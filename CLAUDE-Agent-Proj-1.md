@@ -169,16 +169,18 @@ workflow.add_conditional_edges("critic", route_after_critique, {
 - Keep agent system prompts in the agent files (not separate config)
 
 ## Commands
+
+Everything goes through the `Makefile`. Common targets:
+
 ```bash
-# Run the agent
-python -m src.main "What are the latest approaches to reducing hallucination in LLMs?"
-
-# Run tests
-pytest tests/
-
-# Check types
-mypy src/
+make install-dev          # fresh venv + runtime + dev deps
+make test                 # unit tier (default per-PR check)
+make test-all             # every tier
+make typecheck            # mypy src/
+make run QUERY='What are the latest approaches to reducing hallucination in LLMs?'
 ```
+
+Full setup, targets, and troubleshooting in [`docs/development.md`](docs/development.md).
 
 ## Current Status
 - [ ] Project scaffolded
