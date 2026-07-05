@@ -1,19 +1,48 @@
-"""HuggingFace embeddings + FAISS ranking for paper relevance."""
+"""HuggingFace embeddings + FAISS ranking for paper relevance.
+
+Exposes a shared `encode_texts` helper so downstream retrieval modules
+(paper ranking, chunk ranking) all use the same model and normalization
+convention. Model is lazy-loaded and cached at module scope.
+"""
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from src.graph.state import PaperMetadata
 
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
 _model: SentenceTransformer | None = None
 
 
 def _get_model() -> SentenceTransformer:
-    """Lazy-load the sentence transformer model."""
+    """Lazy-load the sentence transformer model (module-level singleton)."""
     global _model
     if _model is None:
-        _model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        _model = SentenceTransformer(MODEL_NAME)
     return _model
+
+
+def encode_texts(texts: list[str]) -> np.ndarray:
+    """Encode texts as L2-normalized sentence embeddings.
+
+    Normalization means the inner product between two encoded vectors
+    equals their cosine similarity, so `faiss.IndexFlatIP` yields a
+    cosine-similarity search.
+
+    Args:
+        texts: Strings to encode.
+
+    Returns:
+        `(n, d)` float32 ndarray of L2-normalized embeddings. Returns an
+        empty `(0, 0)` array when `texts` is empty.
+    """
+    if not texts:
+        return np.empty((0, 0), dtype=np.float32)
+
+    model = _get_model()
+    encoded = model.encode(texts, normalize_embeddings=True)
+    return np.asarray(encoded, dtype=np.float32)
 
 
 def rank_papers_by_relevance(
@@ -21,7 +50,7 @@ def rank_papers_by_relevance(
     papers: list[PaperMetadata],
     top_k: int = 10,
 ) -> list[PaperMetadata]:
-    """Rank papers by embedding similarity between query and abstracts using FAISS.
+    """Rank papers by cosine similarity between query and abstracts using FAISS.
 
     Args:
         query: The original research query.
@@ -29,7 +58,7 @@ def rank_papers_by_relevance(
         top_k: Number of top papers to return.
 
     Returns:
-        Papers sorted by descending relevance, capped at top_k.
+        Papers sorted by descending relevance, capped at `top_k`.
     """
     if not papers:
         return []
@@ -39,23 +68,13 @@ def rank_papers_by_relevance(
 
     import faiss
 
-    model = _get_model()
-
-    abstracts = [p["abstract"] for p in papers]
-    abstract_embeddings = model.encode(abstracts, normalize_embeddings=True)
-    query_embedding = model.encode([query], normalize_embeddings=True)
+    abstract_embeddings = encode_texts([p["abstract"] for p in papers])
+    query_embedding = encode_texts([query])
 
     dimension = abstract_embeddings.shape[1]
     index = faiss.IndexFlatIP(dimension)
-    index.add(np.array(abstract_embeddings, dtype=np.float32))
+    index.add(abstract_embeddings)
 
-    scores, indices = index.search(
-        np.array(query_embedding, dtype=np.float32), min(top_k, len(papers))
-    )
+    _, indices = index.search(query_embedding, min(top_k, len(papers)))
 
-    ranked: list[PaperMetadata] = []
-    for idx in indices[0]:
-        if idx < len(papers):
-            ranked.append(papers[idx])
-
-    return ranked
+    return [papers[idx] for idx in indices[0] if idx < len(papers)]
