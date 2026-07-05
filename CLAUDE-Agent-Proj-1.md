@@ -143,9 +143,11 @@ class ResearchState(TypedDict):
 - Caps at 8-10 papers
 
 ### Reader
-- Phase 1 (MVP): abstracts + intros only
-- Phase 2: full PDF parsing with PyMuPDF, chunked extraction
+- Fetches PDF -> section-aware chunks -> FAISS-ranked top-K excerpts
+  against sub-questions -> Claude analysis. Falls back to abstract-only
+  on any PDF / chunk / rank failure. Per-paper LLM calls run in parallel.
 - Output per paper: {paper_id, title, key_findings, methodology, results_summary, limitations, relevance}
+- Full details: [`docs/agents/reader.md`](docs/agents/reader.md).
 
 ### Synthesizer
 - Groups findings by theme/approach

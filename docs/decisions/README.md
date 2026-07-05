@@ -19,6 +19,8 @@ never renumbered.
   chunker over generic markdown splitters
 - [0003](0003-chunk-ranker-max-similarity.md) — Rank paper chunks by
   max cosine similarity across sub-questions
+- [0004](0004-reader-fulltext-with-abstract-fallback.md) — Reader
+  consumes ranked full-text chunks with abstract fallback
 
 ## When to write an ADR
 
