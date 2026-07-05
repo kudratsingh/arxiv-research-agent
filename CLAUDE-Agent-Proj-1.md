@@ -3,41 +3,53 @@
 ## Project Overview
 A multi-agent system that takes a natural language research question about ML/AI, searches arXiv for relevant papers, extracts key findings, synthesizes a research briefing, and self-critiques for quality — orchestrated via LangGraph with Claude as the reasoning engine.
 
-## Design Principles
+## Documentation
 
-Every decision in this project — library choice, code structure, testing
-strategy, deployment shape — should be made with the intention of shipping
-a **production system**, not a demo. Two guiding priorities:
+Excellent, thorough documentation is a non-negotiable requirement for
+this project. Every significant module, agent, tool, and design decision
+must be documented so that (a) a new engineer can be productive on day
+one and (b) design intent survives contact with future changes.
 
-1. **Use what the industry uses.** Pick technologies with community support,
-   proven track records, and standard patterns for ML/AI orchestration,
-   retrieval, and evaluation. If a choice would look out of place in a
-   senior-engineer code review at a real ML/AI company, pick a different one.
-   Avoid bespoke / toy / one-off solutions.
+To keep this file focused, detailed docs live in `docs/`. This file
+(`CLAUDE-Agent-Proj-1.md`) is the top-level index — it summarizes the
+system, states the principles, and points into `docs/` for anything
+that needs more space.
 
-2. **Handle thousands of concurrent users from the first production
-   milestone.** This is the initial scale target and it shapes everything
-   downstream:
-   - Concurrent / async I/O by default — parallel LLM calls, non-blocking
-     network, thread pools or `asyncio` where appropriate. Never serialize
-     work that can safely run in parallel.
-   - Statelessness where possible; persistent state belongs in real stores
-     (Redis, Postgres, S3-compatible object storage) not local files or
-     in-process globals. Local caches are acceptable for dev only.
-   - Retries, exponential backoff, and rate-limit handling on every
-     external call (Anthropic, arXiv, HuggingFace).
-   - Cost-aware LLM usage: prompt caching, batching, token budgets,
-     cheaper models for routing / grading where possible.
-   - Observability from the start — structured logging, per-node timing,
-     tracing. Not bolted on later.
-   - Deployment must be horizontally scalable: containerized, no
-     process-local state, health checks, graceful shutdown.
+Documentation requirements:
+- Every module has a docstring explaining what it does and why.
+- Every public function / class has a docstring with Args, Returns, and
+  (where relevant) Raises sections.
+- Every non-trivial architectural or technical decision gets an ADR in
+  `docs/decisions/` (format: `docs/decisions/TEMPLATE.md`).
+- Every agent gets a page in `docs/agents/<name>.md` covering inputs,
+  outputs, prompt design, and known failure modes.
+- Every phase deliverable is tracked in `docs/roadmap.md`.
+- Every non-trivial change updates the relevant doc in the **same PR**.
+  Doc drift is a bug — the reviewer should request updates if a diff
+  changes behavior without changing docs.
 
-When a "simple / quick" option conflicts with a "production-ready" option,
-choose production-ready and note the tradeoff. Local shortcuts (e.g. the
-current on-disk `.cache/pdfs/` used by the PDF parser) are acceptable
-during MVP scaffolding but must be flagged as "replace with shared store
-before production" and tracked in the phased plan.
+## Testing
+
+Every piece of code merged to `main` ships with tests. Untested code
+does not merge. Full strategy in `docs/testing.md`. Summary:
+
+- **Test taxonomy** (three tiers, mirroring the standard pyramid):
+  - `tests/unit/` — pure functions, no I/O / network / LLM. Fast,
+    deterministic. Runs on every PR.
+  - `tests/integration/` — external libraries against local fixtures
+    (PyMuPDF on a sample PDF, sentence-transformers, canned arXiv XML).
+    Runs when the diff touches integration-adjacent code.
+  - `tests/e2e/` — full LangGraph workflow with recorded LLM cassettes.
+    Runs on merge to `main` and nightly, **not** on individual PRs.
+- **Selective per-PR execution**: CI does **not** run the full suite on
+  every PR. It selects tests by changed paths plus pytest markers
+  (`@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.e2e`).
+- **Coverage target**: >=80% on unit-testable code.
+- **LLM code**: assert on response structure and prompt shape, never
+  on exact model output. Cassette-based e2e for pipeline-level checks.
+
+See `docs/testing.md` for how the tiers are wired, how CI selects, and
+what "tested" means for non-deterministic code.
 
 ## Tech Stack
 - **LLM**: Claude (Anthropic API via `anthropic` Python SDK)
