@@ -17,6 +17,8 @@ never renumbered.
   directly, not LangChain's wrapper
 - [0002](0002-section-aware-chunker.md) — Roll our own section-aware
   chunker over generic markdown splitters
+- [0003](0003-chunk-ranker-max-similarity.md) — Rank paper chunks by
+  max cosine similarity across sub-questions
 
 ## When to write an ADR
 

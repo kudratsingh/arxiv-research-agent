@@ -79,7 +79,9 @@ arxiv-research-agent/
 │   ├── tools/
 │   │   ├── __init__.py
 │   │   ├── arxiv_search.py # arXiv API wrapper
-│   │   ├── pdf_parser.py   # PDF download + text extraction
+│   │   ├── pdf_parser.py   # PDF download + text extraction (cached)
+│   │   ├── chunker.py      # Section-aware chunker for paper full text
+│   │   ├── chunk_ranker.py # FAISS chunk ranking against sub-questions
 │   │   └── embeddings.py   # HuggingFace embeddings + FAISS ranking
 │   ├── graph/
 │   │   ├── __init__.py
