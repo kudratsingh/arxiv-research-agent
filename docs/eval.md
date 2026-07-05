@@ -1,0 +1,88 @@
+# Evaluation
+
+Offline evaluation of the full research workflow. Distinct from the
+in-loop `critic` agent (which scores a single run's draft) — this
+pipeline runs the whole system on a fixed benchmark, computes
+system-level metrics, and produces a report so we can measure the
+effect of code changes on end-to-end quality.
+
+Living under `src/eval/`. Design decision: [ADR 0005](decisions/0005-eval-approach.md) —
+custom in-repo eval rather than adopting Ragas / DeepEval / LangSmith.
+
+## Goals
+
+- Detect regressions in end-to-end report quality when we change
+  agent prompts, retrieval, or the model.
+- Compare the impact of specific changes — e.g. swapping the embedding
+  model, tightening K in the chunk ranker, adjusting the critic
+  threshold.
+- Produce a durable eval report artifact that ships alongside major
+  merges to `main`.
+
+## Non-goals
+
+- Human eval. The benchmark is automated and cheap enough to run in
+  CI; human eval is a separate, later track.
+- Live scoring inside a production run. That's the `critic` agent's
+  job.
+
+## Components
+
+### `src/eval/benchmark_queries.py` (this PR)
+
+Ten hand-curated ML/AI research questions with `query_id`, `query`,
+`domain`, `expected_topics`, and `notes`. Coverage across
+hallucination, retrieval, alignment, reasoning, fine-tuning,
+multimodal, efficiency, evaluation, architecture, and safety.
+
+Invariants (protected by `tests/test_benchmark_queries.py`):
+- IDs are kebab-case slugs, unique
+- Every query is non-empty and ends with `?`
+- `expected_topics` is a non-empty list of non-empty strings
+- Domain diversity: at least 5 distinct domains
+
+### `src/eval/metrics.py` (follow-up PR: `feat/eval-metrics-*`)
+
+Three metrics planned, each landing as its own PR so the design and
+prompts get scrutinized independently:
+
+- **Faithfulness** — for each factual claim in the report, does the
+  cited paper actually support it? LLM-as-judge over
+  (claim, cited paper). Score = fraction supported.
+- **Completeness** — how many of the query's `expected_topics` does
+  the report cover? LLM-as-judge over (report, topic). Score =
+  fraction covered.
+- **Citation accuracy** — do the `[Author, Year]` citations in the
+  report body all resolve to entries in the report's citation list?
+  Pure regex + set-membership check, no LLM needed.
+
+### `src/eval/runner.py` (follow-up PR: `feat/eval-runner`)
+
+Batch runner. Iterates the benchmark, invokes the workflow, computes
+metrics, writes a JSONL run record and a markdown summary to
+`outputs/eval/<timestamp>/`.
+
+## Running an eval
+
+```bash
+make eval                         # runs the full benchmark
+make eval QUERIES=hallucination-mitigation,rag-multi-hop
+```
+
+(Wiring lands with `feat/eval-runner`.)
+
+## What "tested" means for eval code itself
+
+The eval code has its own unit tests: benchmark data invariants
+(this PR), metric-scoring pure logic (per-metric PR — LLM-as-judge
+callers are unit-tested against stubbed responses; the full metric
+path is integration).
+
+## Follow-ups
+
+- `feat/eval-metrics-citation-accuracy` — no-LLM metric first; smallest scope.
+- `feat/eval-metrics-completeness` — LLM-as-judge with sub-question coverage prompts.
+- `feat/eval-metrics-faithfulness` — LLM-as-judge with per-claim scoring.
+- `feat/eval-runner` — batch runner + report writer + Makefile target.
+- `feat/eval-ci` — nightly CI job runs the benchmark and posts to a
+  dashboard (further out; needs cost budgeting).
