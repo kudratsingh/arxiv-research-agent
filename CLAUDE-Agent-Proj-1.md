@@ -3,6 +3,42 @@
 ## Project Overview
 A multi-agent system that takes a natural language research question about ML/AI, searches arXiv for relevant papers, extracts key findings, synthesizes a research briefing, and self-critiques for quality — orchestrated via LangGraph with Claude as the reasoning engine.
 
+## Design Principles
+
+Every decision in this project — library choice, code structure, testing
+strategy, deployment shape — should be made with the intention of shipping
+a **production system**, not a demo. Two guiding priorities:
+
+1. **Use what the industry uses.** Pick technologies with community support,
+   proven track records, and standard patterns for ML/AI orchestration,
+   retrieval, and evaluation. If a choice would look out of place in a
+   senior-engineer code review at a real ML/AI company, pick a different one.
+   Avoid bespoke / toy / one-off solutions.
+
+2. **Handle thousands of concurrent users from the first production
+   milestone.** This is the initial scale target and it shapes everything
+   downstream:
+   - Concurrent / async I/O by default — parallel LLM calls, non-blocking
+     network, thread pools or `asyncio` where appropriate. Never serialize
+     work that can safely run in parallel.
+   - Statelessness where possible; persistent state belongs in real stores
+     (Redis, Postgres, S3-compatible object storage) not local files or
+     in-process globals. Local caches are acceptable for dev only.
+   - Retries, exponential backoff, and rate-limit handling on every
+     external call (Anthropic, arXiv, HuggingFace).
+   - Cost-aware LLM usage: prompt caching, batching, token budgets,
+     cheaper models for routing / grading where possible.
+   - Observability from the start — structured logging, per-node timing,
+     tracing. Not bolted on later.
+   - Deployment must be horizontally scalable: containerized, no
+     process-local state, health checks, graceful shutdown.
+
+When a "simple / quick" option conflicts with a "production-ready" option,
+choose production-ready and note the tradeoff. Local shortcuts (e.g. the
+current on-disk `.cache/pdfs/` used by the PDF parser) are acceptable
+during MVP scaffolding but must be flagged as "replace with shared store
+before production" and tracked in the phased plan.
+
 ## Tech Stack
 - **LLM**: Claude (Anthropic API via `anthropic` Python SDK)
 - **Orchestration**: LangGraph (from `langgraph` package)
