@@ -52,8 +52,8 @@ def main() -> None:
     query = sys.argv[1]
     print(f"Researching: {query}\n")
 
-    if not os.environ.get("GROQ_API_KEY"):
-        print("Error: GROQ_API_KEY not set. Copy .env.example to .env and add your key.")
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("Error: ANTHROPIC_API_KEY not set. Copy .env.example to .env and add your key.")
         sys.exit(1)
 
     report = run(query)

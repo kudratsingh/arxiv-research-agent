@@ -12,9 +12,9 @@ from src.tools.embeddings import rank_papers_by_relevance
 MAX_PAPERS = 10
 RESULTS_PER_QUERY = 5
 
-# Fallback mock data for when arXiv is rate-limiting.
-# Remove USE_MOCK_DATA or set to false once arXiv is available.
-USE_MOCK_DATA = os.environ.get("USE_MOCK_DATA", "true").lower() == "true"
+# Fallback mock data used when arXiv is rate-limiting or unavailable.
+# Set USE_MOCK_DATA=true to force offline mode without hitting the arXiv API.
+USE_MOCK_DATA = os.environ.get("USE_MOCK_DATA", "false").lower() == "true"
 
 MOCK_PAPERS: list[PaperMetadata] = [
     PaperMetadata(

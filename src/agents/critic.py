@@ -57,7 +57,7 @@ def _build_user_prompt(state: ResearchState) -> str:
 def critic_agent(state: ResearchState) -> dict:
     """Evaluate the draft research briefing for quality.
 
-    Uses Gemini Pro for rigorous evaluation. Scores on five dimensions and
+    Uses Claude for rigorous evaluation. Scores on five dimensions and
     decides whether revision is needed, routing back to the appropriate
     agent if so.
 
