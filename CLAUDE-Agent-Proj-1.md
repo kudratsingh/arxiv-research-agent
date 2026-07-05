@@ -147,18 +147,44 @@ workflow.add_conditional_edges("critic", route_after_critique, {
 - Test with 3 example queries
 
 ### Phase 2: Depth
-- PDF download + parsing
-- Chunking by section headers
-- FAISS relevance ranking
+- Full-text PDF ingestion
+  - `tools/pdf_parser.py`: download from `pdf_url`, extract text with PyMuPDF
+  - Handle download failures / non-PDF responses gracefully
+  - Cache parsed PDFs on disk to avoid re-download across runs
+- Section-aware chunking
+  - Detect headers (Introduction, Method, Results, Conclusion, Limitations)
+  - Chunk by section, then by token budget within each section
+- FAISS relevance ranking on chunks
+  - Rank chunks against sub-questions (not just abstract vs query)
+  - Feed top-K chunks per paper into reader instead of raw abstract
+- Enriched reader output
+  - Distinguish claims sourced from method vs results vs limitations
+  - Optional: extract references to tables/figures
 - Comparative tables in synthesis
-- Error handling for PDF failures
+  - Method-by-method matrix (dataset, metric, headline result)
+- Robustness
+  - Retry / backoff on Anthropic 429s
+  - Graceful degradation when PDF unavailable (fall back to abstract)
 
 ### Phase 3: Polish
-- Eval pipeline (faithfulness, completeness, citation accuracy)
-- Human-in-the-loop (interrupt after planner)
-- Streaming output
-- Caching layer for paper embeddings
-- Export to formatted markdown/PDF
+- Eval pipeline (`src/eval/`)
+  - `test_queries.py`: 5-10 benchmark queries with expected coverage
+  - `metrics.py`: faithfulness (claims traceable to sources), completeness
+    (coverage of sub-questions), citation accuracy (paper IDs match text)
+  - Batch-run the agent and produce an eval report
+- Observability
+  - Structured logging of each agent's inputs/outputs
+  - Per-node timing
+- UX
+  - Streaming output via LangGraph `astream`
+  - Interrupt after planner for human-in-the-loop plan approval
+  - Node-level progress prints
+- Caching
+  - Cache paper embeddings by paper_id
+  - Cache reader analyses by (paper_id, query) tuple
+- Export
+  - Markdown to PDF via pandoc or weasyprint
+  - BibTeX export of citations
 
 ## Conventions
 - Use `anthropic` SDK directly for Claude API calls (not langchain-anthropic)
@@ -167,6 +193,28 @@ workflow.add_conditional_edges("critic", route_after_critique, {
 - Type hints on everything
 - Docstrings on all public functions
 - Keep agent system prompts in the agent files (not separate config)
+
+## Development Workflow
+
+We follow standard enterprise practice: every differential piece of work
+(a feature, a bug fix, a refactor, a doc update, a test addition) lands
+via its own commit on a feature branch and its own PR against `main`.
+No direct pushes to `main`.
+
+Branch naming: `<type>/<slug>` — e.g. `feat/pdf-parser`,
+`fix/arxiv-timeout`, `docs/readme`, `chore/deps-bump`,
+`test/critic-routing`.
+
+PR requirements:
+- One logical change per PR — do not bundle unrelated edits.
+- Title is concise and describes what changed (under 70 chars).
+- Body explains the *why* (motivation, tradeoffs), links related issues,
+  and includes a short test plan.
+- Tests and `mypy src/` must pass locally before opening the PR.
+- Squash-merge to keep `main` history linear and each PR a single commit.
+
+Scope rule of thumb: if you can't summarize the change in one sentence
+without using "and", split it.
 
 ## Commands
 ```bash
@@ -181,12 +229,17 @@ mypy src/
 ```
 
 ## Current Status
-- [ ] Project scaffolded
-- [ ] State schema defined
-- [ ] Planner agent implemented
-- [ ] Search agent implemented
-- [ ] Reader agent implemented
-- [ ] Synthesizer agent implemented
-- [ ] Critic agent implemented
-- [ ] LangGraph workflow wired
+- [x] Project scaffolded
+- [x] State schema defined
+- [x] Planner agent implemented
+- [x] Search agent implemented (live arXiv + mock-data fallback)
+- [x] Reader agent implemented (abstracts, parallelized per-paper LLM calls)
+- [x] Synthesizer agent implemented
+- [x] Critic agent implemented
+- [x] LangGraph workflow wired
+- [x] Anthropic Claude migration complete (from Groq / Gemini)
+- [x] Smoke tests for pure functions (dedupe, critic routing)
+- [x] README
 - [ ] End-to-end test passing
+- [ ] Phase 2: PDF parsing
+- [ ] Phase 3: Eval pipeline

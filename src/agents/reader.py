@@ -1,9 +1,13 @@
 """Reader agent: extracts structured findings from paper abstracts."""
 
+from concurrent.futures import ThreadPoolExecutor
+
 from langchain_core.messages import AIMessage
 
 from src.graph.state import PaperAnalysis, PaperMetadata, ResearchState
 from src.llm import call_llm_json
+
+MAX_WORKERS = 5
 
 SYSTEM_PROMPT = """\
 You are a research paper analysis assistant. Given a paper's title and abstract,
@@ -51,7 +55,7 @@ def _analyze_paper(paper: PaperMetadata, query: str) -> PaperAnalysis:
 def reader_agent(state: ResearchState) -> dict:
     """Extract structured findings from each paper's abstract.
 
-    Calls Gemini once per paper to pull out key findings, methodology,
+    Calls Claude once per paper to pull out key findings, methodology,
     results, limitations, and a relevance score.
 
     Args:
@@ -63,10 +67,10 @@ def reader_agent(state: ResearchState) -> dict:
     papers = state["papers"]
     query = state["query"]
 
-    analyses: list[PaperAnalysis] = []
-    for paper in papers:
-        analysis = _analyze_paper(paper, query)
-        analyses.append(analysis)
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        analyses: list[PaperAnalysis] = list(
+            executor.map(lambda p: _analyze_paper(p, query), papers)
+        )
 
     return {
         "paper_analyses": analyses,

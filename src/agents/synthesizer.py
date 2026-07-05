@@ -73,7 +73,7 @@ def _build_user_prompt(state: ResearchState) -> str:
 def synthesizer_agent(state: ResearchState) -> dict:
     """Synthesize paper analyses into a structured research briefing.
 
-    Uses Gemini Pro for high-quality synthesis across papers, grouping by
+    Uses Claude for high-quality synthesis across papers, grouping by
     theme, comparing methods, and identifying consensus/contradictions.
 
     Args:
