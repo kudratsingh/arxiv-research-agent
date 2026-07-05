@@ -1,0 +1,114 @@
+# Reader agent
+
+Extracts structured findings from each paper's full text (when
+available) or abstract (as fallback). One of the five agents wired
+through the LangGraph workflow.
+
+Source: `src/agents/reader.py`.
+
+## Inputs
+
+Reads from `ResearchState`:
+
+- `papers: list[PaperMetadata]` — ranked papers from the search agent.
+- `query: str` — the original user query. Included in the prompt so the
+  model calibrates relevance against the same target the user asked
+  about.
+- `sub_questions: list[str]` — planner's decomposition. Used to rank
+  chunks (not directly to prompt the LLM).
+
+## Outputs
+
+Writes to `ResearchState`:
+
+- `paper_analyses: list[PaperAnalysis]` — one entry per input paper,
+  each with `key_findings`, `methodology`, `results_summary`,
+  `limitations`, and a `relevance` score in `[0, 1]`.
+- A `messages` entry (`AIMessage` named `"reader"`).
+
+## Pipeline per paper
+
+```
+PaperMetadata
+   |
+   +--> parse_pdf(pdf_url)              # PyMuPDF, cached on disk
+   |         |
+   |         v
+   |     full_text or ""
+   |         |
+   +--> chunk_paper(full_text)          # section-aware chunker
+   |         |
+   |         v
+   |     chunks or []
+   |         |
+   +--> rank_chunks_by_relevance(       # FAISS + MiniLM
+   |         chunks, sub_questions,
+   |         top_k=5)
+   |         |
+   |         v
+   |     ranked chunks or []
+   |
+   +--> _build_user_prompt(paper, query, excerpts)
+   |         |
+   |         v
+   +--> call_llm_json(...) -> PaperAnalysis
+```
+
+If any of `parse_pdf`, `chunk_paper`, or the ranker returns empty,
+`_gather_context` yields `""` and the prompt tells the model:
+
+> Full text unavailable; base your analysis on the abstract only.
+
+Papers are processed in parallel via a
+`ThreadPoolExecutor(max_workers=5)`.
+
+## Prompt design
+
+**System**: instructs the model to extract JSON with five fields,
+forbids fabrication, tells it to prefer excerpts over the abstract for
+methodology and results when both are present.
+
+**User**: query + title + abstract, always. Then either:
+- Section-tagged excerpts (`[method] ...`), joined by blank lines, or
+- An explicit "full text unavailable" note.
+
+Rationale for the fallback signal: see ADR
+[0004](../decisions/0004-reader-fulltext-with-abstract-fallback.md).
+
+## Known failure modes
+
+| Failure | Where | Handling |
+|---|---|---|
+| PDF 404 / rate-limited | `parse_pdf` HTTP layer | Returns `""`; reader falls back to abstract. |
+| Non-PDF response body | `parse_pdf` magic-header check | Returns `""`. |
+| PyMuPDF extraction throws | `parse_pdf` try/except | Returns `""`. |
+| Chunker finds no headers | `chunk_paper` | Returns a single `body` chunk — still valid. |
+| Chunker finds no chunks | `chunk_paper` (empty input) | Returns `[]`; reader falls back. |
+| Ranker returns empty | shouldn't happen with non-empty chunks | Guarded; falls back. |
+| Claude returns non-JSON | `call_llm_json` | Raises `JSONDecodeError`; the ThreadPoolExecutor propagates. Improvement candidate: catch + retry with a "return valid JSON" nudge. |
+| Anthropic 429 | `call_llm_json` | Currently propagates. Follow-up: `feat/anthropic-retry` with exponential backoff. |
+
+## Configuration
+
+Constants in `src/agents/reader.py`:
+
+- `MAX_WORKERS = 5` — parallel papers.
+- `MAX_CHUNKS_PER_PAPER = 5` — top-K passed to the LLM. Bounds per-paper prompt at ~5 × 800 tokens.
+
+## Testing
+
+- Unit: `tests/test_reader.py` covers `_build_user_prompt` (context /
+  no-context branches) and `_gather_context` (all three empty-return
+  paths + happy-path formatting), with `parse_pdf` / `chunk_paper` /
+  `rank_chunks_by_relevance` monkeypatched.
+- Integration: TODO — needs a canned PDF fixture and a stubbed Claude
+  response. Tracked as a follow-up.
+- E2E: covered by the workflow-level cassette suite (TODO).
+
+## Follow-ups tracked in ADRs
+
+- Retry / backoff for arXiv PDF downloads
+  (`feat/arxiv-download-retry`).
+- Retry / backoff for Anthropic 429s (`feat/anthropic-retry`).
+- Per-paper `source: "fulltext" | "abstract"` field on `PaperAnalysis`
+  for observability (`feat/reader-provenance`).
