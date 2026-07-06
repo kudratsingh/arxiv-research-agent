@@ -44,8 +44,13 @@ class ResearchState(TypedDict):
     Each agent reads from this state and returns a partial update.
     The `messages` field uses LangGraph's add_messages reducer to
     append rather than overwrite.
+
+    `run_id` is a per-run identifier propagated through structured
+    logs and cost tracking so a downstream analyzer can group every
+    event by the workflow invocation that produced it.
     """
 
+    run_id: str
     query: str
     sub_questions: list[str]
     search_queries: list[str]

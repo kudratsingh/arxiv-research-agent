@@ -36,8 +36,9 @@ from src.graph.state import ResearchState
 
 class TestInitialState:
     def test_returns_all_researchstate_keys(self) -> None:
-        state = _initial_state("what is X?")
+        state = _initial_state("what is X?", "run-a")
         expected = {
+            "run_id",
             "query",
             "sub_questions",
             "search_queries",
@@ -55,21 +56,24 @@ class TestInitialState:
         assert set(state.keys()) == expected
 
     def test_query_is_stored(self) -> None:
-        assert _initial_state("hallucination?")["query"] == "hallucination?"
+        assert _initial_state("hallucination?", "r")["query"] == "hallucination?"
+
+    def test_run_id_is_stored(self) -> None:
+        assert _initial_state("q", "rid-123")["run_id"] == "rid-123"
 
     def test_iteration_starts_at_zero(self) -> None:
-        assert _initial_state("x")["iteration"] == 0
+        assert _initial_state("x", "r")["iteration"] == 0
 
 
 class TestSerializeState:
     def test_drops_messages(self) -> None:
-        state: ResearchState = _initial_state("q")
+        state: ResearchState = _initial_state("q", "r")
         state["messages"] = ["not-serializable-marker"]  # type: ignore[typeddict-item]
         result = _serialize_state(state)
         assert "messages" not in result
 
     def test_keeps_everything_else(self) -> None:
-        state = _initial_state("q")
+        state = _initial_state("q", "r")
         result = _serialize_state(state)
         for key in state:
             if key == "messages":
@@ -133,7 +137,7 @@ class TestMean:
 
 
 class TestSummaryLine:
-    def test_extracts_scores_and_state_fields(self) -> None:
+    def test_extracts_scores_state_and_cost_fields(self) -> None:
         record = {
             "query_id": "q1",
             "elapsed_sec": 12.5,
@@ -144,6 +148,7 @@ class TestSummaryLine:
                 "faithfulness": {"score": 0.7},
             },
             "state": {"quality_score": 0.75, "iteration": 2},
+            "costs": {"total_cost_usd": 0.0421, "call_count": 33},
         }
         line = _summary_line(record)
         assert line == {
@@ -155,6 +160,8 @@ class TestSummaryLine:
             "faithfulness": 0.7,
             "critic_score": 0.75,
             "iterations": 2,
+            "cost_usd": 0.0421,
+            "llm_calls": 33,
         }
 
     def test_error_record_has_none_metrics(self) -> None:

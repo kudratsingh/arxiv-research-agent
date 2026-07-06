@@ -36,6 +36,8 @@ never renumbered.
   baseline and regression diff
 - [0011](0011-pydantic-settings-typed-config.md) — Typed configuration
   via `pydantic-settings`
+- [0012](0012-observability-core-logging-costs.md) — Observability core:
+  stdlib JSON logging, ContextVar run scope, per-run cost tracking
 
 ## When to write an ADR
 

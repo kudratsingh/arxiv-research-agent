@@ -1,9 +1,10 @@
 """Shared Anthropic Claude LLM client.
 
 All tunables (model, retry policy, timeout) come from `src.config.settings`
-so runtime behavior is one env-var away rather than a code edit. See
-ADR 0009 for the SDK-native retry choice and ADR 0011 for the config
-approach.
+so runtime behavior is one env-var away rather than a code edit. Every
+successful call records into the per-run cost accumulator (ADR 0012);
+see ADR 0009 for the SDK-native retry choice and ADR 0011 for the
+config approach.
 """
 
 import re
@@ -11,6 +12,7 @@ import re
 import anthropic
 
 from src.config import settings
+from src.observability import record_llm_call
 
 # Back-compat re-exports so existing callers (`from src.llm import DEFAULT_MODEL`)
 # keep working while we migrate to `settings.anthropic_model` at call sites.
@@ -57,13 +59,20 @@ def call_llm(
         The model's text response, with any markdown code fences stripped.
     """
     client = _get_client()
+    resolved_model = model_name or settings.anthropic_model
 
     response = client.messages.create(
-        model=model_name or settings.anthropic_model,
+        model=resolved_model,
         max_tokens=max_tokens,
         temperature=0.3,
         system=system_prompt if system_prompt else anthropic.NOT_GIVEN,
         messages=[{"role": "user", "content": prompt}],
+    )
+
+    record_llm_call(
+        model=resolved_model,
+        input_tokens=response.usage.input_tokens,
+        output_tokens=response.usage.output_tokens,
     )
 
     text = "".join(

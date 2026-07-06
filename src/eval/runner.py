@@ -30,6 +30,7 @@ import os
 import sys
 import time
 import traceback
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -44,8 +45,16 @@ from src.eval.metrics import (
 )
 from src.graph.state import ResearchState
 from src.graph.workflow import build_workflow
+from src.observability import (
+    bind_run_id,
+    get_logger,
+    reset_run_id,
+    start_cost_tracking,
+)
 
 load_dotenv()
+
+log = get_logger(__name__)
 
 DEFAULT_OUTPUT_ROOT = Path("outputs/eval")
 
@@ -55,9 +64,10 @@ DEFAULT_OUTPUT_ROOT = Path("outputs/eval")
 # ---------------------------------------------------------------------------
 
 
-def _initial_state(query: str) -> ResearchState:
+def _initial_state(query: str, run_id: str) -> ResearchState:
     """Fresh `ResearchState` for a single workflow invocation."""
     return {
+        "run_id": run_id,
         "query": query,
         "sub_questions": [],
         "search_queries": [],
@@ -102,35 +112,76 @@ def _compute_metrics(
 
 
 def _run_and_score(benchmark_query: BenchmarkQuery) -> dict[str, Any]:
-    """Invoke the workflow, apply metrics, capture timing / errors.
+    """Invoke the workflow, apply metrics, capture timing / errors / costs.
 
     Never raises — errors are captured on the record so the outer loop
     keeps making progress.
     """
+    run_id = uuid.uuid4().hex[:16]
+    token = bind_run_id(run_id)
+    costs = start_cost_tracking()
     start = time.monotonic()
+
+    log.info(
+        "eval_query_started",
+        extra={
+            "query_id": benchmark_query["query_id"],
+            "domain": benchmark_query["domain"],
+        },
+    )
     try:
         app = build_workflow()
-        final_state = app.invoke(_initial_state(benchmark_query["query"]))
+        final_state = app.invoke(
+            _initial_state(benchmark_query["query"], run_id)
+        )
     except Exception as exc:
+        elapsed = time.monotonic() - start
+        log.exception(
+            "eval_query_failed",
+            extra={
+                "query_id": benchmark_query["query_id"],
+                "elapsed_sec": round(elapsed, 2),
+                **costs.as_dict(),
+            },
+        )
+        reset_run_id(token)
         return {
+            "run_id": run_id,
             "query_id": benchmark_query["query_id"],
             "query": benchmark_query["query"],
             "domain": benchmark_query["domain"],
-            "elapsed_sec": time.monotonic() - start,
+            "elapsed_sec": elapsed,
+            "costs": costs.as_dict(),
             "state": None,
             "metrics": None,
             "error": f"{type(exc).__name__}: {exc}",
             "traceback": traceback.format_exc(),
         }
 
+    metrics = _compute_metrics(final_state, benchmark_query)
     elapsed = time.monotonic() - start
+    costs_snapshot = costs.as_dict()
+    log.info(
+        "eval_query_completed",
+        extra={
+            "query_id": benchmark_query["query_id"],
+            "elapsed_sec": round(elapsed, 2),
+            "citation_accuracy": metrics["citation_accuracy"]["score"],
+            "completeness": metrics["completeness"]["score"],
+            "faithfulness": metrics["faithfulness"]["score"],
+            **costs_snapshot,
+        },
+    )
+    reset_run_id(token)
     return {
+        "run_id": run_id,
         "query_id": benchmark_query["query_id"],
         "query": benchmark_query["query"],
         "domain": benchmark_query["domain"],
         "elapsed_sec": elapsed,
+        "costs": costs_snapshot,
         "state": _serialize_state(final_state),
-        "metrics": _compute_metrics(final_state, benchmark_query),
+        "metrics": metrics,
         "error": None,
     }
 
@@ -156,6 +207,7 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
     """Extract the fields that go into `summary.jsonl` / `summary.md`."""
     metrics = record.get("metrics")
     state = record.get("state") or {}
+    costs = record.get("costs") or {}
     return {
         "query_id": record["query_id"],
         "elapsed_sec": record.get("elapsed_sec"),
@@ -165,6 +217,8 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
         "faithfulness": _get_score(metrics, "faithfulness"),
         "critic_score": state.get("quality_score"),
         "iterations": state.get("iteration"),
+        "cost_usd": costs.get("total_cost_usd"),
+        "llm_calls": costs.get("call_count"),
     }
 
 
@@ -189,16 +243,21 @@ def _mean(rows: list[dict[str, Any]], field: str) -> str:
 
 def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
     """Human-readable rollup with per-query table and aggregate row."""
+    total_cost = sum(
+        (r.get("costs") or {}).get("total_cost_usd", 0.0) or 0.0
+        for r in records
+    )
     lines = [
         f"# Eval run `{run_id}`",
         "",
         f"- **Queries**: {len(records)}",
         f"- **Errors**: {sum(1 for r in records if r.get('error'))}",
+        f"- **Total cost**: ${total_cost:.4f}",
         "",
         "## Per-query results",
         "",
-        "| Query | Cit.Acc. | Complete. | Faithful. | Critic | Iter | Sec | Error |",
-        "|---|---:|---:|---:|---:|---:|---:|---|",
+        "| Query | Cit.Acc. | Complete. | Faithful. | Critic | Iter | Sec | $ | Calls | Error |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for record in records:
         s = _summary_line(record)
@@ -213,6 +272,8 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
                     _fmt(s["critic_score"]),
                     _fmt(s["iterations"]),
                     _fmt(s["elapsed_sec"]),
+                    _fmt(s["cost_usd"]),
+                    _fmt(s["llm_calls"]),
                     s["error"] or "-",
                 ]
             )
@@ -231,6 +292,8 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             f"- Mean completeness: {_mean(successful, 'completeness')}",
             f"- Mean faithfulness: {_mean(successful, 'faithfulness')}",
             f"- Mean critic score: {_mean(successful, 'critic_score')}",
+            f"- Mean cost per query: {_mean(successful, 'cost_usd')}",
+            f"- Mean LLM calls per query: {_mean(successful, 'llm_calls')}",
         ]
 
     return "\n".join(lines) + "\n"
@@ -307,11 +370,13 @@ def _print_result(record: dict[str, Any]) -> None:
         print(f"  ERROR: {record['error']}")
         return
     metrics = record["metrics"]
+    costs = record.get("costs") or {}
+    cost_str = f" ${costs.get('total_cost_usd', 0.0):.4f}" if costs else ""
     print(
         f"  cit={metrics['citation_accuracy']['score']:.2f} "
         f"comp={metrics['completeness']['score']:.2f} "
         f"faith={metrics['faithfulness']['score']:.2f} "
-        f"in {record['elapsed_sec']:.1f}s"
+        f"in {record['elapsed_sec']:.1f}s{cost_str}"
     )
 
 
