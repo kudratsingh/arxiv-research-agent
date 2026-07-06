@@ -21,6 +21,8 @@ never renumbered.
   max cosine similarity across sub-questions
 - [0004](0004-reader-fulltext-with-abstract-fallback.md) — Reader
   consumes ranked full-text chunks with abstract fallback
+- [0005](0005-custom-eval-over-ragas.md) — Roll our own eval pipeline
+  instead of adopting Ragas / DeepEval / LangSmith
 
 ## When to write an ADR
 

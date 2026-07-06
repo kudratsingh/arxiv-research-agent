@@ -89,8 +89,9 @@ arxiv-research-agent/
 │   │   └── workflow.py     # LangGraph wiring + conditional edges
 │   ├── eval/
 │   │   ├── __init__.py
-│   │   ├── metrics.py      # Faithfulness, completeness, citation accuracy
-│   │   └── test_queries.py # Benchmark queries
+│   │   ├── benchmark_queries.py # Hand-curated eval queries + get_queries()
+│   │   ├── metrics.py           # Faithfulness, completeness, citation accuracy
+│   │   └── runner.py            # Batch runner + report writer
 │   └── main.py             # Entry point
 ├── tests/
 │   └── __init__.py
@@ -219,11 +220,15 @@ workflow.add_conditional_edges("critic", route_after_critique, {
   - Graceful degradation when PDF unavailable (fall back to abstract)
 
 ### Phase 3: Polish
-- Eval pipeline (`src/eval/`)
-  - `test_queries.py`: 5-10 benchmark queries with expected coverage
-  - `metrics.py`: faithfulness (claims traceable to sources), completeness
-    (coverage of sub-questions), citation accuracy (paper IDs match text)
-  - Batch-run the agent and produce an eval report
+- Eval pipeline (`src/eval/`) — full strategy in [`docs/eval.md`](docs/eval.md)
+  - `benchmark_queries.py`: 10 hand-curated ML/AI queries with
+    `expected_topics` for reference-free scoring (landed)
+  - `metrics.py`: faithfulness (per-claim traceability), completeness
+    (topic coverage), citation accuracy (regex + set membership)
+  - `runner.py`: batch runner, JSONL + markdown reports to
+    `outputs/eval/<timestamp>/`
+  - Custom in-repo rather than Ragas / DeepEval / LangSmith — see
+    [ADR 0005](docs/decisions/0005-custom-eval-over-ragas.md)
 - Observability
   - Structured logging of each agent's inputs/outputs
   - Per-node timing
