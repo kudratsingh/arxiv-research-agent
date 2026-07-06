@@ -1,4 +1,4 @@
-.PHONY: help venv install install-dev clean test test-unit test-integration test-e2e test-all typecheck run
+.PHONY: help venv install install-dev clean test test-unit test-integration test-e2e test-all typecheck run eval
 
 # ---- Configuration ---------------------------------------------------------
 
@@ -24,6 +24,7 @@ help:  ## Show this help
 	@echo "  make typecheck         Run mypy on src/"
 	@echo ""
 	@echo "  make run QUERY='...'   Run the agent on QUERY"
+	@echo "  make eval              Run full benchmark eval (QUERIES=id1,id2 to filter)"
 	@echo "  make clean             Remove venv, caches, build artifacts"
 
 venv:  ## Create a fresh venv (destroys existing)
@@ -59,6 +60,9 @@ run:  ## Run the agent: make run QUERY='your question'
 		echo "Usage: make run QUERY='your research question'"; exit 2; \
 	fi
 	$(VENV_PYTHON) -m src.main "$(QUERY)"
+
+eval:  ## Batch-run the benchmark; make eval QUERIES=id1,id2 to filter
+	$(VENV_PYTHON) -m src.eval.runner $(if $(QUERIES),--queries $(QUERIES),)
 
 clean:  ## Remove venv, caches, build artifacts
 	rm -rf $(VENV) .mypy_cache .pytest_cache .cache build dist *.egg-info
