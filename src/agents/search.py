@@ -1,20 +1,13 @@
 """Search agent: queries arXiv, deduplicates, and ranks papers by relevance."""
 
-import os
 import time
 
 from langchain_core.messages import AIMessage
 
+from src.config import settings
 from src.graph.state import PaperMetadata, ResearchState
 from src.tools.arxiv_search import deduplicate_papers, search_arxiv
 from src.tools.embeddings import rank_papers_by_relevance
-
-MAX_PAPERS = 10
-RESULTS_PER_QUERY = 5
-
-# Fallback mock data used when arXiv is rate-limiting or unavailable.
-# Set USE_MOCK_DATA=true to force offline mode without hitting the arXiv API.
-USE_MOCK_DATA = os.environ.get("USE_MOCK_DATA", "false").lower() == "true"
 
 MOCK_PAPERS: list[PaperMetadata] = [
     PaperMetadata(
@@ -79,11 +72,11 @@ def search_agent(state: ResearchState) -> dict:
 
     # Try live arXiv search first
     all_papers: list[PaperMetadata] = []
-    if not USE_MOCK_DATA:
+    if not settings.use_mock_data:
         for i, sq in enumerate(search_queries):
             if i > 0:
                 time.sleep(3)
-            results = search_arxiv(sq, max_results=RESULTS_PER_QUERY)
+            results = search_arxiv(sq, max_results=settings.results_per_query)
             all_papers.extend(results)
 
     unique_papers = deduplicate_papers(all_papers) if all_papers else []
@@ -93,7 +86,9 @@ def search_agent(state: ResearchState) -> dict:
         print("  [search] Using mock paper data (arXiv unavailable)")
         unique_papers = MOCK_PAPERS
 
-    ranked_papers = rank_papers_by_relevance(query, unique_papers, top_k=MAX_PAPERS)
+    ranked_papers = rank_papers_by_relevance(
+        query, unique_papers, top_k=settings.max_papers
+    )
 
     return {
         "papers": ranked_papers,

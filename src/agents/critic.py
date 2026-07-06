@@ -2,6 +2,7 @@
 
 from langchain_core.messages import AIMessage
 
+from src.config import settings
 from src.graph.state import ResearchState
 from src.llm import call_llm_json
 
@@ -80,7 +81,7 @@ def critic_agent(state: ResearchState) -> dict:
     iteration = state.get("iteration", 0)
 
     # Force approve if we've hit max iterations
-    if iteration >= 3:
+    if iteration >= settings.max_iterations:
         revision_needed = False
         revision_target = ""
 
@@ -96,7 +97,7 @@ def critic_agent(state: ResearchState) -> dict:
             AIMessage(
                 content=(
                     f"Quality score: {parsed['average_score']:.2f} — {status}. "
-                    f"(iteration {iteration + 1}/3)"
+                    f"(iteration {iteration + 1}/{settings.max_iterations})"
                 ),
                 name="critic",
             )

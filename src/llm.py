@@ -1,32 +1,22 @@
 """Shared Anthropic Claude LLM client.
 
-Configures the SDK's built-in retry + timeout so 429s and transient 5xxs
-don't kill an eval run. See ADR 0009 for the choice of SDK-native retry
-over `tenacity` / custom loop, and the rationale for the specific
-`MAX_RETRIES` / `REQUEST_TIMEOUT_SEC` values.
+All tunables (model, retry policy, timeout) come from `src.config.settings`
+so runtime behavior is one env-var away rather than a code edit. See
+ADR 0009 for the SDK-native retry choice and ADR 0011 for the config
+approach.
 """
 
-import os
 import re
 
 import anthropic
-from dotenv import load_dotenv
 
-load_dotenv()
+from src.config import settings
 
-DEFAULT_MODEL = "claude-sonnet-4-6"
-
-# The anthropic SDK auto-retries on 408 / 409 / 429 and 5xx with exponential
-# backoff (starting at 0.5s, doubling, capped at 8s per attempt). MAX_RETRIES
-# is retries AFTER the first attempt — so 4 gives up to 5 total attempts.
-# Tuned for eval runs that fire ~300 Claude calls; without it, single-run
-# rate-limit hits abort the whole benchmark.
-MAX_RETRIES = 4
-
-# Request timeout in seconds. Anthropic's SDK default is 10 minutes which is
-# far too generous — a stuck request should fail loudly and let the retry
-# layer take over. 120s comfortably covers a 4096-token synthesis response.
-REQUEST_TIMEOUT_SEC = 120.0
+# Back-compat re-exports so existing callers (`from src.llm import DEFAULT_MODEL`)
+# keep working while we migrate to `settings.anthropic_model` at call sites.
+DEFAULT_MODEL = settings.anthropic_model
+MAX_RETRIES = settings.anthropic_max_retries
+REQUEST_TIMEOUT_SEC = settings.anthropic_timeout_sec
 
 _client: anthropic.Anthropic | None = None
 
@@ -34,18 +24,17 @@ _client: anthropic.Anthropic | None = None
 def _get_client() -> anthropic.Anthropic:
     """Get or create the shared Anthropic client (module-level singleton).
 
-    The client bakes in `max_retries` and `timeout` at construction; call
-    sites don't need to know about retry policy.
+    Retry policy and timeout are baked in at construction from
+    `settings`; call sites don't need to know about them.
     """
     global _client
     if _client is None:
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-        if not api_key:
+        if not settings.anthropic_api_key:
             raise RuntimeError("ANTHROPIC_API_KEY not set in .env")
         _client = anthropic.Anthropic(
-            api_key=api_key,
-            max_retries=MAX_RETRIES,
-            timeout=REQUEST_TIMEOUT_SEC,
+            api_key=settings.anthropic_api_key,
+            max_retries=settings.anthropic_max_retries,
+            timeout=settings.anthropic_timeout_sec,
         )
     return _client
 
@@ -53,7 +42,7 @@ def _get_client() -> anthropic.Anthropic:
 def call_llm(
     prompt: str,
     system_prompt: str = "",
-    model_name: str = DEFAULT_MODEL,
+    model_name: str | None = None,
     max_tokens: int = 4096,
 ) -> str:
     """Call Claude and return the text response.
@@ -61,7 +50,7 @@ def call_llm(
     Args:
         prompt: The user message.
         system_prompt: System instruction for the model.
-        model_name: Claude model to use.
+        model_name: Claude model to use. Defaults to `settings.anthropic_model`.
         max_tokens: Maximum output tokens.
 
     Returns:
@@ -70,7 +59,7 @@ def call_llm(
     client = _get_client()
 
     response = client.messages.create(
-        model=model_name,
+        model=model_name or settings.anthropic_model,
         max_tokens=max_tokens,
         temperature=0.3,
         system=system_prompt if system_prompt else anthropic.NOT_GIVEN,
@@ -90,7 +79,7 @@ def call_llm(
 def call_llm_json(
     prompt: str,
     system_prompt: str = "",
-    model_name: str = DEFAULT_MODEL,
+    model_name: str | None = None,
     max_tokens: int = 4096,
 ) -> dict:
     """Call Claude and parse the response as JSON.
@@ -100,7 +89,7 @@ def call_llm_json(
     Args:
         prompt: The user message.
         system_prompt: System instruction for the model.
-        model_name: Claude model to use.
+        model_name: Claude model to use. Defaults to `settings.anthropic_model`.
         max_tokens: Maximum output tokens.
 
     Returns:
