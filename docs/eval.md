@@ -110,9 +110,10 @@ path is integration).
 - ~~`feat/eval-metrics-completeness`~~ — landed.
 - ~~`feat/eval-metrics-faithfulness`~~ — landed.
 - ~~`feat/eval-runner`~~ — landed.
-- `feat/anthropic-retry` — retry/backoff on 429s; makes eval robust
-  to Anthropic rate-limit variability (currently the dominant failure
-  mode).
+- ~~`feat/anthropic-retry`~~ — landed. See ADR
+  [0009](decisions/0009-anthropic-sdk-native-retry.md). SDK-native
+  retry (4 retries, exponential backoff) + 120s timeout on every
+  Claude call.
 - `feat/eval-ci` — nightly GitHub Actions job runs the benchmark,
   diffs against the last main-branch run, comments regressions on the
   triggering PR.

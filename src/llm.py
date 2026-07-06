@@ -1,4 +1,10 @@
-"""Shared Anthropic Claude LLM client."""
+"""Shared Anthropic Claude LLM client.
+
+Configures the SDK's built-in retry + timeout so 429s and transient 5xxs
+don't kill an eval run. See ADR 0009 for the choice of SDK-native retry
+over `tenacity` / custom loop, and the rationale for the specific
+`MAX_RETRIES` / `REQUEST_TIMEOUT_SEC` values.
+"""
 
 import os
 import re
@@ -10,17 +16,37 @@ load_dotenv()
 
 DEFAULT_MODEL = "claude-sonnet-4-6"
 
+# The anthropic SDK auto-retries on 408 / 409 / 429 and 5xx with exponential
+# backoff (starting at 0.5s, doubling, capped at 8s per attempt). MAX_RETRIES
+# is retries AFTER the first attempt — so 4 gives up to 5 total attempts.
+# Tuned for eval runs that fire ~300 Claude calls; without it, single-run
+# rate-limit hits abort the whole benchmark.
+MAX_RETRIES = 4
+
+# Request timeout in seconds. Anthropic's SDK default is 10 minutes which is
+# far too generous — a stuck request should fail loudly and let the retry
+# layer take over. 120s comfortably covers a 4096-token synthesis response.
+REQUEST_TIMEOUT_SEC = 120.0
+
 _client: anthropic.Anthropic | None = None
 
 
 def _get_client() -> anthropic.Anthropic:
-    """Get or create the Anthropic client."""
+    """Get or create the shared Anthropic client (module-level singleton).
+
+    The client bakes in `max_retries` and `timeout` at construction; call
+    sites don't need to know about retry policy.
+    """
     global _client
     if _client is None:
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY not set in .env")
-        _client = anthropic.Anthropic(api_key=api_key)
+        _client = anthropic.Anthropic(
+            api_key=api_key,
+            max_retries=MAX_RETRIES,
+            timeout=REQUEST_TIMEOUT_SEC,
+        )
     return _client
 
 
