@@ -114,9 +114,12 @@ path is integration).
   [0009](decisions/0009-anthropic-sdk-native-retry.md). SDK-native
   retry (4 retries, exponential backoff) + 120s timeout on every
   Claude call.
-- `feat/eval-ci` — nightly GitHub Actions job runs the benchmark,
-  diffs against the last main-branch run, comments regressions on the
-  triggering PR.
+- ~~`feat/eval-ci`~~ — landed. Nightly GitHub Actions workflow at
+  `.github/workflows/eval-nightly.yml` runs the benchmark, diffs
+  against the previous nightly (via built-in `gh` CLI + Actions
+  artifacts — no third-party actions), and fails the workflow on
+  regressions >10 points. See ADR
+  [0010](decisions/0010-nightly-eval-ci.md).
 - `feat/faithfulness-fulltext-source` — use cached full text
   (`.cache/pdfs/<id>.txt`) as faithfulness source when available,
   falling back to abstract. Underestimation of Phase-2 faithfulness

@@ -304,4 +304,6 @@ Full setup, targets, and troubleshooting in [`docs/development.md`](docs/develop
 - [ ] End-to-end test passing (needs cassette-based e2e — tracked as follow-up)
 - [x] Retry/backoff on Anthropic 429s (SDK-native, 4 retries + 120s timeout)
 - [ ] Retry/backoff on arXiv HTTP failures (`feat/arxiv-download-retry`)
-- [ ] Nightly eval CI with regression detection (`feat/eval-ci`)
+- [x] Nightly eval CI with regression detection (`.github/workflows/eval-nightly.yml`)
+- [ ] Regression tracking issue bot (`feat/eval-regression-issue-bot`)
+- [ ] Cheaper eval judges via Haiku (`feat/eval-cheaper-judge`)

@@ -32,6 +32,8 @@ never renumbered.
   output
 - [0009](0009-anthropic-sdk-native-retry.md) — Use the Anthropic SDK's
   built-in retry over a custom loop or `tenacity`
+- [0010](0010-nightly-eval-ci.md) — Nightly eval CI with artifact-based
+  baseline and regression diff
 
 ## When to write an ADR
 
