@@ -27,6 +27,9 @@ never renumbered.
   a single batched LLM-as-judge call
 - [0007](0007-faithfulness-single-call-abstracts.md) — Score
   faithfulness with a single-call judge over cited abstracts
+- [0008](0008-eval-runner-sequential-per-query-isolation.md) — Eval
+  runner: sequential runs, per-query error isolation, three-layer
+  output
 
 ## When to write an ADR
 

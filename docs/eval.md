@@ -69,20 +69,33 @@ get scrutinized independently:
   [0007](decisions/0007-faithfulness-single-call-abstracts.md) for
   source-of-truth and denominator tradeoffs.
 
-### `src/eval/runner.py` (follow-up PR: `feat/eval-runner`)
+### `src/eval/runner.py`
 
-Batch runner. Iterates the benchmark, invokes the workflow, computes
-metrics, writes a JSONL run record and a markdown summary to
-`outputs/eval/<timestamp>/`.
+**Landed.** Sequential batch runner with per-query error isolation
+(see ADR [0008](decisions/0008-eval-runner-sequential-per-query-isolation.md)).
+Fresh workflow per query for state-leak isolation. `Ctrl-C` flushes
+partial results before exiting. Writes three output layers:
+
+```
+outputs/eval/<run_id>/
+    queries/<query_id>.json  — full record: state + metrics + timing + err
+    summary.jsonl            — one line per query (for dashboards / CI)
+    summary.md               — human-readable table + aggregates
+```
+
+Run identifier: `YYYYMMDDTHHMMSSZ` UTC timestamp.
 
 ## Running an eval
 
 ```bash
-make eval                         # runs the full benchmark
+make eval                                          # full benchmark
 make eval QUERIES=hallucination-mitigation,rag-multi-hop
+python -m src.eval.runner --output-dir custom/dir  # bypass Makefile
+python -m src.eval.runner --help                   # full CLI reference
 ```
 
-(Wiring lands with `feat/eval-runner`.)
+Requires `ANTHROPIC_API_KEY` in `.env` — the runner refuses to start
+without it.
 
 ## What "tested" means for eval code itself
 
@@ -93,9 +106,20 @@ path is integration).
 
 ## Follow-ups
 
-- `feat/eval-metrics-citation-accuracy` — no-LLM metric first; smallest scope.
-- `feat/eval-metrics-completeness` — LLM-as-judge with sub-question coverage prompts.
-- `feat/eval-metrics-faithfulness` — LLM-as-judge with per-claim scoring.
-- `feat/eval-runner` — batch runner + report writer + Makefile target.
-- `feat/eval-ci` — nightly CI job runs the benchmark and posts to a
-  dashboard (further out; needs cost budgeting).
+- ~~`feat/eval-metrics-citation-accuracy`~~ — landed.
+- ~~`feat/eval-metrics-completeness`~~ — landed.
+- ~~`feat/eval-metrics-faithfulness`~~ — landed.
+- ~~`feat/eval-runner`~~ — landed.
+- `feat/anthropic-retry` — retry/backoff on 429s; makes eval robust
+  to Anthropic rate-limit variability (currently the dominant failure
+  mode).
+- `feat/eval-ci` — nightly GitHub Actions job runs the benchmark,
+  diffs against the last main-branch run, comments regressions on the
+  triggering PR.
+- `feat/faithfulness-fulltext-source` — use cached full text
+  (`.cache/pdfs/<id>.txt`) as faithfulness source when available,
+  falling back to abstract. Underestimation of Phase-2 faithfulness
+  today is documented in ADR 0007.
+- Hand-labeled calibration set (~20-30 (report, topic) pairs and
+  (claim, source) pairs) once real eval runs give us data to calibrate
+  against. Alignment with human judgment is currently unmeasured.
