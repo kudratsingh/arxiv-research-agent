@@ -91,7 +91,13 @@ arxiv-research-agent/
 │   │   ├── __init__.py
 │   │   ├── benchmark_queries.py # Hand-curated eval queries + get_queries()
 │   │   ├── metrics.py           # Faithfulness, completeness, citation accuracy
+│   │   ├── regression_diff.py   # Baseline-vs-current summary diff for nightly CI
 │   │   └── runner.py            # Batch runner + report writer
+│   ├── observability/
+│   │   ├── __init__.py
+│   │   ├── logging.py      # JSON formatter + run_id ContextVar + propagate helper
+│   │   └── costs.py        # RunCosts accumulator + price table + record_llm_call
+│   ├── config.py           # pydantic-settings typed config surface
 │   └── main.py             # Entry point
 ├── tests/
 │   └── __init__.py
@@ -253,25 +259,31 @@ workflow.add_conditional_edges("critic", route_after_critique, {
 
 ## Development Workflow
 
-We follow standard enterprise practice: every differential piece of work
-(a feature, a bug fix, a refactor, a doc update, a test addition) lands
-via its own commit on a feature branch and its own PR against `main`.
-No direct pushes to `main`.
+We land work on feature branches and open PRs against `main` — no
+direct pushes to `main`.
 
 Branch naming: `<type>/<slug>` — e.g. `feat/pdf-parser`,
 `fix/arxiv-timeout`, `docs/readme`, `chore/deps-bump`,
 `test/critic-routing`.
 
 PR requirements:
-- One logical change per PR — do not bundle unrelated edits.
+- **Bundle related concerns into one PR.** Cluster changes by subsystem
+  (all "observability core" pieces together), by architectural theme
+  (a foundation + its natural first consumers), or by sprint slice
+  (all Sprint 1 reliability items). ~400-800 additions is the sweet
+  spot; smaller PRs are fine for genuinely isolated fixes. **Do not
+  fragment cohesive work into nano-PRs** — the review overhead
+  outweighs the granularity signal.
+- Do not bundle *unrelated* concerns (a doc-only change alongside a
+  bug fix). Cohesion still matters; this is not a license for
+  grab-bag PRs.
 - Title is concise and describes what changed (under 70 chars).
 - Body explains the *why* (motivation, tradeoffs), links related issues,
   and includes a short test plan.
-- Tests and `mypy src/` must pass locally before opening the PR.
+- Tests and docs for the diff ship in the same PR (per the Testing and
+  Documentation mandates above). `pytest tests/` must pass locally
+  before opening the PR.
 - Squash-merge to keep `main` history linear and each PR a single commit.
-
-Scope rule of thumb: if you can't summarize the change in one sentence
-without using "and", split it.
 
 ## Commands
 
@@ -301,9 +313,20 @@ Full setup, targets, and troubleshooting in [`docs/development.md`](docs/develop
 - [x] README
 - [x] Phase 2: PDF parsing (`pdf_parser`, `chunker`, `chunk_ranker`, reader wired)
 - [x] Phase 3: Eval pipeline (10-query benchmark + 3 metrics + runner + `make eval`)
-- [ ] End-to-end test passing (needs cassette-based e2e — tracked as follow-up)
 - [x] Retry/backoff on Anthropic 429s (SDK-native, 4 retries + 120s timeout)
-- [ ] Retry/backoff on arXiv HTTP failures (`feat/arxiv-download-retry`)
 - [x] Nightly eval CI with regression detection (`.github/workflows/eval-nightly.yml`)
+- [x] Typed config via `pydantic-settings` (`src/config.py`)
+- [x] Structured JSON logging + `run_id` propagation (`src/observability/`)
+- [x] Per-run cost tracking (token counts + USD, per-model breakdown) — landed in `summary.jsonl`
+
+Sprint 1 remaining:
+- [ ] arXiv retry / backoff (`feat/arxiv-download-retry`)
+- [ ] LangGraph SqliteSaver checkpointing (`feat/checkpointing-sqlite`)
+- [ ] Expand benchmark queries 10 -> 20 (`chore/expand-benchmark-queries`)
+- [ ] Retrieval recall metric (`feat/eval-metrics-retrieval-recall`)
+- [ ] OpenTelemetry tracing (`feat/otel-tracing`)
+
+Follow-up items (post-Sprint-1 backlog):
+- [ ] End-to-end test with LLM cassettes
 - [ ] Regression tracking issue bot (`feat/eval-regression-issue-bot`)
 - [ ] Cheaper eval judges via Haiku (`feat/eval-cheaper-judge`)

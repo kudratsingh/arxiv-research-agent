@@ -20,6 +20,7 @@ from langchain_core.messages import AIMessage
 from src.config import settings
 from src.graph.state import PaperAnalysis, PaperMetadata, ResearchState
 from src.llm import call_llm_json
+from src.observability import propagate_run_context
 from src.tools.chunk_ranker import rank_chunks_by_relevance
 from src.tools.chunker import chunk_paper
 from src.tools.pdf_parser import parse_pdf
@@ -146,13 +147,15 @@ def reader_agent(state: ResearchState) -> dict:
     query = state["query"]
     subquestions = state.get("sub_questions", [])
 
+    # Propagate the parent's run_id + cost-accumulator ContextVars into
+    # each worker thread — plain ThreadPoolExecutor doesn't inherit
+    # context, so LLM calls from workers would otherwise lose per-run
+    # attribution.
+    analyze = propagate_run_context(
+        lambda p: _analyze_paper(p, query, subquestions)
+    )
     with ThreadPoolExecutor(max_workers=settings.reader_max_workers) as executor:
-        analyses: list[PaperAnalysis] = list(
-            executor.map(
-                lambda p: _analyze_paper(p, query, subquestions),
-                papers,
-            )
-        )
+        analyses: list[PaperAnalysis] = list(executor.map(analyze, papers))
 
     return {
         "paper_analyses": analyses,
