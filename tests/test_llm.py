@@ -1,9 +1,10 @@
 """Unit tests for the shared Anthropic client wrapper.
 
-Focuses on how `_get_client` constructs the SDK client — retry policy,
-timeout, and singleton behavior. The actual `client.messages.create`
-call is exercised in integration tests (which need a real API key)
-and via the metric / agent tests where `call_llm_json` is monkeypatched.
+Focuses on how `_get_client` constructs the SDK client from
+`settings` — retry policy, timeout, api key, and singleton behavior.
+The actual `client.messages.create` call is exercised in integration
+tests (which need a real API key) and via the metric / agent tests
+where `call_llm_json` is monkeypatched.
 """
 
 from typing import Any
@@ -11,6 +12,7 @@ from typing import Any
 import pytest
 
 from src import llm as llm_module
+from src.config import Settings
 from src.llm import MAX_RETRIES, REQUEST_TIMEOUT_SEC
 
 
@@ -24,6 +26,14 @@ class _FakeAnthropic:
         _FakeAnthropic.instances.append(self)
 
 
+def _override_settings(
+    monkeypatch: pytest.MonkeyPatch, **overrides: Any
+) -> None:
+    """Replace `llm.settings` with a fresh Settings carrying the given overrides."""
+    fresh = Settings(**overrides)
+    monkeypatch.setattr(llm_module, "settings", fresh)
+
+
 @pytest.fixture(autouse=True)
 def _reset_singleton(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reset the module-level client between tests so each test gets a fresh construction."""
@@ -35,7 +45,7 @@ class TestGetClient:
     def test_uses_configured_max_retries(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        _override_settings(monkeypatch, anthropic_api_key="sk-test")
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
         client = llm_module._get_client()
@@ -46,17 +56,17 @@ class TestGetClient:
     def test_uses_configured_timeout(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        _override_settings(monkeypatch, anthropic_api_key="sk-test")
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
         client = llm_module._get_client()
 
         assert client.kwargs["timeout"] == REQUEST_TIMEOUT_SEC
 
-    def test_passes_api_key_from_env(
+    def test_passes_api_key_from_settings(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-my-test-key")
+        _override_settings(monkeypatch, anthropic_api_key="sk-my-test-key")
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
         client = llm_module._get_client()
@@ -66,25 +76,34 @@ class TestGetClient:
     def test_missing_api_key_raises(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        _override_settings(monkeypatch, anthropic_api_key="")
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
         with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
             llm_module._get_client()
 
-    def test_empty_api_key_treated_as_missing(
+    def test_settings_override_reaches_client(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+        # Settings-driven config means overriding max_retries / timeout at
+        # test time (or via env var in prod) reaches the constructed client.
+        _override_settings(
+            monkeypatch,
+            anthropic_api_key="sk-test",
+            anthropic_max_retries=7,
+            anthropic_timeout_sec=45.0,
+        )
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
-        with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
-            llm_module._get_client()
+        client = llm_module._get_client()
+
+        assert client.kwargs["max_retries"] == 7
+        assert client.kwargs["timeout"] == 45.0
 
     def test_singleton_reuses_instance(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        _override_settings(monkeypatch, anthropic_api_key="sk-test")
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
         first = llm_module._get_client()

@@ -17,14 +17,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 from langchain_core.messages import AIMessage
 
+from src.config import settings
 from src.graph.state import PaperAnalysis, PaperMetadata, ResearchState
 from src.llm import call_llm_json
 from src.tools.chunk_ranker import rank_chunks_by_relevance
 from src.tools.chunker import chunk_paper
 from src.tools.pdf_parser import parse_pdf
 
-MAX_WORKERS = 5
-MAX_CHUNKS_PER_PAPER = 5
+# Back-compat re-exports for tests / callers that import these names.
+MAX_WORKERS = settings.reader_max_workers
+MAX_CHUNKS_PER_PAPER = settings.reader_max_chunks_per_paper
 
 SYSTEM_PROMPT = """\
 You are a research paper analysis assistant. Given a paper's title, abstract,
@@ -62,7 +64,7 @@ def _gather_context(paper: PaperMetadata, subquestions: list[str]) -> str:
         return ""
 
     ranked = rank_chunks_by_relevance(
-        chunks, subquestions, top_k=MAX_CHUNKS_PER_PAPER
+        chunks, subquestions, top_k=settings.reader_max_chunks_per_paper
     )
     if not ranked:
         return ""
@@ -144,7 +146,7 @@ def reader_agent(state: ResearchState) -> dict:
     query = state["query"]
     subquestions = state.get("sub_questions", [])
 
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=settings.reader_max_workers) as executor:
         analyses: list[PaperAnalysis] = list(
             executor.map(
                 lambda p: _analyze_paper(p, query, subquestions),

@@ -11,8 +11,10 @@ concurrent fan-out.
 import re
 from typing import TypedDict
 
-DEFAULT_MAX_TOKENS = 800
-DEFAULT_OVERLAP_TOKENS = 100
+from src.config import settings
+
+DEFAULT_MAX_TOKENS = settings.chunker_max_tokens
+DEFAULT_OVERLAP_TOKENS = settings.chunker_overlap_tokens
 
 # Rough industry heuristic: 1 token ~= 4 characters of English prose.
 # Swap for a real tokenizer (tiktoken / anthropic count_tokens) if we

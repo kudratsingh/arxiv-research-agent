@@ -34,6 +34,8 @@ never renumbered.
   built-in retry over a custom loop or `tenacity`
 - [0010](0010-nightly-eval-ci.md) — Nightly eval CI with artifact-based
   baseline and regression diff
+- [0011](0011-pydantic-settings-typed-config.md) — Typed configuration
+  via `pydantic-settings`
 
 ## When to write an ADR
 
