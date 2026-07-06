@@ -58,9 +58,16 @@ get scrutinized independently:
   missing / extra / malformed judge output. See ADR
   [0006](decisions/0006-completeness-batched-judge.md) for the
   batched-vs-per-topic tradeoff.
-- **Faithfulness** — follow-up (`feat/eval-metrics-faithfulness`).
-  Per-claim decomposition + LLM-as-judge over `(claim, cited paper)`.
-  Score = fraction of factual claims supported by their cited source.
+- **Faithfulness** — **landed** (this PR). Single LLM-as-judge call
+  extracts each factual, cited claim from the report and decides
+  `supported: true|false|null` against the cited paper's abstract.
+  Source of truth is `state["papers"]` abstracts joined with
+  `state["citations"]` on `paper_id`. Score = supported / (supported +
+  unsupported); `source_unavailable` claims are reported separately.
+  Defensive override: if the judge claims support against a cite key
+  we didn't provide, we force `supported=None`. See ADR
+  [0007](decisions/0007-faithfulness-single-call-abstracts.md) for
+  source-of-truth and denominator tradeoffs.
 
 ### `src/eval/runner.py` (follow-up PR: `feat/eval-runner`)
 

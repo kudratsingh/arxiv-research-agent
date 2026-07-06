@@ -25,6 +25,8 @@ never renumbered.
   instead of adopting Ragas / DeepEval / LangSmith
 - [0006](0006-completeness-batched-judge.md) — Score completeness with
   a single batched LLM-as-judge call
+- [0007](0007-faithfulness-single-call-abstracts.md) — Score
+  faithfulness with a single-call judge over cited abstracts
 
 ## When to write an ADR
 
