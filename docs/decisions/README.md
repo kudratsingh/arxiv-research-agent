@@ -30,6 +30,8 @@ never renumbered.
 - [0008](0008-eval-runner-sequential-per-query-isolation.md) — Eval
   runner: sequential runs, per-query error isolation, three-layer
   output
+- [0009](0009-anthropic-sdk-native-retry.md) — Use the Anthropic SDK's
+  built-in retry over a custom loop or `tenacity`
 
 ## When to write an ADR
 

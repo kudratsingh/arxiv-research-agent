@@ -302,5 +302,6 @@ Full setup, targets, and troubleshooting in [`docs/development.md`](docs/develop
 - [x] Phase 2: PDF parsing (`pdf_parser`, `chunker`, `chunk_ranker`, reader wired)
 - [x] Phase 3: Eval pipeline (10-query benchmark + 3 metrics + runner + `make eval`)
 - [ ] End-to-end test passing (needs cassette-based e2e — tracked as follow-up)
-- [ ] Retry/backoff on Anthropic 429s + arXiv HTTP failures (`feat/anthropic-retry`)
+- [x] Retry/backoff on Anthropic 429s (SDK-native, 4 retries + 120s timeout)
+- [ ] Retry/backoff on arXiv HTTP failures (`feat/arxiv-download-retry`)
 - [ ] Nightly eval CI with regression detection (`feat/eval-ci`)
