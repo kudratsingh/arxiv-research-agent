@@ -41,20 +41,22 @@ Invariants (protected by `tests/test_benchmark_queries.py`):
 - `expected_topics` is a non-empty list of non-empty strings
 - Domain diversity: at least 5 distinct domains
 
-### `src/eval/metrics.py` (follow-up PR: `feat/eval-metrics-*`)
+### `src/eval/metrics.py`
 
-Three metrics planned, each landing as its own PR so the design and
-prompts get scrutinized independently:
+Three metrics, each landing as its own PR so the design and prompts
+get scrutinized independently:
 
-- **Faithfulness** — for each factual claim in the report, does the
-  cited paper actually support it? LLM-as-judge over
-  (claim, cited paper). Score = fraction supported.
-- **Completeness** — how many of the query's `expected_topics` does
-  the report cover? LLM-as-judge over (report, topic). Score =
-  fraction covered.
-- **Citation accuracy** — do the `[Author, Year]` citations in the
-  report body all resolve to entries in the report's citation list?
-  Pure regex + set-membership check, no LLM needed.
+- **Citation accuracy** — **landed** (this PR). Pure regex + set
+  membership over `(first-author-lastname, 4-digit-year)`. Handles
+  `[Smith, 2023]`, `[Smith et al., 2023]`, `[Smith and Jones, 2023]`,
+  year suffixes (`2023a`), and deduplicates repeated citations.
+  Returns `{score, total_citations, resolved, unresolved}`.
+- **Completeness** — follow-up (`feat/eval-metrics-completeness`).
+  LLM-as-judge over `(report, expected_topic)`. Score = fraction of
+  the query's `expected_topics` the report actually covers.
+- **Faithfulness** — follow-up (`feat/eval-metrics-faithfulness`).
+  Per-claim decomposition + LLM-as-judge over `(claim, cited paper)`.
+  Score = fraction of factual claims supported by their cited source.
 
 ### `src/eval/runner.py` (follow-up PR: `feat/eval-runner`)
 
