@@ -6,16 +6,18 @@ LLM-as-judge prompt) gets reviewed on its own. Full strategy in
 
 Landed:
   - citation_accuracy — pure regex + set membership, no LLM.
+  - completeness — batched LLM-as-judge over expected topics
+    (see ADR 0006).
 
 Follow-ups:
-  - completeness  (feat/eval-metrics-completeness)  — LLM-as-judge
   - faithfulness  (feat/eval-metrics-faithfulness)  — LLM-as-judge
 """
 
 import re
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from src.graph.state import Citation
+from src.llm import call_llm_json
 
 # Matches [Author, Year] and its common variants:
 #   [Smith, 2023]
@@ -141,3 +143,147 @@ def measure_citation_accuracy(
         resolved=resolved,
         unresolved=unresolved,
     )
+
+
+# ---------------------------------------------------------------------------
+# Completeness — LLM-as-judge over expected topics.
+# ---------------------------------------------------------------------------
+
+COMPLETENESS_SYSTEM_PROMPT = """\
+You are a strict research report evaluator. Given a research briefing and
+a list of topics the briefing was expected to cover, decide for each topic
+whether the briefing MEANINGFULLY ADDRESSES it.
+
+"Meaningfully addresses" means:
+  - The topic is discussed with specific content — methods, findings,
+    tradeoffs, comparisons, quantitative results — not just name-dropped
+    or listed in passing.
+  - A single sentence that only names the topic does NOT count.
+  - Discussion of a synonymous or clearly equivalent concept DOES count.
+
+Return JSON matching this exact schema, no markdown fencing:
+{
+  "coverage": [
+    {"topic": "<verbatim topic>", "covered": true|false, "reason": "<one short sentence>"}
+  ]
+}
+
+Include one object per input topic, in the same order. Be strict — err
+toward "not covered" when in doubt.
+"""
+
+
+class TopicCoverage(TypedDict):
+    """Per-topic decision emitted by the completeness judge."""
+
+    topic: str
+    covered: bool
+    reason: str
+
+
+class CompletenessResult(TypedDict):
+    """Outcome of the completeness metric."""
+
+    score: float
+    total_topics: int
+    covered_topics: int
+    coverage: list[TopicCoverage]
+
+
+def _build_completeness_prompt(report: str, topics: list[str]) -> str:
+    """Assemble the user message for the completeness judge."""
+    topic_lines = "\n".join(f"- {topic}" for topic in topics)
+    return (
+        f"Research briefing:\n\n{report}\n\n"
+        f"Topics expected to be covered:\n{topic_lines}"
+    )
+
+
+def _aggregate_coverage(
+    parsed: dict[str, Any], requested_topics: list[str]
+) -> CompletenessResult:
+    """Merge the judge's response with the requested topic list.
+
+    Defensively handles judge output shape: missing topics are treated as
+    uncovered with a note; extra / duplicate topics are ignored. The
+    result always has exactly `len(requested_topics)` entries, in the
+    same order as the input.
+    """
+    judged_map: dict[str, dict[str, Any]] = {}
+    raw_coverage = parsed.get("coverage", [])
+    if isinstance(raw_coverage, list):
+        for item in raw_coverage:
+            if isinstance(item, dict) and isinstance(item.get("topic"), str):
+                # Keep the first occurrence if judge duplicates a topic.
+                judged_map.setdefault(item["topic"], item)
+
+    coverage: list[TopicCoverage] = []
+    for topic in requested_topics:
+        item = judged_map.get(topic)
+        if item is None:
+            coverage.append(
+                TopicCoverage(
+                    topic=topic,
+                    covered=False,
+                    reason="Judge did not return a decision for this topic.",
+                )
+            )
+        else:
+            coverage.append(
+                TopicCoverage(
+                    topic=topic,
+                    covered=bool(item.get("covered", False)),
+                    reason=str(item.get("reason", "")),
+                )
+            )
+
+    covered = sum(1 for c in coverage if c["covered"])
+    total = len(requested_topics)
+    score = covered / total if total > 0 else 1.0
+
+    return CompletenessResult(
+        score=score,
+        total_topics=total,
+        covered_topics=covered,
+        coverage=coverage,
+    )
+
+
+def measure_completeness(
+    report: str,
+    expected_topics: list[str],
+) -> CompletenessResult:
+    """Score how many expected topics the report meaningfully covers.
+
+    Uses a single LLM-as-judge call: the judge sees the whole report and
+    the full topic list, and returns a per-topic covered / not-covered
+    decision with a short reason (see `docs/decisions/0006-*` for why
+    batched over per-topic).
+
+    Empty `expected_topics` returns `score=1.0` with `total_topics=0` —
+    the metric doesn't apply. Empty report is judged in the normal way
+    (typically returns all-uncovered).
+
+    Args:
+        report: Synthesized report markdown from the workflow.
+        expected_topics: Coverage targets from the benchmark query.
+
+    Returns:
+        `CompletenessResult` with aggregate score, counts, and per-topic
+        decisions.
+    """
+    if not expected_topics:
+        return CompletenessResult(
+            score=1.0,
+            total_topics=0,
+            covered_topics=0,
+            coverage=[],
+        )
+
+    user_prompt = _build_completeness_prompt(report, expected_topics)
+    parsed = call_llm_json(
+        prompt=user_prompt,
+        system_prompt=COMPLETENESS_SYSTEM_PROMPT,
+        max_tokens=2048,
+    )
+    return _aggregate_coverage(parsed, expected_topics)

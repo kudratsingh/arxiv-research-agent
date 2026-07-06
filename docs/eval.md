@@ -51,9 +51,13 @@ get scrutinized independently:
   `[Smith, 2023]`, `[Smith et al., 2023]`, `[Smith and Jones, 2023]`,
   year suffixes (`2023a`), and deduplicates repeated citations.
   Returns `{score, total_citations, resolved, unresolved}`.
-- **Completeness** — follow-up (`feat/eval-metrics-completeness`).
-  LLM-as-judge over `(report, expected_topic)`. Score = fraction of
-  the query's `expected_topics` the report actually covers.
+- **Completeness** — **landed** (this PR). Single batched LLM-as-judge
+  call — the judge sees the whole report plus the full topic list and
+  returns per-topic `covered` decisions with short reasons. Strict
+  prompt: name-dropping does not count. Aggregator defensively handles
+  missing / extra / malformed judge output. See ADR
+  [0006](decisions/0006-completeness-batched-judge.md) for the
+  batched-vs-per-topic tradeoff.
 - **Faithfulness** — follow-up (`feat/eval-metrics-faithfulness`).
   Per-claim decomposition + LLM-as-judge over `(claim, cited paper)`.
   Score = fraction of factual claims supported by their cited source.
