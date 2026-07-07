@@ -13,8 +13,13 @@ from pathlib import Path
 import fitz
 import requests
 
+from src.observability import get_logger
+from src.tools.http_session import build_retrying_session
+
 DEFAULT_CACHE_DIR = Path(".cache/pdfs")
 DOWNLOAD_TIMEOUT_SEC = 60
+
+log = get_logger(__name__)
 
 
 def _cache_key(pdf_url: str) -> str:
@@ -30,21 +35,37 @@ def _cache_key(pdf_url: str) -> str:
 
 
 def _download_pdf(pdf_url: str, dest: Path) -> bool:
-    """Download a PDF to `dest`. Returns True on success."""
+    """Download a PDF to `dest`. Returns True on success.
+
+    Uses a retrying session so transient 429s from arXiv's PDF host
+    don't drop us into abstract-only mode. A hard failure (bad URL,
+    non-PDF body, extraction throw) still returns False and the reader
+    falls back gracefully.
+    """
+    session = build_retrying_session()
     try:
-        resp = requests.get(
+        resp = session.get(
             pdf_url, timeout=DOWNLOAD_TIMEOUT_SEC, allow_redirects=True
         )
-    except (requests.RequestException, OSError) as e:
-        print(f"  [pdf_parser] download failed for {pdf_url}: {e}")
+    except (requests.RequestException, OSError) as exc:
+        log.warning(
+            "pdf_download_failed",
+            extra={"pdf_url": pdf_url, "error": str(exc)},
+        )
         return False
 
     if resp.status_code != 200:
-        print(f"  [pdf_parser] HTTP {resp.status_code} for {pdf_url}")
+        log.warning(
+            "pdf_download_http_error",
+            extra={"pdf_url": pdf_url, "status": resp.status_code},
+        )
         return False
 
     if not resp.content.startswith(b"%PDF-"):
-        print(f"  [pdf_parser] response for {pdf_url} is not a PDF")
+        log.warning(
+            "pdf_download_not_a_pdf",
+            extra={"pdf_url": pdf_url},
+        )
         return False
 
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -88,8 +109,11 @@ def parse_pdf(pdf_url: str, cache_dir: Path | str = DEFAULT_CACHE_DIR) -> str:
 
     try:
         text = _extract_text(pdf_path)
-    except (RuntimeError, OSError, ValueError) as e:
-        print(f"  [pdf_parser] extraction failed for {pdf_path}: {e}")
+    except (RuntimeError, OSError, ValueError) as exc:
+        log.warning(
+            "pdf_extraction_failed",
+            extra={"pdf_path": str(pdf_path), "error": str(exc)},
+        )
         return ""
 
     txt_path.write_text(text, encoding="utf-8")

@@ -146,6 +146,7 @@ class TestSummaryLine:
                 "citation_accuracy": {"score": 0.8},
                 "completeness": {"score": 0.6},
                 "faithfulness": {"score": 0.7},
+                "retrieval_recall": {"score": 0.85},
             },
             "state": {"quality_score": 0.75, "iteration": 2},
             "costs": {"total_cost_usd": 0.0421, "call_count": 33},
@@ -158,6 +159,7 @@ class TestSummaryLine:
             "citation_accuracy": 0.8,
             "completeness": 0.6,
             "faithfulness": 0.7,
+            "retrieval_recall": 0.85,
             "critic_score": 0.75,
             "iterations": 2,
             "cost_usd": 0.0421,
@@ -261,7 +263,7 @@ class _FakeApp:
     def __init__(self, state: ResearchState) -> None:
         self._state = state
 
-    def invoke(self, _initial: ResearchState) -> ResearchState:
+    def invoke(self, _initial: ResearchState, config: Any = None) -> ResearchState:
         return self._state
 
 
@@ -314,6 +316,16 @@ class TestRunAndScoreSuccess:
                 "claims": [],
             },
         )
+        monkeypatch.setattr(
+            runner_module,
+            "measure_retrieval_recall",
+            lambda *_: {
+                "score": 0.85,
+                "total_topics": 2,
+                "covered_topics": 2,
+                "coverage": [],
+            },
+        )
 
         record = _run_and_score(BENCHMARK_QUERIES[0])
 
@@ -326,6 +338,7 @@ class TestRunAndScoreSuccess:
         assert record["metrics"]["citation_accuracy"]["score"] == 0.9
         assert record["metrics"]["completeness"]["score"] == 0.6
         assert record["metrics"]["faithfulness"]["score"] == 0.7
+        assert record["metrics"]["retrieval_recall"]["score"] == 0.85
 
 
 class TestRunAndScoreError:

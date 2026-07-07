@@ -67,7 +67,11 @@ def run(query: str, run_id: str | None = None) -> str:
             "messages": [],
         }
 
-        final_state = app.invoke(initial_state)
+        # thread_id gates checkpoint isolation — one thread per run so
+        # resuming the same run picks up where it left off, and unrelated
+        # runs don't share state.
+        config = {"configurable": {"thread_id": run_id}}
+        final_state = app.invoke(initial_state, config=config)
 
         log.info(
             "run_completed",

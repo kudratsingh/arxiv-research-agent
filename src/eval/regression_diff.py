@@ -30,6 +30,7 @@ METRIC_FIELDS: tuple[str, ...] = (
     "citation_accuracy",
     "completeness",
     "faithfulness",
+    "retrieval_recall",
     "critic_score",
 )
 
@@ -268,8 +269,8 @@ def format_report(report: RegressionReport) -> str:
         "",
         "## Per-query",
         "",
-        "| Query | Status | Cit.Acc. Δ | Complete. Δ | Faithful. Δ | Critic Δ |",
-        "|---|---|---:|---:|---:|---:|",
+        "| Query | Status | Cit.Acc. Δ | Complete. Δ | Faithful. Δ | Recall Δ | Critic Δ |",
+        "|---|---|---:|---:|---:|---:|---:|",
     ]
     for diff in report["diffs"]:
         lines.append(
@@ -278,6 +279,7 @@ def format_report(report: RegressionReport) -> str:
             f"| {_fmt_delta(diff['deltas'].get('citation_accuracy'))} "
             f"| {_fmt_delta(diff['deltas'].get('completeness'))} "
             f"| {_fmt_delta(diff['deltas'].get('faithfulness'))} "
+            f"| {_fmt_delta(diff['deltas'].get('retrieval_recall'))} "
             f"| {_fmt_delta(diff['deltas'].get('critic_score'))} |"
         )
 

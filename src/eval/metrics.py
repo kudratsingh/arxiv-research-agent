@@ -1,15 +1,15 @@
-"""Metrics for the offline eval pipeline.
-
-Each metric lands as its own PR so its logic (and, where relevant, its
-LLM-as-judge prompt) gets reviewed on its own. Full strategy in
-`docs/eval.md`.
+"""Metrics for the offline eval pipeline. Full strategy in `docs/eval.md`.
 
 Landed:
   - citation_accuracy — pure regex + set membership, no LLM.
-  - completeness — batched LLM-as-judge over expected topics
-    (see ADR 0006).
+  - completeness — batched LLM-as-judge over expected topics on the
+    final report (see ADR 0006).
   - faithfulness — extract-and-judge in one call against cited paper
     abstracts (see ADR 0007).
+  - retrieval_recall — batched LLM-as-judge that asks whether the
+    *retrieved paper set* is enough to cover each expected topic.
+    Complements completeness by isolating retrieval-quality signal
+    from report-generation-quality signal (see ADR 0013).
 """
 
 import re
@@ -539,3 +539,188 @@ def measure_faithfulness(
         max_tokens=4096,
     )
     return _aggregate_claims(parsed, source_index)
+
+
+# ---------------------------------------------------------------------------
+# Retrieval recall — is the retrieved paper set enough to cover the topics?
+# ---------------------------------------------------------------------------
+
+RETRIEVAL_RECALL_SYSTEM_PROMPT = """\
+You are a strict retrieval-quality evaluator. Given a list of expected
+research topics and a list of paper titles + abstracts, decide for each
+topic whether AT LEAST ONE of the papers PLAUSIBLY COVERS it — i.e.
+whether that paper would be a useful primary or secondary source for
+writing about the topic.
+
+Definitions:
+  - "Plausibly covers" means: the abstract discusses the topic or an
+    obvious component / synonym of the topic. Do not require the
+    paper to be the definitive reference.
+  - A paper that only mentions the topic in passing does NOT count.
+  - You are evaluating the SEARCH results, not a final report. Do not
+    penalize a topic just because no single paper covers ALL of it.
+
+Return JSON matching this exact schema, no markdown fencing:
+{
+  "coverage": [
+    {"topic": "<verbatim topic>", "covered": true|false,
+     "paper_ids": [<0-based indices into the paper list>],
+     "reason": "<one short sentence>"}
+  ]
+}
+
+Include one object per input topic, in the same order. `paper_ids` is
+the list of paper indices you consider strong matches for the topic
+(empty when covered is false). Be strict — err toward "not covered"
+when the paper list doesn't clearly support the topic.
+"""
+
+
+class TopicRetrieval(TypedDict):
+    """Per-topic decision emitted by the retrieval recall judge."""
+
+    topic: str
+    covered: bool
+    paper_ids: list[int]
+    reason: str
+
+
+class RetrievalRecallResult(TypedDict):
+    """Outcome of the retrieval recall metric."""
+
+    score: float
+    total_topics: int
+    covered_topics: int
+    coverage: list[TopicRetrieval]
+
+
+def _build_retrieval_recall_prompt(
+    papers: list[PaperMetadata], expected_topics: list[str]
+) -> str:
+    """Assemble the user message for the retrieval recall judge."""
+    paper_block = "\n\n".join(
+        f"[{i}] {paper['title']}\n{paper['abstract']}"
+        for i, paper in enumerate(papers)
+    )
+    topic_lines = "\n".join(f"- {topic}" for topic in expected_topics)
+    return (
+        f"Retrieved papers:\n\n{paper_block}\n\n"
+        f"Topics expected to be covered:\n{topic_lines}"
+    )
+
+
+def _aggregate_retrieval(
+    parsed: dict[str, Any],
+    requested_topics: list[str],
+    n_papers: int,
+) -> RetrievalRecallResult:
+    """Merge judge output with the requested topic list, defensively.
+
+    Missing topics fall back to `covered=False`. Paper IDs are
+    clamped to valid indices — a judge that hallucinates an out-of-
+    range index gets the invalid IDs dropped rather than crashing.
+    """
+    judged_map: dict[str, dict[str, Any]] = {}
+    raw = parsed.get("coverage", [])
+    if isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, dict) and isinstance(item.get("topic"), str):
+                judged_map.setdefault(item["topic"], item)
+
+    coverage: list[TopicRetrieval] = []
+    for topic in requested_topics:
+        item = judged_map.get(topic)
+        if item is None:
+            coverage.append(
+                TopicRetrieval(
+                    topic=topic,
+                    covered=False,
+                    paper_ids=[],
+                    reason="Judge did not return a decision for this topic.",
+                )
+            )
+            continue
+
+        raw_ids = item.get("paper_ids", [])
+        clean_ids = [
+            int(pid)
+            for pid in raw_ids
+            if isinstance(pid, (int, bool)) and not isinstance(pid, bool)
+            and 0 <= int(pid) < n_papers
+        ]
+        coverage.append(
+            TopicRetrieval(
+                topic=topic,
+                covered=bool(item.get("covered", False)),
+                paper_ids=clean_ids,
+                reason=str(item.get("reason", "")),
+            )
+        )
+
+    covered = sum(1 for c in coverage if c["covered"])
+    total = len(requested_topics)
+    score = covered / total if total > 0 else 1.0
+
+    return RetrievalRecallResult(
+        score=score,
+        total_topics=total,
+        covered_topics=covered,
+        coverage=coverage,
+    )
+
+
+def measure_retrieval_recall(
+    papers: list[PaperMetadata],
+    expected_topics: list[str],
+) -> RetrievalRecallResult:
+    """Score whether the retrieved paper set plausibly covers each expected topic.
+
+    Complements `measure_completeness`: completeness asks "did the
+    *report* cover the topic?", retrieval recall asks "did we *find
+    the right papers* to cover the topic in the first place?"
+    Together they isolate whether a regression is retrieval-side
+    (search agent) or generation-side (reader / synthesizer).
+
+    Empty inputs short-circuit without an LLM call:
+      - No topics: `score=1.0`, `total_topics=0`.
+      - No papers with topics: `score=0.0`, all topics uncovered.
+
+    Args:
+        papers: `state["papers"]` — the search agent's ranked output.
+        expected_topics: Coverage targets from the benchmark query.
+
+    Returns:
+        `RetrievalRecallResult` with the aggregate score, counts, and
+        per-topic decisions annotated with the paper indices the judge
+        considered good matches.
+    """
+    if not expected_topics:
+        return RetrievalRecallResult(
+            score=1.0,
+            total_topics=0,
+            covered_topics=0,
+            coverage=[],
+        )
+    if not papers:
+        return RetrievalRecallResult(
+            score=0.0,
+            total_topics=len(expected_topics),
+            covered_topics=0,
+            coverage=[
+                TopicRetrieval(
+                    topic=topic,
+                    covered=False,
+                    paper_ids=[],
+                    reason="No papers retrieved.",
+                )
+                for topic in expected_topics
+            ],
+        )
+
+    user_prompt = _build_retrieval_recall_prompt(papers, expected_topics)
+    parsed = call_llm_json(
+        prompt=user_prompt,
+        system_prompt=RETRIEVAL_RECALL_SYSTEM_PROMPT,
+        max_tokens=2048,
+    )
+    return _aggregate_retrieval(parsed, expected_topics, len(papers))
