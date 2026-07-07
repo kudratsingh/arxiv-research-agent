@@ -27,7 +27,8 @@ Reads from `ResearchState`:
 Writes to `ResearchState`:
 
 - `next_action: str` — one of `plan / search / read / synthesize /
-  critique / stop`. Read by `route_after_supervisor`.
+  critique / stop`, plus `verify` when `enable_verifier` is on. Read
+  by `route_after_supervisor`.
 - `stop_reason: str` — populated only when `next_action == "stop"`.
   Known values: `quality_reached`, `budget_reached`,
   `max_iterations_reached`, `supervisor_stop`.
@@ -100,7 +101,8 @@ Rules-based routing that mirrors the fixed pipeline order:
 |---|---|---|
 | Anthropic 429 after retries | `call_llm_json` (Anthropic SDK layer) | Caught here; falls back to `_default_next_action`. Logged as `supervisor_llm_failed_fallback_to_default`. |
 | Malformed JSON | `call_llm_json` | Same — caught and fallback fires. |
-| Response chose `verify` (or another future action) | Validation | Falls back; logged as `supervisor_invalid_action_fallback` with the received value. Add to `VALID_ACTIONS` + `ACTION_TO_NODE` when the verifier lands. |
+| Response chose a disabled action (`verify` with `enable_verifier=False`, or any future flag-gated action) | Validation | Falls back to `_default_next_action`; logged as `supervisor_invalid_action_fallback` with the received value and the currently-available set. |
+| Response chose an action outside `VALID_ACTIONS` entirely | Validation | Same fallback path. |
 | Response returns `stop` with no `stop_reason` | Post-validation | Defaults to `supervisor_stop` so downstream analysis has a bucket. |
 | Response returns non-stop action with a `stop_reason` | Post-validation | `stop_reason` cleared to empty. |
 | Loop iterations exceed `max_loop_iterations` | Pre-LLM check | Returns `stop` with `stop_reason="max_iterations_reached"`. |
@@ -112,6 +114,9 @@ Rules-based routing that mirrors the fixed pipeline order:
 Settings that drive the supervisor (see `src/config.py`):
 
 - `enable_supervisor: bool = False` — master flag.
+- `enable_verifier: bool = False` — adds `verify` to the action enum
+  and wires the verifier node. Independent of `enable_supervisor` so
+  the two can be A/B'd separately. See ADR 0015.
 - `min_quality_score: float = 0.75` — mentioned in the prompt as a
   stop condition.
 - `max_cost_usd: float = 2.00` — pre-LLM budget check.
@@ -133,7 +138,7 @@ All env-overridable per ADR 0011.
 
 ## Follow-ups (tracked in `planning/05-agentic-upgrade-plan.md`)
 
-- `verify` action + verifier agent (item 4).
+- ~~`verify` action + verifier agent (item 4).~~ Landed — ADR 0015.
 - `EvidenceClaim` store + supervisor sees `evidence_gaps` (item 5).
 - Query refiner so "search again" is a real recovery action (item 6).
 - Reader-requests-more-chunks (item 7).

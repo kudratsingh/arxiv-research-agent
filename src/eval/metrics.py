@@ -352,7 +352,7 @@ class FaithfulnessResult(TypedDict):
     claims: list[ClaimJudgement]
 
 
-def _build_source_index(
+def build_source_index(
     papers: list[PaperMetadata], citations: list[Citation]
 ) -> dict[tuple[str, str], str]:
     """Join papers and citations on `paper_id` to produce a cite-key -> abstract map.
@@ -360,6 +360,10 @@ def _build_source_index(
     Returns `{(first-author-lastname-lower, 4-digit-year): abstract}` for
     every cited paper we have both a citation entry and a `PaperMetadata`
     entry for.
+
+    Public API — shared between the offline faithfulness metric (ADR
+    0007) and the runtime verifier agent (ADR 0015) so both use the
+    same citation-to-abstract join.
     """
     year_by_id: dict[str, str] = {}
     for citation in citations:
@@ -531,7 +535,7 @@ def measure_faithfulness(
             claims=[],
         )
 
-    source_index = _build_source_index(papers, citations)
+    source_index = build_source_index(papers, citations)
     user_prompt = _build_faithfulness_prompt(report, source_index)
     parsed = call_llm_json(
         prompt=user_prompt,

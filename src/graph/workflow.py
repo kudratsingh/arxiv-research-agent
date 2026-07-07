@@ -34,6 +34,7 @@ from src.agents.reader import reader_agent
 from src.agents.search import search_agent
 from src.agents.supervisor import route_after_supervisor, supervisor_agent
 from src.agents.synthesizer import synthesizer_agent
+from src.agents.verifier import verifier_agent
 from src.config import settings
 from src.graph.state import ResearchState
 from src.observability import traced_node
@@ -105,6 +106,11 @@ def _build_supervisor_loop(workflow: StateGraph) -> None:
     Every agent node hands control back to the supervisor when it
     finishes; the supervisor's conditional edge picks the next node
     or terminates.
+
+    The verifier node is only added when `settings.enable_verifier` is
+    on. When off, the supervisor's action enum excludes `verify` (see
+    `_available_actions` in the supervisor module), so this branch of
+    the conditional edge is unreachable.
     """
     workflow.add_node("supervisor", traced_node("supervisor", supervisor_agent))
     workflow.add_node("planner", traced_node("planner", planner_agent))
@@ -113,22 +119,23 @@ def _build_supervisor_loop(workflow: StateGraph) -> None:
     workflow.add_node("synthesizer", traced_node("synthesizer", synthesizer_agent))
     workflow.add_node("critic", traced_node("critic", critic_agent))
 
+    action_nodes = ["planner", "search", "reader", "synthesizer", "critic"]
+    route_map: dict[str, str] = {n: n for n in action_nodes}
+
+    if settings.enable_verifier:
+        workflow.add_node("verifier", traced_node("verifier", verifier_agent))
+        action_nodes.append("verifier")
+        route_map["verifier"] = "verifier"
+
     workflow.set_entry_point("supervisor")
 
     workflow.add_conditional_edges(
         "supervisor",
         route_after_supervisor,
-        {
-            "planner": "planner",
-            "search": "search",
-            "reader": "reader",
-            "synthesizer": "synthesizer",
-            "critic": "critic",
-            END: END,
-        },
+        {**route_map, END: END},
     )
 
-    for node in ("planner", "search", "reader", "synthesizer", "critic"):
+    for node in action_nodes:
         workflow.add_edge(node, "supervisor")
 
 

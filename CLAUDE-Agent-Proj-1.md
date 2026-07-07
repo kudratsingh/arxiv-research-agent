@@ -344,7 +344,13 @@ in `planning/`:
     LLM call, deterministic rules-based fallback on malformed judge
     output. See ADR [0014](docs/decisions/0014-supervisor-loop-behind-flag.md)
     and [`docs/agents/supervisor.md`](docs/agents/supervisor.md).
-  - [ ] Verifier agent (adds `verify` to `VALID_ACTIONS`).
+  - [x] Verifier agent behind `settings.enable_verifier` (default
+    off, independent of `enable_supervisor` so the two flags can be
+    A/B'd separately). Adds `verify` to the supervisor's action space;
+    reuses ADR-0007's calibrated faithfulness prompt with a
+    `recommended_action` extension. See ADR
+    [0015](docs/decisions/0015-verifier-agent-runtime-faithfulness.md)
+    and [`docs/agents/verifier.md`](docs/agents/verifier.md).
   - [ ] Evidence store with `EvidenceClaim` — verifier substrate.
   - [ ] Query refiner (so "search again" tries new queries).
   - [ ] Reader-requests-more-chunks (recovery at read layer).

@@ -59,6 +59,10 @@ def _empty_state(**overrides: Any) -> ResearchState:
         "next_action": "",
         "loop_iterations": 0,
         "stop_reason": "",
+        "verified": False,
+        "unsupported_claims": [],
+        "missing_evidence": [],
+        "verifier_recommendation": "",
         "messages": [],
     }
     base.update(overrides)
@@ -359,3 +363,104 @@ class TestActionEnumInvariants:
     def test_action_to_node_values_all_distinct(self) -> None:
         values = list(ACTION_TO_NODE.values())
         assert len(values) == len(set(values))
+
+
+# ---------------------------------------------------------------------------
+# Verifier gating — `verify` is only usable when enable_verifier is true.
+# ---------------------------------------------------------------------------
+
+
+class TestVerifierGating:
+    def test_available_actions_excludes_verify_by_default(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_verifier=False))
+        assert "verify" not in sup._available_actions()
+
+    def test_available_actions_includes_verify_when_enabled(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_verifier=True))
+        assert "verify" in sup._available_actions()
+
+    def test_verify_rejected_when_flag_off(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Judge picks verify but the flag is off — should fall back to default.
+        monkeypatch.setattr(sup, "settings", Settings(enable_verifier=False))
+        captured: dict[str, Any] = {}
+
+        def fake(
+            *, prompt: str, system_prompt: str, max_tokens: int
+        ) -> dict[str, Any]:
+            captured["system_prompt"] = system_prompt
+            return {"next_action": "verify", "reason": "check draft", "stop_reason": ""}
+
+        monkeypatch.setattr(sup, "call_llm_json", fake)
+        state = _empty_state(
+            sub_questions=["a"],
+            papers=[{"id": "x"}],  # type: ignore[list-item]
+            paper_analyses=[{"paper_id": "x"}],  # type: ignore[list-item]
+            draft_report="body",
+        )
+        result = supervisor_agent(state)
+        # verify not available -> default fallback for a state with a
+        # draft but no critique -> "critique".
+        assert result["next_action"] == "critique"
+        # Prompt shouldn't advertise `verify` either.
+        assert "verify" not in captured["system_prompt"].lower().split()
+
+    def test_verify_accepted_when_flag_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_verifier=True))
+
+        def fake(**_: Any) -> dict[str, Any]:
+            return {"next_action": "verify", "reason": "check draft", "stop_reason": ""}
+
+        monkeypatch.setattr(sup, "call_llm_json", fake)
+        state = _empty_state(draft_report="body")
+        result = supervisor_agent(state)
+        assert result["next_action"] == "verify"
+
+    def test_route_verify_reaches_verifier_node_when_enabled(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_verifier=True))
+        state = _empty_state(next_action="verify")
+        assert route_after_supervisor(state) == "verifier"
+
+    def test_route_verify_falls_to_end_when_disabled(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Defensive path: stale checkpoint carrying verify shouldn't wedge.
+        monkeypatch.setattr(sup, "settings", Settings(enable_verifier=False))
+        state = _empty_state(next_action="verify")
+        assert route_after_supervisor(state) == END
+
+    def test_summary_hides_verifier_fields_when_flag_off(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_verifier=False))
+        summary = _summarize_state(
+            _empty_state(verified=True, verifier_recommendation="revise_report")
+        )
+        assert "verified:" not in summary
+        assert "verifier_recommendation:" not in summary
+
+    def test_summary_includes_verifier_fields_when_flag_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_verifier=True))
+        summary = _summarize_state(
+            _empty_state(
+                verified=False,
+                unsupported_claims=["c1", "c2"],
+                missing_evidence=["m"],
+                verifier_recommendation="search_more",
+            )
+        )
+        assert "verified: False" in summary
+        assert "unsupported_claims: 2" in summary
+        assert "missing_evidence: 1" in summary
+        assert "verifier_recommendation: search_more" in summary

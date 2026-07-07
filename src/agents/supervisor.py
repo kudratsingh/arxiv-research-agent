@@ -32,9 +32,11 @@ from src.observability import current_costs, get_logger
 log = get_logger(__name__)
 
 # Strict action set. Any judge output outside this set falls back to
-# the deterministic pipeline-order routing.
+# the deterministic pipeline-order routing. `verify` is included here
+# but only presented to the LLM (and accepted from it) when
+# `settings.enable_verifier` is true — see `_available_actions`.
 VALID_ACTIONS: frozenset[str] = frozenset(
-    {"plan", "search", "read", "synthesize", "critique", "stop"}
+    {"plan", "search", "read", "synthesize", "critique", "verify", "stop"}
 )
 
 # Map action -> LangGraph node name for the router. Kept as a module
@@ -45,8 +47,32 @@ ACTION_TO_NODE: dict[str, str] = {
     "read": "reader",
     "synthesize": "synthesizer",
     "critique": "critic",
+    "verify": "verifier",
 }
 
+
+def _available_actions() -> frozenset[str]:
+    """Actions the supervisor is currently allowed to pick.
+
+    Filters `VALID_ACTIONS` by feature flags: `verify` is only
+    available when `settings.enable_verifier` is on. Reads `settings`
+    at call time so tests can monkeypatch the flag without re-
+    importing.
+    """
+    if settings.enable_verifier:
+        return VALID_ACTIONS
+    return VALID_ACTIONS - {"verify"}
+
+
+_VERIFY_ACTION_LINE = (
+    "- verify     : Runtime faithfulness check on the current draft "
+    "(reader + synthesizer must have run first)"
+)
+_VERIFY_DEVIATION_HINT = (
+    " Run verify after synthesize when a draft exists and the "
+    "verifier hasn't yet run on the latest draft; use its "
+    "`recommended_action` to pick the next step."
+)
 
 SUPERVISOR_SYSTEM_PROMPT = """\
 You are the supervisor of a multi-agent research workflow. On each
@@ -57,7 +83,7 @@ Available actions (choose exactly one):
 - search     : Search arXiv for papers matching current search queries
 - read       : Extract structured findings from retrieved papers
 - synthesize : Write or revise the research report from paper analyses
-- critique   : Score the current draft report for quality
+- critique   : Score the current draft report for quality{verify_action_line}
 - stop       : Finish the workflow
 
 Choose the action that best advances the workflow given progress so
@@ -71,11 +97,11 @@ far. Prefer STOP when:
 Follow the natural pipeline unless there's a clear reason to deviate:
 plan -> search -> read -> synthesize -> critique. Deviate to re-search
 when papers are weak, re-read when analyses miss context, re-plan when
-the critic flags missing coverage.
+the critic flags missing coverage.{verify_deviation_hint}
 
 Return JSON only, no markdown fencing:
 {{
-  "next_action": "plan|search|read|synthesize|critique|stop",
+  "next_action": "{action_enum}",
   "reason": "one-sentence justification",
   "stop_reason": "quality_reached|budget_reached|max_iterations_reached|supervisor_stop"
 }}
@@ -101,6 +127,15 @@ def _summarize_state(state: ResearchState) -> str:
         if critique_snippet
         else "critique_snippet: (none)"
     )
+    verifier_lines: list[str] = []
+    if settings.enable_verifier:
+        rec = state.get("verifier_recommendation", "") or "(none)"
+        verifier_lines = [
+            f"verified: {state.get('verified', False)}",
+            f"unsupported_claims: {len(state.get('unsupported_claims', []))}",
+            f"missing_evidence: {len(state.get('missing_evidence', []))}",
+            f"verifier_recommendation: {rec}",
+        ]
     return "\n".join(
         [
             f"query: {state.get('query', '(none)')}",
@@ -116,6 +151,7 @@ def _summarize_state(state: ResearchState) -> str:
             f"iteration: {state.get('iteration', 0)}",
             f"loop_iterations: {state.get('loop_iterations', 0)}",
             f"cost_usd: {cost_str}",
+            *verifier_lines,
             critique_display,
         ]
     )
@@ -218,11 +254,16 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
             "stop", "cost budget exhausted", "budget_reached", loop_iter
         )
 
+    available = _available_actions()
     user_prompt = _summarize_state(state)
+    verify_enabled = "verify" in available
     system_prompt = SUPERVISOR_SYSTEM_PROMPT.format(
         min_quality=settings.min_quality_score,
         max_cost=settings.max_cost_usd,
         max_iterations=settings.max_loop_iterations,
+        verify_action_line=("\n" + _VERIFY_ACTION_LINE) if verify_enabled else "",
+        verify_deviation_hint=_VERIFY_DEVIATION_HINT if verify_enabled else "",
+        action_enum="|".join(sorted(available)),
     )
 
     try:
@@ -248,10 +289,14 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
     reason = _clean_string(parsed.get("reason"))
     stop_reason = _clean_string(parsed.get("stop_reason"))
 
-    if action not in VALID_ACTIONS:
+    if action not in available:
         log.warning(
             "supervisor_invalid_action_fallback",
-            extra={"received": action, "parsed_keys": list(parsed.keys())},
+            extra={
+                "received": action,
+                "available": sorted(available),
+                "parsed_keys": list(parsed.keys()),
+            },
         )
         fallback = _default_next_action(state)
         return _emit(
@@ -277,12 +322,21 @@ def route_after_supervisor(state: ResearchState) -> str:
     """Conditional edge: translate `state['next_action']` to a node name.
 
     Returns the LangGraph node name (or `END`) to run next. Unknown /
-    missing actions map to `END` so the graph can never wedge.
+    missing actions map to `END` so the graph can never wedge. Actions
+    disabled by feature flags (e.g. `verify` when
+    `settings.enable_verifier=False`) also fall through to `END` — a
+    stale checkpoint carrying a disabled action can't wedge the graph.
     """
     from langgraph.graph import END
 
     action = state.get("next_action", "")
     if action == "stop":
+        return END
+    if action not in _available_actions():
+        log.warning(
+            "route_after_supervisor_disabled_action_endpoint",
+            extra={"action": action},
+        )
         return END
     node = ACTION_TO_NODE.get(action)
     if node is None:
