@@ -48,6 +48,11 @@ class ResearchState(TypedDict):
     `run_id` is a per-run identifier propagated through structured
     logs and cost tracking so a downstream analyzer can group every
     event by the workflow invocation that produced it.
+
+    Supervisor fields (`next_action`, `loop_iterations`, `stop_reason`)
+    are populated when the supervisor loop is enabled
+    (`settings.enable_supervisor`). They stay at their defaults under
+    the fixed pipeline.
     """
 
     run_id: str
@@ -63,4 +68,8 @@ class ResearchState(TypedDict):
     revision_needed: bool
     revision_target: str  # "planner" | "search" | "synthesizer"
     iteration: int
+    # Supervisor loop fields (unused under the fixed pipeline).
+    next_action: str
+    loop_iterations: int
+    stop_reason: str
     messages: Annotated[list, add_messages]

@@ -1,6 +1,16 @@
 """LangGraph workflow: wires agents together with conditional routing.
 
-Two production knobs configured here:
+Two workflow shapes are supported, chosen by `settings.enable_supervisor`:
+
+- **Fixed pipeline (default)**: planner -> search -> reader ->
+  synthesizer -> critic, with one conditional route from the critic
+  back to planner / search / synthesizer or to END.
+- **Supervisor loop**: START -> supervisor -> chosen node -> supervisor
+  -> ... -> stop. The supervisor picks the next action every turn
+  from a strict enum; unknown / bad actions fall back to the
+  fixed-pipeline order. See ADR 0014.
+
+Two production knobs configured here regardless of shape:
 
 - **Checkpointing** via `SqliteSaver` (ADR 0013 piece #2). Persists
   per-node state to `settings.checkpoint_db_path` so an interrupted
@@ -22,6 +32,7 @@ from src.agents.critic import critic_agent
 from src.agents.planner import planner_agent
 from src.agents.reader import reader_agent
 from src.agents.search import search_agent
+from src.agents.supervisor import route_after_supervisor, supervisor_agent
 from src.agents.synthesizer import synthesizer_agent
 from src.config import settings
 from src.graph.state import ResearchState
@@ -62,19 +73,8 @@ def _open_checkpointer(exit_stack: ExitStack) -> Any | None:
     return exit_stack.enter_context(cm)
 
 
-def build_workflow() -> Any:
-    """Construct and compile the research agent workflow graph.
-
-    When `settings.enable_checkpointing` is on, the compiled graph
-    persists state after each node so a run can be resumed by
-    invoking with `config={"configurable": {"thread_id": <run_id>}}`.
-
-    When `settings.enable_tracing` is on, every agent execution is
-    wrapped in an OpenTelemetry span (no-op wrapper otherwise so we
-    don't pay tracer overhead when disabled).
-    """
-    workflow = StateGraph(ResearchState)
-
+def _build_fixed_pipeline(workflow: StateGraph) -> None:
+    """Wire the classic planner -> search -> reader -> synthesizer -> critic path."""
     workflow.add_node("planner", traced_node("planner", planner_agent))
     workflow.add_node("search", traced_node("search", search_agent))
     workflow.add_node("reader", traced_node("reader", reader_agent))
@@ -97,6 +97,63 @@ def build_workflow() -> Any:
             END: END,
         },
     )
+
+
+def _build_supervisor_loop(workflow: StateGraph) -> None:
+    """Wire the supervisor -> action -> supervisor loop.
+
+    Every agent node hands control back to the supervisor when it
+    finishes; the supervisor's conditional edge picks the next node
+    or terminates.
+    """
+    workflow.add_node("supervisor", traced_node("supervisor", supervisor_agent))
+    workflow.add_node("planner", traced_node("planner", planner_agent))
+    workflow.add_node("search", traced_node("search", search_agent))
+    workflow.add_node("reader", traced_node("reader", reader_agent))
+    workflow.add_node("synthesizer", traced_node("synthesizer", synthesizer_agent))
+    workflow.add_node("critic", traced_node("critic", critic_agent))
+
+    workflow.set_entry_point("supervisor")
+
+    workflow.add_conditional_edges(
+        "supervisor",
+        route_after_supervisor,
+        {
+            "planner": "planner",
+            "search": "search",
+            "reader": "reader",
+            "synthesizer": "synthesizer",
+            "critic": "critic",
+            END: END,
+        },
+    )
+
+    for node in ("planner", "search", "reader", "synthesizer", "critic"):
+        workflow.add_edge(node, "supervisor")
+
+
+def build_workflow() -> Any:
+    """Construct and compile the research agent workflow graph.
+
+    Shape depends on `settings.enable_supervisor`:
+    - Off (default) — fixed pipeline with a single conditional edge on
+      the critic.
+    - On — supervisor loop; every agent hands control back to the
+      supervisor, which picks the next action or stops.
+
+    When `settings.enable_checkpointing` is on, the compiled graph
+    persists state after each node so a run can be resumed by
+    invoking with `config={"configurable": {"thread_id": <run_id>}}`.
+
+    When `settings.enable_tracing` is on, every agent execution is
+    wrapped in an OpenTelemetry span.
+    """
+    workflow = StateGraph(ResearchState)
+
+    if settings.enable_supervisor:
+        _build_supervisor_loop(workflow)
+    else:
+        _build_fixed_pipeline(workflow)
 
     # ExitStack keeps the SqliteSaver context alive for the compiled
     # graph's lifetime. We attach it to the compiled object so callers
