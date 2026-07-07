@@ -351,7 +351,16 @@ in `planning/`:
     `recommended_action` extension. See ADR
     [0015](docs/decisions/0015-verifier-agent-runtime-faithfulness.md)
     and [`docs/agents/verifier.md`](docs/agents/verifier.md).
-  - [ ] Evidence store with `EvidenceClaim` — verifier substrate.
+  - [x] Evidence store (substrate half): reader emits `EvidenceClaim`s
+    with `source_text` hydrated from ranked chunks, verifier switches
+    dossier from abstracts to chunks per paper. Behind
+    `settings.enable_evidence_store` (default off, independent of the
+    supervisor + verifier flags). Fixed pipeline stays byte-identical
+    to Sprint 1 baseline. See ADR
+    [0016](docs/decisions/0016-evidence-store-source-text-verifier.md).
+    Synthesizer swap deferred to item 5b.
+  - [ ] Synthesizer reads from `evidence` (item 5b) — every sentence
+    in the report traces to a claim ID.
   - [ ] Query refiner (so "search again" tries new queries).
   - [ ] Reader-requests-more-chunks (recovery at read layer).
   - [ ] Prompt-injection isolation on reader — severity upgraded now

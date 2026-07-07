@@ -16,7 +16,13 @@ from typing import Any
 import pytest
 
 from src.agents import verifier as verifier_module
-from src.agents.verifier import VALID_RECOMMENDATIONS, verifier_agent
+from src.agents.verifier import (
+    VALID_RECOMMENDATIONS,
+    _build_user_prompt,
+    _dossier_from_evidence,
+    verifier_agent,
+)
+from src.config import Settings
 from src.graph.state import ResearchState
 
 
@@ -43,6 +49,7 @@ def _empty_state(**overrides: Any) -> ResearchState:
         "unsupported_claims": [],
         "missing_evidence": [],
         "verifier_recommendation": "",
+        "evidence": [],
         "messages": [],
     }
     base.update(overrides)
@@ -355,3 +362,157 @@ class TestMalformedOutput:
         assert VALID_RECOMMENDATIONS == frozenset(
             {"read_more", "search_more", "revise_report", ""}
         )
+
+
+# ---------------------------------------------------------------------------
+# Evidence-store dossier (ADR 0016) — chunks replace abstracts when available.
+# ---------------------------------------------------------------------------
+
+
+def _mk_paper(paper_id: str = "p1", lastname: str = "Smith") -> Any:
+    return {
+        "id": paper_id,
+        "title": "T",
+        "authors": [f"Jane {lastname}"],
+        "abstract": "An abstract sentence.",
+        "url": "",
+        "pdf_url": "",
+    }
+
+
+def _mk_citation(paper_id: str = "p1", year: str = "2023", lastname: str = "Smith") -> Any:
+    return {
+        "paper_id": paper_id,
+        "title": "T",
+        "authors": [f"Jane {lastname}"],
+        "year": year,
+        "url": "",
+    }
+
+
+def _mk_claim(
+    paper_id: str = "p1",
+    section: str = "results",
+    text: str = "F1 rose from 0.62 to 0.78.",
+    score: float = 0.85,
+) -> Any:
+    return {
+        "claim": "F1 up.",
+        "paper_id": paper_id,
+        "section": section,
+        "source_text": text,
+        "relevance_score": score,
+        "supports_question": "",
+    }
+
+
+class TestDossierFromEvidence:
+    def test_cited_paper_with_evidence_uses_chunks(self) -> None:
+        dossier = _dossier_from_evidence(
+            [_mk_paper()],
+            [_mk_citation()],
+            [_mk_claim(text="F1 rose from 0.62 to 0.78.")],
+        )
+        assert "[Smith, 2023] — source chunks:" in dossier
+        assert "(results, relevance=0.85)" in dossier
+        assert "F1 rose from 0.62 to 0.78." in dossier
+        assert "An abstract sentence." not in dossier
+
+    def test_cited_paper_without_evidence_falls_back_to_abstract(self) -> None:
+        dossier = _dossier_from_evidence(
+            [_mk_paper()], [_mk_citation()], evidence=[]
+        )
+        assert "[Smith, 2023] — abstract (no chunks available):" in dossier
+        assert "An abstract sentence." in dossier
+
+    def test_uncited_paper_skipped(self) -> None:
+        # Uncited paper (Doe) + cited-but-missing paper (Smith citation
+        # with no matching paper metadata) -> both excluded, dossier
+        # ends up empty and returns the placeholder.
+        dossier = _dossier_from_evidence(
+            [_mk_paper("p2", lastname="Doe")], [_mk_citation()], []
+        )
+        assert "Doe" not in dossier
+        assert "no cited papers" in dossier
+
+    def test_cited_paper_and_uncited_paper_only_cited_appears(self) -> None:
+        # Both papers exist in metadata; only Smith is cited. Doe should
+        # be excluded from the dossier regardless.
+        dossier = _dossier_from_evidence(
+            [_mk_paper("p1", lastname="Smith"), _mk_paper("p2", lastname="Doe")],
+            [_mk_citation("p1", "2023", "Smith")],
+            [],
+        )
+        assert "[Smith, 2023]" in dossier
+        assert "Doe" not in dossier
+
+    def test_multiple_claims_per_paper_stacked(self) -> None:
+        dossier = _dossier_from_evidence(
+            [_mk_paper()],
+            [_mk_citation()],
+            [
+                _mk_claim(text="chunk one"),
+                _mk_claim(text="chunk two", section="method", score=0.9),
+            ],
+        )
+        assert dossier.count("[Smith, 2023]") == 1  # one block per paper
+        assert "chunk one" in dossier
+        assert "chunk two" in dossier
+        assert "(method, relevance=0.90)" in dossier
+
+    def test_no_citations_yields_placeholder(self) -> None:
+        assert _dossier_from_evidence([], [], []) == "(no cited papers with sources available)"
+
+
+class TestBuildUserPromptSourceSelection:
+    def test_flag_off_uses_abstract_dossier(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            verifier_module, "settings", Settings(enable_evidence_store=False)
+        )
+        state = _empty_state(
+            draft_report="body [Smith, 2023].",
+            papers=[_mk_paper()],
+            citations=[_mk_citation()],
+            evidence=[_mk_claim()],  # populated but flag off -> ignored
+        )
+        prompt = _build_user_prompt(state)
+        assert "Cited papers (abstracts):" in prompt
+        assert "An abstract sentence." in prompt
+        assert "Cited papers (ranked source chunks):" not in prompt
+
+    def test_flag_on_with_evidence_uses_chunks(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            verifier_module, "settings", Settings(enable_evidence_store=True)
+        )
+        state = _empty_state(
+            draft_report="body [Smith, 2023].",
+            papers=[_mk_paper()],
+            citations=[_mk_citation()],
+            evidence=[_mk_claim(text="F1 rose 62 to 78.")],
+        )
+        prompt = _build_user_prompt(state)
+        assert "Cited papers (ranked source chunks):" in prompt
+        assert "F1 rose 62 to 78." in prompt
+        # The chunk-based path doesn't ship the abstract for papers with claims.
+        assert "An abstract sentence." not in prompt
+
+    def test_flag_on_no_evidence_falls_back_to_abstract(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Flag on but reader produced no claims (e.g. all PDFs missing) —
+        # verifier should quietly fall through to the abstract path.
+        monkeypatch.setattr(
+            verifier_module, "settings", Settings(enable_evidence_store=True)
+        )
+        state = _empty_state(
+            draft_report="body [Smith, 2023].",
+            papers=[_mk_paper()],
+            citations=[_mk_citation()],
+            evidence=[],
+        )
+        prompt = _build_user_prompt(state)
+        assert "Cited papers (abstracts):" in prompt

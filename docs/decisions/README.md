@@ -45,6 +45,9 @@ never renumbered.
   behind a settings flag with strict-enum action space
 - [0015](0015-verifier-agent-runtime-faithfulness.md) — Verifier
   agent: runtime faithfulness check as a supervisor action
+- [0016](0016-evidence-store-source-text-verifier.md) — Evidence
+  store: reader emits `EvidenceClaim`, verifier judges against
+  `source_text`
 
 ## When to write an ADR
 

@@ -134,16 +134,39 @@ including this one.
   covering the `enable_verifier` flag (`verify` accepted / rejected,
   state summary contents, router behavior with stale checkpoints).
 
+## Source dossier — abstracts vs chunks (ADR 0016)
+
+The verifier's `_build_user_prompt` picks its dossier shape at call
+time:
+
+- **Chunks dossier** — when `settings.enable_evidence_store` is on
+  AND `state.evidence` is populated. Groups evidence claims by
+  cited paper, keyed by `[Author, Year]`, and emits each paper's
+  ranked chunks verbatim with `(section, relevance=X.XX)` headers.
+  Papers cited but lacking evidence (partial coverage) fall back to
+  their abstract inside the same block, marked as such — the judge
+  can then calibrate strictness per paper.
+- **Abstracts dossier** — default. Uses `build_source_index` (shared
+  with the offline faithfulness metric) so runtime and offline
+  judges read the same substrate.
+
+`VERIFIER_SYSTEM_PROMPT` describes both source shapes so the judge
+knows to treat chunks and abstracts differently — chunks are the
+strongest evidence; abstracts are a lower bound.
+
 ## Known limitations
 
-- **Abstract-only sources**. The verifier judges against paper
-  abstracts, inheriting ADR 0007's lower-bound behavior. Item 5 of
-  Sprint 2 (evidence store) will replace abstracts with the specific
-  ranked chunks the reader used, closing this gap.
+- **Reader-dependent substrate**. The verifier judges against chunks
+  only when the reader could extract them (PDF fetch + chunk + rank
+  succeeded). When any of those fail, the verifier silently falls
+  back to abstracts for that paper — same behavior as before ADR
+  0016 for that paper, just per-paper instead of per-run.
 - **No per-claim citation cross-check**. If the judge flags a claim
   whose only cited source we couldn't provide, we currently keep the
   claim rather than reclassifying it as `source_unavailable` (which is
   what the offline metric does). Deliberate: the alternative requires
   a per-claim citation index, and the supervisor's `missing_evidence`
-  handling covers this case orthogonally. Revisit alongside the
-  evidence store.
+  handling covers this case orthogonally.
+- **Synthesizer still writes from `paper_analyses`, not `evidence`**.
+  Sprint 2 item 5b will swap that so every sentence in the report
+  traces to a claim ID.

@@ -27,8 +27,9 @@ from typing import Any
 
 from langchain_core.messages import AIMessage
 
+from src.config import settings
 from src.eval.metrics import build_source_index
-from src.graph.state import ResearchState
+from src.graph.state import Citation, EvidenceClaim, PaperMetadata, ResearchState
 from src.llm import call_llm_json
 from src.observability import get_logger
 
@@ -48,21 +49,30 @@ VALID_RECOMMENDATIONS: frozenset[str] = frozenset(
 
 VERIFIER_SYSTEM_PROMPT = """\
 You are a runtime faithfulness verifier for a research-writing agent.
-Given a draft research report and the abstracts of its cited papers,
-extract every factual claim that carries an inline citation and judge
-whether the cited abstract SUPPORTS it. Then diagnose the failure mode
-and recommend a recovery action for the workflow's supervisor.
+Given a draft research report and source material for each cited
+paper, extract every factual claim that carries an inline citation
+and judge whether the source SUPPORTS it. Then diagnose the failure
+mode and recommend a recovery action for the workflow's supervisor.
+
+Source material comes in two shapes depending on what the reader
+extracted:
+  - **Source chunks** — verbatim excerpts from the paper's full text,
+    tagged with their section and relevance. Judge against these
+    when available; they are the strongest evidence.
+  - **Abstract fallback** — only the paper's abstract, marked
+    "abstract (no chunks available)". Judge more strictly here since
+    abstracts are a lower bound on what the paper actually claims.
 
 Definitions:
   - A "factual claim" is a statement that could be true or false about
     the world — a method exists, an approach works, a result was
     observed. Skip transitional prose, framing sentences, and generic
     background.
-  - "Supported" means the abstract states or clearly implies the
-    claim. Reasonable paraphrase is fine; adding facts absent from
-    the abstract is NOT.
-  - If a cited paper's abstract is not provided (marked "abstract
-    unavailable"), mark `supported=null` and treat as missing evidence.
+  - "Supported" means the source states or clearly implies the claim.
+    Reasonable paraphrase is fine; adding facts absent from the source
+    is NOT.
+  - If a cited paper has neither chunks nor an abstract, treat every
+    claim citing it as missing evidence.
 
 Recovery actions:
   - "read_more": the abstract likely does support the claim but the
@@ -89,26 +99,102 @@ and pick the single most impactful recovery action.
 """
 
 
-def _build_user_prompt(state: ResearchState) -> str:
-    """Assemble the user message: report + cited-paper dossier + open sub-questions.
+def _paper_cite_lastname(paper: PaperMetadata) -> str:
+    """First-author lowercased last name, or empty if unresolvable.
 
-    Reuses `build_source_index` from `src.eval.metrics` so the
-    citation-to-abstract join is identical to the offline metric — same
-    normalization, same lower-bound behavior when abstracts are
-    unavailable.
+    Same normalization as `build_source_index` so the two dossier
+    builders agree on which papers map to which cite keys.
+    """
+    authors = paper.get("authors", [])
+    if not authors or not authors[0].strip():
+        return ""
+    return authors[0].strip().split()[-1].lower()
+
+
+def _dossier_from_evidence(
+    papers: list[PaperMetadata],
+    citations: list[Citation],
+    evidence: list[EvidenceClaim],
+) -> str:
+    """Build a `[Author, Year]`-keyed dossier from evidence claims.
+
+    Groups evidence by paper_id, resolves each to its cite key against
+    the citation list (same key shape as `build_source_index`), and
+    emits one block per paper with all its evidence source_text
+    chunks. Falls back to the abstract for cited papers that have no
+    evidence claims (partial coverage) — that's the same conservative
+    behavior as the abstract-only path.
+    """
+    year_by_id: dict[str, str] = {}
+    for citation in citations:
+        year = citation["year"].strip()[:4]
+        if year:
+            year_by_id[citation["paper_id"]] = year
+
+    paper_by_id: dict[str, PaperMetadata] = {p["id"]: p for p in papers}
+
+    evidence_by_paper: dict[str, list[EvidenceClaim]] = {}
+    for claim in evidence:
+        evidence_by_paper.setdefault(claim["paper_id"], []).append(claim)
+
+    blocks: list[str] = []
+    for paper_id, year in year_by_id.items():
+        paper = paper_by_id.get(paper_id)
+        if paper is None:
+            continue
+        lastname = _paper_cite_lastname(paper)
+        if not lastname:
+            continue
+        cite_key = f"[{lastname.title()}, {year}]"
+
+        claims_for_paper = evidence_by_paper.get(paper_id, [])
+        if claims_for_paper:
+            chunk_blocks = [
+                f"({c['section']}, relevance={c['relevance_score']:.2f})\n{c['source_text']}"
+                for c in claims_for_paper
+            ]
+            body = "\n\n".join(chunk_blocks)
+            blocks.append(f"{cite_key} — source chunks:\n{body}\n")
+        else:
+            # Cited paper has no evidence claims (e.g. reader couldn't
+            # fetch its PDF). Fall back to the abstract so the judge
+            # isn't left blind on that paper.
+            blocks.append(
+                f"{cite_key} — abstract (no chunks available):\n{paper['abstract']}\n"
+            )
+
+    return "\n".join(blocks) or "(no cited papers with sources available)"
+
+
+def _build_user_prompt(state: ResearchState) -> str:
+    """Assemble the user message: report + cited-paper dossier + sub-questions.
+
+    Two dossier shapes:
+      - **Evidence path** (`enable_evidence_store=True` and `state.evidence`
+        populated): dossier lists the actual ranked chunks the reader
+        used, keyed by `[Author, Year]`. Judge decides against real
+        text — the ADR-0007 abstract limitation is closed here.
+      - **Abstract path** (default): uses `build_source_index` from
+        `src.eval.metrics` so the runtime and offline judges agree on
+        the abstract-only substrate.
     """
     report = state.get("draft_report", "")
     papers = state.get("papers", [])
     citations = state.get("citations", [])
     sub_questions = state.get("sub_questions", [])
+    evidence = state.get("evidence", [])
 
-    source_index = build_source_index(papers, citations)
-
-    dossier_lines: list[str] = []
-    for (lastname, year), abstract in source_index.items():
-        cite_key = f"[{lastname.title()}, {year}]"
-        dossier_lines.append(f"{cite_key}\n{abstract}\n")
-    dossier = "\n".join(dossier_lines) or "(no cited papers with abstracts available)"
+    if settings.enable_evidence_store and evidence:
+        dossier = _dossier_from_evidence(papers, citations, evidence)
+        dossier_label = "Cited papers (ranked source chunks):"
+    else:
+        source_index = build_source_index(papers, citations)
+        dossier_lines: list[str] = []
+        for (lastname, year), abstract in source_index.items():
+            cite_key = f"[{lastname.title()}, {year}]"
+            dossier_lines.append(f"{cite_key}\n{abstract}\n")
+        dossier = "\n".join(dossier_lines) or "(no cited papers with abstracts available)"
+        dossier_label = "Cited papers (abstracts):"
 
     sub_q_lines = "\n".join(f"  - {q}" for q in sub_questions) or "  (none)"
 
@@ -116,7 +202,7 @@ def _build_user_prompt(state: ResearchState) -> str:
         f"Research question: {state.get('query', '(unknown)')}\n\n"
         f"Sub-questions the report should cover:\n{sub_q_lines}\n\n"
         f"Draft report:\n\n{report}\n\n"
-        f"Cited papers (abstracts):\n\n{dossier}"
+        f"{dossier_label}\n\n{dossier}"
     )
 
 
