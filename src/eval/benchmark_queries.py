@@ -149,6 +149,127 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
         ],
         notes="Newer topic; tests search coverage of recent (2024+) work.",
     ),
+    BenchmarkQuery(
+        query_id="tool-use-agents",
+        query="How do modern LLM agents plan and execute tool-use across multi-step tasks?",
+        domain="agents",
+        expected_topics=[
+            "ReAct-style planning",
+            "tool selection and routing",
+            "error recovery from tool failures",
+            "trajectory-level evaluation",
+        ],
+        notes="Overlaps with agents / planning; report should distinguish "
+              "single-tool vs multi-tool composition.",
+    ),
+    BenchmarkQuery(
+        query_id="synthetic-data-training",
+        query="What role does synthetic data play in training frontier language models?",
+        domain="training",
+        expected_topics=[
+            "self-distillation and self-play",
+            "instruction generation pipelines",
+            "quality filtering and dedup",
+            "collapse and mode failure modes",
+        ],
+        notes="Meta-topic; expects coverage of both quality wins and pathologies.",
+    ),
+    BenchmarkQuery(
+        query_id="quantization-inference",
+        query="How do modern low-bit quantization methods trade off inference cost and quality?",
+        domain="efficiency",
+        expected_topics=[
+            "int4 / int8 post-training quantization",
+            "activation-aware weight quantization",
+            "kv-cache quantization",
+            "quality degradation on reasoning tasks",
+        ],
+        notes="Technical; second efficiency query — pairs with long-context-efficiency for coverage.",
+    ),
+    BenchmarkQuery(
+        query_id="in-context-learning-mechanisms",
+        query="What mechanisms explain in-context learning in transformer language models?",
+        domain="theory",
+        expected_topics=[
+            "induction heads and pattern completion",
+            "implicit gradient descent hypothesis",
+            "task vectors and skill localization",
+            "scaling and emergence claims",
+        ],
+        notes="Theoretical; report should note where evidence is mechanistic vs correlational.",
+    ),
+    BenchmarkQuery(
+        query_id="scaling-laws",
+        query="How have empirical scaling laws for language models evolved beyond the original Chinchilla results?",
+        domain="scaling",
+        expected_topics=[
+            "Chinchilla-optimal compute allocation",
+            "downstream-loss vs pretraining-loss decoupling",
+            "post-training / RLHF scaling",
+            "data quality vs quantity tradeoffs",
+        ],
+        notes="Historical + current; expects comparison of scaling regimes.",
+    ),
+    BenchmarkQuery(
+        query_id="jailbreak-robustness",
+        query="What defenses against LLM jailbreaks have proven robust in recent evaluations?",
+        domain="safety",
+        expected_topics=[
+            "adversarial suffix defenses",
+            "constitutional prompting",
+            "circuit-level interventions",
+            "evaluation methodology and reproducibility",
+        ],
+        notes="Adversarial; second safety query focused on robustness rather than agent-specific risks.",
+    ),
+    BenchmarkQuery(
+        query_id="reasoning-fine-tuning",
+        query="How do post-training methods like RLVR and STaR improve LLM reasoning?",
+        domain="reasoning",
+        expected_topics=[
+            "reinforcement learning with verifiable rewards",
+            "self-taught reasoner (STaR)",
+            "process reward models",
+            "compute allocation between pretraining and post-training",
+        ],
+        notes="Method-comparison; complements cot-reasoning-effects with post-training angle.",
+    ),
+    BenchmarkQuery(
+        query_id="speculative-decoding",
+        query="How do speculative decoding methods reduce LLM serving latency?",
+        domain="efficiency",
+        expected_topics=[
+            "draft model + verifier architectures",
+            "self-speculation techniques",
+            "tree-based / lookahead speculation",
+            "practical serving throughput gains",
+        ],
+        notes="Serving-time optimization; complements quantization + long-context queries.",
+    ),
+    BenchmarkQuery(
+        query_id="interpretability-methods",
+        query="What interpretability methods are used to understand LLM internal computations?",
+        domain="interpretability",
+        expected_topics=[
+            "sparse autoencoders",
+            "activation patching / causal tracing",
+            "probing and linear representations",
+            "known limitations of current methods",
+        ],
+        notes="Broad interp survey; expects methodology grouping.",
+    ),
+    BenchmarkQuery(
+        query_id="agentic-memory-architectures",
+        query="What memory architectures have been proposed for long-horizon LLM agents?",
+        domain="agents",
+        expected_topics=[
+            "episodic vs semantic memory stores",
+            "retrieval-based memory (MemGPT style)",
+            "summarization / distillation for context compression",
+            "eval methodology on long-horizon tasks",
+        ],
+        notes="Second agents query; complements tool-use-agents with a memory-architecture focus.",
+    ),
 ]
 
 

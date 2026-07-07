@@ -312,21 +312,57 @@ Full setup, targets, and troubleshooting in [`docs/development.md`](docs/develop
 - [x] Smoke tests for pure functions (dedupe, critic routing)
 - [x] README
 - [x] Phase 2: PDF parsing (`pdf_parser`, `chunker`, `chunk_ranker`, reader wired)
-- [x] Phase 3: Eval pipeline (10-query benchmark + 3 metrics + runner + `make eval`)
+- [x] Phase 3: Eval pipeline (20-query benchmark + 4 metrics + runner + `make eval`)
 - [x] Retry/backoff on Anthropic 429s (SDK-native, 4 retries + 120s timeout)
+- [x] Retry/backoff on arXiv API + PDF downloads (`urllib3.Retry` shared session)
 - [x] Nightly eval CI with regression detection (`.github/workflows/eval-nightly.yml`)
 - [x] Typed config via `pydantic-settings` (`src/config.py`)
 - [x] Structured JSON logging + `run_id` propagation (`src/observability/`)
 - [x] Per-run cost tracking (token counts + USD, per-model breakdown) — landed in `summary.jsonl`
+- [x] OpenTelemetry tracing (opt-in; `traced_node` wraps every agent)
+- [x] LangGraph SqliteSaver checkpointing (on by default; interrupt/resume)
+- [x] Expand benchmark queries 10 -> 20 (12+ distinct domains)
+- [x] Retrieval recall metric (batched LLM-as-judge; separates search from generation)
 
-Sprint 1 remaining:
-- [ ] arXiv retry / backoff (`feat/arxiv-download-retry`)
-- [ ] LangGraph SqliteSaver checkpointing (`feat/checkpointing-sqlite`)
-- [ ] Expand benchmark queries 10 -> 20 (`chore/expand-benchmark-queries`)
-- [ ] Retrieval recall metric (`feat/eval-metrics-retrieval-recall`)
-- [ ] OpenTelemetry tracing (`feat/otel-tracing`)
+**Sprint 1 complete.** 20+ merged PRs, 13 ADRs, 262+ tests. See
+[`planning/03-roadmap.md`](planning/03-roadmap.md) for the sprint-by-
+sprint log.
 
-Follow-up items (post-Sprint-1 backlog):
+## Next Phases (post-Sprint-1)
+
+The system is currently **agentic-lite** — five agents in a fixed
+DAG with one conditional edge on the critic. Sprint 2 turns this into
+a supervisor loop; Sprint 3 makes it deployable. Detailed plans live
+in `planning/`:
+
+- **Sprint 2 — go agentic**: build a supervisor loop, verifier
+  agent, evidence store, budget-based stopping. Full sequenced plan
+  with rationale in
+  [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md).
+  Prerequisite: freeze a 3-repeat baseline eval on the current fixed
+  pipeline so we can measure whether the loop pays for itself.
+- **Sprint 3 — recovery + retrieval iteration**: query refiner,
+  reader-requests-more-chunks, Semantic Scholar adapter, Claude
+  prompt caching, cost-aware model routing. Roadmap in
+  [`planning/03-roadmap.md`](planning/03-roadmap.md).
+- **Sprint 4 — deployable**: FastAPI + Docker + CI workflow +
+  paper cache. Roadmap in
+  [`planning/03-roadmap.md`](planning/03-roadmap.md).
+- **Portfolio polish (interleaves with Sprints 2-3)**: architecture
+  diagram, README demo, eval results table, "Production
+  considerations" section. Full checklist and sequencing in
+  [`planning/06-portfolio-polish.md`](planning/06-portfolio-polish.md).
+
+Follow-up items still on the backlog (see also
+[`docs/eval.md`](docs/eval.md)):
+
 - [ ] End-to-end test with LLM cassettes
 - [ ] Regression tracking issue bot (`feat/eval-regression-issue-bot`)
 - [ ] Cheaper eval judges via Haiku (`feat/eval-cheaper-judge`)
+- [ ] Prompt-injection isolation on the reader (**severity upgraded**
+  once the supervisor loop lands — see
+  [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md)
+  item 8)
+- [ ] `regression_diff` `METRIC_FIELDS` extended with `iterations`,
+  `llm_calls`, `cost_usd` — catches loop-induced cost creep before it
+  drowns quality wins

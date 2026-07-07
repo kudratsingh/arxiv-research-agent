@@ -117,6 +117,46 @@ class Settings(BaseSettings):
         description="Standard-library logging level name (DEBUG/INFO/WARNING/ERROR)",
     )
 
+    # ------ HTTP retry (arXiv API + PDF downloads) ---------------------
+    http_max_retries: int = Field(
+        default=3,
+        ge=0,
+        le=10,
+        description="Retries on 429/5xx for arXiv API and PDF downloads",
+    )
+    http_backoff_factor: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=10.0,
+        description="urllib3 Retry backoff_factor (delay = factor * 2**attempt)",
+    )
+
+    # ------ Checkpointing ---------------------------------------------
+    enable_checkpointing: bool = Field(
+        default=True,
+        description="Persist LangGraph state to SQLite for interrupt/resume",
+    )
+    checkpoint_db_path: str = Field(
+        default=".cache/checkpoints.sqlite",
+        description="SQLite file for the LangGraph SqliteSaver checkpointer",
+    )
+
+    # ------ Tracing (OpenTelemetry) -----------------------------------
+    enable_tracing: bool = Field(
+        default=False,
+        description="Emit OpenTelemetry spans around each agent node",
+    )
+    otel_service_name: str = Field(
+        default="arxiv-research-agent",
+        description="OTel `service.name` resource attribute",
+    )
+    otel_exporter_endpoint: str = Field(
+        default="",
+        description=(
+            "OTLP HTTP endpoint (e.g. http://localhost:4318). Empty = console exporter."
+        ),
+    )
+
 
 settings = Settings()
 """Module-level singleton. Import this everywhere instead of instantiating."""

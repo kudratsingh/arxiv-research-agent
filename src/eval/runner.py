@@ -42,6 +42,7 @@ from src.eval.metrics import (
     measure_citation_accuracy,
     measure_completeness,
     measure_faithfulness,
+    measure_retrieval_recall,
 )
 from src.graph.state import ResearchState
 from src.graph.workflow import build_workflow
@@ -92,21 +93,26 @@ def _serialize_state(state: ResearchState) -> dict[str, Any]:
 def _compute_metrics(
     state: ResearchState, benchmark_query: BenchmarkQuery
 ) -> dict[str, Any]:
-    """Score a completed run with all three metrics."""
+    """Score a completed run with all four metrics."""
     report = state.get("draft_report", "")
+    papers = state.get("papers", [])
+    topics = benchmark_query["expected_topics"]
     return {
         "citation_accuracy": dict(
             measure_citation_accuracy(report, state.get("citations", []))
         ),
         "completeness": dict(
-            measure_completeness(report, benchmark_query["expected_topics"])
+            measure_completeness(report, topics)
         ),
         "faithfulness": dict(
             measure_faithfulness(
                 report,
-                state.get("papers", []),
+                papers,
                 state.get("citations", []),
             )
+        ),
+        "retrieval_recall": dict(
+            measure_retrieval_recall(papers, topics)
         ),
     }
 
@@ -131,8 +137,9 @@ def _run_and_score(benchmark_query: BenchmarkQuery) -> dict[str, Any]:
     )
     try:
         app = build_workflow()
+        config = {"configurable": {"thread_id": run_id}}
         final_state = app.invoke(
-            _initial_state(benchmark_query["query"], run_id)
+            _initial_state(benchmark_query["query"], run_id), config=config
         )
     except Exception as exc:
         elapsed = time.monotonic() - start
@@ -215,6 +222,7 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
         "citation_accuracy": _get_score(metrics, "citation_accuracy"),
         "completeness": _get_score(metrics, "completeness"),
         "faithfulness": _get_score(metrics, "faithfulness"),
+        "retrieval_recall": _get_score(metrics, "retrieval_recall"),
         "critic_score": state.get("quality_score"),
         "iterations": state.get("iteration"),
         "cost_usd": costs.get("total_cost_usd"),
@@ -256,8 +264,8 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
         "",
         "## Per-query results",
         "",
-        "| Query | Cit.Acc. | Complete. | Faithful. | Critic | Iter | Sec | $ | Calls | Error |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        "| Query | Cit.Acc. | Complete. | Faithful. | Recall | Critic | Iter | Sec | $ | Calls | Error |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for record in records:
         s = _summary_line(record)
@@ -269,6 +277,7 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
                     _fmt(s["citation_accuracy"]),
                     _fmt(s["completeness"]),
                     _fmt(s["faithfulness"]),
+                    _fmt(s["retrieval_recall"]),
                     _fmt(s["critic_score"]),
                     _fmt(s["iterations"]),
                     _fmt(s["elapsed_sec"]),
@@ -291,6 +300,7 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             f"- Mean citation accuracy: {_mean(successful, 'citation_accuracy')}",
             f"- Mean completeness: {_mean(successful, 'completeness')}",
             f"- Mean faithfulness: {_mean(successful, 'faithfulness')}",
+            f"- Mean retrieval recall: {_mean(successful, 'retrieval_recall')}",
             f"- Mean critic score: {_mean(successful, 'critic_score')}",
             f"- Mean cost per query: {_mean(successful, 'cost_usd')}",
             f"- Mean LLM calls per query: {_mean(successful, 'llm_calls')}",

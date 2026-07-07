@@ -14,8 +14,9 @@ SLUG_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 
 class TestBenchmarkQueriesInvariants:
-    def test_query_set_is_non_empty_and_has_at_least_ten(self) -> None:
-        assert len(BENCHMARK_QUERIES) >= 10
+    def test_query_set_has_at_least_twenty(self) -> None:
+        # Sprint 1 target — expanded from the initial 10.
+        assert len(BENCHMARK_QUERIES) >= 20
 
     def test_query_ids_are_unique(self) -> None:
         ids = [q["query_id"] for q in BENCHMARK_QUERIES]

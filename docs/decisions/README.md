@@ -38,6 +38,9 @@ never renumbered.
   via `pydantic-settings`
 - [0012](0012-observability-core-logging-costs.md) — Observability core:
   stdlib JSON logging, ContextVar run scope, per-run cost tracking
+- [0013](0013-sprint-1-finish-retry-checkpoint-tracing-recall.md) —
+  Finish Sprint 1: shared HTTP retry, SQLite checkpointing, OTel
+  tracing, retrieval recall, expanded benchmark
 
 ## When to write an ADR
 

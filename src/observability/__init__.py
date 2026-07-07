@@ -26,17 +26,25 @@ from src.observability.logging import (
     propagate_run_context,
     reset_run_id,
 )
+from src.observability.tracing import (
+    configure_tracing,
+    get_tracer,
+    traced_node,
+)
 
 __all__ = [
     "JsonFormatter",
     "PRICES_USD_PER_MILLION",
     "RunCosts",
     "bind_run_id",
+    "configure_tracing",
     "current_costs",
     "current_run_id",
     "estimate_cost",
     "get_logger",
+    "get_tracer",
     "propagate_run_context",
     "record_llm_call",
     "reset_run_id",
+    "traced_node",
 ]

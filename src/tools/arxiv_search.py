@@ -1,28 +1,33 @@
 """arXiv API wrapper for searching and retrieving paper metadata."""
 
-import time
 import xml.etree.ElementTree as ET
 
 import requests
 
 from src.graph.state import PaperMetadata
+from src.observability import get_logger
+from src.tools.http_session import build_retrying_session
 
 ARXIV_API_URL = "http://arxiv.org/api/query"
 ATOM_NS = "{http://www.w3.org/2005/Atom}"
+
+log = get_logger(__name__)
 
 
 def search_arxiv(query: str, max_results: int = 5) -> list[PaperMetadata]:
     """Search arXiv for papers matching a query.
 
-    Uses the main arxiv.org API endpoint directly with requests
-    to avoid rate limiting issues with export.arxiv.org.
+    Uses the main arxiv.org API endpoint through a retrying session
+    (see `tools/http_session.build_retrying_session`) so transient
+    429s and 5xxs don't turn into empty result sets.
 
     Args:
         query: Search query string (keyword phrase).
         max_results: Maximum number of results to return per query.
 
     Returns:
-        List of paper metadata dicts.
+        List of paper metadata dicts. Empty list on hard failure —
+        callers fall back to mock data / continue with fewer papers.
     """
     params = {
         "search_query": f"all:{query}",
@@ -32,23 +37,23 @@ def search_arxiv(query: str, max_results: int = 5) -> list[PaperMetadata]:
         "sortOrder": "descending",
     }
 
+    session = build_retrying_session()
     try:
-        for attempt in range(3):
-            resp = requests.get(
-                ARXIV_API_URL, params=params, timeout=30, allow_redirects=True
-            )
-            if resp.status_code == 200 and "Rate exceeded" not in resp.text:
-                break
-            time.sleep(5 * (attempt + 1))
-        else:
-            print(f"  [search] arXiv rate limited for query: {query}")
-            return []
+        resp = session.get(
+            ARXIV_API_URL, params=params, timeout=30, allow_redirects=True
+        )
+    except (requests.RequestException, OSError) as exc:
+        log.warning(
+            "arxiv_search_request_failed",
+            extra={"query": query, "error": str(exc)},
+        )
+        return []
 
-        if "Rate exceeded" in resp.text:
-            print(f"  [search] arXiv rate limited for query: {query}")
-            return []
-    except (requests.RequestException, OSError) as e:
-        print(f"  [search] arXiv request failed for query '{query}': {e}")
+    if resp.status_code != 200 or "Rate exceeded" in resp.text:
+        log.warning(
+            "arxiv_search_rate_limited",
+            extra={"query": query, "status": resp.status_code},
+        )
         return []
 
     root = ET.fromstring(resp.text)
