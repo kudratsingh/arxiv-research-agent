@@ -32,10 +32,14 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
 - `src/agents/supervisor.py`: single-LLM-call decider with a strict
   enum action space (`plan | search | read | verify | synthesize |
   critique | stop`). Behind `settings.enable_supervisor: bool = False`.
-  Fixed pipeline stays as the default.
+  Fixed pipeline stays as the default. **DONE — ADR 0014.**
 - `src/agents/verifier.py`: promote ADR 0007's faithfulness judge
-  into an in-loop node. Runs before critic; can request more
-  search / read.
+  into an in-loop node. Adds `verify` to the supervisor's action
+  space; emits `verified / unsupported_claims / missing_evidence /
+  recommended_action`. Behind `settings.enable_verifier: bool =
+  False`, independent of `enable_supervisor` so the two features can
+  be A/B'd separately against the Sprint 1 baseline. **DONE — ADR
+  0015.**
 - `src/evidence/store.py`: `EvidenceClaim` TypedDict with
   `source_text` + `section` fields so verifier judges against
   chunks, not abstracts.

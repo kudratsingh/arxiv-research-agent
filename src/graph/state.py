@@ -53,6 +53,11 @@ class ResearchState(TypedDict):
     are populated when the supervisor loop is enabled
     (`settings.enable_supervisor`). They stay at their defaults under
     the fixed pipeline.
+
+    Verifier fields (`verified`, `unsupported_claims`, `missing_evidence`,
+    `verifier_recommendation`) are populated only when
+    `settings.enable_verifier` is on AND the supervisor picks `verify`.
+    See ADR 0015.
     """
 
     run_id: str
@@ -72,4 +77,9 @@ class ResearchState(TypedDict):
     next_action: str
     loop_iterations: int
     stop_reason: str
+    # Verifier fields (unused under the fixed pipeline or with verifier off).
+    verified: bool
+    unsupported_claims: list[str]
+    missing_evidence: list[str]
+    verifier_recommendation: str  # "read_more" | "search_more" | "revise_report" | ""
     messages: Annotated[list, add_messages]

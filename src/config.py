@@ -186,6 +186,15 @@ class Settings(BaseSettings):
             "`max_iterations` (critic-revision cap). Prevents thrash."
         ),
     )
+    enable_verifier: bool = Field(
+        default=False,
+        description=(
+            "Adds `verify` to the supervisor's action space. Independent "
+            "of `enable_supervisor` so the two can be A/B'd separately "
+            "against the Sprint 1 baseline. Verifier is a no-op under "
+            "the fixed pipeline. See ADR 0015."
+        ),
+    )
 
 
 settings = Settings()

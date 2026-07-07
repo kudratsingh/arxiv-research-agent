@@ -87,24 +87,30 @@ against the primary loop failure mode: quality holds steady but cost
 > loop lifted faithfulness from X.XX to Y.YY at Z% higher cost — or
 > it didn't, and that's a good story too."
 
-### 4. Verifier agent (~2 days) — **best effort:quality ratio**
+### 4. Verifier agent (~2 days) — **best effort:quality ratio** — **DONE**
 
-- **File:** `src/agents/verifier.py`
-- Promote the ADR-0007 offline faithfulness judge into an in-loop
-  node. Runs after synthesizer, before critic. Same prompt shape,
-  but the response drives the loop:
+- **File:** `src/agents/verifier.py` (ADR
+  [0015](../docs/decisions/0015-verifier-agent-runtime-faithfulness.md),
+  docs [`docs/agents/verifier.md`](../docs/agents/verifier.md)).
+- Promoted the ADR-0007 offline faithfulness judge into an in-loop
+  node. Behind `settings.enable_verifier: bool = False`, **independent
+  of `enable_supervisor`** so the loop and the verifier can be A/B'd
+  separately against the Sprint 1 baseline.
+- Response schema shipped:
   ```
   {
     verified: bool,
     unsupported_claims: [...],
     missing_evidence: [...],
-    recommended_action: "read_more" | "search_more" | "revise_report"
+    recommended_action: "read_more" | "search_more" | "revise_report" | ""
   }
   ```
-- Recommended action feeds into supervisor's next decision.
-- **Why this is the best ROI item:** the prompt already exists,
-  tested, calibrated. The unlock is the loop wiring, not new prompt
-  engineering.
+- Recommended action feeds into the supervisor's next decision — the
+  supervisor's system prompt gains a `verify` action line and a
+  deviation hint only when the flag is on.
+- Short-circuits for empty draft and no-citations paths (no LLM call
+  in either); conservative fallback on malformed judge output
+  (`verified=False, recommendation="revise_report"`).
 
 ### 5. Evidence store (~3 days) — verifier substrate
 

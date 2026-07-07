@@ -43,6 +43,8 @@ never renumbered.
   tracing, retrieval recall, expanded benchmark
 - [0014](0014-supervisor-loop-behind-flag.md) — Supervisor loop
   behind a settings flag with strict-enum action space
+- [0015](0015-verifier-agent-runtime-faithfulness.md) — Verifier
+  agent: runtime faithfulness check as a supervisor action
 
 ## When to write an ADR
 

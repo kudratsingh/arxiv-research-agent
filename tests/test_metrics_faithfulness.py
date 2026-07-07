@@ -1,6 +1,6 @@
 """Unit tests for the faithfulness metric.
 
-Pure helpers (`_build_source_index`, `_build_faithfulness_prompt`,
+Pure helpers (`build_source_index`, `_build_faithfulness_prompt`,
 `_aggregate_claims`, `_cite_key_from_string`) are tested directly.
 The full `measure_faithfulness` path is exercised once with
 `call_llm_json` monkeypatched — no real Claude calls, no network.
@@ -16,7 +16,7 @@ from src.eval.metrics import (
     FaithfulnessResult,
     _aggregate_claims,
     _build_faithfulness_prompt,
-    _build_source_index,
+    build_source_index,
     _cite_key_from_string,
     measure_faithfulness,
 )
@@ -56,7 +56,7 @@ class TestBuildSourceIndex:
             _mk_citation(paper_id="p1", year="2023", first_author="Jane Smith"),
             _mk_citation(paper_id="p2", year="2024", first_author="John Doe"),
         ]
-        index = _build_source_index(papers, citations)
+        index = build_source_index(papers, citations)
         assert index == {("smith", "2023"): "A1", ("doe", "2024"): "A2"}
 
     def test_paper_without_matching_citation_is_omitted(self) -> None:
@@ -65,7 +65,7 @@ class TestBuildSourceIndex:
             _mk_paper(paper_id="uncited", first_author="Nobody Cited"),
         ]
         citations = [_mk_citation(paper_id="p1", year="2023", first_author="Jane Smith")]
-        index = _build_source_index(papers, citations)
+        index = build_source_index(papers, citations)
         assert ("cited", "0000") not in index
         assert list(index.keys()) == [("smith", "2023")]
 
@@ -74,7 +74,7 @@ class TestBuildSourceIndex:
         citations = [
             _mk_citation(paper_id="p1", year="2023a", first_author="Jane Smith")
         ]
-        assert _build_source_index(papers, citations) == {
+        assert build_source_index(papers, citations) == {
             ("smith", "2023"): "Some abstract."
         }
 
@@ -90,12 +90,12 @@ class TestBuildSourceIndex:
             )
         ]
         citations = [_mk_citation(paper_id="p1", year="2023", first_author="X")]
-        assert _build_source_index(papers, citations) == {}
+        assert build_source_index(papers, citations) == {}
 
     def test_citation_without_year_omitted(self) -> None:
         papers = [_mk_paper(paper_id="p1", first_author="Jane Smith")]
         citations = [_mk_citation(paper_id="p1", year="", first_author="Jane Smith")]
-        assert _build_source_index(papers, citations) == {}
+        assert build_source_index(papers, citations) == {}
 
 
 class TestBuildFaithfulnessPrompt:
