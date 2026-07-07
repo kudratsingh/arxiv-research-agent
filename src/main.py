@@ -64,6 +64,9 @@ def run(query: str, run_id: str | None = None) -> str:
             "revision_needed": False,
             "revision_target": "",
             "iteration": 0,
+            "next_action": "",
+            "loop_iterations": 0,
+            "stop_reason": "",
             "messages": [],
         }
 

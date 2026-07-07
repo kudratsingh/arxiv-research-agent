@@ -32,7 +32,25 @@ METRIC_FIELDS: tuple[str, ...] = (
     "faithfulness",
     "retrieval_recall",
     "critic_score",
+    "iterations",
+    "llm_calls",
+    "cost_usd",
 )
+
+# Direction each metric should move for "improvement". Quality metrics
+# get better as they rise; cost / iteration / call-count metrics get
+# better as they fall. Anything not listed defaults to "higher_better"
+# so we don't silently mistreat a new field.
+METRIC_DIRECTIONS: dict[str, str] = {
+    "citation_accuracy": "higher_better",
+    "completeness": "higher_better",
+    "faithfulness": "higher_better",
+    "retrieval_recall": "higher_better",
+    "critic_score": "higher_better",
+    "iterations": "lower_better",
+    "llm_calls": "lower_better",
+    "cost_usd": "lower_better",
+}
 
 
 class QueryDiff(TypedDict):
@@ -104,13 +122,39 @@ def _score(record: dict[str, Any], field: str) -> float | None:
     return None
 
 
+def _is_regression(field: str, delta: float, threshold: float) -> bool:
+    """Whether a per-metric delta counts as a regression, per direction.
+
+    `higher_better` metrics regress when they drop by more than
+    threshold. `lower_better` metrics (cost, iterations, llm_calls)
+    regress when they *rise* by more than threshold.
+    """
+    direction = METRIC_DIRECTIONS.get(field, "higher_better")
+    if direction == "higher_better":
+        return delta < -threshold
+    return delta > threshold
+
+
+def _is_improvement(field: str, delta: float, threshold: float) -> bool:
+    """Symmetric of `_is_regression` — did this metric get meaningfully better?"""
+    direction = METRIC_DIRECTIONS.get(field, "higher_better")
+    if direction == "higher_better":
+        return delta > threshold
+    return delta < -threshold
+
+
 def _query_status(
     baseline: dict[str, Any] | None,
     current: dict[str, Any] | None,
     deltas: dict[str, float | None],
     threshold: float,
 ) -> str:
-    """Classify a single query's baseline-vs-current shape."""
+    """Classify a single query's baseline-vs-current shape.
+
+    Regression / improvement definitions honor per-metric direction —
+    `cost_usd` rising by more than threshold is a regression, not an
+    improvement, even though the raw delta is positive.
+    """
     if baseline is None and current is not None:
         return "new"
     if current is None and baseline is not None:
@@ -125,15 +169,16 @@ def _query_status(
     if baseline_err and not current_err:
         return "recovered"
 
-    # Regression = any metric dropped by more than threshold.
     regressed = any(
-        delta is not None and delta < -threshold for delta in deltas.values()
+        delta is not None and _is_regression(field, delta, threshold)
+        for field, delta in deltas.items()
     )
     if regressed:
         return "regressed"
 
     improved = any(
-        delta is not None and delta > threshold for delta in deltas.values()
+        delta is not None and _is_improvement(field, delta, threshold)
+        for field, delta in deltas.items()
     )
     if improved:
         return "improved"
@@ -269,8 +314,8 @@ def format_report(report: RegressionReport) -> str:
         "",
         "## Per-query",
         "",
-        "| Query | Status | Cit.Acc. Δ | Complete. Δ | Faithful. Δ | Recall Δ | Critic Δ |",
-        "|---|---|---:|---:|---:|---:|---:|",
+        "| Query | Status | Cit.Acc. Δ | Complete. Δ | Faithful. Δ | Recall Δ | Critic Δ | Iter Δ | Calls Δ | $ Δ |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for diff in report["diffs"]:
         lines.append(
@@ -280,7 +325,10 @@ def format_report(report: RegressionReport) -> str:
             f"| {_fmt_delta(diff['deltas'].get('completeness'))} "
             f"| {_fmt_delta(diff['deltas'].get('faithfulness'))} "
             f"| {_fmt_delta(diff['deltas'].get('retrieval_recall'))} "
-            f"| {_fmt_delta(diff['deltas'].get('critic_score'))} |"
+            f"| {_fmt_delta(diff['deltas'].get('critic_score'))} "
+            f"| {_fmt_delta(diff['deltas'].get('iterations'))} "
+            f"| {_fmt_delta(diff['deltas'].get('llm_calls'))} "
+            f"| {_fmt_delta(diff['deltas'].get('cost_usd'))} |"
         )
 
     errored = [d for d in report["diffs"] if d["status"] == "errored"]

@@ -81,6 +81,9 @@ def _initial_state(query: str, run_id: str) -> ResearchState:
         "revision_needed": False,
         "revision_target": "",
         "iteration": 0,
+        "next_action": "",
+        "loop_iterations": 0,
+        "stop_reason": "",
         "messages": [],
     }
 
@@ -227,6 +230,8 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
         "iterations": state.get("iteration"),
         "cost_usd": costs.get("total_cost_usd"),
         "llm_calls": costs.get("call_count"),
+        "loop_iterations": state.get("loop_iterations"),
+        "stop_reason": state.get("stop_reason"),
     }
 
 

@@ -29,6 +29,9 @@ def _line(
     completeness: float | None = None,
     faithfulness: float | None = None,
     critic_score: float | None = None,
+    iterations: float | None = None,
+    llm_calls: float | None = None,
+    cost_usd: float | None = None,
     error: str | None = None,
 ) -> dict[str, Any]:
     return {
@@ -37,6 +40,9 @@ def _line(
         "completeness": completeness,
         "faithfulness": faithfulness,
         "critic_score": critic_score,
+        "iterations": iterations,
+        "llm_calls": llm_calls,
+        "cost_usd": cost_usd,
         "error": error,
     }
 
@@ -98,6 +104,40 @@ class TestDiffSummariesClassification:
         report = diff_summaries(baseline, current, threshold=0.1)
         assert report["diffs"][0]["status"] == "improved"
         assert report["has_regressions"] is False
+
+    # Direction-aware: cost / iterations / llm_calls are `lower_better`.
+    def test_cost_rising_beyond_threshold_is_regression(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.50)}
+        report = diff_summaries(baseline, current, threshold=0.10)
+        assert report["diffs"][0]["status"] == "regressed"
+        assert report["has_regressions"] is True
+
+    def test_cost_dropping_beyond_threshold_is_improvement(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.50)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
+        report = diff_summaries(baseline, current, threshold=0.10)
+        assert report["diffs"][0]["status"] == "improved"
+        assert report["has_regressions"] is False
+
+    def test_iterations_rising_beyond_threshold_is_regression(self) -> None:
+        # loop-induced iteration runaway must show up as a regression.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, iterations=1)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, iterations=5)}
+        report = diff_summaries(baseline, current, threshold=1.0)
+        assert report["diffs"][0]["status"] == "regressed"
+
+    def test_llm_calls_rising_beyond_threshold_is_regression(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=30)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=90)}
+        report = diff_summaries(baseline, current, threshold=10.0)
+        assert report["diffs"][0]["status"] == "regressed"
+
+    def test_cost_within_threshold_is_unchanged(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.15)}
+        report = diff_summaries(baseline, current, threshold=0.10)
+        assert report["diffs"][0]["status"] == "unchanged"
 
     def test_new_query_in_current(self) -> None:
         baseline: dict[str, dict[str, Any]] = {}

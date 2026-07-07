@@ -51,6 +51,9 @@ class TestInitialState:
             "revision_needed",
             "revision_target",
             "iteration",
+            "next_action",
+            "loop_iterations",
+            "stop_reason",
             "messages",
         }
         assert set(state.keys()) == expected
@@ -164,6 +167,8 @@ class TestSummaryLine:
             "iterations": 2,
             "cost_usd": 0.0421,
             "llm_calls": 33,
+            "loop_iterations": None,
+            "stop_reason": None,
         }
 
     def test_error_record_has_none_metrics(self) -> None:

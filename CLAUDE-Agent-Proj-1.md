@@ -335,12 +335,23 @@ DAG with one conditional edge on the critic. Sprint 2 turns this into
 a supervisor loop; Sprint 3 makes it deployable. Detailed plans live
 in `planning/`:
 
-- **Sprint 2 — go agentic**: build a supervisor loop, verifier
-  agent, evidence store, budget-based stopping. Full sequenced plan
-  with rationale in
-  [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md).
-  Prerequisite: freeze a 3-repeat baseline eval on the current fixed
-  pipeline so we can measure whether the loop pays for itself.
+- **Sprint 2 — go agentic** (in progress):
+  - [x] `regression_diff` extended with `iterations`, `llm_calls`,
+    `cost_usd` — direction-aware classification so cost/iteration
+    creep counts as a regression, not an "improvement".
+  - [x] Supervisor loop behind `settings.enable_supervisor` (default
+    off). Strict-enum action space, budget short-circuits before the
+    LLM call, deterministic rules-based fallback on malformed judge
+    output. See ADR [0014](docs/decisions/0014-supervisor-loop-behind-flag.md)
+    and [`docs/agents/supervisor.md`](docs/agents/supervisor.md).
+  - [ ] Verifier agent (adds `verify` to `VALID_ACTIONS`).
+  - [ ] Evidence store with `EvidenceClaim` — verifier substrate.
+  - [ ] Query refiner (so "search again" tries new queries).
+  - [ ] Reader-requests-more-chunks (recovery at read layer).
+  - [ ] Prompt-injection isolation on reader — severity upgraded now
+    that routing depends on PDF-derived text.
+  - Full sequenced plan in
+    [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md).
 - **Sprint 3 — recovery + retrieval iteration**: query refiner,
   reader-requests-more-chunks, Semantic Scholar adapter, Claude
   prompt caching, cost-aware model routing. Roadmap in
@@ -363,6 +374,3 @@ Follow-up items still on the backlog (see also
   once the supervisor loop lands — see
   [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md)
   item 8)
-- [ ] `regression_diff` `METRIC_FIELDS` extended with `iterations`,
-  `llm_calls`, `cost_usd` — catches loop-induced cost creep before it
-  drowns quality wins

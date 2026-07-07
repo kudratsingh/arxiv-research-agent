@@ -41,6 +41,8 @@ never renumbered.
 - [0013](0013-sprint-1-finish-retry-checkpoint-tracing-recall.md) —
   Finish Sprint 1: shared HTTP retry, SQLite checkpointing, OTel
   tracing, retrieval recall, expanded benchmark
+- [0014](0014-supervisor-loop-behind-flag.md) — Supervisor loop
+  behind a settings flag with strict-enum action space
 
 ## When to write an ADR
 

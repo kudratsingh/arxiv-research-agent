@@ -157,6 +157,36 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ Supervisor loop (Sprint 2) --------------------------------
+    enable_supervisor: bool = Field(
+        default=False,
+        description=(
+            "Use the supervisor loop instead of the fixed pipeline. Off by "
+            "default so behavior stays stable; flip on to run the agentic path."
+        ),
+    )
+    min_quality_score: float = Field(
+        default=0.75,
+        ge=0.0,
+        le=1.0,
+        description="Supervisor stops when critic quality_score >= this",
+    )
+    max_cost_usd: float = Field(
+        default=2.00,
+        gt=0.0,
+        le=100.0,
+        description="Supervisor refuses further LLM calls above this per-run spend",
+    )
+    max_loop_iterations: int = Field(
+        default=20,
+        ge=1,
+        le=200,
+        description=(
+            "Hard cap on supervisor invocations per run — orthogonal to "
+            "`max_iterations` (critic-revision cap). Prevents thrash."
+        ),
+    )
+
 
 settings = Settings()
 """Module-level singleton. Import this everywhere instead of instantiating."""
