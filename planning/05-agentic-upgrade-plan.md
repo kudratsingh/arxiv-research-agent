@@ -58,8 +58,32 @@ against the primary loop failure mode: quality holds steady but cost
 ### 3. Supervisor agent (~3-5 days) — **the actual upgrade**
 
 - **File:** `src/agents/supervisor.py`
-- **State:** new `next_action: str` field; `settings.enable_supervisor:
-  bool = False` gate keeps the fixed pipeline default.
+- **State additions** (full list, all merged into `ResearchState`):
+  ```python
+  research_goal: str                # the original user query, immutable
+  next_action: str                  # supervisor's last decision
+  open_tasks: list[ResearchTask]    # see item 5.75 below
+  completed_tasks: list[ResearchTask]
+  evidence: list[EvidenceClaim]     # see item 5
+  tool_history: list[ToolCall]      # {tool, input, output_summary,
+                                    #  success, cost_usd, timestamp}
+  evidence_gaps: list[str]          # sub-questions with weak/no evidence
+  confidence: float                 # aggregate self-assessment
+  cost_budget_remaining: float      # updated after each LLM call
+  budget_used: dict[str, float]     # per-tool spend
+  stop_reason: str                  # "quality_reached" | "budget_reached" |
+                                    # "max_iterations_reached" | "no_progress"
+  ```
+- **Settings additions** (all in `src/config.py`):
+  ```python
+  enable_supervisor: bool = False        # keep fixed pipeline default
+  min_quality_score: float = 0.75        # supervisor stops above this
+  min_faithfulness_score: float = 0.85   # verifier-driven stop threshold
+  max_search_rounds: int = 3             # supervisor refuses more searches
+  max_reader_rounds: int = 2             # supervisor refuses more reads
+  max_cost_usd: float = 2.00             # supervisor stops above this
+  max_loop_iterations: int = 20          # hard cap orthogonal to critic's
+  ```
 - **Action enum (strict):** `plan | search | read | verify |
   synthesize | critique | stop`. Any judge response outside the enum
   → drop to the fixed pipeline's next step. Not a fatal error; a
@@ -121,6 +145,53 @@ against the primary loop failure mode: quality holds steady but cost
 - State: `evidence: list[EvidenceClaim]`, `open_questions:
   list[str]`, `evidence_gaps: list[str]`.
 
+### 5.5. Tool registry — turn each agent into a callable tool (~1 day)
+
+- **File:** `src/tools/tool_registry.py`
+- Right now agents are graph nodes only. The supervisor needs a
+  uniform tool interface to call them:
+  ```python
+  TOOLS: dict[str, ToolSpec] = {
+      "plan":       ToolSpec(fn=planner_agent,     args_schema=PlannerArgs),
+      "search":     ToolSpec(fn=search_agent,      args_schema=SearchArgs),
+      "read":       ToolSpec(fn=reader_agent,      args_schema=ReaderArgs),
+      "synthesize": ToolSpec(fn=synthesizer_agent, args_schema=SynthesizerArgs),
+      "critique":   ToolSpec(fn=critic_agent,      args_schema=CriticArgs),
+      "verify":     ToolSpec(fn=verifier_agent,    args_schema=VerifierArgs),
+      "refine_query": ToolSpec(fn=query_refiner,   args_schema=RefinerArgs),
+  }
+  ```
+- Each `ToolSpec` carries: the callable, a pydantic args schema, a
+  short description the supervisor prompt can read, and cost/latency
+  metadata the supervisor uses when reasoning about budgets.
+- **Why this matters:** with a registry, "add a new capability" is
+  "add a `ToolSpec`", not "rewrite `workflow.py`". Also unblocks the
+  MCP adapter later — MCP tools serialize from `ToolSpec` almost
+  directly.
+
+### 5.75. Research plan as first-class objects (~1 day)
+
+- **Type:** `ResearchTask` TypedDict added to `graph/state.py`:
+  ```python
+  class ResearchTask(TypedDict):
+      id: str                       # kebab-case slug
+      question: str                 # the sub-question in prose
+      status: Literal["not_started", "in_progress",
+                      "weak_evidence", "complete"]
+      search_queries: list[str]     # queries tried for this task
+      evidence_ids: list[str]       # EvidenceClaim IDs supporting it
+      confidence: float             # 0.0-1.0 self-assessed
+  ```
+- State: `open_tasks: list[ResearchTask]`,
+  `completed_tasks: list[ResearchTask]`.
+- Planner emits tasks (not just `sub_questions` — the current field
+  becomes a projection over `open_tasks[*].question` for
+  back-compat).
+- Supervisor picks the next action by looking at tasks with the
+  lowest `confidence` and the emptiest `evidence_ids`.
+- Synthesizer writes the report grouping by completed tasks — the
+  task structure becomes the report outline.
+
 ### 6. Query refiner (~2 days) — real recovery action
 
 - **File:** `src/agents/query_refiner.py`
@@ -152,6 +223,33 @@ to redirect the loop.
 - Never let untrusted text populate control tokens the supervisor
   reads.
 - Add a small adversarial-prompts test in `tests/test_reader.py`.
+
+### 8.5. Claim-first synthesis (~3 days) — cleaner reports, easier verification
+
+The reviewer's item 11. Rework synthesis from
+`analyses → report` to `evidence → claims → outline → report → verify → revise`.
+
+- **File:** `src/agents/claim_builder.py`
+- Takes: `list[EvidenceClaim]` (from the reader / evidence store).
+- Emits: `list[SupportedClaim]` — each with `claim_text`,
+  `supporting_evidence_ids: list[str]`, `confidence`. Deduplicates
+  overlapping claims across papers.
+- **File:** `src/agents/outline_builder.py`
+- Takes: `list[SupportedClaim]` + `list[ResearchTask]`.
+- Emits: a hierarchical outline mapping tasks → sections → claims.
+  Synthesizer walks this outline instead of free-forming from
+  paper analyses.
+- **Why this matters:**
+  - **Faithfulness by construction:** every sentence in the report
+    traces to a claim, and every claim traces to evidence. The
+    verifier's job becomes trivial: "does the report's claim set
+    equal `SupportedClaim[*]`?" instead of "extract claims from
+    prose then match them to sources."
+  - **Debuggability:** a bad report is now diagnosable at the
+    outline layer without re-running the whole workflow.
+  - **Interviews:** "I moved from prose-summary synthesis to
+    claim-first synthesis so the report is faithful by construction"
+    is a strong sentence.
 
 ### 9. Skills registry — **deferred to Sprint 6+**
 

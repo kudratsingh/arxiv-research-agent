@@ -328,6 +328,22 @@ Full setup, targets, and troubleshooting in [`docs/development.md`](docs/develop
 [`planning/03-roadmap.md`](planning/03-roadmap.md) for the sprint-by-
 sprint log.
 
+## Docs Map — where to look for what
+
+| I want to know... | Look in |
+|---|---|
+| What was decided and **why** (with alternatives considered) | [`docs/decisions/`](docs/decisions/) — 13 ADRs, indexed in [`README.md`](docs/decisions/README.md) |
+| The full **eval** strategy — taxonomy, metrics, judges, CI | [`docs/eval.md`](docs/eval.md) |
+| Per-agent **inputs/outputs/prompt/failure modes** | [`docs/agents/`](docs/agents/) (currently only `reader.md`; each new agent lands its page in the same PR) |
+| **Local dev**: venv, `make` targets, troubleshooting | [`docs/development.md`](docs/development.md) |
+| **Testing** strategy — tiers, markers, LLM-code conventions | [`docs/testing.md`](docs/testing.md) |
+| Roadmap and **what's next** by sprint | [`planning/03-roadmap.md`](planning/03-roadmap.md) |
+| The **Sprint 2 agentic-loop plan** — supervisor / verifier / evidence store / tool registry / claim-first synthesis, sequenced with success criteria | [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md) |
+| The **portfolio-polish plan** — architecture diagram, README demo, eval results table, Dockerfile, FastAPI, CI, "Production considerations" | [`planning/06-portfolio-polish.md`](planning/06-portfolio-polish.md) |
+| Enterprise-readiness gaps and prod-quality checklist | [`planning/01-enterprise-gaps.md`](planning/01-enterprise-gaps.md) |
+| Feature ideas (catalogued, not committed) | [`planning/02-feature-ideas.md`](planning/02-feature-ideas.md) |
+| Concrete refactors that unlock roadmap items | [`planning/04-architecture-refactors.md`](planning/04-architecture-refactors.md) |
+
 ## Next Phases (post-Sprint-1)
 
 The system is currently **agentic-lite** — five agents in a fixed
