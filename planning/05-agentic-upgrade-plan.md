@@ -112,20 +112,47 @@ against the primary loop failure mode: quality holds steady but cost
   in either); conservative fallback on malformed judge output
   (`verified=False, recommendation="revise_report"`).
 
-### 5. Evidence store (~3 days) — verifier substrate
+### 5. Evidence store — verifier substrate
 
-- **File:** `src/evidence/store.py`
-- **Type:** `EvidenceClaim` with `{claim, paper_id, section,
-  source_text, relevance_score, supports_question}`.
-- Reader stops emitting free-form summaries; emits `list[EvidenceClaim]`
-  keyed by which sub-question / open task each supports.
-- Verifier judges against `source_text` (real chunk), not against
-  abstracts. This is the concrete fix for the ADR-0007 known
-  limitation ("abstracts are a lower bound on paper content").
-- Synthesizer writes from claims, not paper analyses. Every
-  sentence in the report should trace to at least one claim ID.
-- State: `evidence: list[EvidenceClaim]`, `open_questions:
-  list[str]`, `evidence_gaps: list[str]`.
+Split into two halves so blast radius stays manageable:
+
+**5a. Substrate + verifier upgrade (~2 days) — DONE**
+
+- **Type:** `EvidenceClaim` TypedDict in `src/graph/state.py` with
+  `{claim, paper_id, section, source_text, relevance_score,
+  supports_question}`. Kept alongside `PaperAnalysis` in state; the
+  reader emits both under the flag.
+- **Reader** ships an evidence-path prompt (`EVIDENCE_SYSTEM_PROMPT`)
+  that extends the base analysis response with a `claims: [...]`
+  list. Each claim carries a 1-based `chunk_index` into numbered
+  ranked chunks; the reader hydrates `source_text` / `section` /
+  `relevance_score` server-side so those fields can't be
+  paraphrased by the LLM. Single LLM call per paper (unchanged);
+  `max_tokens` raised to 1536 on the evidence path.
+- **Verifier** picks its dossier at call time: `_dossier_from_evidence`
+  (chunks) when the flag is on and `state.evidence` is populated;
+  `build_source_index` (abstracts) otherwise. Papers cited but
+  lacking evidence claims fall back to their abstract in the same
+  dossier block.
+- Behind `settings.enable_evidence_store: bool = False`, **independent
+  of `enable_supervisor` / `enable_verifier`**. Fixed pipeline stays
+  byte-identical to Sprint 1 baseline (reader base-path prompts
+  unchanged). ADR
+  [0016](../docs/decisions/0016-evidence-store-source-text-verifier.md),
+  docs [`docs/agents/reader.md`](../docs/agents/reader.md) and
+  [`docs/agents/verifier.md`](../docs/agents/verifier.md).
+
+**5b. Synthesizer swap (~2 days) — NEXT**
+
+- Synthesizer prefers `state.evidence` over `paper_analyses` when
+  populated. Every sentence in the report should trace to at least
+  one claim ID.
+- Evidence-aware `open_questions: list[str]` and `evidence_gaps:
+  list[str]` state fields, produced by the verifier or a follow-up
+  agent so the supervisor can route to `search` / `read` with
+  concrete gap descriptions.
+- Update the completeness / citation-accuracy metrics if the swap
+  changes the report's shape enough to matter.
 
 ### 6. Query refiner (~2 days) — real recovery action
 

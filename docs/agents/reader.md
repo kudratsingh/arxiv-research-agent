@@ -105,6 +105,33 @@ Constants in `src/agents/reader.py`:
   response. Tracked as a follow-up.
 - E2E: covered by the workflow-level cassette suite (TODO).
 
+## Evidence store path (ADR 0016)
+
+When `settings.enable_evidence_store` is on, the reader's LLM call
+uses an extended prompt (`EVIDENCE_SYSTEM_PROMPT`) that also emits a
+`claims` list. Each claim carries a 1-based `chunk_index` into the
+numbered ranked-chunk block, and the reader hydrates
+`source_text` / `section` / `relevance_score` from the ranked chunk
+itself (server-side) so those fields can't be paraphrased by the LLM.
+The verifier consumes the resulting `EvidenceClaim`s to judge against
+real text instead of abstracts (ADR-0007's known limitation).
+
+Base-path prompts (`SYSTEM_PROMPT`, `_build_user_prompt`,
+`_gather_context`) stay byte-identical to the Sprint 1 baseline so
+`enable_evidence_store=False` runs are directly comparable to
+pre-flag results.
+
+Cost bounds:
+- `reader_max_claims_per_paper: int = 5` — per-paper claim cap.
+- Per-paper `max_tokens` raised to 1536 on the evidence path (base
+  path stays at 1024).
+- Per-paper LLM call count is unchanged (still one).
+
+Fallback: if the ranked-chunks list is empty (PDF unavailable, chunks
+filtered), the evidence path silently falls back to the base prompt
+and emits `evidence = []`. We do **not** fabricate `source_text` from
+the abstract.
+
 ## Follow-ups tracked in ADRs
 
 - Retry / backoff for arXiv PDF downloads
@@ -112,3 +139,5 @@ Constants in `src/agents/reader.py`:
 - Retry / backoff for Anthropic 429s (`feat/anthropic-retry`).
 - Per-paper `source: "fulltext" | "abstract"` field on `PaperAnalysis`
   for observability (`feat/reader-provenance`).
+- Synthesizer reading from `evidence` — the second half of Sprint 2
+  item 5, tracked in `planning/05-agentic-upgrade-plan.md`.

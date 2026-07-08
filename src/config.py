@@ -195,6 +195,25 @@ class Settings(BaseSettings):
             "the fixed pipeline. See ADR 0015."
         ),
     )
+    enable_evidence_store: bool = Field(
+        default=False,
+        description=(
+            "Reader also emits `EvidenceClaim`s traced to ranked chunks; "
+            "verifier judges against `source_text` instead of abstracts. "
+            "Independent of `enable_supervisor` / `enable_verifier` so "
+            "the substrate upgrade can be A/B'd separately. Fixed "
+            "pipeline stays unchanged. See ADR 0016."
+        ),
+    )
+    reader_max_claims_per_paper: int = Field(
+        default=5,
+        ge=1,
+        le=20,
+        description=(
+            "Cap on claims the reader extracts per paper when the "
+            "evidence store is enabled. Bounds prompt cost."
+        ),
+    )
 
 
 settings = Settings()

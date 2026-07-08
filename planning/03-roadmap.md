@@ -40,9 +40,12 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   False`, independent of `enable_supervisor` so the two features can
   be A/B'd separately against the Sprint 1 baseline. **DONE — ADR
   0015.**
-- `src/evidence/store.py`: `EvidenceClaim` TypedDict with
-  `source_text` + `section` fields so verifier judges against
-  chunks, not abstracts.
+- `src/graph/state.py`: `EvidenceClaim` TypedDict with
+  `source_text` + `section` + `relevance_score` fields so verifier
+  judges against chunks, not abstracts. Reader emits claims under
+  `settings.enable_evidence_store`; verifier picks its dossier at
+  call time. **DONE (5a) — ADR 0016.** Synthesizer swap deferred
+  to 5b.
 - `ResearchState` extensions: `next_action`, `tool_history`,
   `open_questions`, `evidence`, `stop_reason`,
   `cost_budget_remaining`, `iteration_count_per_tool`.
