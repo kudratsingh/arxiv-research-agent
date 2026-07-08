@@ -44,8 +44,11 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   `source_text` + `section` + `relevance_score` fields so verifier
   judges against chunks, not abstracts. Reader emits claims under
   `settings.enable_evidence_store`; verifier picks its dossier at
-  call time. **DONE (5a) — ADR 0016.** Synthesizer swap deferred
-  to 5b.
+  call time. **DONE (5a) — ADR 0016.**
+- Synthesizer prefers `state.evidence` over `paper_analyses` when
+  populated; grounded prompt forbids filling gaps from abstracts.
+  Same flag as 5a. Report output shape unchanged so downstream
+  metrics keep working. **DONE (5b) — ADR 0017.**
 - `ResearchState` extensions: `next_action`, `tool_history`,
   `open_questions`, `evidence`, `stop_reason`,
   `cost_budget_remaining`, `iteration_count_per_tool`.

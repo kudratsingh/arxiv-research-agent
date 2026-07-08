@@ -48,6 +48,8 @@ never renumbered.
 - [0016](0016-evidence-store-source-text-verifier.md) — Evidence
   store: reader emits `EvidenceClaim`, verifier judges against
   `source_text`
+- [0017](0017-synthesizer-evidence-swap.md) — Synthesizer prefers
+  `EvidenceClaim`s when available
 
 ## When to write an ADR
 

@@ -359,8 +359,13 @@ in `planning/`:
     to Sprint 1 baseline. See ADR
     [0016](docs/decisions/0016-evidence-store-source-text-verifier.md).
     Synthesizer swap deferred to item 5b.
-  - [ ] Synthesizer reads from `evidence` (item 5b) — every sentence
-    in the report traces to a claim ID.
+  - [x] Synthesizer reads from `evidence` when populated (item 5b).
+    Grounded prompt path forbids filling gaps from abstracts, tells
+    the LLM to route unsupported topics to "Open Questions". Same
+    `enable_evidence_store` flag as 5a; report output shape unchanged
+    so downstream metrics keep working. See ADR
+    [0017](docs/decisions/0017-synthesizer-evidence-swap.md) and
+    [`docs/agents/synthesizer.md`](docs/agents/synthesizer.md).
   - [ ] Query refiner (so "search again" tries new queries).
   - [ ] Reader-requests-more-chunks (recovery at read layer).
   - [ ] Prompt-injection isolation on reader — severity upgraded now
