@@ -142,17 +142,27 @@ Split into two halves so blast radius stays manageable:
   docs [`docs/agents/reader.md`](../docs/agents/reader.md) and
   [`docs/agents/verifier.md`](../docs/agents/verifier.md).
 
-**5b. Synthesizer swap (~2 days) — NEXT**
+**5b. Synthesizer swap (~1 day) — DONE**
 
 - Synthesizer prefers `state.evidence` over `paper_analyses` when
-  populated. Every sentence in the report should trace to at least
-  one claim ID.
-- Evidence-aware `open_questions: list[str]` and `evidence_gaps:
-  list[str]` state fields, produced by the verifier or a follow-up
-  agent so the supervisor can route to `search` / `read` with
-  concrete gap descriptions.
-- Update the completeness / citation-accuracy metrics if the swap
-  changes the report's shape enough to matter.
+  populated. `EVIDENCE_SYSTEM_PROMPT` adds grounding rules
+  ("every factual claim must trace to an evidence excerpt, missing
+  coverage goes to Open Questions, don't fill from abstracts"). Base
+  prompt kept byte-identical for baseline stability.
+- Evidence bank in the user prompt is grouped by `supports_question`
+  in planner order, sorted by relevance within group. Analyses block
+  is kept alongside for paper-shape context (methodology /
+  limitations) without inviting fabrication (analyses have never
+  been the factual source in the report).
+- Report output shape unchanged externally — no claim IDs embedded in
+  text, no schema changes, no metric churn. Gated by the same
+  `settings.enable_evidence_store` flag as 5a. ADR
+  [0017](../docs/decisions/0017-synthesizer-evidence-swap.md); docs
+  [`docs/agents/synthesizer.md`](../docs/agents/synthesizer.md).
+- Deferred (out of scope for 5b): evidence-aware completeness /
+  citation-accuracy metrics; `open_questions` / `evidence_gaps` state
+  fields with dedicated producers. Report body still surfaces open
+  questions in-markdown.
 
 ### 6. Query refiner (~2 days) — real recovery action
 
