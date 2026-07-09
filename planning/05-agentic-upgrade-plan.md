@@ -209,18 +209,33 @@ Split into two halves so blast radius stays manageable:
 - Abstract-only fallback forces `analysis_complete=False` regardless
   of LLM output so the supervisor sees the truth.
 
-### 8. Prompt-injection isolation on the reader (~2 days)
+### 8. Prompt-injection isolation on the reader (~1 day) — **DONE**
 
-Called out by the outside review and by our own
-[`01-enterprise-gaps.md`](01-enterprise-gaps.md). **This escalates in
-severity once the supervisor loop lands** because routing decisions
-depend on text influenced by arXiv PDFs. A malicious paper could try
-to redirect the loop.
-
-- Tag paper text as untrusted in the prompt.
-- Never let untrusted text populate control tokens the supervisor
-  reads.
-- Add a small adversarial-prompts test in `tests/test_reader.py`.
+- **Files:** `src/security/prompt_isolation.py` (new module),
+  `src/agents/reader.py` (wire-in), ADR
+  [0020](../docs/decisions/0020-prompt-injection-isolation-reader.md),
+  docs [`docs/security.md`](../docs/security.md).
+- Three defenses in depth:
+  1. **Delimiter isolation** — paper-derived text wrapped in
+     `<untrusted_paper_text>...</untrusted_paper_text>` tags in the
+     user prompt (close tags in content are escaped so the wrapper
+     can't be terminated by an attacker).
+  2. **System-prompt instruction** — `ISOLATION_SYSTEM_INSTRUCTION`
+     prepended, names both delimiter tags AND the exact control
+     fields it's protecting (`analysis_complete`,
+     `request_more_sections`, `missing_context`).
+  3. **Output sanitization** — `sanitize_control_string` scrubs
+     `missing_context` and `EvidenceClaim.claim`;
+     `sanitize_section_names` scrubs `request_more_sections`
+     (length cap, charset filter, jailbreak-marker regex).
+- Behind `settings.enable_prompt_isolation: bool = False`,
+  independent of every other Sprint 2 flag. **Recommended whenever
+  `enable_supervisor` is on** — the docs and the ADR say so
+  explicitly. Sprint 4 will make this default-on once baseline-
+  with-isolation eval numbers exist.
+- Adversarial tests in `tests/test_reader_isolation.py` (canned
+  jailbreaks in abstract, in LLM response, in evidence claim; both
+  flag positions).
 
 ### 9. Skills registry — **deferred to Sprint 6+**
 

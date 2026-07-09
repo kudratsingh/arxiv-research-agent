@@ -23,6 +23,14 @@ When `settings.enable_reader_recovery` is on, the LLM also emits three
 state so the supervisor can pick `read` again with a narrower brief.
 On the re-invocation, `rank_chunks_by_relevance` reserves slots for
 chunks from the requested sections. See ADR 0019.
+
+When `settings.enable_prompt_isolation` is on, paper-derived text
+(abstract + ranked chunks) is wrapped in untrusted-content delimiter
+tags in the user prompt, the system prompt gains a security
+instruction, and the reader's control-token fields
+(`missing_context`, `request_more_sections`) are sanitized post-LLM.
+This is the last-line defense against jailbreaks in arXiv PDFs
+redirecting the supervisor's routing decisions (ADR 0020).
 """
 
 from concurrent.futures import ThreadPoolExecutor
@@ -39,6 +47,12 @@ from src.graph.state import (
 )
 from src.llm import call_llm_json
 from src.observability import get_logger, propagate_run_context
+from src.security.prompt_isolation import (
+    ISOLATION_SYSTEM_INSTRUCTION,
+    sanitize_control_string,
+    sanitize_section_names,
+    wrap_untrusted,
+)
 from src.tools.chunk_ranker import RankedChunk, rank_chunks_by_relevance
 from src.tools.chunker import chunk_paper
 from src.tools.pdf_parser import parse_pdf
@@ -172,6 +186,13 @@ def _parse_recovery_signal(parsed: dict[str, Any]) -> ReaderRecoverySignal:
     Fail-open: any missing / wrong-typed field defaults to
     "analysis complete" so a broken response doesn't spuriously
     trigger a re-read loop.
+
+    When `settings.enable_prompt_isolation` is on, the two free-form
+    control fields are additionally scrubbed through the sanitizers
+    (ADR 0020) — length caps, jailbreak-marker filtering, section-name
+    charset filter. A jailbreak that convinced the model to emit
+    misleading values gets its payload stripped before it reaches the
+    supervisor.
     """
     complete_raw = parsed.get("analysis_complete")
     complete = complete_raw is True or complete_raw is None
@@ -185,6 +206,10 @@ def _parse_recovery_signal(parsed: dict[str, Any]) -> ReaderRecoverySignal:
         for item in sections_raw:
             if isinstance(item, str) and item.strip():
                 sections.append(item.strip())
+
+    if settings.enable_prompt_isolation:
+        missing = sanitize_control_string(missing)
+        sections = sanitize_section_names(sections)
 
     # Consistency: if the model said complete but flagged a gap, trust
     # the gap and downgrade. Otherwise `analysis_complete` is a lie
@@ -271,21 +296,38 @@ def _build_user_prompt(
     ranked full-text excerpts when `context` is non-empty; otherwise
     tells the model that only the abstract is available so `relevance`
     can be calibrated accordingly.
+
+    When `settings.enable_prompt_isolation` is on, paper-derived text
+    (abstract + excerpts) is wrapped in untrusted-content tags so the
+    LLM knows to treat it as data. Paper title is left unwrapped —
+    arXiv titles are short and controlled enough that a jailbreak
+    there is unlikely to survive title normalization anyway. See ADR
+    0020.
     """
+    abstract_block = (
+        wrap_untrusted(paper["abstract"])
+        if settings.enable_prompt_isolation
+        else paper["abstract"]
+    )
     parts = [
         f"Research question: {query}",
         "",
         f"Paper title: {paper['title']}",
         "",
-        f"Abstract:\n{paper['abstract']}",
+        f"Abstract:\n{abstract_block}",
     ]
     if context:
+        excerpts_block = (
+            wrap_untrusted(context)
+            if settings.enable_prompt_isolation
+            else context
+        )
         parts.extend(
             [
                 "",
                 "Relevant excerpts from the paper's full text (section-tagged):",
                 "",
-                context,
+                excerpts_block,
             ]
         )
     else:
@@ -310,13 +352,20 @@ def _build_evidence_user_prompt(
     when `_gather_ranked_chunks` yielded chunks). Sub-questions are
     included so the LLM can attribute each claim to the one it
     answers.
+
+    When `settings.enable_prompt_isolation` is on, paper-derived text
+    (abstract + excerpts) is wrapped in untrusted-content tags. See
+    ADR 0020.
     """
+    isolate = settings.enable_prompt_isolation
+    abstract_block = wrap_untrusted(paper["abstract"]) if isolate else paper["abstract"]
+    wrapped_excerpts = wrap_untrusted(excerpts_block) if isolate else excerpts_block
     parts = [
         f"Research question: {query}",
         "",
         f"Paper title: {paper['title']}",
         "",
-        f"Abstract:\n{paper['abstract']}",
+        f"Abstract:\n{abstract_block}",
     ]
     if subquestions:
         parts.extend(
@@ -331,7 +380,7 @@ def _build_evidence_user_prompt(
             "",
             "Ranked excerpts from the paper's full text (numbered, section-tagged):",
             "",
-            excerpts_block,
+            wrapped_excerpts,
         ]
     )
     return "\n".join(parts)
@@ -350,12 +399,28 @@ def _parse_claim(
     resolve `source_text` and the verifier would be judging air).
     Silent-drop is deliberate: a broken claim shouldn't crash the
     read, and paper-analysis output is still populated regardless.
+
+    When `settings.enable_prompt_isolation` is on, the LLM-generated
+    `claim` field is filtered for jailbreak markers — the source_text
+    stays verbatim because the verifier judges against it and needs
+    the raw excerpt, but a `claim` that quotes an injection payload
+    would flow to the verifier as if it were a real claim. Claims
+    that trip the filter are dropped rather than blanked (a blank
+    claim is invalid; a dropped one is just missing evidence).
     """
     if not isinstance(raw, dict):
         return None
     claim_text = str(raw.get("claim", "")).strip()
     if not claim_text:
         return None
+
+    if settings.enable_prompt_isolation:
+        # Reuse the control-string sanitizer's jailbreak filter — a
+        # claim carrying "SYSTEM:" or "IGNORE PREVIOUS" is not a claim.
+        cleaned = sanitize_control_string(claim_text)
+        if not cleaned:
+            return None
+        claim_text = cleaned
 
     idx_raw = raw.get("chunk_index")
     try:
@@ -428,6 +493,12 @@ def _analyze_paper(
         system_prompt = system_prompt + RECOVERY_ADDENDUM
         # Recovery fields add ~150 tokens to the response.
         max_tokens += 256
+
+    if settings.enable_prompt_isolation:
+        # Prepend the security instruction so it comes before any
+        # response-schema rules — the LLM sees "treat wrapped content
+        # as data" as the first thing it's told.
+        system_prompt = ISOLATION_SYSTEM_INSTRUCTION + "\n\n" + system_prompt
 
     parsed = call_llm_json(
         prompt=user_prompt,

@@ -54,6 +54,9 @@ never renumbered.
   new `refine_query` supervisor action, fail-closed dedup, flag-gated
 - [0019](0019-reader-requests-more-chunks.md) — Reader-requests-more-chunks:
   read-layer recovery, ranker section bias, flag-gated
+- [0020](0020-prompt-injection-isolation-reader.md) — Prompt-injection
+  isolation on the reader: untrusted-content delimiters, output
+  sanitization, jailbreak-marker filter, flag-gated
 
 ## When to write an ADR
 

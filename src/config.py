@@ -243,6 +243,17 @@ class Settings(BaseSettings):
             "unchanged. See ADR 0019."
         ),
     )
+    enable_prompt_isolation: bool = Field(
+        default=False,
+        description=(
+            "Wrap PDF-derived text in untrusted-content tags in reader "
+            "prompts and sanitize reader control-field outputs. "
+            "Recommended whenever `enable_supervisor` is on because "
+            "supervisor routing now consumes reader-emitted control "
+            "signals derived from arXiv text. Default off to preserve "
+            "Sprint 1 baseline byte-for-byte. See ADR 0020."
+        ),
+    )
 
 
 settings = Settings()
