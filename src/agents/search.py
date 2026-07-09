@@ -1,4 +1,11 @@
-"""Search agent: queries arXiv, deduplicates, and ranks papers by relevance."""
+"""Search agent: queries arXiv, deduplicates, and ranks papers by relevance.
+
+When `settings.enable_semantic_scholar` is on, the search agent also
+fetches one-hop references from Semantic Scholar for the top-K arXiv
+seed papers and unions them into the candidate pool before the final
+relevance ranking. Sprint 1 baseline is preserved byte-identical when
+the flag is off. See ADR 0023.
+"""
 
 import time
 
@@ -8,6 +15,10 @@ from src.config import settings
 from src.graph.state import PaperMetadata, ResearchState
 from src.tools.arxiv_search import deduplicate_papers, search_arxiv
 from src.tools.embeddings import rank_papers_by_relevance
+from src.tools.semantic_scholar import (
+    _arxiv_url_to_s2_id,
+    get_references,
+)
 
 MOCK_PAPERS: list[PaperMetadata] = [
     PaperMetadata(
@@ -53,13 +64,47 @@ MOCK_PAPERS: list[PaperMetadata] = [
 ]
 
 
+def _enrich_with_s2_references(
+    query: str, seed_papers: list[PaperMetadata]
+) -> list[PaperMetadata]:
+    """Fetch one-hop references from Semantic Scholar for the top-K seeds.
+
+    The seeds are pre-ranked by embedding similarity to the query, so
+    we walk the highest-relevance arXiv papers and pull their cited
+    references. Skips seeds that lack an arXiv ID (S2 needs an
+    external ID form to look up references reliably). Silent on
+    per-seed failures — enrichment is best-effort and must never
+    derail the workflow.
+
+    Returned papers are `PaperMetadata` mapped by the S2 adapter, so
+    they dedupe against arXiv results by paper ID (arXiv URL wins
+    whenever the reference has an arXiv external ID).
+    """
+    seed_count = settings.semantic_scholar_seed_count
+    refs_per_seed = settings.semantic_scholar_refs_per_seed
+    if seed_count <= 0 or refs_per_seed <= 0:
+        return []
+
+    pre_ranked = rank_papers_by_relevance(query, seed_papers, top_k=seed_count)
+    references: list[PaperMetadata] = []
+    for seed in pre_ranked:
+        s2_id = _arxiv_url_to_s2_id(seed["id"])
+        # Skip non-arXiv, non-S2 ids to avoid guessing at S2 lookup format.
+        if not (s2_id.startswith("ARXIV:") or s2_id and not s2_id.startswith("http")):
+            continue
+        fetched = get_references(s2_id, limit=refs_per_seed)
+        references.extend(fetched)
+    return references
+
+
 def search_agent(state: ResearchState) -> dict:
     """Search arXiv for papers matching the planned search queries.
 
     Runs each search query against the arXiv API, deduplicates results
-    by paper ID, then ranks by embedding similarity to the original
-    research question. Caps at 10 papers. Falls back to mock data if
-    arXiv is unavailable.
+    by paper ID, optionally enriches via Semantic Scholar's citation
+    graph (ADR 0023), then ranks by embedding similarity to the
+    original research question. Caps at `settings.max_papers`. Falls
+    back to mock data if arXiv is unavailable.
 
     Args:
         state: Current research workflow state with search_queries populated.
@@ -86,18 +131,34 @@ def search_agent(state: ResearchState) -> dict:
         print("  [search] Using mock paper data (arXiv unavailable)")
         unique_papers = MOCK_PAPERS
 
+    s2_reference_count = 0
+    if (
+        settings.enable_semantic_scholar
+        and unique_papers is not MOCK_PAPERS
+    ):
+        s2_papers = _enrich_with_s2_references(query, unique_papers)
+        s2_reference_count = len(s2_papers)
+        # `deduplicate_papers` keys off `id`; arXiv-URL ids collide with
+        # S2 references that carry an arXiv external ID, so the union
+        # is naturally deduped.
+        unique_papers = deduplicate_papers(unique_papers + s2_papers)
+
     ranked_papers = rank_papers_by_relevance(
         query, unique_papers, top_k=settings.max_papers
     )
+
+    if s2_reference_count:
+        source_label = f"arXiv + {s2_reference_count} S2 references"
+    elif not all_papers:
+        source_label = "mock data"
+    else:
+        source_label = "arXiv"
 
     return {
         "papers": ranked_papers,
         "messages": [
             AIMessage(
-                content=(
-                    f"Found {len(ranked_papers)} papers "
-                    f"({'mock data' if not all_papers else 'arXiv'})."
-                ),
+                content=f"Found {len(ranked_papers)} papers ({source_label}).",
                 name="search",
             )
         ],

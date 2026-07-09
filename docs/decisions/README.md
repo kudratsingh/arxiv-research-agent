@@ -62,6 +62,9 @@ never renumbered.
 - [0022](0022-anthropic-prompt-caching.md) — Anthropic prompt caching
   for agent system prompts: `cache_system` flag on `call_llm`, cache
   read/write cost tracking, flag-gated
+- [0023](0023-semantic-scholar-citation-graph.md) — Semantic Scholar
+  adapter + one-hop reference enrichment in the search agent,
+  flag-gated
 
 ## When to write an ADR
 

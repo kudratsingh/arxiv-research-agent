@@ -323,6 +323,52 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ Semantic Scholar (ADR 0023, Sprint 3) ---------------------
+    enable_semantic_scholar: bool = Field(
+        default=False,
+        description=(
+            "Enrich arXiv search results with Semantic Scholar's "
+            "citation graph. Search agent fetches one-hop references "
+            "for the top-K arXiv seed papers and unions them with the "
+            "arXiv set before ranking. Broader retrieval (conferences, "
+            "journals) + related work discovery via cited papers. "
+            "Default off preserves Sprint 1 baseline. See ADR 0023."
+        ),
+    )
+    semantic_scholar_api_key: str = Field(
+        default="",
+        description=(
+            "Optional Semantic Scholar API key. Unset = anonymous rate "
+            "limit (~100 req / 5 min per IP); set = 1 req/sec sustained."
+        ),
+    )
+    semantic_scholar_seed_count: int = Field(
+        default=3,
+        ge=0,
+        le=10,
+        description=(
+            "How many top-ranked arXiv papers to expand via S2 "
+            "references. Zero disables enrichment even with the flag "
+            "on. Bounds outbound S2 API calls per run."
+        ),
+    )
+    semantic_scholar_refs_per_seed: int = Field(
+        default=3,
+        ge=1,
+        le=20,
+        description=(
+            "How many references to fetch per seed paper (one-hop). "
+            "Total S2 references per run bounded at "
+            "`seed_count * refs_per_seed`."
+        ),
+    )
+    semantic_scholar_timeout_sec: float = Field(
+        default=30.0,
+        gt=0.0,
+        le=120.0,
+        description="Per-request timeout for S2 API calls.",
+    )
+
 
 settings = Settings()
 """Module-level singleton. Import this everywhere instead of instantiating."""
