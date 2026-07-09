@@ -27,8 +27,9 @@ Reads from `ResearchState`:
 Writes to `ResearchState`:
 
 - `next_action: str` — one of `plan / search / read / synthesize /
-  critique / stop`, plus `verify` when `enable_verifier` is on. Read
-  by `route_after_supervisor`.
+  critique / stop`, plus `verify` when `enable_verifier` is on and
+  `refine_query` when `enable_query_refiner` is on. Read by
+  `route_after_supervisor`.
 - `stop_reason: str` — populated only when `next_action == "stop"`.
   Known values: `quality_reached`, `budget_reached`,
   `max_iterations_reached`, `supervisor_stop`.
@@ -117,6 +118,9 @@ Settings that drive the supervisor (see `src/config.py`):
 - `enable_verifier: bool = False` — adds `verify` to the action enum
   and wires the verifier node. Independent of `enable_supervisor` so
   the two can be A/B'd separately. See ADR 0015.
+- `enable_query_refiner: bool = False` — adds `refine_query` to the
+  action enum and wires the query_refiner node. Independent of every
+  other Sprint 2 flag. See ADR 0018.
 - `min_quality_score: float = 0.75` — mentioned in the prompt as a
   stop condition.
 - `max_cost_usd: float = 2.00` — pre-LLM budget check.
@@ -139,7 +143,9 @@ All env-overridable per ADR 0011.
 ## Follow-ups (tracked in `planning/05-agentic-upgrade-plan.md`)
 
 - ~~`verify` action + verifier agent (item 4).~~ Landed — ADR 0015.
-- `EvidenceClaim` store + supervisor sees `evidence_gaps` (item 5).
+- ~~`EvidenceClaim` store + verifier judges chunks (item 5a).~~ Landed — ADR 0016.
+- ~~Synthesizer reads from evidence (item 5b).~~ Landed — ADR 0017.
+- ~~`refine_query` action + query refiner (item 6).~~ Landed — ADR 0018.
 - Query refiner so "search again" is a real recovery action (item 6).
 - Reader-requests-more-chunks (item 7).
 - Prompt-injection isolation on the reader (item 8) — **severity

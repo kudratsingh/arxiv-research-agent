@@ -32,11 +32,21 @@ from src.observability import current_costs, get_logger
 log = get_logger(__name__)
 
 # Strict action set. Any judge output outside this set falls back to
-# the deterministic pipeline-order routing. `verify` is included here
-# but only presented to the LLM (and accepted from it) when
-# `settings.enable_verifier` is true — see `_available_actions`.
+# the deterministic pipeline-order routing. `verify` and `refine_query`
+# are included here but only presented to the LLM (and accepted from
+# it) when their respective feature flags are on — see
+# `_available_actions`.
 VALID_ACTIONS: frozenset[str] = frozenset(
-    {"plan", "search", "read", "synthesize", "critique", "verify", "stop"}
+    {
+        "plan",
+        "search",
+        "read",
+        "synthesize",
+        "critique",
+        "verify",
+        "refine_query",
+        "stop",
+    }
 )
 
 # Map action -> LangGraph node name for the router. Kept as a module
@@ -48,20 +58,26 @@ ACTION_TO_NODE: dict[str, str] = {
     "synthesize": "synthesizer",
     "critique": "critic",
     "verify": "verifier",
+    "refine_query": "query_refiner",
 }
 
 
 def _available_actions() -> frozenset[str]:
     """Actions the supervisor is currently allowed to pick.
 
-    Filters `VALID_ACTIONS` by feature flags: `verify` is only
-    available when `settings.enable_verifier` is on. Reads `settings`
-    at call time so tests can monkeypatch the flag without re-
-    importing.
+    Filters `VALID_ACTIONS` by feature flags:
+    - `verify` when `settings.enable_verifier` is on
+    - `refine_query` when `settings.enable_query_refiner` is on
+
+    Reads `settings` at call time so tests can monkeypatch the flag
+    without re-importing.
     """
-    if settings.enable_verifier:
-        return VALID_ACTIONS
-    return VALID_ACTIONS - {"verify"}
+    available = set(VALID_ACTIONS)
+    if not settings.enable_verifier:
+        available.discard("verify")
+    if not settings.enable_query_refiner:
+        available.discard("refine_query")
+    return frozenset(available)
 
 
 _VERIFY_ACTION_LINE = (
@@ -74,6 +90,17 @@ _VERIFY_DEVIATION_HINT = (
     "`recommended_action` to pick the next step."
 )
 
+_REFINE_ACTION_LINE = (
+    "- refine_query : Generate fresh search queries targeted at "
+    "coverage gaps (do NOT re-run the same weak search)"
+)
+_REFINE_DEVIATION_HINT = (
+    " Prefer refine_query over another `search` when the last search "
+    "returned few / weak papers or when the verifier reports "
+    "missing_evidence — the refiner produces new queries; `search` "
+    "alone would re-run the failing ones."
+)
+
 SUPERVISOR_SYSTEM_PROMPT = """\
 You are the supervisor of a multi-agent research workflow. On each
 step, you decide the next action based on the current state.
@@ -83,7 +110,7 @@ Available actions (choose exactly one):
 - search     : Search arXiv for papers matching current search queries
 - read       : Extract structured findings from retrieved papers
 - synthesize : Write or revise the research report from paper analyses
-- critique   : Score the current draft report for quality{verify_action_line}
+- critique   : Score the current draft report for quality{verify_action_line}{refine_action_line}
 - stop       : Finish the workflow
 
 Choose the action that best advances the workflow given progress so
@@ -97,7 +124,7 @@ far. Prefer STOP when:
 Follow the natural pipeline unless there's a clear reason to deviate:
 plan -> search -> read -> synthesize -> critique. Deviate to re-search
 when papers are weak, re-read when analyses miss context, re-plan when
-the critic flags missing coverage.{verify_deviation_hint}
+the critic flags missing coverage.{verify_deviation_hint}{refine_deviation_hint}
 
 Return JSON only, no markdown fencing:
 {{
@@ -136,6 +163,11 @@ def _summarize_state(state: ResearchState) -> str:
             f"missing_evidence: {len(state.get('missing_evidence', []))}",
             f"verifier_recommendation: {rec}",
         ]
+    refiner_lines: list[str] = []
+    if settings.enable_query_refiner:
+        refiner_lines = [
+            f"tried_search_queries: {len(state.get('tried_search_queries', []))}",
+        ]
     return "\n".join(
         [
             f"query: {state.get('query', '(none)')}",
@@ -152,6 +184,7 @@ def _summarize_state(state: ResearchState) -> str:
             f"loop_iterations: {state.get('loop_iterations', 0)}",
             f"cost_usd: {cost_str}",
             *verifier_lines,
+            *refiner_lines,
             critique_display,
         ]
     )
@@ -257,12 +290,15 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
     available = _available_actions()
     user_prompt = _summarize_state(state)
     verify_enabled = "verify" in available
+    refine_enabled = "refine_query" in available
     system_prompt = SUPERVISOR_SYSTEM_PROMPT.format(
         min_quality=settings.min_quality_score,
         max_cost=settings.max_cost_usd,
         max_iterations=settings.max_loop_iterations,
         verify_action_line=("\n" + _VERIFY_ACTION_LINE) if verify_enabled else "",
         verify_deviation_hint=_VERIFY_DEVIATION_HINT if verify_enabled else "",
+        refine_action_line=("\n" + _REFINE_ACTION_LINE) if refine_enabled else "",
+        refine_deviation_hint=_REFINE_DEVIATION_HINT if refine_enabled else "",
         action_enum="|".join(sorted(available)),
     )
 
