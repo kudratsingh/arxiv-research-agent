@@ -505,6 +505,7 @@ def _analyze_paper(
         system_prompt=system_prompt,
         model_name=settings.reader_model or None,
         max_tokens=max_tokens,
+        cache_system=settings.enable_prompt_caching,
     )
 
     analysis = PaperAnalysis(

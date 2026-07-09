@@ -38,12 +38,32 @@ PRICES_USD_PER_MILLION: dict[str, dict[str, float]] = {
 _FALLBACK_MODEL = "claude-sonnet-4-6"
 
 
-def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+# Anthropic prompt-caching multipliers (see ADR 0022):
+#   Cache read: 10% of the base input token price.
+#   Cache write (creation): 125% of the base input token price
+#     (25% premium on the first call that stores the cache).
+# `input_tokens` from the API's `usage` reflects only the non-cached
+# portion when caching is used, so the three token buckets are
+# additive at billing time.
+_CACHE_READ_MULTIPLIER = 0.10
+_CACHE_WRITE_MULTIPLIER = 1.25
+
+
+def estimate_cost(
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cache_read_input_tokens: int = 0,
+    cache_creation_input_tokens: int = 0,
+) -> float:
     """Return the estimated cost in USD for a completed LLM call.
 
     Falls back to Sonnet pricing when the model isn't in the table (and
     logs a warning). This prevents silent under-reporting when we
     onboard a new model without updating the table.
+
+    Cache tokens are priced separately: reads at 10% of the base input
+    rate, writes at 125% (Anthropic's 25% first-write premium).
     """
     prices = PRICES_USD_PER_MILLION.get(model)
     if prices is None:
@@ -52,9 +72,15 @@ def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
             extra={"model": model, "fallback": _FALLBACK_MODEL},
         )
         prices = PRICES_USD_PER_MILLION[_FALLBACK_MODEL]
+    input_price_per_token = prices["input"] / 1_000_000
+    output_price_per_token = prices["output"] / 1_000_000
     return (
-        input_tokens * prices["input"] / 1_000_000
-        + output_tokens * prices["output"] / 1_000_000
+        input_tokens * input_price_per_token
+        + cache_read_input_tokens * input_price_per_token * _CACHE_READ_MULTIPLIER
+        + cache_creation_input_tokens
+        * input_price_per_token
+        * _CACHE_WRITE_MULTIPLIER
+        + output_tokens * output_price_per_token
     )
 
 
@@ -75,17 +101,27 @@ class RunCosts:
     total_cost_usd: float = 0.0
     total_input_tokens: int = 0
     total_output_tokens: int = 0
+    total_cache_read_input_tokens: int = 0
+    total_cache_creation_input_tokens: int = 0
     call_count: int = 0
     per_model: dict[str, dict[str, Any]] = field(default_factory=dict)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     def record(
-        self, model: str, input_tokens: int, output_tokens: int, cost_usd: float
+        self,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        cost_usd: float,
+        cache_read_input_tokens: int = 0,
+        cache_creation_input_tokens: int = 0,
     ) -> None:
         with self._lock:
             self.total_cost_usd += cost_usd
             self.total_input_tokens += input_tokens
             self.total_output_tokens += output_tokens
+            self.total_cache_read_input_tokens += cache_read_input_tokens
+            self.total_cache_creation_input_tokens += cache_creation_input_tokens
             self.call_count += 1
 
             slot = self.per_model.setdefault(
@@ -93,12 +129,16 @@ class RunCosts:
                 {
                     "input_tokens": 0,
                     "output_tokens": 0,
+                    "cache_read_input_tokens": 0,
+                    "cache_creation_input_tokens": 0,
                     "cost_usd": 0.0,
                     "call_count": 0,
                 },
             )
             slot["input_tokens"] += input_tokens
             slot["output_tokens"] += output_tokens
+            slot["cache_read_input_tokens"] += cache_read_input_tokens
+            slot["cache_creation_input_tokens"] += cache_creation_input_tokens
             slot["cost_usd"] += cost_usd
             slot["call_count"] += 1
 
@@ -109,11 +149,19 @@ class RunCosts:
                 "total_cost_usd": round(self.total_cost_usd, 6),
                 "total_input_tokens": self.total_input_tokens,
                 "total_output_tokens": self.total_output_tokens,
+                "total_cache_read_input_tokens": self.total_cache_read_input_tokens,
+                "total_cache_creation_input_tokens": self.total_cache_creation_input_tokens,
                 "call_count": self.call_count,
                 "per_model": {
                     model: {
                         "input_tokens": slot["input_tokens"],
                         "output_tokens": slot["output_tokens"],
+                        "cache_read_input_tokens": slot.get(
+                            "cache_read_input_tokens", 0
+                        ),
+                        "cache_creation_input_tokens": slot.get(
+                            "cache_creation_input_tokens", 0
+                        ),
                         "cost_usd": round(slot["cost_usd"], 6),
                         "call_count": slot["call_count"],
                     }
@@ -145,7 +193,11 @@ def start_cost_tracking() -> RunCosts:
 
 
 def record_llm_call(
-    model: str, input_tokens: int, output_tokens: int
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cache_read_input_tokens: int = 0,
+    cache_creation_input_tokens: int = 0,
 ) -> None:
     """Record a completed LLM call against the current run's accumulator.
 
@@ -153,17 +205,36 @@ def record_llm_call(
     ad-hoc scripts calling `call_llm` without opening a run don't
     crash. Emits a structured log line for every call so eval /
     downstream processors can trace cost per query per agent.
+
+    Cache token buckets default to 0 so existing callers keep working;
+    ADR 0022 (prompt caching) sets non-zero values through
+    `src.llm.call_llm` when the flag is on.
     """
-    cost = estimate_cost(model, input_tokens, output_tokens)
+    cost = estimate_cost(
+        model,
+        input_tokens,
+        output_tokens,
+        cache_read_input_tokens,
+        cache_creation_input_tokens,
+    )
     log.info(
         "llm_call",
         extra={
             "model": model,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
+            "cache_read_input_tokens": cache_read_input_tokens,
+            "cache_creation_input_tokens": cache_creation_input_tokens,
             "cost_usd": round(cost, 6),
         },
     )
     costs = _current_costs.get()
     if costs is not None:
-        costs.record(model, input_tokens, output_tokens, cost)
+        costs.record(
+            model,
+            input_tokens,
+            output_tokens,
+            cost,
+            cache_read_input_tokens=cache_read_input_tokens,
+            cache_creation_input_tokens=cache_creation_input_tokens,
+        )

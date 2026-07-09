@@ -48,8 +48,10 @@ def _capture_llm(monkeypatch: pytest.MonkeyPatch, module: Any) -> dict[str, Any]
         system_prompt: str,
         max_tokens: int,
         model_name: str | None = None,
+        cache_system: bool = False,
     ) -> dict[str, Any]:
         captured["model_name"] = model_name
+        captured["cache_system"] = cache_system
         # Return the union of every response shape any agent expects.
         return {
             # planner

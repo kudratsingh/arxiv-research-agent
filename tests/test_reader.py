@@ -311,11 +311,13 @@ class TestAnalyzePaperEvidencePath:
             system_prompt: str,
             max_tokens: int,
             model_name: str | None = None,
+            cache_system: bool = False,
         ) -> dict[str, Any]:
             captured["prompt"] = prompt
             captured["system_prompt"] = system_prompt
             captured["max_tokens"] = max_tokens
             captured["model_name"] = model_name
+            captured["cache_system"] = cache_system
             return parsed_response
 
         monkeypatch.setattr(reader_module, "call_llm_json", fake_llm)

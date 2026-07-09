@@ -59,6 +59,9 @@ never renumbered.
   sanitization, jailbreak-marker filter, flag-gated
 - [0021](0021-cost-aware-model-routing.md) — Cost-aware model routing:
   per-agent Claude model overrides, recommended Haiku targets
+- [0022](0022-anthropic-prompt-caching.md) — Anthropic prompt caching
+  for agent system prompts: `cache_system` flag on `call_llm`, cache
+  read/write cost tracking, flag-gated
 
 ## When to write an ADR
 

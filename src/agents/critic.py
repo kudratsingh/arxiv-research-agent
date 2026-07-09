@@ -75,6 +75,7 @@ def critic_agent(state: ResearchState) -> dict:
         system_prompt=SYSTEM_PROMPT,
         model_name=settings.critic_model or None,
         max_tokens=2048,
+        cache_system=settings.enable_prompt_caching,
     )
 
     revision_needed = parsed["revision_needed"]

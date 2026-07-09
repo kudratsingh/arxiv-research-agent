@@ -310,6 +310,19 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ Prompt caching (ADR 0022, Sprint 3) -----------------------
+    enable_prompt_caching: bool = Field(
+        default=False,
+        description=(
+            "Mark each agent's system prompt for Anthropic's ephemeral "
+            "prompt cache. Reads on cache hits bill at 10% of the input "
+            "rate; writes bill at 125% (25% first-write premium). Best "
+            "hit rate on the reader (parallel fan-out) and supervisor "
+            "(loop iterations). Default off — preserves Sprint 1 "
+            "baseline byte-identical. See ADR 0022."
+        ),
+    )
+
 
 settings = Settings()
 """Module-level singleton. Import this everywhere instead of instantiating."""

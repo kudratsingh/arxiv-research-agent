@@ -244,6 +244,7 @@ def synthesizer_agent(state: ResearchState) -> dict:
         system_prompt=system_prompt,
         model_name=settings.synthesizer_model or None,
         max_tokens=4096,
+        cache_system=settings.enable_prompt_caching,
     )
 
     citations = [

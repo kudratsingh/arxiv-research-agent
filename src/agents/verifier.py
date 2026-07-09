@@ -297,6 +297,7 @@ def verifier_agent(state: ResearchState) -> dict[str, Any]:
             system_prompt=VERIFIER_SYSTEM_PROMPT,
             model_name=settings.verifier_model or None,
             max_tokens=2048,
+            cache_system=settings.enable_prompt_caching,
         )
     except Exception as exc:  # noqa: BLE001 — recoverable, log + fallback
         log.warning(

@@ -60,6 +60,7 @@ def planner_agent(state: ResearchState) -> dict:
         system_prompt=SYSTEM_PROMPT,
         model_name=settings.planner_model or None,
         max_tokens=1024,
+        cache_system=settings.enable_prompt_caching,
     )
 
     sub_questions: list[str] = parsed["sub_questions"]
