@@ -94,6 +94,14 @@ class ResearchState(TypedDict):
     when `settings.enable_query_refiner` is on AND the supervisor
     picks `refine_query`. Under the fixed pipeline it stays empty.
     See ADR 0018.
+
+    Reader-recovery fields (`reader_analysis_complete`,
+    `reader_missing_context`, `reader_requested_sections`) are
+    populated only when `settings.enable_reader_recovery` is on.
+    Under the fixed pipeline or with the flag off,
+    `reader_analysis_complete` stays at its default (`True`) so any
+    default-consuming code sees "nothing to recover from". See ADR
+    0019.
     """
 
     run_id: str
@@ -124,4 +132,10 @@ class ResearchState(TypedDict):
     # supervisor loop has ever run for this workflow, used by the
     # refiner to dedupe against already-tried queries.
     tried_search_queries: list[str]
+    # Reader-recovery signals (populated only when the flag is on).
+    # `analysis_complete` defaults to True so consumers reading the
+    # field on a fresh state don't spuriously trigger a re-read.
+    reader_analysis_complete: bool
+    reader_missing_context: str
+    reader_requested_sections: list[str]
     messages: Annotated[list, add_messages]

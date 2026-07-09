@@ -375,7 +375,15 @@ in `planning/`:
     ADR
     [0018](docs/decisions/0018-query-refiner-recovery-action.md)
     and [`docs/agents/query_refiner.md`](docs/agents/query_refiner.md).
-  - [ ] Reader-requests-more-chunks (recovery at read layer).
+  - [x] Reader-requests-more-chunks behind
+    `settings.enable_reader_recovery`. Reader's LLM response gains
+    `analysis_complete` / `missing_context` / `request_more_sections`
+    per paper; state aggregates AND / semicolon-join / deduped-union.
+    On the next `read` action, the ranker reserves slots for chunks
+    from the requested sections. Complements the query refiner:
+    refiner recovers at the search layer, this recovers at the read
+    layer. See ADR
+    [0019](docs/decisions/0019-reader-requests-more-chunks.md).
   - [ ] Prompt-injection isolation on reader — severity upgraded now
     that routing depends on PDF-derived text.
   - Full sequenced plan in

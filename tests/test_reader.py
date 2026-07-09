@@ -100,7 +100,7 @@ class TestGatherContextFallback:
         monkeypatch.setattr(
             reader_module,
             "rank_chunks_by_relevance",
-            lambda _c, _s, top_k: [],
+            lambda _c, _s, top_k, preferred_sections=None: [],
         )
         result = _gather_context(_mk_paper(), ["Q"])
         assert result == ""
@@ -126,11 +126,15 @@ class TestGatherContextFormatting:
         captured: dict[str, Any] = {}
 
         def fake_rank(
-            chunks: list[Any], subqs: list[str], top_k: int
+            chunks: list[Any],
+            subqs: list[str],
+            top_k: int,
+            preferred_sections: list[str] | None = None,
         ) -> list[dict[str, Any]]:
             captured["chunks"] = chunks
             captured["subqs"] = subqs
             captured["top_k"] = top_k
+            captured["preferred"] = preferred_sections
             return [
                 {
                     "section": "method",
@@ -296,7 +300,7 @@ class TestAnalyzePaperEvidencePath:
         monkeypatch.setattr(
             reader_module,
             "rank_chunks_by_relevance",
-            lambda _c, _s, top_k: chunks,
+            lambda _c, _s, top_k, preferred_sections=None: chunks,
         )
 
         captured: dict[str, Any] = {}
@@ -330,7 +334,7 @@ class TestAnalyzePaperEvidencePath:
             reader_module, "settings", Settings(enable_evidence_store=False)
         )
         captured = self._stub_pipeline(monkeypatch, self._base_response())
-        _, claims = _analyze_paper(_mk_paper(), "Q?", ["sub a"])
+        _, claims, _ = _analyze_paper(_mk_paper(), "Q?", ["sub a"])
         assert claims == []
         # System prompt is the baseline analysis prompt.
         assert "claims" not in captured["system_prompt"]
@@ -358,7 +362,7 @@ class TestAnalyzePaperEvidencePath:
             ]
         )
         self._stub_pipeline(monkeypatch, response)
-        analysis, claims = _analyze_paper(_mk_paper(), "Q?", ["sub a", "sub b"])
+        analysis, claims, _ = _analyze_paper(_mk_paper(), "Q?", ["sub a", "sub b"])
 
         assert analysis["key_findings"] == ["a", "b"]
         assert len(claims) == 2
@@ -383,7 +387,7 @@ class TestAnalyzePaperEvidencePath:
 
         monkeypatch.setattr(reader_module, "call_llm_json", fake_llm)
 
-        _, claims = _analyze_paper(_mk_paper(), "Q?", ["sub a"])
+        _, claims, _ = _analyze_paper(_mk_paper(), "Q?", ["sub a"])
         assert claims == []
         # Falls back to the base analysis prompt (not the evidence prompt).
         assert "claims" not in captured["system_prompt"]
@@ -404,7 +408,7 @@ class TestAnalyzePaperEvidencePath:
             ]
         )
         self._stub_pipeline(monkeypatch, response)
-        _, claims = _analyze_paper(_mk_paper(), "Q?", [])
+        _, claims, _ = _analyze_paper(_mk_paper(), "Q?", [])
         assert len(claims) == 1
 
 
@@ -417,15 +421,23 @@ class TestReaderAgentEmission:
         )
 
         def fake_analyze(paper: PaperMetadata, *_a: Any, **_kw: Any) -> Any:
-            return {
-                "paper_id": paper["id"],
-                "title": paper["title"],
-                "key_findings": [],
-                "methodology": "",
-                "results_summary": "",
-                "limitations": "",
-                "relevance": 0.0,
-            }, []
+            return (
+                {
+                    "paper_id": paper["id"],
+                    "title": paper["title"],
+                    "key_findings": [],
+                    "methodology": "",
+                    "results_summary": "",
+                    "limitations": "",
+                    "relevance": 0.0,
+                },
+                [],
+                {
+                    "analysis_complete": True,
+                    "missing_context": "",
+                    "request_more_sections": [],
+                },
+            )
 
         monkeypatch.setattr(reader_module, "_analyze_paper", fake_analyze)
         state = {
@@ -464,7 +476,12 @@ class TestReaderAgentEmission:
                 "relevance_score": 0.9,
                 "supports_question": "",
             }
-            return analysis, [claim]
+            signal = {
+                "analysis_complete": True,
+                "missing_context": "",
+                "request_more_sections": [],
+            }
+            return analysis, [claim], signal
 
         monkeypatch.setattr(reader_module, "_analyze_paper", fake_analyze)
         state = {

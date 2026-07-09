@@ -232,6 +232,17 @@ class Settings(BaseSettings):
             "Bounds fan-out on the next search round."
         ),
     )
+    enable_reader_recovery: bool = Field(
+        default=False,
+        description=(
+            "Reader emits `analysis_complete` / `missing_context` / "
+            "`request_more_sections` so the supervisor can re-invoke "
+            "it with a narrower brief. On re-invocation, the ranker "
+            "reserves slots for chunks from the requested sections. "
+            "Independent of other Sprint 2 flags. Fixed pipeline "
+            "unchanged. See ADR 0019."
+        ),
+    )
 
 
 settings = Settings()

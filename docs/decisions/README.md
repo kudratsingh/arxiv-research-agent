@@ -52,6 +52,8 @@ never renumbered.
   `EvidenceClaim`s when available
 - [0018](0018-query-refiner-recovery-action.md) — Query refiner:
   new `refine_query` supervisor action, fail-closed dedup, flag-gated
+- [0019](0019-reader-requests-more-chunks.md) — Reader-requests-more-chunks:
+  read-layer recovery, ranker section bias, flag-gated
 
 ## When to write an ADR
 
