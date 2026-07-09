@@ -423,7 +423,24 @@ configurations; combinations too. Next: paired-diff runs on the
     savings (parallel fan-out + loop iterations); other agents get
     the flag too for uniformity. See ADR
     [0022](docs/decisions/0022-anthropic-prompt-caching.md).
-  - [ ] Semantic Scholar adapter + citation-graph traversal.
+  - [x] Semantic Scholar adapter + one-hop citation-graph enrichment
+    behind `settings.enable_semantic_scholar`. Second retrieval
+    source: `src/tools/semantic_scholar.py` exposes `search_papers`
+    and `get_references`; the search agent walks the top-K arXiv
+    seeds and unions their S2 references before the final relevance
+    ranking. S2 refs with an arXiv external ID dedupe against arXiv
+    seeds automatically. Failure-tolerant (any S2 error drops to
+    arXiv-only). Fan-out bounded by `seed_count × refs_per_seed`.
+    See ADR
+    [0023](docs/decisions/0023-semantic-scholar-citation-graph.md).
+
+**Sprint 3 complete.** 3 items across ADRs 0021-0023 (query refiner
+and reader-recovery already shipped in Sprint 2). All flag-gated.
+525 tests pass on `main`. Next: portfolio polish (architecture
+diagram, README demo, eval results table, production-considerations
+section — see [`planning/06-portfolio-polish.md`](planning/06-portfolio-polish.md))
+interleaved with Sprint 4 (deployable — FastAPI + Docker + CI).
+
   Full plan in
   [`planning/03-roadmap.md`](planning/03-roadmap.md).
 - **Sprint 4 — deployable**: FastAPI + Docker + CI workflow +

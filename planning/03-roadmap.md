@@ -67,8 +67,10 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
 - Reader requests more chunks: when analysis flags missing context,
   the reader emits `request_more_sections: [...]` and the supervisor
   can re-invoke it with a narrower brief.
-- Semantic Scholar adapter + citation-graph traversal (still on the
-  list; deferred from original Sprint 3).
+- Semantic Scholar adapter + citation-graph traversal. **DONE — ADR
+  0023.** Search agent walks the top-K arXiv seeds and unions their
+  S2 references before the final ranking. One-hop only — forward
+  citations and multi-hop traversal are deferred.
 - Claude prompt caching for paper-corpus system messages. **DONE —
   ADR 0022.** Applied to every agent's system prompt via a single
   `enable_prompt_caching` flag; reader / supervisor drive the hit
