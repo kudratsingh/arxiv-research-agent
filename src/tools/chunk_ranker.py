@@ -61,10 +61,59 @@ def _max_similarity_per_chunk(
     return max_score
 
 
+def _to_ranked_chunk(chunk: Chunk, score: float) -> RankedChunk:
+    return RankedChunk(
+        section=chunk["section"],
+        text=chunk["text"],
+        chunk_index=chunk["chunk_index"],
+        relevance_score=score,
+    )
+
+
+def _apply_preferred_sections(
+    ranked_order: list[int],
+    chunks: list[Chunk],
+    top_k: int,
+    preferred_sections: list[str],
+) -> list[int]:
+    """Reserve top_k // 2 slots for chunks whose section matches `preferred_sections`.
+
+    Used by the reader's recovery path (ADR 0019): after the reader
+    signals it wants "results" or "limitations" re-read, we guarantee
+    at least some chunks from those sections make the cut, even if
+    they'd otherwise be edged out by higher-scoring intro / method
+    chunks. Preferred chunks come first in the returned order so the
+    reader prompt shows them prominently.
+
+    Section-name comparison is case-insensitive.
+    """
+    preferred = {s.strip().lower() for s in preferred_sections if s.strip()}
+    if not preferred:
+        return ranked_order[:top_k]
+
+    preferred_ids = [
+        i for i in ranked_order if chunks[i]["section"].strip().lower() in preferred
+    ]
+    other_ids = [
+        i for i in ranked_order if chunks[i]["section"].strip().lower() not in preferred
+    ]
+    if not preferred_ids:
+        # No chunks in the requested sections — behave as though the
+        # preference wasn't set at all. Keeps re-reads useful when the
+        # reader guessed a section name that isn't in the paper.
+        return ranked_order[:top_k]
+
+    reserve = min(len(preferred_ids), max(1, top_k // 2))
+    take_preferred = preferred_ids[:reserve]
+    take_other = other_ids[: top_k - len(take_preferred)]
+    return take_preferred + take_other
+
+
 def rank_chunks_by_relevance(
     chunks: list[Chunk],
     subquestions: list[str],
     top_k: int = DEFAULT_TOP_K,
+    preferred_sections: list[str] | None = None,
 ) -> list[RankedChunk]:
     """Return the top-K chunks by cosine similarity to any sub-question.
 
@@ -78,10 +127,18 @@ def rank_chunks_by_relevance(
         subquestions: Planner-produced sub-questions. If empty, the first
             `top_k` chunks are returned unranked (`relevance_score=0.0`).
         top_k: Maximum number of chunks to return.
+        preferred_sections: Optional list of section names (case-
+            insensitive) to reserve slots for. Used by the reader's
+            recovery path (ADR 0019) to guarantee re-reads see chunks
+            from the sections it flagged as under-covered. `None` (the
+            default) preserves Sprint 1 behavior byte-for-byte.
 
     Returns:
-        Up to `top_k` chunks, each annotated with `relevance_score`,
-        sorted by descending relevance.
+        Up to `top_k` chunks, each annotated with `relevance_score`.
+        Ordering is by descending relevance in the default case; when
+        `preferred_sections` is applied, the reserved-slot chunks come
+        first (still ordered by their own relevance) followed by the
+        remaining top-scoring chunks.
     """
     if not chunks:
         return []
@@ -109,14 +166,13 @@ def rank_chunks_by_relevance(
 
     ranked_order = sorted(
         range(len(chunks)), key=lambda i: max_score[i], reverse=True
-    )[:top_k]
+    )
 
-    return [
-        RankedChunk(
-            section=chunks[i]["section"],
-            text=chunks[i]["text"],
-            chunk_index=chunks[i]["chunk_index"],
-            relevance_score=max_score[i],
+    if preferred_sections:
+        selection = _apply_preferred_sections(
+            ranked_order, chunks, top_k, preferred_sections
         )
-        for i in ranked_order
-    ]
+    else:
+        selection = ranked_order[:top_k]
+
+    return [_to_ranked_chunk(chunks[i], max_score[i]) for i in selection]

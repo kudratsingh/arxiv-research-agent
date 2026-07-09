@@ -101,6 +101,12 @@ _REFINE_DEVIATION_HINT = (
     "alone would re-run the failing ones."
 )
 
+_RECOVERY_DEVIATION_HINT = (
+    " Pick `read` again when reader_analysis_complete is false — the "
+    "reader will consume reader_requested_sections and re-rank with "
+    "those sections promoted, so the second read fills the flagged gap."
+)
+
 SUPERVISOR_SYSTEM_PROMPT = """\
 You are the supervisor of a multi-agent research workflow. On each
 step, you decide the next action based on the current state.
@@ -124,7 +130,7 @@ far. Prefer STOP when:
 Follow the natural pipeline unless there's a clear reason to deviate:
 plan -> search -> read -> synthesize -> critique. Deviate to re-search
 when papers are weak, re-read when analyses miss context, re-plan when
-the critic flags missing coverage.{verify_deviation_hint}{refine_deviation_hint}
+the critic flags missing coverage.{verify_deviation_hint}{refine_deviation_hint}{recovery_deviation_hint}
 
 Return JSON only, no markdown fencing:
 {{
@@ -168,6 +174,15 @@ def _summarize_state(state: ResearchState) -> str:
         refiner_lines = [
             f"tried_search_queries: {len(state.get('tried_search_queries', []))}",
         ]
+    recovery_lines: list[str] = []
+    if settings.enable_reader_recovery:
+        req_sections = state.get("reader_requested_sections", []) or ["(none)"]
+        missing = state.get("reader_missing_context", "")[:200]
+        recovery_lines = [
+            f"reader_analysis_complete: {state.get('reader_analysis_complete', True)}",
+            f"reader_requested_sections: {', '.join(req_sections)}",
+            f"reader_missing_context: {missing or '(none)'}",
+        ]
     return "\n".join(
         [
             f"query: {state.get('query', '(none)')}",
@@ -185,6 +200,7 @@ def _summarize_state(state: ResearchState) -> str:
             f"cost_usd: {cost_str}",
             *verifier_lines,
             *refiner_lines,
+            *recovery_lines,
             critique_display,
         ]
     )
@@ -291,6 +307,7 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
     user_prompt = _summarize_state(state)
     verify_enabled = "verify" in available
     refine_enabled = "refine_query" in available
+    recovery_enabled = settings.enable_reader_recovery
     system_prompt = SUPERVISOR_SYSTEM_PROMPT.format(
         min_quality=settings.min_quality_score,
         max_cost=settings.max_cost_usd,
@@ -299,6 +316,7 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
         verify_deviation_hint=_VERIFY_DEVIATION_HINT if verify_enabled else "",
         refine_action_line=("\n" + _REFINE_ACTION_LINE) if refine_enabled else "",
         refine_deviation_hint=_REFINE_DEVIATION_HINT if refine_enabled else "",
+        recovery_deviation_hint=_RECOVERY_DEVIATION_HINT if recovery_enabled else "",
         action_enum="|".join(sorted(available)),
     )
 

@@ -65,6 +65,9 @@ def _empty_state(**overrides: Any) -> ResearchState:
         "verifier_recommendation": "",
         "evidence": [],
         "tried_search_queries": [],
+        "reader_analysis_complete": True,
+        "reader_missing_context": "",
+        "reader_requested_sections": [],
         "messages": [],
     }
     base.update(overrides)
@@ -555,3 +558,80 @@ class TestQueryRefinerGating:
             _empty_state(tried_search_queries=["a", "b", "c"])
         )
         assert "tried_search_queries: 3" in summary
+
+
+# ---------------------------------------------------------------------------
+# Reader recovery surface — supervisor sees flag-gated fields + hint.
+# ---------------------------------------------------------------------------
+
+
+class TestReaderRecoverySurface:
+    def test_summary_hides_recovery_fields_when_flag_off(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_reader_recovery=False))
+        summary = _summarize_state(
+            _empty_state(
+                reader_analysis_complete=False,
+                reader_missing_context="need results section",
+                reader_requested_sections=["results"],
+            )
+        )
+        assert "reader_analysis_complete:" not in summary
+        assert "reader_requested_sections:" not in summary
+        assert "reader_missing_context:" not in summary
+
+    def test_summary_includes_recovery_fields_when_flag_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_reader_recovery=True))
+        summary = _summarize_state(
+            _empty_state(
+                reader_analysis_complete=False,
+                reader_missing_context="need results section",
+                reader_requested_sections=["results", "limitations"],
+            )
+        )
+        assert "reader_analysis_complete: False" in summary
+        assert "reader_requested_sections: results, limitations" in summary
+        assert "reader_missing_context: need results section" in summary
+
+    def test_summary_shows_none_placeholder_when_no_recovery_needed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_reader_recovery=True))
+        summary = _summarize_state(_empty_state())
+        assert "reader_analysis_complete: True" in summary
+        assert "reader_requested_sections: (none)" in summary
+
+    def test_prompt_includes_recovery_hint_when_flag_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_reader_recovery=True))
+        captured: dict[str, Any] = {}
+
+        def fake(
+            *, prompt: str, system_prompt: str, max_tokens: int
+        ) -> dict[str, Any]:
+            captured["system_prompt"] = system_prompt
+            return {"next_action": "read", "reason": "recover", "stop_reason": ""}
+
+        monkeypatch.setattr(sup, "call_llm_json", fake)
+        supervisor_agent(_empty_state(reader_analysis_complete=False))
+        assert "reader_analysis_complete is false" in captured["system_prompt"]
+
+    def test_prompt_omits_recovery_hint_when_flag_off(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_reader_recovery=False))
+        captured: dict[str, Any] = {}
+
+        def fake(
+            *, prompt: str, system_prompt: str, max_tokens: int
+        ) -> dict[str, Any]:
+            captured["system_prompt"] = system_prompt
+            return {"next_action": "read", "reason": "any", "stop_reason": ""}
+
+        monkeypatch.setattr(sup, "call_llm_json", fake)
+        supervisor_agent(_empty_state())
+        assert "reader_analysis_complete" not in captured["system_prompt"]

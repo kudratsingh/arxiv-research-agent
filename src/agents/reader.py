@@ -16,10 +16,17 @@ When `settings.enable_evidence_store` is on, the same LLM call also
 emits per-paper `EvidenceClaim`s. Each claim keeps a `source_text`
 pointer back to the ranked chunk it came from so the verifier can
 judge against real text instead of the paper's abstract. See ADR 0016.
+
+When `settings.enable_reader_recovery` is on, the LLM also emits three
+"do we have enough?" signals per paper (`analysis_complete`,
+`missing_context`, `request_more_sections`); they get aggregated onto
+state so the supervisor can pick `read` again with a narrower brief.
+On the re-invocation, `rank_chunks_by_relevance` reserves slots for
+chunks from the requested sections. See ADR 0019.
 """
 
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from typing import Any, TypedDict
 
 from langchain_core.messages import AIMessage
 
@@ -109,14 +116,108 @@ prefer excerpts over abstract, do not fabricate.
 """
 
 
+# ---------------------------------------------------------------------------
+# Recovery addendum — appended to whichever system prompt is in use when
+# `settings.enable_reader_recovery` is on. Adds three "did we get enough?"
+# fields to the response schema without duplicating the two base prompts.
+# ADR 0019.
+# ---------------------------------------------------------------------------
+
+RECOVERY_ADDENDUM = """
+
+Additionally, extend the JSON response with three fields the workflow's
+supervisor will act on:
+  "analysis_complete": true or false — whether the excerpts provided
+    were enough to answer the sub-questions for THIS paper. Set false
+    when key context (a specific section, a metric, a table) is
+    missing.
+  "missing_context": short string describing what's missing (empty
+    when analysis_complete is true).
+  "request_more_sections": list of section-name strings whose text
+    would fill the gap ("results", "limitations", "experiments",
+    "related work", ...). Empty list when analysis_complete is true
+    or when you cannot name which sections to ask for.
+
+If the abstract-only fallback was used ("Full text unavailable"),
+analysis_complete MUST be false, missing_context should say "full
+text unavailable", and request_more_sections should be empty.
+"""
+
+
+class ReaderRecoverySignal(TypedDict):
+    """Per-paper "did we get enough?" signal (ADR 0019).
+
+    Emitted only when `settings.enable_reader_recovery` is on. Under
+    the base configuration the reader always returns a signal with
+    `analysis_complete=True` so aggregators see a "nothing to
+    recover from" default.
+    """
+
+    analysis_complete: bool
+    missing_context: str
+    request_more_sections: list[str]
+
+
+def _default_signal() -> ReaderRecoverySignal:
+    return ReaderRecoverySignal(
+        analysis_complete=True,
+        missing_context="",
+        request_more_sections=[],
+    )
+
+
+def _parse_recovery_signal(parsed: dict[str, Any]) -> ReaderRecoverySignal:
+    """Coerce the LLM's recovery fields into a safe `ReaderRecoverySignal`.
+
+    Fail-open: any missing / wrong-typed field defaults to
+    "analysis complete" so a broken response doesn't spuriously
+    trigger a re-read loop.
+    """
+    complete_raw = parsed.get("analysis_complete")
+    complete = complete_raw is True or complete_raw is None
+
+    missing_raw = parsed.get("missing_context", "")
+    missing = missing_raw.strip() if isinstance(missing_raw, str) else ""
+
+    sections_raw = parsed.get("request_more_sections", [])
+    sections: list[str] = []
+    if isinstance(sections_raw, list):
+        for item in sections_raw:
+            if isinstance(item, str) and item.strip():
+                sections.append(item.strip())
+
+    # Consistency: if the model said complete but flagged a gap, trust
+    # the gap and downgrade. Otherwise `analysis_complete` is a lie
+    # from the supervisor's perspective.
+    if complete and (missing or sections):
+        complete = False
+
+    if complete:
+        missing = ""
+        sections = []
+
+    return ReaderRecoverySignal(
+        analysis_complete=complete,
+        missing_context=missing,
+        request_more_sections=sections,
+    )
+
+
 def _gather_ranked_chunks(
-    paper: PaperMetadata, subquestions: list[str]
+    paper: PaperMetadata,
+    subquestions: list[str],
+    preferred_sections: list[str] | None = None,
 ) -> list[RankedChunk]:
     """Fetch, chunk, and rank the paper's full text.
 
     Returns the ranked chunks (up to `reader_max_chunks_per_paper`) or
     an empty list if any stage yields nothing. Callers treat `[]` as
     the signal to fall back to abstract-only analysis.
+
+    `preferred_sections` (recovery path, ADR 0019) is passed through to
+    the ranker so re-reads can promote chunks from sections the last
+    read flagged as under-covered. `None` preserves the Sprint 1
+    behavior.
     """
     full_text = parse_pdf(paper["pdf_url"])
     if not full_text:
@@ -127,7 +228,10 @@ def _gather_ranked_chunks(
         return []
 
     ranked = rank_chunks_by_relevance(
-        chunks, subquestions, top_k=settings.reader_max_chunks_per_paper
+        chunks,
+        subquestions,
+        top_k=settings.reader_max_chunks_per_paper,
+        preferred_sections=preferred_sections,
     )
     return ranked or []
 
@@ -280,9 +384,13 @@ def _parse_claim(
 
 
 def _analyze_paper(
-    paper: PaperMetadata, query: str, subquestions: list[str]
-) -> tuple[PaperAnalysis, list[EvidenceClaim]]:
-    """Produce a structured analysis (and, if enabled, evidence claims).
+    paper: PaperMetadata,
+    query: str,
+    subquestions: list[str],
+    preferred_sections: list[str] | None = None,
+) -> tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal]:
+    """Produce a structured analysis (and, if enabled, evidence claims and
+    a recovery signal).
 
     The evidence-store branch runs a slightly larger single LLM call
     (~ +512 output tokens for the claims list) rather than a second
@@ -291,11 +399,16 @@ def _analyze_paper(
     we don't fabricate `source_text` from the abstract.
 
     Base-path prompts are kept byte-identical to the Sprint 1 baseline
-    so `enable_evidence_store=False` runs are directly comparable to
-    pre-flag results.
+    so `enable_evidence_store=False` and `enable_reader_recovery=False`
+    runs are directly comparable to pre-flag results.
+
+    `preferred_sections` (ADR 0019) is passed to the ranker so a
+    supervisor-driven re-read can promote chunks from the sections the
+    previous read flagged as under-covered.
     """
-    ranked = _gather_ranked_chunks(paper, subquestions)
+    ranked = _gather_ranked_chunks(paper, subquestions, preferred_sections)
     evidence_on = settings.enable_evidence_store and bool(ranked)
+    recovery_on = settings.enable_reader_recovery
 
     if evidence_on:
         user_prompt = _build_evidence_user_prompt(
@@ -310,6 +423,11 @@ def _analyze_paper(
         user_prompt = _build_user_prompt(paper, query, context)
         system_prompt = SYSTEM_PROMPT
         max_tokens = 1024
+
+    if recovery_on:
+        system_prompt = system_prompt + RECOVERY_ADDENDUM
+        # Recovery fields add ~150 tokens to the response.
+        max_tokens += 256
 
     parsed = call_llm_json(
         prompt=user_prompt,
@@ -339,7 +457,56 @@ def _analyze_paper(
             if parsed_claim is not None:
                 claims.append(parsed_claim)
 
-    return analysis, claims
+    if recovery_on:
+        signal = _parse_recovery_signal(parsed)
+        # Abstract-only path is always "not complete" from the reader's
+        # own perspective, regardless of what the LLM said — full text
+        # would still improve the analysis. Force the signal here so
+        # the supervisor sees the truth.
+        if not ranked:
+            signal = ReaderRecoverySignal(
+                analysis_complete=False,
+                missing_context="full text unavailable",
+                request_more_sections=[],
+            )
+    else:
+        signal = _default_signal()
+
+    return analysis, claims, signal
+
+
+def _aggregate_recovery(
+    papers: list[PaperMetadata],
+    signals: list[ReaderRecoverySignal],
+) -> tuple[bool, str, list[str]]:
+    """Reduce per-paper recovery signals to workflow-level state.
+
+    `analysis_complete` is the AND across papers (any incomplete paper
+    means the workflow has work to recover from). `missing_context` is
+    a semicolon-joined list of "<paper title>: <what's missing>" so the
+    supervisor's state summary carries actionable text.
+    `request_more_sections` is the deduped union (lowercase-key) so the
+    ranker's re-invocation covers every requested section without
+    repeating.
+    """
+    all_complete = True
+    missing_parts: list[str] = []
+    section_seen: set[str] = set()
+    section_union: list[str] = []
+    for paper, signal in zip(papers, signals, strict=True):
+        if not signal["analysis_complete"]:
+            all_complete = False
+            if signal["missing_context"]:
+                missing_parts.append(
+                    f"{paper.get('title', '(untitled)')}: {signal['missing_context']}"
+                )
+        for section in signal["request_more_sections"]:
+            key = section.strip().lower()
+            if not key or key in section_seen:
+                continue
+            section_seen.add(key)
+            section_union.append(section.strip())
+    return all_complete, "; ".join(missing_parts), section_union
 
 
 def reader_agent(state: ResearchState) -> dict:
@@ -347,35 +514,45 @@ def reader_agent(state: ResearchState) -> dict:
 
     Args:
         state: Current research workflow state with `papers` populated
-            and (optionally) `sub_questions` for chunk ranking.
+            and (optionally) `sub_questions` for chunk ranking. When
+            `settings.enable_reader_recovery` is on and
+            `state.reader_requested_sections` is populated, the ranker
+            reserves slots for chunks from those sections (ADR 0019).
 
     Returns:
-        Partial state update with `paper_analyses`, `evidence` (empty
-        unless `settings.enable_evidence_store` is on), and a message.
+        Partial state update with `paper_analyses`, `evidence` (only
+        when `enable_evidence_store` is on), recovery signals (only
+        when `enable_reader_recovery` is on), and a message.
     """
     papers = state["papers"]
     query = state["query"]
     subquestions = state.get("sub_questions", [])
+    requested = (
+        state.get("reader_requested_sections", [])
+        if settings.enable_reader_recovery
+        else []
+    )
+    preferred: list[str] | None = requested if requested else None
 
     # Propagate the parent's run_id + cost-accumulator ContextVars into
     # each worker thread — plain ThreadPoolExecutor doesn't inherit
     # context, so LLM calls from workers would otherwise lose per-run
     # attribution.
     analyze = propagate_run_context(
-        lambda p: _analyze_paper(p, query, subquestions)
+        lambda p: _analyze_paper(p, query, subquestions, preferred)
     )
     with ThreadPoolExecutor(max_workers=settings.reader_max_workers) as executor:
-        results: list[tuple[PaperAnalysis, list[EvidenceClaim]]] = list(
-            executor.map(analyze, papers)
-        )
+        results: list[
+            tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal]
+        ] = list(executor.map(analyze, papers))
 
-    analyses: list[PaperAnalysis] = [a for a, _ in results]
+    analyses: list[PaperAnalysis] = [a for a, _, _ in results]
 
     update: dict = {
         "paper_analyses": analyses,
     }
     if settings.enable_evidence_store:
-        evidence: list[EvidenceClaim] = [c for _, cs in results for c in cs]
+        evidence: list[EvidenceClaim] = [c for _, cs, _ in results for c in cs]
         update["evidence"] = evidence
         summary = (
             f"Analyzed {len(analyses)} papers; extracted {len(evidence)} "
@@ -383,6 +560,20 @@ def reader_agent(state: ResearchState) -> dict:
         )
     else:
         summary = f"Analyzed {len(analyses)} papers (full-text where available)."
+
+    if settings.enable_reader_recovery:
+        signals: list[ReaderRecoverySignal] = [s for _, _, s in results]
+        complete, missing, sections = _aggregate_recovery(papers, signals)
+        update["reader_analysis_complete"] = complete
+        update["reader_missing_context"] = missing
+        update["reader_requested_sections"] = sections
+        if not complete:
+            summary += (
+                f" Recovery: {len(sections)} section(s) requested "
+                f"({', '.join(sections) or 'none named'})."
+            )
+        else:
+            summary += " Recovery: all papers reported complete."
 
     update["messages"] = [AIMessage(content=summary, name="reader")]
     return update

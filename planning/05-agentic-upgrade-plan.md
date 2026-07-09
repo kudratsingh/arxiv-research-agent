@@ -186,14 +186,28 @@ Split into two halves so blast radius stays manageable:
   of every other Sprint 2 flag. Fixed pipeline never sees the
   refiner — it has no re-search phase.
 
-### 7. Reader-requests-more-chunks (~1 day)
+### 7. Reader-requests-more-chunks (~1 day) — **DONE**
 
-- Reader can respond with `{analysis_complete: false,
-  missing_context: "...", request_more_sections: ["results",
-  "limitations"]}`.
-- Supervisor sees this and re-invokes reader with a narrower brief.
-- Complements the query refiner: refiner recovers at search layer,
-  this recovers at reading layer.
+- **File:** `src/agents/reader.py` extended with `RECOVERY_ADDENDUM`,
+  `ReaderRecoverySignal`, `_parse_recovery_signal`,
+  `_aggregate_recovery`. Ranker gains `preferred_sections` (see
+  `src/tools/chunk_ranker.py::_apply_preferred_sections`). ADR
+  [0019](../docs/decisions/0019-reader-requests-more-chunks.md).
+- Reader emits `analysis_complete` / `missing_context` /
+  `request_more_sections` per paper when flag on. State aggregates
+  AND / semicolon-join / deduped-union.
+- Supervisor state summary surfaces the fields; system prompt gains
+  a deviation hint to prefer `read` when `analysis_complete=False`.
+  On the re-invocation, the ranker reserves top_k // 2 slots for
+  chunks whose section is in `reader_requested_sections`, with a
+  no-op fallback when the requested sections don't exist in the
+  paper.
+- Behind `settings.enable_reader_recovery: bool = False`, independent
+  of every other Sprint 2 flag. Fixed pipeline reader prompts stay
+  byte-identical. Fail-open on parse errors (broken response defaults
+  to "complete").
+- Abstract-only fallback forces `analysis_complete=False` regardless
+  of LLM output so the supervisor sees the truth.
 
 ### 8. Prompt-injection isolation on the reader (~2 days)
 

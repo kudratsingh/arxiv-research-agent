@@ -121,6 +121,12 @@ Settings that drive the supervisor (see `src/config.py`):
 - `enable_query_refiner: bool = False` — adds `refine_query` to the
   action enum and wires the query_refiner node. Independent of every
   other Sprint 2 flag. See ADR 0018.
+- `enable_reader_recovery: bool = False` — reader emits
+  `analysis_complete` / `missing_context` / `request_more_sections`
+  which surface on the supervisor state summary; the ranker biases
+  re-reads toward the requested sections. Doesn't add a new action —
+  the supervisor picks the existing `read` action to trigger a
+  narrower re-read. See ADR 0019.
 - `min_quality_score: float = 0.75` — mentioned in the prompt as a
   stop condition.
 - `max_cost_usd: float = 2.00` — pre-LLM budget check.
@@ -146,6 +152,7 @@ All env-overridable per ADR 0011.
 - ~~`EvidenceClaim` store + verifier judges chunks (item 5a).~~ Landed — ADR 0016.
 - ~~Synthesizer reads from evidence (item 5b).~~ Landed — ADR 0017.
 - ~~`refine_query` action + query refiner (item 6).~~ Landed — ADR 0018.
+- ~~Reader-requests-more-chunks (item 7).~~ Landed — ADR 0019.
 - Query refiner so "search again" is a real recovery action (item 6).
 - Reader-requests-more-chunks (item 7).
 - Prompt-injection isolation on the reader (item 8) — **severity

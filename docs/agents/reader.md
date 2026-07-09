@@ -132,6 +132,46 @@ filtered), the evidence path silently falls back to the base prompt
 and emits `evidence = []`. We do **not** fabricate `source_text` from
 the abstract.
 
+## Recovery path (ADR 0019)
+
+When `settings.enable_reader_recovery` is on, a `RECOVERY_ADDENDUM`
+is concatenated onto whichever system prompt is in use, extending
+the response schema with three fields:
+
+- `analysis_complete: bool` — did the excerpts cover this paper's
+  contribution to the sub-questions?
+- `missing_context: str` — short natural-language description of the
+  gap.
+- `request_more_sections: list[str]` — section names the reader
+  wants re-read.
+
+`_analyze_paper` returns those as a per-paper `ReaderRecoverySignal`.
+Aggregation across papers (in `_aggregate_recovery`):
+
+- `reader_analysis_complete` = AND across papers.
+- `reader_missing_context` = `"<paper title>: <what's missing>"`
+  entries joined with `"; "`.
+- `reader_requested_sections` = deduped union across papers, case-
+  insensitive dedup with first-seen casing preserved.
+
+On subsequent invocation, `reader_agent` passes
+`state.reader_requested_sections` into `rank_chunks_by_relevance` as
+`preferred_sections`. The ranker reserves `min(len(preferred),
+max(1, top_k // 2))` slots for chunks whose section matches (case-
+insensitive), then fills the remaining slots from the top of the
+overall ranking. Preferred chunks come first in the returned list so
+the reader's prompt shows them prominently.
+
+If the reader falls back to the abstract-only path (PDF fetch failed,
+no chunks), the recovery signal is forced to
+`analysis_complete=False` with `missing_context="full text
+unavailable"` regardless of what the LLM emitted — an abstract-only
+read is always a lesser read from the workflow's perspective.
+
+Fail-open on parse errors: any missing / wrong-typed recovery field
+defaults to "analysis complete" so a broken response can't trigger
+an infinite re-read loop.
+
 ## Follow-ups tracked in ADRs
 
 - Retry / backoff for arXiv PDF downloads
@@ -139,5 +179,5 @@ the abstract.
 - Retry / backoff for Anthropic 429s (`feat/anthropic-retry`).
 - Per-paper `source: "fulltext" | "abstract"` field on `PaperAnalysis`
   for observability (`feat/reader-provenance`).
-- Synthesizer reading from `evidence` — the second half of Sprint 2
-  item 5, tracked in `planning/05-agentic-upgrade-plan.md`.
+- Per-paper preferred sections (currently unioned across papers) —
+  see ADR 0019 alternatives.
