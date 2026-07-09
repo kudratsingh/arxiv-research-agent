@@ -57,6 +57,8 @@ never renumbered.
 - [0020](0020-prompt-injection-isolation-reader.md) — Prompt-injection
   isolation on the reader: untrusted-content delimiters, output
   sanitization, jailbreak-marker filter, flag-gated
+- [0021](0021-cost-aware-model-routing.md) — Cost-aware model routing:
+  per-agent Claude model overrides, recommended Haiku targets
 
 ## When to write an ADR
 

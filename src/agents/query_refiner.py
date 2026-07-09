@@ -176,6 +176,7 @@ def query_refiner_agent(state: ResearchState) -> dict[str, Any]:
         parsed = call_llm_json(
             prompt=user_prompt,
             system_prompt=system_prompt,
+            model_name=settings.query_refiner_model or None,
             max_tokens=1024,
         )
     except Exception as exc:  # noqa: BLE001 — recoverable, log + hold

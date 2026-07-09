@@ -503,6 +503,7 @@ def _analyze_paper(
     parsed = call_llm_json(
         prompt=user_prompt,
         system_prompt=system_prompt,
+        model_name=settings.reader_model or None,
         max_tokens=max_tokens,
     )
 

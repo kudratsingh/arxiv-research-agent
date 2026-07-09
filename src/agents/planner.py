@@ -2,6 +2,7 @@
 
 from langchain_core.messages import AIMessage
 
+from src.config import settings
 from src.graph.state import ResearchState
 from src.llm import call_llm_json
 
@@ -57,6 +58,7 @@ def planner_agent(state: ResearchState) -> dict:
     parsed = call_llm_json(
         prompt=user_prompt,
         system_prompt=SYSTEM_PROMPT,
+        model_name=settings.planner_model or None,
         max_tokens=1024,
     )
 

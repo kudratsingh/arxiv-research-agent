@@ -295,6 +295,7 @@ def verifier_agent(state: ResearchState) -> dict[str, Any]:
         parsed = call_llm_json(
             prompt=user_prompt,
             system_prompt=VERIFIER_SYSTEM_PROMPT,
+            model_name=settings.verifier_model or None,
             max_tokens=2048,
         )
     except Exception as exc:  # noqa: BLE001 — recoverable, log + fallback

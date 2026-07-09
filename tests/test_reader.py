@@ -306,11 +306,16 @@ class TestAnalyzePaperEvidencePath:
         captured: dict[str, Any] = {}
 
         def fake_llm(
-            *, prompt: str, system_prompt: str, max_tokens: int
+            *,
+            prompt: str,
+            system_prompt: str,
+            max_tokens: int,
+            model_name: str | None = None,
         ) -> dict[str, Any]:
             captured["prompt"] = prompt
             captured["system_prompt"] = system_prompt
             captured["max_tokens"] = max_tokens
+            captured["model_name"] = model_name
             return parsed_response
 
         monkeypatch.setattr(reader_module, "call_llm_json", fake_llm)
