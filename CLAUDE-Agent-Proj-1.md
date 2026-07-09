@@ -384,10 +384,26 @@ in `planning/`:
     refiner recovers at the search layer, this recovers at the read
     layer. See ADR
     [0019](docs/decisions/0019-reader-requests-more-chunks.md).
-  - [ ] Prompt-injection isolation on reader — severity upgraded now
-    that routing depends on PDF-derived text.
+  - [x] Prompt-injection isolation on reader behind
+    `settings.enable_prompt_isolation`. Defense in depth: paper text
+    wrapped in `<untrusted_paper_text>` tags, system prompt gains a
+    security instruction naming the protected control fields,
+    reader's `missing_context` / `request_more_sections` /
+    `EvidenceClaim.claim` scrubbed on the output side. Independent
+    of every other Sprint 2 flag; strongly recommended whenever
+    `enable_supervisor` is on. See ADR
+    [0020](docs/decisions/0020-prompt-injection-isolation-reader.md)
+    and [`docs/security.md`](docs/security.md).
   - Full sequenced plan in
     [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md).
+
+**Sprint 2 complete.** All 8 items landed behind independent flags;
+447 tests pass on `main`. The eval harness A/B story: `fixed` /
+`sup-only` / `sup+ver` / `sup+ver+evidence` / `sup+ver+refiner` /
+`sup+ver+recovery` / `sup+ver+isolation` are all measurable
+configurations; combinations too. Next: paired-diff runs on the
+20-query benchmark to decide which flags to default on for Sprint 3
+/ Sprint 4.
 - **Sprint 3 — recovery + retrieval iteration**: query refiner,
   reader-requests-more-chunks, Semantic Scholar adapter, Claude
   prompt caching, cost-aware model routing. Roadmap in

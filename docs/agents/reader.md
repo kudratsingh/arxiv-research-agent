@@ -172,6 +172,27 @@ Fail-open on parse errors: any missing / wrong-typed recovery field
 defaults to "analysis complete" so a broken response can't trigger
 an infinite re-read loop.
 
+## Prompt-injection isolation (ADR 0020)
+
+When `settings.enable_prompt_isolation` is on, paper-derived text
+(abstract + ranked chunks) is wrapped in
+`<untrusted_paper_text>...</untrusted_paper_text>` tags in the user
+prompt and the system prompt gains an explicit "treat wrapped
+content as data" instruction. On the output side, the reader's
+control fields (`missing_context`, `request_more_sections`) and the
+`EvidenceClaim.claim` field are scrubbed through
+`sanitize_control_string` / `sanitize_section_names` before flowing
+to state.
+
+`source_text` inside `EvidenceClaim` is left verbatim on purpose —
+the verifier judges against it, so paraphrase-in-the-middle would
+break the substrate. Downstream agents (verifier, synthesizer) are
+follow-up isolation work.
+
+Default off; **recommend enabling whenever `enable_supervisor` is
+on**. See `docs/security.md` for the full threat model and
+adversarial tests in `tests/test_reader_isolation.py`.
+
 ## Follow-ups tracked in ADRs
 
 - Retry / backoff for arXiv PDF downloads
@@ -181,3 +202,5 @@ an infinite re-read loop.
   for observability (`feat/reader-provenance`).
 - Per-paper preferred sections (currently unioned across papers) —
   see ADR 0019 alternatives.
+- Extend prompt-injection isolation into synthesizer and verifier
+  prompts — see ADR 0020 non-goals.
