@@ -63,12 +63,17 @@ def _stub_llm(
     captured: dict[str, Any] = {"calls": 0}
 
     def fake(
-        *, prompt: str, system_prompt: str, max_tokens: int
+        *,
+        prompt: str,
+        system_prompt: str,
+        max_tokens: int,
+        model_name: str | None = None,
     ) -> dict[str, Any]:
         captured["calls"] += 1
         captured["prompt"] = prompt
         captured["system_prompt"] = system_prompt
         captured["max_tokens"] = max_tokens
+        captured["model_name"] = model_name
         if isinstance(response, Exception):
             raise response
         return response

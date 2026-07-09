@@ -242,6 +242,7 @@ def synthesizer_agent(state: ResearchState) -> dict:
     parsed = call_llm_json(
         prompt=user_prompt,
         system_prompt=system_prompt,
+        model_name=settings.synthesizer_model or None,
         max_tokens=4096,
     )
 

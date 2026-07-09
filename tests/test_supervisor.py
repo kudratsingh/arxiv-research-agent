@@ -241,11 +241,16 @@ class TestSupervisorLLMPath:
         captured: dict[str, Any] = {}
 
         def fake(
-            *, prompt: str, system_prompt: str, max_tokens: int
+            *,
+            prompt: str,
+            system_prompt: str,
+            max_tokens: int,
+            model_name: str | None = None,
         ) -> dict[str, Any]:
             captured["prompt"] = prompt
             captured["system_prompt"] = system_prompt
             captured["max_tokens"] = max_tokens
+            captured["model_name"] = model_name
             return response
 
         monkeypatch.setattr(sup, "call_llm_json", fake)
@@ -396,7 +401,11 @@ class TestVerifierGating:
         captured: dict[str, Any] = {}
 
         def fake(
-            *, prompt: str, system_prompt: str, max_tokens: int
+            *,
+            prompt: str,
+            system_prompt: str,
+            max_tokens: int,
+            model_name: str | None = None,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "verify", "reason": "check draft", "stop_reason": ""}
@@ -496,7 +505,11 @@ class TestQueryRefinerGating:
         captured: dict[str, Any] = {}
 
         def fake(
-            *, prompt: str, system_prompt: str, max_tokens: int
+            *,
+            prompt: str,
+            system_prompt: str,
+            max_tokens: int,
+            model_name: str | None = None,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "refine_query", "reason": "gap", "stop_reason": ""}
@@ -611,7 +624,11 @@ class TestReaderRecoverySurface:
         captured: dict[str, Any] = {}
 
         def fake(
-            *, prompt: str, system_prompt: str, max_tokens: int
+            *,
+            prompt: str,
+            system_prompt: str,
+            max_tokens: int,
+            model_name: str | None = None,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "read", "reason": "recover", "stop_reason": ""}
@@ -627,7 +644,11 @@ class TestReaderRecoverySurface:
         captured: dict[str, Any] = {}
 
         def fake(
-            *, prompt: str, system_prompt: str, max_tokens: int
+            *,
+            prompt: str,
+            system_prompt: str,
+            max_tokens: int,
+            model_name: str | None = None,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "read", "reason": "any", "stop_reason": ""}

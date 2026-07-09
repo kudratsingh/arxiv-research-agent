@@ -255,6 +255,61 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ Per-agent model routing (ADR 0021, Sprint 3) --------------
+    # Each field defaults to "" — empty means "fall back to
+    # anthropic_model". Set to a Claude model ID to route a specific
+    # agent's calls to a cheaper (Haiku) or richer (Opus) tier.
+    # See ADR 0021 for the recommended defaults and cost impact.
+    reader_model: str = Field(
+        default="",
+        description=(
+            "Model for the reader's per-paper analysis calls. Highest-"
+            "volume agent (one call per paper); Haiku is the "
+            "recommended override. Empty falls back to anthropic_model."
+        ),
+    )
+    planner_model: str = Field(
+        default="",
+        description="Model for the planner. Empty falls back to anthropic_model.",
+    )
+    synthesizer_model: str = Field(
+        default="",
+        description=(
+            "Model for the synthesizer's report generation. Writing "
+            "quality benefits from the base model; overrides only if "
+            "you need to trade quality for cost. Empty = anthropic_model."
+        ),
+    )
+    critic_model: str = Field(
+        default="",
+        description=(
+            "Model for the critic's quality judgment. Empty falls back "
+            "to anthropic_model."
+        ),
+    )
+    verifier_model: str = Field(
+        default="",
+        description=(
+            "Model for the runtime faithfulness verifier. Empty falls "
+            "back to anthropic_model."
+        ),
+    )
+    supervisor_model: str = Field(
+        default="",
+        description=(
+            "Model for the supervisor's per-turn routing decision. "
+            "High-volume under a full loop (~1 call per action); Haiku "
+            "is the recommended override. Empty = anthropic_model."
+        ),
+    )
+    query_refiner_model: str = Field(
+        default="",
+        description=(
+            "Model for the query refiner. Short generation task; Haiku "
+            "is the recommended override. Empty = anthropic_model."
+        ),
+    )
+
 
 settings = Settings()
 """Module-level singleton. Import this everywhere instead of instantiating."""

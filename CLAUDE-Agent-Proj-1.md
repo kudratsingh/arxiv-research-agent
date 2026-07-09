@@ -404,9 +404,19 @@ in `planning/`:
 configurations; combinations too. Next: paired-diff runs on the
 20-query benchmark to decide which flags to default on for Sprint 3
 / Sprint 4.
-- **Sprint 3 — recovery + retrieval iteration**: query refiner,
-  reader-requests-more-chunks, Semantic Scholar adapter, Claude
-  prompt caching, cost-aware model routing. Roadmap in
+- **Sprint 3 — recovery + retrieval iteration** (in progress):
+  - [x] Query refiner — landed early in Sprint 2 (ADR 0018).
+  - [x] Reader-requests-more-chunks — landed early in Sprint 2 (ADR 0019).
+  - [x] Cost-aware model routing behind per-agent overrides
+    (`reader_model` / `planner_model` / `synthesizer_model` /
+    `critic_model` / `verifier_model` / `supervisor_model` /
+    `query_refiner_model`). Default empty = today's Sonnet baseline;
+    recommended mapping in ADR 0021 targets Haiku for the reader,
+    supervisor, and query refiner (~50-60% cost cut). See ADR
+    [0021](docs/decisions/0021-cost-aware-model-routing.md).
+  - [ ] Claude prompt caching for paper-corpus system messages.
+  - [ ] Semantic Scholar adapter + citation-graph traversal.
+  Full plan in
   [`planning/03-roadmap.md`](planning/03-roadmap.md).
 - **Sprint 4 — deployable**: FastAPI + Docker + CI workflow +
   paper cache. Roadmap in

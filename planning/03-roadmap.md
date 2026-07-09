@@ -71,7 +71,9 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   list; deferred from original Sprint 3).
 - Claude prompt caching for paper-corpus system messages.
 - Cost-aware model routing: Haiku for extraction, Sonnet for
-  synthesis, Opus for critic.
+  synthesis, Opus for critic. **DONE — ADR 0021.** Per-agent config
+  fields ship in this PR; recommended mapping documented; defaults
+  unchanged until paired-diff eval runs confirm quality holds.
 
 ## Sprint 4 (~2 weeks) — Make it deployable
 

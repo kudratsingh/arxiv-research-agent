@@ -115,11 +115,16 @@ def _stub_llm(
     }
 
     def fake(
-        *, prompt: str, system_prompt: str, max_tokens: int
+        *,
+        prompt: str,
+        system_prompt: str,
+        max_tokens: int,
+        model_name: str | None = None,
     ) -> dict[str, Any]:
         captured["prompt"] = prompt
         captured["system_prompt"] = system_prompt
         captured["max_tokens"] = max_tokens
+        captured["model_name"] = model_name
         return resp
 
     monkeypatch.setattr(synth_module, "call_llm_json", fake)

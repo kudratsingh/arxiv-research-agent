@@ -73,6 +73,7 @@ def critic_agent(state: ResearchState) -> dict:
     parsed = call_llm_json(
         prompt=user_prompt,
         system_prompt=SYSTEM_PROMPT,
+        model_name=settings.critic_model or None,
         max_tokens=2048,
     )
 
