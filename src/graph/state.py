@@ -89,6 +89,11 @@ class ResearchState(TypedDict):
     Evidence store field (`evidence`) is populated only when
     `settings.enable_evidence_store` is on. Under the fixed pipeline
     or with the flag off it stays empty. See ADR 0016.
+
+    Query refiner field (`tried_search_queries`) is populated only
+    when `settings.enable_query_refiner` is on AND the supervisor
+    picks `refine_query`. Under the fixed pipeline it stays empty.
+    See ADR 0018.
     """
 
     run_id: str
@@ -115,4 +120,8 @@ class ResearchState(TypedDict):
     verifier_recommendation: str  # "read_more" | "search_more" | "revise_report" | ""
     # Evidence store (populated only when enable_evidence_store is on).
     evidence: list[EvidenceClaim]
+    # Query refiner history — flat list of every search query the
+    # supervisor loop has ever run for this workflow, used by the
+    # refiner to dedupe against already-tried queries.
+    tried_search_queries: list[str]
     messages: Annotated[list, add_messages]

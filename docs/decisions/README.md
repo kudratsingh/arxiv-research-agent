@@ -50,6 +50,8 @@ never renumbered.
   `source_text`
 - [0017](0017-synthesizer-evidence-swap.md) — Synthesizer prefers
   `EvidenceClaim`s when available
+- [0018](0018-query-refiner-recovery-action.md) — Query refiner:
+  new `refine_query` supervisor action, fail-closed dedup, flag-gated
 
 ## When to write an ADR
 

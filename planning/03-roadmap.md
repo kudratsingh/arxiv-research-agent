@@ -63,6 +63,7 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
 - `src/agents/query_refiner.py`: rewrites failed search queries
   using critic feedback + evidence gaps. Enables the supervisor's
   "search again" branch to actually try something different.
+  **DONE — moved forward into Sprint 2 (item 6) — ADR 0018.**
 - Reader requests more chunks: when analysis flags missing context,
   the reader emits `request_more_sections: [...]` and the supervisor
   can re-invoke it with a narrower brief.

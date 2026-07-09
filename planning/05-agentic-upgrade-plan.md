@@ -164,15 +164,27 @@ Split into two halves so blast radius stays manageable:
   fields with dedicated producers. Report body still surfaces open
   questions in-markdown.
 
-### 6. Query refiner (~2 days) — real recovery action
+### 6. Query refiner (~1 day) — real recovery action — **DONE**
 
-- **File:** `src/agents/query_refiner.py`
-- Takes: original query, failed / weak search queries, papers
-  already found, missing topics, critic feedback. Returns: new
-  search queries targeted at gaps.
-- Without this, the supervisor's "search again" choice just re-runs
-  the same failing queries. It's the difference between a supervisor
-  that recovers and a supervisor that thrashes.
+- **File:** `src/agents/query_refiner.py` (ADR
+  [0018](../docs/decisions/0018-query-refiner-recovery-action.md),
+  docs [`docs/agents/query_refiner.md`](../docs/agents/query_refiner.md)).
+- Reads: original query, sub-questions, currently-in-flight
+  `search_queries`, `tried_search_queries` history, retrieved
+  papers (titles + abstract heads), verifier `missing_evidence`,
+  critic feedback.
+- Writes: replaces `search_queries` with the refined set, extends
+  `tried_search_queries` with what was in flight at entry.
+- **Fail-closed** — LLM exception / non-list response / empty output
+  / all-duplicates all keep current queries intact; supervisor can
+  pick another action next. Repeating a weak query is worse than
+  nothing but strictly better than searching for nothing.
+- **Dedup** — server-side normalization (lowercase + strip) against
+  `tried ∪ current`, plus within-batch dedup preserving first-
+  occurrence order.
+- Behind `settings.enable_query_refiner: bool = False`, independent
+  of every other Sprint 2 flag. Fixed pipeline never sees the
+  refiner — it has no re-search phase.
 
 ### 7. Reader-requests-more-chunks (~1 day)
 

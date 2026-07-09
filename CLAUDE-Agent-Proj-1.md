@@ -366,7 +366,15 @@ in `planning/`:
     so downstream metrics keep working. See ADR
     [0017](docs/decisions/0017-synthesizer-evidence-swap.md) and
     [`docs/agents/synthesizer.md`](docs/agents/synthesizer.md).
-  - [ ] Query refiner (so "search again" tries new queries).
+  - [x] Query refiner behind `settings.enable_query_refiner`. Adds
+    `refine_query` to the supervisor's action space; produces fresh
+    search queries targeted at verifier `missing_evidence` and critic
+    feedback, dedupes against `tried_search_queries` history, and
+    fails closed (keeps current queries on LLM error / empty output /
+    all duplicates). Independent of every other Sprint 2 flag. See
+    ADR
+    [0018](docs/decisions/0018-query-refiner-recovery-action.md)
+    and [`docs/agents/query_refiner.md`](docs/agents/query_refiner.md).
   - [ ] Reader-requests-more-chunks (recovery at read layer).
   - [ ] Prompt-injection isolation on reader — severity upgraded now
     that routing depends on PDF-derived text.

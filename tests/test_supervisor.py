@@ -63,6 +63,8 @@ def _empty_state(**overrides: Any) -> ResearchState:
         "unsupported_claims": [],
         "missing_evidence": [],
         "verifier_recommendation": "",
+        "evidence": [],
+        "tried_search_queries": [],
         "messages": [],
     }
     base.update(overrides)
@@ -464,3 +466,92 @@ class TestVerifierGating:
         assert "unsupported_claims: 2" in summary
         assert "missing_evidence: 1" in summary
         assert "verifier_recommendation: search_more" in summary
+
+
+# ---------------------------------------------------------------------------
+# Query refiner gating — `refine_query` only usable when flag on.
+# ---------------------------------------------------------------------------
+
+
+class TestQueryRefinerGating:
+    def test_available_actions_excludes_refine_by_default(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_query_refiner=False))
+        assert "refine_query" not in sup._available_actions()
+
+    def test_available_actions_includes_refine_when_enabled(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_query_refiner=True))
+        assert "refine_query" in sup._available_actions()
+
+    def test_refine_rejected_when_flag_off(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_query_refiner=False))
+        captured: dict[str, Any] = {}
+
+        def fake(
+            *, prompt: str, system_prompt: str, max_tokens: int
+        ) -> dict[str, Any]:
+            captured["system_prompt"] = system_prompt
+            return {"next_action": "refine_query", "reason": "gap", "stop_reason": ""}
+
+        monkeypatch.setattr(sup, "call_llm_json", fake)
+        state = _empty_state(
+            sub_questions=["a"],
+            papers=[{"id": "x"}],  # type: ignore[list-item]
+            paper_analyses=[{"paper_id": "x"}],  # type: ignore[list-item]
+            draft_report="body",
+        )
+        result = supervisor_agent(state)
+        # refine_query not available → default fallback (state has draft
+        # but no critique → "critique").
+        assert result["next_action"] == "critique"
+        # Prompt shouldn't advertise refine_query.
+        assert "refine_query" not in captured["system_prompt"]
+
+    def test_refine_accepted_when_flag_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_query_refiner=True))
+
+        def fake(**_: Any) -> dict[str, Any]:
+            return {"next_action": "refine_query", "reason": "gap", "stop_reason": ""}
+
+        monkeypatch.setattr(sup, "call_llm_json", fake)
+        result = supervisor_agent(_empty_state(papers=[{"id": "x"}]))  # type: ignore[list-item]
+        assert result["next_action"] == "refine_query"
+
+    def test_route_refine_reaches_query_refiner_when_enabled(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_query_refiner=True))
+        state = _empty_state(next_action="refine_query")
+        assert route_after_supervisor(state) == "query_refiner"
+
+    def test_route_refine_falls_to_end_when_disabled(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_query_refiner=False))
+        state = _empty_state(next_action="refine_query")
+        assert route_after_supervisor(state) == END
+
+    def test_summary_hides_refiner_field_when_flag_off(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_query_refiner=False))
+        summary = _summarize_state(
+            _empty_state(tried_search_queries=["a", "b"])
+        )
+        assert "tried_search_queries:" not in summary
+
+    def test_summary_includes_refiner_field_when_flag_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(sup, "settings", Settings(enable_query_refiner=True))
+        summary = _summarize_state(
+            _empty_state(tried_search_queries=["a", "b", "c"])
+        )
+        assert "tried_search_queries: 3" in summary

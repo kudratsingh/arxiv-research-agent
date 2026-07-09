@@ -30,6 +30,7 @@ from langgraph.graph import END, StateGraph
 
 from src.agents.critic import critic_agent
 from src.agents.planner import planner_agent
+from src.agents.query_refiner import query_refiner_agent
 from src.agents.reader import reader_agent
 from src.agents.search import search_agent
 from src.agents.supervisor import route_after_supervisor, supervisor_agent
@@ -107,10 +108,14 @@ def _build_supervisor_loop(workflow: StateGraph) -> None:
     finishes; the supervisor's conditional edge picks the next node
     or terminates.
 
-    The verifier node is only added when `settings.enable_verifier` is
-    on. When off, the supervisor's action enum excludes `verify` (see
-    `_available_actions` in the supervisor module), so this branch of
-    the conditional edge is unreachable.
+    Optional nodes are only added when their flags are on:
+      - `verifier` — `settings.enable_verifier`
+      - `query_refiner` — `settings.enable_query_refiner`
+
+    When a flag is off, the supervisor's action enum excludes the
+    corresponding action (see `_available_actions` in the supervisor
+    module), so those branches of the conditional edge are
+    unreachable.
     """
     workflow.add_node("supervisor", traced_node("supervisor", supervisor_agent))
     workflow.add_node("planner", traced_node("planner", planner_agent))
@@ -126,6 +131,14 @@ def _build_supervisor_loop(workflow: StateGraph) -> None:
         workflow.add_node("verifier", traced_node("verifier", verifier_agent))
         action_nodes.append("verifier")
         route_map["verifier"] = "verifier"
+
+    if settings.enable_query_refiner:
+        workflow.add_node(
+            "query_refiner",
+            traced_node("query_refiner", query_refiner_agent),
+        )
+        action_nodes.append("query_refiner")
+        route_map["query_refiner"] = "query_refiner"
 
     workflow.set_entry_point("supervisor")
 

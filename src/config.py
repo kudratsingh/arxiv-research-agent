@@ -214,6 +214,24 @@ class Settings(BaseSettings):
             "evidence store is enabled. Bounds prompt cost."
         ),
     )
+    enable_query_refiner: bool = Field(
+        default=False,
+        description=(
+            "Adds `refine_query` to the supervisor's action space. "
+            "Without it, the supervisor's 'search again' choice re-runs "
+            "the same failing queries. Independent of other Sprint 2 "
+            "flags. No-op under the fixed pipeline. See ADR 0018."
+        ),
+    )
+    query_refiner_max_queries: int = Field(
+        default=5,
+        ge=1,
+        le=15,
+        description=(
+            "Cap on new queries the refiner emits per invocation. "
+            "Bounds fan-out on the next search round."
+        ),
+    )
 
 
 settings = Settings()
