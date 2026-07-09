@@ -246,6 +246,7 @@ class TestSupervisorLLMPath:
             system_prompt: str,
             max_tokens: int,
             model_name: str | None = None,
+            cache_system: bool = False,
         ) -> dict[str, Any]:
             captured["prompt"] = prompt
             captured["system_prompt"] = system_prompt
@@ -406,6 +407,7 @@ class TestVerifierGating:
             system_prompt: str,
             max_tokens: int,
             model_name: str | None = None,
+            cache_system: bool = False,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "verify", "reason": "check draft", "stop_reason": ""}
@@ -510,6 +512,7 @@ class TestQueryRefinerGating:
             system_prompt: str,
             max_tokens: int,
             model_name: str | None = None,
+            cache_system: bool = False,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "refine_query", "reason": "gap", "stop_reason": ""}
@@ -629,6 +632,7 @@ class TestReaderRecoverySurface:
             system_prompt: str,
             max_tokens: int,
             model_name: str | None = None,
+            cache_system: bool = False,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "read", "reason": "recover", "stop_reason": ""}
@@ -649,6 +653,7 @@ class TestReaderRecoverySurface:
             system_prompt: str,
             max_tokens: int,
             model_name: str | None = None,
+            cache_system: bool = False,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "read", "reason": "any", "stop_reason": ""}

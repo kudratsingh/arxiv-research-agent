@@ -41,11 +41,38 @@ def _get_client() -> anthropic.Anthropic:
     return _client
 
 
+def _build_system_param(
+    system_prompt: str, cache_system: bool
+) -> str | list[dict] | object:
+    """Return the `system` argument for the Anthropic Messages API.
+
+    Plain-string path preserves Sprint 1 behavior exactly. Cache path
+    (ADR 0022) wraps the prompt in a single content block with an
+    `ephemeral` cache marker so Anthropic caches the tokens for 5
+    minutes and bills subsequent hits at 10% of the input rate. The
+    5-minute TTL is a fit for the reader's per-run parallel fan-out
+    and the supervisor's per-run loop; longer-lived caching would
+    need the `1h` beta which we're not opting into here.
+    """
+    if not system_prompt:
+        return anthropic.NOT_GIVEN
+    if not cache_system:
+        return system_prompt
+    return [
+        {
+            "type": "text",
+            "text": system_prompt,
+            "cache_control": {"type": "ephemeral"},
+        }
+    ]
+
+
 def call_llm(
     prompt: str,
     system_prompt: str = "",
     model_name: str | None = None,
     max_tokens: int = 4096,
+    cache_system: bool = False,
 ) -> str:
     """Call Claude and return the text response.
 
@@ -54,6 +81,11 @@ def call_llm(
         system_prompt: System instruction for the model.
         model_name: Claude model to use. Defaults to `settings.anthropic_model`.
         max_tokens: Maximum output tokens.
+        cache_system: When True, mark the system prompt for Anthropic's
+            ephemeral prompt cache (ADR 0022). Content below the
+            per-model cache minimum silently doesn't cache; content
+            above it is billed at 10% on subsequent hits within 5
+            minutes. Default False preserves Sprint 1 baseline.
 
     Returns:
         The model's text response, with any markdown code fences stripped.
@@ -65,14 +97,25 @@ def call_llm(
         model=resolved_model,
         max_tokens=max_tokens,
         temperature=0.3,
-        system=system_prompt if system_prompt else anthropic.NOT_GIVEN,
+        system=_build_system_param(system_prompt, cache_system),
         messages=[{"role": "user", "content": prompt}],
+    )
+
+    # Anthropic's SDK exposes cache-token buckets on `usage`. They're 0
+    # (or absent) when caching wasn't requested or the request missed
+    # the cache. `input_tokens` from the SDK already excludes cached
+    # tokens on a hit — the three buckets are additive.
+    cache_read = int(getattr(response.usage, "cache_read_input_tokens", 0) or 0)
+    cache_write = int(
+        getattr(response.usage, "cache_creation_input_tokens", 0) or 0
     )
 
     record_llm_call(
         model=resolved_model,
         input_tokens=response.usage.input_tokens,
         output_tokens=response.usage.output_tokens,
+        cache_read_input_tokens=cache_read,
+        cache_creation_input_tokens=cache_write,
     )
 
     text = "".join(
@@ -90,6 +133,7 @@ def call_llm_json(
     system_prompt: str = "",
     model_name: str | None = None,
     max_tokens: int = 4096,
+    cache_system: bool = False,
 ) -> dict:
     """Call Claude and parse the response as JSON.
 
@@ -100,13 +144,17 @@ def call_llm_json(
         system_prompt: System instruction for the model.
         model_name: Claude model to use. Defaults to `settings.anthropic_model`.
         max_tokens: Maximum output tokens.
+        cache_system: When True, mark the system prompt for Anthropic's
+            ephemeral prompt cache (ADR 0022). See `call_llm`.
 
     Returns:
         Parsed JSON dict.
     """
     import json
 
-    raw = call_llm(prompt, system_prompt, model_name, max_tokens)
+    raw = call_llm(
+        prompt, system_prompt, model_name, max_tokens, cache_system=cache_system
+    )
 
     try:
         return json.loads(raw)

@@ -69,7 +69,11 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   can re-invoke it with a narrower brief.
 - Semantic Scholar adapter + citation-graph traversal (still on the
   list; deferred from original Sprint 3).
-- Claude prompt caching for paper-corpus system messages.
+- Claude prompt caching for paper-corpus system messages. **DONE —
+  ADR 0022.** Applied to every agent's system prompt via a single
+  `enable_prompt_caching` flag; reader / supervisor drive the hit
+  rate. Cost accumulator gains cache-read + cache-creation buckets
+  so `summary.jsonl` reflects real caching savings.
 - Cost-aware model routing: Haiku for extraction, Sonnet for
   synthesis, Opus for critic. **DONE — ADR 0021.** Per-agent config
   fields ship in this PR; recommended mapping documented; defaults

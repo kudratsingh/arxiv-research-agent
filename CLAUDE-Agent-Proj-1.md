@@ -414,7 +414,15 @@ configurations; combinations too. Next: paired-diff runs on the
     recommended mapping in ADR 0021 targets Haiku for the reader,
     supervisor, and query refiner (~50-60% cost cut). See ADR
     [0021](docs/decisions/0021-cost-aware-model-routing.md).
-  - [ ] Claude prompt caching for paper-corpus system messages.
+  - [x] Claude prompt caching behind `settings.enable_prompt_caching`.
+    `call_llm` marks system prompts with `cache_control` ephemeral,
+    forwards `cache_read_input_tokens` / `cache_creation_input_tokens`
+    from Anthropic's usage response into the run's cost accumulator,
+    and `estimate_cost` prices reads at 10% / writes at 125% of the
+    base input rate. Reader and supervisor drive the interesting
+    savings (parallel fan-out + loop iterations); other agents get
+    the flag too for uniformity. See ADR
+    [0022](docs/decisions/0022-anthropic-prompt-caching.md).
   - [ ] Semantic Scholar adapter + citation-graph traversal.
   Full plan in
   [`planning/03-roadmap.md`](planning/03-roadmap.md).

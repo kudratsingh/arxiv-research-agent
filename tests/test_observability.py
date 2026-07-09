@@ -218,6 +218,111 @@ class TestRunCosts:
         assert costs.total_input_tokens == 8 * 100 * 10
 
 
+# ---------------------------------------------------------------------------
+# Prompt-cache token accounting (ADR 0022) — cost math + accumulator buckets.
+# ---------------------------------------------------------------------------
+
+
+class TestCacheTokenPricing:
+    def test_cache_read_priced_at_ten_percent(self) -> None:
+        # Sonnet input is $3/M. Cache read should be $0.30/M → 1M read = 0.30.
+        result = estimate_cost(
+            "claude-sonnet-4-6",
+            input_tokens=0,
+            output_tokens=0,
+            cache_read_input_tokens=1_000_000,
+        )
+        assert result == pytest.approx(0.30)
+
+    def test_cache_write_priced_at_one_hundred_twenty_five_percent(self) -> None:
+        # Sonnet input is $3/M. Cache write premium: $3.75/M.
+        result = estimate_cost(
+            "claude-sonnet-4-6",
+            input_tokens=0,
+            output_tokens=0,
+            cache_creation_input_tokens=1_000_000,
+        )
+        assert result == pytest.approx(3.75)
+
+    def test_all_four_buckets_additive(self) -> None:
+        # 500k regular input @ $3/M -> 1.5
+        # 500k output @ $15/M -> 7.5
+        # 500k cache read @ $0.30/M -> 0.15
+        # 500k cache write @ $3.75/M -> 1.875
+        result = estimate_cost(
+            "claude-sonnet-4-6",
+            input_tokens=500_000,
+            output_tokens=500_000,
+            cache_read_input_tokens=500_000,
+            cache_creation_input_tokens=500_000,
+        )
+        assert result == pytest.approx(1.5 + 7.5 + 0.15 + 1.875)
+
+    def test_cache_defaults_to_zero_when_omitted(self) -> None:
+        # Existing callers that don't know about cache tokens must
+        # get the same result as before.
+        without = estimate_cost("claude-sonnet-4-6", 1_000_000, 500_000)
+        with_zero = estimate_cost(
+            "claude-sonnet-4-6",
+            1_000_000,
+            500_000,
+            cache_read_input_tokens=0,
+            cache_creation_input_tokens=0,
+        )
+        assert without == with_zero
+
+
+class TestRunCostsCacheAccumulation:
+    def test_cache_tokens_accumulate_at_totals_and_per_model(self) -> None:
+        costs = RunCosts()
+        costs.record(
+            "claude-sonnet-4-6",
+            input_tokens=100,
+            output_tokens=50,
+            cost_usd=0.05,
+            cache_read_input_tokens=900,
+            cache_creation_input_tokens=200,
+        )
+        costs.record(
+            "claude-sonnet-4-6",
+            input_tokens=100,
+            output_tokens=50,
+            cost_usd=0.05,
+            cache_read_input_tokens=900,
+            cache_creation_input_tokens=0,
+        )
+        assert costs.total_cache_read_input_tokens == 1800
+        assert costs.total_cache_creation_input_tokens == 200
+        slot = costs.per_model["claude-sonnet-4-6"]
+        assert slot["cache_read_input_tokens"] == 1800
+        assert slot["cache_creation_input_tokens"] == 200
+
+    def test_as_dict_carries_cache_buckets(self) -> None:
+        costs = RunCosts()
+        costs.record(
+            "claude-sonnet-4-6",
+            input_tokens=10,
+            output_tokens=5,
+            cost_usd=0.001,
+            cache_read_input_tokens=100,
+            cache_creation_input_tokens=20,
+        )
+        snapshot = costs.as_dict()
+        assert snapshot["total_cache_read_input_tokens"] == 100
+        assert snapshot["total_cache_creation_input_tokens"] == 20
+        model_slot = snapshot["per_model"]["claude-sonnet-4-6"]
+        assert model_slot["cache_read_input_tokens"] == 100
+        assert model_slot["cache_creation_input_tokens"] == 20
+
+    def test_record_backward_compatible_signature(self) -> None:
+        # Callers that don't pass cache kwargs still work, and cache
+        # buckets stay at 0.
+        costs = RunCosts()
+        costs.record("claude-sonnet-4-6", 10, 5, 0.001)
+        assert costs.total_cache_read_input_tokens == 0
+        assert costs.total_cache_creation_input_tokens == 0
+
+
 class TestCurrentCostsAndRecordCall:
     def test_current_costs_is_none_when_not_started(self) -> None:
         assert current_costs() is None

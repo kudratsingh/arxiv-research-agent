@@ -326,6 +326,7 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
             system_prompt=system_prompt,
             model_name=settings.supervisor_model or None,
             max_tokens=512,
+            cache_system=settings.enable_prompt_caching,
         )
     except Exception as exc:  # noqa: BLE001 — recoverable, log + fallback
         log.warning(
