@@ -1,0 +1,87 @@
+# Compose stack for local + CI deployments.
+#
+#   app        FastAPI + workflow (built from ./Dockerfile).
+#   redis      RedisJobStore backing store (Sprint 4 PR 3, ADR 0027).
+#   postgres   Paper cache (Sprint 4 PR 4 wires it up; sits idle here
+#              so PR 4 doesn't need to touch this file).
+#
+# Persistence via named volumes so a `docker compose down` preserves
+# job records + paper cache across restarts. `docker compose down -v`
+# wipes everything.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: arxiv-research-agent:local
+    container_name: arxiv-research-agent-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      # Anthropic key must come from the host env — never bake into
+      # the image. `docker compose up` errors clearly if it's unset
+      # because the workflow refuses to boot without it.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY must be set on the host}
+      # Wire the API layer to the Redis + Postgres services below.
+      # Names resolve on the compose default network.
+      JOB_STORE: redis
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_URL: postgresql://arxiv:arxiv@postgres:5432/arxiv
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+      LOG_LEVEL: INFO
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    container_name: arxiv-research-agent-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    # No host port publish by default — the app talks to it over the
+    # compose network only. Uncomment to inspect from `redis-cli`
+    # on the host during debugging.
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: arxiv-research-agent-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: arxiv
+      POSTGRES_PASSWORD: arxiv
+      POSTGRES_DB: arxiv
+    # No host port publish by default (see redis note above).
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # `-U arxiv` matches POSTGRES_USER; without it pg_isready checks
+      # the wrong role and reports unhealthy on a live database.
+      test: ["CMD-SHELL", "pg_isready -U arxiv -d arxiv"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  redis-data:
+  postgres-data:

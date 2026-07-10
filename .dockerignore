@@ -1,0 +1,42 @@
+# Same shape as .gitignore + everything the build doesn't need.
+# Smaller build context = faster iteration.
+
+.git/
+.github/
+.venv/
+.cache/
+.claude/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# Test + tooling — not in the image
+tests/
+docs/
+planning/
+CLAUDE-Agent-Proj-1.md
+*.md
+!README.md
+
+# Local runtime artifacts
+outputs/
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# CI configs — not needed at build time
+.pre-commit-config.yaml
