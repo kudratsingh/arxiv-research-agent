@@ -178,6 +178,57 @@ ENABLE_EVIDENCE_STORE=true \
 python -m src.main "..."
 ```
 
+## HTTP API
+
+FastAPI surface layered on top of the workflow. Async job model —
+submit a query, get a `job_id`, poll for the result or stream
+events over Server-Sent Events. Full design in ADRs
+[0025](docs/decisions/0025-fastapi-async-job-model.md) and
+[0026](docs/decisions/0026-sse-streaming-endpoint.md).
+
+```bash
+python -m src.api.serve                       # bind 127.0.0.1:8000
+# or override host/port via env:
+API_HOST=0.0.0.0 API_PORT=8080 python -m src.api.serve
+```
+
+### Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/research` | Submit a query. Returns 202 with `job_id`, `status_url`, `stream_url`. |
+| `GET`  | `/research/{job_id}` | Full lifecycle snapshot (status, result, error, cost, metrics). |
+| `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` → terminal frame. |
+| `GET`  | `/healthz` | Liveness + concurrency headroom. |
+| `GET`  | `/docs` | Auto-generated OpenAPI docs. |
+
+### Example
+
+```bash
+# submit
+curl -s -X POST localhost:8000/research \
+  -H 'content-type: application/json' \
+  -d '{"query": "chain-of-verification for hallucination"}' | jq .
+# → {"job_id": "abc123...", "status_url": "/research/abc123...", ...}
+
+# poll
+curl -s localhost:8000/research/abc123... | jq .status
+
+# stream
+curl -N localhost:8000/research/abc123.../stream
+# → event: job_started
+#    data: {"job_id": "abc123...", "query": "..."}
+#    ...
+#    event: job_completed
+#    data: {"iterations": 1, "quality_score": 0.9, "cost_usd": 0.087, ...}
+```
+
+Concurrency is bounded per process by
+`API_MAX_CONCURRENT_JOBS` (default 10) via `asyncio.Semaphore`;
+per-job timeout by `API_JOB_TIMEOUT_SEC` (default 600). Jobs live
+in an in-memory store — Sprint 4 PR 3+ swaps in Redis for
+horizontal scaling and durability.
+
 ## Eval
 
 Twenty benchmark queries covering hallucination, retrieval, alignment,
@@ -200,20 +251,19 @@ python -m src.eval.regression_diff \
 pytest tests/ -q
 ```
 
-500+ tests across unit + integration tiers (see
+560+ tests across unit + integration tiers (see
 [`docs/testing.md`](docs/testing.md) for the strategy).
 
 ## Project status
 
-**Sprint 3 complete** (as of `main`). Sprint 1 shipped the observability
-+ eval substrate; Sprint 2 shipped the supervisor loop + verifier +
-evidence store + recovery actions + prompt-injection isolation; Sprint 3
-shipped cost-aware model routing + Anthropic prompt caching + Semantic
-Scholar citation-graph enrichment. Every Sprint 2/3 feature is behind
-its own independent flag so the eval harness can A/B each combination
-against the Sprint 1 baseline. Next up: portfolio polish (README /
-architecture / demo / production considerations) interleaved with
-Sprint 4 (FastAPI + Docker + CI + paper cache).
+**Sprint 4 in progress.** Sprint 1 shipped the observability + eval
+substrate; Sprint 2 shipped the supervisor loop + verifier +
+evidence store + recovery actions + prompt-injection isolation;
+Sprint 3 shipped cost-aware model routing + Anthropic prompt
+caching + Semantic Scholar citation-graph enrichment; Sprint 4 is
+now shipping the deployable slice — PR CI (ADR 0024) + FastAPI /
+async job / SSE surface (ADRs 0025, 0026) already merged. Next up:
+Docker + docker-compose + Postgres-backed paper cache.
 
 Full status and phase-by-phase plan in
 [`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).
