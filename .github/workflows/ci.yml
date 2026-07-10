@@ -1,0 +1,90 @@
+name: ci
+
+# Per-PR checks: lint, typecheck, unit + integration tests.
+#
+# Runs on every PR against `main` and on every push to `main`. The
+# nightly eval (`.github/workflows/eval-nightly.yml`) handles the e2e
+# tier against real LLM calls — this workflow does not consume
+# Anthropic credits.
+#
+# Design: docs/decisions/0024-pr-ci-lint-mypy-tests.md
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  # Cancel superseded PR runs but never cancel a main run — main
+  # completion feeds the nightly eval's baseline.
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install lint tooling
+        run: |
+          python -m pip install --upgrade pip
+          # Install ruff by itself — ruff has no runtime deps, so we
+          # skip the full editable install to keep this job fast.
+          pip install ruff
+      - name: Ruff check
+        run: ruff check .
+
+  typecheck:
+    name: mypy (strict, src/)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install project (with dev deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Mypy strict
+        # Tests use monkeypatching heavily and are not strict-typed
+        # yet — a follow-up cleanup PR will bring them under the same
+        # gate. Explicit src/ scope prevents accidental regressions
+        # from creeping in on src/ while tests catch up.
+        run: mypy --strict src/
+
+  tests:
+    name: pytest (unit + integration)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install project (with dev deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Run unit + integration tests
+        # Excludes the e2e tier explicitly. Currently all 525 tests
+        # are effectively unit (mocks throughout, ~3s wall clock);
+        # integration + e2e tiers populate as those tests get
+        # authored. The marker filter is the durable selection knob.
+        run: pytest -m "not e2e" -q

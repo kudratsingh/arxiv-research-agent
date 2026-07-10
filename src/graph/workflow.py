@@ -22,6 +22,7 @@ Two production knobs configured here regardless of shape:
 
 from __future__ import annotations
 
+from collections.abc import Hashable
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
@@ -75,7 +76,7 @@ def _open_checkpointer(exit_stack: ExitStack) -> Any | None:
     return exit_stack.enter_context(cm)
 
 
-def _build_fixed_pipeline(workflow: StateGraph) -> None:
+def _build_fixed_pipeline(workflow: StateGraph[ResearchState, Any, Any, Any]) -> None:
     """Wire the classic planner -> search -> reader -> synthesizer -> critic path."""
     workflow.add_node("planner", traced_node("planner", planner_agent))
     workflow.add_node("search", traced_node("search", search_agent))
@@ -101,7 +102,7 @@ def _build_fixed_pipeline(workflow: StateGraph) -> None:
     )
 
 
-def _build_supervisor_loop(workflow: StateGraph) -> None:
+def _build_supervisor_loop(workflow: StateGraph[ResearchState, Any, Any, Any]) -> None:
     """Wire the supervisor -> action -> supervisor loop.
 
     Every agent node hands control back to the supervisor when it
@@ -125,7 +126,7 @@ def _build_supervisor_loop(workflow: StateGraph) -> None:
     workflow.add_node("critic", traced_node("critic", critic_agent))
 
     action_nodes = ["planner", "search", "reader", "synthesizer", "critic"]
-    route_map: dict[str, str] = {n: n for n in action_nodes}
+    route_map: dict[Hashable, str] = {n: n for n in action_nodes}
 
     if settings.enable_verifier:
         workflow.add_node("verifier", traced_node("verifier", verifier_agent))

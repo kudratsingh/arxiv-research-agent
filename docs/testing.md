@@ -60,8 +60,12 @@ CI must not run the full suite on every PR. Selection strategies:
    infrastructure), run the full unit + integration suite for that PR.
 
 Marker configuration lives in `pyproject.toml` under
-`[tool.pytest.ini_options].markers`. The CI wiring is tracked as a
-separate deliverable in `docs/roadmap.md`.
+`[tool.pytest.ini_options].markers`. The PR-open CI job runs
+`pytest -m "not e2e"` — the marker filter is what makes selection
+work today; path-based selection is a follow-up once the suite
+grows past its ~3s baseline. E2E stays with the nightly eval
+workflow. Full CI design in
+[`docs/decisions/0024-pr-ci-lint-mypy-tests.md`](decisions/0024-pr-ci-lint-mypy-tests.md).
 
 ## Test writing standards
 

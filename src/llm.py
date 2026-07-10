@@ -8,6 +8,7 @@ config approach.
 """
 
 import re
+from typing import Any, cast
 
 import anthropic
 
@@ -43,7 +44,7 @@ def _get_client() -> anthropic.Anthropic:
 
 def _build_system_param(
     system_prompt: str, cache_system: bool
-) -> str | list[dict] | object:
+) -> Any:
     """Return the `system` argument for the Anthropic Messages API.
 
     Plain-string path preserves Sprint 1 behavior exactly. Cache path
@@ -134,7 +135,7 @@ def call_llm_json(
     model_name: str | None = None,
     max_tokens: int = 4096,
     cache_system: bool = False,
-) -> dict:
+) -> dict[str, Any]:
     """Call Claude and parse the response as JSON.
 
     Handles markdown fences and unescaped control characters in string values.
@@ -157,6 +158,6 @@ def call_llm_json(
     )
 
     try:
-        return json.loads(raw)
+        return cast(dict[str, Any], json.loads(raw))
     except json.JSONDecodeError:
-        return json.loads(raw, strict=False)
+        return cast(dict[str, Any], json.loads(raw, strict=False))

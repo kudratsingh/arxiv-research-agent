@@ -423,6 +423,8 @@ def _parse_claim(
         claim_text = cleaned
 
     idx_raw = raw.get("chunk_index")
+    if idx_raw is None:
+        return None
     try:
         idx_one_based = int(idx_raw)  # accepts int or str-ints
     except (TypeError, ValueError):
@@ -582,7 +584,7 @@ def _aggregate_recovery(
     return all_complete, "; ".join(missing_parts), section_union
 
 
-def reader_agent(state: ResearchState) -> dict:
+def reader_agent(state: ResearchState) -> dict[str, Any]:
     """Read each paper (full text when available, abstract otherwise) in parallel.
 
     Args:
@@ -621,7 +623,7 @@ def reader_agent(state: ResearchState) -> dict:
 
     analyses: list[PaperAnalysis] = [a for a, _, _ in results]
 
-    update: dict = {
+    update: dict[str, Any] = {
         "paper_analyses": analyses,
     }
     if settings.enable_evidence_store:

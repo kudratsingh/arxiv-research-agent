@@ -26,7 +26,6 @@ from src.graph.state import ResearchState
 from src.observability import costs as costs_module
 from src.observability import logging as logging_module
 
-
 # ---------------------------------------------------------------------------
 # Fixtures / helpers
 # ---------------------------------------------------------------------------

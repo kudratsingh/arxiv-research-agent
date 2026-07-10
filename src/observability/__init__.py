@@ -46,5 +46,6 @@ __all__ = [
     "propagate_run_context",
     "record_llm_call",
     "reset_run_id",
+    "start_cost_tracking",
     "traced_node",
 ]

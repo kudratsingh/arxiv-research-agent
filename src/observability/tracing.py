@@ -15,7 +15,8 @@ See ADR 0013 for the OTel-over-LangSmith decision.
 
 from __future__ import annotations
 
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (

@@ -1,6 +1,6 @@
 """Shared state schema for the research agent workflow."""
 
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from langgraph.graph.message import add_messages
 
@@ -138,4 +138,4 @@ class ResearchState(TypedDict):
     reader_analysis_complete: bool
     reader_missing_context: str
     reader_requested_sections: list[str]
-    messages: Annotated[list, add_messages]
+    messages: Annotated[list[Any], add_messages]

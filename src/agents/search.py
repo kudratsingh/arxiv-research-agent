@@ -8,6 +8,7 @@ the flag is off. See ADR 0023.
 """
 
 import time
+from typing import Any
 
 from langchain_core.messages import AIMessage
 
@@ -97,7 +98,7 @@ def _enrich_with_s2_references(
     return references
 
 
-def search_agent(state: ResearchState) -> dict:
+def search_agent(state: ResearchState) -> dict[str, Any]:
     """Search arXiv for papers matching the planned search queries.
 
     Runs each search query against the arXiv API, deduplicates results

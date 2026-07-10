@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from dotenv import load_dotenv
 
@@ -85,7 +85,8 @@ def run(query: str, run_id: str | None = None) -> str:
                 **costs.as_dict(),
             },
         )
-        return final_state["draft_report"]
+        report: str = final_state["draft_report"]
+        return report
     except Exception:
         log.exception(
             "run_failed",
@@ -115,7 +116,7 @@ def main() -> None:
     report = run(query)
 
     os.makedirs("outputs", exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     filename = f"outputs/report_{timestamp}.md"
     with open(filename, "w") as f:
         f.write(report)

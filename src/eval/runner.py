@@ -31,7 +31,7 @@ import sys
 import time
 import traceback
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -84,6 +84,15 @@ def _initial_state(query: str, run_id: str) -> ResearchState:
         "next_action": "",
         "loop_iterations": 0,
         "stop_reason": "",
+        "verified": False,
+        "unsupported_claims": [],
+        "missing_evidence": [],
+        "verifier_recommendation": "",
+        "evidence": [],
+        "tried_search_queries": [],
+        "reader_analysis_complete": True,
+        "reader_missing_context": "",
+        "reader_requested_sections": [],
         "messages": [],
     }
 
@@ -407,7 +416,7 @@ def main(argv: list[str] | None = None) -> int:
 
     selected = _select_queries(args.queries)
 
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     output_dir = args.output_dir or (DEFAULT_OUTPUT_ROOT / run_id)
 
     print(

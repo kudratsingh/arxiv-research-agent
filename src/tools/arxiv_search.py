@@ -29,7 +29,7 @@ def search_arxiv(query: str, max_results: int = 5) -> list[PaperMetadata]:
         List of paper metadata dicts. Empty list on hard failure —
         callers fall back to mock data / continue with fewer papers.
     """
-    params = {
+    params: dict[str, str | int] = {
         "search_query": f"all:{query}",
         "start": 0,
         "max_results": max_results,

@@ -234,9 +234,11 @@ def diff_summaries(
     aggregate_current = _aggregate_over_shared(current, baseline)
     aggregate_deltas: dict[str, float | None] = {}
     for field in METRIC_FIELDS:
-        b = aggregate_baseline.get(field)
-        c = aggregate_current.get(field)
-        aggregate_deltas[field] = None if b is None or c is None else c - b
+        base_val = aggregate_baseline.get(field)
+        cur_val = aggregate_current.get(field)
+        aggregate_deltas[field] = (
+            None if base_val is None or cur_val is None else cur_val - base_val
+        )
 
     return RegressionReport(
         diffs=diffs,
