@@ -1,5 +1,7 @@
 """Planner agent: decomposes a research query into sub-questions and search queries."""
 
+from typing import Any
+
 from langchain_core.messages import AIMessage
 
 from src.config import settings
@@ -44,7 +46,7 @@ def _build_user_prompt(state: ResearchState) -> str:
     return "\n".join(parts)
 
 
-def planner_agent(state: ResearchState) -> dict:
+def planner_agent(state: ResearchState) -> dict[str, Any]:
     """Decompose a research query into sub-questions and arXiv search queries.
 
     Args:

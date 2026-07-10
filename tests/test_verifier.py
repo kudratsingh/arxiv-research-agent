@@ -366,9 +366,9 @@ class TestMalformedOutput:
     def test_valid_recommendations_frozen_set_content(self) -> None:
         # Guard against accidental widening — the supervisor's mapping
         # from recommendation to next_action depends on this set.
-        assert VALID_RECOMMENDATIONS == frozenset(
+        assert frozenset(
             {"read_more", "search_more", "revise_report", ""}
-        )
+        ) == VALID_RECOMMENDATIONS
 
 
 # ---------------------------------------------------------------------------

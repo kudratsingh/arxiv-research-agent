@@ -367,21 +367,21 @@ def build_source_index(
     """
     year_by_id: dict[str, str] = {}
     for citation in citations:
-        year = citation["year"].strip()[:4]
-        if year:
-            year_by_id[citation["paper_id"]] = year
+        cited_year = citation["year"].strip()[:4]
+        if cited_year:
+            year_by_id[citation["paper_id"]] = cited_year
 
     index: dict[tuple[str, str], str] = {}
     for paper in papers:
-        year = year_by_id.get(paper["id"])
-        if not year or not paper["authors"]:
+        paper_year = year_by_id.get(paper["id"])
+        if not paper_year or not paper["authors"]:
             continue
         first_author = paper["authors"][0].strip()
         if not first_author:
             continue
         lastname = first_author.split()[-1].lower()
         if lastname:
-            index[(lastname, year)] = paper["abstract"]
+            index[(lastname, paper_year)] = paper["abstract"]
     return index
 
 

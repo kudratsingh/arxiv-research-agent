@@ -16,6 +16,7 @@ Two prompt paths, gated by `settings.enable_evidence_store` (see ADR
 
 import json
 from collections import defaultdict
+from typing import Any
 
 from langchain_core.messages import AIMessage
 
@@ -219,7 +220,7 @@ def _build_user_prompt(state: ResearchState) -> str:
     return "\n".join(parts)
 
 
-def synthesizer_agent(state: ResearchState) -> dict:
+def synthesizer_agent(state: ResearchState) -> dict[str, Any]:
     """Synthesize paper analyses into a structured research briefing.
 
     Under the fixed pipeline (or when the evidence store is off / empty)

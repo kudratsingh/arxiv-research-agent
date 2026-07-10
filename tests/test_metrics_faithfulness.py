@@ -16,8 +16,8 @@ from src.eval.metrics import (
     FaithfulnessResult,
     _aggregate_claims,
     _build_faithfulness_prompt,
-    build_source_index,
     _cite_key_from_string,
+    build_source_index,
     measure_faithfulness,
 )
 from src.graph.state import Citation, PaperMetadata

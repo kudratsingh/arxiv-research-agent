@@ -24,15 +24,76 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "mypy>=1.10.0",
+    "ruff>=0.6.0",
+    "types-requests>=2.32.0",
 ]
 
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv", "outputs", ".cache"]
+
+[tool.ruff.lint]
+# Baseline ruleset: pyflakes (F), pycodestyle errors (E), isort (I),
+# bugbear (B), pyupgrade (UP), simplify (SIM). Kept intentionally
+# conservative so this CI PR does not turn into a lint-fix megadiff;
+# additional rulesets get introduced in follow-up PRs.
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = [
+    "E501",  # line-length handled by formatter; long strings in prompts/tests are OK
+    "B008",  # FastAPI/Pydantic use `Depends()` / `Field()` in defaults
+    "SIM108",  # ternary-vs-if is a readability call, not a lint issue
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["B011"]  # pytest allows `assert False` idioms
+
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
+# 3.12 target: our code is 3.11-compatible (`requires-python = ">=3.11"`),
+# but numpy's stubs use PEP 695 `type` statements that only parse under
+# mypy's 3.12 mode. Bumping the type-check target keeps numpy checkable
+# without adopting 3.12-only syntax in our own code.
+
+[[tool.mypy.overrides]]
+# C-extension libraries without published stubs. Skipping analysis keeps
+# strict-mode on our own code without losing signal from these deps.
+module = [
+    "fitz",
+    "fitz.*",
+    "faiss",
+    "faiss.*",
+    "sentence_transformers",
+    "sentence_transformers.*",
+    "arxiv",
+    "arxiv.*",
+    "langgraph.*",
+    "langchain_core.*",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    # Test tiers per docs/testing.md.
+    #
+    # `unit`: pure functions, no I/O, fast. Default tier — an unmarked
+    # test is treated as `unit`. Runs on every PR.
+    # `integration`: exercises external libraries against local fixtures
+    # or canned responses. No live network. Runs on merge to main.
+    # `e2e`: full workflow with recorded LLM cassettes. Runs nightly.
+    "unit: fast pure-function tests (default tier)",
+    "integration: local-fixture tests against external libs",
+    "e2e: full workflow with recorded cassettes",
+]
+filterwarnings = [
+    # Downstream C-extension noise — SwigPyObject / swigvarlink from
+    # faiss / PyMuPDF surface as harmless DeprecationWarnings.
+    "ignore:builtin type SwigPyObject:DeprecationWarning",
+    "ignore:builtin type swigvarlink:DeprecationWarning",
+]

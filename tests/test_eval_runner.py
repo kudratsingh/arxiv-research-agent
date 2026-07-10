@@ -28,7 +28,6 @@ from src.eval.runner import (
 )
 from src.graph.state import ResearchState
 
-
 # ---------------------------------------------------------------------------
 # State + record helpers
 # ---------------------------------------------------------------------------
@@ -54,6 +53,15 @@ class TestInitialState:
             "next_action",
             "loop_iterations",
             "stop_reason",
+            "verified",
+            "unsupported_claims",
+            "missing_evidence",
+            "verifier_recommendation",
+            "evidence",
+            "tried_search_queries",
+            "reader_analysis_complete",
+            "reader_missing_context",
+            "reader_requested_sections",
             "messages",
         }
         assert set(state.keys()) == expected

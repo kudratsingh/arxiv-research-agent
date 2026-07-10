@@ -1,5 +1,7 @@
 """Critic agent: evaluates the draft report and decides if revision is needed."""
 
+from typing import Any
+
 from langchain_core.messages import AIMessage
 
 from src.config import settings
@@ -55,7 +57,7 @@ def _build_user_prompt(state: ResearchState) -> str:
     )
 
 
-def critic_agent(state: ResearchState) -> dict:
+def critic_agent(state: ResearchState) -> dict[str, Any]:
     """Evaluate the draft research briefing for quality.
 
     Uses Claude for rigorous evaluation. Scores on five dimensions and
