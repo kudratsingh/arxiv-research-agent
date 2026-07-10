@@ -66,13 +66,15 @@ WORKDIR /app
 COPY --from=builder --chown=app:app /opt/venv /opt/venv
 COPY --from=builder --chown=app:app /build /app
 
-USER app
+# Cache dirs the workflow writes to at runtime. Created as root
+# then chowned so the non-root user can write to them; WORKDIR
+# creates /app as root, so a plain `mkdir` after `USER app` would
+# fail with EACCES on this parent. Persistent volumes in compose /
+# a real deployment mount over these paths.
+RUN mkdir -p /app/.cache /app/outputs \
+    && chown -R app:app /app/.cache /app/outputs
 
-# Cache dirs the workflow writes to at runtime. Mounted as tmpfs in
-# compose so restarts start fresh; a real deployment mounts these on
-# persistent volumes (Sprint 4 PR 4's paper cache moves to Postgres,
-# closing this gap).
-RUN mkdir -p /app/.cache /app/outputs
+USER app
 
 EXPOSE 8000
 
