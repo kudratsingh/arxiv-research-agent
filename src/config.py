@@ -131,6 +131,55 @@ class Settings(BaseSettings):
         description="urllib3 Retry backoff_factor (delay = factor * 2**attempt)",
     )
 
+    # ------ HTTP API (Sprint 4) ---------------------------------------
+    # Tunables for the FastAPI surface layered on top of the workflow.
+    # See ADR 0025.
+    api_host: str = Field(
+        default="127.0.0.1",
+        description=(
+            "Bind address for `python -m src.api.serve`. Use 0.0.0.0 in "
+            "a container so the port is reachable from outside."
+        ),
+    )
+    api_port: int = Field(
+        default=8000,
+        ge=1,
+        le=65535,
+        description="Bind port for `python -m src.api.serve`",
+    )
+    api_max_concurrent_jobs: int = Field(
+        default=10,
+        ge=1,
+        le=1000,
+        description=(
+            "Semaphore-limited ceiling on concurrent workflow runs per "
+            "API process. Under a proper job queue (Sprint 4 PR 3+) "
+            "this becomes a per-worker cap; today it caps the whole "
+            "single-process app."
+        ),
+    )
+    api_job_timeout_sec: int = Field(
+        default=600,
+        ge=10,
+        le=3600,
+        description=(
+            "Hard timeout applied to a single workflow invocation via "
+            "the API. Jobs exceeding this are marked failed with "
+            "`timeout` error type. Independent of the client's HTTP "
+            "read timeout on the streaming endpoint."
+        ),
+    )
+    api_job_retention_sec: int = Field(
+        default=3600,
+        ge=60,
+        le=86400,
+        description=(
+            "How long a completed job's record + result stays queryable "
+            "in the in-memory JobStore before it's evicted. The Redis- "
+            "backed store in a follow-up PR will honor the same knob."
+        ),
+    )
+
     # ------ Checkpointing ---------------------------------------------
     enable_checkpointing: bool = Field(
         default=True,
