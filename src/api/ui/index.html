@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>arxiv-research-agent</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>arxiv-research-agent</h1>
+    <p class="tagline">
+      Multi-agent research assistant for ML/AI papers.
+      <a href="https://github.com/kudratsingh/arxiv-research-agent" target="_blank" rel="noopener">Source &rarr;</a>
+    </p>
+  </header>
+
+  <main>
+    <section class="query-panel">
+      <label for="query">Research question</label>
+      <textarea
+        id="query"
+        rows="3"
+        placeholder="e.g. What are the latest approaches to reducing hallucination in large language models?"
+        autofocus
+      ></textarea>
+      <div class="controls">
+        <button id="submit" type="button">Run research</button>
+        <span id="job-meta" class="job-meta"></span>
+      </div>
+      <p class="hint">
+        Enter a natural-language question. The workflow searches arXiv,
+        reads matching papers, synthesizes a briefing, and self-critiques.
+        30-90 seconds per query. Progress streams below.
+      </p>
+    </section>
+
+    <section id="progress-panel" class="progress-panel" hidden>
+      <h2>Progress</h2>
+      <ul id="event-log" class="event-log"></ul>
+      <div id="summary" class="summary" hidden>
+        <div><span class="label">Iterations</span> <span id="stat-iterations">-</span></div>
+        <div><span class="label">Quality</span> <span id="stat-quality">-</span></div>
+        <div><span class="label">Cost</span> <span id="stat-cost">-</span></div>
+        <div><span class="label">LLM calls</span> <span id="stat-calls">-</span></div>
+        <div><span class="label">Elapsed</span> <span id="stat-elapsed">-</span></div>
+      </div>
+    </section>
+
+    <section id="report-panel" class="report-panel" hidden>
+      <h2>Report</h2>
+      <pre id="report"></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      HTTP API: <a href="/docs">/docs</a> &middot;
+      Health: <a href="/healthz">/healthz</a>
+    </p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

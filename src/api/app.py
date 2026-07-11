@@ -15,9 +15,12 @@ import asyncio
 import contextlib
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.api.jobs import InMemoryJobStore, JobStore
 from src.api.routes import router
@@ -26,6 +29,8 @@ from src.graph.workflow import build_workflow as default_build_workflow
 from src.observability import get_logger
 
 log = get_logger(__name__)
+
+UI_DIR = Path(__file__).parent / "ui"
 
 
 def _default_store() -> JobStore:
@@ -117,4 +122,23 @@ def create_app(
         lifespan=lifespan,
     )
     app.include_router(router)
+
+    # Demo UI (ADR 0029). Vanilla HTML/JS/CSS mounted as StaticFiles;
+    # served from the same FastAPI process as the API. Include order
+    # matters — routes register first so `/research`, `/healthz`, etc
+    # take precedence over the static catchall.
+    if UI_DIR.exists():
+        app.mount(
+            "/static",
+            StaticFiles(directory=UI_DIR),
+            name="static",
+        )
+
+        @app.get("/", include_in_schema=False)
+        async def index() -> FileResponse:
+            # Explicit `/` handler (rather than `StaticFiles(html=True)`
+            # at the root) so the OpenAPI schema at `/openapi.json`
+            # stays reachable and `/docs` isn't shadowed by a catchall.
+            return FileResponse(UI_DIR / "index.html")
+
     return app

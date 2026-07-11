@@ -41,6 +41,17 @@ dev = [
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+# Ship the demo UI's static assets inside the wheel so `pip install .`
+# in the Dockerfile (non-editable) makes them reachable at
+# `src/api/ui/*` under site-packages. Editable installs pick them up
+# automatically via the source tree.
+"src.api" = ["ui/*.html", "ui/*.js", "ui/*.css"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

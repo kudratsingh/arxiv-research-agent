@@ -178,6 +178,16 @@ ENABLE_EVIDENCE_STORE=true \
 python -m src.main "..."
 ```
 
+## Web UI
+
+Minimal demo UI shipped with the FastAPI app — vanilla HTML/JS/CSS,
+no build step, mounted from `src/api/ui/`. After `docker compose up`
+(or `python -m src.api.serve` locally), open
+[http://localhost:8000/](http://localhost:8000/) in a browser to
+run a query and watch nodes complete over Server-Sent Events. See
+ADR [0029](docs/decisions/0029-demo-ui-vanilla-html-mount.md) for
+the design.
+
 ## HTTP API
 
 FastAPI surface layered on top of the workflow. Async job model —
@@ -286,21 +296,22 @@ python -m src.eval.regression_diff \
 pytest tests/ -q
 ```
 
-600+ tests across unit + integration tiers (see
+610+ tests across unit + integration tiers (see
 [`docs/testing.md`](docs/testing.md) for the strategy).
 
 ## Project status
 
-**Sprint 4 complete.** Sprint 1 shipped the observability + eval
+**Sprint 5 in progress.** Sprint 1 shipped the observability + eval
 substrate; Sprint 2 shipped the supervisor loop + verifier +
 evidence store + recovery actions + prompt-injection isolation;
 Sprint 3 shipped cost-aware model routing + Anthropic prompt
-caching + Semantic Scholar citation-graph enrichment. Sprint 4
-made the system deployable end-to-end: PR CI gate (ADR 0024),
-FastAPI + async jobs + SSE (ADRs 0025 / 0026),
-Dockerfile + compose stack + `RedisJobStore` (ADR 0027), and
-Postgres-backed paper + embedding caches (ADR 0028). `docker
-compose up` gets you a fully wired app + Redis + Postgres.
+caching + Semantic Scholar citation-graph enrichment; Sprint 4
+made the system deployable end-to-end (PR CI + FastAPI/SSE +
+Docker + Redis + Postgres, ADRs 0024–0028). Sprint 5 opens the
+product-surface arc — demo web UI already merged (ADR 0029);
+next up: human-in-the-loop breakpoint after the supervisor's
+plan step, then multi-format export + follow-up conversation
+mode.
 
 Full status and phase-by-phase plan in
 [`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).
