@@ -11,3 +11,11 @@ outputs/
 *.egg-info/
 dist/
 build/
+
+# Web (Next.js) — mirrored in web/.gitignore for editors that
+# don't traverse subdir ignores.
+web/node_modules/
+web/.next/
+web/out/
+web/coverage/
+web/next-env.d.ts

@@ -178,6 +178,26 @@ ENABLE_EVIDENCE_STORE=true \
 python -m src.main "..."
 ```
 
+## Web UI
+
+Next.js 14 (App Router, TypeScript, Tailwind) demo UI as a separate
+compose service on `:3000`. After `docker compose up`, open
+[http://localhost:3000/](http://localhost:3000/) in a browser to
+run a query and watch nodes complete over Server-Sent Events, with
+the report rendered from markdown via `react-markdown` + `remark-
+gfm`. Talks to the FastAPI service over the browser's view of the
+host-published port. See ADR
+[0029](docs/decisions/0029-nextjs-web-ui.md) for the design.
+
+Local dev without Docker:
+
+```bash
+cd web
+npm install
+NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run dev
+# → http://localhost:3000/
+```
+
 ## HTTP API
 
 FastAPI surface layered on top of the workflow. Async job model —
@@ -291,7 +311,7 @@ pytest tests/ -q
 
 ## Project status
 
-**Sprint 4 complete.** Sprint 1 shipped the observability + eval
+**Sprint 5 in progress.** Sprint 1 shipped the observability + eval
 substrate; Sprint 2 shipped the supervisor loop + verifier +
 evidence store + recovery actions + prompt-injection isolation;
 Sprint 3 shipped cost-aware model routing + Anthropic prompt
@@ -299,8 +319,10 @@ caching + Semantic Scholar citation-graph enrichment. Sprint 4
 made the system deployable end-to-end: PR CI gate (ADR 0024),
 FastAPI + async jobs + SSE (ADRs 0025 / 0026),
 Dockerfile + compose stack + `RedisJobStore` (ADR 0027), and
-Postgres-backed paper + embedding caches (ADR 0028). `docker
-compose up` gets you a fully wired app + Redis + Postgres.
+Postgres-backed paper + embedding caches (ADR 0028). Sprint 5
+opens the product-surface arc — Next.js web UI already merged
+(ADR 0029); next up: HITL breakpoint after the supervisor plan
+step, then multi-format export + follow-up conversation mode.
 
 Full status and phase-by-phase plan in
 [`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).
