@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+.git
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+coverage
+tests
+vitest.config.mts
+vitest.setup.ts
+.eslintrc.json
+README.md

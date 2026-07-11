@@ -1,9 +1,11 @@
 # Compose stack for local + CI deployments.
 #
 #   app        FastAPI + workflow (built from ./Dockerfile).
+#   web        Next.js demo UI (Sprint 5 PR 1, ADR 0029). Talks to
+#              app over the browser (host-published port), not the
+#              compose network — SSE is a client-side stream.
 #   redis      RedisJobStore backing store (Sprint 4 PR 3, ADR 0027).
-#   postgres   Paper cache (Sprint 4 PR 4 wires it up; sits idle here
-#              so PR 4 doesn't need to touch this file).
+#   postgres   Paper cache + embedding cache (Sprint 4 PR 4, ADR 0028).
 #
 # Persistence via named volumes so a `docker compose down` preserves
 # job records + paper cache across restarts. `docker compose down -v`
@@ -48,6 +50,34 @@ services:
       timeout: 3s
       retries: 3
       start_period: 20s
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # Ship the browser-facing API URL into the client bundle at
+        # build time. Browser and API run on the same host; API is
+        # published on `APP_PORT`. Override for staging/prod deploys.
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:${APP_PORT:-8000}}
+    image: arxiv-research-agent-web:local
+    container_name: arxiv-research-agent-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "require('http').get('http://localhost:3000/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   redis:
     image: redis:7-alpine

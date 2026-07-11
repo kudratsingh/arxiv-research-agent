@@ -130,3 +130,34 @@ jobs:
           tags: arxiv-research-agent:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  web:
+    name: web (typecheck + lint + test + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript typecheck
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Vitest
+        run: npm run test
+      - name: Next.js build
+        # Validates the full production build, including static
+        # generation of `/`. NEXT_PUBLIC_API_BASE isn't reachable in
+        # CI but that's fine — the build only bakes it into the
+        # client bundle, no network at build time.
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE: http://localhost:8000
