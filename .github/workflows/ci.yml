@@ -104,7 +104,11 @@ jobs:
   docker-build:
     name: docker build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Cold-cache builds install the full ML stack (torch, sentence-
+    # transformers, faiss, PyMuPDF, psycopg[binary]); ~13-15min on a
+    # fresh runner. Warm runs land in ~30-60s off the GHA cache.
+    # 25min gives comfortable headroom for the cold path.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
