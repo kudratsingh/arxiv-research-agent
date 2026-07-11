@@ -175,8 +175,37 @@ class Settings(BaseSettings):
         le=86400,
         description=(
             "How long a completed job's record + result stays queryable "
-            "in the in-memory JobStore before it's evicted. The Redis- "
-            "backed store in a follow-up PR will honor the same knob."
+            "before it's evicted. In-memory: age check on evict_older_than; "
+            "Redis: TTL on the job key. Same knob honored by both stores."
+        ),
+    )
+    job_store: str = Field(
+        default="memory",
+        description=(
+            "Which JobStore implementation the API uses. `memory` = "
+            "in-process InMemoryJobStore (single-worker only, jobs die "
+            "with the process). `redis` = RedisJobStore backed by "
+            "`redis_url`, safe for horizontal API scaling. See ADR 0027."
+        ),
+    )
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        description=(
+            "Async Redis URL used by `RedisJobStore` when `job_store=redis`. "
+            "In compose the default is `redis://redis:6379/0`."
+        ),
+    )
+
+    # ------ Postgres (Sprint 4 PR 4+: paper cache) --------------------
+    # Standing up the connection surface now so compose can point at a
+    # live Postgres from PR 3, while the paper-cache migration itself
+    # lands in PR 4. Unused until then.
+    postgres_url: str = Field(
+        default="",
+        description=(
+            "SQLAlchemy-style Postgres URL for the paper cache "
+            "(populated in Sprint 4 PR 4). Empty = feature disabled; "
+            "app falls back to the on-disk `.cache/pdfs/` path."
         ),
     )
 

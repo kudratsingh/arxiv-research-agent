@@ -226,8 +226,35 @@ curl -N localhost:8000/research/abc123.../stream
 Concurrency is bounded per process by
 `API_MAX_CONCURRENT_JOBS` (default 10) via `asyncio.Semaphore`;
 per-job timeout by `API_JOB_TIMEOUT_SEC` (default 600). Jobs live
-in an in-memory store — Sprint 4 PR 3+ swaps in Redis for
-horizontal scaling and durability.
+in an in-memory store by default; set `JOB_STORE=redis` +
+`REDIS_URL=redis://...` to swap in the Redis-backed store for
+horizontal scaling and durability across worker restarts
+(compose stack below wires this up automatically).
+
+## Run in Docker
+
+Full compose stack — app + Redis (JobStore) + Postgres (paper cache,
+Sprint 4 PR 4). See ADR
+[0027](docs/decisions/0027-docker-compose-redis-job-store.md) for
+image design + service topology.
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+docker compose up --build
+# → http://localhost:8000/healthz  → 200
+# → http://localhost:8000/docs     → OpenAPI UI
+```
+
+`ANTHROPIC_API_KEY` is the only required host variable. The compose
+file publishes `APP_PORT` (default 8000) to the host; Redis and
+Postgres stay on the internal compose network. Named volumes
+`redis-data` + `postgres-data` persist state across `docker compose
+down`; `down -v` wipes them.
+
+Multi-worker uvicorn is safe under `JOB_STORE=redis` — every worker
+reads/writes the shared Redis-backed store. Note that SSE streaming
+requires job affinity (see ADR 0027 Consequences); polling works
+across workers unconditionally.
 
 ## Eval
 
