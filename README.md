@@ -256,6 +256,14 @@ reads/writes the shared Redis-backed store. Note that SSE streaming
 requires job affinity (see ADR 0027 Consequences); polling works
 across workers unconditionally.
 
+The compose stack also sets `PAPER_CACHE=postgres` +
+`EMBEDDING_CACHE=postgres` so extracted paper text and MiniLM
+embeddings are shared across workers via the Postgres service —
+a paper fetched by one worker is instantly available to any
+other. Local dev outside the compose stack defaults to
+`disk` / `none` (Sprint 1 behavior byte-identical). See ADR
+[0028](docs/decisions/0028-postgres-paper-cache-and-embedding-cache.md).
+
 ## Eval
 
 Twenty benchmark queries covering hallucination, retrieval, alignment,
@@ -278,19 +286,21 @@ python -m src.eval.regression_diff \
 pytest tests/ -q
 ```
 
-560+ tests across unit + integration tiers (see
+600+ tests across unit + integration tiers (see
 [`docs/testing.md`](docs/testing.md) for the strategy).
 
 ## Project status
 
-**Sprint 4 in progress.** Sprint 1 shipped the observability + eval
+**Sprint 4 complete.** Sprint 1 shipped the observability + eval
 substrate; Sprint 2 shipped the supervisor loop + verifier +
 evidence store + recovery actions + prompt-injection isolation;
 Sprint 3 shipped cost-aware model routing + Anthropic prompt
-caching + Semantic Scholar citation-graph enrichment; Sprint 4 is
-now shipping the deployable slice — PR CI (ADR 0024) + FastAPI /
-async job / SSE surface (ADRs 0025, 0026) already merged. Next up:
-Docker + docker-compose + Postgres-backed paper cache.
+caching + Semantic Scholar citation-graph enrichment. Sprint 4
+made the system deployable end-to-end: PR CI gate (ADR 0024),
+FastAPI + async jobs + SSE (ADRs 0025 / 0026),
+Dockerfile + compose stack + `RedisJobStore` (ADR 0027), and
+Postgres-backed paper + embedding caches (ADR 0028). `docker
+compose up` gets you a fully wired app + Redis + Postgres.
 
 Full status and phase-by-phase plan in
 [`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).

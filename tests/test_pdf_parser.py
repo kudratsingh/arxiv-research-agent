@@ -6,6 +6,7 @@ those require network and a real PDF and belong in integration tests.
 
 from pathlib import Path
 
+from src.tools.paper_cache import DiskPaperCache
 from src.tools.pdf_parser import _cache_key, parse_pdf
 
 
@@ -34,13 +35,23 @@ class TestParsePdf:
         assert parse_pdf("", cache_dir=tmp_path) == ""
 
     def test_returns_cached_text_when_txt_exists(self, tmp_path: Path) -> None:
+        # PR 4 refactor: `cache_dir` is now the raw-PDF path only; the
+        # extracted-text cache is the pluggable `PaperCache`. Inject a
+        # `DiskPaperCache` pointing at tmp_path so the write we do
+        # here lines up with the read parse_pdf performs.
         url = "http://arxiv.org/pdf/2311.09000"
         (tmp_path / "2311.09000.txt").write_text("cached body", encoding="utf-8")
 
-        # Must not hit the network or open PyMuPDF — the .txt cache short-circuits.
-        assert parse_pdf(url, cache_dir=tmp_path) == "cached body"
+        # Must not hit the network or open PyMuPDF — the cache short-circuits.
+        assert (
+            parse_pdf(url, cache_dir=tmp_path, cache=DiskPaperCache(tmp_path))
+            == "cached body"
+        )
 
     def test_cache_dir_accepts_string_path(self, tmp_path: Path) -> None:
         url = "http://arxiv.org/pdf/2311.09000"
         (tmp_path / "2311.09000.txt").write_text("ok", encoding="utf-8")
-        assert parse_pdf(url, cache_dir=str(tmp_path)) == "ok"
+        assert (
+            parse_pdf(url, cache_dir=str(tmp_path), cache=DiskPaperCache(tmp_path))
+            == "ok"
+        )
