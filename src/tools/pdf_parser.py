@@ -1,9 +1,15 @@
 """PDF download and full-text extraction using PyMuPDF.
 
-Downloads a PDF from a URL, extracts its text, and caches both the raw
-PDF and the extracted text on disk so repeated calls don't re-download
-or re-parse. Returns "" on any failure — callers should treat that as
+Downloads a PDF from a URL, extracts its text, and caches the
+extracted text via the pluggable `PaperCache` from
+`src.tools.paper_cache` so repeated calls don't re-download or
+re-parse. Returns "" on any failure — callers should treat that as
 a graceful signal to fall back (e.g. to the abstract).
+
+The raw PDF is written to `<cache_dir>/<key>.pdf` on the local
+filesystem regardless of `PaperCache` backend so a future re-parse
+with an updated PyMuPDF doesn't need a re-download. The extracted
+text goes through the cache (disk or Postgres per `settings`).
 """
 
 import hashlib
@@ -15,8 +21,8 @@ import requests
 
 from src.observability import get_logger
 from src.tools.http_session import build_retrying_session
+from src.tools.paper_cache import DEFAULT_CACHE_DIR, PaperCache, get_paper_cache
 
-DEFAULT_CACHE_DIR = Path(".cache/pdfs")
 DOWNLOAD_TIMEOUT_SEC = 60
 
 log = get_logger(__name__)
@@ -79,16 +85,24 @@ def _extract_text(pdf_path: Path) -> str:
         return "\n".join(page.get_text() for page in doc)
 
 
-def parse_pdf(pdf_url: str, cache_dir: Path | str = DEFAULT_CACHE_DIR) -> str:
+def parse_pdf(
+    pdf_url: str,
+    cache_dir: Path | str = DEFAULT_CACHE_DIR,
+    cache: PaperCache | None = None,
+) -> str:
     """Fetch, cache, and extract text from a PDF at `pdf_url`.
 
-    Cache layout under `cache_dir`:
-        <key>.pdf   the raw downloaded PDF
-        <key>.txt   the extracted text (returned on subsequent calls)
+    Extracted text is stored in the `PaperCache` from
+    `settings.paper_cache` (`disk` = `<cache_dir>/<key>.txt`,
+    `postgres` = `paper_cache` table). The raw PDF is always
+    written to `<cache_dir>/<key>.pdf` so a re-parse with an updated
+    PyMuPDF doesn't need a re-download.
 
     Args:
         pdf_url: HTTP(S) URL of the PDF to fetch.
-        cache_dir: Directory used to cache downloads and extractions.
+        cache_dir: Filesystem directory for the raw PDF bytes.
+        cache: Injectable `PaperCache` for tests. Defaults to
+            `get_paper_cache()` — the settings-driven singleton.
 
     Returns:
         The extracted text, or "" if download or extraction failed.
@@ -96,13 +110,14 @@ def parse_pdf(pdf_url: str, cache_dir: Path | str = DEFAULT_CACHE_DIR) -> str:
     if not pdf_url:
         return ""
 
+    cache = cache if cache is not None else get_paper_cache()
     cache_dir = Path(cache_dir)
     key = _cache_key(pdf_url)
-    txt_path = cache_dir / f"{key}.txt"
     pdf_path = cache_dir / f"{key}.pdf"
 
-    if txt_path.exists():
-        return txt_path.read_text(encoding="utf-8")
+    cached_text = cache.get_text(key)
+    if cached_text is not None:
+        return cached_text
 
     if not pdf_path.exists() and not _download_pdf(pdf_url, pdf_path):
         return ""
@@ -116,5 +131,13 @@ def parse_pdf(pdf_url: str, cache_dir: Path | str = DEFAULT_CACHE_DIR) -> str:
         )
         return ""
 
-    txt_path.write_text(text, encoding="utf-8")
+    try:
+        cache.put_text(key, pdf_url, text)
+    except Exception as exc:
+        # Cache write failures should not lose an extracted document —
+        # callers get the text back and the next hit re-extracts.
+        log.warning(
+            "paper_cache_put_failed",
+            extra={"paper_key": key, "error": str(exc)},
+        )
     return text

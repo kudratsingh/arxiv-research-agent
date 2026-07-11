@@ -29,6 +29,11 @@ services:
       JOB_STORE: redis
       REDIS_URL: redis://redis:6379/0
       POSTGRES_URL: postgresql://arxiv:arxiv@postgres:5432/arxiv
+      # Sprint 4 PR 4: shared caches for extracted paper text +
+      # MiniLM embeddings, backed by the Postgres service. Setting
+      # these to `disk` / `none` reverts to Sprint 1 behavior.
+      PAPER_CACHE: postgres
+      EMBEDDING_CACHE: postgres
       API_HOST: 0.0.0.0
       API_PORT: "8000"
       LOG_LEVEL: INFO

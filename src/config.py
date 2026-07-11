@@ -196,16 +196,36 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ------ Postgres (Sprint 4 PR 4+: paper cache) --------------------
-    # Standing up the connection surface now so compose can point at a
-    # live Postgres from PR 3, while the paper-cache migration itself
-    # lands in PR 4. Unused until then.
+    # ------ Postgres (paper cache + embedding cache) ------------------
+    # Sprint 4 PR 4 wires this up. Empty URL = feature disabled: the
+    # paper cache falls back to on-disk `.cache/pdfs/` (Sprint 1
+    # behavior, byte-identical), and the embedding cache is a no-op.
     postgres_url: str = Field(
         default="",
         description=(
-            "SQLAlchemy-style Postgres URL for the paper cache "
-            "(populated in Sprint 4 PR 4). Empty = feature disabled; "
-            "app falls back to the on-disk `.cache/pdfs/` path."
+            "libpq-style Postgres URL (`postgresql://user:pass@host/db`) "
+            "for the paper cache + embedding cache. Empty = disabled, "
+            "falls back to on-disk paper cache and no embedding cache. "
+            "In compose the default is "
+            "`postgresql://arxiv:arxiv@postgres:5432/arxiv`."
+        ),
+    )
+    paper_cache: str = Field(
+        default="disk",
+        description=(
+            "PaperCache implementation. `disk` (default) = "
+            "`.cache/pdfs/<key>.txt` per Sprint 1; `postgres` = "
+            "PostgresPaperCache backed by `postgres_url`. See ADR 0028."
+        ),
+    )
+    embedding_cache: str = Field(
+        default="none",
+        description=(
+            "EmbeddingCache implementation. `none` (default) preserves "
+            "Sprint 1 behavior byte-identically — every call re-encodes "
+            "via MiniLM. `postgres` skips MiniLM inference for texts "
+            "we've seen before, indexed by content hash + model name. "
+            "See ADR 0028."
         ),
     )
 
