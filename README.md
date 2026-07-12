@@ -317,6 +317,54 @@ python -m src.eval.regression_diff \
   outputs/eval/<candidate>/summary.jsonl
 ```
 
+### Latest eval results
+
+<!-- eval-nightly:start -->
+_Auto-updated by the nightly eval workflow. First nightly run against `main` will populate this row._
+
+| Queries | Mean citation | Mean faithfulness | Mean completeness | Mean recall | Mean cost | Mean latency | Last run |
+|---|---|---|---|---|---|---|---|
+| - | - | - | - | - | - | - | (pending) |
+<!-- eval-nightly:end -->
+
+## Production considerations
+
+Grouped by the operational concerns any production-scale AI system has
+to answer. Every tunable is one env-var away — see `src/config.py`.
+
+**Rate limits**
+- Anthropic: SDK-native retries with exponential backoff on 408 / 409 / 429 / 5xx (ADR [0009](docs/decisions/0009-anthropic-sdk-native-retry.md)); default 4 retries, 120s timeout.
+- arXiv API + PDFs: `urllib3.Retry` with `Retry-After` honored, backoff bounded (ADR [0013](docs/decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)). Semantic Scholar (ADR [0023](docs/decisions/0023-semantic-scholar-citation-graph.md)) shares the retry adapter; failure-tolerant fallback to arXiv-only.
+
+**Retries and timeouts**
+- Per-run: `settings.anthropic_max_retries`, `settings.http_max_retries`, `settings.anthropic_timeout_sec`.
+- Per-job HTTP: `settings.api_job_timeout_sec` (default 600s) caps workflow wall clock; `settings.api_hitl_timeout_sec` (default 1800s) caps human review time (ADR [0030](docs/decisions/0030-hitl-plan-review.md)).
+
+**Caching**
+- Anthropic prompt caching on system prompts, behind `enable_prompt_caching` (ADR [0022](docs/decisions/0022-anthropic-prompt-caching.md)). Cache-read tokens billed at 10%; per-run cost accumulator surfaces the breakdown.
+- Paper cache (extracted PDF text) — disk by default, Postgres in compose (ADR [0028](docs/decisions/0028-postgres-paper-cache-and-embedding-cache.md)).
+- Embedding cache (MiniLM vectors) keyed on `(content_hash, model_name)` — a model swap invalidates implicitly (ADR [0028](docs/decisions/0028-postgres-paper-cache-and-embedding-cache.md)).
+- API job store — in-memory or Redis (ADR [0027](docs/decisions/0027-docker-compose-redis-job-store.md)). Redis TTL enforces retention; horizontal API workers share the store.
+
+**Cost**
+- Per-run cost tracking with per-model breakdown surfaces in `summary.jsonl` and the API's `JobDetail`.
+- Nightly regression diff (`src/eval/regression_diff.py`) fails the workflow on cost creep > 25% (ADR [0010](docs/decisions/0010-nightly-eval-ci.md)).
+- Cost-aware routing: per-agent Claude model overrides (ADR [0021](docs/decisions/0021-cost-aware-model-routing.md)) — recommended mapping puts Haiku on the reader / supervisor / query refiner for ~50-60% cost cut with baseline quality preserved.
+
+**Failure handling**
+- Reader falls back to abstract when PDF fetch / extract / chunk / rank yields nothing (ADR [0004](docs/decisions/0004-reader-fulltext-with-abstract-fallback.md)).
+- Eval runner isolates per-query failures — a broken query captures its traceback and continues (ADR [0008](docs/decisions/0008-eval-runner-sequential-per-query-isolation.md)).
+- Runs are checkpointed to SQLite so an interrupted workflow resumes on the same `thread_id` (ADR [0013](docs/decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)).
+- API jobs never lose data on the runner side — every failure mode (`HitlTimeoutError`, `HitlCancelledError`, generic `Exception`, `asyncio.CancelledError`, wall-clock timeout) lands on the `Job` record before propagating.
+
+**Observability**
+- Structured JSON logs with per-run `run_id` propagated through ContextVars (ADR [0012](docs/decisions/0012-observability-core-logging-costs.md)). Every LLM call records to the per-run cost accumulator.
+- OpenTelemetry spans around each agent node behind `enable_tracing` (ADR [0013](docs/decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)).
+
+**Safety**
+- Prompt-injection isolation on the reader — untrusted PDF text is wrapped in `<untrusted_paper>` tags with control-string sanitization (ADR [0020](docs/decisions/0020-prompt-injection-isolation-reader.md)).
+- Runtime faithfulness verifier flags unsupported claims post-synthesis (ADR [0015](docs/decisions/0015-verifier-agent-runtime-faithfulness.md)); evidence-store (ADR [0016](docs/decisions/0016-evidence-store-source-text-verifier.md)) grounds each claim in a specific chunk.
+
 ## Tests
 
 ```bash
