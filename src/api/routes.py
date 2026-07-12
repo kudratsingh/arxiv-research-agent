@@ -11,9 +11,10 @@ import asyncio
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, status
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi.responses import Response, StreamingResponse
 
+from src.api.exporters import EXPORTERS
 from src.api.jobs import (
     InMemoryJobStore,
     Job,
@@ -189,6 +190,73 @@ async def review_plan(
         job_id=job.job_id,
         status=job.status.value,
         action=body.action,
+    )
+
+
+@router.get(
+    "/research/{job_id}/export",
+    summary="Download the report in the requested format.",
+    responses={
+        200: {
+            "content": {
+                "text/markdown": {},
+                "application/pdf": {},
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {},  # noqa: E501
+            },
+        },
+    },
+)
+async def export_research(
+    job_id: str,
+    request: Request,
+    format: str = Query(
+        "md",
+        pattern="^(md|pdf|docx)$",
+        description="`md`, `pdf`, or `docx`",
+    ),
+) -> Response:
+    """Serve the job's report in the requested format (ADR 0031).
+
+    - 404 when the job doesn't exist.
+    - 409 when the job hasn't produced a report yet
+      (still `pending` / `running` / `pending_review` / `failed`
+      without a body / `cancelled` before completion).
+    - Content-Disposition: attachment so browsers download rather
+      than inline-render, matching the demo UI's export buttons.
+    """
+    state = _get_state(request)
+    job = await state["store"].get(job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
+        )
+    if not job.result:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"job_has_no_report (status={job.status.value})",
+        )
+
+    media_type, ext, render = EXPORTERS[format]
+    payload = render(job)
+    filename = f"research-{job.job_id}.{ext}"
+    log.info(
+        "api_job_exported",
+        extra={
+            "job_id": job.job_id,
+            "format": format,
+            "bytes": len(payload),
+        },
+    )
+    return Response(
+        content=payload,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            # Report content is per-user and unauthenticated — never
+            # cache. Also blocks intermediaries from returning stale
+            # copies to a different session.
+            "Cache-Control": "no-store",
+        },
     )
 
 

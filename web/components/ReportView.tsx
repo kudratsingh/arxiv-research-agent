@@ -2,6 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import ExportDropdown from "./ExportDropdown";
 import type { JobDetail } from "@/lib/types";
 
 interface ReportViewProps {
@@ -29,9 +30,12 @@ export default function ReportView({ detail }: ReportViewProps) {
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-        Report
-      </h2>
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Report
+        </h2>
+        <ExportDropdown jobId={detail.job_id} />
+      </div>
       <div className="report-prose">
         {/* react-markdown emits plain HTML by default (no raw HTML
         passthrough), so the report body is safe to render even
