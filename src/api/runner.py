@@ -39,6 +39,14 @@ Injectable so tests can hand in a stub without patching module state.
 """
 
 
+class HitlTimeoutError(Exception):
+    """Job sat in `pending_review` past `api_hitl_timeout_sec`."""
+
+
+class HitlCancelledError(Exception):
+    """Client sent `action=cancel` from the review endpoint."""
+
+
 def _initial_state(query: str, run_id: str) -> ResearchState:
     """Fresh `ResearchState` — same shape used by the eval runner.
 
@@ -116,29 +124,128 @@ async def _invoke_streaming(
     initial_state: ResearchState,
     run_id: str,
     on_node: Callable[[str, dict[str, Any]], Awaitable[None]],
+    *,
+    job: Job | None = None,
+    store: JobStore | None = None,
 ) -> dict[str, Any]:
-    """Run the workflow in a thread, streaming node updates to `on_node`.
+    """Run the workflow, honoring the HITL breakpoint if present.
 
-    `astream` yields `{node_name: state_update}` after each node. We
-    push a `node_completed` event per key. The final state is the
-    accumulation of all updates against the initial state, but
-    LangGraph tracks that internally — for the terminal frame we
-    fall back to `ainvoke` on a fresh app to guarantee we have the
-    settled state (the last `astream` chunk is just the last update).
+    `astream` yields `{node_name: state_update}` after each node. When
+    `settings.enable_hitl` is on, the compiled workflow interrupts
+    after the planner (ADR 0030); we detect that via
+    `app.get_state(config).next`, transition the job to
+    `pending_review`, emit `plan_ready`, and wait on
+    `job.resume_event`. On resume, optionally apply edits via
+    `app.update_state`, then run a second `astream` to completion.
+
+    `job` + `store` are required for the HITL path but optional so
+    the eval runner (which calls this without an API layer) still
+    works. Bypassing HITL when the workflow is compiled with an
+    interrupt: the runner just resumes immediately without waiting.
     """
     app = build_workflow()
     config = {"configurable": {"thread_id": run_id}}
 
-    # Streaming pass — hands the client per-node events as they land.
+    # First pass: runs until interrupt or completion.
     async for chunk in app.astream(initial_state, config=config):
         for node_name, state_update in chunk.items():
             await on_node(node_name, state_update)
 
-    # Second pass to get the settled full state. LangGraph's checkpointer
-    # (SqliteSaver, on by default) makes this cheap — the second call
-    # resumes from the completed checkpoint rather than re-running.
-    final_state = await asyncio.to_thread(app.invoke, initial_state, config=config)
+    # Did the workflow interrupt?
+    workflow_state = await asyncio.to_thread(app.get_state, config)
+    interrupted = bool(getattr(workflow_state, "next", ()))
+
+    if interrupted:
+        await _handle_hitl_pause(app, config, workflow_state, job, store)
+
+        # Resume from checkpoint — pass `None` as the input.
+        async for chunk in app.astream(None, config=config):
+            for node_name, state_update in chunk.items():
+                await on_node(node_name, state_update)
+
+    # Settled state via `invoke` on a completed thread — the
+    # checkpointer makes this cheap (no re-execution, returns the
+    # final values).
+    final_state = await asyncio.to_thread(
+        app.invoke,
+        None if interrupted else initial_state,
+        config=config,
+    )
     return dict(final_state)
+
+
+async def _handle_hitl_pause(
+    app: Any,
+    config: dict[str, Any],
+    workflow_state: Any,
+    job: Job | None,
+    store: JobStore | None,
+) -> None:
+    """Bridge the pause: populate `job.plan`, emit `plan_ready`, wait
+    on the resume signal, optionally apply edits.
+
+    No-op when `job` is None (called from eval / programmatic
+    paths that shouldn't pause). When `job.hitl_bypass` is True the
+    runner resumes immediately without emitting a review event.
+    """
+    if job is None:
+        return
+    if job.hitl_bypass:
+        # Compiled interrupt is unconditional; caller opted out.
+        return
+
+    plan_values = {
+        "sub_questions": list(workflow_state.values.get("sub_questions", [])),
+        "search_queries": list(workflow_state.values.get("search_queries", [])),
+    }
+    job.plan = plan_values
+    job.status = JobStatus.pending_review
+    if store is not None:
+        await store.update(job)
+    await _put_event(
+        job,
+        "plan_ready",
+        {"job_id": job.job_id, "plan": plan_values},
+    )
+    log.info(
+        "api_job_pending_review",
+        extra={"job_id": job.job_id, **_plan_shape(plan_values)},
+    )
+
+    try:
+        await asyncio.wait_for(
+            job.resume_event.wait(),
+            timeout=settings.api_hitl_timeout_sec,
+        )
+    except TimeoutError as exc:
+        raise HitlTimeoutError(
+            f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
+        ) from exc
+
+    if job.resume_action == "cancel":
+        raise HitlCancelledError("client cancelled during plan review")
+
+    if job.resume_action == "revise" and job.resume_plan:
+        await asyncio.to_thread(app.update_state, config, job.resume_plan)
+        log.info(
+            "api_job_plan_revised",
+            extra={"job_id": job.job_id, **_plan_shape(job.resume_plan)},
+        )
+
+    # Back to running for the resume path.
+    job.status = JobStatus.running
+    job.plan = None
+    job.resume_event.clear()
+    if store is not None:
+        await store.update(job)
+
+
+def _plan_shape(plan: dict[str, Any]) -> dict[str, Any]:
+    """Compact plan summary for logs — just counts, no user text."""
+    return {
+        "n_sub_questions": len(plan.get("sub_questions", []) or []),
+        "n_search_queries": len(plan.get("search_queries", []) or []),
+    }
 
 
 async def run_job(
@@ -188,10 +295,80 @@ async def run_job(
         initial = _initial_state(job.query, job.job_id)
 
         try:
+            # The overall timeout wraps only the workflow execution
+            # itself — not the HITL wait, which has its own
+            # `api_hitl_timeout_sec` inside `_handle_hitl_pause`.
+            # Compute a HITL-aware outer timeout: if HITL is enabled,
+            # allow enough headroom for one review cycle plus the
+            # workflow's own budget.
+            outer_timeout = timeout
+            if settings.enable_hitl and not job.hitl_bypass:
+                outer_timeout = timeout + settings.api_hitl_timeout_sec
+
             final_state = await asyncio.wait_for(
-                _invoke_streaming(build_workflow, initial, job.job_id, on_node),
-                timeout=timeout,
+                _invoke_streaming(
+                    build_workflow,
+                    initial,
+                    job.job_id,
+                    on_node,
+                    job=job,
+                    store=store,
+                ),
+                timeout=outer_timeout,
             )
+        except HitlTimeoutError:
+            job.status = JobStatus.failed
+            job.error = (
+                f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
+            )
+            job.error_type = "hitl_timeout"
+            job.completed_at = time.time()
+            snapshot = costs.as_dict()
+            job.cost_usd = snapshot.get("total_cost_usd")
+            job.llm_calls = snapshot.get("call_count")
+            reset_run_id(token)
+            await store.update(job)
+            await _put_terminal_event(
+                job,
+                "job_failed",
+                {
+                    "job_id": job.job_id,
+                    "error": job.error,
+                    "error_type": job.error_type,
+                    "elapsed_sec": job.elapsed_sec(),
+                },
+            )
+            log.warning(
+                "api_job_hitl_timeout",
+                extra={
+                    "job_id": job.job_id,
+                    "hitl_timeout_sec": settings.api_hitl_timeout_sec,
+                    **snapshot,
+                },
+            )
+            return
+        except HitlCancelledError:
+            job.status = JobStatus.cancelled
+            job.completed_at = time.time()
+            snapshot = costs.as_dict()
+            job.cost_usd = snapshot.get("total_cost_usd")
+            job.llm_calls = snapshot.get("call_count")
+            reset_run_id(token)
+            await store.update(job)
+            await _put_terminal_event(
+                job,
+                "job_cancelled",
+                {
+                    "job_id": job.job_id,
+                    "elapsed_sec": job.elapsed_sec(),
+                    "reason": "hitl_cancelled",
+                },
+            )
+            log.info(
+                "api_job_hitl_cancelled",
+                extra={"job_id": job.job_id, **snapshot},
+            )
+            return
         except TimeoutError:
             job.status = JobStatus.failed
             job.error = f"Workflow exceeded {timeout}s timeout"

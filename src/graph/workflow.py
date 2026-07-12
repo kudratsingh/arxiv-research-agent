@@ -153,7 +153,7 @@ def _build_supervisor_loop(workflow: StateGraph[ResearchState, Any, Any, Any]) -
         workflow.add_edge(node, "supervisor")
 
 
-def build_workflow() -> Any:
+def build_workflow(*, enable_hitl: bool | None = None) -> Any:
     """Construct and compile the research agent workflow graph.
 
     Shape depends on `settings.enable_supervisor`:
@@ -168,6 +168,13 @@ def build_workflow() -> Any:
 
     When `settings.enable_tracing` is on, every agent execution is
     wrapped in an OpenTelemetry span.
+
+    Args:
+        enable_hitl: Override for the HITL breakpoint (ADR 0030).
+            `None` (default) reads `settings.enable_hitl`. Pass `False`
+            from the eval runner + other programmatic callers that
+            can't sit through a human review — matches the per-query
+            `hitl_bypass` flag on `POST /research`.
     """
     workflow = StateGraph(ResearchState)
 
@@ -181,10 +188,25 @@ def build_workflow() -> Any:
     # don't have to think about teardown.
     exit_stack = ExitStack()
     checkpointer = _open_checkpointer(exit_stack)
+
+    # HITL breakpoint (ADR 0030): interrupt after the planner so a
+    # human can review + edit sub_questions / search_queries before
+    # search runs. Interrupts require a checkpointer — LangGraph
+    # can't resume without persistence. Bypass with `hitl_bypass=True`
+    # on the API caller side (see runner.py).
+    hitl_effective = (
+        settings.enable_hitl if enable_hitl is None else enable_hitl
+    )
+    interrupt_after: list[str] | None = None
+    if hitl_effective and checkpointer is not None:
+        interrupt_after = ["planner"]
+
+    compile_kwargs: dict[str, Any] = {}
     if checkpointer is not None:
-        compiled = workflow.compile(checkpointer=checkpointer)
-    else:
-        compiled = workflow.compile()
+        compile_kwargs["checkpointer"] = checkpointer
+    if interrupt_after is not None:
+        compile_kwargs["interrupt_after"] = interrupt_after
+    compiled = workflow.compile(**compile_kwargs)
 
     # Attach so a caller who cares can `close()`; ExitStack cleanup
     # otherwise runs at interpreter shutdown.

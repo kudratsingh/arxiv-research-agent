@@ -148,7 +148,11 @@ def _run_and_score(benchmark_query: BenchmarkQuery) -> dict[str, Any]:
         },
     )
     try:
-        app = build_workflow()
+        # `enable_hitl=False`: the nightly benchmark runs unattended;
+        # letting the workflow pause for plan review would hang the
+        # runner. Matches the per-query `hitl_bypass` on POST
+        # /research for other programmatic callers. See ADR 0030.
+        app = build_workflow(enable_hitl=False)
         config = {"configurable": {"thread_id": run_id}}
         final_state = app.invoke(
             _initial_state(benchmark_query["query"], run_id), config=config

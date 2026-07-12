@@ -304,7 +304,9 @@ class TestRunAndScoreSuccess:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            runner_module, "build_workflow", lambda: _FakeApp(_finished_state())
+            runner_module,
+            "build_workflow",
+            lambda **_kw: _FakeApp(_finished_state()),
         )
         # Stub metric functions so we don't invoke the LLM.
         monkeypatch.setattr(
@@ -358,7 +360,7 @@ class TestRunAndScoreError:
     def test_workflow_exception_captured_on_record(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        def _boom() -> None:
+        def _boom(**_kw: Any) -> None:
             raise RuntimeError("no connectivity")
 
         monkeypatch.setattr(runner_module, "build_workflow", _boom)

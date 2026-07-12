@@ -1,4 +1,9 @@
-import type { JobDetail, ResearchAccepted } from "./types";
+import type {
+  JobDetail,
+  ResearchAccepted,
+  ReviewRequest,
+  ReviewResponse,
+} from "./types";
 
 // Base URL for the FastAPI service. In compose the browser hits it
 // via the host-published port; NEXT_PUBLIC_API_BASE ships with the
@@ -38,6 +43,24 @@ export async function getJob(jobId: string): Promise<JobDetail> {
 
 export function streamUrl(jobId: string): string {
   return `${API_BASE}/research/${encodeURIComponent(jobId)}/stream`;
+}
+
+export async function reviewPlan(
+  jobId: string,
+  body: ReviewRequest
+): Promise<ReviewResponse> {
+  const resp = await fetch(
+    `${API_BASE}/research/${encodeURIComponent(jobId)}/review`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!resp.ok) {
+    throw new ApiError(resp.status, await safeError(resp));
+  }
+  return (await resp.json()) as ReviewResponse;
 }
 
 async function safeError(resp: Response): Promise<string> {

@@ -48,7 +48,10 @@ def run(query: str, run_id: str | None = None) -> str:
 
     log.info("run_started", extra={"query": query})
     try:
-        app = build_workflow()
+        # CLI is a fire-and-forget entry point — no way to accept a
+        # mid-run plan review from stdin. Bypass HITL; the API path
+        # (ADR 0030) is where reviewers actually approve plans.
+        app = build_workflow(enable_hitl=False)
 
         initial_state = {
             "run_id": run_id,
