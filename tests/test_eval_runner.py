@@ -62,6 +62,7 @@ class TestInitialState:
             "reader_analysis_complete",
             "reader_missing_context",
             "reader_requested_sections",
+            "prior_context",
             "messages",
         }
         assert set(state.keys()) == expected

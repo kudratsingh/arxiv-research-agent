@@ -138,4 +138,9 @@ class ResearchState(TypedDict):
     reader_analysis_complete: bool
     reader_missing_context: str
     reader_requested_sections: list[str]
+    # Conversation follow-up context (Sprint 5 PR 4, ADR 0032).
+    # Populated by the API runner right before the workflow starts
+    # when the job runs in a conversation with prior jobs. Blank
+    # string outside conversation mode.
+    prior_context: str
     messages: Annotated[list[Any], add_messages]

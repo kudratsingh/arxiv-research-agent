@@ -85,6 +85,7 @@ def _job_from_json(payload: str) -> Job:
         iterations=data.get("iterations"),
         quality_score=data.get("quality_score"),
         hitl_bypass=bool(data.get("hitl_bypass", False)),
+        conversation_id=data.get("conversation_id"),
         plan=data.get("plan"),
         resume_action=data.get("resume_action"),
         resume_plan=data.get("resume_plan"),

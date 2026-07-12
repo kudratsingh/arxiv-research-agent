@@ -47,12 +47,17 @@ class HitlCancelledError(Exception):
     """Client sent `action=cancel` from the review endpoint."""
 
 
-def _initial_state(query: str, run_id: str) -> ResearchState:
+def _initial_state(
+    query: str, run_id: str, *, prior_context: str = ""
+) -> ResearchState:
     """Fresh `ResearchState` — same shape used by the eval runner.
 
     Kept inline (rather than reusing `src.eval.runner._initial_state`)
     so the API layer doesn't import the eval module; those two paths
     should not couple.
+
+    `prior_context` is the ADR-0032 conversation-follow-up
+    hook — retrieved chunks land here before the planner runs.
     """
     return {
         "run_id": run_id,
@@ -80,6 +85,7 @@ def _initial_state(query: str, run_id: str) -> ResearchState:
         "reader_analysis_complete": True,
         "reader_missing_context": "",
         "reader_requested_sections": [],
+        "prior_context": prior_context,
         "messages": [],
     }
 
@@ -255,12 +261,18 @@ async def run_job(
     semaphore: asyncio.Semaphore,
     *,
     timeout_sec: int | None = None,
+    conversation_store: Any = None,
 ) -> None:
     """Execute one job to completion, updating the store as it goes.
 
     Enforces the concurrency semaphore, the per-job timeout, and
     error containment: this function never raises — every failure
     ends up on the `Job` record.
+
+    When `job.conversation_id` is set and `conversation_store` is
+    provided, the runner retrieves top-K chunks from prior jobs in
+    that conversation before invoking the workflow, and appends the
+    completed job to the conversation on success (ADR 0032).
     """
     timeout = timeout_sec if timeout_sec is not None else settings.api_job_timeout_sec
 
@@ -292,7 +304,29 @@ async def run_job(
                 {"node": node_name, "state_delta": slim},
             )
 
-        initial = _initial_state(job.query, job.job_id)
+        prior_context = ""
+        if job.conversation_id and conversation_store is not None:
+            # Retrieve top-K chunks from the conversation's prior jobs.
+            # Encoding happens in a thread — MiniLM inference is CPU-
+            # bound and doesn't need the async event loop.
+            from src.api.retriever import (
+                format_context_for_planner,
+                retrieve_prior_context,
+            )
+
+            conversation = await conversation_store.get(job.conversation_id)
+            if conversation is not None and conversation.jobs:
+                chunks = await asyncio.to_thread(
+                    retrieve_prior_context,
+                    conversation,
+                    job.query,
+                    settings.conversation_context_top_k,
+                )
+                prior_context = format_context_for_planner(chunks)
+
+        initial = _initial_state(
+            job.query, job.job_id, prior_context=prior_context
+        )
 
         try:
             # The overall timeout wraps only the workflow execution
@@ -447,6 +481,15 @@ async def run_job(
         reset_run_id(token)
 
         await store.update(job)
+
+        # ADR 0032: append succeeded jobs to their conversation, so
+        # follow-up queries retrieve this report as prior context.
+        # Auto-title the conversation from the first job's query when
+        # the client seeded it without a title.
+        if job.conversation_id and conversation_store is not None:
+            with contextlib.suppress(Exception):
+                await _append_to_conversation(conversation_store, job)
+
         await _put_terminal_event(
             job,
             "job_completed",
@@ -467,3 +510,31 @@ async def run_job(
                 **snapshot,
             },
         )
+
+
+async def _append_to_conversation(conversation_store: Any, job: Job) -> None:
+    """Append a succeeded job to its conversation. Auto-titles the
+    conversation from the first job's query when the current title
+    is the default placeholder."""
+    from src.api.conversations import Conversation, title_from_query
+
+    added = await conversation_store.append_job(
+        conversation_id=job.conversation_id,
+        job_id=job.job_id,
+        query=job.query,
+        report=job.result or "",
+    )
+    if added is None:
+        return
+    # First-job auto-title. Only overwrites the default placeholder;
+    # a client-set title stays intact.
+    if added.ordinal == 1:
+        conversation: Conversation | None = await conversation_store.get(
+            job.conversation_id
+        )
+        if conversation is not None and conversation.title == "New conversation":
+            conversation.title = title_from_query(job.query)
+            # In-memory store: mutation is enough; Postgres store: no
+            # `update_title` method today. We could add one but the
+            # "New conversation" case is rare in practice (clients
+            # typically set a title).

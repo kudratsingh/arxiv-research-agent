@@ -38,8 +38,13 @@ export interface UseResearchStreamState {
   detail: JobDetail | null;
   plan: Plan | null;
   error: string | null;
-  submit: (query: string) => Promise<void>;
+  submit: (query: string, options?: SubmitOptions) => Promise<void>;
   review: (action: ReviewAction, plan?: Plan) => Promise<void>;
+}
+
+export interface SubmitOptions {
+  conversation_id?: string;
+  onDone?: (detail: JobDetail) => void;
 }
 
 const EVENT_NAMES: readonly SseEventName[] = [
@@ -73,10 +78,13 @@ export function useResearchStream(): UseResearchStreamState {
 
   useEffect(() => cleanup, [cleanup]);
 
+  const onDoneRef = useRef<SubmitOptions["onDone"] | null>(null);
+
   const finalize = useCallback(async (id: string) => {
     try {
       const settled = await getJob(id);
       setDetail(settled);
+      if (onDoneRef.current) onDoneRef.current(settled);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -89,8 +97,9 @@ export function useResearchStream(): UseResearchStreamState {
   }, []);
 
   const submit = useCallback(
-    async (query: string) => {
+    async (query: string, options: SubmitOptions = {}) => {
       cleanup();
+      onDoneRef.current = options.onDone ?? null;
       setStatus("submitting");
       setEvents([]);
       setDetail(null);
@@ -99,7 +108,9 @@ export function useResearchStream(): UseResearchStreamState {
 
       let submission;
       try {
-        submission = await submitResearch(query);
+        submission = await submitResearch(query, {
+          conversation_id: options.conversation_id,
+        });
       } catch (err) {
         setStatus("idle");
         setError(err instanceof Error ? err.message : String(err));

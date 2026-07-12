@@ -33,6 +33,14 @@ class ResearchRequest(BaseModel):
             "don't stall waiting for a human. See ADR 0030."
         ),
     )
+    conversation_id: str | None = Field(
+        default=None,
+        description=(
+            "Run this query as a follow-up in an existing conversation. "
+            "Prior-report chunks from the same conversation are retrieved "
+            "and prepended to the planner's system prompt. See ADR 0032."
+        ),
+    )
 
 
 class ResearchAccepted(BaseModel):
@@ -80,6 +88,10 @@ class JobDetail(BaseModel):
             "Populated when `status=pending_review`. See ADR 0030."
         ),
     )
+    conversation_id: str | None = Field(
+        default=None,
+        description="If the job runs in a conversation, its id. See ADR 0032.",
+    )
 
 
 class ReviewRequest(BaseModel):
@@ -102,6 +114,55 @@ class ReviewResponse(BaseModel):
     job_id: str
     status: str
     action: str
+
+
+# ---------------------------------------------------------------------------
+# Conversation schemas (Sprint 5 PR 4, ADR 0032).
+# ---------------------------------------------------------------------------
+
+MAX_TITLE_LEN = 80
+
+
+class ConversationCreateRequest(BaseModel):
+    """Body for `POST /conversations`. Both fields optional — a
+    conversation can be seeded blank (title auto-derives from the
+    first job's query) or with an explicit title."""
+
+    title: str | None = Field(
+        default=None,
+        max_length=MAX_TITLE_LEN,
+        description="Optional display title. Auto-derived from first "
+        "job's query when omitted.",
+    )
+
+
+class ConversationJobSummary(BaseModel):
+    """Trimmed view of a conversation's job — sidebar-friendly."""
+
+    job_id: str
+    ordinal: int
+    query: str
+    report: str
+    created_at: float
+
+
+class ConversationDetail(BaseModel):
+    """`GET /conversations/{id}` — full thread."""
+
+    conversation_id: str
+    title: str
+    created_at: float
+    updated_at: float
+    jobs: list[ConversationJobSummary] = Field(default_factory=list)
+
+
+class ConversationListItem(BaseModel):
+    """`GET /conversations` — sidebar entry, no job bodies."""
+
+    conversation_id: str
+    title: str
+    created_at: float
+    updated_at: float
 
 
 class HealthResponse(BaseModel):

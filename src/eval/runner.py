@@ -93,6 +93,7 @@ def _initial_state(query: str, run_id: str) -> ResearchState:
         "reader_analysis_complete": True,
         "reader_missing_context": "",
         "reader_requested_sections": [],
+        "prior_context": "",
         "messages": [],
     }
 

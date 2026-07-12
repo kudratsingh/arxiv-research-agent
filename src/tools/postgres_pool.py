@@ -52,6 +52,33 @@ CREATE TABLE IF NOT EXISTS embedding_cache (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (content_hash, model_name)
 );
+
+-- Conversations (Sprint 5 PR 4, ADR 0032). A conversation links
+-- multiple research jobs into a follow-up thread; the planner
+-- retrieves top-K chunks from prior jobs in the same conversation
+-- to bias the new plan toward continuity.
+CREATE TABLE IF NOT EXISTS conversations (
+    conversation_id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS conversation_jobs (
+    conversation_id TEXT NOT NULL REFERENCES conversations(conversation_id)
+        ON DELETE CASCADE,
+    job_id TEXT NOT NULL,
+    ordinal INTEGER NOT NULL,
+    query TEXT NOT NULL,
+    report TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (conversation_id, ordinal)
+);
+
+CREATE INDEX IF NOT EXISTS conversation_jobs_conversation_idx
+    ON conversation_jobs (conversation_id, ordinal);
+CREATE INDEX IF NOT EXISTS conversation_jobs_job_id_idx
+    ON conversation_jobs (job_id);
 """
 
 

@@ -35,6 +35,21 @@ def _build_user_prompt(state: ResearchState) -> str:
     """Build the user message from the current state."""
     parts = [f"Research question: {state['query']}"]
 
+    prior_context = state.get("prior_context", "")
+    if prior_context:
+        # ADR 0032: conversation follow-ups get top-K chunks from
+        # prior reports embedded here. Position it above the
+        # critique so the planner treats it as background rather
+        # than corrective feedback.
+        parts.append(
+            "\nContext from prior queries in this conversation:\n"
+            f"{prior_context}\n\n"
+            "Use these prior findings to (a) avoid redundantly "
+            "researching what's already been covered and (b) target "
+            "the gaps or follow-up threads the user is now asking "
+            "about."
+        )
+
     critique = state.get("critique", "")
     if critique:
         parts.append(f"\nPrevious critique (use this to improve your plan):\n{critique}")
