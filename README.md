@@ -220,6 +220,10 @@ API_HOST=0.0.0.0 API_PORT=8080 python -m src.api.serve
 | `GET`  | `/research/{job_id}` | Full lifecycle snapshot (status, result, error, cost, metrics, `plan` when awaiting review). |
 | `POST` | `/research/{job_id}/review` | Resolve a `pending_review` job. Body: `{action: "approve"\|"revise"\|"cancel", plan?}`. See ADR [0030](docs/decisions/0030-hitl-plan-review.md). |
 | `GET`  | `/research/{job_id}/export?format=md\|pdf\|docx` | Download the report in the requested format. See ADR [0031](docs/decisions/0031-multi-format-export.md). |
+| `POST` | `/conversations` | Create a conversation thread. Body: `{title?}`. See ADR [0032](docs/decisions/0032-conversation-mode.md). |
+| `GET`  | `/conversations` | List conversations (no job bodies). |
+| `GET`  | `/conversations/{id}` | Full thread with every job's report. |
+| `DELETE` | `/conversations/{id}` | Delete a conversation + all its jobs (CASCADE). |
 | `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` (+ `plan_ready` when HITL is on) → terminal frame. |
 | `GET`  | `/healthz` | Liveness + concurrency headroom. |
 | `GET`  | `/docs` | Auto-generated OpenAPI docs. |
@@ -319,12 +323,12 @@ python -m src.eval.regression_diff \
 pytest tests/ -q
 ```
 
-680+ tests across unit + integration tiers (see
+740+ tests across unit + integration tiers (see
 [`docs/testing.md`](docs/testing.md) for the strategy).
 
 ## Project status
 
-**Sprint 5 in progress.** Sprint 1 shipped the observability + eval
+**Sprint 5 complete.** Sprint 1 shipped the observability + eval
 substrate; Sprint 2 shipped the supervisor loop + verifier +
 evidence store + recovery actions + prompt-injection isolation;
 Sprint 3 shipped cost-aware model routing + Anthropic prompt
@@ -333,9 +337,10 @@ made the system deployable end-to-end: PR CI gate (ADR 0024),
 FastAPI + async jobs + SSE (ADRs 0025 / 0026),
 Dockerfile + compose stack + `RedisJobStore` (ADR 0027), and
 Postgres-backed paper + embedding caches (ADR 0028). Sprint 5
-opens the product-surface arc — Next.js web UI (ADR 0029), HITL
-plan-review breakpoint (ADR 0030), and multi-format export (ADR
-0031) shipped. Next up: follow-up conversation mode.
+shipped the product-surface arc: Next.js web UI (ADR 0029), HITL
+plan-review breakpoint (ADR 0030), multi-format export (ADR
+0031), and follow-up conversation mode with retrieval-augmented
+planner context (ADR 0032).
 
 Full status and phase-by-phase plan in
 [`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).

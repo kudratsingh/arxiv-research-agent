@@ -249,6 +249,28 @@ class Settings(BaseSettings):
             "See ADR 0028."
         ),
     )
+    conversation_store: str = Field(
+        default="memory",
+        description=(
+            "ConversationStore implementation. `memory` = in-process "
+            "InMemoryConversationStore (single-worker only, dies with "
+            "the process). `postgres` = PostgresConversationStore, "
+            "durable across restarts + shared across workers. See ADR "
+            "0032. Compose sets this to `postgres` alongside the "
+            "paper + embedding caches."
+        ),
+    )
+    conversation_context_top_k: int = Field(
+        default=5,
+        ge=1,
+        le=20,
+        description=(
+            "How many prior-report chunks the retriever pulls into the "
+            "planner's system prompt when a job runs in a conversation. "
+            "Higher = more continuity, more tokens; lower = leaner, may "
+            "lose thread. See ADR 0032."
+        ),
+    )
 
     # ------ Checkpointing ---------------------------------------------
     enable_checkpointing: bool = Field(

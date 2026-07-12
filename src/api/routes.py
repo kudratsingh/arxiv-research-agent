@@ -14,6 +14,10 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from fastapi.responses import Response, StreamingResponse
 
+from src.api.conversations import (
+    Conversation,
+    new_conversation_id,
+)
 from src.api.exporters import EXPORTERS
 from src.api.jobs import (
     InMemoryJobStore,
@@ -23,6 +27,10 @@ from src.api.jobs import (
 )
 from src.api.runner import run_job
 from src.api.schemas import (
+    ConversationCreateRequest,
+    ConversationDetail,
+    ConversationJobSummary,
+    ConversationListItem,
     HealthResponse,
     JobDetail,
     Plan,
@@ -66,6 +74,7 @@ def _job_to_detail(job: Job) -> JobDetail:
         iterations=job.iterations,
         quality_score=job.quality_score,
         plan=plan,
+        conversation_id=job.conversation_id,
     )
 
 
@@ -85,12 +94,28 @@ async def submit_research(body: ResearchRequest, request: Request) -> ResearchAc
     Returns 202 with `job_id`, `status_url`, `stream_url`. The
     workflow runs behind a semaphore so requests over the concurrent
     ceiling queue as `pending` and start when a slot frees.
+
+    When `conversation_id` is set, the runner retrieves prior-report
+    chunks from that conversation before invoking the workflow, and
+    appends the completed job to the conversation on succeed. See
+    ADR 0032.
     """
     state = _get_state(request)
+
+    # Fast-fail on a missing conversation before the workflow starts.
+    if body.conversation_id is not None:
+        conversation_store = state["conversation_store"]
+        if await conversation_store.get(body.conversation_id) is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="conversation_not_found",
+            )
+
     job = Job(
         job_id=_new_job_id(),
         query=body.query,
         hitl_bypass=body.hitl_bypass,
+        conversation_id=body.conversation_id,
     )
     await state["store"].create(job)
 
@@ -100,6 +125,7 @@ async def submit_research(body: ResearchRequest, request: Request) -> ResearchAc
             build_workflow=state["build_workflow"],
             store=state["store"],
             semaphore=state["semaphore"],
+            conversation_store=state["conversation_store"],
         ),
         name=f"job-{job.job_id}",
     )
@@ -338,6 +364,107 @@ async def stream_research(job_id: str, request: Request) -> StreamingResponse:
     )
 
 
+@router.post(
+    "/conversations",
+    response_model=ConversationDetail,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new conversation.",
+)
+async def create_conversation(
+    body: ConversationCreateRequest, request: Request
+) -> ConversationDetail:
+    """Create an empty conversation. `title` is optional — when
+    omitted the first job's query auto-populates it. See ADR 0032.
+    """
+    state = _get_state(request)
+    conversation = Conversation(
+        conversation_id=new_conversation_id(),
+        title=body.title or "New conversation",
+    )
+    await state["conversation_store"].create(conversation)
+    log.info(
+        "api_conversation_created",
+        extra={"conversation_id": conversation.conversation_id},
+    )
+    return _conversation_to_detail(conversation)
+
+
+@router.get(
+    "/conversations",
+    response_model=list[ConversationListItem],
+    summary="List conversations, newest first (no job bodies).",
+)
+async def list_conversations(request: Request) -> list[ConversationListItem]:
+    state = _get_state(request)
+    conversations = await state["conversation_store"].list()
+    return [
+        ConversationListItem(
+            conversation_id=c.conversation_id,
+            title=c.title,
+            created_at=c.created_at,
+            updated_at=c.updated_at,
+        )
+        for c in conversations
+    ]
+
+
+@router.get(
+    "/conversations/{conversation_id}",
+    response_model=ConversationDetail,
+    summary="Full conversation thread including every job's report body.",
+)
+async def get_conversation(
+    conversation_id: str, request: Request
+) -> ConversationDetail:
+    state = _get_state(request)
+    conversation = await state["conversation_store"].get(conversation_id)
+    if conversation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
+        )
+    return _conversation_to_detail(conversation)
+
+
+@router.delete(
+    "/conversations/{conversation_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a conversation + all its jobs.",
+)
+async def delete_conversation(
+    conversation_id: str, request: Request
+) -> Response:
+    state = _get_state(request)
+    deleted = await state["conversation_store"].delete(conversation_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
+        )
+    log.info(
+        "api_conversation_deleted",
+        extra={"conversation_id": conversation_id},
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def _conversation_to_detail(conversation: Conversation) -> ConversationDetail:
+    return ConversationDetail(
+        conversation_id=conversation.conversation_id,
+        title=conversation.title,
+        created_at=conversation.created_at,
+        updated_at=conversation.updated_at,
+        jobs=[
+            ConversationJobSummary(
+                job_id=j.job_id,
+                ordinal=j.ordinal,
+                query=j.query,
+                report=j.report,
+                created_at=j.created_at,
+            )
+            for j in conversation.jobs
+        ],
+    )
+
+
 @router.get(
     "/healthz",
     response_model=HealthResponse,
@@ -394,4 +521,5 @@ def _get_state(request: Request) -> dict[str, Any]:
         "semaphore": request.app.state.semaphore,
         "max_concurrent_jobs": request.app.state.max_concurrent_jobs,
         "tasks": request.app.state.tasks,
+        "conversation_store": request.app.state.conversation_store,
     }

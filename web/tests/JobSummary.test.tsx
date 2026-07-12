@@ -20,6 +20,7 @@ function makeDetail(overrides: Partial<JobDetail> = {}): JobDetail {
     iterations: 1,
     quality_score: 0.9,
     plan: null,
+    conversation_id: null,
     ...overrides,
   };
 }

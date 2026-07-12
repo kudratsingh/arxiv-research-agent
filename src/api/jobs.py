@@ -77,6 +77,7 @@ class Job:
     iterations: int | None = None
     quality_score: float | None = None
     hitl_bypass: bool = False
+    conversation_id: str | None = None
     plan: dict[str, Any] | None = None
     resume_action: str | None = None
     resume_plan: dict[str, Any] | None = None

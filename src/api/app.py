@@ -19,6 +19,10 @@ from typing import Any
 
 from fastapi import FastAPI
 
+from src.api.conversations import (
+    ConversationStore,
+    build_conversation_store,
+)
 from src.api.jobs import InMemoryJobStore, JobStore
 from src.api.routes import router
 from src.config import settings
@@ -56,6 +60,7 @@ def create_app(
     *,
     build_workflow: Callable[[], Any] | None = None,
     store: JobStore | None = None,
+    conversation_store: ConversationStore | None = None,
     max_concurrent_jobs: int | None = None,
 ) -> FastAPI:
     """Build a FastAPI app instance.
@@ -66,16 +71,26 @@ def create_app(
             inject a stub that yields fake state updates.
         store: Persistence layer. Defaults to whichever `JobStore`
             `settings.job_store` selects (`memory` / `redis`).
+        conversation_store: Conversation persistence (ADR 0032).
+            Defaults to whichever `ConversationStore`
+            `settings.conversation_store` selects
+            (`memory` / `postgres`).
         max_concurrent_jobs: Semaphore ceiling. Defaults to
             `settings.api_max_concurrent_jobs`.
     """
     factory = build_workflow or default_build_workflow
     job_store: JobStore = store if store is not None else _default_store()
+    conv_store: ConversationStore = (
+        conversation_store
+        if conversation_store is not None
+        else build_conversation_store()
+    )
     max_concurrent = max_concurrent_jobs or settings.api_max_concurrent_jobs
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.store = job_store
+        app.state.conversation_store = conv_store
         app.state.build_workflow = factory
         app.state.semaphore = asyncio.Semaphore(max_concurrent)
         app.state.max_concurrent_jobs = max_concurrent
@@ -85,6 +100,7 @@ def create_app(
             extra={
                 "max_concurrent_jobs": max_concurrent,
                 "store": type(job_store).__name__,
+                "conversation_store": type(conv_store).__name__,
             },
         )
         try:

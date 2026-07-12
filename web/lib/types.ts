@@ -55,6 +55,34 @@ export interface JobDetail {
   iterations: number | null;
   quality_score: number | null;
   plan: Plan | null;
+  conversation_id: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Conversation types (Sprint 5 PR 4, ADR 0032).
+// ---------------------------------------------------------------------------
+
+export interface ConversationListItem {
+  conversation_id: string;
+  title: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface ConversationJobSummary {
+  job_id: string;
+  ordinal: number;
+  query: string;
+  report: string;
+  created_at: number;
+}
+
+export interface ConversationDetail {
+  conversation_id: string;
+  title: string;
+  created_at: number;
+  updated_at: number;
+  jobs: ConversationJobSummary[];
 }
 
 export type SseEventName =

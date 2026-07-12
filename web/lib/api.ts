@@ -1,4 +1,6 @@
 import type {
+  ConversationDetail,
+  ConversationListItem,
   JobDetail,
   ResearchAccepted,
   ReviewRequest,
@@ -21,16 +23,77 @@ export class ApiError extends Error {
   }
 }
 
-export async function submitResearch(query: string): Promise<ResearchAccepted> {
+export interface ResearchSubmitOptions {
+  conversation_id?: string;
+  hitl_bypass?: boolean;
+}
+
+export async function submitResearch(
+  query: string,
+  options: ResearchSubmitOptions = {}
+): Promise<ResearchAccepted> {
+  const body: Record<string, unknown> = { query };
+  if (options.conversation_id) body.conversation_id = options.conversation_id;
+  if (options.hitl_bypass) body.hitl_bypass = options.hitl_bypass;
   const resp = await fetch(`${API_BASE}/research`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify(body),
   });
   if (!resp.ok) {
     throw new ApiError(resp.status, await safeError(resp));
   }
   return (await resp.json()) as ResearchAccepted;
+}
+
+// ---------------------------------------------------------------------------
+// Conversation endpoints (ADR 0032).
+// ---------------------------------------------------------------------------
+
+export async function createConversation(
+  title?: string
+): Promise<ConversationDetail> {
+  const resp = await fetch(`${API_BASE}/conversations`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(title ? { title } : {}),
+  });
+  if (!resp.ok) {
+    throw new ApiError(resp.status, await safeError(resp));
+  }
+  return (await resp.json()) as ConversationDetail;
+}
+
+export async function listConversations(): Promise<ConversationListItem[]> {
+  const resp = await fetch(`${API_BASE}/conversations`);
+  if (!resp.ok) {
+    throw new ApiError(resp.status, await safeError(resp));
+  }
+  return (await resp.json()) as ConversationListItem[];
+}
+
+export async function getConversation(
+  conversationId: string
+): Promise<ConversationDetail> {
+  const resp = await fetch(
+    `${API_BASE}/conversations/${encodeURIComponent(conversationId)}`
+  );
+  if (!resp.ok) {
+    throw new ApiError(resp.status, await safeError(resp));
+  }
+  return (await resp.json()) as ConversationDetail;
+}
+
+export async function deleteConversation(
+  conversationId: string
+): Promise<void> {
+  const resp = await fetch(
+    `${API_BASE}/conversations/${encodeURIComponent(conversationId)}`,
+    { method: "DELETE" }
+  );
+  if (!resp.ok) {
+    throw new ApiError(resp.status, await safeError(resp));
+  }
 }
 
 export async function getJob(jobId: string): Promise<JobDetail> {
