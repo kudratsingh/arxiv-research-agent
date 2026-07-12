@@ -10,6 +10,7 @@ interface EventLogProps {
 const NAME_COLORS: Record<SseEventName, string> = {
   job_started: "text-blue-600 dark:text-blue-400",
   node_completed: "text-blue-600 dark:text-blue-400",
+  plan_ready: "text-amber-600 dark:text-amber-400",
   job_completed: "text-emerald-600 dark:text-emerald-400",
   job_failed: "text-red-600 dark:text-red-400",
   job_cancelled: "text-amber-600 dark:text-amber-400",
@@ -74,6 +75,14 @@ function formatDetail(evt: SseEvent): string {
       }
     }
     return parts.join(" ");
+  }
+  if (evt.name === "plan_ready") {
+    const plan = data.plan as
+      | { sub_questions?: string[]; search_queries?: string[] }
+      | undefined;
+    const n_sub = plan?.sub_questions?.length ?? 0;
+    const n_q = plan?.search_queries?.length ?? 0;
+    return `sub_questions=${n_sub} search_queries=${n_q} (awaiting review)`;
   }
   if (evt.name === "job_completed") {
     const elapsed =

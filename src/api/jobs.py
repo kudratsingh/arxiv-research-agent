@@ -22,15 +22,19 @@ from typing import Any, Protocol
 class JobStatus(StrEnum):
     """Terminal + non-terminal states a job can be in.
 
-    `pending` — accepted, not yet started (queued behind the semaphore).
-    `running` — actively invoking the workflow.
-    `succeeded` — workflow returned; `result` populated.
-    `failed`   — workflow raised or timed out; `error` populated.
-    `cancelled` — client called cancel or app is shutting down.
+    `pending`        — accepted, not yet started (queued behind the semaphore).
+    `running`        — actively invoking the workflow.
+    `pending_review` — paused at the HITL breakpoint after the planner (ADR
+                       0030). Waiting for a human to review + resume via
+                       `POST /research/{id}/review`.
+    `succeeded`      — workflow returned; `result` populated.
+    `failed`         — workflow raised or timed out; `error` populated.
+    `cancelled`      — client called cancel or app is shutting down.
     """
 
     pending = "pending"
     running = "running"
+    pending_review = "pending_review"
     succeeded = "succeeded"
     failed = "failed"
     cancelled = "cancelled"
@@ -49,6 +53,14 @@ class Job:
     workflow events into and the SSE endpoint reads from. It's an
     `asyncio.Queue` rather than a list so a slow SSE consumer applies
     backpressure to the runner instead of being silently dropped.
+
+    HITL fields (ADR 0030) are transient — `plan` is populated when
+    the workflow interrupts after the planner and cleared once
+    resumed. `hitl_bypass` mirrors the request field and lets the
+    runner skip the pause without checking global settings. The
+    `resume_event` is the intra-process signal the review endpoint
+    sets to wake the runner; `resume_action` + `resume_plan` carry
+    the client's decision.
     """
 
     job_id: str
@@ -64,12 +76,20 @@ class Job:
     llm_calls: int | None = None
     iterations: int | None = None
     quality_score: float | None = None
+    hitl_bypass: bool = False
+    plan: dict[str, Any] | None = None
+    resume_action: str | None = None
+    resume_plan: dict[str, Any] | None = None
     event_queue: asyncio.Queue[dict[str, Any]] = field(
         default_factory=lambda: asyncio.Queue(maxsize=1024)
     )
+    resume_event: asyncio.Event = field(default_factory=asyncio.Event)
 
     def is_terminal(self) -> bool:
         return self.status in TERMINAL_STATUSES
+
+    def is_awaiting_review(self) -> bool:
+        return self.status == JobStatus.pending_review
 
     def elapsed_sec(self) -> float | None:
         """Wall-clock duration of the job, or None if not yet started."""

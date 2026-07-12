@@ -41,12 +41,13 @@ def _job_key(job_id: str) -> str:
 def _persistent_fields() -> set[str]:
     """Fields on `Job` that go over the wire to Redis.
 
-    `event_queue` is excluded — it's an `asyncio.Queue` bound to the
-    worker running the job. Streaming events crosses process
-    boundaries only via a pub/sub channel (follow-up), never via
-    Redis persistence of the queue itself.
+    Excluded:
+      - `event_queue`: `asyncio.Queue` bound to the runner worker.
+      - `resume_event`: `asyncio.Event`, same rationale — HITL resume
+        is a worker-local signal in this PR. Cross-worker resume
+        would need Redis pub/sub (follow-up in ADR 0030).
     """
-    return {f.name for f in fields(Job)} - {"event_queue"}
+    return {f.name for f in fields(Job)} - {"event_queue", "resume_event"}
 
 
 def _job_to_json(job: Job) -> str:
@@ -83,6 +84,10 @@ def _job_from_json(payload: str) -> Job:
         llm_calls=data.get("llm_calls"),
         iterations=data.get("iterations"),
         quality_score=data.get("quality_score"),
+        hitl_bypass=bool(data.get("hitl_bypass", False)),
+        plan=data.get("plan"),
+        resume_action=data.get("resume_action"),
+        resume_plan=data.get("resume_plan"),
     )
 
 

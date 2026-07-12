@@ -24,8 +24,11 @@ from src.api.runner import run_job
 from src.api.schemas import (
     HealthResponse,
     JobDetail,
+    Plan,
     ResearchAccepted,
     ResearchRequest,
+    ReviewRequest,
+    ReviewResponse,
 )
 from src.api.streaming import (
     HEARTBEAT_INTERVAL_SEC,
@@ -40,6 +43,12 @@ router = APIRouter()
 
 
 def _job_to_detail(job: Job) -> JobDetail:
+    plan = None
+    if job.plan is not None:
+        plan = Plan(
+            sub_questions=list(job.plan.get("sub_questions", [])),
+            search_queries=list(job.plan.get("search_queries", [])),
+        )
     return JobDetail(
         job_id=job.job_id,
         status=job.status.value,
@@ -55,6 +64,7 @@ def _job_to_detail(job: Job) -> JobDetail:
         llm_calls=job.llm_calls,
         iterations=job.iterations,
         quality_score=job.quality_score,
+        plan=plan,
     )
 
 
@@ -76,7 +86,11 @@ async def submit_research(body: ResearchRequest, request: Request) -> ResearchAc
     ceiling queue as `pending` and start when a slot frees.
     """
     state = _get_state(request)
-    job = Job(job_id=_new_job_id(), query=body.query)
+    job = Job(
+        job_id=_new_job_id(),
+        query=body.query,
+        hitl_bypass=body.hitl_bypass,
+    )
     await state["store"].create(job)
 
     task = asyncio.create_task(
@@ -118,6 +132,64 @@ async def get_research(job_id: str, request: Request) -> JobDetail:
             status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
         )
     return _job_to_detail(job)
+
+
+@router.post(
+    "/research/{job_id}/review",
+    response_model=ReviewResponse,
+    summary="Resolve a `pending_review` job — approve, revise, or cancel.",
+)
+async def review_plan(
+    job_id: str, body: ReviewRequest, request: Request
+) -> ReviewResponse:
+    """Signal the paused runner with the client's decision (ADR 0030).
+
+    - `approve` — resume as-is.
+    - `revise`  — apply `plan` (sub_questions + search_queries) then
+                  resume. Both fields required.
+    - `cancel`  — abandon the run; job transitions to `cancelled`.
+    """
+    state = _get_state(request)
+    job = await state["store"].get(job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
+        )
+    if not job.is_awaiting_review():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"job_not_awaiting_review (status={job.status.value})",
+        )
+    if body.action == "revise" and body.plan is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="revise_requires_plan",
+        )
+
+    job.resume_action = body.action
+    if body.action == "revise" and body.plan is not None:
+        job.resume_plan = {
+            "sub_questions": list(body.plan.sub_questions),
+            "search_queries": list(body.plan.search_queries),
+        }
+    await state["store"].update(job)
+    # Wake the runner. The runner is `await`ing on this Event inside
+    # `_handle_hitl_pause`.
+    job.resume_event.set()
+
+    log.info(
+        "api_job_review_submitted",
+        extra={
+            "job_id": job.job_id,
+            "action": body.action,
+            "has_plan": body.plan is not None,
+        },
+    )
+    return ReviewResponse(
+        job_id=job.job_id,
+        status=job.status.value,
+        action=body.action,
+    )
 
 
 @router.get(

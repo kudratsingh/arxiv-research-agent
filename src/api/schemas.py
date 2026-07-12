@@ -25,6 +25,14 @@ class ResearchRequest(BaseModel):
         max_length=MAX_QUERY_LEN,
         description="Natural-language research question",
     )
+    hitl_bypass: bool = Field(
+        default=False,
+        description=(
+            "Skip the HITL plan-review pause even when `enable_hitl` is on. "
+            "The eval runner + other programmatic callers use this so they "
+            "don't stall waiting for a human. See ADR 0030."
+        ),
+    )
 
 
 class ResearchAccepted(BaseModel):
@@ -34,6 +42,19 @@ class ResearchAccepted(BaseModel):
     status: str
     status_url: str
     stream_url: str
+
+
+class Plan(BaseModel):
+    """The planner's output, exposed for HITL review (ADR 0030)."""
+
+    sub_questions: list[str] = Field(
+        default_factory=list,
+        description="Planner-decomposed sub-questions",
+    )
+    search_queries: list[str] = Field(
+        default_factory=list,
+        description="Planner-generated arXiv search queries",
+    )
 
 
 class JobDetail(BaseModel):
@@ -53,6 +74,34 @@ class JobDetail(BaseModel):
     llm_calls: int | None = None
     iterations: int | None = None
     quality_score: float | None = None
+    plan: Plan | None = Field(
+        default=None,
+        description=(
+            "Populated when `status=pending_review`. See ADR 0030."
+        ),
+    )
+
+
+class ReviewRequest(BaseModel):
+    """Body for `POST /research/{job_id}/review` (ADR 0030)."""
+
+    action: str = Field(
+        pattern="^(approve|revise|cancel)$",
+        description="`approve` = resume as-is; `revise` = apply `plan` "
+        "and resume; `cancel` = abandon the run.",
+    )
+    plan: Plan | None = Field(
+        default=None,
+        description="Required when `action=revise`. Ignored otherwise.",
+    )
+
+
+class ReviewResponse(BaseModel):
+    """Response for `POST /research/{job_id}/review`."""
+
+    job_id: str
+    status: str
+    action: str
 
 
 class HealthResponse(BaseModel):

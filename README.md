@@ -216,11 +216,23 @@ API_HOST=0.0.0.0 API_PORT=8080 python -m src.api.serve
 
 | Method | Path | Purpose |
 |---|---|---|
-| `POST` | `/research` | Submit a query. Returns 202 with `job_id`, `status_url`, `stream_url`. |
-| `GET`  | `/research/{job_id}` | Full lifecycle snapshot (status, result, error, cost, metrics). |
-| `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` → terminal frame. |
+| `POST` | `/research` | Submit a query. Body: `{query, hitl_bypass?: bool}`. Returns 202 with `job_id`, `status_url`, `stream_url`. |
+| `GET`  | `/research/{job_id}` | Full lifecycle snapshot (status, result, error, cost, metrics, `plan` when awaiting review). |
+| `POST` | `/research/{job_id}/review` | Resolve a `pending_review` job. Body: `{action: "approve"\|"revise"\|"cancel", plan?}`. See ADR [0030](docs/decisions/0030-hitl-plan-review.md). |
+| `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` (+ `plan_ready` when HITL is on) → terminal frame. |
 | `GET`  | `/healthz` | Liveness + concurrency headroom. |
 | `GET`  | `/docs` | Auto-generated OpenAPI docs. |
+
+### HITL plan review
+
+`enable_hitl` is on by default. Every `POST /research` pauses
+after the planner in `pending_review`; the client either
+approves as-is, revises `{sub_questions, search_queries}`, or
+cancels. The demo UI at `/` renders a `PlanReview` panel when
+this state is reached. Programmatic callers (eval runner, CLI,
+custom clients) skip the pause via `hitl_bypass: true` on the
+request body, or by setting `ENABLE_HITL=false` globally. See
+ADR [0030](docs/decisions/0030-hitl-plan-review.md).
 
 ### Example
 
@@ -306,7 +318,7 @@ python -m src.eval.regression_diff \
 pytest tests/ -q
 ```
 
-600+ tests across unit + integration tiers (see
+625+ tests across unit + integration tiers (see
 [`docs/testing.md`](docs/testing.md) for the strategy).
 
 ## Project status
@@ -320,9 +332,9 @@ made the system deployable end-to-end: PR CI gate (ADR 0024),
 FastAPI + async jobs + SSE (ADRs 0025 / 0026),
 Dockerfile + compose stack + `RedisJobStore` (ADR 0027), and
 Postgres-backed paper + embedding caches (ADR 0028). Sprint 5
-opens the product-surface arc — Next.js web UI already merged
-(ADR 0029); next up: HITL breakpoint after the supervisor plan
-step, then multi-format export + follow-up conversation mode.
+opens the product-surface arc — Next.js web UI (ADR 0029) and
+HITL plan-review breakpoint (ADR 0030) both merged. Next up:
+multi-format export (PDF/DOCX) + follow-up conversation mode.
 
 Full status and phase-by-phase plan in
 [`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).

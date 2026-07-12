@@ -14,11 +14,14 @@ Event names emitted by the runner:
 
   - `node_started`   — a graph node began executing
   - `node_completed` — a graph node produced output; `state_delta` in data
+  - `plan_ready`     — HITL breakpoint hit (ADR 0030); `plan` in data.
+                       Not terminal — the stream stays open through the
+                       review action + resumed nodes.
   - `job_completed`  — terminal frame; `result` field populated
   - `job_failed`     — terminal frame; `error` + `error_type` populated
   - `heartbeat`      — periodic keepalive so proxies don't drop the stream
 
-Design in ADR 0026.
+Design in ADR 0026 (+ ADR 0030 for the HITL event).
 """
 
 from __future__ import annotations

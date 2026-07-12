@@ -9,9 +9,28 @@
 export type JobStatus =
   | "pending"
   | "running"
+  | "pending_review"
   | "succeeded"
   | "failed"
   | "cancelled";
+
+export interface Plan {
+  sub_questions: string[];
+  search_queries: string[];
+}
+
+export type ReviewAction = "approve" | "revise" | "cancel";
+
+export interface ReviewRequest {
+  action: ReviewAction;
+  plan?: Plan;
+}
+
+export interface ReviewResponse {
+  job_id: string;
+  status: string;
+  action: string;
+}
 
 export interface ResearchAccepted {
   job_id: string;
@@ -35,11 +54,13 @@ export interface JobDetail {
   llm_calls: number | null;
   iterations: number | null;
   quality_score: number | null;
+  plan: Plan | null;
 }
 
 export type SseEventName =
   | "job_started"
   | "node_completed"
+  | "plan_ready"
   | "job_completed"
   | "job_failed"
   | "job_cancelled"

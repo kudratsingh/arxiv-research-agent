@@ -179,6 +179,27 @@ class Settings(BaseSettings):
             "Redis: TTL on the job key. Same knob honored by both stores."
         ),
     )
+    enable_hitl: bool = Field(
+        default=True,
+        description=(
+            "When true, the workflow interrupts after the planner so a "
+            "human can review + edit the plan (sub_questions, "
+            "search_queries) before search runs. See ADR 0030. Per-query "
+            "bypass via `POST /research { hitl_bypass: true }` — the eval "
+            "runner uses that path so nightly benchmarks don't stall."
+        ),
+    )
+    api_hitl_timeout_sec: int = Field(
+        default=1800,
+        ge=30,
+        le=86400,
+        description=(
+            "How long a job sits in `pending_review` before the runner "
+            "gives up and marks it failed with error_type=hitl_timeout. "
+            "Independent of `api_job_timeout_sec`, which caps only the "
+            "workflow's own wall-clock (not the human's decision time)."
+        ),
+    )
     job_store: str = Field(
         default="memory",
         description=(

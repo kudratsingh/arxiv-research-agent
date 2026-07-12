@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import AsyncIterator
+from types import SimpleNamespace
 from typing import Any
 
 from asgi_lifespan import LifespanManager
@@ -62,12 +63,29 @@ class StubWorkflow:
             yield {node: update}
 
     def invoke(
-        self, state: dict[str, Any], config: dict[str, Any] | None = None
+        self, state: dict[str, Any] | None, config: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         # Runner calls this via asyncio.to_thread after astream, so
         # sync is correct here. Returns the settled state that would
-        # have accumulated from all the astream chunks.
-        return {**state, **self.final_state}
+        # have accumulated from all the astream chunks. Accepts None
+        # as `state` for the HITL resume path (ADR 0030) — the real
+        # LangGraph app reads from the checkpointer in that case;
+        # the stub just returns final_state.
+        base = state if state is not None else {}
+        return {**base, **self.final_state}
+
+    def get_state(self, config: dict[str, Any] | None = None) -> Any:
+        # Non-interrupted stub: `next` is empty so the runner treats
+        # this as a completed workflow. HITL tests override this
+        # by monkeypatching or subclassing.
+        return SimpleNamespace(next=(), values=dict(self.final_state))
+
+    def update_state(
+        self, config: dict[str, Any] | None, values: dict[str, Any]
+    ) -> None:  # pragma: no cover - overridden in HITL tests
+        # Merged into final_state so the resume path's `invoke(None,
+        # ...)` sees the edits. HITL tests exercise this.
+        self.final_state = {**self.final_state, **values}
 
 
 def _make_app_with_stub(
