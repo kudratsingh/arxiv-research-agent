@@ -28,8 +28,13 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  # `contents: write` + `pull-requests: write` allow the README
+  # update step to open a PR against `main` with the freshly
+  # computed eval numbers. See src/eval/readme_update.py + the
+  # "Latest eval results" section in README.md.
+  contents: write
   actions: read
+  pull-requests: write
 
 jobs:
   eval:
@@ -145,3 +150,48 @@ jobs:
         run: |
           echo "::error::Nightly eval regressed against previous baseline. See regression-report artifact."
           exit 1
+
+      # ---- README update (portfolio polish) -----------------------------
+      #
+      # Patches the "Latest eval results" block in README.md with the
+      # numbers from this run, then opens (or updates) a PR against
+      # `main`. Runs regardless of the diff step's outcome — regressed
+      # numbers are still real numbers; the diff-fail flag already
+      # signals that separately.
+
+      - name: Update README's eval-results block
+        id: update-readme
+        run: |
+          python -m src.eval.readme_update \
+            --summary "${{ steps.find-current.outputs.summary }}" \
+            --readme README.md \
+            --run-id "${{ github.run_id }}"
+          # Emit whether the file actually changed so the next step
+          # can skip PR creation on a no-op update.
+          if git diff --quiet README.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open PR with updated README block
+        if: steps.update-readme.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          # Fixed branch name so subsequent nightly runs update the
+          # same PR instead of piling up.
+          branch: nightly/eval-readme-update
+          commit-message: |
+            Update eval-results block from nightly run
+
+            Run: ${{ github.run_id }}
+          title: "Nightly eval: update README results block"
+          body: |
+            Automated update from `eval-nightly.yml` run `${{ github.run_id }}`.
+
+            The `<!-- eval-nightly:start -->` … `<!-- eval-nightly:end -->` block in `README.md` was patched with the fresh aggregate row from this run's `summary.jsonl`.
+
+            No source changes.
+          add-paths: |
+            README.md
+          delete-branch: true
