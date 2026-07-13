@@ -150,3 +150,12 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   routing requirement documented in ADR 0027. Remaining follow-
   ups: job redriver on restart, per-principal store scoping,
   model-routing defaults, MiniLM → bge-small retrieval swap.
+- _2026-07-13_ — Per-principal store scoping (ADR 0036). Follows
+  ADR 0033: `principal_key_id` on both Job and Conversation;
+  cross-principal reads/deletes return 404 (not 403);
+  `list(principal_key_id=...)` pushes the filter into SQL for
+  the Postgres store. Legacy NULL-owner rows are invisible
+  under auth-on; documented as an admin-cleanup follow-up.
+  Remaining follow-ups: Redis-backed rate limiter, hot-reloadable
+  keystore, job redriver on restart, model-routing defaults,
+  MiniLM → bge-small retrieval swap, SSE heartbeat rewrite.

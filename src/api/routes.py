@@ -53,6 +53,43 @@ log = get_logger(__name__)
 router = APIRouter()
 
 
+def _check_ownership(
+    resource_principal_key_id: str | None,
+    caller: ApiKeyPrincipal | None,
+    *,
+    detail: str,
+) -> None:
+    """Enforce per-principal ownership on a resource (ADR 0036).
+
+    - Auth off (`caller is None`): access allowed regardless of
+      what's on the resource. Legacy demo behavior.
+    - Auth on: caller's `key_id` must equal the resource's
+      `principal_key_id`. Legacy rows with `principal_key_id=None`
+      are invisible under auth-on.
+
+    Mismatch raises 404 (not 403): leaking "this exists but you
+    can't touch it" is an info-disclosure vector. From the client's
+    perspective, resources owned by other principals simply don't
+    exist.
+    """
+    if caller is None:
+        return
+    if resource_principal_key_id == caller.key_id:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail=detail
+    )
+
+
+def _principal_key_id(caller: ApiKeyPrincipal | None) -> str | None:
+    """`principal.key_id` when auth is on, `None` otherwise.
+
+    Convenience so route handlers can stamp `principal_key_id` on
+    new rows without repeating the `if principal else None` guard.
+    """
+    return caller.key_id if caller is not None else None
+
+
 def _job_to_detail(job: Job) -> JobDetail:
     plan = None
     if job.plan is not None:
@@ -118,17 +155,28 @@ async def submit_research(
     # Fast-fail on a missing conversation before the workflow starts.
     if body.conversation_id is not None:
         conversation_store = state["conversation_store"]
-        if await conversation_store.get(body.conversation_id) is None:
+        conversation = await conversation_store.get(body.conversation_id)
+        if conversation is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="conversation_not_found",
             )
+        # ADR 0036: a caller can't piggyback on another principal's
+        # conversation. `_check_ownership` returns 404 (not 403) so
+        # this reads identically to "the id doesn't exist" from the
+        # caller's perspective.
+        _check_ownership(
+            conversation.principal_key_id,
+            principal,
+            detail="conversation_not_found",
+        )
 
     job = Job(
         job_id=_new_job_id(),
         query=body.query,
         hitl_bypass=body.hitl_bypass,
         conversation_id=body.conversation_id,
+        principal_key_id=_principal_key_id(principal),
     )
     await state["store"].create(job)
 
@@ -163,15 +211,19 @@ async def submit_research(
     "/research/{job_id}",
     response_model=JobDetail,
     summary="Get the current status + result of a job.",
-    dependencies=[Depends(require_principal)],
 )
-async def get_research(job_id: str, request: Request) -> JobDetail:
+async def get_research(
+    job_id: str,
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
+) -> JobDetail:
     state = _get_state(request)
     job = await state["store"].get(job_id)
     if job is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
         )
+    _check_ownership(job.principal_key_id, principal, detail="job_not_found")
     return _job_to_detail(job)
 
 
@@ -179,10 +231,12 @@ async def get_research(job_id: str, request: Request) -> JobDetail:
     "/research/{job_id}/review",
     response_model=ReviewResponse,
     summary="Resolve a `pending_review` job — approve, revise, or cancel.",
-    dependencies=[Depends(require_principal)],
 )
 async def review_plan(
-    job_id: str, body: ReviewRequest, request: Request
+    job_id: str,
+    body: ReviewRequest,
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> ReviewResponse:
     """Signal the paused runner with the client's decision (ADR 0030).
 
@@ -197,6 +251,7 @@ async def review_plan(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
         )
+    _check_ownership(job.principal_key_id, principal, detail="job_not_found")
     if not job.is_awaiting_review():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -249,7 +304,6 @@ async def review_plan(
 @router.get(
     "/research/{job_id}/export",
     summary="Download the report in the requested format.",
-    dependencies=[Depends(require_principal)],
     responses={
         200: {
             "content": {
@@ -268,6 +322,7 @@ async def export_research(
         pattern="^(md|pdf|docx)$",
         description="`md`, `pdf`, or `docx`",
     ),
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> Response:
     """Serve the job's report in the requested format (ADR 0031).
 
@@ -284,6 +339,7 @@ async def export_research(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
         )
+    _check_ownership(job.principal_key_id, principal, detail="job_not_found")
     if not job.result:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -317,9 +373,12 @@ async def export_research(
 @router.get(
     "/research/{job_id}/stream",
     summary="Server-Sent Events stream of workflow events.",
-    dependencies=[Depends(require_principal)],
 )
-async def stream_research(job_id: str, request: Request) -> StreamingResponse:
+async def stream_research(
+    job_id: str,
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
+) -> StreamingResponse:
     state = _get_state(request)
     store = state["store"]
     job = await store.get(job_id)
@@ -327,6 +386,7 @@ async def stream_research(job_id: str, request: Request) -> StreamingResponse:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
         )
+    _check_ownership(job.principal_key_id, principal, detail="job_not_found")
 
     async def event_source() -> Any:
         # Terminal jobs replay a single frame and close — no
@@ -428,18 +488,24 @@ async def stream_research(job_id: str, request: Request) -> StreamingResponse:
     response_model=ConversationDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new conversation.",
-    dependencies=[Depends(require_principal)],
 )
 async def create_conversation(
-    body: ConversationCreateRequest, request: Request
+    body: ConversationCreateRequest,
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> ConversationDetail:
     """Create an empty conversation. `title` is optional — when
     omitted the first job's query auto-populates it. See ADR 0032.
+
+    Under `settings.enable_api_auth` the conversation is owned by
+    the presenting API key; other principals see 404 on
+    read/delete. See ADR 0036.
     """
     state = _get_state(request)
     conversation = Conversation(
         conversation_id=new_conversation_id(),
         title=body.title or "New conversation",
+        principal_key_id=_principal_key_id(principal),
     )
     await state["conversation_store"].create(conversation)
     log.info(
@@ -453,11 +519,17 @@ async def create_conversation(
     "/conversations",
     response_model=list[ConversationListItem],
     summary="List conversations, newest first (no job bodies).",
-    dependencies=[Depends(require_principal)],
 )
-async def list_conversations(request: Request) -> list[ConversationListItem]:
+async def list_conversations(
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
+) -> list[ConversationListItem]:
     state = _get_state(request)
-    conversations = await state["conversation_store"].list()
+    # ADR 0036: scope the list to the caller's principal. Auth-off
+    # passes `None` and gets everything (legacy behavior).
+    conversations = await state["conversation_store"].list(
+        principal_key_id=_principal_key_id(principal),
+    )
     return [
         ConversationListItem(
             conversation_id=c.conversation_id,
@@ -473,10 +545,11 @@ async def list_conversations(request: Request) -> list[ConversationListItem]:
     "/conversations/{conversation_id}",
     response_model=ConversationDetail,
     summary="Full conversation thread including every job's report body.",
-    dependencies=[Depends(require_principal)],
 )
 async def get_conversation(
-    conversation_id: str, request: Request
+    conversation_id: str,
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> ConversationDetail:
     state = _get_state(request)
     conversation = await state["conversation_store"].get(conversation_id)
@@ -484,6 +557,11 @@ async def get_conversation(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
         )
+    _check_ownership(
+        conversation.principal_key_id,
+        principal,
+        detail="conversation_not_found",
+    )
     return _conversation_to_detail(conversation)
 
 
@@ -491,12 +569,27 @@ async def get_conversation(
     "/conversations/{conversation_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a conversation + all its jobs.",
-    dependencies=[Depends(require_principal)],
 )
 async def delete_conversation(
-    conversation_id: str, request: Request
+    conversation_id: str,
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> Response:
     state = _get_state(request)
+    # ADR 0036: fetch first so we can verify ownership before the
+    # destructive call. Skipping the fetch would need a
+    # `delete_owned` primitive on every store; the extra round-trip
+    # is cheap and localizes the policy in the route layer.
+    conversation = await state["conversation_store"].get(conversation_id)
+    if conversation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
+        )
+    _check_ownership(
+        conversation.principal_key_id,
+        principal,
+        detail="conversation_not_found",
+    )
     deleted = await state["conversation_store"].delete(conversation_id)
     if not deleted:
         raise HTTPException(

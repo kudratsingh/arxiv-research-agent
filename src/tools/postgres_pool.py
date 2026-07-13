@@ -61,8 +61,23 @@ CREATE TABLE IF NOT EXISTS conversations (
     conversation_id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- ADR 0036: owner under `enable_api_auth`. NULL on legacy rows
+    -- and on rows written under auth-off. Ownership checks in
+    -- `src/api/routes.py` treat NULL as invisible under auth-on.
+    principal_key_id TEXT NULL
 );
+
+-- ADR 0036 migration for pre-existing tables that were created
+-- before `principal_key_id` was part of the schema. Postgres 9.6+
+-- supports `IF NOT EXISTS` on ADD COLUMN so this is idempotent on
+-- both fresh and upgraded databases.
+ALTER TABLE conversations
+    ADD COLUMN IF NOT EXISTS principal_key_id TEXT NULL;
+
+CREATE INDEX IF NOT EXISTS conversations_principal_key_id_idx
+    ON conversations (principal_key_id)
+    WHERE principal_key_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS conversation_jobs (
     conversation_id TEXT NOT NULL REFERENCES conversations(conversation_id)

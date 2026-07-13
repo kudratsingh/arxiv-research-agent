@@ -20,7 +20,7 @@ import asyncio
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Any, Protocol
 
 MAX_TITLE_LEN = 80
 
@@ -66,6 +66,9 @@ class Conversation:
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
     jobs: list[ConversationJob] = field(default_factory=list)
+    # ADR 0036: owner under `enable_api_auth`. See the same field on
+    # `Job` in `src/api/jobs.py` for the ownership model.
+    principal_key_id: str | None = None
 
 
 class ConversationStore(Protocol):
@@ -76,7 +79,9 @@ class ConversationStore(Protocol):
 
     async def get(self, conversation_id: str) -> Conversation | None: ...
 
-    async def list(self) -> list[Conversation]: ...
+    async def list(
+        self, principal_key_id: str | None = None
+    ) -> list[Conversation]: ...
 
     async def append_job(
         self,
@@ -107,8 +112,19 @@ class InMemoryConversationStore:
         async with self._lock:
             return self._conversations.get(conversation_id)
 
-    async def list(self) -> list[Conversation]:
+    async def list(
+        self, principal_key_id: str | None = None
+    ) -> list[Conversation]:
         async with self._lock:
+            # ADR 0036: under auth-on the caller's principal is
+            # threaded through; only rows they own come back. Under
+            # auth-off (`principal_key_id=None`) return everything —
+            # legacy demo behavior.
+            def _visible(c: Conversation) -> bool:
+                if principal_key_id is None:
+                    return True
+                return c.principal_key_id == principal_key_id
+
             # Sort most-recent-first so the sidebar's top item is the
             # active conversation.
             return sorted(
@@ -119,8 +135,10 @@ class InMemoryConversationStore:
                         created_at=c.created_at,
                         updated_at=c.updated_at,
                         jobs=[],
+                        principal_key_id=c.principal_key_id,
                     )
                     for c in self._conversations.values()
+                    if _visible(c)
                 ),
                 key=lambda c: c.updated_at,
                 reverse=True,
@@ -173,10 +191,15 @@ class PostgresConversationStore:
             with _connection() as conn, conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO conversations (conversation_id, title)
-                    VALUES (%s, %s)
+                    INSERT INTO conversations
+                        (conversation_id, title, principal_key_id)
+                    VALUES (%s, %s, %s)
                     """,
-                    (conversation.conversation_id, conversation.title),
+                    (
+                        conversation.conversation_id,
+                        conversation.title,
+                        conversation.principal_key_id,
+                    ),
                 )
                 conn.commit()
 
@@ -191,7 +214,8 @@ class PostgresConversationStore:
             with _connection() as conn, conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT conversation_id, title, created_at, updated_at
+                    SELECT conversation_id, title, created_at, updated_at,
+                           principal_key_id
                     FROM conversations
                     WHERE conversation_id = %s
                     """,
@@ -228,23 +252,40 @@ class PostgresConversationStore:
                     created_at=created_at,
                     updated_at=updated_at,
                     jobs=jobs,
+                    principal_key_id=row[4],
                 )
 
         return await asyncio.to_thread(_run)
 
-    async def list(self) -> list[Conversation]:
+    async def list(
+        self, principal_key_id: str | None = None
+    ) -> list[Conversation]:
         from src.tools.postgres_pool import _connection, init_schema
 
         init_schema()
 
+        # ADR 0036: push the principal filter into SQL so scaled
+        # deployments don't paginate through other tenants' rows.
+        # `principal_key_id IS NULL` in the WHERE branch is
+        # intentionally excluded from auth-on results — legacy rows
+        # with no owner stay invisible until admin cleanup.
+        where_clause = ""
+        params: tuple[Any, ...] = ()
+        if principal_key_id is not None:
+            where_clause = "WHERE principal_key_id = %s"
+            params = (principal_key_id,)
+
         def _run() -> list[Conversation]:
             with _connection() as conn, conn.cursor() as cur:
                 cur.execute(
-                    """
-                    SELECT conversation_id, title, created_at, updated_at
+                    f"""
+                    SELECT conversation_id, title, created_at, updated_at,
+                           principal_key_id
                     FROM conversations
+                    {where_clause}
                     ORDER BY updated_at DESC
-                    """
+                    """,
+                    params,
                 )
                 return [
                     Conversation(
@@ -253,6 +294,7 @@ class PostgresConversationStore:
                         created_at=r[2].timestamp() if r[2] else time.time(),
                         updated_at=r[3].timestamp() if r[3] else time.time(),
                         jobs=[],
+                        principal_key_id=r[4],
                     )
                     for r in cur.fetchall()
                 ]

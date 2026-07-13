@@ -81,6 +81,12 @@ class Job:
     plan: dict[str, Any] | None = None
     resume_action: str | None = None
     resume_plan: dict[str, Any] | None = None
+    # ADR 0036: owner of the resource under `enable_api_auth`. `None`
+    # under auth-off deployments (all callers share one namespace)
+    # and on rows written by pre-ADR-0036 code. Ownership checks in
+    # `src/api/routes.py` treat `None`-owner rows as invisible when
+    # auth is on so legacy data doesn't leak across principals.
+    principal_key_id: str | None = None
     event_queue: asyncio.Queue[dict[str, Any]] = field(
         default_factory=lambda: asyncio.Queue(maxsize=1024)
     )

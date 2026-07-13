@@ -146,15 +146,39 @@ and route decorators in `src/api/routes.py`.
 
 **Not in scope for the auth bundle**:
 
-- Per-principal ownership scoping on `Job` / `Conversation` stores.
-  With auth on, only key holders can hit the endpoints, so the
-  audit's "anyone reads anyone's data" issue is much reduced — but
-  distinct key holders can still read each other's data. Follow-up
-  PR adds a `principal_key_id` field on `Job`.
 - Rate-limit persistence. Counters live per-worker in memory. Under
   multi-worker uvicorn, effective limit is
   `api_key_hourly_limit * n_workers`. Follow-up PR moves to Redis.
 - Key rotation without restart. `api_keys` is parsed once at startup.
+
+### Per-principal Job + Conversation scoping (ADR 0036)
+
+Every `Job` and `Conversation` carries a `principal_key_id: str |
+None` field set to the caller's key_id at creation time. Route
+handlers call `_check_ownership(resource_key_id, caller,
+detail=...)` after every fetch:
+
+- Auth off: caller has no principal; all rows are visible (legacy
+  demo behavior).
+- Auth on: caller must own the resource; otherwise **404** (not
+  403 — leaking "this exists but you can't touch it" is an info-
+  disclosure vector).
+- Legacy rows (`principal_key_id=None`) are invisible under auth-on
+  until an admin cleanup migration.
+
+`ConversationStore.list(principal_key_id=...)` pushes the filter
+into SQL for the Postgres store so scaled deployments don't drag
+other tenants' rows across the wire per request.
+
+`POST /research` additionally verifies the caller owns the
+`conversation_id` they're piggybacking on — otherwise a hostile
+key holder could dump their cost-bearing job into another
+principal's thread.
+
+Wired in `src/api/routes.py::_check_ownership` and
+`_principal_key_id`. Postgres schema migration in
+`src/tools/postgres_pool.py::SCHEMA_DDL` (ADD COLUMN IF NOT EXISTS
++ partial index on non-NULL).
 
 ### Adversarial tests
 
@@ -179,6 +203,13 @@ and route decorators in `src/api/routes.py`.
   `/research` and `/conversations` route rejects missing / invalid
   keys and accepts a valid key, `/healthz` stays open, and the
   sliding-window rate limiter buckets per principal.
+- `tests/test_per_principal_scoping.py` — end-to-end HTTPX suite
+  with two API keys: verifies that principal B gets 404 on
+  principal A's conversations (read, delete, piggyback via
+  `POST /research`), that `GET /conversations` filters by
+  principal, that `_check_ownership` treats legacy NULL-owner rows
+  as invisible under auth-on, and that auth-off behavior is
+  unchanged.
 
 ## Follow-ups
 
@@ -192,8 +223,11 @@ and route decorators in `src/api/routes.py`.
 - Content-classifier-based rejection at ingest (an extra Claude
   call per paper; scope for Sprint 5+ if the deployment model
   justifies the cost).
-- Per-principal ownership scoping on `Job` + `Conversation` stores.
 - Redis-backed rate limiter for horizontal scaling.
 - Hot-reloadable keystore so key rotation doesn't need a restart.
 - Atomic-write PDF cache (write to `.tmp` sibling, rename on
   completion).
+- Admin cleanup migration for legacy NULL-owner rows created
+  before ADR 0036 landed.
+- Single-statement `DELETE ... WHERE principal_key_id=%s` to
+  collapse the get+delete round-trip on `DELETE /conversations`.

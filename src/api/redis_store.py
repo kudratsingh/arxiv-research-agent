@@ -141,6 +141,10 @@ def _job_from_json(payload: str) -> Job:
         plan=data.get("plan"),
         resume_action=data.get("resume_action"),
         resume_plan=data.get("resume_plan"),
+        # ADR 0036: legacy Redis rows without this field are None.
+        # `principal_key_id` is a persistent field so it round-
+        # trips through `_job_to_json` on write.
+        principal_key_id=data.get("principal_key_id"),
     )
 
 
