@@ -36,7 +36,10 @@ log = get_logger(__name__)
 WorkflowFactory = Callable[[], Any]
 """Zero-arg callable that returns a compiled LangGraph app.
 
-Injectable so tests can hand in a stub without patching module state.
+Consumed by `create_app` at startup — see ADR 0034. Kept as a
+public type alias for tests and callers that inject a stub factory
+via `create_app(build_workflow=...)`. The runner itself now takes a
+pre-compiled `workflow` rather than the factory.
 """
 
 
@@ -158,7 +161,7 @@ def _extract_final_metrics(state: dict[str, Any]) -> dict[str, Any]:
 
 
 async def _invoke_streaming(
-    build_workflow: WorkflowFactory,
+    workflow: Any,
     initial_state: ResearchState,
     run_id: str,
     on_node: Callable[[str, dict[str, Any]], Awaitable[None]],
@@ -166,22 +169,27 @@ async def _invoke_streaming(
     job: Job | None = None,
     store: JobStore | None = None,
 ) -> dict[str, Any]:
-    """Run the workflow, honoring the HITL breakpoint if present.
+    """Run the pre-compiled workflow, honoring the HITL breakpoint.
 
     `astream` yields `{node_name: state_update}` after each node. When
     `settings.enable_hitl` is on, the compiled workflow interrupts
     after the planner (ADR 0030); we detect that via
-    `app.get_state(config).next`, transition the job to
+    `workflow.get_state(config).next`, transition the job to
     `pending_review`, emit `plan_ready`, and wait on
     `job.resume_event`. On resume, optionally apply edits via
-    `app.update_state`, then run a second `astream` to completion.
+    `workflow.update_state`, then run a second `astream` to completion.
 
     `job` + `store` are required for the HITL path but optional so
     the eval runner (which calls this without an API layer) still
     works. Bypassing HITL when the workflow is compiled with an
     interrupt: the runner just resumes immediately without waiting.
+
+    The workflow is pre-compiled at app startup and shared across
+    jobs (ADR 0034) — previously we re-compiled per job, which
+    opened a fresh checkpointer connection every time and never
+    cleaned it up until process exit.
     """
-    app = build_workflow()
+    app = workflow
     config = {"configurable": {"thread_id": run_id}}
 
     # First pass: runs until interrupt or completion.
@@ -225,6 +233,13 @@ async def _handle_hitl_pause(
     No-op when `job` is None (called from eval / programmatic
     paths that shouldn't pause). When `job.hitl_bypass` is True the
     runner resumes immediately without emitting a review event.
+
+    ADR 0034: when the store advertises a `watch_for_remote_resume`
+    method (`RedisJobStore` does), spawn a subscription task
+    alongside the local `resume_event` await. That's what lets a
+    review submitted to worker B wake the runner sitting on
+    worker A. Single-worker deployments and in-memory stores skip
+    the subscription and just await the local event.
     """
     if job is None:
         return
@@ -250,15 +265,28 @@ async def _handle_hitl_pause(
         extra={"job_id": job.job_id, **_plan_shape(plan_values)},
     )
 
-    try:
-        await asyncio.wait_for(
-            job.resume_event.wait(),
-            timeout=settings.api_hitl_timeout_sec,
+    subscription: asyncio.Task[None] | None = None
+    watch = getattr(store, "watch_for_remote_resume", None) if store else None
+    if callable(watch):
+        subscription = asyncio.create_task(
+            watch(job), name=f"hitl-resume-{job.job_id}"
         )
-    except TimeoutError as exc:
-        raise HitlTimeoutError(
-            f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
-        ) from exc
+
+    try:
+        try:
+            await asyncio.wait_for(
+                job.resume_event.wait(),
+                timeout=settings.api_hitl_timeout_sec,
+            )
+        except TimeoutError as exc:
+            raise HitlTimeoutError(
+                f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
+            ) from exc
+    finally:
+        if subscription is not None:
+            subscription.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await subscription
 
     if job.resume_action == "cancel":
         raise HitlCancelledError("client cancelled during plan review")
@@ -288,7 +316,7 @@ def _plan_shape(plan: dict[str, Any]) -> dict[str, Any]:
 
 async def run_job(
     job: Job,
-    build_workflow: WorkflowFactory,
+    workflow: Any,
     store: JobStore,
     semaphore: asyncio.Semaphore,
     *,
@@ -305,6 +333,10 @@ async def run_job(
     provided, the runner retrieves top-K chunks from prior jobs in
     that conversation before invoking the workflow, and appends the
     completed job to the conversation on success (ADR 0032).
+
+    ``workflow`` is the pre-compiled LangGraph app; the caller
+    (`create_app` lifespan) builds it once and hands the same
+    instance to every job. See ADR 0034.
     """
     timeout = timeout_sec if timeout_sec is not None else settings.api_job_timeout_sec
 
@@ -385,7 +417,7 @@ async def run_job(
 
             final_state = await asyncio.wait_for(
                 _invoke_streaming(
-                    build_workflow,
+                    workflow,
                     initial,
                     job.job_id,
                     on_node,

@@ -132,3 +132,12 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   limiter, `SqliteSaver` → `PostgresSaver` (ADR 0013 revisit),
   cross-worker SSE via Redis pub/sub (ADR 0027 revisit), model-
   routing defaults (ADR 0021 revisit).
+- _2026-07-13_ — Postgres checkpointer + cross-worker HITL (ADR
+  0034). Closes crit-1 (per-request `SqliteSaver` leak) by
+  compiling the workflow once at app startup and releasing the
+  checkpointer's `ExitStack` on shutdown. Closes crit-2
+  (RedisJobStore HITL never wakes runner on a different worker) by
+  adding `publish_remote_resume` + `watch_for_remote_resume` on
+  `hitl:resume:{job_id}` pub/sub. Revisits ADR 0013 and ADR 0027.
+  Follow-ups remaining: SSE cross-worker via pub/sub, job redriver
+  on restart, per-principal store scoping, model-routing defaults.

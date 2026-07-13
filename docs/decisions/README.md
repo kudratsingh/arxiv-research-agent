@@ -69,6 +69,10 @@ never renumbered.
   arXiv HTTPS + defusedxml, PDF streaming size cap, tightened cache
   key, runner-level cost cap, planner `prior_context` isolation,
   API-key auth + per-key rate limits + CORS allowlist
+- [0034](0034-postgres-checkpointer-and-cross-worker-hitl.md) —
+  Pluggable checkpointer backend (Postgres in compose), workflow
+  compiled once at app startup, Redis pub/sub for cross-worker
+  HITL resume; revisits ADR 0013 and ADR 0027
 
 ## When to write an ADR
 

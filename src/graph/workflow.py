@@ -12,12 +12,20 @@ Two workflow shapes are supported, chosen by `settings.enable_supervisor`:
 
 Two production knobs configured here regardless of shape:
 
-- **Checkpointing** via `SqliteSaver` (ADR 0013 piece #2). Persists
-  per-node state to `settings.checkpoint_db_path` so an interrupted
-  run can be resumed by re-invoking with the same `thread_id`.
+- **Checkpointing** via `SqliteSaver` (per-worker) or `PostgresSaver`
+  (shared) — selected by `settings.checkpoint_backend`. Persists
+  per-node state so an interrupted run can be resumed by invoking
+  with the same `thread_id`. See ADR 0013 (original SQLite choice)
+  and ADR 0034 (Postgres migration).
 - **Tracing** via `traced_node` (ADR 0012 follow-up). When
   `settings.enable_tracing` is on, every agent execution becomes an
   OpenTelemetry span with `run_id` / query / iteration attributes.
+
+The compiled workflow is expensive to construct (opens the
+checkpointer's connection). Callers should build ONCE at app
+startup and reuse across requests — see `src/api/app.py::lifespan`.
+Per-request compilation would leak a checkpointer connection per
+job (audit finding, closed by ADR 0034).
 """
 
 from __future__ import annotations
@@ -58,14 +66,36 @@ def route_after_critique(state: ResearchState) -> str:
 
 
 def _open_checkpointer(exit_stack: ExitStack) -> Any | None:
-    """Open a SqliteSaver and register its teardown on `exit_stack`.
+    """Open the configured checkpointer, register teardown on the stack.
 
-    Returns `None` when checkpointing is disabled via settings so
+    Returns `None` when checkpointing is disabled so
     `workflow.compile()` gets a plain compile call.
+
+    Backend selection follows `settings.checkpoint_backend`:
+
+    - `sqlite` — `SqliteSaver` at `settings.checkpoint_db_path`. Same
+      as the original ADR-0013 shape. Only safe under a single
+      writer (one uvicorn worker).
+    - `postgres` — `PostgresSaver` at `settings.postgres_url`. Runs
+      the shipped `.setup()` DDL once per process; safe under
+      multiple concurrent writers, required for the ADR-0034
+      cross-worker HITL story.
     """
     if not settings.enable_checkpointing:
         return None
 
+    backend = settings.checkpoint_backend
+    if backend == "postgres":
+        return _open_postgres_checkpointer(exit_stack)
+    if backend == "sqlite":
+        return _open_sqlite_checkpointer(exit_stack)
+    raise ValueError(
+        f"Unknown checkpoint_backend={backend!r}; expected 'sqlite' or 'postgres'."
+    )
+
+
+def _open_sqlite_checkpointer(exit_stack: ExitStack) -> Any:
+    """SqliteSaver at `settings.checkpoint_db_path`."""
     # Import kept local so the checkpoint-sqlite dep is optional at
     # import time — if a user removes it, only compilation fails.
     from langgraph.checkpoint.sqlite import SqliteSaver
@@ -74,6 +104,30 @@ def _open_checkpointer(exit_stack: ExitStack) -> Any | None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     cm = SqliteSaver.from_conn_string(str(db_path))
     return exit_stack.enter_context(cm)
+
+
+def _open_postgres_checkpointer(exit_stack: ExitStack) -> Any:
+    """PostgresSaver at `settings.postgres_url`, schema initialized.
+
+    Fails fast with a helpful error when the URL is empty — that's
+    almost always a misconfiguration (the compose file sets it; a
+    manual deploy must too).
+    """
+    from langgraph.checkpoint.postgres import PostgresSaver
+
+    url = settings.postgres_url
+    if not url:
+        raise RuntimeError(
+            "checkpoint_backend=postgres requires POSTGRES_URL to be set; "
+            "the compose stack wires this automatically."
+        )
+    cm = PostgresSaver.from_conn_string(url)
+    saver = exit_stack.enter_context(cm)
+    # `.setup()` is idempotent — LangGraph ships CREATE TABLE IF NOT
+    # EXISTS DDL for its own checkpoint tables. Safe under multi-
+    # worker cold start.
+    saver.setup()
+    return saver
 
 
 def _build_fixed_pipeline(workflow: StateGraph[ResearchState, Any, Any, Any]) -> None:

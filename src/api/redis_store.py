@@ -16,12 +16,31 @@ streaming. Requests hitting a different worker still get the
 persistent snapshot via Redis, but streaming events requires the
 originating worker — a normal deployment pattern for SSE (sticky
 sessions / job-affinity routing).
+
+## Cross-worker HITL resume (ADR 0034)
+
+`resume_event` also lives only on the runner's worker — an
+`asyncio.Event` bound to the runner's loop. The audit flagged this
+as a real bug: a `POST /research/{id}/review` submitted to worker B
+would set a fresh Event on B's reconstructed Job, and A's runner
+would never wake.
+
+`publish_remote_resume` (called from the review endpoint) publishes
+the decision to `hitl:resume:{job_id}` on Redis pub/sub;
+`watch_for_remote_resume` (called from A's runner during the HITL
+pause) subscribes and hydrates the local job when the message
+arrives. Same-worker resume still works via the direct
+`resume_event.set()` in the endpoint; the pub/sub covers the
+different-worker case.
 """
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import json
 from dataclasses import asdict, fields
+from typing import Any
 
 import redis.asyncio as redis_async
 
@@ -32,10 +51,16 @@ from src.observability import get_logger
 log = get_logger(__name__)
 
 JOB_KEY_PREFIX = "job:"
+HITL_RESUME_CHANNEL_PREFIX = "hitl:resume:"
 
 
 def _job_key(job_id: str) -> str:
     return f"{JOB_KEY_PREFIX}{job_id}"
+
+
+def _hitl_resume_channel(job_id: str) -> str:
+    """Pub/sub channel for HITL resume notifications (ADR 0034)."""
+    return f"{HITL_RESUME_CHANNEL_PREFIX}{job_id}"
 
 
 def _persistent_fields() -> set[str]:
@@ -44,8 +69,9 @@ def _persistent_fields() -> set[str]:
     Excluded:
       - `event_queue`: `asyncio.Queue` bound to the runner worker.
       - `resume_event`: `asyncio.Event`, same rationale — HITL resume
-        is a worker-local signal in this PR. Cross-worker resume
-        would need Redis pub/sub (follow-up in ADR 0030).
+        is a worker-local signal. Cross-worker resume uses the
+        `hitl:resume:{job_id}` pub/sub channel; see ADR 0034 and
+        `publish_remote_resume` / `watch_for_remote_resume` below.
     """
     return {f.name for f in fields(Job)} - {"event_queue", "resume_event"}
 
@@ -170,6 +196,83 @@ class RedisJobStore:
         """Release the Redis connection pool. Called from the
         FastAPI lifespan on shutdown."""
         await self._client.aclose()
+
+    # ---- ADR 0034: cross-worker HITL resume ---------------------
+
+    async def publish_remote_resume(
+        self,
+        job_id: str,
+        action: str,
+        plan: dict[str, Any] | None,
+    ) -> None:
+        """Fan out a resume decision to any worker running the job.
+
+        Called from `POST /research/{id}/review`. The runner's
+        worker may be a different process — even in single-worker
+        deployments this is safe and cheap (Redis local-loop
+        publish, no consumer means no work).
+        """
+        payload = json.dumps(
+            {"action": action, "plan": plan}, separators=(",", ":")
+        )
+        await self._client.publish(_hitl_resume_channel(job_id), payload)
+
+    async def watch_for_remote_resume(self, job: Job) -> None:
+        """Subscribe to `hitl:resume:{job_id}`; hydrate + wake on message.
+
+        Runs as a background task spawned by the runner during
+        `_handle_hitl_pause`. On the first message received:
+
+        1. Populates `job.resume_action` and `job.resume_plan` from
+           the payload (the review endpoint already wrote them to
+           Redis, but the runner might be holding a stale local
+           copy).
+        2. Sets `job.resume_event`, which is what the runner's
+           `wait_for` is awaiting.
+
+        The task is cancelled from `_handle_hitl_pause`'s `finally`
+        clause once the resume completes (same-worker path fires
+        the event directly, and the pub/sub subscription is torn
+        down without ever seeing a message). Cancellation cleans up
+        the pubsub connection.
+        """
+        pubsub = self._client.pubsub()
+        try:
+            await pubsub.subscribe(_hitl_resume_channel(job.job_id))
+            async for message in pubsub.listen():
+                if message.get("type") != "message":
+                    continue
+                data = message.get("data")
+                if isinstance(data, bytes):
+                    data = data.decode()
+                try:
+                    parsed = json.loads(data) if data else {}
+                except (ValueError, TypeError):
+                    log.warning(
+                        "hitl_resume_bad_payload",
+                        extra={"job_id": job.job_id, "payload": data},
+                    )
+                    continue
+                job.resume_action = parsed.get("action")
+                job.resume_plan = parsed.get("plan")
+                job.resume_event.set()
+                log.info(
+                    "hitl_resume_received_via_pubsub",
+                    extra={
+                        "job_id": job.job_id,
+                        "action": job.resume_action,
+                    },
+                )
+                return
+        except asyncio.CancelledError:
+            # Normal path when the same-worker resume beats the
+            # pub/sub message. Cleanup runs in `finally`.
+            raise
+        finally:
+            with contextlib.suppress(Exception):
+                await pubsub.unsubscribe(_hitl_resume_channel(job.job_id))
+            with contextlib.suppress(Exception):
+                await pubsub.aclose()  # type: ignore[no-untyped-call]
 
 
 def build_redis_client(url: str) -> redis_async.Redis:
