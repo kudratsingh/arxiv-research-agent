@@ -8,6 +8,7 @@ without setup ceremony.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import uuid
 from typing import Any
 
@@ -134,7 +135,7 @@ async def submit_research(
     task = asyncio.create_task(
         run_job(
             job,
-            build_workflow=state["build_workflow"],
+            workflow=state["workflow"],
             store=state["store"],
             semaphore=state["semaphore"],
             conversation_store=state["conversation_store"],
@@ -214,8 +215,20 @@ async def review_plan(
             "search_queries": list(body.plan.search_queries),
         }
     await state["store"].update(job)
-    # Wake the runner. The runner is `await`ing on this Event inside
-    # `_handle_hitl_pause`.
+
+    # ADR 0034: publish to `hitl:resume:{job_id}` so a runner sitting
+    # on a different worker wakes up. Same-worker resumes still take
+    # the local Event fast-path below. `publish_remote_resume` is
+    # optional on the store Protocol — in-memory stores skip it.
+    publish = getattr(state["store"], "publish_remote_resume", None)
+    if callable(publish):
+        with contextlib.suppress(Exception):
+            await publish(job.job_id, body.action, job.resume_plan)
+
+    # Same-worker wake-up. The runner is `await`ing on this Event
+    # inside `_handle_hitl_pause`. When the review lands on the same
+    # worker as the runner, this fires first and the pub/sub
+    # subscription is cancelled without ever seeing a message.
     job.resume_event.set()
 
     log.info(
@@ -537,7 +550,7 @@ def _get_state(request: Request) -> dict[str, Any]:
     """
     return {
         "store": request.app.state.store,
-        "build_workflow": request.app.state.build_workflow,
+        "workflow": request.app.state.workflow,
         "semaphore": request.app.state.semaphore,
         "max_concurrent_jobs": request.app.state.max_concurrent_jobs,
         "tasks": request.app.state.tasks,

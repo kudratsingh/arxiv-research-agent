@@ -99,9 +99,15 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # ADR 0034: compile the workflow ONCE at startup. The old
+        # code invoked `build_workflow()` per request, which opened
+        # a fresh checkpointer + ExitStack per job — a slow leak of
+        # DB connections and, under SqliteSaver, a corruption risk
+        # on the shared file across concurrent writers.
+        compiled_workflow = factory()
+        app.state.workflow = compiled_workflow
         app.state.store = job_store
         app.state.conversation_store = conv_store
-        app.state.build_workflow = factory
         app.state.semaphore = asyncio.Semaphore(max_concurrent)
         app.state.max_concurrent_jobs = max_concurrent
         app.state.tasks = set()
@@ -115,6 +121,7 @@ def create_app(
                 "conversation_store": type(conv_store).__name__,
                 "auth_enabled": settings.enable_api_auth,
                 "api_keys_configured": len(api_keys),
+                "checkpoint_backend": settings.checkpoint_backend,
             },
         )
         try:
@@ -128,6 +135,12 @@ def create_app(
             for task in list(app.state.tasks):
                 with contextlib.suppress(asyncio.CancelledError, Exception):
                     await task
+            # Release the workflow's checkpointer connections (SQLite
+            # or Postgres) via the ExitStack the compiler attached.
+            exit_stack = getattr(compiled_workflow, "_checkpointer_exit_stack", None)
+            if exit_stack is not None:
+                with contextlib.suppress(Exception):
+                    exit_stack.close()
             # Close the Redis connection pool if we own one. The
             # InMemoryJobStore has no `close` method — that's the
             # signal that this is a no-op path.

@@ -86,7 +86,7 @@ flowchart LR
         S[ResearchState<br/>papers · analyses · evidence<br/>draft · citations · critique<br/>next_action · verifier_recommendation<br/>tried_search_queries · recovery signals]
     end
     subgraph "Observability"
-        O[JSON logs · run_id<br/>per-run cost accumulator<br/>OTel spans · SQLite checkpoints]
+        O[JSON logs · run_id<br/>per-run cost accumulator<br/>OTel spans · SQLite/Postgres checkpoints]
     end
     subgraph "Eval"
         E[20-query benchmark<br/>citation accuracy · faithfulness<br/>completeness · retrieval recall<br/>nightly regression diff]
@@ -354,7 +354,7 @@ to answer. Every tunable is one env-var away — see `src/config.py`.
 **Failure handling**
 - Reader falls back to abstract when PDF fetch / extract / chunk / rank yields nothing (ADR [0004](docs/decisions/0004-reader-fulltext-with-abstract-fallback.md)).
 - Eval runner isolates per-query failures — a broken query captures its traceback and continues (ADR [0008](docs/decisions/0008-eval-runner-sequential-per-query-isolation.md)).
-- Runs are checkpointed to SQLite so an interrupted workflow resumes on the same `thread_id` (ADR [0013](docs/decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)).
+- Runs are checkpointed so an interrupted workflow resumes on the same `thread_id`. Backend selected by `settings.checkpoint_backend` — `sqlite` (default, per-worker) or `postgres` (shared across API workers; required for multi-worker HITL). See ADRs [0013](docs/decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md) and [0034](docs/decisions/0034-postgres-checkpointer-and-cross-worker-hitl.md).
 - API jobs never lose data on the runner side — every failure mode (`HitlTimeoutError`, `HitlCancelledError`, generic `Exception`, `asyncio.CancelledError`, wall-clock timeout) lands on the `Job` record before propagating.
 
 **Observability**

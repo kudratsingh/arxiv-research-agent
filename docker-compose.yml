@@ -36,6 +36,11 @@ services:
       # these to `disk` / `none` reverts to Sprint 1 behavior.
       PAPER_CACHE: postgres
       EMBEDDING_CACHE: postgres
+      # ADR 0034: share LangGraph checkpoints across API workers via
+      # Postgres. Required for HITL to work under multi-worker
+      # uvicorn — the ADR-0013 SqliteSaver is single-writer only.
+      # Set to `sqlite` to revert to per-worker checkpoints.
+      CHECKPOINT_BACKEND: postgres
       API_HOST: 0.0.0.0
       API_PORT: "8000"
       LOG_LEVEL: INFO

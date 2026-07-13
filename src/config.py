@@ -328,11 +328,21 @@ class Settings(BaseSettings):
     # ------ Checkpointing ---------------------------------------------
     enable_checkpointing: bool = Field(
         default=True,
-        description="Persist LangGraph state to SQLite for interrupt/resume",
+        description="Persist LangGraph state for interrupt/resume",
+    )
+    checkpoint_backend: str = Field(
+        default="sqlite",
+        description=(
+            "Backend for LangGraph checkpoints. `sqlite` uses "
+            "`checkpoint_db_path` — single-writer, per-worker only. "
+            "`postgres` shares checkpoints across API workers via "
+            "`postgres_url`; required for multi-worker HITL and "
+            "horizontal scaling. See ADR 0034."
+        ),
     )
     checkpoint_db_path: str = Field(
         default=".cache/checkpoints.sqlite",
-        description="SQLite file for the LangGraph SqliteSaver checkpointer",
+        description="SQLite file used when `checkpoint_backend=sqlite`",
     )
 
     # ------ Tracing (OpenTelemetry) -----------------------------------
