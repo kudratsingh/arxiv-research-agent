@@ -73,6 +73,10 @@ never renumbered.
   Pluggable checkpointer backend (Postgres in compose), workflow
   compiled once at app startup, Redis pub/sub for cross-worker
   HITL resume; revisits ADR 0013 and ADR 0027
+- [0035](0035-cross-worker-sse-pubsub.md) — Cross-worker SSE
+  fan-out via Redis pub/sub on `events:{job_id}`; runner + stream
+  endpoint bypass the local queue when the store supports pub/sub.
+  Closes the sticky-routing requirement documented in ADR 0027
 
 ## When to write an ADR
 

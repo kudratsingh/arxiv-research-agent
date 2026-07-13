@@ -321,7 +321,8 @@ async def export_research(
 )
 async def stream_research(job_id: str, request: Request) -> StreamingResponse:
     state = _get_state(request)
-    job = await state["store"].get(job_id)
+    store = state["store"]
+    job = await store.get(job_id)
     if job is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
@@ -338,43 +339,72 @@ async def stream_research(job_id: str, request: Request) -> StreamingResponse:
             return
 
         try:
-            # Heartbeat + event interleaving via `asyncio.wait`: pull
-            # the next event OR fire a heartbeat, whichever wins.
+            # ADR 0035: prefer the store's cross-worker event stream
+            # (RedisJobStore pub/sub on `events:{job_id}`) when the
+            # store advertises it. Falls back to draining
+            # `job.event_queue` for `InMemoryJobStore`. This is what
+            # lets the stream endpoint work when it lands on a
+            # different worker than the runner.
+            subscribe_events = getattr(store, "subscribe_events", None)
+            if callable(subscribe_events):
+                drainer = subscribe_events(job_id)
+            else:
+                drainer = drain_events(job)
+
             # `_next_event` wraps the async-generator `__anext__` in a
             # proper coroutine so `create_task` accepts it (mypy is
             # right that `__anext__` returns an Awaitable, not a
             # Coroutine).
-            drainer = drain_events(job)
-
             async def _next_event() -> dict[str, Any]:
-                return await drainer.__anext__()
+                # `drainer` is typed as Any because it may come from
+                # either `drain_events` or the duck-typed
+                # `store.subscribe_events` — but both yield
+                # `dict[str, Any]` frames. Cast at the boundary.
+                frame: dict[str, Any] = await drainer.__anext__()
+                return frame
 
-            while True:
-                if await request.is_disconnected():
-                    log.info("sse_client_disconnected", extra={"job_id": job_id})
-                    return
-                get_task: asyncio.Task[dict[str, Any]] = asyncio.create_task(
-                    _next_event()
-                )
-                heartbeat_task: asyncio.Task[None] = asyncio.create_task(
-                    asyncio.sleep(HEARTBEAT_INTERVAL_SEC)
-                )
-                done, pending = await asyncio.wait(
-                    {get_task, heartbeat_task},
-                    return_when=asyncio.FIRST_COMPLETED,
-                )
-                for p in pending:
-                    p.cancel()
-                if get_task in done:
-                    try:
-                        frame = get_task.result()
-                    except StopAsyncIteration:
+            try:
+                while True:
+                    if await request.is_disconnected():
+                        log.info(
+                            "sse_client_disconnected", extra={"job_id": job_id}
+                        )
                         return
-                    yield format_sse(frame["event"], frame["data"])
-                    if frame["event"] in ("job_completed", "job_failed", "job_cancelled"):
-                        return
-                else:
-                    yield format_heartbeat()
+                    get_task: asyncio.Task[dict[str, Any]] = asyncio.create_task(
+                        _next_event()
+                    )
+                    heartbeat_task: asyncio.Task[None] = asyncio.create_task(
+                        asyncio.sleep(HEARTBEAT_INTERVAL_SEC)
+                    )
+                    done, pending = await asyncio.wait(
+                        {get_task, heartbeat_task},
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    for p in pending:
+                        p.cancel()
+                    if get_task in done:
+                        try:
+                            frame = get_task.result()
+                        except StopAsyncIteration:
+                            return
+                        yield format_sse(frame["event"], frame["data"])
+                        if frame["event"] in (
+                            "job_completed",
+                            "job_failed",
+                            "job_cancelled",
+                        ):
+                            return
+                    else:
+                        yield format_heartbeat()
+            finally:
+                # Explicit close so the pub/sub subscriber's `finally`
+                # clause runs (unsubscribe + release the Redis
+                # connection). Relying on generator GC would leak
+                # a Redis pubsub client per disconnected SSE client.
+                aclose = getattr(drainer, "aclose", None)
+                if callable(aclose):
+                    with contextlib.suppress(Exception):
+                        await aclose()
         except asyncio.CancelledError:
             # Client disconnect during a `wait` — quiet exit.
             return

@@ -18,6 +18,7 @@ import asyncio
 import contextlib
 import time
 from collections.abc import Awaitable, Callable
+from contextvars import ContextVar
 from typing import Any
 
 from src.api.jobs import Job, JobStatus, JobStore
@@ -32,6 +33,15 @@ from src.observability import (
 from src.observability.costs import RunCosts
 
 log = get_logger(__name__)
+
+# ADR 0035: `_put_event` / `_put_terminal_event` need to reach the
+# JobStore to fan out via pub/sub without threading the store
+# argument through every call site. Same pattern as
+# `_current_costs` in observability.costs. `run_job` sets it on
+# entry; the helpers read it.
+_current_store: ContextVar[JobStore | None] = ContextVar(
+    "current_store", default=None
+)
 
 WorkflowFactory = Callable[[], Any]
 """Zero-arg callable that returns a compiled LangGraph app.
@@ -113,13 +123,27 @@ def _initial_state(
 
 
 async def _put_event(job: Job, event: str, data: dict[str, Any]) -> None:
-    """Push an event into the job queue without blocking the runner.
+    """Emit an event to whichever SSE delivery mechanism is active.
 
-    If the queue is full (SSE consumer is slow or has disconnected),
-    drop the oldest event to keep the workflow moving. Terminal
-    events must never be dropped, so callers should use
-    `_put_terminal_event` for those.
+    Two paths, selected by the store on the current context:
+
+    - **Store advertises `publish_event`** (RedisJobStore under
+      ADR 0035): fan out to `events:{job_id}` pub/sub. The local
+      queue is bypassed — under multi-worker uvicorn the runner's
+      queue has no consumer, and filling it to `maxsize=1024`
+      then hitting the blocking `_put_terminal_event` would
+      deadlock the runner.
+    - **No pub/sub method** (InMemoryJobStore): fall back to the
+      original queue-based fan-out with drop-oldest on QueueFull
+      so a slow SSE consumer can't stall the runner.
     """
+    store = _current_store.get()
+    publish = getattr(store, "publish_event", None) if store else None
+    if callable(publish):
+        with contextlib.suppress(Exception):
+            await publish(job.job_id, event, data)
+        return
+
     try:
         job.event_queue.put_nowait({"event": event, "data": data})
     except asyncio.QueueFull:
@@ -132,10 +156,21 @@ async def _put_event(job: Job, event: str, data: dict[str, Any]) -> None:
 
 
 async def _put_terminal_event(job: Job, event: str, data: dict[str, Any]) -> None:
-    """Blocking put — terminal events are the SSE close signal and
-    dropping them would leave the client hanging until heartbeat
-    timeout. Slow consumers apply backpressure here.
+    """Emit a terminal frame — the SSE close signal.
+
+    Under the pub/sub path the subscriber terminates on the
+    terminal event name, so the fan-out is enough. Under the
+    queue-based path we do a blocking `put()` because the terminal
+    frame must not be dropped: the SSE consumer keeps the
+    connection open until it arrives.
     """
+    store = _current_store.get()
+    publish = getattr(store, "publish_event", None) if store else None
+    if callable(publish):
+        with contextlib.suppress(Exception):
+            await publish(job.job_id, event, data)
+        return
+
     await job.event_queue.put({"event": event, "data": data})
 
 
@@ -344,6 +379,15 @@ async def run_job(
         job.status = JobStatus.running
         job.started_at = time.time()
         await store.update(job)
+
+        # ADR 0035: bind the store so `_put_event` /
+        # `_put_terminal_event` can reach it for pub/sub fan-out.
+        # ContextVar is asyncio-Task-scoped: sets inside a Task
+        # don't leak back to the caller, and `run_job` runs as the
+        # top-level coroutine of the job's Task, so we don't need
+        # to reset on exit.
+        _current_store.set(store)
+
         await _put_event(
             job,
             "job_started",
