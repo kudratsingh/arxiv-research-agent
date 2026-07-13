@@ -10,20 +10,38 @@ The raw PDF is written to `<cache_dir>/<key>.pdf` on the local
 filesystem regardless of `PaperCache` backend so a future re-parse
 with an updated PyMuPDF doesn't need a re-download. The extracted
 text goes through the cache (disk or Postgres per `settings`).
+
+Two ADR-0033 hardenings live here:
+
+- Downloads stream with a `settings.pdf_max_bytes` ceiling so a
+  500MB adversarial PDF can't OOM the process.
+- `_cache_key` only extracts an arXiv ID when the URL's host is
+  under `arxiv.org`; other hosts hash the full URL. Otherwise
+  `https://evil.com/2311.09000/attack.pdf` collides with the real
+  cache slot for that arXiv ID.
 """
 
 import hashlib
 import re
 from pathlib import Path
+from urllib.parse import urlparse
 
 import fitz
 import requests
 
+from src.config import settings
 from src.observability import get_logger
 from src.tools.http_session import build_retrying_session
 from src.tools.paper_cache import DEFAULT_CACHE_DIR, PaperCache, get_paper_cache
 
 DOWNLOAD_TIMEOUT_SEC = 60
+
+# Read-chunk size for the streaming download. 64 KiB matches urllib3's
+# default and keeps the size check tight without thrashing on many
+# small reads.
+_STREAM_CHUNK_BYTES = 64 * 1024
+
+_ARXIV_ID = re.compile(r"(\d{4}\.\d{4,5}(?:v\d+)?)")
 
 log = get_logger(__name__)
 
@@ -31,27 +49,36 @@ log = get_logger(__name__)
 def _cache_key(pdf_url: str) -> str:
     """Derive a stable filesystem-safe key for a PDF URL.
 
-    Prefers the arXiv ID embedded in the URL (e.g. "2311.09000" or
-    "2311.09000v2"); falls back to a short SHA1 for non-arXiv URLs.
+    Uses the arXiv ID only when the URL's host is arxiv.org (or a
+    subdomain); otherwise falls back to a short SHA1 of the full URL.
+    Otherwise a URL like ``https://evil.com/2311.09000/attack.pdf``
+    would collide with the real cache slot for that arXiv ID.
     """
-    match = re.search(r"(\d{4}\.\d{4,5}(?:v\d+)?)", pdf_url)
-    if match:
-        return match.group(1)
+    host = (urlparse(pdf_url).hostname or "").lower()
+    if host == "arxiv.org" or host.endswith(".arxiv.org"):
+        match = _ARXIV_ID.search(pdf_url)
+        if match:
+            return match.group(1)
     return hashlib.sha1(pdf_url.encode("utf-8")).hexdigest()[:16]
 
 
 def _download_pdf(pdf_url: str, dest: Path) -> bool:
     """Download a PDF to `dest`. Returns True on success.
 
-    Uses a retrying session so transient 429s from arXiv's PDF host
-    don't drop us into abstract-only mode. A hard failure (bad URL,
-    non-PDF body, extraction throw) still returns False and the reader
-    falls back gracefully.
+    Streams the response body with a ``settings.pdf_max_bytes`` cap
+    so a large adversarial PDF can't exhaust memory. Uses a retrying
+    session so transient 429s don't drop us into abstract-only mode.
+    A hard failure (bad URL, non-PDF body, oversize, extraction
+    throw) returns False and the reader falls back gracefully.
     """
     session = build_retrying_session()
+    max_bytes = settings.pdf_max_bytes
     try:
         resp = session.get(
-            pdf_url, timeout=DOWNLOAD_TIMEOUT_SEC, allow_redirects=True
+            pdf_url,
+            timeout=DOWNLOAD_TIMEOUT_SEC,
+            allow_redirects=True,
+            stream=True,
         )
     except (requests.RequestException, OSError) as exc:
         log.warning(
@@ -60,14 +87,49 @@ def _download_pdf(pdf_url: str, dest: Path) -> bool:
         )
         return False
 
-    if resp.status_code != 200:
-        log.warning(
-            "pdf_download_http_error",
-            extra={"pdf_url": pdf_url, "status": resp.status_code},
-        )
-        return False
+    with resp:
+        if resp.status_code != 200:
+            log.warning(
+                "pdf_download_http_error",
+                extra={"pdf_url": pdf_url, "status": resp.status_code},
+            )
+            return False
 
-    if not resp.content.startswith(b"%PDF-"):
+        # A well-behaved server sends Content-Length; if it exceeds
+        # the cap we can reject before pulling any bytes.
+        declared = resp.headers.get("Content-Length")
+        if declared is not None:
+            try:
+                if int(declared) > max_bytes:
+                    log.warning(
+                        "pdf_download_oversize_declared",
+                        extra={
+                            "pdf_url": pdf_url,
+                            "content_length": int(declared),
+                            "max_bytes": max_bytes,
+                        },
+                    )
+                    return False
+            except ValueError:
+                pass  # Non-integer header — fall through to streaming cap.
+
+        buf = bytearray()
+        for chunk in resp.iter_content(chunk_size=_STREAM_CHUNK_BYTES):
+            if not chunk:
+                continue
+            buf.extend(chunk)
+            if len(buf) > max_bytes:
+                log.warning(
+                    "pdf_download_oversize_streamed",
+                    extra={
+                        "pdf_url": pdf_url,
+                        "read_bytes": len(buf),
+                        "max_bytes": max_bytes,
+                    },
+                )
+                return False
+
+    if not bytes(buf[:5]).startswith(b"%PDF-"):
         log.warning(
             "pdf_download_not_a_pdf",
             extra={"pdf_url": pdf_url},
@@ -75,7 +137,7 @@ def _download_pdf(pdf_url: str, dest: Path) -> bool:
         return False
 
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_bytes(resp.content)
+    dest.write_bytes(bytes(buf))
     return True
 
 

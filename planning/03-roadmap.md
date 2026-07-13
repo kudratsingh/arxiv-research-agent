@@ -122,3 +122,13 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   loop engineering (supervisor + verifier + evidence store) ahead of
   the deployment / infra items originally scoped there. Rationale in
   [`05-agentic-upgrade-plan.md`](05-agentic-upgrade-plan.md).
+- _2026-07-13_ — Safety-hardening bundle (ADR 0033). Post-Sprint-5
+  audit surfaced a cluster of production-blocking defects: no auth on
+  any route, no per-run cost cap on the fixed-DAG path, arXiv on
+  http://, unbounded PDF download, cross-turn prompt-injection via
+  `prior_context`. All closed in one bundled PR behind the existing
+  `enable_prompt_isolation` / new `enable_api_auth` flags. Deferred
+  as follow-ups: per-principal store scoping, Redis-backed rate
+  limiter, `SqliteSaver` → `PostgresSaver` (ADR 0013 revisit),
+  cross-worker SSE via Redis pub/sub (ADR 0027 revisit), model-
+  routing defaults (ADR 0021 revisit).

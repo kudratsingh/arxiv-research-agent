@@ -15,6 +15,16 @@ Attackers we defend against:
   text, aiming to redirect the supervisor's next action, stop the
   loop early, or smuggle instructions into the report via evidence
   claims.
+- An in-flight MITM sitting between the workflow and arXiv, trying
+  to inject attacker-chosen `PaperMetadata` that then drives Claude
+  prompts and PDF fetches.
+- An adversarial PDF host serving multi-hundred-MB content in
+  response to `parse_pdf`, aiming to exhaust worker memory.
+- An anonymous HTTP caller trying to drain the Anthropic account by
+  hitting `POST /research` at scale.
+- A conversation follow-up where a prior report — itself derived
+  from adversarial-controllable paper text — carries a jailbreak
+  that redirects the planner on the next turn.
 
 Not in scope:
 
@@ -58,13 +68,117 @@ against it; must be verbatim), `key_findings` / `methodology` /
 `results_summary` / `limitations` (flow to synthesizer, not to
 supervisor control tokens). These are follow-up work.
 
+### Planner prior_context isolation (ADR 0033)
+
+Behind the same `settings.enable_prompt_isolation` flag. When
+conversation mode (ADR 0032) retrieves prior-report chunks into
+`state.prior_context`, the planner:
+
+1. Wraps the text with
+   `<untrusted_prior_context>...</untrusted_prior_context>` tags via
+   `wrap_untrusted_prior_context()`. Close tags in the content are
+   escaped.
+2. Prepends `PRIOR_CONTEXT_ISOLATION_INSTRUCTION` to the system
+   prompt. It names the tag pair and the exact control fields it's
+   protecting (`sub_questions`, `search_queries`).
+
+Wired at `src/agents/planner.py::_build_user_prompt` and
+`src/agents/planner.py::_build_system_prompt`. Same defense pattern
+as the reader; distinct tags so the guardrail can name the fields
+precisely.
+
+### Transport hardening (ADR 0033)
+
+- `ARXIV_API_URL` is `https://export.arxiv.org/api/query`. An
+  in-flight MITM cannot substitute paper metadata.
+- Response parsing uses `defusedxml.ElementTree`, which raises
+  `EntitiesForbidden` on any DOCTYPE + entity payload — no XXE,
+  no billion-laughs.
+
+### PDF fetch guardrails (ADR 0033)
+
+- `_download_pdf` streams with `iter_content` and aborts once
+  `settings.pdf_max_bytes` (default 50 MiB) is reached. Servers
+  that declare `Content-Length` above the cap are refused before
+  any bytes flow.
+- `_cache_key` only extracts an arXiv ID when
+  `urlparse(pdf_url).hostname` is under `arxiv.org`; other hosts
+  fall through to a SHA hash of the full URL, so a URL like
+  `https://evil.com/2311.09000/attack.pdf` cannot poison the cache
+  slot for the real arXiv paper.
+
+### Per-run cost cap (ADR 0033)
+
+`src/api/runner.py::_enforce_cost_cap` runs from the runner's
+`on_node` callback between graph nodes and raises
+`CostBudgetExceeded` when `RunCosts.total_cost_usd >=
+settings.max_cost_usd`. The job terminates as `failed` with
+`error_type=cost_budget_exceeded`. This is the only enforcement
+point that catches the fixed-DAG path where the supervisor's own
+check doesn't apply.
+
+### API-key auth + rate limiting + CORS (ADR 0033)
+
+Behind `settings.enable_api_auth` (default off; **flip on for any
+exposed deployment**). Three layers:
+
+1. **API-key authentication**. Every `/research` and `/conversations`
+   route carries `dependencies=[Depends(require_principal)]`. The
+   dependency reads the `X-API-Key` header, looks it up in the
+   startup-parsed keystore (`settings.api_keys`, format
+   `name:secret,name:secret`), and returns an `ApiKeyPrincipal`.
+   Missing or unknown key -> 401. Lookup uses `hmac.compare_digest`
+   in a non-short-circuiting loop for constant-time comparison.
+   `/healthz` and `/docs` stay open.
+2. **Per-key rate limit**. `RateLimiter` records submit timestamps
+   per principal in an in-memory sliding window. When a key
+   exceeds `settings.api_key_hourly_limit` submits per hour,
+   `POST /research` returns 429 with a `Retry-After` header. Only
+   the submit route is throttled; reads / status calls are not.
+3. **CORS allowlist**. When `settings.api_cors_allow_origins` is
+   non-empty (comma-separated origins), FastAPI's `CORSMiddleware`
+   is installed with those origins allowed, `X-API-Key` in
+   `allow_headers`, and credentials allowed. Empty (default) means
+   no middleware — same-origin only.
+
+Source: `src/api/auth.py`. Wired in `src/api/app.py::create_app`
+and route decorators in `src/api/routes.py`.
+
+**Not in scope for the auth bundle**:
+
+- Per-principal ownership scoping on `Job` / `Conversation` stores.
+  With auth on, only key holders can hit the endpoints, so the
+  audit's "anyone reads anyone's data" issue is much reduced — but
+  distinct key holders can still read each other's data. Follow-up
+  PR adds a `principal_key_id` field on `Job`.
+- Rate-limit persistence. Counters live per-worker in memory. Under
+  multi-worker uvicorn, effective limit is
+  `api_key_hourly_limit * n_workers`. Follow-up PR moves to Redis.
+- Key rotation without restart. `api_keys` is parsed once at startup.
+
 ### Adversarial tests
 
-`tests/test_reader_isolation.py` exercises canned jailbreak strings
-in the abstract, in the LLM's response (simulating a compromised
-model), and in evidence claims. Every attack surface is verified
-with both flag positions so the pre-isolation baseline behavior is
-also documented.
+- `tests/test_reader_isolation.py` — canned jailbreak strings in the
+  abstract, in the LLM's response (simulating a compromised model),
+  and in evidence claims. Verifies both flag positions.
+- `tests/test_planner_prior_context.py::TestPriorContextIsolation`
+  — asserts that adversarial-looking prior_context is wrapped, not
+  obeyed, when `enable_prompt_isolation` is on, and that the flag
+  gates whether the system instruction is added.
+- `tests/test_arxiv_search.py::test_search_arxiv_rejects_entity_expansion`
+  — proves `defusedxml` refuses a billion-laughs payload.
+- `tests/test_pdf_parser.py::TestDownloadPdf` — proves declared-
+  oversize and mid-stream oversize both abort without allocating
+  the whole PDF, and that a URL masquerading with an arXiv-shaped
+  path but a non-arXiv host doesn't share a cache slot with the
+  real arXiv paper.
+- `tests/test_runner_cost_cap.py` — proves `_enforce_cost_cap`
+  raises `CostBudgetExceeded` at and above the ceiling, and that
+  the empty accumulator never trips.
+- `tests/test_api_auth.py` — end-to-end HTTPX suite proves every
+  `/research` and `/conversations` route rejects missing / invalid
+  keys and accepts a valid key, `/healthz` stays open, and the
+  sliding-window rate limiter buckets per principal.
 
 ## Follow-ups
 
@@ -78,3 +192,8 @@ also documented.
 - Content-classifier-based rejection at ingest (an extra Claude
   call per paper; scope for Sprint 5+ if the deployment model
   justifies the cost).
+- Per-principal ownership scoping on `Job` + `Conversation` stores.
+- Redis-backed rate limiter for horizontal scaling.
+- Hot-reloadable keystore so key rotation doesn't need a restart.
+- Atomic-write PDF cache (write to `.tmp` sibling, rename on
+  completion).

@@ -18,7 +18,9 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from src.api.auth import RateLimiter, parse_api_keys
 from src.api.conversations import (
     ConversationStore,
     build_conversation_store,
@@ -87,6 +89,14 @@ def create_app(
     )
     max_concurrent = max_concurrent_jobs or settings.api_max_concurrent_jobs
 
+    # ADR 0033: parse API keys + build the rate limiter once at
+    # startup so every request handler shares the same instances.
+    # `enable_api_auth=False` still parses (an empty string yields
+    # an empty dict) so a misconfigured `api_keys` value fails fast
+    # regardless of the flag.
+    api_keys = parse_api_keys(settings.api_keys)
+    rate_limiter = RateLimiter(limit_per_hour=settings.api_key_hourly_limit)
+
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.store = job_store
@@ -95,12 +105,16 @@ def create_app(
         app.state.semaphore = asyncio.Semaphore(max_concurrent)
         app.state.max_concurrent_jobs = max_concurrent
         app.state.tasks = set()
+        app.state.api_keys = api_keys
+        app.state.rate_limiter = rate_limiter
         log.info(
             "api_startup",
             extra={
                 "max_concurrent_jobs": max_concurrent,
                 "store": type(job_store).__name__,
                 "conversation_store": type(conv_store).__name__,
+                "auth_enabled": settings.enable_api_auth,
+                "api_keys_configured": len(api_keys),
             },
         )
         try:
@@ -132,5 +146,23 @@ def create_app(
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    # ADR 0033: CORS is opt-in via `settings.api_cors_allow_origins`.
+    # Empty (default) => no CORS middleware, so same-origin only.
+    origins = [
+        o.strip()
+        for o in settings.api_cors_allow_origins.split(",")
+        if o.strip()
+    ]
+    if origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["GET", "POST", "DELETE"],
+            allow_headers=["Content-Type", "X-API-Key"],
+        )
+        log.info("api_cors_enabled", extra={"origins": origins})
+
     app.include_router(router)
     return app

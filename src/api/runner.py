@@ -29,6 +29,7 @@ from src.observability import (
     reset_run_id,
     start_cost_tracking,
 )
+from src.observability.costs import RunCosts
 
 log = get_logger(__name__)
 
@@ -45,6 +46,24 @@ class HitlTimeoutError(Exception):
 
 class HitlCancelledError(Exception):
     """Client sent `action=cancel` from the review endpoint."""
+
+
+class CostBudgetExceeded(Exception):
+    """Run's accumulated LLM spend crossed ``settings.max_cost_usd``.
+
+    Raised from the runner's ``on_node`` callback between graph nodes
+    so the workflow aborts before the next agent invocation. See
+    ADR 0033: the supervisor also has its own budget check, but the
+    fixed-DAG path has no supervisor — this is the only enforcement
+    point that catches both shapes.
+    """
+
+    def __init__(self, spent_usd: float, cap_usd: float) -> None:
+        self.spent_usd = spent_usd
+        self.cap_usd = cap_usd
+        super().__init__(
+            f"per-run cost ${spent_usd:.4f} exceeded cap ${cap_usd:.2f}"
+        )
 
 
 def _initial_state(
@@ -115,6 +134,19 @@ async def _put_terminal_event(job: Job, event: str, data: dict[str, Any]) -> Non
     timeout. Slow consumers apply backpressure here.
     """
     await job.event_queue.put({"event": event, "data": data})
+
+
+def _enforce_cost_cap(costs: RunCosts, cap_usd: float) -> None:
+    """Raise `CostBudgetExceeded` when the run's spend crosses the cap.
+
+    Called between graph nodes from the runner's `on_node` callback.
+    The cap comes from `settings.max_cost_usd`; passing it in
+    explicitly (rather than reading `settings` here) keeps this
+    helper unit-testable without env-var gymnastics.
+    """
+    spent = costs.total_cost_usd
+    if spent >= cap_usd:
+        raise CostBudgetExceeded(spent_usd=spent, cap_usd=cap_usd)
 
 
 def _extract_final_metrics(state: dict[str, Any]) -> dict[str, Any]:
@@ -288,6 +320,12 @@ async def run_job(
 
         token = bind_run_id(job.job_id)
         costs = start_cost_tracking()
+        # Some legacy API tests substitute a `SimpleNamespace` for
+        # `runner_module.settings` that predates this field. `getattr`
+        # keeps them green while production always ships a full
+        # `Settings` instance (pydantic-settings validates all
+        # fields at load time, so drift on real deploys is impossible).
+        cap_usd = getattr(settings, "max_cost_usd", float("inf"))
 
         async def on_node(node_name: str, state_update: dict[str, Any]) -> None:
             # Only publish scalar fields — the papers/citations lists
@@ -303,6 +341,12 @@ async def run_job(
                 "node_completed",
                 {"node": node_name, "state_delta": slim},
             )
+            # ADR 0033: enforce the per-run cost cap between nodes so
+            # the fixed-DAG path (no supervisor) can't overspend on
+            # adversarial inputs. Supervisor loop has its own check
+            # but firing here first is harmless — both point at the
+            # same accumulator.
+            _enforce_cost_cap(costs, cap_usd)
 
         prior_context = ""
         if job.conversation_id and conversation_store is not None:
@@ -377,6 +421,36 @@ async def run_job(
                 extra={
                     "job_id": job.job_id,
                     "hitl_timeout_sec": settings.api_hitl_timeout_sec,
+                    **snapshot,
+                },
+            )
+            return
+        except CostBudgetExceeded as exc:
+            job.status = JobStatus.failed
+            job.error = str(exc)
+            job.error_type = "cost_budget_exceeded"
+            job.completed_at = time.time()
+            snapshot = costs.as_dict()
+            job.cost_usd = snapshot.get("total_cost_usd")
+            job.llm_calls = snapshot.get("call_count")
+            reset_run_id(token)
+            await store.update(job)
+            await _put_terminal_event(
+                job,
+                "job_failed",
+                {
+                    "job_id": job.job_id,
+                    "error": job.error,
+                    "error_type": job.error_type,
+                    "elapsed_sec": job.elapsed_sec(),
+                },
+            )
+            log.warning(
+                "api_job_cost_budget_exceeded",
+                extra={
+                    "job_id": job.job_id,
+                    "cap_usd": exc.cap_usd,
+                    "spent_usd": exc.spent_usd,
                     **snapshot,
                 },
             )

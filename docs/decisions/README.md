@@ -65,6 +65,10 @@ never renumbered.
 - [0023](0023-semantic-scholar-citation-graph.md) — Semantic Scholar
   adapter + one-hop reference enrichment in the search agent,
   flag-gated
+- [0033](0033-safety-hardening-bundle.md) — Safety hardening bundle:
+  arXiv HTTPS + defusedxml, PDF streaming size cap, tightened cache
+  key, runner-level cost cap, planner `prior_context` isolation,
+  API-key auth + per-key rate limits + CORS allowlist
 
 ## When to write an ADR
 
