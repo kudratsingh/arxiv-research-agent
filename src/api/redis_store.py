@@ -32,6 +32,17 @@ pause) subscribes and hydrates the local job when the message
 arrives. Same-worker resume still works via the direct
 `resume_event.set()` in the endpoint; the pub/sub covers the
 different-worker case.
+
+## Cross-worker SSE (ADR 0035)
+
+Same pattern applied to node events. `publish_event` (called from
+the runner for every `job_started` / `node_completed` / `plan_ready`
+/ terminal event) publishes to `events:{job_id}`; `subscribe_events`
+(consumed by `stream_research` when the store supports it) reads
+that channel and yields frames until a terminal event. The local
+`event_queue` on `Job` is bypassed entirely for RedisJobStore — a
+`_put_event` under multi-worker would fill an unread queue on the
+runner's worker until the blocking terminal `put()` deadlocks.
 """
 
 from __future__ import annotations
@@ -39,6 +50,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+from collections.abc import AsyncIterator
 from dataclasses import asdict, fields
 from typing import Any
 
@@ -52,6 +64,15 @@ log = get_logger(__name__)
 
 JOB_KEY_PREFIX = "job:"
 HITL_RESUME_CHANNEL_PREFIX = "hitl:resume:"
+EVENTS_CHANNEL_PREFIX = "events:"
+
+# Runner terminal event names — subscribers stop iterating on any of
+# these. Kept in sync with `_terminal_event_name` in routes.py; a
+# mismatch would leave a subscriber hanging until the client
+# disconnects.
+_TERMINAL_EVENT_NAMES: frozenset[str] = frozenset(
+    {"job_completed", "job_failed", "job_cancelled"}
+)
 
 
 def _job_key(job_id: str) -> str:
@@ -61,6 +82,11 @@ def _job_key(job_id: str) -> str:
 def _hitl_resume_channel(job_id: str) -> str:
     """Pub/sub channel for HITL resume notifications (ADR 0034)."""
     return f"{HITL_RESUME_CHANNEL_PREFIX}{job_id}"
+
+
+def _events_channel(job_id: str) -> str:
+    """Pub/sub channel for SSE events (ADR 0035)."""
+    return f"{EVENTS_CHANNEL_PREFIX}{job_id}"
 
 
 def _persistent_fields() -> set[str]:
@@ -196,6 +222,72 @@ class RedisJobStore:
         """Release the Redis connection pool. Called from the
         FastAPI lifespan on shutdown."""
         await self._client.aclose()
+
+    # ---- ADR 0035: cross-worker SSE events ---------------------
+
+    async def publish_event(
+        self, job_id: str, event: str, data: dict[str, Any]
+    ) -> None:
+        """Fan out one SSE event to any streamer subscribed to the job.
+
+        Called from the runner's `_put_event` / `_put_terminal_event`
+        for every frame the SSE endpoint would otherwise pull off
+        `job.event_queue`. Under multi-worker uvicorn this is the
+        only delivery mechanism that actually reaches the streaming
+        endpoint if that endpoint is running on a different worker
+        than the runner.
+        """
+        payload = json.dumps(
+            {"event": event, "data": data}, separators=(",", ":")
+        )
+        await self._client.publish(_events_channel(job_id), payload)
+
+    async def subscribe_events(
+        self, job_id: str
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Yield SSE frames from `events:{job_id}` until a terminal event.
+
+        Consumed by `stream_research` under RedisJobStore. Terminates
+        cleanly on any of `job_completed` / `job_failed` /
+        `job_cancelled`, matching the `drain_events` semantics for
+        `InMemoryJobStore`. Handles pub/sub connection cleanup in
+        `finally` so a cancelled subscription (client disconnect)
+        doesn't leak a Redis connection.
+
+        Malformed payloads are logged and skipped — a rogue
+        publisher on the same channel can't crash the stream.
+        """
+        pubsub = self._client.pubsub()
+        try:
+            await pubsub.subscribe(_events_channel(job_id))
+            async for message in pubsub.listen():
+                if message.get("type") != "message":
+                    continue
+                raw = message.get("data")
+                if isinstance(raw, bytes):
+                    raw = raw.decode()
+                try:
+                    parsed = json.loads(raw) if raw else None
+                except (ValueError, TypeError):
+                    log.warning(
+                        "sse_event_bad_payload",
+                        extra={"job_id": job_id, "payload": raw},
+                    )
+                    continue
+                if not isinstance(parsed, dict) or "event" not in parsed:
+                    log.warning(
+                        "sse_event_bad_shape",
+                        extra={"job_id": job_id, "payload": raw},
+                    )
+                    continue
+                yield parsed
+                if parsed.get("event") in _TERMINAL_EVENT_NAMES:
+                    return
+        finally:
+            with contextlib.suppress(Exception):
+                await pubsub.unsubscribe(_events_channel(job_id))
+            with contextlib.suppress(Exception):
+                await pubsub.aclose()  # type: ignore[no-untyped-call]
 
     # ---- ADR 0034: cross-worker HITL resume ---------------------
 

@@ -141,3 +141,12 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   `hitl:resume:{job_id}` pub/sub. Revisits ADR 0013 and ADR 0027.
   Follow-ups remaining: SSE cross-worker via pub/sub, job redriver
   on restart, per-principal store scoping, model-routing defaults.
+- _2026-07-13_ — Cross-worker SSE via Redis pub/sub (ADR 0035).
+  Ports the ADR-0034 HITL pattern to node events on
+  `events:{job_id}`. Runner + stream endpoint bypass the local
+  `event_queue` when the store advertises pub/sub, so a stream
+  request landing on a different worker than the runner still
+  receives every frame + the terminal close. Removes the sticky-
+  routing requirement documented in ADR 0027. Remaining follow-
+  ups: job redriver on restart, per-principal store scoping,
+  model-routing defaults, MiniLM → bge-small retrieval swap.

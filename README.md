@@ -289,9 +289,11 @@ Postgres stay on the internal compose network. Named volumes
 down`; `down -v` wipes them.
 
 Multi-worker uvicorn is safe under `JOB_STORE=redis` — every worker
-reads/writes the shared Redis-backed store. Note that SSE streaming
-requires job affinity (see ADR 0027 Consequences); polling works
-across workers unconditionally.
+reads/writes the shared Redis-backed store. SSE streaming and HITL
+resume both work across workers via Redis pub/sub on
+`events:{job_id}` and `hitl:resume:{job_id}` — no sticky routing
+required. See ADRs [0034](docs/decisions/0034-postgres-checkpointer-and-cross-worker-hitl.md)
+and [0035](docs/decisions/0035-cross-worker-sse-pubsub.md).
 
 The compose stack also sets `PAPER_CACHE=postgres` +
 `EMBEDDING_CACHE=postgres` so extracted paper text and MiniLM
