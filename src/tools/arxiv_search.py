@@ -1,14 +1,20 @@
-"""arXiv API wrapper for searching and retrieving paper metadata."""
+"""arXiv API wrapper for searching and retrieving paper metadata.
 
-import xml.etree.ElementTree as ET
+Uses HTTPS for the arXiv Atom feed (an in-flight MITM otherwise gets
+to inject attacker-chosen `PaperMetadata` that drives Claude prompts
+and PDF fetches downstream) and `defusedxml` to parse the response
+(closes XML-external-entity / billion-laughs attacks on the parser).
+See ADR 0033.
+"""
 
 import requests
+from defusedxml import ElementTree as ET
 
 from src.graph.state import PaperMetadata
 from src.observability import get_logger
 from src.tools.http_session import build_retrying_session
 
-ARXIV_API_URL = "http://arxiv.org/api/query"
+ARXIV_API_URL = "https://export.arxiv.org/api/query"
 ATOM_NS = "{http://www.w3.org/2005/Atom}"
 
 log = get_logger(__name__)

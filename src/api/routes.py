@@ -11,9 +11,10 @@ import asyncio
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import Response, StreamingResponse
 
+from src.api.auth import ApiKeyPrincipal, enforce_rate_limit, require_principal
 from src.api.conversations import (
     Conversation,
     new_conversation_id,
@@ -88,7 +89,11 @@ def _new_job_id() -> str:
     status_code=status.HTTP_202_ACCEPTED,
     summary="Submit a research query — returns immediately with a job_id.",
 )
-async def submit_research(body: ResearchRequest, request: Request) -> ResearchAccepted:
+async def submit_research(
+    body: ResearchRequest,
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
+) -> ResearchAccepted:
     """Accept a query and kick off a background workflow.
 
     Returns 202 with `job_id`, `status_url`, `stream_url`. The
@@ -99,7 +104,14 @@ async def submit_research(body: ResearchRequest, request: Request) -> ResearchAc
     chunks from that conversation before invoking the workflow, and
     appends the completed job to the conversation on succeed. See
     ADR 0032.
+
+    Under `settings.enable_api_auth`, `X-API-Key` is required — see
+    ADR 0033 — and the caller is subject to
+    `settings.api_key_hourly_limit`.
     """
+    # ADR 0033: rate-limit the submit route only. Read/status routes
+    # don't cost LLM dollars so they don't need per-key throttling.
+    enforce_rate_limit(request, principal)
     state = _get_state(request)
 
     # Fast-fail on a missing conversation before the workflow starts.
@@ -150,6 +162,7 @@ async def submit_research(body: ResearchRequest, request: Request) -> ResearchAc
     "/research/{job_id}",
     response_model=JobDetail,
     summary="Get the current status + result of a job.",
+    dependencies=[Depends(require_principal)],
 )
 async def get_research(job_id: str, request: Request) -> JobDetail:
     state = _get_state(request)
@@ -165,6 +178,7 @@ async def get_research(job_id: str, request: Request) -> JobDetail:
     "/research/{job_id}/review",
     response_model=ReviewResponse,
     summary="Resolve a `pending_review` job — approve, revise, or cancel.",
+    dependencies=[Depends(require_principal)],
 )
 async def review_plan(
     job_id: str, body: ReviewRequest, request: Request
@@ -222,6 +236,7 @@ async def review_plan(
 @router.get(
     "/research/{job_id}/export",
     summary="Download the report in the requested format.",
+    dependencies=[Depends(require_principal)],
     responses={
         200: {
             "content": {
@@ -289,6 +304,7 @@ async def export_research(
 @router.get(
     "/research/{job_id}/stream",
     summary="Server-Sent Events stream of workflow events.",
+    dependencies=[Depends(require_principal)],
 )
 async def stream_research(job_id: str, request: Request) -> StreamingResponse:
     state = _get_state(request)
@@ -369,6 +385,7 @@ async def stream_research(job_id: str, request: Request) -> StreamingResponse:
     response_model=ConversationDetail,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new conversation.",
+    dependencies=[Depends(require_principal)],
 )
 async def create_conversation(
     body: ConversationCreateRequest, request: Request
@@ -393,6 +410,7 @@ async def create_conversation(
     "/conversations",
     response_model=list[ConversationListItem],
     summary="List conversations, newest first (no job bodies).",
+    dependencies=[Depends(require_principal)],
 )
 async def list_conversations(request: Request) -> list[ConversationListItem]:
     state = _get_state(request)
@@ -412,6 +430,7 @@ async def list_conversations(request: Request) -> list[ConversationListItem]:
     "/conversations/{conversation_id}",
     response_model=ConversationDetail,
     summary="Full conversation thread including every job's report body.",
+    dependencies=[Depends(require_principal)],
 )
 async def get_conversation(
     conversation_id: str, request: Request
@@ -429,6 +448,7 @@ async def get_conversation(
     "/conversations/{conversation_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a conversation + all its jobs.",
+    dependencies=[Depends(require_principal)],
 )
 async def delete_conversation(
     conversation_id: str, request: Request

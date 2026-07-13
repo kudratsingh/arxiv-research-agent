@@ -130,6 +130,59 @@ class Settings(BaseSettings):
         le=10.0,
         description="urllib3 Retry backoff_factor (delay = factor * 2**attempt)",
     )
+    pdf_max_bytes: int = Field(
+        default=50 * 1024 * 1024,
+        ge=1024 * 1024,
+        le=500 * 1024 * 1024,
+        description=(
+            "Hard cap on a single PDF download. Reader streams bytes "
+            "and aborts once the cap is reached so a 500MB adversarial "
+            "PDF can't OOM the process. See ADR 0033."
+        ),
+    )
+
+    # ------ API auth + rate limiting (ADR 0033) ------------------------
+    enable_api_auth: bool = Field(
+        default=False,
+        description=(
+            "Gate every /research and /conversations route behind the "
+            "X-API-Key header. Off by default so local dev + eval + "
+            "existing tests keep working. Turn on for any exposed "
+            "deployment: without it, an anonymous caller can drive "
+            "the workflow at ANTHROPIC_API_KEY's expense. ADR 0033."
+        ),
+    )
+    api_keys: str = Field(
+        default="",
+        description=(
+            "Comma-separated `name:key` pairs used when "
+            "`enable_api_auth` is on. Example: "
+            "`internal:sk_a123,partner:sk_b456`. Names appear in "
+            "logs; the raw key is compared with `hmac.compare_digest` "
+            "so lookups run in constant time. Keys are read once at "
+            "app startup — rotating requires a restart."
+        ),
+    )
+    api_key_hourly_limit: int = Field(
+        default=100,
+        ge=1,
+        le=100_000,
+        description=(
+            "Per-API-key ceiling on `POST /research` submits per "
+            "sliding hour. In-memory + per-worker under this bundle; "
+            "the follow-up horizontal-scaling PR moves it to Redis."
+        ),
+    )
+    api_cors_allow_origins: str = Field(
+        default="",
+        description=(
+            "Comma-separated origins allowed by CORS. Empty (default) "
+            "installs no CORS middleware — same-origin only. Set to "
+            "`*` for full permissive (dev only); production should "
+            "list explicit origins, e.g. "
+            "`https://arxiv-agent.example.com,https://staging...`."
+        ),
+    )
 
     # ------ HTTP API (Sprint 4) ---------------------------------------
     # Tunables for the FastAPI surface layered on top of the workflow.
@@ -316,7 +369,12 @@ class Settings(BaseSettings):
         default=2.00,
         gt=0.0,
         le=100.0,
-        description="Supervisor refuses further LLM calls above this per-run spend",
+        description=(
+            "Per-run LLM spend ceiling in USD. Enforced by the API "
+            "runner between graph nodes (both fixed-DAG and supervisor "
+            "shapes) — see ADR 0033. The supervisor also checks this "
+            "independently as a stop condition."
+        ),
     )
     max_loop_iterations: int = Field(
         default=20,
