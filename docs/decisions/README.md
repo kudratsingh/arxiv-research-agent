@@ -77,6 +77,10 @@ never renumbered.
   fan-out via Redis pub/sub on `events:{job_id}`; runner + stream
   endpoint bypass the local queue when the store supports pub/sub.
   Closes the sticky-routing requirement documented in ADR 0027
+- [0036](0036-per-principal-store-scoping.md) — Per-principal
+  ownership on Job + Conversation: 404 on cross-principal access,
+  list filter pushed into SQL, legacy `NULL`-owner rows invisible
+  under auth-on. Follows ADR 0033.
 
 ## When to write an ADR
 
