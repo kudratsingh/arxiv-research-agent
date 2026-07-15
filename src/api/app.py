@@ -20,7 +20,12 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.auth import RateLimiter, parse_api_keys
+from src.api.auth import (
+    ApiKeyPrincipal,
+    KeystoreReloader,
+    build_rate_limiter,
+    parse_api_keys,
+)
 from src.api.conversations import (
     ConversationStore,
     build_conversation_store,
@@ -94,8 +99,21 @@ def create_app(
     # `enable_api_auth=False` still parses (an empty string yields
     # an empty dict) so a misconfigured `api_keys` value fails fast
     # regardless of the flag.
+    #
+    # ADR 0037: when `api_keys_file` is set, that file is the source
+    # of truth and gets loaded + watched by `KeystoreReloader` inside
+    # the lifespan. Otherwise the string is the source of truth.
     api_keys = parse_api_keys(settings.api_keys)
-    rate_limiter = RateLimiter(limit_per_hour=settings.api_key_hourly_limit)
+
+    # ADR 0037: rate limiter backend is pluggable. Redis backend
+    # needs a client; we prefer to share the JobStore's if it's the
+    # Redis variant, so we don't open a second connection pool.
+    redis_client_for_rl: Any = getattr(job_store, "_client", None)
+    rate_limiter = build_rate_limiter(
+        settings.api_key_hourly_limit,
+        settings.rate_limit_backend,
+        redis_client=redis_client_for_rl,
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -111,8 +129,33 @@ def create_app(
         app.state.semaphore = asyncio.Semaphore(max_concurrent)
         app.state.max_concurrent_jobs = max_concurrent
         app.state.tasks = set()
-        app.state.api_keys = api_keys
         app.state.rate_limiter = rate_limiter
+
+        # ADR 0037: if `api_keys_file` is configured, load from it
+        # and start a reloader task. Otherwise use the string-based
+        # keystore parsed above.
+        reloader_task: asyncio.Task[None] | None = None
+        keystore_reloader: KeystoreReloader | None = None
+        if settings.api_keys_file:
+            def _apply_keystore(new_keys: dict[str, ApiKeyPrincipal]) -> None:
+                # Dict assignment is atomic in CPython — no lock
+                # needed. Concurrent lookups either see the old or
+                # the new dict, never a half-swapped state.
+                app.state.api_keys = new_keys
+
+            keystore_reloader = KeystoreReloader(
+                settings.api_keys_file,
+                _apply_keystore,
+                interval_sec=settings.api_keys_reload_interval_sec,
+            )
+            initial = await keystore_reloader.initial_load()
+            app.state.api_keys = initial
+            reloader_task = asyncio.create_task(
+                keystore_reloader.run(), name="keystore-reloader"
+            )
+        else:
+            app.state.api_keys = api_keys
+
         log.info(
             "api_startup",
             extra={
@@ -120,13 +163,23 @@ def create_app(
                 "store": type(job_store).__name__,
                 "conversation_store": type(conv_store).__name__,
                 "auth_enabled": settings.enable_api_auth,
-                "api_keys_configured": len(api_keys),
+                "api_keys_configured": len(app.state.api_keys),
+                "keystore_source": (
+                    "file" if settings.api_keys_file else "settings"
+                ),
+                "rate_limit_backend": settings.rate_limit_backend,
                 "checkpoint_backend": settings.checkpoint_backend,
             },
         )
         try:
             yield
         finally:
+            # ADR 0037: stop the reloader before the rest of shutdown
+            # so it doesn't try to log a swap into a torn-down app.
+            if reloader_task is not None:
+                reloader_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await reloader_task
             # Cancel any jobs still running so shutdown is bounded.
             # The runner catches `CancelledError` and marks the job
             # `cancelled` before propagating.

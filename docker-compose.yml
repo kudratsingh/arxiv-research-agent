@@ -41,6 +41,11 @@ services:
       # uvicorn — the ADR-0013 SqliteSaver is single-writer only.
       # Set to `sqlite` to revert to per-worker checkpoints.
       CHECKPOINT_BACKEND: postgres
+      # ADR 0037: share the per-key rate-limit counter across API
+      # workers via Redis ZSET. Under the memory backend the
+      # effective limit becomes `api_key_hourly_limit * n_workers`,
+      # which defeats the point once auth is on.
+      RATE_LIMIT_BACKEND: redis
       API_HOST: 0.0.0.0
       API_PORT: "8000"
       LOG_LEVEL: INFO

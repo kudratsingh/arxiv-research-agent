@@ -81,6 +81,10 @@ never renumbered.
   ownership on Job + Conversation: 404 on cross-principal access,
   list filter pushed into SQL, legacy `NULL`-owner rows invisible
   under auth-on. Follows ADR 0033.
+- [0037](0037-redis-rate-limiter-and-keystore-reload.md) —
+  Pluggable rate limiter (Redis ZSET backend correct across
+  workers) + hot-reloadable keystore from a JSON file. Follows
+  ADR 0033.
 
 ## When to write an ADR
 
