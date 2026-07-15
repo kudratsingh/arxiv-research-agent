@@ -18,7 +18,7 @@ from asgi_lifespan import LifespanManager
 from src.api.app import create_app
 from src.api.auth import (
     ApiKeyPrincipal,
-    RateLimiter,
+    InMemoryRateLimiter,
     _lookup_principal,
     parse_api_keys,
 )
@@ -71,37 +71,41 @@ class TestLookupPrincipal:
         assert _lookup_principal("sk_a", {}) is None
 
 
-class TestRateLimiter:
-    def test_under_limit_never_raises(self) -> None:
-        rl = RateLimiter(limit_per_hour=5)
+class TestInMemoryRateLimiter:
+    @pytest.mark.asyncio
+    async def test_under_limit_never_raises(self) -> None:
+        rl = InMemoryRateLimiter(limit_per_hour=5)
         for _ in range(5):
-            rl.check_and_record("k")
+            await rl.check_and_record("k")
 
-    def test_over_limit_raises_429(self) -> None:
-        rl = RateLimiter(limit_per_hour=3)
-        rl.check_and_record("k", now=100.0)
-        rl.check_and_record("k", now=101.0)
-        rl.check_and_record("k", now=102.0)
+    @pytest.mark.asyncio
+    async def test_over_limit_raises_429(self) -> None:
+        rl = InMemoryRateLimiter(limit_per_hour=3)
+        await rl.check_and_record("k", now=100.0)
+        await rl.check_and_record("k", now=101.0)
+        await rl.check_and_record("k", now=102.0)
         with pytest.raises(Exception) as exc:
-            rl.check_and_record("k", now=103.0)
+            await rl.check_and_record("k", now=103.0)
         # HTTPException isn't in the module's public exports so check
         # by attribute rather than isinstance.
         assert getattr(exc.value, "status_code", None) == 429
         assert "Retry-After" in getattr(exc.value, "headers", {})
 
-    def test_window_slides(self) -> None:
-        rl = RateLimiter(limit_per_hour=2, window_sec=100)
-        rl.check_and_record("k", now=0.0)
-        rl.check_and_record("k", now=50.0)
+    @pytest.mark.asyncio
+    async def test_window_slides(self) -> None:
+        rl = InMemoryRateLimiter(limit_per_hour=2, window_sec=100)
+        await rl.check_and_record("k", now=0.0)
+        await rl.check_and_record("k", now=50.0)
         # Third call at t=200 — earliest two are outside the 100s
         # window, so this should succeed.
-        rl.check_and_record("k", now=200.0)
+        await rl.check_and_record("k", now=200.0)
 
-    def test_buckets_are_isolated_per_key(self) -> None:
-        rl = RateLimiter(limit_per_hour=1)
-        rl.check_and_record("alice", now=100.0)
+    @pytest.mark.asyncio
+    async def test_buckets_are_isolated_per_key(self) -> None:
+        rl = InMemoryRateLimiter(limit_per_hour=1)
+        await rl.check_and_record("alice", now=100.0)
         # Alice is at cap, but bob starts fresh.
-        rl.check_and_record("bob", now=100.0)
+        await rl.check_and_record("bob", now=100.0)
 
 
 # ---- End-to-end route gating -------------------------------------------

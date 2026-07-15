@@ -147,9 +147,11 @@ async def submit_research(
     ADR 0033 — and the caller is subject to
     `settings.api_key_hourly_limit`.
     """
-    # ADR 0033: rate-limit the submit route only. Read/status routes
-    # don't cost LLM dollars so they don't need per-key throttling.
-    enforce_rate_limit(request, principal)
+    # ADR 0033 + ADR 0037: rate-limit the submit route only.
+    # Read/status routes don't cost LLM dollars so they don't need
+    # per-key throttling. Async now — the Redis backend awaits
+    # pipeline execution.
+    await enforce_rate_limit(request, principal)
     state = _get_state(request)
 
     # Fast-fail on a missing conversation before the workflow starts.

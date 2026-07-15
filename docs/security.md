@@ -144,12 +144,26 @@ exposed deployment**). Three layers:
 Source: `src/api/auth.py`. Wired in `src/api/app.py::create_app`
 and route decorators in `src/api/routes.py`.
 
-**Not in scope for the auth bundle**:
+### Redis rate limiter + hot-reloadable keystore (ADR 0037)
 
-- Rate-limit persistence. Counters live per-worker in memory. Under
-  multi-worker uvicorn, effective limit is
-  `api_key_hourly_limit * n_workers`. Follow-up PR moves to Redis.
-- Key rotation without restart. `api_keys` is parsed once at startup.
+Follow-up to the ADR-0033 auth bundle:
+
+- `settings.rate_limit_backend`: `memory` (default, per-worker) or
+  `redis` (shared ZSET on `ratelimit:{key_id}`, correct across API
+  workers). Compose sets `redis`. Reuses the ADR-0027 JobStore's
+  Redis client so no extra connection pool is opened.
+- `settings.api_keys_file`: optional path to a JSON `{name: secret}`
+  file. When set, overrides `settings.api_keys` and enables hot
+  reload — a background `KeystoreReloader` polls mtime every
+  `settings.api_keys_reload_interval_sec` (default 30) and swaps
+  `app.state.api_keys` atomically. Parse failures are logged and
+  the current keystore is retained; a bad edit doesn't lock
+  legitimate callers out.
+
+Wired in `src/api/auth.py::{InMemoryRateLimiter,RedisRateLimiter,
+KeystoreReloader,build_rate_limiter,load_keystore_from_file}` and
+`src/api/app.py::create_app`. `enforce_rate_limit` is async now so
+both backends fit the same call site.
 
 ### Per-principal Job + Conversation scoping (ADR 0036)
 
@@ -210,6 +224,16 @@ Wired in `src/api/routes.py::_check_ownership` and
   principal, that `_check_ownership` treats legacy NULL-owner rows
   as invisible under auth-on, and that auth-off behavior is
   unchanged.
+- `tests/test_redis_rate_limiter.py` — fakeredis-backed: under/
+  over-limit → 429, sliding window slides, rollback on over-cap
+  keeps the ZSET tight, per-key isolation, and — the production
+  win — two `RedisRateLimiter` instances against the same Redis
+  see the same counter (which the memory backend can't do).
+- `tests/test_keystore_reloader.py` — file-format contract
+  (bad JSON, non-object shape, empty values, duplicate secrets),
+  initial-load seeds mtime, in-flight reload picks up a file
+  change, and a broken edit is logged + skipped without evicting
+  the current in-memory keystore.
 
 ## Follow-ups
 
@@ -223,11 +247,13 @@ Wired in `src/api/routes.py::_check_ownership` and
 - Content-classifier-based rejection at ingest (an extra Claude
   call per paper; scope for Sprint 5+ if the deployment model
   justifies the cost).
-- Redis-backed rate limiter for horizontal scaling.
-- Hot-reloadable keystore so key rotation doesn't need a restart.
 - Atomic-write PDF cache (write to `.tmp` sibling, rename on
   completion).
 - Admin cleanup migration for legacy NULL-owner rows created
   before ADR 0036 landed.
 - Single-statement `DELETE ... WHERE principal_key_id=%s` to
   collapse the get+delete round-trip on `DELETE /conversations`.
+- Lua-scripted `check_and_record` for the Redis rate limiter if
+  the boundary race becomes observable (ADR 0037 follow-up).
+- Expose `RedisJobStore.client` as a public property to remove
+  the `_client` coupling in `create_app` (ADR 0037 follow-up).

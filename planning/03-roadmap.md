@@ -159,3 +159,13 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   Remaining follow-ups: Redis-backed rate limiter, hot-reloadable
   keystore, job redriver on restart, model-routing defaults,
   MiniLM → bge-small retrieval swap, SSE heartbeat rewrite.
+- _2026-07-14_ — Redis rate limiter + hot-reloadable keystore (ADR
+  0037). `RateLimiter` becomes a Protocol; `RedisRateLimiter`
+  uses a shared ZSET so the counter is correct across API workers
+  (compose sets `RATE_LIMIT_BACKEND=redis`). `KeystoreReloader`
+  polls `settings.api_keys_file` mtime and swaps
+  `app.state.api_keys` atomically — key rotation without restart.
+  `enforce_rate_limit` now async. Remaining follow-ups: job
+  redriver on restart, model-routing defaults, MiniLM →
+  bge-small retrieval swap, SSE heartbeat rewrite, admin cleanup
+  migration for legacy NULL-owner rows.

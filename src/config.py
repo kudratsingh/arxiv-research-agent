@@ -169,8 +169,40 @@ class Settings(BaseSettings):
         le=100_000,
         description=(
             "Per-API-key ceiling on `POST /research` submits per "
-            "sliding hour. In-memory + per-worker under this bundle; "
-            "the follow-up horizontal-scaling PR moves it to Redis."
+            "sliding hour. Correct across workers under "
+            "`rate_limit_backend=redis`; per-worker under `memory`."
+        ),
+    )
+    rate_limit_backend: str = Field(
+        default="memory",
+        description=(
+            "Backend for the per-key rate limiter. `memory` (default) "
+            "is single-process — under multi-worker uvicorn the "
+            "effective limit becomes `api_key_hourly_limit * n_workers`. "
+            "`redis` uses a shared ZSET on `ratelimit:{key_id}`; "
+            "requires `redis_url` (usually alongside `job_store=redis`). "
+            "See ADR 0037."
+        ),
+    )
+    api_keys_file: str = Field(
+        default="",
+        description=(
+            "Optional path to a JSON file `{name: secret, ...}` used "
+            "as the keystore. When set, overrides `api_keys` and "
+            "enables hot reload — a background task polls mtime "
+            "every `api_keys_reload_interval_sec` and swaps the "
+            "in-memory keystore on change without a restart. See "
+            "ADR 0037."
+        ),
+    )
+    api_keys_reload_interval_sec: int = Field(
+        default=30,
+        ge=1,
+        le=3600,
+        description=(
+            "Poll interval for the hot-reload keystore watcher. "
+            "Lower = faster propagation, more disk stats. Ignored "
+            "when `api_keys_file` is empty."
         ),
     )
     api_cors_allow_origins: str = Field(
