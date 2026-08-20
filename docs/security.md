@@ -226,6 +226,19 @@ Safety properties worth knowing before you run it:
 
 Blast radius is bounded by `--limit`, which applies **per store** —
 `--store all --limit N` can touch up to 2N rows.
+### Job leases and the redrive lock (ADR 0038)
+
+Two new Redis keyspaces: `joblease:{job_id}` (held by the worker
+running a job, owner-checked CAS on refresh and release) and
+`redrive:lock` (cluster-wide, held for the duration of a startup
+sweep). Both are namespaced by the store's `key_prefix`, so two
+deployments sharing one Redis cannot claim each other's leases or
+contend for a single global lock.
+
+`job_lease_ttl_sec` is the worst-case delay before a crashed
+worker's jobs become reclaimable — and, correspondingly, the window
+in which a hung-but-alive worker keeps its jobs off-limits to the
+redriver.
 
 ### Adversarial tests
 

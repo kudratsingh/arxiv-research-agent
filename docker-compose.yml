@@ -51,6 +51,10 @@ services:
       # effective limit becomes `api_key_hourly_limit * n_workers`,
       # which defeats the point once auth is on.
       RATE_LIMIT_BACKEND: redis
+      # ADR 0038: reconcile jobs orphaned by a worker that died
+      # mid-run. Only meaningful under `JOB_STORE=redis`, where a
+      # non-terminal row outlives the process that owned it.
+      ENABLE_JOB_REDRIVER: "true"
       API_HOST: 0.0.0.0
       API_PORT: "8000"
       LOG_LEVEL: INFO

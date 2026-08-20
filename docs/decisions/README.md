@@ -91,6 +91,12 @@ never renumbered.
   validates the target key against the live keystore, preserves
   Redis TTLs on rewrite, and decides availability from the
   selected store rather than a shared URL. Follows ADR 0036.
+- [0038](0038-job-redriver-and-sse-stream.md) — Worker leases +
+  a startup job redriver, so a dead worker's jobs are reconciled
+  and their streams unhung instead of stuck `running` forever;
+  SSE stream loop rewritten after the old heartbeat race
+  cancelled the event reader mid-generator and silently killed
+  the stream on the first quiet interval. Follows ADR 0027, 0035.
 
 ## When to write an ADR
 
