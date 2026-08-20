@@ -85,6 +85,12 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0038](0038-job-redriver-and-sse-stream.md) — Worker leases +
+  a startup job redriver, so a dead worker's jobs are reconciled
+  and their streams unhung instead of stuck `running` forever;
+  SSE stream loop rewritten after the old heartbeat race
+  cancelled the event reader mid-generator and silently killed
+  the stream on the first quiet interval. Follows ADR 0027, 0035.
 
 ## When to write an ADR
 

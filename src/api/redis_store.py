@@ -43,6 +43,26 @@ that channel and yields frames until a terminal event. The local
 `event_queue` on `Job` is bypassed entirely for RedisJobStore — a
 `_put_event` under multi-worker would fill an unread queue on the
 runner's worker until the blocking terminal `put()` deadlocks.
+
+## Worker leases + redrive scan (ADR 0038)
+
+Non-terminal jobs are written without a TTL on purpose — a stuck job
+is a diagnostic signal, not garbage. The failure mode it created
+was: a worker dies mid-job (deploy, OOM, scale-in) and its row stays
+`running` forever, so `GET /research/{id}` lies and the SSE stream
+hangs waiting for a terminal frame nobody will publish.
+
+`joblease:{job_id}` is what makes "orphaned" decidable. The runner
+holds it for as long as it owns the job and re-expires it every
+`job_lease_refresh_sec`; the key's TTL outliving the worker is the
+signal that the worker is gone. `scan_jobs` + `try_acquire_redrive_lock`
+are the primitives the startup redriver (`src.api.redriver`) uses to
+reconcile whatever the previous generation of workers left behind.
+
+These are duck-typed extras rather than `JobStore` Protocol members,
+for the same reason `subscribe_events` and `publish_remote_resume`
+are: `InMemoryJobStore` has nothing to reconcile, since nothing
+survives its process.
 """
 
 from __future__ import annotations
@@ -57,6 +77,7 @@ from typing import Any
 import redis.asyncio as redis_async
 
 from src.api.jobs import Job, JobStatus
+from src.api.streaming import TERMINAL_EVENT_NAMES
 from src.config import settings
 from src.observability import get_logger
 
@@ -65,14 +86,24 @@ log = get_logger(__name__)
 JOB_KEY_PREFIX = "job:"
 HITL_RESUME_CHANNEL_PREFIX = "hitl:resume:"
 EVENTS_CHANNEL_PREFIX = "events:"
+# ADR 0038. Deliberately not a sub-prefix of `job:` — `SCAN MATCH
+# job:*` in `scan_jobs` must not trip over lease keys.
+LEASE_KEY_PREFIX = "joblease:"
+REDRIVE_LOCK_KEY = "redrive:lock"
 
-# Runner terminal event names — subscribers stop iterating on any of
-# these. Kept in sync with `_terminal_event_name` in routes.py; a
-# mismatch would leave a subscriber hanging until the client
-# disconnects.
-_TERMINAL_EVENT_NAMES: frozenset[str] = frozenset(
-    {"job_completed", "job_failed", "job_cancelled"}
-)
+# How many keys Redis returns per SCAN round trip. SCAN's COUNT is a
+# hint, not a guarantee; 200 keeps each round trip short enough that
+# the server's event loop stays responsive during a sweep.
+_SCAN_BATCH = 200
+
+# Runner terminal event names — the pub/sub reader stops iterating on
+# any of these. Imported from `src.api.streaming` rather than copied:
+# a private duplicate that drifted from the streaming module's copy
+# would leave a subscriber hanging until the client disconnects, and
+# there is no reason for the two to answer this question differently.
+# Note this is the *narrow* set — `stream_timeout` closes a
+# connection without ending the job, so it deliberately does not
+# appear here (see `STREAM_CLOSING_EVENT_NAMES`).
 
 
 def _job_key(job_id: str) -> str:
@@ -87,6 +118,29 @@ def _hitl_resume_channel(job_id: str) -> str:
 def _events_channel(job_id: str) -> str:
     """Pub/sub channel for SSE events (ADR 0035)."""
     return f"{EVENTS_CHANNEL_PREFIX}{job_id}"
+
+
+def _lease_key(job_id: str) -> str:
+    """Key holding the id of the worker that currently owns the job.
+
+    Presence of this key is the liveness proof the redriver checks
+    before reclaiming a non-terminal job (ADR 0038).
+    """
+    return f"{LEASE_KEY_PREFIX}{job_id}"
+
+
+def _as_text(value: Any) -> str | None:
+    """Normalize a Redis reply to `str`.
+
+    `build_redis_client` uses `decode_responses=False`, so replies
+    arrive as `bytes`; tests may inject a client configured either
+    way. Returns None for a missing key.
+    """
+    if value is None:
+        return None
+    if isinstance(value, bytes):
+        return value.decode()
+    return str(value)
 
 
 def _persistent_fields() -> set[str]:
@@ -165,6 +219,23 @@ class RedisJobStore:
     ) -> None:
         self._client = client
         self._key_prefix = key_prefix
+        # ADR 0038: lease and redrive-lock keys carry the same
+        # namespace as job rows. Two deployments sharing one Redis
+        # under distinct `key_prefix` values must not collide on job
+        # leases — and, the worse half, must not contend for a single
+        # global redrive lock, where one deployment's sweep would
+        # silence the other's entirely. The default prefix reproduces
+        # the module-level constants exactly, so the common case keeps
+        # the historic key names.
+        _stem = key_prefix.rstrip(":")
+        self._lease_prefix = (
+            LEASE_KEY_PREFIX if key_prefix == JOB_KEY_PREFIX else f"{_stem}lease:"
+        )
+        self._redrive_lock_key = (
+            REDRIVE_LOCK_KEY
+            if key_prefix == JOB_KEY_PREFIX
+            else f"{_stem}redrive:lock"
+        )
         self._retention_sec = (
             retention_sec if retention_sec is not None else settings.api_job_retention_sec
         )
@@ -175,6 +246,15 @@ class RedisJobStore:
 
     def _key(self, job_id: str) -> str:
         return f"{self._key_prefix}{job_id}"
+
+    def _lease_key(self, job_id: str) -> str:
+        """Lease key for this store's namespace.
+
+        The module-level `_lease_key` is the default-prefix form;
+        this honours a custom `key_prefix` so co-tenant deployments
+        cannot claim each other's leases.
+        """
+        return f"{self._lease_prefix}{job_id}"
 
     async def create(self, job: Job) -> None:
         # Local cache first so streaming picks up the live queue,
@@ -285,7 +365,7 @@ class RedisJobStore:
                     )
                     continue
                 yield parsed
-                if parsed.get("event") in _TERMINAL_EVENT_NAMES:
+                if parsed.get("event") in TERMINAL_EVENT_NAMES:
                     return
         finally:
             with contextlib.suppress(Exception):
@@ -369,6 +449,219 @@ class RedisJobStore:
                 await pubsub.unsubscribe(_hitl_resume_channel(job.job_id))
             with contextlib.suppress(Exception):
                 await pubsub.aclose()  # type: ignore[no-untyped-call]
+
+    # ---- ADR 0038: worker leases + redrive scan -----------------
+
+    async def _compare_and_apply(
+        self, key: str, token: str, *, ttl_sec: int | None
+    ) -> bool:
+        """Re-expire or delete `key`, but only while `token` still owns it.
+
+        The check and the write have to be one atomic step: between a
+        plain GET and a plain EXPIRE the lease can expire and be taken
+        by another worker, and we would then extend *their* lease.
+        WATCH/MULTI/EXEC gives that atomicity — Redis aborts the EXEC
+        if anything touched the key after the WATCH, which is exactly
+        the "someone else took it" case.
+
+        (`EVAL` with a three-line Lua script is the more common idiom
+        for this, but it is unavailable on part of our test matrix —
+        `fakeredis` only implements EVAL when the optional `lupa`
+        native extension is installed. Optimistic locking is
+        supported everywhere and carries the same guarantee.)
+
+        Args:
+            key: Lease or lock key to operate on.
+            token: Owner id the stored value must still equal.
+            ttl_sec: New TTL in seconds, or None to delete the key.
+
+        Returns:
+            True if we still owned the key and the write landed;
+            False if the lease was lost (expired, deleted, or taken
+            by another owner).
+        """
+        try:
+            async with self._client.pipeline() as pipe:
+                await pipe.watch(key)
+                if _as_text(await pipe.get(key)) != token:
+                    await pipe.unwatch()  # type: ignore[no-untyped-call]
+                    return False
+                pipe.multi()  # type: ignore[no-untyped-call]
+                if ttl_sec is None:
+                    pipe.delete(key)
+                else:
+                    pipe.expire(key, ttl_sec)
+                results = await pipe.execute()
+        except redis_async.WatchError:
+            # The key changed under us between WATCH and EXEC — by
+            # definition we no longer own the lease.
+            return False
+        return bool(results) and bool(results[0])
+
+    async def acquire_lease(
+        self, job_id: str, worker_id: str, ttl_sec: int
+    ) -> bool:
+        """Claim `joblease:{job_id}` for `worker_id` if it is unheld.
+
+        Args:
+            job_id: Job whose lease is being claimed.
+            worker_id: Process-unique id of the claiming worker.
+            ttl_sec: Lease lifetime; the runner must refresh inside it.
+
+        Returns:
+            True if this worker now holds the lease, False if another
+            worker already does.
+        """
+        acquired = await self._client.set(
+            self._lease_key(job_id), worker_id, nx=True, ex=ttl_sec
+        )
+        return bool(acquired)
+
+    async def refresh_lease(
+        self, job_id: str, worker_id: str, ttl_sec: int
+    ) -> bool:
+        """Extend a lease this worker still owns.
+
+        Args:
+            job_id: Job whose lease is being extended.
+            worker_id: Owner id that must still match the stored value.
+            ttl_sec: New lease lifetime.
+
+        Returns:
+            False when the lease was lost — it expired and someone
+            else claimed it, or a redriver already reclaimed the job.
+            The runner treats that as a diagnostic, not a kill signal.
+        """
+        return await self._compare_and_apply(
+            self._lease_key(job_id), worker_id, ttl_sec=ttl_sec
+        )
+
+    async def release_lease(self, job_id: str, worker_id: str) -> None:
+        """Drop a lease this worker owns, so the job is reclaimable now.
+
+        Owner-checked: a worker that already lost its lease must not
+        delete the successor's claim.
+
+        Args:
+            job_id: Job whose lease is being released.
+            worker_id: Owner id that must still match the stored value.
+        """
+        await self._compare_and_apply(
+            self._lease_key(job_id), worker_id, ttl_sec=None
+        )
+
+    async def has_lease(self, job_id: str) -> bool:
+        """Whether any worker currently holds the job's lease.
+
+        Args:
+            job_id: Job to check.
+
+        Returns:
+            True while a live worker owns the job. The redriver uses
+            this to leave healthy jobs on other workers alone during
+            a rolling restart.
+        """
+        return bool(await self._client.exists(self._lease_key(job_id)))
+
+    async def scan_jobs(self, *, max_scan: int) -> tuple[list[Job], bool]:
+        """Read up to `max_scan` persisted jobs via cursor-based SCAN.
+
+        Deliberately SCAN and not KEYS: `KEYS job:*` blocks the Redis
+        event loop for the whole keyspace, which on a production
+        instance means a stall for every other client. SCAN trades
+        exactness (it can return duplicates, and misses keys created
+        mid-sweep) for bounded per-call work; the redriver only needs
+        a good-enough snapshot of what the previous generation of
+        workers left behind, and duplicates are deduplicated here.
+
+        A key whose payload will not deserialize is logged as
+        `job_scan_bad_payload` and skipped rather than aborting the
+        sweep — one corrupt row must not block reconciling the rest.
+
+        Args:
+            max_scan: Upper bound on keys examined, so a huge keyspace
+                cannot stall startup.
+
+        Returns:
+            `(jobs, scan_capped)` — the deserialized jobs, and whether
+            the cap stopped the sweep early. A True flag means the
+            result is a partial view and must not be reported as a
+            complete reconciliation.
+        """
+        pattern = f"{self._key_prefix}*"
+        seen: set[str] = set()
+        jobs: list[Job] = []
+        cursor = 0
+        examined = 0
+        capped = False
+
+        while True:
+            cursor, batch = await self._client.scan(
+                cursor=cursor, match=pattern, count=_SCAN_BATCH
+            )
+            keys = [k for k in (_as_text(raw) for raw in batch) if k is not None]
+            fresh = [k for k in keys if k not in seen]
+            seen.update(fresh)
+
+            if examined + len(fresh) > max_scan:
+                fresh = fresh[: max_scan - examined]
+                capped = True
+            examined += len(fresh)
+
+            if fresh:
+                payloads = await self._client.mget(fresh)
+                for key, raw in zip(fresh, payloads, strict=True):
+                    payload = _as_text(raw)
+                    if payload is None:
+                        # Key expired between the SCAN and the MGET.
+                        continue
+                    try:
+                        jobs.append(_job_from_json(payload))
+                    except (ValueError, TypeError, KeyError):
+                        log.warning("job_scan_bad_payload", extra={"key": key})
+
+            if capped or cursor == 0:
+                break
+
+        return jobs, capped
+
+    async def try_acquire_redrive_lock(
+        self, ttl_sec: int, *, token: str
+    ) -> bool:
+        """Claim the cluster-wide right to run one redrive sweep.
+
+        Every worker boots at once after a deploy. Without this lock
+        each of them would scan the same keyspace and race to reclaim
+        the same orphaned jobs, publishing duplicate terminal frames.
+
+        The TTL is what stops a worker that dies mid-sweep from
+        wedging the lock permanently.
+
+        Args:
+            ttl_sec: How long the claim survives without a release.
+            token: Owner id stored in the key, so the release is
+                owner-checked.
+
+        Returns:
+            True if this worker won and should sweep, False if another
+            worker is already sweeping.
+        """
+        acquired = await self._client.set(
+            self._redrive_lock_key, token, nx=True, ex=ttl_sec
+        )
+        return bool(acquired)
+
+    async def release_redrive_lock(self, token: str) -> None:
+        """Release the redrive lock if `token` still owns it.
+
+        Args:
+            token: Owner id that must still match the stored value.
+                A sweep that overran its TTL will not stomp on the
+                worker that legitimately took the lock next.
+        """
+        await self._compare_and_apply(
+            self._redrive_lock_key, token, ttl_sec=None
+        )
 
 
 def build_redis_client(url: str) -> redis_async.Redis:
