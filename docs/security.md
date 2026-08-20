@@ -274,6 +274,52 @@ Wired in `src/api/routes.py::_check_ownership` and
 `src/tools/postgres_pool.py::SCHEMA_DDL` (ADD COLUMN IF NOT EXISTS
 + partial index on non-NULL).
 
+### Legacy NULL-owner cleanup (ADR 0039)
+
+ADR 0036 left rows written before it with `principal_key_id = NULL`,
+invisible to every principal under auth-on. `python -m
+src.api.admin_migrate` (`make admin-migrate`) is the operator tool
+for them — deliberately a CLI a human drives, not an automatic
+migration, because ADR 0036's reason for rejecting auto-assignment
+still holds: the correct owner is usually knowable only by reading
+the query text.
+
+Safety properties worth knowing before you run it:
+
+- **Dry-run by default.** Nothing writes without `--yes`. `report`
+  never writes at all.
+- `assign --owner KEY_ID` **validates the key against the live
+  keystore** (`api_keys`, or `api_keys_file` when set, matching
+  `create_app`'s resolution order). Assigning to a nonexistent key
+  would bury the data one level deeper.
+- Rewriting a Redis row **preserves its TTL**. A plain `SET` would
+  resurrect expired terminal jobs.
+- Availability is decided by which store is *selected*, not by
+  whether a URL happens to be configured — `postgres_url` is shared
+  with the paper cache, embedding cache, and the ADR 0034
+  checkpointer, so gating on it alone would point the tool at a
+  `conversations` table the running service never reads.
+- `delete` emits one structured log record per destroyed row. Once
+  a Redis key is gone there is no other surviving evidence of what
+  it was, so an aggregate count could never answer "was mine one of
+  them?" during an incident review.
+
+Blast radius is bounded by `--limit`, which applies **per store** —
+`--store all --limit N` can touch up to 2N rows.
+### Job leases and the redrive lock (ADR 0038)
+
+Two new Redis keyspaces: `joblease:{job_id}` (held by the worker
+running a job, owner-checked CAS on refresh and release) and
+`redrive:lock` (cluster-wide, held for the duration of a startup
+sweep). Both are namespaced by the store's `key_prefix`, so two
+deployments sharing one Redis cannot claim each other's leases or
+contend for a single global lock.
+
+`job_lease_ttl_sec` is the worst-case delay before a crashed
+worker's jobs become reclaimable — and, correspondingly, the window
+in which a hung-but-alive worker keeps its jobs off-limits to the
+redriver.
+
 ### Adversarial tests
 
 - `tests/test_reader_isolation.py` — canned jailbreak strings in the
@@ -350,8 +396,10 @@ Wired in `src/api/routes.py::_check_ownership` and
   justifies the cost).
 - Atomic-write PDF cache (write to `.tmp` sibling, rename on
   completion).
-- Admin cleanup migration for legacy NULL-owner rows created
-  before ADR 0036 landed.
+- Role-based access on `ApiKeyPrincipal`, so `admin_migrate`'s
+  actions can eventually be driven through an authenticated
+  endpoint instead of shell access to a worker (ADR 0039
+  follow-up).
 - Single-statement `DELETE ... WHERE principal_key_id=%s` to
   collapse the get+delete round-trip on `DELETE /conversations`.
 - Lua-scripted `check_and_record` for the Redis rate limiter if
