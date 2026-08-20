@@ -6,14 +6,17 @@ catch cost creep. Uses a `ContextVar` for per-run isolation so
 concurrent workflows in a future multi-tenant server won't share
 counters.
 
-Prices reflect Anthropic's public list price at project inception; a
-follow-up will read them from `settings` so we can override without a
-code change. Missing model prices fall back to Sonnet and log a
-warning — we want to catch a stale price table, not silently under-
-report cost.
+Prices reflect Anthropic's public list price as of
+`PRICES_LAST_VERIFIED`; a follow-up will read them from `settings` so
+we can override without a code change. Missing model prices fall back
+to Sonnet and log a warning — we want to catch a stale price table,
+not silently under-report cost.
 
-See ADR 0012 for design rationale.
+See ADR 0012 for design rationale and ADR 0044 for the price refresh
+and coverage guarantee.
 """
+
+from __future__ import annotations
 
 import threading
 from contextvars import ContextVar
@@ -29,10 +32,28 @@ log = get_logger(__name__)
 # Price table — USD per 1M tokens (input / output)
 # ---------------------------------------------------------------------------
 
+# The date the rows below were last checked against Anthropic's
+# published pricing. Bump this whenever the table is re-verified, even
+# if no number changed — a visibly old date at review time is the
+# tripwire for stale prices (ADR 0044). Prices are first-party API
+# list prices; time-limited introductory promos (e.g. Sonnet 5's intro
+# rate) are deliberately ignored so we over- rather than under-report.
+PRICES_LAST_VERIFIED = "2026-08-20"
+
 PRICES_USD_PER_MILLION: dict[str, dict[str, float]] = {
-    "claude-opus-4-7": {"input": 15.0, "output": 75.0},
+    # Opus tier — $5 / $25 across the 4.6+ generations.
+    "claude-opus-5": {"input": 5.0, "output": 25.0},
+    "claude-opus-4-8": {"input": 5.0, "output": 25.0},
+    "claude-opus-4-7": {"input": 5.0, "output": 25.0},
+    "claude-opus-4-6": {"input": 5.0, "output": 25.0},
+    # Sonnet tier — $3 / $15.
+    "claude-sonnet-5": {"input": 3.0, "output": 15.0},
     "claude-sonnet-4-6": {"input": 3.0, "output": 15.0},
-    "claude-haiku-4-5-20251001": {"input": 0.80, "output": 4.0},
+    # Haiku tier — $1 / $5. The dated id is the ADR 0021 recommended
+    # override string; the bare alias covers operators who use the
+    # canonical id instead.
+    "claude-haiku-4-5": {"input": 1.0, "output": 5.0},
+    "claude-haiku-4-5-20251001": {"input": 1.0, "output": 5.0},
 }
 
 _FALLBACK_MODEL = "claude-sonnet-4-6"

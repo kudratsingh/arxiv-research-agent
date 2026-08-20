@@ -97,6 +97,62 @@ python -m src.eval.runner --help                   # full CLI reference
 Requires `ANTHROPIC_API_KEY` in `.env` — the runner refuses to start
 without it.
 
+## Regression gate
+
+`src/eval/regression_diff.py` diffs two `summary.jsonl` runs and exits
+non-zero on regression — the nightly workflow
+(`.github/workflows/eval-nightly.yml`) turns that into a red run.
+Metrics are judged by class (ADR
+[0044](decisions/0044-eval-cost-accuracy-and-regression-thresholds.md),
+revisiting ADR [0010](decisions/0010-nightly-eval-ci.md)'s single
+global threshold):
+
+| Metric class | Metrics | Regression rule |
+|---|---|---|
+| Score (0-1 judge outputs) | `citation_accuracy`, `completeness`, `faithfulness`, `retrieval_recall`, `critic_score` | absolute drop > `--threshold` (default 0.10) |
+| Resource (counts / dollars) | `iterations`, `llm_calls`, `cost_usd` | rise > per-metric absolute floor **and** > per-metric relative band (`RESOURCE_THRESHOLDS`) |
+
+Both classes are direction-aware: a score rising or a cost falling
+past the same bounds is an *improvement*, never a regression. The
+resource bands are floor `+1` / `+50%` for `iterations`, `+4` /
+`+25%` for `llm_calls`, and `+$0.10` / `+25%` for `cost_usd` — sized
+so one extra critic revision, one extra rankable paper, or a $0.02
+cost wiggle can never fail the nightly on its own.
+
+### The statistics, honestly
+
+The gate compares **two single runs** of a nondeterministic system
+(live arXiv results, sampling temperature, a critic that decides
+whether to ask for revisions). What that means in practice:
+
+- **Quantization dominates the score epsilon for ratio metrics.**
+  `completeness` and `retrieval_recall` move in steps of
+  `1/len(expected_topics)` — typically 0.20-0.25 per query. The 0.10
+  epsilon therefore filters *nothing* for those two: a single
+  borderline topic decision flipping registers as a full step and
+  fires the per-query gate. `citation_accuracy` and `faithfulness`
+  have finer denominators (citations / claims), where 0.10 is a real
+  noise filter.
+- **The thresholds are priors, not measured spread.** Nothing in
+  `src/eval` computes run-to-run variance today (no stdev, no
+  confidence intervals). The bands come from reasoning about the
+  mechanics (what one critic revision costs in calls and dollars),
+  not from data.
+- **What we can detect:** sustained quality collapses (a metric
+  dropping ≥ 2 quantization steps, or across several queries), call
+  or iteration runaway (loop bugs), and cost creep above 25%.
+- **What we cannot detect:** single-query, single-step ratio-metric
+  drops are indistinguishable from judge noise; slow drift below the
+  bands accumulates silently (ADR 0010 already documents the
+  gradual-drift blind spot — each nightly rebaselines on the previous
+  night).
+- **The fix, when we invest in it:** run the benchmark 3+ times
+  against an unchanged `main`, compute per-metric spread, and set the
+  thresholds at ~3x the observed noise. Until a 3-repeat baseline
+  exists, treat a red nightly on exactly one query and one metric
+  with suspicion and read the per-query table before reverting
+  anything.
+
 ## What "tested" means for eval code itself
 
 The eval code has its own unit tests: benchmark data invariants
