@@ -321,9 +321,15 @@ async def _invoke_streaming(
 
         try:
             workflow_state = await app.aget_state(config)
-        except ValueError:
-            # No checkpointer compiled in — nothing can interrupt, and
-            # the merged updates are the only final state there is.
+        except ValueError as exc:
+            # LangGraph's "No checkpointer set" — nothing can
+            # interrupt, and the merged updates are the only final
+            # state there is. Match the sentinel narrowly: any OTHER
+            # ValueError from a real checkpointer read (e.g. corrupt
+            # checkpoint deserialization) must fail the job, not get
+            # silently reported as a success built from partial state.
+            if "no checkpointer" not in str(exc).lower():
+                raise
             return merged
 
         if not getattr(workflow_state, "next", ()):

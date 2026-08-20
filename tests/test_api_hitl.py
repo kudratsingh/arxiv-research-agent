@@ -525,3 +525,73 @@ class TestJobStatusEnum:
         from src.api.jobs import TERMINAL_STATUSES
 
         assert JobStatus.pending_review not in TERMINAL_STATUSES
+
+
+class _NoCheckpointerStub:
+    """Compiled-app stand-in for `ENABLE_CHECKPOINTING=false`:
+    `aget_state` raises LangGraph's "No checkpointer set" sentinel,
+    so the runner must fall back to the merged stream updates."""
+
+    def __init__(
+        self, aget_state_error: str = "No checkpointer set"
+    ) -> None:
+        self._error = aget_state_error
+
+    async def astream(
+        self,
+        state: dict[str, Any] | None,
+        config: dict[str, Any] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        yield {"planner": {"sub_questions": ["q1"]}}
+        yield {
+            "critic": {
+                "draft_report": "# Report\n\nDone.",
+                "iteration": 1,
+                "quality_score": 0.9,
+            }
+        }
+
+    async def aget_state(self, config: dict[str, Any] | None = None) -> Any:
+        raise ValueError(self._error)
+
+
+class TestAgetStateFailureModes:
+    async def test_no_checkpointer_falls_back_to_merged_updates(self) -> None:
+        """`ValueError: No checkpointer set` is the one aget_state
+        failure that means "nothing to read back" — the job must
+        complete from the folded stream updates (ADR 0040)."""
+        app = create_app(build_workflow=_NoCheckpointerStub)
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            submit = (
+                await client.post(
+                    "/research", json={"query": "q", "hitl_bypass": True}
+                )
+            ).json()
+            body = await _wait_for_status(client, submit["job_id"], "succeeded")
+            assert body["status"] == "succeeded"
+            assert body["result"] == "# Report\n\nDone."
+            assert body["quality_score"] == pytest.approx(0.9)
+
+    async def test_other_aget_state_valueerror_fails_the_job(self) -> None:
+        """Any OTHER ValueError from the checkpoint read (e.g. corrupt
+        checkpoint deserialization) must fail the job — falling back
+        to the merged updates would report a success built from
+        whatever partial state happened to stream before the fault."""
+        app = create_app(
+            build_workflow=lambda: _NoCheckpointerStub(
+                aget_state_error="corrupt checkpoint blob for thread"
+            )
+        )
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            submit = (
+                await client.post(
+                    "/research", json={"query": "q", "hitl_bypass": True}
+                )
+            ).json()
+            body = await _wait_for_status(client, submit["job_id"], "failed")
+            assert body["status"] == "failed"
+            assert body["error_type"] == "ValueError"
