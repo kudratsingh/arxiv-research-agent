@@ -43,7 +43,7 @@ PaperMetadata
    |         |
    +--> rank_chunks_by_relevance(       # FAISS + MiniLM
    |         chunks, sub_questions,
-   |         top_k=5)
+   |         top_k=settings.reader_max_chunks_per_paper)
    |         |
    |         v
    |     ranked chunks or []
@@ -60,7 +60,7 @@ If any of `parse_pdf`, `chunk_paper`, or the ranker returns empty,
 > Full text unavailable; base your analysis on the abstract only.
 
 Papers are processed in parallel via a
-`ThreadPoolExecutor(max_workers=5)`.
+`ThreadPoolExecutor(max_workers=settings.reader_max_workers)`.
 
 ## Prompt design
 
@@ -85,25 +85,43 @@ Rationale for the fallback signal: see ADR
 | Chunker finds no headers | `chunk_paper` | Returns a single `body` chunk — still valid. |
 | Chunker finds no chunks | `chunk_paper` (empty input) | Returns `[]`; reader falls back. |
 | Ranker returns empty | shouldn't happen with non-empty chunks | Guarded; falls back. |
-| Claude returns non-JSON | `call_llm_json` | Raises `JSONDecodeError`; the ThreadPoolExecutor propagates. Improvement candidate: catch + retry with a "return valid JSON" nudge. |
-| Anthropic 429 | `call_llm_json` | Currently propagates. Follow-up: `feat/anthropic-retry` with exponential backoff. |
+| Claude returns non-JSON | `call_llm_json` | Fence-stripping + lenient (`strict=False`) parse first; still-malformed raises `JSONDecodeError`, which the ThreadPoolExecutor propagates. Improvement candidate: catch + retry with a "return valid JSON" nudge. |
+| Anthropic 429 / 5xx | Anthropic SDK layer | Retried by the SDK (`anthropic_max_retries`, default 4 — ADR 0009); exhausted retries propagate. |
 
 ## Configuration
 
-Constants in `src/agents/reader.py`:
+Settings that drive the reader (see `src/config.py`, ADR 0011):
 
-- `MAX_WORKERS = 5` — parallel papers.
-- `MAX_CHUNKS_PER_PAPER = 5` — top-K passed to the LLM. Bounds per-paper prompt at ~5 × 800 tokens.
+- `reader_max_workers: int = 5` — parallel papers in the thread pool.
+- `reader_max_chunks_per_paper: int = 5` — top-K ranked chunks passed
+  to the LLM. Bounds per-paper prompt at ~5 × 800 tokens.
+- `pdf_max_bytes` — hard cap on a single PDF download; the fetch
+  streams and aborts at the cap so an adversarial PDF can't OOM the
+  process (ADR 0033).
+- `reader_model: str = ""` — per-agent model override (ADR 0021);
+  Haiku is the recommended override for this highest-volume agent.
+- `enable_prompt_caching: bool = False` — system-prompt caching (ADR
+  0022); the parallel fan-out is the biggest cache-hit win.
+- Flag-gated paths below: `enable_evidence_store` (+
+  `reader_max_claims_per_paper`), `enable_reader_recovery`,
+  `enable_prompt_isolation`.
 
 ## Testing
 
-- Unit: `tests/test_reader.py` covers `_build_user_prompt` (context /
-  no-context branches) and `_gather_context` (all three empty-return
-  paths + happy-path formatting), with `parse_pdf` / `chunk_paper` /
+- Unit: `tests/test_reader.py` — `_build_user_prompt` (context /
+  no-context branches), `_gather_context` (all three empty-return
+  paths + happy-path formatting), and the evidence path (claim
+  parsing/binding, chunk-index validation, per-config claim cap,
+  flag on/off), with `parse_pdf` / `chunk_paper` /
   `rank_chunks_by_relevance` monkeypatched.
-- Integration: TODO — needs a canned PDF fixture and a stubbed Claude
-  response. Tracked as a follow-up.
-- E2E: covered by the workflow-level cassette suite (TODO).
+- Recovery path: `tests/test_reader_recovery.py` — signal parsing,
+  aggregation, abstract-only forcing, preferred-section ranking.
+- Isolation: `tests/test_reader_isolation.py` — adversarial
+  wrap/scrub coverage (see `docs/security.md`).
+- PDF layer: `tests/test_pdf_parser.py`, `tests/test_chunker.py`,
+  `tests/test_chunk_ranker.py` — the tools this agent composes.
+- E2E: the workflow-level cassette suite is still **planned, not
+  built** — see `docs/testing.md`.
 
 ## Evidence store path (ADR 0016)
 
@@ -195,9 +213,10 @@ adversarial tests in `tests/test_reader_isolation.py`.
 
 ## Follow-ups tracked in ADRs
 
-- Retry / backoff for arXiv PDF downloads
-  (`feat/arxiv-download-retry`).
-- Retry / backoff for Anthropic 429s (`feat/anthropic-retry`).
+- ~~Retry / backoff for arXiv PDF downloads.~~ Landed — shared
+  `urllib3.Retry` session (ADR 0013).
+- ~~Retry / backoff for Anthropic 429s.~~ Landed — SDK-native retry
+  (ADR 0009).
 - Per-paper `source: "fulltext" | "abstract"` field on `PaperAnalysis`
   for observability (`feat/reader-provenance`).
 - Per-paper preferred sections (currently unioned across papers) —
