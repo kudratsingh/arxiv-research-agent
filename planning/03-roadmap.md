@@ -217,3 +217,15 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   sweep, pipelined batch claim, real-Redis coverage for the CAS
   abort path, ADR 0035 subscribe TOCTOU, `stream_timeout` handling
   in the web UI.
+- _2026-08-20_ — Eval cost accounting + regression-gate accuracy
+  (ADR 0044). `PRICES_USD_PER_MILLION` re-verified against
+  published Anthropic pricing (Opus 4.7 was 3x high, Haiku 4.5
+  20% low; current-generation ids added, `PRICES_LAST_VERIFIED`
+  tripwire, coverage test over config model defaults). Nightly
+  regression gate split by metric class: score metrics keep the
+  ADR 0010 epsilon; `iterations`/`llm_calls`/`cost_usd` now need
+  a per-metric absolute floor AND relative rise, so +1 call or a
+  penny wiggle can't fail the nightly. Statistics limits
+  documented in docs/eval.md. Remaining follow-ups:
+  prices-in-settings, 3-repeat baseline to re-derive thresholds
+  from measured spread.
