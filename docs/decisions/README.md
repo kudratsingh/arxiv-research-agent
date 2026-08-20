@@ -85,6 +85,13 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0041](0041-retrieval-and-degradation-honesty.md) —
+  Retrieval and degradation honesty: mock papers gated behind
+  `use_mock_data` only (typed errors for empty live search),
+  cache reads degrade to recompute, per-paper reader failure
+  containment, parse defense across the agents, S2 version-strip
+  + canonical dedup, PDF SSRF guard. Follows ADRs 0004, 0023,
+  0028, 0033.
 
 ## When to write an ADR
 

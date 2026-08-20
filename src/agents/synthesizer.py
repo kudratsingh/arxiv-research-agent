@@ -12,7 +12,21 @@ Two prompt paths, gated by `settings.enable_evidence_store` (see ADR
   the report format on the outside is unchanged (still markdown with
   inline `[Author, Year]` citations) so downstream metrics and the
   verifier keep working without a schema change.
+
+Parse defense (ADR 0041): the synthesizer runs after the whole reader
+fan-out has been billed, so one malformed response must not discard
+the run. An unusable response (unparseable JSON, missing/empty
+`draft_report` — typically a `max_tokens` truncation mid-string) is
+retried exactly once with a corrective nudge; if the retry is also
+unusable the node raises the typed `SynthesizerOutputError` so the job
+fails with an honest `error_type` — the draft report IS the product,
+there is no honest fallback for it. Malformed `citations` entries, by
+contrast, are individually dropped with a WARNING: a report with a
+thinner citation list is still a real report, and the verifier/critic
+flag citation gaps downstream.
 """
+
+from __future__ import annotations
 
 import json
 from collections import defaultdict
@@ -23,6 +37,28 @@ from langchain_core.messages import AIMessage
 from src.config import settings
 from src.graph.state import Citation, EvidenceClaim, ResearchState
 from src.llm import call_llm_json
+from src.observability import get_logger
+
+log = get_logger(__name__)
+
+
+class SynthesizerOutputError(RuntimeError):
+    """The synthesizer produced no usable draft report, even after a retry.
+
+    Raised when both the original call and the single corrective retry
+    yielded unparseable JSON or an empty `draft_report`. The API runner
+    maps the class name straight to the job's `error_type`, so the
+    failure reads as what it is — a synthesis output failure — rather
+    than a generic `JSONDecodeError` (ADR 0041).
+    """
+
+
+_RETRY_NUDGE = (
+    "Your previous response was not valid JSON with a non-empty "
+    '"draft_report" string. Respond again with ONLY the JSON object '
+    "described in the system prompt — no markdown fencing, no prose "
+    "outside the JSON."
+)
 
 SYSTEM_PROMPT = """\
 You are a research synthesis expert. Given a set of analyzed ML/AI papers and a
@@ -220,6 +256,96 @@ def _build_user_prompt(state: ResearchState) -> str:
     return "\n".join(parts)
 
 
+def _call_with_one_retry(user_prompt: str, system_prompt: str) -> dict[str, Any]:
+    """Call the LLM; retry exactly once when the response is unusable.
+
+    "Unusable" means unparseable JSON or a missing/empty
+    `draft_report` — the `max_tokens`-truncation signature. The retry
+    re-issues the same prompt with a corrective nudge appended; one
+    extra call is cheap next to the already-billed reader fan-out it
+    can rescue (ADR 0041).
+
+    Args:
+        user_prompt: The assembled synthesis prompt.
+        system_prompt: The active system prompt (base or evidence path).
+
+    Returns:
+        The parsed response dict, guaranteed to carry a non-empty
+        `draft_report` string.
+
+    Raises:
+        SynthesizerOutputError: Both attempts were unusable.
+    """
+    prompt = user_prompt
+    for attempt in (1, 2):
+        try:
+            parsed = call_llm_json(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                model_name=settings.synthesizer_model or None,
+                max_tokens=4096,
+                cache_system=settings.enable_prompt_caching,
+            )
+        except json.JSONDecodeError as exc:
+            log.warning(
+                "synthesizer_response_unparseable",
+                extra={"attempt": attempt, "error": str(exc)},
+            )
+            parsed = {}
+        if str(parsed.get("draft_report") or "").strip():
+            return parsed
+        if attempt == 1:
+            log.warning(
+                "synthesizer_retrying_malformed_response",
+                extra={"attempt": attempt},
+            )
+            prompt = f"{user_prompt}\n\n{_RETRY_NUDGE}"
+    raise SynthesizerOutputError(
+        "synthesizer produced no usable draft_report after one retry"
+    )
+
+
+def _parse_citations(raw: Any) -> list[Citation]:
+    """Coerce the LLM's `citations` list, dropping malformed entries.
+
+    Per-entry defense: one broken citation object costs that one
+    citation, not the report. Dropped entries are logged at WARNING so
+    a model drifting off-schema is visible in the run's logs.
+    """
+    if not isinstance(raw, list):
+        if raw is not None:
+            log.warning(
+                "synthesizer_citations_not_a_list",
+                extra={"raw_type": type(raw).__name__},
+            )
+        return []
+    citations: list[Citation] = []
+    dropped = 0
+    for entry in raw:
+        if not isinstance(entry, dict) or not str(entry.get("title") or "").strip():
+            dropped += 1
+            continue
+        authors_raw = entry.get("authors")
+        authors = (
+            [str(a) for a in authors_raw] if isinstance(authors_raw, list) else []
+        )
+        citations.append(
+            Citation(
+                paper_id=str(entry.get("paper_id") or ""),
+                title=str(entry.get("title") or "").strip(),
+                authors=authors,
+                year=str(entry.get("year") or ""),
+                url=str(entry.get("url") or ""),
+            )
+        )
+    if dropped:
+        log.warning(
+            "synthesizer_citations_dropped",
+            extra={"dropped": dropped, "kept": len(citations)},
+        )
+    return citations
+
+
 def synthesizer_agent(state: ResearchState) -> dict[str, Any]:
     """Synthesize paper analyses into a structured research briefing.
 
@@ -235,29 +361,19 @@ def synthesizer_agent(state: ResearchState) -> dict[str, Any]:
 
     Returns:
         Partial state update with draft_report, citations, and a message.
+
+    Raises:
+        SynthesizerOutputError: The LLM produced no usable
+            `draft_report` on the original call or the single retry
+            (ADR 0041).
     """
     evidence_path = _use_evidence_path(state)
     user_prompt = _build_user_prompt(state)
     system_prompt = EVIDENCE_SYSTEM_PROMPT if evidence_path else SYSTEM_PROMPT
 
-    parsed = call_llm_json(
-        prompt=user_prompt,
-        system_prompt=system_prompt,
-        model_name=settings.synthesizer_model or None,
-        max_tokens=4096,
-        cache_system=settings.enable_prompt_caching,
-    )
-
-    citations = [
-        Citation(
-            paper_id=c["paper_id"],
-            title=c["title"],
-            authors=c["authors"],
-            year=c["year"],
-            url=c["url"],
-        )
-        for c in parsed["citations"]
-    ]
+    parsed = _call_with_one_retry(user_prompt, system_prompt)
+    draft_report = str(parsed.get("draft_report") or "")
+    citations = _parse_citations(parsed.get("citations"))
 
     if evidence_path:
         summary = (
@@ -268,7 +384,7 @@ def synthesizer_agent(state: ResearchState) -> dict[str, Any]:
         summary = f"Synthesized report with {len(citations)} citations."
 
     return {
-        "draft_report": parsed["draft_report"],
+        "draft_report": draft_report,
         "citations": citations,
         "messages": [AIMessage(content=summary, name="synthesizer")],
     }
