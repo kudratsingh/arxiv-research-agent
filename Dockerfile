@@ -10,14 +10,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1
 
-# System deps needed to compile any wheels that don't have prebuilt
-# aarch64/x86 binaries at our Python version. PyMuPDF and faiss-cpu
-# both ship binary wheels for py314 as of writing; if that changes,
-# add build-essential + swig here.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl \
-    && rm -rf /var/lib/apt/lists/*
-
+# No OS build deps: every compiled dependency (PyMuPDF, faiss-cpu,
+# psycopg-binary, torch) ships a cp314 wheel — pyproject's floors
+# guarantee it (ADR 0045). If a future dep needs a source build,
+# add build-essential + swig here rather than widening the runtime
+# stage. (curl lives only in the runtime stage, for the HEALTHCHECK.)
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 

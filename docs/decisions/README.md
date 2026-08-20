@@ -128,6 +128,11 @@ never renumbered.
   containment, parse defense across the agents, S2 version-strip
   + canonical dedup, PDF SSRF guard. Follows ADRs 0004, 0023,
   0028, 0033.
+- [0045](0045-supply-chain-pinning-lockfile-and-license-posture.md) —
+  Supply-chain hardening: bounded version ranges +
+  `requirements-lock.txt` (CI installs the lock), explicit `src`
+  packaging, lazy PEP 562 `src.api` re-exports, Next 15 / React
+  19 / Node 22 / vitest 4, PyMuPDF AGPL posture recorded.
 
 ## When to write an ADR
 
