@@ -97,6 +97,12 @@ never renumbered.
   SSE stream loop rewritten after the old heartbeat race
   cancelled the event reader mid-generator and silently killed
   the stream on the first quiet interval. Follows ADR 0027, 0035.
+- [0044](0044-eval-cost-accuracy-and-regression-thresholds.md) —
+  Price table re-verified against published Anthropic pricing
+  (Opus was 3x high, Haiku 20% low) with a coverage test over
+  config model defaults; nightly regression gate split by metric
+  class — score epsilon per ADR 0010, two-leg absolute+relative
+  bands for counts/dollars. Revisits ADR 0010; follows ADR 0012.
 - [0046](0046-literal-typed-config-enums.md) — Enum-valued settings
   become `Literal[...]` so a typo'd env var dies at load instead of
   silently selecting the fallback backend; plus behaviour tests for

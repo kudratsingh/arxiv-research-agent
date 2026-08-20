@@ -5,13 +5,18 @@ Covers structured JSON logging, run-scoped ContextVars, cost tracking
 context propagation via `contextvars.copy_context().run(...)`.
 """
 
+from __future__ import annotations
+
+import datetime as dt
 import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
+from src.config import Settings
 from src.observability import (
+    PRICES_USD_PER_MILLION,
     JsonFormatter,
     RunCosts,
     bind_run_id,
@@ -25,6 +30,8 @@ from src.observability import (
 )
 from src.observability import costs as costs_module
 from src.observability import logging as logging_module
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.fixture(autouse=True)
@@ -147,14 +154,14 @@ class TestEstimateCost:
         assert result == pytest.approx(10.5)
 
     def test_haiku_much_cheaper(self) -> None:
-        # 1M input at $0.8, 1M output at $4 -> 4.8
+        # 1M input at $1, 1M output at $5 -> 6.0
         result = estimate_cost("claude-haiku-4-5-20251001", 1_000_000, 1_000_000)
-        assert result == pytest.approx(4.8)
+        assert result == pytest.approx(6.0)
 
     def test_opus_much_pricier(self) -> None:
-        # 1M input at $15, 1M output at $75 -> 90
+        # 1M input at $5, 1M output at $25 -> 30
         result = estimate_cost("claude-opus-4-7", 1_000_000, 1_000_000)
-        assert result == pytest.approx(90.0)
+        assert result == pytest.approx(30.0)
 
     def test_zero_tokens_zero_cost(self) -> None:
         assert estimate_cost("claude-sonnet-4-6", 0, 0) == 0.0
@@ -167,6 +174,48 @@ class TestEstimateCost:
         with caplog.at_level(logging.WARNING, logger="src.observability.costs"):
             result = estimate_cost("claude-unknown-99", 1_000_000, 0)
         assert result == pytest.approx(3.0)
+
+
+class TestPriceTableCoverage:
+    """The price table must cover every Claude id the config can route to.
+
+    A model that reaches production routing without a price row is
+    priced at the Sonnet fallback — wrong by up to 5x in either
+    direction, and since ADR 0033 that error feeds `max_cost_usd`
+    enforcement, not just reporting. See ADR 0044.
+    """
+
+    def test_covers_every_configured_claude_default(self) -> None:
+        referenced = {
+            field.default
+            for name, field in Settings.model_fields.items()
+            if (name == "anthropic_model" or name.endswith("_model"))
+            and isinstance(field.default, str)
+            and field.default.startswith("claude-")
+        }
+        assert referenced, "expected at least one Claude model default in Settings"
+        missing = referenced - set(PRICES_USD_PER_MILLION)
+        assert not missing, f"config defaults missing from price table: {missing}"
+
+    def test_covers_adr_0021_recommended_overrides(self) -> None:
+        # ADR 0021 recommends routing reader / supervisor / query
+        # refiner to Haiku. Both the dated id it names and the bare
+        # canonical id an operator is likely to type must be priced —
+        # the Haiku reader is the highest-volume agent, so a fallback
+        # to Sonnet pricing would overstate its cost 3x+.
+        for model in ("claude-haiku-4-5", "claude-haiku-4-5-20251001"):
+            assert model in PRICES_USD_PER_MILLION, model
+
+    def test_haiku_alias_and_dated_id_priced_identically(self) -> None:
+        assert (
+            PRICES_USD_PER_MILLION["claude-haiku-4-5"]
+            == PRICES_USD_PER_MILLION["claude-haiku-4-5-20251001"]
+        )
+
+    def test_last_verified_is_a_real_date(self) -> None:
+        # The staleness tripwire only works if the constant stays a
+        # parseable ISO date.
+        dt.date.fromisoformat(costs_module.PRICES_LAST_VERIFIED)
 
 
 class TestRunCosts:
