@@ -85,6 +85,12 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0043](0043-conversation-store-hardening.md) — Conversation
+  store hardening: schema bootstrap off the event loop, appends
+  serialized on the parent row with single-statement ordinal
+  allocation, limit/offset pagination on the list endpoint, and
+  ownership inline in a one-statement DELETE. Follows ADR 0032
+  and ADR 0036.
 
 ## When to write an ADR
 
