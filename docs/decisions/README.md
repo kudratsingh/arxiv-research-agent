@@ -85,6 +85,12 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0044](0044-eval-cost-accuracy-and-regression-thresholds.md) —
+  Price table re-verified against published Anthropic pricing
+  (Opus was 3x high, Haiku 20% low) with a coverage test over
+  config model defaults; nightly regression gate split by metric
+  class — score epsilon per ADR 0010, two-leg absolute+relative
+  bands for counts/dollars. Revisits ADR 0010; follows ADR 0012.
 
 ## When to write an ADR
 
