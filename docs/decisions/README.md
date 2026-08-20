@@ -85,6 +85,12 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0046](0046-literal-typed-config-enums.md) — Enum-valued settings
+  become `Literal[...]` so a typo'd env var dies at load instead of
+  silently selecting the fallback backend; plus behaviour tests for
+  the five untested control paths the audit flagged (HTTP 429, job
+  ownership stamping, runner cost-cap/timeout handlers, terminal SSE
+  frame over pub/sub, keystore + CORS wiring). Follows ADR 0011.
 
 ## When to write an ADR
 

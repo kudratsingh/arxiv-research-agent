@@ -169,3 +169,16 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   redriver on restart, model-routing defaults, MiniLM →
   bge-small retrieval swap, SSE heartbeat rewrite, admin cleanup
   migration for legacy NULL-owner rows.
+- _2026-08-20_ — Config strictness + audit coverage gaps (ADR 0046).
+  Every enum-valued settings field (`job_store`,
+  `conversation_store`, `checkpoint_backend`, `rate_limit_backend`,
+  `paper_cache`, `embedding_cache`, `log_level`) becomes a
+  `Literal[...]` so an unrecognized env value fails at settings
+  load with the field named, instead of silently selecting the
+  downstream fallback backend. Closes five audit-flagged test
+  gaps with mutation-checked behaviour tests: HTTP-level 429 on
+  the submit route, route-level job ownership (principal A's job
+  is 404 for B on GET/stream/review/export), `run_job`'s
+  cost-cap + timeout handlers, the terminal SSE frame arriving
+  over Redis pub/sub from a real `run_job`, and the hot-reload
+  keystore + CORS wiring through `create_app`.
