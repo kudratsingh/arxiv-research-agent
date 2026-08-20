@@ -96,6 +96,25 @@ class TestParseApiKeys:
         with pytest.raises(ValueError, match="duplicate"):
             parse_api_keys("internal:sk_a,partner:sk_a")
 
+    def test_duplicate_name_raises(self) -> None:
+        # ADR 0042: the name is what rows get stamped with under
+        # ADR 0036 ownership — two secrets sharing a name would
+        # silently merge two tenants' data.
+        with pytest.raises(ValueError, match="duplicate principal name"):
+            parse_api_keys("internal:sk_a,internal:sk_b")
+
+
+class TestLoadKeystoreDuplicateNames:
+    def test_duplicate_name_in_file_raises(self, tmp_path: Path) -> None:
+        # `json.loads` alone would silently keep the LAST value for a
+        # repeated key — the parser must reject instead (ADR 0042).
+        path = tmp_path / "keys.json"
+        path.write_text('{"partner": "sk_a", "partner": "sk_b"}')
+        from src.api.auth import load_keystore_from_file
+
+        with pytest.raises(ValueError, match="duplicate principal name"):
+            load_keystore_from_file(path)
+
 
 class TestLookupPrincipal:
     def test_hit_returns_principal(self) -> None:
@@ -108,6 +127,45 @@ class TestLookupPrincipal:
 
     def test_empty_keystore_returns_none(self) -> None:
         assert _lookup_principal("sk_a", {}) is None
+
+    def test_non_ascii_presented_key_is_a_miss_not_a_crash(self) -> None:
+        # `hmac.compare_digest` raises TypeError on non-ASCII str —
+        # before ADR 0042 this was an unauthenticated 500. Starlette
+        # decodes headers as latin-1, so the wire value for utf-8
+        # bytes is the latin-1 view of them.
+        store = {"sk_a": ApiKeyPrincipal(key_id="internal")}
+        wire_view = "ключ".encode().decode("latin-1")
+        assert _lookup_principal(wire_view, store) is None
+
+    def test_non_latin1_direct_call_is_a_miss(self) -> None:
+        # Not reachable over HTTP (headers arrive latin-1-decoded);
+        # direct callers must still get a miss, not an encode error.
+        store = {"sk_a": ApiKeyPrincipal(key_id="internal")}
+        assert _lookup_principal("ключ", store) is None
+
+    def test_ascii_key_matches_despite_non_ascii_secret_in_keystore(
+        self,
+    ) -> None:
+        # The old str-comparison loop compared EVERY secret, so one
+        # non-ASCII secret anywhere in the keystore 500'd every
+        # request — including ones presenting a correct ASCII key.
+        store = {
+            "sk_a": ApiKeyPrincipal(key_id="internal"),
+            "sk_café": ApiKeyPrincipal(key_id="partner"),
+        }
+        assert _lookup_principal("sk_a", store) == ApiKeyPrincipal(
+            key_id="internal"
+        )
+
+    def test_non_ascii_secret_matches_its_utf8_wire_bytes(self) -> None:
+        # A client sending the utf-8 bytes of a non-ASCII secret must
+        # authenticate: the wire bytes are recovered from Starlette's
+        # latin-1 decode and compared against the secret's utf-8.
+        store = {"sk_café": ApiKeyPrincipal(key_id="partner")}
+        wire_view = "sk_café".encode().decode("latin-1")
+        assert _lookup_principal(wire_view, store) == ApiKeyPrincipal(
+            key_id="partner"
+        )
 
 
 class TestInMemoryRateLimiter:
@@ -229,6 +287,30 @@ async def test_conversation_delete_gated(
 ) -> None:
     r = await app_client.delete("/conversations/anything")
     assert r.status_code == 401
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "raw_key",
+    [
+        "ключ".encode(),  # utf-8 Cyrillic — every byte >= 0x80
+        b"sk_\xff",  # single high byte, curl-style probe
+        b"sk_test\xc2\xa0",  # correct key + copy-pasted NBSP
+    ],
+)
+async def test_non_ascii_key_returns_401_not_500(
+    app_client: httpx.AsyncClient, raw_key: bytes
+) -> None:
+    """Regression for the ADR 0042 auth fix: any byte >= 0x80 in
+    `X-API-Key` used to raise TypeError inside `hmac.compare_digest`
+    and surface as an unauthenticated 500 with a traceback."""
+    r = await app_client.post(
+        "/research",
+        json={"query": "hi"},
+        headers={"X-API-Key": raw_key},  # type: ignore[dict-item]
+    )
+    assert r.status_code == 401
+    assert r.json()["detail"] == "invalid_api_key"
 
 
 @pytest.mark.asyncio

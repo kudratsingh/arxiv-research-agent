@@ -256,3 +256,23 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   follow-ups: composite `(principal_key_id, updated_at DESC)`
   index, dedicated conversation-create limit + per-principal
   conversation ceiling, keyset cursor if deep paging appears.
+- _2026-08-20_ — API guardrails + deploy hygiene (ADR 0042), from
+  the audit remediation. Bounds the HITL `Plan` lists (20 items x
+  500 chars — an unbounded revise pinned uncancellable executor
+  threads and unbounded arXiv traffic); compares API keys as bytes
+  (non-ASCII `X-API-Key` was an unauthenticated 500) and rejects
+  duplicate principal names; `/healthz` pings Redis + Postgres
+  under 2s timeouts, reports `ok`/`degraded` per dependency, and
+  derives `active_jobs` from the worker's task set (was a constant
+  0 under the Redis store); resume-publish failures on the review
+  endpoint log at ERROR with the job_id instead of vanishing into
+  `contextlib.suppress`; uvicorn gets `timeout_graceful_shutdown`
+  (set in serve.py, which the compose command now boots, with
+  `stop_grace_period` above it) so SIGTERM reaches the lifespan
+  cleanup; `redact_url()` keeps connection-
+  string credentials out of the JSON log stream; compose gains the
+  CORS allowlist that makes the browser demo work at all plus
+  `ENABLE_API_AUTH`/`API_KEYS` pass-through with the auth-on recipe
+  in docs/security.md. Deferred, tracked there: body-size cap,
+  `/readyz`, conversation rate limit, owner-id migration, cache
+  purge command, web-UI key proxy.
