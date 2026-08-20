@@ -82,6 +82,16 @@ class TestPlannerParseDefense:
         update = self._run(monkeypatch, {"unexpected": "shape"})
         assert update["search_queries"] == ["What is RAG?"]
 
+    def test_non_object_json_falls_back_to_raw_query(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Valid JSON, wrong shape: a top-level list parses fine but
+        # has no `.get` — must degrade like unparseable JSON, not
+        # AttributeError the job.
+        update = self._run(monkeypatch, ["not", "an", "object"])
+        assert update["sub_questions"] == ["What is RAG?"]
+        assert update["search_queries"] == ["What is RAG?"]
+
     def test_non_string_entries_filtered(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -272,6 +282,34 @@ class TestSynthesizerParseDefense:
         with pytest.raises(SynthesizerOutputError):
             synthesizer_agent(_synth_state())
 
+    def test_non_object_json_treated_as_unusable_and_retried(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Valid JSON, wrong shape: a top-level list parses fine but
+        # has no `.get` — must count as an unusable attempt (retry,
+        # then typed error), not AttributeError the job.
+        good = {"draft_report": "## Report", "citations": []}
+        prompts = self._wire(monkeypatch, [["not", "an", "object"], good])
+        update = synthesizer_agent(_synth_state())
+        assert update["draft_report"] == "## Report"
+        assert len(prompts) == 2
+
+    def test_output_cap_leaves_truncation_headroom(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # 4096 made truncation deterministic for long reports (the
+        # retry re-truncated identically); the cap must stay at 8192.
+        monkeypatch.setattr(synthesizer_module, "settings", Settings())
+        seen: list[int] = []
+
+        def fake_llm(*, prompt: str, **kw: Any) -> dict[str, Any]:
+            seen.append(kw["max_tokens"])
+            return {"draft_report": "## Report", "citations": []}
+
+        monkeypatch.setattr(synthesizer_module, "call_llm_json", fake_llm)
+        synthesizer_agent(_synth_state())
+        assert seen == [8192]
+
     def test_malformed_citation_entries_dropped_not_fatal(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -349,6 +387,17 @@ class TestCriticParseDefense:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         update = self._run(monkeypatch, _decode_error())
+        assert update["revision_needed"] is False
+        assert update["quality_score"] == 0.0
+        assert "approved" in update["messages"][0].content
+
+    def test_non_object_json_approves_with_zero_score(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Valid JSON, wrong shape: a top-level list parses fine but
+        # has no `.get` — the terminal node must degrade to approve,
+        # never AttributeError away the finished report.
+        update = self._run(monkeypatch, ["not", "an", "object"])
         assert update["revision_needed"] is False
         assert update["quality_score"] == 0.0
         assert "approved" in update["messages"][0].content

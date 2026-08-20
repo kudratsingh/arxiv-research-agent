@@ -142,6 +142,15 @@ def planner_agent(state: ResearchState) -> dict[str, Any]:
             extra={"error": str(exc)},
         )
         parsed = {}
+    if not isinstance(parsed, dict):
+        # Valid JSON that isn't an object (a bare list / string /
+        # number) — `call_llm_json`'s dict return type is a cast, not
+        # a runtime guarantee. Same fallback as unparseable JSON.
+        log.warning(
+            "planner_response_not_an_object",
+            extra={"raw_type": type(parsed).__name__},
+        )
+        parsed = {}
 
     sub_questions: list[str] = _coerce_str_list(parsed.get("sub_questions"))
     search_queries: list[str] = _coerce_str_list(parsed.get("search_queries"))

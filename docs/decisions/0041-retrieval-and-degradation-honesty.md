@@ -69,10 +69,16 @@ when the product itself is unproducible.** Concretely:
 | Reader, one paper's LLM response | Degrade that paper to a placeholder analysis (`relevance=0.0`, explicit limitations note), WARNING | The fan-out already billed every other paper; one paper's formatting failure must not discard nine good analyses. |
 | Reader, every paper failed | Raise `AllPaperAnalysesFailedError` | The LLM is effectively down; synthesizing from nothing would be a hollow report. |
 | Planner response malformed | Fall back to the raw query as the single sub-question / search query, WARNING | Cheapest stage; an honest shallow search beats a dead job. |
-| Synthesizer response malformed / truncated | Retry once with a corrective nudge, then raise typed `SynthesizerOutputError` | The report IS the product — there is no honest fallback for it, but one cheap retry can rescue the whole billed run. Format-failure retry only; transport retries stay SDK-native (ADR 0009). |
+| Synthesizer response malformed / truncated | Retry once with a corrective nudge, then raise typed `SynthesizerOutputError`; output cap raised 4096 → 8192 | The report IS the product — there is no honest fallback for it, but one cheap retry can rescue the whole billed run. Format-failure retry only; transport retries stay SDK-native (ADR 0009). The old 4096 cap left no margin over the ~3000-3300 tokens a full report costs, so truncation was deterministic and a same-cap retry could never rescue it. |
 | Synthesizer citations entries malformed | Drop individually, WARNING | A thinner citation list is still a real report; the verifier/critic flag gaps. |
 | Critic response malformed | Approve with score 0.0, WARNING; scores coerce via `_safe_float`; `revision_needed` requires literal `true` (verifier's idiom) | Terminal node — the report is already written; a judge formatting bug must not discard it. |
 | Verifier / query refiner | Unchanged | Both already fail closed with logged fallbacks (ADRs 0015, 0018); they set the idiom the critic now follows. |
+
+"Malformed" includes valid JSON that is not an object (a bare list or
+string): `call_llm_json`'s dict return type is a cast, not a runtime
+guarantee, so the planner, synthesizer, and critic all check the shape
+before indexing and degrade exactly as they do for unparseable JSON.
+The reader is covered by its per-paper catch-all.
 
 **Everything visible through the structured logger.** The lone
 `print()` in the agent layer is gone; every degradation logs at

@@ -279,17 +279,31 @@ def _call_with_one_retry(user_prompt: str, system_prompt: str) -> dict[str, Any]
     prompt = user_prompt
     for attempt in (1, 2):
         try:
+            # 8192, not the old 4096: the prompt asks for an
+            # 800-1500-word report plus up to 10 citation objects,
+            # which JSON-escaped lands near 3000-3300 tokens — 4096
+            # left no margin, making truncation deterministic for long
+            # reports (a retry at the same cap could never rescue it).
             parsed = call_llm_json(
                 prompt=prompt,
                 system_prompt=system_prompt,
                 model_name=settings.synthesizer_model or None,
-                max_tokens=4096,
+                max_tokens=8192,
                 cache_system=settings.enable_prompt_caching,
             )
         except json.JSONDecodeError as exc:
             log.warning(
                 "synthesizer_response_unparseable",
                 extra={"attempt": attempt, "error": str(exc)},
+            )
+            parsed = {}
+        if not isinstance(parsed, dict):
+            # Valid JSON that isn't an object — `call_llm_json`'s dict
+            # return type is a cast, not a runtime guarantee. Treated
+            # as unusable, same as unparseable JSON.
+            log.warning(
+                "synthesizer_response_not_an_object",
+                extra={"attempt": attempt, "raw_type": type(parsed).__name__},
             )
             parsed = {}
         if str(parsed.get("draft_report") or "").strip():

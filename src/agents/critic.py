@@ -123,6 +123,16 @@ def critic_agent(state: ResearchState) -> dict[str, Any]:
             extra={"error": str(exc)},
         )
         parsed = {}
+    if not isinstance(parsed, dict):
+        # Valid JSON that isn't an object (a bare list / string /
+        # number) — `call_llm_json`'s dict return type is a cast, not
+        # a runtime guarantee. Terminal node: degrade exactly like an
+        # unparseable body, never discard the finished report.
+        log.warning(
+            "critic_response_not_an_object",
+            extra={"raw_type": type(parsed).__name__},
+        )
+        parsed = {}
 
     # Coerce the score exactly once and reuse it everywhere — reading
     # the raw value a second time for the message used to crash on a
