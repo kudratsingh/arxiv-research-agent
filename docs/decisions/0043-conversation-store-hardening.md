@@ -21,8 +21,8 @@ and wrong under concurrency or volume.
    schema DDL — including an `ALTER TABLE` needing ACCESS
    EXCLUSIVE — on the loop thread. A worker booting while Postgres
    was slow or briefly unreachable froze every in-flight request,
-   SSE heartbeats and `/healthz` included, long enough for the
-   container healthcheck to kill it — into the same freeze.
+   SSE heartbeats included — and because `/healthz` ran into the
+   same freeze, the container healthcheck could kill the worker.
 
 2. **Ordinal race on append.** `append_job` read
    `MAX(ordinal)` and inserted `MAX+1` in two statements. Two
