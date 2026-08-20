@@ -242,3 +242,17 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   cost-cap + timeout handlers, the terminal SSE frame arriving
   over Redis pub/sub from a real `run_job`, and the hot-reload
   keystore + CORS wiring through `create_app`.
+- _2026-08-20_ — Conversation store hardening (ADR 0043). Audit
+  remediation for the conversation layer: `init_schema()` moves
+  inside the `to_thread` closures so pool open + DDL never block
+  the event loop; `append_job` serializes on the parent row
+  (`FOR UPDATE`) with single-statement ordinal allocation and an
+  ERROR log before any exception propagates past the store;
+  `GET /conversations` gains limit/offset pagination (default 50,
+  cap 200) pushed into SQL and composed with ADR 0036 scoping;
+  delete carries ownership inline in one DELETE statement,
+  closing that ADR's follow-up; `POST /conversations` now draws
+  from the per-key hourly rate-limit budget. Remaining
+  follow-ups: composite `(principal_key_id, updated_at DESC)`
+  index, dedicated conversation-create limit + per-principal
+  conversation ceiling, keyset cursor if deep paging appears.

@@ -109,6 +109,12 @@ never renumbered.
   the five untested control paths the audit flagged (HTTP 429, job
   ownership stamping, runner cost-cap/timeout handlers, terminal SSE
   frame over pub/sub, keystore + CORS wiring). Follows ADR 0011.
+- [0043](0043-conversation-store-hardening.md) — Conversation
+  store hardening: schema bootstrap off the event loop, appends
+  serialized on the parent row with single-statement ordinal
+  allocation, limit/offset pagination on the list endpoint, and
+  ownership inline in a one-statement DELETE. Follows ADR 0032
+  and ADR 0036.
 
 ## When to write an ADR
 
