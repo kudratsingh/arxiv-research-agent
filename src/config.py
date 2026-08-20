@@ -38,7 +38,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -295,6 +295,30 @@ class Settings(BaseSettings):
             "Redis: TTL on the job key. Same knob honored by both stores."
         ),
     )
+    api_sse_heartbeat_sec: float = Field(
+        default=15.0,
+        gt=0.0,
+        le=300.0,
+        description=(
+            "Idle interval between SSE keepalive comment frames on "
+            "`GET /research/{id}/stream`. Must stay comfortably under "
+            "the shortest idle timeout of any proxy in front of the "
+            "app (nginx `proxy_read_timeout` defaults to 60s). See "
+            "ADR 0038."
+        ),
+    )
+    api_sse_max_duration_sec: int = Field(
+        default=3600,
+        ge=60,
+        le=86400,
+        description=(
+            "Ceiling on how long a single SSE connection stays open. "
+            "A stream on a job that never reaches a terminal state "
+            "would otherwise pin a worker connection forever; at the "
+            "deadline the server emits `stream_timeout` and closes so "
+            "the client can reconnect. See ADR 0038."
+        ),
+    )
     enable_hitl: bool = Field(
         default=True,
         description=(
@@ -330,6 +354,68 @@ class Settings(BaseSettings):
         description=(
             "Async Redis URL used by `RedisJobStore` when `job_store=redis`. "
             "In compose the default is `redis://redis:6379/0`."
+        ),
+    )
+
+    # ------ Job redriver + worker leases (ADR 0038) -------------------
+    # A worker that dies mid-job leaves its Redis row stuck in a
+    # non-terminal status forever: `GET /research/{id}` reports
+    # `running` and the SSE stream hangs waiting for a terminal frame
+    # that nobody will ever publish. The lease is what distinguishes
+    # "orphaned" from "running on a worker that is still alive", so a
+    # rolling restart of worker 3 does not reap worker 1's jobs.
+    enable_job_redriver: bool = Field(
+        default=True,
+        description=(
+            "Run the startup reconciliation sweep that reclaims jobs "
+            "orphaned by a dead worker. No-op unless `job_store=redis` "
+            "(nothing survives a restart under the in-memory store). "
+            "See ADR 0038."
+        ),
+    )
+    job_lease_ttl_sec: int = Field(
+        default=90,
+        ge=10,
+        le=3600,
+        description=(
+            "TTL on `joblease:{job_id}`, the key a worker holds while "
+            "it runs a job. Expiry is what marks the job orphaned, so "
+            "this is also the worst-case delay before a crashed "
+            "worker's jobs become reclaimable. Must be > "
+            "`job_lease_refresh_sec` with margin for a GC pause."
+        ),
+    )
+    job_lease_refresh_sec: int = Field(
+        default=30,
+        ge=5,
+        le=1800,
+        description=(
+            "How often the runner's background task re-expires its "
+            "job lease. Keep at roughly a third of `job_lease_ttl_sec` "
+            "so two consecutive missed refreshes still do not orphan a "
+            "healthy job."
+        ),
+    )
+    job_redrive_requeue_pending: bool = Field(
+        default=False,
+        description=(
+            "When true, orphaned jobs still in `pending` (accepted but "
+            "never started, so no partial work and no spend) are "
+            "resubmitted instead of failed. `running` and "
+            "`pending_review` jobs are always failed with "
+            "`error_type=orphaned` — resuming them would double-charge "
+            "for LLM calls already made."
+        ),
+    )
+    job_redrive_max_scan: int = Field(
+        default=10000,
+        ge=100,
+        le=1000000,
+        description=(
+            "Upper bound on job keys examined in one redrive sweep, so "
+            "a huge keyspace cannot stall startup. Hitting the cap is "
+            "logged as `job_redriver_scan_capped` rather than silently "
+            "truncating the sweep."
         ),
     )
 
@@ -640,6 +726,33 @@ class Settings(BaseSettings):
         le=120.0,
         description="Per-request timeout for S2 API calls.",
     )
+
+
+    @model_validator(mode="after")
+    def _check_lease_invariant(self) -> "Settings":
+        """Reject a lease TTL a refresh cycle cannot keep alive.
+
+        `job_lease_refresh_sec`'s own description promises that "two
+        consecutive missed refreshes still do not orphan a healthy
+        job" — which only holds while three refresh cycles fit inside
+        `job_lease_ttl_sec`. Below that margin a healthy job loses its
+        lease on an ordinary GC pause and a peer's redrive sweep
+        reclaims work that is still running. Both fields have
+        individually valid ranges that combine into a broken pair, so
+        the check has to live here rather than on either Field.
+
+        Raises:
+            ValueError: When the refresh interval leaves no margin.
+        """
+        if self.job_lease_refresh_sec * 3 > self.job_lease_ttl_sec:
+            raise ValueError(
+                "job_lease_refresh_sec must be at most a third of "
+                f"job_lease_ttl_sec so two missed refreshes are "
+                f"survivable; got refresh={self.job_lease_refresh_sec} "
+                f"ttl={self.job_lease_ttl_sec}. See ADR 0038."
+            )
+        return self
+
 
 
 settings = Settings()
