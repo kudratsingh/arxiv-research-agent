@@ -1,4 +1,4 @@
-.PHONY: help venv install install-dev clean test test-unit test-integration test-e2e test-all typecheck run eval
+.PHONY: help venv install install-dev clean test test-unit test-integration test-e2e test-all typecheck run eval admin-migrate
 
 # ---- Configuration ---------------------------------------------------------
 
@@ -25,6 +25,7 @@ help:  ## Show this help
 	@echo ""
 	@echo "  make run QUERY='...'   Run the agent on QUERY"
 	@echo "  make eval              Run full benchmark eval (QUERIES=id1,id2 to filter)"
+	@echo "  make admin-migrate     Report/repair legacy NULL-owner rows (ARGS='...')"
 	@echo "  make clean             Remove venv, caches, build artifacts"
 
 venv:  ## Create a fresh venv (destroys existing)
@@ -63,6 +64,9 @@ run:  ## Run the agent: make run QUERY='your question'
 
 eval:  ## Batch-run the benchmark; make eval QUERIES=id1,id2 to filter
 	$(VENV_PYTHON) -m src.eval.runner $(if $(QUERIES),--queries $(QUERIES),)
+
+admin-migrate:  ## Admin: report/repair legacy NULL-owner rows (ARGS='report --store all')
+	$(VENV_PYTHON) -m src.api.admin_migrate $(ARGS)
 
 clean:  ## Remove venv, caches, build artifacts
 	rm -rf $(VENV) .mypy_cache .pytest_cache .cache build dist *.egg-info
