@@ -7,6 +7,11 @@ in-flight tasks so shutdown can cancel them cleanly.
 The factory takes injectable overrides for `build_workflow` and
 `store` so tests can stub without patching `src.graph.workflow` or
 `src.api.redis_store`.
+
+The lifespan also runs the ADR-0038 startup redriver before serving
+traffic, so jobs orphaned by the previous generation of workers are
+reconciled (and their SSE clients unhung) rather than left claiming
+`running` forever.
 """
 
 from __future__ import annotations
@@ -30,8 +35,15 @@ from src.api.conversations import (
     ConversationStore,
     build_conversation_store,
 )
-from src.api.jobs import InMemoryJobStore, JobStore
+from src.api.jobs import InMemoryJobStore, Job, JobStore
+from src.api.redriver import (
+    REDRIVE_LOCK_TTL_SEC,
+    WORKER_ID,
+    JobRedriver,
+    RedriveReport,
+)
 from src.api.routes import router
+from src.api.runner import run_job
 from src.config import settings
 from src.graph.workflow import build_workflow as default_build_workflow
 from src.observability import get_logger
@@ -130,6 +142,74 @@ def create_app(
         app.state.max_concurrent_jobs = max_concurrent
         app.state.tasks = set()
         app.state.rate_limiter = rate_limiter
+        # ADR 0038: one id per process, stamped on job leases and the
+        # redrive lock so every reclaim is attributable to a worker.
+        app.state.worker_id = WORKER_ID
+
+        # ADR 0038: reconcile whatever the previous generation of
+        # workers left stuck in a non-terminal status. Awaited rather
+        # than fired-and-forgotten: a sweep racing the first request
+        # could reclaim a job the new worker had just accepted, and a
+        # slightly slower boot is the cheaper trade. Any failure is
+        # logged and swallowed — reconciliation is best-effort, and a
+        # redriver bug must never stop the app from starting.
+        async def _resubmit_orphaned(job: Job) -> None:
+            """Put a reclaimed `pending` job back in flight (ADR 0038).
+
+            Only reached for jobs the redriver found in `pending` —
+            accepted but never started, so there is no partial work
+            and no LLM spend to double-charge for. Mirrors the spawn
+            in `submit_research`: same workflow, same semaphore, and
+            registered in `app.state.tasks` so shutdown cancels it
+            like any other in-flight job.
+
+            The redriver drops its own claim on the job's lease
+            before calling this, so `run_job` can take the lease
+            itself.
+
+            Args:
+                job: The reclaimed job, already reset to `pending`.
+            """
+            task = asyncio.create_task(
+                run_job(
+                    job,
+                    workflow=compiled_workflow,
+                    store=job_store,
+                    semaphore=app.state.semaphore,
+                    conversation_store=conv_store,
+                ),
+                name=f"job-{job.job_id}",
+            )
+            app.state.tasks.add(task)
+            task.add_done_callback(app.state.tasks.discard)
+
+        redrive_report = RedriveReport()
+        if settings.enable_job_redriver:
+            try:
+                # Bounded by the redrive lock's own TTL. Past that the
+                # sweep no longer holds the lock, so continuing would
+                # only race whoever took it next — and `build_redis_client`
+                # sets no socket timeout, so an unreachable Redis would
+                # otherwise hold the process in "starting" indefinitely.
+                redrive_report = await asyncio.wait_for(
+                    JobRedriver(
+                        job_store, resubmit=_resubmit_orphaned
+                    ).sweep(),
+                    timeout=REDRIVE_LOCK_TTL_SEC,
+                )
+            except TimeoutError:
+                log.warning(
+                    "job_redriver_startup_timeout",
+                    extra={
+                        "worker_id": WORKER_ID,
+                        "timeout_sec": REDRIVE_LOCK_TTL_SEC,
+                    },
+                )
+            except Exception:
+                log.exception(
+                    "job_redriver_startup_failed",
+                    extra={"worker_id": WORKER_ID},
+                )
 
         # ADR 0037: if `api_keys_file` is configured, load from it
         # and start a reloader task. Otherwise use the string-based
@@ -169,6 +249,13 @@ def create_app(
                 ),
                 "rate_limit_backend": settings.rate_limit_backend,
                 "checkpoint_backend": settings.checkpoint_backend,
+                "worker_id": WORKER_ID,
+                "job_redriver_enabled": settings.enable_job_redriver,
+                "redrive_orphaned": redrive_report.orphaned,
+                "redrive_failed": redrive_report.failed,
+                "redrive_requeued": redrive_report.requeued,
+                "redrive_skipped_live": redrive_report.skipped_live,
+                "redrive_scan_capped": redrive_report.scan_capped,
             },
         )
         try:
@@ -180,6 +267,10 @@ def create_app(
                 reloader_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError, Exception):
                     await reloader_task
+            # ADR 0038: the redrive sweep is awaited during startup and
+            # owns no long-lived task, so there is nothing to cancel
+            # here. The per-job lease refresh tasks belong to `run_job`
+            # and are torn down by the job cancellation below.
             # Cancel any jobs still running so shutdown is bounded.
             # The runner catches `CancelledError` and marks the job
             # `cancelled` before propagating.

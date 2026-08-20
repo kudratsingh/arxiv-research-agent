@@ -127,3 +127,19 @@ class TestExtraKeysIgnored:
         # extra="ignore" in the model_config — random extra env vars shouldn't crash.
         monkeypatch.setenv("SOMETHING_UNRELATED", "value")
         Settings()  # should not raise
+
+
+@pytest.mark.unit
+def test_lease_refresh_must_leave_margin_under_the_ttl() -> None:
+    """A refresh interval with no margin orphans healthy jobs (ADR 0038).
+
+    Both fields validate individually but combine into a broken pair:
+    one missed refresh on an ordinary GC pause and a peer's redrive
+    sweep reclaims work that is still running.
+    """
+    Settings(job_lease_refresh_sec=30, job_lease_ttl_sec=90)  # ok
+
+    with pytest.raises(ValidationError):
+        Settings(job_lease_refresh_sec=60, job_lease_ttl_sec=90)
+    with pytest.raises(ValidationError):
+        Settings(job_lease_refresh_sec=45, job_lease_ttl_sec=90)

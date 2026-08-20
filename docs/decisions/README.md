@@ -85,6 +85,18 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0039](0039-admin-null-owner-migration.md) — Operator CLI
+  (`make admin-migrate`) for the legacy `NULL`-owner rows ADR
+  0036 left unreachable under auth-on. Dry-run by default;
+  validates the target key against the live keystore, preserves
+  Redis TTLs on rewrite, and decides availability from the
+  selected store rather than a shared URL. Follows ADR 0036.
+- [0038](0038-job-redriver-and-sse-stream.md) — Worker leases +
+  a startup job redriver, so a dead worker's jobs are reconciled
+  and their streams unhung instead of stuck `running` forever;
+  SSE stream loop rewritten after the old heartbeat race
+  cancelled the event reader mid-generator and silently killed
+  the stream on the first quiet interval. Follows ADR 0027, 0035.
 - [0045](0045-supply-chain-pinning-lockfile-and-license-posture.md) —
   Supply-chain hardening: bounded version ranges +
   `requirements-lock.txt` (CI installs the lock), explicit `src`
