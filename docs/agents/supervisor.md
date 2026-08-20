@@ -162,5 +162,7 @@ All env-overridable per ADR 0011.
 - ~~Prompt-injection isolation on the reader (item 8).~~ Landed — ADR
   0020 (extended to `prior_context` by ADR 0033).
 - Isolation for the supervisor's own prompt (the state summary embeds
-  reader-derived strings) — covered indirectly by the reader-side
-  scrubbing; a supervisor-side wrap is listed in ADR 0020's non-goals.
+  reader-derived strings) — ADR 0020 deliberately treats the reader as
+  the choke point so the control tokens are scrubbed before they reach
+  this prompt; its non-goals defer isolation on the synthesizer and
+  verifier prompts, not a supervisor-side wrap.

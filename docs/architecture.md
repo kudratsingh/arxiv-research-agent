@@ -75,21 +75,27 @@ timeout (`api_job_timeout_sec`). Job lifecycle:
 `pending → running → (pending_review →) succeeded / failed /
 cancelled`. `GET /research/{job_id}` polls status + result.
 
-**SSE streaming.** `GET /research/{job_id}/stream` replays buffered
-events then follows live ones: `node_started`, `node_completed`,
-`plan_ready`, `job_completed`, `job_failed`, `job_cancelled`, plus heartbeats so
+**SSE streaming.** `GET /research/{job_id}/stream` streams events as
+the runner emits them: `node_completed`, `plan_ready`,
+`job_completed`, `job_failed`, `job_cancelled`, plus heartbeats so
 proxies don't drop the stream (ADR
-[0026](decisions/0026-sse-streaming-endpoint.md)). Under the Redis
+[0026](decisions/0026-sse-streaming-endpoint.md)). Connecting to an
+already-finished job replays the single terminal frame and closes,
+which makes reconnects idempotent. Under the Redis
 job store, events fan out across workers via pub/sub on
 `events:{job_id}` so the streaming request need not land on the
 worker running the job (ADR
-[0035](decisions/0035-cross-worker-sse-pubsub.md)).
+[0035](decisions/0035-cross-worker-sse-pubsub.md)); a late subscriber
+on that path sees only events published after it connects.
 
 **HITL.** When `enable_hitl` is on, the workflow interrupts after
 the planner; the job parks in `pending_review` and
 `POST /research/{job_id}/review` approves or edits the plan
 (sub-questions + search queries) before search runs. Per-request
-bypass via `{"hitl_bypass": true}` — the eval runner uses it. ADR
+bypass via `{"hitl_bypass": true}` — the runner resumes the
+interrupt immediately without emitting a review event. (The eval
+runner and CLI avoid the pause upstream instead, compiling the
+workflow with `enable_hitl=False`.) ADR
 [0030](decisions/0030-hitl-plan-review.md); cross-worker resume via
 Redis pub/sub in ADR 0034.
 

@@ -71,9 +71,10 @@ with CI, use the commands above (or `make test-all`) before opening a
 PR. For the same reason, ADR 0024's follow-up — "add a merge-to-main
 variant that runs `pytest -m 'unit or integration'`" — must **not**
 be closed as written: with most tests unmarked, that filter would
-silently drop the bulk of the suite (including the auth, scoping, and
-cross-worker tests) from the gate while reporting a plausible-looking
-pass count. Either auto-apply the `unit` marker to unmarked tests in
+silently drop the bulk of the suite — `-m "unit or integration"`
+selects ~104 of ~800 tests today, losing the job-routes, HITL,
+streaming, and supervisor modules among others — while reporting a
+plausible-looking pass count. Either auto-apply the `unit` marker to unmarked tests in
 a `conftest.py` collection hook first, or keep `-m "not e2e"` as the
 single selection knob.
 
