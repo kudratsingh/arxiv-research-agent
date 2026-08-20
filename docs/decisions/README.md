@@ -103,6 +103,12 @@ never renumbered.
   config model defaults; nightly regression gate split by metric
   class — score epsilon per ADR 0010, two-leg absolute+relative
   bands for counts/dollars. Revisits ADR 0010; follows ADR 0012.
+- [0046](0046-literal-typed-config-enums.md) — Enum-valued settings
+  become `Literal[...]` so a typo'd env var dies at load instead of
+  silently selecting the fallback backend; plus behaviour tests for
+  the five untested control paths the audit flagged (HTTP 429, job
+  ownership stamping, runner cost-cap/timeout handlers, terminal SSE
+  frame over pub/sub, keystore + CORS wiring). Follows ADR 0011.
 
 ## When to write an ADR
 
