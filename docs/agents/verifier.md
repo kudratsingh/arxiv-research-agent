@@ -108,7 +108,7 @@ verifier_agent(state):
 | `verified=True` alongside flagged issues | Post-parse invariant | Downgraded to `verified=False`; recommendation kept. `verified` must mean "no follow-up needed". |
 | `recommended_action` outside enum | `_clean_recommendation` | Cleared to empty, then re-inferred from `missing_evidence` / `unsupported_claims`. |
 | Wrong-typed fields (`unsupported_claims` = "string", etc.) | `_coerce_string_list` | Coerced to `[]` (drops the field silently rather than crashing). |
-| Judge redirects via prompt-injected paper text | Not yet mitigated | Same open item as the supervisor (planning/05 item 8). |
+| Judge redirects via prompt-injected paper text | Partially mitigated | Reader-side isolation (ADR 0020) scrubs the claims that reach the chunks dossier; the verifier's own prompt is not yet tag-wrapped — listed in ADR 0020's non-goals. See `docs/security.md`. |
 
 ## Configuration
 
@@ -117,6 +117,10 @@ Settings that drive the verifier (see `src/config.py`):
 - `enable_verifier: bool = False` — master flag. When off, the
   verifier node is not wired and the supervisor's action enum
   excludes `verify`.
+- `verifier_model: str = ""` — per-agent model override (ADR 0021).
+  Empty falls back to `anthropic_model`.
+- `enable_prompt_caching: bool = False` — system-prompt caching
+  (ADR 0022).
 
 The verifier does not have its own cost / iteration caps — the
 supervisor's `max_cost_usd` and `max_loop_iterations` gate every node
@@ -124,7 +128,7 @@ including this one.
 
 ## Testing
 
-- Unit: `tests/test_verifier.py` — 15 tests covering short-circuits
+- Unit: `tests/test_verifier.py` — 23 tests covering short-circuits
   (empty draft, no citations), well-formed judge output (all three
   recommendation values), invariants (`verified=True` + issues gets
   downgraded, recommendations get inferred when the judge omits them),
@@ -167,6 +171,8 @@ strongest evidence; abstracts are a lower bound.
   what the offline metric does). Deliberate: the alternative requires
   a per-claim citation index, and the supervisor's `missing_evidence`
   handling covers this case orthogonally.
-- **Synthesizer still writes from `paper_analyses`, not `evidence`**.
-  Sprint 2 item 5b will swap that so every sentence in the report
-  traces to a claim ID.
+- ~~**Synthesizer still writes from `paper_analyses`, not
+  `evidence`**.~~ Landed — the synthesizer's evidence-grounded path
+  shipped as ADR 0017 (same `enable_evidence_store` flag; no claim
+  IDs embedded in the report text — the grounding rules in the system
+  prompt do the work).

@@ -94,6 +94,11 @@ Settings that drive the refiner (see `src/config.py`):
 - `query_refiner_max_queries: int = 5` — cap on queries emitted per
   invocation. Interpolated into the system prompt and enforced
   server-side.
+- `query_refiner_model: str = ""` — per-agent model override (ADR
+  0021); Haiku is the recommended override for this short generation
+  task.
+- `enable_prompt_caching: bool = False` — system-prompt caching
+  (ADR 0022).
 
 No refiner-specific cost / iteration caps — the supervisor's
 `max_cost_usd` and `max_loop_iterations` gate every node including
@@ -101,7 +106,7 @@ this one.
 
 ## Testing
 
-- Unit: `tests/test_query_refiner.py` — 20 tests covering the prompt
+- Unit: `tests/test_query_refiner.py` — 18 tests covering the prompt
   builder (already-tried listing, missing evidence, critique
   inclusion, papers block), normalization, all four fail-closed
   paths (LLM exception, non-list, empty output, all duplicates),

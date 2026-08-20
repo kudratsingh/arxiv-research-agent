@@ -299,3 +299,20 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   choice deliberately left to the owner). Remaining follow-ups:
   hashed cross-platform lock, Next 16 + eslint 9 migration,
   Dependabot + pip-audit/npm-audit CI gates, license decision.
+- _2026-08-20_ — Documentation drift cleanup (audit remediation,
+  docs-only). The audit's maintainability lane found the top-level
+  index still described the Sprint-3 repo, `docs/README.md` pointed
+  at files that didn't exist, and `docs/testing.md` described a
+  three-directory layout and cassette e2e tier that were never
+  built — with the `make test` / `pytest -m unit` trap hiding most
+  of the suite from anyone who trusted it. Rewrote
+  `CLAUDE-Agent-Proj-1.md` against the actual tree (Sprints 1-5 +
+  hardening chain, ADRs 0001-0037, ~800 tests, Docs Map); wrote
+  `docs/architecture.md` (workflow shapes, API layer, storage
+  matrix) from the code; rewrote `docs/testing.md` to describe the
+  flat marker-based reality, flag the Makefile trap, and label the
+  e2e cassette tier explicitly as planned-not-built; added the
+  missing `docs/agents/planner.md` / `search.md` / `critic.md` and
+  de-drifted the five existing agent pages (landed follow-ups
+  unmarked as pending, settings-vs-constants, test counts). No ADR —
+  no decision changed; docs now match `main`.

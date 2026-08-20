@@ -96,8 +96,11 @@ Settings that drive the synthesizer (see `src/config.py`):
 - `enable_evidence_store: bool = False` — same flag that gates the
   reader's claim emission and the verifier's chunks dossier. Turning
   it on switches all three agents together (ADR 0017).
-
-No synthesizer-specific tunables today.
+- `synthesizer_model: str = ""` — per-agent model override (ADR 0021).
+  Writing quality benefits from the base model; override only to
+  trade quality for cost.
+- `enable_prompt_caching: bool = False` — system-prompt caching
+  (ADR 0022).
 
 ## Testing
 
@@ -109,8 +112,11 @@ No synthesizer-specific tunables today.
   by relevance within group, unassigned heading, verbatim
   `source_text`), evidence-path prompt shape, and full agent
   behavior including message summaries.
-- Integration: exercised inside the workflow-level tests.
-- E2E: covered by the future cassette suite.
+- LLM-call plumbing: `tests/test_agent_model_routing.py` (the
+  `synthesizer_model` override) and `tests/test_agent_cache_flag.py`
+  (the prompt-caching flag).
+- E2E: the workflow-level cassette suite is still **planned, not
+  built** — see `docs/testing.md`.
 
 ## Follow-ups
 

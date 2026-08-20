@@ -108,7 +108,7 @@ Rules-based routing that mirrors the fixed pipeline order:
 | Response returns non-stop action with a `stop_reason` | Post-validation | `stop_reason` cleared to empty. |
 | Loop iterations exceed `max_loop_iterations` | Pre-LLM check | Returns `stop` with `stop_reason="max_iterations_reached"`. |
 | Cumulative cost exceeds `max_cost_usd` | Pre-LLM check | Returns `stop` with `stop_reason="budget_reached"`. |
-| Judge tries to redirect via prompt-injected paper text | Not yet mitigated | Called out in `planning/05-agentic-upgrade-plan.md` item 8 — reader-level isolation lands separately. |
+| Judge tries to redirect via prompt-injected paper text | Reader-level isolation (ADR 0020) | Mitigated behind `enable_prompt_isolation`: reader control fields are scrubbed before they reach the supervisor's state summary. Strongly recommended whenever `enable_supervisor` is on. See `docs/security.md`. |
 
 ## Configuration
 
@@ -131,20 +131,26 @@ Settings that drive the supervisor (see `src/config.py`):
   stop condition.
 - `max_cost_usd: float = 2.00` — pre-LLM budget check.
 - `max_loop_iterations: int = 20` — pre-LLM iteration check.
+- `supervisor_model: str = ""` — per-agent model override (ADR 0021);
+  Haiku is the recommended override for this high-volume routing call.
+- `enable_prompt_caching: bool = False` — system-prompt caching (ADR
+  0022); the per-turn loop is one of the two big cache-hit wins.
 
 All env-overridable per ADR 0011.
 
 ## Testing
 
-- Unit: `tests/test_supervisor.py` — 24 tests covering the
+- Unit: `tests/test_supervisor.py` — 51 tests covering the
   rules-based fallback (each pipeline stage), the state summarizer,
   short-circuits (iteration cap + cost cap without LLM calls), the
   LLM path (valid action, stop-with-default-reason, stop-reason
   cleared on non-stop, invalid action, missing action, LLM exception,
   prompt shape), the router (every valid action + unknown fallback
-  to `END`), and enum invariants.
-- Integration: TODO once the first live run happens on the loop path.
-- E2E: covered by the future workflow-level cassette suite.
+  to `END`), enum invariants, and the flag-gating for `verify` /
+  `refine_query` (accepted when on, fallback when off, state-summary
+  contents, stale-checkpoint router behavior).
+- E2E: the workflow-level cassette suite is still **planned, not
+  built** — see `docs/testing.md`.
 
 ## Follow-ups (tracked in `planning/05-agentic-upgrade-plan.md`)
 
@@ -153,7 +159,10 @@ All env-overridable per ADR 0011.
 - ~~Synthesizer reads from evidence (item 5b).~~ Landed — ADR 0017.
 - ~~`refine_query` action + query refiner (item 6).~~ Landed — ADR 0018.
 - ~~Reader-requests-more-chunks (item 7).~~ Landed — ADR 0019.
-- Query refiner so "search again" is a real recovery action (item 6).
-- Reader-requests-more-chunks (item 7).
-- Prompt-injection isolation on the reader (item 8) — **severity
-  upgraded** now that routing depends on paper text.
+- ~~Prompt-injection isolation on the reader (item 8).~~ Landed — ADR
+  0020 (extended to `prior_context` by ADR 0033).
+- Isolation for the supervisor's own prompt (the state summary embeds
+  reader-derived strings) — ADR 0020 deliberately treats the reader as
+  the choke point so the control tokens are scrubbed before they reach
+  this prompt; its non-goals defer isolation on the synthesizer and
+  verifier prompts, not a supervisor-side wrap.
