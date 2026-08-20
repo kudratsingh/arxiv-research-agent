@@ -199,10 +199,11 @@ pieces:
   `active_jobs` from the worker's own task set (it was a constant 0
   under the shipped Redis store). Always HTTP 200 — liveness, not
   readiness; see ADR 0042 for why.
-- **Bounded drain.** `timeout_graceful_shutdown=10` in `serve.py`
-  and the compose command, `stop_grace_period: 15s`, so SIGTERM
-  actually reaches the lifespan cleanup instead of hanging on open
-  SSE streams until SIGKILL orphans in-flight jobs.
+- **Bounded drain.** `timeout_graceful_shutdown=10` in `serve.py`,
+  which the compose command boots (`python -m src.api.serve`), plus
+  `stop_grace_period: 15s`, so SIGTERM actually reaches the
+  lifespan cleanup instead of hanging on open SSE streams until
+  SIGKILL orphans in-flight jobs.
 - **Credential redaction.** `redact_url()` in
   `src/observability/logging.py` strips userinfo from connection
   URLs before they hit the indexed JSON log stream; wired at the

@@ -145,15 +145,23 @@ The same unlogged suppressions in `runner._put_event` /
 
 ### 5. Bounded graceful shutdown
 
-`serve.py` passes `timeout_graceful_shutdown=10` to uvicorn, and the
-compose `app` service overrides the container command with
-`--timeout-graceful-shutdown 10` plus `stop_grace_period: 15s`. The
-ordering constraint is the point: uvicorn drains SSE for at most
-10s, *then* runs the lifespan cleanup (cancel jobs → `cancelled` +
-terminal frame, close checkpointer + pools), and the orchestrator's
-kill must come after that — so grace period > drain timeout, and
-k8s deployments must keep `terminationGracePeriodSeconds` above 10s
-likewise.
+`serve.py` passes `timeout_graceful_shutdown=10` to uvicorn, and
+the compose `app` service overrides the container command to
+`python -m src.api.serve` with `stop_grace_period: 15s`, making
+`serve.py` the single source of truth for the drain *and* for
+`log_config=None`. Routing through `serve.py` is load-bearing, not
+taste: the uvicorn CLI cannot express "no log config" — the
+Dockerfile CMD's `--log-config /dev/null` is rejected at boot
+(`fileConfig` refuses an empty file), so a CLI-style compose
+override either crashes the container or re-installs uvicorn's
+default non-JSON loggers. Fixing the Dockerfile CMD itself is the
+container file's follow-up; the compose override does not depend on
+it. The ordering constraint is the point: uvicorn drains SSE for at
+most 10s, *then* runs the lifespan cleanup (cancel jobs →
+`cancelled` + terminal frame, close checkpointer + pools), and the
+orchestrator's kill must come after that — so grace period > drain
+timeout, and k8s deployments must keep
+`terminationGracePeriodSeconds` above 10s likewise.
 
 ### 6. `redact_url` before logging connection strings
 

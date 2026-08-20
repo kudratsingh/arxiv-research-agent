@@ -19,20 +19,19 @@ services:
     image: arxiv-research-agent:local
     container_name: arxiv-research-agent-app
     restart: unless-stopped
-    # ADR 0042: bounded drain. Uvicorn stops accepting on SIGTERM,
-    # waits up to --timeout-graceful-shutdown 10s for open SSE
-    # streams, then runs the lifespan cleanup (cancel in-flight jobs,
-    # close pools). The container grace period must sit ABOVE that
-    # drain so the cleanup isn't SIGKILLed mid-way — without this,
-    # every `docker compose down` turned healthy in-flight jobs into
-    # `orphaned` failures.
-    command:
-      [
-        "uvicorn", "src.api.app:create_app", "--factory",
-        "--host", "0.0.0.0", "--port", "8000",
-        "--log-config", "/dev/null",
-        "--timeout-graceful-shutdown", "10",
-      ]
+    # ADR 0042: bounded drain, via the canonical entry point.
+    # `src.api.serve` sets `log_config=None` (the JSON stream stays
+    # ours; the Dockerfile CMD's `--log-config /dev/null` does not
+    # boot — `fileConfig` rejects an empty file, so the CLI has no
+    # way to say "no log config") and `timeout_graceful_shutdown=10`:
+    # uvicorn stops accepting on SIGTERM, waits up to 10s for open
+    # SSE streams, then runs the lifespan cleanup (cancel in-flight
+    # jobs, close pools). The container grace period must sit ABOVE
+    # that drain so the cleanup isn't SIGKILLed mid-way — without
+    # this, every `docker compose down` turned healthy in-flight
+    # jobs into `orphaned` failures. Host/port come from the
+    # API_HOST/API_PORT env below.
+    command: ["python", "-m", "src.api.serve"]
     stop_grace_period: 15s
     ports:
       - "${APP_PORT:-8000}:8000"

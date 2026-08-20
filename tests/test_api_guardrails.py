@@ -168,15 +168,21 @@ class TestComposeContract:
         assert "API_KEYS" in env
 
     def test_app_drains_with_a_bounded_grace_period(self) -> None:
+        from src.api.serve import GRACEFUL_SHUTDOWN_TIMEOUT_SEC
+
         service = _compose_app_service()
-        command = service["command"]
-        assert "--timeout-graceful-shutdown" in command
-        drain = int(command[command.index("--timeout-graceful-shutdown") + 1])
+        # The app container must boot through `src.api.serve` — the
+        # one place that sets `log_config=None` and the bounded
+        # drain. A raw uvicorn CLI override cannot: `--log-config
+        # /dev/null` is rejected at boot (`fileConfig` refuses an
+        # empty file), and re-stating the drain flag here would be a
+        # second copy that drifts.
+        assert service["command"][-2:] == ["-m", "src.api.serve"]
         # The container grace period must exceed the drain so the
         # lifespan cleanup after the drain isn't SIGKILLed.
         grace = service["stop_grace_period"]
         assert grace.endswith("s")
-        assert int(grace[:-1]) > drain
+        assert int(grace[:-1]) > GRACEFUL_SHUTDOWN_TIMEOUT_SEC
 
     def test_healthcheck_still_points_at_healthz(self) -> None:
         # /healthz is auth-exempt, so the probe keeps passing when

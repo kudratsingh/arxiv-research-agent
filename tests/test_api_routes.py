@@ -119,17 +119,20 @@ async def _wait_for_terminal(
         await asyncio.sleep(0.02)
 
 
-class _RedisishStore(InMemoryJobStore):
-    """In-memory store that quacks like the Redis store for healthz.
+class _RedisishStore:
+    """Store that quacks like the Redis store for healthz.
 
     Exposes a `_client` with an async `ping()` — the duck-typed
     surface `/healthz` probes (ADR 0042) — that either answers or
     raises, so tests cover both the healthy and the degraded path
-    without a Redis.
+    without a Redis. Deliberately NOT an `InMemoryJobStore` subclass
+    (it delegates instead): the pre-ADR-0042 handler special-cased
+    `isinstance(store, InMemoryJobStore)`, and a subclass would let
+    that dead branch keep these tests green.
     """
 
     def __init__(self, *, ping_ok: bool = True) -> None:
-        super().__init__()
+        self._inner = InMemoryJobStore()
         self._ping_ok = ping_ok
         self._client = SimpleNamespace(ping=self._ping)
 
@@ -137,6 +140,12 @@ class _RedisishStore(InMemoryJobStore):
         if not self._ping_ok:
             raise ConnectionError("redis unreachable")
         return True
+
+    def __getattr__(self, name: str) -> Any:
+        # Everything else (create/get/update/...) is the inner
+        # store's; `__getattr__` only fires for names not set on the
+        # instance, so `_client` above stays ours.
+        return getattr(self._inner, name)
 
 
 class TestHealthz:

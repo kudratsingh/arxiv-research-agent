@@ -1,8 +1,12 @@
-"""Local development entry point — `python -m src.api.serve`.
+"""Serving entry point — `python -m src.api.serve`.
 
-Boots uvicorn against the app factory. For production, a Dockerfile
-(Sprint 4 PR 3) will invoke uvicorn directly with worker counts and
-lifespan tuned by the container orchestrator, not this script.
+Boots uvicorn against the app factory. Both local development and
+the compose stack run this module (ADR 0042): it is the one place
+that sets `log_config=None` (the uvicorn CLI cannot express that —
+`--log-config` demands a parseable file) and the bounded graceful
+shutdown below, so the two environments cannot drift. Host and port
+come from `settings`, so a container sets API_HOST/API_PORT env
+vars rather than flags.
 """
 
 from __future__ import annotations
