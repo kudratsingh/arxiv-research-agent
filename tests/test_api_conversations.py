@@ -8,9 +8,13 @@ system doesn't have the `postgres` server binary.
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import shutil
+import threading
 import time
 from collections.abc import AsyncIterator, Iterator
+from typing import Any
 
 import psycopg
 import pytest
@@ -145,6 +149,109 @@ class TestInMemoryConversationStore:
         assert await store.delete("nope") is False
 
 
+class TestInMemoryListPagination:
+    """ADR 0043: `list` takes limit/offset so the sidebar query is
+    bounded no matter how many conversations accumulate."""
+
+    async def _seeded(self, n: int) -> InMemoryConversationStore:
+        store = InMemoryConversationStore()
+        for i in range(n):
+            await store.create(
+                Conversation(
+                    conversation_id=f"c{i}",
+                    title=f"T{i}",
+                    # Explicit, strictly increasing timestamps so
+                    # "newest first" ordering is deterministic.
+                    created_at=1000.0 + i,
+                    updated_at=1000.0 + i,
+                )
+            )
+        return store
+
+    async def test_limit_caps_page_size(self) -> None:
+        store = await self._seeded(5)
+        got = await store.list(limit=2)
+        assert [c.conversation_id for c in got] == ["c4", "c3"]
+
+    async def test_offset_skips_newest(self) -> None:
+        store = await self._seeded(5)
+        got = await store.list(limit=2, offset=2)
+        assert [c.conversation_id for c in got] == ["c2", "c1"]
+
+    async def test_offset_past_end_returns_empty(self) -> None:
+        store = await self._seeded(3)
+        assert await store.list(limit=50, offset=10) == []
+
+    async def test_pages_are_disjoint_and_cover_everything(self) -> None:
+        store = await self._seeded(5)
+        page1 = await store.list(limit=3, offset=0)
+        page2 = await store.list(limit=3, offset=3)
+        ids = [c.conversation_id for c in page1 + page2]
+        assert ids == ["c4", "c3", "c2", "c1", "c0"]
+
+    async def test_offset_counts_within_principal_scope(self) -> None:
+        """Scoping composes with pagination: offset counts the
+        caller's own rows, not global rows (ADR 0043)."""
+        store = InMemoryConversationStore()
+        for i in range(4):
+            owner = "alice" if i % 2 == 0 else "bob"
+            await store.create(
+                Conversation(
+                    conversation_id=f"c{i}",
+                    title=f"T{i}",
+                    created_at=1000.0 + i,
+                    updated_at=1000.0 + i,
+                    principal_key_id=owner,
+                )
+            )
+        got = await store.list("alice", limit=1, offset=1)
+        assert [c.conversation_id for c in got] == ["c0"]
+        assert all(c.principal_key_id == "alice" for c in got)
+
+
+class TestInMemoryScopedDelete:
+    """ADR 0043: ownership rides inside `delete` itself, closing the
+    ADR 0036 fetch-then-delete follow-up."""
+
+    async def test_unscoped_delete_removes_any_row(self) -> None:
+        store = InMemoryConversationStore()
+        await store.create(
+            Conversation(
+                conversation_id="c", title="C", principal_key_id="alice"
+            )
+        )
+        # `principal_key_id=None` == auth-off: legacy demo behavior.
+        assert await store.delete("c") is True
+
+    async def test_matching_principal_deletes(self) -> None:
+        store = InMemoryConversationStore()
+        await store.create(
+            Conversation(
+                conversation_id="c", title="C", principal_key_id="alice"
+            )
+        )
+        assert await store.delete("c", principal_key_id="alice") is True
+        assert await store.get("c") is None
+
+    async def test_mismatched_principal_leaves_row_intact(self) -> None:
+        store = InMemoryConversationStore()
+        await store.create(
+            Conversation(
+                conversation_id="c", title="C", principal_key_id="alice"
+            )
+        )
+        assert await store.delete("c", principal_key_id="bob") is False
+        assert await store.get("c") is not None
+
+    async def test_legacy_null_owner_is_untouchable_under_auth(self) -> None:
+        store = InMemoryConversationStore()
+        await store.create(
+            Conversation(conversation_id="c", title="C", principal_key_id=None)
+        )
+        assert await store.delete("c", principal_key_id="alice") is False
+        assert await store.get("c") is not None
+
+
 # ---------------------------------------------------------------------------
 # PostgresConversationStore
 # ---------------------------------------------------------------------------
@@ -218,6 +325,192 @@ class TestPostgresConversationStore:
                 ("c",),
             )
             assert cur.fetchone() == (0,)
+
+    async def test_list_pagination(self, pg_url: str) -> None:
+        """ADR 0043: LIMIT/OFFSET applied in SQL, newest first, with
+        disjoint consecutive pages."""
+        store = PostgresConversationStore()
+        for i in range(5):
+            await store.create(
+                Conversation(conversation_id=f"c{i}", title=f"T{i}")
+            )
+            # Bump updated_at in creation order so ordering is
+            # deterministic (NOW() has microsecond resolution but
+            # the inserts can share a transaction timestamp).
+            await store.append_job(f"c{i}", f"j{i}", "q", "r")
+
+        page1 = await store.list(limit=2)
+        page2 = await store.list(limit=2, offset=2)
+        assert [c.conversation_id for c in page1] == ["c4", "c3"]
+        assert [c.conversation_id for c in page2] == ["c2", "c1"]
+        assert await store.list(limit=50, offset=10) == []
+
+    async def test_list_pagination_composes_with_scoping(
+        self, pg_url: str
+    ) -> None:
+        store = PostgresConversationStore()
+        for i in range(4):
+            owner = "alice" if i % 2 == 0 else "bob"
+            await store.create(
+                Conversation(
+                    conversation_id=f"c{i}",
+                    title=f"T{i}",
+                    principal_key_id=owner,
+                )
+            )
+            await store.append_job(f"c{i}", f"j{i}", "q", "r")
+
+        got = await store.list("alice", limit=1, offset=1)
+        assert [c.conversation_id for c in got] == ["c0"]
+        assert all(c.principal_key_id == "alice" for c in got)
+
+    async def test_scoped_delete_single_statement(self, pg_url: str) -> None:
+        """ADR 0043: mismatch and legacy-NULL rows survive a scoped
+        delete; a matching owner's delete succeeds."""
+        store = PostgresConversationStore()
+        await store.create(
+            Conversation(
+                conversation_id="owned", title="T", principal_key_id="alice"
+            )
+        )
+        await store.create(
+            Conversation(
+                conversation_id="legacy", title="T", principal_key_id=None
+            )
+        )
+
+        assert await store.delete("owned", principal_key_id="bob") is False
+        assert await store.get("owned") is not None
+        assert await store.delete("legacy", principal_key_id="alice") is False
+        assert await store.get("legacy") is not None
+        assert await store.delete("owned", principal_key_id="alice") is True
+        assert await store.get("owned") is None
+        # Auth-off (`None`) stays unscoped.
+        assert await store.delete("legacy") is True
+
+    async def test_concurrent_appends_never_collide(self, pg_url: str) -> None:
+        """ADR 0043: the parent-row lock serializes concurrent
+        appends, so N parallel appends land as ordinals 1..N instead
+        of racing on MAX(ordinal) and dying on the primary key."""
+        store = PostgresConversationStore()
+        await store.create(Conversation(conversation_id="c", title="C"))
+
+        results = await asyncio.gather(
+            *(store.append_job("c", f"j{i}", "q", "r") for i in range(8))
+        )
+        ordinals = sorted(j.ordinal for j in results if j is not None)
+        assert ordinals == list(range(1, 9))
+
+        got = await store.get("c")
+        assert got is not None
+        assert len(got.jobs) == 8
+
+
+# ---------------------------------------------------------------------------
+# Postgres store — loop-safety + failure-visibility unit tests.
+# These run without a Postgres server: the pool module's seams are
+# monkeypatched with fakes, so they exercise the store's threading
+# and logging behavior, not SQL.
+# ---------------------------------------------------------------------------
+
+
+class _FakeCursor:
+    """Just enough cursor for the store's code paths: every SELECT
+    comes back empty, every DELETE reports zero rows."""
+
+    rowcount = 0
+
+    def execute(self, sql: str, params: Any = None) -> None:
+        return None
+
+    def fetchone(self) -> Any:
+        return None
+
+    def fetchall(self) -> list[Any]:
+        return []
+
+    def __enter__(self) -> _FakeCursor:
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        return None
+
+
+class _FakeConnection:
+    def cursor(self) -> _FakeCursor:
+        return _FakeCursor()
+
+    def commit(self) -> None:
+        return None
+
+    def __enter__(self) -> _FakeConnection:
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        return None
+
+
+class TestSchemaInitStaysOffTheEventLoop:
+    """ADR 0043: `init_schema()` — pool open + DDL, blocking, up to
+    10s+ — must run on the `asyncio.to_thread` worker. On the loop it
+    froze every in-flight request while Postgres was slow or down."""
+
+    async def test_no_method_calls_init_schema_on_the_loop(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        calls: list[threading.Thread] = []
+
+        def fake_init_schema(url: str | None = None) -> None:
+            calls.append(threading.current_thread())
+
+        monkeypatch.setattr(postgres_pool, "init_schema", fake_init_schema)
+        monkeypatch.setattr(
+            postgres_pool, "_connection", lambda: _FakeConnection()
+        )
+
+        store = PostgresConversationStore()
+        loop_thread = threading.current_thread()
+
+        await store.create(Conversation(conversation_id="c", title="C"))
+        await store.get("c")
+        await store.list()
+        await store.append_job("c", "j", "q", "r")
+        await store.delete("c")
+
+        # All five methods bootstrapped the schema, and none did it
+        # on the event-loop thread.
+        assert len(calls) == 5
+        assert all(t is not loop_thread for t in calls)
+
+
+class TestAppendFailureIsLogged:
+    """ADR 0043: the runner suppresses append errors wholesale, so
+    the store logs at ERROR before the exception propagates —
+    otherwise a paid-for report disappears with no trace."""
+
+    async def test_append_error_logs_then_raises(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        def fake_init_schema(url: str | None = None) -> None:
+            return None
+
+        def broken_connection() -> Any:
+            raise RuntimeError("pool exploded")
+
+        monkeypatch.setattr(postgres_pool, "init_schema", fake_init_schema)
+        monkeypatch.setattr(postgres_pool, "_connection", broken_connection)
+
+        store = PostgresConversationStore()
+        with (
+            caplog.at_level(logging.ERROR, logger="src.api.conversations"),
+            pytest.raises(RuntimeError, match="pool exploded"),
+        ):
+            await store.append_job("c", "j1", "q", "r")
+
+        messages = [r.message for r in caplog.records]
+        assert "conversation_append_failed" in messages
 
 
 # ---------------------------------------------------------------------------
@@ -315,6 +608,38 @@ class TestConversationEndpoints:
             resp = await client.get("/conversations")
             assert resp.status_code == 200
             assert len(resp.json()) == 3
+
+    async def test_list_respects_limit_and_offset(self) -> None:
+        async for client in _client():
+            for i in range(3):
+                await client.post("/conversations", json={"title": f"T{i}"})
+            page1 = await client.get("/conversations", params={"limit": 2})
+            assert page1.status_code == 200
+            assert len(page1.json()) == 2
+            page2 = await client.get(
+                "/conversations", params={"limit": 2, "offset": 2}
+            )
+            assert page2.status_code == 200
+            assert len(page2.json()) == 1
+            # No overlap between consecutive pages.
+            ids1 = {c["conversation_id"] for c in page1.json()}
+            ids2 = {c["conversation_id"] for c in page2.json()}
+            assert not ids1 & ids2
+
+    async def test_list_limit_above_cap_is_422(self) -> None:
+        async for client in _client():
+            resp = await client.get("/conversations", params={"limit": 201})
+            assert resp.status_code == 422
+
+    async def test_list_limit_zero_is_422(self) -> None:
+        async for client in _client():
+            resp = await client.get("/conversations", params={"limit": 0})
+            assert resp.status_code == 422
+
+    async def test_list_negative_offset_is_422(self) -> None:
+        async for client in _client():
+            resp = await client.get("/conversations", params={"offset": -1})
+            assert resp.status_code == 422
 
     async def test_get_returns_404_for_missing(self) -> None:
         async for client in _client():

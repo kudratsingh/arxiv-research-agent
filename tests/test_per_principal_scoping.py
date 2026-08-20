@@ -202,6 +202,107 @@ async def test_list_conversations_filters_by_principal(
 
 
 @pytest.mark.asyncio
+async def test_pagination_composes_with_principal_scoping(
+    two_principal_client: httpx.AsyncClient,
+) -> None:
+    """ADR 0043: limit/offset count within the caller's own rows.
+    Alice paging through her conversations must never see Bob's, and
+    her pages must tile her own set exactly."""
+    client = two_principal_client
+
+    for title in ("alice 1", "alice 2", "alice 3"):
+        r = await client.post(
+            "/conversations",
+            json={"title": title},
+            headers={"X-API-Key": "sk_alice"},
+        )
+        assert r.status_code == 201
+    for title in ("bob 1", "bob 2", "bob 3"):
+        r = await client.post(
+            "/conversations",
+            json={"title": title},
+            headers={"X-API-Key": "sk_bob"},
+        )
+        assert r.status_code == 201
+
+    page1 = await client.get(
+        "/conversations",
+        params={"limit": 2},
+        headers={"X-API-Key": "sk_alice"},
+    )
+    assert page1.status_code == 200
+    assert len(page1.json()) == 2
+
+    page2 = await client.get(
+        "/conversations",
+        params={"limit": 2, "offset": 2},
+        headers={"X-API-Key": "sk_alice"},
+    )
+    assert page2.status_code == 200
+    assert len(page2.json()) == 1
+
+    paged_titles = [c["title"] for c in page1.json() + page2.json()]
+    # All of Alice's rows, none of Bob's, no duplicates across pages.
+    assert sorted(paged_titles) == ["alice 1", "alice 2", "alice 3"]
+
+
+@pytest.fixture
+async def throttled_client() -> AsyncIterator[httpx.AsyncClient]:
+    """Auth on, one key, and a 2-per-hour rate limit so the
+    conversation-create throttle is observable without loops."""
+    from src.api import app as app_module
+    from src.api import auth as auth_module
+    from src.config import Settings
+
+    overridden = Settings(
+        enable_api_auth=True,
+        api_keys="alice:sk_alice",
+        api_key_hourly_limit=2,
+    )
+    import pytest as _pytest
+
+    mp = _pytest.MonkeyPatch()
+    mp.setattr(app_module, "settings", overridden)
+    mp.setattr(auth_module, "settings", overridden)
+
+    app = create_app(
+        build_workflow=lambda: MagicMock(),
+        store=InMemoryJobStore(),
+    )
+    async with LifespanManager(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://test"
+        ) as client:
+            yield client
+
+    mp.undo()
+
+
+@pytest.mark.asyncio
+async def test_conversation_creation_is_rate_limited(
+    throttled_client: httpx.AsyncClient,
+) -> None:
+    """ADR 0043: `POST /conversations` is a durable write, so it
+    draws from the same per-key hourly budget as `/research` —
+    previously a leaked key could insert rows forever with the
+    limiter never firing."""
+    client = throttled_client
+    headers = {"X-API-Key": "sk_alice"}
+
+    for i in range(2):
+        r = await client.post(
+            "/conversations", json={"title": f"T{i}"}, headers=headers
+        )
+        assert r.status_code == 201
+
+    r = await client.post(
+        "/conversations", json={"title": "over quota"}, headers=headers
+    )
+    assert r.status_code == 429
+
+
+@pytest.mark.asyncio
 async def test_bob_cannot_start_a_job_in_alices_conversation(
     two_principal_client: httpx.AsyncClient,
 ) -> None:

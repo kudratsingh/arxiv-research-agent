@@ -17,6 +17,8 @@ from fastapi.responses import Response, StreamingResponse
 
 from src.api.auth import ApiKeyPrincipal, enforce_rate_limit, require_principal
 from src.api.conversations import (
+    DEFAULT_LIST_LIMIT,
+    MAX_LIST_LIMIT,
     Conversation,
     new_conversation_id,
 )
@@ -503,6 +505,11 @@ async def create_conversation(
     the presenting API key; other principals see 404 on
     read/delete. See ADR 0036.
     """
+    # ADR 0043: conversations are durable writes, so they draw from
+    # the same per-key hourly budget as `/research` submits. Without
+    # this, a leaked key could accrete unbounded rows on the shared
+    # Postgres with the limiter never firing. No-op under auth-off.
+    await enforce_rate_limit(request, principal)
     state = _get_state(request)
     conversation = Conversation(
         conversation_id=new_conversation_id(),
@@ -520,17 +527,34 @@ async def create_conversation(
 @router.get(
     "/conversations",
     response_model=list[ConversationListItem],
-    summary="List conversations, newest first (no job bodies).",
+    summary="List conversations, newest first (no job bodies), paginated.",
 )
 async def list_conversations(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
+    limit: int = Query(
+        DEFAULT_LIST_LIMIT,
+        ge=1,
+        le=MAX_LIST_LIMIT,
+        description="Page size — at most this many conversations come back.",
+    ),
+    offset: int = Query(
+        0,
+        ge=0,
+        description="Rows to skip, counted within the caller's own "
+        "conversations, newest first.",
+    ),
 ) -> list[ConversationListItem]:
     state = _get_state(request)
     # ADR 0036: scope the list to the caller's principal. Auth-off
-    # passes `None` and gets everything (legacy behavior).
+    # passes `None` and gets everything (legacy behavior). ADR 0043:
+    # limit/offset ride into the store so Postgres applies
+    # LIMIT/OFFSET in SQL instead of dragging the full table per
+    # sidebar load.
     conversations = await state["conversation_store"].list(
         principal_key_id=_principal_key_id(principal),
+        limit=limit,
+        offset=offset,
     )
     return [
         ConversationListItem(
@@ -578,21 +602,17 @@ async def delete_conversation(
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> Response:
     state = _get_state(request)
-    # ADR 0036: fetch first so we can verify ownership before the
-    # destructive call. Skipping the fetch would need a
-    # `delete_owned` primitive on every store; the extra round-trip
-    # is cheap and localizes the policy in the route layer.
-    conversation = await state["conversation_store"].get(conversation_id)
-    if conversation is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
-        )
-    _check_ownership(
-        conversation.principal_key_id,
-        principal,
-        detail="conversation_not_found",
+    # ADR 0043 (closes the ADR 0036 follow-up): ownership is inline
+    # in the store's DELETE — one statement instead of the old
+    # fetch + delete pair, so there's no window where the row
+    # changes hands between the check and the destructive call.
+    # `False` covers both "missing" and "not yours"; both map to
+    # the same 404 so the response never confirms the id exists
+    # (ADR 0036's 404-not-403 rule).
+    deleted = await state["conversation_store"].delete(
+        conversation_id,
+        principal_key_id=_principal_key_id(principal),
     )
-    deleted = await state["conversation_store"].delete(conversation_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
