@@ -361,6 +361,119 @@ async def test_alice_can_stream_her_own_conversation(
     assert r.status_code == 204
 
 
+# ---- Cross-principal job isolation ------------------------------------
+#
+# The audit flagged that no route-level test pinned job ownership:
+# the suite stayed green even if `submit_research` never stamped
+# `principal_key_id` on the Job. These tests close that gap. The
+# mutation check is the *positive* assertions — under auth-on an
+# unstamped job has `principal_key_id=None`, which `_check_ownership`
+# treats as invisible, so Alice's own 200s fail the moment the stamp
+# is dropped (Bob's 404s alone would stay green).
+
+
+async def _submit_job_as_alice(client: httpx.AsyncClient) -> str:
+    """Submit a job under Alice's key; return its job_id.
+
+    The stub workflow (a `MagicMock`) fails immediately inside the
+    runner — irrelevant here: the Job record persists in the store
+    with whatever `principal_key_id` the route stamped, which is
+    exactly what these tests interrogate.
+    """
+    r = await client.post(
+        "/research",
+        json={"query": "alice research", "hitl_bypass": True},
+        headers={"X-API-Key": "sk_alice"},
+    )
+    assert r.status_code == 202
+    job_id: str = r.json()["job_id"]
+    return job_id
+
+
+@pytest.mark.asyncio
+async def test_bob_cannot_get_alices_job(
+    two_principal_client: httpx.AsyncClient,
+) -> None:
+    client = two_principal_client
+    job_id = await _submit_job_as_alice(client)
+
+    # Alice sees her job — proves the route stamped her key_id on it.
+    r = await client.get(
+        f"/research/{job_id}", headers={"X-API-Key": "sk_alice"}
+    )
+    assert r.status_code == 200
+    assert r.json()["query"] == "alice research"
+
+    # Bob gets 404, indistinguishable from a nonexistent id.
+    r = await client.get(
+        f"/research/{job_id}", headers={"X-API-Key": "sk_bob"}
+    )
+    assert r.status_code == 404
+    assert r.json()["detail"] == "job_not_found"
+
+
+@pytest.mark.asyncio
+async def test_bob_cannot_stream_alices_job(
+    two_principal_client: httpx.AsyncClient,
+) -> None:
+    client = two_principal_client
+    job_id = await _submit_job_as_alice(client)
+
+    r = await client.get(
+        f"/research/{job_id}/stream", headers={"X-API-Key": "sk_bob"}
+    )
+    assert r.status_code == 404
+    assert r.json()["detail"] == "job_not_found"
+
+    # Alice can open the stream on her own job.
+    r = await client.get(
+        f"/research/{job_id}/stream", headers={"X-API-Key": "sk_alice"}
+    )
+    assert r.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_bob_cannot_review_alices_job(
+    two_principal_client: httpx.AsyncClient,
+) -> None:
+    client = two_principal_client
+    job_id = await _submit_job_as_alice(client)
+
+    r = await client.post(
+        f"/research/{job_id}/review",
+        json={"action": "approve"},
+        headers={"X-API-Key": "sk_bob"},
+    )
+    assert r.status_code == 404
+    assert r.json()["detail"] == "job_not_found"
+
+    # Alice reaches past the ownership check — the stub job is not in
+    # `pending_review`, so she gets the state conflict, never a 404.
+    # That distinction is the point: ownership is checked before the
+    # review-state machine, and only for the non-owner.
+    r = await client.post(
+        f"/research/{job_id}/review",
+        json={"action": "approve"},
+        headers={"X-API-Key": "sk_alice"},
+    )
+    assert r.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_bob_cannot_export_alices_job(
+    two_principal_client: httpx.AsyncClient,
+) -> None:
+    client = two_principal_client
+    job_id = await _submit_job_as_alice(client)
+
+    r = await client.get(
+        f"/research/{job_id}/export?format=md",
+        headers={"X-API-Key": "sk_bob"},
+    )
+    assert r.status_code == 404
+    assert r.json()["detail"] == "job_not_found"
+
+
 # ---- Auth-off backward compat ----------------------------------------
 
 
