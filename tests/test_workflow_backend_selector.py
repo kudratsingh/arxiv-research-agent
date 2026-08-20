@@ -265,10 +265,17 @@ class TestAsyncOpenCheckpointer:
     async def test_unknown_backend_raises(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        """ADR 0046 made `checkpoint_backend` a Literal, so a real
+        `Settings` can no longer carry an unknown value (pinned in
+        test_config.py). The raise here is defense-in-depth for
+        direct callers that bypass settings — reach it with a
+        namespace stub, mirroring the sync variant above."""
+        from types import SimpleNamespace
+
         monkeypatch.setattr(
             workflow_module,
             "settings",
-            Settings(
+            SimpleNamespace(
                 enable_checkpointing=True,
                 checkpoint_backend="mysql",
             ),
