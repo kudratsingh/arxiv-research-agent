@@ -23,9 +23,22 @@ See ADR 0011 for the design rationale (pydantic-settings vs alternatives).
 different values should either (a) construct a new `Settings(...)`
 inline and monkeypatch the module-level `settings` attribute, or (b)
 set env vars via `monkeypatch.setenv` before importing.
+
+## Enum-valued fields are `Literal`, not `str`
+
+Every field that selects one of a closed set of implementations
+(`job_store`, `conversation_store`, `checkpoint_backend`,
+`rate_limit_backend`, `paper_cache`, `embedding_cache`, `log_level`)
+is typed `Literal[...]` so a typo'd env var dies at settings load
+with pydantic's "unexpected value" message instead of silently
+selecting a downstream fallback. See ADR 0046.
 """
 
-from pydantic import Field, model_validator
+from __future__ import annotations
+
+from typing import Any, Literal
+
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -112,10 +125,26 @@ class Settings(BaseSettings):
     )
 
     # ------ Logging ----------------------------------------------------
-    log_level: str = Field(
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO",
-        description="Standard-library logging level name (DEBUG/INFO/WARNING/ERROR)",
+        description=(
+            "Standard-library logging level name. Literal so a typo "
+            "(`LOG_LEVEL=DEBG`) fails at settings load instead of "
+            "surfacing as a `logging` error at first emission. See "
+            "ADR 0046."
+        ),
     )
+
+    @field_validator("log_level", mode="before")
+    @classmethod
+    def _normalize_log_level(cls, value: Any) -> Any:
+        """Uppercase before Literal validation.
+
+        `LOG_LEVEL=debug` has always worked because the logging setup
+        calls `.upper()` at use; keep that contract now that the field
+        is a case-sensitive `Literal`.
+        """
+        return value.upper() if isinstance(value, str) else value
 
     # ------ HTTP retry (arXiv API + PDF downloads) ---------------------
     http_max_retries: int = Field(
@@ -173,15 +202,17 @@ class Settings(BaseSettings):
             "`rate_limit_backend=redis`; per-worker under `memory`."
         ),
     )
-    rate_limit_backend: str = Field(
+    rate_limit_backend: Literal["memory", "redis"] = Field(
         default="memory",
         description=(
             "Backend for the per-key rate limiter. `memory` (default) "
             "is single-process — under multi-worker uvicorn the "
             "effective limit becomes `api_key_hourly_limit * n_workers`. "
             "`redis` uses a shared ZSET on `ratelimit:{key_id}`; "
-            "requires `redis_url` (usually alongside `job_store=redis`). "
-            "See ADR 0037."
+            "requires `job_store=redis` — the limiter reuses the "
+            "RedisJobStore's client rather than opening a second pool "
+            "from `redis_url`, and startup fails without one. See "
+            "ADR 0037."
         ),
     )
     api_keys_file: str = Field(
@@ -309,7 +340,7 @@ class Settings(BaseSettings):
             "workflow's own wall-clock (not the human's decision time)."
         ),
     )
-    job_store: str = Field(
+    job_store: Literal["memory", "redis"] = Field(
         default="memory",
         description=(
             "Which JobStore implementation the API uses. `memory` = "
@@ -402,7 +433,7 @@ class Settings(BaseSettings):
             "`postgresql://arxiv:arxiv@postgres:5432/arxiv`."
         ),
     )
-    paper_cache: str = Field(
+    paper_cache: Literal["disk", "postgres"] = Field(
         default="disk",
         description=(
             "PaperCache implementation. `disk` (default) = "
@@ -410,7 +441,7 @@ class Settings(BaseSettings):
             "PostgresPaperCache backed by `postgres_url`. See ADR 0028."
         ),
     )
-    embedding_cache: str = Field(
+    embedding_cache: Literal["none", "postgres"] = Field(
         default="none",
         description=(
             "EmbeddingCache implementation. `none` (default) preserves "
@@ -420,7 +451,7 @@ class Settings(BaseSettings):
             "See ADR 0028."
         ),
     )
-    conversation_store: str = Field(
+    conversation_store: Literal["memory", "postgres"] = Field(
         default="memory",
         description=(
             "ConversationStore implementation. `memory` = in-process "
@@ -448,7 +479,7 @@ class Settings(BaseSettings):
         default=True,
         description="Persist LangGraph state for interrupt/resume",
     )
-    checkpoint_backend: str = Field(
+    checkpoint_backend: Literal["sqlite", "postgres"] = Field(
         default="sqlite",
         description=(
             "Backend for LangGraph checkpoints. `sqlite` uses "
@@ -698,7 +729,7 @@ class Settings(BaseSettings):
 
 
     @model_validator(mode="after")
-    def _check_lease_invariant(self) -> "Settings":
+    def _check_lease_invariant(self) -> Settings:
         """Reject a lease TTL a refresh cycle cannot keep alive.
 
         `job_lease_refresh_sec`'s own description promises that "two

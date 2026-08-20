@@ -22,7 +22,18 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from src.observability import get_logger
+
+log = get_logger(__name__)
+
 MAX_TITLE_LEN = 80
+
+# Pagination contract (ADR 0043): the route layer defaults to
+# DEFAULT_LIST_LIMIT and caps the client-supplied limit at
+# MAX_LIST_LIMIT. The store honors whatever it's handed — clamping
+# is a route-layer concern so stores stay dumb.
+DEFAULT_LIST_LIMIT = 50
+MAX_LIST_LIMIT = 200
 
 
 def new_conversation_id() -> str:
@@ -80,7 +91,11 @@ class ConversationStore(Protocol):
     async def get(self, conversation_id: str) -> Conversation | None: ...
 
     async def list(
-        self, principal_key_id: str | None = None
+        self,
+        principal_key_id: str | None = None,
+        *,
+        limit: int = DEFAULT_LIST_LIMIT,
+        offset: int = 0,
     ) -> list[Conversation]: ...
 
     async def append_job(
@@ -91,7 +106,11 @@ class ConversationStore(Protocol):
         report: str,
     ) -> ConversationJob | None: ...
 
-    async def delete(self, conversation_id: str) -> bool: ...
+    async def delete(
+        self,
+        conversation_id: str,
+        principal_key_id: str | None = None,
+    ) -> bool: ...
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +132,11 @@ class InMemoryConversationStore:
             return self._conversations.get(conversation_id)
 
     async def list(
-        self, principal_key_id: str | None = None
+        self,
+        principal_key_id: str | None = None,
+        *,
+        limit: int = DEFAULT_LIST_LIMIT,
+        offset: int = 0,
     ) -> list[Conversation]:
         async with self._lock:
             # ADR 0036: under auth-on the caller's principal is
@@ -126,8 +149,10 @@ class InMemoryConversationStore:
                 return c.principal_key_id == principal_key_id
 
             # Sort most-recent-first so the sidebar's top item is the
-            # active conversation.
-            return sorted(
+            # active conversation. `conversation_id` tie-breaks equal
+            # timestamps so pages are stable across requests — same
+            # ORDER BY as the Postgres store (ADR 0043).
+            ordered = sorted(
                 (
                     Conversation(
                         conversation_id=c.conversation_id,
@@ -140,9 +165,12 @@ class InMemoryConversationStore:
                     for c in self._conversations.values()
                     if _visible(c)
                 ),
-                key=lambda c: c.updated_at,
-                reverse=True,
+                key=lambda c: (-c.updated_at, c.conversation_id),
             )
+            # ADR 0043: paginate after the scoping filter so offset
+            # counts the caller's own rows, mirroring SQL
+            # WHERE ... ORDER BY ... LIMIT/OFFSET semantics.
+            return ordered[offset : offset + limit]
 
     async def append_job(
         self,
@@ -155,9 +183,12 @@ class InMemoryConversationStore:
             conversation = self._conversations.get(conversation_id)
             if conversation is None:
                 return None
+            # ADR 0043: MAX(ordinal)+1 rather than len()+1, mirroring
+            # the Postgres store's allocation so the two impls stay
+            # behaviorally identical even if jobs are ever removed.
             job = ConversationJob(
                 job_id=job_id,
-                ordinal=len(conversation.jobs) + 1,
+                ordinal=max((j.ordinal for j in conversation.jobs), default=0) + 1,
                 query=query,
                 report=report,
             )
@@ -165,9 +196,27 @@ class InMemoryConversationStore:
             conversation.updated_at = time.time()
             return job
 
-    async def delete(self, conversation_id: str) -> bool:
+    async def delete(
+        self,
+        conversation_id: str,
+        principal_key_id: str | None = None,
+    ) -> bool:
         async with self._lock:
-            return self._conversations.pop(conversation_id, None) is not None
+            conversation = self._conversations.get(conversation_id)
+            if conversation is None:
+                return False
+            # ADR 0043: ownership rides inside the delete itself.
+            # `principal_key_id=None` means unscoped (auth-off);
+            # under auth-on a mismatch — including legacy rows whose
+            # owner is None — reports False, which the route maps to
+            # the same 404 a missing id gets (ADR 0036).
+            if (
+                principal_key_id is not None
+                and conversation.principal_key_id != principal_key_id
+            ):
+                return False
+            del self._conversations[conversation_id]
+            return True
 
 
 # ---------------------------------------------------------------------------
@@ -180,14 +229,22 @@ class PostgresConversationStore:
     from `postgres_pool`. Read/write operations run under the pool's
     connection context; no local caching (unlike `RedisJobStore`,
     which keeps a worker-local dict for live-queue affinity — that
-    concern doesn't apply to conversations)."""
+    concern doesn't apply to conversations).
+
+    Every `_run` closure below opens with `init_schema()` so the
+    bootstrap DDL — pool open included — executes on the
+    `asyncio.to_thread` worker, never on the event loop.
+    `init_schema` carries its own process-wide once-guard, so calls
+    after the first are a boolean check (ADR 0043; previously the
+    call sat on the loop and a slow `pool.open(wait=True)` froze
+    every in-flight request, SSE heartbeats included).
+    """
 
     async def create(self, conversation: Conversation) -> None:
         from src.tools.postgres_pool import _connection, init_schema
 
-        init_schema()
-
         def _run() -> None:
+            init_schema()
             with _connection() as conn, conn.cursor() as cur:
                 cur.execute(
                     """
@@ -208,9 +265,8 @@ class PostgresConversationStore:
     async def get(self, conversation_id: str) -> Conversation | None:
         from src.tools.postgres_pool import _connection, init_schema
 
-        init_schema()
-
         def _run() -> Conversation | None:
+            init_schema()
             with _connection() as conn, conn.cursor() as cur:
                 cur.execute(
                     """
@@ -258,11 +314,13 @@ class PostgresConversationStore:
         return await asyncio.to_thread(_run)
 
     async def list(
-        self, principal_key_id: str | None = None
+        self,
+        principal_key_id: str | None = None,
+        *,
+        limit: int = DEFAULT_LIST_LIMIT,
+        offset: int = 0,
     ) -> list[Conversation]:
         from src.tools.postgres_pool import _connection, init_schema
-
-        init_schema()
 
         # ADR 0036: push the principal filter into SQL so scaled
         # deployments don't paginate through other tenants' rows.
@@ -274,8 +332,14 @@ class PostgresConversationStore:
         if principal_key_id is not None:
             where_clause = "WHERE principal_key_id = %s"
             params = (principal_key_id,)
+        # ADR 0043: LIMIT/OFFSET in SQL so a 10k-conversation tenant
+        # never drags the full table over the wire per sidebar load.
+        # `conversation_id` tie-breaks equal `updated_at` values so
+        # consecutive pages don't overlap or skip rows.
+        params = (*params, limit, offset)
 
         def _run() -> list[Conversation]:
+            init_schema()
             with _connection() as conn, conn.cursor() as cur:
                 cur.execute(
                     f"""
@@ -283,7 +347,8 @@ class PostgresConversationStore:
                            principal_key_id
                     FROM conversations
                     {where_clause}
-                    ORDER BY updated_at DESC
+                    ORDER BY updated_at DESC, conversation_id
+                    LIMIT %s OFFSET %s
                     """,
                     params,
                 )
@@ -310,41 +375,47 @@ class PostgresConversationStore:
     ) -> ConversationJob | None:
         from src.tools.postgres_pool import _connection, init_schema
 
-        init_schema()
-
         def _run() -> ConversationJob | None:
+            init_schema()
             with _connection() as conn, conn.cursor() as cur:
-                # Guard the FK: if the conversation is missing return
-                # None so the caller can 404 (matches the in-memory
-                # store's behavior).
+                # Guard the FK and serialize concurrent appends in
+                # one step: `FOR UPDATE` locks the parent row for the
+                # rest of the transaction, so two appends to the same
+                # conversation queue here instead of both computing
+                # the same MAX(ordinal) and colliding on the primary
+                # key (ADR 0043). A missing conversation still
+                # returns None so the caller can 404 (matches the
+                # in-memory store's behavior).
                 cur.execute(
-                    "SELECT 1 FROM conversations WHERE conversation_id = %s",
+                    """
+                    SELECT 1 FROM conversations
+                    WHERE conversation_id = %s
+                    FOR UPDATE
+                    """,
                     (conversation_id,),
                 )
                 if cur.fetchone() is None:
                     return None
-                cur.execute(
-                    """
-                    SELECT COALESCE(MAX(ordinal), 0) + 1
-                    FROM conversation_jobs
-                    WHERE conversation_id = %s
-                    """,
-                    (conversation_id,),
-                )
-                next_ordinal_row = cur.fetchone()
-                next_ordinal = int(next_ordinal_row[0]) if next_ordinal_row else 1
+                # Ordinal allocation and insert as one statement —
+                # no read-modify-write gap even without the row lock
+                # above (belt and braces, ADR 0043).
                 cur.execute(
                     """
                     INSERT INTO conversation_jobs
                         (conversation_id, job_id, ordinal, query, report)
-                    VALUES (%s, %s, %s, %s, %s)
-                    RETURNING created_at
+                    SELECT %s, %s, COALESCE(MAX(ordinal), 0) + 1, %s, %s
+                    FROM conversation_jobs
+                    WHERE conversation_id = %s
+                    RETURNING ordinal, created_at
                     """,
-                    (conversation_id, job_id, next_ordinal, query, report),
+                    (conversation_id, job_id, query, report, conversation_id),
                 )
-                created_row = cur.fetchone()
+                inserted_row = cur.fetchone()
+                next_ordinal = int(inserted_row[0]) if inserted_row else 1
                 created_at = (
-                    created_row[0].timestamp() if created_row else time.time()
+                    inserted_row[1].timestamp()
+                    if inserted_row and inserted_row[1]
+                    else time.time()
                 )
                 cur.execute(
                     """
@@ -363,19 +434,48 @@ class PostgresConversationStore:
                     created_at=created_at,
                 )
 
-        return await asyncio.to_thread(_run)
+        try:
+            return await asyncio.to_thread(_run)
+        except Exception:
+            # ADR 0043: the runner wraps this call in a blanket
+            # suppress, so without a log line here a failed append —
+            # a fully paid-for report — vanishes without trace. Log
+            # at ERROR before propagating; visibility must live in
+            # the store because the caller's suppress is upstream.
+            log.exception(
+                "conversation_append_failed",
+                extra={
+                    "conversation_id": conversation_id,
+                    "job_id": job_id,
+                },
+            )
+            raise
 
-    async def delete(self, conversation_id: str) -> bool:
+    async def delete(
+        self,
+        conversation_id: str,
+        principal_key_id: str | None = None,
+    ) -> bool:
         from src.tools.postgres_pool import _connection, init_schema
 
-        init_schema()
+        # ADR 0043 (ADR 0036 follow-up): ownership rides inside the
+        # DELETE itself — one statement, no fetch-then-delete pair.
+        # `principal_key_id = %s` never matches a NULL owner, so
+        # legacy rows stay untouchable under auth-on, and a mismatch
+        # is indistinguishable from a missing id (False → 404).
+        where_clause = "WHERE conversation_id = %s"
+        params: tuple[Any, ...] = (conversation_id,)
+        if principal_key_id is not None:
+            where_clause += " AND principal_key_id = %s"
+            params = (conversation_id, principal_key_id)
 
         def _run() -> bool:
+            init_schema()
             with _connection() as conn, conn.cursor() as cur:
                 # ON DELETE CASCADE handles conversation_jobs cleanup.
                 cur.execute(
-                    "DELETE FROM conversations WHERE conversation_id = %s",
-                    (conversation_id,),
+                    f"DELETE FROM conversations {where_clause}",
+                    params,
                 )
                 # `rowcount` on psycopg's cursor is typed loosely;
                 # coerce to bool so mypy strict is happy.
@@ -416,7 +516,9 @@ __all__ = [
     "Conversation",
     "ConversationJob",
     "ConversationStore",
+    "DEFAULT_LIST_LIMIT",
     "InMemoryConversationStore",
+    "MAX_LIST_LIMIT",
     "MAX_TITLE_LEN",
     "PostgresConversationStore",
     "build_conversation_store",

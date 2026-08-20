@@ -81,7 +81,10 @@ prompt do the work.
 
 | Failure | Where | Handling |
 |---|---|---|
-| Anthropic 429 / other exception | `call_llm_json` | Propagates. Synthesizer intentionally doesn't retry above the SDK layer (ADR 0009). |
+| Unparseable JSON, non-object JSON, or empty `draft_report` (typically `max_tokens` truncation) | `_call_with_one_retry` | Retried exactly once with a corrective "return only the JSON object" nudge — one cheap call can rescue the whole already-billed run (ADR 0041). The output cap is 8192 (was 4096, which left no margin over a full report's ~3000-3300 tokens and made truncation deterministic). |
+| Retry also unusable | `_call_with_one_retry` | Raises the typed `SynthesizerOutputError`, so the job's `error_type` names the real failure instead of a generic `JSONDecodeError`. The report is the product; there is no honest fallback for it. |
+| Malformed `citations` entries | `_parse_citations` | Individually dropped with a WARNING; a thinner citation list is still a real report, and the verifier/critic flag citation gaps downstream. |
+| Anthropic 429 / other transport exception | `call_llm_json` | Propagates. Synthesizer intentionally doesn't retry transport errors above the SDK layer (ADR 0009); the single ADR 0041 retry targets only *format* failures the SDK can't see. |
 | `EvidenceClaim.supports_question` doesn't match a planner sub-question | Reader `_parse_claim` | Already cleared to `""` at emission time, so it lands under "Unassigned excerpts" here. |
 | Evidence bank silent on a sub-question | Prompt design | LLM instructed to add it to "Open Questions" rather than fabricate coverage. |
 | Report cites a paper not in `state.papers` | Downstream | Caught by the citation-accuracy metric (offline) and the verifier's `missing_evidence` (online). |
