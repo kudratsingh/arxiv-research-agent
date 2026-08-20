@@ -22,7 +22,6 @@ from src.api.conversations import (
 )
 from src.api.exporters import EXPORTERS
 from src.api.jobs import (
-    InMemoryJobStore,
     Job,
     JobStatus,
     drain_events,
@@ -46,6 +45,7 @@ from src.api.streaming import (
     format_heartbeat,
     format_sse,
 )
+from src.config import settings
 from src.observability import get_logger
 
 log = get_logger(__name__)
@@ -277,10 +277,26 @@ async def review_plan(
     # on a different worker wakes up. Same-worker resumes still take
     # the local Event fast-path below. `publish_remote_resume` is
     # optional on the store Protocol — in-memory stores skip it.
+    #
+    # ADR 0042: a failed publish must be LOUD. Under multi-worker
+    # uvicorn this publish is the only mechanism that wakes a runner
+    # parked on another worker; when it's lost, the review still
+    # returns 200 but the job dies ~30 minutes later on
+    # `hitl_timeout` with nothing connecting the two events. We keep
+    # the 200 (the same-worker path already resumed via the local
+    # Event below, and the decision is durably persisted on the job
+    # row) but log at ERROR with the job_id so the incident timeline
+    # has the dropped publish in it.
     publish = getattr(state["store"], "publish_remote_resume", None)
     if callable(publish):
-        with contextlib.suppress(Exception):
+        try:
             await publish(job.job_id, body.action, job.resume_plan)
+        except Exception:
+            log.error(
+                "hitl_resume_publish_failed",
+                exc_info=True,
+                extra={"job_id": job.job_id, "action": body.action},
+            )
 
     # Same-worker wake-up. The runner is `await`ing on this Event
     # inside `_handle_hitl_pause`. When the review lands on the same
@@ -623,26 +639,93 @@ def _conversation_to_detail(conversation: Conversation) -> ConversationDetail:
     )
 
 
+# Dependency pings must be fast — /healthz is polled every 15s by
+# the compose healthcheck and must never wedge the probe behind a
+# slow backend. 2s leaves headroom inside the probe's 3s timeout.
+_HEALTHZ_PING_TIMEOUT_SEC = 2.0
+
+
+async def _redis_status(store: Any) -> str | None:
+    """Ping the store's Redis client, if it has one.
+
+    Duck-typed on `_client` — the same coupling `create_app` uses to
+    share the client with the rate limiter (ADR 0037 follow-up will
+    make it a public property). Returns `None` for stores with no
+    Redis behind them (in-memory), so the dependency simply doesn't
+    appear in the health payload.
+    """
+    client = getattr(store, "_client", None)
+    ping = getattr(client, "ping", None)
+    if not callable(ping):
+        return None
+    try:
+        await asyncio.wait_for(ping(), timeout=_HEALTHZ_PING_TIMEOUT_SEC)
+        return "ok"
+    except Exception as exc:  # noqa: BLE001 - report, never raise
+        return f"error: {type(exc).__name__}"
+
+
+async def _postgres_status() -> str:
+    """`SELECT 1` through the shared pool, bounded.
+
+    Runs in a thread because the psycopg pool is sync (ADR 0028).
+    `wait_for` abandons (not cancels) a stuck thread — acceptable:
+    the probe stays bounded and the thread dies with its connection
+    timeout.
+    """
+
+    def _ping() -> None:
+        from src.tools import postgres_pool
+
+        with postgres_pool.get_pool().connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT 1")
+
+    try:
+        await asyncio.wait_for(
+            asyncio.to_thread(_ping), timeout=_HEALTHZ_PING_TIMEOUT_SEC
+        )
+        return "ok"
+    except Exception as exc:  # noqa: BLE001 - report, never raise
+        return f"error: {type(exc).__name__}"
+
+
 @router.get(
     "/healthz",
     response_model=HealthResponse,
-    summary="Liveness + concurrency headroom.",
+    summary="Liveness + dependency status + per-worker concurrency.",
 )
 async def healthz(request: Request) -> HealthResponse:
+    """Process liveness plus an honest dependency report (ADR 0042).
+
+    Deliberately auth-exempt (orchestrator probes can't send keys)
+    and always HTTP 200: this endpoint answers "is THIS process
+    alive", and restarting the process does not fix a dead Redis —
+    a probe that 503s on dependency failure turns a backend blip
+    into a rolling-restart storm. Dependency state is reported in
+    the body (`status: degraded` + per-dependency breakdown) so
+    operators and smarter probes can see it.
+
+    `active_jobs` counts this worker's in-flight job tasks (queued +
+    running) — store-independent, so it no longer reports a constant
+    0 under the shipped Redis store.
+    """
     state = _get_state(request)
-    store = state["store"]
-    # Best-effort — the InMemoryJobStore exposes `all_jobs`; a Redis
-    # store may not, so we tolerate the shape.
-    active = 0
-    if isinstance(store, InMemoryJobStore):
-        jobs = await store.all_jobs()
-        active = sum(
-            1 for j in jobs if j.status in (JobStatus.pending, JobStatus.running)
-        )
+    dependencies: dict[str, str] = {}
+
+    redis_status = await _redis_status(state["store"])
+    if redis_status is not None:
+        dependencies["redis"] = redis_status
+    # Only ping Postgres when the deployment configures it — the
+    # in-memory demo path has no pool to check.
+    if settings.postgres_url:
+        dependencies["postgres"] = await _postgres_status()
+
+    degraded = any(v != "ok" for v in dependencies.values())
     return HealthResponse(
-        status="ok",
-        active_jobs=active,
+        status="degraded" if degraded else "ok",
+        active_jobs=len(state["tasks"]),
         max_concurrent_jobs=state["max_concurrent_jobs"],
+        dependencies=dependencies,
     )
 
 

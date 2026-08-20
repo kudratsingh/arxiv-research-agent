@@ -85,6 +85,12 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0042](0042-api-guardrails-and-deploy-hygiene.md) — API
+  guardrails + deploy hygiene: bounded HITL plan lists, bytes-safe
+  key comparison, honest dependency-checking `/healthz`, logged
+  resume-publish failures, bounded SIGTERM drain, credential
+  redaction in logs, compose CORS + bootable auth. Follows
+  ADR 0033/0034.
 
 ## When to write an ADR
 

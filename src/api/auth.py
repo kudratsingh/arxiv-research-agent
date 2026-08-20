@@ -64,9 +64,13 @@ def parse_api_keys(raw: str) -> dict[str, ApiKeyPrincipal]:
     each element is stripped. Empty entries are ignored so a trailing
     comma is harmless. Duplicate secrets raise `ValueError` — a silent
     overwrite would mask a misconfiguration where two clients
-    accidentally share a key.
+    accidentally share a key. Duplicate names raise too (ADR 0042):
+    the name is what `principal_key_id` rows are stamped with under
+    ADR 0036, so two secrets sharing a name would silently merge two
+    tenants' data.
     """
     keys: dict[str, ApiKeyPrincipal] = {}
+    seen_names: set[str] = set()
     for chunk in raw.split(","):
         entry = chunk.strip()
         if not entry:
@@ -86,6 +90,11 @@ def parse_api_keys(raw: str) -> dict[str, ApiKeyPrincipal]:
             raise ValueError(
                 f"api_keys contains duplicate secret for principal {name!r}"
             )
+        if name in seen_names:
+            raise ValueError(
+                f"api_keys contains duplicate principal name {name!r}"
+            )
+        seen_names.add(name)
         keys[secret] = ApiKeyPrincipal(key_id=name)
     return keys
 
@@ -99,9 +108,24 @@ def _lookup_principal(
     which prefix matched. Compare every configured secret with
     `hmac.compare_digest` and return the first match.
     """
+    # Compare bytes, not str: `hmac.compare_digest` raises TypeError
+    # on non-ASCII str operands, and Starlette decodes header values
+    # as latin-1 — so a single byte >= 0x80 in `X-API-Key` would
+    # otherwise turn into an unauthenticated 500 instead of the 401
+    # every other bad-key path returns (ADR 0042). Encoding the
+    # presented value back to latin-1 recovers the exact wire bytes;
+    # configured secrets are utf-8, matching what a well-behaved
+    # client sends for a non-ASCII secret.
+    try:
+        presented_bytes = presented.encode("latin-1")
+    except UnicodeEncodeError:
+        # Not reachable via HTTP (headers arrive latin-1-decoded);
+        # a direct caller handed us something no wire request can
+        # produce, which can't match any configured secret.
+        return None
     match: ApiKeyPrincipal | None = None
     for secret, principal in keystore.items():
-        if hmac.compare_digest(secret, presented):
+        if hmac.compare_digest(secret.encode("utf-8"), presented_bytes):
             # Don't return early — keep the comparison loop uniform
             # across all keys so timing stays constant.
             match = principal
@@ -285,13 +309,28 @@ def load_keystore_from_file(
 
         {"internal": "sk_a123", "partner": "sk_b456"}
 
-    Same duplicate-secret + empty-value validation as
-    `parse_api_keys`. Errors raise `ValueError` with the path in
-    the message so log grep pinpoints the bad file.
+    Same duplicate-secret + duplicate-name + empty-value validation
+    as `parse_api_keys`. Duplicate names need an `object_pairs_hook`
+    because `json.loads` silently keeps the last value for a repeated
+    key — exactly the silent overwrite the check exists to prevent.
+    Errors raise `ValueError` with the path in the message so log
+    grep pinpoints the bad file.
     """
     text = Path(path).read_text(encoding="utf-8")
+
+    def _object_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        obj: dict[str, Any] = {}
+        for pair_key, pair_value in pairs:
+            if pair_key in obj:
+                raise ValueError(
+                    f"api_keys_file {str(path)!r}: duplicate principal "
+                    f"name {pair_key!r}"
+                )
+            obj[pair_key] = pair_value
+        return obj
+
     try:
-        raw = json.loads(text)
+        raw = json.loads(text, object_pairs_hook=_object_pairs)
     except json.JSONDecodeError as exc:
         raise ValueError(
             f"api_keys_file {str(path)!r} is not valid JSON: {exc}"
