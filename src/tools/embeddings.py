@@ -11,23 +11,41 @@ Under the default `"none"`, every call re-encodes — Sprint 1
 behavior byte-identical.
 """
 
+from __future__ import annotations
+
 import contextlib
+import threading
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from src.graph.state import PaperMetadata
+from src.observability import get_logger
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
+log = get_logger(__name__)
+
 _model: SentenceTransformer | None = None
+# Double-checked locking, same pattern as `postgres_pool.get_pool` —
+# the reader's ThreadPoolExecutor and concurrent jobs' search nodes can
+# all hit a cold `_get_model()` simultaneously, and without the lock
+# each would load its own ~90MB SentenceTransformer.
+_model_lock = threading.Lock()
 
 
 def _get_model() -> SentenceTransformer:
-    """Lazy-load the sentence transformer model (module-level singleton)."""
+    """Lazy-load the sentence transformer model (module-level singleton).
+
+    Thread-safe: the unlocked fast path serves the common case, and the
+    re-check inside the lock guarantees exactly one construction under
+    concurrent first-callers.
+    """
     global _model
     if _model is None:
-        _model = SentenceTransformer(MODEL_NAME)
+        with _model_lock:
+            if _model is None:
+                _model = SentenceTransformer(MODEL_NAME)
     return _model
 
 
@@ -68,7 +86,20 @@ def encode_texts(texts: list[str]) -> np.ndarray:
 
     cache = get_embedding_cache()
     hashes = [content_hash(t) for t in texts]
-    hits = cache.get_many(hashes, MODEL_NAME)
+    # The cache is an optimization, never a dependency: a backend
+    # failure (pool timeout, Postgres restart) degrades to a full
+    # recompute instead of failing the caller's node and job. Mirrors
+    # the already-guarded write path below — ADR 0028's "degrades to
+    # recompute, only shows up in the logs" consequence, made true on
+    # the read side too (ADR 0041).
+    hits: dict[str, np.ndarray] = {}
+    try:
+        hits = cache.get_many(hashes, MODEL_NAME)
+    except Exception as exc:
+        log.warning(
+            "embedding_cache_get_failed",
+            extra={"n_texts": len(texts), "error": str(exc)},
+        )
 
     if len(hits) == len(texts):
         # Full-hit fast path — no MiniLM invocation, no put.

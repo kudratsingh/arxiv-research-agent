@@ -276,3 +276,16 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   in docs/security.md. Deferred, tracked there: body-size cap,
   `/readyz`, conversation rate limit, owner-id migration, cache
   purge command, web-UI key proxy.
+- _2026-08-20_ — Retrieval and degradation honesty (ADR 0041),
+  from the audit remediation. Mock papers now served only under
+  `use_mock_data`; an empty live search raises
+  `ArxivUnavailableError` / `NoPapersFoundError` instead of
+  fabricating sources. Cache READ paths degrade to recompute
+  (closing the ADR 0028 gap), one malformed LLM response degrades
+  one paper / triggers one synthesizer retry instead of failing
+  the run, S2 lookups strip the arXiv version suffix (enrichment
+  was a silent 100% no-op), dedup keys canonicalized across
+  sources, PDF fetches get an SSRF destination guard with per-hop
+  redirect validation. Remaining follow-ups: IP-pinning fetch
+  adapter for DNS rebinding, model-weights bake + readiness
+  probe, per-node degradation counts on the job record.
