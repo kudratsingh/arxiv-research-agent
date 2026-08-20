@@ -1,7 +1,15 @@
 # Multi-Agent Research Assistant for ML/AI Papers
 
 ## Project Overview
-A multi-agent system that takes a natural language research question about ML/AI, searches arXiv for relevant papers, extracts key findings, synthesizes a research briefing, and self-critiques for quality — orchestrated via LangGraph with Claude as the reasoning engine.
+A multi-agent system that takes a natural language research question
+about ML/AI, searches arXiv (optionally enriched via Semantic Scholar's
+citation graph), extracts key findings from paper full text, synthesizes
+a research briefing, and self-critiques for quality — orchestrated via
+LangGraph with Claude as the reasoning engine. The workflow ships behind
+a production HTTP surface: an async FastAPI job API with SSE streaming,
+human-in-the-loop plan review, API-key auth with per-principal scoping,
+multi-format export, conversation mode, and a Next.js web UI — all
+deployable via Docker Compose with Redis + Postgres backends.
 
 ## Documentation
 
@@ -23,239 +31,179 @@ Documentation requirements:
   `docs/decisions/` (format: `docs/decisions/TEMPLATE.md`).
 - Every agent gets a page in `docs/agents/<name>.md` covering inputs,
   outputs, prompt design, and known failure modes.
-- Every phase deliverable is tracked in `docs/roadmap.md`.
+- Every phase deliverable is tracked in
+  [`planning/03-roadmap.md`](planning/03-roadmap.md) — the single
+  source of truth for sprint status.
 - Every non-trivial change updates the relevant doc in the **same PR**.
   Doc drift is a bug — the reviewer should request updates if a diff
   changes behavior without changing docs.
+- Docs describe `main` as it is. Planned work is labelled as planned.
+
+### Docs Map
+
+| Doc | What it covers |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | The two workflow shapes, the API layer, the storage matrix |
+| [`docs/agents/`](docs/agents/) | One page per agent: inputs, outputs, prompts, failure modes |
+| [`docs/decisions/`](docs/decisions/README.md) | ADRs 0001-0037 — every non-trivial decision, indexed |
+| [`docs/testing.md`](docs/testing.md) | Flat test layout, markers, what CI runs, the unbuilt e2e tier |
+| [`docs/development.md`](docs/development.md) | Setup, Makefile targets, troubleshooting |
+| [`docs/security.md`](docs/security.md) | Threat model, prompt-injection defenses |
+| [`docs/eval.md`](docs/eval.md) | Benchmark, LLM-judge metrics, nightly regression CI |
+| [`docs/demo.md`](docs/demo.md) | Canonical end-to-end example run |
+| [`planning/03-roadmap.md`](planning/03-roadmap.md) | Sprint-by-sprint log + what's next |
 
 ## Testing
 
 Every piece of code merged to `main` ships with tests. Untested code
-does not merge. Full strategy in `docs/testing.md`. Summary:
+does not merge. Full strategy in [`docs/testing.md`](docs/testing.md).
+Summary:
 
-- **Test taxonomy** (three tiers, mirroring the standard pyramid):
-  - `tests/unit/` — pure functions, no I/O / network / LLM. Fast,
-    deterministic. Runs on every PR.
-  - `tests/integration/` — external libraries against local fixtures
-    (PyMuPDF on a sample PDF, sentence-transformers, canned arXiv XML).
-    Runs when the diff touches integration-adjacent code.
-  - `tests/e2e/` — full LangGraph workflow with recorded LLM cassettes.
-    Runs on merge to `main` and nightly, **not** on individual PRs.
-- **Selective per-PR execution**: CI does **not** run the full suite on
-  every PR. It selects tests by changed paths plus pytest markers
-  (`@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.e2e`).
-- **Coverage target**: >=80% on unit-testable code.
+- **Layout**: all tests live flat in `tests/test_*.py` — one test
+  module per source module. ~800 tests on `main`.
+- **Tiers via markers**, not directories: `unit` and `integration`
+  markers are registered in `pyproject.toml`; the `e2e` marker is
+  reserved for a cassette-based tier that is **planned, not built**.
+  Most tests carry no marker, so marker-filtered runs
+  (`pytest -m unit`) select only a small explicitly-marked subset.
+- **The merge gate is the whole suite**: CI runs
+  `pytest -m "not e2e"` (everything, today) plus ruff, strict mypy on
+  `src/`, a Docker build, and the `web/` typecheck/lint/test/build.
+  See ADR 0024 and `.github/workflows/ci.yml`.
+- **No live services in tests**: fakeredis for Redis,
+  `pytest-postgresql` for Postgres, monkeypatched `call_llm_json` for
+  Claude, canned fixtures for arXiv / PDFs.
 - **LLM code**: assert on response structure and prompt shape, never
-  on exact model output. Cassette-based e2e for pipeline-level checks.
-
-See `docs/testing.md` for how the tiers are wired, how CI selects, and
-what "tested" means for non-deterministic code.
+  on exact model output. Pipeline-level quality is guarded by the
+  nightly eval workflow, not the PR suite.
 
 ## Tech Stack
-- **LLM**: Claude (Anthropic API via `anthropic` Python SDK)
-- **Orchestration**: LangGraph (from `langgraph` package)
-- **Paper Search**: arXiv API (`arxiv` Python package)
+- **LLM**: Claude (Anthropic API via `anthropic` Python SDK, SDK-native
+  retry; per-agent model routing + prompt caching behind flags)
+- **Orchestration**: LangGraph (fixed pipeline or supervisor loop;
+  SQLite / Postgres checkpointing)
+- **API**: FastAPI + uvicorn — async job model, SSE streaming, HITL,
+  auth + rate limiting, multi-format export (md / pdf / docx)
+- **Paper Search**: arXiv API (`arxiv` package) + optional Semantic
+  Scholar citation-graph enrichment
 - **PDF Parsing**: PyMuPDF (`fitz`)
-- **Embeddings**: `sentence-transformers/all-MiniLM-L6-v2` via HuggingFace
-- **Vector Search**: FAISS (`faiss-cpu`)
-- **Config**: `python-dotenv` for API keys
+- **Embeddings**: `sentence-transformers/all-MiniLM-L6-v2` + FAISS
+  (`faiss-cpu`), optional Postgres-backed embedding cache
+- **Storage**: Redis (job store, SSE/HITL pub/sub, rate limiter) and
+  Postgres via `psycopg` (checkpoints, conversations, paper +
+  embedding caches) — all pluggable, in-memory/disk defaults for
+  local dev
+- **Web UI**: Next.js + Tailwind (`web/`), tested with Vitest
+- **Config**: `pydantic-settings` typed settings surface (`src/config.py`,
+  ADR 0011) loading from env vars + `.env`
+- **Observability**: structured JSON logging, per-run cost tracking,
+  opt-in OpenTelemetry tracing
+- **Deploy**: Dockerfile + docker-compose (API + web + Redis + Postgres)
 
 ## Directory Structure
 ```
 arxiv-research-agent/
-├── CLAUDE.md
-├── pyproject.toml
-├── .env                    # ANTHROPIC_API_KEY (never commit)
-├── .env.example
+├── CLAUDE-Agent-Proj-1.md      # This file — the index
+├── README.md
+├── pyproject.toml              # Deps + pytest/mypy/ruff config
+├── Makefile                    # Common targets (see docs/development.md)
+├── Dockerfile
+├── docker-compose.yml          # API + web + Redis + Postgres stack
+├── .env.example                # ANTHROPIC_API_KEY etc. (never commit .env)
+├── .github/workflows/          # ci.yml (per-PR), eval-nightly.yml
 ├── src/
-│   ├── __init__.py
-│   ├── agents/
-│   │   ├── __init__.py
-│   │   ├── planner.py      # Decomposes query into sub-questions + search queries
-│   │   ├── search.py       # Searches arXiv, ranks by relevance
-│   │   ├── reader.py       # Extracts structured findings from papers
-│   │   ├── synthesizer.py  # Combines findings into research briefing
-│   │   └── critic.py       # Evaluates draft, decides if revision needed
-│   ├── tools/
-│   │   ├── __init__.py
-│   │   ├── arxiv_search.py # arXiv API wrapper
-│   │   ├── pdf_parser.py   # PDF download + text extraction (cached)
-│   │   ├── chunker.py      # Section-aware chunker for paper full text
-│   │   ├── chunk_ranker.py # FAISS chunk ranking against sub-questions
-│   │   └── embeddings.py   # HuggingFace embeddings + FAISS ranking
+│   ├── agents/                 # planner, search, reader, synthesizer,
+│   │                           # critic, supervisor, verifier, query_refiner
+│   ├── api/                    # FastAPI surface: app factory, routes,
+│   │   │                       # jobs, runner, streaming, auth,
+│   │   │                       # conversations, retriever, redis_store,
+│   │   │                       # schemas, serve
+│   │   └── exporters/          # md / pdf / docx report renderers
 │   ├── graph/
-│   │   ├── __init__.py
-│   │   ├── state.py        # ResearchState TypedDict
-│   │   └── workflow.py     # LangGraph wiring + conditional edges
-│   ├── eval/
-│   │   ├── __init__.py
-│   │   ├── benchmark_queries.py # Hand-curated eval queries + get_queries()
-│   │   ├── metrics.py           # Faithfulness, completeness, citation accuracy
-│   │   ├── regression_diff.py   # Baseline-vs-current summary diff for nightly CI
-│   │   └── runner.py            # Batch runner + report writer
-│   ├── observability/
-│   │   ├── __init__.py
-│   │   ├── logging.py      # JSON formatter + run_id ContextVar + propagate helper
-│   │   └── costs.py        # RunCosts accumulator + price table + record_llm_call
-│   ├── config.py           # pydantic-settings typed config surface
-│   └── main.py             # Entry point
-├── tests/
-│   └── __init__.py
-├── outputs/                # Generated reports
-└── README.md
+│   │   ├── state.py            # ResearchState TypedDict + typed sub-schemas
+│   │   └── workflow.py         # LangGraph wiring: both shapes + checkpointing
+│   ├── tools/                  # arxiv_search, pdf_parser, chunker,
+│   │                           # chunk_ranker, embeddings, embedding_cache,
+│   │                           # paper_cache, postgres_pool, http_session,
+│   │                           # semantic_scholar
+│   ├── eval/                   # benchmark_queries, metrics, runner,
+│   │                           # regression_diff, readme_update
+│   ├── observability/          # JSON logging, cost tracking, OTel tracing
+│   ├── security/               # prompt_isolation (ADR 0020 / 0033)
+│   ├── config.py               # pydantic-settings typed config surface
+│   ├── llm.py                  # Shared Anthropic client + JSON helper
+│   └── main.py                 # CLI entry point
+├── tests/                      # Flat test_*.py modules (~800 tests)
+├── web/                        # Next.js UI (app/, components/, lib/, tests/)
+├── docs/                       # Deep docs — see the Docs Map above
+├── planning/                   # Roadmap + sprint plans
+└── outputs/                    # Generated reports + eval runs (gitignored)
 ```
 
 ## Architecture
 
+Two workflow shapes over the same `ResearchState`, selected by
+`settings.enable_supervisor`:
+
 ```
+Fixed pipeline (default):
 User Query → PLANNER → SEARCH → READER → SYNTHESIZER → CRITIC → Output
-                ↑                              ↑            │
-                └──────────── RE-ROUTE ←───────┘────────────┘
-                          (on critique failure, max 3 iterations)
+                ↑         ↑                    ↑            │
+                └─────────┴────────────────────┴────────────┘
+                  critic routes revisions (max_iterations cap)
+
+Supervisor loop (flag-gated):
+START → SUPERVISOR → <action> → SUPERVISOR → ... → stop
+        actions: plan/search/read/synthesize/critique/stop
+        (+ verify, refine_query behind their own flags)
 ```
 
-### Shared State Schema
+The HTTP layer wraps the compiled workflow in an async job model —
+`POST /research` → 202 + `job_id`, SSE streaming, HITL plan review,
+conversations, export — with pluggable Redis/Postgres backends for
+every stateful concern. Full picture, including the storage matrix
+and which setting selects each backend:
+[`docs/architecture.md`](docs/architecture.md).
 
-```python
-from typing import TypedDict, Annotated
-from langgraph.graph.message import add_messages
+The full state schema lives in `src/graph/state.py` (`ResearchState`
+plus typed sub-schemas `PaperMetadata`, `PaperAnalysis`, `Citation`,
+`EvidenceClaim`) — the docstrings there document which flags populate
+which fields.
 
-class ResearchState(TypedDict):
-    query: str
-    sub_questions: list[str]
-    search_queries: list[str]
-    papers: list[dict]           # {id, title, authors, abstract, url, pdf_url}
-    paper_analyses: list[dict]   # {paper_id, key_findings, methodology, limitations}
-    draft_report: str
-    citations: list[dict]
-    critique: str
-    quality_score: float         # 0-1
-    revision_needed: bool
-    revision_target: str         # "planner" | "search" | "synthesizer"
-    iteration: int               # max 3 revisions
-    messages: Annotated[list, add_messages]
-```
+## Agents
 
-## Agent Specs
+One page per agent in [`docs/agents/`](docs/agents/):
 
-### Planner
-- Input: raw user query
-- Output: 2-4 sub_questions + search_queries
-- Considers: methods, theory, applications, benchmarks, temporal scope
-
-### Search
-- Uses arxiv Python package to search
-- Deduplicates by paper ID across sub-queries
-- Ranks by embedding similarity (query vs abstracts) using FAISS
-- Caps at 8-10 papers
-
-### Reader
-- Fetches PDF -> section-aware chunks -> FAISS-ranked top-K excerpts
-  against sub-questions -> Claude analysis. Falls back to abstract-only
-  on any PDF / chunk / rank failure. Per-paper LLM calls run in parallel.
-- Output per paper: {paper_id, title, key_findings, methodology, results_summary, limitations, relevance}
-- Full details: [`docs/agents/reader.md`](docs/agents/reader.md).
-
-### Synthesizer
-- Groups findings by theme/approach
-- Compares methodologies and results
-- Identifies consensus, contradictions, gaps
-- Cites papers as [Author, Year]
-- Output: structured markdown report
-
-### Critic
-- Scores on: completeness, accuracy, coherence, depth, balance (each 0-1)
-- Average >= 0.7 → approve
-- Below 0.7 → reject with feedback + revision_target:
-  - Missing coverage → route to planner
-  - Too few papers → route to search
-  - Weak synthesis → route to synthesizer
-
-## LangGraph Wiring
-
-```python
-workflow = StateGraph(ResearchState)
-workflow.add_node("planner", planner_agent)
-workflow.add_node("search", search_agent)
-workflow.add_node("reader", reader_agent)
-workflow.add_node("synthesizer", synthesizer_agent)
-workflow.add_node("critic", critic_agent)
-
-workflow.set_entry_point("planner")
-workflow.add_edge("planner", "search")
-workflow.add_edge("search", "reader")
-workflow.add_edge("reader", "synthesizer")
-workflow.add_edge("synthesizer", "critic")
-
-# Conditional routing from critic
-workflow.add_conditional_edges("critic", route_after_critique, {
-    "planner": "planner",
-    "search": "search",
-    "synthesizer": "synthesizer",
-    END: END,
-})
-```
-
-## Phased Build Plan
-
-### Phase 1: MVP (current)
-- All 5 agents working end-to-end
-- Abstracts only (no PDF parsing)
-- Critic loop with conditional routing
-- Iteration cap at 3 revisions
-- Test with 3 example queries
-
-### Phase 2: Depth
-- Full-text PDF ingestion
-  - `tools/pdf_parser.py`: download from `pdf_url`, extract text with PyMuPDF
-  - Handle download failures / non-PDF responses gracefully
-  - Cache parsed PDFs on disk to avoid re-download across runs
-- Section-aware chunking
-  - Detect headers (Introduction, Method, Results, Conclusion, Limitations)
-  - Chunk by section, then by token budget within each section
-- FAISS relevance ranking on chunks
-  - Rank chunks against sub-questions (not just abstract vs query)
-  - Feed top-K chunks per paper into reader instead of raw abstract
-- Enriched reader output
-  - Distinguish claims sourced from method vs results vs limitations
-  - Optional: extract references to tables/figures
-- Comparative tables in synthesis
-  - Method-by-method matrix (dataset, metric, headline result)
-- Robustness
-  - Retry / backoff on Anthropic 429s
-  - Graceful degradation when PDF unavailable (fall back to abstract)
-
-### Phase 3: Polish
-- Eval pipeline (`src/eval/`) — full strategy in [`docs/eval.md`](docs/eval.md)
-  - `benchmark_queries.py`: 10 hand-curated ML/AI queries with
-    `expected_topics` for reference-free scoring (landed)
-  - `metrics.py`: faithfulness (per-claim traceability), completeness
-    (topic coverage), citation accuracy (regex + set membership)
-  - `runner.py`: batch runner, JSONL + markdown reports to
-    `outputs/eval/<timestamp>/`
-  - Custom in-repo rather than Ragas / DeepEval / LangSmith — see
-    [ADR 0005](docs/decisions/0005-custom-eval-over-ragas.md)
-- Observability
-  - Structured logging of each agent's inputs/outputs
-  - Per-node timing
-- UX
-  - Streaming output via LangGraph `astream`
-  - Interrupt after planner for human-in-the-loop plan approval
-  - Node-level progress prints
-- Caching
-  - Cache paper embeddings by paper_id
-  - Cache reader analyses by (paper_id, query) tuple
-- Export
-  - Markdown to PDF via pandoc or weasyprint
-  - BibTeX export of citations
+- [`planner`](docs/agents/planner.md) — decomposes the query into
+  sub-questions + arXiv search queries; consumes conversation
+  `prior_context` and critic feedback on revisions.
+- [`search`](docs/agents/search.md) — arXiv search, dedup, optional
+  S2 citation-graph enrichment, FAISS relevance ranking.
+- [`reader`](docs/agents/reader.md) — PDF → section-aware chunks →
+  ranked excerpts → structured per-paper analysis; abstract fallback;
+  evidence claims, recovery signals, and prompt isolation behind flags.
+- [`synthesizer`](docs/agents/synthesizer.md) — findings → markdown
+  briefing with citations; evidence-grounded path behind a flag.
+- [`critic`](docs/agents/critic.md) — five-dimension scoring; routes
+  revisions to planner / search / synthesizer below the 0.7 bar.
+- [`supervisor`](docs/agents/supervisor.md) — flag-gated loop
+  controller with strict action enum + budget short-circuits.
+- [`verifier`](docs/agents/verifier.md) — flag-gated runtime
+  faithfulness check with recovery recommendations.
+- [`query_refiner`](docs/agents/query_refiner.md) — flag-gated
+  search-recovery action producing fresh, deduped queries.
 
 ## Conventions
-- Use `anthropic` SDK directly for Claude API calls (not langchain-anthropic)
-- All agents are pure functions: take ResearchState, return partial state updates
-- Use `python-dotenv` to load ANTHROPIC_API_KEY from .env
-- Type hints on everything
-- Docstrings on all public functions
-- Keep agent system prompts in the agent files (not separate config)
+- Use the `anthropic` SDK directly for Claude API calls (not
+  langchain-anthropic) — ADR 0001. All calls go through `src/llm.py`.
+- All agents are pure functions: take ResearchState, return partial
+  state updates.
+- All tunables live in `src/config.py` (`pydantic-settings`, ADR 0011)
+  and map to env vars loaded from `.env` — no string-typed env reads
+  at call sites.
+- Type hints on everything; `mypy --strict` is green on `src/`.
+- Docstrings on all public functions.
+- Keep agent system prompts in the agent files (not separate config).
 
 ## Development Workflow
 
@@ -281,8 +229,9 @@ PR requirements:
 - Body explains the *why* (motivation, tradeoffs), links related issues,
   and includes a short test plan.
 - Tests and docs for the diff ship in the same PR (per the Testing and
-  Documentation mandates above). `pytest tests/` must pass locally
-  before opening the PR.
+  Documentation mandates above). The full suite
+  (`pytest tests/ -m "not e2e"`), `mypy --strict src/`, and
+  `ruff check` must pass locally before opening the PR.
 - Squash-merge to keep `main` history linear and each PR a single commit.
 
 ## Commands
@@ -291,173 +240,55 @@ Everything goes through the `Makefile`. Common targets:
 
 ```bash
 make install-dev          # fresh venv + runtime + dev deps
-make test                 # unit tier (default per-PR check)
-make test-all             # every tier
+make test-all             # full suite — matches the CI gate
 make typecheck            # mypy src/
 make run QUERY='What are the latest approaches to reducing hallucination in LLMs?'
+make eval                 # batch-run the benchmark
 ```
 
-Full setup, targets, and troubleshooting in [`docs/development.md`](docs/development.md).
+> Note: `make test` currently runs only the explicitly-marked `unit`
+> subset (~55 tests), **not** the CI gate — see the "known trap" in
+> [`docs/testing.md`](docs/testing.md). Use `make test-all` (or
+> `pytest tests/ -q -m "not e2e"`) before opening a PR.
+
+Serving the API locally: `python -m src.api.serve` (or
+`docker compose up` for the full stack). Full setup, targets, and
+troubleshooting in [`docs/development.md`](docs/development.md).
 
 ## Current Status
-- [x] Project scaffolded
-- [x] State schema defined
-- [x] Planner agent implemented
-- [x] Search agent implemented (live arXiv + mock-data fallback)
-- [x] Reader agent implemented (abstracts, parallelized per-paper LLM calls)
-- [x] Synthesizer agent implemented
-- [x] Critic agent implemented
-- [x] LangGraph workflow wired
-- [x] Anthropic Claude migration complete (from Groq / Gemini)
-- [x] Smoke tests for pure functions (dedupe, critic routing)
-- [x] README
-- [x] Phase 2: PDF parsing (`pdf_parser`, `chunker`, `chunk_ranker`, reader wired)
-- [x] Phase 3: Eval pipeline (20-query benchmark + 4 metrics + runner + `make eval`)
-- [x] Retry/backoff on Anthropic 429s (SDK-native, 4 retries + 120s timeout)
-- [x] Retry/backoff on arXiv API + PDF downloads (`urllib3.Retry` shared session)
-- [x] Nightly eval CI with regression detection (`.github/workflows/eval-nightly.yml`)
-- [x] Typed config via `pydantic-settings` (`src/config.py`)
-- [x] Structured JSON logging + `run_id` propagation (`src/observability/`)
-- [x] Per-run cost tracking (token counts + USD, per-model breakdown) — landed in `summary.jsonl`
-- [x] OpenTelemetry tracing (opt-in; `traced_node` wraps every agent)
-- [x] LangGraph SqliteSaver checkpointing (on by default; interrupt/resume)
-- [x] Expand benchmark queries 10 -> 20 (12+ distinct domains)
-- [x] Retrieval recall metric (batched LLM-as-judge; separates search from generation)
 
-**Sprint 1 complete.** 20+ merged PRs, 13 ADRs, 262+ tests. See
-[`planning/03-roadmap.md`](planning/03-roadmap.md) for the sprint-by-
-sprint log.
+Sprints 1-5 are complete, followed by a post-Sprint-5 production
+hardening chain. 37 ADRs (0001-0037), ~800 tests, per-PR CI (lint +
+strict mypy + full test suite + Docker + web), nightly LLM-judged eval
+CI. The dated, per-merge log — and the authoritative list of what's
+next — lives in [`planning/03-roadmap.md`](planning/03-roadmap.md).
 
-## Next Phases (post-Sprint-1)
+- **Sprint 1 — observable + testable**: eval pipeline (20-query
+  benchmark, 4 LLM-judge metrics, nightly regression CI), typed
+  config, structured logging + cost tracking, OTel tracing,
+  checkpointing, retries. ADRs 0001-0013.
+- **Sprint 2 — go agentic**: supervisor loop, verifier, evidence
+  store, evidence-grounded synthesizer, query refiner, reader
+  recovery, reader prompt-injection isolation — each behind an
+  independent flag so every combination is A/B-measurable against the
+  Sprint 1 baseline. ADRs 0014-0020.
+- **Sprint 3 — cost + retrieval**: per-agent model routing, Anthropic
+  prompt caching, Semantic Scholar citation-graph enrichment. ADRs
+  0021-0023.
+- **Sprint 4 — deployable**: per-PR CI, FastAPI async job model, SSE
+  streaming, Docker Compose with Redis job store, Postgres paper +
+  embedding caches. ADRs 0024-0028.
+- **Sprint 5 — product surface**: Next.js web UI, HITL plan review,
+  multi-format export (md/pdf/docx), conversation mode with
+  prior-context retrieval. ADRs 0029-0032.
+- **Post-Sprint-5 hardening**: safety bundle (auth, rate limiting,
+  cost-cap enforcement, PDF byte cap, prior-context isolation — ADR
+  0033), Postgres checkpointer + cross-worker HITL (ADR 0034),
+  cross-worker SSE via Redis pub/sub (ADR 0035), per-principal store
+  scoping (ADR 0036), Redis rate limiter + hot-reloadable keystore
+  (ADR 0037).
 
-The system is currently **agentic-lite** — five agents in a fixed
-DAG with one conditional edge on the critic. Sprint 2 turns this into
-a supervisor loop; Sprint 3 makes it deployable. Detailed plans live
-in `planning/`:
-
-- **Sprint 2 — go agentic** (in progress):
-  - [x] `regression_diff` extended with `iterations`, `llm_calls`,
-    `cost_usd` — direction-aware classification so cost/iteration
-    creep counts as a regression, not an "improvement".
-  - [x] Supervisor loop behind `settings.enable_supervisor` (default
-    off). Strict-enum action space, budget short-circuits before the
-    LLM call, deterministic rules-based fallback on malformed judge
-    output. See ADR [0014](docs/decisions/0014-supervisor-loop-behind-flag.md)
-    and [`docs/agents/supervisor.md`](docs/agents/supervisor.md).
-  - [x] Verifier agent behind `settings.enable_verifier` (default
-    off, independent of `enable_supervisor` so the two flags can be
-    A/B'd separately). Adds `verify` to the supervisor's action space;
-    reuses ADR-0007's calibrated faithfulness prompt with a
-    `recommended_action` extension. See ADR
-    [0015](docs/decisions/0015-verifier-agent-runtime-faithfulness.md)
-    and [`docs/agents/verifier.md`](docs/agents/verifier.md).
-  - [x] Evidence store (substrate half): reader emits `EvidenceClaim`s
-    with `source_text` hydrated from ranked chunks, verifier switches
-    dossier from abstracts to chunks per paper. Behind
-    `settings.enable_evidence_store` (default off, independent of the
-    supervisor + verifier flags). Fixed pipeline stays byte-identical
-    to Sprint 1 baseline. See ADR
-    [0016](docs/decisions/0016-evidence-store-source-text-verifier.md).
-    Synthesizer swap deferred to item 5b.
-  - [x] Synthesizer reads from `evidence` when populated (item 5b).
-    Grounded prompt path forbids filling gaps from abstracts, tells
-    the LLM to route unsupported topics to "Open Questions". Same
-    `enable_evidence_store` flag as 5a; report output shape unchanged
-    so downstream metrics keep working. See ADR
-    [0017](docs/decisions/0017-synthesizer-evidence-swap.md) and
-    [`docs/agents/synthesizer.md`](docs/agents/synthesizer.md).
-  - [x] Query refiner behind `settings.enable_query_refiner`. Adds
-    `refine_query` to the supervisor's action space; produces fresh
-    search queries targeted at verifier `missing_evidence` and critic
-    feedback, dedupes against `tried_search_queries` history, and
-    fails closed (keeps current queries on LLM error / empty output /
-    all duplicates). Independent of every other Sprint 2 flag. See
-    ADR
-    [0018](docs/decisions/0018-query-refiner-recovery-action.md)
-    and [`docs/agents/query_refiner.md`](docs/agents/query_refiner.md).
-  - [x] Reader-requests-more-chunks behind
-    `settings.enable_reader_recovery`. Reader's LLM response gains
-    `analysis_complete` / `missing_context` / `request_more_sections`
-    per paper; state aggregates AND / semicolon-join / deduped-union.
-    On the next `read` action, the ranker reserves slots for chunks
-    from the requested sections. Complements the query refiner:
-    refiner recovers at the search layer, this recovers at the read
-    layer. See ADR
-    [0019](docs/decisions/0019-reader-requests-more-chunks.md).
-  - [x] Prompt-injection isolation on reader behind
-    `settings.enable_prompt_isolation`. Defense in depth: paper text
-    wrapped in `<untrusted_paper_text>` tags, system prompt gains a
-    security instruction naming the protected control fields,
-    reader's `missing_context` / `request_more_sections` /
-    `EvidenceClaim.claim` scrubbed on the output side. Independent
-    of every other Sprint 2 flag; strongly recommended whenever
-    `enable_supervisor` is on. See ADR
-    [0020](docs/decisions/0020-prompt-injection-isolation-reader.md)
-    and [`docs/security.md`](docs/security.md).
-  - Full sequenced plan in
-    [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md).
-
-**Sprint 2 complete.** All 8 items landed behind independent flags;
-447 tests pass on `main`. The eval harness A/B story: `fixed` /
-`sup-only` / `sup+ver` / `sup+ver+evidence` / `sup+ver+refiner` /
-`sup+ver+recovery` / `sup+ver+isolation` are all measurable
-configurations; combinations too. Next: paired-diff runs on the
-20-query benchmark to decide which flags to default on for Sprint 3
-/ Sprint 4.
-- **Sprint 3 — recovery + retrieval iteration** (in progress):
-  - [x] Query refiner — landed early in Sprint 2 (ADR 0018).
-  - [x] Reader-requests-more-chunks — landed early in Sprint 2 (ADR 0019).
-  - [x] Cost-aware model routing behind per-agent overrides
-    (`reader_model` / `planner_model` / `synthesizer_model` /
-    `critic_model` / `verifier_model` / `supervisor_model` /
-    `query_refiner_model`). Default empty = today's Sonnet baseline;
-    recommended mapping in ADR 0021 targets Haiku for the reader,
-    supervisor, and query refiner (~50-60% cost cut). See ADR
-    [0021](docs/decisions/0021-cost-aware-model-routing.md).
-  - [x] Claude prompt caching behind `settings.enable_prompt_caching`.
-    `call_llm` marks system prompts with `cache_control` ephemeral,
-    forwards `cache_read_input_tokens` / `cache_creation_input_tokens`
-    from Anthropic's usage response into the run's cost accumulator,
-    and `estimate_cost` prices reads at 10% / writes at 125% of the
-    base input rate. Reader and supervisor drive the interesting
-    savings (parallel fan-out + loop iterations); other agents get
-    the flag too for uniformity. See ADR
-    [0022](docs/decisions/0022-anthropic-prompt-caching.md).
-  - [x] Semantic Scholar adapter + one-hop citation-graph enrichment
-    behind `settings.enable_semantic_scholar`. Second retrieval
-    source: `src/tools/semantic_scholar.py` exposes `search_papers`
-    and `get_references`; the search agent walks the top-K arXiv
-    seeds and unions their S2 references before the final relevance
-    ranking. S2 refs with an arXiv external ID dedupe against arXiv
-    seeds automatically. Failure-tolerant (any S2 error drops to
-    arXiv-only). Fan-out bounded by `seed_count × refs_per_seed`.
-    See ADR
-    [0023](docs/decisions/0023-semantic-scholar-citation-graph.md).
-
-**Sprint 3 complete.** 3 items across ADRs 0021-0023 (query refiner
-and reader-recovery already shipped in Sprint 2). All flag-gated.
-525 tests pass on `main`. Next: portfolio polish (architecture
-diagram, README demo, eval results table, production-considerations
-section — see [`planning/06-portfolio-polish.md`](planning/06-portfolio-polish.md))
-interleaved with Sprint 4 (deployable — FastAPI + Docker + CI).
-
-  Full plan in
-  [`planning/03-roadmap.md`](planning/03-roadmap.md).
-- **Sprint 4 — deployable**: FastAPI + Docker + CI workflow +
-  paper cache. Roadmap in
-  [`planning/03-roadmap.md`](planning/03-roadmap.md).
-- **Portfolio polish (interleaves with Sprints 2-3)**: architecture
-  diagram, README demo, eval results table, "Production
-  considerations" section. Full checklist and sequencing in
-  [`planning/06-portfolio-polish.md`](planning/06-portfolio-polish.md).
-
-Follow-up items still on the backlog (see also
-[`docs/eval.md`](docs/eval.md)):
-
-- [ ] End-to-end test with LLM cassettes
-- [ ] Regression tracking issue bot (`feat/eval-regression-issue-bot`)
-- [ ] Cheaper eval judges via Haiku (`feat/eval-cheaper-judge`)
-- [ ] Prompt-injection isolation on the reader (**severity upgraded**
-  once the supervisor loop lands — see
-  [`planning/05-agentic-upgrade-plan.md`](planning/05-agentic-upgrade-plan.md)
-  item 8)
+Open follow-ups are tracked at the tail of the roadmap log — notably
+the job redriver on restart, model-routing defaults, the e2e cassette
+tier (see [`docs/testing.md`](docs/testing.md)), and the admin cleanup
+migration for legacy NULL-owner rows.

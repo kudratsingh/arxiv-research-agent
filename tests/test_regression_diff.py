@@ -5,6 +5,8 @@ JSONL loading (including missing-file graceful fallback), per-query
 status classification, aggregate rollups, and the markdown renderer.
 """
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
 from typing import Any
@@ -13,6 +15,7 @@ import pytest
 
 from src.eval.regression_diff import (
     DEFAULT_THRESHOLD,
+    RESOURCE_THRESHOLDS,
     QueryDiff,
     RegressionReport,
     diff_summaries,
@@ -20,6 +23,8 @@ from src.eval.regression_diff import (
     load_summary,
     main,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def _line(
@@ -105,39 +110,139 @@ class TestDiffSummariesClassification:
         assert report["diffs"][0]["status"] == "improved"
         assert report["has_regressions"] is False
 
-    # Direction-aware: cost / iterations / llm_calls are `lower_better`.
-    def test_cost_rising_beyond_threshold_is_regression(self) -> None:
+    # Direction-aware: cost / iterations / llm_calls are `lower_better`
+    # and judged by their RESOURCE_THRESHOLDS bands (absolute floor AND
+    # relative fraction), never by `--threshold` (ADR 0044).
+    def test_cost_rising_beyond_band_is_regression(self) -> None:
+        # +$0.40 on $0.10: clears the $0.10 floor and the 25% band.
         baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
         current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.50)}
-        report = diff_summaries(baseline, current, threshold=0.10)
+        report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
         assert report["has_regressions"] is True
 
-    def test_cost_dropping_beyond_threshold_is_improvement(self) -> None:
+    def test_cost_dropping_beyond_band_is_improvement(self) -> None:
         baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.50)}
         current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
-        report = diff_summaries(baseline, current, threshold=0.10)
+        report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "improved"
         assert report["has_regressions"] is False
 
-    def test_iterations_rising_beyond_threshold_is_regression(self) -> None:
+    def test_iteration_runaway_is_regression(self) -> None:
         # loop-induced iteration runaway must show up as a regression.
         baseline = {"q1": _line("q1", citation_accuracy=0.8, iterations=1)}
         current = {"q1": _line("q1", citation_accuracy=0.8, iterations=5)}
-        report = diff_summaries(baseline, current, threshold=1.0)
+        report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
 
-    def test_llm_calls_rising_beyond_threshold_is_regression(self) -> None:
+    def test_llm_call_runaway_is_regression(self) -> None:
         baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=30)}
         current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=90)}
-        report = diff_summaries(baseline, current, threshold=10.0)
+        report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
 
-    def test_cost_within_threshold_is_unchanged(self) -> None:
+    def test_cost_below_absolute_floor_is_unchanged(self) -> None:
+        # +$0.05 is under the $0.10 floor even though it's +50% relative.
         baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
         current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.15)}
-        report = diff_summaries(baseline, current, threshold=0.10)
+        report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "unchanged"
+
+
+class TestResourceBands:
+    """Every classification branch of the ADR 0044 two-leg band model.
+
+    The single-extra-call / single-extra-iteration / proportional-rise
+    cases are the mutation checks for this change: each one classified
+    as `regressed` under the pre-ADR-0044 code (any rise > 0.10 fired)
+    and must classify as `unchanged` now.
+    """
+
+    def test_one_extra_llm_call_is_not_regression(self) -> None:
+        # The audit's canonical false alarm: arXiv returns one more
+        # rankable paper, the reader makes one more call.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=42)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=43)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "unchanged"
+        assert report["has_regressions"] is False
+
+    def test_one_extra_critic_revision_is_not_regression(self) -> None:
+        # iterations 1 -> 2 is ordinary critic nondeterminism.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, iterations=1)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, iterations=2)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "unchanged"
+
+    def test_two_extra_iterations_regress(self) -> None:
+        # +2 clears the floor of 1 and is +200% relative.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, iterations=1)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, iterations=3)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "regressed"
+
+    def test_llm_calls_over_floor_but_proportionally_small_is_unchanged(
+        self,
+    ) -> None:
+        # +6 calls clears the floor of 4 but is only +6% on a baseline
+        # of 100 — the relative leg absorbs drift on large baselines.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=100)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=106)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "unchanged"
+
+    def test_llm_calls_clearing_both_legs_regress(self) -> None:
+        # +5 on 12: over the floor of 4 and +42% relative.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=12)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=17)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "regressed"
+
+    def test_llm_calls_dropping_beyond_band_is_improvement(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=17)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=12)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "improved"
+
+    def test_cost_over_floor_but_proportionally_small_is_unchanged(self) -> None:
+        # +$0.15 on a $1.00 baseline clears the floor but is only +15%.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=1.00)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=1.15)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "unchanged"
+
+    def test_cost_clearing_both_legs_regresses(self) -> None:
+        # +$0.14 on $0.31: over the $0.10 floor and +45% relative.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.31)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.45)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "regressed"
+
+    def test_zero_baseline_falls_back_to_absolute_floor(self) -> None:
+        # No meaningful denominator — the floor alone decides.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.0)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.50)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "regressed"
+
+    def test_score_threshold_does_not_gate_resource_metrics(self) -> None:
+        # A permissive --threshold must not mute a genuine call runaway.
+        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=12)}
+        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=30)}
+        report = diff_summaries(baseline, current, threshold=5.0)
+        assert report["diffs"][0]["status"] == "regressed"
+
+    def test_resource_bands_cover_all_lower_better_metrics(self) -> None:
+        # Any metric declared lower_better without a band would silently
+        # fall back to the score epsilon — the exact bug ADR 0044 fixes.
+        from src.eval.regression_diff import METRIC_DIRECTIONS
+
+        lower_better = {
+            field
+            for field, direction in METRIC_DIRECTIONS.items()
+            if direction == "lower_better"
+        }
+        assert lower_better == set(RESOURCE_THRESHOLDS)
 
     def test_new_query_in_current(self) -> None:
         baseline: dict[str, dict[str, Any]] = {}
@@ -290,6 +395,14 @@ class TestFormatReport:
     def test_threshold_shown(self) -> None:
         md = format_report(self._minimal_report())
         assert "`0.10`" in md
+
+    def test_resource_bands_shown(self) -> None:
+        # The report must state the resource rules it applied, so a
+        # maintainer reading a red nightly can see why a row fired.
+        md = format_report(self._minimal_report())
+        assert "Resource bands" in md
+        for field in RESOURCE_THRESHOLDS:
+            assert f"`{field}`" in md
 
     def test_per_query_row_present(self) -> None:
         md = format_report(self._minimal_report())

@@ -1,10 +1,25 @@
 """Regression diff for eval runs.
 
 Given two `summary.jsonl` files (baseline + current), produce a
-markdown diff and exit non-zero if any metric regressed by more than
-`--threshold` on any query. Wired into the nightly CI workflow (see
+markdown diff and exit non-zero if any metric regressed on any query.
+Wired into the nightly CI workflow (see
 `.github/workflows/eval-nightly.yml`) so a real quality regression on
 `main` fails the run and pages the maintainer.
+
+Metrics are judged by class, not by one scalar (ADR 0044, revisiting
+ADR 0010's single global threshold):
+
+- **Score metrics** (0-1 LLM-judge outputs) regress on an absolute
+  drop larger than `--threshold` (default 0.10 — typical judge noise
+  per ADR 0010).
+- **Resource metrics** (`iterations`, `llm_calls`, `cost_usd`) regress
+  only when the increase clears BOTH a per-metric absolute floor and a
+  relative band (`RESOURCE_THRESHOLDS`). One extra critic revision or
+  a $0.02 cost wiggle is ordinary run-to-run variance and must not
+  fail the nightly; the floors are sized so it can't.
+
+Both classes stay direction-aware: cost going down is an improvement,
+a score going up is an improvement.
 
 Usage:
     python -m src.eval.regression_diff baseline.jsonl current.jsonl
@@ -17,12 +32,22 @@ Exit codes:
     2 — invalid input (missing current file, bad JSONL)
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import sys
 from pathlib import Path
 from typing import Any, TypedDict
 
+# Absolute epsilon for the 0-1 score metrics only — resource metrics
+# below have their own bands. 0.10 is ADR 0010's estimate of typical
+# LLM-as-judge noise on a single run; note that completeness and
+# retrieval_recall quantize in steps of 1/len(expected_topics)
+# (typically 0.20-0.25), so for those two the epsilon filters nothing
+# and a single flipped topic decision registers as a full step. See
+# docs/eval.md ("Regression gate statistics") for what that means in
+# practice.
 DEFAULT_THRESHOLD = 0.10
 
 # Metrics to diff. Kept as a tuple so ordering in the report is stable.
@@ -36,6 +61,31 @@ METRIC_FIELDS: tuple[str, ...] = (
     "llm_calls",
     "cost_usd",
 )
+
+# Per-metric bands for the count / dollar metrics: (absolute_floor,
+# relative_fraction). A move counts as significant only when it
+# exceeds BOTH — the floor stops penny/single-unit wiggles on small
+# baselines, the relative band stops "large baseline, proportionally
+# tiny drift" from firing. Rationale (ADR 0044):
+#
+# - `iterations` moves in steps of 1 and the critic asking for one
+#   extra revision is ordinary nondeterminism. Floor 1.0 means a +1
+#   never fires; +2 with a >50% relative rise does.
+# - `llm_calls`: one critic revision adds ~2-3 calls (re-synthesize,
+#   re-critique, re-verify) and one extra rankable paper adds 1 reader
+#   call. Floor 4.0 absorbs a single ordinary event; 25% catches call
+#   count runaway on any realistic baseline (~12-45 calls).
+# - `cost_usd`: floor $0.10 so a $0.02 wiggle never fires; 25%
+#   matches the documented "cost creep > 25%" gate in the README.
+#
+# These are priors, not measured spread — nothing in src/eval computes
+# run-to-run variance yet. Re-derive them from a 3-repeat baseline
+# once we have one (docs/eval.md).
+RESOURCE_THRESHOLDS: dict[str, tuple[float, float]] = {
+    "iterations": (1.0, 0.50),
+    "llm_calls": (4.0, 0.25),
+    "cost_usd": (0.10, 0.25),
+}
 
 # Direction each metric should move for "improvement". Quality metrics
 # get better as they rise; cost / iteration / call-count metrics get
@@ -122,25 +172,53 @@ def _score(record: dict[str, Any], field: str) -> float | None:
     return None
 
 
-def _is_regression(field: str, delta: float, threshold: float) -> bool:
+def _significant(
+    field: str, magnitude: float, threshold: float, baseline: float | None
+) -> bool:
+    """Whether a directional move of `magnitude` is big enough to matter.
+
+    `magnitude` is the absolute size of the move in the direction under
+    test (adverse for regressions, favorable for improvements) and must
+    be positive to ever return True.
+
+    Score metrics compare against the flat `threshold`. Resource
+    metrics must clear both legs of their `RESOURCE_THRESHOLDS` band;
+    when the baseline is missing or non-positive the relative leg has
+    no meaningful denominator, so the absolute floor alone decides.
+    """
+    band = RESOURCE_THRESHOLDS.get(field)
+    if band is None:
+        return magnitude > threshold
+    floor, relative = band
+    if magnitude <= floor:
+        return False
+    if baseline is None or baseline <= 0:
+        return True
+    return magnitude > relative * baseline
+
+
+def _is_regression(
+    field: str, delta: float, threshold: float, baseline: float | None = None
+) -> bool:
     """Whether a per-metric delta counts as a regression, per direction.
 
-    `higher_better` metrics regress when they drop by more than
-    threshold. `lower_better` metrics (cost, iterations, llm_calls)
-    regress when they *rise* by more than threshold.
+    `higher_better` metrics regress when they drop; `lower_better`
+    metrics (cost, iterations, llm_calls) regress when they rise. The
+    magnitude required depends on the metric class — see
+    `_significant`.
     """
     direction = METRIC_DIRECTIONS.get(field, "higher_better")
-    if direction == "higher_better":
-        return delta < -threshold
-    return delta > threshold
+    adverse = -delta if direction == "higher_better" else delta
+    return adverse > 0 and _significant(field, adverse, threshold, baseline)
 
 
-def _is_improvement(field: str, delta: float, threshold: float) -> bool:
+def _is_improvement(
+    field: str, delta: float, threshold: float, baseline: float | None = None
+) -> bool:
     """Symmetric of `_is_regression` — did this metric get meaningfully better?"""
     direction = METRIC_DIRECTIONS.get(field, "higher_better")
-    if direction == "higher_better":
-        return delta > threshold
-    return delta < -threshold
+    favorable = delta if direction == "higher_better" else -delta
+    return favorable > 0 and _significant(field, favorable, threshold, baseline)
 
 
 def _query_status(
@@ -152,7 +230,7 @@ def _query_status(
     """Classify a single query's baseline-vs-current shape.
 
     Regression / improvement definitions honor per-metric direction —
-    `cost_usd` rising by more than threshold is a regression, not an
+    `cost_usd` rising beyond its band is a regression, not an
     improvement, even though the raw delta is positive.
     """
     if baseline is None and current is not None:
@@ -170,14 +248,16 @@ def _query_status(
         return "recovered"
 
     regressed = any(
-        delta is not None and _is_regression(field, delta, threshold)
+        delta is not None
+        and _is_regression(field, delta, threshold, _score(baseline, field))
         for field, delta in deltas.items()
     )
     if regressed:
         return "regressed"
 
     improved = any(
-        delta is not None and _is_improvement(field, delta, threshold)
+        delta is not None
+        and _is_improvement(field, delta, threshold, _score(baseline, field))
         for field, delta in deltas.items()
     )
     if improved:
@@ -197,7 +277,9 @@ def diff_summaries(
         baseline: `{query_id: summary_line}` from the reference run.
         current: `{query_id: summary_line}` from the new run.
         threshold: Minimum drop (as a raw score delta, e.g. `0.1`) that
-            counts as a regression on a metric.
+            counts as a regression on a 0-1 score metric. Resource
+            metrics ignore it — they are judged by their
+            `RESOURCE_THRESHOLDS` bands.
 
     Returns:
         `RegressionReport` with per-query status, per-metric deltas, and
@@ -293,10 +375,15 @@ def _fmt_score(value: float | None) -> str:
 def format_report(report: RegressionReport) -> str:
     """Render a `RegressionReport` as a markdown document."""
     threshold = report["threshold"]
+    resource_lines = "; ".join(
+        f"`{field}` > +{floor:g} and > +{relative:.0%}"
+        for field, (floor, relative) in RESOURCE_THRESHOLDS.items()
+    )
     lines = [
         "# Eval regression diff",
         "",
-        f"- **Threshold**: `{threshold:.2f}` (a metric drop larger than this is a regression)",
+        f"- **Score threshold**: `{threshold:.2f}` (a 0-1 score drop larger than this is a regression)",
+        f"- **Resource bands** (both legs must be exceeded): {resource_lines}",
         f"- **Regressions detected**: {'yes' if report['has_regressions'] else 'no'}",
         "",
         "## Aggregate (over queries present in both runs)",
@@ -367,7 +454,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--threshold",
         type=float,
         default=DEFAULT_THRESHOLD,
-        help=f"Regression threshold on raw scores (default: {DEFAULT_THRESHOLD})",
+        help=(
+            "Regression threshold on the 0-1 score metrics "
+            f"(default: {DEFAULT_THRESHOLD}). Count and dollar metrics "
+            "use fixed per-metric bands instead — see "
+            "RESOURCE_THRESHOLDS."
+        ),
     )
     parser.add_argument(
         "--output",

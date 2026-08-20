@@ -43,7 +43,7 @@ PaperMetadata
    |         |
    +--> rank_chunks_by_relevance(       # FAISS + MiniLM
    |         chunks, sub_questions,
-   |         top_k=5)
+   |         top_k=settings.reader_max_chunks_per_paper)
    |         |
    |         v
    |     ranked chunks or []
@@ -60,7 +60,7 @@ If any of `parse_pdf`, `chunk_paper`, or the ranker returns empty,
 > Full text unavailable; base your analysis on the abstract only.
 
 Papers are processed in parallel via a
-`ThreadPoolExecutor(max_workers=5)`.
+`ThreadPoolExecutor(max_workers=settings.reader_max_workers)`.
 
 ## Prompt design
 
@@ -85,25 +85,44 @@ Rationale for the fallback signal: see ADR
 | Chunker finds no headers | `chunk_paper` | Returns a single `body` chunk — still valid. |
 | Chunker finds no chunks | `chunk_paper` (empty input) | Returns `[]`; reader falls back. |
 | Ranker returns empty | shouldn't happen with non-empty chunks | Guarded; falls back. |
-| Claude returns non-JSON | `call_llm_json` | Raises `JSONDecodeError`; the ThreadPoolExecutor propagates. Improvement candidate: catch + retry with a "return valid JSON" nudge. |
-| Anthropic 429 | `call_llm_json` | Currently propagates. Follow-up: `feat/anthropic-retry` with exponential backoff. |
+| Claude returns non-JSON / truncated / missing keys | per-paper guard in `reader_agent` | That one paper degrades to a placeholder analysis (empty findings, `relevance=0.0`, explicit limitations note) with a WARNING; the node continues. See "Degradation policy" below. |
+| Every paper's analysis fails | aggregate check in `reader_agent` | Raises `AllPaperAnalysesFailedError` — the LLM is effectively down; the job fails with that honest `error_type`. |
+| Anthropic 429 | `call_llm_json` | SDK-native retry (ADR 0009); an exhausted retry degrades that paper like any other per-paper failure. |
 
 ## Configuration
 
-Constants in `src/agents/reader.py`:
+Settings that drive the reader (see `src/config.py`, ADR 0011):
 
-- `MAX_WORKERS = 5` — parallel papers.
-- `MAX_CHUNKS_PER_PAPER = 5` — top-K passed to the LLM. Bounds per-paper prompt at ~5 × 800 tokens.
+- `reader_max_workers: int = 5` — parallel papers in the thread pool.
+- `reader_max_chunks_per_paper: int = 5` — top-K ranked chunks passed
+  to the LLM. Bounds per-paper prompt at ~5 × 800 tokens.
+- `pdf_max_bytes` — hard cap on a single PDF download; the fetch
+  streams and aborts at the cap so an adversarial PDF can't OOM the
+  process (ADR 0033).
+- `reader_model: str = ""` — per-agent model override (ADR 0021);
+  Haiku is the recommended override for this highest-volume agent.
+- `enable_prompt_caching: bool = False` — system-prompt caching (ADR
+  0022); the parallel fan-out is the biggest cache-hit win.
+- Flag-gated paths below: `enable_evidence_store` (+
+  `reader_max_claims_per_paper`), `enable_reader_recovery`,
+  `enable_prompt_isolation`.
 
 ## Testing
 
-- Unit: `tests/test_reader.py` covers `_build_user_prompt` (context /
-  no-context branches) and `_gather_context` (all three empty-return
-  paths + happy-path formatting), with `parse_pdf` / `chunk_paper` /
+- Unit: `tests/test_reader.py` — `_build_user_prompt` (context /
+  no-context branches), `_gather_context` (all three empty-return
+  paths + happy-path formatting), and the evidence path (claim
+  parsing/binding, chunk-index validation, per-config claim cap,
+  flag on/off), with `parse_pdf` / `chunk_paper` /
   `rank_chunks_by_relevance` monkeypatched.
-- Integration: TODO — needs a canned PDF fixture and a stubbed Claude
-  response. Tracked as a follow-up.
-- E2E: covered by the workflow-level cassette suite (TODO).
+- Recovery path: `tests/test_reader_recovery.py` — signal parsing,
+  aggregation, abstract-only forcing, preferred-section ranking.
+- Isolation: `tests/test_reader_isolation.py` — adversarial
+  wrap/scrub coverage (see `docs/security.md`).
+- PDF layer: `tests/test_pdf_parser.py`, `tests/test_chunker.py`,
+  `tests/test_chunk_ranker.py` — the tools this agent composes.
+- E2E: the workflow-level cassette suite is still **planned, not
+  built** — see `docs/testing.md`.
 
 ## Evidence store path (ADR 0016)
 
@@ -172,10 +191,32 @@ Fail-open on parse errors: any missing / wrong-typed recovery field
 defaults to "analysis complete" so a broken response can't trigger
 an infinite re-read loop.
 
+## Degradation policy (ADR 0041)
+
+The reader fans out one LLM call per paper; by the time any one of
+them fails, every other paper's call is already billed. Per-paper
+failure containment therefore lives in `reader_agent`'s
+`_analyze_or_degrade` wrapper:
+
+- A malformed or truncated LLM response (unparseable JSON — typically
+  a `max_tokens` cutoff mid-string — or a missing/uncoercible
+  required key) degrades **that one paper** to a placeholder
+  `PaperAnalysis`: empty `key_findings`, `relevance=0.0`, and a
+  limitations note stating the analysis failed. Logged at WARNING
+  with the `paper_id` and error type; the node message appends
+  `"N paper(s) degraded (analysis failed)."` so the degradation is
+  visible to the user, not just the logs.
+- Under `enable_reader_recovery`, a degraded paper reports
+  `analysis_complete=False` with `missing_context="analysis failed"`
+  so the supervisor can choose to re-read.
+- Only when **every** paper failed does the node raise
+  `AllPaperAnalysesFailedError` — proceeding would hand the
+  synthesizer an empty analysis set and produce a hollow report.
+
 ## Prompt-injection isolation (ADR 0020)
 
 When `settings.enable_prompt_isolation` is on, paper-derived text
-(abstract + ranked chunks) is wrapped in
+(title + abstract + ranked chunks) is wrapped in
 `<untrusted_paper_text>...</untrusted_paper_text>` tags in the user
 prompt and the system prompt gains an explicit "treat wrapped
 content as data" instruction. On the output side, the reader's
@@ -183,6 +224,13 @@ control fields (`missing_context`, `request_more_sections`) and the
 `EvidenceClaim.claim` field are scrubbed through
 `sanitize_control_string` / `sanitize_section_names` before flowing
 to state.
+
+The title is wrapped too (since ADR 0041): with Semantic Scholar
+enrichment on, titles are attacker-influenceable, and an unwrapped
+multi-line title above the tags could imitate an instruction block.
+Independently, both source adapters (`search_arxiv`, `_map_s2_paper`)
+normalize titles to a single line capped at 300 characters, so the
+single-short-line premise holds regardless of the isolation flag.
 
 `source_text` inside `EvidenceClaim` is left verbatim on purpose —
 the verifier judges against it, so paraphrase-in-the-middle would
@@ -195,9 +243,10 @@ adversarial tests in `tests/test_reader_isolation.py`.
 
 ## Follow-ups tracked in ADRs
 
-- Retry / backoff for arXiv PDF downloads
-  (`feat/arxiv-download-retry`).
-- Retry / backoff for Anthropic 429s (`feat/anthropic-retry`).
+- ~~Retry / backoff for arXiv PDF downloads.~~ Landed — shared
+  `urllib3.Retry` session (ADR 0013).
+- ~~Retry / backoff for Anthropic 429s.~~ Landed — SDK-native retry
+  (ADR 0009).
 - Per-paper `source: "fulltext" | "abstract"` field on `PaperAnalysis`
   for observability (`feat/reader-provenance`).
 - Per-paper preferred sections (currently unioned across papers) —

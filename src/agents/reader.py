@@ -31,7 +31,17 @@ instruction, and the reader's control-token fields
 (`missing_context`, `request_more_sections`) are sanitized post-LLM.
 This is the last-line defense against jailbreaks in arXiv PDFs
 redirecting the supervisor's routing decisions (ADR 0020).
+
+Degradation policy (ADR 0041): a malformed or truncated LLM response
+for one paper degrades that paper to a placeholder analysis with a
+WARNING — it never fails the node, because the fan-out has already
+paid for every other paper's calls. The node raises
+`AllPaperAnalysesFailedError` only when *every* paper failed, which
+means the LLM itself is down and there is nothing honest to
+synthesize from.
 """
+
+from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, TypedDict
@@ -62,6 +72,39 @@ log = get_logger(__name__)
 # Back-compat re-exports for tests / callers that import these names.
 MAX_WORKERS = settings.reader_max_workers
 MAX_CHUNKS_PER_PAPER = settings.reader_max_chunks_per_paper
+
+
+class AllPaperAnalysesFailedError(RuntimeError):
+    """Every paper in the reader fan-out failed to produce an analysis.
+
+    A single malformed LLM response degrades that one paper to a
+    placeholder (ADR 0041); this error fires only when no paper at all
+    yielded a usable analysis — the LLM is effectively down, and
+    proceeding would hand the synthesizer an empty analysis set. The
+    API runner maps the class name straight to the job's `error_type`.
+    """
+
+
+def _failed_analysis(paper: PaperMetadata) -> PaperAnalysis:
+    """Placeholder analysis for a paper whose LLM response was unusable.
+
+    Zero relevance and empty findings keep the paper from contributing
+    fabricated content downstream; the limitations note makes the
+    degradation visible in the final report's source data rather than
+    silently thinning it.
+    """
+    return PaperAnalysis(
+        paper_id=paper["id"],
+        title=paper["title"],
+        key_findings=[],
+        methodology="",
+        results_summary="",
+        limitations=(
+            "Automated analysis failed for this paper (unusable LLM "
+            "response); its content is not reflected in the briefing."
+        ),
+        relevance=0.0,
+    )
 
 SYSTEM_PROMPT = """\
 You are a research paper analysis assistant. Given a paper's title, abstract,
@@ -298,21 +341,23 @@ def _build_user_prompt(
     can be calibrated accordingly.
 
     When `settings.enable_prompt_isolation` is on, paper-derived text
-    (abstract + excerpts) is wrapped in untrusted-content tags so the
-    LLM knows to treat it as data. Paper title is left unwrapped —
-    arXiv titles are short and controlled enough that a jailbreak
-    there is unlikely to survive title normalization anyway. See ADR
-    0020.
+    (title + abstract + excerpts) is wrapped in untrusted-content tags
+    so the LLM knows to treat it as data. The title is wrapped too:
+    with Semantic Scholar enrichment on, titles are
+    attacker-influenceable, and an unwrapped multi-line title sitting
+    above the tags could imitate a fresh instruction block. The source
+    adapters additionally normalize titles to a single capped line.
+    See ADR 0020 / ADR 0041.
     """
+    isolate = settings.enable_prompt_isolation
     abstract_block = (
-        wrap_untrusted(paper["abstract"])
-        if settings.enable_prompt_isolation
-        else paper["abstract"]
+        wrap_untrusted(paper["abstract"]) if isolate else paper["abstract"]
     )
+    title_block = wrap_untrusted(paper["title"]) if isolate else paper["title"]
     parts = [
         f"Research question: {query}",
         "",
-        f"Paper title: {paper['title']}",
+        f"Paper title: {title_block}",
         "",
         f"Abstract:\n{abstract_block}",
     ]
@@ -354,16 +399,17 @@ def _build_evidence_user_prompt(
     answers.
 
     When `settings.enable_prompt_isolation` is on, paper-derived text
-    (abstract + excerpts) is wrapped in untrusted-content tags. See
-    ADR 0020.
+    (title + abstract + excerpts) is wrapped in untrusted-content
+    tags. See ADR 0020 / ADR 0041.
     """
     isolate = settings.enable_prompt_isolation
     abstract_block = wrap_untrusted(paper["abstract"]) if isolate else paper["abstract"]
     wrapped_excerpts = wrap_untrusted(excerpts_block) if isolate else excerpts_block
+    title_block = wrap_untrusted(paper["title"]) if isolate else paper["title"]
     parts = [
         f"Research question: {query}",
         "",
-        f"Paper title: {paper['title']}",
+        f"Paper title: {title_block}",
         "",
         f"Abstract:\n{abstract_block}",
     ]
@@ -510,13 +556,17 @@ def _analyze_paper(
         cache_system=settings.enable_prompt_caching,
     )
 
+    # Missing keys / uncoercible values raise here (KeyError,
+    # ValueError, TypeError) — deliberately. `reader_agent`'s per-paper
+    # guard converts any such failure into a degraded placeholder for
+    # this one paper instead of failing the node (ADR 0041).
     analysis = PaperAnalysis(
         paper_id=paper["id"],
         title=paper["title"],
-        key_findings=parsed["key_findings"],
-        methodology=parsed["methodology"],
-        results_summary=parsed["results_summary"],
-        limitations=parsed["limitations"],
+        key_findings=[str(f) for f in parsed["key_findings"]],
+        methodology=str(parsed["methodology"]),
+        results_summary=str(parsed["results_summary"]),
+        limitations=str(parsed["limitations"]),
         relevance=float(parsed["relevance"]),
     )
 
@@ -609,25 +659,64 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
     )
     preferred: list[str] | None = requested if requested else None
 
+    def _analyze_or_degrade(
+        p: PaperMetadata,
+    ) -> tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal, bool]:
+        """Per-paper failure containment (ADR 0041).
+
+        A malformed / truncated LLM response for one paper — a
+        `max_tokens` cutoff mid-JSON, a missing required key — must not
+        discard every other paper's already-billed analysis. The paper
+        degrades to a placeholder with a WARNING; the trailing bool
+        reports whether the analysis succeeded so the aggregate can
+        fail the node when *nothing* succeeded.
+        """
+        try:
+            return (*_analyze_paper(p, query, subquestions, preferred), True)
+        except Exception as exc:
+            log.warning(
+                "reader_paper_analysis_failed",
+                extra={
+                    "paper_id": p["id"],
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                },
+            )
+            signal = (
+                ReaderRecoverySignal(
+                    analysis_complete=False,
+                    missing_context="analysis failed",
+                    request_more_sections=[],
+                )
+                if settings.enable_reader_recovery
+                else _default_signal()
+            )
+            return _failed_analysis(p), [], signal, False
+
     # Propagate the parent's run_id + cost-accumulator ContextVars into
     # each worker thread — plain ThreadPoolExecutor doesn't inherit
     # context, so LLM calls from workers would otherwise lose per-run
     # attribution.
-    analyze = propagate_run_context(
-        lambda p: _analyze_paper(p, query, subquestions, preferred)
-    )
+    analyze = propagate_run_context(_analyze_or_degrade)
     with ThreadPoolExecutor(max_workers=settings.reader_max_workers) as executor:
         results: list[
-            tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal]
+            tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal, bool]
         ] = list(executor.map(analyze, papers))
 
-    analyses: list[PaperAnalysis] = [a for a, _, _ in results]
+    failed_count = sum(1 for _, _, _, ok in results if not ok)
+    if papers and failed_count == len(papers):
+        raise AllPaperAnalysesFailedError(
+            f"all {len(papers)} paper analyses failed — no usable "
+            f"analysis to synthesize from"
+        )
+
+    analyses: list[PaperAnalysis] = [a for a, _, _, _ in results]
 
     update: dict[str, Any] = {
         "paper_analyses": analyses,
     }
     if settings.enable_evidence_store:
-        evidence: list[EvidenceClaim] = [c for _, cs, _ in results for c in cs]
+        evidence: list[EvidenceClaim] = [c for _, cs, _, _ in results for c in cs]
         update["evidence"] = evidence
         summary = (
             f"Analyzed {len(analyses)} papers; extracted {len(evidence)} "
@@ -636,8 +725,11 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
     else:
         summary = f"Analyzed {len(analyses)} papers (full-text where available)."
 
+    if failed_count:
+        summary += f" {failed_count} paper(s) degraded (analysis failed)."
+
     if settings.enable_reader_recovery:
-        signals: list[ReaderRecoverySignal] = [s for _, _, s in results]
+        signals: list[ReaderRecoverySignal] = [s for _, _, s, _ in results]
         complete, missing, sections = _aggregate_recovery(papers, signals)
         update["reader_analysis_complete"] = complete
         update["reader_missing_context"] = missing

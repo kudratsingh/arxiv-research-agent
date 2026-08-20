@@ -9,8 +9,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from src.tools import pdf_parser as pdf_parser_mod
 from src.tools.paper_cache import DiskPaperCache
-from src.tools.pdf_parser import _cache_key, _download_pdf, parse_pdf
+from src.tools.pdf_parser import (
+    _cache_key,
+    _download_pdf,
+    _is_fetchable,
+    _upgrade_arxiv_scheme,
+    parse_pdf,
+)
 
 
 class TestCacheKey:
@@ -166,3 +173,157 @@ class TestParsePdf:
             parse_pdf(url, cache_dir=str(tmp_path), cache=DiskPaperCache(tmp_path))
             == "ok"
         )
+
+
+# ---------------------------------------------------------------------------
+# SSRF destination guard — ADR 0041
+# ---------------------------------------------------------------------------
+
+
+def _fake_getaddrinfo(address: str):  # type: ignore[no-untyped-def]
+    """getaddrinfo stub resolving every host to `address`."""
+
+    def _resolver(host: str, port: object, *args: object, **kwargs: object) -> list:
+        return [(2, 1, 6, "", (address, 0))]
+
+    return _resolver
+
+
+class TestUpgradeArxivScheme:
+    def test_http_arxiv_upgraded_to_https(self) -> None:
+        assert (
+            _upgrade_arxiv_scheme("http://arxiv.org/pdf/2311.09000")
+            == "https://arxiv.org/pdf/2311.09000"
+        )
+
+    def test_non_arxiv_http_left_alone(self) -> None:
+        # Not upgraded — it gets *rejected* by `_is_fetchable` instead,
+        # since we can't know that an arbitrary host serves https.
+        assert (
+            _upgrade_arxiv_scheme("http://example.com/paper.pdf")
+            == "http://example.com/paper.pdf"
+        )
+
+
+class TestIsFetchable:
+    def test_arxiv_https_trusted_without_dns(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def _no_dns(*_a: object, **_kw: object) -> list:
+            raise AssertionError("arXiv hosts must not trigger a DNS pre-flight")
+
+        monkeypatch.setattr(pdf_parser_mod.socket, "getaddrinfo", _no_dns)
+        assert _is_fetchable("https://arxiv.org/pdf/2311.09000") is True
+
+    def test_plain_http_rejected(self) -> None:
+        assert _is_fetchable("http://example.com/paper.pdf") is False
+
+    def test_public_host_accepted(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(
+            pdf_parser_mod.socket, "getaddrinfo", _fake_getaddrinfo("93.184.216.34")
+        )
+        assert _is_fetchable("https://example.com/paper.pdf") is True
+
+    @pytest.mark.parametrize(
+        "address",
+        [
+            "127.0.0.1",  # loopback
+            "10.1.2.3",  # private
+            "169.254.169.254",  # link-local (cloud metadata endpoint)
+            "192.168.1.10",  # private
+            "0.0.0.0",  # unspecified
+            "::1",  # v6 loopback
+        ],
+    )
+    def test_non_public_addresses_rejected(
+        self, monkeypatch: pytest.MonkeyPatch, address: str
+    ) -> None:
+        monkeypatch.setattr(
+            pdf_parser_mod.socket, "getaddrinfo", _fake_getaddrinfo(address)
+        )
+        assert _is_fetchable("https://evil.example/paper.pdf") is False
+
+    def test_dns_failure_rejected(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        def _nxdomain(*_a: object, **_kw: object) -> list:
+            raise OSError("Name or service not known")
+
+        monkeypatch.setattr(pdf_parser_mod.socket, "getaddrinfo", _nxdomain)
+        assert _is_fetchable("https://gone.example/paper.pdf") is False
+
+
+class TestDownloadRedirectValidation:
+    def _redirect_response(self, location: str) -> MagicMock:
+        resp = MagicMock()
+        resp.status_code = 302
+        resp.headers = {"Location": location}
+        return resp
+
+    def _pdf_response(self) -> MagicMock:
+        body = b"%PDF-1.4\n" + b"x" * 64
+        resp = MagicMock()
+        resp.status_code = 200
+        resp.headers = {"Content-Length": str(len(body))}
+        resp.iter_content = MagicMock(return_value=iter([body]))
+        resp.__enter__ = MagicMock(return_value=resp)
+        resp.__exit__ = MagicMock(return_value=False)
+        return resp
+
+    def test_redirect_into_internal_address_rejected(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A public host 302ing to the cloud metadata endpoint must not
+        be followed — this is the hop-revalidation the blanket
+        `allow_redirects=True` never did."""
+        monkeypatch.setattr(
+            pdf_parser_mod.socket, "getaddrinfo", _fake_getaddrinfo("93.184.216.34")
+        )
+        with patch("src.tools.pdf_parser.build_retrying_session") as factory:
+            factory.return_value.get.return_value = self._redirect_response(
+                "http://169.254.169.254/latest/meta-data/"
+            )
+            ok = _download_pdf("https://journal.example/p.pdf", tmp_path / "o.pdf")
+        assert ok is False
+
+    def test_redirect_to_public_https_followed(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            pdf_parser_mod.socket, "getaddrinfo", _fake_getaddrinfo("93.184.216.34")
+        )
+        responses = [
+            self._redirect_response("https://cdn.example/real.pdf"),
+            self._pdf_response(),
+        ]
+        with patch("src.tools.pdf_parser.build_retrying_session") as factory:
+            factory.return_value.get.side_effect = responses
+            ok = _download_pdf("https://journal.example/p.pdf", tmp_path / "o.pdf")
+        assert ok is True
+        assert (tmp_path / "o.pdf").read_bytes().startswith(b"%PDF-")
+
+    def test_http_arxiv_url_fetched_over_https(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen_urls: list[str] = []
+
+        def _get(url: str, **_kw: object) -> MagicMock:
+            seen_urls.append(url)
+            return self._pdf_response()
+
+        with patch("src.tools.pdf_parser.build_retrying_session") as factory:
+            factory.return_value.get.side_effect = _get
+            ok = _download_pdf("http://arxiv.org/pdf/2311.09000", tmp_path / "o.pdf")
+        assert ok is True
+        assert seen_urls == ["https://arxiv.org/pdf/2311.09000"]
+
+    def test_redirect_loop_gives_up(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            pdf_parser_mod.socket, "getaddrinfo", _fake_getaddrinfo("93.184.216.34")
+        )
+        with patch("src.tools.pdf_parser.build_retrying_session") as factory:
+            factory.return_value.get.return_value = self._redirect_response(
+                "https://journal.example/p.pdf"
+            )
+            ok = _download_pdf("https://journal.example/p.pdf", tmp_path / "o.pdf")
+        assert ok is False

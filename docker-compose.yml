@@ -19,6 +19,20 @@ services:
     image: arxiv-research-agent:local
     container_name: arxiv-research-agent-app
     restart: unless-stopped
+    # ADR 0042: bounded drain, via the canonical entry point.
+    # `src.api.serve` sets `log_config=None` (the JSON stream stays
+    # ours; the Dockerfile CMD's `--log-config /dev/null` does not
+    # boot — `fileConfig` rejects an empty file, so the CLI has no
+    # way to say "no log config") and `timeout_graceful_shutdown=10`:
+    # uvicorn stops accepting on SIGTERM, waits up to 10s for open
+    # SSE streams, then runs the lifespan cleanup (cancel in-flight
+    # jobs, close pools). The container grace period must sit ABOVE
+    # that drain so the cleanup isn't SIGKILLed mid-way — without
+    # this, every `docker compose down` turned healthy in-flight
+    # jobs into `orphaned` failures. Host/port come from the
+    # API_HOST/API_PORT env below.
+    command: ["python", "-m", "src.api.serve"]
+    stop_grace_period: 15s
     ports:
       - "${APP_PORT:-8000}:8000"
     environment:
@@ -41,6 +55,11 @@ services:
       # uvicorn — the ADR-0013 SqliteSaver is single-writer only.
       # Set to `sqlite` to revert to per-worker checkpoints.
       CHECKPOINT_BACKEND: postgres
+      # ADR 0032: conversations are durable + shared across workers
+      # only under the Postgres store. The default is `memory`, which
+      # is per-worker and dies with the process — a `GET
+      # /conversations/{id}` landing on another worker would 404.
+      CONVERSATION_STORE: postgres
       # ADR 0037: share the per-key rate-limit counter across API
       # workers via Redis ZSET. Under the memory backend the
       # effective limit becomes `api_key_hourly_limit * n_workers`,
@@ -50,6 +69,26 @@ services:
       # mid-run. Only meaningful under `JOB_STORE=redis`, where a
       # non-terminal row outlives the process that owned it.
       ENABLE_JOB_REDRIVER: "true"
+      # ADR 0042: the web UI is served from :3000 and calls the API
+      # on :8000 from the browser — cross-origin. Without an explicit
+      # allowlist the server emits no CORS headers and every UI
+      # request (including the preflight) is blocked, so the shipped
+      # demo is unusable. Always an explicit allowlist, never `*` —
+      # the middleware runs with `allow_credentials=True`.
+      API_CORS_ALLOW_ORIGINS: ${API_CORS_ALLOW_ORIGINS:-http://localhost:${WEB_PORT:-3000}}
+      # ADR 0042: auth is off by default so `docker compose up` stays
+      # a zero-config demo, but the mitigation documented in
+      # docs/security.md must be genuinely bootable. To turn it on:
+      #
+      #   ENABLE_API_AUTH=true API_KEYS="ops:sk_change_me" docker compose up
+      #
+      # `/healthz` stays auth-exempt, so the healthcheck below (and
+      # the `web` service's service_healthy gate) keep passing with
+      # auth on. Note the shipped web UI cannot send `X-API-Key` yet
+      # — auth-on protects API access for curl/SDK callers; see
+      # "Turning auth on under compose" in docs/security.md.
+      ENABLE_API_AUTH: ${ENABLE_API_AUTH:-false}
+      API_KEYS: ${API_KEYS:-}
       API_HOST: 0.0.0.0
       API_PORT: "8000"
       LOG_LEVEL: INFO

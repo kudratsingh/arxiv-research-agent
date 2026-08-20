@@ -169,6 +169,27 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   redriver on restart, model-routing defaults, MiniLM →
   bge-small retrieval swap, SSE heartbeat rewrite, admin cleanup
   migration for legacy NULL-owner rows.
+- _2026-08-20_ — Admin CLI for legacy NULL-owner rows (ADR 0039).
+  Closes the last ADR 0036 follow-up. Rows written before
+  per-principal scoping carry `principal_key_id = NULL` and are
+  invisible to every principal under auth-on — not leaked, but not
+  reachable either. `make admin-migrate` reports, assigns, or
+  deletes them; an operator CLI rather than an automatic migration,
+  because ADR 0036's reason for rejecting auto-assignment still
+  holds (a wrong owner turns an access problem into a disclosure
+  problem). Dry-run by default. Four correctness details that each
+  took real thought: `assign` validates the target key against the
+  live keystore, Redis rewrites preserve TTL via `PTTL`,
+  availability is decided by which store is *selected* rather than
+  by whether `postgres_url` happens to be set, and `delete` logs
+  one record per destroyed row so an incident review can answer
+  "was mine one of them?". Fixed alongside: compose never set
+  `CONVERSATION_STORE` despite the setting's own description
+  claiming it did, so the reference deployment ran conversations
+  in-memory against a live Postgres — losing them on restart and
+  404ing across workers. Remaining follow-ups: role-based access on
+  `ApiKeyPrincipal` so these actions could move behind an
+  authenticated endpoint, and a live-Postgres test for the SQL.
 - _2026-08-20_ — Job redriver + SSE stream rewrite (ADR 0038). Two
   ends of one failure. `RedisJobStore.update` TTLs only terminal
   rows, so a worker dying mid-job left it `running` forever — and
@@ -196,6 +217,105 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   sweep, pipelined batch claim, real-Redis coverage for the CAS
   abort path, ADR 0035 subscribe TOCTOU, `stream_timeout` handling
   in the web UI.
+- _2026-08-20_ — Eval cost accounting + regression-gate accuracy
+  (ADR 0044). `PRICES_USD_PER_MILLION` re-verified against
+  published Anthropic pricing (Opus 4.7 was 3x high, Haiku 4.5
+  20% low; current-generation ids added, `PRICES_LAST_VERIFIED`
+  tripwire, coverage test over config model defaults). Nightly
+  regression gate split by metric class: score metrics keep the
+  ADR 0010 epsilon; `iterations`/`llm_calls`/`cost_usd` now need
+  a per-metric absolute floor AND relative rise, so +1 call or a
+  penny wiggle can't fail the nightly. Statistics limits
+  documented in docs/eval.md. Remaining follow-ups:
+  prices-in-settings, 3-repeat baseline to re-derive thresholds
+  from measured spread.
+- _2026-08-20_ — Config strictness + audit coverage gaps (ADR 0046).
+  Every enum-valued settings field (`job_store`,
+  `conversation_store`, `checkpoint_backend`, `rate_limit_backend`,
+  `paper_cache`, `embedding_cache`, `log_level`) becomes a
+  `Literal[...]` so an unrecognized env value fails at settings
+  load with the field named, instead of silently selecting the
+  downstream fallback backend. Closes five audit-flagged test
+  gaps with mutation-checked behaviour tests: HTTP-level 429 on
+  the submit route, route-level job ownership (principal A's job
+  is 404 for B on GET/stream/review/export), `run_job`'s
+  cost-cap + timeout handlers, the terminal SSE frame arriving
+  over Redis pub/sub from a real `run_job`, and the hot-reload
+  keystore + CORS wiring through `create_app`.
+- _2026-08-20_ — Conversation store hardening (ADR 0043). Audit
+  remediation for the conversation layer: `init_schema()` moves
+  inside the `to_thread` closures so pool open + DDL never block
+  the event loop; `append_job` serializes on the parent row
+  (`FOR UPDATE`) with single-statement ordinal allocation and an
+  ERROR log before any exception propagates past the store;
+  `GET /conversations` gains limit/offset pagination (default 50,
+  cap 200) pushed into SQL and composed with ADR 0036 scoping;
+  delete carries ownership inline in one DELETE statement,
+  closing that ADR's follow-up; `POST /conversations` now draws
+  from the per-key hourly rate-limit budget. Remaining
+  follow-ups: composite `(principal_key_id, updated_at DESC)`
+  index, dedicated conversation-create limit + per-principal
+  conversation ceiling, keyset cursor if deep paging appears.
+- _2026-08-20_ — API guardrails + deploy hygiene (ADR 0042), from
+  the audit remediation. Bounds the HITL `Plan` lists (20 items x
+  500 chars — an unbounded revise pinned uncancellable executor
+  threads and unbounded arXiv traffic); compares API keys as bytes
+  (non-ASCII `X-API-Key` was an unauthenticated 500) and rejects
+  duplicate principal names; `/healthz` pings Redis + Postgres
+  under 2s timeouts, reports `ok`/`degraded` per dependency, and
+  derives `active_jobs` from the worker's task set (was a constant
+  0 under the Redis store); resume-publish failures on the review
+  endpoint log at ERROR with the job_id instead of vanishing into
+  `contextlib.suppress`; uvicorn gets `timeout_graceful_shutdown`
+  (set in serve.py, which the compose command now boots, with
+  `stop_grace_period` above it) so SIGTERM reaches the lifespan
+  cleanup; `redact_url()` keeps connection-
+  string credentials out of the JSON log stream; compose gains the
+  CORS allowlist that makes the browser demo work at all plus
+  `ENABLE_API_AUTH`/`API_KEYS` pass-through with the auth-on recipe
+  in docs/security.md. Deferred, tracked there: body-size cap,
+  `/readyz`, conversation rate limit, owner-id migration, cache
+  purge command, web-UI key proxy.
+- _2026-08-20_ — Retrieval and degradation honesty (ADR 0041),
+  from the audit remediation. Mock papers now served only under
+  `use_mock_data`; an empty live search raises
+  `ArxivUnavailableError` / `NoPapersFoundError` instead of
+  fabricating sources. Cache READ paths degrade to recompute
+  (closing the ADR 0028 gap), one malformed LLM response degrades
+  one paper / triggers one synthesizer retry instead of failing
+  the run, S2 lookups strip the arXiv version suffix (enrichment
+  was a silent 100% no-op), dedup keys canonicalized across
+  sources, PDF fetches get an SSRF destination guard with per-hop
+  redirect validation. Remaining follow-ups: IP-pinning fetch
+  adapter for DNS rebinding, model-weights bake + readiness
+  probe, per-node degradation counts on the job record.
+- _2026-08-20_ — Supply-chain hardening (ADR 0045). Bounded version
+  ranges (floors verified installable on py3.14, caps < next major)
+  + committed `requirements-lock.txt`; CI installs the lock so the
+  tested and gated sets are identical. Explicit `src` packaging,
+  lazy PEP 562 `src.api` re-exports (import of a light submodule:
+  3.52 s → 0.06 s), web stack to Next 15.5 / React 19 / Node 22 /
+  vitest 4, PyMuPDF AGPL dual-license posture recorded (license
+  choice deliberately left to the owner). Remaining follow-ups:
+  hashed cross-platform lock, Next 16 + eslint 9 migration,
+  Dependabot + pip-audit/npm-audit CI gates, license decision.
+- _2026-08-20_ — Documentation drift cleanup (audit remediation,
+  docs-only). The audit's maintainability lane found the top-level
+  index still described the Sprint-3 repo, `docs/README.md` pointed
+  at files that didn't exist, and `docs/testing.md` described a
+  three-directory layout and cassette e2e tier that were never
+  built — with the `make test` / `pytest -m unit` trap hiding most
+  of the suite from anyone who trusted it. Rewrote
+  `CLAUDE-Agent-Proj-1.md` against the actual tree (Sprints 1-5 +
+  hardening chain, ADRs 0001-0037, ~800 tests, Docs Map); wrote
+  `docs/architecture.md` (workflow shapes, API layer, storage
+  matrix) from the code; rewrote `docs/testing.md` to describe the
+  flat marker-based reality, flag the Makefile trap, and label the
+  e2e cassette tier explicitly as planned-not-built; added the
+  missing `docs/agents/planner.md` / `search.md` / `critic.md` and
+  de-drifted the five existing agent pages (landed follow-ups
+  unmarked as pending, settings-vs-constants, test counts). No ADR —
+  no decision changed; docs now match `main`.
 - _2026-08-20_ — Async checkpointer + runner correctness (ADR
   0040). The audit's headline: the HTTP research path had never
   run a node. `astream` awaits the checkpointer's async surface,

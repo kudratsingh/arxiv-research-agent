@@ -85,12 +85,54 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0039](0039-admin-null-owner-migration.md) — Operator CLI
+  (`make admin-migrate`) for the legacy `NULL`-owner rows ADR
+  0036 left unreachable under auth-on. Dry-run by default;
+  validates the target key against the live keystore, preserves
+  Redis TTLs on rewrite, and decides availability from the
+  selected store rather than a shared URL. Follows ADR 0036.
 - [0038](0038-job-redriver-and-sse-stream.md) — Worker leases +
   a startup job redriver, so a dead worker's jobs are reconciled
   and their streams unhung instead of stuck `running` forever;
   SSE stream loop rewritten after the old heartbeat race
   cancelled the event reader mid-generator and silently killed
   the stream on the first quiet interval. Follows ADR 0027, 0035.
+- [0044](0044-eval-cost-accuracy-and-regression-thresholds.md) —
+  Price table re-verified against published Anthropic pricing
+  (Opus was 3x high, Haiku 20% low) with a coverage test over
+  config model defaults; nightly regression gate split by metric
+  class — score epsilon per ADR 0010, two-leg absolute+relative
+  bands for counts/dollars. Revisits ADR 0010; follows ADR 0012.
+- [0046](0046-literal-typed-config-enums.md) — Enum-valued settings
+  become `Literal[...]` so a typo'd env var dies at load instead of
+  silently selecting the fallback backend; plus behaviour tests for
+  the five untested control paths the audit flagged (HTTP 429, job
+  ownership stamping, runner cost-cap/timeout handlers, terminal SSE
+  frame over pub/sub, keystore + CORS wiring). Follows ADR 0011.
+- [0043](0043-conversation-store-hardening.md) — Conversation
+  store hardening: schema bootstrap off the event loop, appends
+  serialized on the parent row with single-statement ordinal
+  allocation, limit/offset pagination on the list endpoint, and
+  ownership inline in a one-statement DELETE. Follows ADR 0032
+  and ADR 0036.
+- [0042](0042-api-guardrails-and-deploy-hygiene.md) — API
+  guardrails + deploy hygiene: bounded HITL plan lists, bytes-safe
+  key comparison, honest dependency-checking `/healthz`, logged
+  resume-publish failures, bounded SIGTERM drain, credential
+  redaction in logs, compose CORS + bootable auth. Follows
+  ADR 0033/0034.
+- [0041](0041-retrieval-and-degradation-honesty.md) —
+  Retrieval and degradation honesty: mock papers gated behind
+  `use_mock_data` only (typed errors for empty live search),
+  cache reads degrade to recompute, per-paper reader failure
+  containment, parse defense across the agents, S2 version-strip
+  + canonical dedup, PDF SSRF guard. Follows ADRs 0004, 0023,
+  0028, 0033.
+- [0045](0045-supply-chain-pinning-lockfile-and-license-posture.md) —
+  Supply-chain hardening: bounded version ranges +
+  `requirements-lock.txt` (CI installs the lock), explicit `src`
+  packaging, lazy PEP 562 `src.api` re-exports, Next 15 / React
+  19 / Node 22 / vitest 4, PyMuPDF AGPL posture recorded.
 - [0040](0040-async-checkpointer-and-runner.md) — Async
   checkpointer surface (`AsyncSqliteSaver` / `AsyncPostgresSaver`
   on a reconnecting pool) for the `astream`-driven API runner —

@@ -326,6 +326,146 @@ class TestReviewRevise:
             )
 
 
+class TestPlanBounds:
+    """Schema bounds on the revise plan (ADR 0042).
+
+    Without them, one `action=revise` request could hand the search
+    node thousands of queries — each an arXiv call plus a hard 3s
+    sleep on an executor thread the job timeout cannot cancel.
+    """
+
+    async def test_plan_with_too_many_queries_is_422(self) -> None:
+        stub = InterruptingStub()
+        app = _app_with(stub)
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            submit = (await client.post("/research", json={"query": "q"})).json()
+            await _wait_for_status(client, submit["job_id"], "pending_review")
+
+            resp = await client.post(
+                f"/research/{submit['job_id']}/review",
+                json={
+                    "action": "revise",
+                    "plan": {
+                        "sub_questions": ["q"],
+                        "search_queries": ["x"] * 21,
+                    },
+                },
+            )
+            assert resp.status_code == 422
+            # The oversized plan must not have been applied.
+            assert stub.update_state_calls == []
+            await client.post(
+                f"/research/{submit['job_id']}/review",
+                json={"action": "cancel"},
+            )
+
+    async def test_plan_with_oversized_item_is_422(self) -> None:
+        stub = InterruptingStub()
+        app = _app_with(stub)
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            submit = (await client.post("/research", json={"query": "q"})).json()
+            await _wait_for_status(client, submit["job_id"], "pending_review")
+
+            resp = await client.post(
+                f"/research/{submit['job_id']}/review",
+                json={
+                    "action": "revise",
+                    "plan": {
+                        "sub_questions": ["y" * 501],
+                        "search_queries": ["x"],
+                    },
+                },
+            )
+            assert resp.status_code == 422
+            assert stub.update_state_calls == []
+            await client.post(
+                f"/research/{submit['job_id']}/review",
+                json={"action": "cancel"},
+            )
+
+    async def test_plan_at_the_bounds_is_accepted(self) -> None:
+        stub = InterruptingStub()
+        app = _app_with(stub)
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            submit = (await client.post("/research", json={"query": "q"})).json()
+            await _wait_for_status(client, submit["job_id"], "pending_review")
+
+            edited = {
+                "sub_questions": ["s" * 500] * 20,
+                "search_queries": ["q" * 500] * 20,
+            }
+            resp = await client.post(
+                f"/research/{submit['job_id']}/review",
+                json={"action": "revise", "plan": edited},
+            )
+            assert resp.status_code == 200
+            await _wait_for_status(client, submit["job_id"], "succeeded")
+            assert stub.update_state_calls == [edited]
+
+
+class TestResumePublishFailure:
+    async def test_publish_failure_is_logged_and_review_returns_200(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """ADR 0042: a dropped cross-worker resume publish must land
+        in the log with the job_id — before, `contextlib.suppress`
+        ate it and the only trace was an `hitl_timeout` half an hour
+        later. The 200 stays: the decision is durably persisted and
+        the same-worker path already resumed via the local Event."""
+        from src.api.jobs import InMemoryJobStore
+
+        class PublishFailingStore(InMemoryJobStore):
+            async def publish_remote_resume(
+                self,
+                job_id: str,
+                action: str,
+                plan: dict[str, Any] | None,
+            ) -> None:
+                raise ConnectionError("redis connection lost")
+
+        stub = InterruptingStub()
+        app = create_app(
+            build_workflow=lambda: stub, store=PublishFailingStore()
+        )
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            submit = (await client.post("/research", json={"query": "q"})).json()
+            await _wait_for_status(client, submit["job_id"], "pending_review")
+
+            import logging as logging_module
+
+            with caplog.at_level(
+                logging_module.ERROR, logger="src.api.routes"
+            ):
+                resp = await client.post(
+                    f"/research/{submit['job_id']}/review",
+                    json={"action": "approve"},
+                )
+            assert resp.status_code == 200
+
+            records = [
+                r
+                for r in caplog.records
+                if r.getMessage() == "hitl_resume_publish_failed"
+            ]
+            assert len(records) == 1
+            assert records[0].job_id == submit["job_id"]  # type: ignore[attr-defined]
+            assert records[0].action == "approve"  # type: ignore[attr-defined]
+            # exc_info carries the traceback for the 3am engineer.
+            assert records[0].exc_info is not None
+
+            # Same-worker resume still completes via the local Event.
+            body = await _wait_for_status(client, submit["job_id"], "succeeded")
+            assert body["status"] == "succeeded"
+
+
 class TestReviewCancel:
     async def test_cancel_transitions_to_cancelled(self) -> None:
         stub = InterruptingStub()

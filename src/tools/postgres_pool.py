@@ -19,7 +19,7 @@ from typing import Any
 from psycopg_pool import ConnectionPool
 
 from src.config import settings
-from src.observability import get_logger
+from src.observability import get_logger, redact_url
 
 log = get_logger(__name__)
 
@@ -44,6 +44,14 @@ CREATE TABLE IF NOT EXISTS paper_cache (
 CREATE INDEX IF NOT EXISTS paper_cache_pdf_url_idx
     ON paper_cache (pdf_url);
 
+-- ADR 0042: both caches accumulate forever (no TTL, no sweep), and
+-- an age-based purge needs an index on `created_at` to avoid a
+-- seq-scan over a multi-GB table. Added now, while the DDL can
+-- still express it additively; the purge command itself is a
+-- follow-up.
+CREATE INDEX IF NOT EXISTS paper_cache_created_at_idx
+    ON paper_cache (created_at);
+
 CREATE TABLE IF NOT EXISTS embedding_cache (
     content_hash TEXT NOT NULL,
     model_name TEXT NOT NULL,
@@ -52,6 +60,9 @@ CREATE TABLE IF NOT EXISTS embedding_cache (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (content_hash, model_name)
 );
+
+CREATE INDEX IF NOT EXISTS embedding_cache_created_at_idx
+    ON embedding_cache (created_at);
 
 -- Conversations (Sprint 5 PR 4, ADR 0032). A conversation links
 -- multiple research jobs into a follow-up thread; the planner
@@ -111,7 +122,19 @@ def _make_pool(url: str, *, min_size: int = 1, max_size: int = 10) -> Connection
         # Sane per-connection timeouts so a hung Postgres doesn't
         # wedge a reader thread. Callers already handle failures
         # gracefully — they log and fall back to the disk path.
-        kwargs={"connect_timeout": 5},
+        #
+        # ADR 0042: `statement_timeout` / `lock_timeout` bound every
+        # query on the connection at the server side. Without them a
+        # lock-blocked query (maintenance ALTER, autovacuum) holds
+        # its `asyncio.to_thread` slot indefinitely, and enough such
+        # requests starve the shared default executor with nothing
+        # surfaced anywhere. 10s statements / 5s lock waits are far
+        # above anything the caches or conversation store legitimately
+        # do.
+        kwargs={
+            "connect_timeout": 5,
+            "options": "-c statement_timeout=10000 -c lock_timeout=5000",
+        },
         open=False,
     )
     pool.open(wait=True, timeout=10.0)
@@ -142,7 +165,12 @@ def get_pool(url: str | None = None) -> ConnectionPool:
         # between the fast-path check and the lock acquisition.
         if _pool is None:
             _pool = _make_pool(resolved_url)
-            log.info("postgres_pool_opened", extra={"url": resolved_url})
+            # ADR 0042: redact before logging — the libpq URL carries
+            # the password inline, and `JsonFormatter` would index it
+            # as a searchable top-level field in the log platform.
+            log.info(
+                "postgres_pool_opened", extra={"url": redact_url(resolved_url)}
+            )
     return _pool
 
 

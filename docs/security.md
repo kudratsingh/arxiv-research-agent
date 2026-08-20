@@ -128,8 +128,20 @@ exposed deployment**). Three layers:
    startup-parsed keystore (`settings.api_keys`, format
    `name:secret,name:secret`), and returns an `ApiKeyPrincipal`.
    Missing or unknown key -> 401. Lookup uses `hmac.compare_digest`
-   in a non-short-circuiting loop for constant-time comparison.
-   `/healthz` and `/docs` stay open.
+   in a non-short-circuiting loop for constant-time comparison —
+   over **bytes**, not str (ADR 0042): Starlette decodes headers as
+   latin-1, and `compare_digest` on str raises TypeError for any
+   non-ASCII character, which used to turn a one-byte probe into an
+   unauthenticated 500 with a traceback. `/healthz` and `/docs`
+   stay open.
+
+   **A `key_id` (the name half of a keystore entry) is a permanent
+   identifier.** It is what ADR 0036 stamps onto every job and
+   conversation as the owner. Renaming a key orphans that
+   principal's rows (404 on everything); reusing a retired name
+   hands the new holder the previous tenant's data. Both parsers
+   reject duplicate names for this reason (ADR 0042) — rotate the
+   *secret* under a stable name, never the name.
 2. **Per-key rate limit**. `RateLimiter` records submit timestamps
    per principal in an in-memory sliding window. When a key
    exceeds `settings.api_key_hourly_limit` submits per hour,
@@ -165,6 +177,74 @@ KeystoreReloader,build_rate_limiter,load_keystore_from_file}` and
 `src/api/app.py::create_app`. `enforce_rate_limit` is async now so
 both backends fit the same call site.
 
+### API guardrails + deploy hygiene (ADR 0042)
+
+Closes the audit findings on the seams between the ADR 0030/0033/0034
+pieces:
+
+- **Bounded HITL plans.** `Plan.sub_questions` / `Plan.search_queries`
+  cap at 20 items x 500 chars (the planner emits 2-6). Before the
+  cap, one `action=revise` request could hand the search node
+  thousands of queries — each an arXiv call plus a hard 3s sleep on
+  an executor thread the job timeout cannot cancel.
+- **Loud resume-publish failures.** A failed
+  `publish_remote_resume` on `POST /research/{id}/review` is logged
+  at ERROR with the `job_id` (`hitl_resume_publish_failed`) instead
+  of being suppressed — the review's 200 stands (the decision is
+  persisted; the same-worker path resumed via the local Event), but
+  the incident timeline now contains the drop.
+- **Honest `/healthz`.** Pings Redis (via the store's client) and
+  Postgres (when configured) under 2s timeouts, reports
+  `status: ok|degraded` + a per-dependency breakdown, and computes
+  `active_jobs` from the worker's own task set (it was a constant 0
+  under the shipped Redis store). Always HTTP 200 — liveness, not
+  readiness; see ADR 0042 for why.
+- **Bounded drain.** `timeout_graceful_shutdown=10` in `serve.py`,
+  which the compose command boots (`python -m src.api.serve`), plus
+  `stop_grace_period: 15s`, so SIGTERM actually reaches the
+  lifespan cleanup instead of hanging on open SSE streams until
+  SIGKILL orphans in-flight jobs.
+- **Credential redaction.** `redact_url()` in
+  `src/observability/logging.py` strips userinfo from connection
+  URLs before they hit the indexed JSON log stream; wired at the
+  Postgres pool's startup log, remaining call sites migrate as
+  their files are touched.
+
+### Turning auth on under compose (ADR 0042)
+
+The compose stack ships auth-off so `docker compose up` stays a
+zero-config demo — which means the API is anonymous and unthrottled
+on whatever interface `APP_PORT` is published to. **Never expose the
+demo configuration beyond localhost.** To gate it:
+
+```bash
+ENABLE_API_AUTH=true API_KEYS="ops:$(openssl rand -hex 24)" \
+  docker compose up
+```
+
+Both variables pass through `docker-compose.yml` into the app
+service. Notes:
+
+- Set **both** — `ENABLE_API_AUTH=true` with an empty `API_KEYS`
+  boots, but every gated request 500s with
+  `api_auth_misconfigured` (fail-closed, nothing is exposed).
+- `/healthz` is auth-exempt by design, so the container healthcheck
+  and the `web` service's `service_healthy` gate keep passing.
+- The rate limiter activates with auth (it is keyed per principal)
+  and is Redis-backed in compose, so the limit holds across
+  workers.
+- CORS: the compose default allowlists the web UI's origin
+  (`http://localhost:${WEB_PORT}`) via `API_CORS_ALLOW_ORIGINS` —
+  always an explicit allowlist, never `*`, because the middleware
+  allows credentials. Override the variable for staging/prod
+  origins.
+- **Known limit:** the shipped web UI cannot send `X-API-Key`
+  (plain `fetch`, and `EventSource` cannot set headers at all), so
+  with auth on the UI's API calls 401. Auth-on currently protects
+  curl/SDK access; the fix — a Next.js route handler that proxies
+  to the API and injects the key server-side — is tracked as a
+  web-lane follow-up.
+
 ### Per-principal Job + Conversation scoping (ADR 0036)
 
 Every `Job` and `Conversation` carries a `principal_key_id: str |
@@ -194,6 +274,38 @@ Wired in `src/api/routes.py::_check_ownership` and
 `src/tools/postgres_pool.py::SCHEMA_DDL` (ADD COLUMN IF NOT EXISTS
 + partial index on non-NULL).
 
+### Legacy NULL-owner cleanup (ADR 0039)
+
+ADR 0036 left rows written before it with `principal_key_id = NULL`,
+invisible to every principal under auth-on. `python -m
+src.api.admin_migrate` (`make admin-migrate`) is the operator tool
+for them — deliberately a CLI a human drives, not an automatic
+migration, because ADR 0036's reason for rejecting auto-assignment
+still holds: the correct owner is usually knowable only by reading
+the query text.
+
+Safety properties worth knowing before you run it:
+
+- **Dry-run by default.** Nothing writes without `--yes`. `report`
+  never writes at all.
+- `assign --owner KEY_ID` **validates the key against the live
+  keystore** (`api_keys`, or `api_keys_file` when set, matching
+  `create_app`'s resolution order). Assigning to a nonexistent key
+  would bury the data one level deeper.
+- Rewriting a Redis row **preserves its TTL**. A plain `SET` would
+  resurrect expired terminal jobs.
+- Availability is decided by which store is *selected*, not by
+  whether a URL happens to be configured — `postgres_url` is shared
+  with the paper cache, embedding cache, and the ADR 0034
+  checkpointer, so gating on it alone would point the tool at a
+  `conversations` table the running service never reads.
+- `delete` emits one structured log record per destroyed row. Once
+  a Redis key is gone there is no other surviving evidence of what
+  it was, so an aggregate count could never answer "was mine one of
+  them?" during an incident review.
+
+Blast radius is bounded by `--limit`, which applies **per store** —
+`--store all --limit N` can touch up to 2N rows.
 ### Job leases and the redrive lock (ADR 0038)
 
 Two new Redis keyspaces: `joblease:{job_id}` (held by the worker
@@ -248,6 +360,27 @@ redriver.
   initial-load seeds mtime, in-flight reload picks up a file
   change, and a broken edit is logged + skipped without evicting
   the current in-memory keystore.
+- `tests/test_api_auth.py::test_non_ascii_key_returns_401_not_500`
+  — parametrized raw-byte `X-API-Key` values (utf-8 Cyrillic, a
+  lone `\xff`, a copy-pasted NBSP) each get a clean 401 instead of
+  the pre-ADR-0042 TypeError 500; companion unit tests prove an
+  ASCII key still matches when a non-ASCII secret sits in the
+  keystore, and that a non-ASCII secret matches its own utf-8
+  wire bytes.
+- `tests/test_api_hitl.py::TestPlanBounds` — a 21-query or
+  501-char-item revise plan is a 422 and is never applied to the
+  workflow; a plan at exactly the caps goes through.
+- `tests/test_api_hitl.py::TestResumePublishFailure` — a store
+  whose `publish_remote_resume` raises still yields a 200 review,
+  and the failure lands in the log with `job_id`, action, and
+  traceback.
+- `tests/test_api_guardrails.py` — compose contract pins (CORS
+  allowlist present and never `*`, auth env pass-through, bounded
+  drain with grace period above it), uvicorn graceful-shutdown
+  wiring, and the Postgres pool's server-side timeouts.
+- `tests/test_log_redaction.py` — `redact_url` strips passwords,
+  password-only userinfo, and bare usernames while leaving
+  credential-free URLs untouched.
 
 ## Follow-ups
 
@@ -263,11 +396,30 @@ redriver.
   justifies the cost).
 - Atomic-write PDF cache (write to `.tmp` sibling, rename on
   completion).
-- Admin cleanup migration for legacy NULL-owner rows created
-  before ADR 0036 landed.
+- Role-based access on `ApiKeyPrincipal`, so `admin_migrate`'s
+  actions can eventually be driven through an authenticated
+  endpoint instead of shell access to a worker (ADR 0039
+  follow-up).
 - Single-statement `DELETE ... WHERE principal_key_id=%s` to
   collapse the get+delete round-trip on `DELETE /conversations`.
 - Lua-scripted `check_and_record` for the Redis rate limiter if
   the boundary race becomes observable (ADR 0037 follow-up).
 - Expose `RedisJobStore.client` as a public property to remove
-  the `_client` coupling in `create_app` (ADR 0037 follow-up).
+  the `_client` coupling in `create_app` and `/healthz`
+  (ADR 0037 follow-up).
+- Next.js proxy route that injects `X-API-Key` server-side so the
+  web UI works under `ENABLE_API_AUTH=true` (ADR 0042 known
+  limit).
+- Request body-size cap as an outermost ASGI middleware — today
+  the full body is buffered before auth runs (ADR 0042 deferred).
+- Rate-limit `POST /conversations` and cap per-principal
+  conversation counts (only `/research` is throttled today).
+- Derive the stored owner from the secret (stable `owner_id`)
+  instead of the mutable display name — removes the rename/reuse
+  hazard structurally; needs a row migration (ADR 0042 interim:
+  duplicate-name rejection + permanence rule).
+- `/readyz` with 503-on-dependency-failure semantics for
+  orchestrators that want dependency-gated routing (`/healthz`
+  deliberately stays 200 — ADR 0042).
+- Cache purge command (`--older-than-days`) now that the
+  `created_at` indexes exist to support it (ADR 0042).

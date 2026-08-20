@@ -14,10 +14,12 @@ from collections.abc import AsyncIterator
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
 from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
 
 from src.api import create_app
+from src.api.jobs import InMemoryJobStore
 
 
 class StubWorkflow:
@@ -123,6 +125,35 @@ async def _wait_for_terminal(
         await asyncio.sleep(0.02)
 
 
+class _RedisishStore:
+    """Store that quacks like the Redis store for healthz.
+
+    Exposes a `_client` with an async `ping()` — the duck-typed
+    surface `/healthz` probes (ADR 0042) — that either answers or
+    raises, so tests cover both the healthy and the degraded path
+    without a Redis. Deliberately NOT an `InMemoryJobStore` subclass
+    (it delegates instead): the pre-ADR-0042 handler special-cased
+    `isinstance(store, InMemoryJobStore)`, and a subclass would let
+    that dead branch keep these tests green.
+    """
+
+    def __init__(self, *, ping_ok: bool = True) -> None:
+        self._inner = InMemoryJobStore()
+        self._ping_ok = ping_ok
+        self._client = SimpleNamespace(ping=self._ping)
+
+    async def _ping(self) -> bool:
+        if not self._ping_ok:
+            raise ConnectionError("redis unreachable")
+        return True
+
+    def __getattr__(self, name: str) -> Any:
+        # Everything else (create/get/update/...) is the inner
+        # store's; `__getattr__` only fires for names not set on the
+        # instance, so `_client` above stays ours.
+        return getattr(self._inner, name)
+
+
 class TestHealthz:
     async def test_healthz_returns_ok_and_concurrency_headroom(self) -> None:
         app = _make_app_with_stub(StubWorkflow(), max_concurrent_jobs=5)
@@ -135,7 +166,96 @@ class TestHealthz:
                 "status": "ok",
                 "active_jobs": 0,
                 "max_concurrent_jobs": 5,
+                # In-memory store, no postgres configured: nothing to
+                # ping, so the dependency map is honestly empty.
+                "dependencies": {},
             }
+
+    async def test_healthz_reports_redis_ok_when_ping_answers(self) -> None:
+        app = create_app(
+            build_workflow=lambda: StubWorkflow(),
+            store=_RedisishStore(ping_ok=True),
+        )
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            body = (await client.get("/healthz")).json()
+            assert body["status"] == "ok"
+            assert body["dependencies"] == {"redis": "ok"}
+
+    async def test_healthz_degraded_when_redis_ping_fails(self) -> None:
+        # Before ADR 0042 /healthz did no I/O at all and reported
+        # "ok" with a dead backing store — this asserts the probe
+        # actually touches the dependency.
+        app = create_app(
+            build_workflow=lambda: StubWorkflow(),
+            store=_RedisishStore(ping_ok=False),
+        )
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.get("/healthz")
+            # Still HTTP 200 — the process is alive; a 503 would put
+            # the container into a restart loop that fixes nothing.
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["status"] == "degraded"
+            assert body["dependencies"]["redis"] == "error: ConnectionError"
+
+    async def test_healthz_reports_postgres_when_configured(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import src.api.routes as routes_module
+        import src.tools.postgres_pool as pool_module
+
+        monkeypatch.setattr(
+            routes_module,
+            "settings",
+            SimpleNamespace(postgres_url="postgresql://u:p@db:5432/arxiv"),
+        )
+
+        def _broken_pool() -> Any:
+            raise RuntimeError("pool refused")
+
+        monkeypatch.setattr(pool_module, "get_pool", _broken_pool)
+        app = _make_app_with_stub(StubWorkflow())
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            body = (await client.get("/healthz")).json()
+            assert body["status"] == "degraded"
+            assert body["dependencies"]["postgres"] == "error: RuntimeError"
+
+    async def test_healthz_counts_in_flight_jobs_under_any_store(self) -> None:
+        # The pre-ADR-0042 handler hardcoded active_jobs=0 for every
+        # store except InMemoryJobStore; the count now comes from the
+        # worker's own task set, so it is honest under the Redis
+        # store too. `_RedisishStore` is exactly the shape that used
+        # to report constant zero.
+        stub = StubWorkflow(sleep_per_node_sec=0.05)
+        app = create_app(
+            build_workflow=lambda: stub, store=_RedisishStore(ping_ok=True)
+        )
+        async with LifespanManager(app), AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            submit = (await client.post("/research", json={"query": "q"})).json()
+            body = (await client.get("/healthz")).json()
+            assert body["active_jobs"] >= 1
+
+            await _wait_for_terminal(client, submit["job_id"])
+            # The done-callback discards the task; poll briefly for
+            # the counter to settle back to zero.
+            deadline = asyncio.get_event_loop().time() + 2.0
+            while True:
+                body = (await client.get("/healthz")).json()
+                if body["active_jobs"] == 0:
+                    break
+                if asyncio.get_event_loop().time() > deadline:
+                    raise AssertionError(
+                        f"active_jobs never drained: {body['active_jobs']}"
+                    )
+                await asyncio.sleep(0.02)
 
 
 class TestSubmitAndPoll:

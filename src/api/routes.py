@@ -18,12 +18,13 @@ from fastapi.responses import Response, StreamingResponse
 
 from src.api.auth import ApiKeyPrincipal, enforce_rate_limit, require_principal
 from src.api.conversations import (
+    DEFAULT_LIST_LIMIT,
+    MAX_LIST_LIMIT,
     Conversation,
     new_conversation_id,
 )
 from src.api.exporters import EXPORTERS
 from src.api.jobs import (
-    InMemoryJobStore,
     Job,
     JobStatus,
     drain_events,
@@ -278,10 +279,26 @@ async def review_plan(
     # on a different worker wakes up. Same-worker resumes still take
     # the local Event fast-path below. `publish_remote_resume` is
     # optional on the store Protocol — in-memory stores skip it.
+    #
+    # ADR 0042: a failed publish must be LOUD. Under multi-worker
+    # uvicorn this publish is the only mechanism that wakes a runner
+    # parked on another worker; when it's lost, the review still
+    # returns 200 but the job dies ~30 minutes later on
+    # `hitl_timeout` with nothing connecting the two events. We keep
+    # the 200 (the same-worker path already resumed via the local
+    # Event below, and the decision is durably persisted on the job
+    # row) but log at ERROR with the job_id so the incident timeline
+    # has the dropped publish in it.
     publish = getattr(state["store"], "publish_remote_resume", None)
     if callable(publish):
-        with contextlib.suppress(Exception):
+        try:
             await publish(job.job_id, body.action, job.resume_plan)
+        except Exception:
+            log.error(
+                "hitl_resume_publish_failed",
+                exc_info=True,
+                extra={"job_id": job.job_id, "action": body.action},
+            )
 
     # Same-worker wake-up. The runner is `await`ing on this Event
     # inside `_handle_hitl_pause`. When the review lands on the same
@@ -496,6 +513,11 @@ async def create_conversation(
     the presenting API key; other principals see 404 on
     read/delete. See ADR 0036.
     """
+    # ADR 0043: conversations are durable writes, so they draw from
+    # the same per-key hourly budget as `/research` submits. Without
+    # this, a leaked key could accrete unbounded rows on the shared
+    # Postgres with the limiter never firing. No-op under auth-off.
+    await enforce_rate_limit(request, principal)
     state = _get_state(request)
     conversation = Conversation(
         conversation_id=new_conversation_id(),
@@ -513,17 +535,34 @@ async def create_conversation(
 @router.get(
     "/conversations",
     response_model=list[ConversationListItem],
-    summary="List conversations, newest first (no job bodies).",
+    summary="List conversations, newest first (no job bodies), paginated.",
 )
 async def list_conversations(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
+    limit: int = Query(
+        DEFAULT_LIST_LIMIT,
+        ge=1,
+        le=MAX_LIST_LIMIT,
+        description="Page size — at most this many conversations come back.",
+    ),
+    offset: int = Query(
+        0,
+        ge=0,
+        description="Rows to skip, counted within the caller's own "
+        "conversations, newest first.",
+    ),
 ) -> list[ConversationListItem]:
     state = _get_state(request)
     # ADR 0036: scope the list to the caller's principal. Auth-off
-    # passes `None` and gets everything (legacy behavior).
+    # passes `None` and gets everything (legacy behavior). ADR 0043:
+    # limit/offset ride into the store so Postgres applies
+    # LIMIT/OFFSET in SQL instead of dragging the full table per
+    # sidebar load.
     conversations = await state["conversation_store"].list(
         principal_key_id=_principal_key_id(principal),
+        limit=limit,
+        offset=offset,
     )
     return [
         ConversationListItem(
@@ -571,21 +610,17 @@ async def delete_conversation(
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> Response:
     state = _get_state(request)
-    # ADR 0036: fetch first so we can verify ownership before the
-    # destructive call. Skipping the fetch would need a
-    # `delete_owned` primitive on every store; the extra round-trip
-    # is cheap and localizes the policy in the route layer.
-    conversation = await state["conversation_store"].get(conversation_id)
-    if conversation is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
-        )
-    _check_ownership(
-        conversation.principal_key_id,
-        principal,
-        detail="conversation_not_found",
+    # ADR 0043 (closes the ADR 0036 follow-up): ownership is inline
+    # in the store's DELETE — one statement instead of the old
+    # fetch + delete pair, so there's no window where the row
+    # changes hands between the check and the destructive call.
+    # `False` covers both "missing" and "not yours"; both map to
+    # the same 404 so the response never confirms the id exists
+    # (ADR 0036's 404-not-403 rule).
+    deleted = await state["conversation_store"].delete(
+        conversation_id,
+        principal_key_id=_principal_key_id(principal),
     )
-    deleted = await state["conversation_store"].delete(conversation_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
@@ -616,26 +651,93 @@ def _conversation_to_detail(conversation: Conversation) -> ConversationDetail:
     )
 
 
+# Dependency pings must be fast — /healthz is polled every 15s by
+# the compose healthcheck and must never wedge the probe behind a
+# slow backend. 2s leaves headroom inside the probe's 3s timeout.
+_HEALTHZ_PING_TIMEOUT_SEC = 2.0
+
+
+async def _redis_status(store: Any) -> str | None:
+    """Ping the store's Redis client, if it has one.
+
+    Duck-typed on `_client` — the same coupling `create_app` uses to
+    share the client with the rate limiter (ADR 0037 follow-up will
+    make it a public property). Returns `None` for stores with no
+    Redis behind them (in-memory), so the dependency simply doesn't
+    appear in the health payload.
+    """
+    client = getattr(store, "_client", None)
+    ping = getattr(client, "ping", None)
+    if not callable(ping):
+        return None
+    try:
+        await asyncio.wait_for(ping(), timeout=_HEALTHZ_PING_TIMEOUT_SEC)
+        return "ok"
+    except Exception as exc:  # noqa: BLE001 - report, never raise
+        return f"error: {type(exc).__name__}"
+
+
+async def _postgres_status() -> str:
+    """`SELECT 1` through the shared pool, bounded.
+
+    Runs in a thread because the psycopg pool is sync (ADR 0028).
+    `wait_for` abandons (not cancels) a stuck thread — acceptable:
+    the probe stays bounded and the thread dies with its connection
+    timeout.
+    """
+
+    def _ping() -> None:
+        from src.tools import postgres_pool
+
+        with postgres_pool.get_pool().connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT 1")
+
+    try:
+        await asyncio.wait_for(
+            asyncio.to_thread(_ping), timeout=_HEALTHZ_PING_TIMEOUT_SEC
+        )
+        return "ok"
+    except Exception as exc:  # noqa: BLE001 - report, never raise
+        return f"error: {type(exc).__name__}"
+
+
 @router.get(
     "/healthz",
     response_model=HealthResponse,
-    summary="Liveness + concurrency headroom.",
+    summary="Liveness + dependency status + per-worker concurrency.",
 )
 async def healthz(request: Request) -> HealthResponse:
+    """Process liveness plus an honest dependency report (ADR 0042).
+
+    Deliberately auth-exempt (orchestrator probes can't send keys)
+    and always HTTP 200: this endpoint answers "is THIS process
+    alive", and restarting the process does not fix a dead Redis —
+    a probe that 503s on dependency failure turns a backend blip
+    into a rolling-restart storm. Dependency state is reported in
+    the body (`status: degraded` + per-dependency breakdown) so
+    operators and smarter probes can see it.
+
+    `active_jobs` counts this worker's in-flight job tasks (queued +
+    running) — store-independent, so it no longer reports a constant
+    0 under the shipped Redis store.
+    """
     state = _get_state(request)
-    store = state["store"]
-    # Best-effort — the InMemoryJobStore exposes `all_jobs`; a Redis
-    # store may not, so we tolerate the shape.
-    active = 0
-    if isinstance(store, InMemoryJobStore):
-        jobs = await store.all_jobs()
-        active = sum(
-            1 for j in jobs if j.status in (JobStatus.pending, JobStatus.running)
-        )
+    dependencies: dict[str, str] = {}
+
+    redis_status = await _redis_status(state["store"])
+    if redis_status is not None:
+        dependencies["redis"] = redis_status
+    # Only ping Postgres when the deployment configures it — the
+    # in-memory demo path has no pool to check.
+    if settings.postgres_url:
+        dependencies["postgres"] = await _postgres_status()
+
+    degraded = any(v != "ok" for v in dependencies.values())
     return HealthResponse(
-        status="ok",
-        active_jobs=active,
+        status="degraded" if degraded else "ok",
+        active_jobs=len(state["tasks"]),
         max_concurrent_jobs=state["max_concurrent_jobs"],
+        dependencies=dependencies,
     )
 
 

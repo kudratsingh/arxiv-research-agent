@@ -44,7 +44,7 @@ def _stub_arxiv(monkeypatch: pytest.MonkeyPatch, papers: list[PaperMetadata]) ->
     monkeypatch.setattr(
         search_module,
         "search_arxiv",
-        lambda query, max_results: papers,
+        lambda query, max_results, raise_on_unavailable=False: papers,
     )
 
 
@@ -289,23 +289,89 @@ class TestSearchAgentFlagOn:
         # Deduped: the arXiv URL id appears exactly once.
         assert ranked_input_ids.count("http://arxiv.org/abs/2311.09000") == 1
 
-    def test_mock_data_short_circuit_skips_s2(
+    def test_versioned_seed_dedupes_against_unversioned_s2_reference(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        # When arXiv returns nothing and we fall back to mock data,
-        # we shouldn't hit S2 either — mock runs should be offline.
+        # arXiv Atom seeds carry a version suffix; S2's external-ID
+        # mapping produces the unversioned https form. The canonical
+        # dedup key must collapse the two to one paper (ADR 0041).
         monkeypatch.setattr(
             search_module,
             "settings",
             Settings(
                 enable_semantic_scholar=True,
                 use_mock_data=False,
+                semantic_scholar_seed_count=1,
+                semantic_scholar_refs_per_seed=1,
+                max_papers=5,
+            ),
+        )
+        _stub_arxiv(monkeypatch, [_paper("2311.09000v1", "Seed")])
+        captured = _stub_ranker(monkeypatch)
+
+        def fake_get_refs(paper_id: str, limit: int) -> list[PaperMetadata]:
+            return [_s2_ref("https://arxiv.org/abs/2311.09000", "Seed dup")]
+
+        monkeypatch.setattr(search_module, "get_references", fake_get_refs)
+
+        search_agent(_state())
+        # One paper survives; the arXiv seed (first occurrence) wins.
+        assert [p["id"] for p in captured["papers"]] == [
+            "http://arxiv.org/abs/2311.09000v1"
+        ]
+
+    def test_versioned_seed_looks_up_s2_without_version_suffix(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # S2 404s on `ARXIV:<id>v<n>` — before the version strip, every
+        # enrichment lookup failed and the flag was a silent no-op.
+        monkeypatch.setattr(
+            search_module,
+            "settings",
+            Settings(
+                enable_semantic_scholar=True,
+                use_mock_data=False,
+                semantic_scholar_seed_count=1,
+                semantic_scholar_refs_per_seed=2,
+                max_papers=5,
+            ),
+        )
+        _stub_arxiv(monkeypatch, [_paper("2405.12345v2", "Seed")])
+        _stub_ranker(monkeypatch)
+
+        seen_ids: list[str] = []
+
+        def fake_get_refs(paper_id: str, limit: int) -> list[PaperMetadata]:
+            seen_ids.append(paper_id)
+            return [_s2_ref("s2:ref-a", "S2 Ref A")]
+
+        monkeypatch.setattr(search_module, "get_references", fake_get_refs)
+
+        update = search_agent(_state())
+        assert seen_ids == ["ARXIV:2405.12345"]
+        assert "1 S2 references" in update["messages"][0].content
+
+    def test_mock_data_flag_skips_arxiv_and_s2(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Mock runs are fully offline: neither arXiv nor S2 is hit,
+        # even with enrichment enabled (ADR 0041).
+        monkeypatch.setattr(
+            search_module,
+            "settings",
+            Settings(
+                enable_semantic_scholar=True,
+                use_mock_data=True,
                 semantic_scholar_seed_count=3,
                 semantic_scholar_refs_per_seed=3,
             ),
         )
-        _stub_arxiv(monkeypatch, [])
         _stub_ranker(monkeypatch)
+
+        def _fail_arxiv(*_a: Any, **_kw: Any) -> list[PaperMetadata]:
+            raise AssertionError("mock run must not hit arXiv")
+
+        monkeypatch.setattr(search_module, "search_arxiv", _fail_arxiv)
 
         called = {"n": 0}
         monkeypatch.setattr(
