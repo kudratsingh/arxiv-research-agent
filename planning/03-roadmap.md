@@ -169,6 +169,54 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   redriver on restart, model-routing defaults, MiniLM →
   bge-small retrieval swap, SSE heartbeat rewrite, admin cleanup
   migration for legacy NULL-owner rows.
+- _2026-08-20_ — Admin CLI for legacy NULL-owner rows (ADR 0039).
+  Closes the last ADR 0036 follow-up. Rows written before
+  per-principal scoping carry `principal_key_id = NULL` and are
+  invisible to every principal under auth-on — not leaked, but not
+  reachable either. `make admin-migrate` reports, assigns, or
+  deletes them; an operator CLI rather than an automatic migration,
+  because ADR 0036's reason for rejecting auto-assignment still
+  holds (a wrong owner turns an access problem into a disclosure
+  problem). Dry-run by default. Four correctness details that each
+  took real thought: `assign` validates the target key against the
+  live keystore, Redis rewrites preserve TTL via `PTTL`,
+  availability is decided by which store is *selected* rather than
+  by whether `postgres_url` happens to be set, and `delete` logs
+  one record per destroyed row so an incident review can answer
+  "was mine one of them?". Fixed alongside: compose never set
+  `CONVERSATION_STORE` despite the setting's own description
+  claiming it did, so the reference deployment ran conversations
+  in-memory against a live Postgres — losing them on restart and
+  404ing across workers. Remaining follow-ups: role-based access on
+  `ApiKeyPrincipal` so these actions could move behind an
+  authenticated endpoint, and a live-Postgres test for the SQL.
+- _2026-08-20_ — Job redriver + SSE stream rewrite (ADR 0038). Two
+  ends of one failure. `RedisJobStore.update` TTLs only terminal
+  rows, so a worker dying mid-job left it `running` forever — and
+  the SSE stream watching that job hung waiting for a terminal
+  frame nobody would publish. Worker leases (`joblease:{job_id}`,
+  owner-checked CAS) make "orphaned" distinguishable from "alive on
+  another worker", so a rolling restart no longer reaps healthy
+  work; the startup sweep takes a cluster-wide `redrive:lock`,
+  reclaims leaseless non-terminal rows, and publishes the terminal
+  frame that unhangs their streams. The lease is taken *before* the
+  semaphore — jobs queued as `pending` are alive too. On the stream
+  side, the old heartbeat race cancelled the event reader while it
+  was suspended inside the async generator, running the generator's
+  `finally` and killing the stream silently after the first quiet
+  interval — i.e. on any workflow with a node slower than 15s. Loop
+  extracted from the route into a testable `sse_event_stream()`,
+  one long-lived read task, immediate keepalive, and an
+  `api_sse_max_duration_sec` deadline emitting `stream_timeout`.
+  Also closed a leaked pub/sub connection per disconnected client
+  (Starlette never `aclose()`s a body iterator). A follow-up audit
+  found four more against this code — stale-snapshot reclaim
+  destroying `job.result`, a leaseless run after a Redis blip, an
+  unenforced lease invariant, and SSE contract drift — all closed
+  before merge. Remaining follow-ups: periodic (not just startup)
+  sweep, pipelined batch claim, real-Redis coverage for the CAS
+  abort path, ADR 0035 subscribe TOCTOU, `stream_timeout` handling
+  in the web UI.
 - _2026-08-20_ — Retrieval and degradation honesty (ADR 0041),
   from the audit remediation. Mock papers now served only under
   `use_mock_data`; an empty live search raises
