@@ -35,13 +35,15 @@ jobs:
         with:
           python-version-file: .python-version
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: requirements-lock.txt
       - name: Install lint tooling
         run: |
           python -m pip install --upgrade pip
           # Install ruff by itself — ruff has no runtime deps, so we
-          # skip the full editable install to keep this job fast.
-          pip install ruff
+          # skip the full install to keep this job fast. The exact
+          # version comes from the lock so the gate can't drift on a
+          # ruff release with no repo change (ADR 0045).
+          pip install "$(grep '^ruff==' requirements-lock.txt)"
       - name: Ruff check
         run: ruff check .
 
@@ -55,11 +57,18 @@ jobs:
         with:
           python-version-file: .python-version
           cache: pip
-          cache-dependency-path: pyproject.toml
-      - name: Install project (with dev deps)
+          cache-dependency-path: requirements-lock.txt
+      - name: Install project (locked deps + dev tooling)
+        # Install the frozen set first, then the package itself with
+        # --no-deps so the run exercises exactly the versions the lock
+        # records — pyproject stays authoritative for ranges, the lock
+        # for what CI actually gates on (ADR 0045). `pip check` fails
+        # the job if the lock and pyproject's ranges ever drift apart.
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -r requirements-lock.txt
+          pip install --no-deps -e .
+          python -m pip check
       - name: Mypy strict
         # Tests use monkeypatching heavily and are not strict-typed
         # yet — a follow-up cleanup PR will bring them under the same
@@ -77,11 +86,18 @@ jobs:
         with:
           python-version-file: .python-version
           cache: pip
-          cache-dependency-path: pyproject.toml
-      - name: Install project (with dev deps)
+          cache-dependency-path: requirements-lock.txt
+      - name: Install project (locked deps + dev tooling)
+        # Install the frozen set first, then the package itself with
+        # --no-deps so the run exercises exactly the versions the lock
+        # records — pyproject stays authoritative for ranges, the lock
+        # for what CI actually gates on (ADR 0045). `pip check` fails
+        # the job if the lock and pyproject's ranges ever drift apart.
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -r requirements-lock.txt
+          pip install --no-deps -e .
+          python -m pip check
       - name: Add PostgreSQL to PATH (for pytest-postgresql)
         # ubuntu-latest preinstalls postgresql-16 but doesn't put its
         # bin on PATH. pytest-postgresql needs `postgres` + `pg_ctl`
@@ -142,7 +158,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Node 22 = current LTS (maintained to 2027-04-30); Node 20
+          # went EOL 2026-04-30. Keep in lockstep with web/Dockerfile.
+          node-version: "22"
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies

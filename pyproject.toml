@@ -3,49 +3,79 @@ name = "arxiv-research-agent"
 version = "0.1.0"
 description = "Multi-agent research assistant for ML/AI papers"
 requires-python = ">=3.11"
+# Range policy (ADR 0045): floors are the oldest release that (a) ships
+# a wheel for the project's pinned Python (3.14 — several old floors
+# had no cp314 wheel and were uninstallable as declared) and (b) speaks
+# the API the code actually targets; caps are `< next major` above the
+# locked version so an upstream major can't land untested via a fresh
+# resolve. Exact tested versions live in requirements-lock.txt — these
+# ranges stay authoritative for what *could* work, the lock records
+# what *does*.
 dependencies = [
-    "anthropic>=0.39.0",
-    "langgraph>=0.2.0",
-    "langchain-core>=0.3.0",
-    "arxiv>=2.1.0",
-    "requests>=2.32.0",
-    "PyMuPDF>=1.24.0",
-    "sentence-transformers>=3.0.0",
-    "faiss-cpu>=1.8.0",
-    "python-dotenv>=1.0.0",
-    "pydantic-settings>=2.5.0",
-    "langgraph-checkpoint-sqlite>=2.0.0",
-    "langgraph-checkpoint-postgres>=2.0.0",
-    "opentelemetry-api>=1.28.0",
-    "opentelemetry-sdk>=1.28.0",
-    "opentelemetry-exporter-otlp-proto-http>=1.28.0",
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.32.0",
-    "redis>=5.2.0",
-    "psycopg[binary,pool]>=3.2.0",
-    "markdown-it-py>=3.0.0",
-    "reportlab>=4.2.0",
-    "python-docx>=1.1.0",
-    "defusedxml>=0.7.1",
+    "anthropic>=0.39.0,<1.0",
+    # langgraph 0.x predates the 1.x graph/checkpoint API this codebase
+    # is written against — the old >=0.2.0 floor advertised versions
+    # the code cannot run on.
+    "langgraph>=1.0.0,<2.0",
+    "langchain-core>=1.0.0,<2.0",
+    "arxiv>=2.1.0,<5.0",
+    "requests>=2.32.0,<3.0",
+    # First PyMuPDF release with a cp314 wheel is 1.27.2.
+    "PyMuPDF>=1.27.2,<2.0",
+    "sentence-transformers>=3.0.0,<6.0",
+    # First faiss-cpu release with a cp314 wheel is 1.12.0.
+    "faiss-cpu>=1.12.0,<2.0",
+    "python-dotenv>=1.0.0,<2.0",
+    "pydantic-settings>=2.5.0,<3.0",
+    # 3.x is the line compatible with langgraph 1.x. 3.1.0 (locked) has
+    # a namespace-scoping advisory in the *Store* implementations we do
+    # not use; first patched release is 3.1.1 — pick it up at the next
+    # lock refresh (see docs/development.md).
+    "langgraph-checkpoint-sqlite>=3.1.0,<4.0",
+    "langgraph-checkpoint-postgres>=3.1.0,<4.0",
+    "opentelemetry-api>=1.28.0,<2.0",
+    "opentelemetry-sdk>=1.28.0,<2.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.28.0,<2.0",
+    "fastapi>=0.115.0,<1.0",
+    "uvicorn[standard]>=0.32.0,<1.0",
+    "redis>=5.2.0,<9.0",
+    # First psycopg-binary release with a cp314 wheel is 3.2.10.
+    "psycopg[binary,pool]>=3.2.10,<4.0",
+    "markdown-it-py>=3.0.0,<5.0",
+    "reportlab>=4.2.0,<6.0",
+    "python-docx>=1.1.0,<2.0",
+    "defusedxml>=0.7.1,<0.8",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.24.0",
-    "mypy>=1.10.0",
-    "ruff>=0.6.0",
-    "types-requests>=2.32.0",
-    "httpx>=0.27.0",
-    "asgi-lifespan>=2.1.0",
-    "fakeredis>=2.26.0",
-    "pytest-postgresql>=6.1.0",
-    "types-defusedxml>=0.7.0",
+    "pytest>=8.0.0,<10.0",
+    "pytest-asyncio>=0.24.0,<2.0",
+    # mypy + ruff are exact-pinned: a floating minor of either can fail
+    # CI on an unchanged main with no commit to revert (ADR 0045).
+    "mypy==2.1.0",
+    "ruff==0.15.21",
+    "types-requests>=2.32.0,<3.0",
+    "httpx>=0.27.0,<1.0",
+    "asgi-lifespan>=2.1.0,<3.0",
+    "fakeredis>=2.26.0,<3.0",
+    "pytest-postgresql>=6.1.0,<9.0",
+    "types-defusedxml>=0.7.0,<0.8",
 ]
 
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+# Explicit packaging: install the tree as a single top-level `src`
+# package, matching every `src.*` import in the codebase. Without
+# this, setuptools flat-layout auto-discovery installs the *contents*
+# of src/ as ~11 generically-named top-level modules (`api`,
+# `config`, `main`, ...) at the site-packages root, where a
+# same-named dependency file would silently collide (ADR 0045).
+include = ["src*"]
+namespaces = false
 
 [tool.ruff]
 line-length = 100

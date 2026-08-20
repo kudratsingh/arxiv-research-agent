@@ -169,3 +169,13 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   redriver on restart, model-routing defaults, MiniLM →
   bge-small retrieval swap, SSE heartbeat rewrite, admin cleanup
   migration for legacy NULL-owner rows.
+- _2026-08-20_ — Supply-chain hardening (ADR 0045). Bounded version
+  ranges (floors verified installable on py3.14, caps < next major)
+  + committed `requirements-lock.txt`; CI installs the lock so the
+  tested and gated sets are identical. Explicit `src` packaging,
+  lazy PEP 562 `src.api` re-exports (import of a light submodule:
+  3.52 s → 0.06 s), web stack to Next 15.5 / React 19 / Node 22 /
+  vitest 4, PyMuPDF AGPL dual-license posture recorded (license
+  choice deliberately left to the owner). Remaining follow-ups:
+  hashed cross-platform lock, Next 16 + eslint 9 migration,
+  Dependabot + pip-audit/npm-audit CI gates, license decision.

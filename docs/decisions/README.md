@@ -85,6 +85,11 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
+- [0045](0045-supply-chain-pinning-lockfile-and-license-posture.md) —
+  Supply-chain hardening: bounded version ranges +
+  `requirements-lock.txt` (CI installs the lock), explicit `src`
+  packaging, lazy PEP 562 `src.api` re-exports, Next 15 / React
+  19 / Node 22 / vitest 4, PyMuPDF AGPL posture recorded.
 
 ## When to write an ADR
 
