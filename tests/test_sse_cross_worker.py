@@ -14,6 +14,9 @@ it, so the local queue no longer matters under RedisJobStore.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
+from types import SimpleNamespace
+from typing import Any
 
 import fakeredis.aioredis
 import pytest
@@ -177,6 +180,107 @@ async def test_subscription_cancellation_cleans_up_pubsub(
     consumer.cancel()
     with pytest.raises(asyncio.CancelledError):
         await consumer
+
+
+class CompletingStub:
+    """Fake compiled workflow that runs two nodes and succeeds.
+
+    Just enough surface for `run_job`'s `_invoke_streaming`: an
+    `astream` that yields node updates, a `get_state` reporting no
+    interrupt, and an `invoke` returning the settled final state.
+    """
+
+    async def astream(
+        self,
+        state: dict[str, Any] | None,
+        config: dict[str, Any] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        yield {"planner": {"iteration": 0}}
+        yield {"synthesizer": {"iteration": 1, "quality_score": 0.9}}
+
+    def get_state(self, config: dict[str, Any] | None = None) -> Any:
+        return SimpleNamespace(next=(), values={})
+
+    def invoke(
+        self,
+        state: dict[str, Any] | None,
+        config: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "draft_report": "# Report",
+            "iteration": 1,
+            "quality_score": 0.9,
+        }
+
+
+@pytest.mark.asyncio
+async def test_runner_publishes_terminal_frame_to_other_worker(
+    shared_backend: fakeredis.aioredis.FakeRedis,
+) -> None:
+    """The end-to-end pin the audit asked for: a REAL `run_job`
+    against a RedisJobStore-backed store must publish its terminal
+    frame over pub/sub, and a subscriber on a second store instance
+    (simulating the stream endpoint on another worker) must receive
+    it with the documented payload and terminate.
+
+    The earlier tests in this module drive `publish_event` directly —
+    they'd stay green even if the runner never called it. This one
+    fails if `run_job` stops publishing the terminal frame, publishes
+    it to the local queue instead, or changes the payload shape.
+    """
+    from src.api.jobs import Job, JobStatus
+    from src.api.runner import run_job
+
+    runner_store = RedisJobStore(shared_backend, retention_sec=60)
+    stream_store = RedisJobStore(shared_backend, retention_sec=60)
+
+    job = Job(job_id="job-e2e", query="q", hitl_bypass=True)
+    await runner_store.create(job)
+
+    received: list[dict] = []
+
+    async def stream_consumer() -> None:
+        async for frame in stream_store.subscribe_events("job-e2e"):
+            received.append(frame)
+
+    consumer = asyncio.create_task(stream_consumer())
+    await asyncio.sleep(0.05)  # let the subscriber attach
+
+    await run_job(
+        job,
+        CompletingStub(),
+        runner_store,
+        asyncio.Semaphore(1),
+    )
+    # The subscriber must terminate on its own — that only happens
+    # when the runner's terminal frame actually arrives.
+    await asyncio.wait_for(consumer, timeout=2.0)
+
+    assert job.status == JobStatus.succeeded
+    events = [f["event"] for f in received]
+    assert events == [
+        "job_started",
+        "node_completed",
+        "node_completed",
+        "job_completed",
+    ]
+    terminal = received[-1]["data"]
+    assert set(terminal) == {
+        "job_id",
+        "iterations",
+        "quality_score",
+        "cost_usd",
+        "llm_calls",
+        "elapsed_sec",
+    }
+    assert terminal["job_id"] == "job-e2e"
+    assert terminal["iterations"] == 1
+    assert terminal["quality_score"] == 0.9
+
+    # Under RedisJobStore, pub/sub is the ONLY delivery path — the
+    # local queue must stay untouched or a multi-worker runner would
+    # eventually deadlock on the blocking terminal put.
+    assert job.event_queue.qsize() == 0
 
 
 class TestRunnerPubsubBypass:

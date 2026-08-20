@@ -1,13 +1,18 @@
 """Unit tests for the typed config surface.
 
 Verifies field types, validation ranges, env-var loading, defaults,
-and immutability. No network, no side effects.
+immutability, and the ADR-0046 Literal-typed enum fields. No
+network, no side effects.
 """
+
+from __future__ import annotations
 
 import pytest
 from pydantic import ValidationError
 
 from src.config import Settings
+
+pytestmark = pytest.mark.unit
 
 
 class TestDefaults:
@@ -118,6 +123,70 @@ class TestImmutability:
         s = Settings()
         with pytest.raises(ValidationError):
             s.max_papers = 42  # type: ignore[misc]
+
+
+class TestEnumFieldsAreLiteral:
+    """ADR 0046: enum-valued settings die at load on unknown values.
+
+    Before this, `job_store` and friends were bare `str` — a typo'd
+    env var (`JOB_STORE=Redis`, `PAPER_CACHE=postgress`) sailed
+    through validation and silently selected the downstream fallback
+    branch (in-memory store, disk cache, ...). Every case here fails
+    against the pre-ADR-0046 config surface.
+    """
+
+    @pytest.mark.parametrize(
+        ("field", "bad_value"),
+        [
+            ("job_store", "Redis"),  # case matters — no silent memory fallback
+            ("job_store", "postgres"),
+            ("conversation_store", "redis"),
+            ("checkpoint_backend", "sqllite"),
+            ("rate_limit_backend", "in-memory"),
+            ("paper_cache", "postgress"),
+            ("embedding_cache", "disk"),
+            ("log_level", "DEBG"),
+        ],
+    )
+    def test_unknown_value_rejected_at_load(
+        self, field: str, bad_value: str
+    ) -> None:
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(**{field: bad_value})
+        # The error names the offending field so an operator reading
+        # the crash log doesn't have to diff their whole env.
+        assert field in str(exc_info.value)
+
+    @pytest.mark.parametrize(
+        ("field", "values"),
+        [
+            ("job_store", ("memory", "redis")),
+            ("conversation_store", ("memory", "postgres")),
+            ("checkpoint_backend", ("sqlite", "postgres")),
+            ("rate_limit_backend", ("memory", "redis")),
+            ("paper_cache", ("disk", "postgres")),
+            ("embedding_cache", ("none", "postgres")),
+        ],
+    )
+    def test_every_documented_value_accepted(
+        self, field: str, values: tuple[str, ...]
+    ) -> None:
+        for value in values:
+            assert getattr(Settings(**{field: value}), field) == value
+
+    def test_unknown_value_rejected_from_env(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The real failure path is an env var, not a kwarg."""
+        monkeypatch.setenv("JOB_STORE", "redsi")
+        with pytest.raises(ValidationError):
+            Settings()
+
+    def test_log_level_case_insensitive(self) -> None:
+        """`LOG_LEVEL=debug` predates the Literal type — the before-
+        validator uppercases so existing deployments keep booting."""
+        assert Settings(log_level="debug").log_level == "DEBUG"  # type: ignore[arg-type]
+        assert Settings(log_level="Warning").log_level == "WARNING"  # type: ignore[arg-type]
 
 
 class TestExtraKeysIgnored:

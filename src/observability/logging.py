@@ -10,11 +10,15 @@ Design (ADR 0012):
     to stderr so eval / runner stdout stays report-only.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import sys
 from contextvars import ContextVar, Token
+from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 from src.config import settings
 
@@ -85,8 +89,15 @@ class JsonFormatter(logging.Formatter):
     """
 
     def format(self, record: logging.LogRecord) -> str:
+        # UTC with millisecond precision and an explicit offset
+        # (ADR 0042): local-time second-granularity stamps made
+        # cross-host timelines ambiguous and hid sub-second ordering
+        # between lease refreshes, redrive decisions and SSE frames.
+        ts = datetime.fromtimestamp(
+            record.created, tz=UTC
+        ).isoformat(timespec="milliseconds")
         payload: dict[str, Any] = {
-            "ts": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "ts": ts,
             "level": record.levelname,
             "logger": record.name,
             "run_id": _run_id.get(),
@@ -124,11 +135,47 @@ def _configure_root_once() -> None:
     handler.setFormatter(JsonFormatter())
     root.addHandler(handler)
 
-    # Prevent library debug noise from dominating output.
-    for noisy in ("httpx", "httpcore", "anthropic", "urllib3"):
-        logging.getLogger(noisy).setLevel(logging.WARNING)
+    # Prevent library debug noise from dominating output — but only
+    # when the app itself isn't running at DEBUG (ADR 0042). An
+    # unconditional demotion silently defeated `ANTHROPIC_LOG=debug`,
+    # which is exactly the switch on-call reaches for when jobs fail
+    # against the Anthropic API.
+    if root.level > logging.DEBUG:
+        for noisy in ("httpx", "httpcore", "anthropic", "urllib3"):
+            logging.getLogger(noisy).setLevel(logging.WARNING)
 
     _configured_root = True
+
+
+def redact_url(url: str) -> str:
+    """Strip credentials from a connection URL for safe logging.
+
+    Replaces the userinfo section (`user:password@`, or just
+    `user@`) with `***@`, keeping scheme, host, port, and path —
+    the parts with diagnostic value. Postgres and Redis URLs both
+    carry credentials inline, and `JsonFormatter` copies `extra`
+    values verbatim into the indexed log payload, so any startup
+    line logging a raw URL ships the production password to
+    everyone with log-read access (ADR 0042).
+
+    Args:
+        url: Any URL-shaped string. Values that don't parse or have
+            no userinfo are returned unchanged.
+
+    Returns:
+        The URL with userinfo replaced by `***`, or the input
+        untouched when there is nothing to redact.
+    """
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        # Unparseable input can't be proven credential-free, but it
+        # also can't be rebuilt; hide everything past the scheme.
+        return "***"
+    if "@" not in parts.netloc:
+        return url
+    host = parts.netloc.rsplit("@", 1)[1]
+    return urlunsplit(parts._replace(netloc=f"***@{host}"))
 
 
 def get_logger(name: str) -> logging.Logger:
