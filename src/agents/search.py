@@ -5,7 +5,17 @@ fetches one-hop references from Semantic Scholar for the top-K arXiv
 seed papers and unions them into the candidate pool before the final
 relevance ranking. Sprint 1 baseline is preserved byte-identical when
 the flag is off. See ADR 0023.
+
+Retrieval honesty (ADR 0041): the built-in `MOCK_PAPERS` demo fixture
+is reachable *only* under `settings.use_mock_data`. A live search that
+finds nothing raises a typed error instead — `NoPapersFoundError` when
+arXiv answered with zero hits, `ArxivUnavailableError` when every
+query failed at the transport level — so the job fails with an honest
+`error_type` rather than delivering a fluent briefing built on five
+hardcoded off-topic papers.
 """
+
+from __future__ import annotations
 
 import time
 from typing import Any
@@ -14,13 +24,44 @@ from langchain_core.messages import AIMessage
 
 from src.config import settings
 from src.graph.state import PaperMetadata, ResearchState
-from src.tools.arxiv_search import deduplicate_papers, search_arxiv
+from src.observability import get_logger
+from src.tools.arxiv_search import (
+    ArxivUnavailableError,
+    deduplicate_papers,
+    search_arxiv,
+)
 from src.tools.embeddings import rank_papers_by_relevance
 from src.tools.semantic_scholar import (
     _arxiv_url_to_s2_id,
     get_references,
 )
 
+log = get_logger(__name__)
+
+# Defense-in-depth cap on live arXiv queries per run. The planner's
+# schema bounds the plan size, but a HITL-edited plan arrives from
+# outside that schema — without a cap here, an oversized edited plan
+# drives unbounded arXiv traffic (3s pacing x N queries) from a single
+# job (ADR 0041).
+MAX_SEARCH_QUERIES_PER_RUN = 12
+
+
+class NoPapersFoundError(RuntimeError):
+    """A live arXiv search completed but matched zero papers.
+
+    Raised only when arXiv actually answered — a transport-level
+    failure raises `ArxivUnavailableError` instead, so the job's
+    `error_type` (the runner maps it from the exception class name)
+    names the real cause. Never raised under `settings.use_mock_data`,
+    and never raised when the state already carries papers from an
+    earlier search (a supervisor-loop re-search that finds nothing
+    keeps the prior result set instead of destroying it).
+    """
+
+# Offline demo fixture. Served ONLY under `settings.use_mock_data`
+# (ADR 0041) — never as a fallback for a live search, where these five
+# hallucination/RAG papers would masquerade as real retrieval results
+# for whatever the user actually asked about.
 MOCK_PAPERS: list[PaperMetadata] = [
     PaperMetadata(
         id="http://arxiv.org/abs/2311.09000",
@@ -102,46 +143,133 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
     """Search arXiv for papers matching the planned search queries.
 
     Runs each search query against the arXiv API, deduplicates results
-    by paper ID, optionally enriches via Semantic Scholar's citation
-    graph (ADR 0023), then ranks by embedding similarity to the
-    original research question. Caps at `settings.max_papers`. Falls
-    back to mock data if arXiv is unavailable.
+    by canonical paper ID, optionally enriches via Semantic Scholar's
+    citation graph (ADR 0023), then ranks by embedding similarity to
+    the original research question. Caps at `settings.max_papers`.
+
+    The `MOCK_PAPERS` demo fixture is served only under
+    `settings.use_mock_data` — a live search never silently substitutes
+    fabricated sources (ADR 0041).
 
     Args:
         state: Current research workflow state with search_queries populated.
 
     Returns:
         Partial state update with papers and a message.
+
+    Raises:
+        NoPapersFoundError: Live search answered with zero hits and the
+            state carries no papers from an earlier search round.
+        ArxivUnavailableError: Every live query failed at the transport
+            level (outage / rate limit) and the state carries no papers
+            from an earlier search round.
     """
     search_queries = state["search_queries"]
     query = state["query"]
 
-    # Try live arXiv search first
+    if settings.use_mock_data:
+        log.info(
+            "search_mock_data_served",
+            extra={"n_papers": len(MOCK_PAPERS)},
+        )
+        ranked_mock = rank_papers_by_relevance(
+            query, MOCK_PAPERS, top_k=settings.max_papers
+        )
+        return {
+            "papers": ranked_mock,
+            "messages": [
+                AIMessage(
+                    content=f"Found {len(ranked_mock)} papers (mock data).",
+                    name="search",
+                )
+            ],
+        }
+
+    if len(search_queries) > MAX_SEARCH_QUERIES_PER_RUN:
+        log.warning(
+            "search_query_cap_applied",
+            extra={
+                "requested": len(search_queries),
+                "cap": MAX_SEARCH_QUERIES_PER_RUN,
+            },
+        )
+        search_queries = search_queries[:MAX_SEARCH_QUERIES_PER_RUN]
+
     all_papers: list[PaperMetadata] = []
-    if not settings.use_mock_data:
-        for i, sq in enumerate(search_queries):
-            if i > 0:
-                time.sleep(3)
-            results = search_arxiv(sq, max_results=settings.results_per_query)
-            all_papers.extend(results)
+    failed_queries = 0
+    for i, sq in enumerate(search_queries):
+        if i > 0:
+            time.sleep(3)
+        try:
+            results = search_arxiv(
+                sq,
+                max_results=settings.results_per_query,
+                raise_on_unavailable=True,
+            )
+        except ArxivUnavailableError:
+            # Logged at WARNING inside search_arxiv; keep going — the
+            # remaining queries may still succeed and a partial result
+            # set beats no result set.
+            failed_queries += 1
+            continue
+        all_papers.extend(results)
 
     unique_papers = deduplicate_papers(all_papers) if all_papers else []
 
-    # Fall back to mock data if no results
     if not unique_papers:
-        print("  [search] Using mock paper data (arXiv unavailable)")
-        unique_papers = MOCK_PAPERS
+        # A supervisor-loop re-search that comes up empty must not
+        # destroy a result set an earlier round already paid for.
+        prior_papers = state.get("papers") or []
+        if prior_papers:
+            log.warning(
+                "search_empty_keeping_prior_papers",
+                extra={
+                    "n_prior": len(prior_papers),
+                    "failed_queries": failed_queries,
+                    "n_queries": len(search_queries),
+                },
+            )
+            return {
+                "papers": prior_papers,
+                "messages": [
+                    AIMessage(
+                        content=(
+                            f"Search returned no new papers; keeping "
+                            f"{len(prior_papers)} papers from the "
+                            f"previous round."
+                        ),
+                        name="search",
+                    )
+                ],
+            }
+        if search_queries and failed_queries == len(search_queries):
+            raise ArxivUnavailableError(
+                f"arXiv search failed for all {failed_queries} queries "
+                f"(outage or rate limit) — no papers retrieved"
+            )
+        raise NoPapersFoundError(
+            f"arXiv returned zero papers across "
+            f"{len(search_queries)} search queries"
+        )
+
+    if failed_queries:
+        log.warning(
+            "search_partial_arxiv_failure",
+            extra={
+                "failed_queries": failed_queries,
+                "n_queries": len(search_queries),
+                "n_papers": len(unique_papers),
+            },
+        )
 
     s2_reference_count = 0
-    if (
-        settings.enable_semantic_scholar
-        and unique_papers is not MOCK_PAPERS
-    ):
+    if settings.enable_semantic_scholar:
         s2_papers = _enrich_with_s2_references(query, unique_papers)
         s2_reference_count = len(s2_papers)
-        # `deduplicate_papers` keys off `id`; arXiv-URL ids collide with
-        # S2 references that carry an arXiv external ID, so the union
-        # is naturally deduped.
+        # `deduplicate_papers` keys off the canonical paper ID; arXiv
+        # seeds collide with S2 references that carry an arXiv external
+        # ID (version- and scheme-insensitively), so the union is
+        # naturally deduped.
         unique_papers = deduplicate_papers(unique_papers + s2_papers)
 
     ranked_papers = rank_papers_by_relevance(
@@ -150,8 +278,6 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
 
     if s2_reference_count:
         source_label = f"arXiv + {s2_reference_count} S2 references"
-    elif not all_papers:
-        source_label = "mock data"
     else:
         source_label = "arXiv"
 

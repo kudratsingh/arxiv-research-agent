@@ -217,6 +217,78 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   sweep, pipelined batch claim, real-Redis coverage for the CAS
   abort path, ADR 0035 subscribe TOCTOU, `stream_timeout` handling
   in the web UI.
+- _2026-08-20_ — Eval cost accounting + regression-gate accuracy
+  (ADR 0044). `PRICES_USD_PER_MILLION` re-verified against
+  published Anthropic pricing (Opus 4.7 was 3x high, Haiku 4.5
+  20% low; current-generation ids added, `PRICES_LAST_VERIFIED`
+  tripwire, coverage test over config model defaults). Nightly
+  regression gate split by metric class: score metrics keep the
+  ADR 0010 epsilon; `iterations`/`llm_calls`/`cost_usd` now need
+  a per-metric absolute floor AND relative rise, so +1 call or a
+  penny wiggle can't fail the nightly. Statistics limits
+  documented in docs/eval.md. Remaining follow-ups:
+  prices-in-settings, 3-repeat baseline to re-derive thresholds
+  from measured spread.
+- _2026-08-20_ — Config strictness + audit coverage gaps (ADR 0046).
+  Every enum-valued settings field (`job_store`,
+  `conversation_store`, `checkpoint_backend`, `rate_limit_backend`,
+  `paper_cache`, `embedding_cache`, `log_level`) becomes a
+  `Literal[...]` so an unrecognized env value fails at settings
+  load with the field named, instead of silently selecting the
+  downstream fallback backend. Closes five audit-flagged test
+  gaps with mutation-checked behaviour tests: HTTP-level 429 on
+  the submit route, route-level job ownership (principal A's job
+  is 404 for B on GET/stream/review/export), `run_job`'s
+  cost-cap + timeout handlers, the terminal SSE frame arriving
+  over Redis pub/sub from a real `run_job`, and the hot-reload
+  keystore + CORS wiring through `create_app`.
+- _2026-08-20_ — Conversation store hardening (ADR 0043). Audit
+  remediation for the conversation layer: `init_schema()` moves
+  inside the `to_thread` closures so pool open + DDL never block
+  the event loop; `append_job` serializes on the parent row
+  (`FOR UPDATE`) with single-statement ordinal allocation and an
+  ERROR log before any exception propagates past the store;
+  `GET /conversations` gains limit/offset pagination (default 50,
+  cap 200) pushed into SQL and composed with ADR 0036 scoping;
+  delete carries ownership inline in one DELETE statement,
+  closing that ADR's follow-up; `POST /conversations` now draws
+  from the per-key hourly rate-limit budget. Remaining
+  follow-ups: composite `(principal_key_id, updated_at DESC)`
+  index, dedicated conversation-create limit + per-principal
+  conversation ceiling, keyset cursor if deep paging appears.
+- _2026-08-20_ — API guardrails + deploy hygiene (ADR 0042), from
+  the audit remediation. Bounds the HITL `Plan` lists (20 items x
+  500 chars — an unbounded revise pinned uncancellable executor
+  threads and unbounded arXiv traffic); compares API keys as bytes
+  (non-ASCII `X-API-Key` was an unauthenticated 500) and rejects
+  duplicate principal names; `/healthz` pings Redis + Postgres
+  under 2s timeouts, reports `ok`/`degraded` per dependency, and
+  derives `active_jobs` from the worker's task set (was a constant
+  0 under the Redis store); resume-publish failures on the review
+  endpoint log at ERROR with the job_id instead of vanishing into
+  `contextlib.suppress`; uvicorn gets `timeout_graceful_shutdown`
+  (set in serve.py, which the compose command now boots, with
+  `stop_grace_period` above it) so SIGTERM reaches the lifespan
+  cleanup; `redact_url()` keeps connection-
+  string credentials out of the JSON log stream; compose gains the
+  CORS allowlist that makes the browser demo work at all plus
+  `ENABLE_API_AUTH`/`API_KEYS` pass-through with the auth-on recipe
+  in docs/security.md. Deferred, tracked there: body-size cap,
+  `/readyz`, conversation rate limit, owner-id migration, cache
+  purge command, web-UI key proxy.
+- _2026-08-20_ — Retrieval and degradation honesty (ADR 0041),
+  from the audit remediation. Mock papers now served only under
+  `use_mock_data`; an empty live search raises
+  `ArxivUnavailableError` / `NoPapersFoundError` instead of
+  fabricating sources. Cache READ paths degrade to recompute
+  (closing the ADR 0028 gap), one malformed LLM response degrades
+  one paper / triggers one synthesizer retry instead of failing
+  the run, S2 lookups strip the arXiv version suffix (enrichment
+  was a silent 100% no-op), dedup keys canonicalized across
+  sources, PDF fetches get an SSRF destination guard with per-hop
+  redirect validation. Remaining follow-ups: IP-pinning fetch
+  adapter for DNS rebinding, model-weights bake + readiness
+  probe, per-node degradation counts on the job record.
 - _2026-08-20_ — Supply-chain hardening (ADR 0045). Bounded version
   ranges (floors verified installable on py3.14, caps < next major)
   + committed `requirements-lock.txt`; CI installs the lock so the

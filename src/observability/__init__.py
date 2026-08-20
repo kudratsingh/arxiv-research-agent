@@ -24,6 +24,7 @@ from src.observability.logging import (
     current_run_id,
     get_logger,
     propagate_run_context,
+    redact_url,
     reset_run_id,
 )
 from src.observability.tracing import (
@@ -45,6 +46,7 @@ __all__ = [
     "get_tracer",
     "propagate_run_context",
     "record_llm_call",
+    "redact_url",
     "reset_run_id",
     "start_cost_tracking",
     "traced_node",

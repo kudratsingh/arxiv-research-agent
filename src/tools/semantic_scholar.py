@@ -19,6 +19,7 @@ with neither PDF nor abstract can't be analyzed regardless of source.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from src.config import settings
@@ -54,7 +55,12 @@ def _map_s2_paper(item: dict[str, Any]) -> PaperMetadata | None:
     if not isinstance(item, dict):
         return None
 
-    title = str(item.get("title") or "").strip()
+    # Normalize the title to a single line, length-capped. The reader
+    # interpolates titles into its prompt outside the untrusted-content
+    # tags on the premise that titles are one short line; S2 records are
+    # attacker-influenceable, so the premise is enforced here at the
+    # adapter boundary (ADR 0020 / ADR 0041).
+    title = " ".join(str(item.get("title") or "").split())[:300]
     abstract = item.get("abstract")
     if not title or not isinstance(abstract, str) or not abstract.strip():
         return None
@@ -76,10 +82,14 @@ def _map_s2_paper(item: dict[str, Any]) -> PaperMetadata | None:
             arxiv_id = arxiv_id_raw.strip()
 
     # Prefer the arXiv URL as the paper id so this record dedupes
-    # against arXiv-sourced entries. Fall back to a namespaced S2 id.
+    # against arXiv-sourced entries (deduplicate_papers canonicalizes
+    # scheme and version, so `https` here still collides with the Atom
+    # feed's versioned `http` ids). https, not http: these URLs drive
+    # PDF fetches downstream and must not be MITM-able (ADR 0033).
+    # Fall back to a namespaced S2 id.
     if arxiv_id:
-        paper_id = f"http://arxiv.org/abs/{arxiv_id}"
-        landing_url = f"http://arxiv.org/abs/{arxiv_id}"
+        paper_id = f"https://arxiv.org/abs/{arxiv_id}"
+        landing_url = f"https://arxiv.org/abs/{arxiv_id}"
     else:
         s2_id = str(item.get("paperId") or "").strip()
         if not s2_id:
@@ -96,7 +106,7 @@ def _map_s2_paper(item: dict[str, Any]) -> PaperMetadata | None:
         if candidate:
             pdf_url = candidate
     if not pdf_url and arxiv_id:
-        pdf_url = f"http://arxiv.org/pdf/{arxiv_id}"
+        pdf_url = f"https://arxiv.org/pdf/{arxiv_id}"
 
     return PaperMetadata(
         id=paper_id,
@@ -226,13 +236,17 @@ def _arxiv_url_to_s2_id(paper_id: str) -> str:
 
     S2's REST API accepts `ARXIV:<arxiv_id>` as a paper identifier —
     handy because our arXiv-sourced papers carry the URL form as their
-    `id`. Non-arXiv ids pass through unchanged (S2 already accepts its
-    own paperId).
+    `id`. The `vN` version suffix arXiv's Atom feed appends is stripped:
+    S2 indexes papers by the *unversioned* arXiv id and 404s on
+    `ARXIV:2405.12345v2`, which used to make the whole enrichment path
+    a silent no-op (ADR 0041). Non-arXiv ids pass through unchanged
+    (S2 already accepts its own paperId).
     """
     marker = "arxiv.org/abs/"
     idx = paper_id.find(marker)
     if idx >= 0:
         arxiv_id = paper_id[idx + len(marker):].strip("/")
+        arxiv_id = re.sub(r"v\d+$", "", arxiv_id)
         if arxiv_id:
             return f"ARXIV:{arxiv_id}"
     if paper_id.startswith("s2:"):

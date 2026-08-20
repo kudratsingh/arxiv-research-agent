@@ -19,12 +19,24 @@ Two ADR-0033 hardenings live here:
   under `arxiv.org`; other hosts hash the full URL. Otherwise
   `https://evil.com/2311.09000/attack.pdf` collides with the real
   cache slot for that arXiv ID.
+
+ADR 0041 adds destination validation (SSRF guard): PDF URLs from
+non-arXiv hosts — reachable through Semantic Scholar's
+attacker-influenceable `openAccessPdf.url` — must be https and must
+not resolve to a private, loopback, link-local, or otherwise
+non-public address. Redirects are never followed blindly; each hop is
+re-validated. arXiv URLs get their scheme upgraded to https before
+fetching.
 """
 
+from __future__ import annotations
+
 import hashlib
+import ipaddress
 import re
+import socket
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import fitz
 import requests
@@ -43,7 +55,85 @@ _STREAM_CHUNK_BYTES = 64 * 1024
 
 _ARXIV_ID = re.compile(r"(\d{4}\.\d{4,5}(?:v\d+)?)")
 
+# Redirect statuses walked manually so every hop's destination gets
+# validated — `allow_redirects=True` would happily follow a public
+# host's 302 into the cloud metadata endpoint.
+_REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
+_MAX_REDIRECTS = 5
+
 log = get_logger(__name__)
+
+
+def _is_arxiv_host(host: str) -> bool:
+    """Whether `host` is arxiv.org or a subdomain of it."""
+    host = host.lower()
+    return host == "arxiv.org" or host.endswith(".arxiv.org")
+
+
+def _upgrade_arxiv_scheme(pdf_url: str) -> str:
+    """Rewrite `http://` to `https://` for arXiv-hosted URLs.
+
+    Both the Atom feed and the Semantic Scholar fallback historically
+    emitted plaintext `http://arxiv.org/pdf/...` URLs; fetching those
+    over http would let an in-path attacker substitute the PDF body
+    that ends up in Claude's prompt (ADR 0033's threat model). arXiv
+    serves everything over https, so the upgrade is always safe.
+    """
+    parsed = urlparse(pdf_url)
+    if parsed.scheme == "http" and _is_arxiv_host(parsed.hostname or ""):
+        return pdf_url.replace("http://", "https://", 1)
+    return pdf_url
+
+
+def _is_fetchable(url: str) -> bool:
+    """SSRF guard: whether `url` is a safe PDF download destination.
+
+    Requires an https scheme for every host. arXiv hosts are trusted
+    without a DNS pre-flight (their URLs come from arXiv's own
+    TLS-served Atom feed, and skipping the resolve keeps unit tests
+    offline). Any other host — reachable via Semantic Scholar's
+    attacker-influenceable `openAccessPdf.url` — must resolve, and
+    every resolved address must be globally routable: private,
+    loopback, link-local, reserved, multicast, and unspecified
+    addresses are all rejected, as is a DNS failure.
+
+    A pre-flight resolve is not airtight against DNS rebinding (the
+    fetch re-resolves); the residual risk is recorded in ADR 0041.
+    """
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    if parsed.scheme != "https" or not host:
+        log.warning(
+            "pdf_url_rejected_scheme",
+            extra={"pdf_url": url},
+        )
+        return False
+    if _is_arxiv_host(host):
+        return True
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except OSError as exc:
+        log.warning(
+            "pdf_url_rejected_dns",
+            extra={"pdf_url": url, "error": str(exc)},
+        )
+        return False
+    for info in infos:
+        try:
+            addr = ipaddress.ip_address(info[4][0])
+        except ValueError:
+            log.warning(
+                "pdf_url_rejected_bad_address",
+                extra={"pdf_url": url, "address": str(info[4][0])},
+            )
+            return False
+        if not addr.is_global:
+            log.warning(
+                "pdf_url_rejected_non_public",
+                extra={"pdf_url": url, "address": str(addr)},
+            )
+            return False
+    return True
 
 
 def _cache_key(pdf_url: str) -> str:
@@ -68,22 +158,53 @@ def _download_pdf(pdf_url: str, dest: Path) -> bool:
     Streams the response body with a ``settings.pdf_max_bytes`` cap
     so a large adversarial PDF can't exhaust memory. Uses a retrying
     session so transient 429s don't drop us into abstract-only mode.
-    A hard failure (bad URL, non-PDF body, oversize, extraction
-    throw) returns False and the reader falls back gracefully.
+    A hard failure (bad URL, unsafe destination, non-PDF body,
+    oversize, extraction throw) returns False and the reader falls
+    back gracefully.
+
+    Redirects are walked manually with every hop re-validated through
+    `_is_fetchable` — following them blindly would let a public host
+    302 the fetcher into an internal address (ADR 0041's SSRF guard).
     """
     session = build_retrying_session()
     max_bytes = settings.pdf_max_bytes
-    try:
-        resp = session.get(
-            pdf_url,
-            timeout=DOWNLOAD_TIMEOUT_SEC,
-            allow_redirects=True,
-            stream=True,
-        )
-    except (requests.RequestException, OSError) as exc:
+    url = _upgrade_arxiv_scheme(pdf_url)
+
+    resp: requests.Response | None = None
+    for _hop in range(_MAX_REDIRECTS + 1):
+        if not _is_fetchable(url):
+            return False
+        try:
+            resp = session.get(
+                url,
+                timeout=DOWNLOAD_TIMEOUT_SEC,
+                allow_redirects=False,
+                stream=True,
+            )
+        except (requests.RequestException, OSError) as exc:
+            log.warning(
+                "pdf_download_failed",
+                extra={"pdf_url": url, "error": str(exc)},
+            )
+            return False
+        if resp.status_code not in _REDIRECT_STATUSES:
+            break
+        location = resp.headers.get("Location", "")
+        resp.close()
+        resp = None
+        if not location:
+            log.warning(
+                "pdf_download_redirect_without_location",
+                extra={"pdf_url": url},
+            )
+            return False
+        # Relative Locations resolve against the current hop. The next
+        # loop iteration re-validates the destination before fetching.
+        url = _upgrade_arxiv_scheme(urljoin(url, location))
+    if resp is None:
         log.warning(
-            "pdf_download_failed",
-            extra={"pdf_url": pdf_url, "error": str(exc)},
+            "pdf_download_too_many_redirects",
+            extra={"pdf_url": pdf_url, "max_redirects": _MAX_REDIRECTS},
         )
         return False
 
@@ -91,7 +212,7 @@ def _download_pdf(pdf_url: str, dest: Path) -> bool:
         if resp.status_code != 200:
             log.warning(
                 "pdf_download_http_error",
-                extra={"pdf_url": pdf_url, "status": resp.status_code},
+                extra={"pdf_url": url, "status": resp.status_code},
             )
             return False
 
@@ -177,7 +298,19 @@ def parse_pdf(
     key = _cache_key(pdf_url)
     pdf_path = cache_dir / f"{key}.pdf"
 
-    cached_text = cache.get_text(key)
+    # The cache is an optimization, never a dependency: a read failure
+    # (pool timeout, Postgres restart) is treated as a miss and logged,
+    # mirroring the write-path guard below. Otherwise an optional cache
+    # becomes a hard job-killer, contradicting ADR 0028's degrade-to-
+    # recompute consequence (ADR 0041).
+    cached_text: str | None = None
+    try:
+        cached_text = cache.get_text(key)
+    except Exception as exc:
+        log.warning(
+            "paper_cache_get_failed",
+            extra={"paper_key": key, "error": str(exc)},
+        )
     if cached_text is not None:
         return cached_text
 
