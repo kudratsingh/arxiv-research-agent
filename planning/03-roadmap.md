@@ -169,6 +169,27 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   redriver on restart, model-routing defaults, MiniLM →
   bge-small retrieval swap, SSE heartbeat rewrite, admin cleanup
   migration for legacy NULL-owner rows.
+- _2026-08-20_ — Admin CLI for legacy NULL-owner rows (ADR 0039).
+  Closes the last ADR 0036 follow-up. Rows written before
+  per-principal scoping carry `principal_key_id = NULL` and are
+  invisible to every principal under auth-on — not leaked, but not
+  reachable either. `make admin-migrate` reports, assigns, or
+  deletes them; an operator CLI rather than an automatic migration,
+  because ADR 0036's reason for rejecting auto-assignment still
+  holds (a wrong owner turns an access problem into a disclosure
+  problem). Dry-run by default. Four correctness details that each
+  took real thought: `assign` validates the target key against the
+  live keystore, Redis rewrites preserve TTL via `PTTL`,
+  availability is decided by which store is *selected* rather than
+  by whether `postgres_url` happens to be set, and `delete` logs
+  one record per destroyed row so an incident review can answer
+  "was mine one of them?". Fixed alongside: compose never set
+  `CONVERSATION_STORE` despite the setting's own description
+  claiming it did, so the reference deployment ran conversations
+  in-memory against a live Postgres — losing them on restart and
+  404ing across workers. Remaining follow-ups: role-based access on
+  `ApiKeyPrincipal` so these actions could move behind an
+  authenticated endpoint, and a live-Postgres test for the SQL.
 - _2026-08-20_ — Job redriver + SSE stream rewrite (ADR 0038). Two
   ends of one failure. `RedisJobStore.update` TTLs only terminal
   rows, so a worker dying mid-job left it `running` forever — and
