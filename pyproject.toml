@@ -129,14 +129,16 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    # Test tiers per docs/testing.md.
+    # Test tiers per docs/testing.md. Note that `-m unit` selects only
+    # tests *explicitly* tagged `pytest.mark.unit` — unmarked tests are
+    # excluded by that filter, not treated as unit. CI's per-PR gate is
+    # `pytest -m "not e2e"` (see docs/development.md, Troubleshooting).
     #
-    # `unit`: pure functions, no I/O, fast. Default tier — an unmarked
-    # test is treated as `unit`. Runs on every PR.
+    # `unit`: pure functions, no I/O, fast.
     # `integration`: exercises external libraries against local fixtures
-    # or canned responses. No live network. Runs on merge to main.
+    # or canned responses. No live network.
     # `e2e`: full workflow with recorded LLM cassettes. Runs nightly.
-    "unit: fast pure-function tests (default tier)",
+    "unit: fast pure-function tests",
     "integration: local-fixture tests against external libs",
     "e2e: full workflow with recorded cassettes",
 ]
