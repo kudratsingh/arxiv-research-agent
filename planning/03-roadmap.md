@@ -196,3 +196,27 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   sweep, pipelined batch claim, real-Redis coverage for the CAS
   abort path, ADR 0035 subscribe TOCTOU, `stream_timeout` handling
   in the web UI.
+- _2026-08-20_ — Async checkpointer + runner correctness (ADR
+  0040). The audit's headline: the HTTP research path had never
+  run a node. `astream` awaits the checkpointer's async surface,
+  and both shipped backends compiled the sync savers — instant
+  `NotImplementedError` on every job — while the Dockerfile CMD's
+  `--log-config /dev/null` crashed uvicorn before binding and the
+  Redis store's `asdict` serializer 500'd every HITL review by
+  deep-copying a live Event waiter. `build_workflow` gains
+  `async_checkpointer=True` (AsyncSqliteSaver / AsyncPostgresSaver
+  on a reconnecting `psycopg_pool` pool; CLI + eval keep the sync
+  default untouched); the runner goes `aget_state` /
+  `aupdate_state`, resumes interrupts in a bounded loop (the
+  re-armed planner interrupt no longer truncates re-planned jobs),
+  and reads the final state from the checkpoint instead of a
+  trailing `invoke` that silently doubled every LLM call. Terminal
+  store writes retry + absorb, prior-context failures degrade
+  instead of wedging jobs, `_local` evicts on terminal, terminal →
+  different-terminal overwrites are refused, and the in-memory
+  store finally gets its retention sweep. New
+  `test_api_smoke_e2e.py` boots the production wiring end-to-end
+  (verified failing on the pre-fix base). Remaining follow-ups:
+  timeout path still abandons the node thread (needs a bounded
+  executor + cancel token), `ConversationStore.update_title`,
+  redriver-side CAS on `_fail_orphan`.

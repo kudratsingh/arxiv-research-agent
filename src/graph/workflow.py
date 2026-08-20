@@ -12,11 +12,16 @@ Two workflow shapes are supported, chosen by `settings.enable_supervisor`:
 
 Two production knobs configured here regardless of shape:
 
-- **Checkpointing** via `SqliteSaver` (per-worker) or `PostgresSaver`
-  (shared) — selected by `settings.checkpoint_backend`. Persists
-  per-node state so an interrupted run can be resumed by invoking
-  with the same `thread_id`. See ADR 0013 (original SQLite choice)
-  and ADR 0034 (Postgres migration).
+- **Checkpointing** — selected by `settings.checkpoint_backend`,
+  with the sync/async surface selected by the caller. The CLI and
+  eval runner drive the graph with the sync `invoke` and get
+  `SqliteSaver` / `PostgresSaver`; the API runner drives it with
+  `astream` and must pass `async_checkpointer=True` for
+  `AsyncSqliteSaver` / `AsyncPostgresSaver` — the sync savers raise
+  `NotImplementedError` from their async methods, which killed
+  every API job before its first node ran. See ADR 0013 (original
+  SQLite choice), ADR 0034 (Postgres migration) and ADR 0040
+  (async surface).
 - **Tracing** via `traced_node` (ADR 0012 follow-up). When
   `settings.enable_tracing` is on, every agent execution becomes an
   OpenTelemetry span with `run_id` / query / iteration attributes.
@@ -31,7 +36,7 @@ job (audit finding, closed by ADR 0034).
 from __future__ import annotations
 
 from collections.abc import Hashable
-from contextlib import ExitStack
+from contextlib import AsyncExitStack, ExitStack
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +52,9 @@ from src.agents.synthesizer import synthesizer_agent
 from src.agents.verifier import verifier_agent
 from src.config import settings
 from src.graph.state import ResearchState
-from src.observability import traced_node
+from src.observability import get_logger, traced_node
+
+log = get_logger(__name__)
 
 
 def route_after_critique(state: ResearchState) -> str:
@@ -62,6 +69,16 @@ def route_after_critique(state: ResearchState) -> str:
     if target in ("planner", "search", "synthesizer"):
         return target
 
+    # The critic asked for a revision but named a target this router
+    # cannot dispatch. Finishing is the safe fallback (the draft
+    # ships with its failing quality_score attached), but it must be
+    # visible — a silent END here reads as an approved report
+    # (audit P3; validating the target at the critic is the fuller
+    # fix, tracked in ADR 0040's follow-ups).
+    log.warning(
+        "revision_target_undispatchable",
+        extra={"revision_target": target, "run_id": state.get("run_id")},
+    )
     return END
 
 
@@ -127,6 +144,88 @@ def _open_postgres_checkpointer(exit_stack: ExitStack) -> Any:
     # EXISTS DDL for its own checkpoint tables. Safe under multi-
     # worker cold start.
     saver.setup()
+    return saver
+
+
+async def _aopen_checkpointer(exit_stack: AsyncExitStack) -> Any | None:
+    """Async twin of `_open_checkpointer` for the API runner (ADR 0040).
+
+    The runner drives the graph with `astream` / `aget_state` /
+    `aupdate_state`, whose Pregel loop calls the checkpointer's async
+    surface unconditionally. The sync savers inherit that surface from
+    `BaseCheckpointSaver`, which raises `NotImplementedError` — so the
+    async path gets real async savers instead.
+    """
+    if not settings.enable_checkpointing:
+        return None
+
+    backend = settings.checkpoint_backend
+    if backend == "postgres":
+        return await _aopen_postgres_checkpointer(exit_stack)
+    if backend == "sqlite":
+        return await _aopen_sqlite_checkpointer(exit_stack)
+    raise ValueError(
+        f"Unknown checkpoint_backend={backend!r}; expected 'sqlite' or 'postgres'."
+    )
+
+
+async def _aopen_sqlite_checkpointer(exit_stack: AsyncExitStack) -> Any:
+    """AsyncSqliteSaver (aiosqlite) at `settings.checkpoint_db_path`."""
+    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+
+    db_path = Path(settings.checkpoint_db_path)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    cm = AsyncSqliteSaver.from_conn_string(str(db_path))
+    return await exit_stack.enter_async_context(cm)
+
+
+async def _aopen_postgres_checkpointer(exit_stack: AsyncExitStack) -> Any:
+    """AsyncPostgresSaver on a reconnecting `AsyncConnectionPool`.
+
+    Deliberately a pool rather than `from_conn_string` (which the sync
+    path still uses): a single `psycopg` connection never reconnects,
+    so one Postgres restart would wedge every worker's checkpoint path
+    for the rest of the process's life — the whole workflow is
+    compiled once at startup (ADR 0034) and shares this saver. The
+    pool checks out a connection per checkpoint operation, health-
+    checks it (`check_connection`), and replaces dead ones, so a
+    database blip costs one failed job instead of a rolling restart.
+
+    Connection kwargs mirror what `AsyncPostgresSaver.from_conn_string`
+    would set itself: autocommit (setup's DDL and the saver's writes
+    manage their own transactions), `dict_row` (the saver reads rows
+    by column name), `prepare_threshold=0` (PgBouncer-safe).
+    """
+    from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+    from psycopg.rows import dict_row
+    from psycopg_pool import AsyncConnectionPool
+
+    url = settings.postgres_url
+    if not url:
+        raise RuntimeError(
+            "checkpoint_backend=postgres requires POSTGRES_URL to be set; "
+            "the compose stack wires this automatically."
+        )
+    pool: AsyncConnectionPool[Any] = AsyncConnectionPool(
+        url,
+        min_size=1,
+        # Each running job holds at most one checkpoint operation at a
+        # time, so the concurrency ceiling is the natural pool bound.
+        max_size=max(4, settings.api_max_concurrent_jobs),
+        kwargs={
+            "autocommit": True,
+            "row_factory": dict_row,
+            "prepare_threshold": 0,
+            "connect_timeout": 10,
+        },
+        check=AsyncConnectionPool.check_connection,
+        open=False,
+    )
+    await pool.open()
+    exit_stack.push_async_callback(pool.close)
+    saver = AsyncPostgresSaver(pool)
+    # Same idempotent DDL as the sync path.
+    await saver.setup()
     return saver
 
 
@@ -207,7 +306,58 @@ def _build_supervisor_loop(workflow: StateGraph[ResearchState, Any, Any, Any]) -
         workflow.add_edge(node, "supervisor")
 
 
-def build_workflow(*, enable_hitl: bool | None = None) -> Any:
+def _build_graph_shape() -> StateGraph[ResearchState, Any, Any, Any]:
+    """Wire the node graph — identical for the sync and async builds."""
+    workflow = StateGraph(ResearchState)
+    if settings.enable_supervisor:
+        _build_supervisor_loop(workflow)
+    else:
+        _build_fixed_pipeline(workflow)
+    return workflow
+
+
+def _compile(
+    workflow: StateGraph[ResearchState, Any, Any, Any],
+    checkpointer: Any | None,
+    enable_hitl: bool | None,
+) -> Any:
+    """Compile with the HITL interrupt when configuration allows it.
+
+    HITL breakpoint (ADR 0030): interrupt after the planner so a
+    human can review + edit sub_questions / search_queries before
+    search runs. Interrupts require a checkpointer — LangGraph
+    can't resume without persistence. Bypass with `hitl_bypass=True`
+    on the API caller side (see runner.py).
+    """
+    hitl_effective = (
+        settings.enable_hitl if enable_hitl is None else enable_hitl
+    )
+    compile_kwargs: dict[str, Any] = {}
+    if checkpointer is not None:
+        compile_kwargs["checkpointer"] = checkpointer
+        if hitl_effective:
+            compile_kwargs["interrupt_after"] = ["planner"]
+    return workflow.compile(**compile_kwargs)
+
+
+async def _abuild_workflow(enable_hitl: bool | None) -> Any:
+    """Async-mode build: async savers, `AsyncExitStack` teardown."""
+    exit_stack = AsyncExitStack()
+    try:
+        checkpointer = await _aopen_checkpointer(exit_stack)
+    except BaseException:
+        await exit_stack.aclose()
+        raise
+    compiled = _compile(_build_graph_shape(), checkpointer, enable_hitl)
+    # The lifespan awaits this stack's `aclose()` at shutdown — see
+    # `create_app` in src/api/app.py.
+    compiled._checkpointer_aexit_stack = exit_stack
+    return compiled
+
+
+def build_workflow(
+    *, enable_hitl: bool | None = None, async_checkpointer: bool = False
+) -> Any:
     """Construct and compile the research agent workflow graph.
 
     Shape depends on `settings.enable_supervisor`:
@@ -229,40 +379,33 @@ def build_workflow(*, enable_hitl: bool | None = None) -> Any:
             from the eval runner + other programmatic callers that
             can't sit through a human review — matches the per-query
             `hitl_bypass` flag on `POST /research`.
-    """
-    workflow = StateGraph(ResearchState)
+        async_checkpointer: When True, return an *awaitable* that
+            resolves to the compiled graph, built on the async savers
+            (`AsyncSqliteSaver` / `AsyncPostgresSaver` on a
+            reconnecting pool) the `astream`-driven API runner
+            requires — the sync savers raise `NotImplementedError`
+            from every async method, so no sync-saver graph can serve
+            an API job (ADR 0040). The default False keeps the sync
+            savers and a plain return value for the CLI and the eval
+            runner, which drive the graph with the sync `invoke`.
 
-    if settings.enable_supervisor:
-        _build_supervisor_loop(workflow)
-    else:
-        _build_fixed_pipeline(workflow)
+    Returns:
+        The compiled graph (sync mode), or a coroutine resolving to it
+        (async mode — the `create_app` lifespan awaits it). Teardown
+        handles are attached as `_checkpointer_exit_stack` /
+        `_checkpointer_aexit_stack` respectively.
+    """
+    if async_checkpointer:
+        return _abuild_workflow(enable_hitl)
 
     # ExitStack keeps the SqliteSaver context alive for the compiled
     # graph's lifetime. We attach it to the compiled object so callers
     # don't have to think about teardown.
     exit_stack = ExitStack()
     checkpointer = _open_checkpointer(exit_stack)
-
-    # HITL breakpoint (ADR 0030): interrupt after the planner so a
-    # human can review + edit sub_questions / search_queries before
-    # search runs. Interrupts require a checkpointer — LangGraph
-    # can't resume without persistence. Bypass with `hitl_bypass=True`
-    # on the API caller side (see runner.py).
-    hitl_effective = (
-        settings.enable_hitl if enable_hitl is None else enable_hitl
-    )
-    interrupt_after: list[str] | None = None
-    if hitl_effective and checkpointer is not None:
-        interrupt_after = ["planner"]
-
-    compile_kwargs: dict[str, Any] = {}
-    if checkpointer is not None:
-        compile_kwargs["checkpointer"] = checkpointer
-    if interrupt_after is not None:
-        compile_kwargs["interrupt_after"] = interrupt_after
-    compiled = workflow.compile(**compile_kwargs)
+    compiled = _compile(_build_graph_shape(), checkpointer, enable_hitl)
 
     # Attach so a caller who cares can `close()`; ExitStack cleanup
     # otherwise runs at interpreter shutdown.
-    compiled._checkpointer_exit_stack = exit_stack  # type: ignore[attr-defined]
+    compiled._checkpointer_exit_stack = exit_stack
     return compiled

@@ -8,6 +8,7 @@ PR alongside the unit tier.
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 
 import fakeredis.aioredis
@@ -91,6 +92,39 @@ class TestSerialization:
         assert rebuilt.event_queue.empty()
         # Fresh Queue instance — not the original.
         assert rebuilt.event_queue is not original.event_queue
+
+    async def test_serialize_with_live_resume_event_waiter(self) -> None:
+        # ADR 0040 regression: the old `asdict`-based serializer
+        # deep-copied `resume_event` BEFORE filtering it out. While
+        # the runner awaits `resume_event.wait()` the Event's waiter
+        # deque holds a live Future that deepcopy cannot reproduce,
+        # so serialization raised TypeError — and the HITL review
+        # endpoint 500'd on exactly that call.
+        job = Job(job_id="j-paused", query="q")
+        waiter = asyncio.ensure_future(job.resume_event.wait())
+        await asyncio.sleep(0)  # let the waiter register
+        try:
+            payload = _job_to_json(job)
+        finally:
+            waiter.cancel()
+        assert '"job_id":"j-paused"' in payload
+
+    def test_from_json_ignores_unknown_keys(self) -> None:
+        # Forward compatibility: a payload written by a newer worker
+        # with an extra field must not crash this build's read path.
+        original = Job(job_id="j1", query="q")
+        payload = json.loads(_job_to_json(original))
+        payload["some_future_field"] = "whatever"
+        rebuilt = _job_from_json(json.dumps(payload))
+        assert rebuilt.job_id == "j1"
+        assert not hasattr(rebuilt, "some_future_field")
+
+    def test_json_keys_match_persistent_fields(self) -> None:
+        # The write path derives its keys from `_persistent_fields()`;
+        # the read path must accept exactly the same set, so a field
+        # added to `Job` round-trips without touching either function.
+        payload = json.loads(_job_to_json(Job(job_id="j1", query="q")))
+        assert set(payload) == _persistent_fields()
 
 
 class TestCreateAndGet:
@@ -206,6 +240,125 @@ class TestUpdate:
         await store.update(job)
         got = await store.get("j1")
         assert got is job
+
+
+class TestUpdateDuringHitlPause:
+    async def test_update_with_live_resume_waiter_does_not_raise(
+        self, store: RedisJobStore
+    ) -> None:
+        # The review-endpoint path (ADR 0040 P0): while the runner is
+        # parked in `await job.resume_event.wait()`, the SAME in-
+        # process Job object is written back through `store.update`.
+        # With the old asdict serializer this raised TypeError and the
+        # review returned 500 with the job wedged in pending_review.
+        job = Job(job_id="j1", query="q", status=JobStatus.pending_review)
+        await store.create(job)
+        waiter = asyncio.ensure_future(job.resume_event.wait())
+        await asyncio.sleep(0)  # runner is now "waiting"
+        try:
+            job.resume_action = "approve"
+            await store.update(job)  # must not raise
+        finally:
+            waiter.cancel()
+        got = await store.get("j1")
+        assert got is not None
+        assert got.resume_action == "approve"
+
+
+class TestLocalCacheEviction:
+    async def test_terminal_update_evicts_local_and_reads_from_redis(
+        self, store: RedisJobStore
+    ) -> None:
+        # ADR 0040: `_local` must not outlive the job. Once terminal,
+        # reads come from Redis (rehydrated copy, not the original
+        # instance), so the retention TTL and operator deletes are
+        # authoritative on the originating worker too.
+        job = Job(job_id="j1", query="q")
+        await store.create(job)
+        job.status = JobStatus.succeeded
+        job.completed_at = time.time()
+        job.result = "# Report"
+        await store.update(job)
+
+        got = await store.get("j1")
+        assert got is not None
+        assert got is not job  # rehydrated from Redis, not cached
+        assert got.status == JobStatus.succeeded
+        assert got.result == "# Report"
+
+    async def test_get_returns_none_once_redis_row_is_gone(
+        self, store: RedisJobStore, redis_client: fakeredis.aioredis.FakeRedis
+    ) -> None:
+        # Simulates the retention TTL firing (or an operator DEL):
+        # the originating worker must 404 like every other worker,
+        # not serve a phantom from `_local` forever.
+        job = Job(job_id="j1", query="q")
+        await store.create(job)
+        job.status = JobStatus.failed
+        job.completed_at = time.time()
+        await store.update(job)
+        await redis_client.delete(f"{JOB_KEY_PREFIX}j1")
+
+        assert await store.get("j1") is None
+
+    async def test_running_job_stays_locally_cached(
+        self, store: RedisJobStore
+    ) -> None:
+        # Non-terminal jobs keep the live instance — the event_queue /
+        # resume_event must stay reachable while the job runs.
+        job = Job(job_id="j1", query="q", status=JobStatus.running)
+        await store.create(job)
+        await store.update(job)
+        assert await store.get("j1") is job
+
+
+class TestTerminalTransitionGuard:
+    async def test_succeeded_cannot_overwrite_failed(
+        self, redis_client: fakeredis.aioredis.FakeRedis
+    ) -> None:
+        # ADR 0040 (ADR 0038 follow-up): a redriver that reclaimed a
+        # live job wrote `failed/orphaned`; the still-running worker
+        # must not resurrect the row as `succeeded` after every SSE
+        # client already saw the terminal `job_failed`.
+        store_a = RedisJobStore(redis_client, retention_sec=3600)
+        store_b = RedisJobStore(redis_client, retention_sec=3600)
+
+        job = Job(job_id="j1", query="q", status=JobStatus.running)
+        await store_a.create(job)
+
+        # Peer worker (redriver) marks it failed/orphaned.
+        reclaimed = await store_b.get("j1")
+        assert reclaimed is not None
+        reclaimed.status = JobStatus.failed
+        reclaimed.error_type = "orphaned"
+        reclaimed.completed_at = time.time()
+        await store_b.update(reclaimed)
+
+        # Original worker finishes and tries to write succeeded.
+        job.status = JobStatus.succeeded
+        job.completed_at = time.time()
+        await store_a.update(job)  # refused, absorbed
+
+        got = await store_b.get("j1")
+        assert got is not None
+        assert got.status == JobStatus.failed
+        assert got.error_type == "orphaned"
+
+    async def test_same_terminal_status_rewrite_is_allowed(
+        self, store: RedisJobStore
+    ) -> None:
+        # Idempotent re-persist (e.g. the runner's terminal-write
+        # retry) must go through.
+        job = Job(job_id="j1", query="q")
+        await store.create(job)
+        job.status = JobStatus.succeeded
+        job.completed_at = time.time()
+        await store.update(job)
+        job.result = "# Report v2"
+        await store.update(job)
+        got = await store.get("j1")
+        assert got is not None
+        assert got.result == "# Report v2"
 
 
 class TestEvict:

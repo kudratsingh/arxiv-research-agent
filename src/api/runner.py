@@ -1,10 +1,13 @@
 """Async workflow runner used by the API layer.
 
-Bridges the sync LangGraph workflow into asyncio: `run_job` invokes
-the workflow inside `asyncio.to_thread`, streams intermediate
-`(node, state_delta)` events into the job's event queue via
-`app.astream`, records final costs + metrics, and applies the
-per-job timeout.
+Drives the compiled LangGraph app through its async surface —
+`astream` / `aget_state` / `aupdate_state` — streaming intermediate
+`(node, state_delta)` events to SSE consumers, recording final costs
++ metrics, and applying the per-job timeout. The compiled app MUST be
+built with `build_workflow(async_checkpointer=True)`: the sync savers
+raise `NotImplementedError` from every async method, which is exactly
+how the pre-ADR-0040 wiring killed every API job before its first
+node ran.
 
 The runner is a plain module function (not a class) because it owns
 no state — every input comes from the `Job` and the injected
@@ -49,6 +52,13 @@ log = get_logger(__name__)
 _current_store: ContextVar[JobStore | None] = ContextVar(
     "current_store", default=None
 )
+
+# The terminal frame is every SSE client's close signal and the store
+# write on a terminal transition is the job's outcome of record — both
+# get a few attempts before the failure is escalated to an ERROR log
+# (never an exception: `run_job` promises not to raise).
+_TERMINAL_PUBLISH_ATTEMPTS = 3
+_TERMINAL_PERSIST_ATTEMPTS = 3
 
 WorkflowFactory = Callable[[], Any]
 """Zero-arg callable that returns a compiled LangGraph app.
@@ -147,8 +157,17 @@ async def _put_event(job: Job, event: str, data: dict[str, Any]) -> None:
     store = _current_store.get()
     publish = getattr(store, "publish_event", None) if store else None
     if callable(publish):
-        with contextlib.suppress(Exception):
+        try:
             await publish(job.job_id, event, data)
+        except Exception:
+            # A dropped intermediate frame degrades the stream but not
+            # the job; it must be visible in logs, not silent — every
+            # other error path in this codebase logs (audit P3).
+            log.warning(
+                "sse_publish_failed",
+                extra={"job_id": job.job_id, "event": event},
+                exc_info=True,
+            )
         return
 
     try:
@@ -166,7 +185,10 @@ async def _put_terminal_event(job: Job, event: str, data: dict[str, Any]) -> Non
     """Emit a terminal frame — the SSE close signal.
 
     Under the pub/sub path the subscriber terminates on the
-    terminal event name, so the fan-out is enough. Under the
+    terminal event name, so the fan-out is enough — and because a
+    dropped terminal frame leaves every connected SSE client hanging
+    with no close signal, the publish is retried a few times and the
+    final give-up is an ERROR, not silence (audit P3). Under the
     queue-based path we do a blocking `put()` because the terminal
     frame must not be dropped: the SSE consumer keeps the
     connection open until it arrives.
@@ -174,8 +196,26 @@ async def _put_terminal_event(job: Job, event: str, data: dict[str, Any]) -> Non
     store = _current_store.get()
     publish = getattr(store, "publish_event", None) if store else None
     if callable(publish):
-        with contextlib.suppress(Exception):
-            await publish(job.job_id, event, data)
+        for attempt in range(1, _TERMINAL_PUBLISH_ATTEMPTS + 1):
+            try:
+                await publish(job.job_id, event, data)
+                return
+            except Exception:
+                log.warning(
+                    "sse_terminal_publish_failed",
+                    extra={
+                        "job_id": job.job_id,
+                        "event": event,
+                        "attempt": attempt,
+                    },
+                    exc_info=True,
+                )
+                if attempt < _TERMINAL_PUBLISH_ATTEMPTS:
+                    await asyncio.sleep(0.1 * attempt)
+        log.error(
+            "sse_terminal_publish_gave_up",
+            extra={"job_id": job.job_id, "event": event},
+        )
         return
 
     await job.event_queue.put({"event": event, "data": data})
@@ -216,15 +256,34 @@ async def _invoke_streaming(
     `astream` yields `{node_name: state_update}` after each node. When
     `settings.enable_hitl` is on, the compiled workflow interrupts
     after the planner (ADR 0030); we detect that via
-    `workflow.get_state(config).next`, transition the job to
+    `workflow.aget_state(config).next`, transition the job to
     `pending_review`, emit `plan_ready`, and wait on
     `job.resume_event`. On resume, optionally apply edits via
-    `workflow.update_state`, then run a second `astream` to completion.
+    `workflow.aupdate_state`, then stream on from the checkpoint.
+
+    Resume runs in a LOOP, not a single second pass: LangGraph re-arms
+    `interrupt_after=["planner"]` on *every* planner execution, so a
+    critic-driven re-plan parks the graph at a fresh interrupt. Only
+    the FIRST pause is a human review (ADR 0030's one-review-per-query
+    intent); later pauses auto-resume with no `plan_ready`. Without
+    the loop, a twice-re-planned job would end at an unresumed
+    interrupt and ship the rejected draft as `succeeded` — the exact
+    truncation the audit demonstrated. The loop is bounded by the
+    critic's own `max_iterations` cap plus margin; overrunning it
+    means the graph and runner disagree structurally, which must fail
+    the job loudly rather than truncate it silently.
+
+    The final state is read from the checkpoint (`aget_state.values`),
+    never from a trailing `invoke` — invoking with a non-None input on
+    an existing thread re-executes the whole graph from START, which
+    silently doubled every LLM call on the no-interrupt path. With
+    checkpointing disabled there is no state to read back, so the
+    node updates are folded together as the fallback.
 
     `job` + `store` are required for the HITL path but optional so
-    the eval runner (which calls this without an API layer) still
-    works. Bypassing HITL when the workflow is compiled with an
-    interrupt: the runner just resumes immediately without waiting.
+    programmatic callers still work. Bypassing HITL when the workflow
+    is compiled with an interrupt: the runner just resumes immediately
+    without waiting.
 
     The workflow is pre-compiled at app startup and shared across
     jobs (ADR 0034) — previously we re-compiled per job, which
@@ -234,32 +293,59 @@ async def _invoke_streaming(
     app = workflow
     config = {"configurable": {"thread_id": run_id}}
 
-    # First pass: runs until interrupt or completion.
-    async for chunk in app.astream(initial_state, config=config):
-        for node_name, state_update in chunk.items():
-            await on_node(node_name, state_update)
+    # Fallback final state for checkpointing-disabled runs, where
+    # `aget_state` has nothing to answer from. Plain dict-merge is
+    # accurate for every field the runner reads (scalars +
+    # draft_report); reducer-managed fields like `messages` are not
+    # consumed from here.
+    merged: dict[str, Any] = dict(initial_state)
 
-    # Did the workflow interrupt?
-    workflow_state = await asyncio.to_thread(app.get_state, config)
-    interrupted = bool(getattr(workflow_state, "next", ()))
-
-    if interrupted:
-        await _handle_hitl_pause(app, config, workflow_state, job, store)
-
-        # Resume from checkpoint — pass `None` as the input.
-        async for chunk in app.astream(None, config=config):
+    # ADR 0030 intends one human review per query; every extra planner
+    # run re-arms the interrupt and is auto-resumed. `+ 2` margin: the
+    # initial planner run plus one defensive slot beyond the critic's
+    # own `max_iterations` force-approve.
+    max_pauses = settings.max_iterations + 2
+    pauses = 0
+    stream_input: Any = initial_state
+    while True:
+        async for chunk in app.astream(stream_input, config=config):
             for node_name, state_update in chunk.items():
+                if node_name == "__interrupt__":
+                    # LangGraph's interrupt sentinel — its payload is
+                    # a tuple of `Interrupt` objects, not a state
+                    # update. The pause itself is detected below via
+                    # `aget_state(config).next`.
+                    continue
+                merged.update(state_update)
                 await on_node(node_name, state_update)
 
-    # Settled state via `invoke` on a completed thread — the
-    # checkpointer makes this cheap (no re-execution, returns the
-    # final values).
-    final_state = await asyncio.to_thread(
-        app.invoke,
-        None if interrupted else initial_state,
-        config=config,
-    )
-    return dict(final_state)
+        try:
+            workflow_state = await app.aget_state(config)
+        except ValueError:
+            # No checkpointer compiled in — nothing can interrupt, and
+            # the merged updates are the only final state there is.
+            return merged
+
+        if not getattr(workflow_state, "next", ()):
+            return dict(workflow_state.values)
+
+        pauses += 1
+        if pauses > max_pauses:
+            raise RuntimeError(
+                f"workflow still interrupted after {max_pauses} resumes "
+                f"(thread_id={run_id}); refusing to report a paused "
+                "graph as a finished job"
+            )
+        if pauses == 1:
+            await _handle_hitl_pause(app, config, workflow_state, job, store)
+        else:
+            log.info(
+                "api_job_interrupt_auto_resumed",
+                extra={"thread_id": run_id, "pause_number": pauses},
+            )
+        # Resume from checkpoint — `None` input means "continue from
+        # where we paused"; anything else would restart the graph.
+        stream_input = None
 
 
 async def _handle_hitl_pause(
@@ -334,7 +420,7 @@ async def _handle_hitl_pause(
         raise HitlCancelledError("client cancelled during plan review")
 
     if job.resume_action == "revise" and job.resume_plan:
-        await asyncio.to_thread(app.update_state, config, job.resume_plan)
+        await app.aupdate_state(config, job.resume_plan)
         log.info(
             "api_job_plan_revised",
             extra={"job_id": job.job_id, **_plan_shape(job.resume_plan)},
@@ -354,6 +440,47 @@ def _plan_shape(plan: dict[str, Any]) -> dict[str, Any]:
         "n_sub_questions": len(plan.get("sub_questions", []) or []),
         "n_search_queries": len(plan.get("search_queries", []) or []),
     }
+
+
+async def _persist_terminal(store: JobStore, job: Job) -> None:
+    """Write a terminal `Job` state, absorbing store failures.
+
+    Every terminal transition in `run_job` goes through here rather
+    than a bare `store.update`: a Redis blip on the *last* write used
+    to either lose the finished report (success path, exception
+    escaping `run_job` entirely) or leave the job wedged non-terminal
+    with its SSE clients hanging (failure paths). The write is retried
+    a few times; on final failure the job's outcome is logged in full
+    as `api_job_terminal_persist_failed` so the result is recoverable
+    from logs, and the terminal SSE frame still goes out.
+    """
+    for attempt in range(1, _TERMINAL_PERSIST_ATTEMPTS + 1):
+        try:
+            await store.update(job)
+            return
+        except Exception:
+            log.warning(
+                "api_job_terminal_persist_retry",
+                extra={
+                    "job_id": job.job_id,
+                    "status": job.status.value,
+                    "attempt": attempt,
+                },
+                exc_info=True,
+            )
+            if attempt < _TERMINAL_PERSIST_ATTEMPTS:
+                await asyncio.sleep(0.1 * attempt)
+    log.error(
+        "api_job_terminal_persist_failed",
+        extra={
+            "job_id": job.job_id,
+            "status": job.status.value,
+            "error": job.error,
+            "error_type": job.error_type,
+            # The full report so a lost success write is recoverable.
+            "result": job.result,
+        },
+    )
 
 
 async def _refresh_lease_forever(
@@ -385,11 +512,8 @@ async def _refresh_lease_forever(
             it lands, at which point it reverts to refreshing. Left
             `None` on the normal path, where the lease is already held.
     """
-    # `settings` is module-patched by some legacy API tests with a
-    # `SimpleNamespace` that predates these fields; `getattr` keeps
-    # them green while production always ships a full `Settings`.
-    ttl_sec = int(getattr(settings, "job_lease_ttl_sec", 90))
-    interval = int(getattr(settings, "job_lease_refresh_sec", 30))
+    ttl_sec = settings.job_lease_ttl_sec
+    interval = settings.job_lease_refresh_sec
 
     # Set when we entered leaseless after a failed acquire; cleared
     # the moment a retry lands.
@@ -463,7 +587,7 @@ async def _job_lease(
         yield
         return
 
-    ttl_sec = int(getattr(settings, "job_lease_ttl_sec", 90))
+    ttl_sec = settings.job_lease_ttl_sec
     holding = False
     # The two ways to end up leaseless are worth separating in the
     # logs: a contended key means a second worker claims the same job
@@ -534,7 +658,8 @@ async def run_job(
     completed job to the conversation on success (ADR 0032).
 
     ``workflow`` is the pre-compiled LangGraph app; the caller
-    (`create_app` lifespan) builds it once and hands the same
+    (`create_app` lifespan) builds it once — with
+    `async_checkpointer=True`, per ADR 0040 — and hands the same
     instance to every job. See ADR 0034.
 
     For the whole time this worker owns the job — from entry, so the
@@ -567,10 +692,6 @@ async def run_job(
     # startup sweep reads a leaseless non-terminal row as orphaned —
     # it would fail live, queued work on every rolling restart.
     async with _job_lease(store, job.job_id, worker_id or WORKER_ID), semaphore:
-        job.status = JobStatus.running
-        job.started_at = time.time()
-        await store.update(job)
-
         # ADR 0035: bind the store so `_put_event` /
         # `_put_terminal_event` can reach it for pub/sub fan-out.
         # ContextVar is asyncio-Task-scoped: sets inside a Task
@@ -579,20 +700,9 @@ async def run_job(
         # to reset on exit.
         _current_store.set(store)
 
-        await _put_event(
-            job,
-            "job_started",
-            {"job_id": job.job_id, "query": job.query},
-        )
-
         token = bind_run_id(job.job_id)
         costs = start_cost_tracking()
-        # Some legacy API tests substitute a `SimpleNamespace` for
-        # `runner_module.settings` that predates this field. `getattr`
-        # keeps them green while production always ships a full
-        # `Settings` instance (pydantic-settings validates all
-        # fields at load time, so drift on real deploys is impossible).
-        cap_usd = getattr(settings, "max_cost_usd", float("inf"))
+        cap_usd = settings.max_cost_usd
 
         async def on_node(node_name: str, state_update: dict[str, Any]) -> None:
             # Only publish scalar fields — the papers/citations lists
@@ -615,31 +725,62 @@ async def run_job(
             # same accumulator.
             _enforce_cost_cap(costs, cap_usd)
 
-        prior_context = ""
-        if job.conversation_id and conversation_store is not None:
-            # Retrieve top-K chunks from the conversation's prior jobs.
-            # Encoding happens in a thread — MiniLM inference is CPU-
-            # bound and doesn't need the async event loop.
-            from src.api.retriever import (
-                format_context_for_planner,
-                retrieve_prior_context,
+        # Containment starts BEFORE the first store write, not after
+        # the setup block: the audit showed a raise between the
+        # `running` persist and the old `try` (a store blip, a
+        # conversation-store read, an embedding-model load) escaped
+        # `run_job` entirely and wedged the job in `running` with its
+        # SSE clients hanging forever.
+        try:
+            job.status = JobStatus.running
+            job.started_at = time.time()
+            await store.update(job)
+
+            await _put_event(
+                job,
+                "job_started",
+                {"job_id": job.job_id, "query": job.query},
             )
 
-            conversation = await conversation_store.get(job.conversation_id)
-            if conversation is not None and conversation.jobs:
-                chunks = await asyncio.to_thread(
-                    retrieve_prior_context,
-                    conversation,
-                    job.query,
-                    settings.conversation_context_top_k,
-                )
-                prior_context = format_context_for_planner(chunks)
+            prior_context = ""
+            if job.conversation_id and conversation_store is not None:
+                # Retrieve top-K chunks from the conversation's prior
+                # jobs. Encoding happens in a thread — MiniLM inference
+                # is CPU-bound and doesn't need the async event loop.
+                # A failure here degrades to a context-free answer
+                # rather than failing the job: prior context is an
+                # enrichment (ADR 0032), not a prerequisite.
+                try:
+                    from src.api.retriever import (
+                        format_context_for_planner,
+                        retrieve_prior_context,
+                    )
 
-        initial = _initial_state(
-            job.query, job.job_id, prior_context=prior_context
-        )
+                    conversation = await conversation_store.get(
+                        job.conversation_id
+                    )
+                    if conversation is not None and conversation.jobs:
+                        chunks = await asyncio.to_thread(
+                            retrieve_prior_context,
+                            conversation,
+                            job.query,
+                            settings.conversation_context_top_k,
+                        )
+                        prior_context = format_context_for_planner(chunks)
+                except Exception:
+                    log.warning(
+                        "api_prior_context_failed",
+                        extra={
+                            "job_id": job.job_id,
+                            "conversation_id": job.conversation_id,
+                        },
+                        exc_info=True,
+                    )
 
-        try:
+            initial = _initial_state(
+                job.query, job.job_id, prior_context=prior_context
+            )
+
             # The overall timeout wraps only the workflow execution
             # itself — not the HITL wait, which has its own
             # `api_hitl_timeout_sec` inside `_handle_hitl_pause`.
@@ -671,8 +812,7 @@ async def run_job(
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
-            reset_run_id(token)
-            await store.update(job)
+            await _persist_terminal(store, job)
             await _put_terminal_event(
                 job,
                 "job_failed",
@@ -700,8 +840,7 @@ async def run_job(
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
-            reset_run_id(token)
-            await store.update(job)
+            await _persist_terminal(store, job)
             await _put_terminal_event(
                 job,
                 "job_failed",
@@ -728,8 +867,7 @@ async def run_job(
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
-            reset_run_id(token)
-            await store.update(job)
+            await _persist_terminal(store, job)
             await _put_terminal_event(
                 job,
                 "job_cancelled",
@@ -752,8 +890,7 @@ async def run_job(
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
-            reset_run_id(token)
-            await store.update(job)
+            await _persist_terminal(store, job)
             await _put_terminal_event(
                 job,
                 "job_failed",
@@ -775,8 +912,7 @@ async def run_job(
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
-            reset_run_id(token)
-            await store.update(job)
+            await _persist_terminal(store, job)
             await _put_terminal_event(
                 job,
                 "job_cancelled",
@@ -792,8 +928,7 @@ async def run_job(
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
-            reset_run_id(token)
-            await store.update(job)
+            await _persist_terminal(store, job)
             await _put_terminal_event(
                 job,
                 "job_failed",
@@ -808,49 +943,70 @@ async def run_job(
                 "api_job_failed", extra={"job_id": job.job_id, **snapshot}
             )
             return
+        else:
+            metrics = _extract_final_metrics(final_state)
+            snapshot = costs.as_dict()
 
-        metrics = _extract_final_metrics(final_state)
-        snapshot = costs.as_dict()
+            job.status = JobStatus.succeeded
+            job.result = final_state.get("draft_report", "")
+            job.iterations = metrics["iterations"]
+            job.quality_score = metrics["quality_score"]
+            job.cost_usd = snapshot.get("total_cost_usd")
+            job.llm_calls = snapshot.get("call_count")
+            job.completed_at = time.time()
 
-        job.status = JobStatus.succeeded
-        job.result = final_state.get("draft_report", "")
-        job.iterations = metrics["iterations"]
-        job.quality_score = metrics["quality_score"]
-        job.cost_usd = snapshot.get("total_cost_usd")
-        job.llm_calls = snapshot.get("call_count")
-        job.completed_at = time.time()
-        reset_run_id(token)
+            # Success persistence goes through the same absorbing
+            # helper as the failure paths — this used to be a bare
+            # `store.update` OUTSIDE the try, so one Redis blip on the
+            # last write lost the finished report and broke run_job's
+            # "never raises" contract (audit P2).
+            await _persist_terminal(store, job)
 
-        await store.update(job)
+            # ADR 0032: append succeeded jobs to their conversation,
+            # so follow-up queries retrieve this report as prior
+            # context. Auto-title the conversation from the first
+            # job's query when the client seeded it without a title.
+            # The job stays `succeeded` when this fails, but the gap
+            # must be observable (audit P3) — a silent miss here means
+            # every follow-up quietly loses its context.
+            if job.conversation_id and conversation_store is not None:
+                try:
+                    await _append_to_conversation(conversation_store, job)
+                except Exception:
+                    log.error(
+                        "conversation_append_failed",
+                        extra={
+                            "job_id": job.job_id,
+                            "conversation_id": job.conversation_id,
+                        },
+                        exc_info=True,
+                    )
 
-        # ADR 0032: append succeeded jobs to their conversation, so
-        # follow-up queries retrieve this report as prior context.
-        # Auto-title the conversation from the first job's query when
-        # the client seeded it without a title.
-        if job.conversation_id and conversation_store is not None:
-            with contextlib.suppress(Exception):
-                await _append_to_conversation(conversation_store, job)
-
-        await _put_terminal_event(
-            job,
-            "job_completed",
-            {
-                "job_id": job.job_id,
-                "iterations": job.iterations,
-                "quality_score": job.quality_score,
-                "cost_usd": job.cost_usd,
-                "llm_calls": job.llm_calls,
-                "elapsed_sec": job.elapsed_sec(),
-            },
-        )
-        log.info(
-            "api_job_completed",
-            extra={
-                "job_id": job.job_id,
-                "elapsed_sec": job.elapsed_sec(),
-                **snapshot,
-            },
-        )
+            await _put_terminal_event(
+                job,
+                "job_completed",
+                {
+                    "job_id": job.job_id,
+                    "iterations": job.iterations,
+                    "quality_score": job.quality_score,
+                    "cost_usd": job.cost_usd,
+                    "llm_calls": job.llm_calls,
+                    "elapsed_sec": job.elapsed_sec(),
+                },
+            )
+            log.info(
+                "api_job_completed",
+                extra={
+                    "job_id": job.job_id,
+                    "elapsed_sec": job.elapsed_sec(),
+                    **snapshot,
+                },
+            )
+        finally:
+            # After every terminal emission, so the outcome records —
+            # `api_job_completed` / `api_job_failed` / the terminal
+            # frame — carry the run_id instead of "-" (audit P3).
+            reset_run_id(token)
 
 
 async def _append_to_conversation(conversation_store: Any, job: Job) -> None:

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import inspect
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from typing import Any
@@ -50,6 +51,37 @@ from src.observability import get_logger
 
 log = get_logger(__name__)
 
+# How often the in-memory retention sweep runs (ADR 0040). Coarse on
+# purpose: retention is measured in hours, so a five-minute cadence
+# bounds staleness at a fraction of the window without waking an idle
+# worker constantly. Module-level so tests can shrink it.
+EVICT_SWEEP_INTERVAL_SEC = 300
+
+
+async def _evict_terminal_jobs_forever(store: JobStore) -> None:
+    """Periodically evict old terminal jobs until cancelled (ADR 0040).
+
+    Runs as a lifespan-owned background task for stores whose
+    retention is not backend-managed — without it,
+    `settings.api_job_retention_sec` was documented but unenforced for
+    `InMemoryJobStore`: every finished job's full report stayed
+    resident until the process died. A sweep failure is logged and the
+    loop keeps going; retention is housekeeping, never a crash.
+
+    Args:
+        store: The job store to sweep via its `evict_older_than`.
+    """
+    while True:
+        await asyncio.sleep(EVICT_SWEEP_INTERVAL_SEC)
+        try:
+            evicted = await store.evict_older_than(
+                settings.api_job_retention_sec
+            )
+            if evicted:
+                log.info("api_jobs_evicted", extra={"count": evicted})
+        except Exception:
+            log.warning("api_job_evict_sweep_failed", exc_info=True)
+
 
 def _default_store() -> JobStore:
     """Pick the JobStore implementation from settings.
@@ -66,10 +98,9 @@ def _default_store() -> JobStore:
         from src.api.redis_store import RedisJobStore, build_redis_client
 
         client = build_redis_client(settings.redis_url)
-        log.info(
-            "api_store_selected",
-            extra={"store": "redis", "redis_url": settings.redis_url},
-        )
+        # Backend name only — `redis_url` carries credentials inline
+        # and structured log fields get indexed verbatim (audit P2).
+        log.info("api_store_selected", extra={"store": "redis"})
         return RedisJobStore(client)
     log.info("api_store_selected", extra={"store": "memory"})
     return InMemoryJobStore()
@@ -97,7 +128,13 @@ def create_app(
         max_concurrent_jobs: Semaphore ceiling. Defaults to
             `settings.api_max_concurrent_jobs`.
     """
-    factory = build_workflow or default_build_workflow
+    # ADR 0040: the API runner drives the graph through its async
+    # surface, so the production factory compiles with the ASYNC
+    # savers. The sync default (CLI / eval runner) would kill every
+    # job with `NotImplementedError` before its first node.
+    factory = build_workflow or (
+        lambda: default_build_workflow(async_checkpointer=True)
+    )
     job_store: JobStore = store if store is not None else _default_store()
     conv_store: ConversationStore = (
         conversation_store
@@ -134,7 +171,14 @@ def create_app(
         # a fresh checkpointer + ExitStack per job — a slow leak of
         # DB connections and, under SqliteSaver, a corruption risk
         # on the shared file across concurrent writers.
+        #
+        # ADR 0040: the async-checkpointer factory returns an
+        # awaitable (opening AsyncSqliteSaver / the Postgres pool
+        # needs a running loop, which this lifespan is). Test-injected
+        # stub factories stay plain callables, hence the check.
         compiled_workflow = factory()
+        if inspect.isawaitable(compiled_workflow):
+            compiled_workflow = await compiled_workflow
         app.state.workflow = compiled_workflow
         app.state.store = job_store
         app.state.conversation_store = conv_store
@@ -211,6 +255,21 @@ def create_app(
                     extra={"worker_id": WORKER_ID},
                 )
 
+        # ADR 0040: periodic retention sweep for stores that have no
+        # backend-managed retention. Duck-typed like the other store
+        # capabilities (`publish_event`, `acquire_lease`): a store
+        # advertising `scan_jobs` manages retention in the backend —
+        # RedisJobStore expires terminal rows via key TTL (ADR 0027) —
+        # while the in-memory store's `evict_older_than` previously
+        # had no production caller at all, so terminal jobs (full
+        # report included) accumulated until the process died.
+        evict_task: asyncio.Task[None] | None = None
+        if not callable(getattr(job_store, "scan_jobs", None)):
+            evict_task = asyncio.create_task(
+                _evict_terminal_jobs_forever(job_store),
+                name="job-retention-sweep",
+            )
+
         # ADR 0037: if `api_keys_file` is configured, load from it
         # and start a reloader task. Otherwise use the string-based
         # keystore parsed above.
@@ -267,6 +326,12 @@ def create_app(
                 reloader_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError, Exception):
                     await reloader_task
+            # ADR 0040: same teardown discipline for the retention
+            # sweep as for the reloader.
+            if evict_task is not None:
+                evict_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await evict_task
             # ADR 0038: the redrive sweep is awaited during startup and
             # owns no long-lived task, so there is nothing to cancel
             # here. The per-job lease refresh tasks belong to `run_job`
@@ -279,8 +344,17 @@ def create_app(
             for task in list(app.state.tasks):
                 with contextlib.suppress(asyncio.CancelledError, Exception):
                     await task
-            # Release the workflow's checkpointer connections (SQLite
-            # or Postgres) via the ExitStack the compiler attached.
+            # Release the workflow's checkpointer connections via
+            # whichever stack the builder attached: the async stack
+            # (aiosqlite connection / Postgres pool, ADR 0040) on the
+            # production path, the sync ExitStack when a caller
+            # injected a sync-mode factory.
+            aexit_stack = getattr(
+                compiled_workflow, "_checkpointer_aexit_stack", None
+            )
+            if aexit_stack is not None:
+                with contextlib.suppress(Exception):
+                    await aexit_stack.aclose()
             exit_stack = getattr(compiled_workflow, "_checkpointer_exit_stack", None)
             if exit_stack is not None:
                 with contextlib.suppress(Exception):
