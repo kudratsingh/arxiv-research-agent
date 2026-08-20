@@ -82,5 +82,8 @@ HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
 # compose (or a real orchestrator) tunes this via the `command`
 # override once the RedisJobStore lands so multi-worker doesn't
 # require sticky sessions for polling.
+# No `--log-config`: uvicorn parses that flag's value as an ini file,
+# so `/dev/null` raised RuntimeError before the socket ever bound
+# (ADR 0040). src.observability.logging configures the root logger.
 CMD ["uvicorn", "src.api.app:create_app", "--factory", \
-     "--host", "0.0.0.0", "--port", "8000", "--log-config", "/dev/null"]
+     "--host", "0.0.0.0", "--port", "8000"]

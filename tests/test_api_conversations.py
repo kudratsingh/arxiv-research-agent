@@ -568,6 +568,19 @@ class _StubWorkflow:
     def invoke(self, state, config=None):  # type: ignore[no-untyped-def]
         return {"draft_report": self.report, "iteration": 1, "quality_score": 0.9}
 
+    async def aget_state(self, config=None):  # type: ignore[no-untyped-def]
+        # ADR 0040: the async runner reads the settled values here.
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            next=(),
+            values={
+                "draft_report": self.report,
+                "iteration": 1,
+                "quality_score": 0.9,
+            },
+        )
+
 
 async def _client() -> AsyncIterator[AsyncClient]:
     app = create_app(build_workflow=lambda: _StubWorkflow())

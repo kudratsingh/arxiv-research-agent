@@ -41,6 +41,17 @@ class _StubWorkflow:
     ) -> dict[str, Any]:
         return {"draft_report": self.report, "iteration": 1, "quality_score": 0.9}
 
+    async def aget_state(self, config: dict[str, Any] | None = None) -> Any:
+        # ADR 0040: the async runner reads the settled values here.
+        return SimpleNamespace(
+            next=(),
+            values={
+                "draft_report": self.report,
+                "iteration": 1,
+                "quality_score": 0.9,
+            },
+        )
+
 
 async def _run_until_terminal(client: AsyncClient, job_id: str) -> dict[str, Any]:
     for _ in range(50):

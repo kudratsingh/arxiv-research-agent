@@ -199,18 +199,23 @@ class CompletingStub:
         yield {"synthesizer": {"iteration": 1, "quality_score": 0.9}}
 
     def get_state(self, config: dict[str, Any] | None = None) -> Any:
-        return SimpleNamespace(next=(), values={})
+        return self._final_snapshot()
 
-    def invoke(
-        self,
-        state: dict[str, Any] | None,
-        config: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        return {
-            "draft_report": "# Report",
-            "iteration": 1,
-            "quality_score": 0.9,
-        }
+    async def aget_state(self, config: dict[str, Any] | None = None) -> Any:
+        # ADR 0040: the runner drives the async surface; the settled
+        # values come from the checkpoint snapshot, not a re-invoke.
+        return self._final_snapshot()
+
+    @staticmethod
+    def _final_snapshot() -> Any:
+        return SimpleNamespace(
+            next=(),
+            values={
+                "draft_report": "# Report",
+                "iteration": 1,
+                "quality_score": 0.9,
+            },
+        )
 
 
 @pytest.mark.asyncio

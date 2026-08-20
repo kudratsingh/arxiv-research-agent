@@ -32,6 +32,9 @@ dependencies = [
     # not use; first patched release is 3.1.1 — pick it up at the next
     # lock refresh (see docs/development.md).
     "langgraph-checkpoint-sqlite>=3.1.0,<4.0",
+    # AsyncSqliteSaver backend (ADR 0040) — the sync saver has no
+    # async surface, and the API runner drives the graph with astream.
+    "aiosqlite>=0.20.0,<1.0",
     "langgraph-checkpoint-postgres>=3.1.0,<4.0",
     "opentelemetry-api>=1.28.0,<2.0",
     "opentelemetry-sdk>=1.28.0,<2.0",

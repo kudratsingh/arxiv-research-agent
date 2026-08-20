@@ -133,6 +133,17 @@ never renumbered.
   `requirements-lock.txt` (CI installs the lock), explicit `src`
   packaging, lazy PEP 562 `src.api` re-exports, Next 15 / React
   19 / Node 22 / vitest 4, PyMuPDF AGPL posture recorded.
+- [0040](0040-async-checkpointer-and-runner.md) — Async
+  checkpointer surface (`AsyncSqliteSaver` / `AsyncPostgresSaver`
+  on a reconnecting pool) for the `astream`-driven API runner —
+  the sync savers raised `NotImplementedError` before the first
+  node, in both shipped configs. Runner resume becomes a bounded
+  loop (`interrupt_after` re-arms per planner run), the double-
+  executing trailing `invoke` is removed, terminal writes are
+  retried + contained, the Redis store stops deep-copying live
+  asyncio primitives, and a production-wiring smoke test pins the
+  whole path. Revisits ADR 0034; corrects ADR 0030's interrupt
+  semantics.
 
 ## When to write an ADR
 

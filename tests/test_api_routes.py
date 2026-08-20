@@ -82,6 +82,12 @@ class StubWorkflow:
         # by monkeypatching or subclassing.
         return SimpleNamespace(next=(), values=dict(self.final_state))
 
+    async def aget_state(self, config: dict[str, Any] | None = None) -> Any:
+        # ADR 0040: the runner drives the async surface and reads the
+        # settled checkpoint values from here (never a trailing
+        # `invoke`, which would re-execute the graph).
+        return self.get_state(config)
+
     def update_state(
         self, config: dict[str, Any] | None, values: dict[str, Any]
     ) -> None:  # pragma: no cover - overridden in HITL tests
