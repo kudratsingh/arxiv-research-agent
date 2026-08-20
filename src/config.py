@@ -729,7 +729,7 @@ class Settings(BaseSettings):
 
 
     @model_validator(mode="after")
-    def _check_lease_invariant(self) -> "Settings":
+    def _check_lease_invariant(self) -> Settings:
         """Reject a lease TTL a refresh cycle cannot keep alive.
 
         `job_lease_refresh_sec`'s own description promises that "two
