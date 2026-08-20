@@ -10,6 +10,12 @@ The runner is a plain module function (not a class) because it owns
 no state — every input comes from the `Job` and the injected
 workflow factory. That makes it trivial to swap for a Redis-backed
 worker in Sprint 4 PR 3+.
+
+ADR 0038 adds one piece of bookkeeping on top: for as long as
+`run_job` owns a job it holds a lease key on the store and refreshes
+it in the background. The lease expiring is how the startup redriver
+learns that the worker running a job is gone, without mistaking a
+healthy job on another worker for an orphan during a rolling restart.
 """
 
 from __future__ import annotations
@@ -17,11 +23,12 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextvars import ContextVar
 from typing import Any
 
 from src.api.jobs import Job, JobStatus, JobStore
+from src.api.redriver import WORKER_ID
 from src.config import settings
 from src.graph.state import ResearchState
 from src.observability import (
@@ -349,6 +356,162 @@ def _plan_shape(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+async def _refresh_lease_forever(
+    refresh: Callable[[str, str, int], Awaitable[bool]],
+    job_id: str,
+    worker_id: str,
+    *,
+    acquire: Callable[[str, str, int], Awaitable[bool]] | None = None,
+) -> None:
+    """Re-expire this worker's job lease until cancelled (ADR 0038).
+
+    Runs as a background task for the lifetime of `run_job`. Losing
+    the lease means a redriver already decided this job was orphaned
+    and reclaimed it. We log that and stop refreshing, but we do not
+    kill the run: aborting a job that is genuinely still making
+    progress trades one bad outcome for a strictly worse one, and the
+    reclaim already published a terminal frame either way.
+
+    A transient Redis error is not a lost lease, so those keep
+    looping — the TTL has room for several missed refreshes.
+
+    Args:
+        refresh: The store's owner-checked `refresh_lease`.
+        job_id: Job whose lease this task owns.
+        worker_id: This process's id, checked against the stored owner.
+        acquire: Set when the initial acquire raised, meaning we are
+            running *without* a lease and are reapable by any peer's
+            sweep. The keeper then retries the acquire each tick until
+            it lands, at which point it reverts to refreshing. Left
+            `None` on the normal path, where the lease is already held.
+    """
+    # `settings` is module-patched by some legacy API tests with a
+    # `SimpleNamespace` that predates these fields; `getattr` keeps
+    # them green while production always ships a full `Settings`.
+    ttl_sec = int(getattr(settings, "job_lease_ttl_sec", 90))
+    interval = int(getattr(settings, "job_lease_refresh_sec", 30))
+
+    # Set when we entered leaseless after a failed acquire; cleared
+    # the moment a retry lands.
+    pending_acquire = acquire
+
+    while True:
+        await asyncio.sleep(interval)
+        if pending_acquire is not None:
+            # Still leaseless. Retry the claim rather than refreshing
+            # a key we do not hold.
+            try:
+                if bool(await pending_acquire(job_id, worker_id, ttl_sec)):
+                    pending_acquire = None
+                    log.info(
+                        "job_lease_acquired_late",
+                        extra={"job_id": job_id, "worker_id": worker_id},
+                    )
+            except Exception:
+                log.warning(
+                    "job_lease_acquire_error",
+                    extra={"job_id": job_id, "worker_id": worker_id},
+                )
+            continue
+        try:
+            still_ours = bool(await refresh(job_id, worker_id, ttl_sec))
+        except Exception:
+            log.warning(
+                "job_lease_refresh_error",
+                extra={"job_id": job_id, "worker_id": worker_id},
+            )
+            continue
+        if not still_ours:
+            log.warning(
+                "job_lease_lost",
+                extra={"job_id": job_id, "worker_id": worker_id},
+            )
+            return
+
+
+@contextlib.asynccontextmanager
+async def _job_lease(
+    store: JobStore, job_id: str, worker_id: str
+) -> AsyncIterator[None]:
+    """Hold `joblease:{job_id}` for as long as this worker runs the job.
+
+    The lease is the liveness proof `src.api.redriver` checks before
+    reclaiming a non-terminal job, so a rolling restart of one worker
+    does not reap the jobs still running on the others (ADR 0038).
+
+    A no-op when the store has no lease surface — `InMemoryJobStore`
+    jobs die with the process, so there is nothing for a redriver to
+    reconcile. Detected by duck-typing, matching how `_put_event`
+    detects `publish_event`.
+
+    Failing to acquire means another live worker claims this job id.
+    That is a double-submit, not a reason to refuse to run: we log it
+    and proceed leaseless rather than dropping work on the floor.
+
+    Args:
+        store: The job store, which may or may not support leases.
+        job_id: Job to hold the lease for.
+        worker_id: This process's id, stored as the lease value.
+
+    Yields:
+        None, for the duration of the job.
+    """
+    acquire = getattr(store, "acquire_lease", None)
+    refresh = getattr(store, "refresh_lease", None)
+    release = getattr(store, "release_lease", None)
+    if not (callable(acquire) and callable(refresh) and callable(release)):
+        yield
+        return
+
+    ttl_sec = int(getattr(settings, "job_lease_ttl_sec", 90))
+    holding = False
+    # The two ways to end up leaseless are worth separating in the
+    # logs: a contended key means a second worker claims the same job
+    # id, a raised acquire means Redis is unhealthy. Both proceed
+    # unleased, but they call for different investigations.
+    try:
+        holding = bool(await acquire(job_id, worker_id, ttl_sec))
+    except Exception:
+        # Redis blipped. Proceeding leaseless for the whole run would
+        # leave this job reapable by any peer's sweep for as long as
+        # it takes — so still start the keeper, which re-attempts the
+        # acquire on every tick and closes the window as soon as
+        # Redis comes back.
+        log.warning(
+            "job_lease_acquire_error",
+            extra={"job_id": job_id, "worker_id": worker_id},
+        )
+    else:
+        if not holding:
+            # A second worker claims this job id. That is a
+            # double-submit, not a reason to refuse to run, and
+            # unlike the error above it will not resolve by
+            # retrying — do not fight the rightful owner for the key.
+            log.warning(
+                "job_lease_contended",
+                extra={"job_id": job_id, "worker_id": worker_id},
+            )
+            yield
+            return
+
+    task = asyncio.create_task(
+        _refresh_lease_forever(
+            refresh, job_id, worker_id, acquire=None if holding else acquire
+        ),
+        name=f"job-lease-{job_id}",
+    )
+    try:
+        yield
+    finally:
+        # Runs on the cancellation path too — shutdown cancels the
+        # job task, and the lease must not outlive the run.
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await task
+        with contextlib.suppress(Exception):
+            await release(job_id, worker_id)
+
+
 async def run_job(
     job: Job,
     workflow: Any,
@@ -357,6 +520,7 @@ async def run_job(
     *,
     timeout_sec: int | None = None,
     conversation_store: Any = None,
+    worker_id: str | None = None,
 ) -> None:
     """Execute one job to completion, updating the store as it goes.
 
@@ -372,10 +536,37 @@ async def run_job(
     ``workflow`` is the pre-compiled LangGraph app; the caller
     (`create_app` lifespan) builds it once and hands the same
     instance to every job. See ADR 0034.
+
+    For the whole time this worker owns the job — from entry, so the
+    wait behind the semaphore is covered too — it holds a lease on
+    the store (ADR 0038). That is what lets the startup redriver tell
+    "orphaned by a dead worker" apart from "queued or running
+    elsewhere"; the lease is released in the `finally` of
+    `_job_lease`, including on the shutdown-cancellation path.
+
+    Args:
+        job: The job record to execute and update in place.
+        workflow: Pre-compiled LangGraph app shared across jobs.
+        store: Persistence layer; every status transition is written
+            through it.
+        semaphore: Global concurrency limiter.
+        timeout_sec: Per-job wall-clock cap. Defaults to
+            `settings.api_job_timeout_sec`.
+        conversation_store: Conversation persistence for the ADR-0032
+            follow-up path. None disables prior-context retrieval.
+        worker_id: Id stamped on the job lease. Defaults to this
+            process's `WORKER_ID`; injectable for tests.
     """
     timeout = timeout_sec if timeout_sec is not None else settings.api_job_timeout_sec
 
-    async with semaphore:
+    # ADR 0038: take the lease *before* the semaphore, not after. A
+    # job sits in `pending` for as long as the queue behind
+    # `api_max_concurrent_jobs` is deep, and this worker already owns
+    # it the moment `run_job` starts. Acquiring after the semaphore
+    # would leave every queued row leaseless, and a peer worker's
+    # startup sweep reads a leaseless non-terminal row as orphaned —
+    # it would fail live, queued work on every rolling restart.
+    async with _job_lease(store, job.job_id, worker_id or WORKER_ID), semaphore:
         job.status = JobStatus.running
         job.started_at = time.time()
         await store.update(job)

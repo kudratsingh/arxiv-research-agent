@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import uuid
+from collections.abc import AsyncIterator
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -44,10 +45,10 @@ from src.api.schemas import (
     ReviewResponse,
 )
 from src.api.streaming import (
-    HEARTBEAT_INTERVAL_SEC,
-    format_heartbeat,
     format_sse,
+    sse_event_stream,
 )
+from src.config import settings
 from src.observability import get_logger
 
 log = get_logger(__name__)
@@ -383,6 +384,26 @@ async def stream_research(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> StreamingResponse:
+    """Stream this job's workflow events as Server-Sent Events.
+
+    Terminal jobs replay a single frame and close, which is what
+    makes reconnects idempotent. Live jobs are handed to
+    `sse_event_stream` (ADR 0038), which owns the read/heartbeat/
+    deadline loop and the drainer's cleanup.
+
+    Args:
+        job_id: Job to stream.
+        request: Incoming request; supplies app state and the
+            disconnect probe.
+        principal: Authenticated caller, or None when auth is off.
+
+    Returns:
+        A `text/event-stream` response.
+
+    Raises:
+        HTTPException: 404 when the job is unknown or owned by
+            another principal (ADR 0036).
+    """
     state = _get_state(request)
     store = state["store"]
     job = await store.get(job_id)
@@ -392,7 +413,7 @@ async def stream_research(
         )
     _check_ownership(job.principal_key_id, principal, detail="job_not_found")
 
-    async def event_source() -> Any:
+    async def event_source() -> AsyncIterator[bytes]:
         # Terminal jobs replay a single frame and close — no
         # streaming to do. This is what makes reconnects idempotent.
         if job.is_terminal():
@@ -402,75 +423,47 @@ async def stream_research(
             )
             return
 
+        # ADR 0035: prefer the store's cross-worker event stream
+        # (RedisJobStore pub/sub on `events:{job_id}`) when the
+        # store advertises it. Falls back to draining
+        # `job.event_queue` for `InMemoryJobStore`. This is what
+        # lets the stream endpoint work when it lands on a
+        # different worker than the runner.
+        subscribe_events = getattr(store, "subscribe_events", None)
+        drainer: AsyncIterator[dict[str, Any]]
+        if callable(subscribe_events):
+            drainer = subscribe_events(job_id)
+        else:
+            drainer = drain_events(job)
+
         try:
-            # ADR 0035: prefer the store's cross-worker event stream
-            # (RedisJobStore pub/sub on `events:{job_id}`) when the
-            # store advertises it. Falls back to draining
-            # `job.event_queue` for `InMemoryJobStore`. This is what
-            # lets the stream endpoint work when it lands on a
-            # different worker than the runner.
-            subscribe_events = getattr(store, "subscribe_events", None)
-            if callable(subscribe_events):
-                drainer = subscribe_events(job_id)
-            else:
-                drainer = drain_events(job)
-
-            # `_next_event` wraps the async-generator `__anext__` in a
-            # proper coroutine so `create_task` accepts it (mypy is
-            # right that `__anext__` returns an Awaitable, not a
-            # Coroutine).
-            async def _next_event() -> dict[str, Any]:
-                # `drainer` is typed as Any because it may come from
-                # either `drain_events` or the duck-typed
-                # `store.subscribe_events` — but both yield
-                # `dict[str, Any]` frames. Cast at the boundary.
-                frame: dict[str, Any] = await drainer.__anext__()
-                return frame
-
-            try:
-                while True:
-                    if await request.is_disconnected():
-                        log.info(
-                            "sse_client_disconnected", extra={"job_id": job_id}
-                        )
-                        return
-                    get_task: asyncio.Task[dict[str, Any]] = asyncio.create_task(
-                        _next_event()
-                    )
-                    heartbeat_task: asyncio.Task[None] = asyncio.create_task(
-                        asyncio.sleep(HEARTBEAT_INTERVAL_SEC)
-                    )
-                    done, pending = await asyncio.wait(
-                        {get_task, heartbeat_task},
-                        return_when=asyncio.FIRST_COMPLETED,
-                    )
-                    for p in pending:
-                        p.cancel()
-                    if get_task in done:
-                        try:
-                            frame = get_task.result()
-                        except StopAsyncIteration:
-                            return
-                        yield format_sse(frame["event"], frame["data"])
-                        if frame["event"] in (
-                            "job_completed",
-                            "job_failed",
-                            "job_cancelled",
-                        ):
-                            return
-                    else:
-                        yield format_heartbeat()
-            finally:
-                # Explicit close so the pub/sub subscriber's `finally`
-                # clause runs (unsubscribe + release the Redis
-                # connection). Relying on generator GC would leak
-                # a Redis pubsub client per disconnected SSE client.
-                aclose = getattr(drainer, "aclose", None)
-                if callable(aclose):
-                    with contextlib.suppress(Exception):
-                        await aclose()
+            # ADR 0038: the loop lives in `src/api/streaming.py` so it
+            # can be tested without FastAPI, Redis or real sleeping.
+            #
+            # `aclosing` is load-bearing, not tidiness. StreamingResponse
+            # abandons its body iterator when the socket goes away — it
+            # never calls `aclose()` on it — so the GeneratorExit that
+            # eventually lands on *this* generator arrives at `yield
+            # chunk`, outside the inner `__anext__`. A bare `async for`
+            # would let `sse_event_stream` fall out of scope unclosed and
+            # leave its `finally` (unsubscribe + release the Redis
+            # connection) to whenever the async-generator finalizer runs.
+            # That is one leaked pubsub connection per disconnected
+            # client, which is the exact failure ADR 0035 closed.
+            async with contextlib.aclosing(
+                sse_event_stream(
+                    drainer,
+                    is_disconnected=request.is_disconnected,
+                    heartbeat_sec=settings.api_sse_heartbeat_sec,
+                    max_duration_sec=float(settings.api_sse_max_duration_sec),
+                    job_id=job_id,
+                )
+            ) as stream:
+                async for chunk in stream:
+                    yield chunk
         except asyncio.CancelledError:
-            # Client disconnect during a `wait` — quiet exit.
+            # Client disconnect mid-wait — quiet exit. `sse_event_stream`
+            # has already closed the drainer in its own `finally`.
             return
 
     return StreamingResponse(
