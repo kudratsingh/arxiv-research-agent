@@ -446,3 +446,88 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   trace unused, and neither the compose stack nor the deploy docs
   ship a collector service — the operator wires their own from the
   snippet in `docs/development.md`.
+
+- _2026-08-21_ — Eval-runner hardening (ADR 0050), ahead of the first
+  live campaign. The harness could not hold onto work it had already
+  paid for. `_run_and_score` guarded the workflow invocation and
+  computed the four metrics *outside* that guard, so one 529 on query
+  12's faithfulness judge walked out through a loop that caught only
+  `KeyboardInterrupt`: query 12's finished workflow output was never
+  appended, queries 13-20 never ran, and both ADR 0008's explicit
+  per-query isolation decision and the function's own "Never raises"
+  docstring were violated in one line. Metrics are now scored one at a
+  time inside `except Exception` — a failed judge lands as `None` with
+  its message on a `metrics_error` field while `state`, `costs` and
+  `elapsed_sec` survive, because the workflow output is the expensive
+  artifact and the score is the cheap one. `reset_run_id` moved into
+  `finally`, where it stops leaking a dead query's run_id into the next
+  query's logs. Output is written as it is produced —
+  `queries/<id>.json` plus a flushed `summary.jsonl` line per query,
+  `summary.md` rebuilt from disk at the end — so a kill loses at most
+  the in-flight query, and `--resume` re-enters a campaign without
+  re-paying for what finished. SIGTERM is mapped onto
+  `KeyboardInterrupt` so `docker stop` and an Actions cancellation take
+  the same flushing path Ctrl-C had, and the in-flight record rides out
+  on an `EvalInterrupted` rather than being dropped. Cost accounting
+  now splits the product from the harness: the record snapshots spend
+  before the judges run, so `cost_usd` / `llm_calls` / `elapsed_sec`
+  are the workflow's and `judge_cost_usd` / `judge_llm_calls` /
+  `scoring_sec` are the rig's, with `total_cost_usd` their sum. The
+  name `cost_usd` was kept deliberately: renaming it would have diffed
+  as `None` against every existing baseline and silently switched the
+  regression gate's cost band off, which is worse than a field whose
+  meaning is documented as having narrowed. Three green-while-wrong
+  paths closed — an empty `draft_report` is now a `NoReportProduced`
+  error instead of a free `citation_accuracy=1.0` / `faithfulness=1.0`
+  (and skips two wasted judge calls), reports with zero citations leave
+  the README's citation mean with the exclusion and its denominator
+  stated under the table, and a query present in the baseline but
+  missing from the current run is a regression instead of vanishing
+  while the aggregate quietly re-averages over the survivors
+  (`--allow-removed` opts a deliberate subset run out). `make eval`
+  stopped returning 0 on a total outage: distinct codes for partial
+  failure, all-failed, budget stop and interrupt, with the counts on
+  the closing line. A populated `--output-dir` is refused without
+  `--resume` rather than truncating a prior campaign's records, and
+  `--max-budget-usd` stops the batch cleanly between queries against
+  accumulated workflow+judge spend (per-call enforcement is ADR 0051's
+  choke point, not this one's). The nightly workflow — silently red for
+  15+ consecutive nights on an unset secret, dying with a "copy
+  .env.example" message that reads like a code bug — now fails fast
+  with a message naming the owner action, uploads its artifacts on
+  `always()` so a batch that died at query 15 still refreshes the
+  baseline the *next* night depends on, installs from
+  `requirements-lock.txt` like CI does, and gets the 120 minutes 20
+  queries actually need. Fifteen mutants planted across the judge
+  guard, the run_id reset, the checkpointer close, the empty-report
+  guard, the cost split, the cell escaping, the budget check, the
+  output-dir refusal, resume, the exit codes, the interrupt record, the
+  incremental write, the removed-query gate, the citation denominator
+  and the SIGTERM handler — all caught. Remaining: `summary.md` is
+  still end-of-run only, so a SIGKILL leaves it stale beside a current
+  `summary.jsonl`; the ceiling cannot stop a query already in flight;
+  `--resume` skips errored queries too (delete the record to retry
+  one); and the nightly's missing API key is now legible rather than
+  fixed.
+
+- _2026-08-21_ — Verification pass on ADR 0050 found one seam the
+  hardening itself opened and closed it (decision 10 in the ADR).
+  Judge isolation converts an aborted campaign into a `null` metric,
+  and both consumers of `summary.jsonl` were averaging over whatever
+  survived without saying so: the README could publish
+  `Mean faithfulness 0.420` from two runs inside a row headed
+  `20 / 20`, and `regression_diff` turned the same nulls into `None`
+  deltas, classifying all twenty queries `unchanged` and exiting green
+  on a night where eighteen judges failed — the exact shrunken
+  denominator decision 6 had just closed one level up, with
+  `metrics_error` written by the runner and read by nobody. Neither
+  gates now (a flaky judge is a harness fault, not a product
+  regression, and ~60 judge calls a night would redden the nightly for
+  it), but neither is silent either: the README names any metric whose
+  mean covers fewer runs than the count beside it, the diff report
+  carries a per-metric `Compared` column plus a header line naming what
+  went unscored, and the runner's closing line adds `N partially
+  scored`. The workflow-cost caveat also used to ride inside the
+  uncited-rows note, so it disappeared on any night where every report
+  cited something; it prints unconditionally. Ten more mutants planted
+  across the new counting and rendering — all caught.
