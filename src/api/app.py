@@ -1,8 +1,9 @@
 """FastAPI application factory.
 
 Owns the lifespan: the shared JobStore (in-memory or Redis-backed),
-the workflow factory, the concurrency semaphore, and the set of
-in-flight tasks so shutdown can cancel them cleanly.
+the workflow factory, the concurrency semaphore, the thread pool the
+graph's synchronous nodes run on (ADR 0047), and the set of in-flight
+tasks so shutdown can cancel them cleanly.
 
 The factory takes injectable overrides for `build_workflow` and
 `store` so tests can stub without patching `src.graph.workflow` or
@@ -20,6 +21,7 @@ import asyncio
 import contextlib
 import inspect
 from collections.abc import AsyncIterator, Callable
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -44,7 +46,8 @@ from src.api.redriver import (
     RedriveReport,
 )
 from src.api.routes import router
-from src.api.runner import run_job
+from src.api.runner import SHUTDOWN_DRAIN_SEC, run_job
+from src.cancellation import abandoned_node_count
 from src.config import settings
 from src.graph.workflow import build_workflow as default_build_workflow
 from src.observability import get_logger
@@ -128,13 +131,26 @@ def create_app(
         max_concurrent_jobs: Semaphore ceiling. Defaults to
             `settings.api_max_concurrent_jobs`.
     """
-    # ADR 0040: the API runner drives the graph through its async
-    # surface, so the production factory compiles with the ASYNC
-    # savers. The sync default (CLI / eval runner) would kill every
-    # job with `NotImplementedError` before its first node.
-    factory = build_workflow or (
-        lambda: default_build_workflow(async_checkpointer=True)
-    )
+    def _make_workflow(node_executor: ThreadPoolExecutor) -> Any:
+        """Compile the graph this app will serve every job from.
+
+        ADR 0040: the API runner drives the graph through its async
+        surface, so the production factory compiles with the ASYNC
+        savers — the sync default (CLI / eval runner) would kill every
+        job with `NotImplementedError` before its first node.
+
+        ADR 0047: it also hands the graph the app's node pool, so the
+        synchronous agent functions run somewhere bounded and
+        observable instead of on the event loop's default executor.
+        An injected test factory is called as-is; stub workflows have
+        no real nodes to place.
+        """
+        if build_workflow is not None:
+            return build_workflow()
+        return default_build_workflow(
+            async_checkpointer=True, node_executor=node_executor
+        )
+
     job_store: JobStore = store if store is not None else _default_store()
     conv_store: ConversationStore = (
         conversation_store
@@ -172,11 +188,22 @@ def create_app(
         # DB connections and, under SqliteSaver, a corruption risk
         # on the shared file across concurrent writers.
         #
+        # ADR 0047: the pool every synchronous graph node runs on,
+        # sized to the job ceiling so `api_max_concurrent_jobs` bounds
+        # threads and not just coroutines. Built before the workflow
+        # because the compiled graph closes over it. Threads are
+        # spawned lazily on first submit, so a factory that raises
+        # below leaks nothing.
+        node_executor = ThreadPoolExecutor(
+            max_workers=max_concurrent, thread_name_prefix="graph-node"
+        )
+        app.state.node_executor = node_executor
+
         # ADR 0040: the async-checkpointer factory returns an
         # awaitable (opening AsyncSqliteSaver / the Postgres pool
         # needs a running loop, which this lifespan is). Test-injected
         # stub factories stay plain callables, hence the check.
-        compiled_workflow = factory()
+        compiled_workflow = _make_workflow(node_executor)
         if inspect.isawaitable(compiled_workflow):
             compiled_workflow = await compiled_workflow
         app.state.workflow = compiled_workflow
@@ -344,6 +371,30 @@ def create_app(
             for task in list(app.state.tasks):
                 with contextlib.suppress(asyncio.CancelledError, Exception):
                     await task
+            # ADR 0047: the runners above have already drained their
+            # own cooperating nodes. Drop whatever is still queued,
+            # stop accepting submissions, then join — bounded, because
+            # a node that ignores its cancel token must not be able to
+            # hold SIGTERM open past the orchestrator's grace period.
+            # Without this join the process could not exit cleanly at
+            # all: pool threads are non-daemon.
+            join_budget = min(
+                float(settings.api_job_drain_timeout_sec), SHUTDOWN_DRAIN_SEC
+            )
+            node_executor.shutdown(wait=False, cancel_futures=True)
+            try:
+                await asyncio.wait_for(
+                    asyncio.to_thread(node_executor.shutdown, wait=True),
+                    timeout=join_budget,
+                )
+            except TimeoutError:
+                log.warning(
+                    "api_node_executor_drain_timeout",
+                    extra={
+                        "drain_budget_sec": join_budget,
+                        "abandoned_node_threads": abandoned_node_count(),
+                    },
+                )
             # Release the workflow's checkpointer connections via
             # whichever stack the builder attached: the async stack
             # (aiosqlite connection / Postgres pool, ADR 0040) on the
@@ -366,7 +417,13 @@ def create_app(
             if callable(close):
                 with contextlib.suppress(Exception):
                     await close()
-            log.info("api_shutdown", extra={"cancelled_jobs": len(app.state.tasks)})
+            log.info(
+                "api_shutdown",
+                extra={
+                    "cancelled_jobs": len(app.state.tasks),
+                    "abandoned_node_threads": abandoned_node_count(),
+                },
+            )
 
     app = FastAPI(
         title="arxiv-research-agent",

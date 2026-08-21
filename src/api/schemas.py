@@ -226,8 +226,17 @@ class HealthResponse(BaseModel):
     )
     active_jobs: int = Field(
         description="In-flight job tasks on THIS worker (queued + "
-        "running). Store-independent, so it is honest under the Redis "
-        "store too; a cluster-wide count would need its own endpoint."
+        "running) plus `abandoned_node_threads`. Store-independent, so "
+        "it is honest under the Redis store too; a cluster-wide count "
+        "would need its own endpoint."
+    )
+    abandoned_node_threads: int = Field(
+        default=0,
+        description="Graph-node threads still running after their job "
+        "was already failed and its concurrency permit released — the "
+        "drain budget expired before the thread returned (ADR 0047). "
+        "Sustained non-zero means nodes are ignoring the cancel token, "
+        "or `api_job_drain_timeout_sec` is too tight.",
     )
     max_concurrent_jobs: int
     dependencies: dict[str, str] = Field(

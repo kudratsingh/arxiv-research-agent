@@ -25,6 +25,13 @@ Two production knobs configured here regardless of shape:
 - **Tracing** via `traced_node` (ADR 0012 follow-up). When
   `settings.enable_tracing` is on, every agent execution becomes an
   OpenTelemetry span with `run_id` / query / iteration attributes.
+- **Node execution** — agents are synchronous functions. The sync
+  build registers them as-is. The async build registers an async
+  wrapper that dispatches each node onto a caller-supplied
+  `ThreadPoolExecutor` and registers the running thread on the job's
+  cancel token, because LangGraph's own coercion hard-codes the
+  loop's *default* pool and leaves no way to cancel or even observe
+  the thread. See ADR 0047.
 
 The compiled workflow is expensive to construct (opens the
 checkpointer's connection). Callers should build ONCE at app
@@ -35,8 +42,11 @@ job (audit finding, closed by ADR 0034).
 
 from __future__ import annotations
 
-from collections.abc import Hashable
+import asyncio
+from collections.abc import Callable, Hashable
+from concurrent.futures import Executor
 from contextlib import AsyncExitStack, ExitStack
+from contextvars import copy_context
 from pathlib import Path
 from typing import Any
 
@@ -50,11 +60,24 @@ from src.agents.search import search_agent
 from src.agents.supervisor import route_after_supervisor, supervisor_agent
 from src.agents.synthesizer import synthesizer_agent
 from src.agents.verifier import verifier_agent
+from src.cancellation import CancelToken, current_cancel_token
 from src.config import settings
 from src.graph.state import ResearchState
 from src.observability import get_logger, traced_node
 
 log = get_logger(__name__)
+
+NodeFn = Callable[[ResearchState], dict[str, Any]]
+"""Shape every agent node function shares: state in, partial state out."""
+
+NodeWrapper = Callable[[str, NodeFn], Any]
+"""Turns `(node_name, agent_fn)` into whatever gets registered on the graph.
+
+Two implementations: `_traced_wrapper` for the sync build (CLI + eval
+drive `invoke`, so the node stays a plain callable) and
+`_executor_wrapper` for the async build the API runner drives — see
+ADR 0047.
+"""
 
 
 def route_after_critique(state: ResearchState) -> str:
@@ -229,13 +252,111 @@ async def _aopen_postgres_checkpointer(exit_stack: AsyncExitStack) -> Any:
     return saver
 
 
-def _build_fixed_pipeline(workflow: StateGraph[ResearchState, Any, Any, Any]) -> None:
+def _traced_wrapper(name: str, fn: NodeFn) -> Any:
+    """Sync-path node: tracing only, still a plain synchronous callable.
+
+    LangGraph's `invoke` (CLI, eval runner) needs a sync node; the
+    async-only wrapper below would make `RunnableCallable` raise for
+    lack of a synchronous surface.
+    """
+    return traced_node(name, fn)
+
+
+def _run_node_body(
+    name: str,
+    fn: NodeFn,
+    state: ResearchState,
+    token: CancelToken | None,
+) -> dict[str, Any]:
+    """Execute one node inside the worker thread (ADR 0047).
+
+    Registers the thread on the job's cancel token for the whole call so
+    the runner's drain can tell "the coroutine was cancelled" apart from
+    "the thread has actually returned" — the distinction the timeout
+    path used to get wrong, releasing the semaphore permit while the
+    node kept burning CPU and LLM dollars.
+
+    Args:
+        name: Graph node name, used in the drain's log line.
+        fn: The (already traced) agent callable.
+        state: Graph state to hand the agent.
+        token: The job's cancel token, or `None` for programmatic
+            callers that run without one.
+
+    Returns:
+        The agent's partial state update.
+
+    Raises:
+        JobCancelledError: When the token was set before the thread got
+            scheduled — the queued-behind-a-slow-pool case, where
+            running the node would spend against an already-dead job.
+    """
+    if token is None:
+        return fn(state)
+    token.raise_if_cancelled()
+    handle = token.enter_node(name)
+    try:
+        return fn(state)
+    finally:
+        token.exit_node(handle)
+
+
+def _executor_wrapper(executor: Executor | None) -> NodeWrapper:
+    """Build the async-path node factory bound to `executor` (ADR 0047).
+
+    LangGraph coerces a *sync* node callable with
+    `partial(run_in_executor, None, fn)` — a hard-coded `None` that
+    routes every node onto the event loop's default thread pool. That
+    pool is sized independently of `api_max_concurrent_jobs` and shared
+    with every other `to_thread` caller in the process, so the job
+    semaphore bounded coroutines rather than threads. There is no
+    supported hook to override it (see ADR 0047's alternatives), so the
+    node is registered as an *async* callable that does the executor
+    dispatch itself.
+
+    Args:
+        executor: Pool the nodes run on. `None` falls back to the
+            loop's default executor, preserving the pre-ADR-0047
+            behaviour for callers that build an async graph without one.
+
+    Returns:
+        A `NodeWrapper` producing async node callables.
+    """
+
+    def wrap(name: str, fn: NodeFn) -> Any:
+        traced = traced_node(name, fn)
+
+        async def node(state: ResearchState) -> dict[str, Any]:
+            token = current_cancel_token()
+            if token is not None:
+                # Cheap pre-check on the loop side: never occupy a pool
+                # slot for a job that is already cancelled.
+                token.raise_if_cancelled()
+            loop = asyncio.get_running_loop()
+            # Explicit context copy: `run_in_executor` only propagates
+            # contextvars on its default-executor branch, and run_id /
+            # cost accumulator / cancel token all have to reach the
+            # node thread.
+            ctx = copy_context()
+            return await loop.run_in_executor(
+                executor, ctx.run, _run_node_body, name, traced, state, token
+            )
+
+        node.__name__ = name
+        return node
+
+    return wrap
+
+
+def _build_fixed_pipeline(
+    workflow: StateGraph[ResearchState, Any, Any, Any], wrap: NodeWrapper
+) -> None:
     """Wire the classic planner -> search -> reader -> synthesizer -> critic path."""
-    workflow.add_node("planner", traced_node("planner", planner_agent))
-    workflow.add_node("search", traced_node("search", search_agent))
-    workflow.add_node("reader", traced_node("reader", reader_agent))
-    workflow.add_node("synthesizer", traced_node("synthesizer", synthesizer_agent))
-    workflow.add_node("critic", traced_node("critic", critic_agent))
+    workflow.add_node("planner", wrap("planner", planner_agent))
+    workflow.add_node("search", wrap("search", search_agent))
+    workflow.add_node("reader", wrap("reader", reader_agent))
+    workflow.add_node("synthesizer", wrap("synthesizer", synthesizer_agent))
+    workflow.add_node("critic", wrap("critic", critic_agent))
 
     workflow.set_entry_point("planner")
     workflow.add_edge("planner", "search")
@@ -255,7 +376,9 @@ def _build_fixed_pipeline(workflow: StateGraph[ResearchState, Any, Any, Any]) ->
     )
 
 
-def _build_supervisor_loop(workflow: StateGraph[ResearchState, Any, Any, Any]) -> None:
+def _build_supervisor_loop(
+    workflow: StateGraph[ResearchState, Any, Any, Any], wrap: NodeWrapper
+) -> None:
     """Wire the supervisor -> action -> supervisor loop.
 
     Every agent node hands control back to the supervisor when it
@@ -271,25 +394,25 @@ def _build_supervisor_loop(workflow: StateGraph[ResearchState, Any, Any, Any]) -
     module), so those branches of the conditional edge are
     unreachable.
     """
-    workflow.add_node("supervisor", traced_node("supervisor", supervisor_agent))
-    workflow.add_node("planner", traced_node("planner", planner_agent))
-    workflow.add_node("search", traced_node("search", search_agent))
-    workflow.add_node("reader", traced_node("reader", reader_agent))
-    workflow.add_node("synthesizer", traced_node("synthesizer", synthesizer_agent))
-    workflow.add_node("critic", traced_node("critic", critic_agent))
+    workflow.add_node("supervisor", wrap("supervisor", supervisor_agent))
+    workflow.add_node("planner", wrap("planner", planner_agent))
+    workflow.add_node("search", wrap("search", search_agent))
+    workflow.add_node("reader", wrap("reader", reader_agent))
+    workflow.add_node("synthesizer", wrap("synthesizer", synthesizer_agent))
+    workflow.add_node("critic", wrap("critic", critic_agent))
 
     action_nodes = ["planner", "search", "reader", "synthesizer", "critic"]
     route_map: dict[Hashable, str] = {n: n for n in action_nodes}
 
     if settings.enable_verifier:
-        workflow.add_node("verifier", traced_node("verifier", verifier_agent))
+        workflow.add_node("verifier", wrap("verifier", verifier_agent))
         action_nodes.append("verifier")
         route_map["verifier"] = "verifier"
 
     if settings.enable_query_refiner:
         workflow.add_node(
             "query_refiner",
-            traced_node("query_refiner", query_refiner_agent),
+            wrap("query_refiner", query_refiner_agent),
         )
         action_nodes.append("query_refiner")
         route_map["query_refiner"] = "query_refiner"
@@ -306,13 +429,20 @@ def _build_supervisor_loop(workflow: StateGraph[ResearchState, Any, Any, Any]) -
         workflow.add_edge(node, "supervisor")
 
 
-def _build_graph_shape() -> StateGraph[ResearchState, Any, Any, Any]:
-    """Wire the node graph — identical for the sync and async builds."""
+def _build_graph_shape(wrap: NodeWrapper) -> StateGraph[ResearchState, Any, Any, Any]:
+    """Wire the node graph — same edges for the sync and async builds.
+
+    Args:
+        wrap: How each agent callable is turned into a graph node. The
+            edges are identical either way; only the node's calling
+            convention differs (sync callable vs. ADR-0047 async
+            executor dispatch).
+    """
     workflow = StateGraph(ResearchState)
     if settings.enable_supervisor:
-        _build_supervisor_loop(workflow)
+        _build_supervisor_loop(workflow, wrap)
     else:
-        _build_fixed_pipeline(workflow)
+        _build_fixed_pipeline(workflow, wrap)
     return workflow
 
 
@@ -340,7 +470,9 @@ def _compile(
     return workflow.compile(**compile_kwargs)
 
 
-async def _abuild_workflow(enable_hitl: bool | None) -> Any:
+async def _abuild_workflow(
+    enable_hitl: bool | None, node_executor: Executor | None
+) -> Any:
     """Async-mode build: async savers, `AsyncExitStack` teardown."""
     exit_stack = AsyncExitStack()
     try:
@@ -348,7 +480,11 @@ async def _abuild_workflow(enable_hitl: bool | None) -> Any:
     except BaseException:
         await exit_stack.aclose()
         raise
-    compiled = _compile(_build_graph_shape(), checkpointer, enable_hitl)
+    compiled = _compile(
+        _build_graph_shape(_executor_wrapper(node_executor)),
+        checkpointer,
+        enable_hitl,
+    )
     # The lifespan awaits this stack's `aclose()` at shutdown — see
     # `create_app` in src/api/app.py.
     compiled._checkpointer_aexit_stack = exit_stack
@@ -356,7 +492,10 @@ async def _abuild_workflow(enable_hitl: bool | None) -> Any:
 
 
 def build_workflow(
-    *, enable_hitl: bool | None = None, async_checkpointer: bool = False
+    *,
+    enable_hitl: bool | None = None,
+    async_checkpointer: bool = False,
+    node_executor: Executor | None = None,
 ) -> Any:
     """Construct and compile the research agent workflow graph.
 
@@ -388,22 +527,43 @@ def build_workflow(
             an API job (ADR 0040). The default False keeps the sync
             savers and a plain return value for the CLI and the eval
             runner, which drive the graph with the sync `invoke`.
+        node_executor: Thread pool the graph's synchronous nodes run
+            on (ADR 0047). Async mode only — the pool is what makes
+            `api_max_concurrent_jobs` bound real threads instead of
+            coroutines, and what gives the runner's timeout drain and
+            the lifespan's shutdown join something to wait on. `None`
+            falls back to the event loop's default executor.
 
     Returns:
         The compiled graph (sync mode), or a coroutine resolving to it
         (async mode — the `create_app` lifespan awaits it). Teardown
         handles are attached as `_checkpointer_exit_stack` /
         `_checkpointer_aexit_stack` respectively.
+
+    Raises:
+        ValueError: When `node_executor` is passed without
+            `async_checkpointer` — the sync `invoke` path calls nodes
+            inline on the caller's thread, so an executor there would
+            be silently ignored.
     """
     if async_checkpointer:
-        return _abuild_workflow(enable_hitl)
+        return _abuild_workflow(enable_hitl, node_executor)
+
+    if node_executor is not None:
+        raise ValueError(
+            "node_executor applies to the async build only; the sync "
+            "path calls nodes inline. Pass async_checkpointer=True "
+            "(see ADR 0047)."
+        )
 
     # ExitStack keeps the SqliteSaver context alive for the compiled
     # graph's lifetime. We attach it to the compiled object so callers
     # don't have to think about teardown.
     exit_stack = ExitStack()
     checkpointer = _open_checkpointer(exit_stack)
-    compiled = _compile(_build_graph_shape(), checkpointer, enable_hitl)
+    compiled = _compile(
+        _build_graph_shape(_traced_wrapper), checkpointer, enable_hitl
+    )
 
     # Attach so a caller who cares can `close()`; ExitStack cleanup
     # otherwise runs at interpreter shutdown.

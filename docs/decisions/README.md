@@ -144,6 +144,17 @@ never renumbered.
   asyncio primitives, and a production-wiring smoke test pins the
   whole path. Revisits ADR 0034; corrects ADR 0030's interrupt
   semantics.
+- [0047](0047-bounded-executor-and-cooperative-cancel.md) — Bounded
+  node executor + cooperative cancellation. A job timeout cancelled
+  the coroutine but not the synchronous node's thread, so
+  `api_max_concurrent_jobs` bounded coroutines while zombie threads
+  kept calling Claude on a job already marked failed. Graph nodes
+  now run on a lifespan-owned pool sized to the job ceiling, a
+  per-job cancel token is checked before every LLM call and between
+  the reader's papers, and the runner holds the concurrency permit
+  until the node thread actually returns — with the threads it gives
+  up on still counted in `/healthz`. Follows ADR 0040; extends
+  ADR 0042's honesty rule to `active_jobs`.
 
 ## When to write an ADR
 

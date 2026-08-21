@@ -340,3 +340,29 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   timeout path still abandons the node thread (needs a bounded
   executor + cancel token), `ConversationStore.update_title`,
   redriver-side CAS on `_fail_orphan`.
+- _2026-08-20_ — Bounded node executor + cooperative cancellation
+  (ADR 0047), closing the last open P1 from the audit and the
+  follow-up ADR 0040 left behind. `asyncio.wait_for` cancelled the
+  coroutine awaiting a graph node, never the node's thread —
+  LangGraph coerces sync nodes onto the event loop's *default* pool
+  with a hard-coded `None` executor — so a timed-out job released
+  its semaphore permit while the zombie thread kept calling Claude
+  for a job already marked `failed`, past `max_cost_usd`'s
+  enforcement point, on a non-daemon thread that held SIGTERM open.
+  Nodes now run on a lifespan-owned `ThreadPoolExecutor` sized to
+  `api_max_concurrent_jobs` (the async build registers an async
+  wrapper that does the dispatch itself; the sync CLI / eval build
+  is untouched), a per-job `CancelToken` rides a ContextVar into
+  `src/llm.py` and the reader's per-paper fan-out, and the runner
+  holds the permit across a bounded drain
+  (`api_job_drain_timeout_sec`, default 30s) after emitting the
+  terminal frame — so the client is released immediately but the
+  concurrency ceiling is not. Threads the drain gives up on are
+  logged by name and stay in `/healthz`'s `active_jobs` (broken out
+  as `abandoned_node_threads`) until they return. Remaining
+  follow-ups: async agents on `AsyncAnthropic` (would replace
+  cooperative cancellation with the real thing), cancel checks
+  inside the synthesizer / verifier loops, `abandoned_node_threads`
+  as a metric rather than a health field, and a
+  `POST /research/{id}/cancel` endpoint now that the machinery
+  exists.

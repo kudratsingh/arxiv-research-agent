@@ -165,6 +165,10 @@ class TestHealthz:
             assert resp.json() == {
                 "status": "ok",
                 "active_jobs": 0,
+                # ADR 0047: no timed-out job has abandoned a node
+                # thread on this idle worker, so `active_jobs` and the
+                # breakout both read zero.
+                "abandoned_node_threads": 0,
                 "max_concurrent_jobs": 5,
                 # In-memory store, no postgres configured: nothing to
                 # ping, so the dependency map is honestly empty.

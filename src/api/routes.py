@@ -47,6 +47,7 @@ from src.api.streaming import (
     format_sse,
     sse_event_stream,
 )
+from src.cancellation import abandoned_node_count
 from src.config import settings
 from src.observability import get_logger
 
@@ -719,7 +720,11 @@ async def healthz(request: Request) -> HealthResponse:
 
     `active_jobs` counts this worker's in-flight job tasks (queued +
     running) — store-independent, so it no longer reports a constant
-    0 under the shipped Redis store.
+    0 under the shipped Redis store — *plus* any node threads the
+    runner gave up waiting on after a timeout drain expired (ADR
+    0047). Those threads still hold a pool slot and still spend, so
+    leaving them out would report free capacity this worker does not
+    have; `abandoned_node_threads` breaks them out separately.
     """
     state = _get_state(request)
     dependencies: dict[str, str] = {}
@@ -733,9 +738,11 @@ async def healthz(request: Request) -> HealthResponse:
         dependencies["postgres"] = await _postgres_status()
 
     degraded = any(v != "ok" for v in dependencies.values())
+    abandoned = abandoned_node_count()
     return HealthResponse(
         status="degraded" if degraded else "ok",
-        active_jobs=len(state["tasks"]),
+        active_jobs=len(state["tasks"]) + abandoned,
+        abandoned_node_threads=abandoned,
         max_concurrent_jobs=state["max_concurrent_jobs"],
         dependencies=dependencies,
     )

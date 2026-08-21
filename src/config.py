@@ -285,6 +285,24 @@ class Settings(BaseSettings):
             "read timeout on the streaming endpoint."
         ),
     )
+    api_job_drain_timeout_sec: int = Field(
+        default=30,
+        ge=1,
+        le=300,
+        description=(
+            "How long the runner holds a job's concurrency permit after "
+            "a timeout or shutdown, waiting for the graph node's thread "
+            "to actually return. A node thread cannot be killed, so the "
+            "permit has to outlive the cancelled coroutine or "
+            "`api_max_concurrent_jobs` stops bounding real work. Past "
+            "this budget the runner gives up, logs "
+            "`api_job_node_drain_expired`, and the abandoned thread is "
+            "counted into `/healthz`'s `active_jobs` until it returns. "
+            "The shutdown path caps this further at "
+            "`runner.SHUTDOWN_DRAIN_SEC`, so raising this cannot push "
+            "SIGTERM past the container's grace period. See ADR 0047."
+        ),
+    )
     api_job_retention_sec: int = Field(
         default=3600,
         ge=60,
