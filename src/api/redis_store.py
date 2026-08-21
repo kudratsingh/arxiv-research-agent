@@ -16,8 +16,10 @@ the job) stay reachable while the job runs. The entry is dropped the
 moment the job goes terminal — past that point delivery is pub/sub
 (ADR 0035), and a retained entry would both grow the dict without
 bound and shadow the Redis retention TTL on the originating worker
-(ADR 0040). Requests hitting a different worker still get the
-persistent snapshot via Redis.
+(ADR 0040). The drop happens in a `finally`, so a Redis outage that
+fails every terminal write still bounds worker memory (ADR 0048).
+Requests hitting a different worker still get the persistent
+snapshot via Redis.
 
 ## Cross-worker HITL resume (ADR 0034)
 
@@ -79,7 +81,7 @@ from typing import Any
 import redis.asyncio as redis_async
 
 from src.api.jobs import TERMINAL_STATUSES, Job, JobStatus
-from src.api.streaming import TERMINAL_EVENT_NAMES
+from src.api.streaming import TERMINAL_EVENT_NAMES, TERMINAL_EVENT_STATUS
 from src.config import settings
 from src.observability import get_logger
 
@@ -178,6 +180,31 @@ def _job_to_json(job: Job) -> str:
     # explicit rather than relying on that.
     persistent["status"] = str(job.status)
     return json.dumps(persistent, separators=(",", ":"))
+
+
+def _status_from_payload(payload: str | None) -> JobStatus | None:
+    """Read just the `status` out of a stored row, cheaply.
+
+    Used by every guard that has to answer "what does Redis currently
+    say about this job?" without paying for a full `Job`
+    reconstruction. Returns None for a missing key *and* for a row
+    that will not parse — the callers treat "unknown" as "no opinion",
+    which for the refusal guards means letting the write through
+    rather than wedging a job behind a corrupt payload.
+
+    Args:
+        payload: The raw JSON row, or None when the key is gone.
+
+    Returns:
+        The stored status, or None when it cannot be determined.
+    """
+    if payload is None:
+        return None
+    try:
+        data = json.loads(payload)
+        return JobStatus(data.get("status", "pending"))
+    except (ValueError, TypeError, AttributeError):
+        return None
 
 
 def _job_from_json(payload: str) -> Job:
@@ -285,64 +312,186 @@ class RedisJobStore:
             payload = payload.decode()
         return _job_from_json(payload)
 
+    async def _stored_status(self, job_id: str) -> JobStatus | None:
+        """What Redis currently says this job's status is.
+
+        One GET and a partial parse — no `Job` reconstruction, so the
+        guards that call it per terminal write do not pay for
+        hydrating a full report body.
+        """
+        raw = await self._client.get(self._key(job_id))
+        return _status_from_payload(_as_text(raw))
+
+    async def _terminal_write_refused(self, job: Job) -> bool:
+        """Whether a terminal write must be dropped as a late loser.
+
+        The race this closes (ADR 0038 follow-up): a redriver mistakes
+        a live job for an orphan and writes `failed/orphaned`; the
+        still-running worker later finishes and would silently
+        resurrect the row as `succeeded` — after every SSE client
+        already saw a terminal `job_failed`. First terminal write
+        wins; the loser is logged, not raised (the runner's terminal
+        persist path must stay absorbing, and a raise there would be
+        retried three times and reported as data loss).
+
+        Args:
+            job: The terminal job about to be persisted.
+
+        Returns:
+            True when a *different* terminal status is already stored.
+            An unreadable or absent row returns False so a corrupt
+            payload cannot wedge a job out of ever being finalized.
+        """
+        stored = await self._stored_status(job.job_id)
+        if (
+            stored is not None
+            and stored in TERMINAL_STATUSES
+            and stored != job.status
+        ):
+            log.warning(
+                "job_terminal_transition_refused",
+                extra={
+                    "job_id": job.job_id,
+                    "stored_status": stored.value,
+                    "attempted_status": job.status.value,
+                },
+            )
+            return True
+        return False
+
     async def update(self, job: Job) -> None:
-        # Refuse a terminal -> different-terminal overwrite. The race
-        # this closes (ADR 0038 follow-up): a redriver mistakes a live
-        # job for an orphan and writes `failed/orphaned`; the still-
-        # running worker later finishes and would silently resurrect
-        # the row as `succeeded` — after every SSE client already saw
-        # a terminal `job_failed`. First terminal write wins; the
-        # loser is logged, not raised (the runner's terminal persist
-        # path must stay absorbing).
-        if job.is_terminal():
-            current = await self._client.get(self._key(job.job_id))
-            if current is not None:
-                payload = (
-                    current.decode() if isinstance(current, bytes) else current
+        """Persist a job, evicting terminal ones from the local cache.
+
+        The `finally` is load-bearing (ADR 0048). A terminal job's
+        `_local` entry has to be dropped on *every* exit — the write
+        landing, the refusal guard rejecting it, and either Redis call
+        raising. Without it, a sustained outage in which every
+        terminal persist attempt failed left one entry per finished
+        job in the dict for the process lifetime, so worker memory
+        grew monotonically for exactly as long as the outage lasted.
+
+        Evicting on failure does cost this worker something: its `get`
+        then falls back to the (stale, still non-terminal) Redis row
+        and reports `running` for a job it knows finished. That is the
+        *same* answer every other worker in the fleet is already
+        giving, and the terminal outcome is recoverable from the
+        `api_job_terminal_persist_failed` record the runner logs in
+        full. Serving a stale local row past that point buys one
+        worker a better answer at the price of an OOM that takes the
+        live jobs with it.
+
+        Store failures propagate: the runner's `_persist_terminal`
+        owns the retry-and-absorb policy, and swallowing here would
+        hide a downed Redis from it.
+        """
+        try:
+            # Refuse a terminal -> different-terminal overwrite: first
+            # terminal write wins (see `_terminal_write_refused`).
+            if job.is_terminal() and await self._terminal_write_refused(job):
+                return
+
+            # Preserve the local cache invariant: if we own this job's
+            # runner, keep our instance authoritative for streaming.
+            if job.job_id in self._local:
+                self._local[job.job_id] = job
+
+            serialized = _job_to_json(job)
+            if job.is_terminal() and self._retention_sec > 0:
+                await self._client.set(
+                    self._key(job.job_id), serialized, ex=self._retention_sec
                 )
-                try:
-                    stored_status = JobStatus(
-                        json.loads(payload).get("status", "pending")
-                    )
-                except (ValueError, TypeError):
-                    stored_status = None  # corrupt row — let the write proceed
-                if (
-                    stored_status is not None
-                    and stored_status in TERMINAL_STATUSES
-                    and stored_status != job.status
-                ):
-                    log.warning(
-                        "job_terminal_transition_refused",
+            else:
+                await self._client.set(self._key(job.job_id), serialized)
+        finally:
+            # Under this store SSE delivery is pub/sub (ADR 0035), so
+            # a terminal job's live queue has no consumer left, and
+            # keeping the entry would pin every finished report +
+            # Queue + Event for the process lifetime while shadowing
+            # the retention TTL (audit P2).
+            if job.is_terminal():
+                self._local.pop(job.job_id, None)
+
+    async def update_if_status(self, job: Job, *, expected: JobStatus) -> bool:
+        """Write `job` only while Redis still shows `expected` (ADR 0048).
+
+        The redriver's reclaim needs more than `update`'s guard. That
+        guard is GET-then-SET, and it only refuses *terminal →
+        different-terminal*: a job that completes between the sweep's
+        re-read and its write goes `running → succeeded` in the gap,
+        and the sweep's `failed/orphaned` overwrites a finished report
+        because at the moment of the guard's GET the stored status was
+        still `succeeded`… only after the sweep had already decided to
+        write. Collapsing the check and the write into one
+        WATCH/MULTI/EXEC removes the gap: Redis aborts the EXEC if
+        anything touched the key after the WATCH, which is precisely
+        "the owner finished while we were deciding".
+
+        Uses optimistic locking rather than `EVAL` for the same reason
+        `_compare_and_apply` does — `fakeredis` only implements `EVAL`
+        with the optional native `lupa` extension.
+
+        A duck-typed extra, not a `JobStore` Protocol member:
+        `InMemoryJobStore` has no cross-process race to arbitrate, and
+        the redriver already probes the store for `scan_jobs` and
+        `acquire_lease` the same way.
+
+        Args:
+            job: The mutated job to persist.
+            expected: The status the caller observed and is acting on.
+
+        Returns:
+            True if the row still read `expected` and the write
+            landed. False if it did not — the caller must treat its
+            decision as stale and publish nothing.
+        """
+        key = self._key(job.job_id)
+        serialized = _job_to_json(job)
+        ttl_sec = (
+            self._retention_sec
+            if job.is_terminal() and self._retention_sec > 0
+            else None
+        )
+        try:
+            async with self._client.pipeline() as pipe:
+                await pipe.watch(key)
+                stored = _status_from_payload(_as_text(await pipe.get(key)))
+                if stored != expected:
+                    await pipe.unwatch()  # type: ignore[no-untyped-call]
+                    log.info(
+                        "job_cas_write_stale",
                         extra={
                             "job_id": job.job_id,
-                            "stored_status": stored_status.value,
-                            "attempted_status": job.status.value,
+                            "stored_status": stored.value if stored else None,
+                            "expected_status": expected.value,
                         },
                     )
-                    self._local.pop(job.job_id, None)
-                    return
+                    return False
+                pipe.multi()  # type: ignore[no-untyped-call]
+                if ttl_sec is None:
+                    pipe.set(key, serialized)
+                else:
+                    pipe.set(key, serialized, ex=ttl_sec)
+                results = await pipe.execute()
+        except redis_async.WatchError:
+            # Someone wrote the row between our WATCH and the EXEC —
+            # by definition the status we compared against is stale.
+            log.info(
+                "job_cas_write_aborted",
+                extra={
+                    "job_id": job.job_id,
+                    "expected_status": expected.value,
+                },
+            )
+            return False
 
-        # Preserve the local cache invariant: if we own this job's
-        # runner, keep our instance authoritative for streaming.
+        if not (bool(results) and bool(results[0])):
+            return False
+
         if job.job_id in self._local:
             self._local[job.job_id] = job
-
-        serialized = _job_to_json(job)
-        if job.is_terminal() and self._retention_sec > 0:
-            await self._client.set(
-                self._key(job.job_id), serialized, ex=self._retention_sec
-            )
-        else:
-            await self._client.set(self._key(job.job_id), serialized)
-
-        # Terminal jobs leave the local cache once the Redis write has
-        # landed: under this store SSE delivery is pub/sub (ADR 0035),
-        # so the live queue has no consumer past the terminal frame,
-        # and keeping the entry would pin every finished report +
-        # Queue + Event for the process lifetime while shadowing the
-        # retention TTL (audit P2).
         if job.is_terminal():
             self._local.pop(job.job_id, None)
+        return True
 
     async def evict_older_than(self, retention_sec: int) -> int:
         """Redis handles retention via key TTL, so this is a no-op.
@@ -374,7 +523,45 @@ class RedisJobStore:
         only delivery mechanism that actually reaches the streaming
         endpoint if that endpoint is running on a different worker
         than the runner.
+
+        **Terminal frames are checked against the persisted row**
+        (ADR 0048). `update` refuses a terminal → different-terminal
+        overwrite, but the caller that lost that race did not know it
+        and went on to publish its own terminal frame anyway — so a
+        client could see `job_completed` land after `job_failed`, for
+        a job whose stored outcome is `failed` and whose `result` it
+        will never be able to fetch. Making the refusal observable to
+        the *publisher* would mean changing `update`'s `-> None`
+        Protocol signature (and `InMemoryJobStore` with it); enforcing
+        it here instead needs no Protocol change, and covers every
+        publisher — the runner, the redriver, and anything added
+        later — at the one point where the frame becomes visible.
+        The check costs one GET per terminal frame, which is at most
+        one per job.
+
+        A frame is dropped only when the stored status is *itself*
+        terminal and disagrees. A missing row (retention TTL fired) or
+        a non-terminal row (the terminal persist failed outright)
+        still publishes: a subscriber blocked on a close signal is
+        worse off without it.
         """
+        if event in TERMINAL_EVENT_NAMES:
+            stored = await self._stored_status(job_id)
+            if (
+                stored is not None
+                and stored in TERMINAL_STATUSES
+                and stored.value != TERMINAL_EVENT_STATUS[event]
+            ):
+                log.warning(
+                    "sse_terminal_frame_suppressed",
+                    extra={
+                        "job_id": job_id,
+                        "event": event,
+                        "stored_status": stored.value,
+                    },
+                )
+                return
+
         payload = json.dumps(
             {"event": event, "data": data}, separators=(",", ":")
         )
@@ -617,8 +804,47 @@ class RedisJobStore:
         """
         return bool(await self._client.exists(self._lease_key(job_id)))
 
+    async def _terminal_keys(self, keys: list[str]) -> set[str]:
+        """Subset of `keys` provably holding a terminal job, via TTL.
+
+        The only place a job row is given an expiry is the terminal
+        branch of `update` / `update_if_status`, so `TTL >= 0` is a
+        proof of terminality that costs an integer reply instead of a
+        full report body — which is the whole point (ADR 0048): the
+        sweep used to MGET every row in the keyspace and throw the
+        terminal ones away immediately after paying to transfer and
+        deserialize them, and in a healthy deployment nearly every row
+        inside the retention window is terminal.
+
+        `TTL == -2` (key vanished between the SCAN and here) is
+        counted too — there is nothing left to hydrate.
+
+        The proof is one-directional: under `retention_sec = 0` a
+        terminal row carries no TTL and is *not* reported here, so the
+        caller must still drop terminal rows after deserializing.
+
+        Args:
+            keys: Job keys from the current SCAN batch.
+
+        Returns:
+            The keys worth skipping entirely.
+        """
+        # `transaction=False` — a plain command pipeline, not MULTI:
+        # this is a read-only batch and the rows are independent, so
+        # wrapping them in a transaction would only add round-trip
+        # bookkeeping.
+        async with self._client.pipeline(transaction=False) as pipe:
+            for key in keys:
+                pipe.ttl(key)
+            ttls = await pipe.execute()
+        return {
+            key
+            for key, ttl in zip(keys, ttls, strict=True)
+            if isinstance(ttl, int) and ttl != -1
+        }
+
     async def scan_jobs(self, *, max_scan: int) -> tuple[list[Job], bool]:
-        """Read up to `max_scan` persisted jobs via cursor-based SCAN.
+        """Read the non-terminal persisted jobs via cursor-based SCAN.
 
         Deliberately SCAN and not KEYS: `KEYS job:*` blocks the Redis
         event loop for the whole keyspace, which on a production
@@ -628,16 +854,24 @@ class RedisJobStore:
         a good-enough snapshot of what the previous generation of
         workers left behind, and duplicates are deduplicated here.
 
+        Terminal rows are filtered out *before* their bodies are
+        fetched wherever the retention TTL makes that decidable (see
+        `_terminal_keys`), and after deserialization otherwise. The
+        redriver has nothing to do with a terminal row either way, so
+        returning them only cost bandwidth.
+
         A key whose payload will not deserialize is logged as
         `job_scan_bad_payload` and skipped rather than aborting the
         sweep — one corrupt row must not block reconciling the rest.
 
         Args:
             max_scan: Upper bound on keys examined, so a huge keyspace
-                cannot stall startup.
+                cannot stall startup. Counted in *keys*, including the
+                terminal ones that never become jobs, so the cap
+                bounds the work rather than the yield.
 
         Returns:
-            `(jobs, scan_capped)` — the deserialized jobs, and whether
+            `(jobs, scan_capped)` — the non-terminal jobs, and whether
             the cap stopped the sweep early. A True flag means the
             result is a partial view and must not be reported as a
             complete reconciliation.
@@ -663,16 +897,28 @@ class RedisJobStore:
             examined += len(fresh)
 
             if fresh:
-                payloads = await self._client.mget(fresh)
-                for key, raw in zip(fresh, payloads, strict=True):
+                skip = await self._terminal_keys(fresh)
+                hydrate = [k for k in fresh if k not in skip]
+                payloads = (
+                    await self._client.mget(hydrate) if hydrate else []
+                )
+                for key, raw in zip(hydrate, payloads, strict=True):
                     payload = _as_text(raw)
                     if payload is None:
                         # Key expired between the SCAN and the MGET.
                         continue
                     try:
-                        jobs.append(_job_from_json(payload))
+                        job = _job_from_json(payload)
                     except (ValueError, TypeError, KeyError):
                         log.warning("job_scan_bad_payload", extra={"key": key})
+                        continue
+                    if job.is_terminal():
+                        # `retention_sec = 0` deployments give terminal
+                        # rows no TTL, so the cheap pre-filter cannot
+                        # see them. Correctness lives here; the TTL
+                        # check is only an optimization on top.
+                        continue
+                    jobs.append(job)
 
             if capped or cursor == 0:
                 break

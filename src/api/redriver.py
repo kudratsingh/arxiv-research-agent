@@ -22,6 +22,13 @@ Reclaiming means marking the job `failed` with `error_type=orphaned`
 is not an afterthought — it is the half that unhangs the SSE clients
 that are still waiting.
 
+Both halves are gated on a compare-and-set (ADR 0048): the reclaim
+write only lands while the row still holds the non-terminal status
+the sweep re-read under its claim. Without that, a job that finishes
+in the gap between the re-read and the write has its `succeeded` row
+— report and all — overwritten with `failed/orphaned`, and every
+connected client is then told the opposite of the truth.
+
 Nothing here applies to `InMemoryJobStore`: its jobs die with the
 process, so there is never anything to reconcile. The sweep detects
 that by duck-typing `scan_jobs`, matching how `routes.py` detects
@@ -33,6 +40,7 @@ from __future__ import annotations
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass
+from enum import StrEnum
 from typing import Any, Final
 from uuid import uuid4
 
@@ -58,9 +66,46 @@ request handlers.
 # that dies mid-sweep releases it eventually instead of wedging every
 # future deploy; it is not an operator-tuned knob, so it stays a
 # constant rather than another settings field.
-REDRIVE_LOCK_TTL_SEC: Final[int] = 120
+#
+# 30s, down from 120s (ADR 0048). The failure it was making worse: a
+# worker killed mid-sweep — which on a deploy is the *likely* way a
+# sweep ends — held the lock for two minutes, and its own restart
+# then hit `job_redriver_skipped_locked` and skipped reconciliation
+# entirely, so nothing got reclaimed until some later boot. The
+# obvious alternative (recognise the dead holder and take the lock
+# from it) is unavailable: `WORKER_ID` is regenerated per process, so
+# a restarted worker cannot identify its own previous incarnation.
+#
+# Shrinking is safe because the lock is a de-duplication
+# optimization, not the safety mechanism. Mutual exclusion on an
+# individual job comes from `acquire_lease`'s SET NX plus the re-read
+# under that claim; two overlapping sweeps duplicate work but cannot
+# double-reclaim. And a sweep is bounded work — at most
+# `job_redrive_max_scan` keys, now with the terminal rows filtered
+# before their bodies are fetched (ADR 0048) — so 30s is ample for a
+# healthy Redis and the cost of being wrong is a redundant scan.
+#
+# `create_app` reuses this as the `asyncio.wait_for` bound on the
+# sweep, so it doubles as the worst-case boot delay against an
+# unreachable Redis: also better at 30s.
+REDRIVE_LOCK_TTL_SEC: Final[int] = 30
 
 ORPHANED_ERROR_TYPE: Final[str] = "orphaned"
+
+
+class OrphanOutcome(StrEnum):
+    """What the sweep actually managed to do with one orphan.
+
+    `skipped_live` is the ADR 0048 addition: the reclaim's write is a
+    compare-and-set, and losing it means the job finished under us
+    between the re-read and the write. That is not a failure to
+    reclaim — it is proof the job was never an orphan — so it counts
+    with the other jobs left alone rather than as a reclaim.
+    """
+
+    requeued = "requeued"
+    failed = "failed"
+    skipped_live = "skipped_live"
 
 ResubmitCallback = Callable[[Job], Awaitable[None]]
 """Hands a reset-to-`pending` job back to the execution path.
@@ -75,11 +120,16 @@ semaphore, or the task set that `routes.py` owns.
 class RedriveReport:
     """Outcome of one sweep, for logging and for tests to assert on.
 
-    `scanned` counts job rows read, not keys examined. `orphaned` is
-    the subset that had no live lease and was therefore acted on, so
-    `orphaned == failed + requeued`. `skipped_live` counts jobs left
-    alone because another worker still holds their lease — the number
-    that proves a rolling restart is not reaping healthy work.
+    `scanned` counts the non-terminal job rows the store's scan
+    returned, not keys examined — terminal rows are filtered inside
+    `scan_jobs` (ADR 0048) and never reach the reconcile. `orphaned`
+    is the subset that had no live lease and was actually reclaimed,
+    so `orphaned == failed + requeued`. `skipped_live` counts jobs
+    left alone — because another worker still holds their lease,
+    because the re-read under the claim showed them terminal, or
+    because the reclaim's compare-and-set lost to the owner finishing
+    mid-write. It is the number that proves a rolling restart is not
+    reaping healthy work.
 
     `scan_capped` True means the sweep saw only part of the keyspace
     and its counts must not be read as "everything was reconciled".
@@ -248,8 +298,11 @@ class JobRedriver:
 
         for job in jobs:
             if job.is_terminal():
+                # `scan_jobs` already filters these out (ADR 0048);
+                # kept because the store surface is duck-typed and a
+                # scan that does hand one over must not be reclaimed.
                 # Already reconciled, by its own runner or an earlier
-                # sweep. The retention TTL handles it from here.
+                # sweep — the retention TTL handles it from here.
                 continue
             # Claim the job's own lease rather than merely testing it
             # with `has_lease`. A read-then-write leaves a window in
@@ -283,12 +336,20 @@ class JobRedriver:
                 skipped_live += 1
                 continue
 
-            orphaned += 1
             try:
-                if await self._handle_orphan(fresh):
+                outcome = await self._handle_orphan(fresh)
+                if outcome is OrphanOutcome.requeued:
+                    orphaned += 1
                     requeued += 1
-                else:
+                elif outcome is OrphanOutcome.failed:
+                    orphaned += 1
                     failed += 1
+                else:
+                    # The reclaim's CAS lost: the job went terminal
+                    # under us between the re-read and the write, so
+                    # it was never an orphan. Nothing was written and
+                    # nothing was published.
+                    skipped_live += 1
             finally:
                 # The job is terminal (or handed back to the execution
                 # path) by now, so holding its lease any longer would
@@ -305,7 +366,7 @@ class JobRedriver:
             scan_capped=scan_capped,
         )
 
-    async def _handle_orphan(self, job: Job) -> bool:
+    async def _handle_orphan(self, job: Job) -> OrphanOutcome:
         """Requeue or fail one orphaned job.
 
         Only `pending` is eligible for requeue, and only when the
@@ -319,7 +380,9 @@ class JobRedriver:
             job: A non-terminal job with no live lease.
 
         Returns:
-            True if the job was requeued, False if it was failed.
+            What happened — requeued, failed, or `skipped_live` when
+            the reclaim's compare-and-set found the job had finished
+            after all.
         """
         wants_requeue = (
             job.status == JobStatus.pending and self._requeue_pending
@@ -347,10 +410,11 @@ class JobRedriver:
                     "job_redriver_requeued",
                     extra={"job_id": job.job_id, "worker_id": self._worker_id},
                 )
-                return True
+                return OrphanOutcome.requeued
 
-        await self._fail_orphan(job)
-        return False
+        if await self._fail_orphan(job):
+            return OrphanOutcome.failed
+        return OrphanOutcome.skipped_live
 
     async def _requeue(self, job: Job, resubmit: ResubmitCallback) -> None:
         """Reset a `pending` job to a clean submit state and hand it on.
@@ -381,17 +445,56 @@ class JobRedriver:
         await self._store.release_lease(job.job_id, self._claim_token)
         await resubmit(job)
 
-    async def _fail_orphan(self, job: Job) -> None:
+    async def _write_reclaim(self, job: Job, *, expected: JobStatus) -> bool:
+        """Persist the reclaim, but only if the row has not moved on.
+
+        ADR 0048. The claim + re-read pair narrowed the race but did
+        not close it: the owning worker can finish between
+        `store.get` and this write, and a plain `update` would then
+        replace a `succeeded` row (report and all) with
+        `failed/orphaned`. `update`'s own guard does not help — it
+        only refuses terminal → *different* terminal, and at the
+        instant it reads, the row may still be `running`.
+
+        `update_if_status` folds the comparison and the write into one
+        WATCH/MULTI/EXEC so there is no instant in between. Stores
+        that do not offer it (test doubles, any future backend) fall
+        back to the plain write, which is what the code did before.
+
+        Args:
+            job: The mutated job to persist.
+            expected: The status the sweep re-read under its claim.
+
+        Returns:
+            True if the reclaim landed and the caller may publish.
+        """
+        cas = getattr(self._store, "update_if_status", None)
+        if callable(cas):
+            landed: bool = bool(await cas(job, expected=expected))
+            return landed
+        await self._store.update(job)
+        return True
+
+    async def _fail_orphan(self, job: Job) -> bool:
         """Mark a job failed and unhang whoever is streaming it.
 
-        `store.update` applies the terminal retention TTL, so the row
-        stops living forever. The `job_failed` publish is the other
-        half and the more important one: an SSE client subscribed to
+        The write applies the terminal retention TTL, so the row stops
+        living forever. The `job_failed` publish is the other half and
+        the more important one: an SSE client subscribed to
         `events:{job_id}` is blocked until a terminal frame arrives,
         and without this it never would.
 
+        Both halves are conditional on the compare-and-set landing
+        (ADR 0048). Publishing a `job_failed` for a job that actually
+        succeeded would be the worse bug of the two: the row would be
+        correct and every connected client would be told the opposite.
+
         Args:
             job: Orphaned job to reclaim.
+
+        Returns:
+            True if the job was reclaimed; False if the CAS showed it
+            had already left the status the sweep acted on.
         """
         previous = job.status
         job.status = JobStatus.failed
@@ -403,7 +506,16 @@ class JobRedriver:
             f"Reclaimed by worker {self._worker_id}. Resubmit the query "
             f"to retry."
         )
-        await self._store.update(job)
+        if not await self._write_reclaim(job, expected=previous):
+            log.info(
+                "job_redriver_reclaim_lost_race",
+                extra={
+                    "job_id": job.job_id,
+                    "observed_status": previous.value,
+                    "worker_id": self._worker_id,
+                },
+            )
+            return False
 
         publish = getattr(self._store, "publish_event", None)
         if callable(publish):
@@ -425,3 +537,4 @@ class JobRedriver:
                 "worker_id": self._worker_id,
             },
         )
+        return True

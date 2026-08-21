@@ -340,6 +340,43 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   timeout path still abandons the node thread (needs a bounded
   executor + cancel token), `ConversationStore.update_title`,
   redriver-side CAS on `_fail_orphan`.
+- _2026-08-20_ — Redriver CAS + the store edges around it (ADR
+  0048), finishing the recorded follow-ups of ADRs 0038 and 0040.
+  Three of them shared one root: a read and a write that were not
+  one step. The sweep's re-read and `update`'s terminal-transition
+  guard both narrowed the reclaim race without closing it — a job
+  finishing in the gap still had its `succeeded` row, report and
+  all, replaced by `failed/orphaned`.
+  `RedisJobStore.update_if_status` folds the comparison and the
+  write into one WATCH/MULTI/EXEC; `_fail_orphan` gates *both* the
+  store write and the `job_failed` publish on it landing,
+  counting a lost CAS as
+  `skipped_live`. The refused-overwrite half moved to
+  `publish_event`, which now drops a terminal frame that
+  contradicts the persisted row — no client sees `job_completed`
+  after `job_failed` — chosen over a `-> None` Protocol change or
+  an exception `_persist_terminal` would have reported as data
+  loss. Also: `_local` eviction into a `finally` so a Redis outage
+  cannot grow worker memory job by job; `scan_jobs` proves
+  terminality from the retention TTL and skips those keys before
+  the MGET, so a boot over a keyspace of finished jobs transfers
+  integers instead of reports; `redrive:lock` TTL 120s → 30s so a
+  worker killed mid-sweep stops locking out its own restart (the
+  lock is a de-dup optimization, not the safety mechanism — the
+  per-job `SET NX` claim is); `ConversationStore.update_title` on
+  the Protocol and both impls, so auto-titling stops being a no-op
+  against a detached Postgres row; and the SSE deadline branch
+  flushes a frame the read task already produced, skipping
+  `stream_timeout` when that frame is terminal. ADR 0038's claim
+  that the `WatchError` abort path is untestable under `fakeredis`
+  is wrong on 2.36.2 and is corrected in ADR 0048: an interloping
+  client covers the abort branch for the lease CAS and the reclaim
+  CAS, directly and through a real sweep. Twelve mutants planted
+  against the new guards, all caught. Remaining follow-ups: the
+  runner's `_append_to_conversation` still mutates the fetched
+  conversation instead of calling `update_title` (one line, store
+  side ready), `_requeue`'s write is still a plain `update`, and
+  the periodic redrive sweep is still unbuilt.
 - _2026-08-20_ — Bounded node executor + cooperative cancellation
   (ADR 0047), closing the last open P1 from the audit and the
   follow-up ADR 0040 left behind. `asyncio.wait_for` cancelled the

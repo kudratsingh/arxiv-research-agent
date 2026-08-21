@@ -144,6 +144,20 @@ never renumbered.
   asyncio primitives, and a production-wiring smoke test pins the
   whole path. Revisits ADR 0034; corrects ADR 0030's interrupt
   semantics.
+- [0048](0048-redriver-cas-and-store-edges.md) — Redriver
+  compare-and-set (`update_if_status`, WATCH/MULTI/EXEC) so a job
+  that finishes while the sweep is deciding keeps its report and
+  its clients keep the truth; terminal-frame suppression moved into
+  `publish_event` so no client sees `job_completed` after
+  `job_failed`; `_local` eviction into a `finally` so a Redis
+  outage cannot grow worker memory; `scan_jobs` skips terminal rows
+  by TTL before hydrating report bodies; `redrive:lock` TTL 120s →
+  30s so a worker killed mid-sweep stops locking out its own
+  restart; `ConversationStore.update_title`; SSE deadline flushes a
+  frame the read already produced. Corrects ADR 0038's claim that
+  the `WatchError` abort path is untestable under `fakeredis` — it
+  is now covered. Finishes the recorded follow-ups of ADR 0038 and
+  ADR 0040.
 - [0047](0047-bounded-executor-and-cooperative-cancel.md) — Bounded
   node executor + cooperative cancellation. A job timeout cancelled
   the coroutine but not the synchronous node's thread, so

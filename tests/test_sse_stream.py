@@ -131,6 +131,20 @@ class FakeClock:
         return self.t
 
 
+class ManualClock:
+    """Clock that only moves when the test moves it.
+
+    The deadline-flush tests need the deadline to fire at one exact
+    point in the loop, which a per-read step cannot express.
+    """
+
+    def __init__(self) -> None:
+        self.t = 0.0
+
+    def __call__(self) -> float:
+        return self.t
+
+
 async def _collect(stream: AsyncIterator[bytes], *, timeout: float = 5.0) -> list[bytes]:
     """Drain the stream to a list, failing fast if it never ends."""
 
@@ -328,6 +342,79 @@ class TestDeadline:
         assert payload["job_id"] == "j4"
         assert payload["reconnect"] is True
         assert payload["reason"] == "max_duration_exceeded"
+        assert drainer.aclose_calls == 1
+
+    @staticmethod
+    async def _park_a_finished_read(
+        frame: dict[str, Any], job_id: str
+    ) -> tuple[
+        AsyncGenerator[bytes, None], RecordingDrainer, ManualClock, list[bytes]
+    ]:
+        """Reproduce the ADR 0048 window, step by step.
+
+        The loop has to be *suspended at its keepalive yield* with a
+        read task that has since completed, and the deadline has to
+        fire on the next resume. Driving the generator by hand is the
+        only way to pin that ordering; a wall-clock race would pass
+        against the buggy code often enough to be worthless.
+        """
+        drainer = _drainer(HEARTBEAT * 2, frame)
+        clock = ManualClock()
+        stream = sse_event_stream(
+            drainer,
+            is_disconnected=_connected,
+            heartbeat_sec=HEARTBEAT,
+            max_duration_sec=1.0,
+            now=clock,
+            job_id=job_id,
+        )
+
+        chunks = [await stream.__anext__()]  # keepalive on open
+        # One idle interval: the read task is created and left pending.
+        chunks.append(await stream.__anext__())
+        assert chunks == [KEEPALIVE, KEEPALIVE]
+
+        # The drainer produces its frame while the loop sits in that
+        # yield, so the task is done before the loop looks again...
+        await asyncio.sleep(HEARTBEAT * 3)
+        assert drainer.reads == 1
+        # ...and the deadline passes in the same gap.
+        clock.t = 5.0
+        return stream, drainer, clock, chunks
+
+    async def test_terminal_frame_beats_the_deadline_to_the_wire(self) -> None:
+        # The frame the old loop dropped on the floor: a client whose
+        # job ended microseconds before the hour was told
+        # `stream_timeout` and sent to reconnect to a finished job.
+        stream, drainer, _clock, chunks = await self._park_a_finished_read(
+            _event("job_completed", job_id="j9"), "j9"
+        )
+
+        chunks.append(await stream.__anext__())
+        with pytest.raises(StopAsyncIteration):
+            await stream.__anext__()
+
+        # The frame is delivered, and `stream_timeout` is *not*
+        # appended after it: the job ended, so a reconnect signal
+        # would be a lie about a stream with nothing left to say.
+        assert _events(chunks) == ["job_completed"]
+        assert _payload(chunks[-1]) == {"job_id": "j9"}
+        assert drainer.aclose_calls == 1
+
+    async def test_non_terminal_frame_is_flushed_then_the_timeout(self) -> None:
+        # Same flush, but the pending frame is mid-job: the client
+        # gets the work it paid for *and* the reconnect signal.
+        stream, drainer, _clock, chunks = await self._park_a_finished_read(
+            _event("node_completed", node="synthesizer"), "j10"
+        )
+
+        chunks.append(await stream.__anext__())
+        chunks.append(await stream.__anext__())
+        with pytest.raises(StopAsyncIteration):
+            await stream.__anext__()
+
+        assert _events(chunks) == ["node_completed", STREAM_TIMEOUT_EVENT]
+        assert _payload(chunks[-1])["reconnect"] is True
         assert drainer.aclose_calls == 1
 
     async def test_deadline_shortens_the_final_wait(self) -> None:
@@ -568,6 +655,32 @@ class TestWireFormatAndConstants:
     )
     def test_non_terminal_events_keep_the_stream_open(self, name: str) -> None:
         assert not closes_stream(name)
+
+    def test_terminal_status_map_covers_exactly_the_terminal_names(
+        self,
+    ) -> None:
+        from src.api.streaming import TERMINAL_EVENT_STATUS
+
+        assert set(TERMINAL_EVENT_STATUS) == TERMINAL_EVENT_NAMES
+
+    def test_terminal_status_map_matches_the_real_job_statuses(self) -> None:
+        # The map is plain strings to keep `src.api.jobs` out of this
+        # module's imports, so the enum has to be pinned from here or
+        # a renamed `JobStatus` member would silently start suppressing
+        # every terminal frame of that kind (ADR 0048).
+        from src.api.jobs import TERMINAL_STATUSES, JobStatus
+        from src.api.routes import _terminal_event_name
+        from src.api.streaming import TERMINAL_EVENT_STATUS
+
+        assert set(TERMINAL_EVENT_STATUS.values()) == {
+            s.value for s in TERMINAL_STATUSES
+        }
+        # And each name maps to the status the replay path derives it
+        # from — the two must agree or a replayed frame would be read
+        # as contradicting the row it was built from.
+        for event, status_value in TERMINAL_EVENT_STATUS.items():
+            job = Job(job_id="j", query="q", status=JobStatus(status_value))
+            assert _terminal_event_name(job) == event
 
     def test_store_reuses_the_shared_terminal_set(self) -> None:
         # The pub/sub reader in `RedisJobStore` asks the same question
