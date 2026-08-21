@@ -106,6 +106,18 @@ class ConversationStore(Protocol):
         report: str,
     ) -> ConversationJob | None: ...
 
+    # ADR 0048 (ADR 0040 follow-up). Ownership-agnostic, matching
+    # `get` and `append_job` rather than `list` and `delete`: the only
+    # caller is the runner's first-job auto-title, which acts on a
+    # conversation the job is already attached to and has no principal
+    # in hand. Returns False when the conversation is gone, so the
+    # caller can tell "renamed" from "vanished". Does not bump
+    # `updated_at` — a rename is not activity and must not reorder the
+    # sidebar. The store does not truncate; `title_from_query` owns
+    # `MAX_TITLE_LEN`, keeping stores dumb like the pagination
+    # contract above.
+    async def update_title(self, conversation_id: str, title: str) -> bool: ...
+
     async def delete(
         self,
         conversation_id: str,
@@ -195,6 +207,24 @@ class InMemoryConversationStore:
             conversation.jobs.append(job)
             conversation.updated_at = time.time()
             return job
+
+    async def update_title(self, conversation_id: str, title: str) -> bool:
+        """Rename a conversation in place (ADR 0048).
+
+        Args:
+            conversation_id: Thread to rename.
+            title: New display title, already truncated by the caller.
+
+        Returns:
+            True if the conversation existed and was renamed.
+        """
+        async with self._lock:
+            conversation = self._conversations.get(conversation_id)
+            if conversation is None:
+                return False
+            # `updated_at` deliberately untouched — see the Protocol.
+            conversation.title = title
+            return True
 
     async def delete(
         self,
@@ -450,6 +480,48 @@ class PostgresConversationStore:
                 },
             )
             raise
+
+    async def update_title(self, conversation_id: str, title: str) -> bool:
+        """Rename a conversation in place (ADR 0048).
+
+        Closes the ADR 0040 follow-up: the runner's first-job
+        auto-title mutated the `Conversation` object it had just
+        fetched, which persisted under the in-memory store (same
+        object) and silently did nothing under Postgres (a detached
+        row). Every Postgres deployment therefore kept the
+        "New conversation" placeholder forever.
+
+        Args:
+            conversation_id: Thread to rename.
+            title: New display title, already truncated by the caller.
+
+        Returns:
+            True if a row was updated, False if the conversation is
+            gone.
+        """
+        from src.tools.postgres_pool import _connection, init_schema
+
+        def _run() -> bool:
+            init_schema()
+            with _connection() as conn, conn.cursor() as cur:
+                # `updated_at` is deliberately not bumped — see the
+                # Protocol note. The column has no ON UPDATE trigger,
+                # so leaving it out of the SET list is enough.
+                cur.execute(
+                    """
+                    UPDATE conversations
+                    SET title = %s
+                    WHERE conversation_id = %s
+                    """,
+                    (title, conversation_id),
+                )
+                # `rowcount` on psycopg's cursor is typed loosely;
+                # coerce to bool so mypy strict is happy.
+                updated: bool = bool(cur.rowcount and cur.rowcount > 0)
+                conn.commit()
+                return updated
+
+        return await asyncio.to_thread(_run)
 
     async def delete(
         self,

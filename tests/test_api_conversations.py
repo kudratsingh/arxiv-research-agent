@@ -149,6 +149,70 @@ class TestInMemoryConversationStore:
         assert await store.delete("nope") is False
 
 
+class TestUpdateTitle:
+    """ADR 0048, closing the ADR 0040 follow-up.
+
+    The runner's first-job auto-title mutated the `Conversation`
+    object it had just fetched. That happens to persist in-memory
+    (same object) and does nothing at all under Postgres (a detached
+    row), so every Postgres deployment kept the "New conversation"
+    placeholder forever. A store method is the only way the two
+    backends can agree.
+    """
+
+    async def test_renames_an_existing_conversation(self) -> None:
+        store = InMemoryConversationStore()
+        await store.create(
+            Conversation(conversation_id="c", title="New conversation")
+        )
+
+        assert await store.update_title("c", "Attention mechanisms") is True
+
+        got = await store.get("c")
+        assert got is not None
+        assert got.title == "Attention mechanisms"
+
+    async def test_missing_conversation_returns_false(self) -> None:
+        store = InMemoryConversationStore()
+        assert await store.update_title("nope", "T") is False
+
+    async def test_rename_does_not_reorder_the_sidebar(self) -> None:
+        # `updated_at` is activity, and a rename is not activity. If it
+        # bumped, auto-titling the first job of an old thread would
+        # jump it to the top of every client's list.
+        store = InMemoryConversationStore()
+        await store.create(Conversation(conversation_id="a", title="A"))
+        await store.create(Conversation(conversation_id="b", title="B"))
+        await store.append_job("b", "j1", "q", "r")
+        before = await store.get("a")
+        assert before is not None
+
+        time.sleep(0.005)
+        assert await store.update_title("a", "A renamed") is True
+
+        after = await store.get("a")
+        assert after is not None
+        assert after.updated_at == before.updated_at
+        assert [c.conversation_id for c in await store.list()] == ["b", "a"]
+
+    async def test_rename_is_ownership_agnostic(self) -> None:
+        # Matches `get` and `append_job`, not `list` and `delete`: the
+        # only caller is the runner's auto-title, which acts on a
+        # conversation the job is already attached to and has no
+        # principal in hand.
+        store = InMemoryConversationStore()
+        await store.create(
+            Conversation(
+                conversation_id="c", title="T", principal_key_id="alice"
+            )
+        )
+        assert await store.update_title("c", "Renamed") is True
+        got = await store.get("c")
+        assert got is not None
+        assert got.title == "Renamed"
+        assert got.principal_key_id == "alice"
+
+
 class TestInMemoryListPagination:
     """ADR 0043: `list` takes limit/offset so the sidebar query is
     bounded no matter how many conversations accumulate."""
@@ -388,6 +452,59 @@ class TestPostgresConversationStore:
         # Auth-off (`None`) stays unscoped.
         assert await store.delete("legacy") is True
 
+    async def test_update_title_persists(self, pg_url: str) -> None:
+        """ADR 0048. Mutating the fetched `Conversation` was a no-op
+        here — the row is detached — so auto-titling never reached the
+        database and the placeholder survived forever."""
+        store = PostgresConversationStore()
+        await store.create(
+            Conversation(conversation_id="c", title="New conversation")
+        )
+
+        assert await store.update_title("c", "Attention mechanisms") is True
+
+        got = await store.get("c")
+        assert got is not None
+        assert got.title == "Attention mechanisms"
+
+    async def test_update_title_missing_returns_false(
+        self, pg_url: str
+    ) -> None:
+        store = PostgresConversationStore()
+        assert await store.update_title("nope", "T") is False
+
+    async def test_update_title_leaves_updated_at_alone(
+        self, pg_url: str
+    ) -> None:
+        # A rename must not reorder the sidebar; the SET list omitting
+        # `updated_at` is what guarantees that, and the column has no
+        # ON UPDATE trigger behind it.
+        store = PostgresConversationStore()
+        await store.create(Conversation(conversation_id="c", title="T"))
+        before = await store.get("c")
+        assert before is not None
+
+        assert await store.update_title("c", "Renamed") is True
+
+        after = await store.get("c")
+        assert after is not None
+        assert after.updated_at == before.updated_at
+
+    async def test_update_title_is_ownership_agnostic(
+        self, pg_url: str
+    ) -> None:
+        store = PostgresConversationStore()
+        await store.create(
+            Conversation(
+                conversation_id="c", title="T", principal_key_id="alice"
+            )
+        )
+        assert await store.update_title("c", "Renamed") is True
+        got = await store.get("c")
+        assert got is not None
+        assert got.title == "Renamed"
+        assert got.principal_key_id == "alice"
+
     async def test_concurrent_appends_never_collide(self, pg_url: str) -> None:
         """ADR 0043: the parent-row lock serializes concurrent
         appends, so N parallel appends land as ordinals 1..N instead
@@ -531,6 +648,12 @@ class TestParityContract:
         detail = await s.get("c")
         assert detail is not None
         assert len(detail.jobs) == 1
+        # ADR 0048: `update_title` is part of the surface the API layer
+        # uses, so parity covers it too.
+        assert await s.update_title("c", "Renamed") is True
+        renamed = await s.get("c")
+        assert renamed is not None and renamed.title == "Renamed"
+        assert await s.update_title("nope", "T") is False
         assert await s.delete("c") is True
         assert await s.get("c") is None
 
