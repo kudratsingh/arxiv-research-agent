@@ -667,3 +667,74 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   `--no-pdf` switch and no checked-in full-text fixture, so a
   cold-cache offline demo remains impossible; and the salvaged report
   is a partial artifact with no metrics, critique or verification.
+- _2026-08-20_ — API / web / container pre-flight (ADR 0053), from
+  walking the path a first-time operator takes rather than reading
+  modules: `docker compose up`, open the UI, type a query. Five
+  breaks, none of which any test could see because none drove the
+  *sequence*. **P0**: the landing page created a conversation,
+  `POST`ed `/research`, threw the returned `job_id` away and pushed
+  `/c/{id}` — and nothing downstream could recover it, because the
+  thread reads only `useParams` and a `pending_review` job never
+  appears in `GET /conversations/{id}` (the runner appends on
+  success only). With HITL on by default the run parked, published
+  `plan_ready` to an empty channel, and died 30 minutes later on the
+  timeout: one billed planner call, one blank page. The id now
+  travels as `?job=`, the thread `attach`es to it through the same
+  stream reader `submit` uses, and the thread `router.replace`s the
+  URL for jobs it starts itself — so the URL always names the job in
+  flight and a reload rejoins it instead of buying a second one. The
+  `attach` guard keys on the live `EventSource` rather than a "have
+  attached" flag, which is what makes StrictMode's mount → cleanup →
+  mount end with exactly one stream instead of zero. **P2s**:
+  `plan_ready` is now replayed on attach for a job parked in
+  `pending_review` (published once, and neither transport keeps a
+  backlog — pub/sub drops messages with no subscriber, the in-memory
+  queue is single-consumer — so every reconnect during review used
+  to get heartbeats until the HITL timeout), guarded on status *and*
+  a populated plan so a torn write can't invite approval of an empty
+  plan and a stale plan on a `running` job can't re-open a settled
+  review; the image installs `requirements-lock.txt` and then the
+  project `--no-deps`, so the container finally runs the set CI
+  tests instead of a fresh resolution of pyproject's `< next major`
+  ranges; MiniLM is baked at build time under an `HF_HOME` both
+  stages share, ending the ~90MB download that used to run inside
+  the first job's own timeout budget while `/healthz` reported `ok`;
+  and the redrive sweep now repeats on `job_redrive_interval_sec`
+  with a quarter-interval jitter, because a container SIGKILLed and
+  restarted inside `job_lease_ttl_sec` comes back to its own live
+  lease, which the boot sweep correctly refuses to touch and no
+  later sweep ever revisited. **P3s**: `/healthz` logs one WARNING
+  per transition into degraded and one INFO on recovery, naming the
+  dependency and carrying only the exception type (the probe text
+  can contain a credentialed URL) — edges, not the ~17k lines a
+  15-second probe would produce over a weekend outage; and the
+  README's copy-paste curl example no longer stalls 30 minutes on a
+  review nobody is going to answer. Mutation-checked: the landing
+  page's discarded id, the missing adopt, the `attach` guard, the
+  URL sync, the replay and its status guard, the jitter, the store
+  capability guard, the shutdown cancel, the settings-driven
+  interval, the sweep timeout, and all five health-logging edges —
+  every mutant killed. The two build-time fixes can't be asserted by
+  running the app, so `tests/test_container_contract.py` pins their
+  coupling to the source instead — the bake regex against
+  `MODEL_NAME`, one `HF_HOME` across both stages, the lock install,
+  and the absence of a compose volume over the cache path — and the
+  image was then actually built and run: `docker run --network none
+  -e HF_HUB_OFFLINE=1 … encode_texts([...])` returns a `(1, 384)`
+  vector, which is the bake proving itself with no network at all.
+  That build also produced the first honest number for the image:
+  **5.88GB**, of which the baked weights are 88MB (1.5%) and
+  `site-packages/nvidia/*` is 2.9GB — the lock is frozen on macOS
+  (ADR 0045's recorded limit), so pip resolves torch's Linux extras
+  at install time and picks the CUDA build for a service whose
+  `embedding_device` defaults to `"cpu"`. Pre-existing (`pip install
+  .` resolved the same graph) but now measured, so it is a follow-up
+  instead of folklore. Remaining
+  follow-ups: pin the CPU-only torch build so the image stops
+  carrying 2.9GB of CUDA wheels; split the lockfile into runtime and
+  dev sets so the image stops shipping pytest/mypy/ruff (parity
+  chosen over size, deliberately); list in-flight jobs on `GET /conversations/{id}` so
+  a thread can adopt without the URL; the web UI still cannot send
+  `X-API-Key`, so the shipped demo remains auth-off (ADR 0042); and
+  no readiness probe distinct from `/healthz` — explicitly out of
+  scope here.

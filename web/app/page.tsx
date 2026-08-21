@@ -16,12 +16,28 @@ export default function HomePage() {
       setBusy(true);
       setError(null);
       try {
-        // A new conversation is created for the very first query;
-        // then we redirect into `/c/[id]` and let ConversationThread
-        // pick up the streaming from there.
+        // A new conversation is created for the very first query,
+        // then the query is submitted and we redirect into
+        // `/c/[id]?job=[job_id]`.
+        //
+        // ADR 0053: the `job` parameter is the whole point. This page
+        // used to throw the accepted job_id away and push a bare
+        // `/c/[id]`, and nothing downstream could recover it — the
+        // thread has no way to ask "which job is in flight?", and a
+        // job parked in `pending_review` is not in the conversation's
+        // job list either (the runner appends only on success). So the
+        // user paid for a planner call, watched an empty page, and the
+        // job died 30 minutes later on the HITL timeout. Carrying the
+        // id in the URL also makes a reload of the thread re-attach to
+        // the same job instead of buying a second one.
         const conv = await createConversation();
-        await submitResearch(query, { conversation_id: conv.conversation_id });
-        router.push(`/c/${conv.conversation_id}`);
+        const accepted = await submitResearch(query, {
+          conversation_id: conv.conversation_id,
+        });
+        router.push(
+          `/c/${encodeURIComponent(conv.conversation_id)}` +
+            `?job=${encodeURIComponent(accepted.job_id)}`
+        );
       } catch (err) {
         setBusy(false);
         setError(

@@ -403,9 +403,11 @@ async def stream_research(
     """Stream this job's workflow events as Server-Sent Events.
 
     Terminal jobs replay a single frame and close, which is what
-    makes reconnects idempotent. Live jobs are handed to
-    `sse_event_stream` (ADR 0038), which owns the read/heartbeat/
-    deadline loop and the drainer's cleanup.
+    makes reconnects idempotent. A job parked in `pending_review`
+    replays its `plan_ready` frame first and then keeps streaming
+    (ADR 0053). Live jobs are handed to `sse_event_stream`
+    (ADR 0038), which owns the read/heartbeat/deadline loop and the
+    drainer's cleanup.
 
     Args:
         job_id: Job to stream.
@@ -438,6 +440,28 @@ async def stream_research(
                 _terminal_event_data(job),
             )
             return
+
+        # ADR 0053: same replay idiom, one status earlier. `plan_ready`
+        # is published exactly once, when the runner parks the job, and
+        # neither transport keeps a backlog: Redis pub/sub drops
+        # messages nobody is subscribed for, and the in-memory queue is
+        # single-consumer. So a client that reconnects after the pause
+        # — the browser's own EventSource retry after a wifi blip, or
+        # after the server closed at `api_sse_max_duration_sec` — used
+        # to get nothing but heartbeats until `api_hitl_timeout_sec`
+        # killed the job 30 minutes later. Replaying the snapshot makes
+        # the reconnect self-sufficient: the reviewer sees the plan and
+        # can resolve it.
+        #
+        # The plan may legitimately arrive twice on the in-memory path
+        # (this snapshot, then the queued frame the drainer below is
+        # about to hand over, if no earlier client consumed it). That is
+        # deliberate: the frame carries the whole plan, so a client
+        # applying it twice lands in the same state, and dropping the
+        # replay to avoid the duplicate would reopen the silence this
+        # closes.
+        if job.status == JobStatus.pending_review and job.plan is not None:
+            yield format_sse("plan_ready", _plan_ready_data(job))
 
         # ADR 0035: prefer the store's cross-worker event stream
         # (RedisJobStore pub/sub on `events:{job_id}`) when the
@@ -702,6 +726,57 @@ async def _postgres_status() -> str:
         return f"error: {type(exc).__name__}"
 
 
+def _log_health_transitions(
+    dependencies: dict[str, str], known_degraded: set[str]
+) -> None:
+    """Log dependency health *edges*, never the steady state (ADR 0053).
+
+    `/healthz` reported a dead Redis in its response body and wrote
+    nothing to the log, so an outage left no trace in the stream an
+    operator greps after the fact — the evidence lived only in
+    whatever scraped the endpoint. Logging every probe instead would
+    be worse: the compose healthcheck polls every 15s, so a
+    weekend-long outage would bury the timeline in ~17k identical
+    lines.
+
+    So this logs one WARNING when a dependency goes bad and one INFO
+    when it comes back, naming the dependency both times. Only the
+    exception *type* is carried, matching what the probe helpers
+    return — ADR 0042 drops the message on purpose, because a
+    connection error's text tends to contain the URL, and
+    `redis_url` / `postgres_url` carry credentials inline.
+
+    `known_degraded` is mutated in place; it is the app-lifetime set
+    the caller owns. Concurrent probes could in principle both see the
+    same edge and log it twice — the compose probe is one caller every
+    15s, and a duplicate line is a far cheaper failure than a missed
+    edge or a lock on the health path.
+
+    Args:
+        dependencies: This probe's per-dependency status strings, as
+            they appear in the response body (`"ok"` or `"error: X"`).
+        known_degraded: Names that were already degraded before this
+            probe. Updated to match `dependencies` on return.
+    """
+    for name, dep_status in dependencies.items():
+        if dep_status != "ok" and name not in known_degraded:
+            known_degraded.add(name)
+            log.warning(
+                "api_health_dependency_degraded",
+                extra={"dependency": name, "dependency_status": dep_status},
+            )
+        elif dep_status == "ok" and name in known_degraded:
+            known_degraded.discard(name)
+            log.info(
+                "api_health_dependency_recovered",
+                extra={"dependency": name},
+            )
+    # A dependency that stops being probed at all (Postgres after
+    # `postgres_url` is cleared) must not stay latched as degraded, or
+    # its eventual return would log a recovery for an edge nobody saw.
+    known_degraded.intersection_update(dependencies)
+
+
 @router.get(
     "/healthz",
     response_model=HealthResponse,
@@ -737,6 +812,10 @@ async def healthz(request: Request) -> HealthResponse:
     if settings.postgres_url:
         dependencies["postgres"] = await _postgres_status()
 
+    # ADR 0053: the body already told the caller; the log stream did
+    # not. Edges only — see `_log_health_transitions`.
+    _log_health_transitions(dependencies, _degraded_dependencies(request))
+
     degraded = any(v != "ok" for v in dependencies.values())
     abandoned = abandoned_node_count()
     return HealthResponse(
@@ -754,6 +833,25 @@ def _terminal_event_name(job: Job) -> str:
     if job.status == JobStatus.cancelled:
         return "job_cancelled"
     return "job_failed"
+
+
+def _plan_ready_data(job: Job) -> dict[str, Any]:
+    """The `plan_ready` payload, byte-identical to the runner's.
+
+    `_handle_hitl_pause` publishes `{"job_id", "plan"}` with the plan
+    normalized to two lists; the attach-time replay (ADR 0053) has to
+    match, or a client would have to handle two shapes for one event
+    name. Reads through `.get` because `job.plan` is a plain dict
+    rehydrated from JSON, not a validated model.
+    """
+    plan = job.plan or {}
+    return {
+        "job_id": job.job_id,
+        "plan": {
+            "sub_questions": list(plan.get("sub_questions", [])),
+            "search_queries": list(plan.get("search_queries", [])),
+        },
+    }
 
 
 def _terminal_event_data(job: Job) -> dict[str, Any]:
@@ -783,3 +881,30 @@ def _get_state(request: Request) -> dict[str, Any]:
         "tasks": request.app.state.tasks,
         "conversation_store": request.app.state.conversation_store,
     }
+
+
+def _degraded_dependencies(request: Request) -> set[str]:
+    """The app-lifetime set of dependencies currently known to be down.
+
+    Deliberately *not* part of `_get_state`: that helper reads every
+    key eagerly for every route, so a new required attribute there
+    breaks any caller holding a partial app state — including the
+    hand-built stubs several stream tests pass. This is read by
+    `/healthz` alone (ADR 0053), so it stays a separate lookup and
+    creates the set on first use for an app assembled without our
+    lifespan (`TestClient` without a lifespan context, an ASGI mount
+    in someone else's app). The set is stored back on `app.state`, so
+    every later probe in that process sees the same edges.
+
+    Args:
+        request: The live request, for its app state.
+
+    Returns:
+        The mutable set the health handler latches edges in.
+    """
+    state = request.app.state
+    known: set[str] | None = getattr(state, "degraded_dependencies", None)
+    if known is None:
+        known = set()
+        state.degraded_dependencies = known
+    return known

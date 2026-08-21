@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ApiError, getConversation } from "@/lib/api";
@@ -15,11 +16,19 @@ import ReportView from "./ReportView";
 
 interface ConversationThreadProps {
   conversationId: string;
+  /**
+   * Job to attach to on mount, from the route's `?job=` (ADR 0053).
+   * `null` for a thread opened from the sidebar with nothing in
+   * flight.
+   */
+  adoptJobId?: string | null;
 }
 
 export default function ConversationThread({
   conversationId,
+  adoptJobId = null,
 }: ConversationThreadProps) {
+  const router = useRouter();
   const [conversation, setConversation] = useState<ConversationDetail | null>(
     null
   );
@@ -61,8 +70,46 @@ export default function ConversationThread({
     plan,
     error: submitError,
     submit,
+    attach,
     review,
   } = useResearchStream();
+
+  // ADR 0053: adopt the job named in the URL instead of submitting a
+  // new one. `attach` no-ops when this hook is already streaming that
+  // id, so a re-render — or StrictMode's double-invoked mount — cannot
+  // open a second EventSource, and nothing here ever POSTs /research.
+  useEffect(() => {
+    if (!adoptJobId) return;
+    attach(adoptJobId, {
+      // The job may have finished between the submit and this attach;
+      // reload so the finished turn appears in the transcript above
+      // exactly as it does for a turn started from this page.
+      onDone: () => {
+        void load();
+      },
+    });
+  }, [adoptJobId, attach, load]);
+
+  // Keep the URL naming whatever job is in flight, so a reload of a
+  // follow-up turn re-attaches on the same terms as the first one
+  // (ADR 0053). `replace`, not `push`: the pre-submit URL is not a
+  // state worth a back-button stop.
+  //
+  // Written at most once per job id. Without the ref, a URL that
+  // *loses* its `?job=` — the sidebar link back to this same thread —
+  // would be rewritten from stale hook state, and the user could
+  // never get rid of the parameter.
+  const syncedJobRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (jobId === null || jobId === adoptJobId) return;
+    if (syncedJobRef.current === jobId) return;
+    syncedJobRef.current = jobId;
+    router.replace(
+      `/c/${encodeURIComponent(conversationId)}?job=${encodeURIComponent(
+        jobId
+      )}`
+    );
+  }, [adoptJobId, conversationId, jobId, router]);
 
   const busy =
     status === "submitting" ||
