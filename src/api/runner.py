@@ -11,8 +11,8 @@ node ran.
 
 The runner is a plain module function (not a class) because it owns
 no state — every input comes from the `Job` and the injected
-workflow factory. That makes it trivial to swap for a Redis-backed
-worker in Sprint 4 PR 3+.
+workflow factory. That keeps it store-agnostic: the same function
+serves `InMemoryJobStore` and `RedisJobStore` deployments (ADR 0027).
 
 ADR 0038 adds one piece of bookkeeping on top: for as long as
 `run_job` owns a job it holds a lease key on the store and refreshes
