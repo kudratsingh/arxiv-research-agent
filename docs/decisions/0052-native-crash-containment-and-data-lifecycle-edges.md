@@ -26,27 +26,46 @@ needs the report already in the checkpoint to still be reachable.
 
 ### The native crash
 
-`make test` on an Apple-silicon host has been dying with exit 139 and
-a macOS crash-reporter dialog, with no Python traceback and no log
-line, because a native crash unwinds nothing. Two independent causes,
-both in the same layer:
+The process has been dying with exit 139 and a macOS crash-reporter
+dialog, with no Python traceback and no log line, because a native
+crash unwinds nothing. Two *independent* crashes were measured, and
+they need different containments:
 
-1. **Device selection.** `SentenceTransformer(MODEL_NAME)` lets the
-   library pick a device, and on Apple silicon it picks `mps`. A torch
-   forward pass on the Metal backend has taken the whole process down
-   under concurrent encodes. Nothing in the codebase recorded which
-   device a run used, so the first diagnostic question — "was this run
-   on MPS?" — was unanswerable after the fact.
-2. **OpenMP duplication.** Three separate `libomp.dylib` copies ship
-   in the venv (torch, faiss, scikit-learn) and torch defaults to one
-   OpenMP thread per core. A pytest fleet running several MiniLM
-   encodes at once tears down duplicate OpenMP runtimes concurrently,
-   and that race aborts the interpreter.
+1. **The OpenMP barrier race — the common one.** Torch defaults to one
+   OpenMP worker per core, and three separate `libomp.dylib` copies
+   ship in the venv (torch, faiss, scikit-learn). The reader fans out
+   over `reader_max_workers` (5) threads and each one ranks a paper's
+   chunks, so five `model.encode` calls run concurrently by design.
+   A probe with exactly that shape — 5 threads, 10 papers, 40 chunks
+   each — segfaults **10/10**, with the faulting frame in
+   `libomp.dylib::__kmp_suspend_64` (`EXC_BAD_ACCESS` in
+   `__kmp_hyper_barrier_release` under `__kmp_fork_barrier`). This is
+   *not* a test-fleet phenomenon: it is one process running the
+   reader, which is what `make run`, `make eval` and a `POST
+   /research` all do. `torch.set_num_threads(1)` at model load takes
+   it to **0/15**. `OMP_NUM_THREADS=1` in the environment does the
+   same (0/6), and `TOKENIZERS_PARALLELISM=false` alone does nothing
+   (6/6 — it is a fork warning, not a fix).
+2. **The Metal driver crash — the rarer one.** `SentenceTransformer(
+   MODEL_NAME)` lets the library pick a device and on Apple silicon it
+   picks `mps`. Under `mps` the probe still crashes ~1/6 *with the
+   threads pinned*, faulting in `AGXMetalG15X_M1` via
+   `at::native::fill_mps_kernel` — a different stack entirely, in
+   Apple's driver, which nothing in this repo can pin its way out of.
+
+The ordering matters, because the obvious reading of (1) and (2) is
+backwards. Pinning the device to `cpu` does not fix (1) — the 10/10
+reproduction *is* on `cpu` — and `cpu` measured worse than `mps`
+(6/6 vs 1/4) precisely because the CPU path is the one that leans on
+the OpenMP pool. The thread pin is the crash fix; the device pin buys
+determinism, a log line, and avoidance of (2).
 
 `settings.embedding_device` (default `"cpu"`) landed pre-flight as a
 config-only change; this ADR is where it becomes load-bearing.
-`faulthandler` installation and process-level env hygiene are the
-other half of this containment and land separately.
+`faulthandler` installation is a follow-up: with (1) removed the
+residual crash rate on the default device is zero, and a fatal dump
+from two threads at once interleaves into an unreadable stream
+anyway (observed while measuring this).
 
 ### The data-lifecycle edges
 
@@ -101,18 +120,35 @@ other half of this containment and land separately.
 
 ## Decision
 
+**Torch's OpenMP pool is pinned to one thread, in process, at model
+load.** `_get_model()` calls `torch.set_num_threads(TORCH_THREADS)`
+before constructing the model. In-process rather than an
+`OMP_NUM_THREADS` environment default, because the env var is only
+read when a libomp copy initializes: it works solely if nothing has
+imported torch or faiss first, and no entry point can guarantee that
+ordering. `_get_model` can, because it is on the path of every encode
+and runs ahead of the first forward pass. This is the change measured
+to take the reader-shaped probe from 10/10 crashes to 0/15, and it
+covers every caller — `make run`, `make eval`, the API container, and
+a bare `pytest` in CI, none of which go through the Makefile.
+
 **Device selection is explicit, and logged.** `_get_model()` resolves
 `settings.embedding_device` through `_resolve_device()` and passes it
 to the constructor. `"auto"` maps to `None` — the library's own pick,
 preserved as an opt-in for deployments that want GPU encode — and
 every other value is passed verbatim. One `embedding_model_loaded`
-INFO line at construction records the configured value *and* what
-torch actually bound to.
+INFO line at construction records the configured device, what torch
+actually bound to, and the thread count read back from torch rather
+than echoed from the constant.
 
-**The test targets pin native thread counts.** A `TEST_ENV` variable
+**The test targets pin the environment too.** A `TEST_ENV` variable
 (`OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false`) prefixes every test
-tier's recipe, with the reasoning inline so it does not read as a
-performance tweak someone will helpfully delete.
+tier's recipe. Belt and braces on top of the in-process pin: it also
+covers faiss's and scikit-learn's own libomp copies at import time,
+and silences the fast-tokenizer fork warning. It is not the fix —
+`make test` is not where the crash matters — and the reasoning is
+inline so it does not read as a performance tweak someone will
+helpfully delete.
 
 **`admin_migrate` refuses to mutate under auth-off without an explicit
 opt-in.** `assign` and `delete` exit 2 when `enable_api_auth` is False
@@ -177,13 +213,27 @@ WARNING, mirroring its read path.
 ## Alternatives considered
 
 - **Default `embedding_device` to `"auto"` and only document the
-  risk.** Rejected. The failure mode is a native crash with no
-  traceback on the platform most development happens on; a default
-  that crashes is not a default. `"auto"` remains one setting away.
+  risk.** Rejected. On Apple silicon `auto` is `mps`, which still
+  crashes ~1/6 with the threads pinned, inside Apple's Metal driver
+  where we have no lever at all; a default that crashes is not a
+  default. `"auto"` remains one setting away, and is now documented as
+  carrying that residual.
+- **Pin the device and stop there** (what a first reading of the
+  stacks suggests). Rejected by measurement: the common crash
+  reproduces 10/10 on `cpu`, so the device pin alone leaves the
+  default path 100% broken — worse than before, since `cpu` leans on
+  the OpenMP pool harder than `mps` does.
+- **`OMP_NUM_THREADS=1` in the Makefile / Dockerfile / compose instead
+  of in process.** Rejected as the primary fix. It works when it
+  applies (0/6), but it applies only to callers that go through the
+  wrapper that sets it: `make test` does, a bare `pytest` in CI does
+  not, `uvicorn` in the container does not, and `python -m src.main`
+  run by hand does not. The in-process call has no such gap. The
+  Makefile prefix is kept as a second layer, not as the answer.
 - **Catch the segfault.** Not possible in-process: SIGSEGV from inside
-  a torch kernel is not a Python exception. Pinning the device removes
-  the trigger; `faulthandler` (separate change) is what makes any
-  residual crash legible.
+  a native kernel is not a Python exception. Removing the OpenMP pool
+  removes the trigger; `faulthandler` (separate change) is what would
+  make any residual crash legible.
 - **Warn instead of refusing on `admin_migrate` mutations under
   auth-off.** Rejected. The Postgres half cascades into
   `conversation_jobs` and none of it is recoverable, and a warning
@@ -216,9 +266,10 @@ WARNING, mirroring its read path.
 
 ## Consequences
 
-- **Positive**: the default embedding path no longer touches the
-  backend that has been killing workers, and every run records which
-  device it used. Two silent store failures, two silent degradations
+- **Positive**: the default embedding path no longer crashes — 0/15 on
+  the probe that was 10/10 — and every run records which device and
+  how many native threads it used. Two silent store failures, two
+  silent degradations
   and one silently-discarded report all became log records with enough
   in them to act on. The most dangerous default-configuration command
   in the tree (`admin_migrate delete --yes` with auth off) now refuses.
@@ -226,9 +277,14 @@ WARNING, mirroring its read path.
   stops destroying job state. `make run` and a `POST /research` for the
   same query now start from the same state, and a test fails if that
   stops being true.
-- **Negative**: `"cpu"` gives up GPU encode by default — measured as
-  irrelevant for MiniLM at this corpus size, but a larger embedding
-  model would want `"auto"` and would then re-enter the crash window.
+- **Negative**: torch is single-threaded process-wide once the
+  embedding model loads. Irrelevant for MiniLM over a paper's ~40
+  chunks, and the reader is already parallel one level up — but any
+  future torch workload in this process inherits the pin and would
+  have to be measured against the crash before raising it. `"cpu"`
+  likewise gives up GPU encode by default; a larger embedding model
+  would want `"auto"`, and `"auto"` on Apple silicon still carries the
+  ~1/6 Metal-driver crash that nothing here contains.
   `--include-all-auth-off` is one more thing an operator can learn to
   paste reflexively; it is rejected when auth is *on* partly to keep
   it from becoming muscle memory. The recovered-report file is a
@@ -240,5 +296,10 @@ WARNING, mirroring its read path.
   test guards them until they adopt `initial_research_state` and then
   skips itself. A truly offline demo path — a checked-in fixture text
   set, or a `--no-pdf` flag — is not built; the warm-cache recipe is
-  documented instead. `faulthandler` + process env hygiene land
-  separately.
+  documented instead. `faulthandler` lands separately — it is worth
+  having for the residual `mps` crash and for whatever native crash
+  comes next, but with the common one removed it is no longer urgent.
+  The `mps` / `auto` residual itself is not fixed and probably cannot
+  be from here; if a GPU-encode deployment is ever wanted, the encode
+  needs to be serialized behind `_model_lock` (or moved to a dedicated
+  single-thread executor) and re-measured.

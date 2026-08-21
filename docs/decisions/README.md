@@ -182,13 +182,16 @@ never renumbered.
   set of counters. Closes ADR 0047's `abandoned_node_threads`
   follow-up.
 - [0052](0052-native-crash-containment-and-data-lifecycle-edges.md) —
-  Native-crash containment + data-lifecycle edges. The MiniLM encode
-  ran on whatever device sentence-transformers picked, which on Apple
-  silicon is the MPS backend that has been killing workers with a
-  SIGSEGV — no traceback, no log line — and the test targets let three
-  vendored OpenMP runtimes race on teardown. `settings.embedding_device`
-  now decides (default `cpu`), the choice is logged at model load, and
-  the test tiers pin `OMP_NUM_THREADS`. Shipped with the data edges a
+  Native-crash containment + data-lifecycle edges. The reader's
+  five-way encode fan-out was killing the process with a SIGSEGV in
+  the OpenMP barrier — no traceback, no log line, on `make run` and
+  `make eval` as much as on `make test` — because torch defaults to
+  one OpenMP thread per core and three vendored `libomp` copies ship
+  in the venv. `torch.set_num_threads(1)` at model load takes a
+  reader-shaped probe from 10/10 crashes to 0/15;
+  `settings.embedding_device` (default `cpu`) additionally pins the
+  backend away from the separate, rarer Metal-driver crash, and both
+  choices are logged at model load. Shipped with the data edges a
   crash lands on: `admin_migrate assign/delete` refuse to run under
   `enable_api_auth=false` without `--include-all-auth-off` (with auth
   off *every* row is NULL-owner, so the tool's predicate selects the

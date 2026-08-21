@@ -1,23 +1,33 @@
-"""Embedding device pinning + cache-write visibility (ADR 0052).
+"""Embedding native-thread pinning, device pinning, cache-write logs.
 
-Two findings meet in `src/tools/embeddings.py`:
+Three findings meet in `src/tools/embeddings.py` (ADR 0052):
 
-- The MiniLM encode ran on whatever device sentence-transformers
-  picked. On an Apple-silicon host that is `mps`, and a torch forward
-  pass on the Metal backend has taken the whole worker down with a
-  SIGSEGV — a native crash, so no Python traceback, no `run_failed`
-  log line, nothing but a missing process. `settings.embedding_device`
-  now decides, defaults to `cpu`, and the choice is logged once at
-  model load so the answer to "which backend did that run use?"
-  survives the crash.
-- The cache *write* was wrapped in a bare
-  `contextlib.suppress(Exception)` while the read path logged. A
+- **The reader's fan-out segfaulted the process.** Torch defaults to
+  one OpenMP worker per core, three `libomp.dylib` copies ship in this
+  venv, and five concurrent `model.encode` calls put enough traffic
+  through the OpenMP barrier to take the interpreter down —
+  reproduced 10/10 on a reader-shaped probe, faulting in
+  `libomp.dylib::__kmp_suspend_64`, and 0/15 once
+  `torch.set_num_threads(1)` runs at model load. That measurement is
+  what `test_torch_threads_are_pinned_at_model_load` guards; the
+  crash itself cannot be asserted in-process, because a native crash
+  takes the assertion with it.
+- **The device was whatever sentence-transformers picked**, which on
+  Apple silicon is `mps` — a backend with its own, separate crash
+  (Metal driver, `fill_mps_kernel`, ~1/6 here even with the threads
+  pinned). `settings.embedding_device` now decides, defaults to
+  `cpu`, and the choice is logged at model load so "which backend did
+  that run use?" survives a crash that logs nothing.
+- **The cache write was silent.** A bare
+  `contextlib.suppress(Exception)` while the read path logged: a
   backend that reads fine and refuses every write has a 0% hit rate
   forever, and the only symptom was the Anthropic bill.
 
-Mutation-checked. Reverting `_get_model` to `SentenceTransformer(
-MODEL_NAME)` fails `test_default_settings_force_cpu` and
-`test_explicit_device_is_passed_through`; restoring the
+Mutation-checked. Dropping `torch.set_num_threads` fails
+`test_torch_threads_are_pinned_at_model_load` and
+`test_thread_count_is_logged_at_load`; reverting `_get_model` to
+`SentenceTransformer(MODEL_NAME)` fails `test_default_settings_force_cpu`
+and `test_explicit_device_is_passed_through`; restoring the
 `contextlib.suppress` fails `test_cache_write_failure_is_logged`;
 dropping the `device=None` mapping for `"auto"` fails
 `test_auto_defers_to_the_library`.
@@ -30,6 +40,7 @@ from typing import Any
 
 import numpy as np
 import pytest
+import torch
 
 from src.config import Settings
 from src.tools import embeddings as embeddings_module
@@ -112,6 +123,66 @@ class TestDeviceSelection:
         assert embeddings_module._resolve_device() == "mps"
 
 
+@pytest.fixture
+def restore_torch_threads() -> Any:
+    """Put torch's thread count back however the test left it.
+
+    `set_num_threads` is process-global, so a test that perturbs it
+    would leak into every later test in the session.
+    """
+    before = torch.get_num_threads()
+    yield
+    torch.set_num_threads(before)
+
+
+class TestNativeThreadPinning:
+    """The half of ADR 0052 that actually stops the segfault.
+
+    A native crash cannot be caught, so there is nothing to assert
+    about the crash itself — the assertion is on the pin that the
+    soak measured (10/10 crashes without it, 0/15 with it).
+    """
+
+    def test_torch_threads_are_pinned_at_model_load(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        fake_model: type[_FakeModel],
+        restore_torch_threads: None,
+    ) -> None:
+        monkeypatch.setattr(embeddings_module, "settings", Settings())
+        # Whatever a fresh interpreter would have defaulted to — one
+        # OpenMP worker per core, which is the pool that races.
+        torch.set_num_threads(4)
+
+        embeddings_module._get_model()
+
+        assert torch.get_num_threads() == embeddings_module.TORCH_THREADS
+
+    def test_the_pin_holds_on_every_device_including_auto(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        fake_model: type[_FakeModel],
+        restore_torch_threads: None,
+    ) -> None:
+        """The CPU OpenMP pool exists whatever the forward pass runs
+        on, so the pin cannot be conditional on the device."""
+        _with_device(monkeypatch, "auto")
+        torch.set_num_threads(4)
+
+        embeddings_module._get_model()
+
+        assert torch.get_num_threads() == embeddings_module.TORCH_THREADS
+
+    def test_pinning_to_more_than_one_thread_is_not_a_tuning_knob(
+        self,
+    ) -> None:
+        """Any value above 1 leaves an OpenMP pool for the barrier
+        race to happen in. This is a tripwire on the constant, not a
+        behavioural test — it exists so a future "let's give it 4
+        threads back" edit has to read ADR 0052 first."""
+        assert embeddings_module.TORCH_THREADS == 1
+
+
 class TestLoadLogging:
     def test_device_is_logged_once_at_model_load(
         self,
@@ -134,6 +205,54 @@ class TestLoadLogging:
         assert loaded[0].configured_device == "cpu"  # type: ignore[attr-defined]
         assert loaded[0].resolved_device == "cpu"  # type: ignore[attr-defined]
         assert loaded[0].model == embeddings_module.MODEL_NAME  # type: ignore[attr-defined]
+
+    def test_thread_count_is_logged_at_load(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        fake_model: type[_FakeModel],
+        caplog: pytest.LogCaptureFixture,
+        restore_torch_threads: None,
+    ) -> None:
+        """Read back from torch, not echoed from the constant: a build
+        that ignored the request is the case that still crashes, and
+        the load line is the only place it can show up."""
+        monkeypatch.setattr(embeddings_module, "settings", Settings())
+        torch.set_num_threads(4)
+
+        with caplog.at_level(logging.INFO, logger="src.tools.embeddings"):
+            embeddings_module._get_model()
+
+        loaded = [
+            r for r in caplog.records if r.message == "embedding_model_loaded"
+        ]
+        assert loaded[0].torch_threads == 1  # type: ignore[attr-defined]
+
+    def test_a_torch_build_that_ignores_the_pin_is_visible_in_the_log(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        fake_model: type[_FakeModel],
+        caplog: pytest.LogCaptureFixture,
+        restore_torch_threads: None,
+    ) -> None:
+        """The one case the log line exists for.
+
+        If `set_num_threads` silently does nothing — a torch build
+        without OpenMP, a runtime that has already committed its pool —
+        the process is still in the crash window and nothing else says
+        so. Echoing `TORCH_THREADS` into the record would report the
+        request; reading it back reports the outcome.
+        """
+        monkeypatch.setattr(embeddings_module, "settings", Settings())
+        torch.set_num_threads(4)
+        monkeypatch.setattr(torch, "set_num_threads", lambda _n: None)
+
+        with caplog.at_level(logging.INFO, logger="src.tools.embeddings"):
+            embeddings_module._get_model()
+
+        loaded = [
+            r for r in caplog.records if r.message == "embedding_model_loaded"
+        ]
+        assert loaded[0].torch_threads == 4  # type: ignore[attr-defined]
 
     def test_auto_load_line_reports_what_torch_actually_bound(
         self,

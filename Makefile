@@ -9,20 +9,22 @@ VENV_PIP     := $(VENV)/bin/pip
 
 # Native-library thread hygiene for the test tiers (ADR 0052).
 #
-# Three separate copies of `libomp.dylib` ship in this venv — torch,
-# faiss, and scikit-learn each vendor one — and torch defaults to one
-# OpenMP thread per core. A pytest fleet that runs several MiniLM
-# encodes at once therefore spawns dozens of threads across duplicate
-# OpenMP runtimes, and the teardown race between them has aborted the
-# interpreter with a native crash (exit 139, no traceback, a macOS
-# crash-reporter dialog per worker). Pinning to one thread costs
-# nothing the tests can measure — MiniLM on the fixtures here is
-# microseconds — and removes the concurrency the race needs.
+# Second layer, not the fix. Three separate copies of `libomp.dylib`
+# ship in this venv — torch, faiss, and scikit-learn each vendor one —
+# and torch defaults to one OpenMP thread per core; concurrent MiniLM
+# encodes then abort the interpreter in the OpenMP barrier (exit 139,
+# no traceback, a macOS crash-reporter dialog). The actual containment
+# is `torch.set_num_threads(1)` inside `src/tools/embeddings.py`,
+# because it also covers the callers that never touch this file: a
+# bare `pytest` in CI, `uvicorn` in the container, `python -m
+# src.main` typed by hand. What this variable adds is faiss's and
+# scikit-learn's own libomp copies, which initialize at import — long
+# before any Python code of ours runs.
 #
-# TOKENIZERS_PARALLELISM=false silences the HuggingFace fast-tokenizer
-# fork warning for the same reason: its own thread pool is unsafe
-# across the fork pytest-xdist does, and the library disables it
-# anyway after printing a paragraph into every test log.
+# TOKENIZERS_PARALLELISM=false is unrelated to the crash (measured: it
+# does not prevent it). It silences the HuggingFace fast-tokenizer
+# fork warning, which the library prints as a paragraph into every
+# test log before disabling the pool itself.
 TEST_ENV := OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false
 
 # ---- Targets ---------------------------------------------------------------

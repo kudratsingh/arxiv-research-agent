@@ -447,21 +447,31 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   ship a collector service — the operator wires their own from the
   snippet in `docs/development.md`.
 - _2026-08-20_ — Native-crash containment + data-lifecycle edges (ADR
-  0052). `make test` on Apple silicon had been dying with exit 139, a
-  macOS crash-reporter dialog per worker and nothing in the logs,
-  because a native crash unwinds nothing: `SentenceTransformer(
-  MODEL_NAME)` let the library pick a device, on Apple silicon it
-  picks `mps`, and a torch forward pass on the Metal backend takes the
-  process down under concurrent encodes — while three vendored copies
-  of `libomp.dylib` (torch, faiss, scikit-learn) plus torch's
-  one-thread-per-core default gave a parallel pytest fleet a second,
-  independent teardown race. `_get_model` now resolves
-  `settings.embedding_device` (default `cpu`; `auto` is the opt-in
-  that restores the library's own pick) and logs the configured *and*
-  the bound device once at construction — the only artifact that
-  outlives a SIGSEGV — and the four test tiers are prefixed with
-  `OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false`, with the reasoning
-  inline so it does not read as a removable performance tweak.
+  0052). The process had been dying with exit 139, a macOS
+  crash-reporter dialog and nothing in the logs, because a native
+  crash unwinds nothing. Two independent crashes, measured apart. The
+  common one is an OpenMP barrier race: torch defaults to one OpenMP
+  worker per core, three copies of `libomp.dylib` ship in the venv
+  (torch, faiss, scikit-learn), and the reader fans out over five
+  threads that each call `model.encode` — a probe with exactly that
+  shape segfaults **10/10**, faulting in
+  `libomp.dylib::__kmp_suspend_64`. That is not a test-fleet
+  phenomenon; it is one process running the reader, which is what
+  `make run`, `make eval` and a `POST /research` all do.
+  `_get_model` now calls `torch.set_num_threads(1)` before
+  constructing the model — in process rather than via
+  `OMP_NUM_THREADS`, because the env var only helps callers that go
+  through a wrapper setting it and a bare `pytest`, `uvicorn` and
+  `python -m src.main` do not — and the probe goes to **0/15**. The
+  rarer crash is Apple's Metal driver (`fill_mps_kernel`, ~1/6 even
+  with the threads pinned), which is what the device pin is for:
+  `_get_model` resolves `settings.embedding_device` (default `cpu`;
+  `auto` is the opt-in that restores the library's own pick, and
+  carries that residual) and logs the configured device, the bound
+  device and the thread count once at construction — the only artifact
+  that outlives a SIGSEGV. The four test tiers keep the
+  `OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false` prefix as a second
+  layer covering faiss's and scikit-learn's libomp copies at import.
   Shipped with the data-lifecycle edges a crash lands on, all from the
   same pre-flight audit. `admin_migrate assign/delete` now exit 2
   under `enable_api_auth=false` unless the operator passes

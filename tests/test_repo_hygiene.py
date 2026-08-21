@@ -3,12 +3,14 @@
 Three findings that live in files no Python test could otherwise
 regress:
 
-- **`make test` popped macOS crash dialogs.** Three vendored copies of
-  `libomp.dylib` (torch, faiss, scikit-learn) plus torch's
-  one-OpenMP-thread-per-core default means a parallel pytest fleet
-  tears down duplicate OpenMP runtimes concurrently, and that race has
-  aborted the interpreter natively. The test targets pin the thread
-  counts.
+- **The test targets pin native thread counts.** Three vendored copies
+  of `libomp.dylib` (torch, faiss, scikit-learn) plus torch's
+  one-OpenMP-thread-per-core default means concurrent MiniLM encodes
+  abort the interpreter in the OpenMP barrier. The real containment is
+  `torch.set_num_threads(1)` in `src/tools/embeddings.py` — guarded by
+  `test_embedding_device.py`, and the only one that covers a bare
+  `pytest` or `uvicorn` — but the Makefile prefix catches faiss's and
+  scikit-learn's copies at import time, so it has to stay put.
 - **`make clean` deleted `.cache/checkpoints.sqlite`** — LangGraph's
   durable graph state, including any run paused at the HITL
   breakpoint. That is job state, not a cache, and a target named

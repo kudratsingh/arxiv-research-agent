@@ -10,14 +10,28 @@ looks up every text's L2-normalized vector by content hash in the
 Under the default `"none"`, every call re-encodes — Sprint 1
 behavior byte-identical.
 
-Device selection is explicit (ADR 0052). `settings.embedding_device`
-defaults to `"cpu"`, which is *not* what sentence-transformers would
-pick on its own: on an Apple-silicon host the library selects `mps`,
-and a torch forward pass on the Metal backend has taken the whole
-process down with a SIGSEGV under concurrent encodes — a native
-crash, so no Python traceback and no log line. Pinning the device is
-the half of that containment that lives here; `"auto"` restores the
-library's own pick for deployments that want GPU encode.
+Two native-crash containments live here (ADR 0052).
+
+**Torch's OpenMP pool is pinned to one thread.** The reader fans out
+over `reader_max_workers` (5) threads and each one ranks a paper's
+chunks, so `model.encode` runs concurrently on a pool thread. Torch
+defaults to one OpenMP worker per core, three separate `libomp.dylib`
+copies ship in this venv (torch, faiss, scikit-learn), and the
+resulting barrier traffic segfaults the process — measured 10/10 on a
+5-worker reader-shaped fan-out, with the faulting frame in
+`libomp.dylib::__kmp_suspend_64`. A native crash unwinds nothing:
+exit 139, no traceback, no log line, no partial artifact.
+`torch.set_num_threads(TORCH_THREADS)` removes the pool the barrier
+needs, and it is the *only* change measured to stop the crash.
+
+**Device selection is explicit.** `settings.embedding_device` defaults
+to `"cpu"`, which is not what sentence-transformers picks on its own
+(on Apple silicon it picks `mps`). That pin is about determinism and
+about the one log line an operator has after a crash — it is
+deliberately *not* the crash fix, because the crash reproduces on
+`cpu` as readily as on `mps`. `"auto"` restores the library's own
+pick for deployments that want GPU encode; the thread pin applies
+either way, since the CPU pool exists on every backend.
 """
 
 from __future__ import annotations
@@ -25,6 +39,7 @@ from __future__ import annotations
 import threading
 
 import numpy as np
+import torch
 from sentence_transformers import SentenceTransformer
 
 from src.config import settings
@@ -32,6 +47,16 @@ from src.graph.state import PaperMetadata
 from src.observability import get_logger
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+#: Torch intra-op (OpenMP) thread count, set once at model load.
+#:
+#: 1, not "a few" — the crash is a barrier race between duplicate
+#: OpenMP runtimes, and any value above 1 leaves a pool to race. The
+#: cost is nothing measurable: MiniLM over a paper's ~40 chunks is
+#: milliseconds, and the reader is already parallel one level up, so
+#: the machine stays busy. Raising this re-opens a 100%-reproducible
+#: process kill — see ADR 0052 before touching it.
+TORCH_THREADS = 1
 
 log = get_logger(__name__)
 
@@ -66,16 +91,27 @@ def _get_model() -> SentenceTransformer:
     re-check inside the lock guarantees exactly one construction under
     concurrent first-callers.
 
-    The device comes from `settings.embedding_device` (ADR 0052) and
-    is logged once, at construction — the log line is the only way an
-    operator can tell after the fact which backend a run's embeddings
-    ran on, and "which backend" is the first question asked when a
-    worker dies with exit 139 and no traceback.
+    Doubles as the process's one native-thread pinning point (ADR
+    0052). `torch.set_num_threads` is a runtime call rather than an
+    `OMP_NUM_THREADS` environment default on purpose: the env var is
+    only read when a libomp copy initializes, so it works solely if
+    nothing imported torch or faiss first — an ordering no entry point
+    can guarantee. This call is order-independent, and it sits here
+    because `_get_model` is on the path of every encode in the
+    process, ahead of the first forward pass.
+
+    Both decisions are logged once, at construction — the load line is
+    the only artifact that outlives a SIGSEGV, and "which device, how
+    many threads" is exactly what the crash report cannot tell you.
     """
     global _model
     if _model is None:
         with _model_lock:
             if _model is None:
+                # Before construction: sentence-transformers warms the
+                # model with a forward pass, which is already enough
+                # to stand the OpenMP pool up.
+                torch.set_num_threads(TORCH_THREADS)
                 device = _resolve_device()
                 _model = SentenceTransformer(MODEL_NAME, device=device)
                 log.info(
@@ -90,6 +126,10 @@ def _get_model() -> SentenceTransformer:
                         "resolved_device": str(
                             getattr(_model, "device", "unknown")
                         ),
+                        # Read back rather than echoed: a torch build
+                        # that ignored the request is the case worth
+                        # seeing, because it is the one that crashes.
+                        "torch_threads": torch.get_num_threads(),
                     },
                 )
     return _model
