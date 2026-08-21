@@ -1191,8 +1191,11 @@ async def _append_to_conversation(conversation_store: Any, job: Job) -> None:
             job.conversation_id
         )
         if conversation is not None and conversation.title == "New conversation":
-            conversation.title = title_from_query(job.query)
-            # In-memory store: mutation is enough; Postgres store: no
-            # `update_title` method today. We could add one but the
-            # "New conversation" case is rare in practice (clients
-            # typically set a title).
+            # ADR 0048 added `update_title` to the ConversationStore
+            # Protocol precisely for this call site: under the
+            # Postgres store, mutating the fetched dataclass changed
+            # nothing durable, so the auto-title silently vanished on
+            # the next read from another worker.
+            await conversation_store.update_title(
+                job.conversation_id, title_from_query(job.query)
+            )

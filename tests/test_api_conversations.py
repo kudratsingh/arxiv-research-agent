@@ -863,3 +863,37 @@ class TestResearchWithConversation:
             job_id = r.json()["job_id"]
             detail = (await client.get(f"/research/{job_id}")).json()
             assert detail["conversation_id"] == cid
+
+
+@pytest.mark.asyncio
+async def test_first_job_auto_title_persists_through_the_store() -> None:
+    """The auto-title must go through `update_title` (ADR 0048).
+
+    Mutating the fetched Conversation object was enough for the
+    in-memory store but a silent no-op under Postgres — the rename
+    vanished on the next read from another worker. This drives the
+    runner's append path and asserts the store-level rename happened.
+    """
+    from src.api.jobs import Job, JobStatus
+    from src.api.runner import _append_to_conversation
+
+    store = InMemoryConversationStore()
+    await store.create(Conversation(conversation_id="c1", title="New conversation"))
+
+    calls: list[tuple[str, str]] = []
+    original = store.update_title
+
+    async def recording(conversation_id: str, title: str) -> bool:
+        calls.append((conversation_id, title))
+        return await original(conversation_id, title)
+
+    store.update_title = recording  # type: ignore[method-assign]
+
+    job = Job(job_id="j1", query="what is flash attention", conversation_id="c1")
+    job.status = JobStatus.succeeded
+    job.result = "# Report"
+    await _append_to_conversation(store, job)
+
+    assert calls, "auto-title bypassed the store's update_title"
+    got = await store.get("c1")
+    assert got is not None and got.title != "New conversation"
