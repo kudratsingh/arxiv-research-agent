@@ -181,6 +181,20 @@ never renumbered.
   observe the same accounting `/healthz` reports instead of a second
   set of counters. Closes ADR 0047's `abandoned_node_threads`
   follow-up.
+- [0050](0050-eval-runner-hardening.md) — Eval-runner hardening. The
+  campaign is the next live spend, and the harness could not hold onto
+  work it had paid for: one judge 529 aborted the batch and discarded
+  the failing query's finished workflow output, nothing reached disk
+  until the end, SIGTERM killed without flushing, and `make eval`
+  returned 0 when every query failed. Per-metric judge isolation
+  (honouring ADR 0008's contract and `_run_and_score`'s "Never
+  raises"), per-query persistence plus `--resume` and a SIGTERM
+  handler, workflow spend split from judge spend so the README figure
+  and the `cost_usd` gate describe the agent rather than the eval rig
+  (revisiting ADR 0044), empty reports and truncated batches made red
+  instead of green, honest exit codes, a refusal to overwrite a prior
+  campaign's directory, `--max-budget-usd`, and a nightly workflow that
+  says which owner action fixes its 15-night-old red.
 
 - [0051](0051-llm-cost-enforcement-and-visibility.md) — LLM cost
   enforcement and visibility. `max_cost_usd` was enforced only in the

@@ -149,6 +149,156 @@ class TestDiffSummariesClassification:
         assert report["diffs"][0]["status"] == "unchanged"
 
 
+class TestTruncatedBatch:
+    """A query that vanished from the current run is a regression.
+
+    ADR 0050. The whole class is a mutation check: before it,
+    `has_regressions` only looked at `regressed` / `errored`, so a
+    batch that died at query 15 of 20 shipped green — and the
+    aggregate row above it re-averaged over the fifteen survivors, so
+    nothing in the report said the denominator had moved.
+    """
+
+    def _full(self) -> dict[str, dict[str, Any]]:
+        return {
+            "q1": _line("q1", citation_accuracy=0.8),
+            "q2": _line("q2", citation_accuracy=0.8),
+            "q3": _line("q3", citation_accuracy=0.8),
+        }
+
+    def test_missing_query_classified_as_removed(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"], "q2": baseline["q2"]}
+        report = diff_summaries(baseline, current)
+        statuses = {d["query_id"]: d["status"] for d in report["diffs"]}
+        assert statuses["q3"] == "removed"
+
+    def test_missing_query_fails_the_gate(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"], "q2": baseline["q2"]}
+        report = diff_summaries(baseline, current)
+        assert report["has_regressions"] is True
+
+    def test_truncated_batch_with_otherwise_perfect_scores_still_fails(
+        self,
+    ) -> None:
+        baseline = self._full()
+        current = {"q1": _line("q1", citation_accuracy=1.0)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "improved"
+        assert report["has_regressions"] is True
+
+    def test_allow_removed_opts_a_subset_run_out(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"]}
+        report = diff_summaries(baseline, current, allow_removed=True)
+        assert report["has_regressions"] is False
+        assert report["allow_removed"] is True
+
+    def test_allow_removed_does_not_excuse_a_real_regression(self) -> None:
+        baseline = self._full()
+        current = {"q1": _line("q1", citation_accuracy=0.2)}
+        report = diff_summaries(baseline, current, allow_removed=True)
+        assert report["has_regressions"] is True
+
+    def test_new_query_is_not_a_regression(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=0.8)}
+        current = {
+            "q1": baseline["q1"],
+            "q2": _line("q2", citation_accuracy=0.8),
+        }
+        report = diff_summaries(baseline, current)
+        assert report["has_regressions"] is False
+
+    def test_report_states_the_shrunken_denominator(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"], "q2": baseline["q2"]}
+        md = format_report(diff_summaries(baseline, current))
+        assert "2 compared, 1 missing from the current run, 0 new" in md
+        assert "over the 2 of 3 baseline queries present in both runs" in md
+
+    def test_report_marks_removals_as_ungated_under_allow_removed(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"], "q2": baseline["q2"]}
+        md = format_report(
+            diff_summaries(baseline, current, allow_removed=True)
+        )
+        assert "1 (not gated: --allow-removed)" in md
+
+
+class TestUnscoredMetrics:
+    """A metric the current run stopped scoring must not read as unchanged.
+
+    ADR 0050's judge isolation is the cause: a judge that fails leaves
+    its metric `null` on the record instead of aborting the campaign,
+    so the delta goes `None` and the query classifies `unchanged`. The
+    gate deliberately stays green — a flaky judge is a harness fault,
+    not a product regression — but the report has to say so, or a night
+    where 18 of 20 faithfulness judges failed is byte-identical to a
+    clean one. Every test here is a mutation check on `_unscored_counts`
+    and its rendering.
+    """
+
+    def _pair(self, unscored: int, total: int = 20) -> tuple[
+        dict[str, dict[str, Any]], dict[str, dict[str, Any]]
+    ]:
+        baseline: dict[str, dict[str, Any]] = {}
+        current: dict[str, dict[str, Any]] = {}
+        for i in range(total):
+            qid = f"q{i:02d}"
+            baseline[qid] = _line(qid, citation_accuracy=0.8, faithfulness=0.95)
+            current[qid] = _line(
+                qid,
+                citation_accuracy=0.8,
+                faithfulness=None if i < unscored else 0.95,
+            )
+        return baseline, current
+
+    def test_counts_metrics_the_current_run_stopped_scoring(self) -> None:
+        baseline, current = self._pair(unscored=18)
+        report = diff_summaries(baseline, current)
+        assert report["unscored"]["faithfulness"] == 18
+        assert report["unscored"]["citation_accuracy"] == 0
+
+    def test_absent_field_on_both_sides_is_not_lost_signal(self) -> None:
+        # `llm_calls` is None in both runs here — a summary that never
+        # carried the field, not a judge that failed.
+        baseline, current = self._pair(unscored=0)
+        report = diff_summaries(baseline, current)
+        assert report["unscored"]["llm_calls"] == 0
+
+    def test_a_new_metric_the_baseline_never_had_is_not_lost_signal(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=None)}
+        current = {"q1": _line("q1", citation_accuracy=0.8)}
+        report = diff_summaries(baseline, current)
+        assert report["unscored"]["citation_accuracy"] == 0
+
+    def test_unscored_queries_still_read_unchanged_and_stay_green(self) -> None:
+        baseline, current = self._pair(unscored=18)
+        report = diff_summaries(baseline, current)
+        assert report["has_regressions"] is False
+        assert {d["status"] for d in report["diffs"]} == {"unchanged"}
+
+    def test_report_names_the_metric_and_its_count(self) -> None:
+        baseline, current = self._pair(unscored=18)
+        md = format_report(diff_summaries(baseline, current))
+        assert "Unscored in the current run" in md
+        assert "`faithfulness` on 18 of 20" in md
+
+    def test_aggregate_row_carries_its_own_denominator(self) -> None:
+        baseline, current = self._pair(unscored=18)
+        md = format_report(diff_summaries(baseline, current))
+        # The faithfulness mean is over two queries inside a section
+        # headed "over the 20 of 20 baseline queries".
+        assert "| faithfulness | 0.950 | 0.950 | +0.000 | 2 / 20 |" in md
+        assert "| citation_accuracy | 0.800 | 0.800 | +0.000 | 20 / 20 |" in md
+
+    def test_clean_run_says_nothing_about_unscored_metrics(self) -> None:
+        baseline, current = self._pair(unscored=0)
+        md = format_report(diff_summaries(baseline, current))
+        assert "Unscored in the current run" not in md
+
+
 class TestResourceBands:
     """Every classification branch of the ADR 0044 two-leg band model.
 
@@ -345,9 +495,13 @@ class TestAggregate:
 
 class TestFormatReport:
     def _minimal_report(
-        self, has_regressions: bool = False
+        self, has_regressions: bool = False, *, allow_removed: bool = False
     ) -> RegressionReport:
         return RegressionReport(
+            allow_removed=allow_removed,
+            unscored=dict.fromkeys(
+                ("citation_accuracy", "completeness", "faithfulness"), 0
+            ),
             diffs=[
                 QueryDiff(
                     query_id="q1",
@@ -449,6 +603,34 @@ class TestCLI:
         self._write(baseline, [_line("q1", citation_accuracy=0.9)])
         self._write(current, [_line("q1", citation_accuracy=0.5)])
         assert main([str(baseline), str(current), "--threshold", "0.1"]) == 1
+
+    def test_truncated_current_run_exits_1(self, tmp_path: Path) -> None:
+        # The nightly's real failure mode: the batch died partway, so
+        # summary.jsonl is short. Exit 1 is what turns that red.
+        baseline = tmp_path / "baseline.jsonl"
+        current = tmp_path / "current.jsonl"
+        self._write(
+            baseline,
+            [
+                _line("q1", citation_accuracy=0.9),
+                _line("q2", citation_accuracy=0.9),
+            ],
+        )
+        self._write(current, [_line("q1", citation_accuracy=0.9)])
+        assert main([str(baseline), str(current)]) == 1
+
+    def test_allow_removed_flag_exits_0(self, tmp_path: Path) -> None:
+        baseline = tmp_path / "baseline.jsonl"
+        current = tmp_path / "current.jsonl"
+        self._write(
+            baseline,
+            [
+                _line("q1", citation_accuracy=0.9),
+                _line("q2", citation_accuracy=0.9),
+            ],
+        )
+        self._write(current, [_line("q1", citation_accuracy=0.9)])
+        assert main([str(baseline), str(current), "--allow-removed"]) == 0
 
     def test_output_file_written(self, tmp_path: Path) -> None:
         baseline = tmp_path / "baseline.jsonl"
