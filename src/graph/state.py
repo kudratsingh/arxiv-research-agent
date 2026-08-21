@@ -144,3 +144,65 @@ class ResearchState(TypedDict):
     # string outside conversation mode.
     prior_context: str
     messages: Annotated[list[Any], add_messages]
+
+
+def initial_research_state(
+    query: str, run_id: str, *, prior_context: str = ""
+) -> ResearchState:
+    """Build a complete `ResearchState` for a fresh workflow invocation.
+
+    Lives beside the TypedDict it mirrors so the two are edited
+    together (ADR 0052). Three entry points — the CLI, the API runner,
+    and the eval runner — each carried their own literal, and the CLI's
+    had drifted ten keys behind: `ResearchState` is a *total*
+    TypedDict, so a run started from that literal was already invalid
+    against its own schema, and only survived because every consumer
+    reads through `.get()` with a default. The next field added would
+    have been a silent behavioural difference between `make run` and
+    the same query submitted to the API.
+
+    Defaults follow the schema's documented contract rather than
+    "empty": `reader_analysis_complete` starts True so a consumer
+    reading it on a fresh state sees "nothing to recover from"
+    (state.py's ADR 0019 note), and every collection starts empty so
+    the reducers append rather than merge.
+
+    Args:
+        query: The natural-language research question.
+        run_id: Per-run identifier; also the checkpoint `thread_id`.
+        prior_context: Retrieved prior-report chunks for a
+            conversation follow-up (ADR 0032). Empty outside
+            conversation mode.
+
+    Returns:
+        A `ResearchState` with every key present.
+    """
+    return {
+        "run_id": run_id,
+        "query": query,
+        "sub_questions": [],
+        "search_queries": [],
+        "papers": [],
+        "paper_analyses": [],
+        "draft_report": "",
+        "citations": [],
+        "critique": "",
+        "quality_score": 0.0,
+        "revision_needed": False,
+        "revision_target": "",
+        "iteration": 0,
+        "next_action": "",
+        "loop_iterations": 0,
+        "stop_reason": "",
+        "verified": False,
+        "unsupported_claims": [],
+        "missing_evidence": [],
+        "verifier_recommendation": "",
+        "evidence": [],
+        "tried_search_queries": [],
+        "reader_analysis_complete": True,
+        "reader_missing_context": "",
+        "reader_requested_sections": [],
+        "prior_context": prior_context,
+        "messages": [],
+    }

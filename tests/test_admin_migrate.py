@@ -32,6 +32,7 @@ from src.api import admin_migrate
 from src.api.admin_migrate import (
     EXIT_OK,
     EXIT_USAGE,
+    INCLUDE_ALL_FLAG,
     SAMPLE_ROWS,
     NullOwnerRow,
     assign_job_owner,
@@ -84,9 +85,31 @@ def redis_cli(
 
 @pytest.fixture
 def redis_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
-    """Redis job store, two known keys, Postgres deliberately absent."""
+    """Redis job store, two known keys, Postgres deliberately absent.
+
+    `enable_api_auth=True` is part of the scenario, not incidental
+    (ADR 0052): the tool's premise is "a NULL owner means the row
+    predates ADR 0036", and that is only true while auth is on. With
+    auth off every row has a NULL owner, so the mutating actions are
+    refused outright — that mode has its own fixture and its own
+    tests below.
+    """
     overridden = Settings(
         job_store="redis",
+        enable_api_auth=True,
+        api_keys="internal:sk_int,partner:sk_partner",
+        postgres_url="",
+    )
+    monkeypatch.setattr(admin_migrate, "settings", overridden)
+    return overridden
+
+
+@pytest.fixture
+def auth_off_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
+    """Same store, `enable_api_auth` off — every row is NULL-owner."""
+    overridden = Settings(
+        job_store="redis",
+        enable_api_auth=False,
         api_keys="internal:sk_int,partner:sk_partner",
         postgres_url="",
     )
@@ -443,6 +466,7 @@ def test_assign_reads_the_owner_from_a_keystore_file(
         "settings",
         Settings(
             job_store="redis",
+            enable_api_auth=True,
             api_keys="internal:sk_int",
             api_keys_file=str(keyfile),
             postgres_url="",
@@ -612,6 +636,136 @@ def test_delete_dry_run_removes_nothing(
     assert owners(redis_cli) == {"orphan1": None}
 
 
+# ---- auth-off guard (ADR 0052) -----------------------------------------
+
+
+class TestAuthOffGuard:
+    """`enable_api_auth=False` makes the NULL-owner predicate universal.
+
+    With auth off, `routes._principal_key_id` returns None for every
+    request, so every row this deployment has ever written carries a
+    NULL owner. `delete --store jobs --yes` in that mode is not a
+    legacy cleanup, it is `FLUSHDB` with extra steps — and the report
+    that is supposed to be the operator's last look before pulling the
+    trigger labels the whole live dataset as orphans.
+
+    Mutation-checked: deleting the `MUTATING_ACTIONS` branch in
+    `_validate` turns `test_delete_is_refused_when_auth_is_off` from a
+    pass into "the store came back empty", and dropping the header
+    lines fails the two report tests.
+    """
+
+    def test_delete_is_refused_when_auth_is_off(
+        self,
+        redis_cli: fakeredis.FakeServer,
+        auth_off_settings: Settings,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        seed(redis_cli, [_job("live1"), _job("live2")])
+
+        assert main(["delete", "--store", "jobs", "--yes"]) == EXIT_USAGE
+
+        err = capsys.readouterr().err
+        assert "enable_api_auth is false" in err
+        assert INCLUDE_ALL_FLAG in err
+        # The refusal is the point: nothing was touched.
+        assert owners(redis_cli) == {"live1": None, "live2": None}
+
+    def test_assign_is_refused_when_auth_is_off(
+        self,
+        redis_cli: fakeredis.FakeServer,
+        auth_off_settings: Settings,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        seed(redis_cli, [_job("live1")])
+
+        code = main(
+            ["assign", "--owner", "internal", "--store", "jobs", "--yes"]
+        )
+
+        assert code == EXIT_USAGE
+        assert INCLUDE_ALL_FLAG in capsys.readouterr().err
+        assert owners(redis_cli) == {"live1": None}
+
+    def test_report_is_never_refused(
+        self,
+        redis_cli: fakeredis.FakeServer,
+        auth_off_settings: Settings,
+    ) -> None:
+        """Reading is how the operator discovers the problem."""
+        seed(redis_cli, [_job("live1")])
+        assert main(["report", "--store", "jobs"]) == EXIT_OK
+
+    def test_override_flag_lets_a_deliberate_wipe_through(
+        self,
+        redis_cli: fakeredis.FakeServer,
+        auth_off_settings: Settings,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        seed(redis_cli, [_job("live1"), _job("live2")])
+
+        code = main(
+            ["delete", "--store", "jobs", "--yes", INCLUDE_ALL_FLAG]
+        )
+
+        assert code == EXIT_OK
+        assert "jobs_changed=2" in capsys.readouterr().out
+        assert owners(redis_cli) == {}
+
+    def test_override_flag_is_rejected_on_a_read_only_action(
+        self,
+        redis_cli: fakeredis.FakeServer,
+        auth_off_settings: Settings,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        assert main(["report", "--store", "jobs", INCLUDE_ALL_FLAG]) == EXIT_USAGE
+        assert "only applies to a mutating action" in capsys.readouterr().err
+
+    def test_override_flag_is_rejected_when_auth_is_on(
+        self,
+        redis_cli: fakeredis.FakeServer,
+        redis_settings: Settings,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Auth on means the predicate is already narrow; the flag
+        would only teach an operator to paste it reflexively."""
+        seed(redis_cli, [_job("orphan1")])
+        code = main(["delete", "--store", "jobs", "--yes", INCLUDE_ALL_FLAG])
+        assert code == EXIT_USAGE
+        assert "drop it" in capsys.readouterr().err
+        assert owners(redis_cli) == {"orphan1": None}
+
+    def test_report_header_states_auth_on(
+        self,
+        redis_cli: fakeredis.FakeServer,
+        redis_settings: Settings,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        seed(redis_cli, [_job("orphan1")])
+        assert main(["report", "--store", "jobs"]) == EXIT_OK
+        out = capsys.readouterr().out
+        assert "enable_api_auth=true" in out
+        assert "written before ownership existed" in out
+
+    def test_report_header_states_auth_off_and_what_the_count_means(
+        self,
+        redis_cli: fakeredis.FakeServer,
+        auth_off_settings: Settings,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        seed(redis_cli, [_job("live1"), _job("live2")])
+        assert main(["report", "--store", "jobs"]) == EXIT_OK
+        out = capsys.readouterr().out
+        assert "enable_api_auth=false" in out
+        # The count is the whole store, and the header has to say so —
+        # "null_owner_rows=2" read as a legacy backlog is exactly
+        # backwards here.
+        assert "EVERY row" in out
+        assert "size of the whole store" in out
+        assert INCLUDE_ALL_FLAG in out
+        assert "null_owner_rows=2" in out
+
+
 # ---- scope filters -----------------------------------------------------
 
 
@@ -689,15 +843,20 @@ def test_conversations_half_is_skipped_when_the_store_is_memory(
 ) -> None:
     """`postgres_url` is shared with the paper/embedding caches and the
     ADR 0034 checkpointer, so it is set on plenty of deployments whose
-    conversations still live in process memory — the shipped compose
-    file is one. Selecting on it instead of on `conversation_store`
-    would point the tool at a `conversations` table nothing reads and,
-    under `delete --yes`, destroy another deployment's rows."""
+    conversations still live in process memory — a bare install with
+    `POSTGRES_URL` exported for the caches is one, since
+    `conversation_store` defaults to `memory`. (The shipped compose
+    file is *not* an example; it sets `CONVERSATION_STORE: postgres`.
+    This docstring claimed otherwise until ADR 0052.) Selecting on
+    `postgres_url` instead of on `conversation_store` would point the
+    tool at a `conversations` table nothing reads and, under `delete
+    --yes`, destroy another deployment's rows."""
     monkeypatch.setattr(
         admin_migrate,
         "settings",
         Settings(
             job_store="redis",
+            enable_api_auth=True,
             api_keys="internal:sk_int",
             conversation_store="memory",
             postgres_url="postgresql://unreachable:5432/nope",

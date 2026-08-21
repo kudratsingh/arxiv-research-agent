@@ -216,6 +216,28 @@ never renumbered.
   JSON with `faulthandler` armed. Extends ADR 0033; narrows
   ADR 0042's `anthropic` logger demotion to spare the SDK's retry
   line.
+- [0052](0052-native-crash-containment-and-data-lifecycle-edges.md) —
+  Native-crash containment + data-lifecycle edges. The reader's
+  five-way encode fan-out was killing the process with a SIGSEGV in
+  the OpenMP barrier — no traceback, no log line, on `make run` and
+  `make eval` as much as on `make test` — because torch defaults to
+  one OpenMP thread per core and three vendored `libomp` copies ship
+  in the venv. `torch.set_num_threads(1)` at model load takes a
+  reader-shaped probe from 10/10 crashes to 0/15;
+  `settings.embedding_device` (default `cpu`) additionally pins the
+  backend away from the separate, rarer Metal-driver crash, and both
+  choices are logged at model load. Shipped with the data edges a
+  crash lands on: `admin_migrate assign/delete` refuse to run under
+  `enable_api_auth=false` without `--include-all-auth-off` (with auth
+  off *every* row is NULL-owner, so the tool's predicate selects the
+  whole store), a corrupt job row and a refused terminal write are now
+  audible instead of silent, `make run` salvages a finished report
+  from the checkpoint when a later node fails, `make clean` stops
+  deleting the graph checkpoints (`clean-all` does), the CLI's stale
+  third copy of the initial `ResearchState` is replaced by one
+  canonical initializer, and `docs/demo.md` stops claiming the
+  mock-data run makes no external calls beyond Anthropic — it
+  downloads five real arXiv PDFs.
 
 ## When to write an ADR
 

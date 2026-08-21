@@ -592,3 +592,78 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   uncapturable in-process — `usage` exists only on a 2xx body, so
   `retries_taken` is a count and Anthropic's billing is the only
   reconciliation.
+- _2026-08-20_ — Native-crash containment + data-lifecycle edges (ADR
+  0052). The process had been dying with exit 139, a macOS
+  crash-reporter dialog and nothing in the logs, because a native
+  crash unwinds nothing. Two independent crashes, measured apart. The
+  common one is an OpenMP barrier race: torch defaults to one OpenMP
+  worker per core, three copies of `libomp.dylib` ship in the venv
+  (torch, faiss, scikit-learn), and the reader fans out over five
+  threads that each call `model.encode` — a probe with exactly that
+  shape segfaults **10/10**, faulting in
+  `libomp.dylib::__kmp_suspend_64`. That is not a test-fleet
+  phenomenon; it is one process running the reader, which is what
+  `make run`, `make eval` and a `POST /research` all do.
+  `_get_model` now calls `torch.set_num_threads(1)` before
+  constructing the model — in process rather than via
+  `OMP_NUM_THREADS`, because the env var only helps callers that go
+  through a wrapper setting it and a bare `pytest`, `uvicorn` and
+  `python -m src.main` do not — and the probe goes to **0/15**. The
+  rarer crash is Apple's Metal driver (`fill_mps_kernel`, ~1/6 even
+  with the threads pinned), which is what the device pin is for:
+  `_get_model` resolves `settings.embedding_device` (default `cpu`;
+  `auto` is the opt-in that restores the library's own pick, and
+  carries that residual) and logs the configured device, the bound
+  device and the thread count once at construction — the only artifact
+  that outlives a SIGSEGV. The four test tiers keep the
+  `OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false` prefix as a second
+  layer covering faiss's and scikit-learn's libomp copies at import.
+  Shipped with the data-lifecycle edges a crash lands on, all from the
+  same pre-flight audit. `admin_migrate assign/delete` now exit 2
+  under `enable_api_auth=false` unless the operator passes
+  `--include-all-auth-off`: with auth off `routes._principal_key_id`
+  returns None for every request, so every row ever written has a NULL
+  owner and the tool's "legacy NULL-owner rows" predicate selects the
+  entire store — and `enable_api_auth` defaults to False, making that
+  the *default* posture of the most destructive command in the tree;
+  `report` is never refused but now opens with the auth mode and says
+  out loud that the counts are the whole store. Two silent store
+  failures became records: a job row that will not parse logs
+  `job_status_bad_payload` naming the consequence
+  (`terminal_transition_guard_bypassed`) while a missing key stays
+  quiet, and a refused terminal write carries the result length, the
+  first 200 characters, both statuses and the cost — at ERROR when
+  what it discarded was a finished `succeeded` report, WARNING when it
+  was a `failed` write that lost nothing. `make run` salvages the
+  checkpoint on failure: the synthesizer runs before the critic, so a
+  late-node failure strands a complete `draft_report` in
+  `.cache/checkpoints.sqlite` that no CLI surface could read — it now
+  lands in `outputs/<run_id>-recovered.md`, best-effort from inside
+  the `except` so it can never mask the real exception, with the
+  `thread_id` logged on every failure either way. `make clean` stops
+  deleting `.cache/checkpoints.sqlite` (graph state, not a cache,
+  including any run paused at the HITL breakpoint); `clean-all` is the
+  target that removes it. The CLI's ten-keys-stale third copy of the
+  initial `ResearchState` is gone, replaced by
+  `initial_research_state` beside the TypedDict it mirrors, with a
+  parametrized drift test pinning the API and eval runners' copies
+  until they adopt it. The reader's abstract-only degradation is
+  audible for the first time — one INFO line per paper naming the
+  stage (`no_pdf_url`, `no_text`, `no_chunks`, `no_ranked_chunks`)
+  tallied through a ContextVar bound inside each worker thread, a
+  `reader_completed` summary carrying `n_abstract_only`, and a
+  run-level WARNING past two — as is the embedding cache's write path,
+  which was the last bare `contextlib.suppress(Exception)` in the
+  cache tier. And `docs/demo.md` stops claiming the mock-data run
+  makes no external calls beyond Anthropic: `MOCK_PAPERS` carries real
+  `pdf_url`s, so a cold run downloads five real arXiv PDFs; the doc
+  now tables the hosts it actually contacts and documents the warm
+  `.cache/pdfs` second run as the genuinely Anthropic-only path.
+  Mutants planted against the device pin, the reader tally's thread
+  binding, the corrupt-payload log, the checkpoint salvage and the
+  auth-off gate — all caught. Remaining follow-ups: `faulthandler` +
+  process env hygiene land in the observability lane; the API and eval
+  runners still hold their own `_initial_state` copies; there is no
+  `--no-pdf` switch and no checked-in full-text fixture, so a
+  cold-cache offline demo remains impossible; and the salvaged report
+  is a partial artifact with no metrics, critique or verification.
