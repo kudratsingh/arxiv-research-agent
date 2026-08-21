@@ -304,13 +304,16 @@ class Settings(BaseSettings):
         ),
     )
     api_job_retention_sec: int = Field(
-        default=3600,
+        default=86400,
         ge=60,
         le=86400,
         description=(
             "How long a completed job's record + result stays queryable "
             "before it's evicted. In-memory: age check on evict_older_than; "
-            "Redis: TTL on the job key. Same knob honored by both stores."
+            "Redis: TTL on the job key. Same knob honored by both stores. "
+            "Default is 24h, not 1h: the job row is the only durable copy "
+            "of a report unless the caller exports it or attached a "
+            "conversation, so an aggressive TTL silently destroys results."
         ),
     )
     api_sse_heartbeat_sec: float = Field(
@@ -436,6 +439,20 @@ class Settings(BaseSettings):
             "truncating the sweep."
         ),
     )
+    job_redrive_interval_sec: int = Field(
+        default=300,
+        ge=30,
+        le=86400,
+        description=(
+            "Interval for the periodic redrive sweep. The startup "
+            "sweep alone misses a real case: a container restarted "
+            "before its old lease expires sees the job as live at "
+            "boot, and no later sweep ever runs — the row stays "
+            "`running` forever. Periodic sweeps close that. Only "
+            "meaningful when `enable_job_redriver` is on and the "
+            "store is Redis."
+        ),
+    )
 
     # ------ Postgres (paper cache + embedding cache) ------------------
     # Sprint 4 PR 4 wires this up. Empty URL = feature disabled: the
@@ -467,6 +484,18 @@ class Settings(BaseSettings):
             "via MiniLM. `postgres` skips MiniLM inference for texts "
             "we've seen before, indexed by content hash + model name. "
             "See ADR 0028."
+        ),
+    )
+    embedding_device: Literal["cpu", "auto", "mps", "cuda"] = Field(
+        default="cpu",
+        description=(
+            "Device for the sentence-transformers embedding model. "
+            "`cpu` (default) is deliberate: MiniLM encodes are small "
+            "enough that CPU latency is negligible, while the torch "
+            "MPS backend has segfaulted inside the Metal driver under "
+            "concurrent processes — a native crash kills the worker "
+            "with no traceback. `auto` restores the library's own "
+            "device pick for deployments that want GPU encode."
         ),
     )
     conversation_store: Literal["memory", "postgres"] = Field(
