@@ -9,9 +9,11 @@ The query below is `hallucination-mitigation` from
 [`src/eval/benchmark_queries.py`](../src/eval/benchmark_queries.py) —
 the canonical smoke query for the benchmark. It's well-covered by the
 built-in mock paper set (`src/agents/search.py::MOCK_PAPERS`), so
-this example can be reproduced offline with `USE_MOCK_DATA=true` and
-no arXiv fetch. Live-arXiv runs produce reports of the same shape
-against fresher papers; the metrics on those runs live under
+this example can be reproduced with `USE_MOCK_DATA=true` and no live
+arXiv *search*. It is not a network-free run: see
+[What `USE_MOCK_DATA=true` does and does not skip](#what-use_mock_datatrue-does-and-does-not-skip)
+below. Live-arXiv runs produce reports of the same shape against
+fresher papers; the metrics on those runs live under
 `outputs/eval/<run_id>/` and roll up into the nightly regression
 diff.
 
@@ -35,8 +37,8 @@ verification`. Full record:
 
 ## Invocation
 
-Offline (built-in mock papers, no external API calls beyond
-Anthropic):
+Built-in mock papers, no live arXiv search (but see the note below —
+the reader still fetches the five mock papers' PDFs on a cold cache):
 
 ```bash
 USE_MOCK_DATA=true python -m src.main \
@@ -54,6 +56,54 @@ ENABLE_EVIDENCE_STORE=true \
 python -m src.main \
   "What are the latest approaches to reducing hallucination in large language models?"
 ```
+
+### What `USE_MOCK_DATA=true` does and does not skip
+
+This page used to call the mock-data run "offline, no external API
+calls beyond Anthropic". That was wrong, and ADR 0052 corrects it.
+`USE_MOCK_DATA=true` replaces the *search* step only: the planner's
+queries never reach arXiv's Atom feed, and `MOCK_PAPERS` is returned
+instead. But every entry in `MOCK_PAPERS` carries a real `pdf_url` on
+`arxiv.org` (`src/agents/search.py`), and the reader's job is to read
+full text — so the fan-out calls `parse_pdf` on all five, and on a
+cold cache that is **five real PDF downloads from arxiv.org**,
+roughly 5–10 MB.
+
+A cold mock-data run therefore talks to exactly two external hosts:
+
+| Host | When | Skippable |
+| --- | --- | --- |
+| `api.anthropic.com` | Every node that calls the LLM | No — the workflow is the LLM |
+| `arxiv.org` (`/pdf/...` ×5) | Reader fan-out, cold cache only | Yes — warm the cache once (below) |
+| `export.arxiv.org` (search) | Live search | Yes — that is what `USE_MOCK_DATA` skips |
+
+**The genuinely network-free-except-Anthropic run is the second one.**
+`parse_pdf` caches extracted text through the `PaperCache`
+(`.cache/pdfs/<key>.txt` on the default disk backend, ADR 0028), keyed
+by arXiv ID, and the mock set is fixed — so once a first run has
+populated it, every later `USE_MOCK_DATA=true` run on this query hits
+the cache and issues no arXiv request at all:
+
+```bash
+# 1. Warm run: 5 PDF downloads from arxiv.org + Anthropic.
+USE_MOCK_DATA=true python -m src.main "…"
+
+# 2. Every run after this one: Anthropic only. The five extracted
+#    texts come from .cache/pdfs/. `make clean` removes that cache
+#    (it is re-derivable); `make clean-all` also removes the graph
+#    checkpoints.
+USE_MOCK_DATA=true python -m src.main "…"
+```
+
+There is deliberately **no `--no-pdf` switch**, and none of the
+existing knobs is a usable substitute: `READER_MAX_CHUNKS_PER_PAPER`
+is bounded `ge=1` and `PDF_MAX_BYTES` is bounded `ge=1MB`, so neither
+can be turned down to "skip the fetch", and the second would abort
+mid-download after the request had already gone out. If the reader
+gets no full text it degrades to the abstract — that path is real and
+now logs a `reader_paper_abstract_only` line per paper plus a
+run-level summary (ADR 0052) — but the only supported way to reach it
+without a network call is the warm cache above.
 
 ## Report body
 
@@ -260,7 +310,9 @@ and [0010](decisions/0010-nightly-eval-ci.md).
 ## Reproducing this demo
 
 ```bash
-# offline path — no arXiv fetch, no live search
+# mock papers, no live search; the five mock PDFs are fetched from
+# arxiv.org on a cold .cache/pdfs and served from it afterwards —
+# see "What USE_MOCK_DATA=true does and does not skip" above
 USE_MOCK_DATA=true python -m src.main \
   "What are the latest approaches to reducing hallucination in large language models?"
 ```

@@ -446,3 +446,68 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   trace unused, and neither the compose stack nor the deploy docs
   ship a collector service — the operator wires their own from the
   snippet in `docs/development.md`.
+- _2026-08-20_ — Native-crash containment + data-lifecycle edges (ADR
+  0052). `make test` on Apple silicon had been dying with exit 139, a
+  macOS crash-reporter dialog per worker and nothing in the logs,
+  because a native crash unwinds nothing: `SentenceTransformer(
+  MODEL_NAME)` let the library pick a device, on Apple silicon it
+  picks `mps`, and a torch forward pass on the Metal backend takes the
+  process down under concurrent encodes — while three vendored copies
+  of `libomp.dylib` (torch, faiss, scikit-learn) plus torch's
+  one-thread-per-core default gave a parallel pytest fleet a second,
+  independent teardown race. `_get_model` now resolves
+  `settings.embedding_device` (default `cpu`; `auto` is the opt-in
+  that restores the library's own pick) and logs the configured *and*
+  the bound device once at construction — the only artifact that
+  outlives a SIGSEGV — and the four test tiers are prefixed with
+  `OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false`, with the reasoning
+  inline so it does not read as a removable performance tweak.
+  Shipped with the data-lifecycle edges a crash lands on, all from the
+  same pre-flight audit. `admin_migrate assign/delete` now exit 2
+  under `enable_api_auth=false` unless the operator passes
+  `--include-all-auth-off`: with auth off `routes._principal_key_id`
+  returns None for every request, so every row ever written has a NULL
+  owner and the tool's "legacy NULL-owner rows" predicate selects the
+  entire store — and `enable_api_auth` defaults to False, making that
+  the *default* posture of the most destructive command in the tree;
+  `report` is never refused but now opens with the auth mode and says
+  out loud that the counts are the whole store. Two silent store
+  failures became records: a job row that will not parse logs
+  `job_status_bad_payload` naming the consequence
+  (`terminal_transition_guard_bypassed`) while a missing key stays
+  quiet, and a refused terminal write carries the result length, the
+  first 200 characters, both statuses and the cost — at ERROR when
+  what it discarded was a finished `succeeded` report, WARNING when it
+  was a `failed` write that lost nothing. `make run` salvages the
+  checkpoint on failure: the synthesizer runs before the critic, so a
+  late-node failure strands a complete `draft_report` in
+  `.cache/checkpoints.sqlite` that no CLI surface could read — it now
+  lands in `outputs/<run_id>-recovered.md`, best-effort from inside
+  the `except` so it can never mask the real exception, with the
+  `thread_id` logged on every failure either way. `make clean` stops
+  deleting `.cache/checkpoints.sqlite` (graph state, not a cache,
+  including any run paused at the HITL breakpoint); `clean-all` is the
+  target that removes it. The CLI's ten-keys-stale third copy of the
+  initial `ResearchState` is gone, replaced by
+  `initial_research_state` beside the TypedDict it mirrors, with a
+  parametrized drift test pinning the API and eval runners' copies
+  until they adopt it. The reader's abstract-only degradation is
+  audible for the first time — one INFO line per paper naming the
+  stage (`no_pdf_url`, `no_text`, `no_chunks`, `no_ranked_chunks`)
+  tallied through a ContextVar bound inside each worker thread, a
+  `reader_completed` summary carrying `n_abstract_only`, and a
+  run-level WARNING past two — as is the embedding cache's write path,
+  which was the last bare `contextlib.suppress(Exception)` in the
+  cache tier. And `docs/demo.md` stops claiming the mock-data run
+  makes no external calls beyond Anthropic: `MOCK_PAPERS` carries real
+  `pdf_url`s, so a cold run downloads five real arXiv PDFs; the doc
+  now tables the hosts it actually contacts and documents the warm
+  `.cache/pdfs` second run as the genuinely Anthropic-only path.
+  Mutants planted against the device pin, the reader tally's thread
+  binding, the corrupt-payload log, the checkpoint salvage and the
+  auth-off gate — all caught. Remaining follow-ups: `faulthandler` +
+  process env hygiene land in the observability lane; the API and eval
+  runners still hold their own `_initial_state` copies; there is no
+  `--no-pdf` switch and no checked-in full-text fixture, so a
+  cold-cache offline demo remains impossible; and the salvaged report
+  is a partial artifact with no metrics, critique or verification.

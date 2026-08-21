@@ -181,6 +181,25 @@ never renumbered.
   observe the same accounting `/healthz` reports instead of a second
   set of counters. Closes ADR 0047's `abandoned_node_threads`
   follow-up.
+- [0052](0052-native-crash-containment-and-data-lifecycle-edges.md) —
+  Native-crash containment + data-lifecycle edges. The MiniLM encode
+  ran on whatever device sentence-transformers picked, which on Apple
+  silicon is the MPS backend that has been killing workers with a
+  SIGSEGV — no traceback, no log line — and the test targets let three
+  vendored OpenMP runtimes race on teardown. `settings.embedding_device`
+  now decides (default `cpu`), the choice is logged at model load, and
+  the test tiers pin `OMP_NUM_THREADS`. Shipped with the data edges a
+  crash lands on: `admin_migrate assign/delete` refuse to run under
+  `enable_api_auth=false` without `--include-all-auth-off` (with auth
+  off *every* row is NULL-owner, so the tool's predicate selects the
+  whole store), a corrupt job row and a refused terminal write are now
+  audible instead of silent, `make run` salvages a finished report
+  from the checkpoint when a later node fails, `make clean` stops
+  deleting the graph checkpoints (`clean-all` does), the CLI's stale
+  third copy of the initial `ResearchState` is replaced by one
+  canonical initializer, and `docs/demo.md` stops claiming the
+  mock-data run makes no external calls beyond Anthropic — it
+  downloads five real arXiv PDFs.
 
 ## When to write an ADR
 

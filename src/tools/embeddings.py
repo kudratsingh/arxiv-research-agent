@@ -9,16 +9,25 @@ looks up every text's L2-normalized vector by content hash in the
 `embedding_cache` table (ADR 0028); MiniLM only runs on misses.
 Under the default `"none"`, every call re-encodes — Sprint 1
 behavior byte-identical.
+
+Device selection is explicit (ADR 0052). `settings.embedding_device`
+defaults to `"cpu"`, which is *not* what sentence-transformers would
+pick on its own: on an Apple-silicon host the library selects `mps`,
+and a torch forward pass on the Metal backend has taken the whole
+process down with a SIGSEGV under concurrent encodes — a native
+crash, so no Python traceback and no log line. Pinning the device is
+the half of that containment that lives here; `"auto"` restores the
+library's own pick for deployments that want GPU encode.
 """
 
 from __future__ import annotations
 
-import contextlib
 import threading
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
+from src.config import settings
 from src.graph.state import PaperMetadata
 from src.observability import get_logger
 
@@ -34,18 +43,55 @@ _model: SentenceTransformer | None = None
 _model_lock = threading.Lock()
 
 
+def _resolve_device() -> str | None:
+    """Translate `settings.embedding_device` into a `SentenceTransformer` arg.
+
+    `"auto"` maps to `None`, which is what the constructor treats as
+    "pick a device yourself" — that is the pre-ADR-0052 behavior, kept
+    reachable but no longer the default. Every other value is passed
+    through verbatim as an explicit device string.
+
+    Returns:
+        The device string to construct with, or None to let the
+        library choose.
+    """
+    device = settings.embedding_device
+    return None if device == "auto" else device
+
+
 def _get_model() -> SentenceTransformer:
     """Lazy-load the sentence transformer model (module-level singleton).
 
     Thread-safe: the unlocked fast path serves the common case, and the
     re-check inside the lock guarantees exactly one construction under
     concurrent first-callers.
+
+    The device comes from `settings.embedding_device` (ADR 0052) and
+    is logged once, at construction — the log line is the only way an
+    operator can tell after the fact which backend a run's embeddings
+    ran on, and "which backend" is the first question asked when a
+    worker dies with exit 139 and no traceback.
     """
     global _model
     if _model is None:
         with _model_lock:
             if _model is None:
-                _model = SentenceTransformer(MODEL_NAME)
+                device = _resolve_device()
+                _model = SentenceTransformer(MODEL_NAME, device=device)
+                log.info(
+                    "embedding_model_loaded",
+                    extra={
+                        "model": MODEL_NAME,
+                        "configured_device": settings.embedding_device,
+                        # What torch actually bound to. Under `auto`
+                        # this is the only place the real answer
+                        # appears; under an explicit setting it is the
+                        # confirmation that the request was honored.
+                        "resolved_device": str(
+                            getattr(_model, "device", "unknown")
+                        ),
+                    },
+                )
     return _model
 
 
@@ -88,10 +134,10 @@ def encode_texts(texts: list[str]) -> np.ndarray:
     hashes = [content_hash(t) for t in texts]
     # The cache is an optimization, never a dependency: a backend
     # failure (pool timeout, Postgres restart) degrades to a full
-    # recompute instead of failing the caller's node and job. Mirrors
-    # the already-guarded write path below — ADR 0028's "degrades to
-    # recompute, only shows up in the logs" consequence, made true on
-    # the read side too (ADR 0041).
+    # recompute instead of failing the caller's node and job. The
+    # write path below is guarded the same way, and logs the same way
+    # — ADR 0028's "degrades to recompute, only shows up in the logs"
+    # consequence, made true on both sides (ADR 0041, ADR 0052).
     hits: dict[str, np.ndarray] = {}
     try:
         hits = cache.get_many(hashes, MODEL_NAME)
@@ -111,11 +157,21 @@ def encode_texts(texts: list[str]) -> np.ndarray:
 
     # Write the fresh vectors back to the cache for next time. A
     # write failure is best-effort — callers already got their
-    # vectors and a cache-write hiccup shouldn't block encoding.
-    with contextlib.suppress(Exception):
+    # vectors and a cache-write hiccup shouldn't block encoding — but
+    # it is not silent (ADR 0052). A cache that reads fine and refuses
+    # every write has a 0% hit rate forever and no other symptom than
+    # the bill; the read path above and `paper_cache_put_failed` in
+    # `pdf_parser` both log, and this site used to be the one
+    # `contextlib.suppress(Exception)` that did not.
+    try:
         cache.put_many(
             [(hashes[miss_indices[i]], fresh[i]) for i in range(len(miss_texts))],
             MODEL_NAME,
+        )
+    except Exception as exc:
+        log.warning(
+            "embedding_cache_put_failed",
+            extra={"n_vectors": len(miss_texts), "error": str(exc)},
         )
 
     # Stitch hits + misses back into input order.

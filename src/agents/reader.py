@@ -41,11 +41,21 @@ means the LLM itself is down and there is nothing honest to
 synthesize from. `JobCancelledError` is the deliberate exception to
 that containment: it aborts the fan-out instead of degrading papers,
 because it means the job it belongs to is already over (ADR 0047).
+
+The *other* degradation — falling back to the abstract because the
+full text never arrived — is now reported rather than inferred (ADR
+0052). Each fallback logs one INFO line naming the stage that
+produced nothing, and the node closes with a `reader_completed`
+summary carrying `n_abstract_only`; a run where most papers were read
+from their abstracts scores lower on completeness and faithfulness
+for a reason that has nothing to do with the prompts, and that was
+previously invisible in the log stream.
 """
 
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import ContextVar
 from typing import Any, TypedDict
 
 from langchain_core.messages import AIMessage
@@ -75,6 +85,56 @@ log = get_logger(__name__)
 # Back-compat re-exports for tests / callers that import these names.
 MAX_WORKERS = settings.reader_max_workers
 MAX_CHUNKS_PER_PAPER = settings.reader_max_chunks_per_paper
+
+#: More than this many papers degraded to abstract-only in one run
+#: earns a run-level WARNING on top of the per-paper INFO lines (ADR
+#: 0052). Two is the point where the aggregate stops being an
+#: individual paper's bad luck — one dead PDF link is normal, three
+#: means arXiv is refusing us or the parser broke, and the run's
+#: metrics should be read as "computed on abstracts".
+ABSTRACT_ONLY_WARN_THRESHOLD = 2
+
+#: Per-invocation tally of abstract-only fallbacks, keyed by reason.
+#:
+#: A ContextVar rather than a return value because `_analyze_paper`'s
+#: 3-tuple is load-bearing for a dozen call sites in the test suite,
+#: and a module-global counter would interleave two concurrent API
+#: jobs' runs into one number. `reader_agent` binds a fresh list
+#: *inside each worker thread* (see `_analyze_or_degrade`'s wrapper)
+#: so the fan-out shares one object without sharing it across runs.
+_fallback_reasons: ContextVar[list[str] | None] = ContextVar(
+    "reader_fallback_reasons", default=None
+)
+
+
+def _record_fallback(paper: PaperMetadata, reason: str) -> None:
+    """Log and tally one paper's fall back to abstract-only analysis.
+
+    INFO, not WARNING: the loudest cause (an HTTP error fetching the
+    PDF) already warns from `pdf_parser`, and one WARNING per paper on
+    top of that would be noise. The run-level WARNING in
+    `reader_agent` is where the aggregate gets its volume.
+
+    Args:
+        paper: The paper that will be analyzed from its abstract.
+        reason: Which stage produced nothing — `no_pdf_url`,
+            `no_text`, `no_chunks`, or `no_ranked_chunks`.
+    """
+    log.info(
+        "reader_paper_abstract_only",
+        extra={
+            "paper_id": paper.get("id", ""),
+            "reason": reason,
+            # The URL is what an operator retries by hand; empty
+            # string *is* the finding when reason is `no_pdf_url`.
+            "pdf_url": paper.get("pdf_url", ""),
+        },
+    )
+    tally = _fallback_reasons.get()
+    if tally is not None:
+        # `list.append` is atomic under the GIL, so the fan-out's
+        # threads need no lock of their own here.
+        tally.append(reason)
 
 
 class AllPaperAnalysesFailedError(RuntimeError):
@@ -289,13 +349,26 @@ def _gather_ranked_chunks(
     the ranker so re-reads can promote chunks from sections the last
     read flagged as under-covered. `None` preserves the Sprint 1
     behavior.
+
+    Every `[]` return names the stage that produced it through
+    `_record_fallback` (ADR 0052). The `no_pdf_url` branch is
+    explicit: `parse_pdf("")` returns `""` before reaching any code
+    that could log, so that path used to be the one degradation with
+    no trace anywhere.
     """
-    full_text = parse_pdf(paper["pdf_url"])
+    pdf_url = paper.get("pdf_url", "")
+    if not pdf_url:
+        _record_fallback(paper, "no_pdf_url")
+        return []
+
+    full_text = parse_pdf(pdf_url)
     if not full_text:
+        _record_fallback(paper, "no_text")
         return []
 
     chunks = chunk_paper(full_text)
     if not chunks:
+        _record_fallback(paper, "no_chunks")
         return []
 
     ranked = rank_chunks_by_relevance(
@@ -304,7 +377,10 @@ def _gather_ranked_chunks(
         top_k=settings.reader_max_chunks_per_paper,
         preferred_sections=preferred_sections,
     )
-    return ranked or []
+    if not ranked:
+        _record_fallback(paper, "no_ranked_chunks")
+        return []
+    return ranked
 
 
 def _gather_context(paper: PaperMetadata, subquestions: list[str]) -> str:
@@ -711,11 +787,28 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
             )
             return _failed_analysis(p), [], signal, False
 
+    # One tally object per node invocation, bound inside each worker
+    # thread (ADR 0052). `propagate_run_context` carries exactly three
+    # ContextVars and knows nothing about this one, and a
+    # ThreadPoolExecutor inherits no context at all — so the binding
+    # has to happen in the worker, on the same object every worker
+    # shares, for `_record_fallback` deep in the call stack to find it.
+    fallback_reasons: list[str] = []
+
+    def _tallied(
+        p: PaperMetadata,
+    ) -> tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal, bool]:
+        token = _fallback_reasons.set(fallback_reasons)
+        try:
+            return _analyze_or_degrade(p)
+        finally:
+            _fallback_reasons.reset(token)
+
     # Propagate the parent's run_id + cost-accumulator ContextVars into
     # each worker thread — plain ThreadPoolExecutor doesn't inherit
     # context, so LLM calls from workers would otherwise lose per-run
     # attribution.
-    analyze = propagate_run_context(_analyze_or_degrade)
+    analyze = propagate_run_context(_tallied)
     with ThreadPoolExecutor(max_workers=settings.reader_max_workers) as executor:
         results: list[
             tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal, bool]
@@ -760,5 +853,64 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
         else:
             summary += " Recovery: all papers reported complete."
 
+    _log_reader_summary(
+        n_papers=len(papers),
+        n_failed=failed_count,
+        n_claims=len(update.get("evidence", [])),
+        fallback_reasons=fallback_reasons,
+    )
+
     update["messages"] = [AIMessage(content=summary, name="reader")]
     return update
+
+
+def _log_reader_summary(
+    *,
+    n_papers: int,
+    n_failed: int,
+    n_claims: int,
+    fallback_reasons: list[str],
+) -> None:
+    """Emit the node's one aggregate line, plus a WARNING when degraded.
+
+    The INFO line always fires: it is the record that answers "were
+    this run's scores computed on full text or on abstracts?", which
+    is otherwise unanswerable after the fact and is the first thing
+    worth ruling out when a campaign's completeness drops.
+
+    The WARNING fires only past `ABSTRACT_ONLY_WARN_THRESHOLD` — the
+    per-paper detail is already at INFO, so the WARNING exists purely
+    to reach an operator who filters at that level.
+
+    Args:
+        n_papers: Papers the fan-out covered.
+        n_failed: Papers degraded to a placeholder analysis (ADR 0041).
+        n_claims: Evidence claims extracted, 0 when the flag is off.
+        fallback_reasons: One entry per abstract-only paper, naming
+            the stage that produced no chunks.
+    """
+    by_reason: dict[str, int] = {}
+    for reason in fallback_reasons:
+        by_reason[reason] = by_reason.get(reason, 0) + 1
+    n_abstract_only = len(fallback_reasons)
+
+    log.info(
+        "reader_completed",
+        extra={
+            "n_papers": n_papers,
+            "n_abstract_only": n_abstract_only,
+            "n_failed": n_failed,
+            "n_claims": n_claims,
+            "fallback_reasons": by_reason,
+        },
+    )
+    if n_abstract_only > ABSTRACT_ONLY_WARN_THRESHOLD:
+        log.warning(
+            "reader_degraded_to_abstract_only",
+            extra={
+                "n_papers": n_papers,
+                "n_abstract_only": n_abstract_only,
+                "threshold": ABSTRACT_ONLY_WARN_THRESHOLD,
+                "fallback_reasons": by_reason,
+            },
+        )

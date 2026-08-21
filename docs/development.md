@@ -39,7 +39,8 @@ All targets are documented by `make help`. The ones you'll use daily:
 | `make test-all` | Every tier — slow, use before merging |
 | `make typecheck` | `mypy src/` |
 | `make run QUERY='...'` | Run the agent on a query |
-| `make clean` | Nuke venv + caches |
+| `make clean` | Nuke venv + caches — keeps `.cache/checkpoints.sqlite` (graph state, ADR 0052) |
+| `make clean-all` | `clean` + delete the graph checkpoints; paused HITL runs become unresumable |
 
 See [`testing.md`](testing.md) for the full test taxonomy and how CI
 selects tests per PR.

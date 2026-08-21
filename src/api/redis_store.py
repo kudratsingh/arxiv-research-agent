@@ -100,6 +100,13 @@ REDRIVE_LOCK_KEY = "redrive:lock"
 # the server's event loop stays responsive during a sweep.
 _SCAN_BATCH = 200
 
+#: Leading characters of a discarded report echoed into the
+#: terminal-refusal log record (ADR 0052). Long enough to carry the
+#: title line an operator recognises the run by, short enough that a
+#: log pipeline will not drop the record for size and that a shared
+#: log stream does not become a copy of every tenant's research.
+RESULT_PREVIEW_CHARS = 200
+
 # Runner terminal event names — the pub/sub reader stops iterating on
 # any of these. Imported from `src.api.streaming` rather than copied:
 # a private duplicate that drifted from the streaming module's copy
@@ -182,7 +189,7 @@ def _job_to_json(job: Job) -> str:
     return json.dumps(persistent, separators=(",", ":"))
 
 
-def _status_from_payload(payload: str | None) -> JobStatus | None:
+def _status_from_payload(payload: str | None, *, key: str | None = None) -> JobStatus | None:
     """Read just the `status` out of a stored row, cheaply.
 
     Used by every guard that has to answer "what does Redis currently
@@ -192,8 +199,17 @@ def _status_from_payload(payload: str | None) -> JobStatus | None:
     which for the refusal guards means letting the write through
     rather than wedging a job behind a corrupt payload.
 
+    Those two Nones mean very different things and only one of them is
+    routine (ADR 0052). A missing key is an expired retention TTL or
+    an operator DEL and stays silent; a row that will not parse has
+    silently disabled the terminal-transition guard, and gets the same
+    WARNING the scan path already emits as `job_scan_bad_payload`.
+
     Args:
         payload: The raw JSON row, or None when the key is gone.
+        key: The Redis key, for the corrupt-payload log line. Callers
+            that have it should pass it; None only costs the log
+            record its locator.
 
     Returns:
         The stored status, or None when it cannot be determined.
@@ -203,7 +219,18 @@ def _status_from_payload(payload: str | None) -> JobStatus | None:
     try:
         data = json.loads(payload)
         return JobStatus(data.get("status", "pending"))
-    except (ValueError, TypeError, AttributeError):
+    except (ValueError, TypeError, AttributeError) as exc:
+        log.warning(
+            "job_status_bad_payload",
+            extra={
+                "key": key,
+                "error": str(exc),
+                # The guards this feeds fail open, so name the
+                # consequence: this row is now writable by any
+                # terminal transition, including a contradicting one.
+                "consequence": "terminal_transition_guard_bypassed",
+            },
+        )
         return None
 
 
@@ -319,8 +346,9 @@ class RedisJobStore:
         guards that call it per terminal write do not pay for
         hydrating a full report body.
         """
-        raw = await self._client.get(self._key(job_id))
-        return _status_from_payload(_as_text(raw))
+        key = self._key(job_id)
+        raw = await self._client.get(key)
+        return _status_from_payload(_as_text(raw), key=key)
 
     async def _terminal_write_refused(self, job: Job) -> bool:
         """Whether a terminal write must be dropped as a late loser.
@@ -333,6 +361,21 @@ class RedisJobStore:
         wins; the loser is logged, not raised (the runner's terminal
         persist path must stay absorbing, and a raise there would be
         retried three times and reported as data loss).
+
+        The refusal is the *only* record of the discarded outcome, so
+        it carries enough of the result to recover it (ADR 0052).
+        Before that, a report the operator had already paid for went
+        into a warning that said a write was refused and nothing about
+        what was in it. The body is truncated rather than logged whole
+        for the same reason `admin_migrate` truncates its preview:
+        research reports run to tens of kilobytes, log pipelines drop
+        or truncate oversized records, and a full body at WARNING puts
+        one tenant's research into a shared log stream on a path that
+        fires whenever a redriver and a worker disagree. The length
+        plus the opening lines identify the run; the full text is
+        recoverable from the conversation store when one is
+        configured, and irrecoverable either way if this record is
+        dropped for size.
 
         Args:
             job: The terminal job about to be persisted.
@@ -348,14 +391,24 @@ class RedisJobStore:
             and stored in TERMINAL_STATUSES
             and stored != job.status
         ):
-            log.warning(
-                "job_terminal_transition_refused",
-                extra={
-                    "job_id": job.job_id,
-                    "stored_status": stored.value,
-                    "attempted_status": job.status.value,
-                },
-            )
+            result = job.result or ""
+            record = {
+                "job_id": job.job_id,
+                "stored_status": stored.value,
+                "attempted_status": job.status.value,
+                "result_len": len(result),
+                "result_head": result[:RESULT_PREVIEW_CHARS],
+                "cost_usd": job.cost_usd,
+                "llm_calls": job.llm_calls,
+            }
+            if job.status is JobStatus.succeeded:
+                # A refused `failed` write loses a failure that is
+                # already recorded under the stored status. A refused
+                # `succeeded` write loses a finished, billed report —
+                # that is a data-loss event, not a race note.
+                log.error("job_terminal_transition_refused", extra=record)
+            else:
+                log.warning("job_terminal_transition_refused", extra=record)
             return True
         return False
 
@@ -454,7 +507,9 @@ class RedisJobStore:
         try:
             async with self._client.pipeline() as pipe:
                 await pipe.watch(key)
-                stored = _status_from_payload(_as_text(await pipe.get(key)))
+                stored = _status_from_payload(
+                    _as_text(await pipe.get(key)), key=key
+                )
                 if stored != expected:
                     await pipe.unwatch()  # type: ignore[no-untyped-call]
                     log.info(

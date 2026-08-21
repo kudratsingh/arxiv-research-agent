@@ -21,6 +21,14 @@ capable":
 
 - **Dry run by default.** Nothing mutates without `--yes`. A bare
   invocation prints what it would do and exits 0.
+- **Auth-off is a refusal, not a warning (ADR 0052).** The tool's
+  whole premise — "NULL owner means the row predates ADR 0036" —
+  holds only while `enable_api_auth` is on. With auth off,
+  `routes._principal_key_id` returns None for every request, so
+  every row ever written carries a NULL owner and the predicate
+  selects the entire store. `assign` and `delete` exit 2 in that
+  mode unless the operator adds `--include-all-auth-off`, and the
+  report header says which population the counts describe.
 - **Bounded output.** `report` prints counts plus a small sample with
   the query/title truncated to `PREVIEW_MAX_CHARS`. Dumping full
   result bodies of other tenants' research into an operator's
@@ -100,6 +108,16 @@ STORE_CONVERSATIONS = "conversations"
 ACTION_REPORT = "report"
 ACTION_ASSIGN = "assign"
 ACTION_DELETE = "delete"
+
+#: Actions that write. Both are gated by the auth-off check below;
+#: `report` is always allowed because reading is how an operator
+#: discovers the problem in the first place.
+MUTATING_ACTIONS = frozenset({ACTION_ASSIGN, ACTION_DELETE})
+
+#: Opt-in flag required to mutate while `enable_api_auth` is False
+#: (ADR 0052). Deliberately not `--yes`: `--yes` means "I mean it",
+#: this means "I understand the predicate selects everything".
+INCLUDE_ALL_FLAG = "--include-all-auth-off"
 
 SECONDS_PER_DAY = 86400.0
 
@@ -635,9 +653,12 @@ def _conversations_unavailable() -> ScanResult | None:
     selects on `conversation_store`, *not* on `postgres_url` — and
     `postgres_url` is shared with the paper cache, the embedding cache
     and the ADR 0034 checkpointer, so it is routinely set on a
-    deployment whose conversations still live in process memory (the
-    shipped compose file is exactly that: `POSTGRES_URL` set,
-    `CONVERSATION_STORE` left at its `memory` default). Gating on
+    deployment whose conversations still live in process memory — a
+    bare `pip install` run with `POSTGRES_URL` exported for the caches
+    is exactly that, and `CONVERSATION_STORE` defaults to `memory`.
+    (The shipped compose file is *not* an example: it sets
+    `CONVERSATION_STORE: postgres` at docker-compose.yml:68. This
+    docstring claimed the opposite until ADR 0052.) Gating on
     `postgres_url` alone would point this tool at a `conversations`
     table nothing reads, report its rows as the deployment's orphans,
     and — under `delete --yes` — destroy them while the live
@@ -864,12 +885,40 @@ def delete_null_owner_conversations(
 # ---------------------------------------------------------------------------
 
 
+def _auth_header_lines() -> list[str]:
+    """Header stating the auth mode every count below is relative to.
+
+    "NULL-owner rows" means two completely different populations
+    depending on `enable_api_auth`, and the report used to present the
+    count without saying which (ADR 0052). Under auth-off the number
+    is the size of the whole store, and an operator reading
+    "null_owner_rows=1842" as a backlog of pre-ADR-0036 leftovers is
+    reading it exactly backwards.
+
+    Returns:
+        Lines to print above the per-store blocks.
+    """
+    if settings.enable_api_auth:
+        return [
+            "auth: enable_api_auth=true — NULL-owner rows are rows "
+            "written before ownership existed (ADR 0036).",
+        ]
+    return [
+        "auth: enable_api_auth=false — EVERY row this deployment "
+        "writes has a NULL owner.",
+        "      The counts below are therefore the size of the whole "
+        "store, not a legacy backlog.",
+        f"      assign/delete are refused without {INCLUDE_ALL_FLAG}.",
+    ]
+
+
 def report_lines(results: Sequence[ScanResult]) -> list[str]:
     """Render scan results as operator-readable stdout lines.
 
     Keeps the key=value shape the rest of the codebase logs in, so a
     report is greppable, but stays plain text — an operator reads this
-    directly.
+    directly. The auth-mode header comes first because it is what
+    makes the counts underneath interpretable.
 
     Args:
         results: One `ScanResult` per store the run touched.
@@ -877,7 +926,7 @@ def report_lines(results: Sequence[ScanResult]) -> list[str]:
     Returns:
         Lines to print, without trailing newlines.
     """
-    lines: list[str] = []
+    lines: list[str] = _auth_header_lines()
     for result in results:
         lines.append(f"[{result.store}] backend={result.backend}")
         if not result.available:
@@ -928,6 +977,10 @@ def summary_line(
         f"action={action}",
         f"store={store}",
         f"dry_run={str(dry_run).lower()}",
+        # Same reason the report grew a header: the counts that follow
+        # are uninterpretable without knowing which population the
+        # NULL-owner predicate selected (ADR 0052).
+        f"enable_api_auth={str(settings.enable_api_auth).lower()}",
     ]
     truncated = False
     for result in results:
@@ -959,6 +1012,10 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
             "  preview a re-own:         assign --owner internal\n"
             "  actually re-own:          assign --owner internal --yes\n"
             "  drop stale orphans:       delete --older-than-days 90 --yes\n"
+            "\n"
+            "With ENABLE_API_AUTH=false every row has a NULL owner, so\n"
+            "assign/delete match the entire store and are refused unless\n"
+            f"{INCLUDE_ALL_FLAG} is passed as well.\n"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -1003,6 +1060,17 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--yes",
         action="store_true",
         help="Actually write. Without it the run is a dry run.",
+    )
+    parser.add_argument(
+        INCLUDE_ALL_FLAG,
+        dest="include_all_auth_off",
+        action="store_true",
+        help=(
+            "Required to assign/delete while ENABLE_API_AUTH=false. "
+            "With auth off every row is written with a NULL owner, so "
+            "the NULL-owner predicate selects the entire dataset, not "
+            "a legacy subset."
+        ),
     )
     return parser.parse_args(argv)
 
@@ -1151,6 +1219,35 @@ def _validate(args: argparse.Namespace) -> str | None:
         return "--older-than-days must be >= 0."
     if args.limit is not None and args.limit < 1:
         return "--limit must be >= 1."
+
+    # The whole tool rests on "NULL owner == a row written before ADR
+    # 0036". That equivalence only holds while auth is on. With
+    # `enable_api_auth=False`, `routes._principal_key_id` returns None
+    # for every request, so *every* row this deployment has ever
+    # written carries a NULL owner — the scan predicate at
+    # `scan_null_owner_jobs` then matches the entire store, `delete
+    # --yes` is an unqualified wipe, and the report screen that is
+    # supposed to be the operator's last safety signal labels a live
+    # dataset as orphans (ADR 0052). Refuse rather than warn: the
+    # Postgres half cascades into `conversation_jobs` and none of it
+    # is recoverable.
+    if args.action in MUTATING_ACTIONS and not settings.enable_api_auth:
+        if not args.include_all_auth_off:
+            return (
+                f"{args.action} is refused while enable_api_auth is false. "
+                "With auth off every row is written with a NULL owner, so "
+                "the NULL-owner predicate this tool uses matches the whole "
+                "store, not a legacy subset — this would act on every row "
+                f"in --store {args.store}. Re-run with {INCLUDE_ALL_FLAG} "
+                "if that is genuinely what you want, ideally narrowed by "
+                "--older-than-days / --limit."
+            )
+    elif args.include_all_auth_off:
+        return (
+            f"{INCLUDE_ALL_FLAG} only applies to a mutating action under "
+            "enable_api_auth=false; drop it."
+        )
+
     if args.action != ACTION_ASSIGN:
         if args.owner is not None:
             return f"--owner is only meaningful with 'assign', not {args.action!r}."
@@ -1276,6 +1373,8 @@ def main(argv: list[str] | None = None) -> int:
             "store": args.store,
             "dry_run": dry_run,
             "changed": sum(r.changed for r in actions),
+            "enable_api_auth": settings.enable_api_auth,
+            "include_all_auth_off": args.include_all_auth_off,
         },
     )
     return EXIT_OK

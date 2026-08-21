@@ -103,7 +103,12 @@ class TestModelSingletonLock:
         constructed = {"n": 0}
 
         class _SlowFakeModel:
-            def __init__(self, _name: str) -> None:
+            # `device` is keyword-only in the real constructor call
+            # site since ADR 0052 pinned the embedding device; a fake
+            # that rejects it turns "the lock works" into "the
+            # constructor raised in every thread", which asserts the
+            # same way for the wrong reason.
+            def __init__(self, _name: str, *, device: str | None = None) -> None:
                 constructed["n"] += 1
                 # Long enough that an unlocked check-then-set lets every
                 # waiting thread through before the first assignment.
