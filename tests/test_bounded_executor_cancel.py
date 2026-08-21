@@ -321,6 +321,61 @@ class TestExecutorNode:
             executor.shutdown(wait=True)
             reset_cancel_token(scope)
 
+    async def test_cancel_landing_during_registration_still_stops_the_node(
+        self,
+    ) -> None:
+        """The window between the worker thread waking and registering.
+
+        The drain can only wait for threads it can see, so a cancel that
+        lands while a thread is still on its way into the registry must
+        be caught by the thread's own check instead. Registering *before*
+        checking is what makes those two outcomes exhaustive; checking
+        first leaves a gap where `running_nodes()` reads empty, the drain
+        returns at once, the permit goes back — and the node then runs in
+        full against a job already marked failed.
+        """
+        token = CancelToken("wrap-race")
+        scope = bind_cancel_token(token)
+        at_registration = threading.Event()
+        resume = threading.Event()
+        ran = threading.Event()
+
+        # Freeze the worker thread inside `enter_node`, i.e. after the
+        # pool picked the node up but before it is visible to the drain.
+        original = token.enter_node
+
+        def _slow_enter(name: str) -> int:
+            at_registration.set()
+            resume.wait(5.0)
+            return original(name)
+
+        token.enter_node = _slow_enter  # type: ignore[method-assign]
+
+        def agent(state: dict[str, Any]) -> dict[str, Any]:
+            ran.set()  # pragma: no cover - must not happen
+            return {}
+
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            node = workflow_module._executor_wrapper(executor)("planner", agent)
+            task = asyncio.create_task(node({}))
+            await _await_event(at_registration)
+
+            # The runner's timeout fires exactly here.
+            token.cancel("job_timeout")
+            assert await token.drain(0.1) == []
+            resume.set()
+
+            with pytest.raises(JobCancelledError):
+                await asyncio.wait_for(task, timeout=5)
+            assert not ran.is_set(), (
+                "node ran after the drain reported nothing running"
+            )
+        finally:
+            resume.set()
+            executor.shutdown(wait=True)
+            reset_cancel_token(scope)
+
     async def test_run_context_reaches_the_node_thread(self) -> None:
         """run_id, cost accumulator and cancel token all ride along.
 
@@ -364,6 +419,70 @@ class TestExecutorNode:
             assert await node({}) == {"iteration": 7}
         finally:
             executor.shutdown(wait=True)
+
+    async def test_compiled_graph_really_dispatches_onto_the_pool(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The same proof, but through LangGraph instead of around it.
+
+        `_executor_wrapper` in isolation only shows the wrapper works.
+        What the fix actually claims is that a graph compiled by
+        `build_workflow(async_checkpointer=True, node_executor=...)` runs
+        its nodes there — LangGraph coerces a *sync* node with
+        `partial(run_in_executor, None, fn)`, so if the wrapper ever
+        stopped being registered as an async callable (or stopped being
+        wired into the async build at all), every node would silently
+        fall back to the loop's default pool with nothing else failing.
+        """
+        monkeypatch.setattr(
+            workflow_module,
+            "settings",
+            Settings(enable_checkpointing=False, enable_supervisor=False),
+        )
+        threads: list[str] = []
+        registered: list[tuple[str, ...]] = []
+
+        def _probe(state: dict[str, Any]) -> dict[str, Any]:
+            threads.append(threading.current_thread().name)
+            token = current_cancel_token()
+            registered.append(tuple(token.running_nodes()) if token else ())
+            return {"iteration": 1}
+
+        for agent_name in (
+            "planner_agent",
+            "search_agent",
+            "reader_agent",
+            "synthesizer_agent",
+            "critic_agent",
+        ):
+            monkeypatch.setattr(workflow_module, agent_name, _probe)
+
+        token = CancelToken("compiled-1")
+        scope = bind_cancel_token(token)
+        executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adr47-graph")
+        try:
+            graph = await workflow_module.build_workflow(
+                async_checkpointer=True, node_executor=executor
+            )
+            async for _chunk in graph.astream(
+                {"query": "q", "run_id": "r", "iteration": 0},
+                config={"configurable": {"thread_id": "t"}},
+            ):
+                pass
+        finally:
+            executor.shutdown(wait=True)
+            reset_cancel_token(scope)
+
+        assert threads, "no node ever executed"
+        assert all(name.startswith("adr47-graph") for name in threads), threads
+        # And each node was visible to the drain while it ran.
+        assert registered == [
+            ("planner",),
+            ("search",),
+            ("reader",),
+            ("synthesizer",),
+            ("critic",),
+        ]
 
     def test_sync_build_refuses_a_node_executor(self) -> None:
         """The sync `invoke` path calls nodes inline; an executor there

@@ -276,6 +276,17 @@ def _run_node_body(
     path used to get wrong, releasing the semaphore permit while the
     node kept burning CPU and LLM dollars.
 
+    Registration happens BEFORE the cancel check, and the order is
+    load-bearing. Checking first leaves a window — narrow, but real and
+    reproducible — in which the runner's timeout fires after the check
+    passed and before the thread is registered: `running_nodes()` reads
+    empty, the drain returns immediately, the permit goes back, and the
+    node then runs in full against a job already marked `failed`. That
+    is precisely the accounting lie ADR 0047 exists to close.
+    Registering first makes the two outcomes exhaustive — either the
+    drain sees the thread and waits for it, or the check sees the token
+    and the node never runs.
+
     Args:
         name: Graph node name, used in the drain's log line.
         fn: The (already traced) agent callable.
@@ -293,9 +304,9 @@ def _run_node_body(
     """
     if token is None:
         return fn(state)
-    token.raise_if_cancelled()
     handle = token.enter_node(name)
     try:
+        token.raise_if_cancelled()
         return fn(state)
     finally:
         token.exit_node(handle)

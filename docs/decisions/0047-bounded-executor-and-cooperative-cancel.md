@@ -106,6 +106,16 @@ creates one per job. The checks:
 - `propagate_run_context` carries the token into fan-out worker
   threads alongside `run_id` and the accumulator.
 
+Inside the worker thread, `_run_node_body` registers on the token
+*before* it checks it, and that order is load-bearing. Checking first
+leaves a window in which the timeout fires after the check passed and
+before the thread is registered: the drain reads an empty registry,
+returns at once, the permit goes back — and the node then runs in full
+against a job already marked `failed`, which is the exact accounting
+lie this ADR exists to close. Registering first makes the outcomes
+exhaustive: either the drain sees the thread and waits for it, or the
+thread's own check sees the token and the node never runs.
+
 On timeout, `run_job` sets the token, writes the terminal state and
 emits the terminal SSE frame (so the client is released immediately),
 and *then* — still inside `async with semaphore` — drains: it waits
@@ -177,10 +187,15 @@ decrements when each thread finally returns.
 
 ## Consequences
 
-- **Positive**: `api_max_concurrent_jobs` bounds threads and LLM
-  concurrency again, not just coroutines. A timed-out job stops
-  spending at its next LLM call instead of running to completion
-  uncharged. The process has a bounded, joined pool to shut down.
+- **Positive**: `api_max_concurrent_jobs` bounds *node* threads again,
+  not just coroutines — with the honest caveat that a running reader
+  still opens its own per-paper pool inside its node thread, so total
+  process threads are bounded by `api_max_concurrent_jobs × (1 +
+  reader_max_workers)`, not by the ceiling alone. The drain covers
+  those transitively: the reader's `with ThreadPoolExecutor(...)`
+  joins its workers before the node thread returns. A timed-out job
+  stops spending at its next LLM call instead of running to
+  completion uncharged. The process has a bounded, joined pool to shut down.
   `/healthz` reports a concurrency figure the worker can back up, and
   names the zombies when it cannot.
 - **Negative**: nodes on the async path are now async wrappers, so the
