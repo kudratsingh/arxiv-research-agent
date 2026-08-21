@@ -808,7 +808,7 @@ class RedisJobStore:
         """Subset of `keys` provably holding a terminal job, via TTL.
 
         The only place a job row is given an expiry is the terminal
-        branch of `_write` / `update_if_status`, so `TTL >= 0` is a
+        branch of `update` / `update_if_status`, so `TTL >= 0` is a
         proof of terminality that costs an integer reply instead of a
         full report body — which is the whole point (ADR 0048): the
         sweep used to MGET every row in the keyspace and throw the

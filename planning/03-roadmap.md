@@ -346,10 +346,11 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   one step. The sweep's re-read and `update`'s terminal-transition
   guard both narrowed the reclaim race without closing it — a job
   finishing in the gap still had its `succeeded` row, report and
-  all, replaced by `failed/orphaned`. `RedisJobStore.update_if_
-  status` folds the comparison and the write into one
-  WATCH/MULTI/EXEC; `_fail_orphan` gates *both* the store write and
-  the `job_failed` publish on it landing, counting a lost CAS as
+  all, replaced by `failed/orphaned`.
+  `RedisJobStore.update_if_status` folds the comparison and the
+  write into one WATCH/MULTI/EXEC; `_fail_orphan` gates *both* the
+  store write and the `job_failed` publish on it landing,
+  counting a lost CAS as
   `skipped_live`. The refused-overwrite half moved to
   `publish_event`, which now drops a terminal frame that
   contradicts the persisted row — no client sees `job_completed`
