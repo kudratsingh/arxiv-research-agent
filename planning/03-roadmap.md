@@ -531,3 +531,64 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   uncited-rows note, so it disappeared on any night where every report
   cited something; it prints unconditionally. Ten more mutants planted
   across the new counting and rendering — all caught.
+- _2026-08-20_ — LLM cost enforcement and visibility (ADR 0051),
+  closing the pre-flight audit's cost-control cluster before the first
+  live campaign. The headline gap: `max_cost_usd` had exactly one
+  enforcement point, the API runner's `on_node` callback (ADR 0033), and
+  neither path about to spend real money goes through it —
+  `src/main.py` and `src/eval/runner.py` both drive the graph with a
+  bare `app.invoke(...)`, and the supervisor's independent check is
+  dead under the shipped `enable_supervisor=False`. The check now lives
+  in `src.llm.call_llm`, the one function every entry point funnels
+  through, which fixes the CLI and eval paths and the API's own
+  intra-node overshoot in a single edit (the reader fans out up to
+  `max_papers` parallel calls inside one node, so a between-nodes check
+  can be beaten by a whole node's spend). `CostBudgetExceeded` and the
+  cap helper moved to `src/observability/costs.py` so the LLM layer
+  raises the exception the runner catches without importing the API
+  layer; both are re-bound in `src/api/runner.py` under the names that
+  were already public. The between-nodes check stays — the two cannot
+  disagree, since they raise the same class from the same accumulator,
+  and `on_node` still catches a node that spends outside `call_llm`.
+  Second, hitting the ceiling no longer destroys the artifact: the
+  draft in the runner's merged state rides out on the exception and
+  lands on `job.result`, so a run whose *final* node crossed the cap —
+  a complete report, `route_after_critique` already returned `END` —
+  is retrievable and exportable instead of being a bill with nothing
+  attached. Third, the SDK's retries stopped being invisible:
+  `with_raw_response.retries_taken` is the SDK's own count of discarded
+  attempts, recorded as `llm_retries_total` and on the `llm_call` line
+  next to a measured `latency_ms`, with `llm_upstream_errors_total`
+  for the calls that outlive the retry budget — and no second retry
+  loop anywhere, so ADR 0009's SDK-native choice stands. ADR 0042's
+  blanket demotion of the `anthropic` tree is narrowed to spare
+  `anthropic._base_client`'s retry line at INFO. Fourth, the retry
+  envelope is clamped from `api_job_timeout_sec`: the SDK applies
+  `timeout` per *attempt*, so the shipped 4 retries × 120s bounded one
+  logical call at exactly the 600s job timeout — one unlucky call could
+  eat a whole job. Attempts get trimmed to 2, never the timeout, since
+  a shorter timeout abandons slow-but-healthy generations and
+  Anthropic bills those with no `usage` coming back. Fifth, an
+  unpriced model warns once per id instead of once per call (hundreds a
+  run), and the price-coverage test — which was vacuous, reading
+  `field.default` when every routing field defaults to `""` — now
+  resolves runtime values through new `resolved_model_ids()` /
+  `unpriced_models()` helpers; `claude-fable-5`, `claude-mythos-5` and
+  `claude-opus-4-5` added to the table. Sixth, stderr is JSON lines
+  again (ML-stack loggers demoted, HF progress-bar env `setdefault`ed)
+  and `faulthandler` is armed, so the intermittent MiniLM SIGSEGV
+  leaves a traceback rather than exit 139. Plus the lease-path P3s:
+  `exc_info` on acquire/refresh failures with first-warns-then-debugs
+  volume control, and a `run_id` bound inside the keeper task, which
+  `asyncio.create_task` had been snapshotting before `run_job` bound
+  one. Sixteen mutants planted, all sixteen caught. Remaining
+  follow-ups: `unpriced_models()` at startup as a WARNING; the
+  `max_cost_usd` description in `src/config.py` and
+  `docs/architecture.md:183` still scope the cap to the API runner; the
+  thread-pinning half of the SIGSEGV in `src/tools/embeddings.py`
+  (needs a ≥200-run soak, the repro rate is ~4%); a `partial` flag on
+  `JobDetail`; streaming the synthesizer so a long generation cannot
+  trip the HTTP timeout at all. Retried attempts' token spend stays
+  uncapturable in-process — `usage` exists only on a 2xx body, so
+  `retries_taken` is a count and Anthropic's billing is the only
+  reconciliation.
