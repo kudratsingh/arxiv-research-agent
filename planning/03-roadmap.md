@@ -403,3 +403,46 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   as a metric rather than a health field, and a
   `POST /research/{id}/cancel` endpoint now that the machinery
   exists.
+- _2026-08-20_ — OpenTelemetry metrics (ADR 0049), closing the
+  audit's last observability P2 and ADR 0047's
+  `abandoned_node_threads` follow-up. The service had three
+  telemetry signals and none of them was a metric: logs answer "why
+  did this one request do that", traces answer "where did this run
+  spend its time", and the per-run cost accumulator dies with the
+  run — so "how many jobs are failing right now", "what is the p95
+  job duration" and "are we near the concurrency ceiling" were all
+  grep-and-count. Seven instruments now live in
+  `src/observability/metrics.py` on the OTel metrics API that ships
+  in the already-pinned `opentelemetry-sdk`; `prometheus_client`
+  would have meant a second telemetry stack, a second exporter and a
+  second configuration surface for a repo that already runs an OTLP
+  collector for spans. Gated behind `enable_metrics` and sharing
+  tracing's `otel_exporter_endpoint`, so both signals are two
+  booleans and one URL. Every record point is an *existing* choke
+  point rather than a new call site: `_persist_terminal` (the one
+  function all seven of `run_job`'s terminal branches pass through,
+  recorded before the write so a wedged store cannot also make the
+  fleet look idle), `record_llm_call` (every LLM call site in the
+  repo, recorded unconditionally — a call outside a run still spent
+  money), and `_raise_429` (both limiter backends, which grew a
+  keyword-only `backend` the counter needs and the response does
+  not). The two concurrency gauges are *observable* and read the
+  same accounting `/healthz` reports — this worker's task set plus
+  `abandoned_node_count()` — through callables the lifespan
+  supplies, so the gauge and the health endpoint cannot drift into
+  two disagreeing numbers, and `src/observability/` stays free of
+  any knowledge of the API layer. Cardinality is deliberate:
+  `error_type` normalises to `"none"` so every series has one
+  attribute shape, rejections are labelled by backend and never by
+  `key_id`, and duration is bucketed 5s..3600s because the SDK's
+  sub-second defaults put every real research job in the overflow
+  bucket. Flag off means no provider, no instruments and one `None`
+  check per record point. Twelve mutants planted against the
+  terminal-record, cost-record, 429-record and gauge points, all
+  caught. Remaining follow-ups: no instrument for queue *wait* time
+  (the leading indicator `research_active_jobs` only shows once
+  saturated), cache hit ratios and outbound arXiv / Semantic Scholar
+  latency uninstrumented, exemplars linking a slow duration to its
+  trace unused, and neither the compose stack nor the deploy docs
+  ship a collector service — the operator wires their own from the
+  snippet in `docs/development.md`.

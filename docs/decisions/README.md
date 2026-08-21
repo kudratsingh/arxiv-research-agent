@@ -169,6 +169,18 @@ never renumbered.
   until the node thread actually returns — with the threads it gives
   up on still counted in `/healthz`. Follows ADR 0040; extends
   ADR 0042's honesty rule to `active_jobs`.
+- [0049](0049-otel-metrics.md) — OpenTelemetry metrics. The service
+  had logs, opt-in traces and per-run cost accounting but no metrics
+  at all, so "how many jobs are failing right now", "what is the p95
+  job duration" and "are we near the concurrency ceiling" were
+  grep-and-count exercises. Seven instruments on the OTel metrics API
+  from the already-pinned SDK — rather than a second telemetry stack —
+  gated behind `enable_metrics` and sharing tracing's OTLP endpoint.
+  Every record point is an existing choke point (`_persist_terminal`,
+  `record_llm_call`, `_raise_429`), and the two concurrency gauges
+  observe the same accounting `/healthz` reports instead of a second
+  set of counters. Closes ADR 0047's `abandoned_node_threads`
+  follow-up.
 
 ## When to write an ADR
 

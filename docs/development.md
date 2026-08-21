@@ -44,6 +44,98 @@ All targets are documented by `make help`. The ones you'll use daily:
 See [`testing.md`](testing.md) for the full test taxonomy and how CI
 selects tests per PR.
 
+## OpenTelemetry: traces + metrics
+
+Both signals are off by default and share one exporter endpoint, so
+one collector receives both (ADRs 0013 and 0049). Four env vars:
+
+| Variable | Default | What it does |
+|---|---|---|
+| `ENABLE_TRACING` | `false` | Spans around each agent node |
+| `ENABLE_METRICS` | `false` | Job / spend / concurrency / rate-limit instruments |
+| `OTEL_EXPORTER_ENDPOINT` | `""` | OTLP **HTTP** base URL, e.g. `http://localhost:4318`. Empty = console exporter |
+| `OTEL_METRIC_EXPORT_INTERVAL_SEC` | `60` | How often metrics are pushed |
+
+### Seeing it work without a collector
+
+Leave `OTEL_EXPORTER_ENDPOINT` empty and both signals print to stderr —
+spans as they finish, metrics every export interval. Useful for a quick
+"is this instrumented" check; noisy for anything longer.
+
+```bash
+ENABLE_METRICS=true OTEL_METRIC_EXPORT_INTERVAL_SEC=5 \
+  .venv/bin/python -m src.api.serve
+```
+
+### Pointing a real collector at it
+
+The exporter speaks **OTLP over HTTP** and appends the standard signal
+paths itself — give it the *base* URL, not `/v1/traces`. Any
+OTLP-compatible backend works (Jaeger, Tempo, Grafana Cloud,
+Honeycomb, the OpenTelemetry Collector). The repo ships no collector
+service; run one alongside the stack:
+
+```yaml
+# docker-compose.override.yml — a collector next to the app
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4318:4318"   # OTLP/HTTP
+  api:
+    environment:
+      ENABLE_TRACING: "true"
+      ENABLE_METRICS: "true"
+      OTEL_EXPORTER_ENDPOINT: "http://otel-collector:4318"
+      OTEL_SERVICE_NAME: "arxiv-research-agent"
+```
+
+```yaml
+# otel-collector.yaml — accept OTLP, expose metrics for Prometheus
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+  debug: {}
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheus]
+```
+
+### What you get
+
+| Instrument | Kind | Attributes | Answers |
+|---|---|---|---|
+| `research_jobs_total` | counter | `status`, `error_type` | "how many jobs are failing right now, and why" |
+| `research_job_duration_seconds` | histogram | `status` | "what is the p95 job duration" |
+| `research_active_jobs` | gauge | — | "are we near the concurrency ceiling" (against `API_MAX_CONCURRENT_JOBS`) |
+| `research_abandoned_node_threads` | gauge | — | zombie node threads a drain gave up on (ADR 0047) |
+| `llm_cost_usd_total` | counter | `model` | fleet spend rate, by model |
+| `llm_calls_total` | counter | `model` | call volume, by model |
+| `rate_limit_rejections_total` | counter | `backend` | 429s, by limiter backend |
+
+Both gauges are **per worker** — they report the process that emits
+them, so aggregate across workers by summing on the resource's
+instance attribute. `research_active_jobs` is deliberately the same
+figure `/healthz` reports (in-flight jobs *plus* abandoned node
+threads), read from the same accounting rather than a second counter.
+
+Note the two gauges reset when a worker restarts and the counters are
+monotonic within a process lifetime — query them as rates, and expect
+a counter reset on every deploy.
+
 ## Dependency locking
 
 Two files describe dependencies, with different jobs (ADR 0045):

@@ -399,6 +399,41 @@ class TestCurrentCostsAndRecordCall:
         finally:
             costs_module._current_costs.reset(token)
 
+    def test_record_llm_call_feeds_the_metrics_choke_point(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """ADR 0049 hangs `llm_cost_usd_total` / `llm_calls_total` off
+        this function so every LLM call site is covered from one place.
+
+        Asserted here, at the accumulator's own tests, because the
+        coupling runs the other way too: a refactor that moved cost
+        estimation out of `record_llm_call` would silently take the
+        metrics with it. What the counters do with the numbers is
+        `tests/test_otel_metrics.py`'s business.
+        """
+        seen: list[tuple[str, float]] = []
+        monkeypatch.setattr(
+            costs_module,
+            "record_llm_usage",
+            lambda *, model, cost_usd: seen.append((model, cost_usd)),
+        )
+
+        start_cost_tracking()
+        record_llm_call("claude-haiku-4-5", 1_000_000, 0)
+
+        # Haiku input is $1 / 1M tokens — the same figure the
+        # accumulator was handed, not a separately computed one.
+        assert seen == [("claude-haiku-4-5", pytest.approx(1.0))]
+
+    def test_metrics_are_off_by_default(self) -> None:
+        """The default deployment installs no meter provider, so the
+        record points above cost one `None` check and nothing else."""
+        from src.config import Settings
+        from src.observability import metrics as metrics_module
+
+        assert Settings().enable_metrics is False
+        assert metrics_module.metrics_enabled() is False
+
 
 class TestCrossThreadContextPropagation:
     def test_propagate_carries_run_id_and_costs_across_workers(self) -> None:

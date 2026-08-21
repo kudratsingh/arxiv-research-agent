@@ -13,7 +13,11 @@ to Sonnet and log a warning — we want to catch a stale price table,
 not silently under-report cost.
 
 See ADR 0012 for design rationale and ADR 0044 for the price refresh
-and coverage guarantee.
+and coverage guarantee. ADR 0049 hangs the process-wide
+`llm_cost_usd_total` / `llm_calls_total` metrics off the same
+`record_llm_call` choke point: the per-run accumulator answers "what
+did this run cost", the counters answer "what is this deployment
+spending, by model", and neither can be derived from the other.
 """
 
 from __future__ import annotations
@@ -24,6 +28,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src.observability.logging import get_logger
+from src.observability.metrics import record_llm_usage
 
 log = get_logger(__name__)
 
@@ -230,6 +235,11 @@ def record_llm_call(
     Cache token buckets default to 0 so existing callers keep working;
     ADR 0022 (prompt caching) sets non-zero values through
     `src.llm.call_llm` when the flag is on.
+
+    The OTel counters are bumped unconditionally — unlike the
+    accumulator, which needs a run bound to it. A call made outside a
+    run still spent money, and a fleet's spend rate must not depend on
+    whether the caller remembered to open one (ADR 0049).
     """
     cost = estimate_cost(
         model,
@@ -238,6 +248,7 @@ def record_llm_call(
         cache_read_input_tokens,
         cache_creation_input_tokens,
     )
+    record_llm_usage(model=model, cost_usd=cost)
     log.info(
         "llm_call",
         extra={
