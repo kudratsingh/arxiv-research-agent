@@ -287,6 +287,79 @@ class TestLlmUsageMetrics:
 
 
 # ---------------------------------------------------------------------------
+# SDK retries + upstream failures (ADR 0051)
+# ---------------------------------------------------------------------------
+
+
+class TestLlmRetryMetrics:
+    """Anthropic SDK retries were invisible: no app log, the SDK's own
+    retry line demoted below threshold, and no metric — so a throttled
+    fleet was indistinguishable from a merely slow one."""
+
+    def test_retries_taken_accumulates_per_model(
+        self, reader: InMemoryMetricReader
+    ) -> None:
+        """Recorded from `record_llm_call`, which is where `call_llm`
+        hands over the SDK's own `retries_taken`.
+
+        Mutation-check: dropping the `if retries:` branch in
+        `record_llm_call` leaves `llm_retries_total` absent entirely and
+        `_point_for` raises.
+        """
+        costs_module.record_llm_call(
+            "claude-opus-5", input_tokens=10, output_tokens=10, retries=2
+        )
+        costs_module.record_llm_call(
+            "claude-opus-5", input_tokens=10, output_tokens=10, retries=1
+        )
+        costs_module.record_llm_call(
+            "claude-haiku-4-5", input_tokens=10, output_tokens=10, retries=4
+        )
+
+        retries = _points(reader, "llm_retries_total")
+        assert _point_for(retries, model="claude-opus-5").value == 3
+        assert _point_for(retries, model="claude-haiku-4-5").value == 4
+
+    def test_clean_calls_do_not_create_the_series(
+        self, reader: InMemoryMetricReader
+    ) -> None:
+        """A fleet with no retries should read as an absent series, not
+        a wall of zeroes — the counter exists to be noticed when it
+        moves."""
+        costs_module.record_llm_call(
+            "claude-sonnet-5", input_tokens=10, output_tokens=10
+        )
+
+        assert _points(reader, "llm_retries_total") == []
+
+    def test_upstream_errors_split_by_status(
+        self, reader: InMemoryMetricReader
+    ) -> None:
+        """Retries that eventually succeed cost latency; retries that
+        run out cost the whole node. Both have to be visible."""
+        metrics_module.record_llm_upstream_error(
+            model="claude-opus-5", status="529"
+        )
+        metrics_module.record_llm_upstream_error(
+            model="claude-opus-5", status="529"
+        )
+        metrics_module.record_llm_upstream_error(
+            model="claude-opus-5", status="connection"
+        )
+
+        errors = _points(reader, "llm_upstream_errors_total")
+        assert (
+            _point_for(errors, model="claude-opus-5", status="529").value == 2
+        )
+        assert (
+            _point_for(
+                errors, model="claude-opus-5", status="connection"
+            ).value
+            == 1
+        )
+
+
+# ---------------------------------------------------------------------------
 # Rate-limit rejections, recorded where the 429 is raised
 # ---------------------------------------------------------------------------
 
@@ -414,6 +487,10 @@ class TestDisabled:
             status="succeeded", error_type=None, duration_sec=1.0
         )
         metrics_module.record_llm_usage(model="claude-opus-5", cost_usd=1.0)
+        metrics_module.record_llm_retries(model="claude-opus-5", retries=3)
+        metrics_module.record_llm_upstream_error(
+            model="claude-opus-5", status="529"
+        )
         metrics_module.record_rate_limit_rejection(backend="redis")
 
         assert metrics_module._instruments is None

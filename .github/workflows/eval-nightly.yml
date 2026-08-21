@@ -20,6 +20,10 @@ on:
         description: "Regression threshold on raw scores"
         required: false
         default: "0.10"
+      max_budget_usd:
+        description: "Stop the campaign once this much workflow+judge spend accumulates (empty = no ceiling)"
+        required: false
+        default: ""
 
 concurrency:
   # Never run two nightlies at once; a manual dispatch supersedes a
@@ -39,13 +43,30 @@ permissions:
 jobs:
   eval:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # 20 queries at 2-4 minutes each, plus a 120 s Anthropic timeout
+    # with 4 retries on any single call, does not fit in an hour. An
+    # Actions cancellation now sends SIGTERM into a runner that flushes
+    # (ADR 0050), but a cancelled campaign is still a wasted campaign.
+    timeout-minutes: 120
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       # Force real arXiv, not mock data — the point of nightly eval.
       USE_MOCK_DATA: "false"
 
     steps:
+      # Fail-fast, legibly. This workflow spent 15+ consecutive nights
+      # red on an unset secret, dying inside `Run eval` with a generic
+      # "copy .env.example" message that reads like a code bug. The
+      # fix for a missing secret is an owner action, not a code change
+      # — say so in the step that stops the run.
+      - name: Check ANTHROPIC_API_KEY secret is set
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error title=Missing repository secret::ANTHROPIC_API_KEY is not set for this repository, so the nightly eval cannot make a single LLM call. This is an owner action, not a code fix: add the key under Settings > Secrets and variables > Actions > New repository secret (name: ANTHROPIC_API_KEY). If the nightly is not going to be funded, disable this workflow's schedule instead of leaving it permanently red."
+            exit 1
+          fi
+          echo "ANTHROPIC_API_KEY present (${#ANTHROPIC_API_KEY} chars)."
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -54,12 +75,16 @@ jobs:
         with:
           python-version-file: .python-version
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: requirements-lock.txt
 
-      - name: Install project (with dev deps)
+      # Install the locked set, exactly as ci.yml does — the gated set
+      # and the nightly's set must be the same resolution, or the
+      # nightly measures a dependency tree CI never tested.
+      - name: Install project (locked dependency set)
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -r requirements-lock.txt
+          pip install --no-deps -e .
 
       - name: Download previous nightly baseline
         id: download-baseline
@@ -90,27 +115,45 @@ jobs:
             --dir baseline \
             || echo "Baseline artifact missing on run $prev_run — first-run behavior."
 
+      # A non-zero exit here is real: the runner distinguishes partial
+      # failure (3), total failure (4), budget stop (5) and interrupt
+      # (130), and every one of them means the campaign is not the
+      # clean 20/20 the README block is allowed to publish. The upload
+      # steps below still run, so the records survive the red step.
       - name: Run eval
         id: run-eval
         run: |
+          args=()
           if [ -n "${{ inputs.queries }}" ]; then
-            python -m src.eval.runner --queries "${{ inputs.queries }}"
-          else
-            python -m src.eval.runner
+            args+=(--queries "${{ inputs.queries }}")
           fi
+          if [ -n "${{ inputs.max_budget_usd }}" ]; then
+            args+=(--max-budget-usd "${{ inputs.max_budget_usd }}")
+          fi
+          python -m src.eval.runner "${args[@]}"
 
+      # The next three steps run on `always()` on purpose. The runner
+      # now writes every completed query to disk as it goes, so a run
+      # that died at query 15 still has fourteen paid records worth
+      # uploading — and the `eval-summary-latest` artifact is the next
+      # night's baseline, so skipping it compounds one bad night into
+      # two.
       - name: Locate current summary
         id: find-current
+        if: always()
         run: |
           latest_dir=$(ls -1dt outputs/eval/*/ 2>/dev/null | head -n1 | sed 's:/$::')
           if [ -z "$latest_dir" ]; then
-            echo "No eval output found under outputs/eval/" >&2
-            exit 1
+            echo "::warning::No eval output found under outputs/eval/ — nothing to upload."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "found=true" >> "$GITHUB_OUTPUT"
           echo "run_dir=$latest_dir" >> "$GITHUB_OUTPUT"
           echo "summary=$latest_dir/summary.jsonl" >> "$GITHUB_OUTPUT"
 
       - name: Upload full eval run
+        if: always() && steps.find-current.outputs.found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: eval-run-${{ github.run_id }}
@@ -118,6 +161,7 @@ jobs:
           retention-days: 90
 
       - name: Upload latest summary (baseline for next run)
+        if: always() && steps.find-current.outputs.found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: eval-summary-latest
@@ -125,17 +169,30 @@ jobs:
           retention-days: 90
           overwrite: true
 
+      # Also `always()`: a batch that died partway leaves the queries
+      # it never reached missing from summary.jsonl, which the diff now
+      # classifies as regressions — that report is worth having.
       - name: Diff against previous baseline
         id: diff
+        if: always() && steps.find-current.outputs.found == 'true'
         continue-on-error: true
         run: |
           threshold="${{ inputs.threshold }}"
           threshold="${threshold:-0.10}"
+          args=()
+          # A manual `--queries` dispatch is *meant* to be a subset, so
+          # the queries it omits are not a truncated batch. The nightly
+          # itself never passes this, which is the point: there, a
+          # missing query means the run died and the gate must fire.
+          if [ -n "${{ inputs.queries }}" ]; then
+            args+=(--allow-removed)
+          fi
           python -m src.eval.regression_diff \
             baseline/summary.jsonl \
             "${{ steps.find-current.outputs.summary }}" \
             --threshold "$threshold" \
-            --output regression-report.md
+            --output regression-report.md \
+            "${args[@]}"
 
       - name: Upload regression report
         if: always()
@@ -155,12 +212,22 @@ jobs:
       #
       # Patches the "Latest eval results" block in README.md with the
       # numbers from this run, then opens (or updates) a PR against
-      # `main`. Runs regardless of the diff step's outcome — regressed
-      # numbers are still real numbers; the diff-fail flag already
-      # signals that separately.
+      # `main`.
+      #
+      # Both steps below carry an `if:` with no status function, which
+      # GitHub reads as `success() && <expr>` — so they are skipped
+      # whenever an earlier step failed, `Run eval`'s non-zero exit and
+      # `Fail if regression detected` included. That is the intent: the
+      # block is a published claim, and a campaign that errored,
+      # regressed or stopped early has not earned it.
 
+      # Full runs only, on top of that implicit `success()`: a campaign
+      # that ran a hand-picked
+      # `--queries` subset would publish "3 / 3 queries" as if it were
+      # the whole benchmark (ADR 0050).
       - name: Update README's eval-results block
         id: update-readme
+        if: inputs.queries == ''
         run: |
           python -m src.eval.readme_update \
             --summary "${{ steps.find-current.outputs.summary }}" \

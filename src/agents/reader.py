@@ -70,6 +70,7 @@ from src.graph.state import (
 )
 from src.llm import call_llm_json
 from src.observability import get_logger, propagate_run_context
+from src.observability.costs import CostBudgetExceeded
 from src.security.prompt_isolation import (
     ISOLATION_SYSTEM_INSTRUCTION,
     sanitize_control_string,
@@ -761,11 +762,16 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
         check_cancelled()
         try:
             return (*_analyze_paper(p, query, subquestions, preferred), True)
-        except JobCancelledError:
+        except (JobCancelledError, CostBudgetExceeded):
             # Raised from `src.llm.call_llm` mid-paper. Propagate: the
             # fan-out is over, and a degraded placeholder here would
             # report a paper as "analysed but unusable" when it was
-            # simply never attempted.
+            # simply never attempted. `CostBudgetExceeded` gets the
+            # same treatment for the same reason (ADR 0051): the cap
+            # check runs before every call, so once it trips, each
+            # remaining paper would raise-and-degrade in turn and the
+            # run would limp to synthesis with no analyses — spending
+            # judge and synthesis calls the ceiling existed to stop.
             raise
         except Exception as exc:
             log.warning(

@@ -181,6 +181,41 @@ never renumbered.
   observe the same accounting `/healthz` reports instead of a second
   set of counters. Closes ADR 0047's `abandoned_node_threads`
   follow-up.
+- [0050](0050-eval-runner-hardening.md) — Eval-runner hardening. The
+  campaign is the next live spend, and the harness could not hold onto
+  work it had paid for: one judge 529 aborted the batch and discarded
+  the failing query's finished workflow output, nothing reached disk
+  until the end, SIGTERM killed without flushing, and `make eval`
+  returned 0 when every query failed. Per-metric judge isolation
+  (honouring ADR 0008's contract and `_run_and_score`'s "Never
+  raises"), per-query persistence plus `--resume` and a SIGTERM
+  handler, workflow spend split from judge spend so the README figure
+  and the `cost_usd` gate describe the agent rather than the eval rig
+  (revisiting ADR 0044), empty reports and truncated batches made red
+  instead of green, honest exit codes, a refusal to overwrite a prior
+  campaign's directory, `--max-budget-usd`, and a nightly workflow that
+  says which owner action fixes its 15-night-old red.
+
+- [0051](0051-llm-cost-enforcement-and-visibility.md) — LLM cost
+  enforcement and visibility. `max_cost_usd` was enforced only in the
+  API runner's `on_node` callback, so `make run` and `make eval` — the
+  two paths about to spend real money — had no dollar ceiling at all,
+  and even on the API path a single node could overshoot by its whole
+  fan-out. The check moves to `src.llm.call_llm`, the one function
+  every entry point funnels through, with `CostBudgetExceeded` and the
+  cap helper relocated to `observability.costs` so the LLM layer never
+  imports the API layer; the between-nodes check stays as the coarser
+  stop. Hitting the ceiling now keeps the draft the run already paid
+  for instead of returning a bill with nothing attached. Alongside
+  that: SDK retries become countable and loggable via
+  `with_raw_response.retries_taken` (no second retry loop —
+  ADR 0009's SDK-native choice stands), the retry envelope is clamped
+  so one flaky call cannot eat a whole `api_job_timeout_sec`, unpriced
+  models warn once per id and the coverage check reads runtime values
+  instead of field defaults, and stderr goes back to being parseable
+  JSON with `faulthandler` armed. Extends ADR 0033; narrows
+  ADR 0042's `anthropic` logger demotion to spare the SDK's retry
+  line.
 - [0052](0052-native-crash-containment-and-data-lifecycle-edges.md) —
   Native-crash containment + data-lifecycle edges. The reader's
   five-way encode fan-out was killing the process with a SIGSEGV in

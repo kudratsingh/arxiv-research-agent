@@ -500,3 +500,38 @@ class TestReaderAgentEmission:
         assert "evidence" in update
         assert len(update["evidence"]) == 1
         assert update["evidence"][0]["source_text"] == "text"
+
+
+@pytest.mark.unit
+def test_budget_trip_mid_fanout_propagates_instead_of_degrading(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A tripped cost ceiling must stop the reader, not degrade papers.
+
+    The per-call cap check (ADR 0051) raises before every LLM call, so
+    swallowing it into the per-paper degradation guard would convert
+    "stop spending" into "degrade every remaining paper and continue
+    to synthesis" — spending exactly the calls the ceiling forbids.
+    Mirrors the ADR 0047 JobCancelledError contract.
+    """
+    from src.agents import reader as reader_module
+    from src.observability.costs import CostBudgetExceeded
+
+    def tripped(*args: object, **kwargs: object) -> None:
+        raise CostBudgetExceeded(spent_usd=1.01, cap_usd=1.0)
+
+    monkeypatch.setattr(reader_module, "_analyze_paper", tripped)
+
+    papers = [
+        {"id": "p1", "title": "T1", "abstract": "a", "pdf_url": ""},
+        {"id": "p2", "title": "T2", "abstract": "b", "pdf_url": ""},
+    ]
+    state = {
+        "query": "q",
+        "sub_questions": ["s"],
+        "papers": papers,
+        "paper_analyses": [],
+        "messages": [],
+    }
+    with pytest.raises(CostBudgetExceeded):
+        reader_module.reader_agent(state)
