@@ -115,7 +115,7 @@ class JobStore(Protocol):
     `RedisJobStore` (`src.api.redis_store`, ADR 0027) persists job
     state across process restarts and supports horizontal scaling of
     API workers; it also layers duck-typed extras beyond this Protocol
-    — cross-worker event pub/sub, HITL resume, and worker leases
+    — cross-worker HITL resume, event pub/sub, and worker leases
     (ADRs 0034/0035/0038).
     """
 
