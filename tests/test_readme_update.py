@@ -25,10 +25,13 @@ def _record(**overrides: object) -> dict[str, object]:
         "completeness": 0.8,
         "faithfulness": 0.9,
         "retrieval_recall": 0.75,
+        "total_citations": 3,
         "critic_score": 0.85,
         "iterations": 1,
         "cost_usd": 0.05,
         "llm_calls": 8,
+        "judge_cost_usd": 0.01,
+        "judge_llm_calls": 3,
         "loop_iterations": None,
         "stop_reason": None,
     }
@@ -101,6 +104,77 @@ class TestRenderBlock:
     def test_empty_records_list_produces_zero_row(self) -> None:
         block = render_block([])
         assert "| 0 / 0 " in block
+
+
+class TestCitationAccuracyDenominator:
+    """Rows whose report cited nothing are excluded from that one mean.
+
+    ADR 0050. `measure_citation_accuracy` short-circuits a report with
+    zero `[Author, Year]` tags to 1.0 — "the metric doesn't apply" —
+    and averaging those into the published figure inflates it exactly
+    when the agent cited least. Every test here is a mutation check:
+    each one passes only with `_rows_with_citations` in the path.
+    """
+
+    def test_zero_citation_row_excluded_from_the_mean(self) -> None:
+        block = render_block(
+            [
+                _record(citation_accuracy=0.5, total_citations=4),
+                _record(citation_accuracy=1.0, total_citations=0),
+            ]
+        )
+        # First metric column is citation accuracy. With the free 1.0
+        # folded in it would read 0.750.
+        assert "| 2 / 2 | 0.500 " in block
+
+    def test_other_metrics_keep_the_full_denominator(self) -> None:
+        block = render_block(
+            [
+                _record(
+                    citation_accuracy=0.5, faithfulness=1.0, total_citations=4
+                ),
+                _record(
+                    citation_accuracy=1.0, faithfulness=0.0, total_citations=0
+                ),
+            ]
+        )
+        # faithfulness still averages over both rows: (1.0 + 0.0) / 2.
+        assert "| 0.500 | 0.500 " in block
+
+    def test_exclusion_is_stated_under_the_table(self) -> None:
+        block = render_block(
+            [
+                _record(citation_accuracy=0.5, total_citations=4),
+                _record(citation_accuracy=1.0, total_citations=0),
+            ]
+        )
+        assert "Citation accuracy is averaged over the 1 of 2 scored runs" in block
+        assert "1 produced none" in block
+
+    def test_no_note_when_every_row_cited_something(self) -> None:
+        block = render_block([_record(total_citations=3)])
+        assert "Citation accuracy is averaged over" not in block
+
+    def test_all_rows_uncited_shows_a_dash_not_a_perfect_score(self) -> None:
+        block = render_block(
+            [
+                _record(citation_accuracy=1.0, total_citations=0),
+                _record(citation_accuracy=1.0, total_citations=0),
+            ]
+        )
+        # Publishing 1.000 here would be the exact lie ADR 0050 closes.
+        assert "| 1.000 " not in block
+        assert "| 2 / 2 | - " in block
+
+    def test_pre_adr_rows_without_the_count_are_kept(self) -> None:
+        # Summaries written before ADR 0050 carry no `total_citations`
+        # field; dropping them would empty the mean retroactively.
+        rows = [_record(citation_accuracy=1.0)]
+        for row in rows:
+            row.pop("total_citations", None)
+        block = render_block(rows)
+        assert "| 1.000 " in block
+        assert "Citation accuracy is averaged over" not in block
 
 
 class TestPatchReadme:

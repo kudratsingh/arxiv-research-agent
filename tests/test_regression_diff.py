@@ -149,6 +149,83 @@ class TestDiffSummariesClassification:
         assert report["diffs"][0]["status"] == "unchanged"
 
 
+class TestTruncatedBatch:
+    """A query that vanished from the current run is a regression.
+
+    ADR 0050. The whole class is a mutation check: before it,
+    `has_regressions` only looked at `regressed` / `errored`, so a
+    batch that died at query 15 of 20 shipped green — and the
+    aggregate row above it re-averaged over the fifteen survivors, so
+    nothing in the report said the denominator had moved.
+    """
+
+    def _full(self) -> dict[str, dict[str, Any]]:
+        return {
+            "q1": _line("q1", citation_accuracy=0.8),
+            "q2": _line("q2", citation_accuracy=0.8),
+            "q3": _line("q3", citation_accuracy=0.8),
+        }
+
+    def test_missing_query_classified_as_removed(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"], "q2": baseline["q2"]}
+        report = diff_summaries(baseline, current)
+        statuses = {d["query_id"]: d["status"] for d in report["diffs"]}
+        assert statuses["q3"] == "removed"
+
+    def test_missing_query_fails_the_gate(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"], "q2": baseline["q2"]}
+        report = diff_summaries(baseline, current)
+        assert report["has_regressions"] is True
+
+    def test_truncated_batch_with_otherwise_perfect_scores_still_fails(
+        self,
+    ) -> None:
+        baseline = self._full()
+        current = {"q1": _line("q1", citation_accuracy=1.0)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "improved"
+        assert report["has_regressions"] is True
+
+    def test_allow_removed_opts_a_subset_run_out(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"]}
+        report = diff_summaries(baseline, current, allow_removed=True)
+        assert report["has_regressions"] is False
+        assert report["allow_removed"] is True
+
+    def test_allow_removed_does_not_excuse_a_real_regression(self) -> None:
+        baseline = self._full()
+        current = {"q1": _line("q1", citation_accuracy=0.2)}
+        report = diff_summaries(baseline, current, allow_removed=True)
+        assert report["has_regressions"] is True
+
+    def test_new_query_is_not_a_regression(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=0.8)}
+        current = {
+            "q1": baseline["q1"],
+            "q2": _line("q2", citation_accuracy=0.8),
+        }
+        report = diff_summaries(baseline, current)
+        assert report["has_regressions"] is False
+
+    def test_report_states_the_shrunken_denominator(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"], "q2": baseline["q2"]}
+        md = format_report(diff_summaries(baseline, current))
+        assert "2 compared, 1 missing from the current run, 0 new" in md
+        assert "over the 2 of 3 baseline queries present in both runs" in md
+
+    def test_report_marks_removals_as_ungated_under_allow_removed(self) -> None:
+        baseline = self._full()
+        current = {"q1": baseline["q1"], "q2": baseline["q2"]}
+        md = format_report(
+            diff_summaries(baseline, current, allow_removed=True)
+        )
+        assert "1 (not gated: --allow-removed)" in md
+
+
 class TestResourceBands:
     """Every classification branch of the ADR 0044 two-leg band model.
 
@@ -345,9 +422,10 @@ class TestAggregate:
 
 class TestFormatReport:
     def _minimal_report(
-        self, has_regressions: bool = False
+        self, has_regressions: bool = False, *, allow_removed: bool = False
     ) -> RegressionReport:
         return RegressionReport(
+            allow_removed=allow_removed,
             diffs=[
                 QueryDiff(
                     query_id="q1",
@@ -449,6 +527,34 @@ class TestCLI:
         self._write(baseline, [_line("q1", citation_accuracy=0.9)])
         self._write(current, [_line("q1", citation_accuracy=0.5)])
         assert main([str(baseline), str(current), "--threshold", "0.1"]) == 1
+
+    def test_truncated_current_run_exits_1(self, tmp_path: Path) -> None:
+        # The nightly's real failure mode: the batch died partway, so
+        # summary.jsonl is short. Exit 1 is what turns that red.
+        baseline = tmp_path / "baseline.jsonl"
+        current = tmp_path / "current.jsonl"
+        self._write(
+            baseline,
+            [
+                _line("q1", citation_accuracy=0.9),
+                _line("q2", citation_accuracy=0.9),
+            ],
+        )
+        self._write(current, [_line("q1", citation_accuracy=0.9)])
+        assert main([str(baseline), str(current)]) == 1
+
+    def test_allow_removed_flag_exits_0(self, tmp_path: Path) -> None:
+        baseline = tmp_path / "baseline.jsonl"
+        current = tmp_path / "current.jsonl"
+        self._write(
+            baseline,
+            [
+                _line("q1", citation_accuracy=0.9),
+                _line("q2", citation_accuracy=0.9),
+            ],
+        )
+        self._write(current, [_line("q1", citation_accuracy=0.9)])
+        assert main([str(baseline), str(current), "--allow-removed"]) == 0
 
     def test_output_file_written(self, tmp_path: Path) -> None:
         baseline = tmp_path / "baseline.jsonl"

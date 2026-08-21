@@ -50,6 +50,24 @@ METRIC_FIELDS: tuple[str, ...] = (
 COST_FIELD = "cost_usd"
 LATENCY_FIELD = "elapsed_sec"
 
+# `citation_accuracy` is a ratio over the report's `[Author, Year]`
+# tags: a report with none scores a free 1.0, which the metric's own
+# docstring calls "the metric doesn't apply ... callers who want to
+# penalize uncited reports can check `total_citations`". Averaging
+# those 1.0s into the published README figure inflates it precisely
+# when the system did the *least* citing, so rows reporting zero
+# citations are excluded from that one mean and the exclusion is
+# stated under the table (ADR 0050). Rows from summaries older than
+# ADR 0050 carry no `total_citations` field at all; those stay in the
+# mean rather than silently vanishing from it.
+CITATION_FIELD = "citation_accuracy"
+CITATION_COUNT_FIELD = "total_citations"
+
+# Cost/latency are the *workflow's*, not the judges' — the runner
+# splits them as of ADR 0050. `judge_cost_usd` is deliberately not
+# published here: the README row answers "what does one research run
+# cost", and the eval harness is not part of the product.
+
 
 def render_block(
     records: list[dict[str, Any]], *, run_id: str | None = None
@@ -82,9 +100,12 @@ def render_block(
             ]
         )
 
+    cited_rows = _rows_with_citations(ok_rows)
     metrics = {f: _mean_or_none(ok_rows, f) for f in METRIC_FIELDS}
+    metrics[CITATION_FIELD] = _mean_or_none(cited_rows, CITATION_FIELD)
     cost = _mean_or_none(ok_rows, COST_FIELD)
     latency = _mean_or_none(ok_rows, LATENCY_FIELD)
+    uncited = successful_queries - len(cited_rows)
 
     row = (
         f"| {successful_queries} / {total_queries} "
@@ -104,6 +125,15 @@ def render_block(
         sep,
         row,
     ]
+    if uncited:
+        lines += [
+            "",
+            f"_Citation accuracy is averaged over the {len(cited_rows)} of "
+            f"{successful_queries} scored runs whose report contained at "
+            f"least one citation; {uncited} produced none, where the metric "
+            f"does not apply. Cost and latency are the workflow's, "
+            f"excluding eval-judge calls._",
+        ]
     return "\n".join(lines)
 
 
@@ -135,6 +165,17 @@ def patch_readme(readme_path: Path, block: str) -> bool:
 def _mean_or_none(rows: list[dict[str, Any]], field: str) -> float | None:
     values = [r[field] for r in rows if r.get(field) is not None]
     return statistics.fmean(values) if values else None
+
+
+def _rows_with_citations(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rows where `citation_accuracy` is a meaningful measurement.
+
+    A run whose report carried no `[Author, Year]` tags scores 1.0 by
+    short-circuit, not by being accurate. `total_citations == 0` is the
+    metric's own escape hatch for that; `None` (a pre-ADR-0050 summary
+    that never recorded the count) is treated as unknown and kept.
+    """
+    return [r for r in rows if r.get(CITATION_COUNT_FIELD) != 0]
 
 
 def _fmt_score(v: float | None) -> str:

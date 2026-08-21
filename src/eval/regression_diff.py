@@ -21,10 +21,23 @@ ADR 0010's single global threshold):
 Both classes stay direction-aware: cost going down is an improvement,
 a score going up is an improvement.
 
+A query that the baseline has and the current run does not is also a
+regression (ADR 0050): the usual cause is a truncated batch, and the
+aggregate below it re-averages over the survivors, so "no regressions"
+on a shrunken denominator is the most dangerous kind of green.
+`--allow-removed` opts a deliberate subset run out.
+
+Since ADR 0050 the runner reports `cost_usd` / `llm_calls` /
+`elapsed_sec` as *workflow* figures with the eval judges' own spend
+split into separate fields, so the resource bands below now gate the
+product rather than the harness. Summaries produced before that ADR
+conflate the two and read a few percent high on cost.
+
 Usage:
     python -m src.eval.regression_diff baseline.jsonl current.jsonl
     python -m src.eval.regression_diff baseline.jsonl current.jsonl --threshold 0.05
     python -m src.eval.regression_diff baseline.jsonl current.jsonl --output diff.md
+    python -m src.eval.regression_diff baseline.jsonl subset.jsonl --allow-removed
 
 Exit codes:
     0 — no regressions above threshold
@@ -119,6 +132,7 @@ class RegressionReport(TypedDict):
     diffs: list[QueryDiff]
     has_regressions: bool
     threshold: float
+    allow_removed: bool
     aggregate_baseline: dict[str, float | None]
     aggregate_current: dict[str, float | None]
     aggregate_deltas: dict[str, float | None]
@@ -270,6 +284,8 @@ def diff_summaries(
     baseline: dict[str, dict[str, Any]],
     current: dict[str, dict[str, Any]],
     threshold: float = DEFAULT_THRESHOLD,
+    *,
+    allow_removed: bool = False,
 ) -> RegressionReport:
     """Compute per-query diffs and aggregate rollups.
 
@@ -280,6 +296,13 @@ def diff_summaries(
             counts as a regression on a 0-1 score metric. Resource
             metrics ignore it — they are judged by their
             `RESOURCE_THRESHOLDS` bands.
+        allow_removed: Treat a query present in `baseline` but missing
+            from `current` as expected rather than as a regression. Set
+            it for a deliberate subset run (`--queries a,b` diffed
+            against a full baseline); leave it off for the nightly,
+            where a vanished query means a truncated batch and the
+            aggregate silently re-averages over a smaller denominator
+            (ADR 0050).
 
     Returns:
         `RegressionReport` with per-query status, per-metric deltas, and
@@ -322,10 +345,19 @@ def diff_summaries(
             None if base_val is None or cur_val is None else cur_val - base_val
         )
 
+    # A query that stopped producing data is a regression in signal:
+    # the batch was truncated (kill, budget stop, interrupted run) and
+    # the aggregate below quietly re-averages over whatever survived.
+    # Green on a shrunken denominator is the failure ADR 0050 closes.
+    gating_statuses = ("regressed", "errored") + (
+        () if allow_removed else ("removed",)
+    )
+
     return RegressionReport(
         diffs=diffs,
-        has_regressions=any(d["status"] in ("regressed", "errored") for d in diffs),
+        has_regressions=any(d["status"] in gating_statuses for d in diffs),
         threshold=threshold,
+        allow_removed=allow_removed,
         aggregate_baseline=aggregate_baseline,
         aggregate_current=aggregate_current,
         aggregate_deltas=aggregate_deltas,
@@ -379,14 +411,29 @@ def format_report(report: RegressionReport) -> str:
         f"`{field}` > +{floor:g} and > +{relative:.0%}"
         for field, (floor, relative) in RESOURCE_THRESHOLDS.items()
     )
+    removed = sum(1 for d in report["diffs"] if d["status"] == "removed")
+    new = sum(1 for d in report["diffs"] if d["status"] == "new")
+    shared = len(report["diffs"]) - removed - new
+    baseline_total = shared + removed
+    removed_note = (
+        f"{removed} (not gated: --allow-removed)"
+        if report["allow_removed"]
+        else str(removed)
+    )
     lines = [
         "# Eval regression diff",
         "",
         f"- **Score threshold**: `{threshold:.2f}` (a 0-1 score drop larger than this is a regression)",
         f"- **Resource bands** (both legs must be exceeded): {resource_lines}",
+        f"- **Queries**: {shared} compared, {removed_note} missing from the "
+        f"current run, {new} new",
         f"- **Regressions detected**: {'yes' if report['has_regressions'] else 'no'}",
         "",
-        "## Aggregate (over queries present in both runs)",
+        # State the denominator: `_aggregate_over_shared` averages over
+        # the intersection, so a truncated current run makes these means
+        # describe a smaller set than the baseline they sit beside.
+        f"## Aggregate (over the {shared} of {baseline_total} baseline "
+        "queries present in both runs)",
         "",
         "| Metric | Baseline | Current | Delta |",
         "|---|---:|---:|---:|",
@@ -467,6 +514,16 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         default=None,
         help="Also write the markdown report to this path",
     )
+    parser.add_argument(
+        "--allow-removed",
+        action="store_true",
+        help=(
+            "Don't fail when a baseline query is missing from the "
+            "current run. For deliberate subset runs only — by default "
+            "a vanished query is a regression, because a truncated "
+            "batch otherwise passes green on a shrunken denominator."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -491,7 +548,12 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
 
-    report = diff_summaries(baseline, current, threshold=args.threshold)
+    report = diff_summaries(
+        baseline,
+        current,
+        threshold=args.threshold,
+        allow_removed=args.allow_removed,
+    )
     markdown = format_report(report)
     print(markdown)
 
