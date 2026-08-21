@@ -45,7 +45,7 @@ Documentation requirements:
 |---|---|
 | [`docs/architecture.md`](docs/architecture.md) | The two workflow shapes, the API layer, the storage matrix |
 | [`docs/agents/`](docs/agents/) | One page per agent: inputs, outputs, prompts, failure modes |
-| [`docs/decisions/`](docs/decisions/README.md) | ADRs 0001-0037 — every non-trivial decision, indexed |
+| [`docs/decisions/`](docs/decisions/README.md) | ADRs 0001-0053 — every non-trivial decision, indexed |
 | [`docs/testing.md`](docs/testing.md) | Flat test layout, markers, what CI runs, the unbuilt e2e tier |
 | [`docs/development.md`](docs/development.md) | Setup, Makefile targets, troubleshooting |
 | [`docs/security.md`](docs/security.md) | Threat model, prompt-injection defenses |
@@ -60,12 +60,13 @@ does not merge. Full strategy in [`docs/testing.md`](docs/testing.md).
 Summary:
 
 - **Layout**: all tests live flat in `tests/test_*.py` — one test
-  module per source module. ~800 tests on `main`.
+  module per source module. ~1,400 tests on `main`.
 - **Tiers via markers**, not directories: `unit` and `integration`
   markers are registered in `pyproject.toml`; the `e2e` marker is
   reserved for a cassette-based tier that is **planned, not built**.
-  Most tests carry no marker, so marker-filtered runs
-  (`pytest -m unit`) select only a small explicitly-marked subset.
+  Many tests carry no marker, so marker-filtered runs
+  (`pytest -m unit`) select only the explicitly-marked subset —
+  never the whole suite.
 - **The merge gate is the whole suite**: CI runs
   `pytest -m "not e2e"` (everything, today) plus ruff, strict mypy on
   `src/`, a Docker build, and the `web/` typecheck/lint/test/build.
@@ -97,7 +98,7 @@ Summary:
 - **Config**: `pydantic-settings` typed settings surface (`src/config.py`,
   ADR 0011) loading from env vars + `.env`
 - **Observability**: structured JSON logging, per-run cost tracking,
-  opt-in OpenTelemetry tracing
+  opt-in OpenTelemetry tracing + metrics (ADRs 0012/0013/0049)
 - **Deploy**: Dockerfile + docker-compose (API + web + Redis + Postgres)
 
 ## Directory Structure
@@ -117,7 +118,7 @@ arxiv-research-agent/
 │   ├── api/                    # FastAPI surface: app factory, routes,
 │   │   │                       # jobs, runner, streaming, auth,
 │   │   │                       # conversations, retriever, redis_store,
-│   │   │                       # schemas, serve
+│   │   │                       # redriver, admin_migrate, schemas, serve
 │   │   └── exporters/          # md / pdf / docx report renderers
 │   ├── graph/
 │   │   ├── state.py            # ResearchState TypedDict + typed sub-schemas
@@ -128,12 +129,14 @@ arxiv-research-agent/
 │   │                           # semantic_scholar
 │   ├── eval/                   # benchmark_queries, metrics, runner,
 │   │                           # regression_diff, readme_update
-│   ├── observability/          # JSON logging, cost tracking, OTel tracing
+│   ├── observability/          # JSON logging, cost tracking, OTel
+│   │                           # tracing + metrics
 │   ├── security/               # prompt_isolation (ADR 0020 / 0033)
+│   ├── cancellation.py         # Cooperative cancel tokens (ADR 0047)
 │   ├── config.py               # pydantic-settings typed config surface
 │   ├── llm.py                  # Shared Anthropic client + JSON helper
 │   └── main.py                 # CLI entry point
-├── tests/                      # Flat test_*.py modules (~800 tests)
+├── tests/                      # Flat test_*.py modules (~1,400 tests)
 ├── web/                        # Next.js UI (app/, components/, lib/, tests/)
 ├── docs/                       # Deep docs — see the Docs Map above
 ├── planning/                   # Roadmap + sprint plans
@@ -247,9 +250,10 @@ make eval                 # batch-run the benchmark
 ```
 
 > Note: `make test` currently runs only the explicitly-marked `unit`
-> subset (~55 tests), **not** the CI gate — see the "known trap" in
-> [`docs/testing.md`](docs/testing.md). Use `make test-all` (or
-> `pytest tests/ -q -m "not e2e"`) before opening a PR.
+> subset (roughly a third of the suite), **not** the CI gate — see
+> the "known trap" in [`docs/testing.md`](docs/testing.md). Use
+> `make test-all` (or `pytest tests/ -q -m "not e2e"`) before
+> opening a PR.
 
 Serving the API locally: `python -m src.api.serve` (or
 `docker compose up` for the full stack). Full setup, targets, and
@@ -258,9 +262,10 @@ troubleshooting in [`docs/development.md`](docs/development.md).
 ## Current Status
 
 Sprints 1-5 are complete, followed by a post-Sprint-5 production
-hardening chain. 37 ADRs (0001-0037), ~800 tests, per-PR CI (lint +
-strict mypy + full test suite + Docker + web), nightly LLM-judged eval
-CI. The dated, per-merge log — and the authoritative list of what's
+hardening campaign through the audit-remediation and pre-flight
+waves. 53 ADRs (0001-0053), ~1,400 tests, per-PR CI (lint + strict
+mypy + full test suite + Docker + web), nightly LLM-judged eval CI.
+The dated, per-merge log — and the authoritative list of what's
 next — lives in [`planning/03-roadmap.md`](planning/03-roadmap.md).
 
 - **Sprint 1 — observable + testable**: eval pipeline (20-query
@@ -281,14 +286,32 @@ next — lives in [`planning/03-roadmap.md`](planning/03-roadmap.md).
 - **Sprint 5 — product surface**: Next.js web UI, HITL plan review,
   multi-format export (md/pdf/docx), conversation mode with
   prior-context retrieval. ADRs 0029-0032.
-- **Post-Sprint-5 hardening**: safety bundle (auth, rate limiting,
-  cost-cap enforcement, PDF byte cap, prior-context isolation — ADR
-  0033), Postgres checkpointer + cross-worker HITL (ADR 0034),
-  cross-worker SSE via Redis pub/sub (ADR 0035), per-principal store
-  scoping (ADR 0036), Redis rate limiter + hot-reloadable keystore
-  (ADR 0037).
+- **Post-Sprint-5 hardening — scale-out wave**: safety bundle (auth,
+  rate limiting, cost-cap enforcement, PDF byte cap, prior-context
+  isolation — ADR 0033), Postgres checkpointer + cross-worker HITL
+  (ADR 0034), cross-worker SSE via Redis pub/sub (ADR 0035),
+  per-principal store scoping (ADR 0036), Redis rate limiter +
+  hot-reloadable keystore (ADR 0037), job leases + redriver (ADR
+  0038), admin NULL-owner migration (ADR 0039), async checkpointer +
+  runner (ADR 0040).
+- **Audit-remediation wave**: retrieval + degradation honesty (ADR
+  0041), API guardrails + deploy hygiene (ADR 0042), conversation
+  store hardening (ADR 0043), eval cost accuracy + regression
+  thresholds (ADR 0044), supply-chain pinning + lockfile (ADR 0045),
+  Literal-typed config enums (ADR 0046), bounded executor +
+  cooperative cancel (ADR 0047), redriver CAS + store edges (ADR
+  0048), OTel metrics (ADR 0049).
+- **Pre-flight wave**: eval-runner hardening — judge isolation,
+  incremental persistence + `--resume`, campaign budget (ADR 0050),
+  LLM cost enforcement + visibility (ADR 0051), native-crash
+  containment + data-lifecycle edges (ADR 0052), and the
+  API/web/container pre-flight that fixed the first-operator path
+  end-to-end (ADR 0053).
 
 Open follow-ups are tracked at the tail of the roadmap log — notably
-the job redriver on restart, model-routing defaults, the e2e cassette
-tier (see [`docs/testing.md`](docs/testing.md)), and the admin cleanup
-migration for legacy NULL-owner rows.
+pinning the CPU-only torch build (the image carries ~2.9GB of unused
+CUDA wheels), splitting the lockfile into runtime/dev sets, listing
+in-flight jobs on `GET /conversations/{id}`, teaching the web UI to
+send `X-API-Key` (the shipped demo remains auth-off), a readiness
+probe distinct from `/healthz`, and the e2e cassette tier (see
+[`docs/testing.md`](docs/testing.md)).

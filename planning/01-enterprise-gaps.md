@@ -1,5 +1,14 @@
 # Enterprise-Readiness Gaps
 
+> **Status (2026-08-21)** — largely landed: observability (ADRs
+> 0012/0013/0049), retries + checkpointing (ADRs 0009/0013/0034),
+> prompt-injection defenses + auth + rate limiting (ADRs
+> 0020/0033/0036/0037), typed config (ADRs 0011/0046), the full eval
+> stack (ADRs 0005-0010/0044/0050), Docker/CI (ADRs 0024/0027) and
+> the FastAPI surface (ADR 0025+). Still open: secrets-manager
+> integration, RBAC/SSO, audit log, license tracking, DLQ. Kept as
+> written for the record.
+
 Foundation work before layering on features. These are the things enterprise buyers and reviewers always look for. The current codebase is a solid prototype; this doc lists what separates prototype from production.
 
 ## 1. Observability & Tracing

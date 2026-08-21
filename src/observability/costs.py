@@ -3,8 +3,8 @@
 Wraps every Claude call with a lightweight accumulator so main / runner
 can log a per-run cost summary and the nightly regression diff can
 catch cost creep. Uses a `ContextVar` for per-run isolation so
-concurrent workflows in a future multi-tenant server won't share
-counters.
+concurrent jobs in the API server (each binds its own accumulator in
+`src.api.runner`) don't share counters.
 
 Prices reflect Anthropic's public list price as of
 `PRICES_LAST_VERIFIED`; a follow-up will read them from `settings` so

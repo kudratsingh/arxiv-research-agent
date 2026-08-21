@@ -738,3 +738,27 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   `X-API-Key`, so the shipped demo remains auth-off (ADR 0042); and
   no readiness probe distinct from `/healthz` — explicitly out of
   scope here.
+- _2026-08-21_ — Top-level docs refresh (docs-only, no behavior
+  change). What was stale: the README's project-status section ended
+  at Sprint 5 and claimed "1,200+ tests" and a nightly e2e tier that
+  does not exist; `CLAUDE-Agent-Proj-1.md` indexed ADRs only through
+  0037, counted ~800 tests, described `make test` as "~55 tests"
+  (the unit-marked subset is now 522/1426 collected), and listed the
+  job redriver and admin migration as open follow-ups though both
+  landed (ADRs 0038/0039); `planning/README.md`'s status snapshot
+  was still Sprint 1 (2026-07-07); `.env.example` held a single
+  variable. Now authoritative: README carries the current
+  architecture summary (both workflow shapes + the production HTTP
+  surface), a security-posture section sourced from
+  `docs/security.md`, the eval-runner hardening summary (resume /
+  budget / judge isolation) with the results table honestly marked
+  pending the first green campaign, the four-service compose
+  description, and fresh counts (53 ADRs, 63 merged PRs, 1399
+  passed / 27 skipped on the `not e2e` gate);
+  `CLAUDE-Agent-Proj-1.md` indexes through ADR 0053 with the three
+  post-Sprint-5 waves and the current follow-up list;
+  `.env.example` documents the operator-facing settings with
+  comments sourced from `src/config.py`; planning files 01/02/04/05/06
+  carry dated status notes up top with historical content untouched.
+  All numbers in this entry were derived fresh from the tree at the
+  time of writing, not copied from prior docs.

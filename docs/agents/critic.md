@@ -60,9 +60,11 @@ current draft rather than crashing.
 
 | Failure | Where | Handling |
 |---|---|---|
-| Anthropic 429 / 5xx | SDK layer | Retried by the SDK (ADR 0009); exhausted retries propagate — no fallback verdict is fabricated. |
-| Response not JSON / missing keys | `call_llm_json` / dict access | Propagates. A fabricated "approve" would ship an unreviewed report; a fabricated "revise" would burn budget. |
-| `revision_target` outside the enum | `route_after_critique` | Falls through to `END` — run finishes with the current draft. |
+| Anthropic 429 / 5xx | SDK layer | Retried by the SDK (ADR 0009); exhausted retries propagate — no fallback verdict is fabricated for a transport failure. |
+| Response not JSON / not an object | `critic_agent` (ADR 0041 parse defense) | Logged at WARNING (`critic_response_unparseable` / `critic_response_not_an_object`) and coerced to safe defaults: **approved with score 0.0**. The critic is the terminal node — a formatting hiccup here must never discard the finished report the run already paid for. The zero score keeps the degradation honest in the summary line. |
+| Wrong-typed fields (string score, non-`true` `revision_needed`) | `_safe_float` / literal-`true` check | Coerced with a WARNING; only a literal JSON `true` triggers revision. |
+| `revision_needed` with an unroutable `revision_target` | `critic_agent` | `critic_revision_target_invalid` WARNING; revision cancelled — deliver the report rather than spin a round the graph cannot route. |
+| `revision_target` outside the enum (stale checkpoint) | `route_after_critique` | Falls through to `END` — run finishes with the current draft. |
 | Score inflation / judge drift | Not handled here | The offline eval metrics (`src/eval/metrics.py`) score the same reports independently, so systematic critic drift shows up in the nightly regression diff. |
 | Injected paper text steering the verdict | Prompt path | Paper *titles* and the draft are in the prompt; reader-side isolation (ADR 0020) scrubs upstream, but the critic's own prompt is not yet tag-wrapped — same follow-up as the synthesizer/verifier (ADR 0020 non-goals). |
 
@@ -84,6 +86,9 @@ Settings that drive the critic (see `src/config.py`):
 
 - Routing: `tests/test_smoke.py` — `route_after_critique` (approve →
   END, each valid target, invalid target → END, missing fields → END).
+- Parse defense: `tests/test_parse_defense.py` — unparseable /
+  non-object / wrong-typed judge output degrades to approved-with-
+  zero-score instead of raising (ADR 0041).
 - LLM-call plumbing: `tests/test_agent_model_routing.py` (the
   `critic_model` override) and `tests/test_agent_cache_flag.py` (the
   prompt-caching flag), both with `call_llm_json` monkeypatched.

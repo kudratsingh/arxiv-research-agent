@@ -567,16 +567,20 @@ def build_workflow(
             "(see ADR 0047)."
         )
 
-    # ExitStack keeps the SqliteSaver context alive for the compiled
-    # graph's lifetime. We attach it to the compiled object so callers
-    # don't have to think about teardown.
+    # ExitStack keeps the configured saver's context (SqliteSaver or
+    # PostgresSaver) alive for the compiled graph's lifetime; it stays
+    # empty when checkpointing is disabled.
     exit_stack = ExitStack()
     checkpointer = _open_checkpointer(exit_stack)
     compiled = _compile(
         _build_graph_shape(_traced_wrapper), checkpointer, enable_hitl
     )
 
-    # Attach so a caller who cares can `close()`; ExitStack cleanup
-    # otherwise runs at interpreter shutdown.
+    # Attach so callers can release the saver via
+    # `compiled._checkpointer_exit_stack.close()` — the eval runner
+    # closes it after every query (ADR 0050) and the API lifespan on
+    # shutdown. `ExitStack` has no finalizer: an unclosed stack never
+    # runs its exits, and the connection is simply dropped at process
+    # exit.
     compiled._checkpointer_exit_stack = exit_stack
     return compiled

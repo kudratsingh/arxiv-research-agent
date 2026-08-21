@@ -188,8 +188,9 @@ class Settings(BaseSettings):
             "`enable_api_auth` is on. Example: "
             "`internal:sk_a123,partner:sk_b456`. Names appear in "
             "logs; the raw key is compared with `hmac.compare_digest` "
-            "so lookups run in constant time. Keys are read once at "
-            "app startup — rotating requires a restart."
+            "so lookups run in constant time. This field is read once "
+            "at app startup, so rotating through it requires a restart; "
+            "set `api_keys_file` for hot reload instead (ADR 0037)."
         ),
     )
     api_key_hourly_limit: int = Field(
@@ -269,9 +270,9 @@ class Settings(BaseSettings):
         le=1000,
         description=(
             "Semaphore-limited ceiling on concurrent workflow runs per "
-            "API process. Under a proper job queue (Sprint 4 PR 3+) "
-            "this becomes a per-worker cap; today it caps the whole "
-            "single-process app."
+            "API process. Each uvicorn worker holds its own semaphore, "
+            "so a multi-worker deployment admits up to n_workers times "
+            "this many jobs in flight."
         ),
     )
     api_job_timeout_sec: int = Field(
@@ -455,7 +456,7 @@ class Settings(BaseSettings):
     )
 
     # ------ Postgres (paper cache + embedding cache) ------------------
-    # Sprint 4 PR 4 wires this up. Empty URL = feature disabled: the
+    # Wired up in ADR 0028. Empty URL = feature disabled: the
     # paper cache falls back to on-disk `.cache/pdfs/` (Sprint 1
     # behavior, byte-identical), and the embedding cache is a no-op.
     postgres_url: str = Field(

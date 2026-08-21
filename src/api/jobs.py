@@ -2,9 +2,10 @@
 
 `Job` captures a single workflow invocation's lifecycle: the request,
 the terminal state, timing, cost, and error (if any). `JobStore` is
-the storage protocol so this PR's `InMemoryJobStore` can be swapped
-for a Redis/Postgres implementation in Sprint 4 PR 3+ without
-touching the routes or the runner.
+the storage protocol the routes and the runner depend on; two
+implementations exist — `InMemoryJobStore` below (single worker, the
+default) and the Redis-backed `RedisJobStore` in `src.api.redis_store`
+(ADR 0027) — selected by `settings.job_store`.
 
 Design in ADR 0025.
 """
@@ -110,9 +111,12 @@ class JobStore(Protocol):
     """Storage surface for the API. Implementations must be safe to
     call from concurrent asyncio tasks.
 
-    The Sprint 4 PR 2 implementation is `InMemoryJobStore`; PR 3+
-    swaps this for Redis so job state survives process restarts and
-    supports horizontal scaling of API workers.
+    `InMemoryJobStore` (below) is the single-worker default.
+    `RedisJobStore` (`src.api.redis_store`, ADR 0027) persists job
+    state across process restarts and supports horizontal scaling of
+    API workers; it also layers duck-typed extras beyond this Protocol
+    — cross-worker HITL resume, event pub/sub, and worker leases
+    (ADRs 0034/0035/0038).
     """
 
     async def create(self, job: Job) -> None: ...
@@ -128,9 +132,9 @@ class InMemoryJobStore:
     """Single-process job store. Jobs live in a dict, guarded by a lock.
 
     Suitable for one uvicorn worker. When the process dies, jobs die
-    with it — that's fine because the eval / research use cases here
-    are short-lived (single-digit minutes), and the Redis-backed
-    store in PR 3 gives durability + horizontal scaling.
+    with it — acceptable for local dev and eval runs (single-digit
+    minutes); deployments that need durability + horizontal scaling
+    set `job_store=redis` for `RedisJobStore` (ADR 0027).
     """
 
     def __init__(self) -> None:

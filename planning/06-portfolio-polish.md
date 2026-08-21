@@ -1,5 +1,12 @@
 # Portfolio polish — what turns the repo into a resume artifact
 
+> **Status (2026-08-21)** — landed: README architecture diagrams
+> (mermaid, both shapes), the demo page (`docs/demo.md`),
+> Dockerfile + compose, the FastAPI endpoint (ADR 0025+), per-PR CI
+> (ADR 0024), and the "Production considerations" README section.
+> Outstanding: the eval-results table is still awaiting its first
+> green campaign against `main` (the nightly workflow fills it in).
+
 These are the "presentation" items that separate a well-engineered
 codebase from a well-engineered codebase **that a reviewer can grok
 in 90 seconds**. Distinct from

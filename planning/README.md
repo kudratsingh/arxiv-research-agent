@@ -18,14 +18,32 @@ Living log of enterprise-readiness plans, feature ideas, and roadmap for the arx
 - **Update the roadmap** as sprints complete — mark items done inline; don't delete (this is a log).
 - **Record decisions** — if an idea gets rejected, keep it with a short note on *why*. Future-you will want that.
 
-## Current status snapshot (2026-07-07)
+## Current status snapshot (2026-08-21)
 
-- **Sprint 1 done.** 20 merged PRs, 12 ADRs, 262 tests. What landed:
-  - Full-text reader pipeline (PDF parser + chunker + FAISS chunk-ranker + reader with abstract fallback).
-  - Anthropic migration (Sonnet 4.6 default) + SDK-native retry + `urllib3.Retry` on arXiv/PDF.
-  - Typed frozen config via `pydantic-settings`.
-  - Structured JSON logging with `run_id` propagation + per-run cost tracking + OTel tracing (opt-in).
-  - LangGraph `SqliteSaver` checkpointing on by default.
-  - Eval harness: 20-query benchmark, four metrics (citation accuracy, completeness, faithfulness, retrieval recall), sequential runner with error isolation, regression differ, nightly CI that fails on regression.
-- **Baseline architecture is still agentic-lite** — five agents in a fixed DAG with one conditional edge on the critic. That's the honest label; the loop upgrade is next.
-- **Next up (recommended)**: [05-agentic-upgrade-plan.md](05-agentic-upgrade-plan.md) — Sprint 2 turns the DAG into a supervisor loop. Freeze a baseline eval first (3 repeats), then land supervisor + verifier + evidence store behind flags, then measure.
+- **Sprints 1-5 done, plus a post-Sprint-5 hardening campaign
+  through ADR 0053.** 63 merged PRs, 53 ADRs, ~1,400 tests
+  (`pytest -m "not e2e"`: 1399 passed / 27 skipped). What exists on
+  `main`:
+  - Both workflow shapes: fixed five-agent DAG (default) and the
+    flag-gated supervisor loop with verifier, evidence store, query
+    refiner, and reader recovery (Sprint 2).
+  - Cost controls: per-agent model routing, prompt caching, per-run
+    and per-call spend caps (ADRs 0021/0022/0033/0051).
+  - Production HTTP surface: FastAPI async jobs, SSE streaming, HITL
+    plan review, conversations, multi-format export, API-key auth +
+    rate limiting + per-principal scoping, Next.js web UI.
+  - Scale-out substrate: Redis job store + pub/sub + rate limiter,
+    Postgres checkpoints/conversations/caches, worker leases + job
+    redriver, bounded executor + cooperative cancel.
+  - Observability: JSON logs, per-run costs, OTel tracing + metrics.
+  - Eval harness: 20-query benchmark, four metrics (three
+    LLM-judged, citation accuracy pure-regex),
+    crash-safe runner with `--resume` + `--max-budget-usd`, nightly
+    regression CI. First green campaign against `main` still pending.
+- **Plans in this folder are historical.** 01/04/05/06 drove Sprints
+  1-5 and are essentially landed; each file carries a status note up
+  top. The live log and follow-up list is the tail of
+  [03-roadmap.md](03-roadmap.md).
+- **Next up**: the roadmap's open follow-ups — CPU-only torch pin
+  (image size), lockfile runtime/dev split, web-UI auth header, e2e
+  cassette tier — and the Sprint 6+ enterprise items, unscheduled.

@@ -1,5 +1,11 @@
 # Feature Ideas
 
+> **Status (2026-08-21)** — still a live catalog. Landed so far:
+> Semantic Scholar citation-graph enrichment (ADR 0023),
+> conversation mode / follow-ups (ADR 0032), multi-format export
+> (ADR 0031), web UI (ADR 0029). The rest remains unscheduled —
+> see the Sprint 6+ section of [03-roadmap.md](03-roadmap.md).
+
 Idea catalog grouped by category. Not prioritized here — see [03-roadmap.md](03-roadmap.md) for sequencing.
 
 ## Research Quality (raise the ceiling of what the agent can produce)
