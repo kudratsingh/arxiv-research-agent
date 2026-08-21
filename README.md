@@ -15,8 +15,9 @@ The workflow ships behind a production HTTP surface: FastAPI async
 jobs with SSE streaming and human-in-the-loop plan review, pluggable
 Redis/Postgres backends for every stateful concern (jobs,
 checkpoints, conversations, caches, rate limits), worker leases +
-a redriver for crash recovery, OTel logs/metrics/tracing, and an
-LLM-judged eval harness with resume + budget controls.
+a redriver for crash recovery, structured JSON logs + OTel
+tracing/metrics, and an LLM-judged eval harness with resume +
+budget controls.
 
 ## Architecture
 
@@ -398,7 +399,7 @@ python -m src.eval.regression_diff \
 
 The runner is hardened for real campaigns (ADR
 [0050](docs/decisions/0050-eval-runner-hardening.md)): each of the
-four judge metrics fails independently (a broken judge costs one
+four metrics is scored in its own guard (a broken judge costs one
 score, not the query), results persist incrementally after every
 query, `--resume` re-enters a partial run without re-spending, and
 `--max-budget-usd` stops the campaign at a dollar ceiling. Distinct

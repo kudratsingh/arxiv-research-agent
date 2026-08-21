@@ -36,7 +36,8 @@ Living log of enterprise-readiness plans, feature ideas, and roadmap for the arx
     Postgres checkpoints/conversations/caches, worker leases + job
     redriver, bounded executor + cooperative cancel.
   - Observability: JSON logs, per-run costs, OTel tracing + metrics.
-  - Eval harness: 20-query benchmark, four LLM-judge metrics,
+  - Eval harness: 20-query benchmark, four metrics (three
+    LLM-judged, citation accuracy pure-regex),
     crash-safe runner with `--resume` + `--max-budget-usd`, nightly
     regression CI. First green campaign against `main` still pending.
 - **Plans in this folder are historical.** 01/04/05/06 drove Sprints
