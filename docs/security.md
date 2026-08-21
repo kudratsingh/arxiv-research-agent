@@ -201,9 +201,13 @@ pieces:
   readiness; see ADR 0042 for why.
 - **Bounded drain.** `timeout_graceful_shutdown=10` in `serve.py`,
   which the compose command boots (`python -m src.api.serve`), plus
-  `stop_grace_period: 15s`, so SIGTERM actually reaches the
+  `stop_grace_period: 30s`, so SIGTERM actually reaches the
   lifespan cleanup instead of hanging on open SSE streams until
-  SIGKILL orphans in-flight jobs.
+  SIGKILL orphans in-flight jobs. The cleanup itself is bounded at
+  every step (ADR 0047): cancelled jobs wait at most
+  `runner.SHUTDOWN_DRAIN_SEC` for their node threads to unwind, and
+  the node pool's join is capped the same way, so no single wedged
+  agent can hold the container open to SIGKILL.
 - **Credential redaction.** `redact_url()` in
   `src/observability/logging.py` strips userinfo from connection
   URLs before they hit the indexed JSON log stream; wired at the

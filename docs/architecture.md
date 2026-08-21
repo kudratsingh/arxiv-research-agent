@@ -68,12 +68,24 @@ lives in [`docs/agents/`](agents/) — one page per agent.
 [0025](decisions/0025-fastapi-async-job-model.md).
 
 **Job model.** `POST /research` returns `202 Accepted` with a
-`job_id` immediately; the runner (`runner.py`) invokes the sync
-LangGraph workflow inside `asyncio.to_thread`, bounded by a
-process-wide semaphore (`api_max_concurrent_jobs`) and a hard
+`job_id` immediately; the runner (`runner.py`) drives the compiled
+graph through `astream` (ADR
+[0040](decisions/0040-async-checkpointer-and-runner.md)), bounded by
+a process-wide semaphore (`api_max_concurrent_jobs`) and a hard
 timeout (`api_job_timeout_sec`). Job lifecycle:
 `pending → running → (pending_review →) succeeded / failed /
 cancelled`. `GET /research/{job_id}` polls status + result.
+
+**Node execution + cancellation.** Agents are synchronous, so the
+async path runs each node on a lifespan-owned `ThreadPoolExecutor`
+sized to `api_max_concurrent_jobs` — the semaphore then bounds
+threads rather than coroutines. A timeout can only cancel the
+awaiting coroutine, so the runner also sets a per-job cancel token
+(checked before every LLM call and between the reader's papers) and
+holds the job's permit until the node thread actually returns,
+bounded by `api_job_drain_timeout_sec`. Threads it gives up on stay
+counted in `/healthz`'s `active_jobs`. ADR
+[0047](decisions/0047-bounded-executor-and-cooperative-cancel.md).
 
 **SSE streaming.** `GET /research/{job_id}/stream` streams events as
 the runner emits them: `node_completed`, `plan_ready`,

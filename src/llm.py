@@ -12,6 +12,7 @@ from typing import Any, cast
 
 import anthropic
 
+from src.cancellation import check_cancelled
 from src.config import settings
 from src.observability import record_llm_call
 
@@ -90,7 +91,17 @@ def call_llm(
 
     Returns:
         The model's text response, with any markdown code fences stripped.
+
+    Raises:
+        JobCancelledError: When the calling job's cancel token is
+            already set. This is the checkpoint that actually stops the
+            spend on a timed-out job (ADR 0047) — a node thread cannot
+            be killed, so the abort has to happen between calls, and
+            this is the only place every agent's calls funnel through.
     """
+    # Before `_get_client`, not after: a cancelled job must not even
+    # construct the client on a cold process.
+    check_cancelled()
     client = _get_client()
     resolved_model = model_name or settings.anthropic_model
 

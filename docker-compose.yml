@@ -31,8 +31,14 @@ services:
     # this, every `docker compose down` turned healthy in-flight
     # jobs into `orphaned` failures. Host/port come from the
     # API_HOST/API_PORT env below.
+    #
+    # ADR 0047 lengthened that cleanup: cancelling in-flight jobs now
+    # waits for their graph-node *threads* to unwind (bounded by
+    # `runner.SHUTDOWN_DRAIN_SEC`), then joins the node pool under the
+    # same ceiling. Worst case is uvicorn's 10s + ~5s + ~5s, so the
+    # grace period moved from 15s to 30s to stay above the chain.
     command: ["python", "-m", "src.api.serve"]
-    stop_grace_period: 15s
+    stop_grace_period: 30s
     ports:
       - "${APP_PORT:-8000}:8000"
     environment:

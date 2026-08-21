@@ -38,7 +38,9 @@ WARNING — it never fails the node, because the fan-out has already
 paid for every other paper's calls. The node raises
 `AllPaperAnalysesFailedError` only when *every* paper failed, which
 means the LLM itself is down and there is nothing honest to
-synthesize from.
+synthesize from. `JobCancelledError` is the deliberate exception to
+that containment: it aborts the fan-out instead of degrading papers,
+because it means the job it belongs to is already over (ADR 0047).
 """
 
 from __future__ import annotations
@@ -48,6 +50,7 @@ from typing import Any, TypedDict
 
 from langchain_core.messages import AIMessage
 
+from src.cancellation import JobCancelledError, check_cancelled
 from src.config import settings
 from src.graph.state import (
     EvidenceClaim,
@@ -670,9 +673,24 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
         degrades to a placeholder with a WARNING; the trailing bool
         reports whether the analysis succeeded so the aggregate can
         fail the node when *nothing* succeeded.
+
+        Cancellation is the one exception to that containment. The
+        reader is the most expensive node in the graph (one LLM call
+        per paper), so it is also the one that most needs to stop when
+        its job has already been failed for timeout. The check runs
+        between papers, outside the degradation guard — swallowing
+        `JobCancelledError` into a placeholder would turn "abort" into
+        "analyse every remaining paper anyway" (ADR 0047).
         """
+        check_cancelled()
         try:
             return (*_analyze_paper(p, query, subquestions, preferred), True)
+        except JobCancelledError:
+            # Raised from `src.llm.call_llm` mid-paper. Propagate: the
+            # fan-out is over, and a degraded placeholder here would
+            # report a paper as "analysed but unusable" when it was
+            # simply never attempted.
+            raise
         except Exception as exc:
             log.warning(
                 "reader_paper_analysis_failed",

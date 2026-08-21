@@ -191,15 +191,20 @@ def get_logger(name: str) -> logging.Logger:
 
 
 def propagate_run_context(fn: Any) -> Any:
-    """Wrap `fn` so it inherits the caller's run_id + cost accumulator.
+    """Wrap `fn` so it inherits the caller's run context.
+
+    Three ContextVars ride along: `run_id`, the cost accumulator, and
+    the job's cancel token (ADR 0047 — without it, LLM calls made from
+    a fan-out worker cannot see that their job was cancelled and keep
+    spending after the runner gave up).
 
     `ThreadPoolExecutor` does not propagate `contextvars` state to
     worker threads, and `Context.run()` can only be entered once per
     context object — so `copy_context()` alone isn't safe for reuse
     across multiple `executor.map` calls. This helper snapshots the
-    calling thread's `run_id` and cost accumulator once (at wrap time)
-    and rebinds them per invocation in whichever worker thread runs
-    the wrapped call. Cleanup is guaranteed via try/finally.
+    calling thread's values once (at wrap time) and rebinds them per
+    invocation in whichever worker thread runs the wrapped call.
+    Cleanup is guaranteed via try/finally.
 
     Idiomatic usage inside a per-paper / per-item fan-out:
 
@@ -209,19 +214,24 @@ def propagate_run_context(fn: Any) -> Any:
                 items,
             ))
     """
-    # Local import breaks a small circular between logging and costs.
+    # Local imports: `costs` would be a circular import at module
+    # level, and `cancellation` follows the same shape for symmetry.
+    from src.cancellation import _current_cancel_token
     from src.observability import costs as _costs
 
     parent_run_id = _run_id.get()
     parent_costs = _costs._current_costs.get()
+    parent_cancel = _current_cancel_token.get()
 
     def wrapped(*args: Any, **kwargs: Any) -> Any:
         rid_token = _run_id.set(parent_run_id)
         cost_token = _costs._current_costs.set(parent_costs)
+        cancel_token = _current_cancel_token.set(parent_cancel)
         try:
             return fn(*args, **kwargs)
         finally:
             _run_id.reset(rid_token)
             _costs._current_costs.reset(cost_token)
+            _current_cancel_token.reset(cancel_token)
 
     return wrapped

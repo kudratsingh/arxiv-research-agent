@@ -19,6 +19,16 @@ ADR 0038 adds one piece of bookkeeping on top: for as long as
 it in the background. The lease expiring is how the startup redriver
 learns that the worker running a job is gone, without mistaking a
 healthy job on another worker for an orphan during a rolling restart.
+
+ADR 0047 adds the other half of the timeout story. Graph nodes are
+synchronous, so they run on a thread pool; `asyncio.wait_for` can only
+cancel the coroutine waiting on one. The runner therefore carries a
+per-job `CancelToken`, sets it on timeout / shutdown, and then holds
+the job's semaphore permit until the node thread actually returns.
+Only if that bounded drain expires does the permit go back — and the
+abandoned thread stays counted in `/healthz`'s `active_jobs` until it
+finishes, so the concurrency numbers never claim capacity the process
+does not have.
 """
 
 from __future__ import annotations
@@ -32,6 +42,7 @@ from typing import Any
 
 from src.api.jobs import Job, JobStatus, JobStore
 from src.api.redriver import WORKER_ID
+from src.cancellation import CancelToken, bind_cancel_token, reset_cancel_token
 from src.config import settings
 from src.graph.state import ResearchState
 from src.observability import (
@@ -59,6 +70,17 @@ _current_store: ContextVar[JobStore | None] = ContextVar(
 # (never an exception: `run_job` promises not to raise).
 _TERMINAL_PUBLISH_ATTEMPTS = 3
 _TERMINAL_PERSIST_ATTEMPTS = 3
+
+# Ceiling on the SHUTDOWN-path node drain, independent of the
+# (larger) `api_job_drain_timeout_sec` the timeout path gets. On
+# timeout the permit is the thing being protected, so waiting is
+# worth it; at SIGTERM the whole process is going away and the wait
+# competes with uvicorn's own graceful drain inside the container's
+# `stop_grace_period` (ADR 0042 sizes that chain). A cooperating node
+# unwinds at its next LLM call in milliseconds; one already inside an
+# Anthropic request would not make it back inside 30s either, so the
+# extra patience buys nothing here. See ADR 0047.
+SHUTDOWN_DRAIN_SEC = 5.0
 
 WorkflowFactory = Callable[[], Any]
 """Zero-arg callable that returns a compiled LangGraph app.
@@ -448,6 +470,84 @@ def _plan_shape(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+async def _drain_node_threads(
+    cancel_token: CancelToken,
+    job: Job,
+    *,
+    reason: str,
+    max_budget_sec: float | None = None,
+) -> list[str]:
+    """Wait for this job's in-flight node threads to return (ADR 0047).
+
+    Called from the timeout and shutdown handlers, *inside* the
+    semaphore block, and that placement is the whole point:
+    `asyncio.wait_for` only cancels the awaiting coroutine, so the
+    synchronous graph node — an LLM call, a PDF parse — keeps running
+    on the node pool. Releasing the permit at that moment would leave
+    `api_max_concurrent_jobs` bounding coroutines while the real
+    thread count climbs, which is the accounting lie this closes.
+
+    The caller must have set `cancel_token` first; nothing here stops a
+    thread that never checks it.
+
+    Args:
+        cancel_token: This job's token, already cancelled.
+        job: Job being drained; only used for log attribution.
+        reason: Why we are draining (`job_timeout` / `shutdown`), for
+            the log line.
+        max_budget_sec: Optional ceiling applied on top of
+            `settings.api_job_drain_timeout_sec`. The shutdown path
+            passes `SHUTDOWN_DRAIN_SEC` so a generous runtime budget
+            cannot overrun the container's SIGTERM grace period.
+
+    Returns:
+        Names of the nodes still running when the budget expired — the
+        zombies this worker gave up on, already registered in the
+        process-wide abandoned count. Empty on the happy path.
+    """
+    running = cancel_token.running_nodes()
+    if not running:
+        # Nothing was executing off-loop (the common case: the graph
+        # was between nodes, or waiting on the HITL event). Read the
+        # settings budget only past this point so a store-level stub
+        # without the field can't turn a clean timeout into a raise.
+        return []
+
+    budget = float(settings.api_job_drain_timeout_sec)
+    if max_budget_sec is not None:
+        budget = min(budget, max_budget_sec)
+    started = time.monotonic()
+    still_running = await cancel_token.drain(budget)
+    abandoned = cancel_token.abandon() if still_running else []
+    drain_sec = round(time.monotonic() - started, 3)
+
+    if not abandoned:
+        log.info(
+            "api_job_node_drain_completed",
+            extra={
+                "job_id": job.job_id,
+                "reason": reason,
+                "nodes": running,
+                "drain_sec": drain_sec,
+            },
+        )
+        return []
+
+    # The permit is about to be released with work still running. Name
+    # the zombie: this is the line on-call needs when a worker's
+    # thread count and its `active_jobs` disagree.
+    log.warning(
+        "api_job_node_drain_expired",
+        extra={
+            "job_id": job.job_id,
+            "reason": reason,
+            "nodes": abandoned,
+            "drain_budget_sec": budget,
+        },
+    )
+    return abandoned
+
+
 async def _persist_terminal(store: JobStore, job: Job) -> None:
     """Write a terminal `Job` state, absorbing store failures.
 
@@ -668,6 +768,13 @@ async def run_job(
     `async_checkpointer=True`, per ADR 0040 — and hands the same
     instance to every job. See ADR 0034.
 
+    On timeout or shutdown the runner sets the job's cancel token and
+    keeps its semaphore permit until the in-flight node thread returns,
+    bounded by `settings.api_job_drain_timeout_sec` (the shutdown path
+    clamps that further at `SHUTDOWN_DRAIN_SEC`). See ADR 0047. The job
+    reaches its terminal state and emits its terminal frame *before*
+    that wait, so a client is never held behind a zombie thread.
+
     For the whole time this worker owns the job — from entry, so the
     wait behind the semaphore is covered too — it holds a lease on
     the store (ADR 0038). That is what lets the startup redriver tell
@@ -707,6 +814,13 @@ async def run_job(
         _current_store.set(store)
 
         token = bind_run_id(job.job_id)
+        # ADR 0047: one cancel token per job, bound to this task's
+        # context so the graph's node wrapper, `src.llm.call_llm` and
+        # the reader's per-paper fan-out can all reach it without the
+        # runner threading a handle through `_invoke_streaming` ->
+        # LangGraph -> agent. Same ContextVar shape as `_current_costs`.
+        cancel_token = CancelToken(job.job_id)
+        cancel_scope = bind_cancel_token(cancel_token)
         costs = start_cost_tracking()
         cap_usd = settings.max_cost_usd
 
@@ -889,6 +1003,11 @@ async def run_job(
             )
             return
         except TimeoutError:
+            # ADR 0047: `wait_for` cancelled the coroutine, not the node
+            # thread. Signal first — every LLM call and every paper in
+            # the reader's fan-out checks this token — so the spend
+            # stops while we write the outcome.
+            cancel_token.cancel("job_timeout")
             job.status = JobStatus.failed
             job.error = f"Workflow exceeded {timeout}s timeout"
             job.error_type = "timeout"
@@ -907,12 +1026,30 @@ async def run_job(
                     "elapsed_sec": job.elapsed_sec(),
                 },
             )
+            # Client is already released by the terminal frame above;
+            # the semaphore permit is not. It stays held until the node
+            # thread returns (or the drain budget expires), so the
+            # concurrency ceiling keeps meaning what it says.
+            abandoned = await _drain_node_threads(
+                cancel_token, job, reason="job_timeout"
+            )
             log.warning(
                 "api_job_timeout",
-                extra={"job_id": job.job_id, "timeout_sec": timeout, **snapshot},
+                extra={
+                    "job_id": job.job_id,
+                    "timeout_sec": timeout,
+                    "abandoned_nodes": abandoned,
+                    **snapshot,
+                },
             )
             return
         except asyncio.CancelledError:
+            # Shutdown cancelled this task. Same asymmetry as the
+            # timeout path (ADR 0047): the coroutine dies immediately,
+            # the node thread does not. Draining here is also what
+            # makes the lifespan's executor join meaningful — by the
+            # time it runs, cooperating nodes have already unwound.
+            cancel_token.cancel("shutdown")
             job.status = JobStatus.cancelled
             job.completed_at = time.time()
             snapshot = costs.as_dict()
@@ -924,7 +1061,20 @@ async def run_job(
                 "job_cancelled",
                 {"job_id": job.job_id, "elapsed_sec": job.elapsed_sec()},
             )
-            log.info("api_job_cancelled", extra={"job_id": job.job_id, **snapshot})
+            abandoned = await _drain_node_threads(
+                cancel_token,
+                job,
+                reason="shutdown",
+                max_budget_sec=SHUTDOWN_DRAIN_SEC,
+            )
+            log.info(
+                "api_job_cancelled",
+                extra={
+                    "job_id": job.job_id,
+                    "abandoned_nodes": abandoned,
+                    **snapshot,
+                },
+            )
             raise
         except Exception as exc:
             job.status = JobStatus.failed
@@ -1013,6 +1163,11 @@ async def run_job(
             # `api_job_completed` / `api_job_failed` / the terminal
             # frame — carry the run_id instead of "-" (audit P3).
             reset_run_id(token)
+            # ADR 0047: unbind the token too. `run_job` normally owns
+            # its Task's context, but programmatic callers await it
+            # inline — leaving a *cancelled* token bound there would
+            # abort the next unrelated LLM call in the same context.
+            reset_cancel_token(cancel_scope)
 
 
 async def _append_to_conversation(conversation_store: Any, job: Job) -> None:
@@ -1036,8 +1191,11 @@ async def _append_to_conversation(conversation_store: Any, job: Job) -> None:
             job.conversation_id
         )
         if conversation is not None and conversation.title == "New conversation":
-            conversation.title = title_from_query(job.query)
-            # In-memory store: mutation is enough; Postgres store: no
-            # `update_title` method today. We could add one but the
-            # "New conversation" case is rare in practice (clients
-            # typically set a title).
+            # ADR 0048 added `update_title` to the ConversationStore
+            # Protocol precisely for this call site: under the
+            # Postgres store, mutating the fetched dataclass changed
+            # nothing durable, so the auto-title silently vanished on
+            # the next read from another worker.
+            await conversation_store.update_title(
+                job.conversation_id, title_from_query(job.query)
+            )
