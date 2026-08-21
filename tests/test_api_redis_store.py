@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -19,6 +20,7 @@ import pytest
 from src.api.jobs import Job, JobStatus
 from src.api.redis_store import (
     JOB_KEY_PREFIX,
+    RESULT_PREVIEW_CHARS,
     RedisJobStore,
     _job_from_json,
     _job_to_json,
@@ -453,6 +455,164 @@ class TestTerminalTransitionGuard:
         got = await store.get("j1")
         assert got is not None
         assert got.result == "# Report v2"
+
+
+class TestRefusalRecordIsRecoverable:
+    """A refused terminal write is the only record of what it discarded.
+
+    ADR 0052. The guard above is correct — the late loser must not
+    overwrite the stored terminal status — but the report it drops was
+    fully paid for, and the pre-0052 WARNING said only that a write
+    was refused. The log record now carries enough to recognise and
+    re-run the work: both statuses, the result length, and the opening
+    `RESULT_PREVIEW_CHARS`.
+
+    Mutation-checked: reverting `_terminal_write_refused` to the
+    three-field `extra` fails every test here.
+    """
+
+    async def test_refused_succeeded_write_logs_the_report_head(
+        self,
+        redis_client: fakeredis.aioredis.FakeRedis,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        store_a = RedisJobStore(redis_client, retention_sec=3600)
+        store_b = RedisJobStore(redis_client, retention_sec=3600)
+        await store_a.create(Job(job_id="j1", query="q", status=JobStatus.running))
+
+        reclaimed = await store_b.get("j1")
+        assert reclaimed is not None
+        reclaimed.status = JobStatus.failed
+        reclaimed.error_type = "orphaned"
+        reclaimed.completed_at = time.time()
+        await store_b.update(reclaimed)
+
+        body = "# Findings\n" + "x" * 5_000
+        winner = Job(
+            job_id="j1",
+            query="q",
+            status=JobStatus.succeeded,
+            completed_at=time.time(),
+            result=body,
+            cost_usd=0.42,
+            llm_calls=9,
+        )
+        with caplog.at_level(logging.WARNING, logger="src.api.redis_store"):
+            await store_a.update(winner)
+
+        refused = [
+            r
+            for r in caplog.records
+            if r.message == "job_terminal_transition_refused"
+        ]
+        assert len(refused) == 1
+        rec = refused[0]
+        # A discarded *finished report* is a data-loss event, not a
+        # race note — it has to clear an ERROR-level filter.
+        assert rec.levelno == logging.ERROR
+        assert rec.job_id == "j1"  # type: ignore[attr-defined]
+        assert rec.stored_status == "failed"  # type: ignore[attr-defined]
+        assert rec.attempted_status == "succeeded"  # type: ignore[attr-defined]
+        assert rec.result_len == len(body)  # type: ignore[attr-defined]
+        assert rec.cost_usd == 0.42  # type: ignore[attr-defined]
+        assert rec.llm_calls == 9  # type: ignore[attr-defined]
+        # Truncated, deliberately: research reports run to tens of KB,
+        # oversized records get dropped by log pipelines, and this is a
+        # shared log stream.
+        assert rec.result_head == body[:RESULT_PREVIEW_CHARS]  # type: ignore[attr-defined]
+        assert len(rec.result_head) == RESULT_PREVIEW_CHARS  # type: ignore[attr-defined]
+        assert "# Findings" in rec.result_head  # type: ignore[attr-defined]
+
+    async def test_refused_failed_write_stays_at_warning(
+        self,
+        redis_client: fakeredis.aioredis.FakeRedis,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Losing a `failed` write loses nothing: the failure is
+        already recorded under the stored terminal status."""
+        store_a = RedisJobStore(redis_client, retention_sec=3600)
+        store_b = RedisJobStore(redis_client, retention_sec=3600)
+        await store_a.create(Job(job_id="j1", query="q", status=JobStatus.running))
+
+        won = await store_b.get("j1")
+        assert won is not None
+        won.status = JobStatus.succeeded
+        won.result = "# Report"
+        won.completed_at = time.time()
+        await store_b.update(won)
+
+        loser = Job(
+            job_id="j1",
+            query="q",
+            status=JobStatus.failed,
+            error_type="timeout",
+            completed_at=time.time(),
+        )
+        with caplog.at_level(logging.WARNING, logger="src.api.redis_store"):
+            await store_a.update(loser)
+
+        refused = [
+            r
+            for r in caplog.records
+            if r.message == "job_terminal_transition_refused"
+        ]
+        assert len(refused) == 1
+        assert refused[0].levelno == logging.WARNING
+        assert refused[0].result_len == 0  # type: ignore[attr-defined]
+        assert refused[0].result_head == ""  # type: ignore[attr-defined]
+
+
+class TestCorruptPayloadIsAudible:
+    """A row that will not parse silently disables the guard (ADR 0052).
+
+    `_status_from_payload` fails open by design — a corrupt row must
+    not wedge a job behind an unreadable status — but failing open
+    means the terminal-transition guard above is *off* for that job,
+    and before ADR 0052 that happened with no log line at all. The
+    WARNING is the only difference between "the guard is protecting
+    this row" and "the guard silently isn't".
+
+    Mutation-checked: dropping the `log.warning` from the `except`
+    fails both tests.
+    """
+
+    async def test_unparseable_row_warns_with_the_key(
+        self,
+        store: RedisJobStore,
+        redis_client: fakeredis.aioredis.FakeRedis,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        await redis_client.set(f"{JOB_KEY_PREFIX}j1", "{not json at all")
+
+        with caplog.at_level(logging.WARNING, logger="src.api.redis_store"):
+            status = await store._stored_status("j1")
+
+        assert status is None
+        bad = [
+            r for r in caplog.records if r.message == "job_status_bad_payload"
+        ]
+        assert len(bad) == 1
+        assert bad[0].key == f"{JOB_KEY_PREFIX}j1"  # type: ignore[attr-defined]
+        # Name the consequence, not just the parse error: the guard is
+        # now open for this row.
+        assert (
+            bad[0].consequence  # type: ignore[attr-defined]
+            == "terminal_transition_guard_bypassed"
+        )
+
+    async def test_missing_key_is_silent(
+        self,
+        store: RedisJobStore,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """An expired retention TTL is routine and must not warn — a
+        warning on every expired job would bury the corrupt-row case
+        this exists to surface."""
+        with caplog.at_level(logging.WARNING, logger="src.api.redis_store"):
+            assert await store._stored_status("nope") is None
+        assert not [
+            r for r in caplog.records if r.message == "job_status_bad_payload"
+        ]
 
 
 class TestLocalCacheDuringOutage:

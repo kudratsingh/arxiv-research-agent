@@ -72,9 +72,10 @@ get scrutinized independently:
 ### `src/eval/runner.py`
 
 **Landed.** Sequential batch runner with per-query error isolation
-(see ADR [0008](decisions/0008-eval-runner-sequential-per-query-isolation.md)).
-Fresh workflow per query for state-leak isolation. `Ctrl-C` flushes
-partial results before exiting. Writes three output layers:
+(see ADR [0008](decisions/0008-eval-runner-sequential-per-query-isolation.md),
+hardened by ADR [0050](decisions/0050-eval-runner-hardening.md)).
+Fresh workflow per query for state-leak isolation, and its checkpointer
+is closed after every query. Writes three output layers:
 
 ```
 outputs/eval/<run_id>/
@@ -85,17 +86,87 @@ outputs/eval/<run_id>/
 
 Run identifier: `YYYYMMDDTHHMMSSZ` UTC timestamp.
 
+`queries/*.json` is the durable layer: it is written the moment a query
+finishes, and both summary files are derived from it at the end of the
+run. `summary.jsonl` also gets its line appended and flushed per query,
+so it stays useful mid-campaign; the end-of-run rebuild is what
+collapses the duplicate lines a resumed run appends.
+
+### Isolation, crash-safety and interrupts
+
+- **A judge failure costs one metric, not the batch.** Each of the four
+  metrics is scored inside its own guard. A judge that times out, 429s
+  past its retries or truncates into invalid JSON leaves that metric as
+  `null`, records the reason in `metrics_error`, and keeps the run's
+  state, spend and timing — the workflow output is what cost money.
+  Neither the query nor the campaign fails on it, so both consumers of
+  `summary.jsonl` state the denominator they actually averaged over
+  (below) and the runner's closing line counts the affected queries.
+- **A kill loses at most the in-flight query.** Everything finished is
+  already on disk.
+- **`Ctrl-C` and SIGTERM take the same path.** `kill`, `docker stop`
+  and an Actions cancellation flush partial results, the in-flight
+  query's record included, before exiting `130`.
+- **`--resume` re-enters a campaign** without re-paying: queries whose
+  `queries/<id>.json` exists are skipped and folded into the final
+  summary. That includes *errored* queries — to retry one, delete its
+  record file first.
+- **A populated `--output-dir` is refused** unless `--resume` is
+  passed, so a repair run cannot overwrite a previous campaign's
+  records.
+
+### Cost accounting: product vs harness
+
+Since ADR 0050 the summary separates the agent's spend from the eval
+rig's:
+
+| Field | Covers |
+|---|---|
+| `cost_usd`, `llm_calls`, `elapsed_sec` | the workflow run |
+| `judge_cost_usd`, `judge_llm_calls`, `scoring_sec` | the scoring judges |
+| `total_cost_usd` | both — what the benchmark query cost to run |
+
+The README block and the regression gate's `cost_usd` band both read
+the *workflow* figures, so neither is polluted by judge noise.
+Summaries written before ADR 0050 folded judge spend into `cost_usd`
+and read a few percent high; they are not comparable on cost with newer
+ones.
+
 ## Running an eval
 
 ```bash
 make eval                                          # full benchmark
 make eval QUERIES=hallucination-mitigation,rag-multi-hop
 python -m src.eval.runner --output-dir custom/dir  # bypass Makefile
+python -m src.eval.runner --output-dir custom/dir --resume
+python -m src.eval.runner --max-budget-usd 25      # campaign ceiling
 python -m src.eval.runner --help                   # full CLI reference
 ```
 
 Requires `ANTHROPIC_API_KEY` in `.env` — the runner refuses to start
 without it.
+
+`--max-budget-usd` is checked *between* queries against accumulated
+workflow+judge spend (including spend reused from a resumed campaign),
+so the final query can overshoot the ceiling by its own cost. It is a
+campaign ceiling, and the only one the eval path owns — the per-call
+dollar cap is ADR 0051's, at `call_llm`.
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | every attempted query succeeded |
+| 1 | configuration error (no `ANTHROPIC_API_KEY`) |
+| 2 | usage error (non-empty output directory without `--resume`) |
+| 3 | completed, but at least one query errored |
+| 4 | every attempted query errored |
+| 5 | stopped early on the `--max-budget-usd` ceiling |
+| 130 | interrupted (Ctrl-C / SIGTERM); partial results are on disk |
+
+Precedence is "why is the campaign incomplete" before "how did the
+queries go": an interrupted or budget-stopped run reports as such even
+when the queries it did run all passed.
 
 ## Regression gate
 
@@ -118,6 +189,23 @@ resource bands are floor `+1` / `+50%` for `iterations`, `+4` /
 `+25%` for `llm_calls`, and `+$0.10` / `+25%` for `cost_usd` — sized
 so one extra critic revision, one extra rankable paper, or a $0.02
 cost wiggle can never fail the nightly on its own.
+
+A **query present in the baseline but missing from the current run** is
+also a regression (ADR 0050). The usual cause is a truncated batch, and
+the aggregate row re-averages over whatever survived — so "no
+regressions" on a shrunken denominator is the most dangerous kind of
+green. The report states the denominator it used
+(`over the 15 of 20 baseline queries present in both runs`), and
+`--allow-removed` opts a deliberate `--queries` subset run out of the
+gate without excusing real regressions in the queries it did run.
+
+A **metric the current run stopped scoring** is the same shrunken
+denominator one level down: a failed judge leaves the metric `null`, so
+its delta is `None`, so the query reads `unchanged`. The gate stays
+green on purpose — a flaky judge is a harness fault, not a product
+regression — but the report never hides it. Each aggregate row carries
+a `Compared` column (`faithfulness … | 2 / 20`), and a metric the
+baseline scored while the current run did not gets named in the header.
 
 ### The statistics, honestly
 
@@ -152,6 +240,29 @@ whether to ask for revisions). What that means in practice:
   exists, treat a red nightly on exactly one query and one metric
   with suspicion and read the per-query table before reverting
   anything.
+
+## The published README block
+
+`src/eval/readme_update.py` patches the
+`<!-- eval-nightly:start -->` … `<!-- eval-nightly:end -->` block in
+`README.md` from a `summary.jsonl`. Two honesty rules apply to what it
+publishes (ADR 0050):
+
+- **Cost and latency are the workflow's**, not the judges' — the
+  README row answers "what does one research run cost", and the eval
+  harness is not part of the product.
+- **Runs whose report contained no citations are excluded from the
+  citation-accuracy mean.** `measure_citation_accuracy` short-circuits
+  a report with zero `[Author, Year]` tags to 1.0 — its own docstring
+  says the metric doesn't apply — and averaging those in would inflate
+  the published figure exactly when the agent cited least. The block
+  states the exclusion and its denominator under the table. Other
+  metrics keep the full denominator; a report with no citations still
+  has real completeness and recall.
+- **Every published mean states how many runs it covers.** A judge
+  failure leaves its metric `null`, and the mean silently skips nulls —
+  so any metric averaged over fewer runs than the `Queries` count is
+  named under the table with its own denominator.
 
 ## What "tested" means for eval code itself
 

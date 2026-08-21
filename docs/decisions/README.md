@@ -181,6 +181,63 @@ never renumbered.
   observe the same accounting `/healthz` reports instead of a second
   set of counters. Closes ADR 0047's `abandoned_node_threads`
   follow-up.
+- [0050](0050-eval-runner-hardening.md) — Eval-runner hardening. The
+  campaign is the next live spend, and the harness could not hold onto
+  work it had paid for: one judge 529 aborted the batch and discarded
+  the failing query's finished workflow output, nothing reached disk
+  until the end, SIGTERM killed without flushing, and `make eval`
+  returned 0 when every query failed. Per-metric judge isolation
+  (honouring ADR 0008's contract and `_run_and_score`'s "Never
+  raises"), per-query persistence plus `--resume` and a SIGTERM
+  handler, workflow spend split from judge spend so the README figure
+  and the `cost_usd` gate describe the agent rather than the eval rig
+  (revisiting ADR 0044), empty reports and truncated batches made red
+  instead of green, honest exit codes, a refusal to overwrite a prior
+  campaign's directory, `--max-budget-usd`, and a nightly workflow that
+  says which owner action fixes its 15-night-old red.
+
+- [0051](0051-llm-cost-enforcement-and-visibility.md) — LLM cost
+  enforcement and visibility. `max_cost_usd` was enforced only in the
+  API runner's `on_node` callback, so `make run` and `make eval` — the
+  two paths about to spend real money — had no dollar ceiling at all,
+  and even on the API path a single node could overshoot by its whole
+  fan-out. The check moves to `src.llm.call_llm`, the one function
+  every entry point funnels through, with `CostBudgetExceeded` and the
+  cap helper relocated to `observability.costs` so the LLM layer never
+  imports the API layer; the between-nodes check stays as the coarser
+  stop. Hitting the ceiling now keeps the draft the run already paid
+  for instead of returning a bill with nothing attached. Alongside
+  that: SDK retries become countable and loggable via
+  `with_raw_response.retries_taken` (no second retry loop —
+  ADR 0009's SDK-native choice stands), the retry envelope is clamped
+  so one flaky call cannot eat a whole `api_job_timeout_sec`, unpriced
+  models warn once per id and the coverage check reads runtime values
+  instead of field defaults, and stderr goes back to being parseable
+  JSON with `faulthandler` armed. Extends ADR 0033; narrows
+  ADR 0042's `anthropic` logger demotion to spare the SDK's retry
+  line.
+- [0052](0052-native-crash-containment-and-data-lifecycle-edges.md) —
+  Native-crash containment + data-lifecycle edges. The reader's
+  five-way encode fan-out was killing the process with a SIGSEGV in
+  the OpenMP barrier — no traceback, no log line, on `make run` and
+  `make eval` as much as on `make test` — because torch defaults to
+  one OpenMP thread per core and three vendored `libomp` copies ship
+  in the venv. `torch.set_num_threads(1)` at model load takes a
+  reader-shaped probe from 10/10 crashes to 0/15;
+  `settings.embedding_device` (default `cpu`) additionally pins the
+  backend away from the separate, rarer Metal-driver crash, and both
+  choices are logged at model load. Shipped with the data edges a
+  crash lands on: `admin_migrate assign/delete` refuse to run under
+  `enable_api_auth=false` without `--include-all-auth-off` (with auth
+  off *every* row is NULL-owner, so the tool's predicate selects the
+  whole store), a corrupt job row and a refused terminal write are now
+  audible instead of silent, `make run` salvages a finished report
+  from the checkpoint when a later node fails, `make clean` stops
+  deleting the graph checkpoints (`clean-all` does), the CLI's stale
+  third copy of the initial `ResearchState` is replaced by one
+  canonical initializer, and `docs/demo.md` stops claiming the
+  mock-data run makes no external calls beyond Anthropic — it
+  downloads five real arXiv PDFs.
 - [0053](0053-api-web-container-preflight.md) — Make the shipped demo
   path survive its own first run. Walking `docker compose up` → open
   the UI → type a query found five breaks the suite could not see

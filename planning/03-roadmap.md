@@ -447,6 +447,226 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   ship a collector service — the operator wires their own from the
   snippet in `docs/development.md`.
 
+- _2026-08-21_ — Eval-runner hardening (ADR 0050), ahead of the first
+  live campaign. The harness could not hold onto work it had already
+  paid for. `_run_and_score` guarded the workflow invocation and
+  computed the four metrics *outside* that guard, so one 529 on query
+  12's faithfulness judge walked out through a loop that caught only
+  `KeyboardInterrupt`: query 12's finished workflow output was never
+  appended, queries 13-20 never ran, and both ADR 0008's explicit
+  per-query isolation decision and the function's own "Never raises"
+  docstring were violated in one line. Metrics are now scored one at a
+  time inside `except Exception` — a failed judge lands as `None` with
+  its message on a `metrics_error` field while `state`, `costs` and
+  `elapsed_sec` survive, because the workflow output is the expensive
+  artifact and the score is the cheap one. `reset_run_id` moved into
+  `finally`, where it stops leaking a dead query's run_id into the next
+  query's logs. Output is written as it is produced —
+  `queries/<id>.json` plus a flushed `summary.jsonl` line per query,
+  `summary.md` rebuilt from disk at the end — so a kill loses at most
+  the in-flight query, and `--resume` re-enters a campaign without
+  re-paying for what finished. SIGTERM is mapped onto
+  `KeyboardInterrupt` so `docker stop` and an Actions cancellation take
+  the same flushing path Ctrl-C had, and the in-flight record rides out
+  on an `EvalInterrupted` rather than being dropped. Cost accounting
+  now splits the product from the harness: the record snapshots spend
+  before the judges run, so `cost_usd` / `llm_calls` / `elapsed_sec`
+  are the workflow's and `judge_cost_usd` / `judge_llm_calls` /
+  `scoring_sec` are the rig's, with `total_cost_usd` their sum. The
+  name `cost_usd` was kept deliberately: renaming it would have diffed
+  as `None` against every existing baseline and silently switched the
+  regression gate's cost band off, which is worse than a field whose
+  meaning is documented as having narrowed. Three green-while-wrong
+  paths closed — an empty `draft_report` is now a `NoReportProduced`
+  error instead of a free `citation_accuracy=1.0` / `faithfulness=1.0`
+  (and skips two wasted judge calls), reports with zero citations leave
+  the README's citation mean with the exclusion and its denominator
+  stated under the table, and a query present in the baseline but
+  missing from the current run is a regression instead of vanishing
+  while the aggregate quietly re-averages over the survivors
+  (`--allow-removed` opts a deliberate subset run out). `make eval`
+  stopped returning 0 on a total outage: distinct codes for partial
+  failure, all-failed, budget stop and interrupt, with the counts on
+  the closing line. A populated `--output-dir` is refused without
+  `--resume` rather than truncating a prior campaign's records, and
+  `--max-budget-usd` stops the batch cleanly between queries against
+  accumulated workflow+judge spend (per-call enforcement is ADR 0051's
+  choke point, not this one's). The nightly workflow — silently red for
+  15+ consecutive nights on an unset secret, dying with a "copy
+  .env.example" message that reads like a code bug — now fails fast
+  with a message naming the owner action, uploads its artifacts on
+  `always()` so a batch that died at query 15 still refreshes the
+  baseline the *next* night depends on, installs from
+  `requirements-lock.txt` like CI does, and gets the 120 minutes 20
+  queries actually need. Fifteen mutants planted across the judge
+  guard, the run_id reset, the checkpointer close, the empty-report
+  guard, the cost split, the cell escaping, the budget check, the
+  output-dir refusal, resume, the exit codes, the interrupt record, the
+  incremental write, the removed-query gate, the citation denominator
+  and the SIGTERM handler — all caught. Remaining: `summary.md` is
+  still end-of-run only, so a SIGKILL leaves it stale beside a current
+  `summary.jsonl`; the ceiling cannot stop a query already in flight;
+  `--resume` skips errored queries too (delete the record to retry
+  one); and the nightly's missing API key is now legible rather than
+  fixed.
+
+- _2026-08-21_ — Verification pass on ADR 0050 found one seam the
+  hardening itself opened and closed it (decision 10 in the ADR).
+  Judge isolation converts an aborted campaign into a `null` metric,
+  and both consumers of `summary.jsonl` were averaging over whatever
+  survived without saying so: the README could publish
+  `Mean faithfulness 0.420` from two runs inside a row headed
+  `20 / 20`, and `regression_diff` turned the same nulls into `None`
+  deltas, classifying all twenty queries `unchanged` and exiting green
+  on a night where eighteen judges failed — the exact shrunken
+  denominator decision 6 had just closed one level up, with
+  `metrics_error` written by the runner and read by nobody. Neither
+  gates now (a flaky judge is a harness fault, not a product
+  regression, and ~60 judge calls a night would redden the nightly for
+  it), but neither is silent either: the README names any metric whose
+  mean covers fewer runs than the count beside it, the diff report
+  carries a per-metric `Compared` column plus a header line naming what
+  went unscored, and the runner's closing line adds `N partially
+  scored`. The workflow-cost caveat also used to ride inside the
+  uncited-rows note, so it disappeared on any night where every report
+  cited something; it prints unconditionally. Ten more mutants planted
+  across the new counting and rendering — all caught.
+- _2026-08-20_ — LLM cost enforcement and visibility (ADR 0051),
+  closing the pre-flight audit's cost-control cluster before the first
+  live campaign. The headline gap: `max_cost_usd` had exactly one
+  enforcement point, the API runner's `on_node` callback (ADR 0033), and
+  neither path about to spend real money goes through it —
+  `src/main.py` and `src/eval/runner.py` both drive the graph with a
+  bare `app.invoke(...)`, and the supervisor's independent check is
+  dead under the shipped `enable_supervisor=False`. The check now lives
+  in `src.llm.call_llm`, the one function every entry point funnels
+  through, which fixes the CLI and eval paths and the API's own
+  intra-node overshoot in a single edit (the reader fans out up to
+  `max_papers` parallel calls inside one node, so a between-nodes check
+  can be beaten by a whole node's spend). `CostBudgetExceeded` and the
+  cap helper moved to `src/observability/costs.py` so the LLM layer
+  raises the exception the runner catches without importing the API
+  layer; both are re-bound in `src/api/runner.py` under the names that
+  were already public. The between-nodes check stays — the two cannot
+  disagree, since they raise the same class from the same accumulator,
+  and `on_node` still catches a node that spends outside `call_llm`.
+  Second, hitting the ceiling no longer destroys the artifact: the
+  draft in the runner's merged state rides out on the exception and
+  lands on `job.result`, so a run whose *final* node crossed the cap —
+  a complete report, `route_after_critique` already returned `END` —
+  is retrievable and exportable instead of being a bill with nothing
+  attached. Third, the SDK's retries stopped being invisible:
+  `with_raw_response.retries_taken` is the SDK's own count of discarded
+  attempts, recorded as `llm_retries_total` and on the `llm_call` line
+  next to a measured `latency_ms`, with `llm_upstream_errors_total`
+  for the calls that outlive the retry budget — and no second retry
+  loop anywhere, so ADR 0009's SDK-native choice stands. ADR 0042's
+  blanket demotion of the `anthropic` tree is narrowed to spare
+  `anthropic._base_client`'s retry line at INFO. Fourth, the retry
+  envelope is clamped from `api_job_timeout_sec`: the SDK applies
+  `timeout` per *attempt*, so the shipped 4 retries × 120s bounded one
+  logical call at exactly the 600s job timeout — one unlucky call could
+  eat a whole job. Attempts get trimmed to 2, never the timeout, since
+  a shorter timeout abandons slow-but-healthy generations and
+  Anthropic bills those with no `usage` coming back. Fifth, an
+  unpriced model warns once per id instead of once per call (hundreds a
+  run), and the price-coverage test — which was vacuous, reading
+  `field.default` when every routing field defaults to `""` — now
+  resolves runtime values through new `resolved_model_ids()` /
+  `unpriced_models()` helpers; `claude-fable-5`, `claude-mythos-5` and
+  `claude-opus-4-5` added to the table. Sixth, stderr is JSON lines
+  again (ML-stack loggers demoted, HF progress-bar env `setdefault`ed)
+  and `faulthandler` is armed, so the intermittent MiniLM SIGSEGV
+  leaves a traceback rather than exit 139. Plus the lease-path P3s:
+  `exc_info` on acquire/refresh failures with first-warns-then-debugs
+  volume control, and a `run_id` bound inside the keeper task, which
+  `asyncio.create_task` had been snapshotting before `run_job` bound
+  one. Sixteen mutants planted, all sixteen caught. Remaining
+  follow-ups: `unpriced_models()` at startup as a WARNING; the
+  `max_cost_usd` description in `src/config.py` and
+  `docs/architecture.md:183` still scope the cap to the API runner; the
+  thread-pinning half of the SIGSEGV in `src/tools/embeddings.py`
+  (needs a ≥200-run soak, the repro rate is ~4%); a `partial` flag on
+  `JobDetail`; streaming the synthesizer so a long generation cannot
+  trip the HTTP timeout at all. Retried attempts' token spend stays
+  uncapturable in-process — `usage` exists only on a 2xx body, so
+  `retries_taken` is a count and Anthropic's billing is the only
+  reconciliation.
+- _2026-08-20_ — Native-crash containment + data-lifecycle edges (ADR
+  0052). The process had been dying with exit 139, a macOS
+  crash-reporter dialog and nothing in the logs, because a native
+  crash unwinds nothing. Two independent crashes, measured apart. The
+  common one is an OpenMP barrier race: torch defaults to one OpenMP
+  worker per core, three copies of `libomp.dylib` ship in the venv
+  (torch, faiss, scikit-learn), and the reader fans out over five
+  threads that each call `model.encode` — a probe with exactly that
+  shape segfaults **10/10**, faulting in
+  `libomp.dylib::__kmp_suspend_64`. That is not a test-fleet
+  phenomenon; it is one process running the reader, which is what
+  `make run`, `make eval` and a `POST /research` all do.
+  `_get_model` now calls `torch.set_num_threads(1)` before
+  constructing the model — in process rather than via
+  `OMP_NUM_THREADS`, because the env var only helps callers that go
+  through a wrapper setting it and a bare `pytest`, `uvicorn` and
+  `python -m src.main` do not — and the probe goes to **0/15**. The
+  rarer crash is Apple's Metal driver (`fill_mps_kernel`, ~1/6 even
+  with the threads pinned), which is what the device pin is for:
+  `_get_model` resolves `settings.embedding_device` (default `cpu`;
+  `auto` is the opt-in that restores the library's own pick, and
+  carries that residual) and logs the configured device, the bound
+  device and the thread count once at construction — the only artifact
+  that outlives a SIGSEGV. The four test tiers keep the
+  `OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false` prefix as a second
+  layer covering faiss's and scikit-learn's libomp copies at import.
+  Shipped with the data-lifecycle edges a crash lands on, all from the
+  same pre-flight audit. `admin_migrate assign/delete` now exit 2
+  under `enable_api_auth=false` unless the operator passes
+  `--include-all-auth-off`: with auth off `routes._principal_key_id`
+  returns None for every request, so every row ever written has a NULL
+  owner and the tool's "legacy NULL-owner rows" predicate selects the
+  entire store — and `enable_api_auth` defaults to False, making that
+  the *default* posture of the most destructive command in the tree;
+  `report` is never refused but now opens with the auth mode and says
+  out loud that the counts are the whole store. Two silent store
+  failures became records: a job row that will not parse logs
+  `job_status_bad_payload` naming the consequence
+  (`terminal_transition_guard_bypassed`) while a missing key stays
+  quiet, and a refused terminal write carries the result length, the
+  first 200 characters, both statuses and the cost — at ERROR when
+  what it discarded was a finished `succeeded` report, WARNING when it
+  was a `failed` write that lost nothing. `make run` salvages the
+  checkpoint on failure: the synthesizer runs before the critic, so a
+  late-node failure strands a complete `draft_report` in
+  `.cache/checkpoints.sqlite` that no CLI surface could read — it now
+  lands in `outputs/<run_id>-recovered.md`, best-effort from inside
+  the `except` so it can never mask the real exception, with the
+  `thread_id` logged on every failure either way. `make clean` stops
+  deleting `.cache/checkpoints.sqlite` (graph state, not a cache,
+  including any run paused at the HITL breakpoint); `clean-all` is the
+  target that removes it. The CLI's ten-keys-stale third copy of the
+  initial `ResearchState` is gone, replaced by
+  `initial_research_state` beside the TypedDict it mirrors, with a
+  parametrized drift test pinning the API and eval runners' copies
+  until they adopt it. The reader's abstract-only degradation is
+  audible for the first time — one INFO line per paper naming the
+  stage (`no_pdf_url`, `no_text`, `no_chunks`, `no_ranked_chunks`)
+  tallied through a ContextVar bound inside each worker thread, a
+  `reader_completed` summary carrying `n_abstract_only`, and a
+  run-level WARNING past two — as is the embedding cache's write path,
+  which was the last bare `contextlib.suppress(Exception)` in the
+  cache tier. And `docs/demo.md` stops claiming the mock-data run
+  makes no external calls beyond Anthropic: `MOCK_PAPERS` carries real
+  `pdf_url`s, so a cold run downloads five real arXiv PDFs; the doc
+  now tables the hosts it actually contacts and documents the warm
+  `.cache/pdfs` second run as the genuinely Anthropic-only path.
+  Mutants planted against the device pin, the reader tally's thread
+  binding, the corrupt-payload log, the checkpoint salvage and the
+  auth-off gate — all caught. Remaining follow-ups: `faulthandler` +
+  process env hygiene land in the observability lane; the API and eval
+  runners still hold their own `_initial_state` copies; there is no
+  `--no-pdf` switch and no checked-in full-text fixture, so a
+  cold-cache offline demo remains impossible; and the salvaged report
+  is a partial artifact with no metrics, critique or verification.
 - _2026-08-20_ — API / web / container pre-flight (ADR 0053), from
   walking the path a first-time operator takes rather than reading
   modules: `docker compose up`, open the UI, type a query. Five
