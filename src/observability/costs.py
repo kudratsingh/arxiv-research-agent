@@ -18,6 +18,12 @@ and coverage guarantee. ADR 0049 hangs the process-wide
 `record_llm_call` choke point: the per-run accumulator answers "what
 did this run cost", the counters answer "what is this deployment
 spending, by model", and neither can be derived from the other.
+
+ADR 0051 moves `CostBudgetExceeded` here from `src.api.runner`. The
+spend ceiling is now enforced in `src.llm.call_llm` as well as between
+graph nodes, and the CLI / eval entry points must not import the API
+layer to catch it — so the exception belongs next to the accumulator
+it is raised against, not next to one of its raisers.
 """
 
 from __future__ import annotations
@@ -27,8 +33,9 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any
 
+from src.config import Settings
 from src.observability.logging import get_logger
-from src.observability.metrics import record_llm_usage
+from src.observability.metrics import record_llm_retries, record_llm_usage
 
 log = get_logger(__name__)
 
@@ -46,11 +53,18 @@ log = get_logger(__name__)
 PRICES_LAST_VERIFIED = "2026-08-20"
 
 PRICES_USD_PER_MILLION: dict[str, dict[str, float]] = {
-    # Opus tier — $5 / $25 across the 4.6+ generations.
+    # Frontier tier — $10 / $50. Above Opus pricing, so an operator who
+    # routes one agent here and is priced at the Sonnet fallback would
+    # be under-billed 3.3x, and `max_cost_usd` would let a $2 cap pass
+    # ~$6.60 of real spend (ADR 0051).
+    "claude-fable-5": {"input": 10.0, "output": 50.0},
+    "claude-mythos-5": {"input": 10.0, "output": 50.0},
+    # Opus tier — $5 / $25 across the 4.5+ generations.
     "claude-opus-5": {"input": 5.0, "output": 25.0},
     "claude-opus-4-8": {"input": 5.0, "output": 25.0},
     "claude-opus-4-7": {"input": 5.0, "output": 25.0},
     "claude-opus-4-6": {"input": 5.0, "output": 25.0},
+    "claude-opus-4-5": {"input": 5.0, "output": 25.0},
     # Sonnet tier — $3 / $15.
     "claude-sonnet-5": {"input": 3.0, "output": 15.0},
     "claude-sonnet-4-6": {"input": 3.0, "output": 15.0},
@@ -62,6 +76,15 @@ PRICES_USD_PER_MILLION: dict[str, dict[str, float]] = {
 }
 
 _FALLBACK_MODEL = "claude-sonnet-4-6"
+
+# Model ids already reported as unpriced. The fallback warning must fire
+# once per model id per process, not once per call: the reader alone
+# makes `max_papers` calls per pass, so an off-table model used to emit
+# one WARNING per LLM call — hundreds a run — which is how a line that
+# matters got lost in the lines that don't (ADR 0051). Guarded by a lock
+# because the reader's fan-out records from a thread pool.
+_unpriced_warned: set[str] = set()
+_unpriced_lock = threading.Lock()
 
 
 # Anthropic prompt-caching multipliers (see ADR 0022):
@@ -75,6 +98,91 @@ _CACHE_READ_MULTIPLIER = 0.10
 _CACHE_WRITE_MULTIPLIER = 1.25
 
 
+def _warn_unpriced_model_once(model: str) -> None:
+    """Emit the unpriced-model WARNING the first time `model` is seen.
+
+    Returns silently on every later call for the same id. The warning
+    names the fallback and the price file to edit, because the action it
+    asks for is "add a row", not "investigate".
+    """
+    with _unpriced_lock:
+        if model in _unpriced_warned:
+            return
+        _unpriced_warned.add(model)
+    log.warning(
+        "unknown_model_pricing_fallback",
+        extra={
+            "model": model,
+            "fallback": _FALLBACK_MODEL,
+            "prices_last_verified": PRICES_LAST_VERIFIED,
+            "action": (
+                "add a row to PRICES_USD_PER_MILLION in "
+                "src/observability/costs.py — cost reporting AND "
+                "max_cost_usd enforcement are wrong until you do"
+            ),
+        },
+    )
+
+
+def reset_unpriced_warnings() -> None:
+    """Forget which models have already warned.
+
+    Test seam only: the warn-once set is process-global, so a suite that
+    asserts on the warning needs a way back to a clean slate without
+    reaching into module internals.
+    """
+    with _unpriced_lock:
+        _unpriced_warned.clear()
+
+
+def resolved_model_ids(config: Settings) -> set[str]:
+    """Return every model id `config` can actually route a call to.
+
+    Per-agent routing (ADR 0021) is uniform: each `<agent>_model` field
+    is either a model id or `""`, and empty means "use
+    `anthropic_model`". So the ids a deployment can bill against are the
+    base model plus every non-empty override — derived from the fields
+    themselves rather than a hand-kept list, so a new agent's routing
+    field is covered the day it is added.
+
+    Args:
+        config: The `Settings` instance to resolve. Takes an instance
+            rather than reading the module-level singleton, because the
+            question worth asking ("is *this* env priced?") is about
+            runtime values, not import-time defaults.
+
+    Returns:
+        The set of resolved Claude model ids.
+    """
+    base = config.anthropic_model
+    ids = {base}
+    for name in type(config).model_fields:
+        if name == "anthropic_model" or not name.endswith("_model"):
+            continue
+        value = getattr(config, name)
+        ids.add(value or base)
+    return ids
+
+
+def unpriced_models(config: Settings) -> set[str]:
+    """Return the routed model ids that have no row in the price table.
+
+    Non-empty means this deployment will bill some agent's calls at the
+    Sonnet fallback. Since ADR 0033 that is not merely a reporting
+    error: the same number feeds `max_cost_usd`, so an off-table model
+    priced 3.3x low lets a $2.00 cap pass ~$6.60 of real spend
+    (ADR 0051).
+
+    Args:
+        config: The `Settings` instance to check.
+
+    Returns:
+        Resolved model ids missing from `PRICES_USD_PER_MILLION`; empty
+        when the deployment is fully priced.
+    """
+    return resolved_model_ids(config) - set(PRICES_USD_PER_MILLION)
+
+
 def estimate_cost(
     model: str,
     input_tokens: int,
@@ -84,19 +192,19 @@ def estimate_cost(
 ) -> float:
     """Return the estimated cost in USD for a completed LLM call.
 
-    Falls back to Sonnet pricing when the model isn't in the table (and
-    logs a warning). This prevents silent under-reporting when we
-    onboard a new model without updating the table.
+    Falls back to Sonnet pricing when the model isn't in the table, and
+    warns **once per model id** (see `_unpriced_warned`). This prevents
+    silent under-reporting when we onboard a new model without updating
+    the table — and since ADR 0033 the error is not cosmetic: the same
+    number feeds `max_cost_usd` enforcement, so an off-table Fable 5
+    would let a $2.00 cap pass ~$6.60 of real spend.
 
     Cache tokens are priced separately: reads at 10% of the base input
     rate, writes at 125% (Anthropic's 25% first-write premium).
     """
     prices = PRICES_USD_PER_MILLION.get(model)
     if prices is None:
-        log.warning(
-            "unknown_model_pricing_fallback",
-            extra={"model": model, "fallback": _FALLBACK_MODEL},
-        )
+        _warn_unpriced_model_once(model)
         prices = PRICES_USD_PER_MILLION[_FALLBACK_MODEL]
     input_price_per_token = prices["input"] / 1_000_000
     output_price_per_token = prices["output"] / 1_000_000
@@ -196,6 +304,54 @@ class RunCosts:
             }
 
 
+class CostBudgetExceeded(Exception):
+    """A run's accumulated LLM spend crossed ``settings.max_cost_usd``.
+
+    Raised from two places, both reading the same accumulator:
+
+    - `src.llm.call_llm`, *before* issuing a call (ADR 0051). This is
+      the choke point every entry point shares — CLI, eval campaign,
+      API — so the ceiling now binds on the sync paths that previously
+      had none, and a single node's fan-out can no longer overshoot the
+      cap by its whole spend.
+    - The API runner's `on_node` callback, between graph nodes
+      (ADR 0033). Kept as the earlier, coarser stop: it fires even for a
+      node that spent without going through `call_llm`.
+
+    Both raisers use this one class so `run_job`'s handler catches
+    either without caring which fired first. `partial_report` carries
+    the draft the run had already produced when the ceiling hit, so the
+    money already spent still yields its artifact.
+    """
+
+    def __init__(
+        self, spent_usd: float, cap_usd: float, partial_report: str = ""
+    ) -> None:
+        self.spent_usd = spent_usd
+        self.cap_usd = cap_usd
+        self.partial_report = partial_report
+        super().__init__(
+            f"per-run cost ${spent_usd:.4f} exceeded cap ${cap_usd:.2f}"
+        )
+
+
+def enforce_cost_cap(costs: RunCosts, cap_usd: float) -> None:
+    """Raise `CostBudgetExceeded` when the run's spend crosses the cap.
+
+    The cap comes from `settings.max_cost_usd`; passing it in
+    explicitly (rather than reading `settings` here) keeps this helper
+    unit-testable without env-var gymnastics, and lets the API runner
+    read the setting once per job instead of once per node.
+
+    At-or-above, not strictly-above: spend sitting exactly on the limit
+    must stop the next call, or one expensive call parks on the ceiling
+    and the next one sails past it.
+    """
+    spent = costs.total_cost_usd
+    if spent >= cap_usd:
+        raise CostBudgetExceeded(spent_usd=spent, cap_usd=cap_usd)
+
+
 _current_costs: ContextVar[RunCosts | None] = ContextVar(
     "current_costs", default=None
 )
@@ -224,6 +380,8 @@ def record_llm_call(
     output_tokens: int,
     cache_read_input_tokens: int = 0,
     cache_creation_input_tokens: int = 0,
+    latency_ms: float | None = None,
+    retries: int = 0,
 ) -> None:
     """Record a completed LLM call against the current run's accumulator.
 
@@ -240,6 +398,26 @@ def record_llm_call(
     accumulator, which needs a run bound to it. A call made outside a
     run still spent money, and a fleet's spend rate must not depend on
     whether the caller remembered to open one (ADR 0049).
+
+    `latency_ms` and `retries` are the ADR-0051 retry-visibility
+    fields. `retries` is the SDK's own `retries_taken` — the number of
+    attempts this call threw away before the one that returned — so a
+    throttled fleet shows up as `llm_retries_total` climbing rather than
+    as unexplained wall-clock. Both default to their no-information
+    values so existing callers keep working.
+
+    Args:
+        model: Model id the call was billed against.
+        input_tokens: Non-cached input tokens from `usage`.
+        output_tokens: Output tokens from `usage`.
+        cache_read_input_tokens: Tokens served from the prompt cache.
+        cache_creation_input_tokens: Tokens written to the prompt cache.
+        latency_ms: Wall-clock for the whole call *chain* — retries,
+            backoff sleeps and all. `None` when the caller did not time
+            it.
+        retries: Attempts discarded before the successful one. Their
+            token spend is unknowable (`usage` only exists on a 2xx
+            body), which is exactly why the count is recorded.
     """
     cost = estimate_cost(
         model,
@@ -249,17 +427,20 @@ def record_llm_call(
         cache_creation_input_tokens,
     )
     record_llm_usage(model=model, cost_usd=cost)
-    log.info(
-        "llm_call",
-        extra={
-            "model": model,
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "cache_read_input_tokens": cache_read_input_tokens,
-            "cache_creation_input_tokens": cache_creation_input_tokens,
-            "cost_usd": round(cost, 6),
-        },
-    )
+    if retries:
+        record_llm_retries(model=model, retries=retries)
+    payload: dict[str, Any] = {
+        "model": model,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "cache_read_input_tokens": cache_read_input_tokens,
+        "cache_creation_input_tokens": cache_creation_input_tokens,
+        "cost_usd": round(cost, 6),
+        "retries": retries,
+    }
+    if latency_ms is not None:
+        payload["latency_ms"] = round(latency_ms, 1)
+    log.info("llm_call", extra=payload)
     costs = _current_costs.get()
     if costs is not None:
         costs.record(

@@ -4,7 +4,7 @@ The service had structured logs (ADR 0012), opt-in tracing (ADR 0013)
 and per-run cost accounting, but no metrics at all: an on-call engineer
 could not answer "how many jobs are failing right now", "what is the
 p95 job duration" or "are we near the concurrency ceiling" without
-grepping logs. This module closes that gap with the five instruments
+grepping logs. This module closes that gap with the instruments
 that answer those questions, on the OTel metrics API — the same
 telemetry stack tracing already uses, so one OTLP collector receives
 both signals. See ADR 0049.
@@ -46,7 +46,14 @@ lifespan that configures/shuts down more than once need it to be.
 | `research_abandoned_node_threads`| observable gauge | -                  |
 | `llm_cost_usd_total`             | counter (float)  | model              |
 | `llm_calls_total`                | counter          | model              |
+| `llm_retries_total`              | counter          | model              |
+| `llm_upstream_errors_total`      | counter          | model, status      |
 | `rate_limit_rejections_total`    | counter          | backend            |
+
+The two LLM error/retry counters arrived with ADR 0051: Anthropic SDK
+retries (429 / 529 / timeouts) were invisible — no app log, the SDK's
+own retry line demoted below threshold, no metric — so a throttled
+fleet was indistinguishable from a slow one.
 
 The two gauges are *observable*: they read the live accounting
 `/healthz` already reports (in-flight job tasks, ADR 0047's abandoned
@@ -60,9 +67,9 @@ can never disagree with the health endpoint.
 instruments are live in an API worker and nowhere else — `make run`
 and `make eval` set `enable_metrics` in vain, because those processes
 install no provider and every helper below returns on its `None`
-check. That is deliberate, not an oversight: four of the seven
+check. That is deliberate, not an oversight: four of the nine
 instruments describe a *server* (job outcomes, concurrency, 429s), and
-a one-shot CLI run has no steady state for the remaining three to
+a one-shot CLI run has no steady state for the remaining five to
 sample — it would spin an export thread up and tear it down inside one
 export interval. Tracing differs because `get_tracer()` configures
 lazily on first span, which is what makes `traced_node` work under
@@ -107,6 +114,8 @@ __all__ = [
     "configure_metrics",
     "metrics_enabled",
     "record_job_terminal",
+    "record_llm_retries",
+    "record_llm_upstream_error",
     "record_llm_usage",
     "record_rate_limit_rejection",
     "register_runtime_gauges",
@@ -122,13 +131,6 @@ _METER_NAME = "arxiv-research-agent"
 # separate query per outcome.
 NO_ERROR = "none"
 
-# Buckets for `research_job_duration_seconds`, in seconds. A research
-# job is minutes-scale work (several LLM round trips per node), so the
-# SDK's default sub-second-heavy boundaries would put every real job in
-# the overflow bucket and make p95 unreadable. These span a fast cached
-# run (~10s) through the default `api_job_timeout_sec` neighbourhood and
-# past it, so a timing-out fleet is visible as mass in the tail rather
-# than as a single saturated `+Inf`.
 # Budget for the final flush in `shutdown_metrics`, in milliseconds.
 #
 # Small because it is spent at the *end* of an already-tight chain.
@@ -144,6 +146,13 @@ NO_ERROR = "none"
 # rather than hanging the process.
 _SHUTDOWN_BUDGET_MS = 2_000.0
 
+# Buckets for `research_job_duration_seconds`, in seconds. A research
+# job is minutes-scale work (several LLM round trips per node), so the
+# SDK's default sub-second-heavy boundaries would put every real job in
+# the overflow bucket and make p95 unreadable. These span a fast cached
+# run (~10s) through the default `api_job_timeout_sec` neighbourhood and
+# past it, so a timing-out fleet is visible as mass in the tail rather
+# than as a single saturated `+Inf`.
 _JOB_DURATION_BUCKETS: tuple[float, ...] = (
     5.0,
     10.0,
@@ -172,6 +181,8 @@ class _Instruments:
     job_duration_seconds: Histogram
     llm_cost_usd_total: Counter
     llm_calls_total: Counter
+    llm_retries_total: Counter
+    llm_upstream_errors_total: Counter
     rate_limit_rejections_total: Counter
 
 
@@ -245,6 +256,23 @@ def _build_instruments(meter: Meter) -> _Instruments:
             "llm_calls_total",
             unit="1",
             description="Completed LLM calls, by model.",
+        ),
+        llm_retries_total=meter.create_counter(
+            "llm_retries_total",
+            unit="1",
+            description=(
+                "Anthropic SDK attempts discarded before a call "
+                "succeeded (the SDK's own `retries_taken`), by model."
+            ),
+        ),
+        llm_upstream_errors_total=meter.create_counter(
+            "llm_upstream_errors_total",
+            unit="1",
+            description=(
+                "LLM calls that failed after the SDK exhausted its "
+                "retries, by model and HTTP status "
+                "(`connection` when the call never got one)."
+            ),
         ),
         rate_limit_rejections_total=meter.create_counter(
             "rate_limit_rejections_total",
@@ -434,6 +462,54 @@ def record_llm_usage(*, model: str, cost_usd: float) -> None:
     attributes = {"model": model}
     instruments.llm_calls_total.add(1, attributes)
     instruments.llm_cost_usd_total.add(cost_usd, attributes)
+
+
+def record_llm_retries(*, model: str, retries: int) -> None:
+    """Record attempts the Anthropic SDK discarded before one succeeded.
+
+    Called from `src.observability.costs.record_llm_call` with the SDK's
+    own `retries_taken`, which `src.llm.call_llm` reads off the raw
+    response (ADR 0051). Before this, SDK-internal retries were entirely
+    invisible: the retry line is logged by `anthropic._base_client` at
+    INFO, which the log config demoted to WARNING, so a rate-limited
+    fleet looked like slow calls and nothing else.
+
+    No app-level retry loop is involved — this counts what the SDK
+    already did, so the count stays correct if `anthropic_max_retries`
+    changes.
+
+    Args:
+        model: Model id the call was billed against.
+        retries: `retries_taken` for one call. Callers skip the zero
+            case, but a zero here is harmless — a counter `add(0)` is a
+            no-op that still creates the series.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    instruments.llm_retries_total.add(retries, {"model": model})
+
+
+def record_llm_upstream_error(*, model: str, status: str) -> None:
+    """Record an LLM call that failed after the SDK gave up retrying.
+
+    The companion to `record_llm_retries`: retries that eventually
+    succeed cost latency, retries that run out cost the whole node. Both
+    have to be visible for "the API is degraded" to be answerable
+    without reading logs (ADR 0051).
+
+    Args:
+        model: Model id the failed call targeted.
+        status: HTTP status as a string, or `"connection"` when the
+            call failed before any response (timeout, DNS, reset).
+            Bounded cardinality either way — never the message text.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    instruments.llm_upstream_errors_total.add(
+        1, {"model": model, "status": status}
+    )
 
 
 def record_rate_limit_rejection(*, backend: str) -> None:

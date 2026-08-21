@@ -182,6 +182,27 @@ never renumbered.
   set of counters. Closes ADR 0047's `abandoned_node_threads`
   follow-up.
 
+- [0051](0051-llm-cost-enforcement-and-visibility.md) — LLM cost
+  enforcement and visibility. `max_cost_usd` was enforced only in the
+  API runner's `on_node` callback, so `make run` and `make eval` — the
+  two paths about to spend real money — had no dollar ceiling at all,
+  and even on the API path a single node could overshoot by its whole
+  fan-out. The check moves to `src.llm.call_llm`, the one function
+  every entry point funnels through, with `CostBudgetExceeded` and the
+  cap helper relocated to `observability.costs` so the LLM layer never
+  imports the API layer; the between-nodes check stays as the coarser
+  stop. Hitting the ceiling now keeps the draft the run already paid
+  for instead of returning a bill with nothing attached. Alongside
+  that: SDK retries become countable and loggable via
+  `with_raw_response.retries_taken` (no second retry loop —
+  ADR 0009's SDK-native choice stands), the retry envelope is clamped
+  so one flaky call cannot eat a whole `api_job_timeout_sec`, unpriced
+  models warn once per id and the coverage check reads runtime values
+  instead of field defaults, and stderr goes back to being parseable
+  JSON with `faulthandler` armed. Extends ADR 0033; narrows
+  ADR 0042's `anthropic` logger demotion to spare the SDK's retry
+  line.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

@@ -55,8 +55,17 @@ from src.observability import (
     reset_run_id,
     start_cost_tracking,
 )
-from src.observability.costs import RunCosts
+from src.observability.costs import CostBudgetExceeded
+from src.observability.costs import enforce_cost_cap as _enforce_cost_cap
 from src.observability.metrics import record_job_terminal
+
+# ADR 0051 moved `CostBudgetExceeded` and the cap helper out of this
+# module and into `observability.costs`, so `src.llm` can raise the same
+# exception this runner catches without the LLM layer importing the API
+# layer. Both are re-bound above under the names this module has always
+# exported: `CostBudgetExceeded` is part of the runner's public surface
+# (routes and tests import it from here) and `_enforce_cost_cap` is
+# imported by `tests/test_runner_cost_cap.py`.
 
 log = get_logger(__name__)
 
@@ -103,24 +112,6 @@ class HitlTimeoutError(Exception):
 
 class HitlCancelledError(Exception):
     """Client sent `action=cancel` from the review endpoint."""
-
-
-class CostBudgetExceeded(Exception):
-    """Run's accumulated LLM spend crossed ``settings.max_cost_usd``.
-
-    Raised from the runner's ``on_node`` callback between graph nodes
-    so the workflow aborts before the next agent invocation. See
-    ADR 0033: the supervisor also has its own budget check, but the
-    fixed-DAG path has no supervisor — this is the only enforcement
-    point that catches both shapes.
-    """
-
-    def __init__(self, spent_usd: float, cap_usd: float) -> None:
-        self.spent_usd = spent_usd
-        self.cap_usd = cap_usd
-        super().__init__(
-            f"per-run cost ${spent_usd:.4f} exceeded cap ${cap_usd:.2f}"
-        )
 
 
 def _initial_state(
@@ -248,19 +239,6 @@ async def _put_terminal_event(job: Job, event: str, data: dict[str, Any]) -> Non
     await job.event_queue.put({"event": event, "data": data})
 
 
-def _enforce_cost_cap(costs: RunCosts, cap_usd: float) -> None:
-    """Raise `CostBudgetExceeded` when the run's spend crosses the cap.
-
-    Called between graph nodes from the runner's `on_node` callback.
-    The cap comes from `settings.max_cost_usd`; passing it in
-    explicitly (rather than reading `settings` here) keeps this
-    helper unit-testable without env-var gymnastics.
-    """
-    spent = costs.total_cost_usd
-    if spent >= cap_usd:
-        raise CostBudgetExceeded(spent_usd=spent, cap_usd=cap_usd)
-
-
 def _extract_final_metrics(state: dict[str, Any]) -> dict[str, Any]:
     """Pull the fields that end up in the `JobDetail` response."""
     return {
@@ -335,16 +313,28 @@ async def _invoke_streaming(
     pauses = 0
     stream_input: Any = initial_state
     while True:
-        async for chunk in app.astream(stream_input, config=config):
-            for node_name, state_update in chunk.items():
-                if node_name == "__interrupt__":
-                    # LangGraph's interrupt sentinel — its payload is
-                    # a tuple of `Interrupt` objects, not a state
-                    # update. The pause itself is detected below via
-                    # `aget_state(config).next`.
-                    continue
-                merged.update(state_update)
-                await on_node(node_name, state_update)
+        try:
+            async for chunk in app.astream(stream_input, config=config):
+                for node_name, state_update in chunk.items():
+                    if node_name == "__interrupt__":
+                        # LangGraph's interrupt sentinel — its payload is
+                        # a tuple of `Interrupt` objects, not a state
+                        # update. The pause itself is detected below via
+                        # `aget_state(config).next`.
+                        continue
+                    merged.update(state_update)
+                    await on_node(node_name, state_update)
+        except CostBudgetExceeded as exc:
+            # `merged` is updated BEFORE `on_node` runs, so whatever the
+            # graph had produced by the time the ceiling hit is in hand
+            # right here — including a `draft_report` from a run whose
+            # last node pushed it over. Hand it to the runner rather
+            # than letting the money already spent evaporate (ADR 0051).
+            # Reading the checkpoint instead would be an extra async
+            # round trip for state this frame already holds, and would
+            # return nothing at all with checkpointing disabled.
+            exc.partial_report = str(merged.get("draft_report") or "")
+            raise
 
         try:
             workflow_state = await app.aget_state(config)
@@ -608,6 +598,43 @@ async def _persist_terminal(store: JobStore, job: Job) -> None:
     )
 
 
+def _log_lease_failure(
+    event: str, *, job_id: str, worker_id: str, consecutive: int
+) -> None:
+    """Log one lease-keeper failure at a volume an outage survives.
+
+    Every other `except` in this module carries `exc_info` (ADR 0051
+    closed the gap where the lease sites did not), but the keeper's
+    failures are *timer-driven*: a Redis outage produces one per job per
+    `job_lease_refresh_sec` tick, so an unconditional stack trace turns
+    a dependency blip into a log flood that buries the events an
+    operator is actually looking for.
+
+    The first failure of a streak therefore carries the traceback at
+    WARNING and every repeat is DEBUG with a running count — the same
+    information, paid for once. The counter resets on the next success,
+    so a *second* outage warns again rather than hiding behind the
+    first.
+
+    Args:
+        event: Structured event name (`job_lease_refresh_error` or
+            `job_lease_acquire_error`).
+        job_id: Job whose lease failed to refresh or acquire.
+        worker_id: This process's lease-owner id.
+        consecutive: How many failures of this kind have happened
+            back to back, this one included. `1` is the streak head.
+    """
+    extra = {
+        "job_id": job_id,
+        "worker_id": worker_id,
+        "consecutive": consecutive,
+    }
+    if consecutive == 1:
+        log.warning(event, extra=extra, exc_info=True)
+    else:
+        log.debug(event, extra=extra, exc_info=True)
+
+
 async def _refresh_lease_forever(
     refresh: Callable[[str, str, int], Awaitable[bool]],
     job_id: str,
@@ -640,9 +667,52 @@ async def _refresh_lease_forever(
     ttl_sec = settings.job_lease_ttl_sec
     interval = settings.job_lease_refresh_sec
 
+    # ADR 0051: bind the run_id HERE, not in the caller. `run_job`
+    # binds it inside the `async with _job_lease(...)` body, i.e. after
+    # `__aenter__` has already created this task — and
+    # `asyncio.create_task` snapshots the context at creation, so every
+    # line the keeper emitted formatted with the `-` default and could
+    # not be joined to its job by run_id. A task's context is its own
+    # copy, so setting it in here cannot leak back into `run_job`.
+    run_scope = bind_run_id(job_id)
+    try:
+        await _refresh_lease_loop(
+            refresh, job_id, worker_id, acquire=acquire, ttl_sec=ttl_sec,
+            interval=interval,
+        )
+    finally:
+        reset_run_id(run_scope)
+
+
+async def _refresh_lease_loop(
+    refresh: Callable[[str, str, int], Awaitable[bool]],
+    job_id: str,
+    worker_id: str,
+    *,
+    acquire: Callable[[str, str, int], Awaitable[bool]] | None,
+    ttl_sec: int,
+    interval: int,
+) -> None:
+    """The keeper's actual loop, split out so the run_id bind above
+    reads as a single `try/finally` rather than wrapping 40 lines.
+
+    Args:
+        refresh: The store's owner-checked `refresh_lease`.
+        job_id: Job whose lease this task owns.
+        worker_id: This process's id, checked against the stored owner.
+        acquire: The store's `acquire_lease` when we are running
+            leaseless and must keep retrying the claim; `None` on the
+            normal path.
+        ttl_sec: Lease TTL to re-arm on every tick.
+        interval: Seconds between ticks.
+    """
     # Set when we entered leaseless after a failed acquire; cleared
     # the moment a retry lands.
     pending_acquire = acquire
+    # Consecutive failures of each kind, for `_log_lease_failure`'s
+    # first-warns-then-debugs volume control.
+    refresh_failures = 0
+    acquire_failures = 0
 
     while True:
         await asyncio.sleep(interval)
@@ -652,24 +722,32 @@ async def _refresh_lease_forever(
             try:
                 if bool(await pending_acquire(job_id, worker_id, ttl_sec)):
                     pending_acquire = None
+                    acquire_failures = 0
                     log.info(
                         "job_lease_acquired_late",
                         extra={"job_id": job_id, "worker_id": worker_id},
                     )
             except Exception:
-                log.warning(
+                acquire_failures += 1
+                _log_lease_failure(
                     "job_lease_acquire_error",
-                    extra={"job_id": job_id, "worker_id": worker_id},
+                    job_id=job_id,
+                    worker_id=worker_id,
+                    consecutive=acquire_failures,
                 )
             continue
         try:
             still_ours = bool(await refresh(job_id, worker_id, ttl_sec))
         except Exception:
-            log.warning(
+            refresh_failures += 1
+            _log_lease_failure(
                 "job_lease_refresh_error",
-                extra={"job_id": job_id, "worker_id": worker_id},
+                job_id=job_id,
+                worker_id=worker_id,
+                consecutive=refresh_failures,
             )
             continue
+        refresh_failures = 0
         if not still_ours:
             log.warning(
                 "job_lease_lost",
@@ -714,24 +792,37 @@ async def _job_lease(
 
     ttl_sec = settings.job_lease_ttl_sec
     holding = False
-    # The two ways to end up leaseless are worth separating in the
-    # logs: a contended key means a second worker claims the same job
-    # id, a raised acquire means Redis is unhealthy. Both proceed
-    # unleased, but they call for different investigations.
+    acquire_failed = False
+    # ADR 0051: `run_job` binds the run_id inside this context
+    # manager's body, so both warnings below used to format with the
+    # `-` default. Bind it for the acquire, and drop it again before
+    # yielding so the caller's own bind stays the one that owns the
+    # scope.
+    lease_scope = bind_run_id(job_id)
     try:
-        holding = bool(await acquire(job_id, worker_id, ttl_sec))
-    except Exception:
-        # Redis blipped. Proceeding leaseless for the whole run would
-        # leave this job reapable by any peer's sweep for as long as
-        # it takes — so still start the keeper, which re-attempts the
-        # acquire on every tick and closes the window as soon as
-        # Redis comes back.
-        log.warning(
-            "job_lease_acquire_error",
-            extra={"job_id": job_id, "worker_id": worker_id},
-        )
-    else:
-        if not holding:
+        # The two ways to end up leaseless are worth separating in the
+        # logs: a contended key means a second worker claims the same
+        # job id, a raised acquire means Redis is unhealthy. Both
+        # proceed unleased, but they call for different investigations.
+        try:
+            holding = bool(await acquire(job_id, worker_id, ttl_sec))
+        except Exception:
+            # Redis blipped. Proceeding leaseless for the whole run
+            # would leave this job reapable by any peer's sweep for as
+            # long as it takes — so still start the keeper, which
+            # re-attempts the acquire on every tick and closes the
+            # window as soon as Redis comes back.
+            acquire_failed = True
+            log.warning(
+                "job_lease_acquire_error",
+                extra={"job_id": job_id, "worker_id": worker_id},
+                # ADR 0051: "the acquire raised" without saying what it
+                # raised cannot distinguish a connection refusal from a
+                # WRONGTYPE on the lease key, and this is the signal the
+                # redriver's orphan decision hangs off.
+                exc_info=True,
+            )
+        if not (holding or acquire_failed):
             # A second worker claims this job id. That is a
             # double-submit, not a reason to refuse to run, and
             # unlike the error above it will not resolve by
@@ -740,8 +831,14 @@ async def _job_lease(
                 "job_lease_contended",
                 extra={"job_id": job_id, "worker_id": worker_id},
             )
-            yield
-            return
+    finally:
+        reset_run_id(lease_scope)
+
+    if not (holding or acquire_failed):
+        # Contended: no lease and no keeper, because retrying would
+        # only fight the rightful owner.
+        yield
+        return
 
     task = asyncio.create_task(
         _refresh_lease_forever(
@@ -862,6 +959,17 @@ async def run_job(
             # adversarial inputs. Supervisor loop has its own check
             # but firing here first is harmless — both point at the
             # same accumulator.
+            #
+            # ADR 0051 keeps this check even though `src.llm.call_llm`
+            # now checks the same accumulator before every call. The two
+            # are not redundant: the per-call check is what bounds
+            # *intra-node* overshoot (the reader fans out up to
+            # `max_papers` calls inside one node, so this callback alone
+            # let a run pass the ceiling by a whole node's spend), while
+            # this one still catches a node that spent without going
+            # through `call_llm` at all. Both raise the same exception
+            # from the same accumulator, so whichever fires first is the
+            # one `run_job` handles — there is no double-fire.
             _enforce_cost_cap(costs, cap_usd)
 
         # Containment starts BEFORE the first store write, not after
@@ -976,6 +1084,13 @@ async def run_job(
             job.error = str(exc)
             job.error_type = "cost_budget_exceeded"
             job.completed_at = time.time()
+            # ADR 0051: keep the draft the run had already paid for.
+            # The job is still `failed` — the report is partial and the
+            # caller must know it — but `GET /research/{id}` now returns
+            # the artifact instead of a bill with nothing attached. This
+            # matters most for the run whose *last* node crossed the
+            # cap: its report was complete, and it used to be discarded.
+            job.result = exc.partial_report or None
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
@@ -996,6 +1111,9 @@ async def run_job(
                     "job_id": job.job_id,
                     "cap_usd": exc.cap_usd,
                     "spent_usd": exc.spent_usd,
+                    # Whether the spend bought a retrievable artifact is
+                    # the first question asked about a capped job.
+                    "partial_report_chars": len(job.result or ""),
                     **snapshot,
                 },
             )

@@ -1,12 +1,19 @@
-"""Runner-level cost cap (ADR 0033).
+"""Cost cap enforcement (ADR 0033, extended by ADR 0051).
 
 The supervisor loop has its own `max_cost_usd` short-circuit, but the
 fixed-DAG path has none. The runner's `on_node` callback is the one
-place both shapes flow through, so the enforcement lives there.
+place both graph shapes flow through, so enforcement started there.
 
-Two layers under test:
+ADR 0051 added a second enforcement point at `src.llm.call_llm`,
+because `on_node` only exists on the API path: `make run` and
+`make eval` drive the graph with a bare `app.invoke(...)` and had no
+ceiling at all. Both raise the same `CostBudgetExceeded` against the
+same accumulator.
+
+Layers under test:
 
 - `_enforce_cost_cap` — the pure boundary math.
+- The sync path — no runner, no `on_node`, spend still stops.
 - `run_job`'s exception handlers — the audit found the
   `CostBudgetExceeded` and `TimeoutError` paths had zero coverage,
   so the suite stayed green even if a refactor dropped the handlers
@@ -14,6 +21,8 @@ Two layers under test:
   observable behaviour (job status transitions and event-frame
   payloads), not runner internals, so they survive the planned
   runner refactor as long as the contract holds.
+- Report preservation — hitting the ceiling must not throw away a
+  draft the run has already paid for.
 """
 
 from __future__ import annotations
@@ -25,12 +34,33 @@ from typing import Any
 
 import pytest
 
+from src import llm as llm_module
 from src.api.jobs import InMemoryJobStore, Job, JobStatus
 from src.api.runner import CostBudgetExceeded, _enforce_cost_cap, run_job
 from src.config import Settings
-from src.observability.costs import RunCosts, current_costs
+from src.observability import costs as costs_module
+from src.observability.costs import (
+    RunCosts,
+    current_costs,
+    start_cost_tracking,
+)
 
 pytestmark = pytest.mark.unit
+
+
+@pytest.fixture(autouse=True)
+def _no_leaked_accumulator() -> Any:
+    """Leave the cost ContextVar unbound for the next test.
+
+    `start_cost_tracking()` writes a module-level ContextVar that
+    outlives the test in the same pytest context, and an armed
+    accumulator changes `call_llm`'s behaviour everywhere.
+    """
+    token = costs_module._current_costs.set(None)
+    try:
+        yield
+    finally:
+        costs_module._current_costs.reset(token)
 
 
 def test_under_cap_does_not_raise() -> None:
@@ -73,6 +103,94 @@ def test_zero_cost_never_raises() -> None:
     _enforce_cost_cap(costs, cap_usd=0.01)  # empty accumulator, no raise
 
 
+# ---- the sync path: no runner, no on_node, still a ceiling -------------
+
+
+class _SpendingClient:
+    """Fake Anthropic client that bills a fixed amount per call.
+
+    Stands in for the SDK at `call_llm`'s seam so the ceiling can be
+    exercised without a network — the tokens are chosen to produce a
+    known per-call cost through the real `estimate_cost` path.
+    """
+
+    def __init__(self) -> None:
+        self.calls = 0
+        self.messages = SimpleNamespace(with_raw_response=self)
+
+    def create(self, **_kwargs: Any) -> Any:
+        self.calls += 1
+        usage = SimpleNamespace(
+            input_tokens=200_000,
+            output_tokens=0,
+            cache_read_input_tokens=0,
+            cache_creation_input_tokens=0,
+        )
+        parsed = SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="ok")], usage=usage
+        )
+        return SimpleNamespace(retries_taken=0, parse=lambda: parsed)
+
+
+def test_sync_pipeline_run_trips_the_cap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`make run` / `make eval` shape: an accumulator and nothing else.
+
+    No `run_job`, no `on_node`, no supervisor — exactly what
+    `src/main.py` and `src/eval/runner.py` set up before calling
+    `app.invoke(...)`. Before ADR 0051 this loop ran until the queries
+    ran out; now it stops at the ceiling.
+
+    Mutation-check: removing `_check_cost_budget()` from `call_llm`
+    makes the loop complete all 20 iterations and the `pytest.fail`
+    below fires.
+    """
+    monkeypatch.setattr(
+        llm_module, "settings", Settings(max_cost_usd=2.00)
+    )
+    client = _SpendingClient()
+    monkeypatch.setattr(llm_module, "_get_client", lambda: client)
+
+    costs = start_cost_tracking()
+    # 200k Sonnet input tokens = $0.60 per call, so the $2.00 cap is
+    # crossed on the fourth call's pre-flight check.
+    for _ in range(20):
+        try:
+            llm_module.call_llm("q")
+        except CostBudgetExceeded as exc:
+            assert exc.cap_usd == 2.00
+            assert exc.spent_usd >= 2.00
+            break
+    else:  # pragma: no cover - only reached when the cap never fires
+        pytest.fail("call_llm never enforced max_cost_usd on the sync path")
+
+    assert client.calls == 4
+    assert costs.total_cost_usd == pytest.approx(2.40)
+
+
+def test_sync_run_without_tracking_is_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No accumulator bound means no run to measure.
+
+    A unit test or an ad-hoc script has no budget to exceed, and must
+    keep working exactly as it did — the same rule `record_llm_call`
+    already follows.
+    """
+    monkeypatch.setattr(
+        llm_module, "settings", Settings(max_cost_usd=0.01)
+    )
+    client = _SpendingClient()
+    monkeypatch.setattr(llm_module, "_get_client", lambda: client)
+
+    assert current_costs() is None
+    for _ in range(3):
+        llm_module.call_llm("q")
+
+    assert client.calls == 3
+
+
 # ---- run_job handler coverage ------------------------------------------
 
 
@@ -103,6 +221,56 @@ class OverspendingStub:
             cost_usd=self._cost_usd,
         )
         yield {"planner": {"iteration": 0}}
+
+    def get_state(self, config: dict[str, Any] | None = None) -> Any:
+        return SimpleNamespace(next=(), values={})
+
+    def invoke(
+        self,
+        state: dict[str, Any] | None,
+        config: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:  # pragma: no cover - unreached past the cap
+        return {}
+
+
+class ReportThenOverspendStub:
+    """Produces a report, then blows the cap.
+
+    Two shapes in one, selected by `raise_from_node`:
+
+    - `False` — the node that finished the report is also the node
+      whose spend crossed the ceiling, so `on_node` raises after the
+      update has already landed in the runner's merged state. This is
+      the "run completed on its final node and was failed anyway"
+      case the audit called out.
+    - `True` — the exception comes out of the *stream* itself, which
+      is what `src.llm.call_llm`'s per-call check does from inside a
+      later node (ADR 0051). The earlier node's report must survive
+      that too.
+    """
+
+    def __init__(self, cost_usd: float, *, raise_from_node: bool) -> None:
+        self._cost_usd = cost_usd
+        self._raise_from_node = raise_from_node
+
+    async def astream(
+        self,
+        state: dict[str, Any] | None,
+        config: dict[str, Any] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        costs = current_costs()
+        assert costs is not None, "run_job must start cost tracking"
+        costs.record(
+            "claude-sonnet-4-6",
+            input_tokens=1_000_000,
+            output_tokens=0,
+            cost_usd=self._cost_usd,
+        )
+        yield {"synthesizer": {"draft_report": "# Findings\n\nParagraph."}}
+        if self._raise_from_node:
+            raise CostBudgetExceeded(
+                spent_usd=self._cost_usd, cap_usd=2.0
+            )
 
     def get_state(self, config: dict[str, Any] | None = None) -> Any:
         return SimpleNamespace(next=(), values={})
@@ -232,3 +400,95 @@ async def test_run_job_timeout_fails_the_job(
     terminal = frames[-1]["data"]
     assert set(terminal) == {"job_id", "error", "error_type", "elapsed_sec"}
     assert terminal["error_type"] == "timeout"
+
+
+# ---- the paid-for draft must survive the ceiling (ADR 0051) -----------
+
+
+async def test_capped_job_keeps_the_report_it_already_paid_for(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Failing the job is right; throwing away the artifact is not.
+
+    The old handler set status / error / error_type / cost and returned
+    without ever touching `job.result`, so `GET /research/{id}` returned
+    a bill with nothing attached — even for a run whose *last* node
+    produced a complete report and happened to cross the cap doing it.
+
+    Mutation-check: deleting the `job.result = exc.partial_report`
+    assignment leaves `job.result` None and this fails; deleting the
+    `except CostBudgetExceeded` block in `_invoke_streaming` leaves
+    `partial_report` empty and it fails the same way.
+    """
+    import src.api.runner as runner_module
+
+    monkeypatch.setattr(runner_module, "settings", Settings(max_cost_usd=2.0))
+    job = Job(job_id="cost-blown-with-report", query="q", hitl_bypass=True)
+    store = InMemoryJobStore()
+    await store.create(job)
+
+    await run_job(
+        job,
+        ReportThenOverspendStub(3.0, raise_from_node=False),
+        store,
+        asyncio.Semaphore(1),
+    )
+
+    assert job.status == JobStatus.failed
+    assert job.error_type == "cost_budget_exceeded"
+    assert job.result == "# Findings\n\nParagraph."
+    # And it is durable, not just on the in-memory object — the
+    # retrieval path reads the store.
+    stored = await store.get("cost-blown-with-report")
+    assert stored is not None
+    assert stored.result == "# Findings\n\nParagraph."
+
+
+async def test_report_survives_a_cap_raised_from_inside_a_node(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`call_llm`'s per-call check raises from inside the graph.
+
+    That path never reaches `on_node`, so the draft has to be
+    recovered from the runner's merged state rather than from the
+    callback's own frame.
+    """
+    import src.api.runner as runner_module
+
+    monkeypatch.setattr(runner_module, "settings", Settings(max_cost_usd=2.0))
+    job = Job(job_id="cost-blown-mid-node", query="q", hitl_bypass=True)
+    store = InMemoryJobStore()
+    await store.create(job)
+
+    await run_job(
+        job,
+        ReportThenOverspendStub(1.0, raise_from_node=True),
+        store,
+        asyncio.Semaphore(1),
+    )
+
+    assert job.status == JobStatus.failed
+    assert job.error_type == "cost_budget_exceeded"
+    assert job.result == "# Findings\n\nParagraph."
+
+
+async def test_capped_job_with_no_report_stores_none_not_empty_string(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A run that bought nothing must not look like it bought a blank.
+
+    `""` and `None` read very differently downstream: the export route
+    refuses on falsy `result`, but a `JobDetail` carrying `result: ""`
+    tells a client a report exists and is empty.
+    """
+    import src.api.runner as runner_module
+
+    monkeypatch.setattr(runner_module, "settings", Settings(max_cost_usd=2.0))
+    job = Job(job_id="cost-blown-no-report", query="q", hitl_bypass=True)
+    store = InMemoryJobStore()
+    await store.create(job)
+
+    await run_job(job, OverspendingStub(3.0), store, asyncio.Semaphore(1))
+
+    assert job.status == JobStatus.failed
+    assert job.result is None

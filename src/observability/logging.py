@@ -8,12 +8,26 @@ Design (ADR 0012):
     workers use `contextvars.copy_context().run(...)`.
   - Level from `settings.log_level` at logger construction; logs sink
     to stderr so eval / runner stdout stays report-only.
+
+ADR 0051 adds two things to the one-time root configuration, both about
+what *else* reaches stderr:
+
+  - The ML stack's progress bars and INFO chatter are muted, because
+    "logs sink to stderr" is only useful if stderr is parseable. A
+    measured full-workflow run emitted 22 JSON lines and 34 non-JSON
+    ones, with one JSON record physically split by an interleaved
+    tqdm bar — records lost to a parser, not merely surrounded by noise.
+  - `faulthandler` is enabled, so a native crash (a SIGSEGV inside
+    MiniLM's forward pass, say) leaves a traceback on stderr instead of
+    an exit code and nothing at all.
 """
 
 from __future__ import annotations
 
+import faulthandler
 import json
 import logging
+import os
 import sys
 from contextvars import ContextVar, Token
 from datetime import UTC, datetime
@@ -116,17 +130,92 @@ class JsonFormatter(logging.Formatter):
 
 _configured_root = False
 
+# Libraries that write per-request / per-batch INFO lines. Demoted to
+# WARNING so the JSON stream carries events, not narration.
+_NOISY_LOGGERS = (
+    "httpx",
+    "httpcore",
+    "anthropic",
+    "urllib3",
+    # The ML stack (ADR 0051). `sentence_transformers` matters twice
+    # over: its INFO lines are noise, AND its progress-bar default is
+    # `logger.getEffectiveLevel() in (INFO, DEBUG)` — so demoting the
+    # logger is also what turns the tqdm bars off, at the library's own
+    # gate rather than by monkeypatching its call sites.
+    "sentence_transformers",
+    "transformers",
+    "huggingface_hub",
+    "faiss",
+)
+
+# The one library logger ADR 0051 pulls back OUT of the blanket
+# demotion. `anthropic._base_client` emits exactly one non-DEBUG line —
+# `"Retrying request to %s in %f seconds"` at INFO — and that line is
+# the only in-process signal that the SDK is absorbing 429s / 529s /
+# timeouts on our behalf. ADR 0042's demotion of the whole `anthropic`
+# tree silenced it, which is how a rate-limited fleet came to look
+# identical to a slow one. Re-opening the child rather than the parent
+# keeps every other `anthropic.*` logger quiet.
+_SDK_RETRY_LOGGER = "anthropic._base_client"
+
+# Environment knobs the ML stack reads at import time. `setdefault`, so
+# an operator debugging a model load can still export their own value.
+# Progress bars and tokenizer fork-warnings write straight to stderr,
+# bypassing `logging` entirely — a logger level cannot reach them
+# (ADR 0051).
+_QUIET_LIBRARY_ENV = {
+    "HF_HUB_DISABLE_PROGRESS_BARS": "1",
+    "TOKENIZERS_PARALLELISM": "false",
+    "TRANSFORMERS_VERBOSITY": "error",
+}
+
+
+def _enable_faulthandler() -> None:
+    """Arm `faulthandler` so a native crash still leaves a traceback.
+
+    A SIGSEGV in native code (torch, faiss and tokenizers all run there;
+    an audit reproduced one inside MiniLM's pooling forward pass under
+    the reader's thread-pool fan-out) kills the process with no
+    Python-level output whatsoever — no log line, no traceback, no
+    artifact, just exit 139. `faulthandler` costs nothing until that
+    happens and then prints every thread's stack to stderr, which is the
+    difference between a diagnosable crash and a mystery (ADR 0051).
+    This is half of that fix; pinning the native thread pools is the
+    other half and lives outside this module.
+
+    Best-effort by design: `enable()` needs a real file descriptor and
+    `sys.stderr` is not always one — pytest's capture and embedded hosts
+    replace it with an object that has no `fileno()`. Crash diagnostics
+    are a bonus, so an unavailable handler is logged and shrugged off
+    rather than allowed to break logging setup for everyone.
+    """
+    if faulthandler.is_enabled():
+        # Already armed by the host — pytest does this by default.
+        return
+    try:
+        faulthandler.enable()
+    except (AttributeError, ValueError, OSError) as exc:
+        logging.getLogger(__name__).debug(
+            "faulthandler_unavailable", extra={"detail": str(exc)}
+        )
+
 
 def _configure_root_once() -> None:
     """Attach the JSON formatter to a stderr handler on the root logger.
 
-    Idempotent — safe to call from every `get_logger`. Also silences
-    the noisy httpx / anthropic HTTP client debug logs which spam the
-    stream with per-request lines.
+    Idempotent — safe to call from every `get_logger`. Also quiets the
+    HTTP clients and the ML stack so every line on stderr is a JSON
+    record, and enables `faulthandler` so a native crash is not silent.
     """
     global _configured_root
     if _configured_root:
         return
+
+    # Before any logging setup: these are read by `transformers` /
+    # `huggingface_hub` / `tokenizers` when they import, and this module
+    # is imported far earlier than they are.
+    for key, value in _QUIET_LIBRARY_ENV.items():
+        os.environ.setdefault(key, value)
 
     root = logging.getLogger()
     root.setLevel(settings.log_level.upper())
@@ -135,14 +224,23 @@ def _configure_root_once() -> None:
     handler.setFormatter(JsonFormatter())
     root.addHandler(handler)
 
+    _enable_faulthandler()
+
     # Prevent library debug noise from dominating output — but only
     # when the app itself isn't running at DEBUG (ADR 0042). An
     # unconditional demotion silently defeated `ANTHROPIC_LOG=debug`,
     # which is exactly the switch on-call reaches for when jobs fail
     # against the Anthropic API.
     if root.level > logging.DEBUG:
-        for noisy in ("httpx", "httpcore", "anthropic", "urllib3"):
+        for noisy in _NOISY_LOGGERS:
             logging.getLogger(noisy).setLevel(logging.WARNING)
+        # ...except the SDK's retry line (see `_SDK_RETRY_LOGGER`). A
+        # child logger's own level wins over its parent's, and it is
+        # held no lower than the app's own level so `LOG_LEVEL=WARNING`
+        # still means WARNING rather than "WARNING plus retries".
+        logging.getLogger(_SDK_RETRY_LOGGER).setLevel(
+            max(logging.INFO, root.level)
+        )
 
     _configured_root = True
 
