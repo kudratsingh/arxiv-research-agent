@@ -64,6 +64,17 @@ Scholar's external-ID mapping emits the unversioned form, and the two
 must collide to one entry. First occurrence wins, so the arXiv seed
 beats an S2 duplicate.
 
+## Ranking
+
+The deduped pool is ranked against the original question by cosine
+similarity over MiniLM embeddings — `rank_papers_by_relevance` in
+`src/tools/embeddings.py`, a FAISS inner-product index — capped at
+`settings.max_papers`. The encoder is the process-wide shared model:
+torch's OpenMP pool is pinned to one thread and the device is
+explicit (`embedding_device`, default `cpu`) — the native-crash
+containments of ADR 0052 — and `embedding_cache=postgres` skips
+re-encoding texts seen before (ADR 0028).
+
 ## Semantic Scholar enrichment (ADR 0023)
 
 Gated by `settings.enable_semantic_scholar`. The top

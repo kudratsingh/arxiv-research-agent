@@ -6,8 +6,9 @@ pipeline runs the whole system on a fixed benchmark, computes
 system-level metrics, and produces a report so we can measure the
 effect of code changes on end-to-end quality.
 
-Living under `src/eval/`. Design decision: [ADR 0005](decisions/0005-eval-approach.md) —
-custom in-repo eval rather than adopting Ragas / DeepEval / LangSmith.
+Living under `src/eval/`. Design decision: [ADR
+0005](decisions/0005-custom-eval-over-ragas.md) — custom in-repo eval
+rather than adopting Ragas / DeepEval / LangSmith.
 
 ## Goals
 
@@ -28,12 +29,15 @@ custom in-repo eval rather than adopting Ragas / DeepEval / LangSmith.
 
 ## Components
 
-### `src/eval/benchmark_queries.py` (this PR)
+### `src/eval/benchmark_queries.py`
 
-Ten hand-curated ML/AI research questions with `query_id`, `query`,
-`domain`, `expected_topics`, and `notes`. Coverage across
-hallucination, retrieval, alignment, reasoning, fine-tuning,
-multimodal, efficiency, evaluation, architecture, and safety.
+Twenty hand-curated ML/AI research questions with `query_id`, `query`,
+`domain`, `expected_topics`, and `notes` (the original ten were
+doubled by ADR
+[0013](decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)).
+Coverage across hallucination, retrieval, alignment, reasoning,
+fine-tuning, multimodal, efficiency, evaluation, architecture, and
+safety.
 
 Invariants (protected by `tests/test_benchmark_queries.py`):
 - IDs are kebab-case slugs, unique
@@ -43,22 +47,22 @@ Invariants (protected by `tests/test_benchmark_queries.py`):
 
 ### `src/eval/metrics.py`
 
-Three metrics, each landing as its own PR so the design and prompts
-get scrutinized independently:
+Four metrics, each of which landed as its own PR so the design and
+prompts got scrutinized independently:
 
-- **Citation accuracy** — **landed** (this PR). Pure regex + set
+- **Citation accuracy**. Pure regex + set
   membership over `(first-author-lastname, 4-digit-year)`. Handles
   `[Smith, 2023]`, `[Smith et al., 2023]`, `[Smith and Jones, 2023]`,
   year suffixes (`2023a`), and deduplicates repeated citations.
   Returns `{score, total_citations, resolved, unresolved}`.
-- **Completeness** — **landed** (this PR). Single batched LLM-as-judge
+- **Completeness**. Single batched LLM-as-judge
   call — the judge sees the whole report plus the full topic list and
   returns per-topic `covered` decisions with short reasons. Strict
   prompt: name-dropping does not count. Aggregator defensively handles
   missing / extra / malformed judge output. See ADR
   [0006](decisions/0006-completeness-batched-judge.md) for the
   batched-vs-per-topic tradeoff.
-- **Faithfulness** — **landed** (this PR). Single LLM-as-judge call
+- **Faithfulness**. Single LLM-as-judge call
   extracts each factual, cited claim from the report and decides
   `supported: true|false|null` against the cited paper's abstract.
   Source of truth is `state["papers"]` abstracts joined with
@@ -68,6 +72,10 @@ get scrutinized independently:
   we didn't provide, we force `supported=None`. See ADR
   [0007](decisions/0007-faithfulness-single-call-abstracts.md) for
   source-of-truth and denominator tradeoffs.
+- **Retrieval recall**. LLM-as-judge over the retrieved paper set
+  against `expected_topics` — did search actually fetch material for
+  each expected topic, independent of what the report did with it
+  (ADR 0013).
 
 ### `src/eval/runner.py`
 
@@ -151,6 +159,38 @@ workflow+judge spend (including spend reused from a resumed campaign),
 so the final query can overshoot the ceiling by its own cost. It is a
 campaign ceiling, and the only one the eval path owns — the per-call
 dollar cap is ADR 0051's, at `call_llm`.
+
+### Campaign run-book
+
+For a paid multi-query campaign (as opposed to a one-query smoke):
+
+```bash
+API_JOB_TIMEOUT_SEC=3600 \
+python -m src.eval.runner \
+  --output-dir outputs/eval/campaign-<name> \
+  --max-budget-usd 25
+# interrupted or partially failed? same command + --resume
+```
+
+- **`API_JOB_TIMEOUT_SEC=3600` restores retry headroom.** The LLM
+  client clamps its retry envelope so one call chain fits inside 75%
+  of `api_job_timeout_sec` (`src/llm.py::_retry_envelope`, ADR 0051)
+  — and the clamp applies on the eval path too, even though no API
+  job exists there. At the defaults (600s timeout, 120s per attempt)
+  only 3 attempts fit, so the configured `anthropic_max_retries=4`
+  is cut to 2 (the client warns once:
+  `llm_retry_budget_clamped`). Raising the env var to 3600 lets all
+  4 retries through — worth it on a long campaign where a transient
+  529 otherwise costs a whole query record.
+- **Name the output dir** so `--resume` has a stable target; the
+  runner refuses a populated dir without `--resume`, and `--resume`
+  skips every query whose `queries/<id>.json` already exists
+  (delete a record file to retry that query).
+- **`--max-budget-usd`** stops the campaign between queries at the
+  ceiling (exit 5) with everything already scored safely on disk.
+- **Watch the exit code** (table below) — a `0` means every attempted
+  query succeeded; `3` means the campaign completed but the summary
+  contains errored queries.
 
 ### Exit codes
 
@@ -267,9 +307,12 @@ publishes (ADR 0050):
 ## What "tested" means for eval code itself
 
 The eval code has its own unit tests: benchmark data invariants
-(this PR), metric-scoring pure logic (per-metric PR — LLM-as-judge
-callers are unit-tested against stubbed responses; the full metric
-path is integration).
+(`tests/test_benchmark_queries.py`), metric-scoring pure logic
+(`tests/test_metrics_*.py` — LLM-as-judge callers are unit-tested
+against stubbed responses), the runner's isolation / resume / exit
+codes (`tests/test_eval_runner.py`), the regression gate
+(`tests/test_regression_diff.py`), and the README block
+(`tests/test_readme_update.py`).
 
 ## Follow-ups
 

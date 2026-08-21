@@ -58,14 +58,16 @@ otherwise steer this run's plan (ADR
 
 | Failure | Where | Handling |
 |---|---|---|
-| Anthropic 429 / 5xx | SDK layer | Retried by the SDK (`anthropic_max_retries`, ADR 0009); exhausted retries propagate. |
-| Response not JSON | `call_llm_json` | Fence-stripping + lenient parse first; still-malformed raises and propagates. |
-| Response missing `sub_questions` / `search_queries` | `planner_agent` | `KeyError` propagates. No fallback plan is fabricated — under the API the runner marks the job `failed`; on the CLI the run aborts. |
+| Anthropic 429 / 5xx | SDK layer | Retried by the SDK (`anthropic_max_retries`, ADR 0009); exhausted retries propagate — a transport failure is not a formatting hiccup. |
+| Response not JSON / not an object | `planner_agent` (ADR 0041 parse defense) | Logged at WARNING (`planner_response_unparseable` / `planner_response_not_an_object`) and treated as an empty plan — see the next row. |
+| Missing / empty / wrong-typed `sub_questions` or `search_queries` | `planner_agent` | Falls back to the user's **raw query** as the single sub-question and search query, logged as `planner_plan_fallback_to_query` (ADR 0041). The pipeline runs an honest, shallower search rather than failing the job at its cheapest stage. |
 | Prompt injection via `prior_context` | Cross-turn (ADR 0033) | Mitigated behind `enable_prompt_isolation`: wrap + system instruction. Off by default. |
 
-The planner deliberately has no rules-based fallback: a garbage plan
-poisons every downstream stage, so failing loudly beats degrading
-silently.
+The fallback is the raw query, never a fabricated decomposition: a
+degraded plan is visibly shallow (one sub-question) rather than
+plausible-looking garbage, and the WARNING makes the degradation
+greppable. (Before ADR 0041 a malformed response propagated and
+failed the whole job.)
 
 ## Configuration
 
@@ -87,6 +89,9 @@ Settings that drive the planner (see `src/config.py`):
   coverage: prior-context block presence/absence, ordering relative to
   the critique, isolation wrapping on/off, system-prompt shape, and
   full-agent behavior with `call_llm_json` monkeypatched.
+- Parse defense: `tests/test_parse_defense.py::TestPlannerParseDefense`
+  — unparseable / non-object / wrong-typed responses all degrade to
+  the raw-query plan instead of raising (ADR 0041).
 - LLM-call plumbing: `tests/test_agent_model_routing.py` (the
   `planner_model` override) and `tests/test_agent_cache_flag.py` (the
   prompt-caching flag).

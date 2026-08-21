@@ -27,14 +27,14 @@ Tier membership is expressed with pytest markers, registered in
 - `e2e` — reserved for the full-workflow cassette tier. **Zero tests
   carry this marker today** (see "Planned, not built" below).
 
-State of the suite on `main` at the time of writing: ~800 tests
-collected, of which ~55 carry an explicit `unit` marker and ~49 carry
-`integration`. **The majority of tests carry no marker at all.** That
-matters for selection:
+State of the suite on `main` at the time of writing: 1,400+ tests
+collected (1,426 at the last count), of which ~520 carry an explicit
+`unit` marker and ~200 carry `integration`. **Roughly half the suite
+carries no marker at all.** That matters for selection:
 
 > An unmarked test is *conceptually* unit-tier, but `pytest -m unit`
 > only selects tests that literally carry the marker. A marker-filtered
-> run is therefore a small subset of the suite, not "the fast tier".
+> run is therefore a subset of the suite, not "the fast tier".
 > The only filter that runs the whole suite is the exclusion filter
 > `-m "not e2e"` — which is what CI uses.
 
@@ -65,18 +65,36 @@ make typecheck
 ```
 
 **Known trap**: `make test` currently expands to `pytest -m unit`,
-which runs only the explicitly-marked subset (~55 tests) — a green
+which runs only the explicitly-marked subset — a green
 `make test` is **not** the merge gate. Until the Makefile is aligned
 with CI, use the commands above (or `make test-all`) before opening a
 PR. For the same reason, ADR 0024's follow-up — "add a merge-to-main
 variant that runs `pytest -m 'unit or integration'`" — must **not**
-be closed as written: with most tests unmarked, that filter would
-silently drop the bulk of the suite — `-m "unit or integration"`
-selects ~104 of ~800 tests today, losing the job-routes, HITL,
-streaming, and supervisor modules among others — while reporting a
-plausible-looking pass count. Either auto-apply the `unit` marker to unmarked tests in
+be closed as written: with about half the suite unmarked, that filter
+would silently drop it — `-m "unit or integration"` selects ~720 of
+~1,430 tests today — while reporting a plausible-looking pass count.
+Either auto-apply the `unit` marker to unmarked tests in
 a `conftest.py` collection hook first, or keep `-m "not e2e"` as the
 single selection knob.
+
+## The environment pin: `TEST_ENV`
+
+Every Makefile test target runs under
+`OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false` (the `TEST_ENV`
+variable, ADR 0052). This is the *second* layer of the native-crash
+containment, not the fix: three separate `libomp.dylib` copies ship
+in the venv (torch, faiss, scikit-learn vendor one each), and
+concurrent MiniLM encodes used to abort the interpreter inside the
+OpenMP barrier — exit 139, no traceback, a macOS crash-reporter
+dialog. The actual containment is `torch.set_num_threads(1)` inside
+`src/tools/embeddings.py`, which covers callers that never touch the
+Makefile (a bare `pytest` in CI, `uvicorn` in the container,
+`python -m src.main`). What `TEST_ENV` adds is faiss's and
+scikit-learn's own libomp copies, which initialize at import — before
+any Python code of ours runs. `TOKENIZERS_PARALLELISM=false` is
+unrelated to the crash; it only silences the HuggingFace
+fast-tokenizer fork warning. `tests/test_repo_hygiene.py` pins that
+every test target keeps the prefix.
 
 ## Selective execution
 
@@ -115,6 +133,21 @@ Non-determinism means we cannot assert on exact model output. Instead:
 - Pipeline-level quality is guarded by the nightly eval, not the PR
   suite.
 
+## The production-wiring smoke test
+
+`tests/test_api_smoke_e2e.py` (marked `integration`, so it runs in
+the per-PR gate) drives **one job through the production wiring**:
+the real `build_workflow` (fixed pipeline, HITL interrupt,
+`AsyncSqliteSaver` at a tmp path), `create_app`'s lifespan, the
+runner, the store, and the HTTP surface. Only the network edges are
+canned — `call_llm_json` per agent module with shape-valid
+responses, PDF fetch (empty → abstract fallback), and embedding
+ranking. It exists because the shipped configuration once compiled a
+*sync* checkpointer under an `astream`-driven runner and every HTTP
+job died before its first node — a wiring break no per-module test
+could see (ADR 0040). It is a smoke test, not a cassette tier: one
+happy path, canned LLM output, no recorded real responses.
+
 ## Planned, not built: the e2e cassette tier
 
 The design calls for a third tier — the full LangGraph workflow run
@@ -123,13 +156,15 @@ prompt) so a pipeline-level regression is caught deterministically and
 without API cost. **No such tests exist yet**: the `e2e` marker is
 registered but unused, and no cassette fixtures are checked in.
 
-Name the consequence, because it already bit once: everything between
-individual node behavior and the nightly LLM-judged eval is currently
-untested, and the production audit found a P0 hiding in precisely that
-gap — a defect no unit test could see and the nightly eval didn't
-surface. Until the cassette tier is built, treat cross-node integration
-changes (workflow wiring, state schema, runner/streaming interplay)
-with extra review care, and do not claim e2e coverage anywhere.
+Name the consequence, because it has bitten more than once: with real
+LLM *content* untested, everything between the smoke test's single
+canned path and the nightly LLM-judged eval is uncovered — the ADR
+0040 wiring break lived in that gap, and ADR 0053's audit found five
+more sequence-level defects (`docker compose up` → UI → query) that
+no per-module test drove. Until the cassette tier is built, treat
+cross-node integration changes (workflow wiring, state schema,
+runner/streaming interplay) with extra review care, and do not claim
+e2e coverage anywhere.
 
 When the tier is built it should: live in flat `tests/test_e2e_*.py`
 modules marked `e2e`, run on merge-to-`main` and nightly (not per-PR),

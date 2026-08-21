@@ -88,6 +88,8 @@ Rationale for the fallback signal: see ADR
 | Claude returns non-JSON / truncated / missing keys | per-paper guard in `reader_agent` | That one paper degrades to a placeholder analysis (empty findings, `relevance=0.0`, explicit limitations note) with a WARNING; the node continues. See "Degradation policy" below. |
 | Every paper's analysis fails | aggregate check in `reader_agent` | Raises `AllPaperAnalysesFailedError` — the LLM is effectively down; the job fails with that honest `error_type`. |
 | Anthropic 429 | `call_llm_json` | SDK-native retry (ADR 0009); an exhausted retry degrades that paper like any other per-paper failure. |
+| Job cancelled mid-fan-out | `check_cancelled()` between papers and inside `call_llm` | `JobCancelledError` is **re-raised, never degraded** (ADR 0047) — swallowing it into a placeholder would turn "abort" into "analyse every remaining paper anyway". |
+| Run hits `max_cost_usd` mid-fan-out | `call_llm`'s pre-call budget check | `CostBudgetExceeded` is **re-raised, never degraded** (ADR 0051) — once the cap trips, every remaining paper would raise-and-degrade in turn and the run would limp to synthesis with no analyses. |
 
 ## Configuration
 
@@ -212,6 +214,23 @@ failure containment therefore lives in `reader_agent`'s
 - Only when **every** paper failed does the node raise
   `AllPaperAnalysesFailedError` — proceeding would hand the
   synthesizer an empty analysis set and produce a hollow report.
+- `JobCancelledError` and `CostBudgetExceeded` are exempt from the
+  containment and propagate (ADRs 0047 / 0051) — see the failure
+  table above.
+
+## Abstract-only fallback is audible (ADR 0052)
+
+Falling back to the abstract used to be silent (and on the
+empty-`pdf_url` path, entirely unreported). Now every `[]` return
+from the chunk-gathering pipeline logs one
+`reader_paper_abstract_only` INFO line per paper naming the stage
+that produced nothing (`no_pdf_url`, `no_text`, `no_chunks`,
+`no_ranked_chunks`), the node closes with a `reader_completed`
+summary carrying `n_abstract_only`, and a run where more than
+`ABSTRACT_ONLY_WARN_THRESHOLD` (2) papers degraded logs
+`reader_degraded_to_abstract_only` at WARNING — a mostly-abstract
+run produces a shallower report and should be visible without
+diffing per-paper lines.
 
 ## Prompt-injection isolation (ADR 0020)
 

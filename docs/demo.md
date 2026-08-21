@@ -253,7 +253,7 @@ One line per query, written by
 scoring the report. Fields exactly match the schema in that function:
 
 ```json
-{"query_id": "hallucination-mitigation", "elapsed_sec": 42.7, "error": null, "citation_accuracy": 1.00, "completeness": 0.85, "faithfulness": 0.92, "retrieval_recall": 0.80, "critic_score": 0.82, "iterations": 1, "cost_usd": 0.087, "llm_calls": 8, "loop_iterations": null, "stop_reason": null}
+{"query_id": "hallucination-mitigation", "elapsed_sec": 42.7, "scoring_sec": 21.3, "error": null, "metrics_error": null, "citation_accuracy": 1.00, "completeness": 0.85, "faithfulness": 0.92, "retrieval_recall": 0.80, "total_citations": 5, "critic_score": 0.82, "iterations": 1, "cost_usd": 0.087, "llm_calls": 8, "judge_cost_usd": 0.031, "judge_llm_calls": 3, "total_cost_usd": 0.118, "loop_iterations": null, "stop_reason": null}
 ```
 
 Field-by-field:
@@ -261,24 +261,29 @@ Field-by-field:
 | Field | Value | Source |
 |---|---|---|
 | `query_id` | `hallucination-mitigation` | `benchmark_queries.py` |
-| `elapsed_sec` | 42.7 | wall-clock, runner |
-| `citation_accuracy` | 1.00 | regex + citation-list join (ADR 0006 background) |
+| `elapsed_sec` | 42.7 | workflow wall-clock, runner |
+| `scoring_sec` | 21.3 | wall-clock of the metric judges (ADR 0050) |
+| `error` / `metrics_error` | `null` | populated when the workflow / a metric judge failed; a judge failure leaves its metric `null` and keeps the run (ADR 0050) |
+| `citation_accuracy` | 1.00 | regex + citation-list join |
 | `completeness` | 0.85 | batched LLM judge over `expected_topics` (ADR 0006) |
 | `faithfulness` | 0.92 | per-claim LLM judge vs. abstracts (ADR 0007) |
 | `retrieval_recall` | 0.80 | LLM judge over the retrieved paper set (ADR 0013) |
+| `total_citations` | 5 | citation-accuracy denominator, surfaced for the README block's exclusion rule (ADR 0050) |
 | `critic_score` | 0.82 | in-workflow critic average |
 | `iterations` | 1 | critic revisions used (0 = no revision, capped by `max_iterations`) |
-| `cost_usd` | 0.087 | per-run cost accumulator, all Sonnet (ADR 0012) |
+| `cost_usd` | 0.087 | the **workflow's** spend only (ADR 0012; split from judge spend by ADR 0050) |
 | `llm_calls` | 8 | planner + 5 reader (per paper) + synthesizer + critic |
+| `judge_cost_usd` / `judge_llm_calls` | 0.031 / 3 | the scoring judges' own spend (completeness + faithfulness + retrieval recall; citation accuracy is regex-only) |
+| `total_cost_usd` | 0.118 | workflow + judges — what the benchmark query cost to run |
 | `loop_iterations` | `null` | supervisor loop was off; would be positive under `enable_supervisor` |
 | `stop_reason` | `null` | see above |
 
 At `enable_supervisor=true, enable_verifier=true,
 enable_evidence_store=true`, `loop_iterations` and `stop_reason`
-populate. Typical shape:
+populate. Typical shape (non-null fields shown):
 
 ```json
-{"query_id": "hallucination-mitigation", "elapsed_sec": 58.3, "error": null, "citation_accuracy": 1.00, "completeness": 0.88, "faithfulness": 0.95, "retrieval_recall": 0.80, "critic_score": 0.85, "iterations": 1, "cost_usd": 0.142, "llm_calls": 14, "loop_iterations": 9, "stop_reason": "quality_reached"}
+{"query_id": "hallucination-mitigation", "elapsed_sec": 58.3, "citation_accuracy": 1.00, "completeness": 0.88, "faithfulness": 0.95, "retrieval_recall": 0.80, "critic_score": 0.85, "iterations": 1, "cost_usd": 0.142, "llm_calls": 14, "loop_iterations": 9, "stop_reason": "quality_reached"}
 ```
 
 Higher cost (loop tax + verifier call), slightly higher faithfulness
@@ -327,7 +332,9 @@ python -m src.eval.runner --queries hallucination-mitigation
 # writes outputs/eval/<run_id>/{queries/,summary.jsonl,summary.md}
 ```
 
-The full 20-query benchmark takes ~10 minutes on the base Sonnet
-configuration and costs roughly $1.50 at Sprint 1 pricing; see
-[`docs/eval.md`](eval.md) for the running-cost breakdown and how
-Sprint 3's Haiku routing + prompt caching change those numbers.
+The full 20-query benchmark runs sequentially and spends real
+Anthropic credits — a few dollars on the base Sonnet configuration,
+less with Sprint 3's Haiku routing + prompt caching. Cap a campaign
+with `--max-budget-usd` and see [`docs/eval.md`](eval.md) for the
+run-book (resume, exit codes, and the workflow-vs-judge cost split
+in `summary.jsonl`).
