@@ -51,6 +51,12 @@ from src.cancellation import abandoned_node_count
 from src.config import settings
 from src.graph.workflow import build_workflow as default_build_workflow
 from src.observability import get_logger
+from src.observability.metrics import (
+    configure_metrics,
+    metrics_enabled,
+    register_runtime_gauges,
+    shutdown_metrics,
+)
 
 log = get_logger(__name__)
 
@@ -217,6 +223,17 @@ def create_app(
         # redrive lock so every reclaim is attributable to a worker.
         app.state.worker_id = WORKER_ID
 
+        # ADR 0049: install the meter provider before anything can
+        # record, and hand the two observable gauges the *same*
+        # accounting `/healthz` reports from rather than a second set
+        # of counters that could drift from it. Both calls no-op when
+        # `enable_metrics` is off, so this stays unconditional.
+        configure_metrics()
+        register_runtime_gauges(
+            active_jobs=lambda: len(app.state.tasks) + abandoned_node_count(),
+            abandoned_node_threads=abandoned_node_count,
+        )
+
         # ADR 0038: reconcile whatever the previous generation of
         # workers left stuck in a non-terminal status. Awaited rather
         # than fired-and-forgotten: a sweep racing the first request
@@ -336,6 +353,7 @@ def create_app(
                 "rate_limit_backend": settings.rate_limit_backend,
                 "checkpoint_backend": settings.checkpoint_backend,
                 "worker_id": WORKER_ID,
+                "metrics_enabled": metrics_enabled(),
                 "job_redriver_enabled": settings.enable_job_redriver,
                 "redrive_orphaned": redrive_report.orphaned,
                 "redrive_failed": redrive_report.failed,
@@ -417,6 +435,19 @@ def create_app(
             if callable(close):
                 with contextlib.suppress(Exception):
                     await close()
+            # ADR 0049: last, so the terminal counters every cancelled
+            # job above just recorded make it into the final export.
+            # Runs in a thread — the SDK's shutdown blocks on its
+            # export thread, and blocking the event loop here would
+            # stall uvicorn's own shutdown. Being last also means it is
+            # first in line for the orchestrator's SIGKILL if the drains
+            # above ran long, which is why its budget is the smallest in
+            # the chain (`metrics._SHUTDOWN_BUDGET_MS`) and why losing it
+            # costs one export window and nothing else. The guard keeps a
+            # metrics-off shutdown from paying for a thread hop to reach
+            # a no-op.
+            if metrics_enabled():
+                await asyncio.to_thread(shutdown_metrics)
             log.info(
                 "api_shutdown",
                 extra={

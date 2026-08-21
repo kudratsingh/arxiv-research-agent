@@ -53,6 +53,10 @@ knobs:
 - **Tracing** — `traced_node` wraps every agent in an OpenTelemetry
   span when `settings.enable_tracing` is on (ADR
   [0012](decisions/0012-observability-core-logging-costs.md)).
+  Metrics ride the same OTLP endpoint behind their own flag (ADR
+  [0049](decisions/0049-otel-metrics.md)), but no instrument wraps a
+  node: they hang off choke points the API layer and the cost
+  accumulator already own, and only an API worker installs a provider.
 
 The compiled graph is expensive (it opens the checkpointer's
 connection), so it is built **once** at app startup and shared —
@@ -172,10 +176,27 @@ conversations, and caches — which is exactly what
   per-agent model routing (ADR
   [0021](decisions/0021-cost-aware-model-routing.md)), prompt caching
   (ADR [0022](decisions/0022-anthropic-prompt-caching.md)).
-- **Observability** — structured JSON logs with `run_id`
-  propagation and per-run cost accounting
-  (`src/observability/`, ADR 0012). The runner enforces
-  `max_cost_usd` between nodes on both workflow shapes (ADR 0033).
+- **Observability** — three signals out of `src/observability/`.
+  **Logs**: structured JSON with `run_id` propagation, plus per-run
+  cost accounting (ADR
+  [0012](decisions/0012-observability-core-logging-costs.md)); the
+  runner enforces `max_cost_usd` between nodes on both workflow
+  shapes (ADR [0033](decisions/0033-safety-hardening-bundle.md)).
+  **Traces**: `traced_node` spans per agent behind `enable_tracing`
+  (ADR
+  [0013](decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)).
+  **Metrics**: seven OTel instruments behind `enable_metrics` (ADR
+  [0049](decisions/0049-otel-metrics.md)) — terminal job counts by
+  status + error type, a job-duration histogram, LLM spend and call
+  counts by model, rate-limit rejections by backend, and observable
+  gauges for this worker's in-flight jobs and its abandoned node
+  threads. Traces and metrics share one `otel_exporter_endpoint`, so
+  a single OTLP collector receives both. Every metric is recorded at
+  an existing choke point — the runner's terminal write, the cost
+  accumulator, the shared 429 helper — and the gauges observe the
+  same accounting `/healthz` reports rather than a second set of
+  counters. Pointing a collector at it:
+  [`development.md`](development.md#opentelemetry-traces--metrics).
 - **Evaluation** — custom in-repo benchmark + LLM-judge metrics
   (`src/eval/`, ADR [0005](decisions/0005-custom-eval-over-ragas.md))
   run nightly in CI with regression diffing (ADR

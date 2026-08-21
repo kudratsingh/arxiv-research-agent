@@ -29,6 +29,10 @@ Only if that bounded drain expires does the permit go back — and the
 abandoned thread stays counted in `/healthz`'s `active_jobs` until it
 finishes, so the concurrency numbers never claim capacity the process
 does not have.
+
+ADR 0049 hangs the job outcome metrics — `research_jobs_total` and
+`research_job_duration_seconds` — off `_persist_terminal`, the one
+place every terminal transition below passes through.
 """
 
 from __future__ import annotations
@@ -52,6 +56,7 @@ from src.observability import (
     start_cost_tracking,
 )
 from src.observability.costs import RunCosts
+from src.observability.metrics import record_job_terminal
 
 log = get_logger(__name__)
 
@@ -559,7 +564,21 @@ async def _persist_terminal(store: JobStore, job: Job) -> None:
     a few times; on final failure the job's outcome is logged in full
     as `api_job_terminal_persist_failed` so the result is recoverable
     from logs, and the terminal SSE frame still goes out.
+
+    Being the one place every terminal transition passes through also
+    makes this the right place to record the job outcome metrics
+    (ADR 0049) — the alternative was the same two lines duplicated
+    across all seven terminal branches, where the next branch added
+    would silently not be counted. The record happens *before* the
+    write and outside the retry loop on purpose: the job reached its
+    terminal state whether or not the store accepted the row, and a
+    failing store must not also make the fleet look idle.
     """
+    record_job_terminal(
+        status=job.status.value,
+        error_type=job.error_type,
+        duration_sec=job.elapsed_sec(),
+    )
     for attempt in range(1, _TERMINAL_PERSIST_ATTEMPTS + 1):
         try:
             await store.update(job)

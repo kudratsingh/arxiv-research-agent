@@ -37,6 +37,7 @@ from fastapi import HTTPException, Request, status
 
 from src.config import settings
 from src.observability import get_logger
+from src.observability.metrics import record_rate_limit_rejection
 
 log = get_logger(__name__)
 
@@ -148,9 +149,30 @@ class RateLimiter(Protocol):
     ) -> None: ...
 
 
-def _raise_429(key_id: str, limit_per_hour: int, retry_after_sec: int) -> None:
+def _raise_429(
+    key_id: str, limit_per_hour: int, retry_after_sec: int, *, backend: str
+) -> None:
     """Shared 429 response shape so both backends emit the same
-    detail + Retry-After header."""
+    detail + Retry-After header.
+
+    Also the single point where `rate_limit_rejections_total` is
+    recorded (ADR 0049) — hence `backend`, which the counter needs and
+    the response does not. Attributing by backend rather than by
+    `key_id` keeps the metric's cardinality bounded at two: the
+    rejected principal is already named in the 429 body and the
+    request log.
+
+    Args:
+        key_id: Principal that hit the cap; surfaced in the response.
+        limit_per_hour: The cap that was hit.
+        retry_after_sec: Seconds until the window frees a slot.
+        backend: Limiter implementation raising this — `memory` or
+            `redis`, matching `settings.rate_limit_backend`.
+
+    Raises:
+        HTTPException: Always; 429 with a `Retry-After` header.
+    """
+    record_rate_limit_rejection(backend=backend)
     raise HTTPException(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         detail={
@@ -195,7 +217,12 @@ class InMemoryRateLimiter:
                 bucket.popleft()
             if len(bucket) >= self.limit_per_hour:
                 retry_after = int(bucket[0] + self.window_sec - ts) + 1
-                _raise_429(key_id, self.limit_per_hour, retry_after)
+                _raise_429(
+                    key_id,
+                    self.limit_per_hour,
+                    retry_after,
+                    backend="memory",
+                )
             bucket.append(ts)
 
 
@@ -265,7 +292,9 @@ class RedisRateLimiter:
                 retry_after = int(float(oldest_ts) + self.window_sec - ts) + 1
             else:
                 retry_after = self.window_sec
-            _raise_429(key_id, self.limit_per_hour, retry_after)
+            _raise_429(
+                key_id, self.limit_per_hour, retry_after, backend="redis"
+            )
 
 
 def build_rate_limiter(

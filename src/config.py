@@ -512,10 +512,22 @@ class Settings(BaseSettings):
         description="SQLite file used when `checkpoint_backend=sqlite`",
     )
 
-    # ------ Tracing (OpenTelemetry) -----------------------------------
+    # ------ Telemetry (OpenTelemetry: tracing + metrics) ---------------
     enable_tracing: bool = Field(
         default=False,
         description="Emit OpenTelemetry spans around each agent node",
+    )
+    enable_metrics: bool = Field(
+        default=False,
+        description=(
+            "Emit OpenTelemetry metrics (job counts + durations, LLM "
+            "cost/calls, concurrency gauges, rate-limit rejections). "
+            "Off by default and gated exactly like `enable_tracing`: "
+            "with it off no meter provider is installed and every "
+            "record point returns on a single `None` check. Shares "
+            "`otel_exporter_endpoint` with tracing — one collector "
+            "receives both signals. See ADR 0049."
+        ),
     )
     otel_service_name: str = Field(
         default="arxiv-research-agent",
@@ -525,6 +537,17 @@ class Settings(BaseSettings):
         default="",
         description=(
             "OTLP HTTP endpoint (e.g. http://localhost:4318). Empty = console exporter."
+        ),
+    )
+    otel_metric_export_interval_sec: int = Field(
+        default=60,
+        ge=1,
+        le=3600,
+        description=(
+            "How often the periodic metric reader exports to the OTLP "
+            "collector. Bounded (ADR 0046): below 1s the export thread "
+            "costs more than the signal is worth, and above an hour a "
+            "worker that dies takes its last window's counters with it."
         ),
     )
 
