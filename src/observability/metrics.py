@@ -53,6 +53,23 @@ The two gauges are *observable*: they read the live accounting
 node threads) through callbacks the API lifespan supplies. Nothing is
 duplicated — the callbacks close over the existing sources, so a gauge
 can never disagree with the health endpoint.
+
+## Which processes emit
+
+`configure_metrics()` has exactly one caller: the API lifespan. So the
+instruments are live in an API worker and nowhere else — `make run`
+and `make eval` set `enable_metrics` in vain, because those processes
+install no provider and every helper below returns on its `None`
+check. That is deliberate, not an oversight: four of the seven
+instruments describe a *server* (job outcomes, concurrency, 429s), and
+a one-shot CLI run has no steady state for the remaining three to
+sample — it would spin an export thread up and tear it down inside one
+export interval. Tracing differs because `get_tracer()` configures
+lazily on first span, which is what makes `traced_node` work under
+`make eval`. If the eval runner ever needs the spend counters, the fix
+is one `configure_metrics()` call at its entry point, not a lazy
+configure on the record path (that would put an `enable_metrics` read
+and a possible provider build on every LLM call).
 """
 
 from __future__ import annotations
@@ -112,6 +129,21 @@ NO_ERROR = "none"
 # run (~10s) through the default `api_job_timeout_sec` neighbourhood and
 # past it, so a timing-out fleet is visible as mass in the tail rather
 # than as a single saturated `+Inf`.
+# Budget for the final flush in `shutdown_metrics`, in milliseconds.
+#
+# Small because it is spent at the *end* of an already-tight chain.
+# ADR 0042 sizes that chain: compose grants `stop_grace_period: 15s`
+# and uvicorn spends up to `timeout_graceful_shutdown=10` draining
+# connections *before* it runs the lifespan teardown at all — and
+# uvicorn puts no timeout on the teardown itself, so the container's
+# remaining ~5s is the only bound. The node-executor join (ADR 0047)
+# can already claim all of it, so the metrics flush is best-effort by
+# construction and must not make things worse: a collector that cannot
+# accept an export in two seconds will not accept it in five, and the
+# SDK's export thread is a daemon, so overrunning loses the last window
+# rather than hanging the process.
+_SHUTDOWN_BUDGET_MS = 2_000.0
+
 _JOB_DURATION_BUCKETS: tuple[float, ...] = (
     5.0,
     10.0,
@@ -381,11 +413,16 @@ def record_llm_usage(*, model: str, cost_usd: float) -> None:
     """Record one completed LLM call and its estimated cost.
 
     Called from `src.observability.costs.record_llm_call`, which every
-    LLM call site already funnels through — so agents, the eval runner
-    and the API path are all covered from one place. Unlike the
-    per-run accumulator this is process-wide and survives the run: the
-    counters answer "what is this deployment spending, by model",
-    which no per-run `ContextVar` can.
+    LLM call site in the repo already funnels through — agent nodes
+    included — so one wiring point covers them all. Unlike the per-run
+    accumulator this is process-wide and survives the run: the counters
+    answer "what is this deployment spending, by model", which no
+    per-run `ContextVar` can.
+
+    Recorded only in a process that configured a provider, which today
+    means the API workers — see this module's "Which processes emit"
+    note. `make run` and `make eval` still log and accumulate cost the
+    way they always did.
 
     Args:
         model: Model id the call was billed against.
@@ -416,7 +453,7 @@ def record_rate_limit_rejection(*, backend: str) -> None:
     instruments.rate_limit_rejections_total.add(1, {"backend": backend})
 
 
-def shutdown_metrics(*, timeout_millis: float = 5_000.0) -> None:
+def shutdown_metrics(*, timeout_millis: float = _SHUTDOWN_BUDGET_MS) -> None:
     """Flush pending measurements and tear the provider down.
 
     Called from the API lifespan's teardown. Disarming `_instruments`
@@ -428,9 +465,8 @@ def shutdown_metrics(*, timeout_millis: float = 5_000.0) -> None:
     must not turn a clean shutdown into a crashing one.
 
     Args:
-        timeout_millis: Budget for the final export, bounded so a
-            wedged collector cannot hold SIGTERM open past the
-            container's grace period (ADR 0042 sizes that chain).
+        timeout_millis: Budget for the final export. See
+            `_SHUTDOWN_BUDGET_MS` for why it is as small as it is.
     """
     global _provider, _meter, _instruments
     provider = _provider

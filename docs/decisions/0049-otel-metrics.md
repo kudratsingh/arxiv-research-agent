@@ -84,14 +84,42 @@ future call site can bypass the metric:
   the retry loop: the job reached its terminal state whether or not the
   store accepted the row, and a Redis outage must not also make the
   fleet look idle.
-- **`record_llm_call`** already funnels every LLM call in the repo
-  (agents, eval runner, API path) through one function that computes
-  the cost. The counters are bumped unconditionally there, unlike the
-  per-run accumulator, which needs a run bound to the context: a call
-  made outside a run still spent money.
+- **`record_llm_call`** already funnels every LLM call in the repo —
+  agent nodes included — through one function that computes the cost.
+  The counters are bumped unconditionally there, unlike the per-run
+  accumulator, which needs a run bound to the context: a call made
+  outside a run still spent money.
 - **`_raise_429`** is the shared response-shape helper both limiter
   backends already call. It grows one keyword-only `backend` argument
   that the counter needs and the HTTP response does not.
+- **`JobRedriver._fail_orphan`** is the one terminal transition that
+  never reaches `_persist_terminal`: the worker that owned the job died
+  before any of `run_job`'s branches ran, and another worker's startup
+  sweep reconciles the row (ADR 0038/0048). Leaving it uncounted would
+  blind `research_jobs_total` to the failure mode the counter most
+  exists for — a crash-looping worker would read as falling throughput
+  and nothing else. Recorded *after* the compare-and-set lands, the
+  mirror image of `_persist_terminal`'s rule: there the job is terminal
+  whether or not the store agrees; here a lost CAS means the real owner
+  finished it and will count it itself. No duration is observed — a
+  reclaim's wall clock is mostly the time the row sat orphaned before a
+  sweep noticed, which would report the scan interval as job latency.
+
+### Which processes emit
+
+`configure_metrics()` has one caller, the API lifespan, so the
+instruments are live in an API worker and nowhere else: `make run` and
+`make eval` set `ENABLE_METRICS` in vain. That is a decision, not an
+omission. Four of the seven instruments describe a *server* (job
+outcomes, concurrency, 429s), and a one-shot CLI run has no steady
+state for the other three to sample — it would spin an export thread up
+and tear it down inside a single export interval. Tracing differs
+because `get_tracer()` configures lazily on first span, which is what
+makes `traced_node` work under `make eval`; the metrics equivalent
+would put an `enable_metrics` read and a possible provider build on
+every LLM call, which is exactly the flag-off cost this design avoids.
+If the eval runner ever wants the spend counters, the fix is one
+`configure_metrics()` call at its entry point.
 
 ### Attribute-cardinality rules
 
@@ -132,9 +160,21 @@ job can record. `shutdown_metrics()` runs *last* in the teardown —
 after the in-flight jobs are cancelled — so the terminal counters
 those cancellations just recorded make it into the final export. It
 runs in a thread (`asyncio.to_thread`) because the SDK's shutdown
-blocks on its export thread, and it is bounded so a wedged collector
-cannot hold SIGTERM open past the container's grace period (the chain
-ADR 0042 sizes).
+blocks on its export thread, and blocking the loop would stall
+uvicorn's own shutdown.
+
+Being last also means it is first in line for the orchestrator's
+SIGKILL, and the chain ADR 0042 sizes has no room to spare: compose
+grants `stop_grace_period: 15s`, uvicorn spends up to
+`timeout_graceful_shutdown=10` draining connections *before* the
+lifespan teardown starts, and it puts no timeout on the teardown
+itself — so the container's remaining ~5s is the only bound, and ADR
+0047's node-executor join can already claim all of it. The flush is
+therefore best-effort by construction, and its budget is deliberately
+the smallest in the chain (2s, `metrics._SHUTDOWN_BUDGET_MS`): a
+collector that cannot accept an export in two seconds will not accept
+it in five, and the SDK's export thread is a daemon, so overrunning
+costs the last export window rather than hanging the process.
 
 ### The provider is module-local
 
@@ -240,12 +280,23 @@ provider, no instruments, inert helpers). The two end-to-end classes
 drive `run_job` and the real `create_app` lifespan, so the wiring is
 covered rather than just the helpers.
 
-Twelve mutants were planted against the load-bearing points and all
-twelve were caught: dropping the terminal record; moving it inside the
+Eighteen mutants were planted against the load-bearing points and all
+eighteen are caught: dropping the terminal record; moving it inside the
 persist retry loop so a store failure suppresses it; dropping the LLM
-usage record; dropping the 429 record; hard-coding its `backend`
-attribute; dropping the `"none"` error-type normalisation; timing a
-never-started job as zero; snapshotting the gauge instead of observing
-it; ignoring `enable_metrics`; re-registering the gauges instead of
-rebinding their sources; never registering the gauges in the lifespan;
-and never shutting the provider down.
+usage record; feeding the cost counter a constant; dropping the 429
+record; hard-coding its `backend` attribute; dropping the `"none"`
+error-type normalisation; attributing the duration histogram by
+`error_type` too; timing a never-started job as zero; snapshotting the
+gauge instead of observing it; ignoring `enable_metrics`; making
+`configure_metrics` non-idempotent; re-registering the gauges instead
+of rebinding their sources; never registering the gauges in the
+lifespan; dropping `+ abandoned_node_count()` from the lifespan's
+`active_jobs` callback so the gauge drifts from `/healthz`; exporting
+metrics to the `/v1/traces` path; leaving the instruments armed after
+shutdown; and never shutting the provider down.
+
+The `abandoned_node_count()` mutant is why
+`test_gauges_agree_with_healthz_on_abandoned_threads` asserts the gauge
+against a live `GET /healthz` response rather than against a literal:
+a hand-written expectation passes just as happily when the two numbers
+have quietly become two different numbers.

@@ -439,9 +439,13 @@ def create_app(
             # job above just recorded make it into the final export.
             # Runs in a thread — the SDK's shutdown blocks on its
             # export thread, and blocking the event loop here would
-            # stall uvicorn's own shutdown. Bounded either way. The
-            # guard keeps a metrics-off shutdown from paying for a
-            # thread hop to reach a no-op.
+            # stall uvicorn's own shutdown. Being last also means it is
+            # first in line for the orchestrator's SIGKILL if the drains
+            # above ran long, which is why its budget is the smallest in
+            # the chain (`metrics._SHUTDOWN_BUDGET_MS`) and why losing it
+            # costs one export window and nothing else. The guard keeps a
+            # metrics-off shutdown from paying for a thread hop to reach
+            # a no-op.
             if metrics_enabled():
                 await asyncio.to_thread(shutdown_metrics)
             log.info(

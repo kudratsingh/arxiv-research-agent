@@ -47,6 +47,7 @@ from uuid import uuid4
 from src.api.jobs import Job, JobStatus
 from src.config import settings
 from src.observability import get_logger
+from src.observability.metrics import record_job_terminal
 
 log = get_logger(__name__)
 
@@ -516,6 +517,27 @@ class JobRedriver:
                 },
             )
             return False
+
+        # ADR 0049: `_persist_terminal` covers every terminal transition
+        # `run_job` makes, but not this one — the worker that owned this
+        # job died without reaching any of those branches. Leaving the
+        # reclaim uncounted would blind `research_jobs_total` to exactly
+        # the failure mode the counter exists for: a crash-looping
+        # worker would show as falling throughput and nothing else.
+        # Recorded only after the CAS lands, unlike `_persist_terminal`
+        # — there the job *is* terminal whether or not the store agrees,
+        # here the CAS losing means the real owner finished it and will
+        # count it itself.
+        #
+        # No duration: `completed_at - started_at` on a reclaim spans
+        # however long the row sat orphaned before a sweep noticed,
+        # which measures the scan interval rather than the work, and
+        # would drag the p95 the histogram exists to report.
+        record_job_terminal(
+            status=job.status.value,
+            error_type=job.error_type,
+            duration_sec=None,
+        )
 
         publish = getattr(self._store, "publish_event", None)
         if callable(publish):

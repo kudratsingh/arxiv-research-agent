@@ -136,6 +136,21 @@ Note the two gauges reset when a worker restarts and the counters are
 monotonic within a process lifetime — query them as rates, and expect
 a counter reset on every deploy.
 
+`research_jobs_total` also counts the jobs a *startup sweep* reclaims
+from a worker that died mid-job (`error_type="orphaned"`, ADR 0038), so
+a crash-looping worker shows up as a failure rate rather than only as
+falling throughput.
+
+### Metrics are an API-server signal
+
+`ENABLE_METRICS` is read by the API lifespan and nowhere else, so it
+does nothing under `make run` or `make eval` — those processes install
+no meter provider and every record point returns on its `None` check.
+Tracing is different: `ENABLE_TRACING` works everywhere, because the
+tracer configures lazily on the first span. Cost accounting is
+unaffected either way — the per-run `cost_usd` in the logs is the same
+with the flag on or off.
+
 ## Dependency locking
 
 Two files describe dependencies, with different jobs (ADR 0045):

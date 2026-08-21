@@ -54,8 +54,9 @@ knobs:
   span when `settings.enable_tracing` is on (ADR
   [0012](decisions/0012-observability-core-logging-costs.md)).
   Metrics ride the same OTLP endpoint behind their own flag (ADR
-  [0049](decisions/0049-otel-metrics.md)) but are recorded by the API
-  layer, not the graph.
+  [0049](decisions/0049-otel-metrics.md)), but no instrument wraps a
+  node: they hang off choke points the API layer and the cost
+  accumulator already own, and only an API worker installs a provider.
 
 The compiled graph is expensive (it opens the checkpointer's
 connection), so it is built **once** at app startup and shared —

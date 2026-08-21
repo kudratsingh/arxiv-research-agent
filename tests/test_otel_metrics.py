@@ -33,12 +33,15 @@ from typing import Any
 import pytest
 from asgi_lifespan import LifespanManager
 from fastapi import HTTPException
+from httpx import ASGITransport, AsyncClient
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
+from src import cancellation as cancellation_module
 from src.api import auth as auth_module
 from src.api import runner as runner_module
 from src.api.app import create_app
 from src.api.jobs import InMemoryJobStore, Job, JobStatus
+from src.api.redriver import ORPHANED_ERROR_TYPE, JobRedriver
 from src.api.runner import run_job
 from src.config import Settings
 from src.observability import costs as costs_module
@@ -559,6 +562,77 @@ class TestRunnerTerminalWiring:
 
 
 # ---------------------------------------------------------------------------
+# The other terminal transition: a sweep reclaiming a dead worker's job
+# ---------------------------------------------------------------------------
+
+
+class _CasStore:
+    """Minimal store surface `JobRedriver._fail_orphan` reaches for.
+
+    Only `update_if_status` and `publish_event` matter here; the sweep
+    itself is not under test, the reclaim's accounting is.
+    """
+
+    def __init__(self, *, cas_lands: bool) -> None:
+        self.cas_lands = cas_lands
+        self.published: list[str] = []
+
+    async def update_if_status(self, job: Job, *, expected: JobStatus) -> bool:
+        return self.cas_lands
+
+    async def publish_event(
+        self, job_id: str, event: str, data: dict[str, Any]
+    ) -> None:
+        self.published.append(event)
+
+
+class TestRedriveReclaimMetric:
+    """ADR 0038/0048's reclaim is the one terminal transition that never
+    passes through `_persist_terminal` — the worker that owned the job
+    died before reaching any of `run_job`'s branches."""
+
+    async def test_reclaimed_orphan_counts_as_a_failure(
+        self, reader: InMemoryMetricReader
+    ) -> None:
+        """Otherwise a crash-looping worker is invisible to
+        `research_jobs_total` — the counter reads "no failures" while
+        every job it owned is being reclaimed as one."""
+        store = _CasStore(cas_lands=True)
+        job = Job(job_id="orphan-1", query="q", status=JobStatus.running)
+        job.started_at = 0.0
+
+        assert await JobRedriver(store)._fail_orphan(job) is True
+
+        assert (
+            _point_for(
+                _points(reader, "research_jobs_total"),
+                status="failed",
+                error_type=ORPHANED_ERROR_TYPE,
+            ).value
+            == 1
+        )
+        # No duration: a reclaim's wall clock is mostly however long the
+        # row sat orphaned before a sweep noticed, which would report
+        # the scan interval as job latency.
+        assert _points(reader, "research_job_duration_seconds") == []
+
+    async def test_lost_cas_race_records_nothing(
+        self, reader: InMemoryMetricReader
+    ) -> None:
+        """Losing the compare-and-set means the real owner finished the
+        job and will count it itself — counting here too would double
+        every job that races a sweep."""
+        store = _CasStore(cas_lands=False)
+        job = Job(job_id="orphan-2", query="q", status=JobStatus.running)
+        job.started_at = 0.0
+
+        assert await JobRedriver(store)._fail_orphan(job) is False
+
+        assert _points(reader, "research_jobs_total") == []
+        assert store.published == []
+
+
+# ---------------------------------------------------------------------------
 # The lifespan wiring: gauges bound to the app's live accounting
 # ---------------------------------------------------------------------------
 
@@ -592,6 +666,48 @@ class TestLifespanWiring:
                 app.state.tasks.discard(task)
 
             assert _points(reader, "research_active_jobs")[0].value == 0
+
+    async def test_gauges_agree_with_healthz_on_abandoned_threads(
+        self, reader: InMemoryMetricReader
+    ) -> None:
+        """The whole reason the gauges take callbacks (ADR 0049).
+
+        Asserting the gauge against a hand-written expectation would
+        pass just as happily if the lifespan bound `active_jobs` to
+        `len(app.state.tasks)` alone — which is the drift from
+        `/healthz` the design exists to rule out, and which ADR 0047's
+        abandoned threads are the only way to observe. So the
+        assertion is gauge *against the endpoint*, with an abandoned
+        thread on the books to separate them.
+        """
+        app = create_app(
+            build_workflow=lambda: _SucceedingStub(),
+            store=InMemoryJobStore(),
+            max_concurrent_jobs=2,
+        )
+        async with LifespanManager(app):
+            cancellation_module._adjust_abandoned(3)
+            try:
+                transport = ASGITransport(app=app)
+                async with AsyncClient(
+                    transport=transport, base_url="http://metrics-test"
+                ) as client:
+                    health = (await client.get("/healthz")).json()
+
+                assert health["abandoned_node_threads"] == 3
+                assert health["active_jobs"] == 3
+                assert (
+                    _points(reader, "research_active_jobs")[0].value
+                    == health["active_jobs"]
+                )
+                assert (
+                    _points(reader, "research_abandoned_node_threads")[
+                        0
+                    ].value
+                    == health["abandoned_node_threads"]
+                )
+            finally:
+                cancellation_module._adjust_abandoned(-3)
 
     async def test_shutdown_tears_the_provider_down(
         self, reader: InMemoryMetricReader
@@ -638,6 +754,28 @@ class TestProviderLifecycle:
         metrics_module.record_job_terminal(
             status="failed", error_type="timeout", duration_sec=1.0
         )
+
+    def test_shutdown_hands_the_provider_a_bounded_budget(
+        self, reader: InMemoryMetricReader
+    ) -> None:
+        """The teardown runs last in a chain ADR 0042 leaves no slack
+        in, so an unreachable collector must cost a bounded wait and
+        not an open-ended one. The SDK enforces the deadline; what this
+        asserts is that a deadline is passed at all — `shutdown()` with
+        no argument would inherit the SDK's 30s default and blow the
+        container's grace period on its own.
+        """
+        seen: dict[str, float] = {}
+
+        class _RecordingProvider:
+            def shutdown(self, timeout_millis: float = 30_000.0) -> None:
+                seen["timeout_millis"] = timeout_millis
+
+        metrics_module._provider = _RecordingProvider()  # type: ignore[assignment]
+        metrics_module.shutdown_metrics()
+
+        assert seen["timeout_millis"] == metrics_module._SHUTDOWN_BUDGET_MS
+        assert 0 < metrics_module._SHUTDOWN_BUDGET_MS <= 5_000.0
 
     def test_exporting_reader_selected_from_endpoint(
         self, monkeypatch: pytest.MonkeyPatch
