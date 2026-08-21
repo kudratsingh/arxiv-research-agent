@@ -64,7 +64,7 @@ Existing agent functions can be kept as thin wrappers around a class instance du
 
 **Where:** `src/graph/workflow.py` → `workflow.py` (wiring) + `routing.py` (conditional edges + max-iteration guard).
 
-Iteration cap is documented in `CLAUDE-Agent-Proj-1.md` but not enforced in code — this refactor is the natural place to add it.
+Iteration cap is documented in the project notes but not enforced in code — this refactor is the natural place to add it.
 
 ## 6. Fill in `src/eval/`
 
