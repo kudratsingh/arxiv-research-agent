@@ -212,13 +212,17 @@ jobs:
       #
       # Patches the "Latest eval results" block in README.md with the
       # numbers from this run, then opens (or updates) a PR against
-      # `main`. Runs regardless of the diff step's outcome — regressed
-      # numbers are still real numbers; the diff-fail flag already
-      # signals that separately.
+      # `main`.
+      #
+      # Both steps below carry an `if:` with no status function, which
+      # GitHub reads as `success() && <expr>` — so they are skipped
+      # whenever an earlier step failed, `Run eval`'s non-zero exit and
+      # `Fail if regression detected` included. That is the intent: the
+      # block is a published claim, and a campaign that errored,
+      # regressed or stopped early has not earned it.
 
-      # Deliberately NOT `always()`, and deliberately full runs only.
-      # The block is a published claim about the system: a campaign
-      # that errored, stopped on its budget or ran a hand-picked
+      # Full runs only, on top of that implicit `success()`: a campaign
+      # that ran a hand-picked
       # `--queries` subset would publish "3 / 3 queries" as if it were
       # the whole benchmark (ADR 0050).
       - name: Update README's eval-results block
