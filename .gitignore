@@ -19,3 +19,10 @@ web/.next/
 web/out/
 web/coverage/
 web/next-env.d.ts
+
+# Private project notes — the top-level agent/project context file is
+# local-only by owner decision; public entry points are README.md and
+# docs/README.md. All casings ignored so a rename cannot re-track it.
+CLAUDE.md
+claude.md
+CLAUDE-Agent-Proj-1.md

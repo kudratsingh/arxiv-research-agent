@@ -233,7 +233,7 @@ with a `Makefile` — never recreate venvs manually or from memory.
 
 ## Branching and PRs
 
-See the **Development Workflow** section in `CLAUDE-Agent-Proj-1.md`
+See the **Development Workflow** conventions below
 for the branch-naming and PR conventions. Short version:
 
 - Bundle related concerns into one cohesive PR (~400-800 additions);

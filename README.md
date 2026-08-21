@@ -511,4 +511,4 @@ Fresh numbers as of this writing: 53 ADRs, 60+ merged PRs, ~1,400
 tests. The dated per-merge log — and the authoritative list of
 what's next — lives in
 [`planning/03-roadmap.md`](planning/03-roadmap.md); the project
-index is [`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).
+index is [`docs/README.md`](docs/README.md).

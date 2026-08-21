@@ -1,7 +1,7 @@
 # Documentation
 
 Deep documentation for `arxiv-research-agent`. The top-level
-`CLAUDE-Agent-Proj-1.md` is the entry point — it summarizes the project,
+This page is the entry point — the pages below summarize the project,
 states the principles, and points here for anything that needs more space.
 
 ## Layout
@@ -30,7 +30,7 @@ than restating it.
 
 - Every non-trivial code change updates the relevant doc in the **same
   PR**. Doc drift is a bug.
-- Long-form content lives here, not in `CLAUDE-Agent-Proj-1.md`. The
+- Long-form content lives here, not in the top-level README. The
   top-level file is an index and mandate, not a manual.
 - Architecture decisions land as ADRs before or alongside the code that
   implements them. Never renumber ADRs; supersede them instead.
