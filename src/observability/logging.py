@@ -188,13 +188,21 @@ def _enable_faulthandler() -> None:
     replace it with an object that has no `fileno()`. Crash diagnostics
     are a bonus, so an unavailable handler is logged and shrugged off
     rather than allowed to break logging setup for everyone.
+
+    The three ways CPython refuses, all caught: `AttributeError` (a
+    stderr with no `fileno`), `io.UnsupportedOperation` (a captured or
+    closed stream — it subclasses both `ValueError` and `OSError`), and
+    `RuntimeError` ("sys.stderr is None", which is what a stderr-detached
+    process gets). Missing that last one would let a daemonised host take
+    `_configure_root_once` down with it — losing *all* logging to save
+    the crash handler, the exact trade this function exists to refuse.
     """
     if faulthandler.is_enabled():
         # Already armed by the host — pytest does this by default.
         return
     try:
         faulthandler.enable()
-    except (AttributeError, ValueError, OSError) as exc:
+    except (AttributeError, ValueError, OSError, RuntimeError) as exc:
         logging.getLogger(__name__).debug(
             "faulthandler_unavailable", extra={"detail": str(exc)}
         )

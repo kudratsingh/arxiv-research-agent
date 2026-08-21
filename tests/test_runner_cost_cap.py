@@ -169,6 +169,87 @@ def test_sync_pipeline_run_trips_the_cap(
     assert costs.total_cost_usd == pytest.approx(2.40)
 
 
+def test_reader_fanout_stops_spending_but_reshapes_the_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The brake holds inside an agent's degradation guard; the label does not.
+
+    `reader_agent` wraps each paper's analysis in `except Exception` and
+    substitutes a placeholder, re-raising only `JobCancelledError`. A
+    `CostBudgetExceeded` raised by `call_llm` inside that fan-out is
+    therefore *absorbed*, and when it hits every paper the node raises
+    `AllPaperAnalysesFailedError` instead — so a capped run on the sync
+    path is reported as a reader failure rather than as a budget stop.
+
+    The guarantee that actually matters survives and is what this test
+    pins: **not one call is issued** once the ceiling is crossed. The
+    money brake is the point of ADR 0051's per-call check; the exception
+    class is a diagnostic label.
+
+    The mislabelling is a known limit, recorded in ADR 0051 — closing it
+    means teaching `src/agents/reader.py` to re-raise `CostBudgetExceeded`
+    the way it already re-raises `JobCancelledError`, which is a different
+    module's change. This test is what makes that follow-up visible: if
+    someone makes the reader propagate the ceiling, the assertion below
+    fails loudly and gets updated rather than the behaviour drifting
+    unnoticed.
+
+    Mutation-check: removing `_check_cost_budget()` from `call_llm` makes
+    `client.calls == 3` and fails the load-bearing assertion.
+    """
+    from src.agents.reader import AllPaperAnalysesFailedError, reader_agent
+
+    monkeypatch.setattr(llm_module, "settings", Settings(max_cost_usd=2.00))
+    client = _SpendingClient()
+    monkeypatch.setattr(llm_module, "_get_client", lambda: client)
+
+    costs = start_cost_tracking()
+    costs.record(
+        "claude-sonnet-4-6", input_tokens=1_000_000, output_tokens=0, cost_usd=3.00
+    )
+
+    papers = [
+        {
+            "id": f"p{i}",
+            "title": f"Paper {i}",
+            "abstract": "abstract text",
+            "authors": ["A. Author"],
+            "published": "2026-01-01",
+            "pdf_url": "",
+            "url": "http://example.invalid/p",
+            "categories": ["cs.AI"],
+            "summary": "summary",
+        }
+        for i in range(3)
+    ]
+    state: Any = {
+        "run_id": "cap-probe",
+        "query": "q",
+        "sub_questions": ["s1"],
+        "search_queries": [],
+        "papers": papers,
+        "paper_analyses": [],
+        "draft_report": "",
+        "citations": [],
+        "critique": "",
+        "quality_score": 0.0,
+        "revision_needed": False,
+        "revision_target": "",
+        "iteration": 0,
+        "next_action": "",
+        "loop_iterations": 0,
+        "stop_reason": "",
+        "messages": [],
+    }
+
+    with pytest.raises(AllPaperAnalysesFailedError):
+        reader_agent(state)
+
+    # The load-bearing assertion: over the cap, the fan-out spends nothing.
+    assert client.calls == 0
+    assert costs.total_cost_usd == pytest.approx(3.00)
+
+
 def test_sync_run_without_tracking_is_unchanged(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

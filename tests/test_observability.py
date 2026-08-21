@@ -8,8 +8,11 @@ context propagation via `contextvars.copy_context().run(...)`.
 from __future__ import annotations
 
 import datetime as dt
+import faulthandler
+import io
 import json
 import logging
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -813,21 +816,63 @@ class TestFaulthandler:
 
         assert calls == []
 
+    @pytest.mark.parametrize(
+        "exc",
+        [
+            # Every way CPython's `faulthandler_get_fileno` refuses,
+            # measured against the real interpreter rather than guessed:
+            #   sys.stderr = None       -> RuntimeError
+            #   sys.stderr = StringIO() -> io.UnsupportedOperation
+            #                              (a ValueError *and* an OSError)
+            #   sys.stderr with no fileno -> AttributeError
+            RuntimeError("sys.stderr is None"),
+            io.UnsupportedOperation("fileno"),
+            AttributeError("'object' object has no attribute 'fileno'"),
+            OSError("bad file descriptor"),
+        ],
+        ids=["stderr-is-none", "captured-stream", "no-fileno", "bad-fd"],
+    )
     def test_unavailable_stderr_does_not_break_logging_setup(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch, exc: BaseException
     ) -> None:
         """`enable()` needs a real fd and does not always get one.
 
         Crash diagnostics are a bonus; losing them must never stop the
-        app from configuring its logging.
+        app from configuring its logging. The `RuntimeError` case is the
+        one that matters most and the one an except-tuple written from
+        memory misses: a stderr-detached process would otherwise lose
+        *all* logging in order to save the crash handler.
+
+        Mutation-check: dropping `RuntimeError` from the except tuple in
+        `_enable_faulthandler` fails the first parameter case.
         """
+
         def _boom() -> None:
-            raise ValueError("sys.stderr has no fileno")
+            raise exc
 
         monkeypatch.setattr(
             logging_module.faulthandler, "is_enabled", lambda: False
         )
         monkeypatch.setattr(logging_module.faulthandler, "enable", _boom)
+
+        logging_module._enable_faulthandler()  # must not raise
+
+    def test_real_enable_refuses_a_none_stderr_with_runtimeerror(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Pins the interpreter behaviour the except tuple is written for.
+
+        If a future CPython changes which exception `enable()` raises for
+        a detached stderr, this fails and the tuple above gets revisited
+        — rather than the guard silently stopping guarding.
+        """
+        monkeypatch.setattr(
+            logging_module.faulthandler, "is_enabled", lambda: False
+        )
+        monkeypatch.setattr(sys, "stderr", None)
+
+        with pytest.raises(RuntimeError):
+            faulthandler.enable()
 
         logging_module._enable_faulthandler()  # must not raise
 

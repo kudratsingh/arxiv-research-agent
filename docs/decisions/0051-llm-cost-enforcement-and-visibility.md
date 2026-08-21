@@ -345,6 +345,37 @@ reads before reclaiming a job:
     `x-stainless-retry-count` on the request; nothing comes back. The
     parsed `Message` carries no retry information either, which is why
     the raw response is needed at all.
+  - **Agents' degradation guards absorb the ceiling's exception.**
+    `reader_agent` wraps each paper in `except Exception` and
+    substitutes a placeholder, re-raising only `JobCancelledError`;
+    `supervisor`, `verifier` and `query_refiner` have the same shape.
+    So a `CostBudgetExceeded` raised from `call_llm` inside one of those
+    nodes is caught and degraded, and when it hits every paper the reader
+    raises `AllPaperAnalysesFailedError` instead — a capped sync run is
+    reported as a reader failure, with one misleading
+    `reader_paper_analysis_failed` WARNING per paper.
+
+    The *brake* is unaffected and that is the part that matters: once the
+    ceiling is crossed no further call is issued, which
+    `test_reader_fanout_stops_spending_but_reshapes_the_error` pins
+    directly (zero calls, spend unchanged). Only the label is wrong. The
+    API path is effectively immune — `on_node` stops the run at the
+    preceding node boundary, so the reader cannot *start* over the cap
+    unless `max_papers` is 1 — but the sync revision loop
+    (`critic -> planner -> ... -> reader`) can re-enter the reader with
+    the accumulator already over, and it is the sync path this ADR set
+    out to protect. Closing it means teaching the agents to re-raise
+    `CostBudgetExceeded` alongside `JobCancelledError` — the same
+    argument `reader.py` already makes for cancellation, "swallowing an
+    abort would turn it into analyse-everything-anyway" — and
+    `src/agents/*` was outside this change's file scope.
+  - **The clamp always fires at the shipped defaults.** 4 retries x 120s
+    exceeds 75% of the 600s job budget, so every process logs
+    `llm_retry_budget_clamped` at WARNING once at client construction
+    even when the operator set nothing. The line is accurate and carries
+    the numbers, but a warning that is always present is a warning
+    operators learn to skip; keying it to `model_fields_set` (warn only
+    on an explicit `ANTHROPIC_MAX_RETRIES`) is the tidier shape.
   - **The clamp uses `api_job_timeout_sec` on every path**, including
     `make run` and `make eval`, which have no job timeout. It is a
     global bound on one call chain, which is a reasonable thing to want
@@ -365,7 +396,10 @@ reads before reclaiming a job:
     serialising encoding behind the existing model lock — belongs in
     `src/tools/embeddings.py` and needs a real soak (≥200 runs) before
     anyone believes a fix, since the reproduction rate is ~4%.
-- **Follow-ups**: run `unpriced_models(settings)` at startup and WARN;
+- **Follow-ups**: re-raise `CostBudgetExceeded` from the agents'
+  degradation guards so a capped run is labelled as one; key the
+  retry-clamp warning to `model_fields_set`; run
+  `unpriced_models(settings)` at startup and WARN;
   widen `max_cost_usd`'s config description and
   `docs/architecture.md`; the embeddings thread-pinning half of the
   SIGSEGV; a `partial` flag on `JobDetail` so a client can tell a
