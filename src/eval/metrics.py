@@ -537,10 +537,16 @@ def measure_faithfulness(
 
     source_index = build_source_index(papers, citations)
     user_prompt = _build_faithfulness_prompt(report, source_index)
+    # 8192, not 4096: the judge returns one verdict object per claim
+    # over the full report, and the pre-flight scan measured routine
+    # truncation-into-invalid-JSON at the old cap on long reports. An
+    # output cap costs nothing unless tokens are actually generated,
+    # so the low cap bought only wasted judge calls (same reasoning as
+    # the synthesizer's cap in ADR 0041's follow-up).
     parsed = call_llm_json(
         prompt=user_prompt,
         system_prompt=FAITHFULNESS_SYSTEM_PROMPT,
-        max_tokens=4096,
+        max_tokens=8192,
     )
     return _aggregate_claims(parsed, source_index)
 
