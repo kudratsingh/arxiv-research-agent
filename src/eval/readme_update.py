@@ -101,8 +101,9 @@ def render_block(
         )
 
     cited_rows = _rows_with_citations(ok_rows)
-    metrics = {f: _mean_or_none(ok_rows, f) for f in METRIC_FIELDS}
-    metrics[CITATION_FIELD] = _mean_or_none(cited_rows, CITATION_FIELD)
+    eligible = {f: ok_rows for f in METRIC_FIELDS}
+    eligible[CITATION_FIELD] = cited_rows
+    metrics = {f: _mean_or_none(rows, f) for f, rows in eligible.items()}
     cost = _mean_or_none(ok_rows, COST_FIELD)
     latency = _mean_or_none(ok_rows, LATENCY_FIELD)
     uncited = successful_queries - len(cited_rows)
@@ -125,15 +126,18 @@ def render_block(
         sep,
         row,
     ]
+    notes = ["Cost and latency are the workflow's, excluding eval-judge calls."]
     if uncited:
-        lines += [
-            "",
-            f"_Citation accuracy is averaged over the {len(cited_rows)} of "
+        notes.append(
+            f"Citation accuracy is averaged over the {len(cited_rows)} of "
             f"{successful_queries} scored runs whose report contained at "
             f"least one citation; {uncited} produced none, where the metric "
-            f"does not apply. Cost and latency are the workflow's, "
-            f"excluding eval-judge calls._",
-        ]
+            f"does not apply."
+        )
+    unscored = _unscored_note(eligible, metrics)
+    if unscored:
+        notes.append(unscored)
+    lines += ["", "_" + " ".join(notes) + "_"]
     return "\n".join(lines)
 
 
@@ -165,6 +169,36 @@ def patch_readme(readme_path: Path, block: str) -> bool:
 def _mean_or_none(rows: list[dict[str, Any]], field: str) -> float | None:
     values = [r[field] for r in rows if r.get(field) is not None]
     return statistics.fmean(values) if values else None
+
+
+def _unscored_note(
+    eligible: dict[str, list[dict[str, Any]]],
+    metrics: dict[str, float | None],
+) -> str:
+    """Name any metric whose mean was taken over fewer runs than it could be.
+
+    Since ADR 0050 a judge that fails leaves its metric `null` on the
+    record instead of aborting the campaign, and `_mean_or_none` skips
+    nulls. So `Mean faithfulness 0.420` can be an average of two runs
+    sitting in a row headed `20 / 20` — the same shrunken-denominator
+    lie the citation-accuracy exclusion above is careful to state, one
+    cause further along. Published numbers state their denominator.
+    """
+    short = []
+    for field, rows in sorted(eligible.items()):
+        if metrics.get(field) is None:
+            continue  # printed as `-`; nothing is being claimed
+        scored = sum(1 for r in rows if r.get(field) is not None)
+        if scored < len(rows):
+            short.append(f"{field.replace('_', ' ')} over {scored} of {len(rows)}")
+    if not short:
+        return ""
+    return (
+        "Some runs went unscored where an eval judge failed, so these "
+        "means cover fewer runs than the count above: "
+        + "; ".join(short)
+        + "."
+    )
 
 
 def _rows_with_citations(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:

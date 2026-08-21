@@ -202,12 +202,48 @@ connection ceiling), and exception text in `summary.md` table cells is
 now pipe-escaped, newline-collapsed and length-capped, since an SDK
 error body containing a `|` corrupted the table from that row down.
 
+### 10. What judge isolation costs the consumers, and how they say so
+
+Decision 1 buys the campaign's survival with a new hole: a metric that
+used to abort the run now goes `null`, and both consumers of
+`summary.jsonl` average over whatever is left without saying so.
+`readme_update._mean_or_none` skips nulls, so `Mean faithfulness 0.420`
+can be the mean of two runs inside a row headed `20 / 20`;
+`regression_diff` turns a null into a `None` delta, which is never a
+regression, so the same night classifies every query `unchanged` and
+exits `0`. That is decision 6's shrunken denominator one level down —
+`metrics_error` was being written by the runner and read by nobody.
+
+Both consumers now state their denominator:
+
+- The README block names any metric whose mean covers fewer runs than
+  the count in the row ("faithfulness over 2 of 20"), alongside the
+  citation-accuracy exclusion from decision 5. The workflow-cost caveat
+  is printed unconditionally; it used to ride inside the uncited-rows
+  note and so vanished on a night where every report cited something.
+- The diff report carries a `Compared` column per metric and, when the
+  baseline scored something this run did not, a line naming the metric
+  and the count.
+- The runner's closing line adds `N partially scored`.
+
+**Not gated.** A flaky judge is a harness fault, not a product
+regression, and 20 queries make ~60 judge calls a night — gating on one
+truncated JSON response would put the nightly back where this ADR found
+it, red for reasons nobody acts on. The signal loss is reported at
+three levels instead, and a *query* that produced nothing at all is
+still `removed` or `errored` and still gates.
+
 ## Alternatives considered
 
 - **Fail the whole batch on a judge error (status quo)** — the
   fail-fast option ADR 0008 already rejected for workflow errors. There
   is no argument for applying it to the *scoring* half that does not
   apply more strongly to the half that costs ten times as much.
+- **Fail the gate when a metric goes unscored** — symmetric with the
+  `removed` decision and rejected on frequency: a single truncated
+  judge response out of ~60 a night would redden the nightly for a
+  harness fault, which is the alarm fatigue this ADR is trying to end.
+  Reported at three levels instead; see decision 10.
 - **Retry the failed judge instead of degrading to `None`** — the SDK
   already retries (ADR 0009: 4 retries, exponential backoff). A second
   application-level retry loop doubles the worst-case latency of a

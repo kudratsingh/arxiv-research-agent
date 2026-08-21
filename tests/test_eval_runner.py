@@ -1164,6 +1164,24 @@ class TestMain:
         assert "2/3 succeeded, 1 errored" in out
 
     @pytest.mark.usefixtures("_api_key")
+    def test_closing_line_names_partially_scored_queries(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        # A judge failure keeps the run and the clean exit code, so the
+        # closing line is the only place the operator learns the night
+        # has a hole in it without opening summary.md.
+        ids = _three_ids()
+        outcomes = {qid: _record(qid) for qid in ids}
+        outcomes[ids[1]]["metrics_error"] = "faithfulness: RuntimeError: 529"
+        _fake_runs(monkeypatch, outcomes)
+
+        code = main_with(["--queries", ",".join(ids)], tmp_path)
+
+        assert code == EXIT_OK
+        assert "3/3 succeeded, 0 errored, 1 partially scored" in capsys.readouterr().out
+
+    @pytest.mark.usefixtures("_api_key")
     def test_all_error_exits_all_failed(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

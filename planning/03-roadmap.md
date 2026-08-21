@@ -509,3 +509,25 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   `--resume` skips errored queries too (delete the record to retry
   one); and the nightly's missing API key is now legible rather than
   fixed.
+
+- _2026-08-21_ — Verification pass on ADR 0050 found one seam the
+  hardening itself opened and closed it (decision 10 in the ADR).
+  Judge isolation converts an aborted campaign into a `null` metric,
+  and both consumers of `summary.jsonl` were averaging over whatever
+  survived without saying so: the README could publish
+  `Mean faithfulness 0.420` from two runs inside a row headed
+  `20 / 20`, and `regression_diff` turned the same nulls into `None`
+  deltas, classifying all twenty queries `unchanged` and exiting green
+  on a night where eighteen judges failed — the exact shrunken
+  denominator decision 6 had just closed one level up, with
+  `metrics_error` written by the runner and read by nobody. Neither
+  gates now (a flaky judge is a harness fault, not a product
+  regression, and ~60 judge calls a night would redden the nightly for
+  it), but neither is silent either: the README names any metric whose
+  mean covers fewer runs than the count beside it, the diff report
+  carries a per-metric `Compared` column plus a header line naming what
+  went unscored, and the runner's closing line adds `N partially
+  scored`. The workflow-cost caveat also used to ride inside the
+  uncited-rows note, so it disappeared on any night where every report
+  cited something; it prints unconditionally. Ten more mutants planted
+  across the new counting and rendering — all caught.

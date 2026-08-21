@@ -99,6 +99,9 @@ collapses the duplicate lines a resumed run appends.
   past its retries or truncates into invalid JSON leaves that metric as
   `null`, records the reason in `metrics_error`, and keeps the run's
   state, spend and timing — the workflow output is what cost money.
+  Neither the query nor the campaign fails on it, so both consumers of
+  `summary.jsonl` state the denominator they actually averaged over
+  (below) and the runner's closing line counts the affected queries.
 - **A kill loses at most the in-flight query.** Everything finished is
   already on disk.
 - **`Ctrl-C` and SIGTERM take the same path.** `kill`, `docker stop`
@@ -146,7 +149,8 @@ without it.
 `--max-budget-usd` is checked *between* queries against accumulated
 workflow+judge spend (including spend reused from a resumed campaign),
 so the final query can overshoot the ceiling by its own cost. It is a
-campaign ceiling; the per-call dollar cap lives at `call_llm`.
+campaign ceiling, and the only one the eval path owns — the per-call
+dollar cap is ADR 0051's, at `call_llm`.
 
 ### Exit codes
 
@@ -194,6 +198,14 @@ green. The report states the denominator it used
 (`over the 15 of 20 baseline queries present in both runs`), and
 `--allow-removed` opts a deliberate `--queries` subset run out of the
 gate without excusing real regressions in the queries it did run.
+
+A **metric the current run stopped scoring** is the same shrunken
+denominator one level down: a failed judge leaves the metric `null`, so
+its delta is `None`, so the query reads `unchanged`. The gate stays
+green on purpose — a flaky judge is a harness fault, not a product
+regression — but the report never hides it. Each aggregate row carries
+a `Compared` column (`faithfulness … | 2 / 20`), and a metric the
+baseline scored while the current run did not gets named in the header.
 
 ### The statistics, honestly
 
@@ -247,6 +259,10 @@ publishes (ADR 0050):
   states the exclusion and its denominator under the table. Other
   metrics keep the full denominator; a report with no citations still
   has real completeness and recall.
+- **Every published mean states how many runs it covers.** A judge
+  failure leaves its metric `null`, and the mean silently skips nulls —
+  so any metric averaged over fewer runs than the `Queries` count is
+  named under the table with its own denominator.
 
 ## What "tested" means for eval code itself
 

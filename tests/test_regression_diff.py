@@ -226,6 +226,79 @@ class TestTruncatedBatch:
         assert "1 (not gated: --allow-removed)" in md
 
 
+class TestUnscoredMetrics:
+    """A metric the current run stopped scoring must not read as unchanged.
+
+    ADR 0050's judge isolation is the cause: a judge that fails leaves
+    its metric `null` on the record instead of aborting the campaign,
+    so the delta goes `None` and the query classifies `unchanged`. The
+    gate deliberately stays green — a flaky judge is a harness fault,
+    not a product regression — but the report has to say so, or a night
+    where 18 of 20 faithfulness judges failed is byte-identical to a
+    clean one. Every test here is a mutation check on `_unscored_counts`
+    and its rendering.
+    """
+
+    def _pair(self, unscored: int, total: int = 20) -> tuple[
+        dict[str, dict[str, Any]], dict[str, dict[str, Any]]
+    ]:
+        baseline: dict[str, dict[str, Any]] = {}
+        current: dict[str, dict[str, Any]] = {}
+        for i in range(total):
+            qid = f"q{i:02d}"
+            baseline[qid] = _line(qid, citation_accuracy=0.8, faithfulness=0.95)
+            current[qid] = _line(
+                qid,
+                citation_accuracy=0.8,
+                faithfulness=None if i < unscored else 0.95,
+            )
+        return baseline, current
+
+    def test_counts_metrics_the_current_run_stopped_scoring(self) -> None:
+        baseline, current = self._pair(unscored=18)
+        report = diff_summaries(baseline, current)
+        assert report["unscored"]["faithfulness"] == 18
+        assert report["unscored"]["citation_accuracy"] == 0
+
+    def test_absent_field_on_both_sides_is_not_lost_signal(self) -> None:
+        # `llm_calls` is None in both runs here — a summary that never
+        # carried the field, not a judge that failed.
+        baseline, current = self._pair(unscored=0)
+        report = diff_summaries(baseline, current)
+        assert report["unscored"]["llm_calls"] == 0
+
+    def test_a_new_metric_the_baseline_never_had_is_not_lost_signal(self) -> None:
+        baseline = {"q1": _line("q1", citation_accuracy=None)}
+        current = {"q1": _line("q1", citation_accuracy=0.8)}
+        report = diff_summaries(baseline, current)
+        assert report["unscored"]["citation_accuracy"] == 0
+
+    def test_unscored_queries_still_read_unchanged_and_stay_green(self) -> None:
+        baseline, current = self._pair(unscored=18)
+        report = diff_summaries(baseline, current)
+        assert report["has_regressions"] is False
+        assert {d["status"] for d in report["diffs"]} == {"unchanged"}
+
+    def test_report_names_the_metric_and_its_count(self) -> None:
+        baseline, current = self._pair(unscored=18)
+        md = format_report(diff_summaries(baseline, current))
+        assert "Unscored in the current run" in md
+        assert "`faithfulness` on 18 of 20" in md
+
+    def test_aggregate_row_carries_its_own_denominator(self) -> None:
+        baseline, current = self._pair(unscored=18)
+        md = format_report(diff_summaries(baseline, current))
+        # The faithfulness mean is over two queries inside a section
+        # headed "over the 20 of 20 baseline queries".
+        assert "| faithfulness | 0.950 | 0.950 | +0.000 | 2 / 20 |" in md
+        assert "| citation_accuracy | 0.800 | 0.800 | +0.000 | 20 / 20 |" in md
+
+    def test_clean_run_says_nothing_about_unscored_metrics(self) -> None:
+        baseline, current = self._pair(unscored=0)
+        md = format_report(diff_summaries(baseline, current))
+        assert "Unscored in the current run" not in md
+
+
 class TestResourceBands:
     """Every classification branch of the ADR 0044 two-leg band model.
 
@@ -426,6 +499,9 @@ class TestFormatReport:
     ) -> RegressionReport:
         return RegressionReport(
             allow_removed=allow_removed,
+            unscored=dict.fromkeys(
+                ("citation_accuracy", "completeness", "faithfulness"), 0
+            ),
             diffs=[
                 QueryDiff(
                     query_id="q1",

@@ -27,6 +27,13 @@ aggregate below it re-averages over the survivors, so "no regressions"
 on a shrunken denominator is the most dangerous kind of green.
 `--allow-removed` opts a deliberate subset run out.
 
+The report also names any metric the current run stopped scoring (a
+judge failure leaves it `null` since ADR 0050, which makes its delta
+`None` and its query read `unchanged`). That is reported, not gated —
+a flaky judge is a harness fault, not a product regression — but it is
+never silent, because a mean over two of twenty queries must not print
+like a mean over twenty.
+
 Since ADR 0050 the runner reports `cost_usd` / `llm_calls` /
 `elapsed_sec` as *workflow* figures with the eval judges' own spend
 split into separate fields, so the resource bands below now gate the
@@ -133,6 +140,7 @@ class RegressionReport(TypedDict):
     has_regressions: bool
     threshold: float
     allow_removed: bool
+    unscored: dict[str, int]
     aggregate_baseline: dict[str, float | None]
     aggregate_current: dict[str, float | None]
     aggregate_deltas: dict[str, float | None]
@@ -358,10 +366,42 @@ def diff_summaries(
         has_regressions=any(d["status"] in gating_statuses for d in diffs),
         threshold=threshold,
         allow_removed=allow_removed,
+        unscored=_unscored_counts(baseline, current),
         aggregate_baseline=aggregate_baseline,
         aggregate_current=aggregate_current,
         aggregate_deltas=aggregate_deltas,
     )
+
+
+def _unscored_counts(
+    baseline: dict[str, dict[str, Any]],
+    current: dict[str, dict[str, Any]],
+) -> dict[str, int]:
+    """Per metric: shared queries the baseline scored and the current run did not.
+
+    Since ADR 0050 a judge that times out or truncates no longer aborts
+    the campaign — it leaves that one metric `null` on the record and
+    records why in `metrics_error`. That is the right trade, but it
+    means a metric can quietly lose most of its queries between two
+    runs: the deltas go `None`, the query classifies `unchanged`, and
+    the aggregate below re-averages over whatever was scored. Same
+    shrunken-denominator failure as a truncated batch, one level down,
+    so `format_report` states this the same way it states `removed`.
+
+    Counted only when the baseline *had* a value, so a field a summary
+    never carried (`llm_calls` in a pre-ADR-0044 file) is absence, not
+    lost signal.
+    """
+    shared = set(baseline) & set(current)
+    return {
+        field: sum(
+            1
+            for qid in shared
+            if _score(baseline[qid], field) is not None
+            and _score(current[qid], field) is None
+        )
+        for field in METRIC_FIELDS
+    }
 
 
 def _aggregate_over_shared(
@@ -428,22 +468,56 @@ def format_report(report: RegressionReport) -> str:
         f"- **Queries**: {shared} compared, {removed_note} missing from the "
         f"current run, {new} new",
         f"- **Regressions detected**: {'yes' if report['has_regressions'] else 'no'}",
+    ]
+
+    # A metric the current run stopped scoring contributes nothing to
+    # the gate — its delta is `None`, so the query reads `unchanged`.
+    # Without this line a night where the faithfulness judge failed on
+    # 18 of 20 queries is indistinguishable from a clean one: green
+    # tick, "20 compared", a mean quietly taken over the surviving two
+    # (ADR 0050).
+    lost = {f: n for f, n in report["unscored"].items() if n}
+    if lost:
+        detail = "; ".join(
+            f"`{field}` on {count} of {shared}"
+            for field, count in sorted(lost.items())
+        )
+        lines.append(
+            f"- **Unscored in the current run**: {detail}. The baseline "
+            "scored these and the current run did not — an eval judge "
+            "failed there, so they are absent from the comparison "
+            "rather than unchanged by it. Not gated: a flaky judge is a "
+            "harness fault, not a product regression. Read "
+            "`metrics_error` in the run's summary."
+        )
+
+    lines += [
         "",
         # State the denominator: `_aggregate_over_shared` averages over
         # the intersection, so a truncated current run makes these means
-        # describe a smaller set than the baseline they sit beside.
+        # describe a smaller set than the baseline they sit beside. The
+        # `Compared` column carries the same honesty per metric, since a
+        # null score shrinks one row's denominator without shrinking the
+        # section's.
         f"## Aggregate (over the {shared} of {baseline_total} baseline "
         "queries present in both runs)",
         "",
-        "| Metric | Baseline | Current | Delta |",
-        "|---|---:|---:|---:|",
+        "| Metric | Baseline | Current | Delta | Compared |",
+        "|---|---:|---:|---:|---:|",
     ]
     for field in METRIC_FIELDS:
+        compared = sum(
+            1
+            for d in report["diffs"]
+            if d["status"] not in ("removed", "new")
+            and d["deltas"].get(field) is not None
+        )
         lines.append(
             f"| {field} "
             f"| {_fmt_score(report['aggregate_baseline'].get(field))} "
             f"| {_fmt_score(report['aggregate_current'].get(field))} "
-            f"| {_fmt_delta(report['aggregate_deltas'].get(field))} |"
+            f"| {_fmt_delta(report['aggregate_deltas'].get(field))} "
+            f"| {compared} / {shared} |"
         )
 
     lines += [

@@ -871,6 +871,11 @@ def main(argv: list[str] | None = None) -> int:
 
     attempted = 0
     errored = 0
+    # A judge failure is not a query failure — the run is kept and the
+    # exit code stays clean — but it is a hole in the night's data, so
+    # the closing line names it rather than leaving it for whoever
+    # opens summary.md (ADR 0050).
+    partially_scored = 0
     spend = sum(_record_total_cost(r) for r in already_done.values())
     interrupted = False
     budget_stopped = False
@@ -885,6 +890,8 @@ def main(argv: list[str] | None = None) -> int:
             attempted += 1
             if record.get("error"):
                 errored += 1
+            if record.get("metrics_error"):
+                partially_scored += 1
             persist_record(output_dir, record)
             _print_result(record)
 
@@ -915,6 +922,11 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"{attempted - errored}/{attempted} succeeded, "
                 f"{errored} errored"
+                + (
+                    f", {partially_scored} partially scored"
+                    if partially_scored
+                    else ""
+                )
                 + (f", {skipped} reused" if skipped else "")
                 + f", total ${spend:.4f}"
             )

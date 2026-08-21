@@ -106,6 +106,58 @@ class TestRenderBlock:
         assert "| 0 / 0 " in block
 
 
+class TestUnscoredDenominator:
+    """A mean over the runs a judge managed to score states how many.
+
+    ADR 0050. Judge isolation leaves a failed metric `null` on the
+    record instead of aborting the campaign, and `_mean_or_none` skips
+    nulls — so `Mean faithfulness` can be an average of two runs inside
+    a row headed `20 / 20`. Every test here is a mutation check on
+    `_unscored_note`.
+    """
+
+    def test_note_names_the_metric_and_its_denominator(self) -> None:
+        rows = [_record(faithfulness=None) for _ in range(18)]
+        rows += [_record(faithfulness=0.9) for _ in range(2)]
+        block = render_block(rows)
+        assert "| 20 / 20 " in block
+        assert "faithfulness over 2 of 20" in block
+
+    def test_clean_run_gets_no_unscored_note(self) -> None:
+        block = render_block([_record(), _record()])
+        assert "went unscored" not in block
+
+    def test_a_metric_nobody_scored_is_a_dash_not_a_denominator_note(
+        self,
+    ) -> None:
+        # Nothing is claimed for a metric printed as `-`, so there is no
+        # denominator to qualify.
+        block = render_block([_record(faithfulness=None)])
+        assert "faithfulness over" not in block
+
+    def test_citation_accuracy_counts_against_its_own_eligible_rows(
+        self,
+    ) -> None:
+        # One uncited row is excluded from the citation mean entirely;
+        # of the two that remain, one went unscored. The note must say
+        # "1 of 2", not "1 of 3".
+        block = render_block(
+            [
+                _record(citation_accuracy=0.9, total_citations=4),
+                _record(citation_accuracy=None, total_citations=4),
+                _record(citation_accuracy=1.0, total_citations=0),
+            ]
+        )
+        assert "citation accuracy over 1 of 2" in block
+
+    def test_workflow_cost_caveat_is_always_stated(self) -> None:
+        # It used to ride along inside the uncited-rows note, so a night
+        # where every report cited something published cost and latency
+        # with no word on whose spend they are.
+        block = render_block([_record()])
+        assert "excluding eval-judge calls" in block
+
+
 class TestCitationAccuracyDenominator:
     """Rows whose report cited nothing are excluded from that one mean.
 
