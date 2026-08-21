@@ -1,5 +1,12 @@
 # Agentic upgrade plan (Sprint 2 focus)
 
+> **Status (2026-08-21)** — executed. Sprint 2 landed the supervisor
+> loop, verifier, evidence store, query refiner, reader recovery,
+> and prompt-injection isolation, each behind an independent flag
+> (ADRs 0014-0020). The skills-registry idea at the tail stayed
+> deferred (see Sprint 6+ in [03-roadmap.md](03-roadmap.md)). Kept
+> as written for the record.
+
 The current system is **agentic-lite**: five agents wired as a fixed
 DAG with one conditional edge (`critic → planner|search|synthesizer`)
 and a hard iteration cap. Sprint 2 converts that DAG into a supervisor

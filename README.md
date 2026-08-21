@@ -11,6 +11,13 @@ conditional edge on the critic. Behind opt-in flags it becomes an agentic
 supervisor loop with runtime faithfulness verification, evidence-grounded
 synthesis, and search-layer / read-layer recovery actions.
 
+The workflow ships behind a production HTTP surface: FastAPI async
+jobs with SSE streaming and human-in-the-loop plan review, pluggable
+Redis/Postgres backends for every stateful concern (jobs,
+checkpoints, conversations, caches, rate limits), worker leases +
+a redriver for crash recovery, OTel logs/metrics/tracing, and an
+LLM-judged eval harness with resume + budget controls.
+
 ## Architecture
 
 ### Fixed pipeline — Sprint 1 baseline (default)
@@ -124,9 +131,25 @@ list in `src/config.py`.
 | `enable_prompt_caching` | 3 | Anthropic ephemeral cache on system prompts | [0022](docs/decisions/0022-anthropic-prompt-caching.md) |
 | `enable_semantic_scholar` | 3 | One-hop reference enrichment on top of arXiv | [0023](docs/decisions/0023-semantic-scholar-citation-graph.md) |
 
-Full design log in
-[`docs/decisions/`](docs/decisions/README.md); the roadmap lives in
-[`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).
+The table stops at Sprint 3 because it tracks *workflow-behavior*
+flags — the ones that change what the agents do and so must stay
+independently toggleable for A/B eval runs. Later settings (HITL,
+metrics, job redriver, storage backends) are API and infrastructure
+concerns; the full settings surface is `src/config.py`. Full design
+log in
+[`docs/decisions/`](docs/decisions/README.md); the sprint-by-sprint
+roadmap lives in [`planning/03-roadmap.md`](planning/03-roadmap.md).
+
+## How this was built
+
+Every non-trivial decision in this repo has an Architecture Decision
+Record — 50+ ADRs in [`docs/decisions/`](docs/decisions/README.md)
+covering everything from "why roll our own chunker" (0002) to "why
+the container bakes MiniLM weights at build time" (0053). The ADR
+index plus the dated log in
+[`planning/03-roadmap.md`](planning/03-roadmap.md) reconstruct the
+entire build sequence: what was decided, when, what the alternatives
+were, and what broke along the way.
 
 ## Demo
 
@@ -139,10 +162,11 @@ the report the workflow produced, and the per-query line from
 Requires Python 3.11+.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
+make install        # fresh .venv + runtime deps (editable)
+make install-dev    # + dev deps (pytest, mypy, ruff)
 ```
+
+(Or by hand: `python -m venv .venv && .venv/bin/pip install -e .`.)
 
 Copy `.env.example` to `.env` and add your Anthropic API key:
 
@@ -312,8 +336,10 @@ horizontal scaling and durability across worker restarts
 
 ## Run in Docker
 
-Full compose stack — app + Redis (JobStore) + Postgres (paper cache,
-Sprint 4 PR 4). See ADR
+Full compose stack — four services: the FastAPI app, the Next.js
+web UI, Redis (job store, SSE/HITL pub/sub, rate limiter), and
+Postgres (checkpoints, conversations, paper + embedding caches).
+See ADR
 [0027](docs/decisions/0027-docker-compose-redis-job-store.md) for
 image design + service topology.
 
@@ -344,6 +370,12 @@ a paper fetched by one worker is instantly available to any
 other. Local dev outside the compose stack defaults to
 `disk` / `none` (Sprint 1 behavior byte-identical). See ADR
 [0028](docs/decisions/0028-postgres-paper-cache-and-embedding-cache.md).
+Likewise `CHECKPOINT_BACKEND=postgres` (cross-worker HITL, ADR
+[0034](docs/decisions/0034-postgres-checkpointer-and-cross-worker-hitl.md)),
+`CONVERSATION_STORE=postgres` (ADR
+[0032](docs/decisions/0032-conversation-mode.md)), and
+`RATE_LIMIT_BACKEND=redis` (limits correct across workers, ADR
+[0037](docs/decisions/0037-redis-rate-limiter-and-keystore-reload.md)).
 
 ## Eval
 
@@ -355,13 +387,31 @@ score, iteration count, LLM call count, and cost per query in
 `summary.jsonl`. Full eval design in [`docs/eval.md`](docs/eval.md).
 
 ```bash
-python -m src.eval.runner              # run the benchmark
+make eval                              # run the benchmark
+make eval QUERIES=id1,id2              # subset by query id
+python -m src.eval.runner --output-dir outputs/eval/<run> --resume   # re-enter an interrupted campaign
+python -m src.eval.runner --max-budget-usd 25   # campaign spend ceiling
 python -m src.eval.regression_diff \
   outputs/eval/<baseline>/summary.jsonl \
   outputs/eval/<candidate>/summary.jsonl
 ```
 
+The runner is hardened for real campaigns (ADR
+[0050](docs/decisions/0050-eval-runner-hardening.md)): each of the
+four judge metrics fails independently (a broken judge costs one
+score, not the query), results persist incrementally after every
+query, `--resume` re-enters a partial run without re-spending, and
+`--max-budget-usd` stops the campaign at a dollar ceiling. Distinct
+exit codes separate "a query failed" from "budget hit" from
+"interrupted" — see [`docs/eval.md`](docs/eval.md).
+
 ### Latest eval results
+
+No numbers yet, honestly: the first full green campaign against
+`main` hasn't been run. The table below is auto-populated by the
+nightly eval workflow
+(`.github/workflows/eval-nightly.yml`); until it lands, run the
+benchmark yourself with `make eval`.
 
 <!-- eval-nightly:start -->
 _Auto-updated by the nightly eval workflow. First nightly run against `main` will populate this row._
@@ -400,6 +450,7 @@ to answer. Every tunable is one env-var away — see `src/config.py`.
 - Eval runner isolates per-query failures — a broken query captures its traceback and continues (ADR [0008](docs/decisions/0008-eval-runner-sequential-per-query-isolation.md)).
 - Runs are checkpointed so an interrupted workflow resumes on the same `thread_id`. Backend selected by `settings.checkpoint_backend` — `sqlite` (default, per-worker) or `postgres` (shared across API workers; required for multi-worker HITL). See ADRs [0013](docs/decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md) and [0034](docs/decisions/0034-postgres-checkpointer-and-cross-worker-hitl.md).
 - API jobs never lose data on the runner side — every failure mode (`HitlTimeoutError`, `HitlCancelledError`, generic `Exception`, `asyncio.CancelledError`, wall-clock timeout) lands on the `Job` record before propagating.
+- Under `JOB_STORE=redis`, each running job holds a TTL'd worker lease; a redriver sweep at startup and every `job_redrive_interval_sec` reclaims jobs orphaned by a dead worker instead of leaving them `running` forever (ADRs [0038](docs/decisions/0038-job-redriver-and-sse-stream.md), [0048](docs/decisions/0048-redriver-cas-and-store-edges.md)).
 
 **Observability**
 - Structured JSON logs with per-run `run_id` propagated through ContextVars (ADR [0012](docs/decisions/0012-observability-core-logging-costs.md)). Every LLM call records to the per-run cost accumulator.
@@ -407,9 +458,19 @@ to answer. Every tunable is one env-var away — see `src/config.py`.
 - OpenTelemetry **metrics** behind `enable_metrics` (ADR [0049](docs/decisions/0049-otel-metrics.md)): job submissions / completions / duration, LLM spend, in-flight job concurrency, and rate-limit rejections. Exported to `otel_exporter_endpoint` (shared with tracing) every `otel_metric_export_interval_sec`.
 - `/healthz` reports each dependency's status in its body, and logs one WARNING per transition into degraded (never per probe) naming the dependency (ADR [0053](docs/decisions/0053-api-web-container-preflight.md)).
 
-**Safety**
-- Prompt-injection isolation on the reader — untrusted PDF text is wrapped in `<untrusted_paper>` tags with control-string sanitization (ADR [0020](docs/decisions/0020-prompt-injection-isolation-reader.md)).
+**Security**
+
+The threat model starts from the fact that arXiv PDFs are untrusted
+input: anyone can publish a paper, and paper text flows into Claude
+calls whose output steers the workflow. The documented defenses
+([`docs/security.md`](docs/security.md)):
+
+- Prompt-injection isolation on the reader — untrusted PDF text is wrapped in `<untrusted_paper>` tags with control-string sanitization (ADR [0020](docs/decisions/0020-prompt-injection-isolation-reader.md)); conversation `prior_context` gets the same treatment on the planner (ADR [0033](docs/decisions/0033-safety-hardening-bundle.md)).
 - Runtime faithfulness verifier flags unsupported claims post-synthesis (ADR [0015](docs/decisions/0015-verifier-agent-runtime-faithfulness.md)); evidence-store (ADR [0016](docs/decisions/0016-evidence-store-source-text-verifier.md)) grounds each claim in a specific chunk.
+- API-key auth (`ENABLE_API_AUTH` + `X-API-Key`, constant-time compare), per-key sliding-hour rate limiting (Redis-backed across workers), and a hot-reloadable file keystore (ADRs [0033](docs/decisions/0033-safety-hardening-bundle.md), [0037](docs/decisions/0037-redis-rate-limiter-and-keystore-reload.md)).
+- Per-principal scoping — an API key only sees its own jobs and conversations (ADR [0036](docs/decisions/0036-per-principal-store-scoping.md)).
+- Resource guardrails: per-run cost cap enforced between graph nodes (`MAX_COST_USD`), streamed PDF downloads aborted at `pdf_max_bytes` so an adversarial PDF can't OOM a worker (ADR [0033](docs/decisions/0033-safety-hardening-bundle.md)).
+- Auth is **off by default** for local dev; any exposed deployment must turn it on or an anonymous caller can spend the Anthropic account's money. `docs/security.md` documents the compose auth-on recipe (ADR [0042](docs/decisions/0042-api-guardrails-and-deploy-hygiene.md)).
 
 ## Tests
 
@@ -417,26 +478,36 @@ to answer. Every tunable is one env-var away — see `src/config.py`.
 pytest tests/ -q
 ```
 
-1,200+ tests across unit + integration tiers (see
+1,400+ tests across unit + integration tiers (see
 [`docs/testing.md`](docs/testing.md) for the strategy). The command
-above runs the whole suite; CI's per-PR gate is `pytest -m "not
-e2e"`, and the `e2e` tier runs nightly.
+above runs the whole suite; CI's per-PR gate is `pytest -m "not e2e"`
+plus ruff, strict mypy, a Docker build, and the `web/` check chain.
+The `e2e` cassette tier is registered but not yet built — pipeline
+quality is guarded by the nightly LLM-judged eval workflow instead.
 
 ## Project status
 
-**Sprint 5 complete.** Sprint 1 shipped the observability + eval
-substrate; Sprint 2 shipped the supervisor loop + verifier +
-evidence store + recovery actions + prompt-injection isolation;
-Sprint 3 shipped cost-aware model routing + Anthropic prompt
-caching + Semantic Scholar citation-graph enrichment. Sprint 4
-made the system deployable end-to-end: PR CI gate (ADR 0024),
-FastAPI + async jobs + SSE (ADRs 0025 / 0026),
-Dockerfile + compose stack + `RedisJobStore` (ADR 0027), and
-Postgres-backed paper + embedding caches (ADR 0028). Sprint 5
-shipped the product-surface arc: Next.js web UI (ADR 0029), HITL
-plan-review breakpoint (ADR 0030), multi-format export (ADR
-0031), and follow-up conversation mode with retrieval-augmented
-planner context (ADR 0032).
+**Sprints 1-5 complete, plus a sustained hardening campaign.**
+Sprint 1 shipped the observability + eval substrate; Sprint 2 the
+supervisor loop + verifier + evidence store + recovery actions +
+prompt-injection isolation; Sprint 3 cost-aware model routing +
+Anthropic prompt caching + Semantic Scholar enrichment; Sprint 4
+the deployable surface (PR CI, FastAPI async jobs + SSE, Docker
+compose, Redis/Postgres backends); Sprint 5 the product surface
+(Next.js web UI, HITL plan review, multi-format export,
+conversation mode).
 
-Full status and phase-by-phase plan in
-[`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).
+Since Sprint 5, a hardening chain (ADRs 0033-0053) has taken the
+system from "works" to "operable": auth + rate limiting + cost
+caps, cross-worker HITL/SSE via Postgres checkpoints and Redis
+pub/sub, per-principal scoping, job leases + redriver, supply-chain
+pinning + lockfile, bounded executor + cooperative cancel, OTel
+metrics, eval-runner crash-safety + resume + budget, LLM cost
+enforcement, native-crash containment, and an end-to-end pre-flight
+of the shipped container + web path.
+
+Fresh numbers as of this writing: 53 ADRs, 60+ merged PRs, ~1,400
+tests. The dated per-merge log — and the authoritative list of
+what's next — lives in
+[`planning/03-roadmap.md`](planning/03-roadmap.md); the project
+index is [`CLAUDE-Agent-Proj-1.md`](CLAUDE-Agent-Proj-1.md).
