@@ -107,15 +107,20 @@ precisely.
   `https://evil.com/2311.09000/attack.pdf` cannot poison the cache
   slot for the real arXiv paper.
 
-### Per-run cost cap (ADR 0033)
+### Per-run cost cap (ADR 0033, moved to `call_llm` by ADR 0051)
 
-`src/api/runner.py::_enforce_cost_cap` runs from the runner's
-`on_node` callback between graph nodes and raises
-`CostBudgetExceeded` when `RunCosts.total_cost_usd >=
-settings.max_cost_usd`. The job terminates as `failed` with
-`error_type=cost_budget_exceeded`. This is the only enforcement
-point that catches the fixed-DAG path where the supervisor's own
-check doesn't apply.
+`src/llm.py::call_llm` checks the run's accumulated spend against
+`settings.max_cost_usd` **before every LLM call** and raises
+`CostBudgetExceeded` at the ceiling (`enforce_cost_cap` lives in
+`src/observability/costs.py`). Because every entry point — CLI, eval
+campaign, API job — funnels through `call_llm`, the dollar ceiling
+now binds on the sync paths that previously had none, and a single
+node's parallel fan-out (the reader) cannot overshoot by its whole
+spend. The API runner's between-nodes check (the original ADR 0033
+enforcement point) remains as the earlier, coarser stop. Under the
+API the job terminates as `failed` with
+`error_type=cost_budget_exceeded`; on the CLI the run aborts and the
+checkpoint salvage (ADR 0052) recovers any finished draft.
 
 ### API-key auth + rate limiting + CORS (ADR 0033)
 
@@ -142,11 +147,15 @@ exposed deployment**). Three layers:
    hands the new holder the previous tenant's data. Both parsers
    reject duplicate names for this reason (ADR 0042) — rotate the
    *secret* under a stable name, never the name.
-2. **Per-key rate limit**. `RateLimiter` records submit timestamps
-   per principal in an in-memory sliding window. When a key
-   exceeds `settings.api_key_hourly_limit` submits per hour,
-   `POST /research` returns 429 with a `Retry-After` header. Only
-   the submit route is throttled; reads / status calls are not.
+2. **Per-key rate limit**. The rate limiter records submit
+   timestamps per principal in a sliding window (in-memory per
+   worker, or a shared Redis ZSET — see ADR 0037 below). When a key
+   exceeds `settings.api_key_hourly_limit` submits per hour, the
+   route returns 429 with a `Retry-After` header. Two routes draw
+   from that budget: `POST /research` and `POST /conversations` —
+   the latter added by ADR 0043 because a conversation create is a
+   durable write a leaked key could otherwise accrete without
+   limit. Reads / status calls are not throttled.
 3. **CORS allowlist**. When `settings.api_cors_allow_origins` is
    non-empty (comma-separated origins), FastAPI's `CORSMiddleware`
    is installed with those origins allowed, `X-API-Key` in
@@ -292,6 +301,18 @@ Safety properties worth knowing before you run it:
 
 - **Dry-run by default.** Nothing writes without `--yes`. `report`
   never writes at all.
+- **Mutations refuse to run under auth-off without an explicit
+  opt-in** (ADR 0052). With `enable_api_auth=false` *every* row is
+  NULL-owner, so the tool's predicate selects the whole store —
+  `assign` and `delete` exit 2 unless the operator also passes
+  `--include-all-auth-off`. Deliberately a separate flag from
+  `--yes`: `--yes` means "I mean it", this one means "I understand
+  the predicate selects everything". `report` is never refused, but
+  its output opens with the auth mode and says under auth-off that
+  the counts are the size of the whole store.
+- **Blast radius is age-boundable.** `--older-than-days N` restricts
+  every action to rows created more than N days ago (ADR 0052), so
+  a cleanup can target the genuinely-legacy backlog.
 - `assign --owner KEY_ID` **validates the key against the live
   keystore** (`api_keys`, or `api_keys_file` when set, matching
   `create_app`'s resolution order). Assigning to a nonexistent key
@@ -310,14 +331,19 @@ Safety properties worth knowing before you run it:
 
 Blast radius is bounded by `--limit`, which applies **per store** —
 `--store all --limit N` can touch up to 2N rows.
-### Job leases and the redrive lock (ADR 0038)
+### Job leases and the redrive lock (ADR 0038, 0048, 0053)
 
-Two new Redis keyspaces: `joblease:{job_id}` (held by the worker
+Two Redis keyspaces: `joblease:{job_id}` (held by the worker
 running a job, owner-checked CAS on refresh and release) and
-`redrive:lock` (cluster-wide, held for the duration of a startup
-sweep). Both are namespaced by the store's `key_prefix`, so two
+`redrive:lock` (cluster-wide, held for the duration of one sweep —
+startup or the periodic `job_redrive_interval_sec` sweep ADR 0053
+added). Both are namespaced by the store's `key_prefix`, so two
 deployments sharing one Redis cannot claim each other's leases or
-contend for a single global lock.
+contend for a single global lock. The lock's TTL is 30s (ADR 0048
+cut it from 120s) so a worker killed mid-sweep does not lock out its
+own restart, and every reclaim is a compare-and-set
+(`update_if_status`) so a job that reaches a terminal state while
+the sweep is deciding keeps its result.
 
 `job_lease_ttl_sec` is the worst-case delay before a crashed
 worker's jobs become reclaimable — and, correspondingly, the window
@@ -404,8 +430,6 @@ redriver.
   actions can eventually be driven through an authenticated
   endpoint instead of shell access to a worker (ADR 0039
   follow-up).
-- Single-statement `DELETE ... WHERE principal_key_id=%s` to
-  collapse the get+delete round-trip on `DELETE /conversations`.
 - Lua-scripted `check_and_record` for the Redis rate limiter if
   the boundary race becomes observable (ADR 0037 follow-up).
 - Expose `RedisJobStore.client` as a public property to remove
@@ -416,14 +440,18 @@ redriver.
   limit).
 - Request body-size cap as an outermost ASGI middleware — today
   the full body is buffered before auth runs (ADR 0042 deferred).
-- Rate-limit `POST /conversations` and cap per-principal
-  conversation counts (only `/research` is throttled today).
+- Cap per-principal conversation counts (the rate limit on
+  `POST /conversations` landed in ADR 0043, drawing from the same
+  hourly budget as `/research`; a total-rows cap is still open).
 - Derive the stored owner from the secret (stable `owner_id`)
   instead of the mutable display name — removes the rename/reuse
   hazard structurally; needs a row migration (ADR 0042 interim:
   duplicate-name rejection + permanence rule).
 - `/readyz` with 503-on-dependency-failure semantics for
   orchestrators that want dependency-gated routing (`/healthz`
-  deliberately stays 200 — ADR 0042).
-- Cache purge command (`--older-than-days`) now that the
-  `created_at` indexes exist to support it (ADR 0042).
+  deliberately stays 200 — ADR 0042; ADR 0053 re-affirmed the
+  liveness-only scope when it considered a model-warmup probe).
+- Cache purge command for the paper / embedding caches, now that
+  the `created_at` indexes exist to support it (ADR 0042 follow-up;
+  `admin_migrate delete --older-than-days` covers only NULL-owner
+  job / conversation rows, not the caches).

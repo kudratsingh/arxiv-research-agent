@@ -1,5 +1,14 @@
 # Architecture Refactors
 
+> **Status (2026-08-21)** — historical (written during Sprint 1).
+> Most of what this doc wanted landed in a different shape: retries,
+> cost tracking, caching, and model routing centralized in
+> `src/llm.py` (ADRs 0009/0012/0021/0022) rather than an
+> `LLMClient` class; `run_id` lives on `ResearchState`
+> (`src/graph/state.py`). The `SourceAdapter` package was never
+> built — Semantic Scholar landed as a sibling tool with a
+> failure-tolerant fallback instead (ADR 0023).
+
 Concrete refactors that unlock the roadmap, mapped to current files. These are non-breaking additions — do them incrementally as part of Sprint 1/2.
 
 ## 1. `SourceAdapter` protocol

@@ -39,8 +39,14 @@ All targets are documented by `make help`. The ones you'll use daily:
 | `make test-all` | Every tier — slow, use before merging |
 | `make typecheck` | `mypy src/` |
 | `make run QUERY='...'` | Run the agent on a query |
+| `make eval` | Batch-run the benchmark (`QUERIES=id1,id2` to filter) — spends real Anthropic credits; see [`eval.md`](eval.md) |
+| `make admin-migrate` | Operator CLI for legacy NULL-owner rows (`ARGS='report --store all'`, ADR 0039/0052) |
 | `make clean` | Nuke venv + caches — keeps `.cache/checkpoints.sqlite` (graph state, ADR 0052) |
 | `make clean-all` | `clean` + delete the graph checkpoints; paused HITL runs become unresumable |
+
+Every test target runs under the `TEST_ENV` prefix
+(`OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false`) — see
+Troubleshooting below for why that exists.
 
 See [`testing.md`](testing.md) for the full test taxonomy and how CI
 selects tests per PR.
@@ -125,6 +131,8 @@ service:
 | `research_abandoned_node_threads` | gauge | — | zombie node threads a drain gave up on (ADR 0047) |
 | `llm_cost_usd_total` | counter | `model` | fleet spend rate, by model |
 | `llm_calls_total` | counter | `model` | call volume, by model |
+| `llm_retries_total` | counter | `model` | SDK attempts discarded before a call succeeded (`retries_taken`, ADR 0051) |
+| `llm_upstream_errors_total` | counter | `model`, `status` | calls that failed after the SDK exhausted its retries (`status` is the HTTP code, or `connection`) |
 | `rate_limit_rejections_total` | counter | `backend` | 429s, by limiter backend |
 
 Both gauges are **per worker** — they report the process that emits
@@ -190,6 +198,15 @@ The lock is frozen on one platform and carries no hashes yet; the
 hashed, cross-platform lock (`uv lock` / `pip-compile
 --generate-hashes`) is recorded follow-up in ADR 0045.
 
+The container image installs the same lock (`pip install -r
+requirements-lock.txt`, then `pip install --no-deps .`), so the
+image, CI, and a fresh venv all run the tested set — and it bakes
+the MiniLM weights into `/opt/hf-cache` at build time so the first
+live job doesn't download them (ADR 0053). Both properties are
+pinned without a docker build by `tests/test_container_contract.py`;
+if you touch the Dockerfile, that module tells you what must stay
+true.
+
 ## Dependency licensing
 
 PyMuPDF (`fitz`, the PDF extractor behind `src/tools/pdf_parser.py`)
@@ -233,9 +250,22 @@ for the branch-naming and PR conventions. Short version:
   fill in the key. `main.py` loads it via `python-dotenv`.
 - **arXiv rate limiting** — set `USE_MOCK_DATA=true` to run against
   the built-in mock papers.
-- **`make test` finds almost nothing** — `make test-unit` filters with
-  `-m unit`, which selects only tests *explicitly* tagged
-  `pytest.mark.unit`; most of the suite is unmarked and gets skipped
-  by that filter. CI's actual gate is `pytest -m "not e2e"`. Use
-  `make test-all` (or `pytest -m "not e2e"` directly) to run what CI
-  runs.
+- **`make test` finds only part of the suite** — `make test-unit`
+  filters with `-m unit`, which selects only tests *explicitly* tagged
+  `pytest.mark.unit`; about half the suite is unmarked and gets
+  skipped by that filter. CI's actual gate is `pytest -m "not e2e"`.
+  Use `make test-all` (or `pytest -m "not e2e"` directly) to run what
+  CI runs.
+- **Exit 139 / a macOS crash-reporter dialog with no traceback** —
+  a native crash in the embedding path. The fix is in-process
+  (`torch.set_num_threads(1)` at model load, plus
+  `EMBEDDING_DEVICE=cpu` as the default device — ADR 0052), and the
+  Makefile's `TEST_ENV` prefix (`OMP_NUM_THREADS=1
+  TOKENIZERS_PARALLELISM=false`) adds a second layer covering
+  faiss's and scikit-learn's own libomp copies at import time. If
+  you see this crash again, do not raise `TORCH_THREADS` or default
+  the device to `auto` without re-reading ADR 0052 — `auto` picks
+  `mps` on Apple silicon, which still crashes ~1/6 inside the Metal
+  driver. The `embedding_model_loaded` log line records the device
+  and thread count actually bound — it is the one artifact that
+  survives a SIGSEGV.

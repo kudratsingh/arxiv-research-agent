@@ -65,6 +65,28 @@ never renumbered.
 - [0023](0023-semantic-scholar-citation-graph.md) — Semantic Scholar
   adapter + one-hop reference enrichment in the search agent,
   flag-gated
+- [0024](0024-pr-ci-lint-mypy-tests.md) — Per-PR CI gate: ruff +
+  strict mypy + the pytest suite on every PR and push to `main`
+- [0025](0025-fastapi-async-job-model.md) — FastAPI + async job model
+  over the sync workflow: `POST /research` returns 202 + `job_id`,
+  status polling, bounded concurrency
+- [0026](0026-sse-streaming-endpoint.md) — Hand-rolled SSE streaming
+  endpoint for live job events
+- [0027](0027-docker-compose-redis-job-store.md) — Dockerfile +
+  docker-compose stack + RedisJobStore for multi-worker deployment
+- [0028](0028-postgres-paper-cache-and-embedding-cache.md) —
+  Postgres-backed PaperCache + EmbeddingCache behind pluggable
+  settings, disk / no-op defaults preserved
+- [0029](0029-nextjs-web-ui.md) — Next.js web UI as a separate
+  compose service, tested in CI alongside the Python suite
+- [0030](0030-hitl-plan-review.md) — Human-in-the-loop plan review:
+  workflow interrupts after the planner; `POST /research/{id}/review`
+  approves / edits / cancels
+- [0031](0031-multi-format-export.md) — Multi-format report export
+  (Markdown, PDF, DOCX) via `GET /research/{id}/export`
+- [0032](0032-conversation-mode.md) — Follow-up conversation mode:
+  threads group jobs, prior-report chunks retrieved into the
+  planner's prompt
 - [0033](0033-safety-hardening-bundle.md) — Safety hardening bundle:
   arXiv HTTPS + defusedxml, PDF streaming size cap, tightened cache
   key, runner-level cost cap, planner `prior_context` isolation,
@@ -85,54 +107,18 @@ never renumbered.
   Pluggable rate limiter (Redis ZSET backend correct across
   workers) + hot-reloadable keystore from a JSON file. Follows
   ADR 0033.
-- [0039](0039-admin-null-owner-migration.md) — Operator CLI
-  (`make admin-migrate`) for the legacy `NULL`-owner rows ADR
-  0036 left unreachable under auth-on. Dry-run by default;
-  validates the target key against the live keystore, preserves
-  Redis TTLs on rewrite, and decides availability from the
-  selected store rather than a shared URL. Follows ADR 0036.
 - [0038](0038-job-redriver-and-sse-stream.md) — Worker leases +
   a startup job redriver, so a dead worker's jobs are reconciled
   and their streams unhung instead of stuck `running` forever;
   SSE stream loop rewritten after the old heartbeat race
   cancelled the event reader mid-generator and silently killed
   the stream on the first quiet interval. Follows ADR 0027, 0035.
-- [0044](0044-eval-cost-accuracy-and-regression-thresholds.md) —
-  Price table re-verified against published Anthropic pricing
-  (Opus was 3x high, Haiku 20% low) with a coverage test over
-  config model defaults; nightly regression gate split by metric
-  class — score epsilon per ADR 0010, two-leg absolute+relative
-  bands for counts/dollars. Revisits ADR 0010; follows ADR 0012.
-- [0046](0046-literal-typed-config-enums.md) — Enum-valued settings
-  become `Literal[...]` so a typo'd env var dies at load instead of
-  silently selecting the fallback backend; plus behaviour tests for
-  the five untested control paths the audit flagged (HTTP 429, job
-  ownership stamping, runner cost-cap/timeout handlers, terminal SSE
-  frame over pub/sub, keystore + CORS wiring). Follows ADR 0011.
-- [0043](0043-conversation-store-hardening.md) — Conversation
-  store hardening: schema bootstrap off the event loop, appends
-  serialized on the parent row with single-statement ordinal
-  allocation, limit/offset pagination on the list endpoint, and
-  ownership inline in a one-statement DELETE. Follows ADR 0032
-  and ADR 0036.
-- [0042](0042-api-guardrails-and-deploy-hygiene.md) — API
-  guardrails + deploy hygiene: bounded HITL plan lists, bytes-safe
-  key comparison, honest dependency-checking `/healthz`, logged
-  resume-publish failures, bounded SIGTERM drain, credential
-  redaction in logs, compose CORS + bootable auth. Follows
-  ADR 0033/0034.
-- [0041](0041-retrieval-and-degradation-honesty.md) —
-  Retrieval and degradation honesty: mock papers gated behind
-  `use_mock_data` only (typed errors for empty live search),
-  cache reads degrade to recompute, per-paper reader failure
-  containment, parse defense across the agents, S2 version-strip
-  + canonical dedup, PDF SSRF guard. Follows ADRs 0004, 0023,
-  0028, 0033.
-- [0045](0045-supply-chain-pinning-lockfile-and-license-posture.md) —
-  Supply-chain hardening: bounded version ranges +
-  `requirements-lock.txt` (CI installs the lock), explicit `src`
-  packaging, lazy PEP 562 `src.api` re-exports, Next 15 / React
-  19 / Node 22 / vitest 4, PyMuPDF AGPL posture recorded.
+- [0039](0039-admin-null-owner-migration.md) — Operator CLI
+  (`make admin-migrate`) for the legacy `NULL`-owner rows ADR
+  0036 left unreachable under auth-on. Dry-run by default;
+  validates the target key against the live keystore, preserves
+  Redis TTLs on rewrite, and decides availability from the
+  selected store rather than a shared URL. Follows ADR 0036.
 - [0040](0040-async-checkpointer-and-runner.md) — Async
   checkpointer surface (`AsyncSqliteSaver` / `AsyncPostgresSaver`
   on a reconnecting pool) for the `astream`-driven API runner —
@@ -144,6 +130,53 @@ never renumbered.
   asyncio primitives, and a production-wiring smoke test pins the
   whole path. Revisits ADR 0034; corrects ADR 0030's interrupt
   semantics.
+- [0041](0041-retrieval-and-degradation-honesty.md) —
+  Retrieval and degradation honesty: mock papers gated behind
+  `use_mock_data` only (typed errors for empty live search),
+  cache reads degrade to recompute, per-paper reader failure
+  containment, parse defense across the agents, S2 version-strip
+  + canonical dedup, PDF SSRF guard. Follows ADRs 0004, 0023,
+  0028, 0033.
+- [0042](0042-api-guardrails-and-deploy-hygiene.md) — API
+  guardrails + deploy hygiene: bounded HITL plan lists, bytes-safe
+  key comparison, honest dependency-checking `/healthz`, logged
+  resume-publish failures, bounded SIGTERM drain, credential
+  redaction in logs, compose CORS + bootable auth. Follows
+  ADR 0033/0034.
+- [0043](0043-conversation-store-hardening.md) — Conversation
+  store hardening: schema bootstrap off the event loop, appends
+  serialized on the parent row with single-statement ordinal
+  allocation, limit/offset pagination on the list endpoint, and
+  ownership inline in a one-statement DELETE. Follows ADR 0032
+  and ADR 0036.
+- [0044](0044-eval-cost-accuracy-and-regression-thresholds.md) —
+  Price table re-verified against published Anthropic pricing
+  (Opus was 3x high, Haiku 20% low) with a coverage test over
+  config model defaults; nightly regression gate split by metric
+  class — score epsilon per ADR 0010, two-leg absolute+relative
+  bands for counts/dollars. Revisits ADR 0010; follows ADR 0012.
+- [0045](0045-supply-chain-pinning-lockfile-and-license-posture.md) —
+  Supply-chain hardening: bounded version ranges +
+  `requirements-lock.txt` (CI installs the lock), explicit `src`
+  packaging, lazy PEP 562 `src.api` re-exports, Next 15 / React
+  19 / Node 22 / vitest 4, PyMuPDF AGPL posture recorded.
+- [0046](0046-literal-typed-config-enums.md) — Enum-valued settings
+  become `Literal[...]` so a typo'd env var dies at load instead of
+  silently selecting the fallback backend; plus behaviour tests for
+  the five untested control paths the audit flagged (HTTP 429, job
+  ownership stamping, runner cost-cap/timeout handlers, terminal SSE
+  frame over pub/sub, keystore + CORS wiring). Follows ADR 0011.
+- [0047](0047-bounded-executor-and-cooperative-cancel.md) — Bounded
+  node executor + cooperative cancellation. A job timeout cancelled
+  the coroutine but not the synchronous node's thread, so
+  `api_max_concurrent_jobs` bounded coroutines while zombie threads
+  kept calling Claude on a job already marked failed. Graph nodes
+  now run on a lifespan-owned pool sized to the job ceiling, a
+  per-job cancel token is checked before every LLM call and between
+  the reader's papers, and the runner holds the concurrency permit
+  until the node thread actually returns — with the threads it gives
+  up on still counted in `/healthz`. Follows ADR 0040; extends
+  ADR 0042's honesty rule to `active_jobs`.
 - [0048](0048-redriver-cas-and-store-edges.md) — Redriver
   compare-and-set (`update_if_status`, WATCH/MULTI/EXEC) so a job
   that finishes while the sweep is deciding keeps its report and
@@ -158,17 +191,6 @@ never renumbered.
   the `WatchError` abort path is untestable under `fakeredis` — it
   is now covered. Finishes the recorded follow-ups of ADR 0038 and
   ADR 0040.
-- [0047](0047-bounded-executor-and-cooperative-cancel.md) — Bounded
-  node executor + cooperative cancellation. A job timeout cancelled
-  the coroutine but not the synchronous node's thread, so
-  `api_max_concurrent_jobs` bounded coroutines while zombie threads
-  kept calling Claude on a job already marked failed. Graph nodes
-  now run on a lifespan-owned pool sized to the job ceiling, a
-  per-job cancel token is checked before every LLM call and between
-  the reader's papers, and the runner holds the concurrency permit
-  until the node thread actually returns — with the threads it gives
-  up on still counted in `/healthz`. Follows ADR 0040; extends
-  ADR 0042's honesty rule to `active_jobs`.
 - [0049](0049-otel-metrics.md) — OpenTelemetry metrics. The service
   had logs, opt-in traces and per-run cost accounting but no metrics
   at all, so "how many jobs are failing right now", "what is the p95
@@ -180,7 +202,8 @@ never renumbered.
   `record_llm_call`, `_raise_429`), and the two concurrency gauges
   observe the same accounting `/healthz` reports instead of a second
   set of counters. Closes ADR 0047's `abandoned_node_threads`
-  follow-up.
+  follow-up. (ADR 0051 later adds two more instruments on the same
+  meter: SDK retries and upstream errors.)
 - [0050](0050-eval-runner-hardening.md) — Eval-runner hardening. The
   campaign is the next live spend, and the harness could not hold onto
   work it had paid for: one judge 529 aborted the batch and discarded
@@ -195,7 +218,6 @@ never renumbered.
   instead of green, honest exit codes, a refusal to overwrite a prior
   campaign's directory, `--max-budget-usd`, and a nightly workflow that
   says which owner action fixes its 15-night-old red.
-
 - [0051](0051-llm-cost-enforcement-and-visibility.md) — LLM cost
   enforcement and visibility. `max_cost_usd` was enforced only in the
   API runner's `on_node` callback, so `make run` and `make eval` — the

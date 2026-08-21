@@ -9,8 +9,11 @@ keeps answering `running` forever, and `GET /research/{id}/stream`
 subscribes to `events:{job_id}` and hangs until the client gives up,
 because the terminal frame will never be published.
 
-`JobRedriver.sweep()` runs once per worker at startup and closes that
-hole. The hard part is telling "orphaned" apart from "running on a
+`JobRedriver.sweep()` closes that hole. `create_app` runs it once per
+worker at startup and then keeps sweeping every
+`settings.job_redrive_interval_sec` (ADR 0053) — the startup sweep
+alone cannot see a lease that outlives the container it belonged to.
+The hard part is telling "orphaned" apart from "running on a
 worker that is still alive" — a rolling restart of worker 3 must not
 reap the jobs on workers 1 and 2. The `joblease:{job_id}` key added
 in `src.api.redis_store` is what makes that decidable: the runner
@@ -176,7 +179,8 @@ def _terminal_event_data(job: Job) -> dict[str, Any]:
 
 
 class JobRedriver:
-    """Reclaims jobs whose owning worker died, once per startup.
+    """Reclaims jobs whose owning worker died — swept at startup and
+    then every `job_redrive_interval_sec` (ADR 0053).
 
     Safe to construct against any store — `sweep()` no-ops when the
     store cannot enumerate its keyspace, which is the `InMemoryJobStore`
