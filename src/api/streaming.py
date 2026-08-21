@@ -51,7 +51,14 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Mapping,
+)
+from types import MappingProxyType
 from typing import Any
 
 from src.observability import get_logger
@@ -67,14 +74,33 @@ MAX_STREAM_DURATION_SEC: float = 3600.0
 
 STREAM_TIMEOUT_EVENT: str = "stream_timeout"
 
+# The outcome each terminal frame asserts, as a `JobStatus` *value*.
+# Deliberately plain strings rather than the enum: `src.api.jobs`
+# imports nothing from here today and this module is imported by the
+# store, so keeping the dependency one-way avoids an import cycle for
+# a three-entry lookup table. `tests/test_sse_stream.py` pins the
+# mapping against the real `JobStatus` members.
+#
+# `RedisJobStore.publish_event` uses it to answer "does this terminal
+# frame agree with the row that is actually persisted?" (ADR 0048) —
+# a `job_completed` published after a redriver already wrote
+# `failed/orphaned` would show a client a success it will never be
+# able to fetch.
+TERMINAL_EVENT_STATUS: Mapping[str, str] = MappingProxyType(
+    {
+        "job_completed": "succeeded",
+        "job_failed": "failed",
+        "job_cancelled": "cancelled",
+    }
+)
+
 # "Did the job reach a terminal state?" — these are the runner's own
 # terminal frames, and nothing else belongs here. This is the single
 # definition: `RedisJobStore.subscribe_events` imports it for the same
 # question on the pub/sub side, and `_terminal_event_name` in
-# routes.py produces exactly these three names on replay.
-TERMINAL_EVENT_NAMES: frozenset[str] = frozenset(
-    {"job_completed", "job_failed", "job_cancelled"}
-)
+# routes.py produces exactly these three names on replay. Derived from
+# `TERMINAL_EVENT_STATUS` so the two cannot drift apart.
+TERMINAL_EVENT_NAMES: frozenset[str] = frozenset(TERMINAL_EVENT_STATUS)
 
 # "Should the server stop streaming?" — a strictly wider question
 # (ADR 0038). `stream_timeout` closes the connection while the job
@@ -187,6 +213,12 @@ async def sse_event_stream(
     and left every subsequent read raising. A frame already pulled
     off the queue by that cancelled task was lost with it.
 
+    At the deadline a frame the read task has *already* produced is
+    flushed before the stream closes (ADR 0048). If that frame is a
+    closing one the `stream_timeout` frame is skipped entirely —
+    `stream_timeout` means "reconnect, the job is still going", which
+    is exactly wrong once the job has ended.
+
     The drainer's cleanup lives in this generator's `finally`, so a
     caller that can abandon the stream part-way — `StreamingResponse`
     drops its body iterator on socket loss without closing it — must
@@ -231,6 +263,32 @@ async def sse_event_stream(
 
             remaining = deadline - now()
             if remaining <= 0.0:
+                # The read task may already hold a frame produced
+                # while we were suspended in the `yield` above (audit
+                # P3, ADR 0048): the previous iteration's `wait` timed
+                # out, the drainer completed a moment later, and the
+                # deadline then fired. Discarding it lost real output —
+                # and, when it was the terminal frame, told the client
+                # to reconnect to a job that had already finished.
+                if get_task is not None and get_task.done():
+                    finished, get_task = get_task, None
+                    try:
+                        frame = finished.result()
+                    except StopAsyncIteration:
+                        return
+                    event_name = str(frame.get("event", ""))
+                    yield format_sse(event_name, frame.get("data") or {})
+                    if closes_stream(event_name):
+                        # The job ended. `stream_timeout` exists to
+                        # tell the client to reconnect; appending it
+                        # after a terminal frame would send it back to
+                        # a stream that has nothing left to say.
+                        log.info(
+                            "sse_terminal_frame_flushed_at_deadline",
+                            extra={"job_id": job_id, "event": event_name},
+                        )
+                        return
+
                 # A wedged job must not pin a worker connection
                 # forever. Distinguishable from a terminal frame so
                 # the client reconnects rather than reporting the job

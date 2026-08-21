@@ -30,9 +30,10 @@ from src.api.jobs import InMemoryJobStore, Job, JobStatus
 from src.api.redis_store import (
     REDRIVE_LOCK_KEY,
     RedisJobStore,
+    _job_to_json,
     _lease_key,
 )
-from src.api.redriver import JobRedriver, RedriveReport
+from src.api.redriver import REDRIVE_LOCK_TTL_SEC, JobRedriver, RedriveReport
 
 pytestmark = pytest.mark.integration
 
@@ -204,22 +205,22 @@ async def test_reclaim_holds_the_job_lease_while_it_writes(
 
     Reading `has_lease` and then writing leaves a window: the rightful
     owner can acquire the lease and flip the job to `running` between
-    the two, and the sweep's blind `update` then overwrites a live row
-    with `failed` and publishes a terminal frame for work still in
-    flight. Claiming the lease with SET NX collapses that into one
-    atomic step, so the sweep can only write a row it demonstrably
-    owns — which is what this asserts, at the moment of the write.
+    the two, and the sweep's blind write then replaces a live row with
+    `failed` and publishes a terminal frame for work still in flight.
+    Claiming the lease with SET NX collapses that into one atomic
+    step, so the sweep can only write a row it demonstrably owns —
+    which is what this asserts, at the moment of the write.
     """
     await _seed(store, "job-claimed", JobStatus.running)
 
     held_at_write: list[bool] = []
-    original_update = store.update
+    original_cas = store.update_if_status
 
-    async def spy_update(job: Job) -> None:
+    async def spy_cas(job: Job, *, expected: JobStatus) -> bool:
         held_at_write.append(await store.has_lease(job.job_id))
-        await original_update(job)
+        return await original_cas(job, expected=expected)
 
-    store.update = spy_update  # type: ignore[method-assign]
+    store.update_if_status = spy_cas  # type: ignore[method-assign]
 
     report = await JobRedriver(store, WORKER_B).sweep()
 
@@ -263,14 +264,19 @@ async def test_reclaim_publishes_terminal_frame_to_subscriber(
 
 @pytest.mark.asyncio
 async def test_terminal_jobs_are_ignored(store: RedisJobStore) -> None:
-    """Already-reconciled rows are none of the redriver's business."""
+    """Already-reconciled rows are none of the redriver's business.
+
+    ADR 0048 moved the filter into `scan_jobs`, so they no longer even
+    reach the reconcile: `scanned` counts what the sweep had to
+    consider, and for a keyspace of finished jobs that is nothing.
+    """
     await _seed(store, "job-done", JobStatus.succeeded, result="report")
     await _seed(store, "job-dead", JobStatus.failed, error="boom")
     await _seed(store, "job-gone", JobStatus.cancelled)
 
     report = await JobRedriver(store, WORKER_A).sweep()
 
-    assert report.scanned == 3
+    assert report.scanned == 0
     assert report.orphaned == 0
     assert report.failed == 0
     assert report.skipped_live == 0
@@ -279,6 +285,78 @@ async def test_terminal_jobs_are_ignored(store: RedisJobStore) -> None:
     assert done is not None
     assert done.status == JobStatus.succeeded
     assert done.error_type is None
+
+
+@pytest.mark.asyncio
+async def test_scan_skips_terminal_rows_before_fetching_their_bodies(
+    store: RedisJobStore, shared_backend: fakeredis.aioredis.FakeRedis
+) -> None:
+    """The audit's P3: terminal reports were transferred, then binned.
+
+    In a healthy deployment nearly every row inside the retention
+    window is terminal and carries a full report body, so the old
+    sweep dragged the entire finished keyspace over the wire on every
+    boot only to discard it a line later. The retention TTL is a
+    cheap, one-directional proof of terminality, so those keys never
+    reach the MGET at all.
+    """
+    await _seed(store, "job-live", JobStatus.running)
+    for i in range(5):
+        await _seed(
+            store,
+            f"job-done-{i}",
+            JobStatus.succeeded,
+            result="# a large finished report" * 100,
+            completed_at=time.time(),
+        )
+
+    fetched: list[str] = []
+    original_mget = shared_backend.mget
+
+    async def spy_mget(keys: Any, *args: Any) -> Any:
+        fetched.extend(
+            k.decode() if isinstance(k, bytes) else str(k) for k in keys
+        )
+        return await original_mget(keys, *args)
+
+    shared_backend.mget = spy_mget  # type: ignore[method-assign]
+
+    jobs, capped = await store.scan_jobs(max_scan=100)
+
+    assert capped is False
+    assert [job.job_id for job in jobs] == ["job-live"]
+    # Only the one row the sweep can actually act on was hydrated.
+    assert fetched == ["job:job-live"]
+
+
+@pytest.mark.asyncio
+async def test_scan_still_drops_terminal_rows_without_a_ttl(
+    shared_backend: fakeredis.aioredis.FakeRedis,
+) -> None:
+    """`retention_sec=0` keeps rows forever, so the TTL proof is blind.
+
+    The cheap pre-filter is an optimization layered on top of the real
+    check; an operator who disabled retention must not start seeing
+    finished jobs handed to the reclaim path.
+    """
+    forever = RedisJobStore(shared_backend, retention_sec=0)
+    await forever.update(
+        Job(
+            job_id="job-kept",
+            query="q",
+            status=JobStatus.succeeded,
+            result="report",
+            completed_at=time.time(),
+        )
+    )
+    await forever.update(
+        Job(job_id="job-live", query="q", status=JobStatus.running)
+    )
+    assert await shared_backend.ttl("job:job-kept") == -1
+
+    jobs, _capped = await forever.scan_jobs(max_scan=100)
+
+    assert [job.job_id for job in jobs] == ["job-live"]
 
 
 @pytest.mark.asyncio
@@ -736,6 +814,149 @@ async def test_completed_job_is_not_overwritten_by_a_stale_snapshot(
     assert after is not None
     assert after.status == JobStatus.succeeded
     assert after.result == "# The finished report"
+
+
+@pytest.mark.asyncio
+async def test_reclaim_refuses_a_job_that_finished_after_the_reread(
+    store: RedisJobStore,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The last gap the re-read left open (ADR 0048).
+
+    The re-read narrowed the window; it did not close it. The owning
+    worker can finish between `store.get` and the reclaim's write, and
+    a plain `update` would then replace a `succeeded` row — report and
+    all — with `failed/orphaned`. `update`'s own guard does not catch
+    it either: that guard only refuses terminal → *different*
+    terminal, and the row it reads is whatever is there at that
+    instant, not what the sweep decided on.
+
+    Here Redis holds `succeeded` while `get` hands back the `running`
+    snapshot the sweep saw, which is exactly the state of the world in
+    that window.
+    """
+    done = Job(
+        job_id="job-finished-late",
+        query="q",
+        status=JobStatus.succeeded,
+        result="# The finished report",
+        completed_at=time.time(),
+    )
+    await store.update(done)
+
+    stale = Job(job_id="job-finished-late", query="q", status=JobStatus.running)
+
+    async def _stale_scan(*, max_scan: int) -> tuple[list[Job], bool]:
+        return [stale], False
+
+    async def _stale_get(job_id: str) -> Job:
+        return stale
+
+    published: list[str] = []
+
+    async def _spy_publish(job_id: str, event: str, data: Any) -> None:
+        published.append(event)
+
+    monkeypatch.setattr(store, "scan_jobs", _stale_scan)
+    monkeypatch.setattr(store, "get", _stale_get)
+    monkeypatch.setattr(store, "publish_event", _spy_publish)
+
+    report = await JobRedriver(store, WORKER_A).sweep()
+
+    assert report.failed == 0
+    assert report.orphaned == 0
+    assert report.skipped_live == 1
+    # Nothing published: telling every connected client the job failed
+    # while the row says it succeeded is the worse half of this bug.
+    assert published == []
+
+    monkeypatch.undo()
+    after = await store.get("job-finished-late")
+    assert after is not None
+    assert after.status == JobStatus.succeeded
+    assert after.result == "# The finished report"
+
+
+@pytest.mark.asyncio
+async def test_reclaim_aborts_when_the_owner_writes_mid_transaction(
+    shared_backend: fakeredis.aioredis.FakeRedis,
+) -> None:
+    """The CAS abort branch, driven end to end through a real sweep.
+
+    The status still matched when the reclaim read it under the WATCH;
+    the owning worker's terminal write landed in the window before the
+    EXEC. Redis aborts the transaction, and the sweep has to treat
+    that as "not an orphan after all" — no write, no terminal frame.
+    """
+    from tests.test_api_redis_store import InterlopingClient
+
+    seeder = RedisJobStore(shared_backend, retention_sec=3600)
+    await seeder.update(
+        Job(job_id="job-racy", query="q", status=JobStatus.running)
+    )
+
+    async def owner_finishes() -> None:
+        done = Job(
+            job_id="job-racy",
+            query="q",
+            status=JobStatus.succeeded,
+            result="# Finished in the window",
+            completed_at=time.time(),
+        )
+        await shared_backend.set("job:job-racy", _job_to_json(done))
+
+    client = InterlopingClient(
+        shared_backend, owner_finishes, watched_key="job:job-racy"
+    )
+    store = RedisJobStore(client, retention_sec=3600)  # type: ignore[arg-type]
+
+    published: list[str] = []
+    original_publish = store.publish_event
+
+    async def spy_publish(job_id: str, event: str, data: Any) -> None:
+        published.append(event)
+        await original_publish(job_id, event, data)
+
+    store.publish_event = spy_publish  # type: ignore[method-assign]
+
+    report = await JobRedriver(store, WORKER_A).sweep()
+
+    assert client.fired  # the instrumentation really did run
+    assert report.failed == 0
+    assert report.orphaned == 0
+    assert report.skipped_live == 1
+    assert published == []
+
+    after = await seeder.get("job-racy")
+    assert after is not None
+    assert after.status == JobStatus.succeeded
+    assert after.result == "# Finished in the window"
+
+
+@pytest.mark.asyncio
+async def test_redrive_lock_ttl_is_short_enough_to_survive_a_restart(
+    store: RedisJobStore, shared_backend: fakeredis.aioredis.FakeRedis
+) -> None:
+    """A worker killed mid-sweep must not lock out its own restart.
+
+    The lock TTL was 120s, so a worker that died mid-sweep — which on
+    a deploy is the likely way a sweep ends — came back up, hit
+    `job_redriver_skipped_locked` and reconciled nothing. Shrinking
+    the TTL is the whole mitigation (ADR 0048); pinning it here is
+    what keeps someone from quietly raising it again, since the
+    behaviour it protects only shows up on a real clock.
+    """
+    assert REDRIVE_LOCK_TTL_SEC <= 60
+
+    # And the constant is what actually reaches Redis, not a default
+    # that drifted away from it.
+    await store.try_acquire_redrive_lock(REDRIVE_LOCK_TTL_SEC, token=WORKER_A)
+    ttl = await shared_backend.ttl(REDRIVE_LOCK_KEY)
+    assert 0 < ttl <= REDRIVE_LOCK_TTL_SEC
+    await store.release_redrive_lock(WORKER_A)
+
+    driver = JobRedriver(store, WORKER_A)
+    assert driver._lock_ttl_sec == REDRIVE_LOCK_TTL_SEC
 
 
 @pytest.mark.asyncio
