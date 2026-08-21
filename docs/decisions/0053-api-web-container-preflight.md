@@ -97,6 +97,23 @@ Handing the id over in the URL rather than in router state or
 `sessionStorage` is the whole point: a reload, a restored tab and a
 pasted link all rejoin the same job.
 
+It also means the id can outlive the job. `job_retention_sec` evicts
+finished rows, and the default in-memory store loses every job when
+`api` restarts, so a bookmarked `?job=` eventually names something the
+server 404s. A browser fails an `EventSource` permanently on a non-200
+— `readyState` goes to `CLOSED` and no retry follows — which the
+stream reader's error handler used to treat as "nothing to narrate".
+`status` then stayed `streaming` forever: `busy` kept the composer
+disabled with no message, so the one page the user could reach from
+that link was inert. The handler now splits the two closes it can see.
+`CONNECTING` is the browser retrying (a wifi blip, or the server
+hitting `api_sse_max_duration_sec`) and stays a `stream_note`, because
+the reconnect replays whatever was missed. `CLOSED` without a terminal
+frame surfaces an error and drops back to `idle`, so the user can ask
+the question again. The "without a terminal frame" half is load-bearing
+— the terminal handler closes the source itself, and reporting *that*
+close as a failure would overwrite a finished run's report.
+
 ### 2. Replay `plan_ready` on attach
 
 In the stream route's attach path, a job whose status is

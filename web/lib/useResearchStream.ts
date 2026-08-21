@@ -120,6 +120,10 @@ export function useResearchStream(): UseResearchStreamState {
     (id: string) => {
       const source = new EventSource(streamUrl(id));
       sourceRef.current = source;
+      // Set when a terminal frame closes this stream on purpose, so
+      // the fatal branch of the error handler can tell "the run
+      // finished" from "the browser gave up".
+      let settled = false;
 
       const handleFrame = (name: SseEventName) => (evt: MessageEvent) => {
         let data: Record<string, unknown> | null = null;
@@ -138,6 +142,7 @@ export function useResearchStream(): UseResearchStreamState {
           return;
         }
         if (TERMINAL_EVENTS.has(name)) {
+          settled = true;
           source.close();
           sourceRef.current = null;
           void finalize(id);
@@ -148,15 +153,38 @@ export function useResearchStream(): UseResearchStreamState {
         source.addEventListener(name, handleFrame(name) as EventListener);
       }
       source.addEventListener("error", () => {
-        if (source.readyState === EventSource.CLOSED) return;
-        setEvents((prev) => [
-          ...prev,
-          {
-            name: "stream_note",
-            data: { message: "connection interrupted; browser is retrying" },
-            receivedAt: Date.now(),
-          },
-        ]);
+        if (source.readyState !== EventSource.CLOSED) {
+          // Still CONNECTING: the browser owns the retry, so just
+          // narrate it. This is the wifi-blip / `api_sse_max_
+          // duration_sec` case, and the reconnect replays whatever
+          // the client missed (ADR 0053).
+          setEvents((prev) => [
+            ...prev,
+            {
+              name: "stream_note",
+              data: { message: "connection interrupted; browser is retrying" },
+              receivedAt: Date.now(),
+            },
+          ]);
+          return;
+        }
+        if (settled) return;
+        // CLOSED without a terminal frame means the browser failed the
+        // connection and will NOT retry — a non-200 response, which in
+        // practice is the stream route's 404. `attach` makes that
+        // reachable in a way `submit` never was: the job id now lives
+        // in the URL (ADR 0053), so a reload after `job_retention_sec`
+        // evicted the row — or after an `api` restart under the
+        // default in-memory store — adopts an id the server no longer
+        // knows. Leaving `status` on "streaming" then wedged the whole
+        // thread: `busy` stayed true, so the composer was disabled
+        // forever with nothing on screen explaining why.
+        sourceRef.current = null;
+        setError(
+          `stream unavailable for job ${id} — it may have expired. ` +
+            "Ask the question again to start a new run."
+        );
+        setStatus("idle");
       });
     },
     [finalize]

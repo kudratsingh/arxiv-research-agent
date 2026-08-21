@@ -54,6 +54,24 @@ class FakeEventSource {
     const payload = { data: JSON.stringify(data) } as MessageEvent;
     for (const fn of this.listeners.get(name) ?? []) fn(payload);
   }
+
+  /**
+   * What a browser does on a non-200 response (the stream route's
+   * 404): fail the connection permanently — `readyState` goes to
+   * CLOSED and no retry follows.
+   */
+  fatal(): void {
+    this.readyState = FakeEventSource.CLOSED;
+    for (const fn of this.listeners.get("error") ?? [])
+      fn({} as MessageEvent);
+  }
+
+  /** A transient drop the browser will retry on its own. */
+  transientDrop(): void {
+    this.readyState = 0;
+    for (const fn of this.listeners.get("error") ?? [])
+      fn({} as MessageEvent);
+  }
 }
 
 /** Sources not yet closed — the count that matters for double-streaming. */
@@ -295,6 +313,69 @@ describe("ConversationThread job adoption (ADR 0053)", () => {
     );
 
     expect(replace).toHaveBeenCalledTimes(1);
+  });
+
+  it("recovers the composer when the adopted job no longer exists", async () => {
+    // `?job=` outlives the job itself: `job_retention_sec` evicts the
+    // row, and the default in-memory store loses every job on an `api`
+    // restart. Reloading that URL then streams a 404, which the
+    // browser fails permanently. Without a fatal-close branch the
+    // thread stayed on status "streaming" — composer disabled forever,
+    // nothing on screen saying why.
+    const user = userEvent.setup();
+    await renderThread("evicted-job");
+    await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1));
+
+    act(() => {
+      FakeEventSource.instances[0]!.fatal();
+    });
+
+    // The dead-end is explained, not silent...
+    expect(await screen.findByRole("alert")).toHaveTextContent(/evicted-job/);
+    // ...and the thread is usable again: the user can ask the question
+    // a second time rather than staring at a disabled "Running…".
+    expect(countOf("POST /research")).toBe(0);
+    await user.type(screen.getByLabelText(/research question/i), "ask again");
+    await user.click(screen.getByRole("button", { name: /run research/i }));
+    await waitFor(() => expect(countOf("POST /research")).toBe(1));
+  });
+
+  it("does not report a settled stream's close as a failure", async () => {
+    // The terminal handler closes the source itself, which is also
+    // `readyState === CLOSED`. Treating that as the fatal case would
+    // overwrite a finished run with "stream unavailable" and throw the
+    // report away.
+    await renderThread("job-1");
+    await waitFor(() => expect(openSources()).toHaveLength(1));
+    const source = FakeEventSource.instances[0]!;
+
+    act(() => {
+      source.emit("job_completed", { job_id: "job-1", status: "succeeded" });
+    });
+    await waitFor(() => expect(countOf("GET /research/job-1")).toBe(1));
+
+    act(() => {
+      source.fatal();
+    });
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    // The settled report body is still on screen.
+    expect(await screen.findByText("body")).toBeInTheDocument();
+  });
+
+  it("keeps streaming through a drop the browser will retry", async () => {
+    // The other half of the same handler: a transient interruption
+    // must stay a note, not unlock the composer mid-run.
+    await renderThread("job-1");
+    await waitFor(() => expect(openSources()).toHaveLength(1));
+
+    act(() => {
+      openSources()[0]!.transientDrop();
+    });
+
+    expect(await screen.findByText("stream_note")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /running/i })).toBeDisabled();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("opens no stream at all when the URL names no job", async () => {
