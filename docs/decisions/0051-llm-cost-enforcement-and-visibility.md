@@ -345,67 +345,27 @@ reads before reclaiming a job:
     `x-stainless-retry-count` on the request; nothing comes back. The
     parsed `Message` carries no retry information either, which is why
     the raw response is needed at all.
-  - **Agents' degradation guards absorb the ceiling's exception.**
-    `reader_agent` wraps each paper in `except Exception` and
-    substitutes a placeholder, re-raising only `JobCancelledError`;
-    `supervisor`, `verifier` and `query_refiner` have the same shape.
-    So a `CostBudgetExceeded` raised from `call_llm` inside one of those
-    nodes is caught and degraded, and when it hits every paper the reader
-    raises `AllPaperAnalysesFailedError` instead — a capped sync run is
-    reported as a reader failure, with one misleading
-    `reader_paper_analysis_failed` WARNING per paper.
+  - **Some degradation guards absorb the ceiling's exception — the
+    reader no longer does.**
+    `reader_agent` re-raises `CostBudgetExceeded` from its per-paper
+    guard exactly as it re-raises `JobCancelledError` (ADR 0047's
+    contract): the reader is a fan-out whose absorbed ceiling would
+    have degraded every remaining paper and carried the run on to
+    synthesis and the judges — spending precisely the calls the
+    ceiling forbids. `test_reader_fanout_stops_spending_and_names_the_reason`
+    pins both halves: zero calls over the cap, and the escaping
+    exception names the budget.
 
-    The *brake* is unaffected and that is the part that matters: once the
-    ceiling is crossed no further call is issued, which
-    `test_reader_fanout_stops_spending_but_reshapes_the_error` pins
-    directly (zero calls, spend unchanged). Only the label is wrong. The
+    `supervisor`, `verifier` and `query_refiner` still absorb it into
+    their documented fail-closed defaults. That remains money-safe —
+    the check runs before every call, so no further call is ever
+    issued — and each is a single-call node, so the mislabelling costs
+    one confusing log line rather than a cascade of downstream spend.
+    Extending the re-raise to them would change their fail-closed
+    philosophy (ADRs 0014/0015/0018) and is deliberately left as a
+    follow-up decision rather than smuggled in here. The
     API path is effectively immune — `on_node` stops the run at the
     preceding node boundary, so the reader cannot *start* over the cap
-    unless `max_papers` is 1 — but the sync revision loop
-    (`critic -> planner -> ... -> reader`) can re-enter the reader with
-    the accumulator already over, and it is the sync path this ADR set
-    out to protect. Closing it means teaching the agents to re-raise
-    `CostBudgetExceeded` alongside `JobCancelledError` — the same
-    argument `reader.py` already makes for cancellation, "swallowing an
-    abort would turn it into analyse-everything-anyway" — and
-    `src/agents/*` was outside this change's file scope.
-  - **The clamp always fires at the shipped defaults.** 4 retries x 120s
-    exceeds 75% of the 600s job budget, so every process logs
-    `llm_retry_budget_clamped` at WARNING once at client construction
-    even when the operator set nothing. The line is accurate and carries
-    the numbers, but a warning that is always present is a warning
-    operators learn to skip; keying it to `model_fields_set` (warn only
-    on an explicit `ANTHROPIC_MAX_RETRIES`) is the tidier shape.
-  - **The clamp uses `api_job_timeout_sec` on every path**, including
-    `make run` and `make eval`, which have no job timeout. It is a
-    global bound on one call chain, which is a reasonable thing to want
-    everywhere, but the number it is derived from is named for the API.
-  - **`src/config.py`'s `max_cost_usd` description still says
-    "Enforced by the API runner between graph nodes"**, and
-    `docs/architecture.md:183` has the same narrowing. Both are now
-    incomplete. Neither file was in this change's scope; correcting
-    them is a follow-up.
-  - **Two adjacent diagnostics gaps are untouched**, both outside this
-    change's file scope: `src/api/redriver.py`'s
-    `job_redriver_publish_failed` still logs without `exc_info`, and a
-    corrupt Redis job row still disables `src/api/redis_store.py`'s
-    terminal-transition guard silently.
-  - **The SIGSEGV is only half-fixed.** `faulthandler` makes it
-    diagnosable; it does not make it stop. The mitigation half —
-    pinning `OMP_NUM_THREADS` / `torch.set_num_threads(1)`, or
-    serialising encoding behind the existing model lock — belongs in
-    `src/tools/embeddings.py` and needs a real soak (≥200 runs) before
-    anyone believes a fix, since the reproduction rate is ~4%.
-- **Follow-ups**: re-raise `CostBudgetExceeded` from the agents'
-  degradation guards so a capped run is labelled as one; key the
-  retry-clamp warning to `model_fields_set`; run
-  `unpriced_models(settings)` at startup and WARN;
-  widen `max_cost_usd`'s config description and
-  `docs/architecture.md`; the embeddings thread-pinning half of the
-  SIGSEGV; a `partial` flag on `JobDetail` so a client can tell a
-  capped report from a complete one without reading `error_type`;
-  streaming the synthesizer's 8192-token generation so a long
-  completion cannot trip the HTTP timeout at all.
 
 ## Testing
 

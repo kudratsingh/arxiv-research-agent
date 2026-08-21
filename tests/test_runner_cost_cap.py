@@ -169,35 +169,29 @@ def test_sync_pipeline_run_trips_the_cap(
     assert costs.total_cost_usd == pytest.approx(2.40)
 
 
-def test_reader_fanout_stops_spending_but_reshapes_the_error(
+def test_reader_fanout_stops_spending_and_names_the_reason(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The brake holds inside an agent's degradation guard; the label does not.
+    """The brake holds inside the reader's fan-out, and the label is honest.
 
-    `reader_agent` wraps each paper's analysis in `except Exception` and
-    substitutes a placeholder, re-raising only `JobCancelledError`. A
-    `CostBudgetExceeded` raised by `call_llm` inside that fan-out is
-    therefore *absorbed*, and when it hits every paper the node raises
-    `AllPaperAnalysesFailedError` instead — so a capped run on the sync
-    path is reported as a reader failure rather than as a budget stop.
+    `reader_agent` re-raises `CostBudgetExceeded` from its per-paper
+    degradation guard exactly as it re-raises `JobCancelledError`
+    (ADR 0047's contract, extended by ADR 0051): once the ceiling
+    trips, degrading each remaining paper in turn would carry the run
+    on to synthesis and the judges — spending the calls the ceiling
+    exists to stop. A capped run therefore surfaces as a budget stop,
+    not as `AllPaperAnalysesFailedError`.
 
-    The guarantee that actually matters survives and is what this test
-    pins: **not one call is issued** once the ceiling is crossed. The
-    money brake is the point of ADR 0051's per-call check; the exception
-    class is a diagnostic label.
+    Two guarantees pinned here: **not one call is issued** once the
+    ceiling is crossed, and the exception that escapes the node names
+    the real cause.
 
-    The mislabelling is a known limit, recorded in ADR 0051 — closing it
-    means teaching `src/agents/reader.py` to re-raise `CostBudgetExceeded`
-    the way it already re-raises `JobCancelledError`, which is a different
-    module's change. This test is what makes that follow-up visible: if
-    someone makes the reader propagate the ceiling, the assertion below
-    fails loudly and gets updated rather than the behaviour drifting
-    unnoticed.
-
-    Mutation-check: removing `_check_cost_budget()` from `call_llm` makes
-    `client.calls == 3` and fails the load-bearing assertion.
+    Mutation-checks: removing `_check_cost_budget()` from `call_llm`
+    makes `client.calls == 3`; removing `CostBudgetExceeded` from the
+    reader's re-raise tuple turns the raise into
+    `AllPaperAnalysesFailedError`. Both fail this test.
     """
-    from src.agents.reader import AllPaperAnalysesFailedError, reader_agent
+    from src.agents.reader import reader_agent
 
     monkeypatch.setattr(llm_module, "settings", Settings(max_cost_usd=2.00))
     client = _SpendingClient()
@@ -242,7 +236,7 @@ def test_reader_fanout_stops_spending_but_reshapes_the_error(
         "messages": [],
     }
 
-    with pytest.raises(AllPaperAnalysesFailedError):
+    with pytest.raises(CostBudgetExceeded):
         reader_agent(state)
 
     # The load-bearing assertion: over the cap, the fan-out spends nothing.
