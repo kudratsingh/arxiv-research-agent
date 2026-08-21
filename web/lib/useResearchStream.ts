@@ -28,6 +28,11 @@ import {
  *   4. On a terminal event, GET the status URL for the settled
  *      JobDetail (the report body + metrics).
  *
+ * `attach` is step 2 onwards for a job someone else started (ADR
+ * 0053) — the landing page submits and hands the id over in the URL,
+ * and a reload of that URL rejoins the same job instead of paying for
+ * a second one.
+ *
  * Idempotent to caller re-submissions — a fresh submit closes any
  * open stream and resets state before starting.
  */
@@ -39,12 +44,16 @@ export interface UseResearchStreamState {
   plan: Plan | null;
   error: string | null;
   submit: (query: string, options?: SubmitOptions) => Promise<void>;
+  attach: (jobId: string, options?: AttachOptions) => void;
   review: (action: ReviewAction, plan?: Plan) => Promise<void>;
 }
 
-export interface SubmitOptions {
-  conversation_id?: string;
+export interface AttachOptions {
   onDone?: (detail: JobDetail) => void;
+}
+
+export interface SubmitOptions extends AttachOptions {
+  conversation_id?: string;
 }
 
 const EVENT_NAMES: readonly SseEventName[] = [
@@ -96,6 +105,63 @@ export function useResearchStream(): UseResearchStreamState {
     }
   }, []);
 
+  /**
+   * Open the SSE stream for `id` and wire every frame into state.
+   *
+   * Shared by `submit` and `attach` (ADR 0053) so a job the landing
+   * page started and a job this hook started are consumed by exactly
+   * the same code — the attach path is not a second, thinner reader
+   * that quietly drops `plan_ready`.
+   *
+   * The caller owns `jobIdRef`/`status`: this only touches the
+   * EventSource and the frame-derived state.
+   */
+  const openStream = useCallback(
+    (id: string) => {
+      const source = new EventSource(streamUrl(id));
+      sourceRef.current = source;
+
+      const handleFrame = (name: SseEventName) => (evt: MessageEvent) => {
+        let data: Record<string, unknown> | null = null;
+        try {
+          data = JSON.parse(evt.data);
+        } catch {
+          data = null;
+        }
+        setEvents((prev) => [
+          ...prev,
+          { name, data, receivedAt: Date.now() },
+        ]);
+        if (name === "plan_ready" && data && data.plan) {
+          setPlan(data.plan as Plan);
+          setStatus("awaiting_review");
+          return;
+        }
+        if (TERMINAL_EVENTS.has(name)) {
+          source.close();
+          sourceRef.current = null;
+          void finalize(id);
+        }
+      };
+
+      for (const name of EVENT_NAMES) {
+        source.addEventListener(name, handleFrame(name) as EventListener);
+      }
+      source.addEventListener("error", () => {
+        if (source.readyState === EventSource.CLOSED) return;
+        setEvents((prev) => [
+          ...prev,
+          {
+            name: "stream_note",
+            data: { message: "connection interrupted; browser is retrying" },
+            receivedAt: Date.now(),
+          },
+        ]);
+      });
+    },
+    [finalize]
+  );
+
   const submit = useCallback(
     async (query: string, options: SubmitOptions = {}) => {
       cleanup();
@@ -120,49 +186,42 @@ export function useResearchStream(): UseResearchStreamState {
       setJobId(submission.job_id);
       jobIdRef.current = submission.job_id;
       setStatus("streaming");
-
-      const source = new EventSource(streamUrl(submission.job_id));
-      sourceRef.current = source;
-
-      const handleFrame = (name: SseEventName) => (evt: MessageEvent) => {
-        let data: Record<string, unknown> | null = null;
-        try {
-          data = JSON.parse(evt.data);
-        } catch {
-          data = null;
-        }
-        setEvents((prev) => [
-          ...prev,
-          { name, data, receivedAt: Date.now() },
-        ]);
-        if (name === "plan_ready" && data && data.plan) {
-          setPlan(data.plan as Plan);
-          setStatus("awaiting_review");
-          return;
-        }
-        if (TERMINAL_EVENTS.has(name)) {
-          source.close();
-          sourceRef.current = null;
-          void finalize(submission.job_id);
-        }
-      };
-
-      for (const name of EVENT_NAMES) {
-        source.addEventListener(name, handleFrame(name) as EventListener);
-      }
-      source.addEventListener("error", () => {
-        if (source.readyState === EventSource.CLOSED) return;
-        setEvents((prev) => [
-          ...prev,
-          {
-            name: "stream_note",
-            data: { message: "connection interrupted; browser is retrying" },
-            receivedAt: Date.now(),
-          },
-        ]);
-      });
+      openStream(submission.job_id);
     },
-    [cleanup, finalize]
+    [cleanup, openStream]
+  );
+
+  /**
+   * Join a job that already exists — never POSTs (ADR 0053).
+   *
+   * Re-entrant on purpose: it returns early when this hook is already
+   * streaming `id`, so an effect that fires again on re-render (or
+   * twice under React StrictMode's double-invoked mount) cannot open
+   * a second EventSource on the same job. The guard is the live
+   * source, not a "have attached" flag, so the StrictMode sequence
+   * mount → cleanup (closes the source) → mount does re-open and the
+   * reader is not left dead.
+   *
+   * Attaching to an *already terminal* job is fine and is the reload
+   * case: the stream route replays one terminal frame and closes
+   * (ADR 0038), which lands here as a normal terminal frame and
+   * fetches the settled detail.
+   */
+  const attach = useCallback(
+    (id: string, options: AttachOptions = {}) => {
+      if (sourceRef.current !== null && jobIdRef.current === id) return;
+      cleanup();
+      onDoneRef.current = options.onDone ?? null;
+      setEvents([]);
+      setDetail(null);
+      setPlan(null);
+      setError(null);
+      setJobId(id);
+      jobIdRef.current = id;
+      setStatus("streaming");
+      openStream(id);
+    },
+    [cleanup, openStream]
   );
 
   const review = useCallback(
@@ -195,5 +254,15 @@ export function useResearchStream(): UseResearchStreamState {
     []
   );
 
-  return { status, jobId, events, detail, plan, error, submit, review };
+  return {
+    status,
+    jobId,
+    events,
+    detail,
+    plan,
+    error,
+    submit,
+    attach,
+    review,
+  };
 }

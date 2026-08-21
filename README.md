@@ -86,7 +86,7 @@ flowchart LR
         S[ResearchState<br/>papers · analyses · evidence<br/>draft · citations · critique<br/>next_action · verifier_recommendation<br/>tried_search_queries · recovery signals]
     end
     subgraph "Observability"
-        O[JSON logs · run_id<br/>per-run cost accumulator<br/>OTel spans · SQLite/Postgres checkpoints]
+        O[JSON logs · run_id<br/>per-run cost accumulator<br/>OTel spans + metrics<br/>SQLite/Postgres checkpoints]
     end
     subgraph "Eval"
         E[20-query benchmark<br/>citation accuracy · faithfulness<br/>completeness · retrieval recall<br/>nightly regression diff]
@@ -180,7 +180,7 @@ python -m src.main "..."
 
 ## Web UI
 
-Next.js 14 (App Router, TypeScript, Tailwind) demo UI as a separate
+Next.js 15 (App Router, TypeScript, Tailwind) demo UI as a separate
 compose service on `:3000`. After `docker compose up`, open
 [http://localhost:3000/](http://localhost:3000/) in a browser to
 run a query and watch nodes complete over Server-Sent Events, with
@@ -188,6 +188,15 @@ the report rendered from markdown via `react-markdown` + `remark-
 gfm`. Talks to the FastAPI service over the browser's view of the
 host-published port. See ADR
 [0029](docs/decisions/0029-nextjs-web-ui.md) for the design.
+
+The first query creates a conversation, submits the job, and lands
+on `/c/{conversation_id}?job={job_id}`; the thread attaches to the
+job named in the URL rather than submitting its own, so reloading
+that page rejoins the running job instead of buying a second one
+(ADR [0053](docs/decisions/0053-api-web-container-preflight.md)).
+Because HITL is on by default, the run pauses at `plan_ready` and
+the page shows the plan-review panel — approve, revise, or cancel
+to let the run finish.
 
 Local dev without Docker:
 
@@ -224,8 +233,8 @@ API_HOST=0.0.0.0 API_PORT=8080 python -m src.api.serve
 | `GET`  | `/conversations` | List conversations (no job bodies). |
 | `GET`  | `/conversations/{id}` | Full thread with every job's report. |
 | `DELETE` | `/conversations/{id}` | Delete a conversation + all its jobs (CASCADE). |
-| `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` (+ `plan_ready` when HITL is on) → terminal frame. |
-| `GET`  | `/healthz` | Liveness + concurrency headroom. |
+| `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` (+ `plan_ready` when HITL is on) → terminal frame. Reconnect-safe: attaching replays the terminal frame for a finished job and `plan_ready` for one awaiting review. |
+| `GET`  | `/healthz` | Liveness + per-dependency status + concurrency headroom. Always 200; `status: degraded` in the body when a dependency is down. |
 | `GET`  | `/docs` | Auto-generated OpenAPI docs. |
 
 ### HITL plan review
@@ -241,11 +250,16 @@ ADR [0030](docs/decisions/0030-hitl-plan-review.md).
 
 ### Example
 
+`enable_hitl` defaults to on, so a plain `POST /research` parks the
+job in `pending_review` and waits up to `api_hitl_timeout_sec` (30
+minutes) for a decision. Pass `hitl_bypass: true` for a
+non-interactive one-shot:
+
 ```bash
-# submit
+# submit — hitl_bypass runs planner → report with no review pause
 curl -s -X POST localhost:8000/research \
   -H 'content-type: application/json' \
-  -d '{"query": "chain-of-verification for hallucination"}' | jq .
+  -d '{"query": "chain-of-verification for hallucination", "hitl_bypass": true}' | jq .
 # → {"job_id": "abc123...", "status_url": "/research/abc123...", ...}
 
 # poll
@@ -259,6 +273,34 @@ curl -N localhost:8000/research/abc123.../stream
 #    event: job_completed
 #    data: {"iterations": 1, "quality_score": 0.9, "cost_usd": 0.087, ...}
 ```
+
+With the review pause left on, the stream stops at `plan_ready` and
+the job goes nowhere until the plan is resolved:
+
+```bash
+# submit without the bypass
+JOB=$(curl -s -X POST localhost:8000/research \
+  -H 'content-type: application/json' \
+  -d '{"query": "chain-of-verification for hallucination"}' | jq -r .job_id)
+
+# stream in one shell — pauses after the planner
+curl -N localhost:8000/research/$JOB/stream
+# → event: job_started
+#    ...
+#    event: plan_ready
+#    data: {"job_id": "abc123...", "plan": {"sub_questions": [...], "search_queries": [...]}}
+
+# approve in another shell — the same open stream then resumes and
+# ends on job_completed
+curl -s -X POST localhost:8000/research/$JOB/review \
+  -H 'content-type: application/json' \
+  -d '{"action": "approve"}' | jq .
+```
+
+Reconnecting to the stream while the job is parked replays
+`plan_ready` as the first frame, so a dropped connection during
+review is recoverable (ADR
+[0053](docs/decisions/0053-api-web-container-preflight.md)).
 
 Concurrency is bounded per process by
 `API_MAX_CONCURRENT_JOBS` (default 10) via `asyncio.Semaphore`;
@@ -362,6 +404,8 @@ to answer. Every tunable is one env-var away — see `src/config.py`.
 **Observability**
 - Structured JSON logs with per-run `run_id` propagated through ContextVars (ADR [0012](docs/decisions/0012-observability-core-logging-costs.md)). Every LLM call records to the per-run cost accumulator.
 - OpenTelemetry spans around each agent node behind `enable_tracing` (ADR [0013](docs/decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)).
+- OpenTelemetry **metrics** behind `enable_metrics` (ADR [0049](docs/decisions/0049-otel-metrics.md)): job submissions / completions / duration, LLM spend, in-flight job concurrency, and rate-limit rejections. Exported to `otel_exporter_endpoint` (shared with tracing) every `otel_metric_export_interval_sec`.
+- `/healthz` reports each dependency's status in its body, and logs one WARNING per transition into degraded (never per probe) naming the dependency (ADR [0053](docs/decisions/0053-api-web-container-preflight.md)).
 
 **Safety**
 - Prompt-injection isolation on the reader — untrusted PDF text is wrapped in `<untrusted_paper>` tags with control-string sanitization (ADR [0020](docs/decisions/0020-prompt-injection-isolation-reader.md)).
@@ -373,8 +417,10 @@ to answer. Every tunable is one env-var away — see `src/config.py`.
 pytest tests/ -q
 ```
 
-740+ tests across unit + integration tiers (see
-[`docs/testing.md`](docs/testing.md) for the strategy).
+1,200+ tests across unit + integration tiers (see
+[`docs/testing.md`](docs/testing.md) for the strategy). The command
+above runs the whole suite; CI's per-PR gate is `pytest -m "not
+e2e"`, and the `e2e` tier runs nightly.
 
 ## Project status
 

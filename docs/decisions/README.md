@@ -181,6 +181,24 @@ never renumbered.
   observe the same accounting `/healthz` reports instead of a second
   set of counters. Closes ADR 0047's `abandoned_node_threads`
   follow-up.
+- [0053](0053-api-web-container-preflight.md) — Make the shipped demo
+  path survive its own first run. Walking `docker compose up` → open
+  the UI → type a query found five breaks the suite could not see
+  because no test drove the *sequence*: the landing page discarded
+  the `job_id` it had just paid for and redirected to a page that
+  could never recover it; `plan_ready` was published once and never
+  replayed, so any reconnect during review waited out the 30-minute
+  HITL timeout in silence; the image installed pyproject's ranges
+  rather than `requirements-lock.txt`; the first live job downloaded
+  ~90MB of MiniLM weights inside its own timeout budget while
+  `/healthz` said `ok`; and the startup-only redriver left a job
+  `running` forever when a container restarted inside its own lease.
+  The job id now travels in `?job=`, the thread attaches instead of
+  submitting, the stream replays `plan_ready` for a parked job, the
+  image installs the lock and bakes the model, and the sweep repeats
+  on `job_redrive_interval_sec`. `/healthz` also logs one WARNING
+  per transition into degraded. Extends ADR 0038's redriver and
+  ADR 0042's honesty rule; consumes ADR 0045's lockfile.
 
 ## When to write an ADR
 

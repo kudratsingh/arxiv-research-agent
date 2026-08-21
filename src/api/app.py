@@ -12,7 +12,10 @@ The factory takes injectable overrides for `build_workflow` and
 The lifespan also runs the ADR-0038 startup redriver before serving
 traffic, so jobs orphaned by the previous generation of workers are
 reconciled (and their SSE clients unhung) rather than left claiming
-`running` forever.
+`running` forever — and then keeps sweeping on
+`settings.job_redrive_interval_sec` (ADR 0053), because the startup
+sweep alone cannot see a lease that outlives the container it belonged
+to.
 """
 
 from __future__ import annotations
@@ -20,7 +23,8 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import inspect
-from collections.abc import AsyncIterator, Callable
+import random
+from collections.abc import AsyncIterator, Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from typing import Any
@@ -90,6 +94,91 @@ async def _evict_terminal_jobs_forever(store: JobStore) -> None:
                 log.info("api_jobs_evicted", extra={"count": evicted})
         except Exception:
             log.warning("api_job_evict_sweep_failed", exc_info=True)
+
+
+# Fraction of one interval the periodic redrive waits before its first
+# sweep (ADR 0053). A fleet started by one `docker compose up` / one
+# rollout boots in lockstep, so an unjittered timer would put every
+# worker's sweep on the same second: all but one would find the
+# redrive lock taken and log `job_redriver_skipped_locked` forever,
+# and the reclaim would depend on whichever worker happened to win.
+# Spreading the phase over a quarter of the interval decorrelates them
+# without meaningfully delaying the first sweep.
+REDRIVE_JITTER_RATIO = 0.25
+
+
+async def _redrive_forever(
+    redriver: JobRedriver,
+    interval_sec: float,
+    *,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+) -> None:
+    """Re-run the redrive sweep on a fixed interval until cancelled.
+
+    ADR 0053. ADR 0038's sweep ran once, at startup, which misses the
+    case that motivated leases in the first place: a container SIGKILLed
+    (OOM, `docker compose kill`, a grace-period overrun) and restarted
+    by `restart: unless-stopped` inside `job_lease_ttl_sec` comes back
+    to find its *own* dead lease still live in Redis. The boot sweep
+    correctly declines to touch the job — from the outside a live lease
+    is indistinguishable from a healthy peer mid-run — and then no
+    later sweep ever happens, so the row stays `running` forever, with
+    `GET /research/{id}` and the SSE stream both waiting on a terminal
+    frame nobody will publish. A sweep an interval later sees the
+    expired lease and reclaims it.
+
+    Failures never break the loop: reconciliation is best-effort
+    housekeeping, and a redriver bug must not take a serving worker
+    down with it. Cancellation propagates so shutdown stays prompt.
+
+    Args:
+        redriver: Sweeper to run. Constructed once by the caller so
+            every sweep shares the worker id and the resubmit hook.
+        interval_sec: Seconds between sweeps.
+        sleep: Injectable for tests, which assert the cadence rather
+            than living through it.
+    """
+    # Phase offset first, then a full interval — the startup sweep has
+    # already run by the time this task exists, so sweeping immediately
+    # would only re-take the lock for a keyspace just examined.
+    await sleep(random.uniform(0, interval_sec * REDRIVE_JITTER_RATIO))
+    while True:
+        await sleep(interval_sec)
+        try:
+            # Same bound as the startup sweep: past the lock's TTL this
+            # sweep no longer holds it, so continuing would just race
+            # whoever took it next.
+            report = await asyncio.wait_for(
+                redriver.sweep(), timeout=REDRIVE_LOCK_TTL_SEC
+            )
+        except TimeoutError:
+            log.warning(
+                "job_redriver_periodic_timeout",
+                extra={
+                    "worker_id": WORKER_ID,
+                    "timeout_sec": REDRIVE_LOCK_TTL_SEC,
+                },
+            )
+            continue
+        except Exception:
+            log.exception(
+                "job_redriver_periodic_failed",
+                extra={"worker_id": WORKER_ID},
+            )
+            continue
+        if report.orphaned or report.failed or report.requeued:
+            # Silent on an empty sweep — this runs every few minutes on
+            # every worker, and the steady state is "nothing to do".
+            log.info(
+                "job_redriver_periodic_reclaimed",
+                extra={
+                    "worker_id": WORKER_ID,
+                    "redrive_orphaned": report.orphaned,
+                    "redrive_failed": report.failed,
+                    "redrive_requeued": report.requeued,
+                    "redrive_skipped_live": report.skipped_live,
+                },
+            )
 
 
 def _default_store() -> JobStore:
@@ -222,6 +311,11 @@ def create_app(
         # ADR 0038: one id per process, stamped on job leases and the
         # redrive lock so every reclaim is attributable to a worker.
         app.state.worker_id = WORKER_ID
+        # ADR 0053: dependencies `/healthz` has already logged as down,
+        # so the handler logs the transition and not every probe.
+        # Lifespan-owned rather than module-global so two apps in one
+        # test process cannot latch each other's health edges.
+        app.state.degraded_dependencies = set()
 
         # ADR 0049: install the meter provider before anything can
         # record, and hand the two observable gauges the *same*
@@ -272,6 +366,7 @@ def create_app(
             task.add_done_callback(app.state.tasks.discard)
 
         redrive_report = RedriveReport()
+        redriver = JobRedriver(job_store, resubmit=_resubmit_orphaned)
         if settings.enable_job_redriver:
             try:
                 # Bounded by the redrive lock's own TTL. Past that the
@@ -280,10 +375,7 @@ def create_app(
                 # sets no socket timeout, so an unreachable Redis would
                 # otherwise hold the process in "starting" indefinitely.
                 redrive_report = await asyncio.wait_for(
-                    JobRedriver(
-                        job_store, resubmit=_resubmit_orphaned
-                    ).sweep(),
-                    timeout=REDRIVE_LOCK_TTL_SEC,
+                    redriver.sweep(), timeout=REDRIVE_LOCK_TTL_SEC
                 )
             except TimeoutError:
                 log.warning(
@@ -312,6 +404,25 @@ def create_app(
             evict_task = asyncio.create_task(
                 _evict_terminal_jobs_forever(job_store),
                 name="job-retention-sweep",
+            )
+
+        # ADR 0053: keep sweeping after boot. Guarded on the same flag
+        # as the startup sweep and on the same store capability the
+        # redriver itself checks — under `InMemoryJobStore` nothing
+        # survives a restart, so a recurring sweep would burn a task to
+        # log `job_redriver_store_unsupported` forever. Cross-worker
+        # serialization is already handled: every sweep takes the
+        # redrive lock, so only one worker in the fleet reclaims per
+        # tick and the rest no-op.
+        redrive_task: asyncio.Task[None] | None = None
+        if settings.enable_job_redriver and callable(
+            getattr(job_store, "scan_jobs", None)
+        ):
+            redrive_task = asyncio.create_task(
+                _redrive_forever(
+                    redriver, float(settings.job_redrive_interval_sec)
+                ),
+                name="job-redrive-sweep",
             )
 
         # ADR 0037: if `api_keys_file` is configured, load from it
@@ -355,6 +466,8 @@ def create_app(
                 "worker_id": WORKER_ID,
                 "metrics_enabled": metrics_enabled(),
                 "job_redriver_enabled": settings.enable_job_redriver,
+                "job_redriver_periodic": redrive_task is not None,
+                "job_redrive_interval_sec": settings.job_redrive_interval_sec,
                 "redrive_orphaned": redrive_report.orphaned,
                 "redrive_failed": redrive_report.failed,
                 "redrive_requeued": redrive_report.requeued,
@@ -377,10 +490,17 @@ def create_app(
                 evict_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError, Exception):
                     await evict_task
-            # ADR 0038: the redrive sweep is awaited during startup and
-            # owns no long-lived task, so there is nothing to cancel
-            # here. The per-job lease refresh tasks belong to `run_job`
-            # and are torn down by the job cancellation below.
+            # ADR 0053: the periodic sweep is cancelled before the jobs
+            # below, so it cannot reclaim a job on its way out — the
+            # runners are about to mark those `cancelled` themselves,
+            # and a sweep racing them would publish a second terminal
+            # frame for the same job. (The per-job lease refresh tasks
+            # belong to `run_job` and are torn down by the job
+            # cancellation below.)
+            if redrive_task is not None:
+                redrive_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await redrive_task
             # Cancel any jobs still running so shutdown is bounded.
             # The runner catches `CancelledError` and marks the job
             # `cancelled` before propagating.
