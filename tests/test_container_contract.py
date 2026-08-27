@@ -27,6 +27,10 @@ pytestmark = pytest.mark.unit
 ROOT = Path(__file__).resolve().parents[1]
 DOCKERFILE = (ROOT / "Dockerfile").read_text()
 EMBEDDINGS_SRC = (ROOT / "src" / "tools" / "embeddings.py").read_text()
+CI_WORKFLOW = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
+NIGHTLY_WORKFLOW = (
+    ROOT / ".github" / "workflows" / "eval-nightly.yml"
+).read_text()
 
 # The exact expression the Dockerfile's bake step runs. Kept as one
 # constant so a change to either side has to come here too.
@@ -101,6 +105,19 @@ def test_image_preinstalls_the_locked_cpu_only_torch_wheel() -> None:
         "pip install -r requirements-runtime-lock.txt"
     )
     assert cpu_install < runtime_install
+
+
+def test_linux_python_gates_use_the_same_cpu_torch_artifact() -> None:
+    cpu_index = "https://download.pytorch.org/whl/cpu"
+    # Typecheck and pytest each create a fresh environment; both must
+    # preinstall +cpu before the public-version full lock. Nightly is a
+    # third runtime consumer and must measure the same artifact.
+    assert CI_WORKFLOW.count(cpu_index) == 2
+    assert NIGHTLY_WORKFLOW.count(cpu_index) == 1
+    for workflow in (CI_WORKFLOW, NIGHTLY_WORKFLOW):
+        assert workflow.index(cpu_index) < workflow.index(
+            "pip install -r requirements-lock.txt"
+        )
 
 
 def test_lock_is_installable_as_written() -> None:

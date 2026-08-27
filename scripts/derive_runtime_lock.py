@@ -33,8 +33,9 @@ HEADER = """# requirements-runtime-lock.txt — generated runtime-only subset
 #   python scripts/derive_runtime_lock.py --check
 #
 # The full lock remains the CI/test authority. This subset removes packages
-# reachable only from the project's `dev` extra; platform-only transitive
-# dependencies remain subject to requirements-lock.txt's recorded limitation.
+# reachable only from the project's `dev` extra. Linux gates preinstall the
+# official locked +cpu Torch artifact before the public-version lock so this
+# metadata walk sees the same dependency graph the container ships.
 """
 
 

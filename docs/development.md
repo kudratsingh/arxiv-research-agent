@@ -216,6 +216,11 @@ download them (ADRs 0053/0054). Both properties are pinned without a
 Docker build by `tests/test_container_contract.py`; if you touch the
 Dockerfile, that module tells you what must stay true.
 
+Linux CI preinstalls the locked Torch version from the official CPU
+index before installing the full lock. Do the same in any new Linux
+workflow: otherwise the public PyPI artifact adds CUDA-only metadata and
+the job no longer represents the production runtime.
+
 ## Dependency licensing
 
 PyMuPDF (`fitz`, the PDF extractor behind `src/tools/pdf_parser.py`)

@@ -42,6 +42,13 @@ Torch version from PyTorch's official CPU wheel index on both amd64 and
 arm64, then installs the runtime subset and the project with `--no-deps`.
 The model remains baked into the image.
 
+Linux CI typecheck, pytest, and nightly-eval environments preinstall
+that same locked `+cpu` artifact before `requirements-lock.txt`. The
+lock's public `torch==X.Y.Z` pin accepts the local-version wheel, so pip
+keeps it rather than resolving PyPI's CUDA graph. This makes the runtime
+lock check platform-stable and makes the Linux gates exercise the
+artifact production actually ships.
+
 The resulting Linux/arm64 image is 1.70 GB and, under `--network none`
 with Hugging Face/Transformers offline flags, reports `torch 2.12.1+cpu`
 and produces a `(1, 384)` MiniLM vector. pytest and mypy are absent.

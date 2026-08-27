@@ -83,6 +83,13 @@ jobs:
       - name: Install project (locked dependency set)
         run: |
           python -m pip install --upgrade pip
+          # Nightly measures the deployed CPU runtime, not PyPI's
+          # CUDA-enabled Linux Torch artifact (ADR 0054).
+          torch_version=$(sed -n 's/^torch==//p' requirements-lock.txt)
+          test -n "$torch_version"
+          pip install --only-binary=:all: \
+            --index-url https://download.pytorch.org/whl/cpu \
+            "torch==$torch_version"
           pip install -r requirements-lock.txt
           pip install --no-deps -e .
 
