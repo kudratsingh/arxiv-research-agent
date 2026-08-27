@@ -173,6 +173,11 @@ Two files describe dependencies, with different jobs (ADR 0045):
   the exact versions the suite last ran green against. CI installs
   from it, so the gated set and the tested set are identical by
   construction.
+- **`requirements-runtime-lock.txt`** is the generated production
+  subset of that tested set. It excludes pytest/mypy/ruff and packages
+  reachable only from the dev extras; the Docker image installs it
+  after selecting the same locked Torch version from PyTorch's CPU
+  index (ADR 0054). Never edit it by hand.
 
 To update dependencies:
 
@@ -188,7 +193,11 @@ make test-all && make typecheck && .venv/bin/ruff check src/ tests/
                                                    # pinned section of
                                                    # requirements-lock.txt
 
-# 4. Commit pyproject.toml (if ranges moved) + requirements-lock.txt
+# 4. Regenerate and check the production subset:
+.venv/bin/python scripts/derive_runtime_lock.py
+.venv/bin/python scripts/derive_runtime_lock.py --check
+
+# 5. Commit pyproject.toml (if ranges moved) + both lock files
 #    together, with a line on *why* the set moved.
 ```
 
@@ -198,14 +207,19 @@ The lock is frozen on one platform and carries no hashes yet; the
 hashed, cross-platform lock (`uv lock` / `pip-compile
 --generate-hashes`) is recorded follow-up in ADR 0045.
 
-The container image installs the same lock (`pip install -r
-requirements-lock.txt`, then `pip install --no-deps .`), so the
-image, CI, and a fresh venv all run the tested set — and it bakes
-the MiniLM weights into `/opt/hf-cache` at build time so the first
-live job doesn't download them (ADR 0053). Both properties are
-pinned without a docker build by `tests/test_container_contract.py`;
-if you touch the Dockerfile, that module tells you what must stay
-true.
+The container image installs the generated runtime subset (`pip
+install -r requirements-runtime-lock.txt`, then `pip install --no-deps
+.`), so every production package is still pinned to the version in the
+CI-tested set without carrying its dev-only closure. It also bakes the
+MiniLM weights into `/opt/hf-cache` so the first live job does not
+download them (ADRs 0053/0054). Both properties are pinned without a
+Docker build by `tests/test_container_contract.py`; if you touch the
+Dockerfile, that module tells you what must stay true.
+
+Linux CI preinstalls the locked Torch version from the official CPU
+index before installing the full lock. Do the same in any new Linux
+workflow: otherwise the public PyPI artifact adds CUDA-only metadata and
+the job no longer represents the production runtime.
 
 ## Dependency licensing
 

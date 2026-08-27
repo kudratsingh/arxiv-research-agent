@@ -158,8 +158,8 @@ never renumbered.
 - [0045](0045-supply-chain-pinning-lockfile-and-license-posture.md) —
   Supply-chain hardening: bounded version ranges +
   `requirements-lock.txt` (CI installs the lock), explicit `src`
-  packaging, lazy PEP 562 `src.api` re-exports, Next 15 / React
-  19 / Node 22 / vitest 4, PyMuPDF AGPL posture recorded.
+  packaging, lazy PEP 562 `src.api` re-exports, the original Next 15 /
+  React 19 / Node 22 / vitest 4 upgrade, and PyMuPDF AGPL posture.
 - [0046](0046-literal-typed-config-enums.md) — Enum-valued settings
   become `Literal[...]` so a typo'd env var dies at load instead of
   silently selecting the fallback backend; plus behaviour tests for
@@ -278,6 +278,12 @@ never renumbered.
   on `job_redrive_interval_sec`. `/healthz` also logs one WARNING
   per transition into degraded. Extends ADR 0038's redriver and
   ADR 0042's honesty rule; consumes ADR 0045's lockfile.
+- [0054](0054-hetzner-production-boundary.md) — Close the production
+  boundary for a single Hetzner VPS: generated runtime lock and
+  CPU-only Torch, Next.js 16 server-only authenticated API proxy,
+  loopback-safe local ports, parameterized Postgres credentials, and a
+  Caddy HTTPS/basic-auth edge that is the only production host publish.
+  Adds the reviewed single-host runbook and rollback contract.
 
 ## When to write an ADR
 

@@ -66,6 +66,15 @@ jobs:
         # the job if the lock and pyproject's ranges ever drift apart.
         run: |
           python -m pip install --upgrade pip
+          # Match the production artifact before installing the public
+          # `torch==X.Y.Z` pin. PEP 440 treats the official `X.Y.Z+cpu`
+          # wheel as satisfying that pin, so the full lock will not
+          # replace it with PyPI's CUDA-enabled Linux artifact (ADR 0054).
+          torch_version=$(sed -n 's/^torch==//p' requirements-lock.txt)
+          test -n "$torch_version"
+          pip install --only-binary=:all: \
+            --index-url https://download.pytorch.org/whl/cpu \
+            "torch==$torch_version"
           pip install -r requirements-lock.txt
           pip install --no-deps -e .
           python -m pip check
@@ -95,6 +104,15 @@ jobs:
         # the job if the lock and pyproject's ranges ever drift apart.
         run: |
           python -m pip install --upgrade pip
+          # Keep the test environment on the same CPU-only Torch artifact
+          # as the container. Otherwise PyPI's Linux wheel installs CUDA
+          # dependencies that are intentionally absent from the generated
+          # runtime lock, and this gate tests a deployment we never ship.
+          torch_version=$(sed -n 's/^torch==//p' requirements-lock.txt)
+          test -n "$torch_version"
+          pip install --only-binary=:all: \
+            --index-url https://download.pytorch.org/whl/cpu \
+            "torch==$torch_version"
           pip install -r requirements-lock.txt
           pip install --no-deps -e .
           python -m pip check
@@ -173,9 +191,7 @@ jobs:
         run: npm run test
       - name: Next.js build
         # Validates the full production build, including static
-        # generation of `/`. NEXT_PUBLIC_API_BASE isn't reachable in
-        # CI but that's fine — the build only bakes it into the
-        # client bundle, no network at build time.
+        # generation of `/` and the server-side `/api` proxy route.
+        # The proxy resolves API_INTERNAL_BASE only when requested, so
+        # no API service or secret is needed at build time.
         run: npm run build
-        env:
-          NEXT_PUBLIC_API_BASE: http://localhost:8000

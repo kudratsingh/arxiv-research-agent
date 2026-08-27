@@ -34,8 +34,27 @@ export default function ConversationSidebar({
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+
+    // Fetch directly in the effect so React can see that the state updates
+    // happen in an asynchronous callback, not synchronously during the
+    // effect. Event handlers continue to use `load` for explicit refreshes.
+    void listConversations().then(
+      (list) => {
+        if (cancelled) return;
+        setItems(list);
+        setError(null);
+      },
+      (err: unknown) => {
+        if (cancelled) return;
+        setError(err instanceof ApiError ? err.message : String(err));
+      }
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleNew = useCallback(async () => {
     setCreating(true);

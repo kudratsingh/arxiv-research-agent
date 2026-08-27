@@ -762,3 +762,23 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   carry dated status notes up top with historical content untouched.
   All numbers in this entry were derived fresh from the tree at the
   time of writing, not copied from prior docs.
+- _2026-08-27_ — Hetzner production-boundary closeout (ADR 0054).
+  The deployment target is a single Hetzner Cloud VPS, selected by the
+  maintainer after comparing the free/paid host options. Local work
+  remains non-billable until the exact Console order is approved.
+  Closed the three deployment blockers ADR 0053 measured: a generated
+  `requirements-runtime-lock.txt` removes the dev-only closure, and
+  every Linux architecture installs the locked Torch version from the
+  official CPU index; the Linux/arm64 API image falls from 5.88 GB to
+  1.70 GB and passes a `--network none` MiniLM encode as
+  `torch 2.12.1+cpu`. Next moves to 16.3.3 (zero production npm audit
+  findings), and a tested server-only `/api` route injects the API key
+  while streaming SSE/exports, so the browser no longer needs either
+  CORS or a public secret. Base Compose binds app/web to loopback and
+  parameterizes Postgres; the production overlay removes both host
+  ports, forces auth/prompt isolation/spend guards, and makes Caddy
+  2.11.4 the sole public HTTPS/basic-auth edge. A deployment runbook
+  records firewall, DNS, exact-commit deploy/rollback, and backup
+  boundaries. Remaining: merge the reviewed PR, provision only after
+  explicit Hetzner cost approval, verify TLS/health on the host, then
+  separately approve one paid Anthropic end-to-end query.

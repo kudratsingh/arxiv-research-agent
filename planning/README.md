@@ -18,10 +18,10 @@ Living log of enterprise-readiness plans, feature ideas, and roadmap for the arx
 - **Update the roadmap** as sprints complete — mark items done inline; don't delete (this is a log).
 - **Record decisions** — if an idea gets rejected, keep it with a short note on *why*. Future-you will want that.
 
-## Current status snapshot (2026-08-21)
+## Current status snapshot (2026-08-27)
 
 - **Sprints 1-5 done, plus a post-Sprint-5 hardening campaign
-  through ADR 0053.** 63 merged PRs, 53 ADRs, ~1,400 tests
+  through ADR 0054.** 63 merged PRs, 54 ADRs, ~1,400 tests
   (`pytest -m "not e2e"`: 1399 passed / 27 skipped). What exists on
   `main`:
   - Both workflow shapes: fixed five-agent DAG (default) and the
@@ -44,6 +44,9 @@ Living log of enterprise-readiness plans, feature ideas, and roadmap for the arx
   1-5 and are essentially landed; each file carries a status note up
   top. The live log and follow-up list is the tail of
   [03-roadmap.md](03-roadmap.md).
-- **Next up**: the roadmap's open follow-ups — CPU-only torch pin
-  (image size), lockfile runtime/dev split, web-UI auth header, e2e
-  cassette tier — and the Sprint 6+ enterprise items, unscheduled.
+- **Current lane**: Hetzner deployment. CPU-only Torch, the generated
+  runtime lock, Next.js server-side API auth, and the Caddy production
+  boundary are implemented locally. Remaining gates are reviewed PR +
+  green CI, explicit approval for the exact Hetzner charge, live host
+  provisioning, and one separately approved Anthropic end-to-end run.
+  The cassette e2e tier and `/readyz` remain open follow-ups.

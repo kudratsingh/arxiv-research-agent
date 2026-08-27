@@ -223,7 +223,7 @@ pieces:
   Postgres pool's startup log, remaining call sites migrate as
   their files are touched.
 
-### Turning auth on under compose (ADR 0042)
+### Turning auth on under compose (ADRs 0042/0054)
 
 The compose stack ships auth-off so `docker compose up` stays a
 zero-config demo — which means the API is anonymous and unthrottled
@@ -231,32 +231,52 @@ on whatever interface `APP_PORT` is published to. **Never expose the
 demo configuration beyond localhost.** To gate it:
 
 ```bash
-ENABLE_API_AUTH=true API_KEYS="ops:$(openssl rand -hex 24)" \
+WEB_API_KEY="replace-with-a-generated-secret" \
+ENABLE_API_AUTH=true API_KEYS="web:replace-with-the-same-secret" \
   docker compose up
 ```
 
-Both variables pass through `docker-compose.yml` into the app
-service. Notes:
+All three variables pass through `docker-compose.yml`: the app parses
+`API_KEYS`, while the web container receives only the secret as
+`ARXIV_API_KEY`. Its server-only `/api` route injects `X-API-Key` on
+the private upstream hop. The raw key is neither a build argument nor
+a `NEXT_PUBLIC_*` value. Notes:
 
-- Set **both** — `ENABLE_API_AUTH=true` with an empty `API_KEYS`
-  boots, but every gated request 500s with
-  `api_auth_misconfigured` (fail-closed, nothing is exposed).
+- Set all three values consistently — `ENABLE_API_AUTH=true` with an
+  empty `API_KEYS` boots, but every gated request 500s with
+  `api_auth_misconfigured` (fail-closed, nothing is exposed). A missing
+  or mismatched `WEB_API_KEY` makes web requests fail 401.
 - `/healthz` is auth-exempt by design, so the container healthcheck
   and the `web` service's `service_healthy` gate keep passing.
 - The rate limiter activates with auth (it is keyed per principal)
   and is Redis-backed in compose, so the limit holds across
   workers.
-- CORS: the compose default allowlists the web UI's origin
-  (`http://localhost:${WEB_PORT}`) via `API_CORS_ALLOW_ORIGINS` —
-  always an explicit allowlist, never `*`, because the middleware
-  allows credentials. Override the variable for staging/prod
-  origins.
-- **Known limit:** the shipped web UI cannot send `X-API-Key`
-  (plain `fetch`, and `EventSource` cannot set headers at all), so
-  with auth on the UI's API calls 401. Auth-on currently protects
-  curl/SDK access; the fix — a Next.js route handler that proxies
-  to the API and injects the key server-side — is tracked as a
-  web-lane follow-up.
+- CORS is empty by default because browser requests stay same-origin
+  at Next.js. If a separate trusted browser client is introduced,
+  configure an explicit `API_CORS_ALLOW_ORIGINS` list, never `*`.
+- The proxy streams SSE and exports instead of buffering them, forwards
+  only safe headers, rejects credentialed/non-HTTP upstream URLs, and
+  maps an unreachable API to 502.
+
+### Internet-facing Hetzner boundary (ADR 0054)
+
+The production overlay in `deploy/hetzner/compose.prod.yml` is stricter
+than local Compose:
+
+- FastAPI and Next.js publish no host ports; Redis and Postgres never
+  had any. Only Caddy publishes TCP 80/443.
+- `ENABLE_API_AUTH=true`, prompt isolation, a per-run spend ceiling,
+  and the Redis-backed per-principal rate limiter are explicit.
+- Caddy obtains/renews HTTPS certificates, enforces a second
+  human-facing bcrypt login over TLS, rejects request bodies above
+  1 MB, and proxies only to Next.js on the private network.
+- The Postgres password and internal web/API key are required secrets;
+  Compose refuses to render the production configuration when either
+  is missing.
+- The Hetzner Cloud Firewall allowlists SSH from the administrator IP
+  and HTTP/HTTPS from the internet; unmatched inbound traffic is
+  denied. This is the outer control because Docker-published ports can
+  bypass `ufw` rules.
 
 ### Per-principal Job + Conversation scoping (ADR 0036)
 
@@ -435,9 +455,6 @@ redriver.
 - Expose `RedisJobStore.client` as a public property to remove
   the `_client` coupling in `create_app` and `/healthz`
   (ADR 0037 follow-up).
-- Next.js proxy route that injects `X-API-Key` server-side so the
-  web UI works under `ENABLE_API_AUTH=true` (ADR 0042 known
-  limit).
 - Request body-size cap as an outermost ASGI middleware — today
   the full body is buffered before auth runs (ADR 0042 deferred).
 - Cap per-principal conversation counts (the rate limit on
