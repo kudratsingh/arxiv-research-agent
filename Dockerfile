@@ -29,9 +29,19 @@ WORKDIR /build
 # Copy only the dependency manifests first so the pip layer caches
 # on unchanged deps. Source changes past this line don't invalidate
 # the pip install layer.
-COPY pyproject.toml README.md requirements-lock.txt ./
+COPY pyproject.toml README.md requirements-lock.txt requirements-runtime-lock.txt ./
 
-# ADR 0053: install the LOCK, not pyproject's ranges. `pip install .`
+# ADR 0053/0054: install generated exact runtime pins, not pyproject's ranges.
+# `requirements-runtime-lock.txt` is a mechanically derived subset of the
+# full CI lock, so the image keeps production dependencies at the versions
+# the suite tests without carrying pytest/mypy/ruff and their dependency
+# closure. Preinstall the same locked torch version from PyTorch's official
+# CPU index on every Linux architecture: current PyPI wheels resolve CUDA 13
+# packages on arm64 as well as amd64. PEP 440 considers the index's `+cpu`
+# local version a match for the public `==X.Y.Z` pin when the rest of the
+# runtime lock is installed.
+#
+# `pip install .`
 # re-resolved every range at build time, so the image ran a dependency
 # set nobody had tested — CI installs `-r requirements-lock.txt`
 # (ADR 0045) and the caps are only `< next major`, which leaves every
@@ -41,7 +51,13 @@ COPY pyproject.toml README.md requirements-lock.txt ./
 # means pip performs no resolution at all for the app's dependencies.
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --upgrade pip \
-    && pip install -r requirements-lock.txt
+    && TORCH_VERSION="$(sed -n 's/^torch==//p' requirements-runtime-lock.txt)" \
+    && test -n "$TORCH_VERSION" \
+    && pip install --only-binary=:all: \
+      --index-url https://download.pytorch.org/whl/cpu \
+      "torch==$TORCH_VERSION" \
+    && pip install -r requirements-runtime-lock.txt \
+    && pip check
 
 # ADR 0053: bake the embedding model into the image. Copied on its own,
 # before `src`, so an edit anywhere else in the tree does not
@@ -78,11 +94,8 @@ RUN pip install --no-deps .
 
 # ---------- Runtime ----------------------------------------------------
 # Minimal image with the built venv + source + baked model weights,
-# running as a non-root user. No build toolchain and no docs. It does
-# carry the lockfile's test tooling (pytest, mypy, ruff): the lock is a
-# whole-venv freeze, and ADR 0053 chose exact parity with the tested
-# set over a smaller image. Splitting the lock into runtime and dev
-# halves is the recorded follow-up.
+# running as a non-root user. No build toolchain, docs, or test tooling;
+# ADR 0054's generated runtime-lock subset keeps those packages in CI only.
 FROM python:3.14-slim AS runtime
 
 # `HF_HOME` must match the builder's value exactly — see the note there.

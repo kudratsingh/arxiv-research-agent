@@ -1,0 +1,68 @@
+# Production-only additions for a single Hetzner Cloud VPS (ADR 0054).
+# Merge with the repository-root docker-compose.yml; paths are resolved
+# from that first file:
+#
+#   docker compose -f docker-compose.yml \
+#     -f deploy/hetzner/compose.prod.yml up --build -d
+
+services:
+  app:
+    # Only Caddy is host-published in production. The Next.js proxy
+    # reaches this service on the private Compose network.
+    ports: !reset []
+    environment:
+      ENABLE_API_AUTH: "true"
+      API_KEYS: web:${WEB_API_KEY:?WEB_API_KEY must be set}
+      ENABLE_PROMPT_ISOLATION: "true"
+      MAX_COST_USD: ${MAX_COST_USD:-2.00}
+      API_KEY_HOURLY_LIMIT: ${API_KEY_HOURLY_LIMIT:-20}
+      POSTGRES_URL: postgresql://arxiv:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/arxiv
+
+  web:
+    # The public request terminates at Caddy, then stays on the private
+    # Compose network through web -> app.
+    ports: !reset []
+    environment:
+      API_INTERNAL_BASE: http://app:8000
+      ARXIV_API_KEY: ${WEB_API_KEY:?WEB_API_KEY must be set}
+
+  postgres:
+    environment:
+      POSTGRES_USER: arxiv
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: arxiv
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    container_name: arxiv-research-agent-caddy
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?APP_DOMAIN must be set}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL must be set}
+      APP_USERNAME: ${APP_USERNAME:?APP_USERNAME must be set}
+      APP_PASSWORD_HASH: ${APP_PASSWORD_HASH:?APP_PASSWORD_HASH must be set}
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./deploy/hetzner/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:2019/config/"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  caddy-data:
+  caddy-config:

@@ -59,8 +59,38 @@ export default function ConversationThread({
   }, [conversationId]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+
+    // Fetch directly in the effect so state is only updated from the
+    // asynchronous completion callback. `load` remains the refresh function
+    // used by submit/attach event handlers.
+    void getConversation(conversationId).then(
+      (detail) => {
+        if (cancelled) return;
+        setConversation(detail);
+        setLoadError(null);
+        if (detail.jobs.length > 0) {
+          setExpanded((prev) => {
+            const next = new Set(prev);
+            next.add(detail.jobs[detail.jobs.length - 1]!.job_id);
+            return next;
+          });
+        }
+      },
+      (err: unknown) => {
+        if (cancelled) return;
+        if (err instanceof ApiError && err.status === 404) {
+          setLoadError("Conversation not found.");
+        } else {
+          setLoadError(err instanceof Error ? err.message : String(err));
+        }
+      }
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [conversationId]);
 
   const {
     status,

@@ -1,10 +1,9 @@
-"""The Dockerfile's promises about the source tree (ADR 0053).
+"""The Dockerfile's promises about the source tree (ADRs 0053/0054).
 
-Two of ADR 0053's fixes are build-time and cannot be asserted by
-running the app: the image installs `requirements-lock.txt` rather
-than re-resolving pyproject's ranges, and it bakes the MiniLM weights
-so the first live job doesn't spend ~90MB of download inside its own
-timeout budget while `/healthz` says `ok`.
+The build-time contract cannot be asserted only by running the app:
+the image installs the generated runtime subset of the tested lock,
+selects CPU-only Torch on amd64, and bakes MiniLM weights so the first
+live job does not download them inside its own timeout budget.
 
 Both fixes are only as good as their coupling to the source. The bake
 step reads `MODEL_NAME` out of `src/tools/embeddings.py` with a regex,
@@ -17,6 +16,8 @@ the Dockerfile, they do not build it.
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -79,12 +80,27 @@ def test_dependencies_come_from_the_lockfile() -> None:
     # the container ran a dependency set nobody had tested (ADR 0045
     # pins CI to the lock). The project itself is installed after, and
     # `--no-deps`, so pip performs no resolution for it either.
-    assert "COPY pyproject.toml README.md requirements-lock.txt ./" in (
-        DOCKERFILE
-    )
-    assert "pip install -r requirements-lock.txt" in DOCKERFILE
+    assert (
+        "COPY pyproject.toml README.md requirements-lock.txt "
+        "requirements-runtime-lock.txt ./"
+    ) in DOCKERFILE
+    assert "pip install -r requirements-runtime-lock.txt" in DOCKERFILE
     assert "pip install --no-deps ." in DOCKERFILE
     assert re.search(r"pip install \.$", DOCKERFILE, re.MULTILINE) is None
+
+
+def test_image_preinstalls_the_locked_cpu_only_torch_wheel() -> None:
+    # PyPI's current Linux torch wheels resolve multi-gigabyte CUDA
+    # dependencies on both amd64 and arm64. The official CPU index
+    # carries the same locked public version with a +cpu local suffix.
+    assert "TARGETARCH" not in DOCKERFILE
+    assert "https://download.pytorch.org/whl/cpu" in DOCKERFILE
+    assert "s/^torch==//p' requirements-runtime-lock.txt" in DOCKERFILE
+    cpu_install = DOCKERFILE.index("https://download.pytorch.org/whl/cpu")
+    runtime_install = DOCKERFILE.index(
+        "pip install -r requirements-runtime-lock.txt"
+    )
+    assert cpu_install < runtime_install
 
 
 def test_lock_is_installable_as_written() -> None:
@@ -104,11 +120,45 @@ def test_lock_is_installable_as_written() -> None:
         assert "file://" not in entry, f"local path in lock: {entry}"
 
 
+def test_runtime_lock_is_an_exact_generated_subset() -> None:
+    full_lines = {
+        line.strip()
+        for line in (ROOT / "requirements-lock.txt").read_text().splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    runtime_lines = {
+        line.strip()
+        for line in (ROOT / "requirements-runtime-lock.txt")
+        .read_text()
+        .splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    assert runtime_lines
+    assert runtime_lines < full_lines
+    assert not {
+        "pytest",
+        "pytest-asyncio",
+        "pytest-postgresql",
+        "mypy",
+        "ruff",
+        "fakeredis",
+    } & {line.split("==", 1)[0].lower() for line in runtime_lines}
+
+    result = subprocess.run(
+        [sys.executable, "scripts/derive_runtime_lock.py", "--check"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
 def test_bake_runs_after_the_dependency_install() -> None:
     # `SentenceTransformer` has to be importable for the bake, and the
     # bake has to sit before `COPY src` so an edit to any other module
     # doesn't re-download the weights on every build.
-    install = DOCKERFILE.index("pip install -r requirements-lock.txt")
+    install = DOCKERFILE.index("pip install -r requirements-runtime-lock.txt")
     bake = DOCKERFILE.index("COPY src/tools/embeddings.py")
     copy_src = DOCKERFILE.index("COPY src ./src")
     assert install < bake < copy_src

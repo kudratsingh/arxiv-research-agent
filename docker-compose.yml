@@ -1,9 +1,8 @@
-# Compose stack for local + CI deployments.
+# Compose stack for local development and the base of the Hetzner deployment.
 #
 #   app        FastAPI + workflow (built from ./Dockerfile).
-#   web        Next.js demo UI (Sprint 5 PR 1, ADR 0029). Talks to
-#              app over the browser (host-published port), not the
-#              compose network — SSE is a client-side stream.
+#   web        Next.js UI (ADR 0029/0054). Browser calls stay same-origin
+#              at /api; the server route proxies to app over Compose.
 #   redis      RedisJobStore backing store (Sprint 4 PR 3, ADR 0027).
 #   postgres   Paper cache + embedding cache (Sprint 4 PR 4, ADR 0028).
 #
@@ -39,8 +38,11 @@ services:
     # grace period moved from 15s to 30s to stay above the chain.
     command: ["python", "-m", "src.api.serve"]
     stop_grace_period: 30s
+    # Loopback by default. Docker-published ports can bypass a host's
+    # ufw rules, and the browser no longer needs direct API access now
+    # that the web service owns the authenticated /api proxy (ADR 0054).
     ports:
-      - "${APP_PORT:-8000}:8000"
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8000}:8000"
     environment:
       # Anthropic key must come from the host env — never bake into
       # the image. `docker compose up` errors clearly if it's unset
@@ -50,7 +52,7 @@ services:
       # Names resolve on the compose default network.
       JOB_STORE: redis
       REDIS_URL: redis://redis:6379/0
-      POSTGRES_URL: postgresql://arxiv:arxiv@postgres:5432/arxiv
+      POSTGRES_URL: postgresql://${POSTGRES_USER:-arxiv}:${POSTGRES_PASSWORD:-arxiv}@postgres:5432/${POSTGRES_DB:-arxiv}
       # Sprint 4 PR 4: shared caches for extracted paper text +
       # MiniLM embeddings, backed by the Postgres service. Setting
       # these to `disk` / `none` reverts to Sprint 1 behavior.
@@ -75,13 +77,10 @@ services:
       # mid-run. Only meaningful under `JOB_STORE=redis`, where a
       # non-terminal row outlives the process that owned it.
       ENABLE_JOB_REDRIVER: "true"
-      # ADR 0042: the web UI is served from :3000 and calls the API
-      # on :8000 from the browser — cross-origin. Without an explicit
-      # allowlist the server emits no CORS headers and every UI
-      # request (including the preflight) is blocked, so the shipped
-      # demo is unusable. Always an explicit allowlist, never `*` —
-      # the middleware runs with `allow_credentials=True`.
-      API_CORS_ALLOW_ORIGINS: ${API_CORS_ALLOW_ORIGINS:-http://localhost:${WEB_PORT:-3000}}
+      # Browser traffic is same-origin through web's /api proxy. Keep
+      # CORS disabled unless a separate trusted client genuinely needs
+      # cross-origin access; if enabled, use an explicit allowlist.
+      API_CORS_ALLOW_ORIGINS: ${API_CORS_ALLOW_ORIGINS:-}
       # ADR 0042: auth is off by default so `docker compose up` stays
       # a zero-config demo, but the mitigation documented in
       # docs/security.md must be genuinely bootable. To turn it on:
@@ -90,9 +89,8 @@ services:
       #
       # `/healthz` stays auth-exempt, so the healthcheck below (and
       # the `web` service's service_healthy gate) keep passing with
-      # auth on. Note the shipped web UI cannot send `X-API-Key` yet
-      # — auth-on protects API access for curl/SDK callers; see
-      # "Turning auth on under compose" in docs/security.md.
+      # auth on. Set WEB_API_KEY to the secret half of one API_KEYS
+      # entry so the server-only web proxy can authenticate upstream.
       ENABLE_API_AUTH: ${ENABLE_API_AUTH:-false}
       API_KEYS: ${API_KEYS:-}
       API_HOST: 0.0.0.0
@@ -114,16 +112,19 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-      args:
-        # Ship the browser-facing API URL into the client bundle at
-        # build time. Browser and API run on the same host; API is
-        # published on `APP_PORT`. Override for staging/prod deploys.
-        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:${APP_PORT:-8000}}
     image: arxiv-research-agent-web:local
     container_name: arxiv-research-agent-web
     restart: unless-stopped
+    environment:
+      # Browser requests stay same-origin at `/api`; the Next.js route
+      # handler forwards over the private compose network. When API auth
+      # is enabled, set WEB_API_KEY to the secret portion of one API_KEYS
+      # entry (for example API_KEYS="web:secret", WEB_API_KEY="secret").
+      # The key remains server-side and is never baked into browser JS.
+      API_INTERNAL_BASE: http://app:8000
+      ARXIV_API_KEY: ${WEB_API_KEY:-}
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
     depends_on:
       app:
         condition: service_healthy
@@ -161,16 +162,16 @@ services:
     container_name: arxiv-research-agent-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: arxiv
-      POSTGRES_PASSWORD: arxiv
-      POSTGRES_DB: arxiv
+      POSTGRES_USER: ${POSTGRES_USER:-arxiv}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arxiv}
+      POSTGRES_DB: ${POSTGRES_DB:-arxiv}
     # No host port publish by default (see redis note above).
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      # `-U arxiv` matches POSTGRES_USER; without it pg_isready checks
-      # the wrong role and reports unhealthy on a live database.
-      test: ["CMD-SHELL", "pg_isready -U arxiv -d arxiv"]
+      # Double dollars defer expansion to the container so the probe
+      # follows the configured role/database instead of hard-coding it.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 3s
       retries: 5

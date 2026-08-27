@@ -116,10 +116,11 @@ const JOB_DETAIL = {
 
 function installFetch(): void {
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = new URL(String(input));
+    const url = new URL(String(input), "http://localhost");
     const method = (init?.method ?? "GET").toUpperCase();
-    calls.push(`${method} ${url.pathname}`);
-    if (url.pathname === "/conversations/conv-1" && method === "GET") {
+    const apiPath = url.pathname.replace(/^\/api/, "") || "/";
+    calls.push(`${method} ${apiPath}`);
+    if (apiPath === "/conversations/conv-1" && method === "GET") {
       return jsonResp({
         conversation_id: "conv-1",
         title: "A conversation",
@@ -128,10 +129,10 @@ function installFetch(): void {
         jobs: [],
       });
     }
-    if (url.pathname === "/research/job-1" && method === "GET") {
+    if (apiPath === "/research/job-1" && method === "GET") {
       return jsonResp(JOB_DETAIL);
     }
-    if (url.pathname === "/research" && method === "POST") {
+    if (apiPath === "/research" && method === "POST") {
       return jsonResp({
         job_id: "job-2",
         status: "pending",
@@ -139,10 +140,10 @@ function installFetch(): void {
         stream_url: "/research/job-2/stream",
       });
     }
-    if (url.pathname === "/research/job-2" && method === "GET") {
+    if (apiPath === "/research/job-2" && method === "GET") {
       return jsonResp({ ...JOB_DETAIL, job_id: "job-2" });
     }
-    throw new Error(`unexpected request: ${method} ${url.pathname}`);
+    throw new Error(`unexpected request: ${method} ${apiPath}`);
   }) as unknown as typeof fetch;
 }
 
@@ -178,9 +179,7 @@ describe("ConversationThread job adoption (ADR 0053)", () => {
     await renderThread("job-1");
 
     await waitFor(() => expect(openSources()).toHaveLength(1));
-    expect(openSources()[0]!.url).toBe(
-      "http://localhost:8000/research/job-1/stream"
-    );
+    expect(openSources()[0]!.url).toBe("/api/research/job-1/stream");
     expect(countOf("POST /research")).toBe(0);
   });
 
@@ -274,7 +273,7 @@ describe("ConversationThread job adoption (ADR 0053)", () => {
     await user.click(screen.getByRole("button", { name: /run research/i }));
     await waitFor(() => expect(openSources()).toHaveLength(1));
     const source = openSources()[0]!;
-    expect(source.url).toBe("http://localhost:8000/research/job-2/stream");
+    expect(source.url).toBe("/api/research/job-2/stream");
 
     act(() => {
       source.emit("node_completed", { node: "planner", elapsed_sec: 1 });

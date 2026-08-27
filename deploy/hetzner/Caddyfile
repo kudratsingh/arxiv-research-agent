@@ -1,0 +1,35 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN} {
+	# The UI can initiate paid Anthropic work, so the entire site has a
+	# second, human-facing gate in addition to the private API key.
+	basic_auth {
+		{$APP_USERNAME} {$APP_PASSWORD_HASH}
+	}
+
+	# Queries and plan revisions are small JSON documents. This rejects
+	# oversized bodies before Next.js or FastAPI buffers them.
+	request_body {
+		max_size 1MB
+	}
+
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), geolocation=(), microphone=()"
+		-Server
+	}
+
+	reverse_proxy web:3000
+
+	log {
+		output stdout
+		format json
+	}
+}

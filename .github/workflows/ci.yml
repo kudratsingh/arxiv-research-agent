@@ -173,9 +173,7 @@ jobs:
         run: npm run test
       - name: Next.js build
         # Validates the full production build, including static
-        # generation of `/`. NEXT_PUBLIC_API_BASE isn't reachable in
-        # CI but that's fine — the build only bakes it into the
-        # client bundle, no network at build time.
+        # generation of `/` and the server-side `/api` proxy route.
+        # The proxy resolves API_INTERNAL_BASE only when requested, so
+        # no API service or secret is needed at build time.
         run: npm run build
-        env:
-          NEXT_PUBLIC_API_BASE: http://localhost:8000

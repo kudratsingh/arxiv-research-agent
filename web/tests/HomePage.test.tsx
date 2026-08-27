@@ -57,9 +57,10 @@ function jsonResp(body: unknown, status = 200): Response {
  */
 function installFetch(overrides: Record<string, () => Response> = {}): void {
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = new URL(String(input));
+    const url = new URL(String(input), "http://localhost");
     const method = (init?.method ?? "GET").toUpperCase();
-    const key = `${method} ${url.pathname}`;
+    const apiPath = url.pathname.replace(/^\/api/, "") || "/";
+    const key = `${method} ${apiPath}`;
     calls.push(key);
     const override = overrides[key];
     if (override) return override();

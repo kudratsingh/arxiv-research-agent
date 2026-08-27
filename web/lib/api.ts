@@ -7,11 +7,11 @@ import type {
   ReviewResponse,
 } from "./types";
 
-// Base URL for the FastAPI service. In compose the browser hits it
-// via the host-published port; NEXT_PUBLIC_API_BASE ships with the
-// client bundle so it's readable from `use client` code.
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+// Browser calls stay same-origin. The Next.js route handler at /api
+// forwards them to FastAPI and injects the server-only API key, which
+// keeps credentials out of the client bundle and lets native
+// EventSource/export links use the authenticated path too.
+export const API_BASE = "/api";
 
 export class ApiError extends Error {
   public readonly status: number;

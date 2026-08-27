@@ -148,15 +148,13 @@ class TestComposeContract:
     manifest in a browser or during a `docker compose down`.
     """
 
-    def test_cors_allowlist_defaults_to_web_origin(self) -> None:
+    def test_cors_defaults_off_for_same_origin_proxy(self) -> None:
         env = _compose_app_service()["environment"]
         value = env["API_CORS_ALLOW_ORIGINS"]
-        # Explicit allowlist pointing at the web UI's origin, never a
-        # wildcard — `allow_credentials=True` makes `*` dangerous.
-        assert "http://localhost" in value
-        assert "*" not in value.replace("${", "").replace(
-            "API_CORS_ALLOW_ORIGINS", ""
-        ).replace("WEB_PORT", "")
+        # The browser calls Next.js at same-origin /api now. FastAPI
+        # should install no CORS middleware unless an operator supplies
+        # a separate trusted-client allowlist (ADR 0054).
+        assert value == "${API_CORS_ALLOW_ORIGINS:-}"
 
     def test_auth_env_is_wired_through(self) -> None:
         env = _compose_app_service()["environment"]
@@ -166,6 +164,17 @@ class TestComposeContract:
         assert "ENABLE_API_AUTH" in env
         assert ":-false" in env["ENABLE_API_AUTH"]
         assert "API_KEYS" in env
+
+    def test_host_ports_default_to_loopback(self) -> None:
+        compose = yaml.safe_load(
+            (_REPO_ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        )
+        assert compose["services"]["app"]["ports"] == [
+            "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8000}:8000"
+        ]
+        assert compose["services"]["web"]["ports"] == [
+            "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
+        ]
 
     def test_app_drains_with_a_bounded_grace_period(self) -> None:
         from src.api.serve import GRACEFUL_SHUTDOWN_TIMEOUT_SEC

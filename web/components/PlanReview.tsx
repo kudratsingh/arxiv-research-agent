@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Plan, ReviewAction } from "@/lib/types";
 
 interface PlanReviewProps {
@@ -17,17 +17,17 @@ interface PlanReviewProps {
  * Local state carries the working copy; only committed on submit.
  * `Reset` restores the original planner output.
  */
-export default function PlanReview({ plan, onReview }: PlanReviewProps) {
+export default function PlanReview(props: PlanReviewProps) {
+  // A changed plan represents a new working copy. Keying the stateful form by
+  // its value gives it fresh initial state without synchronously resetting
+  // state from an effect.
+  return <PlanReviewForm key={JSON.stringify(props.plan)} {...props} />;
+}
+
+function PlanReviewForm({ plan, onReview }: PlanReviewProps) {
   const [subs, setSubs] = useState<string[]>(plan.sub_questions);
   const [queries, setQueries] = useState<string[]>(plan.search_queries);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    // Refresh the working copy if the plan prop changes (e.g. a new
-    // job with a new plan).
-    setSubs(plan.sub_questions);
-    setQueries(plan.search_queries);
-  }, [plan]);
 
   const edited =
     !arraysEqual(subs, plan.sub_questions) ||

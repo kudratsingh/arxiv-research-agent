@@ -205,14 +205,16 @@ python -m src.main "..."
 
 ## Web UI
 
-Next.js 15 (App Router, TypeScript, Tailwind) demo UI as a separate
+Next.js 16 (App Router, TypeScript, Tailwind) UI as a separate
 compose service on `:3000`. After `docker compose up`, open
 [http://localhost:3000/](http://localhost:3000/) in a browser to
 run a query and watch nodes complete over Server-Sent Events, with
 the report rendered from markdown via `react-markdown` + `remark-
-gfm`. Talks to the FastAPI service over the browser's view of the
-host-published port. See ADR
-[0029](docs/decisions/0029-nextjs-web-ui.md) for the design.
+gfm`. Browser calls stay same-origin at `/api`; a server-only Next.js
+route streams them to FastAPI over the private Compose network and can
+inject the API key without exposing it in browser JavaScript. See ADRs
+[0029](docs/decisions/0029-nextjs-web-ui.md) and
+[0054](docs/decisions/0054-hetzner-production-boundary.md).
 
 The first query creates a conversation, submits the job, and lands
 on `/c/{conversation_id}?job={job_id}`; the thread attaches to the
@@ -228,9 +230,13 @@ Local dev without Docker:
 ```bash
 cd web
 npm install
-NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run dev
+npm run dev
 # → http://localhost:3000/
 ```
+
+The proxy defaults to `http://localhost:8000` outside Compose. For an
+auth-on API, set `ARXIV_API_KEY` in the Next.js server environment; it
+is never a `NEXT_PUBLIC_*` value.
 
 ## HTTP API
 
@@ -348,14 +354,23 @@ image design + service topology.
 export ANTHROPIC_API_KEY=sk-ant-...
 docker compose up --build
 # → http://localhost:8000/healthz  → 200
+# → http://localhost:3000/         → web UI
 # → http://localhost:8000/docs     → OpenAPI UI
 ```
 
 `ANTHROPIC_API_KEY` is the only required host variable. The compose
-file publishes `APP_PORT` (default 8000) to the host; Redis and
-Postgres stay on the internal compose network. Named volumes
+file publishes `APP_PORT` (default 8000) and `WEB_PORT` (default 3000)
+to **loopback**; Redis and Postgres stay on the internal Compose
+network. Set `APP_BIND_ADDRESS` or `WEB_BIND_ADDRESS` explicitly only
+when a trusted network genuinely needs a broader bind. Named volumes
 `redis-data` + `postgres-data` persist state across `docker compose
 down`; `down -v` wipes them.
+
+For the production single-VPS path, use the hardened Caddy overlay and
+runbook in [`deploy/hetzner/`](deploy/hetzner/README.md). It removes the
+app/web host ports, forces API auth, parameterizes the database secret,
+and publishes only HTTPS through Caddy (ADR
+[0054](docs/decisions/0054-hetzner-production-boundary.md)).
 
 Multi-worker uvicorn is safe under `JOB_STORE=redis` — every worker
 reads/writes the shared Redis-backed store. SSE streaming and HITL
@@ -471,7 +486,7 @@ calls whose output steers the workflow. The documented defenses
 - API-key auth (`ENABLE_API_AUTH` + `X-API-Key`, constant-time compare), per-key sliding-hour rate limiting (Redis-backed across workers), and a hot-reloadable file keystore (ADRs [0033](docs/decisions/0033-safety-hardening-bundle.md), [0037](docs/decisions/0037-redis-rate-limiter-and-keystore-reload.md)).
 - Per-principal scoping — an API key only sees its own jobs and conversations (ADR [0036](docs/decisions/0036-per-principal-store-scoping.md)).
 - Resource guardrails: per-run cost cap enforced between graph nodes (`MAX_COST_USD`), streamed PDF downloads aborted at `pdf_max_bytes` so an adversarial PDF can't OOM a worker (ADR [0033](docs/decisions/0033-safety-hardening-bundle.md)).
-- Auth is **off by default** for local dev; any exposed deployment must turn it on or an anonymous caller can spend the Anthropic account's money. `docs/security.md` documents the compose auth-on recipe (ADR [0042](docs/decisions/0042-api-guardrails-and-deploy-hygiene.md)).
+- Auth is **off by default** for local dev. The Hetzner production overlay forces it on and the Next.js server-only proxy injects the key; Caddy adds a separate human-facing login so an anonymous visitor cannot spend the Anthropic account's money (ADR [0054](docs/decisions/0054-hetzner-production-boundary.md)).
 
 ## Tests
 
@@ -498,7 +513,7 @@ compose, Redis/Postgres backends); Sprint 5 the product surface
 (Next.js web UI, HITL plan review, multi-format export,
 conversation mode).
 
-Since Sprint 5, a hardening chain (ADRs 0033-0053) has taken the
+Since Sprint 5, a hardening chain (ADRs 0033-0054) has taken the
 system from "works" to "operable": auth + rate limiting + cost
 caps, cross-worker HITL/SSE via Postgres checkpoints and Redis
 pub/sub, per-principal scoping, job leases + redriver, supply-chain
@@ -507,7 +522,7 @@ metrics, eval-runner crash-safety + resume + budget, LLM cost
 enforcement, native-crash containment, and an end-to-end pre-flight
 of the shipped container + web path.
 
-Fresh numbers as of this writing: 53 ADRs, 60+ merged PRs, ~1,400
+Fresh numbers as of this writing: 54 ADRs, 60+ merged PRs, ~1,400
 tests. The dated per-merge log — and the authoritative list of
 what's next — lives in
 [`planning/03-roadmap.md`](planning/03-roadmap.md); the project

@@ -18,12 +18,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Ship the API base to the client bundle at build time. Compose sets
-# it via `--build-arg NEXT_PUBLIC_API_BASE=...` so a different host
-# port doesn't require a rebuild of the whole tree.
-ARG NEXT_PUBLIC_API_BASE=http://localhost:8000
-ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
-
 RUN npm run build
 
 # ---------- Runtime stage: minimal footprint.

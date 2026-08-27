@@ -17,8 +17,8 @@ const FORMATS: ExportFormat[] = [
 
 /**
  * Small popover with three download links. Uses vanilla anchor tags
- * pointing at the export endpoint; the server's Content-Disposition
- * header triggers the browser download. No JavaScript fetch is
+ * pointing at the same-origin proxy endpoint; the upstream server's
+ * Content-Disposition header triggers the browser download. No fetch is
  * needed, which keeps the download semantics identical to a
  * "right-click, save as" from the docs page.
  *
