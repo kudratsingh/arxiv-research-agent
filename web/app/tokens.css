@@ -308,3 +308,329 @@
     --duration-ambient: 1ms;
   }
 }
+
+/* =========================================================================
+ * WO-18 OWNS THIS FENCE — the reading surface (03 section 4.7, 7.5;
+ * 06-WORK-ORDERS.md section 5.4 "append-only sections with comment fences").
+ *
+ * NOTHING BELOW DECLARES A CUSTOM PROPERTY. This fence adds rules only, so
+ * the parity assertions in web/tests/tokens.test.ts -- which compare the
+ * custom properties on :root and on each theme block against
+ * docs/revamp/design/tokens.json -- are untouched by it. Every value is a
+ * var() reference to a token declared above.
+ *
+ * WHY THE DARK MODE HERE IS ONE RULE AND NOT TWO. 03 section 3.3 names the
+ * gap: dark values for the report's code / th / td treatments "today only
+ * exist as prefers-color-scheme overrides in web/app/globals.css:33-58".
+ * That is the defect, not the location. A prefers-color-scheme override
+ * cannot see the persisted user choice, so a reader who forces light on a
+ * dark OS gets a dark code background inside a light briefing, and one who
+ * forces dark on a light OS gets the light one. Resolving --color-sunken and
+ * --color-border-subtle instead fixes both directions at once, because those
+ * tokens are redeclared by BOTH dark mechanisms and by the light override
+ * (see the four blocks above). There is therefore no
+ * @media (prefers-color-scheme: dark) block in this fence, and its absence
+ * is the criterion-7 fix rather than an omission.
+ *
+ * The legacy .report-prose block in web/app/globals.css:19-60 is left
+ * standing on purpose: ReportView.tsx and ConversationThread.tsx still
+ * render through it, and WO-20 stops composing them / WO-31 deletes both the
+ * components and that block. Nothing new uses .report-prose.
+ * ========================================================================= */
+
+/* -------------------------------------------------------------------------
+ * The reader's own frame.
+ * ---------------------------------------------------------------------- */
+.ew-report-reader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.ew-report-reader__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* Chrome, so the UI family -- 03 section 3.5: "the report never uses the UI
+ * family and the chrome never uses the report family". The reading column
+ * below is the other half of that pair, and one test asserts both. */
+.ew-report-reader__title {
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-lg-size);
+  line-height: var(--text-ui-lg-line);
+  letter-spacing: var(--text-ui-lg-tracking);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.ew-report-reader__note {
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-base-size);
+  line-height: var(--text-ui-base-line);
+  color: var(--color-ink-muted);
+}
+
+.ew-report-reader__columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+/* -------------------------------------------------------------------------
+ * The reading column (criterion 5): report family, 68ch, report-body 17/1.65.
+ *
+ * min-width: 0 is load-bearing for SC 1.4.10. A flex item's default
+ * min-width is auto, so a table wider than the column would push the whole
+ * row -- and therefore the page -- past the viewport, and the ScrollRegion
+ * inside it would never get the chance to pan.
+ * ---------------------------------------------------------------------- */
+.ew-report {
+  flex: 1 1 24rem;
+  min-width: 0;
+  max-width: var(--layout-report-measure);
+  font-family: var(--font-report);
+  font-size: var(--text-report-body-size);
+  line-height: var(--text-report-body-line);
+  color: var(--color-ink);
+  /* RC-20: Literata Italic 400 is a real committed face
+   * (app/fonts/Literata-Italic-400.woff2), so the browser must be told not
+   * to fall back on a synthesised oblique -- which is what it does by
+   * default, and what looks visibly wrong in a reading serif. */
+  font-synthesis-style: none;
+  /* A bare URL in a briefing is not a reason for the page to pan. */
+  overflow-wrap: break-word;
+}
+
+.ew-report > :first-child {
+  margin-top: 0;
+}
+
+.ew-report > :last-child {
+  margin-bottom: 0;
+}
+
+.ew-report p {
+  margin: var(--space-4) 0;
+}
+
+.ew-report h1 {
+  font-size: var(--text-report-h1-size);
+  line-height: var(--text-report-h1-line);
+  font-weight: var(--text-report-h1-weight);
+  margin: var(--space-8) 0 var(--space-3);
+}
+
+.ew-report h2 {
+  font-size: var(--text-report-h2-size);
+  line-height: var(--text-report-h2-line);
+  font-weight: var(--text-report-h2-weight);
+  margin: var(--space-8) 0 var(--space-3);
+  /* The section rail links to these. Without the offset a targeted heading
+   * lands flush against the top edge of the scroll container. */
+  scroll-margin-top: var(--space-6);
+}
+
+.ew-report h3 {
+  font-size: var(--text-report-h3-size);
+  line-height: var(--text-report-h3-line);
+  font-weight: var(--text-report-h3-weight);
+  margin: var(--space-6) 0 var(--space-2);
+  scroll-margin-top: var(--space-6);
+}
+
+.ew-report ul {
+  list-style: disc;
+  margin: var(--space-4) 0;
+  padding-left: var(--space-6);
+}
+
+.ew-report ol {
+  list-style: decimal;
+  margin: var(--space-4) 0;
+  padding-left: var(--space-6);
+}
+
+.ew-report li {
+  margin: var(--space-1) 0;
+}
+
+.ew-report li::marker {
+  color: var(--color-ink-faint);
+}
+
+/* LONGHANDS, NOT SHORTHANDS, WHEREVER A BORDER CARRIES A var().
+ * Same reason primitives.css spells the focus ring out: a shorthand holding
+ * a custom property is opaque to every CSSOM implementation -- jsdom drops
+ * `border: 1px solid var(--x)` on the floor entirely -- so a shorthand here
+ * would make the criterion-7 computed-style assertion impossible to write
+ * honestly. The longhands below are what make the dark-mode claim checkable
+ * rather than merely stated. */
+.ew-report blockquote {
+  margin: var(--space-5) 0;
+  padding-left: var(--space-4);
+  border-left-width: var(--size-trace-rule);
+  border-left-style: solid;
+  border-left-color: var(--color-border-strong);
+  color: var(--color-ink-muted);
+}
+
+.ew-report a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ew-report strong {
+  font-weight: 600;
+}
+
+.ew-report em {
+  font-style: italic;
+}
+
+.ew-report hr {
+  margin: var(--space-8) 0;
+  border-width: 0;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--color-border-subtle);
+}
+
+.ew-report img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* -------------------------------------------------------------------------
+ * Criterion 7 -- code, th and td, in both themes, from tokens.
+ * ---------------------------------------------------------------------- */
+.ew-report code {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-sm-size);
+  background-color: var(--color-sunken);
+  color: var(--color-ink);
+  border-radius: var(--radius-sm);
+  padding: var(--space-05) var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+/* No border: the sunken surface is what separates a fence from the prose
+ * around it, and a second edge on top of it is decoration (03 section 3.6,
+ * "the default is elev-0"). */
+.ew-report pre {
+  margin: var(--space-5) 0;
+  padding: var(--space-4);
+  background-color: var(--color-sunken);
+  border-radius: var(--radius-md);
+}
+
+/* Inside a fence the block already carries the surface, so the span must
+ * not paint a second one on top of it. */
+.ew-report pre code {
+  background-color: transparent;
+  border-radius: var(--radius-0);
+  padding: 0;
+  line-height: var(--text-mono-sm-line);
+  overflow-wrap: normal;
+}
+
+/* report-small (15 / 1.5) is the scale step 03 section 3.5 assigns to
+ * "Report tables and captions". The family stays the report family: a table
+ * inside the briefing is part of the document, not part of the chrome. */
+.ew-report table {
+  border-collapse: collapse;
+  font-size: var(--text-report-small-size);
+  line-height: var(--text-report-small-line);
+}
+
+.ew-report th,
+.ew-report td {
+  border-width: 1px;
+  border-style: solid;
+  border-top-color: var(--color-border-subtle);
+  border-right-color: var(--color-border-subtle);
+  border-bottom-color: var(--color-border-subtle);
+  border-left-color: var(--color-border-subtle);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  vertical-align: top;
+}
+
+.ew-report th {
+  background-color: var(--color-sunken);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------------------
+ * The section rail (criterion 4).
+ *
+ * The nav comes FIRST in the DOM so a keyboard or screen-reader user meets
+ * the map before the territory, and below 1280px it stays there, in the
+ * flow, as an ordinary list. At 1280px and up -- the width 03 section 7.5
+ * gives it -- `order` moves it into the right margin and it becomes sticky.
+ * Reordering a named nav landmark does not change the meaning of the
+ * sequence; putting a table of contents after the document it indexes
+ * would.
+ * ---------------------------------------------------------------------- */
+.ew-section-rail {
+  flex: 1 1 100%;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-sm-size);
+  line-height: var(--text-ui-sm-line);
+  color: var(--color-ink-muted);
+}
+
+.ew-section-rail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left-width: 1px;
+  border-left-style: solid;
+  border-left-color: var(--color-border-subtle);
+}
+
+.ew-section-rail__item[data-level="3"] {
+  padding-left: var(--space-3);
+}
+
+.ew-section-rail__link {
+  display: block;
+  padding: var(--space-1) var(--space-3);
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  border-left-width: var(--size-trace-rule);
+  border-left-style: solid;
+  border-left-color: transparent;
+  margin-left: -1px;
+}
+
+.ew-section-rail__link:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+
+/* Never colour alone (03 section 3.4): the current section carries a rule
+ * on its leading edge and full-strength ink, so a forced-colours user and a
+ * reader who cannot separate the two greys both still see which one it is. */
+.ew-section-rail__link[aria-current="location"] {
+  color: var(--color-ink);
+  border-left-color: var(--color-signature);
+  font-weight: 600;
+}
+
+@media (min-width: 1280px) {
+  .ew-section-rail {
+    order: 2;
+    flex: 0 0 var(--layout-rail-width);
+    position: sticky;
+    top: var(--space-6);
+    max-height: calc(100vh - var(--space-16));
+    overflow-y: auto;
+  }
+}
