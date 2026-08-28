@@ -43,6 +43,16 @@ export const THREAD_RAIL = {
   collapse: "Collapse the rail",
   expand: "Expand the rail",
   openDrawer: "Threads",
+  /**
+   * A deletion that did not happen (WO-14 criterion 3's other half).
+   *
+   * `useDeleteConversation` removes the row optimistically and puts it back
+   * on failure (`lib/queries/conversations.ts`), so the honest sentence is
+   * about the list the user is looking at right now. There is NO retry
+   * beside it: 04 §9.1 H6 and R-01 forbid replaying a write, and a "try
+   * again" button next to a failed DELETE is exactly that.
+   */
+  deleteFailed: "That thread was not deleted. It is back in the list.",
 } as const;
 
 /** One row in the rail. */
@@ -52,6 +62,14 @@ export const THREAD_ROW = {
   open: "Open thread",
   /** The reserved, empty owner slot (04 §10 seam S4/S6). Rendered, never filled. */
   ownerSlotLabel: "Owner",
+  /**
+   * The marker on the row whose run is currently attached (03 §2.1, R-02).
+   *
+   * One word, because that row's whole claim is that `?job=` survives
+   * navigation through it — and the word is what a forced-colours or
+   * monochrome reader gets instead of the `live` hue (03 §3.4).
+   */
+  live: "Live",
 } as const;
 
 /** "3 turns", and the singular that a naive template gets wrong. */
@@ -93,6 +111,14 @@ export interface DeleteDialogCopy {
   confirm: string;
   cancel: string;
   pending: string;
+  /**
+   * The close mark in the dialog's corner.
+   *
+   * It does the same thing Cancel does, so it needs a name that is not the
+   * word "Cancel" — two controls with one accessible name inside a modal is
+   * a control a screen-reader user cannot tell apart from its neighbour.
+   */
+  close: string;
 }
 
 /**
@@ -116,6 +142,7 @@ export function deleteDialog(title: string): DeleteDialogCopy {
     confirm: "Delete thread",
     cancel: "Cancel",
     pending: "Deleting…",
+    close: "Close without deleting",
   };
 }
 

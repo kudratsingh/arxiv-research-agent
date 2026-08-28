@@ -31,7 +31,6 @@
 import type { ReactNode } from "react";
 
 import { Dialog } from "@/components/primitives/Dialog";
-import { ScrollRegion } from "@/components/primitives/ScrollRegion";
 import { SHELL } from "@/lib/copy/shell";
 import { THREAD_RAIL } from "@/lib/copy/threads";
 
@@ -71,12 +70,19 @@ export default function ThreadDrawer({
           }
         }}
       >
-        {/* The rail this wraps is `w-64 shrink-0` (ConversationSidebar.tsx:89)
-            — 256px at every width, which is wider than the dialog's content
-            box at a 320px viewport. ScrollRegion is 04 §8.3 item 4's answer
-            to exactly that: the PANEL pans, the page does not. It comes out
-            when WO-14's ThreadRail replaces the fixed width. */}
-        <ScrollRegion label={SHELL.drawerList}>{children}</ScrollRegion>
+        {/* WO-08 wrapped this in a `ScrollRegion` because the rail it
+            carried was `w-64 shrink-0` (ConversationSidebar.tsx:89) — 256px
+            at every width, wider than the dialog's content box at 320px, so
+            04 §8.3 item 4's pan surface was what kept the PAGE from panning.
+            WO-14's `ThreadRail` has no fixed width: every box in it is
+            `min-w-0` and the one line that could overflow — the thread
+            title — truncates (`.ew-thread-row__title`). The wrapper is
+            therefore redundant, and a redundant `ScrollRegion` is not free:
+            it is `tabindex="0"`, so it adds a focus stop inside the modal
+            for a region that can never scroll. `threads.css` also drops the
+            list's own `overflow-y` inside this element, so there is exactly
+            one scroller in the drawer and it is the dialog's. */}
+        {children}
       </div>
     </Dialog>
   );

@@ -17,14 +17,50 @@
  * own `params.id` as the active thread. Both survive verbatim — the active
  * id now comes from `usePathname()` because a layout has no `params`, and it
  * is decoded because a pathname is percent-encoded and `params.id` was not.
+ * WO-14 changed one thing about the push: the rail hands over a full HREF
+ * rather than an id, because the attached run's row carries `?job=` and an
+ * id cannot express that (criterion 1, R-02).
  *
- * WO-14's `ThreadRail` replaces `ConversationSidebar` and this bridge with
- * it; the shell's `rail` prop is the only thing that has to survive.
+ * WO-14 — THE SWAP, AND WHY THE RAIL ARRIVES LAZILY.
+ * `components/ConversationSidebar.tsx` is no longer rendered here; it stays
+ * on disk until WO-31 removes it, with its own tests still green.
+ * `components/features/ThreadRail.tsx` replaces it through `React.lazy`,
+ * for the same reason WO-08 lazily imports `ThreadDrawer`: this module is
+ * reached from `app/(workspace)/layout.tsx`, so everything it imports
+ * statically is charged to BOTH routes' first-load JavaScript, and the rail
+ * pulls in TanStack Query (+8,016 B gzip on `/` when WO-08 measured it) and
+ * two Radix packages. `/` has 4,632 B of headroom under RC-01's 148,480 B
+ * ceiling. The fallback below is not a placeholder for that split — it is
+ * the rail's own loading state, the same chrome and the same three rows at
+ * the same height (03 §2.2 row 2), so the chunk boundary cannot be seen and
+ * cannot shift anything when it resolves.
  */
 
 import { usePathname, useRouter } from "next/navigation";
+import { Suspense, lazy } from "react";
 
-import ConversationSidebar from "@/components/ConversationSidebar";
+import {
+  ThreadListSkeleton,
+  ThreadRailFrame,
+} from "@/components/patterns/ThreadRailFrame";
+import { THREAD_RAIL } from "@/lib/copy/threads";
+
+/**
+ * The request is started when this MODULE is evaluated, not when the rail
+ * first renders.
+ *
+ * `lazy(() => import(…))` defers the request to first render, which is the
+ * right default for a surface that may never be shown — the drawer WO-08
+ * lazily imports is exactly that. This rail is the opposite: it is rendered
+ * on every route in the workbench, unconditionally, so waiting for a render
+ * to begin fetching it buys nothing and costs a round trip on the critical
+ * path. Hoisting the `import()` keeps the only property the budget
+ * accounting cares about — it is still a separate chunk, absent from both
+ * routes' first-load union — while removing the latency, and it is what
+ * makes the fallback a frame rather than a state.
+ */
+const railChunk = import("@/components/features/ThreadRail");
+const ThreadRail = lazy(() => railChunk);
 
 /** `/c/<id>` → `<id>`, decoded. Anything else → `null`. */
 export function activeConversationIdFrom(pathname: string | null): string | null {
@@ -39,16 +75,31 @@ export function activeConversationIdFrom(pathname: string | null): string | null
   }
 }
 
+/** The rail's chrome with its three reserved rows, and no data layer at all. */
+export function ThreadRailFallback() {
+  return (
+    <ThreadRailFrame
+      heading={THREAD_RAIL.heading}
+      newThreadLabel={THREAD_RAIL.newThread}
+      state="loading"
+    >
+      <ThreadListSkeleton label={THREAD_RAIL.loading} />
+    </ThreadRailFrame>
+  );
+}
+
 export default function ThreadRailBridge() {
   const router = useRouter();
   const pathname = usePathname();
 
   return (
-    <ConversationSidebar
-      activeConversationId={activeConversationIdFrom(pathname)}
-      onNavigate={(conversationId) => {
-        router.push(conversationId ? `/c/${conversationId}` : "/");
-      }}
-    />
+    <Suspense fallback={<ThreadRailFallback />}>
+      <ThreadRail
+        activeConversationId={activeConversationIdFrom(pathname)}
+        onNavigate={(href) => {
+          router.push(href);
+        }}
+      />
+    </Suspense>
   );
 }
