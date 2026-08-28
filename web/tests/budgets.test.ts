@@ -1,0 +1,651 @@
+/**
+ * Tests for the route budget check (WO-23).
+ *
+ * The build-dependent behaviour is exercised against synthetic fixture
+ * manifests written to a temp directory, so the suite runs without `.next`
+ * present and is independent of whatever the real build currently weighs.
+ */
+
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import zlib from "node:zlib";
+import { fileURLToPath } from "node:url";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import {
+  GZIP_LEVEL,
+  emittedCssFiles,
+  evaluate,
+  formatBytes,
+  formatDelta,
+  gzipBytes,
+  isOnRouteSegmentPath,
+  loadBudgets,
+  measure,
+  parseBudgetBytes,
+  renderReport,
+  routeFirstLoadFiles,
+  run,
+  selfHostedFontFiles,
+  sharedFirstLoadFiles,
+  verifyAgainstPrerenderedHtml,
+  type BudgetRow,
+  type BudgetsFile,
+} from "../scripts/route-budgets.mjs";
+
+const WEB_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SCRIPT_PATH = path.join(WEB_DIR, "scripts", "route-budgets.mjs");
+const BUDGETS_PATH = path.join(WEB_DIR, "budgets.json");
+
+// ---------------------------------------------------------------------------
+// Fixture build
+// ---------------------------------------------------------------------------
+
+/** Deterministic filler that compresses predictably. */
+function filler(seed: string, length: number): string {
+  let out = "";
+  while (out.length < length) out += `${seed}${out.length};`;
+  return out.slice(0, length);
+}
+
+function write(file: string, contents: string): void {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, contents, "utf8");
+}
+
+interface Fixture {
+  root: string;
+  nextDir: string;
+}
+
+/**
+ * A miniature Next 16 webpack build: the two manifests the script reads, the
+ * client-reference manifests that replaced the deleted `app-build-manifest.json`,
+ * the emitted chunks, one stylesheet, and the prerendered HTML for `/`.
+ *
+ * It deliberately reproduces the two traps in a real build: `/c/[id]`'s
+ * client-reference manifest also lists `/`'s page module, and the root layout's
+ * only client module is a stylesheet whose JS stub is never in the script set.
+ */
+function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } = {}): Fixture {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "wo23-budgets-"));
+  const nextDir = path.join(root, ".next");
+
+  const chunks: Record<string, string> = {
+    "static/chunks/webpack-1111111111111111.js": filler("webpack", 2_000),
+    "static/chunks/4bd1b696-2222222222222222.js": filler("framework", 40_000),
+    "static/chunks/794-3333333333333333.js": filler("nextruntime", 30_000),
+    "static/chunks/main-app-4444444444444444.js": filler("mainapp", 400),
+    "static/chunks/polyfills-5555555555555555.js": filler("polyfill", 90_000),
+    "static/chunks/756-6666666666666666.js": filler("sharedvendor", 6_000),
+    "static/chunks/454-7777777777777777.js": filler("markdown", 100_000),
+    "static/chunks/app/page-8888888888888888.js": filler("homepage", 5_000),
+    "static/chunks/app/layout-9999999999999999.js": filler("layoutstub", 190),
+    "static/chunks/app/c/[id]/page-aaaaaaaaaaaaaaaa.js": filler("convpage", 20_000),
+  };
+  for (const [rel, body] of Object.entries(chunks)) write(path.join(nextDir, rel), body);
+  write(path.join(nextDir, "static/css/bbbbbbbbbbbbbbbb.css"), filler(".a{color:red}", 15_000));
+
+  write(
+    path.join(nextDir, "build-manifest.json"),
+    JSON.stringify({
+      polyfillFiles: ["static/chunks/polyfills-5555555555555555.js"],
+      devFiles: [],
+      lowPriorityFiles: [],
+      rootMainFiles: [
+        "static/chunks/webpack-1111111111111111.js",
+        "static/chunks/4bd1b696-2222222222222222.js",
+        "static/chunks/794-3333333333333333.js",
+        "static/chunks/main-app-4444444444444444.js",
+      ],
+      rootMainFilesTree: {},
+      pages: { "/_app": [] },
+    }),
+  );
+
+  write(
+    path.join(nextDir, "app-path-routes-manifest.json"),
+    JSON.stringify({
+      "/page": "/",
+      "/c/[id]/page": "/c/[id]",
+      "/api/[...path]/route": "/api/[...path]",
+    }),
+  );
+
+  const homeModules = {
+    [`${root}/app/page.tsx#`]: {
+      chunks: ["756", "static/chunks/756-6666666666666666.js", "974", "static/chunks/app/page-8888888888888888.js"],
+    },
+    [`${root}/app/globals.css`]: {
+      chunks: ["177", "static/chunks/app/layout-9999999999999999.js"],
+    },
+    [`${root}/node_modules/next/dist/client/components/layout-router.js`]: { chunks: [] },
+  };
+  // The real Next 16 manifest for `/c/[id]` also carries `/`'s page module.
+  const convModules = {
+    ...homeModules,
+    [`${root}/app/c/[id]/page.tsx#default`]: {
+      chunks: [
+        "756",
+        "static/chunks/756-6666666666666666.js",
+        "454",
+        "static/chunks/454-7777777777777777.js",
+        "378",
+        "static/chunks/app/c/%5Bid%5D/page-aaaaaaaaaaaaaaaa.js",
+      ],
+    },
+  };
+
+  write(
+    path.join(nextDir, "server/app/page_client-reference-manifest.js"),
+    `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/page"]=${JSON.stringify(
+      { clientModules: homeModules, entryCSSFiles: {} },
+    )};`,
+  );
+  write(
+    path.join(nextDir, "server/app/c/[id]/page_client-reference-manifest.js"),
+    `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/c/[id]/page"]=${JSON.stringify(
+      { clientModules: convModules, entryCSSFiles: {} },
+    )};`,
+  );
+
+  write(
+    path.join(nextDir, "server/app/index.html"),
+    [
+      '<link rel="stylesheet" href="/_next/static/css/bbbbbbbbbbbbbbbb.css"/>',
+      '<link rel="preload" as="script" href="/_next/static/chunks/webpack-1111111111111111.js"/>',
+      '<script src="/_next/static/chunks/4bd1b696-2222222222222222.js" async=""></script>',
+      '<script src="/_next/static/chunks/794-3333333333333333.js" async=""></script>',
+      '<script src="/_next/static/chunks/main-app-4444444444444444.js" async=""></script>',
+      '<script src="/_next/static/chunks/756-6666666666666666.js" async=""></script>',
+      '<script src="/_next/static/chunks/app/page-8888888888888888.js" async=""></script>',
+      '<script src="/_next/static/chunks/polyfills-5555555555555555.js" noModule=""></script>',
+      '<script src="/_next/static/chunks/webpack-1111111111111111.js" id="_R_" async=""></script>',
+    ].join("\n"),
+  );
+
+  for (const font of options.fonts ?? []) {
+    const abs = path.join(root, font.rel);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, Buffer.alloc(font.size, 7));
+  }
+
+  return { root, nextDir };
+}
+
+function fixtureBudgets(overrides: Partial<Record<string, number>> = {}): BudgetsFile {
+  const rows: BudgetRow[] = [
+    {
+      id: "route-js-home",
+      kind: "route-first-load-js",
+      route: "/",
+      label: "`/` first-load JS, excl. polyfill",
+      budgetBytes: overrides["route-js-home"] ?? 5_000_000,
+      baselineBytes: 1,
+      enforcement: "gated",
+    },
+    {
+      id: "route-js-conversation",
+      kind: "route-first-load-js",
+      route: "/c/[id]",
+      label: "`/c/[id]` first-load JS, excl. polyfill",
+      budgetBytes: overrides["route-js-conversation"] ?? 5_000_000,
+      enforcement: "gated",
+    },
+    {
+      id: "shared-framework-runtime",
+      kind: "shared-first-load-js",
+      label: "Shared framework/runtime chunk",
+      budgetBytes: overrides["shared-framework-runtime"] ?? 5_000_000,
+      enforcement: "gated",
+    },
+    {
+      id: "emitted-css",
+      kind: "emitted-css",
+      label: "All emitted CSS",
+      budgetBytes: overrides["emitted-css"] ?? 5_000_000,
+      enforcement: "gated",
+    },
+    {
+      id: "self-hosted-fonts",
+      kind: "self-hosted-fonts",
+      label: "All self-hosted font files (woff2, latin subset)",
+      budgetBytes: overrides["self-hosted-fonts"] ?? 5_000_000,
+      enforcement: "gated",
+    },
+    {
+      id: "total-transferred-js",
+      kind: "external-total-transferred-js",
+      label: "Total transferred JS on a settled report route, incl. lazy chunks",
+      budgetBytes: 245_760,
+      enforcement: "external",
+      enforcedBy: "WO-21 -- Playwright network-transfer assertion",
+    },
+    {
+      id: "derived-total-first-load",
+      kind: "derived-total-first-load",
+      label: "Derived: total first-load transfer for `/c/[id]`, cold cache",
+      budgetBytes: 334_848,
+      enforcement: "reported",
+      derivedFrom: ["route-js-conversation", "emitted-css", "self-hosted-fonts"],
+    },
+  ];
+  return { source: "fixture", rows };
+}
+
+function gzipOf(fixture: Fixture, rel: string): number {
+  return gzipBytes(fs.readFileSync(path.join(fixture.nextDir, rel)));
+}
+
+let fixture: Fixture;
+
+beforeEach(() => {
+  fixture = makeFixture();
+});
+
+afterEach(() => {
+  fs.rmSync(fixture.root, { recursive: true, force: true });
+});
+
+// ---------------------------------------------------------------------------
+
+describe("byte parsing (criterion 2: budgets are bytes, not KB strings)", () => {
+  it("accepts non-negative integers", () => {
+    expect(parseBudgetBytes(0)).toBe(0);
+    expect(parseBudgetBytes(148_480)).toBe(148_480);
+  });
+
+  it.each([["145 KiB"], ["145 KB"], ["148480"], [148_480.5], [-1], [null], [undefined], [{}]])(
+    "rejects %o",
+    (value) => {
+      expect(() => parseBudgetBytes(value as unknown)).toThrow(/integer number of BYTES/);
+    },
+  );
+
+  it("names the offending row in the error", () => {
+    expect(() => parseBudgetBytes("12 KB", 'row "emitted-css"')).toThrow(/row "emitted-css"/);
+  });
+
+  it("gzips at zlib level 6, the level that reproduces the retained baseline", () => {
+    expect(GZIP_LEVEL).toBe(6);
+    const sample = Buffer.from(filler("sample", 50_000));
+    expect(gzipBytes(sample)).toBe(zlib.gzipSync(sample, { level: 6 }).length);
+    expect(gzipBytes(sample)).not.toBe(zlib.gzipSync(sample, { level: 9 }).length);
+  });
+
+  it("formats bytes and deltas with an explicit KiB conversion", () => {
+    expect(formatBytes(137_272)).toBe("137,272 B (134.1 KiB)");
+    expect(formatBytes(null)).toBe("—");
+    expect(formatDelta(11_208)).toBe("+11,208 B");
+    expect(formatDelta(-7_985)).toBe("−7,985 B");
+    expect(formatDelta(0)).toBe("±0 B");
+  });
+});
+
+describe("route -> chunk association from the fixture manifests", () => {
+  it("unions rootMainFiles with the entry's own client chunks and drops polyfills", () => {
+    expect(routeFirstLoadFiles(fixture.nextDir, "/")).toEqual([
+      "static/chunks/4bd1b696-2222222222222222.js",
+      "static/chunks/756-6666666666666666.js",
+      "static/chunks/794-3333333333333333.js",
+      "static/chunks/app/page-8888888888888888.js",
+      "static/chunks/main-app-4444444444444444.js",
+      "static/chunks/webpack-1111111111111111.js",
+    ]);
+  });
+
+  it("decodes percent-encoded dynamic segments and excludes the other route's page chunk", () => {
+    const files = routeFirstLoadFiles(fixture.nextDir, "/c/[id]");
+    expect(files).toContain("static/chunks/app/c/[id]/page-aaaaaaaaaaaaaaaa.js");
+    expect(files).toContain("static/chunks/454-7777777777777777.js");
+    expect(files).not.toContain("static/chunks/app/page-8888888888888888.js");
+    expect(files).not.toContain("static/chunks/polyfills-5555555555555555.js");
+  });
+
+  it("excludes the layout chunk contributed only by a stylesheet module", () => {
+    // Its sole client module is app/globals.css; Next links the stylesheet and
+    // never loads the JS stub, so it is not first-load JS on any route.
+    for (const route of ["/", "/c/[id]"]) {
+      expect(routeFirstLoadFiles(fixture.nextDir, route)).not.toContain(
+        "static/chunks/app/layout-9999999999999999.js",
+      );
+    }
+  });
+
+  it("keeps client modules outside app/ but scopes app/ modules to the route's own path", () => {
+    expect(isOnRouteSegmentPath("components/QueryForm.tsx", "/c/[id]/page")).toBe(true);
+    expect(isOnRouteSegmentPath("app/c/[id]/page.tsx", "/c/[id]/page")).toBe(true);
+    expect(isOnRouteSegmentPath("app/layout.tsx", "/c/[id]/page")).toBe(true);
+    expect(isOnRouteSegmentPath("app/page.tsx", "/c/[id]/page")).toBe(false);
+    expect(isOnRouteSegmentPath("app/other/page.tsx", "/page")).toBe(false);
+  });
+
+  it("fails loudly on an unknown route rather than reporting zero", () => {
+    expect(() => routeFirstLoadFiles(fixture.nextDir, "/nope")).toThrow(
+      /not in \.next\/app-path-routes-manifest\.json/,
+    );
+  });
+
+  it("treats rootMainFiles minus polyfills as the shared framework/runtime set", () => {
+    expect(sharedFirstLoadFiles(fixture.nextDir)).toEqual([
+      "static/chunks/4bd1b696-2222222222222222.js",
+      "static/chunks/794-3333333333333333.js",
+      "static/chunks/main-app-4444444444444444.js",
+      "static/chunks/webpack-1111111111111111.js",
+    ]);
+  });
+
+  it("collects every emitted stylesheet", () => {
+    expect(emittedCssFiles(fixture.nextDir)).toEqual(["static/css/bbbbbbbbbbbbbbbb.css"]);
+  });
+
+  it("cross-checks the manifest union against the prerendered <script src> set", () => {
+    const files = routeFirstLoadFiles(fixture.nextDir, "/");
+    const check = verifyAgainstPrerenderedHtml(fixture.nextDir, "/", files);
+    expect(check).toMatchObject({ checked: true, match: true });
+
+    const skipped = verifyAgainstPrerenderedHtml(fixture.nextDir, "/c/[id]", []);
+    expect(skipped).toMatchObject({ checked: false });
+
+    const mismatch = verifyAgainstPrerenderedHtml(fixture.nextDir, "/", [
+      ...files,
+      "static/chunks/454-7777777777777777.js",
+    ]);
+    expect(mismatch.match).toBe(false);
+    expect(mismatch.onlyInManifest).toEqual(["static/chunks/454-7777777777777777.js"]);
+  });
+});
+
+describe("font row (criterion 3: measured from woff2 files, not the JS manifests)", () => {
+  it("reports zero and no files when WO-02's faces have not landed", () => {
+    expect(selfHostedFontFiles(fixture.root)).toEqual([]);
+    const { measurements } = measure({ webDir: fixture.root, budgets: fixtureBudgets() });
+    const fonts = measurements.find((m) => m.row.id === "self-hosted-fonts");
+    expect(fonts?.measuredBytes).toBe(0);
+    expect(fonts?.fontsPresent).toBe(false);
+    expect(fonts?.notes.join(" ")).toMatch(/WO-02 has not landed/);
+  });
+
+  it("sums raw woff2 bytes from both emission paths once faces exist", () => {
+    fs.rmSync(fixture.root, { recursive: true, force: true });
+    fixture = makeFixture({
+      fonts: [
+        { rel: ".next/static/media/literata-400.woff2", size: 17_000 },
+        { rel: "public/fonts/atkinson-400.woff2", size: 13_000 },
+        { rel: "public/fonts/not-a-font.txt", size: 999 },
+      ],
+    });
+    expect(selfHostedFontFiles(fixture.root)).toHaveLength(2);
+    const { measurements } = measure({ webDir: fixture.root, budgets: fixtureBudgets() });
+    const fonts = measurements.find((m) => m.row.id === "self-hosted-fonts");
+    // Raw bytes, not gzipped: woff2 is already Brotli-compressed internally.
+    expect(fonts?.measuredBytes).toBe(30_000);
+    expect(fonts?.fontsPresent).toBe(true);
+  });
+});
+
+describe("breach detection", () => {
+  function evaluateFixture(overrides: Partial<Record<string, number>> = {}) {
+    const budgets = fixtureBudgets(overrides);
+    const { measurements } = measure({ webDir: fixture.root, budgets });
+    return { budgets, result: evaluate(measurements) };
+  }
+
+  it("passes when every gated row is under its ceiling", () => {
+    const { result } = evaluateFixture();
+    expect(result.breached).toBe(false);
+    expect(result.rows.filter((r) => r.status === "BREACH")).toHaveLength(0);
+  });
+
+  it("breaches when a gated row exceeds its ceiling, and names the row", () => {
+    const measuredCss = gzipOf(fixture, "static/css/bbbbbbbbbbbbbbbb.css");
+    const { result } = evaluateFixture({ "emitted-css": measuredCss - 1 });
+    expect(result.breached).toBe(true);
+    const css = result.rows.find((r) => r.row.id === "emitted-css");
+    expect(css?.status).toBe("BREACH");
+    expect(css?.breached).toBe(true);
+    expect(css?.headroomBytes).toBe(-1);
+  });
+
+  it("treats the ceiling as inclusive: measured == budget passes", () => {
+    const measuredCss = gzipOf(fixture, "static/css/bbbbbbbbbbbbbbbb.css");
+    const { result } = evaluateFixture({ "emitted-css": measuredCss });
+    expect(result.breached).toBe(false);
+    expect(result.rows.find((r) => r.row.id === "emitted-css")?.headroomBytes).toBe(0);
+  });
+
+  it("never breaches on the externally enforced or reported-only rows", () => {
+    const { result } = evaluateFixture({});
+    const external = result.rows.find((r) => r.row.id === "total-transferred-js");
+    expect(external?.status).toBe("EXTERNAL");
+    expect(external?.measuredBytes).toBeNull();
+    expect(external?.breached).toBe(false);
+
+    const derived = result.rows.find((r) => r.row.id === "derived-total-first-load");
+    expect(derived?.status).toBe("REPORTED");
+    expect(derived?.breached).toBe(false);
+  });
+
+  it("even when a reported-only row exceeds its reference ceiling", () => {
+    const budgets = fixtureBudgets();
+    const derivedRow = budgets.rows.find((r) => r.id === "derived-total-first-load");
+    if (derivedRow) derivedRow.budgetBytes = 1;
+    const { measurements } = measure({ webDir: fixture.root, budgets });
+    const result = evaluate(measurements);
+    expect(result.breached).toBe(false);
+    expect(result.rows.find((r) => r.row.id === "derived-total-first-load")?.status).toBe(
+      "REPORTED",
+    );
+  });
+
+  it("derives the total first-load row from JS + CSS + fonts", () => {
+    const { result } = evaluateFixture();
+    const byId = new Map(result.rows.map((r) => [r.row.id, r]));
+    const expected =
+      (byId.get("route-js-conversation")?.measuredBytes ?? 0) +
+      (byId.get("emitted-css")?.measuredBytes ?? 0) +
+      (byId.get("self-hosted-fonts")?.measuredBytes ?? 0);
+    expect(byId.get("derived-total-first-load")?.measuredBytes).toBe(expected);
+  });
+
+  it("reports the delta from the retained baseline", () => {
+    const { result } = evaluateFixture();
+    const home = result.rows.find((r) => r.row.id === "route-js-home");
+    expect(home?.baselineBytes).toBe(1);
+    expect(home?.baselineDeltaBytes).toBe((home?.measuredBytes ?? 0) - 1);
+    expect(home?.baselineExact).toBe(false);
+  });
+});
+
+describe("report format", () => {
+  function report(overrides: Partial<Record<string, number>> = {}): string {
+    const budgets = fixtureBudgets(overrides);
+    const { measurements, crossChecks } = measure({ webDir: fixture.root, budgets });
+    return renderReport({
+      result: evaluate(measurements),
+      budgets,
+      crossChecks,
+      generatedAt: "2026-08-28T00:00:00.000Z",
+      nextVersion: "16.3.3",
+    });
+  }
+
+  it("is a Markdown document with a gated table carrying budget, headroom and baseline delta", () => {
+    const md = report();
+    expect(md.startsWith("# Route budget report")).toBe(true);
+    expect(md).toContain("## Gated rows");
+    expect(md).toContain(
+      "| Row | Measured | Budget | Headroom | Retained baseline | Δ baseline | Status |",
+    );
+    expect(md).toContain("`/` first-load JS, excl. polyfill");
+    expect(md).toContain("`/c/[id]` first-load JS, excl. polyfill");
+  });
+
+  it("marks the 240 KiB total-transferred row as enforced by WO-21 and not gated here", () => {
+    const md = report();
+    expect(md).toContain("## Rows this script does NOT gate");
+    expect(md).toContain("**not gated here**");
+    expect(md).toContain("WO-21");
+    expect(md).toContain("NOT MEASURED HERE");
+    // The number is still visible, so it can never be silently dropped.
+    expect(md).toContain("245,760 B");
+  });
+
+  it("puts the derived row under 'Reported, not gated'", () => {
+    const md = report();
+    const derivedIndex = md.indexOf("Derived: total first-load transfer");
+    expect(derivedIndex).toBeGreaterThan(md.indexOf("## Reported, not gated"));
+    expect(md).toContain("transfer ceiling, not an LCP ceiling");
+  });
+
+  it("states the result and, on a breach, what the two legitimate responses are", () => {
+    expect(report()).toContain("**Result: pass.**");
+    const measuredCss = gzipOf(fixture, "static/css/bbbbbbbbbbbbbbbb.css");
+    const breached = report({ "emitted-css": measuredCss - 1 });
+    expect(breached).toContain("**Result: BREACH.**");
+    expect(breached).toContain("### Breaches");
+    expect(breached).toContain("reduce the payload, or move the ceiling");
+  });
+
+  it("records the method, the baseline reproduction and the manifest cross-check", () => {
+    const md = report();
+    expect(md).toContain("## Method");
+    expect(md).toContain("zlib level 6");
+    expect(md).toContain("## Baseline reproduction");
+    expect(md).toContain("## Manifest cross-check");
+    expect(md).toContain("manifest union == prerendered `<script src>` set");
+    expect(md).toContain("## Chunk detail");
+  });
+
+  it("restates the ratchet rule and lists what it does not cover, including RC-06 CLS", () => {
+    const md = report();
+    expect(md).toContain("## Ratchet rule");
+    expect(md).toContain("no flag and no env var can skip this check");
+    expect(md).toContain("CLS (RC-06)");
+  });
+});
+
+describe("the committed budgets.json encodes RC-01 in bytes", () => {
+  const budgets = loadBudgets(BUDGETS_PATH);
+
+  it("has all seven reconciled rows", () => {
+    expect(budgets.rows.map((r) => r.id)).toEqual([
+      "route-js-home",
+      "route-js-conversation",
+      "shared-framework-runtime",
+      "emitted-css",
+      "self-hosted-fonts",
+      "total-transferred-js",
+      "derived-total-first-load",
+    ]);
+  });
+
+  it.each([
+    ["route-js-home", 148_480, 137_272],
+    ["route-js-conversation", 199_680, 184_745],
+    ["shared-framework-runtime", 122_880, null],
+    ["emitted-css", 12_288, 4_288],
+    ["self-hosted-fonts", 122_880, 0],
+    ["total-transferred-js", 245_760, null],
+    ["derived-total-first-load", 334_848, null],
+  ])("row %s carries the ratified ceiling in bytes", (id, budgetBytes, baselineBytes) => {
+    const row = budgets.rows.find((r) => r.id === id);
+    expect(row?.budgetBytes).toBe(budgetBytes);
+    expect(Number.isInteger(row?.budgetBytes)).toBe(true);
+    expect(row?.baselineBytes ?? null).toBe(baselineBytes);
+  });
+
+  it("gates the five per-asset-class rows, delegates one and only reports one", () => {
+    const by = (enforcement: string) =>
+      budgets.rows.filter((r) => r.enforcement === enforcement).map((r) => r.id);
+    expect(by("gated")).toHaveLength(5);
+    expect(by("external")).toEqual(["total-transferred-js"]);
+    expect(by("reported")).toEqual(["derived-total-first-load"]);
+  });
+
+  it("names WO-21 as the enforcer of the total-transferred row", () => {
+    const row = budgets.rows.find((r) => r.id === "total-transferred-js");
+    expect(row?.enforcedBy).toMatch(/WO-21/);
+  });
+
+  it("rejects a budgets file whose ceiling is a KB string", () => {
+    const bad = path.join(fixture.root, "bad-budgets.json");
+    fs.writeFileSync(
+      bad,
+      JSON.stringify({
+        source: "fixture",
+        rows: [
+          {
+            id: "emitted-css",
+            kind: "emitted-css",
+            label: "All emitted CSS",
+            budgetBytes: "12 KiB",
+            enforcement: "gated",
+          },
+        ],
+      }),
+    );
+    expect(() => loadBudgets(bad)).toThrow(/integer number of BYTES/);
+  });
+});
+
+describe("ratchet rule (criterion 7: nothing can skip the check)", () => {
+  const source = fs.readFileSync(SCRIPT_PATH, "utf8");
+
+  it("reads no environment variable", () => {
+    expect(source).not.toMatch(/process\.env/);
+  });
+
+  it("has no skip/ignore/force escape hatch", () => {
+    expect(source).not.toMatch(/--(skip|ignore|force|no-fail|allow-fail)/);
+    expect(source).not.toMatch(/SKIP_BUDGETS|BUDGETS_SKIP|IGNORE_BUDGET/i);
+  });
+
+  it("refuses any command-line argument, so no flag can be introduced by invocation", () => {
+    expect(source).toContain("this check takes no arguments");
+  });
+
+  it("exits non-zero on breach rather than warning", () => {
+    expect(source).toMatch(/if \(result\.breached\)/);
+    expect(source).toMatch(/return 1;/);
+  });
+
+  it("is wired to an npm script that builds first", () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(WEB_DIR, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    expect(pkg.scripts.budgets).toBe("npm run build && node scripts/route-budgets.mjs");
+    // B4: the build tool stays pinned to webpack.
+    expect(pkg.scripts.build).toBe("next build --webpack");
+  });
+});
+
+describe("run()", () => {
+  it("writes budget-report.md next to budgets.json and returns the verdict", () => {
+    fs.copyFileSync(BUDGETS_PATH, path.join(fixture.root, "budgets.json"));
+    fs.mkdirSync(path.join(fixture.root, "node_modules", "next"), { recursive: true });
+    fs.writeFileSync(
+      path.join(fixture.root, "node_modules", "next", "package.json"),
+      JSON.stringify({ version: "16.3.3" }),
+    );
+    const { result, reportPath } = run({ webDir: fixture.root, now: new Date(0) });
+    expect(reportPath).toBe(path.join(fixture.root, "budget-report.md"));
+    expect(fs.readFileSync(reportPath, "utf8")).toContain("# Route budget report");
+    expect(result.rows).toHaveLength(7);
+  });
+
+  it("explains how to fix a missing build instead of measuring nothing", () => {
+    const empty = fs.mkdtempSync(path.join(os.tmpdir(), "wo23-empty-"));
+    try {
+      expect(() =>
+        measure({ webDir: empty, budgets: fixtureBudgets() } as {
+          webDir: string;
+          budgets: BudgetsFile;
+        }),
+      ).toThrow(/npm run build/);
+    } finally {
+      fs.rmSync(empty, { recursive: true, force: true });
+    }
+  });
+});

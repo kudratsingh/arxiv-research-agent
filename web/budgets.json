@@ -1,0 +1,110 @@
+{
+  "source": "RC-01, the seven-row reconciled budget table in docs/revamp/06-WORK-ORDERS.md §1, ratified at Gate 2 (docs/revamp/DECISIONS.md D-010)",
+  "$comment": [
+    "Every ceiling here is an INTEGER NUMBER OF BYTES, never a \"KB\" string (WO-23 criterion 2).",
+    "scripts/route-budgets.mjs rejects anything else outright, so the comparison is unambiguous.",
+    "RC-01 prints KiB for humans; budgetLabel carries that text and is display-only.",
+    "",
+    "RATCHET RULE (04-ARCHITECTURE.md §8.4): a ceiling may only move in a PR that edits this file",
+    "in the same commit and states the reason in the PR body. No environment variable and no CLI",
+    "flag skips the check -- scripts/route-budgets.mjs accepts no arguments and reads no environment,",
+    "and tests/budgets.test.ts asserts that against the script's own source text.",
+    "",
+    "baselineBytes are the retained Gate 1 measurements in docs/revamp/baseline/README.md",
+    "(\"Bundle baseline\"), reproduced by this script from the current build as its correctness proof."
+  ],
+  "method": {
+    "compression": "gzip",
+    "zlibLevel": 6,
+    "aggregation": "sum-of-per-file-gzip",
+    "polyfills": "excluded from every JavaScript row, per RC-01 'excl. polyfill'",
+    "fonts": "raw woff2 bytes -- woff2 is already Brotli-compressed, so file size is wire weight",
+    "note": "zlib level 6 is not a preference: summing per-file level-6 gzip over the /c/[id] first-load union reproduces the retained baseline's 184,745 B exactly, and no other level does."
+  },
+  "rows": [
+    {
+      "id": "route-js-home",
+      "kind": "route-first-load-js",
+      "route": "/",
+      "label": "`/` first-load JS, excl. polyfill",
+      "budgetBytes": 148480,
+      "budgetLabel": "145 KiB",
+      "baselineBytes": 137272,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)"
+    },
+    {
+      "id": "route-js-conversation",
+      "kind": "route-first-load-js",
+      "route": "/c/[id]",
+      "label": "`/c/[id]` first-load JS, excl. polyfill",
+      "budgetBytes": 199680,
+      "budgetLabel": "195 KiB",
+      "baselineBytes": 184745,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)"
+    },
+    {
+      "id": "shared-framework-runtime",
+      "kind": "shared-first-load-js",
+      "label": "Shared framework/runtime chunk",
+      "budgetBytes": 122880,
+      "budgetLabel": "120 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "definition": "The build manifest's rootMainFiles minus polyfillFiles -- the chunk set every app route loads (webpack runtime, React framework chunk, Next app-router client runtime, main-app). This is Next's 'First Load JS shared by all'. RC-01 records this row's baseline as '(subset of the above)' rather than a number, i.e. it was never measured; see the PR body for the consequence."
+    },
+    {
+      "id": "emitted-css",
+      "kind": "emitted-css",
+      "label": "All emitted CSS",
+      "budgetBytes": 12288,
+      "budgetLabel": "12 KiB",
+      "baselineBytes": 4288,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)"
+    },
+    {
+      "id": "self-hosted-fonts",
+      "kind": "self-hosted-fonts",
+      "label": "All self-hosted font files (woff2, latin subset)",
+      "budgetBytes": 122880,
+      "budgetLabel": "120 KiB",
+      "baselineBytes": 0,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "definition": "Raw bytes of every emitted woff2, found in .next/static/media (next/font/local) and public/ (hand-rolled @font-face). Measured from the font binaries, never from the JS manifests (WO-23 criterion 3). Reports 0 B and is flagged as not-yet-meaningful until WO-02's measured faces land."
+    },
+    {
+      "id": "total-transferred-js",
+      "kind": "external-total-transferred-js",
+      "label": "Total transferred JS on a settled report route, incl. lazy chunks",
+      "budgetBytes": 245760,
+      "budgetLabel": "240 KiB",
+      "baselineBytes": null,
+      "gate": "per-PR chromium E2E",
+      "enforcement": "external",
+      "enforcedBy": "WO-21 -- a Playwright network-transfer assertion on a settled report route, in the per-PR chromium job",
+      "definition": "Lazy chunks are fetched at runtime, so this row CANNOT be derived from the build manifests (WO-23 criterion 4). It is carried here so the ceiling has a single home and is visible in budget-report.md, explicitly marked as not gated by npm run budgets."
+    },
+    {
+      "id": "derived-total-first-load",
+      "kind": "derived-total-first-load",
+      "label": "Derived: total first-load transfer for `/c/[id]`, cold cache",
+      "budgetBytes": 334848,
+      "budgetLabel": "327 KiB",
+      "baselineBytes": null,
+      "gate": "reported, not gated",
+      "enforcement": "reported",
+      "enforcedBy": "nobody -- reported only (RC-01, WO-23 criterion 5)",
+      "derivedFrom": ["route-js-conversation", "emitted-css", "self-hosted-fonts"],
+      "definition": "JS + CSS + fonts. A transfer ceiling, not an LCP ceiling: fonts load font-display: swap, are cached across both routes, and do not block first paint."
+    }
+  ]
+}
