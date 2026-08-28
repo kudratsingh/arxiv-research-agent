@@ -109,8 +109,11 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   shared-workspace assumption was **rejected as the end state** — real
   end-user multi-tenancy is tracked as a separate, own-gated backend
   workstream (MT-01 in `docs/revamp/STATUS.md`), not part of this revamp.
-- [ ] Gate 2 approval after Phases 2–4: design brief/tokens, architecture,
-  budgets, migration strategy, full work-order set, and dependency graph.
+- [x] Gate 2 approval after Phases 2–4 (2026-08-28, under the user's
+  standing delegation): design brief/tokens (PR #71), architecture +
+  migration (PR #70), work orders + dependency graph (PR #72) — all
+  independently reviewed (reject → corrected → approve) and merged on
+  green CI; the sixteen rulings are `docs/revamp/DECISIONS.md` D-010.
 - [ ] Gate 3 approval after the foundation and one complete vertical slice
   are merged: Storybook/state evidence, end-to-end behavior, and tests.
 - [ ] Gate 4 approval after quality hardening and documentation: before/after
@@ -802,6 +805,19 @@ Product implementation remains intentionally blocked until Gate 1 is approved.
   boundaries. Remaining: merge the reviewed PR, provision only after
   explicit Hetzner cost approval, verify TLS/health on the host, then
   separately approve one paid Anthropic end-to-end query.
+- _2026-08-28_ — Frontend revamp Gate 2 closed. Three concurrent Opus
+  author agents produced the Phase 2–4 package (Evidence Workbench design
+  brief + machine-readable tokens, architecture + migration plan, 33
+  work orders with a verified dependency graph), plus the separate MT-01
+  multi-tenancy proposal (PROPOSED, awaiting the user's own gate). An
+  independent package reviewer rejected the first pass (2 Major /
+  14 Minor — all corrected pre-merge on the work-orders branch), then
+  approved with zero unresolved findings. All four PRs (#69–#72)
+  squash-merged on green CI. The sixteen Gate 2 rulings were ratified
+  under the user's standing delegation (`docs/revamp/DECISIONS.md`
+  D-010). Implementation (EXEC) begins: 26 Gate 3 work orders + 7
+  Gate 4, run as a concurrent worktree-agent fleet, merges gated on
+  green CI. Cost-bearing actions and MT-01 remain reserved for the user.
 - _2026-08-28_ — Frontend revamp Gate 1 closed. The interrupted second-pass
   independent review was re-run by a fresh reviewer and returned APPROVE
   with two minor, non-blocking findings (Lighthouse capture provenance —

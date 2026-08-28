@@ -1002,9 +1002,11 @@ produce is either mapped or falls through visibly.
 **Recommendation: keep it unavailable in the UI, and make that a stated
 design rule rather than an omission.**
 
-`hitl_bypass` exists for programmatic callers — the eval runner uses it
-so nightly benchmarks do not stall (`src/api/schemas.py:41-47`,
-`src/eval/runner.py:295`). It is already plumbed through the client
+`hitl_bypass` exists for programmatic HTTP callers
+(`src/api/schemas.py:41-47`); the eval runner reaches the same outcome a
+different way — it builds the workflow with `enable_hitl=False`
+(`src/eval/runner.py:297`), so the field has no non-test consumer in
+this repository. It is already plumbed through the client
 (`ResearchSubmitOptions.hitl_bypass`, `web/lib/api.ts:26-37`) and simply
 never set.
 
