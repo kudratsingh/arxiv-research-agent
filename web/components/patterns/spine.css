@@ -1,0 +1,112 @@
+/* =========================================================================
+ * WO-15 — the trace spine's three structural rules.
+ *
+ * There are exactly three things this file exists for, and every one of
+ * them is an acceptance criterion rather than a style preference:
+ *
+ *   1. THE TICK ENTRANCE IS OPACITY AND NOTHING ELSE (03 §5.6, criterion
+ *      7). "The last observed tick fades in over dur-fast, opacity only, no
+ *      translation — a checkpoint arriving must never move the reading
+ *      column (CLS budget 0.00)." So `ew-spine-tick-in` declares one
+ *      property. There is no transform to remove under reduced motion,
+ *      which is why the reduced-motion block at the bottom removes the
+ *      animation itself rather than a translation.
+ *
+ *   2. THE BLIND SPOT IS STATIC UNDER EVERY MOTION SETTING (03 §5.6,
+ *      criterion 8). "The one thing that must never animate is the region
+ *      the UI knows nothing about, because motion there would read as
+ *      activity." `.ew-spine-void` therefore declares no animation and no
+ *      transition anywhere in this file — not in the base rule, not in a
+ *      media block, not in a hover state. `web/tests/patterns/TraceSpine.test.tsx`
+ *      asserts that mechanically over the parsed stylesheet, in both motion
+ *      conditions, rather than trusting the reading of it.
+ *
+ *   3. THE BLIND SPOT IS DIMENSIONED (03 §5.8). It is "a visible,
+ *      dimensioned, deliberately static dashed void" — so it has a floor
+ *      width of --space-16 and grows into whatever the row has left. A void
+ *      that collapsed to nothing when the ledger got long would be the one
+ *      thing the design cannot do: hide its own blind spot.
+ *
+ * NO LITERAL COLOUR, NO LITERAL DURATION AND NO LITERAL LENGTH THAT A TOKEN
+ * OWNS. --size-trace-dot and --size-trace-rule were reserved by WO-01 for
+ * exactly this surface; the reading column's stability comes from
+ * min-height on the two rows a checkpoint can land in.
+ * ========================================================================= */
+
+/* -------------------------------------------------------------------------
+ * The run row: ticks, then the void, on one baseline.
+ *
+ * `min-height` rather than `height`: the row must not GROW when the first
+ * tick arrives (that is the CLS budget), and must still accommodate a
+ * wrapped label on a 320px viewport.
+ * ---------------------------------------------------------------------- */
+.ew-spine-run {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-target-min);
+  min-width: 0;
+}
+
+/* The ledger reserves its line before it has anything in it, so the first
+ * checkpoint fades in rather than pushing the sentence below it down. */
+.ew-spine-ledger {
+  min-height: var(--size-target-min);
+}
+
+/* -------------------------------------------------------------------------
+ * 1. The tick entrance — opacity only.
+ * ---------------------------------------------------------------------- */
+.ew-spine-tick {
+  animation: ew-spine-tick-in var(--duration-fast) var(--ease-enter) both;
+}
+
+@keyframes ew-spine-tick-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 2 and 3. The dimensioned, static, dashed void.
+ *
+ * A border rather than a background gradient: a dashed border is one
+ * declaration, inherits nothing that could animate, and renders in forced
+ * colours where a gradient does not.
+ * ---------------------------------------------------------------------- */
+.ew-spine-void {
+  flex: 1 1 var(--space-16);
+  min-width: var(--space-16);
+  align-self: center;
+  border-top-width: var(--size-trace-rule);
+  border-top-style: dashed;
+  border-top-color: var(--color-ink-faint);
+}
+
+/* The gap the recording proves was lost (03 §5.4, "Reconnecting: ticks
+ * kept, then a broken rule"). Still no motion: a break is a shape. */
+.ew-spine-void[data-current="false"] {
+  border-top-style: dotted;
+}
+
+/* -------------------------------------------------------------------------
+ * Reduced motion (03 §3.7, §5.6)
+ *
+ * app/tokens.css has already collapsed --duration-fast to 1ms by the time
+ * this applies. A 1ms one-shot fade is a still mark, but removing the
+ * animation outright is the honest reading of "transform-based entrances
+ * are removed" for a surface whose entrance is the only motion it has.
+ *
+ * `.ew-spine-void` is deliberately ABSENT from this block. It has nothing
+ * to disable, in either direction, which is the property criterion 8 asks
+ * for: static under EVERY motion setting, not merely under reduced motion.
+ * ---------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .ew-spine-tick {
+    animation: none;
+  }
+}
