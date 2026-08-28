@@ -1,0 +1,95 @@
+/* =========================================================================
+ * WO-06 — the two emulations, and nothing else.
+ *
+ * THIS FILE CONTAINS NO LITERAL COLOUR. Every value below is either a CSS
+ * system-colour keyword -- the small palette a forced-colors user agent
+ * substitutes for the author's palette -- or a duration copied from
+ * docs/revamp/design/tokens.json's reduced-motion policy. web/app/tokens.css
+ * remains the only file in web/ with a colour value, and
+ * web/tests/tokens.test.ts walks this file to prove it.
+ *
+ * Both blocks override tokens, never components. That is the whole design:
+ * because the product resolves colour and duration through custom
+ * properties, emulating a user-agent mode is a matter of rebinding the
+ * properties, and every component inherits the emulation without knowing it
+ * exists.
+ * ========================================================================= */
+
+/* -------------------------------------------------------------------------
+ * forced-colors: active (theme toolbar -> "Forced colours")
+ *
+ * A forced-colors UA discards author colours and paints from the system
+ * palette. Twenty-three semantic roles collapse onto five or six keywords,
+ * which is precisely why RC-17 refuses to let colour be the only carrier of
+ * a status: `review` and `warning` already share a hue, and here `signature`,
+ * `review` and `critical` become the same CanvasText as body copy. The word
+ * and the mark are what survive.
+ *
+ * Specificity is (0,2,0) -- the same as :root[data-theme="dark"] -- and this
+ * sheet is imported after app/tokens.css, so it wins on source order in both
+ * themes.
+ * ---------------------------------------------------------------------- */
+:root[data-forced-colors="active"] {
+  forced-color-adjust: none;
+
+  /* Surfaces all become the one system canvas; depth is carried by the
+   * border, which is why elevation goes to none below. */
+  --color-canvas: Canvas;
+  --color-surface: Canvas;
+  --color-sunken: Canvas;
+
+  /* Text. Only the disabled role keeps a separate keyword, because
+   * GrayText is the one distinction the system palette preserves. */
+  --color-ink: CanvasText;
+  --color-ink-muted: CanvasText;
+  --color-ink-faint: CanvasText;
+  --color-ink-disabled: GrayText;
+
+  /* Rules and outlines. A forced-colors UA keeps borders visible, so both
+   * weights resolve to the text colour rather than disappearing. */
+  --color-border-subtle: CanvasText;
+  --color-border-strong: CanvasText;
+
+  /* Interactive. LinkText is the only "accent" the palette offers. */
+  --color-primary: LinkText;
+  --color-primary-strong: LinkText;
+  --color-primary-on: Canvas;
+  --color-focus: Highlight;
+
+  /* Status roles. All three lose their hue; see RC-17. */
+  --color-signature: CanvasText;
+  --color-signature-text: CanvasText;
+  --color-signature-on: Canvas;
+  --color-review: CanvasText;
+  --color-review-text: CanvasText;
+  --color-review-surface: Canvas;
+  --color-critical: CanvasText;
+  --color-critical-text: CanvasText;
+  --color-critical-surface: Canvas;
+  --color-critical-on: Canvas;
+
+  /* Shadows are not painted in forced colours at all. */
+  --elevation-0: none;
+  --elevation-1: none;
+  --elevation-2: none;
+  --elevation-3: none;
+}
+
+/* -------------------------------------------------------------------------
+ * prefers-reduced-motion: reduce (motion toolbar -> "Motion: reduced")
+ *
+ * tokens.json motion.reducedMotion.policy item 1: "All transition-duration
+ * and animation-duration become 1ms". app/tokens.css already does this
+ * behind the media query; the values below are the same four, so the
+ * emulated state and the real one are indistinguishable to a component.
+ * --duration-instant is already 0ms and is left alone.
+ * ---------------------------------------------------------------------- */
+:root[data-reduced-motion="reduce"] {
+  --duration-fast: 1ms;
+  --duration-base: 1ms;
+  --duration-slow: 1ms;
+  --duration-ambient: 1ms;
+
+  /* Policy item 4: report heading anchors use scroll-behavior: auto. */
+  scroll-behavior: auto;
+}
