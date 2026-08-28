@@ -2468,15 +2468,17 @@ them. Both start at the tokens and end at the Gate 4 evidence pack:
 - **By dependency depth (chain B):** WO-01 → WO-02 → WO-06 → WO-07 → WO-08 →
   WO-21 → WO-22 → WO-24 → WO-26 → WO-31 → WO-32 → WO-33.
 
-They share a seven-node head and tail and differ only in the middle: chain A
-runs through the reading surfaces, chain B through the test harness and CI
-wiring. **Either one is the schedule-determining path**, so neither can be
-descheduled in favour of the other.
+They share a four-node head (WO-01 → WO-02 → WO-06 → WO-07) and a four-node
+tail (WO-26 → WO-31 → WO-32 → WO-33), and differ only across the four in the
+middle: chain A runs through the reading surfaces, chain B through the test
+harness and CI wiring. **Either one is the schedule-determining path**, so
+neither can be descheduled in favour of the other.
 
 **The path to plan against, ranked by size and risk rather than node count,
-is chain B's shell variant:** WO-01 → WO-02 → WO-06 → WO-07 → WO-08 → WO-09
-→ WO-20 → WO-26 → WO-31 → WO-32 → WO-33 — 11 nodes but carrying three L
-units (WO-07, WO-08, WO-20). Nothing shortens the head of any of these:
+is a third chain through the shell** — it leaves chain B at WO-08:
+WO-01 → WO-02 → WO-06 → WO-07 → WO-08 → WO-09 → WO-20 → WO-26 → WO-31 →
+WO-32 → WO-33 — 11 nodes but carrying three L units (WO-07, WO-08, WO-20).
+Nothing shortens the head of any of these:
 tokens gate fonts, fonts gate the Storybook theme decorator, the decorator
 gates the primitive stories, the primitives gate the shell, and the shell
 gates every route.
