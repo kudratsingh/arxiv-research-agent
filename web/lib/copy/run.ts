@@ -353,23 +353,23 @@ export const BRIEFING = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Diagnostics (04 §9.2).
+// Diagnostics (04 §9.2) — MOVED to `lib/copy/diagnostics.ts` by WO-16.
+//
+// WO-12 wrote `DIAGNOSTICS` here as a handoff, before WO-16's own copy file
+// existed. It now lives in that file, verbatim and unedited, for two
+// reasons:
+//
+//   1. 06-WORK-ORDERS.md §5.6's file-ownership table gives each surface
+//      work order one copy file, so the surface that renders a string and
+//      the file that holds it stay together.
+//   2. It is what keeps `components/patterns/Diagnostics.tsx` from pulling
+//      this module into the Storybook project's graph. vitest.config.mts
+//      records the consequence in full: a module loaded by BOTH vitest
+//      projects has its function list CONCATENATED in the merged coverage
+//      report, and `run.ts`'s ten composers are driven by
+//      `tests/copy/forbidden.test.ts` in the unit project and by nothing at
+//      all in the storybook one. The measured cost of the static import was
+//      ten uncovered functions.
+//
+// Nothing else moved, and no wording changed.
 // ---------------------------------------------------------------------------
-
-/**
- * The diagnostics disclosure — collapsed by default, so routine SSE frames
- * are never announced (03 §7.3).
- *
- * `copyNote` states the redaction rule as a promise the user can check:
- * no report text, no question text, no headers, no URLs beyond the path
- * template, and nothing transmitted anywhere.
- */
-export const DIAGNOSTICS = {
-  label: "Technical events",
-  logLabel: "Received frames",
-  empty: "No frames have been received on this connection.",
-  copyAction: "Copy diagnostics",
-  copyNote:
-    "Copies the last 200 frames and the raw error strings to the clipboard. No question text, no briefing text, no headers and no keys, and nothing is sent anywhere.",
-  copied: "Copied to the clipboard.",
-} as const;
