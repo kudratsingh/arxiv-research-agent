@@ -118,9 +118,11 @@ export const radius = {
 export type RadiusToken = keyof typeof radius;
 
 /**
- * Font families. WO-02 owns the self-hosted woff2 subsets and the
- * measured fallback metrics; these names resolve to the declared
- * fallback stacks until then.
+ * Font families. Each resolves to a three-layer stack in tokens.css: the
+ * self-hosted latin-subset woff2 declared by next/font/local, then the
+ * metric-adjusted fallback that paints during the `font-display: swap`
+ * window, then the declared generic stack. Nothing outside tokens.css may
+ * name a family directly; web/tests/fonts.test.ts enforces that.
  */
 export const font = {
   "ui": "var(--font-ui)",

@@ -1,0 +1,80 @@
+/* =========================================================================
+ * WO-02 — metric-adjusted fallback faces.
+ *
+ * `font-display: swap` paints text in a fallback immediately and replaces it
+ * when the webfont arrives. That replacement moves the page unless the
+ * fallback has already been made metrically identical to the webfont, which
+ * is what the three faces below do: each names concrete local fonts and
+ * carries the size and vertical-metric overrides that make them lay out
+ * exactly like the family they stand in for.
+ *
+ * app/tokens.css puts each of these directly after the self-hosted family
+ * and before the generic stack, so the adjusted face is what actually
+ * renders during the swap window.
+ *
+ * EVERY NUMBER BELOW IS MEASURED, none is chosen. `node
+ * scripts/measure-fonts.mjs` regenerates this block; that script documents
+ * the method, and docs/revamp/evidence/gate-3/fonts.md records the run,
+ * including the residual difference left after the overrides are applied
+ * (at most 0.01% of the reference string's width, and exactly 0.00 px of
+ * baseline and line-box movement) and what the same swap would have cost
+ * without them (up to 7.08% of width and 35 px of line box).
+ *
+ * Measured in Google Chrome 151.0.7922.174 on macOS at 100px.
+ *
+ * The size adjustment is the one descriptor that depends on which local
+ * font the platform supplies; ascent and descent come from the webfont
+ * alone and are exact everywhere. Each src list is ordered so the metric
+ * anchor comes first, and local() is given PostScript or full names because
+ * that is what it matches -- local("Menlo") silently misses where
+ * local("Menlo-Regular") hits.
+ * ========================================================================= */
+
+/* Anchor: Arial (macOS, Windows, and metric-clone Liberation Sans on Linux),
+ * so one adjustment holds across all three. The declared stack's own first
+ * choice is system-ui, which CSS cannot name in local() at all; measured
+ * unadjusted, that swap would have moved text by 7.08%. */
+@font-face {
+  font-family: "Atkinson Hyperlegible Next Fallback";
+  src:
+    local("Arial"), local("ArialMT"), local("Liberation Sans"), local("LiberationSans"),
+    local("Helvetica Neue"), local("HelveticaNeue"), local("Helvetica"),
+    local("DejaVu Sans"), local("DejaVuSans");
+  size-adjust: 99.24%;
+  ascent-override: 98.75%;
+  descent-override: 32.24%;
+  line-gap-override: 0%;
+}
+
+/* Anchor: Georgia, which is also what the declared serif stack resolves to
+ * on macOS and Windows, so the adjusted face and the plain fallback are the
+ * same font there. Times New Roman is last on purpose: it is 10% narrower
+ * than Georgia and would have been the worst of the four to anchor on. */
+@font-face {
+  font-family: "Literata Fallback";
+  src:
+    local("Georgia"), local("Liberation Serif"), local("LiberationSerif"),
+    local("DejaVu Serif"), local("DejaVuSerif"),
+    local("Times New Roman"), local("TimesNewRomanPSMT");
+  size-adjust: 106.74%;
+  ascent-override: 110.55%;
+  descent-override: 29.04%;
+  line-gap-override: 0%;
+}
+
+/* Anchor: Menlo, which is also what the declared mono stack resolves to on
+ * macOS. Courier New precedes Consolas deliberately -- IBM Plex Mono's
+ * advance is 0.6em and Courier New's is 0.6em, where Consolas' is 0.55em,
+ * so on Windows the plainer face is the metrically honest swap. */
+@font-face {
+  font-family: "IBM Plex Mono Fallback";
+  src:
+    local("Menlo-Regular"), local("Menlo Regular"),
+    local("DejaVu Sans Mono"), local("DejaVuSansMono"),
+    local("Liberation Mono"), local("LiberationMono"),
+    local("Courier New"), local("CourierNewPSMT"), local("Consolas");
+  size-adjust: 99.66%;
+  ascent-override: 102.35%;
+  descent-override: 27.09%;
+  line-gap-override: 0%;
+}
