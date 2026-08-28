@@ -637,7 +637,11 @@ describe("criterion 5 — the pre-paint theme script", () => {
     const markup = renderToStaticMarkup(
       createElement(RootLayout, { children: createElement("main") }),
     );
-    expect(markup).toContain('<html lang="en">');
+    // Attribute-wise rather than string-wise: WO-02 added the three
+    // next/font variable classes to this element, and WO-08 will add more.
+    // What criterion 5 is about is the lang and the inline script, not the
+    // exact attribute set.
+    expect(markup).toMatch(/<html\b[^>]*\blang="en"/);
     expect(markup).toContain(tokens.THEME_STORAGE_KEY);
     const scriptIndex = markup.indexOf(tokens.themeInitScript);
     expect(scriptIndex, "the theme script is not inlined in the layout").toBeGreaterThan(-1);

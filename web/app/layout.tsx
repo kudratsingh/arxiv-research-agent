@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 
 import { themeInitScript } from "@/lib/tokens";
 
+import { fontVariables } from "./fonts/fonts";
+
+// The metric-adjusted fallback faces. Imported here rather than from
+// globals.css because they belong to the font declarations below, not to
+// the token sheet: WO-01 owns tokens.css, WO-02 owns app/fonts/.
+import "./fonts/fallback.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +25,11 @@ export default function RootLayout({
     // suppressHydrationWarning: the script below writes data-theme and
     // data-theme-preference onto this element before React hydrates, so
     // the server markup deliberately does not match.
-    <html lang="en" suppressHydrationWarning>
+    // className carries the three next/font/local variables --font-ui-face,
+    // --font-report-face and --font-mono-face. They sit at the head of the
+    // --font-* stacks in tokens.css, so every family in the product resolves
+    // through this element.
+    <html lang="en" className={fontVariables} suppressHydrationWarning>
       <head>
         {/*
           The pre-paint theme script. Inline and synchronous by

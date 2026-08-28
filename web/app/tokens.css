@@ -112,15 +112,29 @@
   --radius-dot: 9999px;
 
   /* --- font families (tokens.json typography.families) ----------------
-   * WO-02 OWNS THIS FENCE. The stacks below are the declared fallback
-   * stacks verbatim; no family is self-hosted yet, so every browser
-   * resolves to the generic fallback today and nothing shifts. WO-02
-   * replaces each leading family name with its next/font/local CSS
-   * variable and adds the measured size-adjust metrics.
+   * WO-02 OWNS THIS FENCE. Each stack is now three layers deep:
+   *
+   *   var(--font-*-face)   the self-hosted latin-subset woff2, declared by
+   *                        next/font/local in app/fonts/fonts.ts. The
+   *                        leading family name from the design tokens has
+   *                        been replaced by this variable rather than kept
+   *                        beside it, so a stale copy of the same family
+   *                        installed on the reader's machine cannot
+   *                        outrank the subset we measured.
+   *   "* Fallback"         the metric-adjusted face in app/fonts/
+   *                        fallback.css. This is what paints during the
+   *                        `font-display: swap` window, carrying measured
+   *                        size-adjust / ascent-override / descent-override
+   *                        so the swap moves nothing.
+   *   the generic stack    the declared fallback verbatim, still last, for
+   *                        a platform that supplies none of the concrete
+   *                        fonts the adjusted face names.
+   *
+   * Numbers and method: docs/revamp/evidence/gate-3/fonts.md.
    * ------------------------------------------------------------------ */
-  --font-ui:     "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-report: Literata, ui-serif, Georgia, "Times New Roman", serif;
-  --font-mono:   "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-ui:     var(--font-ui-face), "Atkinson Hyperlegible Next Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-report: var(--font-report-face), "Literata Fallback", ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono:   var(--font-mono-face), "IBM Plex Mono Fallback", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* --- type scale (tokens.json typography.scale) ----------------------
    * Minimum rendered size is 12px anywhere in the product; the
