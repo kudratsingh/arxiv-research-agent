@@ -1,16 +1,18 @@
+/* tokens.css declares every custom property and both theme mechanisms.
+ * It must come first: everything below resolves var(--...) against it. */
+@import "./tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-white text-slate-900 antialiased;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    body {
-      @apply bg-slate-950 text-slate-100;
-    }
+    /* The two theme blocks in tokens.css now carry dark mode for the
+     * page canvas, so the prefers-color-scheme override that used to
+     * live here is gone: it could not see a user override and would
+     * have fought :root[data-theme="light"]. */
+    @apply bg-canvas text-ink antialiased;
   }
 }
 
