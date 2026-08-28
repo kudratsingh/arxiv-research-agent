@@ -1469,7 +1469,10 @@ That branch must be taken at Gate 2, not discovered mid-implementation.
    route's first-load JS.
 8. Nothing is transmitted anywhere — a test asserts no `fetch`/`sendBeacon`
    to any non-`/api` origin exists in the module graph.
-9. Stories: `Collapsed` `Expanded` `Empty` `UnknownEvent` `StreamNote`.
+9. Stories — **`Diagnostics/`**: `Collapsed` `Expanded` `Empty`
+   `UnknownEvent` `StreamNote`. This is one of RC-10's four components
+   absent from [`04` §5.3](04-ARCHITECTURE.md#53-the-degraded-state-matrix-as-stories),
+   so the group is named explicitly rather than left implied.
 
 **Risk notes.** The baseline's raw `stream_note` row moves here
 ([§2.2](03-DESIGN-BRIEF.md#22-state-matrix) row 11); it must not leak back
