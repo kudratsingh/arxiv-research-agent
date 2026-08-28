@@ -699,8 +699,12 @@ describe("criterion 1 — tokens.css is the only file in web/ with a literal col
   // Deliberately narrower than the ESLint selectors, because this scan
   // also reads prose, CSS and SVG: the lookbehind spares HTML numeric
   // entities (&#9662;), and requiring a digit after the paren spares a
-  // sentence that merely names rgb() or hsl().
-  const HEX = /(?<!&)#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/;
+  // sentence that merely names rgb() or hsl(). The trailing (?!\w)
+  // spares hex-like prefixes of longer words — no real colour is ever
+  // followed by a word character, but Next's client-reference-manifest
+  // module keys end in hash-default, whose first four letters after the
+  // hash all happen to be valid hex digits.
+  const HEX = /(?<!&)#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?!\w)/;
   const FUNCTIONAL = /\b(?:rgb|rgba|hsl|hsla)\(\s*[\d.]/;
   const SCANNED = new Set([".ts", ".tsx", ".css", ".mjs", ".js", ".svg"]);
   const SKIP = new Set(["node_modules", ".next", "out", "build", ".git"]);
