@@ -99,6 +99,26 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
 - Follow-up conversation mode.
 - Slack bot (optional).
 
+### Frontend production revamp — gated follow-up
+
+- [x] Gate 1 discovery: product/domain/API/route/state/quality inventory,
+  no-cost browser baseline, current-source UX/technology research, skill
+  audit, and three preliminary visual directions.
+- [x] Gate 1 human approval (2026-08-28): Direction A (Evidence Workbench),
+  frozen-backend boundary, and first vertical slice approved; the private
+  shared-workspace assumption was **rejected as the end state** — real
+  end-user multi-tenancy is tracked as a separate, own-gated backend
+  workstream (MT-01 in `docs/revamp/STATUS.md`), not part of this revamp.
+- [ ] Gate 2 approval after Phases 2–4: design brief/tokens, architecture,
+  budgets, migration strategy, full work-order set, and dependency graph.
+- [ ] Gate 3 approval after the foundation and one complete vertical slice
+  are merged: Storybook/state evidence, end-to-end behavior, and tests.
+- [ ] Gate 4 approval after quality hardening and documentation: before/after
+  quality report, operational docs, rollout plan, and ship decision.
+
+Gate 1 evidence is indexed from [`docs/revamp/STATUS.md`](../docs/revamp/STATUS.md).
+Product implementation remains intentionally blocked until Gate 1 is approved.
+
 ## Sprint 6+ — Enterprise moat
 
 - Private corpus / BYO PDF.
@@ -782,3 +802,20 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   boundaries. Remaining: merge the reviewed PR, provision only after
   explicit Hetzner cost approval, verify TLS/health on the host, then
   separately approve one paid Anthropic end-to-end query.
+- _2026-08-28_ — Frontend revamp Gate 1 closed. The interrupted second-pass
+  independent review was re-run by a fresh reviewer and returned APPROVE
+  with two minor, non-blocking findings (Lighthouse capture provenance —
+  disclosed in the baseline README; Direction C stage-label constraint —
+  carried into Phase 2). The human Gate 1 decisions were recorded
+  (`docs/revamp/DECISIONS.md` D-009): Direction A (Evidence Workbench),
+  frozen backend confirmed, vertical slice approved, and real end-user
+  multi-tenancy adopted as the intended end state via a separate own-gated
+  backend workstream (MT-01). Next: Phase 2 design brief toward Gate 2.
+- _2026-08-28_ — Frontend production-revamp Gate 1 candidate. Completed a
+  fresh product/frontend/backend-contract inventory, captured synthetic local
+  mobile/desktop Lighthouse and visual evidence with an invalid model key,
+  measured current bundles, researched standards/category analogs/current
+  tooling, pinned Anthropic's official frontend-design guidance, and prepared
+  three backend-feasible directions. No product code, API shape, paid model,
+  hosting order, or deployment state changed. The detailed design brief is
+  blocked on the human Gate 1 decisions recorded in `docs/revamp/STATUS.md`.
