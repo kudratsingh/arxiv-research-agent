@@ -152,6 +152,26 @@ jobs:
         # A dummy API key satisfies the `${VAR:?...}` gate without
         # leaking a real secret.
         run: ANTHROPIC_API_KEY=dummy docker compose config --quiet
+      - name: Validate production compose overlay
+        # WO-25 / 05-MIGRATION.md C2: the Hetzner overlay (ADR 0054) was
+        # never schema-checked by CI, so a typo in it only surfaced on the
+        # box. Mirrors the base-file check above; every `${VAR:?...}` gate
+        # in the overlay gets a dummy value, which is why the list is
+        # longer than one key. `config` resolves and validates only — it
+        # starts nothing and reaches no network.
+        env:
+          ANTHROPIC_API_KEY: dummy
+          WEB_API_KEY: dummy
+          POSTGRES_PASSWORD: dummy
+          APP_DOMAIN: ci.example.invalid
+          ACME_EMAIL: ci@example.invalid
+          APP_USERNAME: ci
+          APP_PASSWORD_HASH: dummy
+        run: |
+          docker compose \
+            -f docker-compose.yml \
+            -f deploy/hetzner/compose.prod.yml \
+            config --quiet
       - name: Build image
         # Cache the layer graph in the runner's local GHA cache — a
         # rebuild without dep changes lands in ~30s vs. ~4min cold.
@@ -164,6 +184,84 @@ jobs:
           tags: arxiv-research-agent:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  web-image:
+    name: web image smoke
+    # WO-25 / 05-MIGRATION.md C1: `docker-build` above covers the API
+    # image only, so nothing proved the web image boots or that its
+    # server-side /api proxy resolves. This builds ./web, runs it against
+    # a dependency-free stub upstream, and asserts HTTP 200 on `/` and on
+    # `/api/healthz` — the latter only returns 200 if the proxy reached
+    # the upstream (it answers 503 on a bad API_INTERNAL_BASE and 502 when
+    # the upstream is unreachable). No Anthropic key is involved: the web
+    # image never takes one, and the stub refuses /research outright.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Keep in lockstep with web/Dockerfile and the `web` job.
+          node-version: "22"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build web image
+        # Separate cache scope from the API image so the two builds do
+        # not evict each other from the GHA cache.
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          load: true
+          tags: arxiv-research-agent-web:ci
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+      - name: Start stub upstream
+        run: |
+          node web/e2e/support/stub-upstream.mjs >"$RUNNER_TEMP/stub.log" 2>&1 &
+          echo $! >"$RUNNER_TEMP/stub.pid"
+          for _ in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8000/healthz; then break; fi
+            sleep 0.5
+          done
+      - name: Run web image against the stub
+        # host-gateway is how the container reaches a plain-node process on
+        # the runner; the alternative (--network host) would also drop the
+        # published-port boundary the probe below exercises.
+        run: |
+          docker run -d --name web-image-smoke \
+            -p 127.0.0.1:3000:3000 \
+            --add-host host.docker.internal:host-gateway \
+            -e API_INTERNAL_BASE=http://host.docker.internal:8000 \
+            arxiv-research-agent-web:ci
+      - name: Probe / and /api/healthz
+        run: |
+          set -u
+          # Boot wait first, so the two assertions below are strict:
+          # anything other than 200 fails immediately rather than being
+          # retried into a pass.
+          for _ in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://127.0.0.1:3000/; then break; fi
+            sleep 1
+          done
+          fail=0
+          for path in / /api/healthz; do
+            code=$(curl -s -o "$RUNNER_TEMP/body" -w '%{http_code}' \
+              "http://127.0.0.1:3000${path}")
+            echo "GET ${path} -> ${code}"
+            head -c 300 "$RUNNER_TEMP/body"; echo
+            [ "$code" = "200" ] || fail=1
+          done
+          exit "$fail"
+      - name: Container and stub logs on failure
+        if: failure()
+        run: |
+          docker logs web-image-smoke || true
+          cat "$RUNNER_TEMP/stub.log" || true
+      - name: Tear down
+        if: always()
+        run: |
+          docker rm -f web-image-smoke || true
+          kill "$(cat "$RUNNER_TEMP/stub.pid")" 2>/dev/null || true
 
   web:
     name: web (typecheck + lint + test + build)
