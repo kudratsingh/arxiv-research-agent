@@ -17,10 +17,10 @@ modified by this document. It adds exactly one file.
 
 ## How to read this document
 
-Read [§1](#1-reconciliations-to-ratify-at-gate-2) first. Twenty places where
-Phase 2 and Phase 3 disagree are listed there with a proposed resolution
-each; several work orders cannot be sized or written until those resolutions
-are ratified. [§2](#2-decision-dependent-work-orders) then names every work
+Read [§1](#1-reconciliations-to-ratify-at-gate-2) first. Twenty-one places
+where Phase 2 and Phase 3 disagree are listed there with a proposed
+resolution each; several work orders cannot be sized or written until those
+resolutions are ratified. [§2](#2-decision-dependent-work-orders) then names every work
 order whose *content* changes depending on a pending Gate 2 human ruling.
 
 [§3](#3-the-work-order-set) is the work-order set itself.
@@ -83,9 +83,11 @@ data and safety").
 [`03-DESIGN-BRIEF.md`](03-DESIGN-BRIEF.md), on a branch where the brief did
 not exist — it says so itself ("the path is written as plain text, not as a
 Markdown link, because the file does not exist on this branch",
-[§How to read](04-ARCHITECTURE.md#how-to-read-this-document)). Twenty
-tensions follow from that. Each is proposed for ratification rather than
-silently resolved; where a work order depends on the outcome, it is named.
+[§How to read](04-ARCHITECTURE.md#how-to-read-this-document)). Nineteen
+tensions follow from that, and two more (RC-20, RC-21) were found while
+sizing the work orders themselves — twenty-one in total. Each is proposed
+for ratification rather than silently resolved; where a work order depends
+on the outcome, it is named.
 
 ### RC-01 — Route bundle budgets versus the three self-hosted typefaces
 
@@ -93,9 +95,12 @@ silently resolved; where a work order depends on the outcome, it is named.
 sets budgets (145 KB `/`, 195 KB `/c/[id]`, 120 KB shared chunk, 12 KB CSS,
 240 KB total route JS, 120 KB fonts).
 [`03-DESIGN-BRIEF.md` §10](03-DESIGN-BRIEF.md#10-what-gate-2-must-decide)
-item 7 asks that the ceiling be set *only after* the three font families are
-accounted for, citing the same measured baselines (137,272 B for `/`,
-184,745 B for `/c/[id]`).
+item 7 states the same measured baselines (137,272 B for `/`, 184,745 B for
+`/c/[id]`), observes that "three self-hosted families and new primitives
+will move both", and asks — as written — that "Gate 2 should set the ceiling
+**before the work orders, not after**". This document is the work orders, so
+the ceiling has to be settled here, with the fonts accounted for, which is
+what the reconciled table below does.
 
 **Do the architecture budgets already absorb the fonts? No — and they do not
 need to.** The `/` and `/c/[id]` rows measure **first-load JavaScript**,
@@ -136,13 +141,15 @@ on the six per-class rows.
 **The risk this exposes, stated rather than smoothed over.** The brief names
 three families across seven static faces — Atkinson Hyperlegible Next
 400/600/700, Literata 400/600, IBM Plex Mono 400/500
-([`design/tokens.json`](design/tokens.json), `typography.families`). 120 KiB
-across seven latin-subset woff2 faces is ~17.5 KiB per face, which is at or
-below what a text serif of Literata's character set typically subsets to.
-The budget may not be achievable with static faces. Mitigations in
-preference order: variable woff2 with a restricted weight axis (one file per
-family); drop Atkinson 700 and use 600 for both roles; tighten the subset to
-the glyphs actually rendered. **The order of operations is measure first**
+([`design/tokens.json`](design/tokens.json), `typography.families`).
+122,880 B ÷ 7 = **17.1 KiB per face**, which is at or below what a text serif
+of Literata's character set typically subsets to. RC-20 adds Literata Italic
+400, making it **eight** faces at **15.0 KiB each** — so the budget is
+*less* likely to hold, not more, and the mitigation ladder below is
+correspondingly more likely to be needed. Mitigations in preference order:
+variable woff2 with a restricted weight axis (one file per family); drop
+Atkinson 700 and use 600 for both roles; tighten the subset to the glyphs
+actually rendered. **The order of operations is measure first**
 (WO-02), then either meet the budget or raise it under the ratchet rule
 ([`04-ARCHITECTURE.md` §8.4](04-ARCHITECTURE.md#84-enforcement--a-ci-check-not-an-aspiration))
 in a PR carrying the per-face measurement table. Inventing a number now
@@ -167,9 +174,17 @@ variants, added `ink-faint`/`ink-disabled`, **no `success`** (explicitly cut
 [`03-DESIGN-BRIEF.md` Appendix](03-DESIGN-BRIEF.md#appendix--anti-template-self-critique))
 and no `warning`; a px-valued space scale `2 4 8 12 16 20 24 32 40 48 64 96`;
 radii `0 / 3 / 5 / 6`; families `report / ui / mono`; three parallel type
-ramps (`ui-*`, `report-*`, `mono-*`) plus `display`; durations
-`fast / base / slow / ambient`; and an elevation scale `elev-0…3` that §6.1
-has no namespace for.
+ramps (`ui-*`, `report-*`, `mono-*`) plus `display`; and an elevation scale
+`elev-0…3` that §6.1 has no namespace for.
+
+Durations are the one place the two sets **overlap rather than conflict**,
+and only the brief's prose obscures it: [`03-DESIGN-BRIEF.md` §3.7](03-DESIGN-BRIEF.md#37-motion)
+tabulates `fast / base / slow / ambient`, but
+[`design/tokens.json`](design/tokens.json) `motion.duration` declares
+**five** — `dur-instant: 0ms` as well. So §6.1's `instant` is already
+satisfied by the token file, and the reconciled duration set is the union:
+`instant / fast / base / slow / ambient`. `dur-instant` is the twelfth
+orphan counted in RC-15.
 
 **Proposed resolution.** §6.1's list is a placeholder written to unblock a
 concurrent branch, and §6 says so twice — "This section defines only the
@@ -181,9 +196,9 @@ is the *namespacing convention* and the whole of
 typed name module, Tailwind built from that module, a parity test, an ESLint
 rule banning literal colours. Applied to the brief's names, the namespace
 becomes `--color-*`, `--space-*`, `--radius-*`, `--font-*`, `--text-*`,
-`--duration-*`, `--ease-*`, plus a new `--elevation-*`. `success` and
-`warning` are not created; see RC-17 for what `StatusBanner`'s "warning"
-severity maps to.
+`--duration-*` (five steps, per the union above), `--ease-*`, plus a new
+`--elevation-*`. `success` and `warning` are not created; see RC-17 for what
+`StatusBanner`'s "warning" severity maps to.
 
 Affects **WO-01**, **WO-07**, **WO-12**.
 
@@ -360,23 +375,33 @@ both name the same thing:
 
 `FailureNotice` and `StatusBanner` are one component under the brief's name;
 `ConversationList`/`ConversationRail` become `ThreadList`/`ThreadRail` under
-RC-12. Consequence for Gate 3: **the §5.3 story list must be extended** —
-`Diagnostics`, `SectionRail`, `CheckpointLedger`, `ThemeToggle`,
-`ConfirmDialog`, and `SkipLink` currently have no story group, and
+RC-12. Consequence for Gate 3: **the §5.3 story list must be extended** for
+exactly **four** modules — `Diagnostics`, `SectionRail`, `CheckpointLedger`,
+and `ThemeToggle`. `ConfirmDialog` and `SkipLink` are **already covered** by
+§5.3 (`ConversationRail/DeleteConfirm` and `Shell/SkipLinkFocused`
+respectively) and need nothing added.
 [`05-MIGRATION.md` §4.1](05-MIGRATION.md#41-gate-3--foundation--first-vertical-slice)
-makes an uncovered state a Gate 3 blocker.
+makes an uncovered state a Gate 3 blocker, so the four gaps are discharged
+as named story criteria: `Diagnostics/*` in WO-16 c9, `SectionRail/*` in
+WO-18 c10, `CheckpointLedger/*` in WO-15 c11, and `ThemeToggle/*` in
+WO-08 c11. WO-26 c1 extends the blocker rule to cover this component list,
+not only the [§4](#4-state-coverage-map) states.
 
-Affects **WO-07**, **WO-12**, **WO-14**, **WO-15**, **WO-16**, **WO-18**,
-**WO-19**, **WO-26**.
+Affects **WO-07**, **WO-08**, **WO-12**, **WO-14**, **WO-15**, **WO-16**,
+**WO-18**, **WO-19**, **WO-26**.
 
 ### RC-11 — Which state matrix is canonical
 
 **The tension.** [`04-ARCHITECTURE.md` §2.2](04-ARCHITECTURE.md#22-state-variants-per-route)
 declares itself "the canonical state matrix" and both Storybook and
 Playwright index off it. [`03-DESIGN-BRIEF.md` §2.2](03-DESIGN-BRIEF.md#22-state-matrix)
-has 25 rows including six the architecture matrix does not carry: dark mode,
-delete confirmation, export refused (409), route-level 404, validation (422)
-field mapping, and the inline thread-not-found copy variant.
+has 25 rows including **five** the architecture matrix does not carry at
+all: dark mode, delete confirmation, export refused (409), route-level 404,
+and validation (422) field mapping. A sixth — the inline thread-not-found
+copy variant — **is** carried by §2.2's `/c/[id]` "loading / not found /
+load error" row, but is not split out as its own state, and the brief's copy
+requirement (a 404 means missing *or* not-yours) is invisible at that
+granularity.
 
 **Proposed resolution.** Keep the architecture's **structure** (route-indexed
 with a source-of-truth column — it is the one that survives contact with
@@ -434,18 +459,34 @@ boundary. Nothing samples 1024–1279, so the "rail expanded, no section rail"
 mode has no story. **Resolution:** viewports become 320 / 412 / 768 / 1024 /
 1440. Affects **WO-06**.
 
-### RC-15 — `--focus` is in the token file but not the light table
+### RC-15 — The published token tables are incomplete against `tokens.json`
 
-[`03-DESIGN-BRIEF.md` §3.2](03-DESIGN-BRIEF.md#32-colour--light) has no
-`--focus` row (it folds focus into `--primary-strong`), while
-[`design/tokens.json`](design/tokens.json) declares `focus` in **both**
-themes (`#1E4C91` light, `#9CC7F5` dark). The dark table
-([§3.3](03-DESIGN-BRIEF.md#33-colour--dark)) lists `--focus` but omits
-`primary-strong`, which the token file also declares (`#B3D0F5`).
-**Resolution:** `design/tokens.json` is the machine-readable authority (the
-brief says so in its header); both tokens exist in both themes. This matters
-only because the WO-01 parity test fails on orphan properties in either
-direction. Affects **WO-01**.
+**The tension.** [`design/tokens.json`](design/tokens.json) declares **23
+colour tokens in each theme**. The brief's published tables list fewer —
+20 rows in [§3.2](03-DESIGN-BRIEF.md#32-colour--light) and 15 in
+[§3.3](03-DESIGN-BRIEF.md#33-colour--dark) — so the divergence is **twelve
+orphans, not the one or two a reader of §3.2 alone would infer**:
+
+| Where | Count | Declared in `tokens.json`, absent from the table |
+|---|---:|---|
+| Light table (§3.2), 20 of 23 | 3 | `focus` · `signature-on` · `critical-on` |
+| Dark table (§3.3), 15 of 23 | 8 | `primary-strong` · `signature-text` · `signature-on` · `review-text` · `review-surface` · `critical-text` · `critical-surface` · `critical-on` |
+| Motion (§3.7) | 1 | `dur-instant` (`0ms`) — folded into RC-02's duration union |
+
+The brief's prose accounts for some of these implicitly — §3.2 folds focus
+into `--primary-strong`, and the dark section says roles are "remapped, not
+inverted" — but a table that omits eight of a theme's tokens cannot be the
+implementation source.
+
+**Resolution.** [`design/tokens.json`](design/tokens.json) is the
+machine-readable authority and the brief's own header says so ("the same
+tokens, machine-readable"). All 23 colour tokens exist in **both** themes
+and all five durations exist; §3.2/§3.3 are read as curated excerpts, not as
+the token set. This matters concretely because WO-01's parity test fails on
+orphan properties **in either direction**, so all twelve would fail a naive
+implementation built from the tables. WO-01 c2 is the discharge; its
+parity-test output is the authoritative enumeration at implementation time.
+Affects **WO-01**.
 
 ### RC-16 — `error_type`: mapped sentence versus raw string
 
@@ -508,6 +549,27 @@ Literata Italic 400 to the face set and fold it into the RC-01 measurement.
 UI and mono families need no italic — nothing in the chrome renders `<em>`.
 Affects **WO-02**, **WO-18**; ties to the typeface ruling.
 
+### RC-21 — `JobSummary` is dispositioned "Restyled" but the module is deleted
+
+**The tension.** [`03-DESIGN-BRIEF.md` §4](03-DESIGN-BRIEF.md#4-component-inventory)
+dispositions `JobSummary.tsx` as **"Restyled"** — "Shape is right (five real
+fields, `<dl>`); needs tokens, mono numerals, and a place attached to the
+briefing" — which reads as *the module survives*. In this set WO-19 retires
+it from the render path in favour of `MetricsStrip`, and WO-31 deletes the
+file.
+
+**Proposed resolution.** Same class as RC-03: the MUST-KEEP is the
+**contract, not the module**. What survives verbatim is the five real fields
+(iterations, quality score, cost, LLM calls, elapsed — `00-DISCOVERY.md`
+MUST-KEEP 10) and the `<dl>` shape; what changes is the file it lives in,
+its tokens, its numerals, and its position beneath the briefing rather than
+detached. "Restyled" is honoured as *behaviour and semantics preserved*,
+and WO-31's equivalence-table criterion covers `JobSummary.test.tsx` the
+same way it covers the stream tests. Recorded so the deletion is not read as
+a scope drop against §4's disposition column.
+
+Affects **WO-19**, **WO-31**.
+
 ---
 
 ## 2. Decision-dependent work orders
@@ -526,7 +588,7 @@ this set begins before its ruling lands.
 | **Product lexicon** ([`03` §1.5](03-DESIGN-BRIEF.md#15-product-lexicon), RC-12) | WO-12, WO-14, WO-19, and every user-facing string | Thread / Run / Briefing / Checkpoint in copy and component names; API nouns unchanged | Copy dictionary keys and component names revert to *conversation/job/report*; WO-12's dictionary is the single edit site either way, which is why it exists |
 | **The three self-hosted OFL typefaces** ([`03` §3.5](03-DESIGN-BRIEF.md#35-typography), [`03` §10](03-DESIGN-BRIEF.md#10-what-gate-2-must-decide) item 3) | WO-02, WO-23 | Literata + Atkinson Hyperlegible Next + IBM Plex Mono self-hosted, measured, budgeted per RC-01 | Fewer families collapses WO-02 to S and frees font budget; the two-family plan editor (below) becomes unbuildable if mono or UI is dropped |
 | **Two-family plan editor** ([`03` §10](03-DESIGN-BRIEF.md#10-what-gate-2-must-decide) item 4) | WO-17 | Sub-questions in the UI face, arXiv queries in mono, with an `aria-describedby` hint | Both columns in one family; the `aria-describedby` hint carries the whole distinction and becomes load-bearing |
-| **Trace-spine blind-spot treatment** ([`03` §5.8](03-DESIGN-BRIEF.md#58-the-one-aesthetic-risk-and-why-it-is-worth-it), [`03` §10](03-DESIGN-BRIEF.md#10-what-gate-2-must-decide) item 2) | WO-15, WO-16, WO-26 | Full spine with the visible, static, dimensioned unobserved region | The stated fallback is a **status-only chip with no spine** — never a spine with invented stages. WO-15 drops L → S, `CheckpointLedger` is not built, and 12 `TraceSpine/*` stories become ~5 |
+| **Trace-spine blind-spot treatment** ([`03` §5.8](03-DESIGN-BRIEF.md#58-the-one-aesthetic-risk-and-why-it-is-worth-it), [`03` §10](03-DESIGN-BRIEF.md#10-what-gate-2-must-decide) item 2) | WO-15, WO-26 | Full spine with the visible, static, dimensioned unobserved region | The stated fallback is a **status-only chip with no spine** — never a spine with invented stages. WO-15 drops L → S, `CheckpointLedger` is not built, and 12 `TraceSpine/*` stories become ~5 |
 | **Web-container healthcheck semantics** ([`04` §11.12](04-ARCHITECTURE.md#11-contract-ambiguities-to-resolve-at-gate-2), C5) | WO-30 | Probe `/api/healthz`, require HTTP 200, do **not** fail on `status: degraded` | Failing on `degraded` restarts the web container for a backend fault; if that is wanted, the compose healthcheck and its test invert |
 | **Bundle budget ratification** (RC-01) | WO-02, WO-23 | The seven-row reconciled table becomes `web/budgets.json` | Any changed ceiling changes `budgets.json` and the WO-02 font strategy; a lower font ceiling forces variable fonts |
 | **D-002 architecture confirmation** ([`03` §10](03-DESIGN-BRIEF.md#10-what-gate-2-must-decide) item 6, [`04` §1.3](04-ARCHITECTURE.md#13-recommendation-for-gate-2)) | WO-32 (ADR 0055), and implicitly all of them | ADR records Next + same-origin proxy retained under three constraints | A different stack invalidates this entire work-order set |
@@ -570,8 +632,12 @@ adds `web/tests/tokens.test.ts`.
    `components/` with `tokens.css` the sole exemption, proven by a fixture
    that must fail lint.
 2. A Vitest test parses `tokens.css` and asserts bidirectional parity with
-   `tokens.ts` in both themes — every name resolves, and orphan properties
-   fail (RC-15's two tokens included).
+   `tokens.ts` in **both** themes against
+   [`design/tokens.json`](design/tokens.json) as the source of truth — every
+   declared name resolves, and **orphan properties fail in either
+   direction** (RC-15 enumerates them: 3 light, 8 dark, plus `dur-instant`).
+   The test's output is the authoritative enumeration; the brief's §3.2/§3.3
+   tables are excerpts and must not be used as the implementation list.
 3. A Vitest test recomputes the WCAG ratio for every pair in
    `design/tokens.json`'s `contrastChecks` from the hex values in
    `tokens.css` and asserts each recorded number to ±0.01, including the
@@ -586,7 +652,14 @@ adds `web/tests/tokens.test.ts`.
 6. `app/icon.svg` exists and the `/favicon.ico` 404 is gone from the next
    Lighthouse run (B1). No `public/` directory is introduced, keeping
    `web/Dockerfile:36`'s comment accurate.
-7. `npm run typecheck`, `npm run lint`, and the existing 78 tests stay green.
+7. **Minimum rendered size is 12px anywhere**
+   ([`03` §3.5](03-DESIGN-BRIEF.md#35-typography)): a test asserts no
+   `--text-*` step declares a size below 12px, and no step reproduces the
+   baseline's 10.4px job-id label — which has no replacement token by
+   design, because deleting it is also one of the three contrast fixes in
+   [`03` §3.1](03-DESIGN-BRIEF.md#31-how-the-ratios-were-produced).
+   Uppercase is reserved for one- or two-word eyebrows.
+8. `npm run typecheck`, `npm run lint`, and the existing 78 tests stay green.
 
 **Risk notes.** Touching `globals.css` and `tailwind.config.ts` while every
 existing component still uses raw slate/blue utilities means the visual
@@ -937,6 +1010,12 @@ RC-04, RC-05.
    [`03` §6](03-DESIGN-BRIEF.md#6-identity-ready-shell) and an `IdentitySlot`
    that returns `null` — **no** avatar, no "Sign in", no disabled login.
 10. Skip link is first in tab order and moves focus to `#main`.
+11. **Stories.** `ThemeToggle/Light` `/Dark` `/System` `/KeyboardFocus` —
+    discharging one of RC-10's four uncovered components;
+    `WorkbenchShell/RailExpanded` `/RailCollapsed` `/DrawerClosed`
+    `/DrawerOpen` `/Offline`; `IdentitySlot/Empty` (asserting it renders
+    nothing). Every story passes axe at all five viewports in light, dark,
+    and forced-colors.
 
 **Risk notes.** R-04's whole mitigation is here. The blast radius is
 deliberately layout-only so `git revert` of one merge restores the previous
@@ -1132,6 +1211,12 @@ ESLint rule for forbidden strings.
    *in progress*, *step N of M*, `%`, ETA, *failed during*, *failed in*,
    *stage*, *almost done* can be produced by **any** copy key or any
    composed status string ([`03` §5.5](03-DESIGN-BRIEF.md#55-copy-rules)).
+   The same gate carries seam **S6's ownership prohibition**
+   ([`04` §10](04-ARCHITECTURE.md#10-identity-ready-seams-for-mt-01)):
+   *your conversations*, *my workspace*, *my library*, *your account* are
+   forbidden too, because there is no user identity to own anything until
+   MT-01. This is the mechanism that keeps S6 enforced rather than
+   remembered.
 3. Required qualifiers are present: "on this connection" wherever a
    checkpoint count appears, "observed" wherever a checkpoint is named,
    "not reported" rather than "unknown".
@@ -1235,6 +1320,13 @@ tests; fills WO-08's drawer with real content.
 [§8.2](03-DESIGN-BRIEF.md#82-deletion-copy),
 [§6](03-DESIGN-BRIEF.md#6-identity-ready-shell) (owner slot);
 [`04` §4.6](04-ARCHITECTURE.md#46-conversation-list-and-detail); RC-09, RC-12.
+The deletion copy's second sentence rests on two backend facts that must be
+verified before it ships: the Postgres cascade removes the conversation's
+job rows (`src/api/conversations.py:547`, "ON DELETE CASCADE handles
+conversation_jobs cleanup"), while the job store's own records live on a
+separate lifecycle under `api_job_retention_sec` (`src/config.py:307`,
+default 86400 s). Those two together are why "removes the thread and its
+briefings" is accurate and "deletes all its jobs" is not.
 
 **Acceptance criteria.**
 1. **R-02 fix:** the row for the thread whose run is currently attached
@@ -1322,10 +1414,14 @@ in full — [§5.1](03-DESIGN-BRIEF.md#51-the-binding-constraint),
 10. A documented insertion point for future structured evidence exists as a
     comment and a note in the story — no code
     ([`03` §2.3](03-DESIGN-BRIEF.md#23-omitted-concepts)).
-11. Stories: `NoJob` `StatusUnknown` `RunningNoCheckpoint`
-    `RunningWithCheckpoint` `Reconnecting` `StreamTimeout` `AwaitingReview`
-    `Succeeded` `SucceededFromHistory` `Failed` `FailedAfterCheckpoint`
-    `Cancelled` `Unavailable`.
+11. Stories — two groups. `TraceSpine/`: `NoJob` `StatusUnknown`
+    `RunningNoCheckpoint` `RunningWithCheckpoint` `Reconnecting`
+    `StreamTimeout` `AwaitingReview` `Succeeded` `SucceededFromHistory`
+    `Failed` `FailedAfterCheckpoint` `Cancelled` `Unavailable`. And
+    **`CheckpointLedger/`**: `Empty` `SingleCheckpoint` `Many`
+    `AfterReconnectGap` `UnknownNodeLabel` — discharging one of RC-10's four
+    uncovered components, since the ledger has states the spine group does
+    not exercise.
 
 **Risk notes.** If Gate 2 rejects the visible blind spot, the fallback is a
 status-only chip and this work order drops to S — **not** a spine with
@@ -1392,7 +1488,9 @@ into the primary surface.
 **Why L.** Dynamic arrays with per-field server-error mapping, nine states,
 the dynamic-import boundary, and the keyboard behaviour on removal. This is
 the product's control surface ([§1.3](03-DESIGN-BRIEF.md#13-experience-principles)
-P3) and the state matrix's worst baseline axe result (5 violations).
+P3) and a state **tied for the worst** baseline axe result — 5 violations,
+level with `failed-partial` and `cancelled`, which carry the identical five
+rules ([`baseline/axe/plan-review.json`](baseline/axe/plan-review.json)).
 
 **Scope.** Creates `components/patterns/PlanEditor.tsx`,
 `web/lib/plan/schema.ts`, stories and tests; adds React Hook Form and Zod as
@@ -1433,7 +1531,8 @@ P3) and the state matrix's worst baseline axe result (5 violations).
    buttons keep stable accessible names (`Remove sub-question 2`) and moving
    focus on removal is tested (next row, or the add control when empty);
    add/remove meet 24 px and 44 px on coarse pointers. Axe is clean on the
-   plan-review state, which today carries the matrix's worst result.
+   plan-review state, which today is tied for the matrix's worst result
+   (5 violations, with `failed-partial` and `cancelled`).
 10. RHF and Zod are **dynamically imported** by this surface; a bundle
     assertion proves neither is in `/`'s first-load JS (R-11).
 11. Stories: `Default` `Edited` `EmptyLists` `MaxItems` `ItemAtMaxLength`
@@ -1501,8 +1600,13 @@ consumers.
    The result — confirmed defect or retired inference — is written into the
    PR body ([§4.7](03-DESIGN-BRIEF.md#47-reportreader--sectionrail--metricsstrip),
    `00-DISCOVERY.md` "Additional investigation item").
-10. Stories: `Empty` `Short` `LongWithHeadings` `WithWideTable`
-    `WithCodeBlocks` `PartialFromFailedRun` `Dark`.
+10. Stories — two groups. `ReportReader/`: `Empty` `Short`
+    `LongWithHeadings` `WithWideTable` `WithCodeBlocks`
+    `PartialFromFailedRun` `Dark`. And **`SectionRail/`**: `Absent`
+    (heading-free report) `ShortList` `LongSticky` `DeepNesting`
+    `ActiveHeading` — discharging one of RC-10's four uncovered components,
+    since the rail's absent and sticky states are not reachable from the
+    reader group.
 
 **Risk notes.** Criterion 9 is the one item Phase 2 explicitly says "Phase 4
 owes". If it turns out to be a real defect, the fix belongs in this PR, not
@@ -1691,9 +1795,17 @@ WO-27 and are not claimed here.
 |---|---|
 | Gate | 3 |
 | Size | M |
-| Depends | — (font row requires WO-02) |
+| Depends | **none to start** · WO-02 gates completion of the font row only |
 | Phase | M0 |
 | Decision-dependent | **Yes** — bundle budget ratification (RC-01) |
+
+**Dependency shape.** This is the one work order with a split dependency,
+and the graph draws it as such: the script, `budgets.json`, and the five
+JS/CSS rows need nothing and can start at t=0 against the current build
+(criterion 6 is measured against `main`). Only the **font row** needs WO-02's
+measured faces, so WO-02 → WO-23 appears in [§5.1](#51-graph) as a dashed
+*completion gate*, not a start gate. The card, the graph, and the wave table
+in [§5.3](#53-concurrency) all say this same thing.
 
 **Scope.** Creates `web/scripts/route-budgets.mjs`, `web/budgets.json`, a
 `budgets` npm script, and `web/tests/budgets.test.ts`.
@@ -1756,7 +1868,12 @@ C8, C9, C10.
    wall-clock stays bounded.
 5. A deliberately introduced budget breach, axe violation, and coverage drop
    each fail their job — demonstrated in the PR body, not asserted.
-6. `docs/testing.md` gains the new tiers in the same PR (repo policy).
+6. **B4 is enforced, not aspirational**: a test asserts
+   `web/package.json`'s build script is still exactly `next build --webpack`
+   ([`05` §3.1](05-MIGRATION.md#31-build-path-fixes) B4). Turbopack is a
+   separate ADR (R-15), and without this assertion "the build tool stays
+   pinned" is a sentence rather than a gate.
+7. `docs/testing.md` gains the new tiers in the same PR (repo policy).
 
 **Risk notes.** `.github/workflows/ci.yml` is edited by WO-24, WO-25, and
 WO-30. See [§5.4](#54-fleet-coordination-hazards).
@@ -1813,7 +1930,12 @@ order that can start on day one with zero dependencies.
 **Acceptance criteria.**
 1. `storybook-states.md` maps **story ID → state (from [§4](#4-state-coverage-map))
    → the baseline screenshot it replaces → axe result**. A state with no
-   story is a Gate 3 blocker; the file must show zero such rows.
+   story is a Gate 3 blocker; the file must show zero such rows. The blocker
+   rule covers **two** lists, not one: every [§4](#4-state-coverage-map)
+   state, **and** every module in RC-10's union component table — so the
+   four components §5.3 never named (`Diagnostics`, `SectionRail`,
+   `CheckpointLedger`, `ThemeToggle`) cannot pass by being absent from the
+   state matrix.
 2. Every story renders in light, dark, and reduced-motion at 320 / 412 / 768
    / 1024 / 1440 (RC-14).
 3. The five slice steps green on chromium, firefox, webkit, `Pixel 7`, and
@@ -2011,11 +2133,24 @@ RC-07, RC-08.
    **does not** fail on `status: degraded`, so a Redis blip does not restart
    the web container for a backend fault. *Contingent on the Gate 2 ruling;
    the inverted behaviour is a one-line change plus its test.*
-7. S1: `resolveUpstreamPrincipal(request)` is extracted; the shared-principal
+7. **H10**: the healthcheck parses the response body's `status` **and**
+   `dependencies` — HTTP 200 alone never means healthy, because `/healthz`
+   is always 200 by design (`routes.py:786-802`,
+   [`04` §9.1](04-ARCHITECTURE.md#91-honesty-rules) H10, MUST-KEEP 11). A
+   test feeds a 200 carrying `status: degraded` and asserts the probe
+   distinguishes it from a healthy body even though it does not fail the
+   container. This is the only place health is surfaced at all; no product
+   UI consumes `/healthz`.
+8. S1: `resolveUpstreamPrincipal(request)` is extracted; the shared-principal
    implementation returns the env key unchanged, proven a **no-op refactor**
    by the unmodified proxy tests.
-8. S2: `/api/auth/*` is documented as reserved. **No route file is created.**
-9. `docs/security.md` is updated in the same PR.
+9. S2: `/api/auth/*` is documented as reserved. **No route file is created.**
+10. `docs/security.md` is updated in the same PR, and must state explicitly
+    that **CSRF on the proxy remains unaddressed and out of scope pending
+    MT-01** — the proxy forwards same-origin requests with a server-held
+    credential and has no per-user session to protect yet, so "proxy
+    hardened" must never be read as "CSRF considered". When MT-01 introduces
+    a session at S1/S3, CSRF becomes a live requirement.
 
 **Risk notes.** R-08 — this is the only work order that edits the credential
 boundary. Reviewers should treat criterion 5 as the gate: if any existing
@@ -2093,7 +2228,14 @@ RC-05, RC-19.
    locally.
 5. `docs/development.md` records the two persisted client preferences
    (RC-05) and the budget ratchet rule.
-6. Every relative link in the new and edited files resolves.
+6. **S7 is documented**: `docs/architecture.md` (or `docs/security.md`,
+   whichever the reviewer prefers) states that the Caddy site-level HTTP
+   basic auth at `deploy/hetzner/Caddyfile:8-10` is a **deployment gate, not
+   a user account**, and that the UI must never render it as a signed-in
+   user ([`04` §10](04-ARCHITECTURE.md#10-identity-ready-seams-for-mt-01)
+   S7). Without this written down, the next reader mistakes the basic-auth
+   prompt for the identity D-009 says does not exist yet.
+7. Every relative link in the new and edited files resolves.
 
 **Risk notes.** The ADR template and numbering conventions live in
 `docs/decisions/TEMPLATE.md` and `README.md`; both must be followed or the
@@ -2266,6 +2408,7 @@ flowchart LR
   WO07 --> WO18
   WO11 --> WO18
   WO12 --> WO18
+  WO07 --> WO19
   WO18 --> WO19
   WO09 --> WO20
   WO13 --> WO20
@@ -2279,7 +2422,7 @@ flowchart LR
   WO08 --> WO21
   WO06 --> WO22
   WO21 --> WO22
-  WO02 --> WO23
+  WO02 -.->|font row only| WO23
   WO06 --> WO24
   WO21 --> WO24
   WO22 --> WO24
@@ -2301,50 +2444,81 @@ flowchart LR
   WO27 --> WO33
   WO28 --> WO33
   WO29 --> WO33
+  WO30 --> WO33
+  WO31 --> WO33
   WO32 --> WO33
 ```
 
+33 nodes; **71 hard edges plus one soft completion gate** (the dashed
+WO-02 ⇢ WO-23 font-row edge, see that card's *Dependency shape*). Every
+edge is a dependency named on a work-order card, and every card dependency
+appears as an edge — the two are checked against each other, not written
+twice.
+
 ### 5.2 Critical path
 
-**WO-01 → WO-02 → WO-06 → WO-07 → WO-08 → WO-09 → WO-20 → WO-26 → WO-31 →
-WO-32 → WO-33** — eleven work orders, containing three L units (WO-07,
-WO-08, and WO-20's integration surface). Nothing shortens it: tokens gate
-fonts, fonts gate the Storybook theme decorator, the decorator gates the
-primitive stories, the primitives gate the shell, and the shell gates every
-route.
+**The longest chain in the graph is 12 work orders**, and there are two of
+them. Both start at the tokens and end at the Gate 4 evidence pack:
 
-**The co-critical branch is the one to watch:**
-**WO-03 → WO-04 → WO-05 → WO-10 → WO-17 → WO-20**. One node shorter but it
-carries the two highest-risk L units in the set — the job machine (R-01,
-R-05, the repo's highest-churn file) and the plan editor (R-09, the worst
-baseline axe state). Schedule these against the most experienced worktree,
-not the earliest-free one.
+- **By dependency depth (chain A):** WO-01 → WO-02 → WO-06 → WO-07 → WO-12 →
+  WO-18 → WO-19 → WO-20 → WO-26 → WO-31 → WO-32 → WO-33.
+- **By dependency depth (chain B):** WO-01 → WO-02 → WO-06 → WO-07 → WO-08 →
+  WO-21 → WO-22 → WO-24 → WO-26 → WO-31 → WO-32 → WO-33.
+
+They share a seven-node head and tail and differ only in the middle: chain A
+runs through the reading surfaces, chain B through the test harness and CI
+wiring. **Either one is the schedule-determining path**, so neither can be
+descheduled in favour of the other.
+
+**The path to plan against, ranked by size and risk rather than node count,
+is chain B's shell variant:** WO-01 → WO-02 → WO-06 → WO-07 → WO-08 → WO-09
+→ WO-20 → WO-26 → WO-31 → WO-32 → WO-33 — 11 nodes but carrying three L
+units (WO-07, WO-08, WO-20). Nothing shortens the head of any of these:
+tokens gate fonts, fonts gate the Storybook theme decorator, the decorator
+gates the primitive stories, the primitives gate the shell, and the shell
+gates every route.
+
+**The branch to watch is neither of the longest:**
+**WO-03 → WO-04 → WO-05 → WO-10 → WO-17 → WO-20**. Six nodes, but it carries
+the two highest-risk L units in the set — the job machine (R-01, R-05, the
+repo's highest-churn file) and the plan editor (R-09, a state tied for the
+worst baseline axe result). Schedule these against the most experienced
+worktree, not the earliest-free one.
 
 ### 5.3 Concurrency
 
-| Wave | Concurrent work orders | Count |
-|---|---|---|
-| Start (t=0) | WO-01, WO-03, WO-23, WO-25 | **4** |
-| After WO-01, WO-03 | WO-02, WO-04, (+ WO-23, WO-25 still running) | 4 |
-| After WO-02, WO-04 | WO-05, WO-06 | 2 |
-| After WO-06 | WO-07 alone (it gates the whole surface track) | 1 |
-| After WO-07 | WO-08, WO-12 | 2 |
-| After WO-08 | WO-09, WO-21, WO-10, WO-11 | 4 |
-| **Peak, after WO-10/11/12** | WO-13, WO-14, WO-15, WO-16, WO-17, WO-18 + WO-21, WO-22 | **8** |
-| After WO-18 | WO-19 | 1 |
-| Gate 4 | WO-27, WO-28, WO-29, WO-30 | 4 |
+The exact topological wave schedule, computed from the card dependencies
+(WO-23 startable at t=0 per its *Dependency shape*; the WO-02 font-row gate
+is a completion gate and does not delay its start):
+
+| Wave | Work orders that become startable | Count |
+|---|---|---:|
+| 1 (t=0) | WO-01, WO-03, WO-23, WO-25 | **4** |
+| 2 | WO-02, WO-04, WO-11 | 3 |
+| 3 | WO-05, WO-06 | 2 |
+| 4 | WO-07, WO-10 | 2 |
+| 5 | WO-08, WO-12 | 2 |
+| **6** | WO-09, WO-13, WO-14, WO-15, WO-16, WO-17, WO-18, WO-21 | **8** |
+| 7 | WO-19, WO-22 | 2 |
+| 8 | WO-20, WO-24 | 2 |
+| 9 | WO-26, WO-30 | 2 |
+| 10 | WO-27, WO-28, WO-29, WO-31 | 4 |
+| 11 | WO-32 | 1 |
+| 12 | WO-33 | 1 |
 
 **Maximum safe concurrency at the start: 4 worktrees.** WO-01, WO-03,
-WO-23, and WO-25 have no dependencies and no overlapping files. **Peak
-concurrency is 8**, during the surface wave, and that is the number to size
-the fleet for; the six surface work orders are file-disjoint by construction
-because each owns its own component directory
+WO-23, and WO-25 have no start dependencies and no overlapping files.
+**Peak concurrency is 8**, at wave 6, and that is the number to size the
+fleet for; those eight are file-disjoint by construction because each owns
+its own component directory
 ([`04` §5.1](04-ARCHITECTURE.md#51-layers)'s layering is what makes this
 true).
 
-WO-07 is the serialising node: nothing in Track D can start until the
-primitives exist. If schedule pressure appears, the correct response is to
-add reviewers to WO-07, not to fan out around it.
+Note that no wave falls to a single work order until wave 11 — WO-07 is a
+*bottleneck*, not a solo wave: WO-10 becomes startable alongside it at
+wave 4. Track D still cannot begin until the primitives exist, so if
+schedule pressure appears the correct response is to add reviewers to
+WO-07, not to fan out around it.
 
 ### 5.4 Fleet coordination hazards
 
@@ -2370,7 +2544,7 @@ Real conflicts a parallel fleet will hit, and the mitigation:
 | **M0 — foundation** | WO-01, WO-02, WO-03, WO-04, WO-05, WO-06, WO-07, WO-23, WO-25 | RC-19: nine PRs, not one. Visible change stays "almost none" — product 404 and favicon appear, nothing else. |
 | **M1 — shell** | WO-08, WO-09, WO-21, WO-22 | The deliberate layout big-bang plus the harness that proves it. |
 | **M2 — job machine** | WO-10, WO-11 | |
-| **M3 — surfaces** | WO-12 … WO-20 | [`05` §1.1](05-MIGRATION.md#11-shape-branch-by-abstraction-inside-the-same-nextjs-app) says "one PR each"; WO-12 and WO-20 are the two additions its list does not name. |
+| **M3 — surfaces** | WO-12 … WO-20 | [`05` §1.1](05-MIGRATION.md#11-shape-branch-by-abstraction-inside-the-same-nextjs-app) names six surfaces and says "one PR each"; five map directly (WO-14 ← `ConversationList`, WO-15 ← `TraceSpine`, WO-17 ← `PlanEditor`, WO-18 ← `ReportReader`, WO-19 ← `MetricsStrip` + `ExportMenu`). **Four are additions its list does not name: WO-12** (copy dictionary and `StatusBanner`), **WO-13** (`QueryComposer`), **WO-16** (`Diagnostics`), and **WO-20** (route composition). |
 | **M4 — cleanup** | WO-31 | |
 | Gate 3 evidence | WO-24, WO-26 | |
 | Gate 4 | WO-27 … WO-30, WO-32, WO-33 | |
@@ -2393,7 +2567,7 @@ Real conflicts a parallel fleet will hit, and the mitigation:
 | B1 favicon 404 | WO-01 | 3 |
 | B2 `vitest.config.mts` `__dirname` | WO-05 | 3 |
 | B3 jsdom download warning | WO-05 + WO-19 | 3 |
-| B4 build tool stays pinned | no work order — a **constraint** on all of them; asserted by WO-24 (`next build --webpack` unchanged) | — |
+| B4 build tool stays pinned | WO-24 c6 — a test asserts `web/package.json`'s build script is still exactly `next build --webpack`, so the constraint is enforced rather than aspirational | 3 |
 | B5 CX23 build path | **not scheduled** — DEPLOY workstream, see [§7](#7-not-scheduled) | — |
 
 ### 6.3 Gate evidence → producing work order
@@ -2456,13 +2630,14 @@ The list is not empty, and it should not be.
 
 ## 8. What Gate 2 is being asked to approve in this document
 
-1. The **twenty reconciliations** in [§1](#1-reconciliations-to-ratify-at-gate-2),
+1. The **twenty-one reconciliations** in [§1](#1-reconciliations-to-ratify-at-gate-2),
    most consequentially the reconciled budget table (RC-01), the token role
-   set (RC-02), and the `useResearchStream` disposition (RC-03).
+   set (RC-02), and the two "the MUST-KEEP is the contract, not the module"
+   dispositions (RC-03 for `useResearchStream`, RC-21 for `JobSummary`).
 2. The **33 work orders**, their gate assignment (26 at Gate 3, 7 at
    Gate 4), and their sizes.
-3. The **critical path** and a fleet sized for **8 concurrent worktrees** at
-   peak, 4 at the start.
+3. The **two 12-node critical paths** and a fleet sized for **8 concurrent
+   worktrees** at peak, 4 at the start.
 4. The **not-scheduled list** in [§7](#7-not-scheduled) as complete — if
    something is missing from it, that is the finding this document most
    wants back.
