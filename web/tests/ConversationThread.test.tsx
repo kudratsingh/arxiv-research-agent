@@ -12,6 +12,17 @@ import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConversationThread from "@/components/ConversationThread";
 
+// The suite's one EventSource stub (WO-05). This file used to carry its own
+// copy; the class it defined is now `tests/support/FakeEventSource.ts`, with
+// the same `emit` / `fatal` / `transientDrop` controls and the same
+// `openSources()` helper, so every assertion below is unchanged.
+import {
+  FakeEventSource,
+  installFakeEventSource,
+  openSources,
+  uninstallFakeEventSource,
+} from "./support/FakeEventSource";
+
 const replace = vi.fn();
 
 vi.mock("next/navigation", () => ({
@@ -19,72 +30,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// EventSource stub — jsdom has none.
-// ---------------------------------------------------------------------------
-
-type Listener = (evt: MessageEvent) => void;
-
-class FakeEventSource {
-  static instances: FakeEventSource[] = [];
-  static readonly CLOSED = 2;
-
-  public readonly url: string;
-  public closed = false;
-  public readyState = 1;
-  private listeners = new Map<string, Listener[]>();
-
-  constructor(url: string) {
-    this.url = url;
-    FakeEventSource.instances.push(this);
-  }
-
-  addEventListener(name: string, fn: Listener): void {
-    const existing = this.listeners.get(name) ?? [];
-    existing.push(fn);
-    this.listeners.set(name, existing);
-  }
-
-  close(): void {
-    this.closed = true;
-    this.readyState = FakeEventSource.CLOSED;
-  }
-
-  /** Deliver one SSE frame to the component under test. */
-  emit(name: string, data: unknown): void {
-    const payload = { data: JSON.stringify(data) } as MessageEvent;
-    for (const fn of this.listeners.get(name) ?? []) fn(payload);
-  }
-
-  /**
-   * What a browser does on a non-200 response (the stream route's
-   * 404): fail the connection permanently — `readyState` goes to
-   * CLOSED and no retry follows.
-   */
-  fatal(): void {
-    this.readyState = FakeEventSource.CLOSED;
-    for (const fn of this.listeners.get("error") ?? [])
-      fn({} as MessageEvent);
-  }
-
-  /** A transient drop the browser will retry on its own. */
-  transientDrop(): void {
-    this.readyState = 0;
-    for (const fn of this.listeners.get("error") ?? [])
-      fn({} as MessageEvent);
-  }
-}
-
-/** Sources not yet closed — the count that matters for double-streaming. */
-function openSources(): FakeEventSource[] {
-  return FakeEventSource.instances.filter((s) => !s.closed);
-}
-
-// ---------------------------------------------------------------------------
 // fetch stub
 // ---------------------------------------------------------------------------
 
 const originalFetch = globalThis.fetch;
-const originalEventSource = globalThis.EventSource;
 
 let calls: string[] = [];
 
@@ -154,14 +103,13 @@ function countOf(key: string): number {
 beforeEach(() => {
   calls = [];
   replace.mockClear();
-  FakeEventSource.instances = [];
-  globalThis.EventSource = FakeEventSource as unknown as typeof EventSource;
+  installFakeEventSource();
   installFetch();
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  globalThis.EventSource = originalEventSource;
+  uninstallFakeEventSource();
 });
 
 async function renderThread(adoptJobId: string | null = "job-1") {
