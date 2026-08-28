@@ -24,60 +24,34 @@
 // `web/tests/copy/forbidden.test.ts` proves all three over every key in
 // this file and over every string its functions can compose.
 
+import { LANDING } from "./composer";
 import { NOT_REPORTED } from "./errors";
 
 // ---------------------------------------------------------------------------
-// Landing (03 §1.4, verbatim).
+// Landing (03 §1.4, verbatim). RE-HOMED TO `./composer` BY WO-13.
+//
+// The four names below were defined here by WO-12 because there was no
+// composer file yet; this barrel's own layout rule is "one file per surface
+// … so WO-13 … WO-19 add their own file", and 03 §1.4 IS the composer's
+// surface. They moved for one measurable reason: `lib/copy/run.ts` is also
+// the trace spine's and the metrics strip's dictionary, and a story that
+// renders the composer would drag all eleven of its functions into the
+// Storybook Vitest project while exercising three — the merged-coverage
+// hazard `vitest.config.mts` records for WO-13 … WO-19, which cost eight
+// function-coverage points when measured.
+//
+// They are re-exported rather than relocated-and-forgotten, so every
+// existing consumer — `@/lib/copy`, `@/lib/copy/run`, and
+// `web/tests/copy/forbidden.test.ts`'s walk of this module's namespace —
+// keeps seeing them at exactly the paths it saw them at before.
 // ---------------------------------------------------------------------------
 
-/** `MAX_QUERY_LEN` on `ResearchRequest` (`src/api/schemas.py:36-40`). */
-export const MAX_QUERY_LEN = 8000;
-
-/**
- * The landing surface, string for string as 03 §1.4 prints it.
- *
- * `disclosure` is persistent body copy directly above the button — "not a
- * tooltip, not a footnote, not revealed on hover". It says *billable*
- * because generating a plan is the moment money starts being spent, and
- * `button` says "Generate plan" rather than "Run research" because a
- * planner run that pauses is the action's true immediate effect.
- *
- * `process` is a legend for the trace spine the user is about to meet.
- * Four things that genuinely exist, in the lexicon's words (RC-12).
- */
-export const LANDING = {
-  eyebrow: "Evidence Workbench",
-  heading: "What should the literature settle?",
-  questionLabel: "Research question",
-  questionPlaceholder:
-    "e.g. How do current systems evaluate faithfulness in retrieval-augmented generation?",
-  disclosure:
-    "Generating a plan starts a billable run. You review and edit the plan before any arXiv search or paper reading happens.",
-  submit: "Generate plan",
-  submitPending: "Generating plan…",
-  process: ["Question", "Plan you approve", "arXiv run", "Briefing"],
-} as const;
-
-/** Group thousands without `toLocaleString`, whose output is host-dependent. */
-function groupDigits(value: number): string {
-  return String(Math.trunc(Math.abs(value))).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-/**
- * The character counter, visible from zero characters (03 §1.4).
- *
- * A counter, not a percentage: 03 §5.5 forbids any `%`, and a fraction of
- * a character limit is the one place a `%` would look harmless.
- */
-export function queryCounter(length: number): string {
-  return `${groupDigits(length)} / ${groupDigits(MAX_QUERY_LEN)}`;
-}
-
-/** Over the bound, client-side, before a request is ever made. */
-export function queryOverLimit(length: number): string {
-  const over = Math.max(0, Math.trunc(length) - MAX_QUERY_LEN);
-  return `${groupDigits(over)} character${over === 1 ? "" : "s"} over the limit. Shorten the question to send it.`;
-}
+export {
+  LANDING,
+  MAX_QUERY_LEN,
+  queryCounter,
+  queryOverLimit,
+} from "./composer";
 
 // ---------------------------------------------------------------------------
 // Status words and marks (03 §3.4).

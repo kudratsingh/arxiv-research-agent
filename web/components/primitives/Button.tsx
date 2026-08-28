@@ -17,6 +17,17 @@
  * unavailable rather than permanently inapplicable. `disabled` is still
  * there for the permanent case.
  *
+ * A CALLER MAY DECLARE `aria-disabled` WITHOUT CLAIMING `busy` (WO-13
+ * criterion 7). 03 §2.2 row 4 requires the landing submit to refuse while
+ * the research service is unreachable, "with the reason attached to it" —
+ * `aria-disabled` plus `aria-describedby`, explicitly "not a bare disabled
+ * button". That state is unavailable but it is not *busy*: nothing is in
+ * flight, and emitting `aria-busy` for it would announce work that is not
+ * happening. So `aria-disabled` passed by a caller is honoured — it earns
+ * the same click guard and the same unavailable styling as `busy` — while
+ * `aria-busy` stays exclusively `busy`'s. Before this, `aria-disabled` was
+ * written after the prop spread and a caller's value was silently dropped.
+ *
  * `iconOnly` throws without an accessible name. A silent icon button is the
  * single most common way a component library ships an axe `button-name`
  * violation, and the failure is invisible until an audit. Failing loudly at
@@ -100,7 +111,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     );
   }
 
-  const unavailable = disabled || busy;
+  // A caller's own `aria-disabled`, read out of the spread rather than
+  // overwritten by it. Strictly `=== true`: `aria-disabled="false"` is a
+  // truthy string and must not disable anything.
+  const declaredUnavailable = rest["aria-disabled"] === true;
+  const refuses = busy || declaredUnavailable;
+  const unavailable = disabled || refuses;
 
   return (
     <button
@@ -109,11 +125,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       disabled={disabled}
       aria-busy={busy || undefined}
-      aria-disabled={busy || undefined}
+      aria-disabled={refuses || undefined}
       onClick={(event) => {
-        // `busy` leaves the button enabled on purpose (see the header), so
-        // the guard has to live here rather than in the DOM.
-        if (busy) {
+        // `busy` and a caller's `aria-disabled` both leave the button
+        // enabled on purpose (see the header), so the guard has to live
+        // here rather than in the DOM.
+        if (refuses) {
           event.preventDefault();
           return;
         }
