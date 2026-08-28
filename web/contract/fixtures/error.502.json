@@ -1,0 +1,20 @@
+{
+  "x-recording": {
+    "note": "Recorded response body and headers. DO NOT EDIT BY HAND — re-record with `bash web/contract/record.sh`. JSON has no comment syntax, so this key carries the header.",
+    "case": "error.502",
+    "commit": "e54d1c9d4b2fd9cc406bd5a6ed8196a378b53579",
+    "request": "GET /api/conversations with API_INTERNAL_BASE pointing at a closed port",
+    "transport": "Next.js /api proxy, generated locally — the upstream was never reached",
+    "stack": "docker compose (app + web + redis + postgres) with ANTHROPIC_API_KEY=local-preview-disabled, seeded by docs/revamp/baseline/fixtures/seed-local-baseline.sh",
+    "headers": "filtered to the proxy response allowlist in web/app/api/[...path]/route.ts; volatile transport headers are dropped so the fixture is byte-stable",
+    "authored": false
+  },
+  "status": 502,
+  "statusText": "Bad Gateway",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "detail": "api_upstream_unavailable"
+  }
+}
