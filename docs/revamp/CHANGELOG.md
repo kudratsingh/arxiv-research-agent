@@ -1,5 +1,14 @@
 # Frontend revamp changelog
 
+## 2026-08-28 — Gate 2 approved and closed (under user delegation)
+
+- Merged the Phase 2–4 package on green CI: design brief + tokens (PR #71), architecture + migration (PR #70), work orders + dependency graph (PR #72), authored by three concurrent agents; MT-01 multi-tenancy proposal merged separately (PR #69, PROPOSED).
+- Independent Gate 2 package review: first pass REJECT (2 Major / 14 Minor), all corrected on the unmerged work-orders branch; second pass APPROVE with zero unresolved findings. Record appended to `REVIEW.md`.
+- Ratified the sixteen Gate 2 rulings as `DECISIONS.md` D-010 under the user's standing delegation; every ruling follows the documented recommendation and its reviewer support assessment.
+- Applied the two reviewer findings against merged files: 03 §8.4's `hitl_bypass` eval-runner claim corrected (`enable_hitl=False` at `src/eval/runner.py:297`); 05 §2.1's "worst axe state" restated as a three-way tie.
+- Risk register updated: R-03/R-14 closed, R-07 resolved-to-MT-01, R-16 (plan lineage) and R-17 (font-budget floor) added.
+- EXEC unblocked: implementation begins as concurrent work-order PRs per `06-WORK-ORDERS.md` §5.
+
 ## 2026-08-28 — Gate 1 approved and closed
 
 - Recorded the human Gate 1 decisions as `DECISIONS.md` D-009: Direction A (Evidence Workbench); frozen-backend rule confirmed; vertical slice approved; shared-principal model rejected as the end state, with real multi-tenancy tracked as separate backend workstream MT-01.

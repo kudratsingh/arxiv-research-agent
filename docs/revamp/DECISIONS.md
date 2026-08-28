@@ -106,3 +106,74 @@
   and needs its own gated proposal and ADR before any backend change.
 - Needs human review: MT-01's proposal, cost, and rollout require their
   own explicit approval; nothing in this revamp implements it.
+
+## D-010 — Gate 2 decisions (made under user delegation)
+
+- Date: 2026-08-28
+- Status: recorded; Gate 2 approved
+- Authority: after Gate 1 the user delegated the remaining revamp gate
+  decisions to the coordinator ("no need for me, just keep going and get
+  everything done"). Every ruling below follows the recommendation
+  documented in the package, and each was independently assessed as
+  evidence-supported by the Gate 2 reviewer before ratification (the two
+  assessed as thin — the two-family plan editor and the font-budget
+  feasibility — are ratified with their documented fallbacks/ratchets).
+  Anything that costs money (deployment, paid model runs) and MT-01
+  implementation remain reserved for the user.
+- Package approved: `03-DESIGN-BRIEF.md` + `design/tokens.json` (PR #71),
+  `04-ARCHITECTURE.md` + `05-MIGRATION.md` (PR #70), `06-WORK-ORDERS.md`
+  (PR #72). Independent review: first pass REJECT (2 Major / 14 Minor),
+  all corrected; second pass APPROVE with zero unresolved findings
+  (`REVIEW.md`).
+- Rulings:
+  1. **Architecture (D-002 confirmed)** — keep Next.js with the
+     same-origin server proxy as the sole credential boundary; ADR 0055
+     to be written in WO-32.
+  2. **Partial-report export** — exposed, labelled partial on screen
+     (03 §8.1; closes R-14). A partial marker *inside* the exported file
+     is a backend exporter change, not scheduled.
+  3. **Deletion copy** — "Delete thread", with the honest second
+     sentence about job-store retention
+     (`src/api/conversations.py:547`, `src/config.py:307`).
+  4. **`error_type` vocabulary** — mapped sentence primary, raw string
+     always one disclosure away, drift test enforces non-lossiness.
+  5. **`hitl_bypass`** — stays unavailable in the UI as a stated rule;
+     test-enforced absence.
+  6. **Product lexicon** — thread / run / briefing / checkpoint,
+     three-register split per RC-12; export filenames stay upstream.
+  7. **Typefaces** — the three OFL families including RC-20's Literata
+     Italic 400 (eight faces); WO-02 measures first; RC-01 ratchet rule
+     governs any budget raise (see R-17).
+  8. **Two-family plan editor** — approved with WO-17's
+     `aria-describedby` fallback load-bearing.
+  9. **Trace-spine blind-spot** — the dimensioned static void is
+     approved; the fallback is a status-only chip, never invented
+     stages.
+  10. **Web-container healthcheck** — probe `/api/healthz` requiring
+      HTTP 200 but not failing on `status: degraded` (04 §11.12).
+  11. **Bundle budgets** — RC-01's reconciled table ratified
+      (`/` 145 KiB, `/c/[id]` 195 KiB, shared 120 KiB, CSS 12 KiB,
+      fonts 120 KiB, total route JS 240 KiB; derived 327 KiB first-load
+      transfer reported, not gated).
+  12. **`job.plan = None` permanence** — accepted for this revamp
+      (R-16); durable plan lineage is a future backend proposal beside
+      MT-01.
+  13. **Review deadline** — not exposed; `api_hitl_timeout_sec` is
+      server config, and the UI shows no countdown.
+  14. **MT-01 seams** — S1/S2/S5 as specified; reserved names only, no
+      files, one-directional dependency per the proposal's §5.7.
+  15. **`last-event-id`** — declared reserved in the proxy allowlist; no
+      code change either way.
+  16. **Reconciliations RC-01…RC-21** — ratified as resolved in
+      `06-WORK-ORDERS.md` §1, including both co-critical 12-node chains
+      and the 12-wave schedule in §5.
+- Consequences: EXEC unblocks. Implementation runs as concurrent
+  work-order PRs per `06-WORK-ORDERS.md` §5, merged only on green CI;
+  Gate 3 requires the merged foundation + vertical slice with
+  Storybook/state evidence; Gate 4 requires the hardening/docs wave and
+  the before/after quality report. WO-08 is expected to overrun its size
+  estimate (reviewer note) — treated as expected, not a decomposition
+  failure.
+- Needs human review: no further review for these rulings (delegated);
+  the ship decision's cost-bearing follow-ons (deployment) and MT-01
+  remain the user's.

@@ -179,7 +179,8 @@ Evidence: `PlanEditor/*` stories including `Conflict409` and
 `HitlTimedOut`; axe on the plan-review state, which must clear the
 `aria-allowed-role` / `listitem` / `color-contrast` failures the baseline
 records for it ([`baseline/README.md`](baseline/README.md) axe table, 5
-violations — the worst state in the matrix).
+violations — tied for the worst state in the matrix with
+`failed-partial` and `cancelled`).
 
 **Step 4 — Stream and reconnect.**
 Surfaces: R-05 (live/replay divergence), the last-observed-checkpoint rule,
