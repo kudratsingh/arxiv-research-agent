@@ -57,6 +57,7 @@ export function Textarea({
   value,
   defaultValue,
   onChange,
+  "aria-describedby": describedByProp,
   ...rest
 }: TextareaProps) {
   const generated = useId();
@@ -75,8 +76,20 @@ export function Textarea({
   const near =
     limit !== undefined && !over && count >= Math.floor(limit * nearLimitRatio);
 
+  // A CALLER'S `aria-describedby` IS MERGED, NOT OVERWRITTEN (WO-17).
+  // `{...rest}` is spread before the attribute below, so a caller-supplied
+  // value would otherwise be silently dropped — and WO-17's arXiv column
+  // needs one shared description ("sent to arXiv verbatim") on every row
+  // without repeating that sentence under each of them. The caller's ids
+  // come first because they describe the field's purpose; the hint, count
+  // and error describe its current state.
   const describedBy =
-    [hint ? hintId : null, limit !== undefined ? countId : null, error ? errorId : null]
+    [
+      describedByProp,
+      hint ? hintId : null,
+      limit !== undefined ? countId : null,
+      error ? errorId : null,
+    ]
       .filter(Boolean)
       .join(" ") || undefined;
 
