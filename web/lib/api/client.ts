@@ -261,22 +261,46 @@ export async function createConversation(
   return json<ConversationDetail>(resp);
 }
 
+export interface ListConversationsOptions extends RequestOptions {
+  /**
+   * Page size. Sent verbatim; the server clamps it to `MAX_LIST_LIMIT`
+   * (`src/api/conversations.py:36`) and rejects `< 1` with a 422.
+   */
+  limit?: number;
+  /** Rows to skip, newest first (`routes.py:576-579`). */
+  offset?: number;
+}
+
 /**
- * List conversations. The endpoint accepts `limit` / `offset`
- * (`routes.py:568-579`) and returns a bare array with no `total`;
- * neither parameter is sent today, and adding one is a behaviour
- * change that belongs to the surface work order, not to M0.
+ * List conversations.
+ *
+ * `limit` / `offset` (`routes.py:568-579`) are sent **only when the
+ * caller supplies them**, so the M0 call sites that pass neither behave
+ * exactly as they did. Omitting both is what silently truncates the list
+ * at `DEFAULT_LIST_LIMIT = 50` with nothing on the wire to say so, which
+ * is why `web/lib/queries/conversations.ts` always passes both
+ * explicitly (WO-11 criterion 2). The response is a bare array with no
+ * `total` and no `has_more`, so page counts are not derivable and are
+ * not offered.
  */
 export async function listConversations(
-  options?: RequestOptions
+  options?: ListConversationsOptions
 ): Promise<ConversationListItem[]> {
   const resp = await request(
-    "/conversations",
+    `/conversations${listQuery(options)}`,
     {},
     options,
     DEFAULT_READ_TIMEOUT_MS
   );
   return json<ConversationListItem[]>(resp);
+}
+
+function listQuery(options: ListConversationsOptions | undefined): string {
+  const params = new URLSearchParams();
+  if (options?.limit !== undefined) params.set("limit", String(options.limit));
+  if (options?.offset !== undefined) params.set("offset", String(options.offset));
+  const query = params.toString();
+  return query === "" ? "" : `?${query}`;
 }
 
 export async function getConversation(
