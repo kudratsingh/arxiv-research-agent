@@ -131,11 +131,38 @@ export default defineConfig(async () => ({
       // story to import the modules it actually exercises. WO-12's stories
       // read `lib/copy/errors` only, and take the twelve `ApiFailure`
       // kinds from `FAILURE_COPY`'s keys rather than from `lib/api`.
+      //
+      // WO-08 re-seeded all four, upward, at 1,570 tests: 1461/1545
+      // statements, 955/1079 branches, 442/465 functions, 1300/1355 lines.
+      // Previous values, for the audit trail: 93.98 / 87.99 / 95 / 95.26.
+      //
+      // Two notes a later work order will need.
+      //
+      // (1) The hazard above bit this branch twice and both fixes were
+      // structural, not numeric. `WorkbenchShell` originally defaulted its
+      // `rail` prop to `ConversationSidebar`, which pulled `lib/api` into
+      // the storybook project and took the functions column from 94.89%
+      // (unit alone) to 85.62% (both). The rail is now passed in by
+      // `app/(workspace)/layout.tsx` through `ThreadRailBridge`, which is
+      // the only module in the shell that reaches the data layer — so the
+      // shell's stories load layout and nothing else. The residual cost is
+      // `lib/copy/threads.ts`: the shell renders WO-12's `WORKSPACE` and
+      // `THREAD_RAIL` strings, so both projects load that module and its
+      // two composers report 50%. That is the correct trade — the
+      // alternative was a second copy of 03 §6's workspace sentence
+      // outside the dictionary's gate.
+      //
+      // (2) Four functions in this branch can never be covered by the
+      // storybook project, and no story should be contorted to try: the
+      // `getServerSnapshot` argument of each `useSyncExternalStore` — rail
+      // mode, rail collapse, offline, theme preference — runs during
+      // hydration only. They are pinned directly in
+      // web/tests/shell/wiring.test.tsx instead.
       thresholds: {
-        statements: 93.98,
-        branches: 87.99,
-        functions: 95,
-        lines: 95.26,
+        statements: 94.56,
+        branches: 88.5,
+        functions: 95.05,
+        lines: 95.94,
       },
     },
     projects: [

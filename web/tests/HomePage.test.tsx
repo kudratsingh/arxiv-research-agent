@@ -10,7 +10,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import HomePage from "@/app/page";
+// WO-08 moved the page into the `(workspace)` route group. The group adds
+// no URL segment — `/` is still `/` — but it does add a path segment, so
+// this import moved with the file. Nothing else in this file changed, which
+// is the point: the hand-off contract is unaffected by the shell.
+import HomePage from "@/app/(workspace)/page";
 
 const push = vi.fn();
 const replace = vi.fn();

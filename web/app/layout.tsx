@@ -41,6 +41,31 @@ export default function RootLayout({
         */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
+      {/*
+        WO-11's `<Providers>` IS NOT MOUNTED HERE, AND WO-08 MEASURED WHY.
+
+        `web/app/providers.tsx` documents the intended edit — wrap `children`
+        in `<Providers>` — and names WO-08 as the work order that would make
+        it. WO-08 built the mount, measured it with `npm run budgets`, and
+        took it back out:
+
+            /        143,848 B -> 151,864 B   ceiling 148,480 B   BREACH
+            /c/[id]  194,518 B -> 202,536 B   ceiling 199,680 B   BREACH
+
+        TanStack Query in the root layout is +8,016 B gzip on `/` and
+        +8,018 B on `/c/[id]`, and in M1 it has no consumer: every component
+        the shell renders is a legacy one that calls `lib/api` directly. So
+        the mount would breach two gated rows to load a library nothing
+        reads, which is the ratchet rule's exact anti-pattern
+        (04-ARCHITECTURE.md §8.4: a ceiling moves only in a PR that says
+        why).
+
+        providers.tsx's own note already says where it should land: "The
+        ~13 KB gzip lands on `/` when WO-20 route-loads it, and WO-23's
+        check is what will price it." WO-20 rewrites both pages against the
+        query layer, so it is the PR where the bytes buy something and where
+        the ceiling can be moved on the record. The edit is one line, here.
+      */}
       <body>{children}</body>
     </html>
   );

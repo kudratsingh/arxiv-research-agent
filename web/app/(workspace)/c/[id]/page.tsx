@@ -3,27 +3,34 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import ConversationThread from "@/components/ConversationThread";
-import ConversationsShell from "@/components/ConversationsShell";
+
+// WO-08 moved this file from `app/c/[id]/page.tsx` into the `(workspace)`
+// route group. A route group adds no URL segment, so this is still
+// `/c/[id]`, and `?job=` is untouched (ADR 0053, MUST-KEEP #1).
+//
+// The only edit to its body: the manual shell wrapper it used to render
+// around itself is gone: the shell is now `app/(workspace)/layout.tsx`.
+// The rail it used to render is now the layout's `nav[aria-label="Threads"]`, and the
+// thread renders inside the layout's single `<main id="main">`. The ad-hoc
+// "Loading conversation…" fallback stays until WO-09 replaces it with a
+// real `loading.tsx`.
 
 export default function ConversationPage() {
   const params = useParams<{ id: string }>();
   const conversationId = params?.id ?? "";
   return (
-    <ConversationsShell activeConversationId={conversationId}>
-      {/* `useSearchParams` opts its subtree into client-side
-          rendering; Next requires the Suspense boundary so the rest
-          of the page can still be prerendered (next build fails the
-          route otherwise). */}
-      <Suspense
-        fallback={
-          <div className="px-6 py-10 text-sm text-slate-500 dark:text-slate-400">
-            Loading conversation…
-          </div>
-        }
-      >
-        <ConversationThreadRoute conversationId={conversationId} />
-      </Suspense>
-    </ConversationsShell>
+    // `useSearchParams` opts its subtree into client-side rendering; Next
+    // requires the Suspense boundary so the rest of the page can still be
+    // prerendered (next build fails the route otherwise).
+    <Suspense
+      fallback={
+        <div className="px-6 py-10 text-sm text-slate-500 dark:text-slate-400">
+          Loading conversation…
+        </div>
+      }
+    >
+      <ConversationThreadRoute conversationId={conversationId} />
+    </Suspense>
   );
 }
 
