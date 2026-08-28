@@ -80,11 +80,18 @@ export default defineConfig(async () => ({
       // app/fonts/fonts.ts and app/layout.tsx — were already at 100% from the
       // unit project, so the second project adds execution but no new
       // covered line.
+      //
+      // WO-11 RE-SEEDED all four, upward, at 583 tests: 668/739 statements,
+      // 369/469 branches, 174/191 functions, 615/676 lines. The floor rose
+      // because the query layer arrived with its tests — lib/queries is
+      // 99.18/94.82/100/100 — so leaving the old numbers in place would have
+      // banked a regression allowance nobody earned. Previous values, for the
+      // audit trail: 88.09 / 75.93 / 86.66 / 88.66.
       thresholds: {
-        statements: 88.09,
-        branches: 75.93,
-        functions: 86.66,
-        lines: 88.66,
+        statements: 90.39,
+        branches: 78.67,
+        functions: 91.09,
+        lines: 90.97,
       },
     },
     projects: [

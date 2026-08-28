@@ -20,7 +20,7 @@ export {
   streamUrl,
   submitResearch,
 } from "./client";
-export type { RequestOptions } from "./client";
+export type { ListConversationsOptions, RequestOptions } from "./client";
 
 export {
   API_FAILURE_KINDS,
