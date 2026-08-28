@@ -1068,9 +1068,35 @@ export function shouldPoll(state: JobState): boolean {
   );
 }
 
-/** The checkpoint's label, or the honest absence of one. */
+/**
+ * The checkpoint's label, or the sentinel `"unknown"` for its absence.
+ *
+ * **NOT RENDERABLE COPY, AND NOT A ROUTE FOR IT.** 03 §5.5 requires "not
+ * reported" rather than "unknown" wherever the API is simply silent, and
+ * `web/tests/copy/forbidden.test.ts` bans the word outright. This helper
+ * predates WO-12's dictionary and survives as a *diagnostic* — the string
+ * `web/tests/job/checkpoint.test.ts` and `web/tests/job/stream.test.ts`
+ * assert the absent case with. Changing its sentinel would edit those
+ * suites, which is why the fix went the other way:
+ * `observedNode()` below exposes the raw absence, and a surface turns that
+ * into text with `checkpointName()` from `lib/copy/run`. WO-15's spine
+ * calls `observedNode`; nothing renders `checkpointLabel`.
+ */
 export function checkpointLabel(state: JobState): string {
   return state.checkpoint?.node ?? "unknown";
+}
+
+/**
+ * The last observed checkpoint's label **verbatim**, or `null` for absent.
+ *
+ * The raw-absent state rather than a stand-in string, so the module that
+ * owns wording decides what absence reads as: `checkpointName(null)` is
+ * "not reported" (03 §5.5), and no other spelling of it exists. The label
+ * itself is passed through untouched (H11) — there is no vocabulary to
+ * check it against.
+ */
+export function observedNode(state: JobState): string | null {
+  return state.checkpoint?.node ?? null;
 }
 
 /**

@@ -24,8 +24,36 @@
 // `web/tests/copy/forbidden.test.ts` proves all three over every key in
 // this file and over every string its functions can compose.
 
-import { LANDING } from "./composer";
 import { NOT_REPORTED } from "./errors";
+import { RUN_STATUS_LINE, checkpointCount, lastUpdated } from "./trace";
+
+// ---------------------------------------------------------------------------
+// The trace half, re-exported (WO-15). THE THIRD MOVE OUT OF THIS FILE, AND
+// THE SAME REASON AS THE OTHER TWO.
+//
+// 03 §3.4's status words, §5.3's legend and segments, §5.4's status lines,
+// `UNAVAILABLE_COPY` and the four checkpoint composers now live in
+// `./trace.ts`, byte-identical and under the same names — the trace spine's
+// surface, in the trace spine's file, exactly as WO-13 moved §1.4 to
+// `./composer.ts` and WO-16 moved `DIAGNOSTICS` to `./diagnostics.ts`.
+//
+// RE-EXPORTED, unlike `DIAGNOSTICS` and like the landing block, because
+// `web/tests/copy/forbidden.test.ts` DRIVES five of these as functions
+// (`run.checkpointCount`, `run.checkpointName`, `run.observedCheckpoint`,
+// `run.lastUpdated`, `run.failedStatusLine`) and asserts that the set it
+// drives EQUALS the set its walk of this namespace finds. This module's
+// export set is therefore unchanged: `@/lib/copy`, `@/lib/copy/run` and
+// `lib/job/machine.ts` all still see every name where they saw it before.
+//
+// The measurement, in this work order's own numbers: before the split, a
+// spine story importing one string from here put all eleven of this file's
+// functions into the Storybook project while exercising four.
+// `lib/copy/run.ts` fell from 100% to 68.18% functions and took the global
+// floor from 95.00% to 93.72% with no product code changed. Same hazard,
+// same page of `vitest.config.mts`, third file to hit it.
+// ---------------------------------------------------------------------------
+
+export * from "./trace";
 
 // ---------------------------------------------------------------------------
 // Landing (03 §1.4, verbatim). RE-HOMED TO `./composer` BY WO-13.
@@ -54,121 +82,16 @@ export {
 } from "./composer";
 
 // ---------------------------------------------------------------------------
-// Status words and marks (03 §3.4).
+// The composed run lines that are NOT the spine's (03 §5.4, §4.8).
+//
+// `runningStatusLine` is the whole of §5.4's running row as one string. The
+// trace spine does not render it: 03 §5.7 allows the live region to
+// announce material transitions and "never individual checkpoints", so the
+// spine splits the line and announces only "Running" — see
+// `lib/copy/spine.ts`. This composed form stays here because it is the
+// canonical §5.4 sentence and WO-16's diagnostics and WO-19's summary read
+// it whole.
 // ---------------------------------------------------------------------------
-
-/**
- * The word for each run state, from 03 §3.4's table.
- *
- * The table's order of precedence is word, then mark, then colour. This
- * object is the first of those three; `SEVERITY_MARK` in
- * `components/primitives/StatusBadge.tsx` is the second.
- */
-export const RUN_STATUS_WORD = {
-  observed: "observed",
-  live: "Live",
-  notObserved: "not observed",
-  pendingReview: "Waiting for your review",
-  succeeded: "Complete",
-  failed: "Failed",
-  cancelled: "Cancelled",
-  expired: "No longer available",
-} as const;
-
-/** The spine legend, rendered once per session and then behind a disclosure. */
-export const SPINE_LEGEND = [
-  { mark: "circle", meaning: "observed on this connection" },
-  { mark: "dashed-rule", meaning: "not observed" },
-  { mark: "diamond", meaning: "waiting for your review" },
-  { mark: "square", meaning: "complete" },
-  { mark: "hollow-square", meaning: "cancelled" },
-  { mark: "dashed-square", meaning: "no longer available" },
-] as const;
-
-/** The four spine segments (03 §5.3) — status transitions, not node names. */
-export const SPINE_SEGMENTS = ["Question", "Plan", "Run", "Report"] as const;
-
-// ---------------------------------------------------------------------------
-// The status line, state by state (03 §5.4).
-// ---------------------------------------------------------------------------
-
-/**
- * The fixed status lines. Every one of them is a sentence about something
- * the contract actually reports.
- *
- * `rejoined` and `reconnecting` are the two that carry H2: after any
- * reload or reconnect the checkpoint is genuinely unknown, and the UI says
- * so instead of leaving the last tick on screen implying otherwise.
- */
-export const RUN_STATUS_LINE = {
-  submitting: LANDING.submitPending,
-  awaitingReview: "Waiting for your review. The run is paused and not spending.",
-  rejoined: "Rejoined this run. Earlier checkpoints are not replayed.",
-  reconnecting: "Reconnecting. Checkpoints during the gap are not replayed.",
-  recycled: "Connection recycled by the server. The run is still going.",
-  cancelled: "Cancelled at plan review. Nothing was searched.",
-  historic:
-    "This briefing was produced outside this session. Its plan and checkpoints are not stored.",
-  failedWithoutCheckpoints:
-    "Failed. No checkpoints were observed on this connection.",
-  positionNotReported: "Position after the last checkpoint is not reported.",
-} as const;
-
-/**
- * §5.4: the 404 sentence, and the only one for an aged-out run.
- *
- * RE-HOMED FROM `web/lib/job/machine.ts` BY WO-12. It lived there because
- * WO-10 needed it provable, and it lives here because criterion 1 says one
- * module is the single edit site; `machine.ts` now imports it, and the
- * allow-list and deny-list tests that guarded it travelled to
- * `web/tests/copy/forbidden.test.ts` with the wording.
- *
- * Never "deleted", never "no permission" (H8): a 404 covers both missing
- * and not-yours by design (`routes.py:59-84`), and retention is why a run
- * this browser watched an hour ago can be gone now
- * (`api_job_retention_sec`, `src/config.py:307`).
- */
-export const UNAVAILABLE_COPY =
-  "This run is no longer available. Run records are kept for a limited time.";
-
-/**
- * The checkpoint count, with the qualifier that makes it true (03 §5.5).
- *
- * "on this connection" is not softening. The ledger is reset on every
- * open, including the browser's own retry (04 §4.4 rule 2), so the number
- * describes what this EventSource saw and nothing else.
- */
-export function checkpointCount(count: number): string {
-  const n = Math.max(0, Math.trunc(count));
-  if (n === 0) return "No checkpoints observed on this connection";
-  return `${n} checkpoint${n === 1 ? "" : "s"} observed on this connection`;
-}
-
-/**
- * A checkpoint's label, or the honest absence of one.
- *
- * The label is the event payload's `node`, verbatim (H11). It is never
- * looked up in a vocabulary, because `state_delta` is an open scalar map
- * (`runner.py:947-951`) and no node set is guaranteed.
- */
-export function checkpointName(node: string | null | undefined): string {
-  return typeof node === "string" && node !== "" ? node : NOT_REPORTED;
-}
-
-/** "observed <node>" — the qualifier travels with the name (03 §5.5). */
-export function observedCheckpoint(node: string | null | undefined): string {
-  return `observed ${checkpointName(node)}`;
-}
-
-/** "updated 41s ago", or nothing at all when no frame has ever arrived. */
-export function lastUpdated(secondsAgo: number | null | undefined): string | null {
-  if (typeof secondsAgo !== "number" || !Number.isFinite(secondsAgo)) return null;
-  const seconds = Math.max(0, Math.trunc(secondsAgo));
-  if (seconds < 60) return `updated ${seconds}s ago`;
-  const minutes = Math.trunc(seconds / 60);
-  if (minutes < 60) return `updated ${minutes}m ago`;
-  return `updated ${Math.trunc(minutes / 60)}h ago`;
-}
 
 /**
  * "Running · 3 checkpoints observed on this connection · updated 41s ago"
@@ -186,22 +109,6 @@ export function runningStatusLine(
   const parts = ["Running", checkpointCount(count)];
   if (updated !== null) parts.push(updated);
   return parts.join(" · ");
-}
-
-/**
- * The failure line for a settled run (H3).
- *
- * "Failed after the last observed checkpoint (`reader`)." when one was
- * seen; 03 §5.4's checkpoint-free sentence otherwise. Never "failed in",
- * never "failed during", never a stage: no terminal payload carries a node
- * (`runner.py:1063-1072`, `routes.py:857-867`), so any preposition that
- * attributes the failure *to* a node is invention.
- */
-export function failedStatusLine(node: string | null | undefined): string {
-  if (typeof node !== "string" || node === "") {
-    return RUN_STATUS_LINE.failedWithoutCheckpoints;
-  }
-  return `Failed after the last observed checkpoint (${node}).`;
 }
 
 /** The settled-and-succeeded line: only values `GET /research/{id}` gave us. */
