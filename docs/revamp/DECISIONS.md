@@ -177,3 +177,49 @@
 - Needs human review: no further review for these rulings (delegated);
   the ship decision's cost-bearing follow-ons (deployment) and MT-01
   remain the user's.
+
+## D-011 — EXEC coordinator rulings (M0 wave, under the same delegation)
+
+- Date: 2026-08-28
+- Status: recorded as ruled
+- Authority: the D-010 delegation; each ruling was made in response to an
+  implementation agent's honest flag rather than silently absorbed.
+- Rulings:
+  1. **Shared framework/runtime budget raised 120 → 138 KiB** (PR #77,
+     ratchet rule). WO-23's script measured the row at 130,865 B on
+     untouched `main` — React DOM (63,370 B) + the Next app-router
+     runtime (65,603 B) exceed the inferred 122,880 B ceiling before any
+     application code. 138 KiB = 141,312 B is 8.0% headroom over the
+     measured baseline, matching the other rows' +8.1/+8.2%. The raise
+     is recorded inside `web/budgets.json`'s `ratchet` array and printed
+     by every budget report.
+  2. **Next 16 manifest substitution accepted** (PR #77):
+     `app-build-manifest.json` no longer exists; the derived app-router
+     chunk union is cross-proved against the script tags in the
+     prerendered HTML.
+  3. **WO-03 error-message dual channel accepted** (PR #75):
+     `ApiFailure.message` is the user-facing sentence; the legacy
+     `ApiError.message` string survives only for shim neutrality and is
+     deleted with the shims in M4. Billable writes carry **no default
+     timeout** (R-01: a client timeout on `POST /research` hides a run
+     being paid for); reads carry 15 s.
+  4. **WO-04 scope extension accepted** (PR #79): one `contract:check`
+     step in `.github/workflows/ci.yml` — its criterion literally
+     requires CI to fail on drift.
+  5. **WO-02 shared-file touches accepted** (PR #80): a 4-line
+     `vitest.config.mts` alias stubbing `next/font/local`, and one
+     future-proofed assertion in WO-01's token test.
+  6. **Integration incident recorded** (PR #78): PRs #76 and #77 were
+     independently green but their combination failed on `main` — the
+     repo-wide hex-colour scan matched the `#defa` prefix of Next's
+     `#default` manifest module keys in WO-23's fixtures. `main` was red
+     for one push run (~6 minutes); fixed forward by tightening the
+     scan's lookahead to `(?!\w)`. Coordinator process change: every
+     merge is now gated on the CI watch's exit status in a single
+     guarded command.
+  7. **Fleet hazard added to `06-WORK-ORDERS.md` §5.4**: the compose
+     file's hardcoded `container_name` values let one agent's
+     `docker compose down` remove another agent's running stack
+     (observed; no data loss — the victim had already finished).
+- Needs human review: no (delegated); listed here so the audit trail of
+  every deviation from the ratified package is complete.
