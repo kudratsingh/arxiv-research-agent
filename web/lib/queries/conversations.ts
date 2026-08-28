@@ -23,7 +23,7 @@
 //      Markdown pipeline is **not loaded until one is expanded**. See
 //      `loadReportRenderer` at the bottom of this file.
 
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useState } from "react";
 
 import {
   useInfiniteQuery,
@@ -44,6 +44,11 @@ import {
   type ConversationDetail,
   type ConversationListItem,
 } from "@/lib/api/index";
+
+import {
+  loadReportRenderer,
+  type ReportRenderer,
+} from "@/lib/report/renderer";
 
 import { mutationKeys, queryKeys } from "./keys";
 
@@ -302,29 +307,19 @@ export function useDeleteConversation(): UseMutationResult<
 // The Markdown parse boundary.
 // ---------------------------------------------------------------------------
 
-/** `react-markdown`'s default export, as this layer uses it. */
-export type ReportRenderer = ComponentType<{ children: string }>;
-
-let rendererPromise: Promise<ReportRenderer> | null = null;
-
 /**
- * Load the Markdown pipeline — and only then.
+ * The boundary itself now lives in `lib/report/renderer.ts` (WO-18), and is
+ * re-exported here so this module's public shape is unchanged.
  *
- * A conversation detail response carries every report body in full
- * (`schemas.py:184-191`), so a thread with ten turns holds ten Markdown
- * documents in memory the moment it loads. Parsing them all to render a
- * collapsed list is work nobody asked for, and `react-markdown` +
- * `remark-gfm` are a meaningful chunk on a route whose budget is already
- * tight (RC-01). The dynamic import keeps both out of the route's
- * first-load JS until a turn is actually expanded, and the module-level
- * promise means the second expansion pays nothing.
+ * WHY IT MOVED. This module imports `@tanstack/react-query` and `lib/api`.
+ * Everything that only wants to RENDER Markdown — the reading surface and
+ * its stories — would otherwise pull the whole query layer in to reach a
+ * dynamic `import()` that has nothing to do with it. `useReportRenderer`
+ * below is a hook about when a turn is expanded, so it stays; the loader is
+ * about a module, so it does not.
  */
-export function loadReportRenderer(): Promise<ReportRenderer> {
-  rendererPromise ??= import("react-markdown").then(
-    (module) => module.default as unknown as ReportRenderer
-  );
-  return rendererPromise;
-}
+export type { ReportRenderer, ReportRendererProps } from "@/lib/report/renderer";
+export { loadReportRenderer };
 
 /**
  * The renderer for one turn, or `null` while it is collapsed.

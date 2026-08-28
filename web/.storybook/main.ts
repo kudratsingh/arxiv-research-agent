@@ -49,6 +49,41 @@ const config: StorybookConfig = {
   core: {
     disableTelemetry: true,
   },
+
+  /**
+   * WO-18: the Markdown pipeline must be resolved by Vite, not by Node.
+   *
+   * Same symptom, same cause and same fix as the `@radix-ui/*` entries WO-07
+   * added to `server.deps.inline` in web/vitest.config.mts. The Next
+   * framework mocks register a `module-alias` redirect from `react` to
+   * `next/dist/compiled/react`, which Node's ESM loader cannot resolve
+   * because the target is a directory. `react-markdown` imports
+   * `react/jsx-runtime`, so the moment the Storybook Vitest project
+   * externalises it the story fails with "Cannot find module
+   * .../next/dist/compiled/react/jsx-runtime".
+   *
+   * It is fixed HERE rather than in vitest.config.mts because the Storybook
+   * project takes its Vite configuration from this file, and because the
+   * coverage thresholds in that file are not this work order's to touch.
+   * `ssr.noExternal` is the Vite-level spelling of the same instruction:
+   * bundle these two through Vite, and the `react` import inside them
+   * resolves the way every other module's does.
+   *
+   * `npm run build-storybook` is unaffected either way — a browser build
+   * never externalises anything.
+   */
+  async viteFinal(config) {
+    const existing = config.ssr?.noExternal;
+    const inherited =
+      existing === true ? [] : Array.isArray(existing) ? existing : existing ? [existing] : [];
+    return {
+      ...config,
+      ssr: {
+        ...config.ssr,
+        noExternal: [...inherited, "react-markdown", "remark-gfm"],
+      },
+    };
+  },
 };
 
 export default config;
