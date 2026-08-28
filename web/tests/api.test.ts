@@ -1,5 +1,28 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ApiError, getJob, streamUrl, submitResearch } from "@/lib/api";
+import * as shim from "@/lib/api";
+import * as surface from "@/lib/api/index";
+import {
+  DEFAULT_READ_TIMEOUT_MS,
+  createConversation,
+  deleteConversation,
+  getConversation,
+  listConversations,
+  reviewPlan,
+} from "@/lib/api";
+
+// Vitest runs from `web/`, where its config lives.
+const WEB_ROOT = process.cwd();
+
+// Assembled at runtime — including in this file's own describe title —
+// so `tests/` can be scanned for the literal alongside everything else.
+const BYPASS_FIELD = ["hitl", "bypass"].join("_");
+
+function readWebFile(relative: string): string {
+  return readFileSync(join(WEB_ROOT, relative), "utf8");
+}
 
 const originalFetch = globalThis.fetch;
 
@@ -94,5 +117,340 @@ describe("getJob", () => {
 describe("streamUrl", () => {
   it("encodes the job_id path segment", () => {
     expect(streamUrl("j 1")).toContain("/research/j%201/stream");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WO-03 additions. Everything above this line is unchanged.
+// ---------------------------------------------------------------------------
+
+/** A fetch that only settles when its signal aborts. */
+function hangingFetch(): ReturnType<typeof vi.fn> {
+  return vi.fn(
+    (_input: RequestInfo | URL, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal;
+        if (!signal) return;
+        signal.addEventListener("abort", () => {
+          const err = new Error("The operation was aborted.");
+          err.name = "AbortError";
+          reject(err);
+        });
+      })
+  );
+}
+
+async function failureOf(promise: Promise<unknown>): Promise<ApiError> {
+  try {
+    await promise;
+  } catch (err) {
+    return err as ApiError;
+  }
+  throw new Error("expected the call to reject");
+}
+
+describe("abort and timeout on reads", () => {
+  it("aborts a read when the caller's signal fires", async () => {
+    globalThis.fetch = hangingFetch() as unknown as typeof fetch;
+    const controller = new AbortController();
+    const pending = failureOf(getJob("j1", { signal: controller.signal }));
+    controller.abort();
+    const err = await pending;
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.failure.kind).toBe("cancelled");
+    expect(err.status).toBe(0);
+  });
+
+  it("never sends a request when the signal is already aborted", async () => {
+    const fetchMock = hangingFetch();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    const err = await failureOf(
+      getJob("j1", { signal: AbortSignal.abort() })
+    );
+
+    expect(err.failure.kind).toBe("cancelled");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("passes a signal to fetch even when the caller supplies none", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      jsonResponse({ job_id: "j1", status: "succeeded" })
+    );
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    await getJob("j1");
+
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(init?.signal).toBeInstanceOf(AbortSignal);
+    expect(init?.signal?.aborted).toBe(false);
+  });
+
+  it("times out a read with an explicit ceiling", async () => {
+    globalThis.fetch = hangingFetch() as unknown as typeof fetch;
+    const err = await failureOf(listConversations({ timeoutMs: 5 }));
+
+    expect(err.failure.kind).toBe("timeout");
+    expect(err.failure.message).toContain("too long");
+  });
+
+  it("applies a default timeout to every read with no options", async () => {
+    vi.useFakeTimers();
+    try {
+      globalThis.fetch = hangingFetch() as unknown as typeof fetch;
+      const reads = [
+        getJob("j1"),
+        listConversations(),
+        getConversation("c1"),
+      ].map((promise) => failureOf(promise));
+
+      await vi.advanceTimersByTimeAsync(DEFAULT_READ_TIMEOUT_MS + 1);
+
+      for (const err of await Promise.all(reads)) {
+        expect(err.failure.kind).toBe("timeout");
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("leaves billable writes without a default timeout", async () => {
+    // Aborting POST /research does not cancel the job the server
+    // already created, so a client-side ceiling would only hide a run
+    // the user is still paying for.
+    vi.useFakeTimers();
+    try {
+      let release: ((value: Response) => void) | undefined;
+      globalThis.fetch = vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            release = resolve;
+          })
+      ) as unknown as typeof fetch;
+
+      const pending = submitResearch("q");
+      await vi.advanceTimersByTimeAsync(DEFAULT_READ_TIMEOUT_MS * 10);
+
+      release?.(
+        jsonResponse(
+          {
+            job_id: "j1",
+            status: "pending",
+            status_url: "/research/j1",
+            stream_url: "/research/j1/stream",
+          },
+          202
+        )
+      );
+      await expect(pending).resolves.toMatchObject({ job_id: "j1" });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("normalized failures reach callers", () => {
+  it("carries the normalized failure alongside the legacy message", async () => {
+    (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          detail: { error: "rate_limited", key_id: "k", limit_per_hour: 20 },
+        }),
+        {
+          status: 429,
+          headers: {
+            "content-type": "application/json",
+            "retry-after": "30",
+          },
+        }
+      )
+    );
+    const err = await failureOf(submitResearch("q"));
+
+    expect(err.status).toBe(429);
+    expect(err.failure.kind).toBe("rate_limited");
+    // The user-facing sentence never contains the payload...
+    expect(err.failure.message).not.toContain("key_id");
+    // ...while the legacy `message` channel stays byte-compatible with
+    // the superseded `safeError()` so existing UI copy is unchanged.
+    expect(err.message).toContain("rate_limited");
+  });
+
+  it("falls back to HTTP status text for a non-JSON body", async () => {
+    (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      new Response("<html>nope</html>", {
+        status: 500,
+        statusText: "Internal Server Error",
+        headers: { "content-type": "text/html" },
+      })
+    );
+    const err = await failureOf(getJob("j1"));
+
+    expect(err.message).toBe("HTTP 500 Internal Server Error");
+    expect(err.failure.kind).toBe("server_error");
+  });
+
+  it("wraps a transport failure without losing its message", async () => {
+    globalThis.fetch = vi.fn(async () => {
+      throw new TypeError("Failed to fetch");
+    }) as unknown as typeof fetch;
+    const err = await failureOf(getConversation("c1"));
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.status).toBe(0);
+    expect(err.failure.kind).toBe("offline");
+    expect(err.message).toBe("Failed to fetch");
+  });
+});
+
+describe("the M0 compatibility shim", () => {
+  const NAMES = [
+    "submitResearch",
+    "getJob",
+    "reviewPlan",
+    "streamUrl",
+    "listConversations",
+    "getConversation",
+    "createConversation",
+    "deleteConversation",
+    "ApiError",
+  ] as const;
+
+  it("re-exports every name 05-MIGRATION.md §1.1 pins", () => {
+    for (const name of NAMES) {
+      expect(shim).toHaveProperty(name);
+      // Same binding, not a re-implementation.
+      expect(shim[name]).toBe(surface[name]);
+    }
+  });
+
+  it("keeps the callable surface callable", () => {
+    for (const name of NAMES) {
+      expect(typeof shim[name]).toBe("function");
+    }
+    expect(
+      [
+        submitResearch,
+        getJob,
+        reviewPlan,
+        createConversation,
+        listConversations,
+        getConversation,
+        deleteConversation,
+      ].every((fn) => typeof fn === "function")
+    ).toBe(true);
+  });
+
+  it("keeps API_BASE pointing at the same-origin proxy", () => {
+    expect(shim.API_BASE).toBe("/api");
+  });
+});
+
+describe(`${BYPASS_FIELD} containment (H12)`, () => {
+  const FIELD = BYPASS_FIELD;
+  const ROOTS = ["app", "components", "lib", "tests"];
+  const ALLOWED_PREFIX = join("lib", "api") + "/";
+
+  function walk(dir: string, acc: string[] = []): string[] {
+    for (const entry of readdirSync(join(WEB_ROOT, dir), {
+      withFileTypes: true,
+    })) {
+      const relative = join(dir, entry.name);
+      if (entry.isDirectory()) walk(relative, acc);
+      else if (/\.tsx?$/.test(entry.name)) acc.push(relative);
+    }
+    return acc;
+  }
+
+  it("is referenced by no module outside lib/api", () => {
+    const offenders = ROOTS.flatMap((root) => walk(root)).filter(
+      (relative) =>
+        !relative.startsWith(ALLOWED_PREFIX) &&
+        readWebFile(relative).includes(FIELD)
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("is still offered by the typed client", () => {
+    // Removing it would be a false narrowing of the real API
+    // (03-DESIGN-BRIEF.md §8.4).
+    expect(readWebFile(join("lib", "api", "models.ts"))).toContain(
+      `${FIELD}?: boolean`
+    );
+  });
+
+  it("is never sent unless a caller opts in", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      jsonResponse(
+        {
+          job_id: "j1",
+          status: "pending",
+          status_url: "/research/j1",
+          stream_url: "/research/j1/stream",
+        },
+        202
+      )
+    );
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    await submitResearch("q");
+    await submitResearch("q", { conversation_id: "c1" });
+
+    for (const call of fetchMock.mock.calls) {
+      const init = call[1] as RequestInit;
+      expect(Object.keys(JSON.parse(init.body as string))).not.toContain(FIELD);
+    }
+  });
+});
+
+describe("the committed OpenAPI snapshot", () => {
+  const snapshot = JSON.parse(
+    readWebFile(join("contract", "openapi.json"))
+  ) as Record<string, unknown>;
+
+  it("records the commit it was generated at", () => {
+    const provenance = snapshot["x-provenance"] as Record<string, string>;
+    expect(provenance).toBeDefined();
+    expect(provenance.commit).toMatch(/^[0-9a-f]{40}$/);
+    expect(provenance.source).toContain("create_app().openapi()");
+    expect(provenance.generated).toContain("DO NOT EDIT");
+  });
+
+  it("describes the frozen HTTP surface 04-ARCHITECTURE.md §3.1 lists", () => {
+    expect(Object.keys(snapshot.paths as object).sort()).toEqual([
+      "/conversations",
+      "/conversations/{conversation_id}",
+      "/healthz",
+      "/research",
+      "/research/{job_id}",
+      "/research/{job_id}/export",
+      "/research/{job_id}/review",
+      "/research/{job_id}/stream",
+    ]);
+  });
+
+  it("is the only source the generated types are built from", () => {
+    const generated = readWebFile(
+      join("lib", "api", "generated", "schema.d.ts")
+    );
+    expect(generated).toContain("auto-generated by openapi-typescript");
+    expect(generated).toContain("Do not make direct changes to the file");
+  });
+
+  it("is aliased by models.ts rather than duplicated", () => {
+    const models = readWebFile(join("lib", "api", "models.ts"));
+    const schemaNames = Object.keys(
+      (snapshot.components as { schemas: object }).schemas
+    );
+    const exported = [...models.matchAll(/^export type (\w+)/gm)].map(
+      (match) => match[1]
+    );
+    const shared = exported.filter((name) =>
+      schemaNames.includes(name as string)
+    );
+
+    expect(shared.length).toBeGreaterThanOrEqual(8);
+    for (const name of shared) {
+      expect(models).toContain(`Schemas["${name}"]`);
+    }
   });
 });

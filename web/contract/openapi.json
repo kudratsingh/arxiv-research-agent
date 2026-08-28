@@ -1,0 +1,945 @@
+{
+  "x-provenance": {
+    "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
+    "source": "create_app().openapi() -- src/api/app.py",
+    "commit": "09508afebabd890823170d5a9cc91b5be97f9a64",
+    "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
+    "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
+    "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
+  },
+  "openapi": "3.1.0",
+  "info": {
+    "title": "arxiv-research-agent",
+    "description": "HTTP surface over the multi-agent research workflow. See docs/decisions/0025-fastapi-async-job-model.md.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/research": {
+      "post": {
+        "summary": "Submit a research query \u2014 returns immediately with a job_id.",
+        "description": "Accept a query and kick off a background workflow.\n\nReturns 202 with `job_id`, `status_url`, `stream_url`. The\nworkflow runs behind a semaphore so requests over the concurrent\nceiling queue as `pending` and start when a slot frees.\n\nWhen `conversation_id` is set, the runner retrieves prior-report\nchunks from that conversation before invoking the workflow, and\nappends the completed job to the conversation on succeed. See\nADR 0032.\n\nUnder `settings.enable_api_auth`, `X-API-Key` is required \u2014 see\nADR 0033 \u2014 and the caller is subject to\n`settings.api_key_hourly_limit`.",
+        "operationId": "submit_research_research_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchAccepted"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{job_id}": {
+      "get": {
+        "summary": "Get the current status + result of a job.",
+        "operationId": "get_research_research__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{job_id}/review": {
+      "post": {
+        "summary": "Resolve a `pending_review` job \u2014 approve, revise, or cancel.",
+        "description": "Signal the paused runner with the client's decision (ADR 0030).\n\n- `approve` \u2014 resume as-is.\n- `revise`  \u2014 apply `plan` (sub_questions + search_queries) then\n              resume. Both fields required.\n- `cancel`  \u2014 abandon the run; job transitions to `cancelled`.",
+        "operationId": "review_plan_research__job_id__review_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{job_id}/export": {
+      "get": {
+        "summary": "Download the report in the requested format.",
+        "description": "Serve the job's report in the requested format (ADR 0031).\n\n- 404 when the job doesn't exist.\n- 409 when the job hasn't produced a report yet\n  (still `pending` / `running` / `pending_review` / `failed`\n  without a body / `cancelled` before completion).\n- Content-Disposition: attachment so browsers download rather\n  than inline-render, matching the demo UI's export buttons.",
+        "operationId": "export_research_research__job_id__export_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(md|pdf|docx)$",
+              "description": "`md`, `pdf`, or `docx`",
+              "default": "md",
+              "title": "Format"
+            },
+            "description": "`md`, `pdf`, or `docx`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "text/markdown": {},
+              "application/pdf": {},
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{job_id}/stream": {
+      "get": {
+        "summary": "Server-Sent Events stream of workflow events.",
+        "description": "Stream this job's workflow events as Server-Sent Events.\n\nTerminal jobs replay a single frame and close, which is what\nmakes reconnects idempotent. A job parked in `pending_review`\nreplays its `plan_ready` frame first and then keeps streaming\n(ADR 0053). Live jobs are handed to `sse_event_stream`\n(ADR 0038), which owns the read/heartbeat/deadline loop and the\ndrainer's cleanup.\n\nArgs:\n    job_id: Job to stream.\n    request: Incoming request; supplies app state and the\n        disconnect probe.\n    principal: Authenticated caller, or None when auth is off.\n\nReturns:\n    A `text/event-stream` response.\n\nRaises:\n    HTTPException: 404 when the job is unknown or owned by\n        another principal (ADR 0036).",
+        "operationId": "stream_research_research__job_id__stream_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations": {
+      "post": {
+        "summary": "Create a new conversation.",
+        "description": "Create an empty conversation. `title` is optional \u2014 when\nomitted the first job's query auto-populates it. See ADR 0032.\n\nUnder `settings.enable_api_auth` the conversation is owned by\nthe presenting API key; other principals see 404 on\nread/delete. See ADR 0036.",
+        "operationId": "create_conversation_conversations_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List conversations, newest first (no job bodies), paginated.",
+        "operationId": "list_conversations_conversations_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Page size \u2014 at most this many conversations come back.",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Page size \u2014 at most this many conversations come back."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Rows to skip, counted within the caller's own conversations, newest first.",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Rows to skip, counted within the caller's own conversations, newest first."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConversationListItem"
+                  },
+                  "title": "Response List Conversations Conversations Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}": {
+      "get": {
+        "summary": "Full conversation thread including every job's report body.",
+        "operationId": "get_conversation_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a conversation + all its jobs.",
+        "operationId": "delete_conversation_conversations__conversation_id__delete",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "summary": "Liveness + dependency status + per-worker concurrency.",
+        "description": "Process liveness plus an honest dependency report (ADR 0042).\n\nDeliberately auth-exempt (orchestrator probes can't send keys)\nand always HTTP 200: this endpoint answers \"is THIS process\nalive\", and restarting the process does not fix a dead Redis \u2014\na probe that 503s on dependency failure turns a backend blip\ninto a rolling-restart storm. Dependency state is reported in\nthe body (`status: degraded` + per-dependency breakdown) so\noperators and smarter probes can see it.\n\n`active_jobs` counts this worker's in-flight job tasks (queued +\nrunning) \u2014 store-independent, so it no longer reports a constant\n0 under the shipped Redis store \u2014 *plus* any node threads the\nrunner gave up waiting on after a timeout drain expired (ADR\n0047). Those threads still hold a pool slot and still spend, so\nleaving them out would report free capacity this worker does not\nhave; `abandoned_node_threads` breaks them out separately.",
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConversationCreateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Optional display title. Auto-derived from first job's query when omitted."
+          }
+        },
+        "type": "object",
+        "title": "ConversationCreateRequest",
+        "description": "Body for `POST /conversations`. Both fields optional \u2014 a\nconversation can be seeded blank (title auto-derives from the\nfirst job's query) or with an explicit title."
+      },
+      "ConversationDetail": {
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "title": "Conversation Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "number",
+            "title": "Updated At"
+          },
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationJobSummary"
+            },
+            "type": "array",
+            "title": "Jobs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conversation_id",
+          "title",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ConversationDetail",
+        "description": "`GET /conversations/{id}` \u2014 full thread."
+      },
+      "ConversationJobSummary": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "ordinal": {
+            "type": "integer",
+            "title": "Ordinal"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "report": {
+            "type": "string",
+            "title": "Report"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "ordinal",
+          "query",
+          "report",
+          "created_at"
+        ],
+        "title": "ConversationJobSummary",
+        "description": "Trimmed view of a conversation's job \u2014 sidebar-friendly."
+      },
+      "ConversationListItem": {
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "title": "Conversation Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "number",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conversation_id",
+          "title",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ConversationListItem",
+        "description": "`GET /conversations` \u2014 sidebar entry, no job bodies."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "`ok` when all checked dependencies ping; `degraded` otherwise. The HTTP status stays 200 either way \u2014 see ADR 0042."
+          },
+          "active_jobs": {
+            "type": "integer",
+            "title": "Active Jobs",
+            "description": "In-flight job tasks on THIS worker (queued + running) plus `abandoned_node_threads`. Store-independent, so it is honest under the Redis store too; a cluster-wide count would need its own endpoint."
+          },
+          "abandoned_node_threads": {
+            "type": "integer",
+            "title": "Abandoned Node Threads",
+            "description": "Graph-node threads still running after their job was already failed and its concurrency permit released \u2014 the drain budget expired before the thread returned (ADR 0047). Sustained non-zero means nodes are ignoring the cancel token, or `api_job_drain_timeout_sec` is too tight.",
+            "default": 0
+          },
+          "max_concurrent_jobs": {
+            "type": "integer",
+            "title": "Max Concurrent Jobs"
+          },
+          "dependencies": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Dependencies",
+            "description": "Per-dependency ping result (`ok` or `error: <ExceptionName>`), keyed by dependency name. Only backends the deployment actually configures appear here."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "active_jobs",
+          "max_concurrent_jobs"
+        ],
+        "title": "HealthResponse",
+        "description": "`GET /healthz` \u2014 process liveness + dependency visibility (ADR 0042).\n\n`status` is `ok` when every checked dependency answered its ping,\n`degraded` otherwise. The endpoint always returns 200 \u2014 it\nreports liveness of *this process*, and restarting the process\ndoes not fix a dead Redis. Orchestrators that want to gate\ntraffic on dependencies should parse `status` / `dependencies`."
+      },
+      "JobDetail": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "elapsed_sec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elapsed Sec"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "error_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Type"
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd"
+          },
+          "llm_calls": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Calls"
+          },
+          "iterations": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iterations"
+          },
+          "quality_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Score"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Plan"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Populated when `status=pending_review`. See ADR 0030."
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id",
+            "description": "If the job runs in a conversation, its id. See ADR 0032."
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "query",
+          "created_at"
+        ],
+        "title": "JobDetail",
+        "description": "`GET /research/{job_id}` \u2014 full lifecycle snapshot."
+      },
+      "Plan": {
+        "properties": {
+          "sub_questions": {
+            "items": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Sub Questions",
+            "description": "Planner-decomposed sub-questions. The planner emits 2-6; the cap of 20 items x 500 chars is generous headroom (ADR 0042)."
+          },
+          "search_queries": {
+            "items": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Search Queries",
+            "description": "Planner-generated arXiv search queries. The planner emits 2-6; the cap of 20 items x 500 chars is generous headroom (ADR 0042)."
+          }
+        },
+        "type": "object",
+        "title": "Plan",
+        "description": "The planner's output, exposed for HITL review (ADR 0030).\n\nBoth lists are bounded (ADR 0042): each search query costs one\narXiv HTTP call plus a hard 3s politeness sleep on an executor\nthread, so an unbounded revised plan is a resource-exhaustion\nvector, not just bad input."
+      },
+      "ResearchAccepted": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "status_url": {
+            "type": "string",
+            "title": "Status Url"
+          },
+          "stream_url": {
+            "type": "string",
+            "title": "Stream Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "status_url",
+          "stream_url"
+        ],
+        "title": "ResearchAccepted",
+        "description": "`POST /research` response \u2014 202 Accepted, work now in flight."
+      },
+      "ResearchRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Query",
+            "description": "Natural-language research question"
+          },
+          "hitl_bypass": {
+            "type": "boolean",
+            "title": "Hitl Bypass",
+            "description": "Skip the HITL plan-review pause even when `enable_hitl` is on. The eval runner + other programmatic callers use this so they don't stall waiting for a human. See ADR 0030.",
+            "default": false
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id",
+            "description": "Run this query as a follow-up in an existing conversation. Prior-report chunks from the same conversation are retrieved and prepended to the planner's system prompt. See ADR 0032."
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "ResearchRequest",
+        "description": "Body for `POST /research`."
+      },
+      "ReviewRequest": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "pattern": "^(approve|revise|cancel)$",
+            "title": "Action",
+            "description": "`approve` = resume as-is; `revise` = apply `plan` and resume; `cancel` = abandon the run."
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Plan"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required when `action=revise`. Ignored otherwise."
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "ReviewRequest",
+        "description": "Body for `POST /research/{job_id}/review` (ADR 0030)."
+      },
+      "ReviewResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Snapshot of the job's status when the review was accepted (always `pending_review`). The action is applied asynchronously \u2014 poll the job for the settled state."
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "status",
+          "action"
+        ],
+        "title": "ReviewResponse",
+        "description": "Response for `POST /research/{job_id}/review`.\n\n`status` is the job's status *at the moment the review was\naccepted* \u2014 always `pending_review` \u2014 not the post-resume state.\nThe resume is asynchronous: the runner applies the action after\nthis response is written, so clients should poll `status_url`\n(or watch the SSE stream) for the settled outcome rather than\nasserting on this snapshot."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
