@@ -97,11 +97,24 @@ export default defineConfig(async () => ({
       // WO-11's numbers would have banked ~2 points of regression allowance
       // nobody earned. Previous values, for the audit trail:
       // 90.39 / 78.67 / 91.09 / 90.97.
+      //
+      // WO-07 re-seeded all four again, measured on the tree rebased onto
+      // WO-10 — the union of the primitives, the job machine and the query
+      // layer. Neither branch's number was right for that union, so nothing
+      // was carried forward. The eleven primitives sit inside the include
+      // scope above and land at 100% statements, 100% functions, 100% lines
+      // and 97.40% branches over 238 new unit tests, which lifts three of the
+      // four columns; branches gains the most ground because a primitive's
+      // whole state set is prop-reachable and the tests walk it. 1,275 tests
+      // now cover 1148/1232 statements, 724/843 branches, 319/338 functions,
+      // 1039/1098 lines. Nothing was lowered, and no exclusion was added to
+      // reach these. Previous values, for the audit trail:
+      // 92.39 / 82.46 / 93.75 / 94.11.
       thresholds: {
-        statements: 92.39,
-        branches: 82.46,
-        functions: 93.75,
-        lines: 94.11,
+        statements: 93.18,
+        branches: 85.88,
+        functions: 94.37,
+        lines: 94.62,
       },
     },
     projects: [
@@ -149,10 +162,26 @@ export default defineConfig(async () => ({
            * externalised @storybook/react therefore fails to import with
            * "Directory import ... is not supported". Inlined, Vite resolves
            * react itself and the alias never applies.
+           *
+           * WO-07 adds `@radix-ui/*` and `@floating-ui/*` for exactly the
+           * same reason and with exactly the same symptom:
+           * `@radix-ui/react-dialog`, `@radix-ui/react-dropdown-menu` and
+           * the `@floating-ui/react-dom` the menu's popper depends on all
+           * import `react`, and when Node resolves that import the
+           * `module-alias` registration above sends it to a directory it
+           * cannot load. This is the whole of WO-07's edit to this file
+           * besides the re-seeded coverage floors; it adds no package to the
+           * product and changes nothing about the `unit` project.
            */
           server: {
             deps: {
-              inline: [/@storybook\//, /^storybook$/, /vite-plugin-storybook-nextjs/],
+              inline: [
+                /@storybook\//,
+                /^storybook$/,
+                /vite-plugin-storybook-nextjs/,
+                /@radix-ui\//,
+                /@floating-ui\//,
+              ],
             },
           },
         },
