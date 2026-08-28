@@ -18,7 +18,12 @@
     "build-storybook": "storybook build --output-dir build/storybook",
     "generate:types": "openapi-typescript ./contract/openapi.json --output ./lib/api/generated/schema.d.ts",
     "contract:check": "bash ./contract/check-generated-types.sh",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install --with-deps chromium firefox webkit",
+    "e2e:stack:up": "bash ./e2e/support/stack.sh up",
+    "e2e:stack:seed": "bash ./e2e/support/stack.sh seed",
+    "e2e:stack:down": "bash ./e2e/support/stack.sh down"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.23",
@@ -32,6 +37,7 @@
     "web-vitals": "6.2.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@storybook/addon-a11y": "10.5.10",
     "@storybook/addon-vitest": "10.5.10",
     "@storybook/nextjs-vite": "10.5.10",

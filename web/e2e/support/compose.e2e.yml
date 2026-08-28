@@ -1,0 +1,70 @@
+# Compose overlay for the WO-21 end-to-end stack.
+#
+# WHY THIS FILE EXISTS AT ALL.
+#
+# `docker-compose.yml` at the repository root hardcodes `container_name` on
+# every service (`arxiv-research-agent-app`, `-web`, `-redis`, `-postgres`).
+# A `container_name` is global to the Docker daemon, not scoped to the
+# Compose project, so two checkouts of this repository — two worktrees, two
+# CI jobs on one runner, an agent and a developer — cannot bring the stack
+# up at the same time, and `docker compose down` run from one of them
+# removes the *other* one's containers. That was observed during M0 and is
+# recorded in `docs/revamp/06-WORK-ORDERS.md` §5.4 ("Docker: hardcoded
+# container_name").
+#
+# This overlay renames all four containers and moves both published ports
+# into a private block, so the e2e stack is isolated by construction rather
+# than by convention. Use it through `web/e2e/support/stack.sh`, which also
+# pins the Compose project name — never `docker compose down` without
+# `-p` and `-f` both, or you will take down somebody else's stack.
+#
+#   docker compose -p arxiv-wo21-e2e \
+#     -f docker-compose.yml -f web/e2e/support/compose.e2e.yml up -d --wait
+#
+# THE COST BOUNDARY. `ANTHROPIC_API_KEY` is pinned to
+# `local-preview-disabled` here rather than passed through from the host, so
+# the stack physically cannot reach a model provider even if a real key is
+# exported in the shell that starts it. That is the same value the Gate 1
+# baseline used (`docs/revamp/baseline/README.md`, "Test data and safety")
+# and the rule stated in `06-WORK-ORDERS.md` §0 ("Cost boundary").
+#
+# NOTE ON `web.image`. The tag is distinct from the base file's
+# `arxiv-research-agent-web:local` so that building the e2e image never
+# overwrites a developer's local tag, and so a stale `:local` from an
+# earlier branch is never silently reused for an e2e run.
+
+#
+# `!override` ON EVERY `ports:` LIST, AND WHY IT IS NOT OPTIONAL.
+#
+# Compose merges sequences by APPENDING, not replacing. Without the tag this
+# overlay would publish the base file's `127.0.0.1:8000:8000` *and* its own
+# `127.0.0.1:18210:8000`, so the e2e stack would still collide on the base
+# ports with whatever else is running — which is the exact failure this file
+# exists to prevent, and which was observed the first time it was written
+# without the tag ("Bind for 0.0.0.0:8000 failed: port is already allocated").
+# `!override` needs Compose v2.24 or newer.
+
+services:
+  app:
+    container_name: arxiv-wo21-app
+    ports: !override
+      - "${E2E_APP_BIND_ADDRESS:-127.0.0.1}:${E2E_APP_PORT:-18210}:8000"
+    environment:
+      # Never a real key. See "THE COST BOUNDARY" above.
+      ANTHROPIC_API_KEY: local-preview-disabled
+      # The redriver is left ON deliberately: the seed's Redis leases are
+      # what keep it away from the synthetic non-terminal rows, and an e2e
+      # stack with the redriver disabled would not prove that.
+      ENABLE_JOB_REDRIVER: "true"
+
+  web:
+    container_name: arxiv-wo21-web
+    image: arxiv-research-agent-web:wo21-e2e
+    ports: !override
+      - "${E2E_WEB_BIND_ADDRESS:-127.0.0.1}:${E2E_WEB_PORT:-13210}:3000"
+
+  redis:
+    container_name: arxiv-wo21-redis
+
+  postgres:
+    container_name: arxiv-wo21-postgres
