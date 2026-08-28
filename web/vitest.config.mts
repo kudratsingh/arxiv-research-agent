@@ -110,11 +110,32 @@ export default defineConfig(async () => ({
       // 1039/1098 lines. Nothing was lowered, and no exclusion was added to
       // reach these. Previous values, for the audit trail:
       // 92.39 / 82.46 / 93.75 / 94.11.
+      // WO-12 re-seeded all four, upward, at 1,439 tests: 1296/1379
+      // statements, 872/991 branches, 361/380 functions, 1168/1226 lines.
+      // The copy dictionary and StatusBanner arrive fully covered
+      // (lib/copy and components/patterns are both 100% statements,
+      // functions and lines), so leaving WO-07's numbers would have banked
+      // regression allowance nobody earned. Previous values, for the audit
+      // trail: 93.18 / 85.88 / 94.37 / 94.62.
+      //
+      // ONE MEASUREMENT HAZARD, RECORDED FOR WO-13 … WO-19. When a module
+      // under `include` is loaded by BOTH projects, the two Vite pipelines
+      // produce two different transforms of it, and the merged report
+      // unions statements, branches and lines correctly but CONCATENATES
+      // the function lists. A module a story imports and only partly
+      // exercises therefore has its function denominator doubled while its
+      // numerator does not move: an early draft of WO-12's stories
+      // imported `@/lib/api` and `@/lib/copy/run` and drove the functions
+      // column from 94.7% (unit alone) to 85.08% (both) without changing a
+      // line of product code. The fix is not a lower floor — it is for a
+      // story to import the modules it actually exercises. WO-12's stories
+      // read `lib/copy/errors` only, and take the twelve `ApiFailure`
+      // kinds from `FAILURE_COPY`'s keys rather than from `lib/api`.
       thresholds: {
-        statements: 93.18,
-        branches: 85.88,
-        functions: 94.37,
-        lines: 94.62,
+        statements: 93.98,
+        branches: 87.99,
+        functions: 95,
+        lines: 95.26,
       },
     },
     projects: [

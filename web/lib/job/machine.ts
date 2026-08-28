@@ -38,6 +38,11 @@
 
 import { TERMINAL_EVENTS } from "@/lib/api";
 import type { JobDetail, Plan } from "@/lib/api";
+import {
+  TERMINAL_PHRASE,
+  UNAVAILABLE_COPY as COPY_UNAVAILABLE,
+  failedPhrase,
+} from "@/lib/copy/run";
 
 import {
   JOB_EVENT_TYPES,
@@ -1083,16 +1088,28 @@ export function checkpointIsCurrent(state: JobState): boolean {
 // ---------------------------------------------------------------------------
 // Copy.
 //
-// WO-12 owns the product's copy dictionary. These two functions are
-// here because two of this work order's acceptance criteria are about
-// *strings* — the terminal phrase (H3) and the 404 sentence (H8) — and
-// a rule that lives only in a component cannot be proven unreachable.
-// WO-12 may re-home the wording; the rule below travels with it.
+// WO-12 owns the product's copy dictionary, and has now taken the
+// wording: `UNAVAILABLE_COPY` and every phrase `terminalPhrase()` can
+// return live in `web/lib/copy/run.ts`, which is the single edit site
+// criterion 1 requires. The deny-list and the `/^failed( after
+// [^\s]+)?$/` allow-list travelled with them to
+// `web/tests/copy/forbidden.test.ts`; `web/tests/job/terminal.test.ts`
+// keeps driving them from this reducer, unchanged, because the rule
+// being provable from the state machine is why they were written here
+// in the first place.
+//
+// The dependency is one-directional: machine → copy, never the reverse.
+// Copy has no state and the machine has no wording.
 // ---------------------------------------------------------------------------
 
-/** §5.4: the 404 sentence. Never "deleted", never "no permission" (H8). */
-export const UNAVAILABLE_COPY =
-  "This run is no longer available. Run records are kept for a limited time.";
+/**
+ * §5.4: the 404 sentence. Never "deleted", never "no permission" (H8).
+ *
+ * Re-exported rather than re-declared so existing importers
+ * (`web/tests/job/attach.test.ts`) keep their import path while the
+ * string itself has exactly one home.
+ */
+export const UNAVAILABLE_COPY = COPY_UNAVAILABLE;
 
 /**
  * The terminal phrase, and the only sanctioned way to describe a
@@ -1109,26 +1126,25 @@ export const UNAVAILABLE_COPY =
  * Returns `null` when the run is not over.
  */
 export function terminalPhrase(state: JobState): string | null {
-  if (state.phase === "unavailable") return "no longer available";
-  if (state.phase === "submit_failed") return "not started";
+  if (state.phase === "unavailable") return TERMINAL_PHRASE.unavailable;
+  if (state.phase === "submit_failed") return TERMINAL_PHRASE.notStarted;
   if (state.phase !== "settled") return null;
 
   // H9: the outcome comes from `GET /research/{id}`. Only when that
   // read itself failed do we fall back to the terminal frame's *name*
   // — never to its payload.
   const outcome = state.detail?.status ?? terminalNameFallback(state);
-  const after = state.checkpoint === null ? "" : ` after ${state.checkpoint.node}`;
   switch (outcome) {
     case "succeeded":
-      return "complete";
+      return TERMINAL_PHRASE.succeeded;
     case "cancelled":
-      return "cancelled";
+      return TERMINAL_PHRASE.cancelled;
     case "failed":
-      return `failed${after}`;
+      return failedPhrase(state.checkpoint?.node ?? null);
     default:
       // A terminal frame arrived, the read failed, and no name is
       // available either. Say only what is known.
-      return "finished";
+      return TERMINAL_PHRASE.finished;
   }
 }
 
