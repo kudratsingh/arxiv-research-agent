@@ -2537,6 +2537,7 @@ Real conflicts a parallel fleet will hit, and the mitigation:
 | `web/lib/copy/` | WO-12 (owner) and every surface | Per-surface files under `lib/copy/<surface>.ts` behind an index barrel, so surfaces never edit the same file. |
 | `web/app/tokens.css` | WO-01 (owner), WO-02, WO-18 | WO-02 adds only `--font-*`; WO-18 adds only report-surface rules. Append-only sections with comment fences. |
 | `docs/revamp/evidence/gate-*/` | WO-26, WO-33 (owners) | Producing work orders write **into** the pack; only WO-26 and WO-33 author the index files. |
+| Docker: hardcoded `container_name` in `docker-compose.yml` | Every WO that brings up the local stack (WO-04 recording; WO-21/22/26/29 e2e) | Observed during M0: `docker compose down` from one agent's worktree removed another agent's running stack, because the fixed `container_name` values match across compose projects. Agents must run the stack under an overlay with distinct container names and ports (scratchpad overlay, uncommitted), and never run bare `docker compose down` while the fleet is active. |
 
 ---
 

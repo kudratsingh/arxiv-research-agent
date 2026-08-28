@@ -1,5 +1,12 @@
 # Frontend revamp changelog
 
+## 2026-08-28 — EXEC: M0 foundation wave (in progress)
+
+- Merged on green CI: WO-25 web-image CI smoke + prod overlay (PR #74), WO-03 typed API client + shims (PR #75), WO-01 design-token foundation (PR #76), WO-23 route budgets (PR #77), WO-04 recorded contract fixtures + four drift checks (PR #79), WO-02 self-hosted typography with measured metrics and CLS 0.000 proof (PR #80). In flight: WO-05, WO-06.
+- Coordinator rulings during the wave recorded as `DECISIONS.md` D-011, including the ratchet-rule raise of the shared framework/runtime budget row (120 → 138 KiB) after WO-23 measured it infeasible on untouched `main`.
+- Integration incident: independently-green PRs #76 + #77 conflicted on `main` (hex-scan false positive on Next manifest `#default` keys); red for one push run, fixed forward in PR #78 with a tightened lookahead. Merge process now gates on CI-watch exit status in one guarded command.
+- Fleet hazard added to `06-WORK-ORDERS.md` §5.4: hardcoded compose `container_name` values collide across agent worktrees.
+
 ## 2026-08-28 — Gate 2 approved and closed (under user delegation)
 
 - Merged the Phase 2–4 package on green CI: design brief + tokens (PR #71), architecture + migration (PR #70), work orders + dependency graph (PR #72), authored by three concurrent agents; MT-01 multi-tenancy proposal merged separately (PR #69, PROPOSED).
