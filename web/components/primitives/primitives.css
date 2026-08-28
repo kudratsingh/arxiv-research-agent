@@ -1,0 +1,203 @@
+/* =========================================================================
+ * WO-07 — the cross-cutting policies of components/primitives/.
+ *
+ * Four rules that every primitive shares live here rather than being
+ * repeated eleven times, so each is ONE rule a test can read instead of a
+ * habit spread across a library:
+ *
+ *   1. FOCUS (03 §7.2, criterion 4). `:focus-visible` only, a ring at
+ *      --size-focus-ring-width in --color-focus at --size-focus-ring-offset.
+ *      `outline: none` appears nowhere in this file, so the "never without a
+ *      replacement in the same rule" clause is satisfied by construction;
+ *      web/tests/primitives/policy.test.ts checks that mechanically and
+ *      self-tests the checker against a deliberately bad rule.
+ *
+ *   2. TARGETS (03 §3.6, §7.4, criterion 3). --ew-target-size is the single
+ *      knob: --size-target-default (32px) by default, a control-height token
+ *      per size modifier, and --size-target-coarse (44px) for every modifier
+ *      under `@media (pointer: coarse)`. The floor --size-target-min (24px)
+ *      is never approached — the smallest value any branch below can produce
+ *      is 32px.
+ *
+ *   3. MOTION (03 §3.7, criterion 9). Entrances are opacity-only: no
+ *      transform entrance exists to drop. Durations are var(--duration-*),
+ *      so app/tokens.css's `prefers-reduced-motion` block already collapses
+ *      them to 1ms; the block at the bottom then removes the animations
+ *      outright, because a 1ms *infinite* pulse is a flicker rather than a
+ *      still mark. Nothing here is the sole carrier of any information —
+ *      every animated element also carries a word (03 §3.4).
+ *
+ *   4. OVERFLOW (04 §8.3 item 4). The ScrollRegion pan surface, so the
+ *      table pans and the page does not.
+ *
+ * THERE IS NO LITERAL COLOUR AND NO LITERAL DURATION IN THIS FILE. Sizes
+ * that are structural rather than token-bearing (the 1px hairline of the
+ * visually-hidden clip rect, the 100% of a pan surface) are the only bare
+ * numbers, and none of them is a design decision the tokens own.
+ * ========================================================================= */
+
+/* -------------------------------------------------------------------------
+ * 1. Focus
+ *
+ * One rule, applied by every focusable primitive through `ew-focusable`.
+ * `:focus-visible` and not `:focus`: a pointer press on a button must not
+ * paint a ring, which is the whole reason the pseudo-class exists.
+ * ---------------------------------------------------------------------- */
+.ew-focusable:focus-visible {
+  /* Longhands rather than the `outline` shorthand: a shorthand carrying
+   * two var() references is opaque to every CSSOM implementation, which
+   * would make the computed-value assertion in
+   * web/tests/primitives/policy.test.tsx impossible to write honestly. */
+  outline-width: var(--size-focus-ring-width);
+  outline-style: solid;
+  outline-color: var(--color-focus);
+  outline-offset: var(--size-focus-ring-offset);
+}
+
+/* -------------------------------------------------------------------------
+ * 2. Targets
+ *
+ * `min-height`/`min-width` rather than `height`/`width` so a control grows
+ * with its content and never shrinks below the target. Physical properties
+ * rather than logical ones because the product is `dir="ltr"` only and
+ * jsdom's computed-style implementation does not resolve logical
+ * properties, which would make criterion 3's test untestable.
+ * ---------------------------------------------------------------------- */
+.ew-target {
+  --ew-target-size: var(--size-target-default);
+  min-height: var(--ew-target-size);
+  min-width: var(--ew-target-size);
+}
+
+.ew-target--sm {
+  --ew-target-size: var(--size-control-height-sm);
+}
+
+.ew-target--md {
+  --ew-target-size: var(--size-control-height-md);
+}
+
+.ew-target--lg {
+  --ew-target-size: var(--size-control-height-lg);
+}
+
+/* A coarse pointer is a fingertip: every control becomes 44px, whatever
+ * size modifier it carries. The selectors repeat the modifiers rather than
+ * re-declaring the variable on `.ew-target` alone, because a modifier has
+ * the same specificity and would otherwise win on source order. */
+@media (pointer: coarse) {
+  .ew-target,
+  .ew-target--sm,
+  .ew-target--md,
+  .ew-target--lg {
+    --ew-target-size: var(--size-target-coarse);
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 3. Motion
+ * ---------------------------------------------------------------------- */
+.ew-enter {
+  animation: ew-fade-in var(--duration-base) var(--ease-enter) both;
+}
+
+@keyframes ew-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* The ambient "receiving" indicator: opacity only, never a transform, and
+ * only ever attached to a mark that sits beside the word "Live". */
+.ew-pulse {
+  animation: ew-pulse var(--duration-ambient) var(--ease-standard) infinite;
+}
+
+@keyframes ew-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 4. Overflow — the ScrollRegion pan surface
+ * ---------------------------------------------------------------------- */
+.ew-scroll-region {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* -------------------------------------------------------------------------
+ * Skeleton
+ *
+ * Deliberately animation-free: 03 §3.7 forbids skeleton shimmer by name.
+ * ---------------------------------------------------------------------- */
+.ew-skeleton {
+  background-color: var(--color-sunken);
+  border-radius: var(--radius-sm);
+}
+
+/* -------------------------------------------------------------------------
+ * VisuallyHidden, and the one element that un-hides
+ *
+ * Both `clip` and `clip-path`: the deprecated one for the user agents that
+ * still honour only it, the current one for everything else.
+ *
+ * `.ew-skip-link` is the only thing in the product that reverses the clip.
+ * It reveals on `:focus-visible` as a fixed overlay rather than by returning
+ * to the flow, so taking focus does not shove the header down the page. The
+ * higher specificity (0,2,0 against the clip's 0,1,0) is what makes the
+ * reveal win regardless of the order the two sheets happen to load in.
+ * ---------------------------------------------------------------------- */
+.ew-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ew-skip-link:focus-visible {
+  position: fixed;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 20;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+}
+
+/* -------------------------------------------------------------------------
+ * Reduced motion (03 §3.7)
+ *
+ * app/tokens.css has already collapsed every --duration-* to 1ms by the
+ * time this block applies. It exists for the second half of the policy:
+ * "transform-based entrances are removed". There are none to remove — every
+ * animation above is opacity-only — so what it actually does is stop the
+ * two animations from running at all, which is the honest reading of
+ * "removed" for an infinite ambient loop.
+ * ---------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .ew-enter,
+  .ew-pulse {
+    animation: none;
+  }
+}

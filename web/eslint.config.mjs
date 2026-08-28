@@ -41,6 +41,17 @@ const noLiteralColour = [
  * than globbed, so a new file in components/ is covered from its first
  * commit.
  */
+/**
+ * WO-07 criterion 1. One message for both groups, because the answer is
+ * always the same shape: hoist the data into a prop.
+ */
+const PRIMITIVE_BOUNDARY_MESSAGE =
+  "components/primitives/ may not reach the data layer. 04-ARCHITECTURE.md " +
+  "§5.1: primitives take plain props and never call a hook that fetches, so " +
+  "every state they can be in is reachable by passing props and their " +
+  "stories need no MSW and no network. Move the fetch up into a features/ " +
+  "component and pass the result down.";
+
 const LEGACY_UNTOKENISED = [
   "app/page.tsx",
   "app/c/**/page.tsx",
@@ -77,6 +88,70 @@ export default defineConfig([
     ignores: LEGACY_UNTOKENISED,
     rules: {
       "no-restricted-syntax": ["error", ...noLiteralColour],
+    },
+  },
+  {
+    /**
+     * WO-07 criterion 1 — the primitives import boundary.
+     *
+     * 04-ARCHITECTURE.md §5.1 states the layer rule: primitives and patterns
+     * "take plain props and never call a hook that fetches. Every state they
+     * can be in is reachable by passing props, so their stories need no MSW
+     * and no network." That is what makes Storybook cheap, and it is exactly
+     * the kind of rule that decays the first time somebody reaches for a
+     * job id from inside a Button. Lint is the only place it can hold.
+     *
+     * `no-restricted-imports` rather than another `no-restricted-syntax`
+     * block, deliberately: flat config REPLACES a rule's options rather than
+     * merging them, so a second `no-restricted-syntax` entry scoped to
+     * components/primitives/** would silently switch the no-literal-colour
+     * rule OFF for the newest files in the repository. A different rule
+     * cannot collide.
+     *
+     * tests/fixtures/primitive-*.fixture.tsx are in scope for the same
+     * reason WO-01's fixtures are: web/tests/primitives/boundary.test.tsx
+     * lints a real committed file that really fails, which is what proves
+     * the rule fires rather than merely being configured. `npm run lint`
+     * walks only app/ components/ lib/, so the failing fixture never breaks
+     * the repository lint.
+     */
+    name: "primitives/no-data-layer",
+    files: [
+      "components/primitives/**/*.{ts,tsx}",
+      "tests/fixtures/primitive-*.fixture.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/lib/api",
+                "@/lib/api/*",
+                "@/lib/api.ts",
+                "**/lib/api",
+                "**/lib/api/*",
+                "**/lib/api.ts",
+              ],
+              message: PRIMITIVE_BOUNDARY_MESSAGE,
+            },
+            {
+              group: [
+                "@/lib/useResearchStream",
+                "**/useResearchStream",
+                "swr",
+                "swr/*",
+                "@tanstack/react-query",
+                "react-query",
+                "msw",
+                "msw/*",
+              ],
+              message: PRIMITIVE_BOUNDARY_MESSAGE,
+            },
+          ],
+        },
+      ],
     },
   },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
