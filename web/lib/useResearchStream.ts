@@ -1,20 +1,47 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ApiError,
-  getJob,
-  reviewPlan,
-  streamUrl,
-  submitResearch,
-} from "./api";
+// M2 compatibility adapter (RC-03, 05-MIGRATION.md §1.1).
+//
+// The lifecycle this hook used to implement now lives in
+// `web/lib/job/` — a pure reducer (`machine.ts`), the imperative
+// stream/attach/submit side (`useJobStream.ts`), and a provider
+// (`provider.tsx`). What survives here is the hook's *public shape*,
+// so `components/ConversationThread.tsx` and the tests that pin its
+// behaviour keep working unchanged while the surfaces migrate.
+//
+// That is the RC-03 ruling in force: the MUST-KEEP from
+// `00-DISCOVERY.md` #6 is the *behaviour* — named SSE event handling,
+// unknown-event tolerance, reconnect, and final `GET JobDetail`
+// reconciliation — not the filename. The behaviour moved; the tests
+// that guard it did not move with it, and they still pass, which is
+// the evidence that the port was faithful. WO-31 deletes this file
+// once its last consumer is gone.
+//
+// Two deliberate legacy pins, both scoped to this adapter and both
+// deleted with it:
+//
+//   1. `attachMode: "stream-first"`. The machine's own contract is
+//      GET-first (04-ARCHITECTURE.md §4.3), but this hook's callers
+//      pin the old request ordering — `attach()` opens the
+//      `EventSource` synchronously, and the only
+//      `GET /research/{id}` in a run is the one a terminal frame
+//      triggers. New surfaces use `JobRunProvider`, which is GET-first.
+//   2. The sentences below. The machine exposes structured state
+//      (`phase`, `unavailableReason`, `failureSource`); the strings
+//      that state used to be rendered as are reproduced here so the
+//      legacy components render exactly what they rendered before.
+//      WO-12's dictionary is where the new copy lives.
+
+import { useCallback, useMemo, useRef, useState } from "react";
+
+import { useJobStream } from "./job/useJobStream";
+import type { JobPhase, JobState } from "./job/types";
 import {
   JobDetail,
   Plan,
   ReviewAction,
   SseEvent,
   SseEventName,
-  TERMINAL_EVENTS,
 } from "./types";
 
 /**
@@ -56,239 +83,152 @@ export interface SubmitOptions extends AttachOptions {
   conversation_id?: string;
 }
 
-const EVENT_NAMES: readonly SseEventName[] = [
+/**
+ * Ten machine phases collapsed onto five legacy statuses.
+ *
+ * The three that are not one-to-one:
+ *
+ *   - `submit_failed` and `unavailable` both become `"idle"`, which is
+ *     what unlocks the composer. That is the whole point of the
+ *     fatal-close branch this hook grew: a dead end has to leave the
+ *     thread usable.
+ *   - `attaching`, `resolving` and `reconciling` are all `"streaming"`
+ *     — the caller's `busy` flag must stay true across a review
+ *     resolution and across the settling GET.
+ */
+const LEGACY_STATUS: Record<JobPhase, UseResearchStreamState["status"]> = {
+  idle: "idle",
+  submitting: "submitting",
+  submit_failed: "idle",
+  attaching: "streaming",
+  unavailable: "idle",
+  live: "streaming",
+  awaiting_review: "awaiting_review",
+  resolving: "streaming",
+  reconciling: "streaming",
+  settled: "done",
+};
+
+/**
+ * The names this hook has always surfaced.
+ *
+ * `stream_timeout` is deliberately absent even though the machine now
+ * registers it: `SseEventName` does not include it and
+ * `components/EventLog.tsx:10` keys an exhaustive
+ * `Record<SseEventName, string>` off that union, so surfacing it here
+ * would render an undefined label. The frame is still handled — it
+ * reopens the stream — it is just not part of this hook's contract.
+ */
+const LEGACY_EVENT_NAMES: ReadonlySet<string> = new Set<SseEventName>([
   "job_started",
   "node_completed",
   "plan_ready",
   "job_completed",
   "job_failed",
   "job_cancelled",
-] as const;
+  "stream_note",
+  "error",
+]);
+
+/** The error sentence this hook used to compose, from machine state. */
+function legacyError(state: JobState): string | null {
+  if (state.phase === "unavailable") {
+    // `useResearchStream.ts:183-186`, preserved verbatim: `?job=`
+    // outlives the job itself, and the dead end has to say so.
+    return (
+      `stream unavailable for job ${state.jobId} — it may have expired. ` +
+      "Ask the question again to start a new run."
+    );
+  }
+  if (state.failureMessage === null) return null;
+  switch (state.failureSource) {
+    case "submit":
+      return state.failureMessage;
+    case "reconcile":
+      return `fetch result failed (${state.failureStatus ?? 0}): ${state.failureMessage}`;
+    case "review":
+      return `review failed (${state.failureStatus ?? 0}): ${state.failureMessage}`;
+    default:
+      // An attach or poll read that failed without ending the run. The
+      // legacy hook had no such path — it never read the job except to
+      // settle it — so it showed nothing, and neither does this.
+      return null;
+  }
+}
 
 export function useResearchStream(): UseResearchStreamState {
-  const [status, setStatus] = useState<UseResearchStreamState["status"]>(
-    "idle"
-  );
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [events, setEvents] = useState<SseEvent[]>([]);
-  const [detail, setDetail] = useState<JobDetail | null>(null);
-  const [plan, setPlan] = useState<Plan | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const onDoneRef = useRef<AttachOptions["onDone"] | null>(null);
+  // The one error this hook raises that the machine has no event for:
+  // `review()` called with no job. The machine cannot review nothing,
+  // so it does nothing; the sentence is the adapter's.
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const sourceRef = useRef<EventSource | null>(null);
-  const jobIdRef = useRef<string | null>(null);
-
-  const cleanup = useCallback(() => {
-    if (sourceRef.current) {
-      sourceRef.current.close();
-      sourceRef.current = null;
-    }
+  const handleSettled = useCallback((detail: JobDetail) => {
+    onDoneRef.current?.(detail);
   }, []);
 
-  useEffect(() => cleanup, [cleanup]);
-
-  const onDoneRef = useRef<SubmitOptions["onDone"] | null>(null);
-
-  const finalize = useCallback(async (id: string) => {
-    try {
-      const settled = await getJob(id);
-      setDetail(settled);
-      if (onDoneRef.current) onDoneRef.current(settled);
-    } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? `fetch result failed (${err.status}): ${err.message}`
-          : String(err)
-      );
-    } finally {
-      setStatus("done");
-    }
-  }, []);
-
-  /**
-   * Open the SSE stream for `id` and wire every frame into state.
-   *
-   * Shared by `submit` and `attach` (ADR 0053) so a job the landing
-   * page started and a job this hook started are consumed by exactly
-   * the same code — the attach path is not a second, thinner reader
-   * that quietly drops `plan_ready`.
-   *
-   * The caller owns `jobIdRef`/`status`: this only touches the
-   * EventSource and the frame-derived state.
-   */
-  const openStream = useCallback(
-    (id: string) => {
-      const source = new EventSource(streamUrl(id));
-      sourceRef.current = source;
-      // Set when a terminal frame closes this stream on purpose, so
-      // the fatal branch of the error handler can tell "the run
-      // finished" from "the browser gave up".
-      let settled = false;
-
-      const handleFrame = (name: SseEventName) => (evt: MessageEvent) => {
-        let data: Record<string, unknown> | null = null;
-        try {
-          data = JSON.parse(evt.data);
-        } catch {
-          data = null;
-        }
-        setEvents((prev) => [
-          ...prev,
-          { name, data, receivedAt: Date.now() },
-        ]);
-        if (name === "plan_ready" && data && data.plan) {
-          setPlan(data.plan as Plan);
-          setStatus("awaiting_review");
-          return;
-        }
-        if (TERMINAL_EVENTS.has(name)) {
-          settled = true;
-          source.close();
-          sourceRef.current = null;
-          void finalize(id);
-        }
-      };
-
-      for (const name of EVENT_NAMES) {
-        source.addEventListener(name, handleFrame(name) as EventListener);
-      }
-      source.addEventListener("error", () => {
-        if (source.readyState !== EventSource.CLOSED) {
-          // Still CONNECTING: the browser owns the retry, so just
-          // narrate it. This is the wifi-blip / `api_sse_max_
-          // duration_sec` case, and the reconnect replays whatever
-          // the client missed (ADR 0053).
-          setEvents((prev) => [
-            ...prev,
-            {
-              name: "stream_note",
-              data: { message: "connection interrupted; browser is retrying" },
-              receivedAt: Date.now(),
-            },
-          ]);
-          return;
-        }
-        if (settled) return;
-        // CLOSED without a terminal frame means the browser failed the
-        // connection and will NOT retry — a non-200 response, which in
-        // practice is the stream route's 404. `attach` makes that
-        // reachable in a way `submit` never was: the job id now lives
-        // in the URL (ADR 0053), so a reload after `job_retention_sec`
-        // evicted the row — or after an `api` restart under the
-        // default in-memory store — adopts an id the server no longer
-        // knows. Leaving `status` on "streaming" then wedged the whole
-        // thread: `busy` stayed true, so the composer was disabled
-        // forever with nothing on screen explaining why.
-        sourceRef.current = null;
-        setError(
-          `stream unavailable for job ${id} — it may have expired. ` +
-            "Ask the question again to start a new run."
-        );
-        setStatus("idle");
-      });
-    },
-    [finalize]
-  );
+  const {
+    state,
+    submit: machineSubmit,
+    attach: machineAttach,
+    review: machineReview,
+  } = useJobStream({
+    attachMode: "stream-first",
+    onSettled: handleSettled,
+  });
 
   const submit = useCallback(
     async (query: string, options: SubmitOptions = {}) => {
-      cleanup();
       onDoneRef.current = options.onDone ?? null;
-      setStatus("submitting");
-      setEvents([]);
-      setDetail(null);
-      setPlan(null);
-      setError(null);
-
-      let submission;
-      try {
-        submission = await submitResearch(query, {
-          conversation_id: options.conversation_id,
-        });
-      } catch (err) {
-        setStatus("idle");
-        setError(err instanceof Error ? err.message : String(err));
-        return;
-      }
-
-      setJobId(submission.job_id);
-      jobIdRef.current = submission.job_id;
-      setStatus("streaming");
-      openStream(submission.job_id);
+      setLocalError(null);
+      await machineSubmit(query, {
+        conversationId: options.conversation_id ?? null,
+      });
     },
-    [cleanup, openStream]
+    [machineSubmit]
   );
 
-  /**
-   * Join a job that already exists — never POSTs (ADR 0053).
-   *
-   * Re-entrant on purpose: it returns early when this hook is already
-   * streaming `id`, so an effect that fires again on re-render (or
-   * twice under React StrictMode's double-invoked mount) cannot open
-   * a second EventSource on the same job. The guard is the live
-   * source, not a "have attached" flag, so the StrictMode sequence
-   * mount → cleanup (closes the source) → mount does re-open and the
-   * reader is not left dead.
-   *
-   * Attaching to an *already terminal* job is fine and is the reload
-   * case: the stream route replays one terminal frame and closes
-   * (ADR 0038), which lands here as a normal terminal frame and
-   * fetches the settled detail.
-   */
   const attach = useCallback(
-    (id: string, options: AttachOptions = {}) => {
-      if (sourceRef.current !== null && jobIdRef.current === id) return;
-      cleanup();
+    (jobId: string, options: AttachOptions = {}) => {
       onDoneRef.current = options.onDone ?? null;
-      setEvents([]);
-      setDetail(null);
-      setPlan(null);
-      setError(null);
-      setJobId(id);
-      jobIdRef.current = id;
-      setStatus("streaming");
-      openStream(id);
+      setLocalError(null);
+      machineAttach(jobId);
     },
-    [cleanup, openStream]
+    [machineAttach]
   );
 
+  const jobId = state.jobId;
   const review = useCallback(
     async (action: ReviewAction, planEdits?: Plan) => {
-      const id = jobIdRef.current;
-      if (id === null) {
-        setError("no active job to review");
+      if (jobId === null) {
+        setLocalError("no active job to review");
         return;
       }
-      try {
-        await reviewPlan(id, {
-          action,
-          ...(action === "revise" && planEdits ? { plan: planEdits } : {}),
-        });
-      } catch (err) {
-        setError(
-          err instanceof ApiError
-            ? `review failed (${err.status}): ${err.message}`
-            : String(err)
-        );
-        return;
-      }
-      // Clear the plan (it's been resolved) and go back to streaming
-      // until the workflow terminates. The EventSource stays open
-      // through the review — the runner keeps emitting node_completed
-      // + terminal frames on the same connection.
-      setPlan(null);
-      setStatus(action === "cancel" ? "streaming" : "streaming");
+      setLocalError(null);
+      await machineReview(action, planEdits);
     },
-    []
+    [jobId, machineReview]
+  );
+
+  const events = useMemo<SseEvent[]>(
+    () =>
+      state.frames
+        .filter((frame) => LEGACY_EVENT_NAMES.has(frame.name))
+        .map((frame) => ({
+          name: frame.name as SseEventName,
+          data: frame.data,
+          receivedAt: frame.receivedAt,
+        })),
+    [state.frames]
   );
 
   return {
-    status,
+    status: LEGACY_STATUS[state.phase],
     jobId,
     events,
-    detail,
-    plan,
-    error,
+    detail: state.detail,
+    plan: state.plan,
+    error: localError ?? legacyError(state),
     submit,
     attach,
     review,

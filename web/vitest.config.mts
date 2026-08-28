@@ -87,11 +87,21 @@ export default defineConfig(async () => ({
       // 99.18/94.82/100/100 — so leaving the old numbers in place would have
       // banked a regression allowance nobody earned. Previous values, for the
       // audit trail: 88.09 / 75.93 / 86.66 / 88.66.
+      //
+      // WO-10 re-seeded them again, on the tree rebased onto WO-11, at 942
+      // tests: 1020/1104 statements, 536/650 branches, 285/304 functions,
+      // 944/1003 lines. The floor rose for the same reason it rose for WO-11:
+      // `lib/job/` arrived with its own tests — the reducer's transition table
+      // alone is 250 cases, and `lib/job` measures 93.92/87.24/97.43/97.13 —
+      // and `lib/useResearchStream.ts` became a thin adapter over it. Leaving
+      // WO-11's numbers would have banked ~2 points of regression allowance
+      // nobody earned. Previous values, for the audit trail:
+      // 90.39 / 78.67 / 91.09 / 90.97.
       thresholds: {
-        statements: 90.39,
-        branches: 78.67,
-        functions: 91.09,
-        lines: 90.97,
+        statements: 92.39,
+        branches: 82.46,
+        functions: 93.75,
+        lines: 94.11,
       },
     },
     projects: [
