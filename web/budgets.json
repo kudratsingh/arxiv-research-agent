@@ -21,6 +21,25 @@
     "fonts": "raw woff2 bytes -- woff2 is already Brotli-compressed, so file size is wire weight",
     "note": "zlib level 6 is not a preference: summing per-file level-6 gzip over the /c/[id] first-load union reproduces the retained baseline's 184,745 B exactly, and no other level does."
   },
+  "ratchet": [
+    {
+      "row": "shared-framework-runtime",
+      "from": 122880,
+      "to": 141312,
+      "date": "2026-08-28",
+      "pr": "WO-23 -- route budget check, budgets.json, and npm run budgets",
+      "authority": "Coordinator ruling under the Gate 2 delegation; to be recorded in docs/revamp/DECISIONS.md by the coordinator.",
+      "measuredBytes": 130865,
+      "why": "RC-01 set 120 KiB for this row without a measured baseline -- its own headroom column reads '-'. The first measurement, taken by this script on the main build, is 130865 B, so the ceiling was infeasible from day one: React DOM (63370 B) + the Next app-router client runtime (65603 B) already total 128973 B, which exceeds 122880 B before any application code exists. Neither chunk is ours to cut. 141312 B (138 KiB) is 8.0% headroom over the measured 130865 B, matching the headroom the other RC-01 rows embody (/ is +8.2% over its baseline, /c/[id] +8.1%).",
+      "perFileAtChange": {
+        "static/chunks/4bd1b696-*.js (React DOM)": 63370,
+        "static/chunks/794-*.js (Next app-router client runtime)": 65603,
+        "static/chunks/webpack-*.js (webpack runtime)": 1668,
+        "static/chunks/main-app-*.js": 224,
+        "total": 130865
+      }
+    }
+  ],
   "rows": [
     {
       "id": "route-js-home",
@@ -50,13 +69,14 @@
       "id": "shared-framework-runtime",
       "kind": "shared-first-load-js",
       "label": "Shared framework/runtime chunk",
-      "budgetBytes": 122880,
-      "budgetLabel": "120 KiB",
+      "budgetBytes": 141312,
+      "budgetLabel": "138 KiB",
       "baselineBytes": null,
       "gate": "every PR",
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
-      "definition": "The build manifest's rootMainFiles minus polyfillFiles -- the chunk set every app route loads (webpack runtime, React framework chunk, Next app-router client runtime, main-app). This is Next's 'First Load JS shared by all'. RC-01 records this row's baseline as '(subset of the above)' rather than a number, i.e. it was never measured; see the PR body for the consequence."
+      "definition": "The build manifest's rootMainFiles minus polyfillFiles -- the chunk set every app route loads (webpack runtime, React DOM chunk, Next app-router client runtime, main-app). This is Next's 'First Load JS shared by all'.",
+      "note": "RAISED FROM 122880 (120 KiB) UNDER THE RATCHET RULE. See budgets.ratchet[0]. baselineBytes stays null because RC-01 recorded no measured baseline for this row; the measured main figure is 130865 B and lives in the ratchet record, not here, so the report's baseline-reproduction table keeps meaning 'reproduces the retained Gate 1 figures'."
     },
     {
       "id": "emitted-css",

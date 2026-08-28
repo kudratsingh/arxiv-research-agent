@@ -524,6 +524,36 @@ describe("report format", () => {
     expect(md).toContain("no flag and no env var can skip this check");
     expect(md).toContain("CLS (RC-06)");
   });
+
+  it("surfaces any raised ceiling on every run instead of burying it in a merged diff", () => {
+    const budgets = fixtureBudgets();
+    budgets.ratchet = [
+      {
+        row: "shared-framework-runtime",
+        from: 122_880,
+        to: 141_312,
+        date: "2026-08-28",
+        authority: "Coordinator ruling under the Gate 2 delegation",
+        why: "The RC-01 ceiling was inferred without a measured baseline and proved infeasible.",
+      },
+    ];
+    const { measurements, crossChecks } = measure({ webDir: fixture.root, budgets });
+    const md = renderReport({
+      result: evaluate(measurements),
+      budgets,
+      crossChecks,
+      generatedAt: "2026-08-28T00:00:00.000Z",
+      nextVersion: "16.3.3",
+    });
+    expect(md).toContain("### Ceilings that have moved");
+    expect(md).toContain("122,880 B");
+    expect(md).toContain("141,312 B");
+    expect(md).toContain("Coordinator ruling under the Gate 2 delegation");
+  });
+
+  it("omits the ratchet section entirely when no ceiling has moved", () => {
+    expect(report()).not.toContain("### Ceilings that have moved");
+  });
 });
 
 describe("the committed budgets.json encodes RC-01 in bytes", () => {
@@ -544,7 +574,8 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
   it.each([
     ["route-js-home", 148_480, 137_272],
     ["route-js-conversation", 199_680, 184_745],
-    ["shared-framework-runtime", 122_880, null],
+    // Raised from 122,880 B under the ratchet rule; see the `ratchet` record below.
+    ["shared-framework-runtime", 141_312, null],
     ["emitted-css", 12_288, 4_288],
     ["self-hosted-fonts", 122_880, 0],
     ["total-transferred-js", 245_760, null],
@@ -562,6 +593,31 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     expect(by("gated")).toHaveLength(5);
     expect(by("external")).toEqual(["total-transferred-js"]);
     expect(by("reported")).toEqual(["derived-total-first-load"]);
+  });
+
+  it("records every deviation from RC-01 in the ratchet log, and the log agrees with the rows", () => {
+    const ratchet = budgets.ratchet ?? [];
+    expect(ratchet.length).toBeGreaterThan(0);
+    for (const entry of ratchet) {
+      const row = budgets.rows.find((r) => r.id === entry.row);
+      expect(row, `ratchet entry names unknown row ${entry.row}`).toBeDefined();
+      // The live ceiling must equal what the ratchet says it was moved to,
+      // so a ceiling can never drift away from its own justification.
+      expect(row?.budgetBytes).toBe(entry.to);
+      expect(entry.from).not.toBe(entry.to);
+      expect(entry.why.length).toBeGreaterThan(80);
+      expect(Number.isInteger(entry.from) && Number.isInteger(entry.to)).toBe(true);
+    }
+  });
+
+  it("carries the shared framework/runtime raise with its measured justification", () => {
+    const entry = (budgets.ratchet ?? []).find((r) => r.row === "shared-framework-runtime");
+    expect(entry?.from).toBe(122_880); // the RC-01 ceiling
+    expect(entry?.to).toBe(141_312); // 138 KiB
+    expect(entry?.measuredBytes).toBe(130_865);
+    // 8.0% headroom over the measured baseline, matching the other RC-01 rows.
+    expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.08, 2);
+    expect(entry?.perFileAtChange?.total).toBe(130_865);
   });
 
   it("names WO-21 as the enforcer of the total-transferred row", () => {

@@ -717,6 +717,30 @@ export function renderReport({ result, budgets, crossChecks, generatedAt, nextVe
   );
   out.push("");
 
+  const ratchet = budgets.ratchet ?? [];
+  if (ratchet.length > 0) {
+    out.push("### Ceilings that have moved");
+    out.push("");
+    out.push(
+      "Every deviation from the ratified RC-01 table, so a raised ceiling is visible on every run " +
+        "rather than buried in a merged diff.",
+    );
+    out.push("");
+    out.push("| Row | From | To | Date | Authority |");
+    out.push("|---|---:|---:|---|---|");
+    for (const entry of ratchet) {
+      out.push(
+        `| ${entry.row} | ${entry.from.toLocaleString("en-US")} B | ${entry.to.toLocaleString("en-US")} B ` +
+          `| ${entry.date ?? "—"} | ${entry.authority ?? "—"} |`,
+      );
+    }
+    out.push("");
+    for (const entry of ratchet) {
+      out.push(`- **${entry.row}** — ${entry.why}`);
+    }
+    out.push("");
+  }
+
   out.push("## Not covered by this report");
   out.push("");
   out.push(

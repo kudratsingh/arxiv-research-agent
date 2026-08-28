@@ -35,9 +35,22 @@ export interface BudgetRow {
   derivedFrom?: string[];
 }
 
+export interface RatchetEntry {
+  row: string;
+  from: number;
+  to: number;
+  date?: string;
+  pr?: string;
+  authority?: string;
+  measuredBytes?: number;
+  why: string;
+  perFileAtChange?: Record<string, number>;
+}
+
 export interface BudgetsFile {
   source: string;
   method?: Record<string, unknown>;
+  ratchet?: RatchetEntry[];
   rows: BudgetRow[];
 }
 
