@@ -285,6 +285,16 @@ jobs:
         run: npm run typecheck
       - name: ESLint
         run: npm run lint
+      - name: Contract drift check (generated types)
+        # WO-04 / 04-ARCHITECTURE.md §3.5 check 2: regenerate
+        # lib/api/generated/schema.d.ts from the committed
+        # contract/openapi.json and fail on any byte difference. Needs no API
+        # and no network — both inputs are in the repository, and
+        # `openapi-typescript` is pinned to an exact version so its own output
+        # format is part of the comparison. The producer end of the same
+        # contract is `tests/test_contract_openapi_snapshot.py` in the `tests`
+        # job, which asserts the snapshot still equals `create_app().openapi()`.
+        run: npm run contract:check
       - name: Vitest
         run: npm run test
       - name: Next.js build

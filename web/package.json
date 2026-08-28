@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "generate:types": "openapi-typescript ./contract/openapi.json --output ./lib/api/generated/schema.d.ts",
+    "contract:check": "bash ./contract/check-generated-types.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "zod": "4.4.3"
   }
 }
