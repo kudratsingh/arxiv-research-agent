@@ -1,0 +1,296 @@
+/* =========================================================================
+ * Evidence Workbench design tokens
+ *
+ * THIS IS THE ONLY FILE IN web/ THAT MAY CONTAIN A LITERAL COLOUR.
+ * The ESLint no-restricted-syntax rule in web/eslint.config.mjs rejects
+ * hex/rgb/hsl literals in app/ and components/; app/icon.svg is the one
+ * documented non-CSS exemption (a favicon has no CSS context to inherit).
+ *
+ * Source of truth: docs/revamp/design/tokens.json (WO-01 acceptance
+ * criterion 2). The tables in docs/revamp/03-DESIGN-BRIEF.md sections 3.2
+ * and 3.3 are curated EXCERPTS -- they omit twelve tokens (RC-15) -- and
+ * must never be used as the implementation list. web/tests/tokens.test.ts
+ * asserts bidirectional parity between this file, web/lib/tokens.ts and
+ * tokens.json in both themes; an orphan in either direction fails.
+ *
+ * Theme mechanism (04-ARCHITECTURE.md section 6.2 item 1):
+ *   :root                        light values + color-scheme: light dark
+ *   @media (prefers-color-scheme: dark) :root   dark values, no-JS fallback
+ *   :root[data-theme="dark"]     dark values, user override
+ *   :root[data-theme="light"]    light values, user override
+ * The [data-theme] blocks carry specificity (0,2,0) and therefore always
+ * beat the (0,1,0) :root block inside the media query, in both directions.
+ * ========================================================================= */
+
+:root {
+  /* Lets the UA paint form controls, scrollbars and the canvas correctly
+   * in either theme. The baseline declared no color-scheme at all. */
+  color-scheme: light dark;
+
+  /* --- colour: light (23 tokens, tokens.json color.light) ------------- */
+  --color-canvas:           #F3F7F8;
+  --color-surface:          #FFFFFF;
+  --color-sunken:           #E7EEF0;
+  --color-ink:              #172B31;
+  --color-ink-muted:        #4A636B;
+  --color-ink-faint:        #5A737B;
+  --color-ink-disabled:     #7C9198;
+  --color-border-subtle:    #D2DFE2;
+  --color-border-strong:    #74898F;
+  --color-primary:          #275DAD;
+  --color-primary-strong:   #1E4C91;
+  --color-primary-on:       #FFFFFF;
+  --color-focus:            #1E4C91;
+  --color-signature:        #167D7F;
+  --color-signature-text:   #10666A;
+  --color-signature-on:     #FFFFFF;
+  --color-review:           #C47A17;
+  --color-review-text:      #8C5610;
+  --color-review-surface:   #FBF1E1;
+  --color-critical:         #B33A3A;
+  --color-critical-text:    #A32C2C;
+  --color-critical-surface: #FBECEC;
+  --color-critical-on:      #FFFFFF;
+
+  /* --- elevation: light (tokens.json elevation.light) ----------------- */
+  /* elev-0 is the norm: separation is a 1px --color-border-subtle rule. */
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(23, 43, 49, 0.06);
+  --elevation-2: 0 4px 12px rgba(23, 43, 49, 0.10);
+  --elevation-3: 0 12px 32px rgba(23, 43, 49, 0.16);
+
+  /* --- space: 4px unit (tokens.json space.scale) ----------------------- */
+  --space-0:  0;
+  --space-05: 2px;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+
+  /* --- layout constants (tokens.json space.layout) -------------------- */
+  /* Tailwind's default md/lg/xl screens already equal the breakpoint
+   * tokens; sm does not (640px vs 480px), so theme.screens is
+   * deliberately NOT overridden while legacy sm: utilities survive. */
+  --layout-gutter-narrow:        16px;
+  --layout-gutter-wide:          32px;
+  --layout-rail-width:           260px;
+  --layout-rail-collapsed-width: 56px;
+  --layout-report-measure:       68ch;
+  --layout-content-max:          1180px;
+  --layout-breakpoint-sm:        480px;
+  --layout-breakpoint-md:        768px;
+  --layout-breakpoint-lg:        1024px;
+  --layout-breakpoint-xl:        1280px;
+
+  /* --- size: targets, controls, marks (tokens.json size) -------------- */
+  --size-target-min:        24px;
+  --size-target-default:    32px;
+  --size-target-coarse:     44px;
+  --size-control-height-sm: 32px;
+  --size-control-height-md: 40px;
+  --size-control-height-lg: 44px;
+  --size-icon-sm:           16px;
+  --size-icon-md:           20px;
+  --size-trace-dot:         7px;
+  --size-trace-rule:        2px;
+  --size-focus-ring-width:  2px;
+  --size-focus-ring-offset: 2px;
+
+  /* --- radius (tokens.json radius) ------------------------------------ */
+  /* Nothing above 6px except radius-dot, which is reserved for the trace spine's checkpoint marks — a data mark, not a container. */
+  --radius-0:   0;
+  --radius-sm:  3px;
+  --radius-md:  5px;
+  --radius-lg:  6px;
+  --radius-dot: 9999px;
+
+  /* --- font families (tokens.json typography.families) ----------------
+   * WO-02 OWNS THIS FENCE. The stacks below are the declared fallback
+   * stacks verbatim; no family is self-hosted yet, so every browser
+   * resolves to the generic fallback today and nothing shifts. WO-02
+   * replaces each leading family name with its next/font/local CSS
+   * variable and adds the measured size-adjust metrics.
+   * ------------------------------------------------------------------ */
+  --font-ui:     "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-report: Literata, ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono:   "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* --- type scale (tokens.json typography.scale) ----------------------
+   * Minimum rendered size is 12px anywhere in the product; the
+   * baseline's 10.4px job-id label has no replacement token by design
+   * (deleting it is one of the three contrast fixes in 03 section 3.1).
+   * web/tests/tokens.test.ts enforces both facts.
+   * ------------------------------------------------------------------ */
+  --text-ui-xs-size:        12px;
+  --text-ui-xs-line:        16px;
+  --text-ui-xs-tracking:    0.005em;
+  --text-ui-sm-size:        14px;
+  --text-ui-sm-line:        20px;
+  --text-ui-sm-tracking:    0;
+  --text-ui-base-size:      16px;
+  --text-ui-base-line:      24px;
+  --text-ui-base-tracking:  0;
+  --text-ui-lg-size:        18px;
+  --text-ui-lg-line:        26px;
+  --text-ui-lg-tracking:    -0.005em;
+  --text-ui-xl-size:        22px;
+  --text-ui-xl-line:        28px;
+  --text-ui-xl-tracking:    -0.01em;
+  --text-report-small-size: 15px;
+  --text-report-small-line: 1.5;
+  --text-report-body-size:  17px;
+  --text-report-body-line:  1.65;
+  --text-report-h3-size:    18px;
+  --text-report-h3-line:    1.35;
+  --text-report-h3-weight:  600;
+  --text-report-h2-size:    22px;
+  --text-report-h2-line:    1.30;
+  --text-report-h2-weight:  600;
+  --text-report-h1-size:    27px;
+  --text-report-h1-line:    1.25;
+  --text-report-h1-weight:  600;
+  --text-display-size:      34px;
+  --text-display-line:      1.18;
+  --text-display-tracking:  -0.015em;
+  --text-mono-xs-size:      12px;
+  --text-mono-xs-line:      16px;
+  --text-mono-sm-size:      13px;
+  --text-mono-sm-line:      20px;
+
+  /* --- motion: duration (tokens.json motion.duration) ------------------ */
+  --duration-instant: 0ms;
+  --duration-fast:    120ms;
+  --duration-base:    160ms;
+  --duration-slow:    240ms;
+  --duration-ambient: 2400ms;
+
+  /* --- motion: easing (tokens.json motion.easing) --------------------- */
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-enter:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Dark, mechanism 1 of 2: the no-JS / no-preference fallback. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas:           #0E1A1E;
+    --color-surface:          #15252B;
+    --color-sunken:           #0A1418;
+    --color-ink:              #E8F1F3;
+    --color-ink-muted:        #A6BEC4;
+    --color-ink-faint:        #8CA5AC;
+    --color-ink-disabled:     #6E888F;
+    --color-border-subtle:    #273B42;
+    --color-border-strong:    #61828B;
+    --color-primary:          #8FB8EC;
+    --color-primary-strong:   #B3D0F5;
+    --color-primary-on:       #0E1A1E;
+    --color-focus:            #9CC7F5;
+    --color-signature:        #58C7C2;
+    --color-signature-text:   #58C7C2;
+    --color-signature-on:     #0E1A1E;
+    --color-review:           #EDB458;
+    --color-review-text:      #EDB458;
+    --color-review-surface:   #2A2113;
+    --color-critical:         #F2908A;
+    --color-critical-text:    #F2908A;
+    --color-critical-surface: #2E1719;
+    --color-critical-on:      #0E1A1E;
+
+    --elevation-0: none;
+    --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+    --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.55);
+    --elevation-3: 0 12px 32px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* Dark, mechanism 2 of 2: the persisted user override, applied before
+ * first paint by the theme script in web/app/layout.tsx. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-canvas:           #0E1A1E;
+  --color-surface:          #15252B;
+  --color-sunken:           #0A1418;
+  --color-ink:              #E8F1F3;
+  --color-ink-muted:        #A6BEC4;
+  --color-ink-faint:        #8CA5AC;
+  --color-ink-disabled:     #6E888F;
+  --color-border-subtle:    #273B42;
+  --color-border-strong:    #61828B;
+  --color-primary:          #8FB8EC;
+  --color-primary-strong:   #B3D0F5;
+  --color-primary-on:       #0E1A1E;
+  --color-focus:            #9CC7F5;
+  --color-signature:        #58C7C2;
+  --color-signature-text:   #58C7C2;
+  --color-signature-on:     #0E1A1E;
+  --color-review:           #EDB458;
+  --color-review-text:      #EDB458;
+  --color-review-surface:   #2A2113;
+  --color-critical:         #F2908A;
+  --color-critical-text:    #F2908A;
+  --color-critical-surface: #2E1719;
+  --color-critical-on:      #0E1A1E;
+
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.55);
+  --elevation-3: 0 12px 32px rgba(0, 0, 0, 0.65);
+}
+
+/* Light override: a user who forces light on a dark OS. Specificity
+ * (0,2,0) beats the media block's :root, so source order is irrelevant. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-canvas:           #F3F7F8;
+  --color-surface:          #FFFFFF;
+  --color-sunken:           #E7EEF0;
+  --color-ink:              #172B31;
+  --color-ink-muted:        #4A636B;
+  --color-ink-faint:        #5A737B;
+  --color-ink-disabled:     #7C9198;
+  --color-border-subtle:    #D2DFE2;
+  --color-border-strong:    #74898F;
+  --color-primary:          #275DAD;
+  --color-primary-strong:   #1E4C91;
+  --color-primary-on:       #FFFFFF;
+  --color-focus:            #1E4C91;
+  --color-signature:        #167D7F;
+  --color-signature-text:   #10666A;
+  --color-signature-on:     #FFFFFF;
+  --color-review:           #C47A17;
+  --color-review-text:      #8C5610;
+  --color-review-surface:   #FBF1E1;
+  --color-critical:         #B33A3A;
+  --color-critical-text:    #A32C2C;
+  --color-critical-surface: #FBECEC;
+  --color-critical-on:      #FFFFFF;
+
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(23, 43, 49, 0.06);
+  --elevation-2: 0 4px 12px rgba(23, 43, 49, 0.10);
+  --elevation-3: 0 12px 32px rgba(23, 43, 49, 0.16);
+}
+
+/* Reduced motion (tokens.json motion.reducedMotion.policy item 1):
+ * "All transition-duration and animation-duration become 1ms". Enforced
+ * at the token level so every consumer inherits it without opting in.
+ * --duration-ambient collapses too, which is what turns the receiving
+ * indicator into a static mark; the word "Live" carries the state. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast:    1ms;
+    --duration-base:    1ms;
+    --duration-slow:    1ms;
+    --duration-ambient: 1ms;
+  }
+}
