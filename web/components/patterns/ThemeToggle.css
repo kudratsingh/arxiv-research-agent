@@ -1,0 +1,38 @@
+/* =========================================================================
+ * WO-08 — ThemeToggle's two state rules.
+ *
+ * The control is three native `<input type="radio">` elements in a
+ * `<fieldset>`. That is not a stylistic choice: it is what makes arrow-key
+ * navigation, the group's accessible name, and the "one of three" semantic
+ * come from the platform instead of from a roving-tabindex implementation
+ * this product would then have to test. The trade is that the input itself
+ * is clipped, so the two rules below are what move its state onto the label
+ * beside it.
+ *
+ * A separate file rather than utilities because both rules are token-valued
+ * — `--size-focus-ring-width` and `--size-focus-ring-offset` are the focus
+ * policy's own numbers (03 §7.2), and writing `outline-2` would fork them.
+ * A separate file rather than a shared `patterns.css` because WO-12 is
+ * adding StatusBanner to this directory concurrently.
+ * ========================================================================= */
+
+.ew-theme-option {
+  cursor: pointer;
+}
+
+/* The clipped input's `:checked` state, rendered on its label. */
+.ew-theme-option input:checked + span {
+  background-color: var(--color-primary);
+  color: var(--color-primary-on);
+}
+
+/* The focus ring, on the element that has a box. Same four longhands as
+   `.ew-focusable` in components/primitives/primitives.css, for the same
+   reason: a shorthand carrying two var() references is opaque to the
+   CSSOM, and this rule is asserted by a test. */
+.ew-theme-option input:focus-visible + span {
+  outline-width: var(--size-focus-ring-width);
+  outline-style: solid;
+  outline-color: var(--color-focus);
+  outline-offset: var(--size-focus-ring-offset);
+}

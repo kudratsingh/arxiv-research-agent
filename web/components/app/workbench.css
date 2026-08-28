@@ -1,0 +1,233 @@
+/* =========================================================================
+ * WO-08 — the workbench shell's layout, as CSS rather than as utilities.
+ *
+ * WHY A STYLESHEET AND NOT TAILWIND CLASSES. Three of this file's rules
+ * cannot be written as utilities without losing the thing that makes them
+ * correct:
+ *
+ *   1. `minmax(0, 1fr)` is the whole repair (04-ARCHITECTURE.md §8.3 item
+ *      2). It has to be one declaration that a reader — and
+ *      web/tests/shell/layout.test.ts — can point at, not an arbitrary
+ *      value spliced into three responsive variants.
+ *   2. The rail width is a *variable* the collapse toggle rewrites
+ *      (`--ew-rail-width`), so the grid template is authored once and the
+ *      three modes change one custom property instead of three class
+ *      strings. RC-04 fixes the widths at 260px expanded and 56px
+ *      collapsed; both come from --layout-* tokens, never from a literal.
+ *   3. `env(safe-area-inset-bottom)` (criterion 7) belongs in a media
+ *      query at the shell's bottom edge; Tailwind can express it, but not
+ *      legibly beside the sticky rule it exists for.
+ *
+ * BREAKPOINTS. 768px and 1024px are `--layout-breakpoint-md` and
+ * `--layout-breakpoint-lg` in web/app/tokens.css. A media query cannot
+ * read a custom property, so the two numbers are repeated here as
+ * literals — and web/tests/shell/layout.test.ts asserts that every
+ * breakpoint in this file is one of the declared token values, so the
+ * repetition cannot drift.
+ *
+ * NO LITERAL COLOUR. Every colour is a `var(--color-*)`; web/tests/tokens.test.ts
+ * scans this file along with every other one under web/.
+ * ========================================================================= */
+
+/* -------------------------------------------------------------------------
+ * The shell grid
+ *
+ * Rows: the header, then everything else. `minmax(0, 1fr)` on the body row
+ * for the same reason it is on the content column — a `1fr` track has an
+ * `auto` minimum, so a tall child would push the grid past the viewport and
+ * a wide one past the window.
+ *
+ * `height: 100dvh` with a `100vh` fallback immediately above it: the shell
+ * is a fixed-height application frame (this is what the previous
+ * `flex h-screen` shell was, and what ConversationThread's `h-full`
+ * depends on), and `dvh` is the version of that which survives the mobile
+ * URL bar.
+ * ---------------------------------------------------------------------- */
+.ew-shell {
+  /* Below md there is no rail column at all, so the variable is only read
+     inside the two media queries below. Declared here so the custom
+     property always has a value to cascade from. */
+  --ew-rail-width: 0px;
+
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+  min-width: 0;
+  background-color: var(--color-canvas);
+}
+
+/* -------------------------------------------------------------------------
+ * Header — the banner landmark
+ *
+ * Spans every column so the rail starts below it rather than beside it;
+ * `flex-wrap` so the workspace indicator can take a second line at 320px
+ * instead of forcing the controls off the edge (which is what would break
+ * criterion 5).
+ * ---------------------------------------------------------------------- */
+.ew-shell__header {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+  padding: var(--space-2) var(--layout-gutter-narrow);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background-color: var(--color-surface);
+}
+
+/* The workspace indicator (03-DESIGN-BRIEF.md §6). `flex: 1 1 auto` with a
+   zero basis floor so it yields to the controls rather than pushing them
+   out of the header. */
+.ew-shell__workspace {
+  flex: 1 1 12rem;
+  min-width: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-ui-xs-size);
+  line-height: var(--text-ui-xs-line);
+  letter-spacing: var(--text-ui-xs-tracking);
+}
+
+.ew-shell__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* -------------------------------------------------------------------------
+ * Rail — the `nav[aria-label="Threads"]` landmark
+ *
+ * Not rendered at all below md: 04-ARCHITECTURE.md §8.3 item 1 is explicit
+ * that the fix is structural ("the rail is **not in the layout at all**"),
+ * so the shell does not render the element rather than hiding it. The
+ * `display: none` in the narrow block below is belt-and-braces for the
+ * single frame between a server render (which has no viewport to measure)
+ * and hydration.
+ *
+ * The DEFAULT is `display: block`, and the narrow media query is what turns
+ * it off, rather than the other way round. That ordering is deliberate:
+ * jsdom applies a stylesheet's unconditional rules but not its media
+ * overrides, so a `display: none` base rule would make the rail invisible to
+ * every story's axe run and to every Testing Library role query — the
+ * landmark this work order exists to add would be asserted against a hidden
+ * element.
+ * ---------------------------------------------------------------------- */
+.ew-shell__rail {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-right: 1px solid var(--color-border-subtle);
+  background-color: var(--color-surface);
+}
+
+/* The 56px icon strip's own column of controls. */
+.ew-shell__strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+/* -------------------------------------------------------------------------
+ * Main — exactly one per document (criterion 1)
+ *
+ * Two rows: the surface the route renders into, and the reserved composer
+ * slot. `min-width: 0` here is the second half of the repair — 04 §8.3
+ * item 3, "the content column carries min-w-0 regardless of layout mode".
+ * It is on the element in every mode because it is declared on the base
+ * rule and no media query below overrides it.
+ * ---------------------------------------------------------------------- */
+.ew-shell__main {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* `height: 100%` rather than `min-height: 0` alone: the routes rendered
+   into this element are the existing ConversationThread and landing page,
+   whose roots are `h-full`, and a percentage height needs a definite
+   containing block. The grid above supplies one. */
+.ew-shell__surface {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* -------------------------------------------------------------------------
+ * The composer slot (criterion 7)
+ *
+ * Reserved, and empty in M1 — the composer still lives inside the existing
+ * ConversationThread, which this work order renders unmodified. It is the
+ * bottom row of `main`'s grid, so it never scrolls away; `position: sticky`
+ * keeps that true if a later surface makes `main` itself the scroller.
+ * WO-13 (QueryComposer) and WO-20 (route composition) render into it via
+ * WORKBENCH_COMPOSER_SLOT_ID.
+ * ---------------------------------------------------------------------- */
+.ew-shell__composer {
+  min-width: 0;
+}
+
+.ew-shell__composer:not(:empty) {
+  border-top: 1px solid var(--color-border-subtle);
+  background-color: var(--color-surface);
+}
+
+/* -------------------------------------------------------------------------
+ * < 768px — drawer mode
+ *
+ * One column, no rail, and the shell's bottom edge clears the iOS home
+ * indicator. The inset is declared once, on `main`, because the composer
+ * slot is empty in M1 and today's composer is the last thing inside the
+ * route's own subtree; when the slot is occupied it sits above the same
+ * inset rather than adding a second one.
+ * ---------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .ew-shell__rail {
+    display: none;
+  }
+
+  .ew-shell__main {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .ew-shell__composer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 768px and up — the rail enters the grid as a 56px icon strip
+ * (--layout-breakpoint-md)
+ * ---------------------------------------------------------------------- */
+@media (min-width: 768px) {
+  .ew-shell {
+    --ew-rail-width: var(--layout-rail-collapsed-width);
+    grid-template-columns: var(--ew-rail-width) minmax(0, 1fr);
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * 1024px and up — the persistent 260px rail, and the only mode with a
+ * collapse toggle (RC-04: "applied at ≥1024px only")
+ * (--layout-breakpoint-lg)
+ * ---------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  .ew-shell {
+    --ew-rail-width: var(--layout-rail-width);
+  }
+
+  .ew-shell[data-rail-collapsed="true"] {
+    --ew-rail-width: var(--layout-rail-collapsed-width);
+  }
+}

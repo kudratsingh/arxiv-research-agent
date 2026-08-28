@@ -125,8 +125,14 @@ const noInlineText = [
 ].map((selector) => ({ selector, message: NO_INLINE_TEXT_MESSAGE }));
 
 const LEGACY_UNTOKENISED = [
-  "app/page.tsx",
-  "app/c/**/page.tsx",
+  // WO-08 moved both route files into the `(workspace)` route group. The
+  // group adds no URL segment, but it does add a path segment, so these two
+  // entries moved with them. The parentheses are literal — they are only
+  // extglob syntax when preceded by `?*+@!` — and
+  // web/tests/tokens.test.ts lints the real file to prove the pattern still
+  // matches.
+  "app/(workspace)/page.tsx",
+  "app/(workspace)/c/**/page.tsx",
   "components/ConversationSidebar.tsx",
   "components/ConversationThread.tsx",
   "components/ConversationsShell.tsx",

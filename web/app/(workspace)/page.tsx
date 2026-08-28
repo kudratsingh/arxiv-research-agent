@@ -2,9 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import ConversationsShell from "@/components/ConversationsShell";
 import QueryForm from "@/components/QueryForm";
 import { ApiError, createConversation, submitResearch } from "@/lib/api";
+
+// WO-08 moved this file from `app/page.tsx` into the `(workspace)` route
+// group. A route group adds no URL segment, so this is still `/`.
+//
+// The only edit to its body: the manual shell wrapper it used to render
+// around itself is gone: the shell is now `app/(workspace)/layout.tsx`,
+// which wraps every route in the group — including the `<main id="main">` this page
+// never had. Everything else is untouched: the same two writes in the same
+// order, the same `?job=` hand-off, the same error handling. WO-13 and
+// WO-20 own this page's redesign.
 
 export default function HomePage() {
   const router = useRouter();
@@ -51,25 +60,23 @@ export default function HomePage() {
   );
 
   return (
-    <ConversationsShell activeConversationId={null}>
-      <div className="mx-auto flex h-full max-w-3xl flex-col justify-center gap-6 px-6">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            arxiv-research-agent
-          </h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Ask a research question to kick off a new conversation. Follow-ups
-            stay in the same thread and reuse prior findings as retrievable
-            context.
-          </p>
-        </header>
-        <QueryForm
-          onSubmit={handleSubmit}
-          busy={busy}
-          jobId={null}
-          error={error}
-        />
-      </div>
-    </ConversationsShell>
+    <div className="mx-auto flex h-full max-w-3xl flex-col justify-center gap-6 px-6">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          arxiv-research-agent
+        </h1>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          Ask a research question to kick off a new conversation. Follow-ups
+          stay in the same thread and reuse prior findings as retrievable
+          context.
+        </p>
+      </header>
+      <QueryForm
+        onSubmit={handleSubmit}
+        busy={busy}
+        jobId={null}
+        error={error}
+      />
+    </div>
   );
 }
