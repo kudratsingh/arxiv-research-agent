@@ -78,6 +78,7 @@ Every default lives in `support/env.ts`. Nothing else hard-codes a port.
 | `support/axe.ts` | WO-22's axe run, allowlist parser, contrast probe |
 | `axe-allowlist.json` | WO-22's suppression list — **empty, and stays empty** |
 | `fixtures/seed.sh` | the promoted Gate 1 seed, extended |
+| `__screenshots__/<platform>/` | WO-28's committed PNGs — 48 per platform |
 | `*.spec.ts` | one file per criterion; see the header comment in each |
 
 ## Projects and tags
@@ -85,12 +86,12 @@ Every default lives in `support/env.ts`. Nothing else hard-codes a port.
 | Project | Runs | Why |
 |---|---|---|
 | `chromium` | everything except `@device` | the per-PR project |
-| `firefox`, `webkit` | everything except `@device`, `@slice`, `@export`, `@axe` | criteria 6 and 7 are pinned to chromium; the axe sweep is pinned there too, because the twelve retained baseline reports were taken in Chrome and a WebKit contrast measurement is a *different* measurement, not a stricter one |
+| `firefox`, `webkit` | everything except `@device`, `@slice`, `@export`, `@axe`, `@cls`, `@csp`, `@a11y`, `@visual` | criteria 6 and 7 are pinned to chromium; the axe sweep is pinned there too, because the twelve retained baseline reports were taken in Chrome and a WebKit contrast measurement is a *different* measurement, not a stricter one; `@visual` because a snapshot's artefact *is* the engine's rasterisation. `playwright.config.ts` argues each one on the `CHROMIUM_ONLY` constant |
 | `Pixel 7` | `@device`, `@theme` | 412 × 915 — the width 04 §8.3 audits |
 | `iPhone 15` | `@device`, `@theme` | 393 × 852 on WebKit, where `env(safe-area-inset-*)` matters |
 
 Tags: `@paid-path`, `@stream`, `@reflow`, `@slice`, `@export`, `@theme`,
-`@device`, `@axe`.
+`@device`, `@axe`, `@cls`, `@csp`, `@a11y`, `@visual`.
 
 ## Artifacts
 
@@ -134,6 +135,98 @@ rules. What automation cannot establish — keyboard order, focus restoration,
 announcement quality, screen-reader comprehension — is WO-27's manual Gate 4
 evidence and is not claimed here.
 
+## Visual regression (WO-28)
+
+`visual.spec.ts` takes forty-eight committed screenshots — twelve renders ×
+light/dark × 412/1440 px — and compares every later run against them. It closes
+`00-DISCOVERY.md`'s missing "visual regression" tier with Playwright's own
+`toHaveScreenshot`: no new dependency, no hosted service, no approval UI.
+
+```bash
+npm run e2e:visual            # compare against the committed set
+npm run e2e:visual:update     # REGENERATE — read "Regenerating" first
+```
+
+The twelve renders are the five slice steps (`05-MIGRATION.md` §2.1) plus every
+degraded state that has a retained Gate 1 screenshot to be compared against.
+The list is in `visual.spec.ts` with each state's baseline file beside it, and
+the file's own inventory tests fail if the count moves, if a slice step goes
+missing, if a named baseline screenshot no longer exists on disk, or if **two
+committed snapshots are byte-identical**.
+
+That last one is not hypothetical. `toBeVisible()` means "has a box", not "is
+on screen", so `reconnecting` at 412 passed its ready condition with the
+spine's announcement below the fold and captured `running`'s viewport byte for
+byte: two files, one picture, one of them asserting nothing about the state it
+was named after. The fix is `scrollTo` on that row; the guard is permanent.
+
+### Where the bytes live, and why the path has a platform in it
+
+`e2e/__screenshots__/<platform>/<state>-<theme>-<width>.png`, set by
+`snapshotPathTemplate` in `playwright.config.ts`. macOS and Linux rasterise the
+same font at the same size differently, so a single set shared between them
+fails on whichever host did not produce it. The committed set is `darwin`; a
+Linux set is **additive** — run `e2e:visual:update` on Linux and a
+`__screenshots__/linux/` directory appears beside it, with nothing to merge.
+
+**A platform with no committed set skips, loudly, with the command that would
+fix it.** That is deliberate: failing forty-eight comparisons for the absence
+of bytes nobody wrote is a red build that means "no baseline" rather than
+"regression", and letting the runner write its own and pass is a baseline the
+runner produced and then agreed with, which proves nothing.
+`--update-snapshots` turns the skip off, because that *is* the request to
+generate the set. One test in the file never skips — "at least one platform's
+baseline set is committed" — so deleting the whole tree turns the suite red
+instead of quiet.
+
+### Determinism, and what each measure removes
+
+A visual gate that goes red for reasons other than a visual change is worse
+than no visual gate: it teaches everybody to regenerate on sight, and a set
+regenerated on sight asserts nothing. So:
+
+| Measure | Where | The drift it removes |
+|---|---|---|
+| No `[data-skeleton-lines]` on screen | `settleForCapture` | A loading placeholder is *static*, so a DOM-quiescence check agrees with itself and photographs a page still waiting for data. This suite flaked on its own second run before this existed. |
+| `settleForAudit` | `support/axe.ts`, reused | Two agreeing samples of the serialised DOM — a route paints its header from cache and fills the panel afterwards |
+| `document.fonts.ready`, then `fonts.status` asserted | `settleForCapture` | The three faces are self-hosted with `font-display: swap`; a capture before the swap is the fallback metrics. `ready` also resolves on failure, hence the assertion |
+| Two `requestAnimationFrame`s | `settleForCapture` | The compositor has painted what the DOM settled on |
+| `emulateMedia({ colorScheme, reducedMotion: "reduce" })` | before navigation | The theme axis without `localStorage` (`theme.spec.ts` pins a live hydration defect that would capture dark states in light), and no animation mid-flight |
+| `animations: "disabled"`, `caret: "hide"`, `scale: "css"`, `fullPage: false` | the `toHaveScreenshot` call | Passed explicitly, not left to defaults, because they *are* the determinism argument |
+| Seeded `baseline-*` fixtures only | `fixtures/seed.sh` | The data is the same on every run by construction |
+| Chromium only (`@visual` in `CHROMIUM_ONLY`) | `playwright.config.ts` | A snapshot's artefact *is* the engine's rasterisation; three engines would be three sets of bytes that disagree for reasons that are never product defects |
+
+**Measured result:** 45 of the 48 are byte-identical between two forced
+regenerations; the other three differ by 4, 9 and 14 raw pixels, below
+Playwright's per-pixel threshold. `maxDiffPixels` is **200**, and
+`MAX_DIFF_PIXELS` in `visual.spec.ts` carries the measurement, the cause
+(a `position: sticky` `SectionRail` at a fractional x offset, snapped or not
+depending on compositor promotion) and the fixes that were tried and rejected.
+For scale: a deliberate 2 px shift moves 1,441–13,703 pixels.
+
+### Regenerating
+
+**`e2e:visual:update` is legitimate in exactly one situation: you changed how
+something looks, on purpose, and the new pixels are part of the same PR as the
+change that produced them.** Then the regenerated PNGs are the *evidence* for
+that change and a reviewer looks at them the way they look at a diff.
+
+It is **not** legitimate for:
+
+- **A red run you did not expect.** That is the gate working. Open
+  `web/build/e2e/report/` and look at the three-up expected/actual/diff before
+  touching the bytes.
+- **A red run on a machine that did not produce the set.** A different OS is a
+  different rasterisation, not a regression — generate that platform's own
+  directory instead (see above).
+- **Flake.** If a render is unstable, the fix is a determinism measure in
+  `settleForCapture`, not a wider tolerance and not fresh bytes. The table
+  above is where such a fix goes, with the drift it removes written next to it.
+
+A regeneration commit should touch only `__screenshots__/`, should say which
+change caused it, and should never appear in a PR that changes no styles, no
+markup and no copy.
+
 ## For WO-24 (CI wiring)
 
 **WO-24.** The `web-e2e` job is three commands after `npm ci`:
@@ -167,6 +260,32 @@ Notes it will need:
   already has. `E2E_SKIP_DEV_SERVER=1` turns it off and the test skips itself
   rather than passing vacuously.
 - `retries` is 1 and `workers` is 2 under `CI`; `forbidOnly` is on.
+
+**WO-28 — a note for whoever owns CI, not a change to it.** `visual.spec.ts` is
+tagged `@visual` and grepped into the `chromium` project, so
+`npm run e2e -- --project=chromium` already runs it and the `web-e2e` job above
+needs **no new step**. Two things that job's owner has to decide, because this
+work order deliberately did not edit a workflow:
+
+- **The runner is Linux and the committed set is `darwin`, so on CI the
+  forty-eight comparisons currently SKIP.** They report the reason and the
+  command that fixes it, and the guard test above them still runs, so the
+  situation is visible in the job log rather than silent. Nothing is red and
+  nothing is falsely green — but nothing is gating on the runner either.
+  To make it gate: generate `e2e/__screenshots__/linux/` on a Linux host
+  (`mcr.microsoft.com/playwright:v1.62.1-noble` against the seeded stack, or
+  the runner itself with a one-off `--update-snapshots`), **look at the
+  forty-eight images**, and commit them. The suite then activates with no
+  code change. Do **not** wire CI to write its own — a baseline the runner
+  produced and immediately agreed with proves nothing, which is why
+  `--update-snapshots` was left out of the job rather than added to it.
+- **Where it belongs once a Linux set exists.** Per-PR in the existing
+  `web-e2e` job is the natural home: it is +17 s on the `chromium` project
+  against a stack the job already has up, and a visual regression is exactly
+  the kind of thing that should block the PR that caused it rather than
+  surface in a nightly. WO-29's nightly is the alternative if the Linux set is
+  not wanted per-PR — in which case grep `@visual` out of the `web-e2e`
+  invocation so the skip does not sit in the log forever.
 
 **WO-22 — landed.** `axe.spec.ts` iterates `STATES` in both themes (forty
 renders), so it inherits `reflow.spec.ts`'s partition claim that `STATES ∪
