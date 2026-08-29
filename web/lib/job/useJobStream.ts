@@ -11,14 +11,20 @@
 //
 // Three behaviours here are the reason this work order exists:
 //
+// (The three comparisons below are against the legacy client this
+// module replaced, `lib/useResearchStream.ts`, deleted in WO-31. Its
+// line references are kept because they are the record of what the
+// port was measured against; `git show 8f0d738:web/lib/useResearchStream.ts`
+// is the file they point into.)
+//
 //   1. **GET-first attach.** `GET /research/{id}` runs BEFORE the
-//      `EventSource` is opened. Today the stream is opened first
-//      (`useResearchStream.ts:238-253`) and the job's status is learned
-//      from whatever frame happens to arrive, which is why an expired
-//      job arrives through the browser's failed-connection path
+//      `EventSource` is opened. The legacy client opened the stream
+//      first (`useResearchStream.ts:238-253`) and learned the job's
+//      status from whatever frame happened to arrive, which is why an
+//      expired job arrived through the browser's failed-connection path
 //      (`useResearchStream.ts:171-188`) instead of a clean 404.
 //   2. **`stream_timeout` reopens immediately.** The name is registered
-//      here — `useResearchStream.ts:59-66` registers six of the seven —
+//      here — `useResearchStream.ts:59-66` registered six of the seven —
 //      so the client no longer waits out the browser's default retry
 //      after the server closes at `api_sse_max_duration_sec`.
 //   3. **A terminal frame is a signal.** It closes the stream and
@@ -63,15 +69,24 @@ import type {
  *
  * `get-first` is the contract (§4.3) and the default.
  *
- * `stream-first` exists for exactly one caller: the
- * `useResearchStream` adapter, whose consumers' tests pin the old
+ * `stream-first` existed for exactly one caller: the
+ * `useResearchStream` adapter, whose consumers' tests pinned the old
  * request ordering — `attach()` opens the `EventSource`
  * *synchronously*, and the only `GET /research/{id}` in the whole
  * lifecycle is the one a terminal frame triggers. Porting those tests
- * to GET-first would mean rewriting them, and "all existing tests pass
- * unmodified" is the evidence that the port is behaviour-neutral. The
- * mode dies with `useResearchStream.ts` in WO-31; nothing else may set
- * it.
+ * to GET-first would have meant rewriting them, and "all existing
+ * tests pass unmodified" was the evidence that WO-10's port was
+ * behaviour-neutral.
+ *
+ * WO-31 DELETED THAT ADAPTER, AND LEFT THIS MODE IN PLACE. **No product
+ * module sets it, and none may.** Removing it is not a deletion but a
+ * change to the reducer's event shape — `AttachRequested.prefetch`
+ * would go, and with it two branches of `machine.ts`'s total
+ * transition table — which is outside a removal work order's licence
+ * and is recorded as a residual in WO-31's PR body instead. Its one
+ * remaining exerciser is `tests/support/msw.test.tsx`, the harness
+ * composition test, which needs the old request order to replay a
+ * recorded script against an already-settled fixture.
  */
 export type AttachMode = "get-first" | "stream-first";
 

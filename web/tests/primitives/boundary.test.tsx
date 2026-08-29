@@ -66,8 +66,10 @@ describe("criterion 1 — the ESLint boundary rule fires on a real file", () => 
       const violations = (bad?.messages ?? []).filter(
         (message) => message.ruleId === "no-restricted-imports",
       );
-      // Four imports: the client barrel, a module inside it, the SSE hook,
-      // and MSW — the four ways a primitive reaches the network.
+      // Four imports: the client barrel, a module inside it, a fetching
+      // hook, and MSW — the four ways a primitive reaches the network.
+      // WO-31 replaced the SSE hook with `@tanstack/react-query` when the
+      // `useResearchStream` adapter was deleted; the count is unchanged.
       expect(violations).toHaveLength(4);
       for (const violation of violations) {
         expect(violation.message).toContain("may not reach the data layer");
@@ -107,7 +109,9 @@ describe("criterion 1 — no primitive reaches the network by any other route", 
   it.each(sourceFiles())("%s imports nothing from the data layer", (file) => {
     const source = readFileSync(file, "utf8");
     expect(source).not.toMatch(/from\s+["'][^"']*lib\/api/);
-    expect(source).not.toMatch(/useResearchStream/);
+    // WO-31: `useResearchStream` is deleted, so the hook a primitive could
+    // reach for is the query library's.
+    expect(source).not.toMatch(/@tanstack\/react-query/);
   });
 
   it.each(sourceFiles())("%s calls no fetch primitive directly", (file) => {

@@ -1,35 +1,35 @@
 /**
- * WO-19's retirement clause, as a ratchet.
+ * WO-19's retirement clause, as a ratchet — now WO-31's deletion, as one.
  *
- * The work order's scope says it "retires `JobSummary.tsx` and
- * `ExportDropdown.tsx` from the render path (files deleted in WO-31)", and
- * RC-21 says the same thing in more words: what survives is the CONTRACT —
- * five real fields, the `<dl>`, the three formats, the same-origin anchors —
- * not the modules. `MetricsStrip` and `ExportDisclosure` are those
- * contracts' new home.
+ * WHAT THIS FILE USED TO SAY, AND WHY IT SAID IT. WO-19 retired
+ * `JobSummary.tsx` and `ExportDropdown.tsx` from the render path but could
+ * not delete them: `ConversationThread.tsx` was still the whole of
+ * `/c/[id]`'s body, so the two modules still had an importer. WO-20 rewrote
+ * both routes and extended the list from two modules to seven; the files
+ * stayed on disk because RC-03 and WO-31's equivalence-table criterion both
+ * needed the old modules and their tests present to compare against
+ * (D-012 ruling 2). Until this commit, therefore, the strongest thing that
+ * could be asserted was CONFINEMENT: the doomed modules were imported only
+ * by doomed modules — a closed cycle no route could reach.
  *
- * WHAT THIS FILE CAN AND CANNOT ASSERT, STATED PLAINLY. Both legacy modules
- * are reachable today from exactly two places, and both of those are
- * themselves legacy: `ReportView.tsx:37` and `ConversationThread.tsx:239`
- * and `:308`. `ConversationThread` is the whole of `/c/[id]`'s body
- * (`app/(workspace)/c/[id]/page.tsx`), and WO-20 — not this work order —
- * "rewrites `web/app/(workspace)/page.tsx` and
- * `web/app/(workspace)/c/[id]/page.tsx` against the new features. Retires
- * `ConversationThread.tsx` from the render path." So the last DOM these two
- * modules render disappears when WO-20 lands, and the browser tier already
- * schedules it that way: `e2e/support/states.ts` keeps §4 row 23 in
- * `DEFERRED_STATES` naming WO-19's `ExportDisclosure/UnavailableNoReport` as
- * the surface, and `reflow.spec.ts` fails the partition until the row moves
- * into `STATES`.
+ * WO-31 RETIRED THAT REASON. The equivalence table is in the deletion PR's
+ * body, the comparison is made, and the twelve files are gone. So the
+ * confinement ratchet is gone with them and this file now holds the
+ * property that replaces it, which is strictly stronger and is WO-31
+ * acceptance criterion 1 as something a later PR cannot quietly undo:
  *
- * What this work order CAN hold, and what this file holds, is the ratchet:
- * the two doomed modules are confined to the two doomed modules that render
- * them, and nothing built after them may pick either one up again. Without
- * it, "retired" would be a claim about today's imports rather than a
- * property a later PR cannot quietly undo.
+ *   - none of the twelve files exists;
+ *   - nothing under app/, components/ or lib/ imports any of them by any
+ *     spelling;
+ *   - the replacements they were retired in favour of are all committed;
+ *   - and neither route file reaches a retired module.
+ *
+ * The build and the typecheck prove criterion 1 for the tree as it stands.
+ * They cannot prove it for a tree somebody adds `components/EventLog.tsx`
+ * back to, because that tree would build. This file can.
  */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -61,43 +61,56 @@ function sourceFiles(relativeDir: string): string[] {
 const SOURCES = [...sourceFiles("app"), ...sourceFiles("components"), ...sourceFiles("lib")];
 
 /**
- * The retired modules, and every spelling an import of them can take.
+ * The twelve files WO-31 deleted, and every spelling an import of each can
+ * take.
  *
- * WO-20 EXTENDED THIS LIST FROM TWO TO SEVEN. The work order's scope is
- * "retires `ConversationThread.tsx` from the render path", and that sentence
- * is only true if everything it was the last render path FOR goes with it:
- * `ConversationThread` rendered `EventLog`, `PlanReview`, `QueryForm`,
- * `JobSummary` and (through `ReportView`) `ExportDropdown`. Their replacements
- * — `Diagnostics`, `PlanEditor`, `QueryComposer`, `MetricsStrip`,
- * `ExportDisclosure`, `ReportReader` — are all merged and all composed by
- * `ThreadTimeline` and `ActiveRunPanel`. Deletion is still WO-31's.
+ * Enumerated rather than globbed, and the list may only ever get longer:
+ * this is the record of what was removed, so a resurrection has a name.
+ *
+ * `lib/api.ts` and `lib/types.ts` are the M0 compatibility shims
+ * (05-MIGRATION.md §1.1). Deleting `lib/api.ts` does NOT break the ~50
+ * `from "@/lib/api"` imports in the tree — the specifier resolves to
+ * `lib/api/index.ts`, the real module, which is what the shim only ever
+ * re-exported. `@/lib/types` had no consumer outside the nine components,
+ * so it resolves to nothing and a resurrected import is a build error.
  */
-const RETIRED = {
-  "JobSummary.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)JobSummary["']/,
-  "ExportDropdown.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)ExportDropdown["']/,
-  "EventLog.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)EventLog["']/,
-  "PlanReview.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)PlanReview["']/,
-  "QueryForm.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)QueryForm["']/,
-  "ReportView.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)ReportView["']/,
-  "ConversationThread.tsx":
+const DELETED = {
+  "components/ConversationsShell.tsx":
+    /from\s+["'](?:\.\/|@\/components\/|\.\.\/)ConversationsShell["']/,
+  "components/ConversationSidebar.tsx":
+    /from\s+["'](?:\.\/|@\/components\/|\.\.\/)ConversationSidebar["']/,
+  "components/ConversationThread.tsx":
     /from\s+["'](?:\.\/|@\/components\/|\.\.\/)ConversationThread["']/,
+  "components/QueryForm.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)QueryForm["']/,
+  "components/EventLog.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)EventLog["']/,
+  "components/PlanReview.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)PlanReview["']/,
+  "components/JobSummary.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)JobSummary["']/,
+  "components/ReportView.tsx": /from\s+["'](?:\.\/|@\/components\/|\.\.\/)ReportView["']/,
+  "components/ExportDropdown.tsx":
+    /from\s+["'](?:\.\/|@\/components\/|\.\.\/)ExportDropdown["']/,
+  // The leading `/` is load-bearing on both: it matches a module SPECIFIER
+  // and not the many prose references to `useResearchStream.ts:59-66` that
+  // lib/job/ still carries in its comments — those are the record of where
+  // the ported behaviour came from and should survive the module.
+  //
+  // `lib/types.ts` is matched by its `@/` spelling only. A relative `./types`
+  // is how `lib/job/*` imports `lib/job/types.ts`, which is a live module.
+  "lib/useResearchStream.ts": /["'][^"']*\/useResearchStream["']/,
+  "lib/types.ts": /["']@\/lib\/types["']/,
 } as const;
 
-/**
- * The modules WO-20 stops composing and WO-31 deletes.
- *
- * Enumerated rather than pattern-matched: the point of the list is that it
- * may only ever get shorter. After WO-20 the two entries here are the last
- * two legacy modules with any importer at all, and both of them are
- * themselves on the list — which is the shape "retired from the render path"
- * has when nothing renders it: a closed cycle no route can reach.
- */
-const DOOMED = ["components/ConversationThread.tsx", "components/ReportView.tsx"];
-
 /** The route files whose composition WO-20 owns. */
-const ROUTES = [
-  "app/(workspace)/page.tsx",
-  "app/(workspace)/c/[id]/page.tsx",
+const ROUTES = ["app/(workspace)/page.tsx", "app/(workspace)/c/[id]/page.tsx"];
+
+/**
+ * The modules the twelve were retired in favour of. WO-19's list, extended
+ * by WO-20's two features — the same four this file has always named.
+ */
+const REPLACEMENTS = [
+  "components/patterns/MetricsStrip.tsx",
+  "components/patterns/ExportDisclosure.tsx",
+  "components/features/ThreadTimeline.tsx",
+  "components/features/ActiveRunPanel.tsx",
 ];
 
 function importersOf(pattern: RegExp): string[] {
@@ -107,58 +120,27 @@ function importersOf(pattern: RegExp): string[] {
 }
 
 describe("the replacements exist", () => {
-  it.each([
-    "components/patterns/MetricsStrip.tsx",
-    "components/patterns/ExportDisclosure.tsx",
-    "components/features/ThreadTimeline.tsx",
-    "components/features/ActiveRunPanel.tsx",
-  ])("%s is committed", (file) => {
+  it.each(REPLACEMENTS)("%s is committed", (file) => {
     expect(SOURCES).toContain(file);
-  });
-
-  it("keeps the retired files on disk — deletion is WO-31's, not this one's", () => {
-    // RC-21 and WO-31's equivalence-table criterion both depend on the old
-    // modules and their tests still being here to compare against.
-    for (const name of Object.keys(RETIRED)) {
-      expect(SOURCES).toContain(`components/${name}`);
-    }
   });
 });
 
-describe("the retired pair is confined to the modules that are themselves retired", () => {
-  it.each(Object.entries(RETIRED))("%s is imported only by the doomed modules", (_name, pattern) => {
-    const importers = importersOf(pattern);
-    for (const importer of importers) {
-      expect(DOOMED, `${importer} imports a module WO-31 deletes`).toContain(importer);
-    }
+describe("WO-31 criterion 1 — the twelve are gone and stay gone", () => {
+  it.each([...Object.keys(DELETED), "lib/api.ts"])("%s does not exist", (file) => {
+    expect(existsSync(path.join(WEB_ROOT, file))).toBe(false);
   });
 
-  it("is imported by nothing in the new layers", () => {
-    const newLayers = SOURCES.filter(
-      (file) =>
-        file.startsWith("app/") ||
-        file.startsWith("components/patterns/") ||
-        file.startsWith("components/features/") ||
-        file.startsWith("lib/"),
+  it("leaves no top-level component file behind at all", () => {
+    // The nine were the only `.tsx` directly under components/; what is
+    // left is the four layer directories 04 §5.1 names, plus foundations.
+    const stray = readdirSync(path.join(WEB_ROOT, "components")).filter((entry) =>
+      /\.tsx?$/.test(entry),
     );
-
-    for (const [name, pattern] of Object.entries(RETIRED)) {
-      const offenders = newLayers.filter((file) =>
-        pattern.test(readFileSync(path.join(WEB_ROOT, file), "utf8")),
-      );
-      expect(offenders, `${name} has been picked up again`).toEqual([]);
-    }
+    expect(stray).toEqual([]);
   });
 
-  it("has one importer left per module, so WO-20 had one edit site each", () => {
-    // ConversationThread rendered both (`:239`, `:308`); ReportView rendered
-    // the dropdown (`:37`). Three call sites, two files, and both files were
-    // on WO-20's list. After the rewrite the only importer of either is a
-    // module that is itself retired.
-    expect(importersOf(RETIRED["JobSummary.tsx"])).toEqual([
-      "components/ConversationThread.tsx",
-    ]);
-    expect(importersOf(RETIRED["ExportDropdown.tsx"])).toEqual(DOOMED);
+  it.each(Object.entries(DELETED))("%s is imported by nothing", (name, pattern) => {
+    expect(importersOf(pattern), `${name} has been picked up again`).toEqual([]);
   });
 });
 
@@ -166,16 +148,16 @@ describe("the retired pair is confined to the modules that are themselves retire
 // WO-20 — the render path itself.
 //
 // The ratchet above is about IMPORTS, which is a property of the tree. This
-// one is about the two files that decide what a browser actually renders, and
-// it is the assertion that makes "retired from the render path" checkable:
-// neither route may reach any of the seven legacy modules, directly or
-// through one hop.
+// one is about the two files that decide what a browser actually renders,
+// and it is the assertion that makes "retired from the render path"
+// checkable: neither route may reach any of the retired modules, directly
+// or through one hop.
 // ---------------------------------------------------------------------------
 
 describe("WO-20 — no route renders a retired module", () => {
   it.each(ROUTES)("%s imports none of them", (route) => {
     const source = readFileSync(path.join(WEB_ROOT, route), "utf8");
-    for (const [name, pattern] of Object.entries(RETIRED)) {
+    for (const [name, pattern] of Object.entries(DELETED)) {
       expect(pattern.test(source), `${route} still imports ${name}`).toBe(false);
     }
   });
@@ -193,11 +175,5 @@ describe("WO-20 — no route renders a retired module", () => {
       "utf8",
     );
     expect(landing).toContain("LandingComposer");
-  });
-
-  it("leaves ConversationThread with no importer outside the doomed set", () => {
-    // The last render path was `app/(workspace)/c/[id]/page.tsx`. Nothing
-    // outside the modules WO-31 deletes may import it again.
-    expect(importersOf(RETIRED["ConversationThread.tsx"])).toEqual([]);
   });
 });

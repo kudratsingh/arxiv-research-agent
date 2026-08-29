@@ -20,7 +20,7 @@
  * pages with the baseline tag set.
  */
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import type { ReactElement } from "react";
@@ -312,14 +312,17 @@ describe("criterion 4 — loading.tsx reserves the real header and report height
     expect(rule.slice(0, rule.indexOf("}"))).not.toMatch(/animation|transition/);
   });
 
-  it("replaced the ad-hoc string in all three places it was rendered", () => {
+  it("replaced the ad-hoc string in every place it was rendered", () => {
     // Criterion 4 names `page.tsx:19`. Two other frames showed the same
     // string at the same wrong height, and a designed loading state that
     // only one of the three paths reaches is not a designed loading state.
+    //
+    // WO-31 DELETED THE THIRD. `components/ConversationThread.tsx` was one
+    // of the three frames; the claim about it is now discharged by the file
+    // not existing, which the assertion after this loop makes explicit.
     for (const file of [
       "app/(workspace)/c/[id]/page.tsx",
       "app/(workspace)/c/[id]/loading.tsx",
-      "components/ConversationThread.tsx",
     ]) {
       const source = read(file);
       expect(source, file).toContain("<ThreadSkeleton />");
@@ -327,6 +330,9 @@ describe("criterion 4 — loading.tsx reserves the real header and report height
       // render it.
       expect(readCode(file), file).not.toContain("Loading conversation");
     }
+
+    // The third frame is gone rather than fixed (WO-31 criterion 1).
+    expect(existsSync(path.join(WEB_ROOT, "components/ConversationThread.tsx"))).toBe(false);
   });
 });
 
