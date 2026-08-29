@@ -45,6 +45,13 @@ export const fontUi = localFont({
     },
   ],
   variable: "--font-ui-face",
+  // `preload: true` STAYS, and it was re-measured rather than assumed. This
+  // family is `body`'s, so it draws every route's first paint; dropping its
+  // preload was tried on the Gate 3 rerun branch and made things worse on
+  // both budgets at once — `/` went from LCP 1.37 s to 2.35 s and picked up
+  // CLS 0.00618, because the swap then lands after the first contentful
+  // paint instead of before it. The report family below is the opposite case
+  // and the note there says why.
   display: "swap",
   preload: true,
   adjustFontFallback: false,
@@ -74,8 +81,17 @@ export const fontReport = localFont({
     },
   ],
   variable: "--font-report-face",
+  // `preload: false`, for the reason stated for mono below and measured on
+  // this family in the Gate 3 rerun. `--font-report` has exactly one consumer
+  // in the whole product — `.ew-report`, the reading column
+  // (app/tokens.css) — so it sets no pixel of any route's first paint: not
+  // the landing prompt (that is `--font-ui`, inherited from `body`), not the
+  // chrome, not the thread header. Preloading it put 55,612 B of woff2 at
+  // VeryHigh priority ahead of the render-blocking CSS on EVERY navigation,
+  // including `/`, where a briefing cannot exist. The adjusted fallbacks in
+  // ./fallback.css are what make the later swap free.
   display: "swap",
-  preload: true,
+  preload: false,
   adjustFontFallback: false,
 });
 

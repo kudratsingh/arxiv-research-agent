@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { FIXTURES } from "./support/env";
 import { sseFrame } from "./support/intercept";
 import { interceptPaidPath } from "./support/paid-path";
-import { REPORT_READER, RUN_PANEL } from "./support/states";
+import { REPORT_READER, RUN_PANEL, STATES, readyLocator } from "./support/states";
 
 /**
  * WO-20 criterion 5 — "incoming events never move the report column, CLS
@@ -171,4 +171,188 @@ test.describe("WO-20 criterion 5 — a live run does not move the reading column
       paid.expectExactly(0, "criterion 5 — checkpoints during a live run");
     },
   );
+});
+
+/* =========================================================================
+ * Gate 3 criterion 7 — the COLD LOAD, on a phone.
+ *
+ * WHY THIS BLOCK EXISTS, AND WHY THE TEST ABOVE DID NOT CATCH WHAT IT MISSED.
+ * The Gate 3 evidence pack measured mobile CLS **0.134** against 04 §8.2's
+ * 0.02 ceiling on all four audited states, from a single shift of
+ * `body > div.ew-shell > main#main` with the same score to five decimal
+ * places everywhere — the shell's header gaining its drawer disclosure at
+ * hydration (`lighthouse-diff.md` §4.1). The block above is right and stayed
+ * green through all of it, because it is two different measurements away
+ * from this one:
+ *
+ *   1. it is tagged `@cls`, which `playwright.config.ts` pins to the chromium
+ *      DESKTOP project, and the defect was mobile-only — at ≥768px neither
+ *      the server snapshot nor the client one renders a header trigger;
+ *   2. it zeroes its accumulator AFTER the page has settled, on purpose, so
+ *      that it measures checkpoints rather than page load.
+ *
+ * So this block is the other half: `@device`, which runs it at the Pixel 7
+ * profile's own 412px — the width 04 §8.3 audits and the width Lighthouse
+ * emulated — and it measures from before the first byte of page script to
+ * after the route has settled.
+ *
+ * IT CANNOT PASS VACUOUSLY. `layout-shift` exists only in Chromium, so on
+ * WebKit an observer would collect nothing and the assertion would be a green
+ * tick over an unmeasured surface. The `iPhone 15` project therefore skips
+ * explicitly rather than passing, and the Chromium run asserts that the entry
+ * type is supported before it asserts anything about the number.
+ *
+ * Lighthouse is not in CI until WO-29 (`lighthouse-diff.md` §7), so until it
+ * is, THIS is the gate on that budget.
+ * ========================================================================= */
+
+/** 04 §8.2's ceiling. The design intent, and the baseline, are 0.000. */
+const LOAD_CLS_CEILING = 0.02;
+
+/**
+ * The four states the Gate 3 pack audited, taken from the same `STATES`
+ * table the reflow sweep walks so the two cannot describe different pages.
+ */
+const AUDITED = ["landing", "thread-empty", "thread-populated", "plan-review"];
+
+interface LoadShiftSource {
+  node: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}
+
+interface LoadShiftBucket {
+  supported: boolean;
+  total: number;
+  entries: { value: number; startTime: number; sources: LoadShiftSource[] }[];
+}
+
+declare global {
+  interface Window {
+    __loadCls?: LoadShiftBucket;
+  }
+}
+
+test.describe("Gate 3 criterion 7 — a cold load does not move the mobile shell", () => {
+  for (const state of STATES.filter((entry) => AUDITED.includes(entry.id))) {
+    test(
+      `${state.id} loads with no layout shift at this device's width`,
+      { tag: "@device" },
+      async ({ page, browserName }) => {
+        test.skip(
+          browserName !== "chromium",
+          "`layout-shift` is a Chromium-only performance entry: Firefox and " +
+            "WebKit implement neither it nor CLS, so this would collect " +
+            "nothing and pass without measuring.",
+        );
+
+        // BEFORE ANY PAGE SCRIPT. `addInitScript` is what makes this a
+        // cold-load measurement rather than a post-hydration one, and
+        // `buffered: true` hands over the entries the browser recorded
+        // before the observer existed.
+        await page.addInitScript(() => {
+          const supported =
+            typeof PerformanceObserver !== "undefined" &&
+            (PerformanceObserver.supportedEntryTypes ?? []).includes("layout-shift");
+          const bucket: LoadShiftBucket = { supported, total: 0, entries: [] };
+          window.__loadCls = bucket;
+          if (!supported) return;
+          new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              const shift = entry as PerformanceEntry & {
+                value: number;
+                hadRecentInput: boolean;
+                sources?: {
+                  node?: Element | null;
+                  previousRect: DOMRectReadOnly;
+                  currentRect: DOMRectReadOnly;
+                }[];
+              };
+              // Excluded for the same reason CLS excludes them: a shift the
+              // user asked for by tapping is not the defect.
+              if (shift.hadRecentInput) continue;
+              bucket.total += shift.value;
+              bucket.entries.push({
+                value: shift.value,
+                startTime: Math.round(shift.startTime),
+                // THE SOURCES, NOT JUST THE NUMBER. A CLS figure with no node
+                // attached is unactionable, and this message is the first
+                // thing whoever breaks this rule will read.
+                sources: (shift.sources ?? []).map((source) => ({
+                  node:
+                    source.node === undefined || source.node === null
+                      ? "(detached)"
+                      : `${source.node.tagName.toLowerCase()}${
+                          source.node.id === "" ? "" : `#${source.node.id}`
+                        }.${String(source.node.className).trim().split(/\s+/)[0] ?? ""}`,
+                  fromX: Math.round(source.previousRect.x),
+                  fromY: Math.round(source.previousRect.y),
+                  toX: Math.round(source.currentRect.x),
+                  toY: Math.round(source.currentRect.y),
+                })),
+              });
+            }
+          }).observe({ type: "layout-shift", buffered: true });
+        });
+
+        await state.arrange?.(page);
+        await page.goto(state.path, { waitUntil: "domcontentloaded" });
+
+        // The mode has to have RESOLVED, not merely been server-guessed:
+        // `drawer` is the client snapshot, so this is the exact moment the
+        // 0.134 shift used to be charged.
+        await expect(page.locator("[data-workbench-shell]")).toHaveAttribute(
+          "data-rail-mode",
+          "drawer",
+        );
+        // …and the route's own content has to be on screen, or "nothing
+        // moved" would be true of a document that never arrived.
+        await expect(readyLocator(page, state.ready)).toBeVisible();
+        // A shift is reported on the frame after the one that caused it.
+        await page.waitForTimeout(1_500);
+
+        const cls = await page.evaluate(
+          () => window.__loadCls ?? { supported: false, total: 0, entries: [] },
+        );
+
+        expect(
+          cls.supported,
+          "the `layout-shift` entry type is not available in this browser, so " +
+            "nothing was measured. This assertion must never pass by default.",
+        ).toBe(true);
+
+        const detail = JSON.stringify(cls.entries);
+        expect(
+          cls.total,
+          `${state.id}: load-time CLS ${cls.total.toFixed(5)} exceeds 04 §8.2's ` +
+            `${LOAD_CLS_CEILING} ceiling. The Gate 3 pack measured 0.13357 here, ` +
+            "from `main#main` dropping when the header gained its drawer " +
+            'disclosure at hydration; if that is what came back, the trigger is ' +
+            'being rendered from `mode === "drawer"` again instead of always ' +
+            "being rendered and hidden at ≥768px by `.ew-shell__disclosure`. " +
+            `Entries: ${detail}`,
+        ).toBeLessThanOrEqual(LOAD_CLS_CEILING);
+
+        // The specific regression, named. The budget above is the contract;
+        // this is the defect, and it is worth failing separately so the
+        // message says which one came back.
+        const shellMovers = cls.entries.flatMap((entry) =>
+          entry.sources
+            .filter(
+              (source) =>
+                source.node.startsWith("main#main") ||
+                source.node.includes("ew-shell__"),
+            )
+            .map((source) => source.node),
+        );
+        expect(
+          shellMovers,
+          `${state.id}: the shell moved after first paint — ${detail}. Nothing ` +
+            "in `.ew-shell` may depend on hydration for its geometry.",
+        ).toEqual([]);
+      },
+    );
+  }
 });

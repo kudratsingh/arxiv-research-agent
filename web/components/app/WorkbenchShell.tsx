@@ -47,6 +47,27 @@
  * snapshot is `expanded`, which is what the CSS paints at desktop widths
  * anyway, and the client snapshot replaces it during hydration.
  *
+ * WHERE THAT SPLIT WAS DRAWN IN THE WRONG PLACE, AND WHAT IT COST (Gate 3
+ * criterion 7). The header's drawer disclosure was on the JavaScript side of
+ * it — `mode === "drawer" ? <Button/> : null`. A server render has no
+ * viewport, so at every width below 768px the first paint had NO trigger and
+ * hydration then inserted one: the workspace indicator moved 112.7px to the
+ * right, the actions wrapped to a second line, the header grew from 65px to
+ * 107px and `main` dropped 42px with it. Chromium scored that single shift
+ * at **0.13357** on all four routes — a seventh of a viewport against 04
+ * §8.2's 0.02 ceiling, and the whole of the mobile CLS breach in
+ * `docs/revamp/evidence/gate-3/lighthouse-diff.md` §4.1. Desktop measured
+ * 0.000 because at ≥768px neither snapshot renders a header trigger.
+ *
+ * The rail's two reasons for being JavaScript's — a fetch and a duplicated
+ * list — are properties of its SUBTREE, and the disclosure has neither: it
+ * is one button, one inline glyph and one word. So it moved to the CSS side
+ * of the split, where the answer is known before the first byte of script:
+ * it is always rendered, and `workbench.css` hides it at ≥768px, where the
+ * rail is persistent and the icon strip carries its own trigger. Nothing in
+ * the header's geometry now depends on hydration, which is what "reserve the
+ * space" has to mean when the space belongs to a control.
+ *
  * WHAT THIS FILE DOES NOT DO. It does not restyle, rewrite or even read the
  * feature components it renders. `ConversationSidebar`, `ConversationThread`
  * and `QueryForm` come through untouched — 05-MIGRATION.md §1.4's blast
@@ -387,19 +408,25 @@ export function WorkbenchShell({
             Criterion 6: "the trigger is a labelled header button, never
             hover-only". It is a real `<button>` with a visible word, in the
             header, at every width where the rail is not persistent.
+
+            UNCONDITIONALLY RENDERED, AND HIDDEN BY A MEDIA QUERY — see the
+            header of this file. `.ew-shell__disclosure` is `display: none`
+            at ≥768px in workbench.css, so it is out of the layout AND out
+            of the accessibility tree at exactly the widths where the rail
+            is persistent, while the narrow widths get its box on the FIRST
+            paint rather than on hydration. That is the Gate 3 CLS repair.
           */}
-          {mode === "drawer" ? (
-            <Button
-              variant="secondary"
-              onClick={openDrawer}
-              aria-haspopup="dialog"
-              aria-expanded={drawerVisible}
-              data-drawer-trigger=""
-            >
-              <Glyph d={LIST_GLYPH} />
-              {THREAD_RAIL.openDrawer}
-            </Button>
-          ) : null}
+          <Button
+            variant="secondary"
+            className="ew-shell__disclosure"
+            onClick={openDrawer}
+            aria-haspopup="dialog"
+            aria-expanded={drawerVisible}
+            data-drawer-trigger=""
+          >
+            <Glyph d={LIST_GLYPH} />
+            {THREAD_RAIL.openDrawer}
+          </Button>
 
           <p className="ew-shell__workspace">
             <strong className="font-medium text-ink">{WORKSPACE.indicator}</strong>{" "}

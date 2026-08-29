@@ -39,6 +39,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, lazy } from "react";
 
+import { COMPACT_QUERY } from "@/components/app/WorkbenchShell";
 import {
   ThreadListSkeleton,
   ThreadRailFrame,
@@ -46,21 +47,50 @@ import {
 import { THREAD_RAIL } from "@/lib/copy/threads";
 
 /**
- * The request is started when this MODULE is evaluated, not when the rail
- * first renders.
+ * The request is started when this MODULE is evaluated — but only at the
+ * widths where the rail is going to be rendered.
  *
  * `lazy(() => import(…))` defers the request to first render, which is the
  * right default for a surface that may never be shown — the drawer WO-08
- * lazily imports is exactly that. This rail is the opposite: it is rendered
- * on every route in the workbench, unconditionally, so waiting for a render
- * to begin fetching it buys nothing and costs a round trip on the critical
- * path. Hoisting the `import()` keeps the only property the budget
+ * lazily imports is exactly that. At `compact` and `expanded` the rail is
+ * the opposite: it is rendered on every route in the workbench, so waiting
+ * for a render to begin fetching it buys nothing and costs latency on the
+ * critical path. Hoisting the `import()` keeps the only property the budget
  * accounting cares about — it is still a separate chunk, absent from both
- * routes' first-load union — while removing the latency, and it is what
+ * routes' first-load union — while removing that latency, and it is what
  * makes the fallback a frame rather than a state.
+ *
+ * WHAT THE UNCONDITIONAL HOIST COST, AND WHERE (Gate 3 criterion 7).
+ * "Rendered on every route in the workbench" is true above 768px and false
+ * below it: WO-08's repair is that the rail is *not in the layout at all* in
+ * `drawer` mode. This module is still imported by `app/(workspace)/layout.tsx`
+ * at every width, so an unconditional hoist fetched the rail's chunk —
+ * `ThreadRail` plus the Dialog primitive plus `@radix-ui/react-dialog`,
+ * **34,396 B** over three requests, measured on `/c/[id]` — on the one form
+ * factor that never renders a pixel of it, and it landed on the critical path
+ * ahead of `GET /conversations/{id}`. `docs/revamp/evidence/gate-3/lighthouse-diff.md`
+ * §4.2 records the LCP that produced.
+ *
+ * So the warm-up is now asked the same question the shell asks: does this
+ * viewport have a rail? `COMPACT_QUERY` is imported rather than restated, so
+ * there is still exactly one definition of 768px on the JavaScript side. A
+ * viewport that later crosses the breakpoint still gets the rail — `lazy`
+ * calls `loadRail` on the first render either way, and the promise is
+ * memoised, so the chunk is requested once whichever path reaches it first.
  */
-const railChunk = import("@/components/features/ThreadRail");
-const ThreadRail = lazy(() => railChunk);
+let railChunk: Promise<typeof import("@/components/features/ThreadRail")> | null =
+  null;
+
+function loadRail(): Promise<typeof import("@/components/features/ThreadRail")> {
+  railChunk ??= import("@/components/features/ThreadRail");
+  return railChunk;
+}
+
+if (typeof window !== "undefined" && window.matchMedia?.(COMPACT_QUERY).matches) {
+  void loadRail();
+}
+
+const ThreadRail = lazy(loadRail);
 
 /** `/c/<id>` → `<id>`, decoded. Anything else → `null`. */
 export function activeConversationIdFrom(pathname: string | null): string | null {

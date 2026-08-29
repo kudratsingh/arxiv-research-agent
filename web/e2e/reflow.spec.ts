@@ -81,6 +81,20 @@ test.describe("criterion 5 — reflow sweep and the work-surface floor", () => {
           // rail is not in the layout, and `ThreadRailBridge` is not even
           // mounted, until it is opened. See `StateEntry.inRail`.
           if (state.inRail === true) {
+            // WAIT FOR THE RESOLVED MODE FIRST, and this is not defensive
+            // padding. The disclosure is now in the SERVER markup at every
+            // width — it has to be, or its box arrives at hydration and that
+            // is the 0.13357 shift the Gate 3 pack measured — so a click can
+            // land on a button React has not attached a handler to yet, and
+            // the drawer never opens. `data-rail-mode` is `expanded` in the
+            // server snapshot and `drawer` only once the client store has
+            // been read, so waiting for it IS waiting for hydration.
+            // `device.spec.ts` already waits on the same attribute before its
+            // own click, for the same reason.
+            await expect(page.locator("[data-workbench-shell]")).toHaveAttribute(
+              "data-rail-mode",
+              "drawer",
+            );
             await page.locator("[data-drawer-trigger]").first().click();
           }
 

@@ -164,8 +164,40 @@ export function ThreadTimeline({
   // WO-09 criterion 4: `/c/[id]` is dynamic, so the server renders straight
   // through the route's Suspense boundary and THIS is the frame a cold load
   // paints. It reserves the loaded header's own geometry.
+  //
+  // THE COMPOSER IS IN THIS FRAME, AND THAT IS A CLAIM ABOUT WHAT IT IS
+  // (Gate 3 criterion 7). The follow-up field is thread CHROME, not thread
+  // CONTENT: it reads nothing from `GET /conversations/{id}` — its only
+  // input is the `conversationId` already in the URL — so holding it back
+  // until the transcript lands was sequencing, not a dependency. Two things
+  // follow from putting it in the loading frame:
+  //
+  //   1. A reader can start typing a follow-up while the transcript is still
+  //      in flight, which is the honest behaviour for a field that never
+  //      needed the transcript.
+  //   2. The route's largest contentful element — Lighthouse names it
+  //      `div#placeholder`, this field's placeholder, on all three `/c/[id]`
+  //      states — now paints at hydration instead of after
+  //      `GET /conversations/{id}`. `lighthouse-diff.md` §4.2's 3.24–3.70 s
+  //      was that one wait.
+  //
+  // NOTHING MOVES WHEN THE TRANSCRIPT ARRIVES. `.ew-thread--loading` is the
+  // same grid with the middle rows collapsed into one, so the composer sits
+  // at the bottom edge in both frames and the rows above it are the ones
+  // that change (workspace.css).
   if (detail === undefined) {
-    if (query.isPending) return <ThreadSkeleton className={className} />;
+    if (query.isPending) {
+      return (
+        <div
+          className={["ew-thread", "ew-thread--loading", className]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <ThreadSkeleton />
+          {composer}
+        </div>
+      );
+    }
     return (
       <div className={["ew-thread", className].filter(Boolean).join(" ")}>
         <header className="ew-thread__header">

@@ -231,18 +231,21 @@ test.describe("criterion 3 — the pre-paint theme script survives the policy", 
       const header = readCspHeader(await page.goto("/", { waitUntil: "domcontentloaded" }));
       expect(header.nonce).not.toBeNull();
 
-      const nonces = await page.evaluate(() =>
-        Array.from(document.querySelectorAll("script")).map((script) => ({
-          inline: script.src === "",
-          // `getAttribute` rather than `.nonce`: browsers blank the IDL
-          // attribute after parsing to keep the value away from CSS
-          // exfiltration, so the property would read empty even when the
-          // markup carried it. What matters is the markup.
-          hasNonce: script.hasAttribute("nonce"),
-          text: script.textContent?.slice(0, 40) ?? "",
-        })),
-      );
+      const read = () =>
+        page.evaluate(() =>
+          Array.from(document.querySelectorAll("script")).map((script) => ({
+            inline: script.src === "",
+            // `getAttribute` rather than `.nonce`: browsers blank the IDL
+            // attribute after parsing to keep the value away from CSS
+            // exfiltration, so the property would read empty even when the
+            // markup carried it. What matters is the markup.
+            hasNonce: script.hasAttribute("nonce"),
+            src: script.src === "" ? "(inline)" : new URL(script.src).pathname,
+            text: script.textContent?.slice(0, 40) ?? "",
+          })),
+        );
 
+      const nonces = await read();
       const themeScript = nonces.find((script) => script.text.includes("arxiv-agent.theme"));
       expect(
         themeScript,
@@ -255,7 +258,30 @@ test.describe("criterion 3 — the pre-paint theme script survives the policy", 
       ).toBe(true);
       // And every other script too: one un-nonced bundle chunk is a page that
       // never hydrates.
-      expect(nonces.filter((script) => !script.hasNonce)).toEqual([]);
+      //
+      // POLLED, BECAUSE THE DOM CARRIES SCRIPTS THE SERVER NEVER WROTE.
+      // webpack loads an async chunk by APPENDING a `<script>` of its own and
+      // removing it again once the chunk has run, and those elements have no
+      // `nonce` attribute — they do not need one, because `'strict-dynamic'`
+      // trusts a script created by an already-trusted script, which is the
+      // whole point of the directive. On `/` the five that appear are the
+      // thread rail's chunk (`ThreadRailBridge` warms it at module
+      // evaluation), and a single `page.evaluate` landing inside that window
+      // failed this assertion on roughly one run in four — measured on this
+      // branch at 6 passes in 8 repeats, with the transient elements gone
+      // 1.5 s later.
+      //
+      // Polling keeps the assertion strict rather than softening it: a bundle
+      // tag the server wrote without a nonce never disappears, so it still
+      // fails here, and it is still the thing the sentence above is about.
+      await expect
+        .poll(async () => (await read()).filter((script) => !script.hasNonce), {
+          message:
+            "a script in the document carries no nonce and did not go away — " +
+            "under 'strict-dynamic' the `'self'` source is ignored, so this " +
+            "is a chunk the browser will refuse and a page that never hydrates",
+        })
+        .toEqual([]);
     },
   );
 
