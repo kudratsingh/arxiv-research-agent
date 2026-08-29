@@ -38,11 +38,11 @@ Three rules govern every number below.
 | States failing `landmark-one-main` | **12 of 12** | 0 | **0 of 20** | §1 |
 | States failing `region` | **12 of 12** | 0 | **0 of 20** | §1 |
 | axe audits taken | 12 | 40 | **120** | §1 |
-| Mobile CLS (worst route) | 0.000 | **0.13418** | **0.00000** | §2 |
-| `/c/[id]` mobile LCP | 2.38 s | **3.62 s** | **1.42 s** | §2 |
-| Mobile Performance (worst) | 98 | **85** | **100** | §2 |
-| Lighthouse Accessibility (worst) | **94** | 100 | **100** | §2 |
-| Lighthouse Best Practices | **96** | 100 | **100** | §2 |
+| Mobile CLS (worst route)† | 0.000 | **0.13418** | **0.00000** | §2 |
+| `/c/[id]` mobile LCP† | 2.38 s | **3.62 s** | **1.42 s** | §2 |
+| Mobile Performance (worst)† | 98 | **85** | **100** | §2 |
+| Lighthouse Accessibility (worst)† | **94** | 100 | **100** | §2 |
+| Lighthouse Best Practices† | **96** | 100 | **100** | §2 |
 | Gated bundle ceilings | **none — no budget file** | 5 gated + 2 recorded | **5 gated + 2 recorded, six ratcheted down** | §3 |
 | Dependency advisories, production tree | 0 of 119 | 0 | **0 of 166** | §4 |
 | Vitest tests | **78** in 12 files | 2,970 in 136 | **3,080** in 136 | §5 |
@@ -50,6 +50,14 @@ Three rules govern every number below.
 | Storybook stories | **0** — no Storybook | 261 | **284**, each axe-clean | §5 |
 | CI jobs on the PR path | **5** (frontend: **1**) | 8 (frontend: 4) | **8** (frontend: **4**) | §6 |
 | Scheduled workflows | 1 (`nightly-eval`) | 1 | **2** (+ `nightly-lighthouse`) | §6 |
+
+**† The five Lighthouse rows' "Now" column is measured at `d3460a7`, not
+`80f6081`.** It is the Gate 3 addendum's corpus, and it is used here because it
+is the most recent set taken with **Lighthouse 13.4.1** — the version the
+baseline and the Gate 3 pack both used, so the three columns are comparable.
+The Gate 4 `lhci` gate runs 12.6.1 and is reported separately in §2.3 as an
+absolute measurement rather than a delta. §2.3 and **RR-09** say why. Every
+other row in this table is measured at `80f6081`.
 
 ---
 
