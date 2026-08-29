@@ -369,6 +369,58 @@ than local Compose:
   denied. This is the outer control because Docker-published ports can
   bypass `ufw` rules.
 
+### S7 — the deployment gate is not an identity
+
+The production Caddy edge asks the browser for HTTP basic auth before
+anything else is served (`deploy/hetzner/Caddyfile:8-10`):
+
+```caddyfile
+basic_auth {
+	{$APP_USERNAME} {$APP_PASSWORD_HASH}
+}
+```
+
+**That prompt is a deployment gate, not a user account**, and the
+distinction is the whole of MT-01 seam S7. It is written down here
+because the failure mode is a reader — or a future work order —
+mistaking the basic-auth dialog for the identity system that
+deliberately does not exist yet (D-009).
+
+What it actually is: one site-wide credential, shared by everyone who
+has it, checked by the reverse proxy before any request reaches
+Next.js. It exists because the UI can initiate paid Anthropic work, so
+the site gets a second human-facing gate in addition to the private
+API key the proxy holds. It authenticates **access to the deployment**.
+
+What it is not:
+
+- It is **not a session.** Caddy does not issue one, and nothing
+  downstream reads the basic-auth credential. It never reaches
+  FastAPI, and it has no relationship to `X-API-Key`.
+- It is **not a principal.** Every request that clears the gate arrives
+  at the API as the same single principal. Two people with the same
+  password are indistinguishable at every layer below Caddy.
+- It is **not per-user scoping.** The backend's per-principal Job and
+  Conversation scoping (ADR 0036, below) is real, but with one
+  principal configured it partitions nothing. Everyone sees the same
+  threads.
+
+**The rule that follows: the UI must never render it as a signed-in
+user.** No avatar, no username, no "signed in as", no account menu, and
+no "your threads" — not even disabled, because a disabled login control
+is still a claim that login exists. The web tier holds this
+structurally rather than by convention: the header's `IdentitySlot`
+returns `null` and is asserted to render nothing at all, and the
+truthful string that occupies the header instead is "Shared workspace —
+Everyone with access to this deployment sees these threads. There are
+no separate accounts."
+
+When MT-01 introduces real identity, it arrives at seam S1
+(`resolveUpstreamPrincipal`) or S3 (session middleware) — not by
+promoting this gate. Basic auth may then stay as an outer perimeter or
+be removed, but it is not the mechanism being replaced, because it was
+never doing that job.
+
 ### Per-principal Job + Conversation scoping (ADR 0036)
 
 Every `Job` and `Conversation` carries a `principal_key_id: str |

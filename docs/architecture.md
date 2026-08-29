@@ -1,11 +1,56 @@
 # Architecture
 
 System-level view of `arxiv-research-agent`: the two workflow shapes,
-the HTTP surface layered on top, and the storage matrix that decides
-where every piece of state lives. Everything here is derived from the
-code on `main` (`src/graph/workflow.py`, `src/api/app.py`,
-`src/api/routes.py`, `src/config.py`); the linked ADRs carry the
-rationale — this page does not restate them.
+the HTTP surface layered on top, the browser tier in front of it, and
+the storage matrix that decides where every piece of state lives.
+Everything here is derived from the code on `main`
+(`src/graph/workflow.py`, `src/api/app.py`, `src/api/routes.py`,
+`src/config.py`, `web/`); the linked ADRs carry the rationale — this
+page does not restate them. The [README](../README.md) has the same
+picture one level up; this page is the level below it.
+
+## The shape of the system
+
+```mermaid
+flowchart LR
+    B["Browser<br/>holds no credential"]
+
+    subgraph WEB["web service — same origin"]
+        MW["middleware.ts<br/>per-request nonce CSP"]
+        PX["app/api/[...path]/route.ts<br/>runtime nodejs, force-dynamic<br/>attaches X-API-Key, logs one JSON line"]
+    end
+
+    subgraph BE["private network"]
+        API["FastAPI<br/>async job model, SSE, HITL"]
+        RUN["job runner<br/>compiled LangGraph"]
+    end
+
+    R[("Redis<br/>job store, SSE pub/sub<br/>leases, rate limiter")]
+    P[("Postgres<br/>checkpoints, conversations<br/>paper + embedding caches")]
+
+    B -->|"document requests"| MW
+    B -->|"same-origin /api/*"| PX
+    PX --> API
+    API --> RUN
+    API <--> R
+    RUN <--> R
+    RUN <--> P
+```
+
+Three properties of that picture are load-bearing rather than
+incidental, and each is argued in ADR
+[0055](decisions/0055-frontend-architecture-confirmation.md):
+
+- **The browser never holds a credential.** `X-API-Key` is attached
+  server-side in the proxy route and nowhere else. Every call the
+  browser makes is same-origin.
+- **The proxy is not optional.** Native `EventSource` and `<a download>`
+  cannot carry a request header, so under `ENABLE_API_AUTH=true` —
+  the production configuration — neither the event stream nor any
+  export could be authenticated from browser code at all.
+- **Redis and Postgres are what make the tier horizontal.** On the
+  defaults everything is in-process; the shared backends are what let a
+  second worker exist. See the [storage matrix](#storage-matrix).
 
 ## The workflow — two shapes
 
@@ -13,22 +58,33 @@ rationale — this page does not restate them.
 graphs over the shared `ResearchState` (`src/graph/state.py`),
 selected by `settings.enable_supervisor`:
 
-**Fixed pipeline (default)**
+**Fixed pipeline (default)** — the conditional edge is the whole
+shape, so it is drawn as a node rather than as an annotation:
 
+```mermaid
+flowchart LR
+    P[planner] --> S[search] --> RD[reader] --> Y[synthesizer] --> C[critic]
+    C --> RT{"route_after_critique"}
+    RT -->|"approved, or max_iterations reached"| E([END])
+    RT -->|"revision_target = plan"| P
+    RT -->|"revision_target = search"| S
+    RT -->|"revision_target = synthesize"| Y
 ```
-planner → search → reader → synthesizer → critic → END
-   ↑         ↑                    ↑           │
-   └─────────┴────────────────────┴───────────┘
-     route_after_critique: on revision_needed, the critic's
-     revision_target picks planner / search / synthesizer
-     (capped at settings.max_iterations revisions)
-```
+
+On `revision_needed` the critic's `revision_target` picks which of the
+three nodes the run re-enters; revisions are capped at
+`settings.max_iterations`.
 
 **Supervisor loop** (`enable_supervisor=true`, ADR
-[0014](decisions/0014-supervisor-loop-behind-flag.md))
+[0014](decisions/0014-supervisor-loop-behind-flag.md)) — the fan-out is
+uniform, so what matters is the cycle and where it terminates:
 
-```
-START → supervisor → <chosen node> → supervisor → ... → END
+```mermaid
+flowchart LR
+    ST([START]) --> SUP[supervisor]
+    SUP -->|"one action from a strict enum"| N["chosen agent node"]
+    N -->|"always returns control"| SUP
+    SUP -->|"stop, or a budget / iteration cap"| E([END])
 ```
 
 Every agent node hands control back to the supervisor, which picks
@@ -162,10 +218,114 @@ opt-in, prompt-isolation extensions) is ADR
 [0033](decisions/0033-safety-hardening-bundle.md); threat model in
 [`docs/security.md`](security.md).
 
-**Web UI.** `web/` is a Next.js single-page client (query form, live
-SSE event log, plan review, report view with export, conversation
-sidebar), built and tested in CI alongside the Python suite (ADR
-[0029](decisions/0029-nextjs-web-ui.md)).
+**Web tier.** `web/` is a Next.js App Router application whose route
+handler is the credential boundary above. It gets its own section
+below; ADRs [0029](decisions/0029-nextjs-web-ui.md) and
+[0055](decisions/0055-frontend-architecture-confirmation.md).
+
+## The web tier
+
+`web/` is not a single-page client. It is an App Router application
+with two routes, three separable layers, and a server boundary that is
+part of the security model rather than a convenience.
+
+**Routes.** `/` (the workspace) and `/c/[id]` (a thread), both under
+the `(workspace)` route group so they share one layout.
+`/login` and `/settings` are **reserved names with no files** — as is
+`web/app/api/auth/[...path]/route.ts` — because there is no identity
+yet and a disabled login control would be a fake one.
+
+**The shell.** `app/(workspace)/layout.tsx` mounts `WorkbenchShell`,
+which owns the header, the thread rail, the skip link and the main
+landmark. Components are layered `foundations → primitives → patterns
+→ features`, so a primitive never imports a feature. The header
+contains an `IdentitySlot` that **returns `null`**: it reserves a DOM
+position and a module name for a future account control without
+rendering an avatar, a "Sign in", or a disabled button. What occupies
+the header today is the truthful string "Shared workspace — Everyone
+with access to this deployment sees these threads. There are no
+separate accounts."
+
+**The data layer.** `lib/api/` is a typed client whose types are
+*generated* from `contract/openapi.json` (a CI job fails on drift), and
+`lib/queries/` wraps it in TanStack Query. Every query key is
+`[resource, principal, …]` with `principal` a module constant today, so
+that when identity arrives the caches partition without a call-site
+change. All of it goes through `/api` on the same origin; no component
+ever sees `API_INTERNAL_BASE`.
+
+**The job machine.** `lib/job/machine.ts` is a pure reducer — no clock,
+no network, no `EventSource`, no React. Its transition table is
+**total**: all 10 phases × 25 event types are decided explicitly, a
+deliberately-ignored combination is written as `IGNORE` rather than
+omitted, and there is no default branch, so adding a phase or an event
+fails typecheck until every cell is decided. `lib/job/useJobStream.ts`
+is the impure half that owns the `EventSource` and feeds it frames.
+
+The split exists because the hard part is not rendering — it is being
+honest about what is known. The machine never invents a stage: the
+`checkpoint` field is written only by `node_completed`, is reset on
+every stream open (including the browser's own automatic retry), and is
+never persisted or derived from a polled `JobDetail`. Terminal copy is
+therefore `failed after <checkpoint>` or plain `failed` — never
+`failed in <node>`, because no terminal payload carries a node.
+
+### How a run travels
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant X as Next proxy
+    participant A as FastAPI
+    participant R as Runner
+    Note over B,X: every response below returns through the proxy hop
+    B->>X: POST /api/research
+    X->>A: POST /research + X-API-Key
+    A-->>B: 202 Accepted, job_id
+    B->>X: GET /api/research/{id}/stream
+    X->>A: attach, returns the raw ReadableStream
+    R-->>A: node_completed
+    A-->>B: event node_completed
+    R-->>A: plan_ready (interrupt after planner)
+    A-->>B: event plan_ready
+    Note over B,R: job parks in pending_review until someone decides
+    B->>X: POST /api/research/{id}/review
+    X->>A: approve or edit, resume the interrupt
+    R-->>A: job_completed
+    A-->>B: terminal event, stream closes
+```
+
+The job id travels in the URL as `?job=`, which is what makes a reload
+mid-run recoverable: the page attaches to an existing job rather than
+submitting a new one (ADR
+[0053](decisions/0053-api-web-container-preflight.md)). Reattaching
+replays the terminal frame for a finished job and `plan_ready` for one
+parked in review, so a dropped connection during plan review does not
+wait out the HITL timeout in silence.
+
+**The server boundary.** `middleware.ts` mints a per-request nonce and
+sets the CSP on every document response; the proxy route emits one
+structured JSON log line per proxied request with a path *template*
+rather than a raw id; the container healthcheck probes `/api/healthz`
+*through* the proxy. All three, plus the CSP's exact policy and the
+deliberate CSRF scope note, are in
+[`security.md`](security.md#browser-facing-hardening-on-the-nextjs-service-wo-30).
+
+Because the nonce is per-request, `/` is **dynamically rendered** — a
+nonce cannot live in a cached document. That is inherent to the choice,
+not a regression; the consequences are recorded in ADR
+[0055](decisions/0055-frontend-architecture-confirmation.md).
+
+**Styling and weight.** Colour, space, type and motion come from one
+token chain with a parity test and an ESLint ban on literal colours,
+and every route carries a gzip byte ceiling enforced on every PR under
+a ratchet rule. Both are ADR
+[0056](decisions/0056-design-tokens.md).
+
+**A note on the deployment gate.** The production Caddy edge asks for
+HTTP basic auth before anything else. It is a **deployment gate, not a
+user account**, and the UI must never render it as a signed-in user —
+see [`security.md`](security.md#s7--the-deployment-gate-is-not-an-identity).
 
 ## Storage matrix
 
