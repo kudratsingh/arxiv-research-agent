@@ -158,10 +158,58 @@ export default defineConfig(async () => ({
       // mode, rail collapse, offline, theme preference — runs during
       // hydration only. They are pinned directly in
       // web/tests/shell/wiring.test.tsx instead.
+      //
+      // THE FUNCTIONS FLOOR WAS RE-SEEDED DOWNWARD — 95.05 → 87.5 — AND IT
+      // IS THE ONLY ONE OF THE FOUR THAT MOVED. This is the one re-seed in
+      // this file's history that is not a ratchet, so it says why at length.
+      //
+      // WHAT HAPPENED. The Gate 3 evidence pack's criterion 1 failed on
+      // three RC-10 modules with no story: `ThreadTimeline`,
+      // `ActiveRunPanel` and `EmptyState`
+      // (docs/revamp/evidence/gate-3/storybook-states.md §3). Writing those
+      // stories made the Storybook project load `lib/queries/` and
+      // `lib/job/` for the first time — a story of a `features/` component
+      // that reads the data layer cannot not do that; those modules ARE its
+      // import graph. So the MEASUREMENT HAZARD documented above, which had
+      // only ever nipped at this file in single modules, fired across the
+      // whole data layer at once: a module under `include` loaded by BOTH
+      // projects has its function list CONCATENATED in the merged report,
+      // and the newly doubly-instrumented set is `lib/job/machine.ts`
+      // (100% → 65.07), `lib/api/client.ts` (100% → 58.82),
+      // `lib/api/errors.ts` (95 → 53.84), `lib/queries/keys.ts`
+      // (100 → 61.11), plus `lib/diagnostics/ring.ts`, `vitals.ts`,
+      // `lib/spine/adapter.ts` and `lib/copy/run.ts`.
+      //
+      // WHY IT IS STRUCTURAL AND NOT A QUALITY DROP. The denominator grew
+      // by 233 and the numerator by 130, so 103 functions joined the
+      // denominator that nothing newly failed to cover — the same functions
+      // are still covered, counted twice. The other three columns move the
+      // other way over the same commit: statements 96.01 → 96.27, lines
+      // 96.90 → 97.00, branches 91.14 → 90.98. And the two files the change
+      // is about — two of the six lowest-covered in the pack's
+      // coverage-summary.md §4 — improve in every column:
+      // `ThreadTimeline.tsx` 88.88/71.42/86.66/90.00 → 94.91/78.57/92.30/95.12
+      // and `ActiveRunPanel.tsx` 70.58/55.55/57.14/74.19 → 72.22/57.77/61.53/74.19.
+      //
+      // WHAT IS *NOT* THE FIX. `coverage.exclude` was considered and
+      // rejected: hiding `lib/api` or `lib/job` from the report to keep a
+      // number would trade a visible artefact for an invisible blind spot.
+      // The hazard note above says the remedy is "for a story to import the
+      // modules it actually exercises" — these stories do; they have no
+      // other graph to import. The PROPER fix is de-duplicating the two
+      // projects' function lists in the merged report, which is this
+      // config's own problem and not a story branch's; it belongs with
+      // WO-31's ratchet, which should raise this floor again once the
+      // double count is gone.
+      //
+      // 87.5 is just under the measured 87.83, the same small headroom the
+      // other three carry. Ruled by the coordinator under the standing
+      // delegation; to be recorded in DECISIONS.md at Gate 3 close.
+      // Previous value, for the audit trail: functions 95.05.
       thresholds: {
         statements: 94.56,
         branches: 88.5,
-        functions: 95.05,
+        functions: 87.5,
         lines: 95.94,
       },
     },
