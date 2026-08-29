@@ -273,6 +273,37 @@ jobs:
             [ "$code" = "200" ] || fail=1
           done
           exit "$fail"
+      - name: Probe the CSP header and the container healthcheck
+        # WO-30. Two things only the real image can prove, and both are cheap
+        # here because the container is already up.
+        #
+        #   1. The enforcing CSP with a per-request nonce is on `/`, and the
+        #      middleware's excluded paths carry the inert policy instead of
+        #      nothing. The browser sweep (web/e2e/csp.spec.ts, `@csp`) is the
+        #      real gate; this catches a build that shipped no middleware at
+        #      all, which the sweep would only report five minutes later.
+        #   2. `scripts/healthcheck.mjs` runs INSIDE the image. `output:
+        #      standalone` traces the server's imports and not the daemon's
+        #      probe, so a missing COPY in web/Dockerfile makes every
+        #      deployment's healthcheck fail — with the container reported
+        #      unhealthy and no clue why. It exits 0 here against the stub.
+        run: |
+          set -eu
+          csp=$(curl -sS -D- -o /dev/null http://127.0.0.1:3000/ \
+            | tr -d '\r' | grep -i '^content-security-policy:')
+          echo "$csp"
+          case "$csp" in
+            *"'strict-dynamic'"*"'nonce-"*) ;;
+            *) echo "no nonce-based CSP on /"; exit 1 ;;
+          esac
+          inert=$(curl -sS -D- -o /dev/null http://127.0.0.1:3000/api/healthz \
+            | tr -d '\r' | grep -i '^content-security-policy:')
+          echo "$inert"
+          case "$inert" in
+            *"default-src 'none'"*) ;;
+            *) echo "/api/healthz carries no inert policy"; exit 1 ;;
+          esac
+          docker exec web-image-smoke node scripts/healthcheck.mjs
       - name: Container and stub logs on failure
         if: failure()
         run: |
@@ -527,11 +558,32 @@ jobs:
           else
             npm run e2e -- --project=chromium
           fi
-      - name: Upload traces, screenshots, axe JSON
+      - name: Capture the proxy request log
+        # WO-30 / 05-MIGRATION.md C6. The suite has just driven every §4 state
+        # through the same-origin proxy, so the web container's stdout now
+        # holds one structured line per request. `ci/proxy-log-sample.txt` is
+        # the committed sample and web/tests/proxyLogging.test.ts gates it;
+        # this captures the RUN's lines beside the other artifacts, so an
+        # incident can be read against the run that produced it rather than
+        # against a file somebody refreshed by hand months ago.
+        #
+        # `|| true` and `always()`: a red suite is exactly when this log is
+        # worth having, and a container that never started must not turn a
+        # test failure into a second, misleading one.
+        if: always()
+        run: |
+          mkdir -p build/e2e
+          docker logs arxiv-wo21-web 2>&1 \
+            | grep '"event":"api_proxy_request"' \
+            > build/e2e/proxy-log.txt || true
+          wc -l build/e2e/proxy-log.txt || true
+      - name: Upload traces, screenshots, axe JSON, CSP sweep, proxy log
         # web/build/e2e holds all of it: test-results/ (traces, screenshots,
         # video — retained on failure), report/, results.json,
-        # research-post-count.txt, and axe/*.json + the summary/baseline-map/
-        # contrast-proof TSVs WO-26 diffs against docs/revamp/baseline/axe/.
+        # research-post-count.txt, axe/*.json + the summary/baseline-map/
+        # contrast-proof TSVs WO-26 diffs against docs/revamp/baseline/axe/,
+        # and WO-30's csp/sweep.tsv (one row per §4 state: mode, violation
+        # count, console count) plus proxy-log.txt from the step above.
         if: always()
         uses: actions/upload-artifact@v4
         with:

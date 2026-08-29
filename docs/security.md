@@ -258,6 +258,97 @@ a `NEXT_PUBLIC_*` value. Notes:
   only safe headers, rejects credentialed/non-HTTP upstream URLs, and
   maps an unreachable API to 502.
 
+### Browser-facing hardening on the Next.js service (WO-30)
+
+Four controls on the `web` service, all of them in front of the
+credential boundary rather than inside it. The boundary itself —
+`web/app/api/[...path]/route.ts` — is behaviourally unchanged;
+`web/tests/apiProxyRoute.test.ts` passes unmodified, which is the
+evidence for that claim.
+
+**Content Security Policy.** `web/middleware.ts` mints a fresh
+128-bit nonce per request and sets the policy on every document
+response:
+
+```
+default-src 'self'; script-src 'self' 'nonce-…' 'strict-dynamic';
+style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:;
+font-src 'self'; connect-src 'self'; frame-ancestors 'none';
+base-uri 'none'; object-src 'none'; form-action 'self'
+```
+
+- `'strict-dynamic'` makes the nonce the entire script allowlist, so
+  an injected `<script>` — inline or same-origin — does not execute.
+  Next stamps its own bundle tags automatically; the pre-paint theme
+  script in `app/layout.tsx` carries the nonce explicitly.
+- `connect-src 'self'` is sufficient because SSE is same-origin: the
+  browser opens `/api/research/{id}/stream` on the Next origin and the
+  proxy, not the browser, talks to FastAPI.
+- **`style-src-attr 'unsafe-inline'` is the one directive that is not
+  in the ratified policy.** It was added because the Report-Only run
+  found three violations across the whole state matrix, all of them
+  inline `style` attributes written by
+  `components/primitives/Skeleton.tsx` for per-instance placeholder
+  geometry, which no nonce or hash can cover. Naming `style-src-attr`
+  separately leaves `style-src 'self'` intact, so `<style>` elements
+  and stylesheet URLs remain same-origin only; chromium, firefox and
+  webkit were each measured honouring the narrow form. Removing it is
+  a follow-up, listed below.
+- The policy is enforcing by default. `CSP_MODE=report-only` is the
+  rollout switch for an observation window on a live deployment, and
+  `CSP_MODE=off` exists only for `next dev`, whose HMR runtime needs
+  `eval` and inline `<style>`.
+- `/api/*`, `/_next/static/*` and `/icon.svg` skip the middleware so
+  proxy and asset traffic take no extra hop. They are not left bare:
+  `next.config.mjs` gives all three `default-src 'none'` plus
+  `X-Content-Type-Options: nosniff`, which matters most for the SVG
+  icon (a scriptable document when navigated to directly) and for
+  proxied bodies the service did not author.
+
+**Proxy request logging.** One structured JSON line per proxied
+request on the web container's stdout: method, path **template**,
+upstream status, duration, response bytes. Never the API key, never a
+header, never a body, never a query string, and never a raw job or
+conversation id — a path segment is emitted only when it is a literal
+in `web/contract/openapi.json`, and anything else becomes `{id}`.
+`ci/proxy-log-sample.txt` is a captured sample.
+
+**Healthcheck.** The container probe was `GET /` and is now
+`GET /api/healthz` through the proxy, so a misconfigured
+`API_INTERNAL_BASE` no longer yields a healthy container serving a
+broken app. It requires HTTP 200 and **does not** fail on
+`status: degraded`: `/healthz` is always 200 by design (ADR 0042) and
+restarting Next does not fix a dead Redis. It does parse `status` and
+`dependencies` and print them, because HTTP 200 alone never means
+healthy; `docker inspect` retains the last five reports.
+
+**CSRF is not addressed, and is out of scope pending MT-01.** This
+must not be read out of "the proxy is hardened". The proxy forwards
+same-origin requests and attaches a server-held credential to every
+one of them, and it has no per-user session to protect — so there is
+no CSRF token, no `SameSite` cookie policy, and no origin check on
+state-changing requests today. What limits the exposure now is that
+the credential is not ambient browser state: it is held by the
+server, so a cross-site request can only reach the proxy with
+whatever the browser would send anyway, and the deployment boundary
+(`deploy/hetzner/Caddyfile`'s HTTP basic auth) is a site gate rather
+than a user account. **The moment MT-01 introduces a session at seam
+S1 or S3, CSRF becomes a live requirement** — a session cookie is
+ambient authority, and every state-changing route behind this proxy
+(`POST /research`, `POST /research/{id}/review`,
+`DELETE /conversations/{id}`) becomes forgeable without one. That
+work belongs to MT-01's ADR, not here.
+
+**`/api/auth/*` is reserved.** No route file exists and none is
+created. Today the path falls into the catch-all and is forwarded
+upstream, where FastAPI 404s it. When MT-01 adds
+`web/app/api/auth/[...path]/route.ts`, the App Router's more-specific
+segment takes precedence over the catch-all, so the login surface
+lands without editing the credential boundary. `resolveUpstreamPrincipal`
+in `web/lib/server/principal.ts` is the matching seam on the outbound
+side: it returns the environment key unchanged today and is the single
+place a session-derived principal would be resolved.
+
 ### Internet-facing Hetzner boundary (ADR 0054)
 
 The production overlay in `deploy/hetzner/compose.prod.yml` is stricter
@@ -434,6 +525,16 @@ redriver.
 
 ## Follow-ups
 
+- **CSRF on the `/api` proxy**, the moment MT-01 introduces a session
+  (seam S1 or S3). Not a gap in the current design — there is no
+  per-user session to forge a request on behalf of — and a hard
+  requirement as soon as there is one. See "Browser-facing hardening
+  on the Next.js service" above.
+- Retire `style-src-attr 'unsafe-inline'` from the CSP by tokenising
+  `components/primitives/Skeleton.tsx`'s per-instance width/height
+  into classes. Three inline `style` attributes are the only reason
+  the directive exists; with them gone the policy is exactly the
+  ratified one.
 - Extend isolation into the synthesizer and verifier prompts (they
   read `EvidenceClaim.source_text` and paper analyses; both are
   vectors even with the reader defended).
