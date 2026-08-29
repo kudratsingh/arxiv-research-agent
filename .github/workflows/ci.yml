@@ -292,9 +292,17 @@ jobs:
           csp=$(curl -sS -D- -o /dev/null http://127.0.0.1:3000/ \
             | tr -d '\r' | grep -i '^content-security-policy:')
           echo "$csp"
+          # Two independent checks rather than one ordered glob: the tokens
+          # appear as `'nonce-…' 'strict-dynamic'`, and a single pattern
+          # pinning their order tests the spelling of this step instead of
+          # the policy. (It did exactly that on the first run.)
           case "$csp" in
-            *"'strict-dynamic'"*"'nonce-"*) ;;
-            *) echo "no nonce-based CSP on /"; exit 1 ;;
+            *"'nonce-"*) ;;
+            *) echo "no per-request nonce in the CSP on /"; exit 1 ;;
+          esac
+          case "$csp" in
+            *"'strict-dynamic'"*) ;;
+            *) echo "no 'strict-dynamic' in the CSP on /"; exit 1 ;;
           esac
           inert=$(curl -sS -D- -o /dev/null http://127.0.0.1:3000/api/healthz \
             | tr -d '\r' | grep -i '^content-security-policy:')
