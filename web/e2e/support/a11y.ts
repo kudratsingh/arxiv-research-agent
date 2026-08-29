@@ -726,6 +726,12 @@ export function retainAxe(
  * does the same thing for the same reason.
  */
 export async function openRailDrawer(page: Page): Promise<Locator> {
+  // A click can land on a button React has not attached a handler to yet,
+  // and the drawer never opens (see reflow.spec.ts). `data-rail-mode` flips
+  // to `drawer` only once the client store has been read, so waiting for it
+  // IS waiting for hydration — here, inside the helper, so no call site can
+  // omit the guard and race a cold worker.
+  await waitForRailMode(page, "drawer");
   const trigger = page.locator("[data-drawer-trigger]").first();
   await trigger.click();
   return trigger;
