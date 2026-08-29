@@ -86,8 +86,18 @@ const MOBILE_ONLY = /@device/;
  * unless full keyboard access is on), so a cross-engine walk would report
  * platform policy as product defects. The engine limit is recorded in
  * `docs/revamp/evidence/gate-4/manual/keyboard.md` rather than left implicit.
+ *
+ * `@visual` (WO-28) joins it for the reason that is hardest to argue with:
+ * the artefact IS the engine's rasterisation. Text hinting, form-control
+ * metrics, scrollbar geometry and antialiasing differ between Chromium,
+ * Gecko and WebKit, so a cross-engine snapshot set is three sets of committed
+ * bytes that go stale independently and disagree for reasons that are never
+ * product defects — which is precisely the maintenance debt WO-28's risk note
+ * scopes out ("a full-matrix visual baseline is maintenance debt
+ * disproportionate to a single-deployment product"). The limit is recorded in
+ * `docs/revamp/evidence/gate-4/residual-risks.md` rather than left implicit.
  */
-const CHROMIUM_ONLY = /@slice|@export|@axe|@cls|@csp|@a11y/;
+const CHROMIUM_ONLY = /@slice|@export|@axe|@cls|@csp|@a11y|@visual/;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -106,6 +116,25 @@ export default defineConfig({
   workers: process.env.CI ? 2 : 4,
   timeout: 60_000,
   expect: { timeout: 10_000 },
+
+  /**
+   * WO-28. Where the committed PNGs live, and why `{platform}` is in the path.
+   *
+   * The default template is `{testFilePath}-snapshots/…`, which would put a
+   * directory called `visual.spec.ts-snapshots` beside the specs. This is the
+   * same names, in one obvious place, with the platform as a directory rather
+   * than a filename suffix — so `git status` after a capture on a new OS shows
+   * a new *directory*, not forty-eight renamed files.
+   *
+   * THE PLATFORM SEGMENT IS LOAD-BEARING, NOT TIDINESS. macOS and Linux
+   * rasterise the same font at the same size differently (different hinting,
+   * different subpixel handling), and a single set shared between them fails
+   * on whichever host did not produce it — a gate that goes red for the host
+   * rather than for the change, which is the failure mode WO-28 exists to
+   * avoid. The set committed here is `darwin`; `e2e/README.md`,
+   * "Regenerating", says how a Linux set is produced when CI wants one.
+   */
+  snapshotPathTemplate: "{testDir}/__screenshots__/{platform}/{arg}{ext}",
 
   reporter: [
     ["list"],
