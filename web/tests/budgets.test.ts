@@ -624,10 +624,10 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
 
   it("carries the shared framework/runtime movements with their measured justifications", () => {
     const entry = (budgets.ratchet ?? []).find((r) => r.row === "shared-framework-runtime");
-    // WO-31's ratchet DOWN, against the current measurement.
+    // WO-31's ratchet DOWN, against the current measurement (main d3460a7).
     expect(entry?.from).toBe(141_312);
     expect(entry?.to).toBe(139_264); // 136 KiB
-    expect(entry?.measuredBytes).toBe(131_644);
+    expect(entry?.measuredBytes).toBe(131_641);
     expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.058, 2);
 
     // WO-23's raise, retained. It is the record of why this row exceeds
@@ -645,7 +645,7 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     const entry = (budgets.ratchet ?? []).find((r) => r.row === "route-js-home");
     expect(entry?.from).toBe(167_936);
     expect(entry?.to).toBe(166_912); // 163 KiB
-    expect(entry?.measuredBytes).toBe(158_839);
+    expect(entry?.measuredBytes).toBe(158_878);
     // Tighter than the ~8% RC-01's rows carry, because this one is measured
     // against the finished surface rather than projected from the legacy one.
     expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.051, 2);
