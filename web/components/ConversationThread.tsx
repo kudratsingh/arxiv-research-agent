@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import { ApiError, getConversation } from "@/lib/api";
 import { useResearchStream } from "@/lib/useResearchStream";
 import type { ConversationDetail, ConversationJobSummary } from "@/lib/types";
+import { ThreadSkeleton } from "@/components/patterns/ThreadSkeleton";
 import EventLog from "./EventLog";
 import ExportDropdown from "./ExportDropdown";
 import JobSummary from "./JobSummary";
@@ -177,11 +178,19 @@ export default function ConversationThread({
     );
   }
   if (conversation === null) {
-    return (
-      <div className="px-6 py-10 text-sm text-slate-500 dark:text-slate-400">
-        Loading conversation…
-      </div>
-    );
+    // WO-09 criterion 4. This — not the route's Suspense fallback — is the
+    // loading state a COLD LOAD of `/c/[id]` actually paints: the route is
+    // dynamic, so `useSearchParams` does not suspend during SSR and the
+    // server renders straight through to here, with `conversation` still
+    // null. It used to be a `px-6 py-10` box holding the string "Loading
+    // conversation…", about 40px tall against a loaded header of 79px, so
+    // every arrival moved the reading position. `ThreadSkeleton` holds the
+    // loaded header's own geometry open and carries the `h1` that
+    // `page-has-heading-one` needs; measured with axe-core 4.13.0 in
+    // headless Chrome against `next start` with the app's chunks blocked,
+    // this served state goes from `h1: 0` / VIOLATION to `h1: 1` / PASS.
+    // WO-20 retires this component; the skeleton survives it.
+    return <ThreadSkeleton />;
   }
 
   return (
