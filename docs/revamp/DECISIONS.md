@@ -223,3 +223,66 @@
      (observed; no data loss — the victim had already finished).
 - Needs human review: no (delegated); listed here so the audit trail of
   every deviation from the ratified package is complete.
+
+## D-012 — EXEC coordinator rulings (surface and quality-gate waves, under the same delegation)
+
+- Date: 2026-08-29
+- Status: recorded as ruled
+- Authority: the D-010 delegation; each ruling was made in response to an
+  implementation agent's honest flag rather than silently absorbed.
+- Rulings:
+  1. **npm-audit gate scoped by dependency tree** (PR #100, C4). The
+     production tree is gated at zero advisories with no exception
+     mechanism (`npm audit --audit-level=high --omit=dev`); the dev tree
+     is gated against `web/audit-exceptions.json`, which fails on any
+     unlisted advisory, on stale entries, and on new advisories against
+     an already-excepted package (entries key on the advisory-id set,
+     not the package). Seeded with the three `image-size` reports
+     reached only through `@storybook/nextjs-vite` (three packages
+     carrying two upstream GHSAs; no fix available). Rationale: the
+     baseline's "0 across 669" predates Storybook (WO-06); blocking the
+     merge train on an unfixable dev-chain advisory guards nothing the
+     production image ships.
+  2. **WO-19 retirement deferral accepted** (PR #98 → completed in
+     PR #101). The DOM-level retirement of `JobSummary`/`ExportDropdown`
+     rides WO-20's `ConversationThread` rewrite — the only render path
+     to both — behind an import-ratchet test
+     (`web/tests/patterns/retirement.test.ts`); files stay on disk for
+     WO-31. The merged e2e state table had already scheduled the swap
+     for WO-20 by name.
+  3. **`PENDING_COMPOSITION` routing accepted** (PR #99 → discharged in
+     PR #101). WO-22's nine residual axe violations — all in legacy
+     `ConversationThread`/`PlanReview` markup, including two contrast
+     regressions new against baseline (`#64748b` on `--canvas` @12px
+     = 4.41; white on `#059669` = 3.76) — were pinned in a register that
+     fails when a pin goes stale, rather than hotfixed in files WO-20
+     replaces wholesale. WO-20's composition deleted all nine pins and
+     the sweep reports 40/40 state×theme audits at zero violations.
+  4. **`/` route budget raised 148,480 → 167,936 B** (PR #101, ratchet
+     rule; measured 158,899 B). The in-budget alternative was built and
+     measured, not assumed: a `React.lazy` composer lands `/` at
+     143,426 B but Next resolves the lazy boundary's fallback into the
+     prerendered HTML — verified on the build — so the route would ship
+     a document with no `h1` and fail `page-has-heading-one`, which the
+     axe gate holds at zero. Accessibility gate beats budget row. Net
+     across both routes the composition is −4,189 B, with `/c/[id]`
+     dropping 199,425 → 182,784 B. Recorded in `web/budgets.json`'s
+     ratchet array and pinned by test.
+  5. **Nightly matrix via a workflow-level `schedule:` trigger accepted**
+     (PR #100, criterion 4 deviation). Gating per-job would have added
+     `if:` conditions to five jobs WO-24 does not own; `web-e2e` is the
+     only job whose behaviour differs by event.
+  6. **Axe audit viewport pinned at the baseline's 1440×1200** (PR #99).
+     At Playwright's default 1280×720 axe downgrades below-the-fold
+     contrast findings to `incomplete` and the sweep under-reports
+     against the retained baseline — the viewport is load-bearing for
+     criterion 1's comparability claim.
+  7. **WO-20's two deliberately unwired edges recorded as accepted
+     residuals** (PR #101): `LandingComposer`'s `createThread` mutation
+     and its `unreachable` prop stay unwired pending a shared
+     QueryClient that would cost `/` ~8 KB it does not have; `/c/[id]`
+     consequently runs two Query caches whose only shared key is
+     `conversations.detail` and whose only cross-cache write navigates
+     away. To be restated in WO-26's `known-gaps.md`.
+- Needs human review: no (delegated); listed here so the audit trail of
+  every deviation from the ratified package is complete.

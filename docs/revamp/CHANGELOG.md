@@ -1,5 +1,18 @@
 # Frontend revamp changelog
 
+## 2026-08-29 — EXEC: quality gates, route composition, and the 8-job CI
+
+- Merged on green CI: the probe-alignment follow-up from the merged-main integration run (PR #97, merged by the user), WO-19 MetricsStrip + ExportDisclosure (PR #98), WO-22 axe gate (PR #99), WO-24 CI wiring (PR #100), and WO-20 route composition (PR #101). **25/33 work orders merged; every Gate 3 implementation work order is on `main`.**
+- Headlines: `landmark-one-main`/`region` axe violations went 12/12 baseline states → **zero** with the allowlist empty; the route composition retired seven legacy modules from the render path behind a widened import ratchet; CLS 0.000 held in a live-run browser test across three consecutive runs; net route JS fell 4,189 B with `/c/[id]` gaining 16,896 B of budget headroom; CI grew from five to eight jobs (coverage thresholds, the npm-audit gate, budgets artifact, Storybook build + story tests, seeded chromium+axe e2e; the full five-project browser matrix moved to a nightly schedule).
+- Real defects found and fixed inside the wave: an R-01 double-submit window in `LandingComposer` that bought a second run (caught by the paid-path interceptor discipline), three CLS sources (reading-column scrollbar, spine void reflow, run-panel geometry), and two contrast/heading regressions the new axe gate caught in the composition itself.
+- Coordinator rulings recorded as [`DECISIONS.md` D-012](DECISIONS.md#d-012--exec-coordinator-rulings-surface-and-quality-gate-waves-under-the-same-delegation): audit-gate scoping, the `/` budget ratchet, the retirement deferral, and the `PENDING_COMPOSITION` routing.
+- In flight: WO-26 Gate 3 evidence pack (`docs/wo-26-gate-3-evidence`) and WO-30 proxy hardening (`feat/wo-30-proxy-hardening`).
+
+## 2026-08-28→29 — EXEC: surface wave (M1–M3)
+
+- Merged on green CI, in merge order: WO-05 test harness (PR #82), WO-06 Storybook + a11y addon (PR #83), WO-11 query layer (PR #84), WO-07 primitives (PR #85), WO-10 job state machine (PR #86), WO-12 copy dictionary (PR #87), WO-08 workbench shell (PR #88), WO-18 ReportReader (PR #89), WO-16 Diagnostics (PR #90), WO-13 QueryComposer (PR #91), WO-15 trace spine (PR #92), WO-17 PlanEditor (PR #93), WO-14 ThreadRail (PR #94), WO-09 recovery surfaces (PR #95), WO-21 Playwright harness + seeded stack + paid-path interceptor (PR #96). M0 rulings and the integration-incident record merged as PR #81.
+- The merged-main integration run after the wave exposed four stale probe expectations and one first-paint scheduler race that per-PR CI could not see; repaired in PR #97 with a definitive 158/158 five-project matrix.
+
 ## 2026-08-28 — EXEC: M0 foundation wave (in progress)
 
 - Merged on green CI: WO-25 web-image CI smoke + prod overlay (PR #74), WO-03 typed API client + shims (PR #75), WO-01 design-token foundation (PR #76), WO-23 route budgets (PR #77), WO-04 recorded contract fixtures + four drift checks (PR #79), WO-02 self-hosted typography with measured metrics and CLS 0.000 proof (PR #80). In flight: WO-05, WO-06.
