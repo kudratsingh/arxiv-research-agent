@@ -1,0 +1,7 @@
+# 320 CSS px — SC 1.4.10's reflow width (≡ 1280px at 400% zoom)
+# /c/baseline-populated?job=baseline-plan-review
+measure	value
+viewport	320x900
+scrollWidth	320
+clientWidth	320
+widestOverflow	(none)

@@ -1,0 +1,8 @@
+# A synthetic element with author colours, measured under
+# emulateMedia({ forcedColors: 'active' }).
+property	author value	composited value
+media (forced-colors: active)	—	true
+color	red (#ff0000 unforced)	rgb(0, 0, 0)
+background-color	lime	rgb(255, 255, 255)
+border-top-color	blue	rgb(0, 0, 0)
+border-top-style	dashed	dashed

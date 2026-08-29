@@ -1,0 +1,16 @@
+# Every element with a non-zero animation or transition duration
+# (threshold 1.5ms, because 1ms IS the reduced-motion value)
+condition	selector	animation	animation-duration	transition	transition-duration
+no-preference	button.inline-flex.items-center	none	0s	color, background-color, border-color, text-decoration-color, fill, stroke	0.12s
+no-preference	button#radix-_r_6_.inline-flex.items-center	none	0s	color, background-color, border-color, text-decoration-color, fill, stroke	0.12s
+no-preference	button#radix-_r_8_.inline-flex.items-center	none	0s	color, background-color, border-color, text-decoration-color, fill, stroke	0.12s
+no-preference	svg	ew-pulse	2.4s	all	0s
+no-preference	button#_r_0_-trigger.flex.w-full	none	0s	color, background-color, border-color, text-decoration-color, fill, stroke	0.12s
+no-preference	svg	none	0s	transform	0.16s
+no-preference	div#_r_0_-panel.ew-disclosure-panel.ew-enter	ew-fade-in	0.16s	all	0s
+no-preference	button#_r_1_-trigger.flex.w-full	none	0s	color, background-color, border-color, text-decoration-color, fill, stroke	0.12s
+no-preference	svg	none	0s	transform	0.16s
+no-preference	div#_r_1_-panel.ew-disclosure-panel.ew-enter	ew-fade-in	0.16s	all	0s
+no-preference	button.inline-flex.items-center	none	0s	color, background-color, border-color, text-decoration-color, fill, stroke	0.12s
+no-preference	textarea#_r_5_-textarea.w-full.resize-y	none	0s	color, background-color, border-color, text-decoration-color, fill, stroke	0.12s
+no-preference	button.inline-flex.items-center	none	0s	color, background-color, border-color, text-decoration-color, fill, stroke	0.12s

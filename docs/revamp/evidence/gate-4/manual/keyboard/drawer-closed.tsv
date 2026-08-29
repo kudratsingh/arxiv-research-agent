@@ -1,0 +1,8 @@
+# Landing · 412 · closed
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	link	Skip to content	a	data-theme="light"	chrome	solid 2px @ 2px	self
+2	button	Threads	button	data-drawer-trigger	chrome	solid 2px @ 2px	self
+3	radio	System	input	data-theme-toggle	chrome	solid 2px @ 2px	sibling
+4	textbox	Research question	textarea	data-variant="landing"	main	solid 2px @ 2px	self
+5	button	Generate plan	button	data-variant="landing"	main	solid 2px @ 2px	self
+6	(document)		body		chrome	none	none

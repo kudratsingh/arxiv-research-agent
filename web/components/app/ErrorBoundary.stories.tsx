@@ -29,6 +29,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import type { CSSProperties, ReactElement } from "react";
 import { expect, fn, within } from "storybook/test";
 
+import { railIsAvailable } from "@/.storybook/storyRail";
 import { GlobalErrorSurface } from "@/components/patterns/GlobalErrorSurface";
 import { RouteError } from "@/components/patterns/RouteError";
 import { GLOBAL_ERROR } from "@/lib/copy/globalError";
@@ -136,7 +137,23 @@ export const Workspace: Story = {
     await expect(
       canvas.getByRole("heading", { level: 1, name: ROUTE_ERROR.errorHeading }),
     ).toBeInTheDocument();
-    await expect(canvas.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
+
+    // WO-27: "the shell survives" means something different either side of
+    // `md`, and this story is rendered at all five RC-14 widths. Above the
+    // breakpoint the rail is the visible proof; below it the rail is out of
+    // the layout by design (04 §8.3 repair step 1) and what survives is the
+    // landmark structure and the heading. Asserting the first unconditionally
+    // was 6 of the 48 play-function errors in
+    // `evidence/gate-3/known-gaps.md` §2d.
+    if (railIsAvailable()) {
+      await expect(canvas.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
+    } else {
+      await expect(canvas.queryByRole("navigation", { name: "Threads" })).toBeNull();
+      // The boundary still renders inside the shell's single `<main>`, which
+      // is the part of "the shell survives" that holds at every width.
+      await expect(canvasElement.querySelector("main#main")).not.toBeNull();
+    }
+
     // No digest was passed, so no evidence row is invented for it.
     await expect(canvas.queryByText(RECOVERY.referenceLabel)).toBeNull();
   },

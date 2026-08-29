@@ -1,0 +1,15 @@
+# 03 §3.4's three channels, with motion allowed and with it removed
+condition	segment	status	mark	mark painted	text
+no-preference	Question	observed	circle	true	QuestionQuestion · observedobserved
+no-preference	Plan	not-observed	dashed-rule	true	PlanPlan · not observednot observed
+no-preference	Run	not-observed	dashed-rule	true	RunRun · not observednot observed
+no-preference	Report	not-observed	dashed-rule	true	ReportReport · not observednot observed
+reduce	Question	observed	circle	true	QuestionQuestion · observedobserved
+reduce	Plan	not-observed	dashed-rule	true	PlanPlan · not observednot observed
+reduce	Run	not-observed	dashed-rule	true	RunRun · not observednot observed
+reduce	Report	not-observed	dashed-rule	true	ReportReport · not observednot observed
+
+# The dashed/dotted void — 03 §5.8, spine.css: 'a break is a shape'
+condition	data-current	border-style	border-width
+no-preference	false	dotted	2px
+reduce	false	dotted	2px

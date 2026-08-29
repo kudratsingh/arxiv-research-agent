@@ -385,3 +385,77 @@ describe("criterion 9 — reduced motion", () => {
     expect(after).toBe(before);
   });
 });
+
+/* =========================================================================
+ * WO-27 criteria 6 and 7 — the marks under forced colours
+ * ========================================================================= */
+
+/**
+ * THE DEFECT. 03 §3.4 ranks the channels a status is carried on — "a distinct
+ * word, a distinct mark shape and a colour, in that order of precedence" —
+ * and forced-colors mode is the condition that removes the third one on the
+ * reader's terms. It did remove it from the words. It did not remove it from
+ * the marks: Chromium's user-agent sheet sets `forced-color-adjust:
+ * preserve-parent-color` on SVG content, which means "inherit the parent's
+ * already-forced colour", and a `<svg>` carrying its OWN `color` — which
+ * every `Mark` does, through the tone class that gives it its hue — has
+ * nothing to inherit and keeps the author value.
+ *
+ * WO-27 measured it on this commit: in both of Chromium's forced palettes the
+ * spine's marks kept `--color-signature-text` and `--color-ink-faint` while
+ * every word beside them came back as `CanvasText`. A shape drawn in a hue
+ * the product chose is exactly what the mode exists to prevent.
+ *
+ * WHY THE PROOF IS SPLIT. jsdom evaluates no `@media` block that does not
+ * mention `screen` (./support/css.ts, limit 3), so `(forced-colors: active)`
+ * cannot match here in either direction and a computed-style assertion would
+ * be a fiction. The COMPOSITED proof is `web/e2e/motion.spec.ts`, "the spine
+ * keeps its word and its shape in the {light,dark} forced palette", which
+ * measures every painted `[data-mark]` against the palette the browser really
+ * substituted and is red on this commit without the rule below. What is
+ * provable here is the pair of facts about the source: the rule exists and
+ * says `color: inherit`, and every `Mark` renders an `svg[data-mark]` for it
+ * to match.
+ */
+describe("WO-27 criterion 6 — status marks take the reader's palette", () => {
+  const FORCED = mediaBlockBody(PRIMITIVES_CSS, "(forced-colors: active)");
+
+  it("declares `color: inherit` for the marks under forced colours", () => {
+    expect(FORCED).toContain("svg[data-mark]");
+    // `inherit` rather than `CanvasText`: 03 §3.4 makes the mark the
+    // redundant channel BESIDE ITS WORD, so the right forced colour is
+    // whatever that word ended up being — CanvasText in the spine, LinkText
+    // inside a link, the button's forced colour inside a button. Inheriting
+    // gets all three right and hard-codes none of them.
+    expect(ruleBody(FORCED, "svg[data-mark]")).toContain("color: inherit");
+    expect(
+      FORCED,
+      "`forced-color-adjust: none` would keep the product's own hues and " +
+        "defeat the mode outright.",
+    ).not.toContain("forced-color-adjust: none");
+  });
+
+  it("selects with an element+attribute pair a tone utility cannot outrank", () => {
+    // `svg[data-mark]` is (0,1,1) and beats the (0,1,0) of
+    // `.text-signature-text`. Written as a bare `[data-mark]` the two would
+    // tie, and the winner would be whichever stylesheet Next happened to
+    // inject last — which is not a property anyone should have to reason
+    // about at 3am.
+    expect(FORCED).toMatch(/svg\[data-mark\]/);
+    expect(FORCED.replace(/svg\[data-mark\]/g, "")).not.toContain("[data-mark]");
+  });
+
+  it("renders every mark as an svg[data-mark], so the rule can match it", () => {
+    render(<StatusBadge severity="live">Live</StatusBadge>);
+    const mark = screen.getByText("Live").querySelector("[data-mark]");
+    expect(mark).not.toBeNull();
+    expect(
+      mark?.tagName.toLowerCase(),
+      "the forced-colours rule is written against `svg[data-mark]`; a mark " +
+        "that stopped being an svg would silently lose the fix.",
+    ).toBe("svg");
+    // …and the mark is still aria-hidden, so nothing above changed which
+    // channel is the announced one.
+    expect(mark).toHaveAttribute("aria-hidden", "true");
+  });
+});

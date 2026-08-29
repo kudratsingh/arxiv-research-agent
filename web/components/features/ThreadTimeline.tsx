@@ -257,7 +257,43 @@ export function ThreadTimeline({
         {runPanel}
       </div>
 
-      <div className="ew-thread__timeline">
+      {/*
+        WO-27 criterion 1/7: THE EMPTY TIMELINE IS FOCUSABLE, AND THE
+        POPULATED ONE IS NOT.
+
+        `.ew-thread__timeline` is `overflow-y: auto` (workspace.css), so it is
+        a scroll container at every width. With turns in it that is fine — the
+        turn buttons are focusable content, and a keyboard user reaches the
+        scroll by reaching them. With NO turns its only child is an
+        `EmptyState`, which has no focusable descendant, and at 320 CSS px the
+        empty state is taller than the row: a region that scrolls and cannot
+        be focused, which is SC 2.1.1 and axe's `scrollable-region-focusable`
+        at `serious`.
+
+        WO-27's full-matrix sweep is what caught it, and the width is the
+        reason nothing else did: WO-22's sweep audits every state at 1440,
+        where the empty state fits and the container does not scroll. It fails
+        in both themes at 320 and passes at 412.
+
+        The four attributes are `ScrollRegion`'s contract, applied here rather
+        than by nesting one: the element that scrolls is this one, and a
+        `ScrollRegion` INSIDE it would be a focusable box inside an
+        unreachable scroller. `role="region"` rather than a bare `tabindex`
+        because a `div[tabindex="0"]` with no role trips `focus-order-semantics`
+        (best-practice, in this gate's tag set) and cannot carry `aria-label`
+        without tripping `aria-prohibited-attr` either — the stop has to be
+        named, and naming it requires the role.
+      */}
+      <div
+        className={
+          briefings.length === 0
+            ? "ew-thread__timeline ew-focusable"
+            : "ew-thread__timeline"
+        }
+        {...(briefings.length === 0
+          ? { role: "region", "aria-label": THREAD.timelineLabel, tabIndex: 0 }
+          : {})}
+      >
         {briefings.length === 0 ? (
           // `h2`, not `EmptyState`'s default `h3`: the only heading above it
           // is the thread's own `h1`, and on a thread with no run there is no

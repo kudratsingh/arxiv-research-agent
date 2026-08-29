@@ -1,0 +1,21 @@
+# Trace spine and status marks, light forced palette
+# Canvas rgb(255, 255, 255) · CanvasText rgb(0, 0, 0) · LinkText rgb(0, 0, 159)
+segment	status	mark	painted	mark colour	text
+Question	observed	circle	true	rgb(0, 0, 0)	QuestionQuestion · observedobserved
+Plan	not-observed	dashed-rule	true	rgb(0, 0, 0)	PlanPlan · not observednot observed
+Run	not-observed	dashed-rule	true	rgb(0, 0, 0)	RunRun · not observednot observed
+Report	not-observed	dashed-rule	true	rgb(0, 0, 0)	ReportReport · not observednot observed
+
+# Every painted [data-mark] on the page
+mark	colour	w×h
+ring	rgb(0, 0, 159)	16×16
+circle	rgb(0, 0, 0)	16×16
+dashed-rule	rgb(0, 0, 0)	16×16
+dashed-rule	rgb(0, 0, 0)	16×16
+dashed-rule	rgb(0, 0, 0)	16×16
+ring	rgb(0, 0, 0)	16×16
+
+# The void
+data-current	false
+border-top-style	dotted
+border-top-color	rgb(0, 0, 0)

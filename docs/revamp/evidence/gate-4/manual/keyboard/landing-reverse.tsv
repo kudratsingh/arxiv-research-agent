@@ -1,0 +1,20 @@
+# forwards
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	link	Skip to content	a	data-theme="light"	chrome	solid 2px @ 2px	self
+2	radio	System	input	data-theme-toggle	chrome	solid 2px @ 2px	sibling
+3	button	Collapse the rail	button	data-rail-collapse-toggle	rail	solid 2px @ 2px	self
+4	link	New research	a	data-thread-rail-new	rail	solid 2px @ 2px	self
+5	link	Empty research thread	a	data-thread-row-link="baseline-empty"	rail	solid 2px @ 2px	self
+6	button	Thread actions: Empty research thread	button	data-thread-row-menu="baseline-empty"	rail	solid 2px @ 2px	self
+7	link	Scientific claim verification	a	data-thread-row-link="baseline-populated"	rail	solid 2px @ 2px	self
+8	button	Thread actions: Scientific claim verification	button	data-thread-row-menu="baseline-populated"	rail	solid 2px @ 2px	self
+
+# backwards
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	link	Scientific claim verification	a	data-thread-row-link="baseline-populated"	rail	solid 2px @ 2px	self
+2	button	Thread actions: Empty research thread	button	data-thread-row-menu="baseline-empty"	rail	solid 2px @ 2px	self
+3	link	Empty research thread	a	data-thread-row-link="baseline-empty"	rail	solid 2px @ 2px	self
+4	link	New research	a	data-thread-rail-new	rail	solid 2px @ 2px	self
+5	button	Collapse the rail	button	data-rail-collapse-toggle	rail	solid 2px @ 2px	self
+6	radio	System	input	data-theme-toggle	chrome	solid 2px @ 2px	sibling
+7	link	Skip to content	a	data-theme="light"	chrome	solid 2px @ 2px	self

@@ -32,6 +32,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, screen, userEvent, waitFor } from "storybook/test";
 
+import { railIsAvailable, railPresentation } from "@/.storybook/storyRail";
 import { THREAD_RAIL } from "@/lib/copy/threads";
 import { RAIL_COLLAPSED_STORAGE_KEY } from "@/lib/tokens";
 
@@ -129,7 +130,24 @@ export const RailCollapseToggle: Story = {
     window.localStorage.setItem(RAIL_COLLAPSED_STORAGE_KEY, "0");
     return () => window.localStorage.removeItem(RAIL_COLLAPSED_STORAGE_KEY);
   },
+  // WO-27: the toggle exists only where the rail is laid out. Below `md`
+  // `workbench.css` sets `display: none` on `.ew-shell__rail` regardless of
+  // the `railMode` prop above, so at 320 and 412 this story's control is not
+  // in the accessibility tree — which is the product working, and which used
+  // to be 10 of the 48 play-function errors in `evidence/gate-3/known-gaps.md`
+  // §2d. See `.storybook/storyRail.ts` for why the branch reads `display`
+  // rather than a width.
   play: async ({ canvas }) => {
+    if (!railIsAvailable()) {
+      await expect(
+        canvas.queryByRole("button", { name: THREAD_RAIL.collapse }),
+        "below `md` the rail is out of the layout (04 §8.3 repair step 1), so " +
+          "its collapse toggle must not be reachable either.",
+      ).toBeNull();
+      await expect(railPresentation()).toBe("hidden-by-css");
+      return;
+    }
+
     await userEvent.click(canvas.getByRole("button", { name: THREAD_RAIL.collapse }));
 
     await expect(

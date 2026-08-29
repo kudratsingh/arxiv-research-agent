@@ -1,0 +1,14 @@
+# Drawer · 412 · open
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	link	New research	a	data-thread-rail-new	dialog	solid 2px @ 2px	self
+2	link	Empty research thread	a	data-thread-row-link="baseline-empty"	dialog	solid 2px @ 2px	self
+3	button	Thread actions: Empty research thread	button	data-thread-row-menu="baseline-empty"	dialog	solid 2px @ 2px	self
+4	link	Scientific claim verification	a	data-thread-row-link="baseline-populated"	dialog	solid 2px @ 2px	self
+5	button	Thread actions: Scientific claim verification	button	data-thread-row-menu="baseline-populated"	dialog	solid 2px @ 2px	self
+6	button	Close the thread drawer	button	data-state="open"	dialog	solid 2px @ 2px	self
+7	link	New research	a	data-thread-rail-new	dialog	solid 2px @ 2px	self
+8	link	Empty research thread	a	data-thread-row-link="baseline-empty"	dialog	solid 2px @ 2px	self
+9	button	Thread actions: Empty research thread	button	data-thread-row-menu="baseline-empty"	dialog	solid 2px @ 2px	self
+10	link	Scientific claim verification	a	data-thread-row-link="baseline-populated"	dialog	solid 2px @ 2px	self
+11	button	Thread actions: Scientific claim verification	button	data-thread-row-menu="baseline-populated"	dialog	solid 2px @ 2px	self
+12	button	Close the thread drawer	button	data-state="open"	dialog	solid 2px @ 2px	self

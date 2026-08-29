@@ -1,0 +1,12 @@
+# Report reader · 1440
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	textbox	Follow-up question	textarea	data-variant="follow-up"	main	solid 2px @ 2px	self
+2	button	Generate plan	button	data-variant="follow-up"	main	solid 2px @ 2px	self
+3	(document)		body		chrome	none	none
+4	link	Skip to content	a	data-theme="light"	chrome	solid 2px @ 2px	self
+5	radio	System	input	data-theme-toggle	chrome	solid 2px @ 2px	sibling
+6	button	Collapse the rail	button	data-rail-collapse-toggle	rail	solid 2px @ 2px	self
+7	link	New research	a	data-thread-rail-new	rail	solid 2px @ 2px	self
+8	link	Empty research thread	a	data-thread-row-link="baseline-empty"	rail	solid 2px @ 2px	self
+9	button	Thread actions: Empty research thread	button	data-thread-row-menu="baseline-empty"	rail	solid 2px @ 2px	self
+10	link	Scientific claim verification	a	data-thread-row-link="baseline-populated"	rail	solid 2px @ 2px	self

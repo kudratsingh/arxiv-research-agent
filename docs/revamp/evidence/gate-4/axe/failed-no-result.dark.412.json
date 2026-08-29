@@ -1,0 +1,33 @@
+{
+  "state": "failed-no-result",
+  "theme": "dark",
+  "width": 412,
+  "url": "http://127.0.0.1:13280/c/baseline-populated?job=baseline-failed",
+  "timestamp": "2026-08-29T15:49:34.998Z",
+  "testEngine": {
+    "name": "axe-core",
+    "version": "4.13.0"
+  },
+  "toolOptions": {
+    "runOnly": {
+      "type": "tag",
+      "values": [
+        "wcag2a",
+        "wcag2aa",
+        "wcag21a",
+        "wcag21aa",
+        "wcag22aa",
+        "best-practice"
+      ]
+    },
+    "reporter": "v1"
+  },
+  "counts": {
+    "violations": 0,
+    "passes": 43,
+    "incomplete": 0,
+    "inapplicable": 47
+  },
+  "violations": [],
+  "incomplete": []
+}

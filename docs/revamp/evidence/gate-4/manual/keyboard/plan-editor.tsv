@@ -1,0 +1,18 @@
+# Plan editor · 1440
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	button	Remove sub-question 1	button	data-list="subQuestions"	main	solid 2px @ 2px	self
+2	textbox	Sub-question 2	textarea	data-list="subQuestions"	main	solid 2px @ 2px	self
+3	button	Remove sub-question 2	button	data-list="subQuestions"	main	solid 2px @ 2px	self
+4	textbox	Sub-question 3	textarea	data-list="subQuestions"	main	solid 2px @ 2px	self
+5	button	Remove sub-question 3	button	data-list="subQuestions"	main	solid 2px @ 2px	self
+6	button	Add sub-question	button	data-list="subQuestions"	main	solid 2px @ 2px	self
+7	textbox	arXiv query 1	textarea	data-list="searchQueries"	main	solid 2px @ 2px	self
+8	button	Remove arXiv query 1	button	data-list="searchQueries"	main	solid 2px @ 2px	self
+9	textbox	arXiv query 2	textarea	data-list="searchQueries"	main	solid 2px @ 2px	self
+10	button	Remove arXiv query 2	button	data-list="searchQueries"	main	solid 2px @ 2px	self
+11	textbox	arXiv query 3	textarea	data-list="searchQueries"	main	solid 2px @ 2px	self
+12	button	Remove arXiv query 3	button	data-list="searchQueries"	main	solid 2px @ 2px	self
+13	button	Add arXiv query	button	data-list="searchQueries"	main	solid 2px @ 2px	self
+14	button	Approve plan	button	data-primary="true"	main	solid 2px @ 2px	self
+15	button	Cancel this run	button	data-edited="false"	main	solid 2px @ 2px	self
+16	button	Technical events	button	data-surface="active-run"	main	solid 2px @ 2px	self

@@ -1,0 +1,188 @@
+{
+  "state": "rail-loading",
+  "theme": "light",
+  "width": 412,
+  "url": "http://127.0.0.1:13280/",
+  "timestamp": "2026-08-29T15:49:07.630Z",
+  "testEngine": {
+    "name": "axe-core",
+    "version": "4.13.0"
+  },
+  "toolOptions": {
+    "runOnly": {
+      "type": "tag",
+      "values": [
+        "wcag2a",
+        "wcag2aa",
+        "wcag21a",
+        "wcag21aa",
+        "wcag22aa",
+        "best-practice"
+      ]
+    },
+    "reporter": "v1"
+  },
+  "counts": {
+    "violations": 0,
+    "passes": 33,
+    "incomplete": 1,
+    "inapplicable": 57
+  },
+  "violations": [],
+  "incomplete": [
+    {
+      "id": "aria-hidden-focus",
+      "impact": "serious",
+      "tags": [
+        "cat.name-role-value",
+        "wcag2a",
+        "wcag412",
+        "TTv5",
+        "TT6.a",
+        "EN-301-549",
+        "EN-9.4.1.2",
+        "RGAAv4",
+        "RGAA-10.8.1"
+      ],
+      "description": "Ensure aria-hidden elements are not focusable nor contain focusable elements",
+      "help": "ARIA hidden element must not be focusable or contain focusable elements",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/aria-hidden-focus?application=playwright",
+      "nodes": [
+        {
+          "any": [],
+          "all": [
+            {
+              "id": "focusable-modal-open",
+              "data": null,
+              "relatedNodes": [
+                {
+                  "html": "<span data-radix-focus-guard=\"\" tabindex=\"0\" data-aria-hidden=\"true\" aria-hidden=\"true\" style=\"outline: none; opacity: 0; position: fixed; pointer-events: none;\"></span>",
+                  "target": [
+                    "span[data-radix-focus-guard=\"\"][data-aria-hidden=\"true\"]:nth-child(1)"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Check that focusable elements are not tabbable in the current state"
+            }
+          ],
+          "none": [],
+          "impact": "serious",
+          "html": "<span data-radix-focus-guard=\"\" tabindex=\"0\" data-aria-hidden=\"true\" aria-hidden=\"true\" style=\"outline: none; opacity: 0; position: fixed; pointer-events: none;\"></span>",
+          "target": [
+            "span[data-radix-focus-guard=\"\"][data-aria-hidden=\"true\"]:nth-child(1)"
+          ],
+          "failureSummary": "Fix all of the following:\n  Check that focusable elements are not tabbable in the current state"
+        },
+        {
+          "any": [],
+          "all": [
+            {
+              "id": "focusable-modal-open",
+              "data": null,
+              "relatedNodes": [
+                {
+                  "html": "<a href=\"#main\" class=\"ew-visually-hidden e...\" data-aria-hidden=\"true\" aria-hidden=\"true\">",
+                  "target": [
+                    ".ew-skip-link"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Check that focusable elements are not tabbable in the current state"
+            }
+          ],
+          "none": [],
+          "impact": "serious",
+          "html": "<a href=\"#main\" class=\"ew-visually-hidden e...\" data-aria-hidden=\"true\" aria-hidden=\"true\">",
+          "target": [
+            ".ew-skip-link"
+          ],
+          "failureSummary": "Fix all of the following:\n  Check that focusable elements are not tabbable in the current state"
+        },
+        {
+          "any": [],
+          "all": [
+            {
+              "id": "focusable-modal-open",
+              "data": null,
+              "relatedNodes": [
+                {
+                  "html": "<button aria-haspopup=\"dialog\" aria-expanded=\"true\" data-drawer-trigger=\"\" type=\"button\" class=\"inline-flex items-ce...\">",
+                  "target": [
+                    "button[aria-haspopup=\"dialog\"]"
+                  ]
+                },
+                {
+                  "html": "<input type=\"radio\" class=\"ew-visually-hidden\" name=\"theme-preference\" value=\"light\">",
+                  "target": [
+                    "input[value=\"light\"]"
+                  ]
+                },
+                {
+                  "html": "<input type=\"radio\" class=\"ew-visually-hidden\" name=\"theme-preference\" value=\"dark\">",
+                  "target": [
+                    "input[value=\"dark\"]"
+                  ]
+                },
+                {
+                  "html": "<input type=\"radio\" class=\"ew-visually-hidden\" name=\"theme-preference\" checked=\"\" value=\"system\">",
+                  "target": [
+                    "input[value=\"system\"]"
+                  ]
+                },
+                {
+                  "html": "<textarea placeholder=\"e.g. How do current ...\" id=\"_R_lbrqbtb_-textarea\" rows=\"4\" aria-describedby=\"_R_lbrqbtb_-hint\" class=\"w-full resize-y roun...\">",
+                  "target": [
+                    "#_R_lbrqbtb_-textarea"
+                  ]
+                },
+                {
+                  "html": "<button aria-disabled=\"true\" aria-describedby=\"_R_1brqbtb_-disclosu...\" type=\"submit\" class=\"inline-flex items-ce...\">",
+                  "target": [
+                    ".ew-target--lg"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Check that focusable elements are not tabbable in the current state"
+            }
+          ],
+          "none": [],
+          "impact": "serious",
+          "html": "<div class=\"ew-shell\" data-workbench-shell=\"\" data-rail-mode=\"drawer\" data-rail-collapsed=\"true\" data-aria-hidden=\"true\" aria-hidden=\"true\">",
+          "target": [
+            ".ew-shell"
+          ],
+          "failureSummary": "Fix all of the following:\n  Check that focusable elements are not tabbable in the current state"
+        },
+        {
+          "any": [],
+          "all": [
+            {
+              "id": "focusable-modal-open",
+              "data": null,
+              "relatedNodes": [
+                {
+                  "html": "<span data-radix-focus-guard=\"\" tabindex=\"0\" data-aria-hidden=\"true\" aria-hidden=\"true\" style=\"outline: none; opacity: 0; position: fixed; pointer-events: none;\"></span>",
+                  "target": [
+                    "span[data-radix-focus-guard=\"\"][data-aria-hidden=\"true\"]:nth-child(11)"
+                  ]
+                }
+              ],
+              "impact": "serious",
+              "message": "Check that focusable elements are not tabbable in the current state"
+            }
+          ],
+          "none": [],
+          "impact": "serious",
+          "html": "<span data-radix-focus-guard=\"\" tabindex=\"0\" data-aria-hidden=\"true\" aria-hidden=\"true\" style=\"outline: none; opacity: 0; position: fixed; pointer-events: none;\"></span>",
+          "target": [
+            "span[data-radix-focus-guard=\"\"][data-aria-hidden=\"true\"]:nth-child(11)"
+          ],
+          "failureSummary": "Fix all of the following:\n  Check that focusable elements are not tabbable in the current state"
+        }
+      ]
+    }
+  ]
+}

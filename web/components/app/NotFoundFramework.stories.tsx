@@ -29,6 +29,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, within } from "storybook/test";
 
+import { railIsAvailable } from "@/.storybook/storyRail";
 import { NotFound } from "@/components/patterns/NotFound";
 import { ROUTE_ERROR } from "@/lib/copy/recovery";
 
@@ -97,8 +98,22 @@ export const Default: Story = {
     ).toBeInTheDocument();
 
     // The rail, intact — the whole difference from the baseline screenshot.
-    await expect(canvas.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
+    //
+    // WO-27: only above `md`. This story renders at all five RC-14 widths and
+    // `workbench.css` takes the rail out of the layout below 768px whatever
+    // `railMode` says, so the assertion has to be the one that is true at the
+    // width it is being made at. `Narrow` below is the same surface with the
+    // mode passed explicitly; this branch is what stops the *default* story
+    // from failing when a harness renders it at 320. (6 of the 48
+    // play-function errors in `evidence/gate-3/known-gaps.md` §2d.)
+    if (railIsAvailable()) {
+      await expect(canvas.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
+    } else {
+      await expect(canvas.queryByRole("navigation", { name: "Threads" })).toBeNull();
+    }
 
+    // The recovery itself is width-independent, and below `md` it is the
+    // whole of the recovery — so it is asserted outside the branch.
     const action = canvas.getByRole("link", { name: ROUTE_ERROR.notFoundAction });
     await expect(action).toHaveAttribute("href", "/");
   },

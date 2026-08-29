@@ -1,0 +1,10 @@
+# Delete dialog
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	button	Delete thread	button	data-confirm-accept	dialog	solid 2px @ 2px	self
+2	button	Close without deleting	button	data-state="open"	dialog	solid 2px @ 2px	self
+3	button	Cancel	button	data-confirm-cancel	dialog	solid 2px @ 2px	self
+4	button	Delete thread	button	data-confirm-accept	dialog	solid 2px @ 2px	self
+5	button	Close without deleting	button	data-state="open"	dialog	solid 2px @ 2px	self
+6	button	Cancel	button	data-confirm-cancel	dialog	solid 2px @ 2px	self
+7	button	Delete thread	button	data-confirm-accept	dialog	solid 2px @ 2px	self
+8	button	Close without deleting	button	data-state="open"	dialog	solid 2px @ 2px	self

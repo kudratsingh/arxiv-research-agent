@@ -1,0 +1,7 @@
+# 200% zoom — 1280px window, 640 CSS px of layout
+# /c/baseline-populated
+measure	value
+viewport	640x512
+scrollWidth	640
+clientWidth	640
+widestOverflow	(none)

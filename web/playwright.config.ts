@@ -73,8 +73,21 @@ const MOBILE_ONLY = /@device/;
  * was being chosen, with the result recorded on the directive in
  * `web/lib/server/csp.ts`. A sweep is the wrong instrument for that question
  * anyway: it would only show the difference as an unexplained violation.
+ *
+ * `@a11y` (WO-27) joins it for three reasons of its own. Its axe half is the
+ * same argument `@axe` makes and has to make it for the same reports to be
+ * comparable. Its forced-colours half depends on `emulateMedia({ forcedColors
+ * })`, which Chromium implements as a real palette replacement and the other
+ * two engines do not implement at all — a sweep there would match the media
+ * query, force nothing, and pass without measuring anything, which is the
+ * failure mode `@cls` is pinned to chromium to avoid. And its keyboard half
+ * reads focus back through Playwright's ARIA snapshot: sequential focus
+ * navigation genuinely differs between engines (WebKit's Tab skips links
+ * unless full keyboard access is on), so a cross-engine walk would report
+ * platform policy as product defects. The engine limit is recorded in
+ * `docs/revamp/evidence/gate-4/manual/keyboard.md` rather than left implicit.
  */
-const CHROMIUM_ONLY = /@slice|@export|@axe|@cls|@csp/;
+const CHROMIUM_ONLY = /@slice|@export|@axe|@cls|@csp|@a11y/;
 
 export default defineConfig({
   testDir: "./e2e",

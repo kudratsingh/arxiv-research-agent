@@ -1,0 +1,6 @@
+# Diagnostics · 1440
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	region	Diagnostics table	div	data-record-count="3"	main	solid 2px @ 2px	self
+2	button	Copy diagnostics	button	data-surface="active-run"	main	solid 2px @ 2px	self
+3	button	Turn 1 How should scientific research agents verify claims?	button	data-workbench-shell	main	solid 2px @ 2px	self
+4	button	Turn 2 Which verification failures are worth reporting partially?	button	data-workbench-shell	main	solid 2px @ 2px	self

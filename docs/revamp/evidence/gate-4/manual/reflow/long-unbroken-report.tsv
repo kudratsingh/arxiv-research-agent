@@ -1,0 +1,10 @@
+# A 4,000-character unbroken token, a 600-character URL and a 400-character table cell
+# rendered through the real Markdown pipeline at 320 CSS px
+measure	value
+scrollWidth	320
+clientWidth	320
+widestOverflow	table @ 4319px
+overflow-wrap	break-word
+word-break	normal
+max-width	670.48px
+widest descendant right edge	4319px
