@@ -633,9 +633,16 @@ describe("criterion 5 — the pre-paint theme script", () => {
     expect(document.documentElement.getAttribute("data-theme")).toBeNull();
   });
 
-  it("is inlined in the document head, ahead of the body", () => {
+  it("is inlined in the document head, ahead of the body", async () => {
+    // `await RootLayout(...)` rather than `createElement(RootLayout, ...)`:
+    // WO-30 made the root layout async so it can read the per-request CSP
+    // nonce, and `renderToStaticMarkup` is the legacy synchronous renderer.
+    // Every assertion below is unchanged, and the one WO-30 could have
+    // broken — "no defer, no async" — is exactly the one that matters: the
+    // nonce is an attribute, not a loading mode, so the script stays
+    // synchronous and still runs before first paint.
     const markup = renderToStaticMarkup(
-      createElement(RootLayout, { children: createElement("main") }),
+      await RootLayout({ children: createElement("main") }),
     );
     // Attribute-wise rather than string-wise: WO-02 added the three
     // next/font variable classes to this element, and WO-08 will add more.

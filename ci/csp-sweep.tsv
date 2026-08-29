@@ -1,0 +1,62 @@
+# WO-30 / 05-MIGRATION.md C3 — criterion 1's two runs, recorded.
+#
+# C3 ships Report-Only first and only then flips to enforcing. Both runs are
+# below because the first is only evidence for the second if they observed the
+# SAME policy: CSP_MODE switches the header NAME and nothing else, so every row
+# here was produced by one image and one build of web/e2e/csp.spec.ts.
+#
+#   CSP_MODE=report-only  docker compose up -d --build --wait
+#   npm run e2e -- --project=chromium   (csp.spec.ts: 26 passed)
+#   CSP_MODE=enforce      docker compose up -d --build --wait
+#   npm run e2e -- --project=chromium   (csp.spec.ts: 26 passed)
+#
+# 20 states x 2 modes, zero violations and zero CSP console errors in every
+# row. The one violation the FIRST report-only run found — a script-src
+# eval from zod 4's JIT feature probe on plan-review — was fixed at source
+# (z.config({ jitless: true }) in components/patterns/PlanEditorFields.tsx),
+# not by widening the policy. The 20 entries of web/e2e/support/states.ts are
+# every §4 row that has a distinct rendered layout on this commit; the rest are
+# in DEFERRED_STATES with a written reason, and csp.spec.ts asserts the two
+# lists partition all 31 rows of 06-WORK-ORDERS.md §4.
+#
+state	rows	mode	violations	console	directives
+attached-status-unknown	C	enforce	0	0	—
+attached-status-unknown	C	report-only	0	0	—
+cancelled	13	enforce	0	0	—
+cancelled	13	report-only	0	0	—
+expired	16	enforce	0	0	—
+expired	16	report-only	0	0	—
+failed-no-result	15+23	enforce	0	0	—
+failed-no-result	15+23	report-only	0	0	—
+failed-partial	14	enforce	0	0	—
+failed-partial	14	report-only	0	0	—
+landing	1	enforce	0	0	—
+landing	1	report-only	0	0	—
+plan-review	9	enforce	0	0	—
+plan-review	9	report-only	0	0	—
+rail-empty	3	enforce	0	0	—
+rail-empty	3	report-only	0	0	—
+rail-error-proxy-503	F	enforce	0	0	—
+rail-error-proxy-503	F	report-only	0	0	—
+rail-error-upstream	4+F	enforce	0	0	—
+rail-error-upstream	4+F	report-only	0	0	—
+rail-loading	2+6	enforce	0	0	—
+rail-loading	2+6	report-only	0	0	—
+rate-limited-429	18	enforce	0	0	—
+rate-limited-429	18	report-only	0	0	—
+route-not-found	22	enforce	0	0	—
+route-not-found	22	report-only	0	0	—
+running	10	enforce	0	0	—
+running	10	report-only	0	0	—
+submission-error-500	17	enforce	0	0	—
+submission-error-500	17	report-only	0	0	—
+thread-empty	5+B	enforce	0	0	—
+thread-empty	5+B	report-only	0	0	—
+thread-not-found-inline	21	enforce	0	0	—
+thread-not-found-inline	21	report-only	0	0	—
+thread-populated	7	enforce	0	0	—
+thread-populated	7	report-only	0	0	—
+unauthorized-401	19	enforce	0	0	—
+unauthorized-401	19	report-only	0	0	—
+validation-422	20	enforce	0	0	—
+validation-422	20	report-only	0	0	—

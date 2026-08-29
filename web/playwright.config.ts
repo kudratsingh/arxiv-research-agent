@@ -64,8 +64,17 @@ const MOBILE_ONLY = /@device/;
  * observer in `cls.spec.ts` would collect nothing and the assertion would pass
  * without measuring anything — a green tick over an unmeasured surface, which
  * is worse than no test.
+ *
+ * `@csp` (WO-30) joins it for the wall-clock reason and one of evidence. A
+ * CSP violation is a property of the policy and the markup, not of the
+ * engine, so sweeping twenty-two states three times buys nothing; and the one
+ * place the engines genuinely differ — whether `style-src-attr` is honoured —
+ * was measured directly across chromium, firefox and webkit while the policy
+ * was being chosen, with the result recorded on the directive in
+ * `web/lib/server/csp.ts`. A sweep is the wrong instrument for that question
+ * anyway: it would only show the difference as an unexplained violation.
  */
-const CHROMIUM_ONLY = /@slice|@export|@axe|@cls/;
+const CHROMIUM_ONLY = /@slice|@export|@axe|@cls|@csp/;
 
 export default defineConfig({
   testDir: "./e2e",

@@ -119,6 +119,23 @@ describe("the web tiers are wired", () => {
     expect(workflow).toContain("web/build/e2e");
   });
 
+  it("keeps WO-30's boundary evidence, so a green run is readable after the fact", () => {
+    // Same argument as the rest of this file: these are edits to a workflow
+    // that nothing else can reach. The CSP sweep's TSV and the captured
+    // proxy log are the two artifacts a reviewer needs to check criteria 1
+    // and 4 against the run that actually happened, and both live under the
+    // directory already uploaded whole — so what has to be asserted is that
+    // the capture step still exists and still filters to the log's own event
+    // name.
+    expect(workflow).toContain('"event":"api_proxy_request"');
+    expect(workflow).toContain("build/e2e/proxy-log.txt");
+    // And the image smoke job proves the two things only the real container
+    // can: the nonce-based header, and that scripts/healthcheck.mjs was
+    // actually copied into the image.
+    expect(workflow).toContain("docker exec web-image-smoke node scripts/healthcheck.mjs");
+    expect(workflow).toContain("'strict-dynamic'");
+  });
+
   it("runs chromium only per PR and the full matrix on a schedule", () => {
     // WO-24 criterion 4. `npm run e2e` with no project argument is every
     // project; `--project=chromium` is the per-PR set.

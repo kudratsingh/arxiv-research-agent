@@ -129,13 +129,20 @@ describe("criterion 6 — the three --font-* variables resolve", () => {
     expect(requested.sort()).toEqual(FAMILIES.map((family) => family.faceVariable).sort());
   });
 
-  it("puts all three variable classes on <html> so the var() references have a scope", () => {
+  it("puts all three variable classes on <html> so the var() references have a scope", async () => {
     for (const family of FAMILIES) {
       expect(family.module.variable, `${family.id} has no variable class`).toBeTruthy();
       expect(fontVariables).toContain(family.module.variable);
     }
+    // `await RootLayout(...)` rather than `createElement(RootLayout, ...)`:
+    // WO-30 made the root layout async so it can read the CSP nonce
+    // `web/middleware.ts` minted for the request, and `renderToStaticMarkup`
+    // is the legacy synchronous renderer. Outside a request scope the nonce
+    // read returns `undefined` (lib/server/csp.ts), so the markup asserted
+    // below is the same markup, minus a `nonce` attribute this test never
+    // looked at.
     const markup = renderToStaticMarkup(
-      createElement(RootLayout, { children: createElement("main") }),
+      await RootLayout({ children: createElement("main") }),
     );
     const className = /<html\b[^>]*\bclass="([^"]*)"/.exec(markup);
     expect(className, "<html> carries no className").not.toBeNull();

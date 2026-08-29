@@ -123,17 +123,31 @@ services:
       # The key remains server-side and is never baked into browser JS.
       API_INTERNAL_BASE: http://app:8000
       ARXIV_API_KEY: ${WEB_API_KEY:-}
+      # WO-30 / 05-MIGRATION.md C3. The Content-Security-Policy the Next
+      # middleware writes on every document response. `enforce` is the
+      # default and needs no entry here; the variable exists because C3's
+      # rollout is "ship Report-Only first ... then flip to enforcing", and
+      # `CSP_MODE=report-only` is that first half — a switch an operator can
+      # turn without a rebuild, which is what makes an observation window
+      # possible on a real deployment. `off` exists for `next dev` only.
+      CSP_MODE: ${CSP_MODE:-enforce}
     ports:
       - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
     depends_on:
       app:
         condition: service_healthy
+    # WO-30 / 05-MIGRATION.md C5 + 04-ARCHITECTURE.md §11 item 12. The old
+    # probe fetched Next `/`, which a container with a misconfigured
+    # API_INTERNAL_BASE serves perfectly well while every API call 503s. This
+    # one goes through the proxy to `/api/healthz`: a 200 proves the upstream
+    # was reached. It deliberately does NOT fail on `status: degraded` —
+    # `/healthz` is always 200 by design (ADR 0042) and a Redis blip is a
+    # backend fault, not a reason to restart the web tier — but it does parse
+    # `status` and `dependencies` and print them, because HTTP 200 alone
+    # never means healthy (H10). `docker inspect` keeps the last five of
+    # those lines.
     healthcheck:
-      test:
-        - "CMD"
-        - "node"
-        - "-e"
-        - "require('http').get('http://localhost:3000/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      test: ["CMD", "node", "scripts/healthcheck.mjs"]
       interval: 15s
       timeout: 3s
       retries: 3
