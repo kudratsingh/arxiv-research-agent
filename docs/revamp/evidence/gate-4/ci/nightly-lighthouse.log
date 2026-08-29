@@ -1,0 +1,851 @@
+# Gate 4 — the first GREEN nightly Lighthouse run.
+#
+# Collected by WO-33 from
+#   https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33265437903
+#   job 99134564621, "lighthouse ci (§8.2, 3 profiles x 3 runs)"
+#   conclusion SUCCESS, 2026-08-29T17:22:06Z -> 17:31:41Z (9m 35s)
+#   head 80f6081 (PR #119, the TBT runner-ceiling ruling), workflow_dispatch.
+#
+# It is the FIRST nightly to pass. The two before it (33262680039 and
+# 33262721279, both on 17e1fb6, pre-#119) each failed exactly one assertion:
+# total-blocking-time on plan-review mobile, medians 180 ms and 213.5 ms
+# against the then-error ceiling of 150 ms.
+#
+# RESULT, counted from the block below: 80 assertions, 74 pass, 6 WARN,
+# 0 ERROR. All three profiles exit 0.
+#
+#   4 warn : desktop-1350 bf-cache, all four states — the documented WO-30
+#            consequence of the per-request nonce CSP (D-014 ruling 3).
+#   2 warn : mobile-412 total-blocking-time —
+#              /c/baseline-populated                median 157.5 ms (158.5, 132, 157.5)
+#              ?job=baseline-plan-review            median 264.5 ms (302, 229, 264.5)
+#            Both are past 04 §8.2s ratified 150 ms and inside the 300 ms
+#            runner ceiling #119 introduced. This run is the reason that
+#            ruling exists, and it is also the evidence that the headroom is
+#            thin: the plan-review cells WORST SINGLE SAMPLE was 302 ms,
+#            already past the error ceiling. The gate reads the MEDIAN.
+#
+# One more runner effect worth reading, and it is NOT a warning because LCP
+# has no warn tier: on mobile-412 the landing page measured LCP samples of
+# 2578.45, 1363.29 and 2278.43 ms against a 2500 ms ceiling. The median
+# (2278.43) passes; one sample did not. On a developer machine the same cell
+# measures 1.36 s. See residual-risks.md RR-10 and RR-03.
+#
+# Everything below is the job log from the Lighthouse step onward, ANSI
+# escapes stripped and the gh column prefix removed. Nothing else was edited.
+
+  CHROME_PATH: /usr/bin/google-chrome-stable
+  CHROME_PATH: /usr/bin/google-chrome-stable
+##[endgroup]
+
+> arxiv-research-agent-web@0.1.0 lhci
+> node scripts/lhci-run.mjs
+
+
+=== mobile-412 — Mobile, 412 x 823 ===
+✅  .lighthouseci/ directory writable
+✅  Configuration file found
+✅  Chrome installation found
+⚠️   GitHub token not set
+Healthcheck passed!
+
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/c/baseline-empty
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/c/baseline-populated
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/c/baseline-populated?job=baseline-plan-review
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Done running Lighthouse!
+
+Checking assertions against 4 URL(s), 12 total run(s)
+
+8 result(s) for http://127.0.0.1:13210/ :
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 0.98
+      all values: 0.91, 1, 0.98
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0.002639593319881676, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=2500
+           found: 2278.4303999999997
+      all values: 2578.4528499999997, 1363.2918, 2278.4303999999997
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=300
+           found: 97
+      all values: 277.5, 82.5, 97
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 97
+      all values: 277.5, 82.5, 97
+
+8 result(s) for http://127.0.0.1:13210/c/baseline-empty :
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 0.99
+      all values: 0.99, 0.97, 0.99
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=2500
+           found: 1827.3748500000002
+      all values: 1827.3748500000002, 2427.8003000000003, 1667.21835
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=300
+           found: 107
+      all values: 107, 105, 115
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 107
+      all values: 107, 105, 115
+
+8 result(s) for http://127.0.0.1:13210/c/baseline-populated :
+
+  ⚠️  total-blocking-time warning for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 157.5
+      all values: 158.5, 132, 157.5
+
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 0.98
+      all values: 0.98, 0.98, 0.96
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0.0006111383796837512, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=2500
+           found: 1874.7197
+      all values: 1666.9605000000001, 1874.7197, 2307.8075500000004
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=300
+           found: 157.5
+      all values: 158.5, 132, 157.5
+
+8 result(s) for http://127.0.0.1:13210/c/baseline-populated?job=baseline-plan-review :
+
+  ⚠️  total-blocking-time warning for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 264.5
+      all values: 302, 229, 264.5
+
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 0.95
+      all values: 0.93, 0.96, 0.95
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=2500
+           found: 1530.1796
+      all values: 1363.8013, 1678.73775, 1530.1796
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=300
+           found: 264.5
+      all values: 302, 229, 264.5
+
+All results processed!
+
+Dumping 12 reports to disk at /home/runner/work/arxiv-research-agent/arxiv-research-agent/web/build/lhci/mobile-412...
+Done writing reports to disk.
+
+Done running autorun.
+
+=== desktop-1350 — Desktop, 1350 x 940 ===
+✅  .lighthouseci/ directory writable
+✅  Configuration file found
+✅  Chrome installation found
+⚠️   GitHub token not set
+Healthcheck passed!
+
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/c/baseline-empty
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/c/baseline-populated
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/c/baseline-populated?job=baseline-plan-review
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Done running Lighthouse!
+
+Checking assertions against 4 URL(s), 12 total run(s)
+
+8 result(s) for http://127.0.0.1:13210/ :
+
+  ⚠️  bf-cache warning for minScore assertion
+       Page prevented back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.98
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=1200
+           found: 550.1869
+      all values: 550.1869, 550.8136, 541.4113
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=100
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=50
+           found: 0
+      all values: 0, 0, 0
+
+8 result(s) for http://127.0.0.1:13210/c/baseline-empty :
+
+  ⚠️  bf-cache warning for minScore assertion
+       Page prevented back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.98
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=1200
+           found: 582.19775
+      all values: 582.19775, 573.2224, 598.7776499999999
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=100
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=50
+           found: 0
+      all values: 0, 0, 0
+
+8 result(s) for http://127.0.0.1:13210/c/baseline-populated :
+
+  ⚠️  bf-cache warning for minScore assertion
+       Page prevented back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.98
+           found: 0.99
+      all values: 0.99, 0.99, 0.99
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=1200
+           found: 838.0563999999999
+      all values: 835.2720000000002, 843.453, 838.0563999999999
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=100
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=50
+           found: 0
+      all values: 0, 0, 0
+
+8 result(s) for http://127.0.0.1:13210/c/baseline-populated?job=baseline-plan-review :
+
+  ⚠️  bf-cache warning for minScore assertion
+       Page prevented back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.98
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0.0001264460204885737
+      all values: 0.0001264460204885737, 0.0001264460204885737, 0.0001264460204885737
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=1200
+           found: 590.3285
+      all values: 596.5591999999999, 587.5681500000001, 590.3285
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=100
+           found: 0
+      all values: 5, 0, 0
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=50
+           found: 0
+      all values: 5, 0, 0
+
+All results processed!
+
+Dumping 12 reports to disk at /home/runner/work/arxiv-research-agent/arxiv-research-agent/web/build/lhci/desktop-1350...
+Done writing reports to disk.
+
+Done running autorun.
+
+=== mobile-320 — Mobile, 320 x 568 (04 §8.3 narrow strip) ===
+✅  .lighthouseci/ directory writable
+✅  Configuration file found
+✅  Chrome installation found
+⚠️   GitHub token not set
+Healthcheck passed!
+
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13210/c/baseline-populated
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Done running Lighthouse!
+
+Checking assertions against 2 URL(s), 6 total run(s)
+
+8 result(s) for http://127.0.0.1:13210/ :
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 1
+      all values: 1, 0.99, 1
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=2500
+           found: 1363.1506
+      all values: 1363.1506, 1756.6835, 1359.8009
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=300
+           found: 74.5
+      all values: 74.5, 76, 64.5
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 74.5
+      all values: 74.5, 76, 64.5
+
+8 result(s) for http://127.0.0.1:13210/c/baseline-populated :
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 0.99
+      all values: 0.99, 0.99, 0.99
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  largest-contentful-paint passing for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=2500
+           found: 1822.27995
+      all values: 1822.27995, 1869.5734499999999, 1365.5728
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=300
+           found: 123
+      all values: 123, 122, 148.5
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 123
+      all values: 123, 122, 148.5
+
+All results processed!
+
+Dumping 6 reports to disk at /home/runner/work/arxiv-research-agent/arxiv-research-agent/web/build/lhci/mobile-320...
+Done writing reports to disk.
+
+Done running autorun.
+
+# Lighthouse CI — §8.2 assertion run
+
+Produced by `node scripts/lhci-run.mjs` (WO-29). Every number below is a **local lab measurement** against the seeded Compose stack — a Lighthouse simulated-throttling run on one machine, not field p75. See `docs/revamp/evidence/gate-4/lhci/README.md` §1.
+
+- Generated: `2026-08-29T17:31:33.342Z`
+- Base URL: `http://127.0.0.1:13210`
+- Assertions evaluated: **80**
+
+## mobile-412 — Mobile, 412 x 823
+
+Result: **PASS** (`lhci autorun` exit 0)
+
+| State | Perf | A11y | BP | LCP | TBT | CLS | bf-cache |
+|---|---:|---:|---:|---:|---:|---:|:-:|
+| `/` | 98 | 100 | 100 | 2.28 s | 97 ms | 0.00000 | pass |
+| `/c/baseline-empty` | 99 | 100 | 100 | 1.83 s | 107 ms | 0.00000 | pass |
+| `/c/baseline-populated` | 98 | 100 | 100 | 1.87 s | **158 ms** ⚠️ | 0.00000 | pass |
+| `/c/baseline-populated?job=baseline-plan-review` | 95 | 100 | 100 | 1.53 s | **265 ms** ⚠️ | 0.00000 | pass |
+
+⚠️ on TBT means the measured median is past 04 §8.2's ratified ceiling of 150 ms without breaching the runner ceiling the run is gated on. It is a warning, not a failure — see `web/lighthouserc.json`'s "TOTAL BLOCKING TIME" comment.
+
+Per-run spread (median is what the assertions were evaluated against):
+
+| State | LCP runs (ms) | TBT runs (ms) | CLS runs | bf-cache reasons |
+|---|---|---|---|---|
+| `/` | 2578, 2278, 1363 | 278, 97, 83 | 0.00264, 0.00000, 0.00000 | — |
+| `/c/baseline-empty` | 1827, 2428, 1667 | 107, 105, 115 | 0.00000, 0.00000, 0.00000 | — |
+| `/c/baseline-populated` | 1667, 1875, 2308 | 159, 132, 158 | 0.00061, 0.00000, 0.00000 | — |
+| `/c/baseline-populated?job=baseline-plan-review` | 1364, 1679, 1530 | 302, 229, 265 | 0.00000, 0.00000, 0.00000 | — |
+
+## desktop-1350 — Desktop, 1350 x 940
+
+Result: **PASS** (`lhci autorun` exit 0)
+
+| State | Perf | A11y | BP | LCP | TBT | CLS | bf-cache |
+|---|---:|---:|---:|---:|---:|---:|:-:|
+| `/` | 100 | 100 | 100 | 0.55 s | 0 ms | 0.00000 | **fail** |
+| `/c/baseline-empty` | 100 | 100 | 100 | 0.58 s | 0 ms | 0.00000 | **fail** |
+| `/c/baseline-populated` | 99 | 100 | 100 | 0.84 s | 0 ms | 0.00000 | **fail** |
+| `/c/baseline-populated?job=baseline-plan-review` | 100 | 100 | 100 | 0.59 s | 0 ms | 0.00013 | **fail** |
+
+⚠️ on TBT means the measured median is past 04 §8.2's ratified ceiling of 50 ms without breaching the runner ceiling the run is gated on. It is a warning, not a failure — see `web/lighthouserc.json`'s "TOTAL BLOCKING TIME" comment.
+
+Per-run spread (median is what the assertions were evaluated against):
+
+| State | LCP runs (ms) | TBT runs (ms) | CLS runs | bf-cache reasons |
+|---|---|---|---|---|
+| `/` | 550, 541, 551 | 0, 0, 0 | 0.00000, 0.00000, 0.00000 | MainResourceHasCacheControlNoStore (Not actionable); JsNetworkRequestReceivedCacheControlNoStoreResource (Not actionable) |
+| `/c/baseline-empty` | 573, 599, 582 | 0, 0, 0 | 0.00000, 0.00000, 0.00000 | MainResourceHasCacheControlNoStore (Not actionable); JsNetworkRequestReceivedCacheControlNoStoreResource (Not actionable) |
+| `/c/baseline-populated` | 835, 843, 838 | 0, 0, 0 | 0.00000, 0.00000, 0.00000 | MainResourceHasCacheControlNoStore (Not actionable); JsNetworkRequestReceivedCacheControlNoStoreResource (Not actionable) |
+| `/c/baseline-populated?job=baseline-plan-review` | 597, 588, 590 | 5, 0, 0 | 0.00013, 0.00013, 0.00013 | MainResourceHasCacheControlNoStore (Not actionable); JsNetworkRequestReceivedCacheControlNoStoreResource (Not actionable) |
+
+## mobile-320 — Mobile, 320 x 568 (04 §8.3 narrow strip)
+
+Result: **PASS** (`lhci autorun` exit 0)
+
+| State | Perf | A11y | BP | LCP | TBT | CLS | bf-cache |
+|---|---:|---:|---:|---:|---:|---:|:-:|
+| `/` | 100 | 100 | 100 | 1.36 s | 75 ms | 0.00000 | pass |
+| `/c/baseline-populated` | 99 | 100 | 100 | 1.82 s | 123 ms | 0.00000 | pass |
+
+⚠️ on TBT means the measured median is past 04 §8.2's ratified ceiling of 150 ms without breaching the runner ceiling the run is gated on. It is a warning, not a failure — see `web/lighthouserc.json`'s "TOTAL BLOCKING TIME" comment.
+
+Per-run spread (median is what the assertions were evaluated against):
+
+| State | LCP runs (ms) | TBT runs (ms) | CLS runs | bf-cache reasons |
+|---|---|---|---|---|
+| `/` | 1363, 1360, 1757 | 75, 65, 76 | 0.00000, 0.00000, 0.00000 | — |
+| `/c/baseline-populated` | 1822, 1870, 1366 | 123, 122, 149 | 0.00000, 0.00000, 0.00000 | — |
+
+
+
+lhci: all 3 profiles passed (80 assertions).

@@ -1,0 +1,251 @@
+# Gate 4 / 05-MIGRATION.md C2 — production Compose overlay validation.
+#
+# Collected by WO-33. The check is WO-25 criterion 2, in the `docker build`
+# job of .github/workflows/ci.yml, and it runs on every pull request and
+# every push. Both steps pass `--quiet`, so a pass is SILENT: the CI evidence
+# is the absence of a diagnostic plus the job’s own green conclusion.
+#
+# PART 1 — the two CI steps, transcribed from
+#   https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33264933325
+#   job 99133214936 `docker build`, conclusion SUCCESS, 2026-08-29T17:11Z,
+#   head 9268b542432a7f03e3aa409e76e5b59966c0c509 (PR #118).
+#   ANSI escapes stripped; the gh column prefix removed; nothing else edited.
+#
+# PART 2 — the SAME overlay command re-run locally WITHOUT `--quiet`, so a
+#   reader can see what the overlay resolves to instead of taking the silence
+#   on trust. Docker Compose v5.4.0, Docker 29.7.2, darwin, 2026-08-29,
+#   on 80f6081 (origin/main). `config` resolves interpolation and validates
+#   the schema; it starts no container and reaches no network. Every secret
+#   below is the literal string `dummy` that the CI job also uses — the
+#   overlay gates them with ${VAR:?…}, so the command cannot run without them.
+
+================================================================
+PART 1 — .github/workflows/ci.yml, job `docker build`, the two config steps
+================================================================
+
+﻿2026-08-29T17:11:13.4878362Z ##[group]Run ANTHROPIC_API_KEY=dummy docker compose config --quiet
+2026-08-29T17:11:13.4879263Z ANTHROPIC_API_KEY=dummy docker compose config --quiet
+2026-08-29T17:11:13.4922945Z shell: /usr/bin/bash -e {0}
+2026-08-29T17:11:13.4923278Z ##[endgroup]
+﻿2026-08-29T17:11:13.6970593Z ##[group]Run docker compose \
+2026-08-29T17:11:13.6970946Z docker compose \
+2026-08-29T17:11:13.6971216Z   -f docker-compose.yml \
+2026-08-29T17:11:13.6971539Z   -f deploy/hetzner/compose.prod.yml \
+2026-08-29T17:11:13.6971859Z   config --quiet
+2026-08-29T17:11:13.7010567Z shell: /usr/bin/bash -e {0}
+2026-08-29T17:11:13.7010861Z env:
+2026-08-29T17:11:13.7011084Z   ANTHROPIC_API_KEY: dummy
+2026-08-29T17:11:13.7011335Z   WEB_API_KEY: dummy
+2026-08-29T17:11:13.7011567Z   POSTGRES_PASSWORD: dummy
+2026-08-29T17:11:13.7011829Z   APP_DOMAIN: ci.example.invalid
+2026-08-29T17:11:13.7012105Z   ACME_EMAIL: ci@example.invalid
+2026-08-29T17:11:13.7012361Z   APP_USERNAME: ci
+2026-08-29T17:11:13.7012585Z   APP_PASSWORD_HASH: dummy
+2026-08-29T17:11:13.7012823Z ##[endgroup]
+﻿2026-08-29T17:11:13.8082135Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+
+(Both steps exited 0. `--quiet` suppresses the rendered document, so there is
+no further output; the next line in the job log is the API image build.)
+
+================================================================
+PART 2 — the same overlay, rendered locally (no --quiet)
+================================================================
+
+$ ANTHROPIC_API_KEY=dummy WEB_API_KEY=dummy POSTGRES_PASSWORD=dummy \
+  APP_DOMAIN=ci.example.invalid ACME_EMAIL=ci@example.invalid \
+  APP_USERNAME=ci APP_PASSWORD_HASH=dummy \
+  docker compose -f docker-compose.yml -f deploy/hetzner/compose.prod.yml config
+
+name: agent-ae72ba156d632425f
+services:
+  app:
+    build:
+      context: /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-ae72ba156d632425f
+      dockerfile: Dockerfile
+    command:
+      - python
+      - -m
+      - src.api.serve
+    container_name: arxiv-research-agent-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      ANTHROPIC_API_KEY: dummy
+      API_CORS_ALLOW_ORIGINS: ""
+      API_HOST: 0.0.0.0
+      API_KEY_HOURLY_LIMIT: "20"
+      API_KEYS: web:dummy
+      API_PORT: "8000"
+      CHECKPOINT_BACKEND: postgres
+      CONVERSATION_STORE: postgres
+      EMBEDDING_CACHE: postgres
+      ENABLE_API_AUTH: "true"
+      ENABLE_JOB_REDRIVER: "true"
+      ENABLE_PROMPT_ISOLATION: "true"
+      JOB_STORE: redis
+      LOG_LEVEL: INFO
+      MAX_COST_USD: "2.00"
+      PAPER_CACHE: postgres
+      POSTGRES_URL: postgresql://arxiv:dummy@postgres:5432/arxiv
+      RATE_LIMIT_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - http://localhost:8000/healthz
+      timeout: 3s
+      interval: 15s
+      retries: 3
+      start_period: 20s
+    image: arxiv-research-agent:local
+    networks:
+      default: null
+    restart: unless-stopped
+    stop_grace_period: 30s
+  caddy:
+    container_name: arxiv-research-agent-caddy
+    depends_on:
+      web:
+        condition: service_healthy
+        required: true
+    environment:
+      ACME_EMAIL: ci@example.invalid
+      APP_DOMAIN: ci.example.invalid
+      APP_PASSWORD_HASH: dummy
+      APP_USERNAME: ci
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - http://localhost:2019/config/
+      timeout: 3s
+      interval: 15s
+      retries: 3
+      start_period: 5s
+    image: caddy:2.11.4-alpine
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "80"
+        protocol: tcp
+      - mode: ingress
+        target: 443
+        published: "443"
+        protocol: tcp
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - type: bind
+        source: /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-ae72ba156d632425f/deploy/hetzner/Caddyfile
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind: {}
+      - type: volume
+        source: caddy-data
+        target: /data
+        volume: {}
+      - type: volume
+        source: caddy-config
+        target: /config
+        volume: {}
+  postgres:
+    container_name: arxiv-research-agent-postgres
+    environment:
+      POSTGRES_DB: arxiv
+      POSTGRES_PASSWORD: dummy
+      POSTGRES_USER: arxiv
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
+      timeout: 3s
+      interval: 10s
+      retries: 5
+      start_period: 10s
+    image: postgres:16-alpine
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: postgres-data
+        target: /var/lib/postgresql/data
+        volume: {}
+  redis:
+    command:
+      - redis-server
+      - --appendonly
+      - 'yes'
+    container_name: arxiv-research-agent-redis
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      timeout: 3s
+      interval: 10s
+      retries: 3
+    image: redis:7-alpine
+    networks:
+      default: null
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: redis-data
+        target: /data
+        volume: {}
+  web:
+    build:
+      context: /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-ae72ba156d632425f/web
+      dockerfile: Dockerfile
+    container_name: arxiv-research-agent-web
+    depends_on:
+      app:
+        condition: service_healthy
+        required: true
+    environment:
+      API_INTERNAL_BASE: http://app:8000
+      ARXIV_API_KEY: dummy
+      CSP_MODE: enforce
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - scripts/healthcheck.mjs
+      timeout: 3s
+      interval: 15s
+      retries: 3
+      start_period: 10s
+    image: arxiv-research-agent-web:local
+    networks:
+      default: null
+    restart: unless-stopped
+networks:
+  default:
+    name: agent-ae72ba156d632425f_default
+volumes:
+  caddy-config:
+    name: agent-ae72ba156d632425f_caddy-config
+  caddy-data:
+    name: agent-ae72ba156d632425f_caddy-data
+  postgres-data:
+    name: agent-ae72ba156d632425f_postgres-data
+  redis-data:
+    name: agent-ae72ba156d632425f_redis-data
+
+$ echo $?
+0

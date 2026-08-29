@@ -1,0 +1,1613 @@
+web image smoke	Set up job	﻿2026-08-29T17:10:50.5617437Z Current runner version: '2.336.0'
+web image smoke	Set up job	2026-08-29T17:10:50.5642108Z ##[group]Runner Image Provisioner
+web image smoke	Set up job	2026-08-29T17:10:50.5642997Z Hosted Compute Agent
+web image smoke	Set up job	2026-08-29T17:10:50.5643736Z Version: 20260819.586
+web image smoke	Set up job	2026-08-29T17:10:50.5644356Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+web image smoke	Set up job	2026-08-29T17:10:50.5645206Z Build Date: 2026-08-18T23:20:18Z
+web image smoke	Set up job	2026-08-29T17:10:50.5645915Z Worker ID: {d97a6402-bec8-4d29-b7cc-9bd8f349e529}
+web image smoke	Set up job	2026-08-29T17:10:50.5646663Z Azure Region: westcentralus
+web image smoke	Set up job	2026-08-29T17:10:50.5647327Z ##[endgroup]
+web image smoke	Set up job	2026-08-29T17:10:50.5648585Z ##[group]Operating System
+web image smoke	Set up job	2026-08-29T17:10:50.5649219Z Ubuntu
+web image smoke	Set up job	2026-08-29T17:10:50.5649733Z 24.04.4
+web image smoke	Set up job	2026-08-29T17:10:50.5650384Z LTS
+web image smoke	Set up job	2026-08-29T17:10:50.5650954Z ##[endgroup]
+web image smoke	Set up job	2026-08-29T17:10:50.5651478Z ##[group]Runner Image
+web image smoke	Set up job	2026-08-29T17:10:50.5652033Z Image: ubuntu-24.04
+web image smoke	Set up job	2026-08-29T17:10:50.5652597Z Version: 20260823.283.1
+web image smoke	Set up job	2026-08-29T17:10:50.5653593Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260823.283/images/ubuntu/Ubuntu2404-Readme.md
+web image smoke	Set up job	2026-08-29T17:10:50.5655267Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260823.283
+web image smoke	Set up job	2026-08-29T17:10:50.5656152Z ##[endgroup]
+web image smoke	Set up job	2026-08-29T17:10:50.5657241Z ##[group]GITHUB_TOKEN Permissions
+web image smoke	Set up job	2026-08-29T17:10:50.5659118Z Contents: read
+web image smoke	Set up job	2026-08-29T17:10:50.5659735Z Metadata: read
+web image smoke	Set up job	2026-08-29T17:10:50.5660468Z ##[endgroup]
+web image smoke	Set up job	2026-08-29T17:10:50.5662448Z Secret source: Actions
+web image smoke	Set up job	2026-08-29T17:10:50.5663424Z Prepare workflow directory
+web image smoke	Set up job	2026-08-29T17:10:50.6016462Z Prepare all required actions
+web image smoke	Set up job	2026-08-29T17:10:50.6063260Z Getting action download info
+web image smoke	Set up job	2026-08-29T17:10:50.8804394Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+web image smoke	Set up job	2026-08-29T17:10:51.0304367Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+web image smoke	Set up job	2026-08-29T17:10:51.1873060Z Download action repository 'docker/setup-buildx-action@v3' (SHA:8d2750c68a42422c14e847fe6c8ac0403b4cbd6f)
+web image smoke	Set up job	2026-08-29T17:10:52.2857883Z Download action repository 'docker/build-push-action@v6' (SHA:10e90e3645eae34f1e60eeb005ba3a3d33f178e8)
+web image smoke	Set up job	2026-08-29T17:10:53.7589486Z Complete job name: web image smoke
+web image smoke	Run actions/checkout@v4	﻿2026-08-29T17:10:53.8463771Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8475639Z ##[group]Run actions/checkout@v4
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8476982Z with:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8478070Z   repository: kudratsingh/arxiv-research-agent
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8488244Z   token: ***
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8489178Z   ssh-strict: true
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8490291Z   ssh-user: git
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8491276Z   persist-credentials: true
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8492343Z   clean: true
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8493370Z   sparse-checkout-cone-mode: true
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8494502Z   fetch-depth: 1
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8495521Z   fetch-tags: false
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8496526Z   show-progress: true
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8497566Z   lfs: false
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8498495Z   submodules: false
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8499629Z   set-safe-directory: true
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8500923Z   allow-unsafe-pr-checkout: false
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.8502245Z ##[endgroup]
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.9543303Z Syncing repository: kudratsingh/arxiv-research-agent
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.9546452Z ##[group]Getting Git version info
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.9548094Z Working directory is '/home/runner/work/arxiv-research-agent/arxiv-research-agent'
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:53.9550711Z [command]/usr/bin/git version
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.0742574Z git version 2.55.0
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.0762296Z ##[endgroup]
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.0775880Z Temporarily overriding HOME='/home/runner/work/_temp/1426c142-ff61-4081-87a5-b4f7526e244d' before making global git config changes
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.0778742Z Adding repository directory to the temporary git global config as a safe directory
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.0781951Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/arxiv-research-agent/arxiv-research-agent
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1046590Z Deleting the contents of '/home/runner/work/arxiv-research-agent/arxiv-research-agent'
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1050627Z ##[group]Initializing the repository
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1055961Z [command]/usr/bin/git init /home/runner/work/arxiv-research-agent/arxiv-research-agent
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1482204Z hint: Using 'master' as the name for the initial branch. This default branch name
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1485454Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1488067Z hint: to use in all of your new repositories, which will suppress this warning,
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1490515Z hint: call:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1491719Z hint:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1493231Z hint: 	git config --global init.defaultBranch <name>
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1495505Z hint:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1496937Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1499053Z hint: 'development'. The just-created branch can be renamed via this command:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1500805Z hint:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1501815Z hint: 	git branch -m <name>
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1503188Z hint:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1504522Z hint: Disable this message with "git config set advice.defaultBranchName false"
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1507034Z Initialized empty Git repository in /home/runner/work/arxiv-research-agent/arxiv-research-agent/.git/
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1511296Z [command]/usr/bin/git remote add origin https://github.com/kudratsingh/arxiv-research-agent
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1732498Z ##[endgroup]
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1734355Z ##[group]Disabling automatic garbage collection
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1737382Z [command]/usr/bin/git config --local gc.auto 0
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1773508Z ##[endgroup]
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1775259Z ##[group]Setting up auth
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1781661Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.1816684Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.3577954Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.3616902Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.3822019Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.3856478Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.4064188Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.4101762Z ##[endgroup]
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.4103391Z ##[group]Fetching the repository
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:54.4113131Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +f572213f9d0a366f1e5747da75c8e24a4bac22d8:refs/remotes/pull/118/merge
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0196915Z From https://github.com/kudratsingh/arxiv-research-agent
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0197873Z  * [new ref]         f572213f9d0a366f1e5747da75c8e24a4bac22d8 -> pull/118/merge
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0200856Z ##[endgroup]
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0201841Z ##[group]Determining the checkout info
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0202757Z ##[endgroup]
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0209177Z [command]/usr/bin/git sparse-checkout disable
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0370923Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0404448Z ##[group]Checking out the ref
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.0431409Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/118/merge
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2410782Z Note: switching to 'refs/remotes/pull/118/merge'.
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2411841Z 
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2412345Z You are in 'detached HEAD' state. You can look around, make experimental
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2413214Z changes and commit them, and you can discard any commits you make in this
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2413774Z state without impacting any branches by switching back to a branch.
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2414176Z 
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2414424Z If you want to create a new branch to retain commits you create, you may
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2415022Z do so (now or later) by using -c with the switch command. Example:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2415332Z 
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2415551Z   git switch -c <new-branch-name>
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2415737Z 
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2415954Z Or undo this operation with:
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2416142Z 
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2416305Z   git switch -
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2416469Z 
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2416725Z Turn off this advice by setting config variable advice.detachedHead to false
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2417114Z 
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2417470Z HEAD is now at f572213 Merge c7cfda32df2645a97703d4b86a0b8e4d2d0e81e5 into 3d84665489cd549e7596651ff62f121cb9115af1
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2538683Z ##[endgroup]
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2582718Z [command]/usr/bin/git log -1 --format=%H
+web image smoke	Run actions/checkout@v4	2026-08-29T17:10:56.2608990Z f572213f9d0a366f1e5747da75c8e24a4bac22d8
+web image smoke	Run actions/setup-node@v4	﻿2026-08-29T17:10:56.2924059Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.2925878Z ##[group]Run actions/setup-node@v4
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.2926250Z with:
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.2926596Z   node-version: 22
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.2926937Z   always-auth: false
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.2927265Z   check-latest: false
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.2930026Z   token: ***
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.2930383Z ##[endgroup]
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.4677640Z Found in cache @ /opt/hostedtoolcache/node/22.23.2/x64
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.4679676Z (node:2246) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.4681002Z (Use `node --trace-deprecation ...` to show where the warning was created)
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:56.4683256Z ##[group]Environment details
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:59.0300910Z node: v22.23.2
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:59.0301454Z npm: 10.9.8
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:59.0301994Z yarn: 1.22.22
+web image smoke	Run actions/setup-node@v4	2026-08-29T17:10:59.0303333Z ##[endgroup]
+web image smoke	Set up Docker Buildx	﻿2026-08-29T17:10:59.0481265Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0482647Z ##[group]Run docker/setup-buildx-action@v3
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0483027Z with:
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0483344Z   driver: docker-container
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0483732Z   use: true
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0484030Z   keep-state: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0484362Z   cache-binary: true
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0484676Z   cleanup: true
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0484965Z   install: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.0485336Z ##[endgroup]
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.2800719Z (node:2277) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.2802030Z (Use `node --trace-deprecation ...` to show where the warning was created)
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.2846947Z ##[group]Docker info
+web image smoke	Set up Docker Buildx	2026-08-29T17:10:59.2873716Z [command]/usr/bin/docker version
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3730016Z Client: Docker Engine - Community
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3730681Z  Version:           28.0.4
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3731180Z  API version:       1.48
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3731704Z  Go version:        go1.23.7
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3732184Z  Git commit:        b8034c0
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3732691Z  Built:             Tue Mar 25 15:07:16 2025
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3735704Z  OS/Arch:           linux/amd64
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3736394Z  Context:           default
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3736752Z 
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3741624Z Server: Docker Engine - Community
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3742498Z  Engine:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3743280Z   Version:          28.0.4
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3743989Z   API version:      1.48 (minimum version 1.24)
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3744659Z   Go version:       go1.23.7
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3745396Z   Git commit:       6430e49
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3746129Z   Built:            Tue Mar 25 15:07:16 2025
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3750791Z   OS/Arch:          linux/amd64
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3751493Z   Experimental:     false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3751952Z  containerd:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3752472Z   Version:          v2.3.3
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3753110Z   GitCommit:        aad11006b869517fcd3009450b6f82da282e1a9b
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3753744Z  runc:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3754138Z   Version:          1.4.3
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3754618Z   GitCommit:        v1.4.3-0-gbb14dab
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3755262Z  docker-init:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3755819Z   Version:          0.19.0
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3756315Z   GitCommit:        de40ad0
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:00.3777702Z [command]/usr/bin/docker info
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5707725Z Client: Docker Engine - Community
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5708665Z  Version:    28.0.4
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5709202Z  Context:    default
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5709611Z  Debug Mode: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5710321Z  Plugins:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5710710Z   buildx: Docker Buildx (Docker Inc.)
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5711150Z     Version:  v0.36.1
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5711579Z     Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5712033Z   compose: Docker Compose (Docker Inc.)
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5712484Z     Version:  v2.38.2
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5712918Z     Path:     /usr/libexec/docker/cli-plugins/docker-compose
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5713162Z 
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5713358Z Server:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5713647Z  Containers: 0
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5713953Z   Running: 0
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5714325Z   Paused: 0
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5714640Z   Stopped: 0
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5714956Z  Images: 6
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5715258Z  Server Version: 28.0.4
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5715581Z  Storage Driver: overlay2
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5715955Z   Backing Filesystem: extfs
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5716370Z   Supports d_type: true
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5716734Z   Using metacopy: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5717062Z   Native Overlay Diff: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5717386Z   userxattr: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5717742Z  Logging Driver: json-file
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5718501Z  Cgroup Driver: systemd
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5719389Z  Cgroup Version: 2
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5719712Z  Plugins:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5720234Z   Volume: local
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5720962Z   Network: bridge host ipvlan macvlan null overlay
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5721726Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5722589Z  Swarm: inactive
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5723035Z  Runtimes: io.containerd.runc.v2 runc
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5723755Z  Default Runtime: runc
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5724393Z  Init Binary: docker-init
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5724972Z  containerd version: aad11006b869517fcd3009450b6f82da282e1a9b
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5725647Z  runc version: v1.4.3-0-gbb14dab
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5726119Z  init version: de40ad0
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5726604Z  Security Options:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5727145Z   apparmor
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5727526Z   seccomp
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5727994Z    Profile: builtin
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5728397Z   cgroupns
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5728827Z  Kernel Version: 6.17.0-1022-azure
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5729465Z  Operating System: Ubuntu 24.04.4 LTS
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5730230Z  OSType: linux
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5730635Z  Architecture: x86_64
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5731145Z  CPUs: 4
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5731441Z  Total Memory: 15.61GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5732000Z  Name: runnervmgx7h7
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5732373Z  ID: a9bdcc8e-7fee-41a1-b6e5-bb51314b0287
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5733073Z  Docker Root Dir: /var/lib/docker
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5733437Z  Debug Mode: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5733850Z  Username: githubactions
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5734223Z  Experimental: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5734542Z  Insecure Registries:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5734951Z   ::1/128
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5735278Z   127.0.0.0/8
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5735618Z  Live Restore Enabled: false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5735849Z 
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.5738266Z ##[endgroup]
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.6997003Z ##[group]Buildx version
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.7026317Z [command]/usr/bin/docker buildx version
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.7688898Z github.com/docker/buildx v0.36.1 1d8dde89b8aba914e05e45366770736fea1fd690
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.7713416Z ##[endgroup]
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.7874541Z ##[group]Inspecting default docker context
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8022916Z [
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8023585Z   {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8024063Z     "Name": "default",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8024548Z     "Metadata": {},
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8025020Z     "Endpoints": {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8025404Z       "docker": {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8025794Z         "Host": "unix:///var/run/docker.sock",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8026312Z         "SkipTLSVerify": false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8026681Z       }
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8026952Z     },
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8027301Z     "TLSMaterial": {},
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8027607Z     "Storage": {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8028013Z       "MetadataPath": "<IN MEMORY>",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8028475Z       "TLSPath": "<IN MEMORY>"
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8028791Z     }
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8029112Z   }
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8029461Z ]
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8030426Z ##[endgroup]
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.8030995Z ##[group]Creating a new builder instance
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:02.9434470Z [command]/usr/bin/docker buildx create --name builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4 --driver docker-container --buildkitd-flags --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host --use
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:03.0503825Z builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:03.0529488Z ##[endgroup]
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:03.0530434Z ##[group]Booting builder
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:03.0559664Z [command]/usr/bin/docker buildx inspect --bootstrap --builder builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:03.1136814Z #1 [internal] booting buildkit
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:03.2643532Z #1 pulling image moby/buildkit:buildx-stable-1
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:08.6288176Z #1 pulling image moby/buildkit:buildx-stable-1 5.5s done
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:08.7802295Z #1 creating container buildx_buildkit_builder-1daff1a5-0208-42b6-a922-3185ee1fa9c40
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.2906060Z #1 creating container buildx_buildkit_builder-1daff1a5-0208-42b6-a922-3185ee1fa9c40 0.7s done
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.2928681Z #1 DONE 6.2s
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3515165Z Name:          builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3516244Z Driver:        docker-container
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3528552Z Last Activity: 2026-08-29 17:11:03 +0000 UTC
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3529313Z 
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3529661Z Nodes:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3530705Z Name:                  builder-1daff1a5-0208-42b6-a922-3185ee1fa9c40
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3531527Z Endpoint:              unix:///var/run/docker.sock
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3532198Z Status:                running
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3533263Z BuildKit daemon flags: --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3534385Z BuildKit version:      v0.32.2
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3535288Z Platforms:             linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/amd64/v4, linux/386
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3536127Z Labels:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3537019Z  org.mobyproject.buildkit.worker.executor:         oci
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3537838Z  org.mobyproject.buildkit.worker.hostname:         c2791d3d5d8b
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3538853Z  org.mobyproject.buildkit.worker.network:          host
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3539747Z  org.mobyproject.buildkit.worker.oci.process-mode: sandbox
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3541511Z  org.mobyproject.buildkit.worker.selinux.enabled:  false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3542693Z  org.mobyproject.buildkit.worker.snapshotter:      overlayfs
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3543476Z GC Policy rule#0:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3544090Z  All:            false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3544874Z  Filters:        type==source.local type==exec.cachemount type==source.git.checkout
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3545699Z  Keep Duration:  48h0m0s
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3546328Z  Max Used Space: 488.3MiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3546932Z GC Policy rule#1:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3547471Z  All:            false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3547986Z  Keep Duration:  1440h0m0s
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3548571Z  Reserved Space: 9.313GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3549113Z  Max Used Space: 93.13GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3549696Z  Min Free Space: 27.01GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3550474Z GC Policy rule#2:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3551118Z  All:            false
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3551742Z  Reserved Space: 9.313GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3552610Z  Max Used Space: 93.13GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3553306Z  Min Free Space: 27.01GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3553929Z GC Policy rule#3:
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3554873Z  All:            true
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3555425Z  Reserved Space: 9.313GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3556786Z  Max Used Space: 93.13GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3557378Z  Min Free Space: 27.01GiB
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.3558390Z ##[endgroup]
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4547320Z ##[group]Inspect builder
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4548828Z {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4549743Z   "nodes": [
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4551776Z     {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4552731Z       "name": "builder-1daff1a5-0208-42b6-a922-3185ee1fa9c40",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4553919Z       "endpoint": "unix:///var/run/docker.sock",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4554998Z       "status": "running",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4556281Z       "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4557444Z       "buildkit": "v0.32.2",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4558443Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/amd64/v4,linux/386",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4559307Z       "features": {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4560862Z         "Automatically load images to the Docker Engine image store": true,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4561892Z         "Cache export": true,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4563121Z         "Direct push": true,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4563875Z         "Docker exporter": true,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4564610Z         "Multi-platform build": true,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4565500Z         "OCI exporter": true
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4566088Z       },
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4566789Z       "labels": {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4568026Z         "org.mobyproject.buildkit.worker.executor": "oci",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4570441Z         "org.mobyproject.buildkit.worker.hostname": "c2791d3d5d8b",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4571295Z         "org.mobyproject.buildkit.worker.network": "host",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4572091Z         "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4573124Z         "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4574056Z         "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4575385Z       },
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4576227Z       "gcPolicy": [
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4576810Z         {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4577563Z           "all": false,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4578334Z           "filter": [
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4579216Z             "type==source.local type==exec.cachemount type==source.git.checkout"
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4580481Z           ],
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4580999Z           "keepDuration": "48h0m0s",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4581862Z           "maxUsedSpace": "488.3MiB"
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4582484Z         },
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4583024Z         {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4583553Z           "all": false,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4584219Z           "keepDuration": "1440h0m0s",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4584954Z           "reservedSpace": "9.313GiB",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4585442Z           "maxUsedSpace": "93.13GiB",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4586010Z           "minFreeSpace": "27.01GiB"
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4586463Z         },
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4586860Z         {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4587527Z           "all": false,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4588054Z           "reservedSpace": "9.313GiB",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4588587Z           "maxUsedSpace": "93.13GiB",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4589094Z           "minFreeSpace": "27.01GiB"
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4589587Z         },
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4590386Z         {
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4590827Z           "all": true,
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4591338Z           "reservedSpace": "9.313GiB",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4591856Z           "maxUsedSpace": "93.13GiB",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4592437Z           "minFreeSpace": "27.01GiB"
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4592860Z         }
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4593146Z       ]
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4593512Z     }
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4593821Z   ],
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4594284Z   "name": "builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4594747Z   "driver": "docker-container",
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4595188Z   "lastActivity": "2026-08-29T17:11:03.000Z"
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4595609Z }
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4597589Z ##[endgroup]
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4598433Z ##[group]BuildKit version
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4598981Z builder-1daff1a5-0208-42b6-a922-3185ee1fa9c40: v0.32.2
+web image smoke	Set up Docker Buildx	2026-08-29T17:11:09.4599619Z ##[endgroup]
+web image smoke	Build web image	﻿2026-08-29T17:11:09.4727833Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+web image smoke	Build web image	2026-08-29T17:11:09.4729136Z ##[group]Run docker/build-push-action@v6
+web image smoke	Build web image	2026-08-29T17:11:09.4729546Z with:
+web image smoke	Build web image	2026-08-29T17:11:09.4729996Z   context: ./web
+web image smoke	Build web image	2026-08-29T17:11:09.4730462Z   load: true
+web image smoke	Build web image	2026-08-29T17:11:09.4730887Z   tags: arxiv-research-agent-web:ci
+web image smoke	Build web image	2026-08-29T17:11:09.4731299Z   cache-from: type=gha,scope=web
+web image smoke	Build web image	2026-08-29T17:11:09.4731705Z   cache-to: type=gha,mode=max,scope=web
+web image smoke	Build web image	2026-08-29T17:11:09.4732123Z   no-cache: false
+web image smoke	Build web image	2026-08-29T17:11:09.4732431Z   pull: false
+web image smoke	Build web image	2026-08-29T17:11:09.4732786Z   push: false
+web image smoke	Build web image	2026-08-29T17:11:09.4735662Z   github-token: ***
+web image smoke	Build web image	2026-08-29T17:11:09.4736012Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:11:09.7149178Z (node:2759) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+web image smoke	Build web image	2026-08-29T17:11:09.7150697Z (Use `node --trace-deprecation ...` to show where the warning was created)
+web image smoke	Build web image	2026-08-29T17:11:09.7167422Z ##[group]GitHub Actions runtime token ACs
+web image smoke	Build web image	2026-08-29T17:11:09.7175900Z refs/pull/118/merge: read/write
+web image smoke	Build web image	2026-08-29T17:11:09.7176394Z refs/heads/main: read
+web image smoke	Build web image	2026-08-29T17:11:09.7177100Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:11:09.7177799Z ##[group]Docker info
+web image smoke	Build web image	2026-08-29T17:11:09.7219431Z [command]/usr/bin/docker version
+web image smoke	Build web image	2026-08-29T17:11:09.7440343Z Client: Docker Engine - Community
+web image smoke	Build web image	2026-08-29T17:11:09.7452349Z  Version:           28.0.4
+web image smoke	Build web image	2026-08-29T17:11:09.7453736Z  API version:       1.48
+web image smoke	Build web image	2026-08-29T17:11:09.7455011Z  Go version:        go1.23.7
+web image smoke	Build web image	2026-08-29T17:11:09.7456035Z  Git commit:        b8034c0
+web image smoke	Build web image	2026-08-29T17:11:09.7457309Z  Built:             Tue Mar 25 15:07:16 2025
+web image smoke	Build web image	2026-08-29T17:11:09.7458429Z  OS/Arch:           linux/amd64
+web image smoke	Build web image	2026-08-29T17:11:09.7459421Z  Context:           default
+web image smoke	Build web image	2026-08-29T17:11:09.7460243Z 
+web image smoke	Build web image	2026-08-29T17:11:09.7460701Z Server: Docker Engine - Community
+web image smoke	Build web image	2026-08-29T17:11:09.7461338Z  Engine:
+web image smoke	Build web image	2026-08-29T17:11:09.7461938Z   Version:          28.0.4
+web image smoke	Build web image	2026-08-29T17:11:09.7462609Z   API version:      1.48 (minimum version 1.24)
+web image smoke	Build web image	2026-08-29T17:11:09.7463380Z   Go version:       go1.23.7
+web image smoke	Build web image	2026-08-29T17:11:09.7463994Z   Git commit:       6430e49
+web image smoke	Build web image	2026-08-29T17:11:09.7464665Z   Built:            Tue Mar 25 15:07:16 2025
+web image smoke	Build web image	2026-08-29T17:11:09.7465332Z   OS/Arch:          linux/amd64
+web image smoke	Build web image	2026-08-29T17:11:09.7466071Z   Experimental:     false
+web image smoke	Build web image	2026-08-29T17:11:09.7466692Z  containerd:
+web image smoke	Build web image	2026-08-29T17:11:09.7467234Z   Version:          v2.3.3
+web image smoke	Build web image	2026-08-29T17:11:09.7468005Z   GitCommit:        aad11006b869517fcd3009450b6f82da282e1a9b
+web image smoke	Build web image	2026-08-29T17:11:09.7468700Z  runc:
+web image smoke	Build web image	2026-08-29T17:11:09.7469266Z   Version:          1.4.3
+web image smoke	Build web image	2026-08-29T17:11:09.7470724Z   GitCommit:        v1.4.3-0-gbb14dab
+web image smoke	Build web image	2026-08-29T17:11:09.7471402Z  docker-init:
+web image smoke	Build web image	2026-08-29T17:11:09.7471927Z   Version:          0.19.0
+web image smoke	Build web image	2026-08-29T17:11:09.7472568Z   GitCommit:        de40ad0
+web image smoke	Build web image	2026-08-29T17:11:09.7476220Z [command]/usr/bin/docker info
+web image smoke	Build web image	2026-08-29T17:11:09.7959966Z Client: Docker Engine - Community
+web image smoke	Build web image	2026-08-29T17:11:09.7961020Z  Version:    28.0.4
+web image smoke	Build web image	2026-08-29T17:11:09.7961546Z  Context:    default
+web image smoke	Build web image	2026-08-29T17:11:09.7961981Z  Debug Mode: false
+web image smoke	Build web image	2026-08-29T17:11:09.7962526Z  Plugins:
+web image smoke	Build web image	2026-08-29T17:11:09.7962978Z   buildx: Docker Buildx (Docker Inc.)
+web image smoke	Build web image	2026-08-29T17:11:09.7963528Z     Version:  v0.36.1
+web image smoke	Build web image	2026-08-29T17:11:09.7964108Z     Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+web image smoke	Build web image	2026-08-29T17:11:09.7964782Z   compose: Docker Compose (Docker Inc.)
+web image smoke	Build web image	2026-08-29T17:11:09.7965287Z     Version:  v2.38.2
+web image smoke	Build web image	2026-08-29T17:11:09.7965947Z     Path:     /usr/libexec/docker/cli-plugins/docker-compose
+web image smoke	Build web image	2026-08-29T17:11:09.7966413Z 
+web image smoke	Build web image	2026-08-29T17:11:09.7966646Z Server:
+web image smoke	Build web image	2026-08-29T17:11:09.7967113Z  Containers: 1
+web image smoke	Build web image	2026-08-29T17:11:09.7967614Z   Running: 1
+web image smoke	Build web image	2026-08-29T17:11:09.7968031Z   Paused: 0
+web image smoke	Build web image	2026-08-29T17:11:09.7968535Z   Stopped: 0
+web image smoke	Build web image	2026-08-29T17:11:09.7968956Z  Images: 7
+web image smoke	Build web image	2026-08-29T17:11:09.7969908Z  Server Version: 28.0.4
+web image smoke	Build web image	2026-08-29T17:11:09.7970505Z  Storage Driver: overlay2
+web image smoke	Build web image	2026-08-29T17:11:09.7971066Z   Backing Filesystem: extfs
+web image smoke	Build web image	2026-08-29T17:11:09.7971607Z   Supports d_type: true
+web image smoke	Build web image	2026-08-29T17:11:09.7972301Z   Using metacopy: false
+web image smoke	Build web image	2026-08-29T17:11:09.7972861Z   Native Overlay Diff: false
+web image smoke	Build web image	2026-08-29T17:11:09.7973489Z   userxattr: false
+web image smoke	Build web image	2026-08-29T17:11:09.7974007Z  Logging Driver: json-file
+web image smoke	Build web image	2026-08-29T17:11:09.7974498Z  Cgroup Driver: systemd
+web image smoke	Build web image	2026-08-29T17:11:09.7975001Z  Cgroup Version: 2
+web image smoke	Build web image	2026-08-29T17:11:09.7975476Z  Plugins:
+web image smoke	Build web image	2026-08-29T17:11:09.7975906Z   Volume: local
+web image smoke	Build web image	2026-08-29T17:11:09.7976511Z   Network: bridge host ipvlan macvlan null overlay
+web image smoke	Build web image	2026-08-29T17:11:09.7977317Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+web image smoke	Build web image	2026-08-29T17:11:09.7978070Z  Swarm: inactive
+web image smoke	Build web image	2026-08-29T17:11:09.7978750Z  Runtimes: io.containerd.runc.v2 runc
+web image smoke	Build web image	2026-08-29T17:11:09.7979365Z  Default Runtime: runc
+web image smoke	Build web image	2026-08-29T17:11:09.7979980Z  Init Binary: docker-init
+web image smoke	Build web image	2026-08-29T17:11:09.7980619Z  containerd version: aad11006b869517fcd3009450b6f82da282e1a9b
+web image smoke	Build web image	2026-08-29T17:11:09.7981378Z  runc version: v1.4.3-0-gbb14dab
+web image smoke	Build web image	2026-08-29T17:11:09.7982331Z  init version: de40ad0
+web image smoke	Build web image	2026-08-29T17:11:09.7983301Z  Security Options:
+web image smoke	Build web image	2026-08-29T17:11:09.7984100Z   apparmor
+web image smoke	Build web image	2026-08-29T17:11:09.7984758Z   seccomp
+web image smoke	Build web image	2026-08-29T17:11:09.7985668Z    Profile: builtin
+web image smoke	Build web image	2026-08-29T17:11:09.7986479Z   cgroupns
+web image smoke	Build web image	2026-08-29T17:11:09.7987646Z  Kernel Version: 6.17.0-1022-azure
+web image smoke	Build web image	2026-08-29T17:11:09.7988736Z  Operating System: Ubuntu 24.04.4 LTS
+web image smoke	Build web image	2026-08-29T17:11:09.7989707Z  OSType: linux
+web image smoke	Build web image	2026-08-29T17:11:09.7990825Z  Architecture: x86_64
+web image smoke	Build web image	2026-08-29T17:11:09.7991271Z  CPUs: 4
+web image smoke	Build web image	2026-08-29T17:11:09.7992187Z  Total Memory: 15.61GiB
+web image smoke	Build web image	2026-08-29T17:11:09.7992736Z  Name: runnervmgx7h7
+web image smoke	Build web image	2026-08-29T17:11:09.7993224Z  ID: a9bdcc8e-7fee-41a1-b6e5-bb51314b0287
+web image smoke	Build web image	2026-08-29T17:11:09.7993864Z  Docker Root Dir: /var/lib/docker
+web image smoke	Build web image	2026-08-29T17:11:09.7994365Z  Debug Mode: false
+web image smoke	Build web image	2026-08-29T17:11:09.7994847Z  Username: githubactions
+web image smoke	Build web image	2026-08-29T17:11:09.7995385Z  Experimental: false
+web image smoke	Build web image	2026-08-29T17:11:09.7995811Z  Insecure Registries:
+web image smoke	Build web image	2026-08-29T17:11:09.7996330Z   ::1/128
+web image smoke	Build web image	2026-08-29T17:11:09.7996712Z   127.0.0.0/8
+web image smoke	Build web image	2026-08-29T17:11:09.7997165Z  Live Restore Enabled: false
+web image smoke	Build web image	2026-08-29T17:11:09.7997490Z 
+web image smoke	Build web image	2026-08-29T17:11:09.7998031Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:11:09.7998775Z ##[group]Proxy configuration
+web image smoke	Build web image	2026-08-29T17:11:09.7999294Z No proxy configuration found
+web image smoke	Build web image	2026-08-29T17:11:09.8000204Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:11:09.8741177Z ##[group]Buildx version
+web image smoke	Build web image	2026-08-29T17:11:09.8766049Z [command]/usr/bin/docker buildx version
+web image smoke	Build web image	2026-08-29T17:11:09.9319196Z github.com/docker/buildx v0.36.1 1d8dde89b8aba914e05e45366770736fea1fd690
+web image smoke	Build web image	2026-08-29T17:11:09.9344134Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:11:09.9345272Z ##[group]Builder info
+web image smoke	Build web image	2026-08-29T17:11:10.0364790Z {
+web image smoke	Build web image	2026-08-29T17:11:10.0365773Z   "nodes": [
+web image smoke	Build web image	2026-08-29T17:11:10.0366504Z     {
+web image smoke	Build web image	2026-08-29T17:11:10.0367249Z       "name": "builder-1daff1a5-0208-42b6-a922-3185ee1fa9c40",
+web image smoke	Build web image	2026-08-29T17:11:10.0368212Z       "endpoint": "unix:///var/run/docker.sock",
+web image smoke	Build web image	2026-08-29T17:11:10.0368904Z       "status": "running",
+web image smoke	Build web image	2026-08-29T17:11:10.0370099Z       "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+web image smoke	Build web image	2026-08-29T17:11:10.0371062Z       "buildkit": "v0.32.2",
+web image smoke	Build web image	2026-08-29T17:11:10.0371844Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/amd64/v4,linux/386",
+web image smoke	Build web image	2026-08-29T17:11:10.0372619Z       "features": {
+web image smoke	Build web image	2026-08-29T17:11:10.0373240Z         "Automatically load images to the Docker Engine image store": true,
+web image smoke	Build web image	2026-08-29T17:11:10.0373924Z         "Cache export": true,
+web image smoke	Build web image	2026-08-29T17:11:10.0374488Z         "Direct push": true,
+web image smoke	Build web image	2026-08-29T17:11:10.0375024Z         "Docker exporter": true,
+web image smoke	Build web image	2026-08-29T17:11:10.0375658Z         "Multi-platform build": true,
+web image smoke	Build web image	2026-08-29T17:11:10.0376233Z         "OCI exporter": true
+web image smoke	Build web image	2026-08-29T17:11:10.0376712Z       },
+web image smoke	Build web image	2026-08-29T17:11:10.0377109Z       "labels": {
+web image smoke	Build web image	2026-08-29T17:11:10.0377727Z         "org.mobyproject.buildkit.worker.executor": "oci",
+web image smoke	Build web image	2026-08-29T17:11:10.0379041Z         "org.mobyproject.buildkit.worker.hostname": "c2791d3d5d8b",
+web image smoke	Build web image	2026-08-29T17:11:10.0380115Z         "org.mobyproject.buildkit.worker.network": "host",
+web image smoke	Build web image	2026-08-29T17:11:10.0380992Z         "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+web image smoke	Build web image	2026-08-29T17:11:10.0381977Z         "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+web image smoke	Build web image	2026-08-29T17:11:10.0382984Z         "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+web image smoke	Build web image	2026-08-29T17:11:10.0383691Z       },
+web image smoke	Build web image	2026-08-29T17:11:10.0384077Z       "gcPolicy": [
+web image smoke	Build web image	2026-08-29T17:11:10.0384527Z         {
+web image smoke	Build web image	2026-08-29T17:11:10.0385089Z           "all": false,
+web image smoke	Build web image	2026-08-29T17:11:10.0385575Z           "filter": [
+web image smoke	Build web image	2026-08-29T17:11:10.0386385Z             "type==source.local type==exec.cachemount type==source.git.checkout"
+web image smoke	Build web image	2026-08-29T17:11:10.0387161Z           ],
+web image smoke	Build web image	2026-08-29T17:11:10.0387753Z           "keepDuration": "48h0m0s",
+web image smoke	Build web image	2026-08-29T17:11:10.0388395Z           "maxUsedSpace": "488.3MiB"
+web image smoke	Build web image	2026-08-29T17:11:10.0388913Z         },
+web image smoke	Build web image	2026-08-29T17:11:10.0389375Z         {
+web image smoke	Build web image	2026-08-29T17:11:10.0389996Z           "all": false,
+web image smoke	Build web image	2026-08-29T17:11:10.0390513Z           "keepDuration": "1440h0m0s",
+web image smoke	Build web image	2026-08-29T17:11:10.0391222Z           "reservedSpace": "9.313GiB",
+web image smoke	Build web image	2026-08-29T17:11:10.0391841Z           "maxUsedSpace": "93.13GiB",
+web image smoke	Build web image	2026-08-29T17:11:10.0392434Z           "minFreeSpace": "27.01GiB"
+web image smoke	Build web image	2026-08-29T17:11:10.0392986Z         },
+web image smoke	Build web image	2026-08-29T17:11:10.0393448Z         {
+web image smoke	Build web image	2026-08-29T17:11:10.0393975Z           "all": false,
+web image smoke	Build web image	2026-08-29T17:11:10.0394489Z           "reservedSpace": "9.313GiB",
+web image smoke	Build web image	2026-08-29T17:11:10.0395158Z           "maxUsedSpace": "93.13GiB",
+web image smoke	Build web image	2026-08-29T17:11:10.0395847Z           "minFreeSpace": "27.01GiB"
+web image smoke	Build web image	2026-08-29T17:11:10.0396373Z         },
+web image smoke	Build web image	2026-08-29T17:11:10.0396809Z         {
+web image smoke	Build web image	2026-08-29T17:11:10.0397226Z           "all": true,
+web image smoke	Build web image	2026-08-29T17:11:10.0397827Z           "reservedSpace": "9.313GiB",
+web image smoke	Build web image	2026-08-29T17:11:10.0398429Z           "maxUsedSpace": "93.13GiB",
+web image smoke	Build web image	2026-08-29T17:11:10.0399123Z           "minFreeSpace": "27.01GiB"
+web image smoke	Build web image	2026-08-29T17:11:10.0399712Z         }
+web image smoke	Build web image	2026-08-29T17:11:10.0400920Z       ]
+web image smoke	Build web image	2026-08-29T17:11:10.0401348Z     }
+web image smoke	Build web image	2026-08-29T17:11:10.0401803Z   ],
+web image smoke	Build web image	2026-08-29T17:11:10.0402360Z   "name": "builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4",
+web image smoke	Build web image	2026-08-29T17:11:10.0403266Z   "driver": "docker-container",
+web image smoke	Build web image	2026-08-29T17:11:10.0403858Z   "lastActivity": "2026-08-29T17:11:03.000Z"
+web image smoke	Build web image	2026-08-29T17:11:10.0404439Z }
+web image smoke	Build web image	2026-08-29T17:11:10.0405287Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:11:10.1887283Z [command]/usr/bin/docker buildx build --cache-from type=gha,scope=web --cache-to type=gha,mode=max,scope=web --iidfile /home/runner/work/_temp/docker-actions-toolkit-23CvaZ/build-iidfile-b0e81b29b5.txt --tag arxiv-research-agent-web:ci --load --metadata-file /home/runner/work/_temp/docker-actions-toolkit-23CvaZ/build-metadata-72de85ea64.json ./web
+web image smoke	Build web image	2026-08-29T17:11:10.5248717Z #0 building with "builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4" instance using docker-container driver
+web image smoke	Build web image	2026-08-29T17:11:10.5249300Z 
+web image smoke	Build web image	2026-08-29T17:11:10.5249706Z #1 [internal] load build definition from Dockerfile
+web image smoke	Build web image	2026-08-29T17:11:10.5250505Z #1 transferring dockerfile: 2.23kB 0.0s done
+web image smoke	Build web image	2026-08-29T17:11:10.5250974Z #1 DONE 0.0s
+web image smoke	Build web image	2026-08-29T17:11:10.5251179Z 
+web image smoke	Build web image	2026-08-29T17:11:10.5251503Z #2 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+web image smoke	Build web image	2026-08-29T17:11:10.7056461Z #2 ...
+web image smoke	Build web image	2026-08-29T17:11:10.7058465Z 
+web image smoke	Build web image	2026-08-29T17:11:10.7059444Z #3 [auth] docker/dockerfile:pull token for registry-1.docker.io
+web image smoke	Build web image	2026-08-29T17:11:10.7060393Z #3 DONE 0.0s
+web image smoke	Build web image	2026-08-29T17:11:10.8550621Z 
+web image smoke	Build web image	2026-08-29T17:11:10.8551560Z #2 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+web image smoke	Build web image	2026-08-29T17:11:11.1660502Z #2 DONE 0.8s
+web image smoke	Build web image	2026-08-29T17:11:11.3289755Z 
+web image smoke	Build web image	2026-08-29T17:11:11.3291416Z #4 docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+web image smoke	Build web image	2026-08-29T17:11:11.3292536Z #4 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e done
+web image smoke	Build web image	2026-08-29T17:11:11.3314577Z #4 sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 0B / 11.98MB 0.2s
+web image smoke	Build web image	2026-08-29T17:11:11.4816956Z #4 sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 11.98MB / 11.98MB 0.3s
+web image smoke	Build web image	2026-08-29T17:11:11.6628411Z #4 sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 11.98MB / 11.98MB 0.4s done
+web image smoke	Build web image	2026-08-29T17:11:11.6630375Z #4 extracting sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 0.1s done
+web image smoke	Build web image	2026-08-29T17:11:11.6631458Z #4 DONE 0.5s
+web image smoke	Build web image	2026-08-29T17:11:11.7701460Z 
+web image smoke	Build web image	2026-08-29T17:11:11.7702419Z #5 [auth] library/node:pull token for registry-1.docker.io
+web image smoke	Build web image	2026-08-29T17:11:11.9212015Z #5 DONE 0.0s
+web image smoke	Build web image	2026-08-29T17:11:11.9212374Z 
+web image smoke	Build web image	2026-08-29T17:11:11.9212714Z #6 [internal] load metadata for docker.io/library/node:22-alpine
+web image smoke	Build web image	2026-08-29T17:11:12.2471510Z #6 DONE 0.5s
+web image smoke	Build web image	2026-08-29T17:11:12.4085142Z 
+web image smoke	Build web image	2026-08-29T17:11:12.4086191Z #7 [internal] load .dockerignore
+web image smoke	Build web image	2026-08-29T17:11:12.4087294Z #7 transferring context: 186B done
+web image smoke	Build web image	2026-08-29T17:11:12.4087958Z #7 DONE 0.0s
+web image smoke	Build web image	2026-08-29T17:11:12.4434101Z 
+web image smoke	Build web image	2026-08-29T17:11:12.4435788Z #8 importing cache manifest from gha:9637744886369729264
+web image smoke	Build web image	2026-08-29T17:11:12.6022972Z #8 ...
+web image smoke	Build web image	2026-08-29T17:11:12.6023281Z 
+web image smoke	Build web image	2026-08-29T17:11:12.6023455Z #9 [internal] load build context
+web image smoke	Build web image	2026-08-29T17:11:12.6024126Z #9 DONE 0.0s
+web image smoke	Build web image	2026-08-29T17:11:12.6024276Z 
+web image smoke	Build web image	2026-08-29T17:11:12.6024853Z #10 [runtime 1/6] FROM docker.io/library/node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
+web image smoke	Build web image	2026-08-29T17:11:12.6025839Z #10 resolve docker.io/library/node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 done
+web image smoke	Build web image	2026-08-29T17:11:12.6026465Z #10 DONE 0.0s
+web image smoke	Build web image	2026-08-29T17:11:12.7524643Z 
+web image smoke	Build web image	2026-08-29T17:11:12.7525611Z #8 importing cache manifest from gha:9637744886369729264
+web image smoke	Build web image	2026-08-29T17:11:12.8899523Z #8 DONE 0.4s
+web image smoke	Build web image	2026-08-29T17:11:13.1142223Z 
+web image smoke	Build web image	2026-08-29T17:11:13.1143203Z #9 [internal] load build context
+web image smoke	Build web image	2026-08-29T17:11:13.1143956Z #9 transferring context: 5.85MB 0.1s done
+web image smoke	Build web image	2026-08-29T17:11:13.1144638Z #9 DONE 0.1s
+web image smoke	Build web image	2026-08-29T17:11:13.1144837Z 
+web image smoke	Build web image	2026-08-29T17:11:13.1145014Z #11 [runtime 2/6] WORKDIR /app
+web image smoke	Build web image	2026-08-29T17:11:13.1145340Z #11 CACHED
+web image smoke	Build web image	2026-08-29T17:11:13.1145600Z 
+web image smoke	Build web image	2026-08-29T17:11:13.1145875Z #12 [deps 3/4] COPY package.json package-lock.json* ./
+web image smoke	Build web image	2026-08-29T17:11:13.1146278Z #12 CACHED
+web image smoke	Build web image	2026-08-29T17:11:13.1146975Z 
+web image smoke	Build web image	2026-08-29T17:11:13.1147392Z #13 [deps 4/4] RUN --mount=type=cache,target=/root/.npm     npm ci --ignore-scripts
+web image smoke	Build web image	2026-08-29T17:11:13.1147868Z #13 CACHED
+web image smoke	Build web image	2026-08-29T17:11:13.1148055Z 
+web image smoke	Build web image	2026-08-29T17:11:13.1148375Z #14 [builder 3/5] COPY --from=deps /app/node_modules ./node_modules
+web image smoke	Build web image	2026-08-29T17:11:13.1780861Z #14 CACHED
+web image smoke	Build web image	2026-08-29T17:11:13.3295838Z 
+web image smoke	Build web image	2026-08-29T17:11:13.3297149Z #14 [builder 3/5] COPY --from=deps /app/node_modules ./node_modules
+web image smoke	Build web image	2026-08-29T17:11:13.3324501Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 0B / 239.21MB 0.2s
+web image smoke	Build web image	2026-08-29T17:11:13.4819209Z #14 sha256:02d9f0db0f2f7fa4b6a99a82eb69ae7c6c54bf3c87a36bde9363588de77e0b3d 93B / 93B 0.2s done
+web image smoke	Build web image	2026-08-29T17:11:13.4820718Z #14 sha256:a2980c1fee17dfd6263234b253955e0e9d5f38d47c0e71c001139897134899d0 0B / 1.26MB 0.2s
+web image smoke	Build web image	2026-08-29T17:11:13.4821916Z #14 sha256:16da5a6403776464b5bf551ef294de57da242eac594527ea551a46e7f76ac2d6 445B / 445B 0.2s done
+web image smoke	Build web image	2026-08-29T17:11:13.6318801Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 0B / 52.63MB 0.2s
+web image smoke	Build web image	2026-08-29T17:11:13.6320077Z #14 sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4 0B / 3.85MB 0.2s
+web image smoke	Build web image	2026-08-29T17:11:13.7826497Z #14 sha256:a2980c1fee17dfd6263234b253955e0e9d5f38d47c0e71c001139897134899d0 1.26MB / 1.26MB 0.5s done
+web image smoke	Build web image	2026-08-29T17:11:14.0828083Z #14 sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4 2.10MB / 3.85MB 0.6s
+web image smoke	Build web image	2026-08-29T17:11:14.2153912Z #14 sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4 3.85MB / 3.85MB 0.7s done
+web image smoke	Build web image	2026-08-29T17:11:14.2155173Z #14 extracting sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4 0.1s done
+web image smoke	Build web image	2026-08-29T17:11:14.5328118Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 14.68MB / 239.21MB 1.4s
+web image smoke	Build web image	2026-08-29T17:11:14.5329161Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 3.15MB / 52.63MB 1.1s
+web image smoke	Build web image	2026-08-29T17:11:14.8322886Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 8.39MB / 52.63MB 1.4s
+web image smoke	Build web image	2026-08-29T17:11:14.9821804Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 11.53MB / 52.63MB 1.5s
+web image smoke	Build web image	2026-08-29T17:11:15.1327750Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 29.36MB / 239.21MB 2.0s
+web image smoke	Build web image	2026-08-29T17:11:15.1329082Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 15.73MB / 52.63MB 1.7s
+web image smoke	Build web image	2026-08-29T17:11:15.2827703Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 18.87MB / 52.63MB 1.8s
+web image smoke	Build web image	2026-08-29T17:11:15.4326761Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 22.02MB / 52.63MB 2.0s
+web image smoke	Build web image	2026-08-29T17:11:15.5819063Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 25.17MB / 52.63MB 2.1s
+web image smoke	Build web image	2026-08-29T17:11:15.7320604Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 41.94MB / 239.21MB 2.6s
+web image smoke	Build web image	2026-08-29T17:11:15.7321671Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 29.36MB / 52.63MB 2.3s
+web image smoke	Build web image	2026-08-29T17:11:15.8821502Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 32.51MB / 52.63MB 2.4s
+web image smoke	Build web image	2026-08-29T17:11:16.0325489Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 35.65MB / 52.63MB 2.6s
+web image smoke	Build web image	2026-08-29T17:11:16.1822121Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 39.85MB / 52.63MB 2.7s
+web image smoke	Build web image	2026-08-29T17:11:16.3327673Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 55.57MB / 239.21MB 3.2s
+web image smoke	Build web image	2026-08-29T17:11:16.3328925Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 42.99MB / 52.63MB 2.9s
+web image smoke	Build web image	2026-08-29T17:11:16.4824743Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 46.14MB / 52.63MB 3.0s
+web image smoke	Build web image	2026-08-29T17:11:16.6321155Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 50.33MB / 52.63MB 3.2s
+web image smoke	Build web image	2026-08-29T17:11:16.9327190Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 70.25MB / 239.21MB 3.8s
+web image smoke	Build web image	2026-08-29T17:11:17.0821404Z #14 sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 52.63MB / 52.63MB 3.6s done
+web image smoke	Build web image	2026-08-29T17:11:17.0823414Z #14 extracting sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a
+web image smoke	Build web image	2026-08-29T17:11:17.5320445Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 84.93MB / 239.21MB 4.4s
+web image smoke	Build web image	2026-08-29T17:11:17.9434662Z #14 extracting sha256:efbef6f9e333972a10ca323e700496a64e7ddcc3a6725e6afbbae52e690f4a4a 0.9s done
+web image smoke	Build web image	2026-08-29T17:11:17.9435904Z #14 extracting sha256:a2980c1fee17dfd6263234b253955e0e9d5f38d47c0e71c001139897134899d0 0.0s done
+web image smoke	Build web image	2026-08-29T17:11:18.1323681Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 99.61MB / 239.21MB 5.0s
+web image smoke	Build web image	2026-08-29T17:11:18.1325238Z #14 extracting sha256:16da5a6403776464b5bf551ef294de57da242eac594527ea551a46e7f76ac2d6 done
+web image smoke	Build web image	2026-08-29T17:11:18.1326153Z #14 extracting sha256:02d9f0db0f2f7fa4b6a99a82eb69ae7c6c54bf3c87a36bde9363588de77e0b3d done
+web image smoke	Build web image	2026-08-29T17:11:18.7320577Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 114.29MB / 239.21MB 5.6s
+web image smoke	Build web image	2026-08-29T17:11:19.3322550Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 127.93MB / 239.21MB 6.2s
+web image smoke	Build web image	2026-08-29T17:11:19.9325975Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 141.56MB / 239.21MB 6.8s
+web image smoke	Build web image	2026-08-29T17:11:20.5324308Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 156.24MB / 239.21MB 7.4s
+web image smoke	Build web image	2026-08-29T17:11:21.1319162Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 170.92MB / 239.21MB 8.0s
+web image smoke	Build web image	2026-08-29T17:11:21.7319192Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 185.60MB / 239.21MB 8.6s
+web image smoke	Build web image	2026-08-29T17:11:22.3322187Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 200.28MB / 239.21MB 9.2s
+web image smoke	Build web image	2026-08-29T17:11:23.0827614Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 214.96MB / 239.21MB 9.9s
+web image smoke	Build web image	2026-08-29T17:11:23.6828264Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 228.59MB / 239.21MB 10.5s
+web image smoke	Build web image	2026-08-29T17:11:25.6757869Z #14 sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 239.21MB / 239.21MB 12.3s done
+web image smoke	Build web image	2026-08-29T17:11:25.6760193Z #14 extracting sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9
+web image smoke	Build web image	2026-08-29T17:11:32.4163231Z #14 extracting sha256:c6b81bf3762855ae863fa5ee63ecc2dfb5091b118f0f1870c9a0fa6f4a2307c9 6.9s done
+web image smoke	Build web image	2026-08-29T17:11:32.4164399Z #14 DONE 19.4s
+web image smoke	Build web image	2026-08-29T17:11:32.5839046Z 
+web image smoke	Build web image	2026-08-29T17:11:32.5840069Z #15 [builder 4/5] COPY . .
+web image smoke	Build web image	2026-08-29T17:11:40.1601491Z #15 DONE 7.7s
+web image smoke	Build web image	2026-08-29T17:11:40.3113888Z 
+web image smoke	Build web image	2026-08-29T17:11:40.3115094Z #16 [builder 5/5] RUN npm run build
+web image smoke	Build web image	2026-08-29T17:11:40.5590985Z #16 0.398 
+web image smoke	Build web image	2026-08-29T17:11:40.5591930Z #16 0.398 > arxiv-research-agent-web@0.1.0 build
+web image smoke	Build web image	2026-08-29T17:11:40.5593701Z #16 0.398 > next build --webpack
+web image smoke	Build web image	2026-08-29T17:11:40.5594287Z #16 0.398 
+web image smoke	Build web image	2026-08-29T17:11:40.9724938Z #16 0.811 ▲ Next.js 16.3.3 (webpack)
+web image smoke	Build web image	2026-08-29T17:11:41.0728571Z #16 0.826 ✓ Running next.config.mjs took 14ms
+web image smoke	Build web image	2026-08-29T17:11:41.0732228Z #16 0.831 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+web image smoke	Build web image	2026-08-29T17:11:41.0734661Z #16 0.831 This information is used to shape Next.js' roadmap and prioritize features.
+web image smoke	Build web image	2026-08-29T17:11:41.0736185Z #16 0.831 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+web image smoke	Build web image	2026-08-29T17:11:41.0737547Z #16 0.831 https://nextjs.org/telemetry
+web image smoke	Build web image	2026-08-29T17:11:41.0738204Z #16 0.833 
+web image smoke	Build web image	2026-08-29T17:11:41.0738658Z #16 0.878 
+web image smoke	Build web image	2026-08-29T17:11:41.0739726Z #16 0.910 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+web image smoke	Build web image	2026-08-29T17:11:41.0740858Z #16 0.910 
+web image smoke	Build web image	2026-08-29T17:11:41.0741394Z #16 0.910   To migrate automatically, run:
+web image smoke	Build web image	2026-08-29T17:11:41.0742066Z #16 0.910   npx @next/codemod@canary middleware-to-proxy .
+web image smoke	Build web image	2026-08-29T17:11:41.0742710Z #16 0.910 
+web image smoke	Build web image	2026-08-29T17:11:41.0743398Z #16 0.910   Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+web image smoke	Build web image	2026-08-29T17:11:41.2509095Z #16 0.938   Creating an optimized production build ...
+web image smoke	Build web image	2026-08-29T17:11:50.3992302Z #16 10.23 ⚠ Compiled with warnings in 1708ms
+web image smoke	Build web image	2026-08-29T17:11:50.3992927Z #16 10.23 
+web image smoke	Build web image	2026-08-29T17:11:50.3993536Z #16 10.23 ./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+web image smoke	Build web image	2026-08-29T17:11:50.3994862Z #16 10.23 A Node.js API is used (process.cwd at line: 1044) which is not supported in the Edge Runtime.
+web image smoke	Build web image	2026-08-29T17:11:50.3995760Z #16 10.23 Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+web image smoke	Build web image	2026-08-29T17:11:50.3996351Z #16 10.23 
+web image smoke	Build web image	2026-08-29T17:11:50.3996771Z #16 10.23 Import trace for requested module:
+web image smoke	Build web image	2026-08-29T17:11:50.3997460Z #16 10.23 ./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+web image smoke	Build web image	2026-08-29T17:11:50.3998249Z #16 10.23 ./node_modules/next/dist/esm/server/request/connection.js
+web image smoke	Build web image	2026-08-29T17:11:50.3998983Z #16 10.23 ./node_modules/next/dist/esm/server/web/exports/index.js
+web image smoke	Build web image	2026-08-29T17:11:50.3999893Z #16 10.23 ./node_modules/next/dist/esm/api/server.js
+web image smoke	Build web image	2026-08-29T17:11:50.4000392Z #16 10.23 
+web image smoke	Build web image	2026-08-29T17:11:50.4000987Z #16 10.23 ./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+web image smoke	Build web image	2026-08-29T17:11:50.4001934Z #16 10.23 A Node.js API is used (process.cwd at line: 1044) which is not supported in the Edge Runtime.
+web image smoke	Build web image	2026-08-29T17:11:50.4002958Z #16 10.23 Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+web image smoke	Build web image	2026-08-29T17:11:50.4003627Z #16 10.23 
+web image smoke	Build web image	2026-08-29T17:11:50.4004064Z #16 10.23 Import trace for requested module:
+web image smoke	Build web image	2026-08-29T17:11:50.4004935Z #16 10.23 ./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+web image smoke	Build web image	2026-08-29T17:11:50.4005726Z #16 10.23 ./node_modules/next/dist/esm/server/request/connection.js
+web image smoke	Build web image	2026-08-29T17:11:50.4006415Z #16 10.23 ./node_modules/next/dist/esm/server/web/exports/index.js
+web image smoke	Build web image	2026-08-29T17:11:50.4007096Z #16 10.23 ./node_modules/next/dist/esm/api/server.js
+web image smoke	Build web image	2026-08-29T17:11:50.4007574Z #16 10.23 
+web image smoke	Build web image	2026-08-29T17:11:57.7976548Z #16 17.64 ✓ Compiled successfully in 14.2s
+web image smoke	Build web image	2026-08-29T17:11:57.9535421Z #16 17.64   Running TypeScript ...
+web image smoke	Build web image	2026-08-29T17:12:05.4178465Z #16 25.26   Finished TypeScript in 7.6s ...
+web image smoke	Build web image	2026-08-29T17:12:05.5742364Z #16 25.26   Collecting page data using 3 workers ...
+web image smoke	Build web image	2026-08-29T17:12:07.4865129Z #16 27.33   Generating static pages using 3 workers (0/4) ...
+web image smoke	Build web image	2026-08-29T17:12:07.8018954Z #16 27.64   Generating static pages using 3 workers (1/4) 
+web image smoke	Build web image	2026-08-29T17:12:07.8020939Z #16 27.64   Generating static pages using 3 workers (2/4) 
+web image smoke	Build web image	2026-08-29T17:12:07.8022183Z #16 27.64   Generating static pages using 3 workers (3/4) 
+web image smoke	Build web image	2026-08-29T17:12:07.8023525Z #16 27.64 ✓ Generating static pages using 3 workers (4/4) in 316ms
+web image smoke	Build web image	2026-08-29T17:12:08.0417839Z #16 27.73   Finalizing page optimization ...
+web image smoke	Build web image	2026-08-29T17:12:08.0419045Z #16 27.73   Collecting build traces ...
+web image smoke	Build web image	2026-08-29T17:12:23.4737218Z #16 43.31 
+web image smoke	Build web image	2026-08-29T17:12:23.6704230Z #16 43.31 Route (app)
+web image smoke	Build web image	2026-08-29T17:12:23.6706319Z #16 43.31 ┌ ƒ /
+web image smoke	Build web image	2026-08-29T17:12:23.6707000Z #16 43.31 ├ ƒ /_not-found
+web image smoke	Build web image	2026-08-29T17:12:23.6707615Z #16 43.31 ├ ƒ /api/[...path]
+web image smoke	Build web image	2026-08-29T17:12:23.6708188Z #16 43.31 ├ ƒ /c/[id]
+web image smoke	Build web image	2026-08-29T17:12:23.6708725Z #16 43.31 └ ○ /icon.svg
+web image smoke	Build web image	2026-08-29T17:12:23.6709259Z #16 43.31 
+web image smoke	Build web image	2026-08-29T17:12:23.6710098Z #16 43.31 
+web image smoke	Build web image	2026-08-29T17:12:23.6710759Z #16 43.31 ƒ Proxy (Middleware)
+web image smoke	Build web image	2026-08-29T17:12:23.6711277Z #16 43.31 
+web image smoke	Build web image	2026-08-29T17:12:23.6711982Z #16 43.31 ○  (Static)   prerendered as static content
+web image smoke	Build web image	2026-08-29T17:12:23.6712709Z #16 43.31 ƒ  (Dynamic)  server-rendered on demand
+web image smoke	Build web image	2026-08-29T17:12:23.6713203Z #16 43.31 
+web image smoke	Build web image	2026-08-29T17:12:23.6713611Z #16 43.36 npm notice
+web image smoke	Build web image	2026-08-29T17:12:23.6717833Z #16 43.36 npm notice New major version of npm available! 10.9.8 -> 12.0.2
+web image smoke	Build web image	2026-08-29T17:12:23.6718452Z #16 43.36 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+web image smoke	Build web image	2026-08-29T17:12:23.6719110Z #16 43.36 npm notice To update run: npm install -g npm@12.0.2
+web image smoke	Build web image	2026-08-29T17:12:23.6719520Z #16 43.36 npm notice
+web image smoke	Build web image	2026-08-29T17:12:23.7103813Z #16 DONE 43.5s
+web image smoke	Build web image	2026-08-29T17:12:23.8887406Z 
+web image smoke	Build web image	2026-08-29T17:12:23.8888891Z #11 [runtime 2/6] WORKDIR /app
+web image smoke	Build web image	2026-08-29T17:12:24.1067196Z #11 CACHED
+web image smoke	Build web image	2026-08-29T17:12:24.1067523Z 
+web image smoke	Build web image	2026-08-29T17:12:24.1067861Z #17 [runtime 3/6] COPY --from=builder /app/.next/standalone ./
+web image smoke	Build web image	2026-08-29T17:12:24.5730999Z #17 DONE 0.6s
+web image smoke	Build web image	2026-08-29T17:12:24.7934573Z 
+web image smoke	Build web image	2026-08-29T17:12:24.7935767Z #18 [runtime 4/6] COPY --from=builder /app/.next/static ./.next/static
+web image smoke	Build web image	2026-08-29T17:12:24.7937083Z #18 DONE 0.1s
+web image smoke	Build web image	2026-08-29T17:12:24.7937293Z 
+web image smoke	Build web image	2026-08-29T17:12:24.7937772Z #19 [runtime 5/6] COPY --from=builder /app/scripts/healthcheck.mjs ./scripts/healthcheck.mjs
+web image smoke	Build web image	2026-08-29T17:12:24.7938304Z #19 DONE 0.0s
+web image smoke	Build web image	2026-08-29T17:12:24.7938497Z 
+web image smoke	Build web image	2026-08-29T17:12:24.7938992Z #20 [runtime 6/6] RUN addgroup --system --gid 1001 nodejs     && adduser --system --uid 1001 nextjs     && chown -R nextjs:nodejs /app
+web image smoke	Build web image	2026-08-29T17:12:26.9503052Z #20 DONE 2.3s
+web image smoke	Build web image	2026-08-29T17:12:27.1024940Z 
+web image smoke	Build web image	2026-08-29T17:12:27.1026369Z #21 exporting to docker image format
+web image smoke	Build web image	2026-08-29T17:12:27.1027465Z #21 exporting layers
+web image smoke	Build web image	2026-08-29T17:12:29.4976369Z #21 exporting layers 2.5s done
+web image smoke	Build web image	2026-08-29T17:12:29.6580462Z #21 exporting manifest sha256:d797caf015350c0fd661e1a95d387b91c4eaeddcc8d7c2d14c00d68c76719bc1 done
+web image smoke	Build web image	2026-08-29T17:12:29.6591534Z #21 exporting config sha256:d7e9a548f000a62a4235437f3ad0789218d587d14a7ee7444a3824dd8ea1ec32 done
+web image smoke	Build web image	2026-08-29T17:12:29.6593394Z #21 sending tarball
+web image smoke	Build web image	2026-08-29T17:12:33.7883695Z #21 sending tarball 4.1s done
+web image smoke	Build web image	2026-08-29T17:12:33.7885053Z #21 DONE 6.7s
+web image smoke	Build web image	2026-08-29T17:12:33.7885564Z 
+web image smoke	Build web image	2026-08-29T17:12:33.7886243Z #22 importing to docker
+web image smoke	Build web image	2026-08-29T17:12:33.7887475Z #22 loading layer 4b9c32f57876 93B / 93B 3.5s done
+web image smoke	Build web image	2026-08-29T17:12:33.7888258Z #22 loading layer d4cd3203ac9d 23.29MB / 23.29MB 2.8s done
+web image smoke	Build web image	2026-08-29T17:12:33.7889022Z #22 loading layer f125b5e6a5b5 594.11kB / 594.11kB 1.7s done
+web image smoke	Build web image	2026-08-29T17:12:33.7890043Z #22 loading layer 652c26e3c8db 3.14kB / 3.14kB 1.6s done
+web image smoke	Build web image	2026-08-29T17:12:33.7890881Z #22 loading layer e7077043995a 23.89MB / 23.89MB 1.6s done
+web image smoke	Build web image	2026-08-29T17:12:33.7891461Z #22 DONE 3.5s
+web image smoke	Build web image	2026-08-29T17:12:33.7891674Z 
+web image smoke	Build web image	2026-08-29T17:12:33.7891991Z #23 exporting to GitHub Actions Cache
+web image smoke	Build web image	2026-08-29T17:12:33.7892563Z #23 preparing build cache for export
+web image smoke	Build web image	2026-08-29T17:12:39.8441807Z #23 preparing build cache for export 6.2s done
+web image smoke	Build web image	2026-08-29T17:12:39.8442585Z #23 sending cache export
+web image smoke	Build web image	2026-08-29T17:12:39.9861652Z #23 writing layer sha256:06ad7b707904a41d1802c9de1d02eaacb7ccd78e70fd180c9aabf7d68f378e41
+web image smoke	Build web image	2026-08-29T17:12:42.4440326Z #23 writing layer sha256:06ad7b707904a41d1802c9de1d02eaacb7ccd78e70fd180c9aabf7d68f378e41 2.5s done
+web image smoke	Build web image	2026-08-29T17:12:42.6518485Z #23 writing layer sha256:07cdcbeec98d89cd6238aa394a3aa2f8a8c65c0a894a990f28e2b49d5df69216
+web image smoke	Build web image	2026-08-29T17:12:44.9282476Z #23 writing layer sha256:07cdcbeec98d89cd6238aa394a3aa2f8a8c65c0a894a990f28e2b49d5df69216 2.4s done
+web image smoke	Build web image	2026-08-29T17:12:45.0513806Z #23 writing layer sha256:4cd32f1f0e4443c2dea5737f61763f369b359ff585426a7be9be1bda8d43b68f
+web image smoke	Build web image	2026-08-29T17:12:45.3141873Z #23 writing layer sha256:4cd32f1f0e4443c2dea5737f61763f369b359ff585426a7be9be1bda8d43b68f 0.3s done
+web image smoke	Build web image	2026-08-29T17:12:45.4955521Z #23 writing layer sha256:607d76e45ad4d8df8a982183b3dea169e30e48607842943a0f2f04bc7683e73f
+web image smoke	Build web image	2026-08-29T17:12:45.7278828Z #23 writing layer sha256:607d76e45ad4d8df8a982183b3dea169e30e48607842943a0f2f04bc7683e73f 0.2s done
+web image smoke	Build web image	2026-08-29T17:12:45.9908526Z #23 writing layer sha256:ee5c1a16abbd0ba21efca44ba30e085303a773a90e7ff444076240566c128a8c
+web image smoke	Build web image	2026-08-29T17:12:46.9750733Z #23 writing layer sha256:ee5c1a16abbd0ba21efca44ba30e085303a773a90e7ff444076240566c128a8c 1.0s done
+web image smoke	Build web image	2026-08-29T17:12:47.0965147Z #23 writing layer sha256:f562d858463146ef053bf73504c18a6294522a956aa6a8a887c36530ba5eb6aa
+web image smoke	Build web image	2026-08-29T17:12:51.7690594Z #23 writing layer sha256:f562d858463146ef053bf73504c18a6294522a956aa6a8a887c36530ba5eb6aa 4.7s done
+web image smoke	Build web image	2026-08-29T17:12:52.3141976Z #23 sending cache export 12.5s done
+web image smoke	Build web image	2026-08-29T17:12:52.3143051Z #23 DONE 18.7s
+web image smoke	Build web image	2026-08-29T17:12:52.3522084Z 
+web image smoke	Build web image	2026-08-29T17:12:52.3523270Z #24 resolving provenance for metadata file
+web image smoke	Build web image	2026-08-29T17:12:52.3523958Z #24 DONE 0.0s
+web image smoke	Build web image	2026-08-29T17:12:52.3604999Z ##[group]ImageID
+web image smoke	Build web image	2026-08-29T17:12:52.3606084Z sha256:d7e9a548f000a62a4235437f3ad0789218d587d14a7ee7444a3824dd8ea1ec32
+web image smoke	Build web image	2026-08-29T17:12:52.3609070Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:12:52.3609761Z ##[group]Digest
+web image smoke	Build web image	2026-08-29T17:12:52.3610909Z sha256:d797caf015350c0fd661e1a95d387b91c4eaeddcc8d7c2d14c00d68c76719bc1
+web image smoke	Build web image	2026-08-29T17:12:52.3611835Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:12:52.3612937Z ##[group]Metadata
+web image smoke	Build web image	2026-08-29T17:12:52.3614603Z {
+web image smoke	Build web image	2026-08-29T17:12:52.3615146Z   "buildx.build.provenance": {
+web image smoke	Build web image	2026-08-29T17:12:52.3615914Z     "builder": {
+web image smoke	Build web image	2026-08-29T17:12:52.3616540Z       "id": ""
+web image smoke	Build web image	2026-08-29T17:12:52.3616994Z     },
+web image smoke	Build web image	2026-08-29T17:12:52.3617553Z     "buildType": "https://mobyproject.org/buildkit@v1",
+web image smoke	Build web image	2026-08-29T17:12:52.3618113Z     "materials": [
+web image smoke	Build web image	2026-08-29T17:12:52.3621397Z       {
+web image smoke	Build web image	2026-08-29T17:12:52.3621947Z         "uri": "pkg:docker/docker/dockerfile@1.7",
+web image smoke	Build web image	2026-08-29T17:12:52.3622553Z         "digest": {
+web image smoke	Build web image	2026-08-29T17:12:52.3623483Z           "sha256": "a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e"
+web image smoke	Build web image	2026-08-29T17:12:52.3624208Z         }
+web image smoke	Build web image	2026-08-29T17:12:52.3624771Z       },
+web image smoke	Build web image	2026-08-29T17:12:52.3625339Z       {
+web image smoke	Build web image	2026-08-29T17:12:52.3626115Z         "uri": "pkg:docker/node@22-alpine?platform=linux%2Famd64",
+web image smoke	Build web image	2026-08-29T17:12:52.3626724Z         "digest": {
+web image smoke	Build web image	2026-08-29T17:12:52.3627683Z           "sha256": "c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32"
+web image smoke	Build web image	2026-08-29T17:12:52.3628526Z         }
+web image smoke	Build web image	2026-08-29T17:12:52.3629074Z       }
+web image smoke	Build web image	2026-08-29T17:12:52.3629543Z     ],
+web image smoke	Build web image	2026-08-29T17:12:52.3630092Z     "invocation": {
+web image smoke	Build web image	2026-08-29T17:12:52.3630946Z       "configSource": {
+web image smoke	Build web image	2026-08-29T17:12:52.3631454Z         "entryPoint": "Dockerfile"
+web image smoke	Build web image	2026-08-29T17:12:52.3631965Z       },
+web image smoke	Build web image	2026-08-29T17:12:52.3632405Z       "parameters": {
+web image smoke	Build web image	2026-08-29T17:12:52.3632932Z         "frontend": "gateway.v0",
+web image smoke	Build web image	2026-08-29T17:12:52.3633474Z         "args": {
+web image smoke	Build web image	2026-08-29T17:12:52.3633959Z           "cmdline": "docker/dockerfile:1.7",
+web image smoke	Build web image	2026-08-29T17:12:52.3634610Z           "source": "docker/dockerfile:1.7"
+web image smoke	Build web image	2026-08-29T17:12:52.3635124Z         },
+web image smoke	Build web image	2026-08-29T17:12:52.3635586Z         "locals": [
+web image smoke	Build web image	2026-08-29T17:12:52.3636059Z           {
+web image smoke	Build web image	2026-08-29T17:12:52.3636467Z             "name": "context"
+web image smoke	Build web image	2026-08-29T17:12:52.3636932Z           },
+web image smoke	Build web image	2026-08-29T17:12:52.3637329Z           {
+web image smoke	Build web image	2026-08-29T17:12:52.3637746Z             "name": "dockerfile"
+web image smoke	Build web image	2026-08-29T17:12:52.3638319Z           }
+web image smoke	Build web image	2026-08-29T17:12:52.3638682Z         ],
+web image smoke	Build web image	2026-08-29T17:12:52.3639109Z         "root": {
+web image smoke	Build web image	2026-08-29T17:12:52.3639530Z           "configSource": {
+web image smoke	Build web image	2026-08-29T17:12:52.3641096Z             "path": "Dockerfile"
+web image smoke	Build web image	2026-08-29T17:12:52.3641590Z           },
+web image smoke	Build web image	2026-08-29T17:12:52.3641888Z           "request": {
+web image smoke	Build web image	2026-08-29T17:12:52.3642280Z             "args": {
+web image smoke	Build web image	2026-08-29T17:12:52.3642634Z               "vcs:localdir:context": "web",
+web image smoke	Build web image	2026-08-29T17:12:52.3643075Z               "vcs:localdir:dockerfile": "web",
+web image smoke	Build web image	2026-08-29T17:12:52.3643568Z               "vcs:revision": "f572213f9d0a366f1e5747da75c8e24a4bac22d8",
+web image smoke	Build web image	2026-08-29T17:12:52.3644150Z               "vcs:source": "https://github.com/kudratsingh/arxiv-research-agent"
+web image smoke	Build web image	2026-08-29T17:12:52.3644651Z             }
+web image smoke	Build web image	2026-08-29T17:12:52.3644936Z           }
+web image smoke	Build web image	2026-08-29T17:12:52.3645240Z         },
+web image smoke	Build web image	2026-08-29T17:12:52.3645569Z         "compatibilityVersion": 30
+web image smoke	Build web image	2026-08-29T17:12:52.3645908Z       },
+web image smoke	Build web image	2026-08-29T17:12:52.3646225Z       "environment": {
+web image smoke	Build web image	2026-08-29T17:12:52.3646614Z         "github_actor": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3647024Z         "github_actor_id": "119715546",
+web image smoke	Build web image	2026-08-29T17:12:52.3647424Z         "github_event_name": "pull_request",
+web image smoke	Build web image	2026-08-29T17:12:52.3647816Z         "github_event_payload": {
+web image smoke	Build web image	2026-08-29T17:12:52.3648331Z           "action": "synchronize",
+web image smoke	Build web image	2026-08-29T17:12:52.3648813Z           "after": "c7cfda32df2645a97703d4b86a0b8e4d2d0e81e5",
+web image smoke	Build web image	2026-08-29T17:12:52.3649304Z           "before": "9c288ffd16f7567e9bb928b3395fdafd8953cac7",
+web image smoke	Build web image	2026-08-29T17:12:52.3649712Z           "number": 118,
+web image smoke	Build web image	2026-08-29T17:12:52.3650238Z           "pull_request": {
+web image smoke	Build web image	2026-08-29T17:12:52.3650680Z             "_links": {
+web image smoke	Build web image	2026-08-29T17:12:52.3651122Z               "comments": {
+web image smoke	Build web image	2026-08-29T17:12:52.3651921Z                 "href": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/118/comments"
+web image smoke	Build web image	2026-08-29T17:12:52.3652676Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3653061Z               "commits": {
+web image smoke	Build web image	2026-08-29T17:12:52.3653717Z                 "href": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls/118/commits"
+web image smoke	Build web image	2026-08-29T17:12:52.3654443Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3654739Z               "html": {
+web image smoke	Build web image	2026-08-29T17:12:52.3655194Z                 "href": "https://github.com/kudratsingh/arxiv-research-agent/pull/118"
+web image smoke	Build web image	2026-08-29T17:12:52.3655660Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3655961Z               "issue": {
+web image smoke	Build web image	2026-08-29T17:12:52.3656484Z                 "href": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/118"
+web image smoke	Build web image	2026-08-29T17:12:52.3657010Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3657342Z               "review_comment": {
+web image smoke	Build web image	2026-08-29T17:12:52.3657903Z                 "href": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls/comments{/number}"
+web image smoke	Build web image	2026-08-29T17:12:52.3658444Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3658791Z               "review_comments": {
+web image smoke	Build web image	2026-08-29T17:12:52.3659600Z                 "href": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls/118/comments"
+web image smoke	Build web image	2026-08-29T17:12:52.3660515Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3660879Z               "self": {
+web image smoke	Build web image	2026-08-29T17:12:52.3661498Z                 "href": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls/118"
+web image smoke	Build web image	2026-08-29T17:12:52.3662525Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3662998Z               "statuses": {
+web image smoke	Build web image	2026-08-29T17:12:52.3663861Z                 "href": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/statuses/c7cfda32df2645a97703d4b86a0b8e4d2d0e81e5"
+web image smoke	Build web image	2026-08-29T17:12:52.3664620Z               }
+web image smoke	Build web image	2026-08-29T17:12:52.3665020Z             },
+web image smoke	Build web image	2026-08-29T17:12:52.3665409Z             "active_lock_reason": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3666070Z             "additions": 986,
+web image smoke	Build web image	2026-08-29T17:12:52.3666554Z             "assignee": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3667008Z             "assignees": [],
+web image smoke	Build web image	2026-08-29T17:12:52.3667573Z             "author_association": "OWNER",
+web image smoke	Build web image	2026-08-29T17:12:52.3668094Z             "auto_merge": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3668613Z             "base": {
+web image smoke	Build web image	2026-08-29T17:12:52.3669084Z               "label": "kudratsingh:main",
+web image smoke	Build web image	2026-08-29T17:12:52.3669542Z               "ref": "main",
+web image smoke	Build web image	2026-08-29T17:12:52.3670189Z               "repo": {
+web image smoke	Build web image	2026-08-29T17:12:52.3670743Z                 "allow_auto_merge": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3671328Z                 "allow_forking": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3672001Z                 "allow_merge_commit": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3672575Z                 "allow_rebase_merge": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3673210Z                 "allow_squash_merge": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3673792Z                 "allow_update_branch": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3674759Z                 "archive_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/{archive_format}{/ref}",
+web image smoke	Build web image	2026-08-29T17:12:52.3675714Z                 "archived": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3676543Z                 "assignees_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/assignees{/user}",
+web image smoke	Build web image	2026-08-29T17:12:52.3677743Z                 "blobs_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/blobs{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3679238Z                 "branches_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/branches{/branch}",
+web image smoke	Build web image	2026-08-29T17:12:52.3680636Z                 "clone_url": "https://github.com/kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.3681878Z                 "collaborators_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/collaborators{/collaborator}",
+web image smoke	Build web image	2026-08-29T17:12:52.3683289Z                 "comments_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/comments{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3684564Z                 "commits_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/commits{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3685881Z                 "compare_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/compare/{base}...{head}",
+web image smoke	Build web image	2026-08-29T17:12:52.3687207Z                 "contents_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/contents/{+path}",
+web image smoke	Build web image	2026-08-29T17:12:52.3688743Z                 "contributors_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/contributors",
+web image smoke	Build web image	2026-08-29T17:12:52.3689743Z                 "created_at": "2026-03-29T07:43:10Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3690621Z                 "default_branch": "main",
+web image smoke	Build web image	2026-08-29T17:12:52.3691283Z                 "delete_branch_on_merge": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3692373Z                 "deployments_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/deployments",
+web image smoke	Build web image	2026-08-29T17:12:52.3695080Z                 "description": "A multi-agent arXiv research assistant — LangGraph + Claude pipeline with an opt-in supervisor loop, behind a FastAPI/SSE job API and a Next.js human-in-the-loop Evidence Workbench on Redis/Postgres. Extensively ADR-documented.",
+web image smoke	Build web image	2026-08-29T17:12:52.3696760Z                 "disabled": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3697722Z                 "downloads_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/downloads",
+web image smoke	Build web image	2026-08-29T17:12:52.3698990Z                 "events_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/events",
+web image smoke	Build web image	2026-08-29T17:12:52.3700269Z                 "fork": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3701007Z                 "forks": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3701536Z                 "forks_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3702522Z                 "forks_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/forks",
+web image smoke	Build web image	2026-08-29T17:12:52.3703488Z                 "full_name": "kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3704708Z                 "git_commits_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/commits{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3705851Z                 "git_refs_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/refs{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3707086Z                 "git_tags_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/tags{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3708091Z                 "git_url": "git://github.com/kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.3708775Z                 "has_discussions": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3709350Z                 "has_downloads": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3710222Z                 "has_issues": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3710964Z                 "has_pages": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3711456Z                 "has_projects": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3711962Z                 "has_pull_requests": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3712515Z                 "has_wiki": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3712995Z                 "homepage": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3713719Z                 "hooks_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/hooks",
+web image smoke	Build web image	2026-08-29T17:12:52.3714708Z                 "html_url": "https://github.com/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3715344Z                 "id": 1195087251,
+web image smoke	Build web image	2026-08-29T17:12:52.3715879Z                 "is_template": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3716769Z                 "issue_comment_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/comments{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3718077Z                 "issue_events_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/events{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3719271Z                 "issues_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3720800Z                 "keys_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/keys{/key_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3721909Z                 "labels_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/labels{/name}",
+web image smoke	Build web image	2026-08-29T17:12:52.3722784Z                 "language": "TypeScript",
+web image smoke	Build web image	2026-08-29T17:12:52.3723591Z                 "languages_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/languages",
+web image smoke	Build web image	2026-08-29T17:12:52.3724379Z                 "license": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3724895Z                 "merge_commit_message": "PR_TITLE",
+web image smoke	Build web image	2026-08-29T17:12:52.3725946Z                 "merge_commit_title": "MERGE_MESSAGE",
+web image smoke	Build web image	2026-08-29T17:12:52.3726774Z                 "merges_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/merges",
+web image smoke	Build web image	2026-08-29T17:12:52.3727847Z                 "milestones_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/milestones{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3728612Z                 "mirror_url": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3729182Z                 "name": "arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3730082Z                 "node_id": "R_kgDORzuVkw",
+web image smoke	Build web image	2026-08-29T17:12:52.3731139Z                 "notifications_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/notifications{?since,all,participating}",
+web image smoke	Build web image	2026-08-29T17:12:52.3731825Z                 "open_issues": 1,
+web image smoke	Build web image	2026-08-29T17:12:52.3732212Z                 "open_issues_count": 1,
+web image smoke	Build web image	2026-08-29T17:12:52.3732627Z                 "owner": {
+web image smoke	Build web image	2026-08-29T17:12:52.3733146Z                   "avatar_url": "https://avatars.githubusercontent.com/u/119715546?v=4",
+web image smoke	Build web image	2026-08-29T17:12:52.3733770Z                   "events_url": "https://api.github.com/users/kudratsingh/events{/privacy}",
+web image smoke	Build web image	2026-08-29T17:12:52.3734372Z                   "followers_url": "https://api.github.com/users/kudratsingh/followers",
+web image smoke	Build web image	2026-08-29T17:12:52.3735132Z                   "following_url": "https://api.github.com/users/kudratsingh/following{/other_user}",
+web image smoke	Build web image	2026-08-29T17:12:52.3735775Z                   "gists_url": "https://api.github.com/users/kudratsingh/gists{/gist_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3736362Z                   "gravatar_id": "",
+web image smoke	Build web image	2026-08-29T17:12:52.3736782Z                   "html_url": "https://github.com/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3737192Z                   "id": 119715546,
+web image smoke	Build web image	2026-08-29T17:12:52.3737587Z                   "login": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3737963Z                   "node_id": "U_kgDOByK22g",
+web image smoke	Build web image	2026-08-29T17:12:52.3738510Z                   "organizations_url": "https://api.github.com/users/kudratsingh/orgs",
+web image smoke	Build web image	2026-08-29T17:12:52.3739139Z                   "received_events_url": "https://api.github.com/users/kudratsingh/received_events",
+web image smoke	Build web image	2026-08-29T17:12:52.3739744Z                   "repos_url": "https://api.github.com/users/kudratsingh/repos",
+web image smoke	Build web image	2026-08-29T17:12:52.3740523Z                   "site_admin": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3741112Z                   "starred_url": "https://api.github.com/users/kudratsingh/starred{/owner}{/repo}",
+web image smoke	Build web image	2026-08-29T17:12:52.3741811Z                   "subscriptions_url": "https://api.github.com/users/kudratsingh/subscriptions",
+web image smoke	Build web image	2026-08-29T17:12:52.3742314Z                   "type": "User",
+web image smoke	Build web image	2026-08-29T17:12:52.3742733Z                   "url": "https://api.github.com/users/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3743214Z                   "user_view_type": "public"
+web image smoke	Build web image	2026-08-29T17:12:52.3743588Z                 },
+web image smoke	Build web image	2026-08-29T17:12:52.3743942Z                 "private": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3744323Z                 "pull_request_creation_policy": "all",
+web image smoke	Build web image	2026-08-29T17:12:52.3744905Z                 "pulls_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3745529Z                 "pushed_at": "2026-08-29T17:10:38Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3746109Z                 "releases_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/releases{/id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3746704Z                 "size": 10448,
+web image smoke	Build web image	2026-08-29T17:12:52.3747168Z                 "squash_merge_commit_message": "COMMIT_MESSAGES",
+web image smoke	Build web image	2026-08-29T17:12:52.3747657Z                 "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+web image smoke	Build web image	2026-08-29T17:12:52.3748628Z                 "ssh_url": "git@github.com:kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.3749358Z                 "stargazers_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3750219Z                 "stargazers_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/stargazers",
+web image smoke	Build web image	2026-08-29T17:12:52.3751264Z                 "statuses_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/statuses/{sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3752377Z                 "subscribers_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/subscribers",
+web image smoke	Build web image	2026-08-29T17:12:52.3753268Z                 "subscription_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/subscription",
+web image smoke	Build web image	2026-08-29T17:12:52.3753941Z                 "svn_url": "https://github.com/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3754550Z                 "tags_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/tags",
+web image smoke	Build web image	2026-08-29T17:12:52.3755258Z                 "teams_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/teams",
+web image smoke	Build web image	2026-08-29T17:12:52.3755831Z                 "topics": [
+web image smoke	Build web image	2026-08-29T17:12:52.3756172Z                   "anthropic",
+web image smoke	Build web image	2026-08-29T17:12:52.3756513Z                   "arxiv",
+web image smoke	Build web image	2026-08-29T17:12:52.3756828Z                   "claude",
+web image smoke	Build web image	2026-08-29T17:12:52.3757219Z                   "fastapi",
+web image smoke	Build web image	2026-08-29T17:12:52.3757580Z                   "human-in-the-loop",
+web image smoke	Build web image	2026-08-29T17:12:52.3757956Z                   "langgraph",
+web image smoke	Build web image	2026-08-29T17:12:52.3758287Z                   "llm",
+web image smoke	Build web image	2026-08-29T17:12:52.3758623Z                   "llm-evaluation",
+web image smoke	Build web image	2026-08-29T17:12:52.3759054Z                   "multi-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3759531Z                   "nextjs",
+web image smoke	Build web image	2026-08-29T17:12:52.3760210Z                   "playwright",
+web image smoke	Build web image	2026-08-29T17:12:52.3760577Z                   "rag",
+web image smoke	Build web image	2026-08-29T17:12:52.3760923Z                   "research-assistant",
+web image smoke	Build web image	2026-08-29T17:12:52.3761429Z                   "sse"
+web image smoke	Build web image	2026-08-29T17:12:52.3761760Z                 ],
+web image smoke	Build web image	2026-08-29T17:12:52.3762268Z                 "trees_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/trees{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3762846Z                 "updated_at": "2026-08-29T16:35:40Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3763346Z                 "url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3764013Z                 "use_squash_pr_title_as_default": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3764453Z                 "visibility": "public",
+web image smoke	Build web image	2026-08-29T17:12:52.3764816Z                 "watchers": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3765173Z                 "watchers_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3765565Z                 "web_commit_signoff_required": false
+web image smoke	Build web image	2026-08-29T17:12:52.3766004Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3766421Z               "sha": "3d84665489cd549e7596651ff62f121cb9115af1",
+web image smoke	Build web image	2026-08-29T17:12:52.3766800Z               "user": {
+web image smoke	Build web image	2026-08-29T17:12:52.3767271Z                 "avatar_url": "https://avatars.githubusercontent.com/u/119715546?v=4",
+web image smoke	Build web image	2026-08-29T17:12:52.3767867Z                 "events_url": "https://api.github.com/users/kudratsingh/events{/privacy}",
+web image smoke	Build web image	2026-08-29T17:12:52.3768498Z                 "followers_url": "https://api.github.com/users/kudratsingh/followers",
+web image smoke	Build web image	2026-08-29T17:12:52.3769158Z                 "following_url": "https://api.github.com/users/kudratsingh/following{/other_user}",
+web image smoke	Build web image	2026-08-29T17:12:52.3770016Z                 "gists_url": "https://api.github.com/users/kudratsingh/gists{/gist_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3770533Z                 "gravatar_id": "",
+web image smoke	Build web image	2026-08-29T17:12:52.3770973Z                 "html_url": "https://github.com/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3771431Z                 "id": 119715546,
+web image smoke	Build web image	2026-08-29T17:12:52.3771791Z                 "login": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3772169Z                 "node_id": "U_kgDOByK22g",
+web image smoke	Build web image	2026-08-29T17:12:52.3772663Z                 "organizations_url": "https://api.github.com/users/kudratsingh/orgs",
+web image smoke	Build web image	2026-08-29T17:12:52.3773308Z                 "received_events_url": "https://api.github.com/users/kudratsingh/received_events",
+web image smoke	Build web image	2026-08-29T17:12:52.3774157Z                 "repos_url": "https://api.github.com/users/kudratsingh/repos",
+web image smoke	Build web image	2026-08-29T17:12:52.3774613Z                 "site_admin": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3775117Z                 "starred_url": "https://api.github.com/users/kudratsingh/starred{/owner}{/repo}",
+web image smoke	Build web image	2026-08-29T17:12:52.3775763Z                 "subscriptions_url": "https://api.github.com/users/kudratsingh/subscriptions",
+web image smoke	Build web image	2026-08-29T17:12:52.3776384Z                 "type": "User",
+web image smoke	Build web image	2026-08-29T17:12:52.3776849Z                 "url": "https://api.github.com/users/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3777283Z                 "user_view_type": "public"
+web image smoke	Build web image	2026-08-29T17:12:52.3777634Z               }
+web image smoke	Build web image	2026-08-29T17:12:52.3777935Z             },
+web image smoke	Build web image	2026-08-29T17:12:52.3830402Z             "body": "Closes the \"visual regression\" tier `00-DISCOVERY.md` listed as missing, using\nPlaywright's own `toHaveScreenshot` on WO-21's harness. No new dependency, no\nhosted service, no approval UI, no lockfile change.\n\n## The three criteria, mapped to evidence\n\n### 1. Snapshots for the five slice steps plus the degraded states with retained baseline screenshots\n\n`web/e2e/visual.spec.ts` — **48 committed PNGs**, 12 renders × light/dark ×\n412/1440 px, 3,257,408 B total (avg 66 KiB), in\n`web/e2e/__screenshots__/darwin/`.\n\n| Half | State | Slice step (`05` §2.1) | Retained Gate 1 screenshot |\n|---|---|---|---|\n| slice | `landing` | 1 — new question | `home-desktop-full.png`, `home-mobile-full.png` |\n| slice | `running` | 2 — reload-safe job | `running-desktop.png` |\n| slice | `plan-review` | 3 — plan review | `plan-review-desktop.png`, `plan-review-mobile-full.png` |\n| slice | `reconnecting` | 4 — stream and reconnect | `reconnecting-desktop.png` |\n| slice | `thread-populated` | 5 — report, metrics, export | `conversation-populated-desktop-full.png` (+ dark, + mobile) |\n| degraded | `cancelled` | — | `cancelled-desktop.png` |\n| degraded | `failed-partial` | — | `failed-partial-desktop.png`, `failed-partial-mobile.png` |\n| degraded | `expired` | — | `expired-job-desktop.png` |\n| degraded | `submission-error-500` | — | `submission-error-desktop.png` |\n| degraded | `rail-error-upstream` | — | `backend-offline-desktop.png` |\n| degraded | `thread-not-found-inline` | — | `conversation-not-found-desktop.png` |\n| degraded | `route-not-found` | — | `framework-not-found-desktop.png` |\n\n**Why seven degraded states and not \"the four\".** Nothing in `06`, `05` or `00`\nnames which four, and the arithmetic does not produce four on the state table\nWO-21 built. Thirteen of the twenty `states.ts` rows are degraded; **seven** of\nthose have a retained Gate 1 capture to compare against (the other six —\n`rail-error-proxy-503`, `failed-no-result`, `rate-limited-429`,\n`unauthorized-401`, `validation-422`, `attached-status-unknown` — postdate the\nGate 1 evidence run; `env.ts` says exactly that of `failed-no-result`). Of the\nseven, two are reached inside the slice (`expired` is step 2's second half,\n`failed-partial` is step 5's), which leaves *five*, not four. Rather than pick\none reading and silently drop the rest, the suite covers all seven: every\nreading of the criterion is then a subset of what is here, and the surplus is\nthree states' worth of PNG. The reasoning is on `DEGRADED_STATES` in the spec.\n\nThree things are asserted rather than described, so the inventory cannot rot:\n\n- every named retained baseline screenshot **exists on disk** under\n  `docs/revamp/baseline/screenshots/`;\n- the five slice steps are covered once each and no degraded state is also\n  claimed as a slice step;\n- the sweep is 12 × 2 × 2 and no two renders would write the same file.\n\nTwo states needed more than a URL. `reconnecting` (§4 row 11) is in\n`DEFERRED_STATES` because it is a transition, but it has a resting *appearance*\n— the browser's own `EventSource` retry holds the spine there — and Gate 1\ncaptured it for that reason; it uses `interruptStream`, the technique\n`capture-baseline.spec.ts:63-76` already proved. `submission-error-500` renders\n`landing`'s pixels until something is actually submitted, so it submits, and\n`POST /api/research` is additionally aborted at the route for that one render on\ntop of the three structural cost mechanisms.\n\n### 2. A deliberate 2 px shift fails the check\n\nIntroduced by appending `main#main,[data-thread-rail]{padding-top:2px}` to the\nserved stylesheet through `page.route` — **not** `addStyleTag`, which WO-30's\n`style-src 'self'` blocks. As far as the browser is concerned, the stylesheet\nshipped 2 px of padding.\n\n```\n  48 failed\n  5 passed (38.7s)\n```\n\n```\n  1) [chromium] › e2e/visual.spec.ts › … › landing · light · 412px (§4 1) @visual\n\n    Error: expect(page).toHaveScreenshot(expected) failed\n\n      4551 pixels (ratio 0.02 of all image pixels) are different.\n\n      Snapshot: landing-light-412.png\n```\n\nAll **48 of 48** snapshot comparisons went red; the 5 that passed are the\ninventory tests, which do not take a picture. Per-render deltas ranged from\n**1,441 to 13,703 pixels** — the smallest is 7.2× the tolerance and the largest\n68×.\n\nA first pass shifted only `main#main` and produced **46** failures: the two that\npassed were `rail-error-upstream` at 412, where the rail drawer is a modal over\n`main`, so no shifted pixel was on screen. That is the gate measuring pixels\nrather than asserting blindly, and the demonstration was widened to cover the\ndrawer.\n\nReverted in the same session; the suite is green on this branch (below).\n\n### 3. The depth limit is recorded\n\n`docs/revamp/evidence/gate-4/residual-risks.md` — new, created as the stub\nWO-33 extends. Entries are `RR-NN` with seven fixed fields and an index table,\nso the remaining three risks §4.2 names (field CWV, browser matrix limits, the\nMT-01 dependency) append without restructuring.\n\n> **RR-01 — Visual-regression coverage is the slice, not the matrix.**\n> *Risk:* a visual regression in a state the snapshot suite does not cover ships\n> unnoticed. *Covered:* 48 PNGs — the five slice steps plus every degraded state\n> with a retained Gate 1 screenshot, in light and dark at 412 and 1440, Chromium\n> on `darwin`. *Not covered:* the other nine `states.ts` rows, 320 px, every\n> `DEFERRED_STATES` transition, Firefox and WebKit, forced-colours,\n> reduced-motion as a separate axis, every Storybook story, and — until a\n> `linux` set is generated and reviewed — the CI runner, where the sweep skips\n> rather than gates. *Why accepted:*\n> the matrix is 20 × 2 × 3 = 120 renders, ~8 MB of committed binary that one\n> legitimate token change invalidates in a single commit — the cost of a visual\n> baseline is not taking it but re-taking it, and re-taking 120 files by hand is\n> how a team learns to run `--update-snapshots` without looking; this is a\n> single-deployment product with no per-tenant CSS (MT-01); the nine uncovered\n> states are still swept by axe in both themes at three widths, measured for\n> reflow, and rendered as Storybook stories, so what is missing for them is\n> pixel comparison specifically; and Chromium/`darwin` only is the same argument\n> one level down, because a snapshot's artefact *is* the engine's rasterisation.\n> *What would change it:* per-tenant theming; a visual regression reaching a\n> user in an uncovered state; literal values leaking out of the token layer; or\n> CI gaining a Linux leg somebody actually reviews.\n\n## The update workflow\n\n```bash\nnpm run e2e:visual            # compare against the committed set\nnpm run e2e:visual:update     # regenerate\n```\n\n`web/e2e/README.md` gains a \"Visual regression (WO-28)\" section stating when\nregeneration is legitimate — **you changed how something looks, on purpose, and\nthe new pixels ship in the same PR as the change that produced them** — and\nwhen it is not: an unexpected red run (that is the gate working; open the\nthree-up diff in `web/build/e2e/report/`), a red run on a platform that did not\nproduce the set (generate that platform's own directory instead), or flake (the\nfix is a determinism measure, not fresh bytes or a wider tolerance).\n\n## Determinism\n\nEight measures, each with the drift it removes, tabulated in the README and\ndocumented on `settleForCapture()`:\n\n1. **no `[data-skeleton-lines]` on screen** — the measure that was missing. A\n   skeleton is *static*, so a DOM-quiescence check agrees with itself and\n   photographs a page still waiting for its data. The suite flaked on its own\n   second run for exactly this: `landing` captured with the rail's two threads\n   loaded, then with the rail's two skeleton bars, 527 pixels apart.\n2. `settleForAudit` — WO-22's DOM-quiescence loop, reused rather than re-written.\n3. `document.fonts.ready`, then `fonts.status` asserted (it also resolves on\n   failure) — the faces are self-hosted with `font-display: swap`.\n4. two `requestAnimationFrame`s.\n5. `emulateMedia({ colorScheme, reducedMotion: \"reduce\" })` before navigation —\n   the theme axis without `localStorage`, because `theme.spec.ts` pins a live\n   hydration defect that would capture dark states in light.\n6. `animations: \"disabled\"`, `caret: \"hide\"`, `scale: \"css\"`, `fullPage: false`,\n   passed explicitly.\n7. seeded `baseline-*` fixtures only.\n8. Chromium only (`@visual` joins `CHROMIUM_ONLY`), and `{platform}` in\n   `snapshotPathTemplate` so a second OS is additive rather than a conflict.\n\n**Results.**\n\n- Four consecutive full runs from a clean stack: **53 passed** each time\n  (48 snapshots + 5 inventory tests).\n- Byte-level: **45 of 48 byte-identical** between two forced regenerations; the\n  other three (`plan-review-light-1440`, `rail-error-upstream-dark-412`,\n  `submission-error-500-dark-412`) differ by **4, 9 and 14 raw pixels**, below\n  Playwright's per-pixel threshold, so the comparator never counts them.\n- `maxDiffPixels` is **200**, and it is the one tolerance in the file. Six full\n  zero-tolerance runs (288 comparisons) produced exactly one render that the\n  comparator ever saw move: `thread-populated` at 1440, bimodally 124 px (dark)\n  / 131 px (light). Cause measured, not guessed: the briefing's `SectionRail` is\n  `position: sticky` above 1280 px and lays out at x = 1007.46875 — probed\n  twelve times, identical rect, colour, weight and `aria-current` every time —\n  and a sticky box is a compositor-promotion candidate, so its glyphs are\n  rasterised snapped to 1007 or unsnapped at 1007.47, half a pixel apart.\n  `--disable-lcd-text` was tried and measured: it makes no difference, because\n  this is subpixel *positioning* rather than the choice of antialiasing.\n  Masking the rail and injecting `position: static` were both rejected for\n  taking a real surface out of the gate. The tolerance bounds *area* rather than\n  raising `threshold`, so a colour change over a whole surface stays red however\n  small its per-pixel delta.\n\n## Verification\n\n| Check | Result |\n|---|---|\n| `npx tsc --noEmit` | clean |\n| `npm run lint` | clean |\n| `npm run test` | 135 files, **3026 passed**, 7 skipped |\n| `npm run budgets` (build + budgets) | all rows PASS, no ratchet |\n| `npm run audit:gate` | 0 high/critical in the production tree; 3 dev-tree, all pre-accounted |\n| `npm run contract:check` | generated types match `contract/openapi.json` |\n| `npm run e2e -- --project=chromium` | see below |\n| `npm run e2e:visual` × 4 | 53 passed each (54 after the skip guard landed) |\n| 2 px shift | 48/48 snapshot comparisons red |\n\nRun against an isolated stack — Compose project `arxiv-wo28-e2e`, containers\n`arxiv-wo28-{app,web,redis,postgres}`, ports 13280/18280 — so the two sibling\nGate 4 branches were untouched. `ANTHROPIC_API_KEY=local-preview-disabled`\nthroughout; **no paid model call was made**, and `submission-error-500` is the\nonly render that submits anything, with `POST /api/research` aborted at the\nroute on top of the three existing structural mechanisms.\n\n## For the coordinator: CI\n\n**No workflow was edited.** `@visual` is grepped into the existing `chromium`\nproject, so `npm run e2e -- --project=chromium` — the command the `web-e2e` job\nalready runs — picks the suite up with no new step.\n\n**On the Linux runner the forty-eight comparisons currently SKIP, on purpose.**\n`e2e/__screenshots__/linux/` does not exist, and the three things that could\nhappen there are: fail all forty-eight for the absence of bytes nobody wrote (a\nred build that means \"no baseline\", not \"regression\"); let the runner write its\nown and pass (a baseline the runner produced and then immediately agreed with,\nwhich proves nothing, and is the worse of the two); or skip with a message\nnaming the platform, the directory and the command that fixes it. The suite\ndoes the third. `--update-snapshots` turns the skip off, because that *is* the\nrequest to generate a set.\n\nThe skip is guarded: one test in the file never skips, so deleting the\n`__screenshots__` tree turns the suite red rather than quiet, and every run\nlogs which sets exist and whether this platform is gating or skipping —\n\n```\n[visual] committed baseline sets: darwin; this run is \"linux\" (SKIPPING — no set).\n  48 skipped\n  6 passed\n```\n\nSo the gate is real on a developer's macOS and inert on the runner today. That\nis a second residual limit and RR-01 says so rather than leaving it to be\ndiscovered. Two decisions belong to whoever owns CI, written up at the foot of\n`web/e2e/README.md`:\n\n- **To make it gate on CI**, generate `e2e/__screenshots__/linux/` on a Linux\n  host (`mcr.microsoft.com/playwright:v1.62.1-noble` against the seeded stack,\n  or the runner itself with a one-off `--update-snapshots`), **look at the\n  forty-eight images**, and commit them. The suite activates with no code\n  change. Do not wire `--update-snapshots` into the job.\n- **Per-PR versus nightly.** Per-PR in `web-e2e` is the natural home: +17 s on\n  a stack the job already has up, and a visual regression should block the PR\n  that caused it. WO-29's nightly is the alternative — in which case grep\n  `@visual` out of the `web-e2e` invocation so the skip does not sit in the log\n  forever.\n\n## Files\n\n| File | Change |\n|---|---|\n| `web/e2e/visual.spec.ts` | new — the 12-state table, the sweep, the inventory assertions, the determinism helper |\n| `web/e2e/__screenshots__/darwin/*.png` | new — 48 committed baselines |\n| `web/playwright.config.ts` | `@visual` joins `CHROMIUM_ONLY` (with its argument); `snapshotPathTemplate` with `{platform}` |\n| `web/package.json` | `e2e:visual`, `e2e:visual:update` |\n| `web/e2e/README.md` | the \"Visual regression (WO-28)\" section, the regeneration rule, the tags/projects/layout rows, the CI note |\n| `docs/revamp/evidence/gate-4/residual-risks.md` | new stub, RR-01 |\n\nNo product code, no lockfile, no workflow, no bookkeeping file and no gate-3\nevidence was touched.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n",
+web image smoke	Build web image	2026-08-29T17:12:52.3870636Z             "changed_files": 53,
+web image smoke	Build web image	2026-08-29T17:12:52.3871143Z             "closed_at": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3871530Z             "comments": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3872149Z             "comments_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/118/comments",
+web image smoke	Build web image	2026-08-29T17:12:52.3872841Z             "commits": 3,
+web image smoke	Build web image	2026-08-29T17:12:52.3873461Z             "commits_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls/118/commits",
+web image smoke	Build web image	2026-08-29T17:12:52.3874123Z             "created_at": "2026-08-29T16:55:19Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3874511Z             "deletions": 4,
+web image smoke	Build web image	2026-08-29T17:12:52.3875005Z             "diff_url": "https://github.com/kudratsingh/arxiv-research-agent/pull/118.diff",
+web image smoke	Build web image	2026-08-29T17:12:52.3875527Z             "draft": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3875866Z             "head": {
+web image smoke	Build web image	2026-08-29T17:12:52.3876316Z               "label": "kudratsingh:test/wo-28-visual-baselines",
+web image smoke	Build web image	2026-08-29T17:12:52.3876773Z               "ref": "test/wo-28-visual-baselines",
+web image smoke	Build web image	2026-08-29T17:12:52.3877128Z               "repo": {
+web image smoke	Build web image	2026-08-29T17:12:52.3877527Z                 "allow_auto_merge": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3877913Z                 "allow_forking": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3878344Z                 "allow_merge_commit": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3878721Z                 "allow_rebase_merge": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3879083Z                 "allow_squash_merge": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3879518Z                 "allow_update_branch": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3880232Z                 "archive_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/{archive_format}{/ref}",
+web image smoke	Build web image	2026-08-29T17:12:52.3881397Z                 "archived": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3882073Z                 "assignees_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/assignees{/user}",
+web image smoke	Build web image	2026-08-29T17:12:52.3882780Z                 "blobs_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/blobs{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3883555Z                 "branches_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/branches{/branch}",
+web image smoke	Build web image	2026-08-29T17:12:52.3884247Z                 "clone_url": "https://github.com/kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.3885010Z                 "collaborators_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/collaborators{/collaborator}",
+web image smoke	Build web image	2026-08-29T17:12:52.3885799Z                 "comments_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/comments{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3886501Z                 "commits_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/commits{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3887346Z                 "compare_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/compare/{base}...{head}",
+web image smoke	Build web image	2026-08-29T17:12:52.3888109Z                 "contents_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/contents/{+path}",
+web image smoke	Build web image	2026-08-29T17:12:52.3888947Z                 "contributors_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/contributors",
+web image smoke	Build web image	2026-08-29T17:12:52.3889509Z                 "created_at": "2026-03-29T07:43:10Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3890098Z                 "default_branch": "main",
+web image smoke	Build web image	2026-08-29T17:12:52.3890577Z                 "delete_branch_on_merge": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3891151Z                 "deployments_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/deployments",
+web image smoke	Build web image	2026-08-29T17:12:52.3892602Z                 "description": "A multi-agent arXiv research assistant — LangGraph + Claude pipeline with an opt-in supervisor loop, behind a FastAPI/SSE job API and a Next.js human-in-the-loop Evidence Workbench on Redis/Postgres. Extensively ADR-documented.",
+web image smoke	Build web image	2026-08-29T17:12:52.3893594Z                 "disabled": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3894173Z                 "downloads_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/downloads",
+web image smoke	Build web image	2026-08-29T17:12:52.3894863Z                 "events_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/events",
+web image smoke	Build web image	2026-08-29T17:12:52.3895359Z                 "fork": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3895722Z                 "forks": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3896115Z                 "forks_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3896613Z                 "forks_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/forks",
+web image smoke	Build web image	2026-08-29T17:12:52.3897179Z                 "full_name": "kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3897801Z                 "git_commits_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/commits{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3898588Z                 "git_refs_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/refs{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3899319Z                 "git_tags_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/tags{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3900062Z                 "git_url": "git://github.com/kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.3900553Z                 "has_discussions": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3900943Z                 "has_downloads": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3901337Z                 "has_issues": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3901718Z                 "has_pages": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3902096Z                 "has_projects": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3902475Z                 "has_pull_requests": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3902834Z                 "has_wiki": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3903237Z                 "homepage": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3903755Z                 "hooks_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/hooks",
+web image smoke	Build web image	2026-08-29T17:12:52.3904376Z                 "html_url": "https://github.com/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3904916Z                 "id": 1195087251,
+web image smoke	Build web image	2026-08-29T17:12:52.3905270Z                 "is_template": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3905960Z                 "issue_comment_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/comments{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3906758Z                 "issue_events_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/events{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3907511Z                 "issues_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3908219Z                 "keys_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/keys{/key_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3908929Z                 "labels_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/labels{/name}",
+web image smoke	Build web image	2026-08-29T17:12:52.3909524Z                 "language": "TypeScript",
+web image smoke	Build web image	2026-08-29T17:12:52.3910179Z                 "languages_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/languages",
+web image smoke	Build web image	2026-08-29T17:12:52.3910704Z                 "license": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3911121Z                 "merge_commit_message": "PR_TITLE",
+web image smoke	Build web image	2026-08-29T17:12:52.3911606Z                 "merge_commit_title": "MERGE_MESSAGE",
+web image smoke	Build web image	2026-08-29T17:12:52.3912207Z                 "merges_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/merges",
+web image smoke	Build web image	2026-08-29T17:12:52.3912924Z                 "milestones_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/milestones{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3913478Z                 "mirror_url": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3913908Z                 "name": "arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3914275Z                 "node_id": "R_kgDORzuVkw",
+web image smoke	Build web image	2026-08-29T17:12:52.3914992Z                 "notifications_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/notifications{?since,all,participating}",
+web image smoke	Build web image	2026-08-29T17:12:52.3915634Z                 "open_issues": 1,
+web image smoke	Build web image	2026-08-29T17:12:52.3916049Z                 "open_issues_count": 1,
+web image smoke	Build web image	2026-08-29T17:12:52.3916388Z                 "owner": {
+web image smoke	Build web image	2026-08-29T17:12:52.3916831Z                   "avatar_url": "https://avatars.githubusercontent.com/u/119715546?v=4",
+web image smoke	Build web image	2026-08-29T17:12:52.3917502Z                   "events_url": "https://api.github.com/users/kudratsingh/events{/privacy}",
+web image smoke	Build web image	2026-08-29T17:12:52.3918097Z                   "followers_url": "https://api.github.com/users/kudratsingh/followers",
+web image smoke	Build web image	2026-08-29T17:12:52.3918760Z                   "following_url": "https://api.github.com/users/kudratsingh/following{/other_user}",
+web image smoke	Build web image	2026-08-29T17:12:52.3919370Z                   "gists_url": "https://api.github.com/users/kudratsingh/gists{/gist_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3919943Z                   "gravatar_id": "",
+web image smoke	Build web image	2026-08-29T17:12:52.3920421Z                   "html_url": "https://github.com/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3920828Z                   "id": 119715546,
+web image smoke	Build web image	2026-08-29T17:12:52.3921240Z                   "login": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3921619Z                   "node_id": "U_kgDOByK22g",
+web image smoke	Build web image	2026-08-29T17:12:52.3922108Z                   "organizations_url": "https://api.github.com/users/kudratsingh/orgs",
+web image smoke	Build web image	2026-08-29T17:12:52.3922757Z                   "received_events_url": "https://api.github.com/users/kudratsingh/received_events",
+web image smoke	Build web image	2026-08-29T17:12:52.3923344Z                   "repos_url": "https://api.github.com/users/kudratsingh/repos",
+web image smoke	Build web image	2026-08-29T17:12:52.3923839Z                   "site_admin": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3924338Z                   "starred_url": "https://api.github.com/users/kudratsingh/starred{/owner}{/repo}",
+web image smoke	Build web image	2026-08-29T17:12:52.3924974Z                   "subscriptions_url": "https://api.github.com/users/kudratsingh/subscriptions",
+web image smoke	Build web image	2026-08-29T17:12:52.3925494Z                   "type": "User",
+web image smoke	Build web image	2026-08-29T17:12:52.3927138Z                   "url": "https://api.github.com/users/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3927584Z                   "user_view_type": "public"
+web image smoke	Build web image	2026-08-29T17:12:52.3928025Z                 },
+web image smoke	Build web image	2026-08-29T17:12:52.3928333Z                 "private": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3928747Z                 "pull_request_creation_policy": "all",
+web image smoke	Build web image	2026-08-29T17:12:52.3929368Z                 "pulls_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3930055Z                 "pushed_at": "2026-08-29T17:10:38Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3930778Z                 "releases_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/releases{/id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3931297Z                 "size": 10448,
+web image smoke	Build web image	2026-08-29T17:12:52.3931729Z                 "squash_merge_commit_message": "COMMIT_MESSAGES",
+web image smoke	Build web image	2026-08-29T17:12:52.3932220Z                 "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+web image smoke	Build web image	2026-08-29T17:12:52.3932753Z                 "ssh_url": "git@github.com:kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.3933231Z                 "stargazers_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3933771Z                 "stargazers_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/stargazers",
+web image smoke	Build web image	2026-08-29T17:12:52.3934565Z                 "statuses_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/statuses/{sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3935376Z                 "subscribers_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/subscribers",
+web image smoke	Build web image	2026-08-29T17:12:52.3936177Z                 "subscription_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/subscription",
+web image smoke	Build web image	2026-08-29T17:12:52.3936825Z                 "svn_url": "https://github.com/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3937468Z                 "tags_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/tags",
+web image smoke	Build web image	2026-08-29T17:12:52.3938130Z                 "teams_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/teams",
+web image smoke	Build web image	2026-08-29T17:12:52.3938613Z                 "topics": [
+web image smoke	Build web image	2026-08-29T17:12:52.3939139Z                   "anthropic",
+web image smoke	Build web image	2026-08-29T17:12:52.3939470Z                   "arxiv",
+web image smoke	Build web image	2026-08-29T17:12:52.3939924Z                   "claude",
+web image smoke	Build web image	2026-08-29T17:12:52.3940268Z                   "fastapi",
+web image smoke	Build web image	2026-08-29T17:12:52.3940627Z                   "human-in-the-loop",
+web image smoke	Build web image	2026-08-29T17:12:52.3941175Z                   "langgraph",
+web image smoke	Build web image	2026-08-29T17:12:52.3941497Z                   "llm",
+web image smoke	Build web image	2026-08-29T17:12:52.3941858Z                   "llm-evaluation",
+web image smoke	Build web image	2026-08-29T17:12:52.3942258Z                   "multi-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3942562Z                   "nextjs",
+web image smoke	Build web image	2026-08-29T17:12:52.3942959Z                   "playwright",
+web image smoke	Build web image	2026-08-29T17:12:52.3943285Z                   "rag",
+web image smoke	Build web image	2026-08-29T17:12:52.3943628Z                   "research-assistant",
+web image smoke	Build web image	2026-08-29T17:12:52.3944015Z                   "sse"
+web image smoke	Build web image	2026-08-29T17:12:52.3944297Z                 ],
+web image smoke	Build web image	2026-08-29T17:12:52.3944862Z                 "trees_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/trees{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3945409Z                 "updated_at": "2026-08-29T16:35:40Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3945908Z                 "url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.3946454Z                 "use_squash_pr_title_as_default": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3946857Z                 "visibility": "public",
+web image smoke	Build web image	2026-08-29T17:12:52.3947247Z                 "watchers": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3947590Z                 "watchers_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3947982Z                 "web_commit_signoff_required": false
+web image smoke	Build web image	2026-08-29T17:12:52.3948347Z               },
+web image smoke	Build web image	2026-08-29T17:12:52.3948768Z               "sha": "c7cfda32df2645a97703d4b86a0b8e4d2d0e81e5",
+web image smoke	Build web image	2026-08-29T17:12:52.3949182Z               "user": {
+web image smoke	Build web image	2026-08-29T17:12:52.3949636Z                 "avatar_url": "https://avatars.githubusercontent.com/u/119715546?v=4",
+web image smoke	Build web image	2026-08-29T17:12:52.3950338Z                 "events_url": "https://api.github.com/users/kudratsingh/events{/privacy}",
+web image smoke	Build web image	2026-08-29T17:12:52.3950972Z                 "followers_url": "https://api.github.com/users/kudratsingh/followers",
+web image smoke	Build web image	2026-08-29T17:12:52.3951698Z                 "following_url": "https://api.github.com/users/kudratsingh/following{/other_user}",
+web image smoke	Build web image	2026-08-29T17:12:52.3952341Z                 "gists_url": "https://api.github.com/users/kudratsingh/gists{/gist_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3952805Z                 "gravatar_id": "",
+web image smoke	Build web image	2026-08-29T17:12:52.3953206Z                 "html_url": "https://github.com/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3953683Z                 "id": 119715546,
+web image smoke	Build web image	2026-08-29T17:12:52.3954018Z                 "login": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3954424Z                 "node_id": "U_kgDOByK22g",
+web image smoke	Build web image	2026-08-29T17:12:52.3954902Z                 "organizations_url": "https://api.github.com/users/kudratsingh/orgs",
+web image smoke	Build web image	2026-08-29T17:12:52.3955526Z                 "received_events_url": "https://api.github.com/users/kudratsingh/received_events",
+web image smoke	Build web image	2026-08-29T17:12:52.3956176Z                 "repos_url": "https://api.github.com/users/kudratsingh/repos",
+web image smoke	Build web image	2026-08-29T17:12:52.3956598Z                 "site_admin": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3957132Z                 "starred_url": "https://api.github.com/users/kudratsingh/starred{/owner}{/repo}",
+web image smoke	Build web image	2026-08-29T17:12:52.3957754Z                 "subscriptions_url": "https://api.github.com/users/kudratsingh/subscriptions",
+web image smoke	Build web image	2026-08-29T17:12:52.3958375Z                 "type": "User",
+web image smoke	Build web image	2026-08-29T17:12:52.3958805Z                 "url": "https://api.github.com/users/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3959203Z                 "user_view_type": "public"
+web image smoke	Build web image	2026-08-29T17:12:52.3959567Z               }
+web image smoke	Build web image	2026-08-29T17:12:52.3959919Z             },
+web image smoke	Build web image	2026-08-29T17:12:52.3960378Z             "html_url": "https://github.com/kudratsingh/arxiv-research-agent/pull/118",
+web image smoke	Build web image	2026-08-29T17:12:52.3960945Z             "id": 4392502409,
+web image smoke	Build web image	2026-08-29T17:12:52.3961444Z             "issue_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/118",
+web image smoke	Build web image	2026-08-29T17:12:52.3961963Z             "labels": [],
+web image smoke	Build web image	2026-08-29T17:12:52.3962277Z             "locked": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3962629Z             "maintainer_can_modify": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3963165Z             "merge_commit_sha": "06a8a86ffdce1238d1a0ec455b9c5a8c27dba60e",
+web image smoke	Build web image	2026-08-29T17:12:52.3963588Z             "mergeable": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3963977Z             "mergeable_state": "unknown",
+web image smoke	Build web image	2026-08-29T17:12:52.3964323Z             "merged": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3964661Z             "merged_at": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3965066Z             "merged_by": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3965374Z             "milestone": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3965783Z             "node_id": "PR_kwDORzuVk88AAAABBdBEiQ",
+web image smoke	Build web image	2026-08-29T17:12:52.3966175Z             "number": 118,
+web image smoke	Build web image	2026-08-29T17:12:52.3966669Z             "patch_url": "https://github.com/kudratsingh/arxiv-research-agent/pull/118.patch",
+web image smoke	Build web image	2026-08-29T17:12:52.3967237Z             "rebaseable": null,
+web image smoke	Build web image	2026-08-29T17:12:52.3967571Z             "requested_reviewers": [],
+web image smoke	Build web image	2026-08-29T17:12:52.3967959Z             "requested_teams": [],
+web image smoke	Build web image	2026-08-29T17:12:52.3968558Z             "review_comment_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls/comments{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3969166Z             "review_comments": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.3969884Z             "review_comments_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls/118/comments",
+web image smoke	Build web image	2026-08-29T17:12:52.3970656Z             "state": "open",
+web image smoke	Build web image	2026-08-29T17:12:52.3971369Z             "statuses_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/statuses/c7cfda32df2645a97703d4b86a0b8e4d2d0e81e5",
+web image smoke	Build web image	2026-08-29T17:12:52.3972093Z             "title": "WO-28: visual regression baselines for the slice",
+web image smoke	Build web image	2026-08-29T17:12:52.3972606Z             "updated_at": "2026-08-29T17:10:41Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3973133Z             "url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls/118",
+web image smoke	Build web image	2026-08-29T17:12:52.3973581Z             "user": {
+web image smoke	Build web image	2026-08-29T17:12:52.3974055Z               "avatar_url": "https://avatars.githubusercontent.com/u/119715546?v=4",
+web image smoke	Build web image	2026-08-29T17:12:52.3974736Z               "events_url": "https://api.github.com/users/kudratsingh/events{/privacy}",
+web image smoke	Build web image	2026-08-29T17:12:52.3975383Z               "followers_url": "https://api.github.com/users/kudratsingh/followers",
+web image smoke	Build web image	2026-08-29T17:12:52.3975996Z               "following_url": "https://api.github.com/users/kudratsingh/following{/other_user}",
+web image smoke	Build web image	2026-08-29T17:12:52.3976595Z               "gists_url": "https://api.github.com/users/kudratsingh/gists{/gist_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.3977077Z               "gravatar_id": "",
+web image smoke	Build web image	2026-08-29T17:12:52.3977496Z               "html_url": "https://github.com/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3977941Z               "id": 119715546,
+web image smoke	Build web image	2026-08-29T17:12:52.3978286Z               "login": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3978638Z               "node_id": "U_kgDOByK22g",
+web image smoke	Build web image	2026-08-29T17:12:52.3979138Z               "organizations_url": "https://api.github.com/users/kudratsingh/orgs",
+web image smoke	Build web image	2026-08-29T17:12:52.3979773Z               "received_events_url": "https://api.github.com/users/kudratsingh/received_events",
+web image smoke	Build web image	2026-08-29T17:12:52.3980575Z               "repos_url": "https://api.github.com/users/kudratsingh/repos",
+web image smoke	Build web image	2026-08-29T17:12:52.3981009Z               "site_admin": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3981561Z               "starred_url": "https://api.github.com/users/kudratsingh/starred{/owner}{/repo}",
+web image smoke	Build web image	2026-08-29T17:12:52.3982214Z               "subscriptions_url": "https://api.github.com/users/kudratsingh/subscriptions",
+web image smoke	Build web image	2026-08-29T17:12:52.3982741Z               "type": "User",
+web image smoke	Build web image	2026-08-29T17:12:52.3983156Z               "url": "https://api.github.com/users/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.3983578Z               "user_view_type": "public"
+web image smoke	Build web image	2026-08-29T17:12:52.3983899Z             }
+web image smoke	Build web image	2026-08-29T17:12:52.3984212Z           },
+web image smoke	Build web image	2026-08-29T17:12:52.3984524Z           "repository": {
+web image smoke	Build web image	2026-08-29T17:12:52.3984914Z             "allow_forking": true,
+web image smoke	Build web image	2026-08-29T17:12:52.3985482Z             "archive_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/{archive_format}{/ref}",
+web image smoke	Build web image	2026-08-29T17:12:52.3986021Z             "archived": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3986619Z             "assignees_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/assignees{/user}",
+web image smoke	Build web image	2026-08-29T17:12:52.3987384Z             "blobs_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/blobs{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3988120Z             "branches_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/branches{/branch}",
+web image smoke	Build web image	2026-08-29T17:12:52.3988767Z             "clone_url": "https://github.com/kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.3989464Z             "collaborators_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/collaborators{/collaborator}",
+web image smoke	Build web image	2026-08-29T17:12:52.3990417Z             "comments_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/comments{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.3991126Z             "commits_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/commits{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.3991880Z             "compare_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/compare/{base}...{head}",
+web image smoke	Build web image	2026-08-29T17:12:52.3992620Z             "contents_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/contents/{+path}",
+web image smoke	Build web image	2026-08-29T17:12:52.3993388Z             "contributors_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/contributors",
+web image smoke	Build web image	2026-08-29T17:12:52.3993976Z             "created_at": "2026-03-29T07:43:10Z",
+web image smoke	Build web image	2026-08-29T17:12:52.3994362Z             "default_branch": "main",
+web image smoke	Build web image	2026-08-29T17:12:52.3994927Z             "deployments_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/deployments",
+web image smoke	Build web image	2026-08-29T17:12:52.3996417Z             "description": "A multi-agent arXiv research assistant — LangGraph + Claude pipeline with an opt-in supervisor loop, behind a FastAPI/SSE job API and a Next.js human-in-the-loop Evidence Workbench on Redis/Postgres. Extensively ADR-documented.",
+web image smoke	Build web image	2026-08-29T17:12:52.3997409Z             "disabled": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3998099Z             "downloads_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/downloads",
+web image smoke	Build web image	2026-08-29T17:12:52.3998776Z             "events_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/events",
+web image smoke	Build web image	2026-08-29T17:12:52.3999327Z             "fork": false,
+web image smoke	Build web image	2026-08-29T17:12:52.3999643Z             "forks": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.4000093Z             "forks_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.4000597Z             "forks_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/forks",
+web image smoke	Build web image	2026-08-29T17:12:52.4001144Z             "full_name": "kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.4112488Z             "git_commits_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/commits{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.4113657Z             "git_refs_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/refs{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.4114427Z             "git_tags_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/tags{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.4115223Z             "git_url": "git://github.com/kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.4115632Z             "has_discussions": false,
+web image smoke	Build web image	2026-08-29T17:12:52.4116235Z             "has_downloads": false,
+web image smoke	Build web image	2026-08-29T17:12:52.4116513Z             "has_issues": true,
+web image smoke	Build web image	2026-08-29T17:12:52.4116780Z             "has_pages": false,
+web image smoke	Build web image	2026-08-29T17:12:52.4117049Z             "has_projects": true,
+web image smoke	Build web image	2026-08-29T17:12:52.4117334Z             "has_pull_requests": true,
+web image smoke	Build web image	2026-08-29T17:12:52.4117641Z             "has_wiki": false,
+web image smoke	Build web image	2026-08-29T17:12:52.4117893Z             "homepage": null,
+web image smoke	Build web image	2026-08-29T17:12:52.4118338Z             "hooks_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/hooks",
+web image smoke	Build web image	2026-08-29T17:12:52.4118886Z             "html_url": "https://github.com/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.4119273Z             "id": 1195087251,
+web image smoke	Build web image	2026-08-29T17:12:52.4119556Z             "is_template": false,
+web image smoke	Build web image	2026-08-29T17:12:52.4120222Z             "issue_comment_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/comments{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.4120984Z             "issue_events_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues/events{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.4121664Z             "issues_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/issues{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.4122283Z             "keys_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/keys{/key_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.4122953Z             "labels_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/labels{/name}",
+web image smoke	Build web image	2026-08-29T17:12:52.4123415Z             "language": "TypeScript",
+web image smoke	Build web image	2026-08-29T17:12:52.4123891Z             "languages_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/languages",
+web image smoke	Build web image	2026-08-29T17:12:52.4124331Z             "license": null,
+web image smoke	Build web image	2026-08-29T17:12:52.4124784Z             "merges_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/merges",
+web image smoke	Build web image	2026-08-29T17:12:52.4125449Z             "milestones_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/milestones{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.4125924Z             "mirror_url": null,
+web image smoke	Build web image	2026-08-29T17:12:52.4126201Z             "name": "arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.4126500Z             "node_id": "R_kgDORzuVkw",
+web image smoke	Build web image	2026-08-29T17:12:52.4127099Z             "notifications_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/notifications{?since,all,participating}",
+web image smoke	Build web image	2026-08-29T17:12:52.4127641Z             "open_issues": 1,
+web image smoke	Build web image	2026-08-29T17:12:52.4127907Z             "open_issues_count": 1,
+web image smoke	Build web image	2026-08-29T17:12:52.4128184Z             "owner": {
+web image smoke	Build web image	2026-08-29T17:12:52.4128581Z               "avatar_url": "https://avatars.githubusercontent.com/u/119715546?v=4",
+web image smoke	Build web image	2026-08-29T17:12:52.4129175Z               "events_url": "https://api.github.com/users/kudratsingh/events{/privacy}",
+web image smoke	Build web image	2026-08-29T17:12:52.4129700Z               "followers_url": "https://api.github.com/users/kudratsingh/followers",
+web image smoke	Build web image	2026-08-29T17:12:52.4130751Z               "following_url": "https://api.github.com/users/kudratsingh/following{/other_user}",
+web image smoke	Build web image	2026-08-29T17:12:52.4131306Z               "gists_url": "https://api.github.com/users/kudratsingh/gists{/gist_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.4131716Z               "gravatar_id": "",
+web image smoke	Build web image	2026-08-29T17:12:52.4132045Z               "html_url": "https://github.com/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.4132371Z               "id": 119715546,
+web image smoke	Build web image	2026-08-29T17:12:52.4132641Z               "login": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.4132927Z               "node_id": "U_kgDOByK22g",
+web image smoke	Build web image	2026-08-29T17:12:52.4133322Z               "organizations_url": "https://api.github.com/users/kudratsingh/orgs",
+web image smoke	Build web image	2026-08-29T17:12:52.4133883Z               "received_events_url": "https://api.github.com/users/kudratsingh/received_events",
+web image smoke	Build web image	2026-08-29T17:12:52.4134401Z               "repos_url": "https://api.github.com/users/kudratsingh/repos",
+web image smoke	Build web image	2026-08-29T17:12:52.4134775Z               "site_admin": false,
+web image smoke	Build web image	2026-08-29T17:12:52.4135195Z               "starred_url": "https://api.github.com/users/kudratsingh/starred{/owner}{/repo}",
+web image smoke	Build web image	2026-08-29T17:12:52.4135745Z               "subscriptions_url": "https://api.github.com/users/kudratsingh/subscriptions",
+web image smoke	Build web image	2026-08-29T17:12:52.4136227Z               "type": "User",
+web image smoke	Build web image	2026-08-29T17:12:52.4136549Z               "url": "https://api.github.com/users/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.4136886Z               "user_view_type": "public"
+web image smoke	Build web image	2026-08-29T17:12:52.4137137Z             },
+web image smoke	Build web image	2026-08-29T17:12:52.4137354Z             "private": false,
+web image smoke	Build web image	2026-08-29T17:12:52.4137648Z             "pull_request_creation_policy": "all",
+web image smoke	Build web image	2026-08-29T17:12:52.4138136Z             "pulls_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/pulls{/number}",
+web image smoke	Build web image	2026-08-29T17:12:52.4138579Z             "pushed_at": "2026-08-29T17:10:38Z",
+web image smoke	Build web image	2026-08-29T17:12:52.4139038Z             "releases_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/releases{/id}",
+web image smoke	Build web image	2026-08-29T17:12:52.4139446Z             "size": 10448,
+web image smoke	Build web image	2026-08-29T17:12:52.4140335Z             "ssh_url": "git@github.com:kudratsingh/arxiv-research-agent.git",
+web image smoke	Build web image	2026-08-29T17:12:52.4140757Z             "stargazers_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.4141213Z             "stargazers_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/stargazers",
+web image smoke	Build web image	2026-08-29T17:12:52.4141824Z             "statuses_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/statuses/{sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.4142442Z             "subscribers_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/subscribers",
+web image smoke	Build web image	2026-08-29T17:12:52.4143083Z             "subscription_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/subscription",
+web image smoke	Build web image	2026-08-29T17:12:52.4143623Z             "svn_url": "https://github.com/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.4144119Z             "tags_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/tags",
+web image smoke	Build web image	2026-08-29T17:12:52.4144668Z             "teams_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/teams",
+web image smoke	Build web image	2026-08-29T17:12:52.4145056Z             "topics": [
+web image smoke	Build web image	2026-08-29T17:12:52.4145280Z               "anthropic",
+web image smoke	Build web image	2026-08-29T17:12:52.4145501Z               "arxiv",
+web image smoke	Build web image	2026-08-29T17:12:52.4145717Z               "claude",
+web image smoke	Build web image	2026-08-29T17:12:52.4145928Z               "fastapi",
+web image smoke	Build web image	2026-08-29T17:12:52.4146176Z               "human-in-the-loop",
+web image smoke	Build web image	2026-08-29T17:12:52.4146433Z               "langgraph",
+web image smoke	Build web image	2026-08-29T17:12:52.4146647Z               "llm",
+web image smoke	Build web image	2026-08-29T17:12:52.4146874Z               "llm-evaluation",
+web image smoke	Build web image	2026-08-29T17:12:52.4147110Z               "multi-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.4147333Z               "nextjs",
+web image smoke	Build web image	2026-08-29T17:12:52.4147545Z               "playwright",
+web image smoke	Build web image	2026-08-29T17:12:52.4147766Z               "rag",
+web image smoke	Build web image	2026-08-29T17:12:52.4148017Z               "research-assistant",
+web image smoke	Build web image	2026-08-29T17:12:52.4148256Z               "sse"
+web image smoke	Build web image	2026-08-29T17:12:52.4148452Z             ],
+web image smoke	Build web image	2026-08-29T17:12:52.4148957Z             "trees_url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent/git/trees{/sha}",
+web image smoke	Build web image	2026-08-29T17:12:52.4149392Z             "updated_at": "2026-08-29T16:35:40Z",
+web image smoke	Build web image	2026-08-29T17:12:52.4149867Z             "url": "https://api.github.com/repos/kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.4150255Z             "visibility": "public",
+web image smoke	Build web image	2026-08-29T17:12:52.4150495Z             "watchers": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.4150733Z             "watchers_count": 0,
+web image smoke	Build web image	2026-08-29T17:12:52.4151011Z             "web_commit_signoff_required": false
+web image smoke	Build web image	2026-08-29T17:12:52.4151317Z           },
+web image smoke	Build web image	2026-08-29T17:12:52.4151525Z           "sender": {
+web image smoke	Build web image	2026-08-29T17:12:52.4151882Z             "avatar_url": "https://avatars.githubusercontent.com/u/119715546?v=4",
+web image smoke	Build web image	2026-08-29T17:12:52.4152383Z             "events_url": "https://api.github.com/users/kudratsingh/events{/privacy}",
+web image smoke	Build web image	2026-08-29T17:12:52.4152872Z             "followers_url": "https://api.github.com/users/kudratsingh/followers",
+web image smoke	Build web image	2026-08-29T17:12:52.4153397Z             "following_url": "https://api.github.com/users/kudratsingh/following{/other_user}",
+web image smoke	Build web image	2026-08-29T17:12:52.4153920Z             "gists_url": "https://api.github.com/users/kudratsingh/gists{/gist_id}",
+web image smoke	Build web image	2026-08-29T17:12:52.4154364Z             "gravatar_id": "",
+web image smoke	Build web image	2026-08-29T17:12:52.4154667Z             "html_url": "https://github.com/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.4154962Z             "id": 119715546,
+web image smoke	Build web image	2026-08-29T17:12:52.4155215Z             "login": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.4155498Z             "node_id": "U_kgDOByK22g",
+web image smoke	Build web image	2026-08-29T17:12:52.4155876Z             "organizations_url": "https://api.github.com/users/kudratsingh/orgs",
+web image smoke	Build web image	2026-08-29T17:12:52.4156390Z             "received_events_url": "https://api.github.com/users/kudratsingh/received_events",
+web image smoke	Build web image	2026-08-29T17:12:52.4156874Z             "repos_url": "https://api.github.com/users/kudratsingh/repos",
+web image smoke	Build web image	2026-08-29T17:12:52.4157225Z             "site_admin": false,
+web image smoke	Build web image	2026-08-29T17:12:52.4157623Z             "starred_url": "https://api.github.com/users/kudratsingh/starred{/owner}{/repo}",
+web image smoke	Build web image	2026-08-29T17:12:52.4158143Z             "subscriptions_url": "https://api.github.com/users/kudratsingh/subscriptions",
+web image smoke	Build web image	2026-08-29T17:12:52.4158511Z             "type": "User",
+web image smoke	Build web image	2026-08-29T17:12:52.4158812Z             "url": "https://api.github.com/users/kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.4159140Z             "user_view_type": "public"
+web image smoke	Build web image	2026-08-29T17:12:52.4159392Z           }
+web image smoke	Build web image	2026-08-29T17:12:52.4159580Z         },
+web image smoke	Build web image	2026-08-29T17:12:52.4159908Z         "github_job": "web-image",
+web image smoke	Build web image	2026-08-29T17:12:52.4160216Z         "github_ref": "refs/pull/118/merge",
+web image smoke	Build web image	2026-08-29T17:12:52.4160506Z         "github_ref_name": "118/merge",
+web image smoke	Build web image	2026-08-29T17:12:52.4160792Z         "github_ref_protected": "false",
+web image smoke	Build web image	2026-08-29T17:12:52.4161087Z         "github_ref_type": "branch",
+web image smoke	Build web image	2026-08-29T17:12:52.4161433Z         "github_repository": "kudratsingh/arxiv-research-agent",
+web image smoke	Build web image	2026-08-29T17:12:52.4161792Z         "github_repository_id": "1195087251",
+web image smoke	Build web image	2026-08-29T17:12:52.4162102Z         "github_repository_owner": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.4162421Z         "github_repository_owner_id": "119715546",
+web image smoke	Build web image	2026-08-29T17:12:52.4162711Z         "github_run_attempt": "1",
+web image smoke	Build web image	2026-08-29T17:12:52.4162990Z         "github_run_id": "33264933325",
+web image smoke	Build web image	2026-08-29T17:12:52.4163262Z         "github_run_number": "207",
+web image smoke	Build web image	2026-08-29T17:12:52.4163523Z         "github_runner_arch": "X64",
+web image smoke	Build web image	2026-08-29T17:12:52.4163828Z         "github_runner_environment": "github-hosted",
+web image smoke	Build web image	2026-08-29T17:12:52.4164146Z         "github_runner_image_os": "ubuntu24",
+web image smoke	Build web image	2026-08-29T17:12:52.4164471Z         "github_runner_image_version": "20260823.283.1",
+web image smoke	Build web image	2026-08-29T17:12:52.4164808Z         "github_runner_name": "GitHub Actions 1000006300",
+web image smoke	Build web image	2026-08-29T17:12:52.4165115Z         "github_runner_os": "Linux",
+web image smoke	Build web image	2026-08-29T17:12:52.4165499Z         "github_runner_tracking_id": "github_74c04947-35a3-4367-baf3-c7577c81a211",
+web image smoke	Build web image	2026-08-29T17:12:52.4165907Z         "github_server_url": "https://github.com",
+web image smoke	Build web image	2026-08-29T17:12:52.4166225Z         "github_triggering_actor": "kudratsingh",
+web image smoke	Build web image	2026-08-29T17:12:52.4166611Z         "github_workflow": "ci",
+web image smoke	Build web image	2026-08-29T17:12:52.4167101Z         "github_workflow_ref": "kudratsingh/arxiv-research-agent/.github/workflows/ci.yml@refs/pull/118/merge",
+web image smoke	Build web image	2026-08-29T17:12:52.4167665Z         "github_workflow_sha": "f572213f9d0a366f1e5747da75c8e24a4bac22d8",
+web image smoke	Build web image	2026-08-29T17:12:52.4168030Z         "platform": "linux/amd64"
+web image smoke	Build web image	2026-08-29T17:12:52.4168271Z       }
+web image smoke	Build web image	2026-08-29T17:12:52.4168469Z     }
+web image smoke	Build web image	2026-08-29T17:12:52.4168656Z   },
+web image smoke	Build web image	2026-08-29T17:12:52.4169238Z   "buildx.build.ref": "builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4/builder-1daff1a5-0208-42b6-a922-3185ee1fa9c40/q4nfzrakr4eaqcwxqre630lh5",
+web image smoke	Build web image	2026-08-29T17:12:52.4170333Z   "containerimage.config.digest": "sha256:d7e9a548f000a62a4235437f3ad0789218d587d14a7ee7444a3824dd8ea1ec32",
+web image smoke	Build web image	2026-08-29T17:12:52.4170847Z   "containerimage.descriptor": {
+web image smoke	Build web image	2026-08-29T17:12:52.4171211Z     "mediaType": "application/vnd.oci.image.manifest.v1+json",
+web image smoke	Build web image	2026-08-29T17:12:52.4171711Z     "digest": "sha256:d797caf015350c0fd661e1a95d387b91c4eaeddcc8d7c2d14c00d68c76719bc1",
+web image smoke	Build web image	2026-08-29T17:12:52.4172111Z     "size": 2007,
+web image smoke	Build web image	2026-08-29T17:12:52.4172322Z     "annotations": {
+web image smoke	Build web image	2026-08-29T17:12:52.4172633Z       "org.opencontainers.image.created": "2026-08-29T17:12:29Z"
+web image smoke	Build web image	2026-08-29T17:12:52.4173039Z     },
+web image smoke	Build web image	2026-08-29T17:12:52.4173231Z     "platform": {
+web image smoke	Build web image	2026-08-29T17:12:52.4173461Z       "architecture": "amd64",
+web image smoke	Build web image	2026-08-29T17:12:52.4173694Z       "os": "linux"
+web image smoke	Build web image	2026-08-29T17:12:52.4173898Z     }
+web image smoke	Build web image	2026-08-29T17:12:52.4174079Z   },
+web image smoke	Build web image	2026-08-29T17:12:52.4174495Z   "containerimage.digest": "sha256:d797caf015350c0fd661e1a95d387b91c4eaeddcc8d7c2d14c00d68c76719bc1",
+web image smoke	Build web image	2026-08-29T17:12:52.4175044Z   "image.name": "docker.io/library/arxiv-research-agent-web:ci"
+web image smoke	Build web image	2026-08-29T17:12:52.4175368Z }
+web image smoke	Build web image	2026-08-29T17:12:52.4175841Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:12:52.4176212Z ##[group]Reference
+web image smoke	Build web image	2026-08-29T17:12:52.4176824Z builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4/builder-1daff1a5-0208-42b6-a922-3185ee1fa9c40/q4nfzrakr4eaqcwxqre630lh5
+web image smoke	Build web image	2026-08-29T17:12:52.4177464Z ##[endgroup]
+web image smoke	Build web image	2026-08-29T17:12:52.4177814Z ##[group]Check build summary support
+web image smoke	Build web image	2026-08-29T17:12:52.4178227Z Build summary supported!
+web image smoke	Build web image	2026-08-29T17:12:52.4178582Z ##[endgroup]
+web image smoke	Start stub upstream	﻿2026-08-29T17:12:52.4225025Z ##[group]Run node web/e2e/support/stub-upstream.mjs >"$RUNNER_TEMP/stub.log" 2>&1 &
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4225728Z node web/e2e/support/stub-upstream.mjs >"$RUNNER_TEMP/stub.log" 2>&1 &
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4226142Z echo $! >"$RUNNER_TEMP/stub.pid"
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4226451Z for _ in $(seq 1 20); do
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4226813Z   if curl -fsS http://127.0.0.1:8000/healthz; then break; fi
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4227157Z   sleep 0.5
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4227381Z done
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4307409Z shell: /usr/bin/bash -e {0}
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4307723Z ##[endgroup]
+web image smoke	Start stub upstream	2026-08-29T17:12:52.4489575Z curl: (7) Failed to connect to 127.0.0.1 port 8000 after 0 ms: Couldn't connect to server
+web image smoke	Start stub upstream	2026-08-29T17:12:52.9654563Z {"status":"ok","active_jobs":0,"abandoned_node_threads":0,"max_concurrent_jobs":2,"dependencies":{}}
+web image smoke	Run web image against the stub	﻿2026-08-29T17:12:52.9688906Z ##[group]Run docker run -d --name web-image-smoke \
+web image smoke	Run web image against the stub	2026-08-29T17:12:52.9689488Z docker run -d --name web-image-smoke \
+web image smoke	Run web image against the stub	2026-08-29T17:12:52.9689964Z   -p 127.0.0.1:3000:3000 \
+web image smoke	Run web image against the stub	2026-08-29T17:12:52.9690342Z   --add-host host.docker.internal:host-gateway \
+web image smoke	Run web image against the stub	2026-08-29T17:12:52.9690757Z   -e API_INTERNAL_BASE=http://host.docker.internal:8000 \
+web image smoke	Run web image against the stub	2026-08-29T17:12:52.9691124Z   arxiv-research-agent-web:ci
+web image smoke	Run web image against the stub	2026-08-29T17:12:52.9717158Z shell: /usr/bin/bash -e {0}
+web image smoke	Run web image against the stub	2026-08-29T17:12:52.9717452Z ##[endgroup]
+web image smoke	Run web image against the stub	2026-08-29T17:12:53.0198846Z 73b2a9580a01ea4d4fc0cf208ca583c2f0a59b7073622a5052da0fe654c8e6ac
+web image smoke	Probe / and /api/healthz	﻿2026-08-29T17:12:53.2682723Z ##[group]Run set -u
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2683017Z set -u
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2683309Z # Boot wait first, so the two assertions below are strict:
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2683722Z # anything other than 200 fails immediately rather than being
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2684209Z # retried into a pass.
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2684475Z for _ in $(seq 1 60); do
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2684840Z   if curl -fsS -o /dev/null http://127.0.0.1:3000/; then break; fi
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2685196Z   sleep 1
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2685420Z done
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2685626Z fail=0
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2685854Z for path in / /api/healthz; do
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2686198Z   code=$(curl -s -o "$RUNNER_TEMP/body" -w '%{http_code}' \
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2686557Z     "http://127.0.0.1:3000${path}")
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2686866Z   echo "GET ${path} -> ${code}"
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2687164Z   head -c 300 "$RUNNER_TEMP/body"; echo
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2687500Z   [ "$code" = "200" ] || fail=1
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2687758Z done
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2687976Z exit "$fail"
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2713849Z shell: /usr/bin/bash -e {0}
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2714160Z ##[endgroup]
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:53.2825170Z curl: (56) Recv failure: Connection reset by peer
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:54.2898513Z curl: (56) Recv failure: Connection reset by peer
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:55.2969339Z curl: (56) Recv failure: Connection reset by peer
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:56.6382644Z GET / -> 200
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:56.6394463Z <!DOCTYPE html><html lang="en" class="__variable_c5a337 __variable_68a670 __variable_484041"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/_next/static/css/f8fb8d84349ca80d.css" nonce="QgvubzXTg2frH8WaKCX9cg==" data-pr
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:56.7053044Z GET /api/healthz -> 200
+web image smoke	Probe / and /api/healthz	2026-08-29T17:12:56.7067574Z {"status":"ok","active_jobs":0,"abandoned_node_threads":0,"max_concurrent_jobs":2,"dependencies":{}}
+web image smoke	Probe the CSP header and the container healthcheck	﻿2026-08-29T17:12:56.7112265Z ##[group]Run set -eu
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7112565Z set -eu
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7112856Z csp=$(curl -sS -D- -o /dev/null http://127.0.0.1:3000/ \
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7113270Z   | tr -d '\r' | grep -i '^content-security-policy:')
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7113576Z echo "$csp"
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7113883Z # Two independent checks rather than one ordered glob: the tokens
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7114364Z # appear as `'nonce-…' 'strict-dynamic'`, and a single pattern
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7114917Z # pinning their order tests the spelling of this step instead of
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7115318Z # the policy. (It did exactly that on the first run.)
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7115626Z case "$csp" in
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7115855Z   *"'nonce-"*) ;;
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7116149Z   *) echo "no per-request nonce in the CSP on /"; exit 1 ;;
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7116464Z esac
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7116668Z case "$csp" in
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7116953Z   *"'strict-dynamic'"*) ;;
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7117260Z   *) echo "no 'strict-dynamic' in the CSP on /"; exit 1 ;;
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7117566Z esac
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7117868Z inert=$(curl -sS -D- -o /dev/null http://127.0.0.1:3000/api/healthz \
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7118264Z   | tr -d '\r' | grep -i '^content-security-policy:')
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7118564Z echo "$inert"
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7118792Z case "$inert" in
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7119031Z   *"default-src 'none'"*) ;;
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7119345Z   *) echo "/api/healthz carries no inert policy"; exit 1 ;;
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7119653Z esac
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7120177Z docker exec web-image-smoke node scripts/healthcheck.mjs
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7145277Z shell: /usr/bin/bash -e {0}
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7145562Z ##[endgroup]
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7492857Z content-security-policy: default-src 'self'; script-src 'self' 'nonce-vYj5xKATOEf4YbfdUsz5OA==' 'strict-dynamic'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.7663135Z Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+web image smoke	Probe the CSP header and the container healthcheck	2026-08-29T17:12:56.9009510Z {"event":"web_healthcheck","http_status":200,"report":"ok","status":"ok","dependencies":{}}
+web image smoke	Tear down	﻿2026-08-29T17:12:56.9270961Z ##[group]Run docker rm -f web-image-smoke || true
+web image smoke	Tear down	2026-08-29T17:12:56.9271593Z docker rm -f web-image-smoke || true
+web image smoke	Tear down	2026-08-29T17:12:56.9272160Z kill "$(cat "$RUNNER_TEMP/stub.pid")" 2>/dev/null || true
+web image smoke	Tear down	2026-08-29T17:12:56.9311917Z shell: /usr/bin/bash -e {0}
+web image smoke	Tear down	2026-08-29T17:12:56.9312324Z ##[endgroup]
+web image smoke	Tear down	2026-08-29T17:12:57.0818423Z web-image-smoke
+web image smoke	Post Build web image	﻿2026-08-29T17:12:57.0944730Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+web image smoke	Post Build web image	2026-08-29T17:12:57.0945832Z Post job cleanup.
+web image smoke	Post Build web image	2026-08-29T17:12:57.3230348Z ##[group]Generating build summary
+web image smoke	Post Build web image	2026-08-29T17:12:57.3234291Z exporting build record to /home/runner/work/_temp/docker-actions-toolkit-k7Xi64/export
+web image smoke	Post Build web image	2026-08-29T17:12:57.3247779Z (node:3611) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+web image smoke	Post Build web image	2026-08-29T17:12:57.3248480Z (Use `node --trace-deprecation ...` to show where the warning was created)
+web image smoke	Post Build web image	2026-08-29T17:12:57.5047351Z [command]/usr/bin/docker buildx history export --builder builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4 --output /home/runner/work/_temp/docker-actions-toolkit-k7Xi64/export/kudratsingh~arxiv-research-agent~Q4NFZR.dockerbuild q4nfzrakr4eaqcwxqre630lh5 --finalize
+web image smoke	Post Build web image	2026-08-29T17:12:57.6772781Z Build record written to /home/runner/work/_temp/docker-actions-toolkit-k7Xi64/export/kudratsingh~arxiv-research-agent~Q4NFZR.dockerbuild (48.33 KB)
+web image smoke	Post Build web image	2026-08-29T17:12:57.6795977Z Uploading kudratsingh~arxiv-research-agent~Q4NFZR.dockerbuild to blob storage
+web image smoke	Post Build web image	2026-08-29T17:12:57.9685611Z Beginning upload of artifact content to blob storage
+web image smoke	Post Build web image	2026-08-29T17:12:57.9765887Z (node:3611) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+web image smoke	Post Build web image	2026-08-29T17:12:57.9775589Z Uploaded bytes 49488
+web image smoke	Post Build web image	2026-08-29T17:12:58.2839268Z Finished uploading artifact content to blob storage!
+web image smoke	Post Build web image	2026-08-29T17:12:58.2843718Z SHA256 hash of uploaded artifact is 60518a183945bd2eb95299fc737ceed48101ef3dacdbb13f3795af1cb01b9a31
+web image smoke	Post Build web image	2026-08-29T17:12:58.2844976Z Finalizing artifact upload
+web image smoke	Post Build web image	2026-08-29T17:12:58.6295485Z Artifact successfully finalized (9718377842)
+web image smoke	Post Build web image	2026-08-29T17:12:58.6296770Z Artifact download URL: https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33264933325/artifacts/9718377842
+web image smoke	Post Build web image	2026-08-29T17:12:58.6321813Z Writing summary
+web image smoke	Post Build web image	2026-08-29T17:12:58.6335200Z ##[endgroup]
+web image smoke	Post Build web image	2026-08-29T17:12:58.6335949Z ##[group]Removing temp folder /home/runner/work/_temp/docker-actions-toolkit-23CvaZ
+web image smoke	Post Build web image	2026-08-29T17:12:58.6337492Z ##[endgroup]
+web image smoke	Post Build web image	2026-08-29T17:12:58.6338045Z ##[group]Post cache
+web image smoke	Post Build web image	2026-08-29T17:12:58.6340402Z State not set
+web image smoke	Post Build web image	2026-08-29T17:12:58.6341143Z ##[endgroup]
+web image smoke	Post Set up Docker Buildx	﻿2026-08-29T17:12:58.6486632Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:12:58.6488381Z Post job cleanup.
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:12:58.8914085Z ##[group]Removing builder
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:12:58.8919610Z (node:3764) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:12:58.8920723Z (Use `node --trace-deprecation ...` to show where the warning was created)
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:12:59.0073779Z [command]/usr/bin/docker buildx rm builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:13:00.1023580Z builder-1daff1a5-0208-42b6-a922-3185ee1fa9c4 removed
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:13:00.1052175Z ##[endgroup]
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:13:00.1052930Z ##[group]Cleaning up certificates
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:13:00.1061168Z ##[endgroup]
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:13:00.1061855Z ##[group]Post cache
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:13:00.1062272Z State not set
+web image smoke	Post Set up Docker Buildx	2026-08-29T17:13:00.1062792Z ##[endgroup]
+web image smoke	Post Run actions/setup-node@v4	﻿2026-08-29T17:13:00.1196736Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+web image smoke	Post Run actions/setup-node@v4	2026-08-29T17:13:00.1197871Z Post job cleanup.
+web image smoke	Post Run actions/setup-node@v4	2026-08-29T17:13:00.2425896Z (node:3887) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+web image smoke	Post Run actions/setup-node@v4	2026-08-29T17:13:00.2427037Z (Use `node --trace-deprecation ...` to show where the warning was created)
+web image smoke	Post Run actions/checkout@v4	﻿2026-08-29T17:13:00.2610127Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.2611992Z Post job cleanup.
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.3578692Z [command]/usr/bin/git version
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.3626338Z git version 2.55.0
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.3671082Z Temporarily overriding HOME='/home/runner/work/_temp/92e9a832-bfca-4ec1-bc6d-d2de5a3b0859' before making global git config changes
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.3672068Z Adding repository directory to the temporary git global config as a safe directory
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.3678281Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/arxiv-research-agent/arxiv-research-agent
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.3726009Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.3762719Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.3993654Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.4024749Z http.https://github.com/.extraheader
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.4038724Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.4076001Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.4317620Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+web image smoke	Post Run actions/checkout@v4	2026-08-29T17:13:00.4355404Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+web image smoke	Complete job	﻿2026-08-29T17:13:00.4731292Z Cleaning up orphan processes
+web image smoke	Complete job	2026-08-29T17:13:00.5014905Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, docker/build-push-action@v6, docker/setup-buildx-action@v3. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
