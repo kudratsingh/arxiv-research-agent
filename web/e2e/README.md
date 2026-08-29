@@ -162,6 +162,16 @@ fails on whichever host did not produce it. The committed set is `darwin`; a
 Linux set is **additive** — run `e2e:visual:update` on Linux and a
 `__screenshots__/linux/` directory appears beside it, with nothing to merge.
 
+**A platform with no committed set skips, loudly, with the command that would
+fix it.** That is deliberate: failing forty-eight comparisons for the absence
+of bytes nobody wrote is a red build that means "no baseline" rather than
+"regression", and letting the runner write its own and pass is a baseline the
+runner produced and then agreed with, which proves nothing.
+`--update-snapshots` turns the skip off, because that *is* the request to
+generate the set. One test in the file never skips — "at least one platform's
+baseline set is committed" — so deleting the whole tree turns the suite red
+instead of quiet.
+
 ### Determinism, and what each measure removes
 
 A visual gate that goes red for reasons other than a visual change is worse
@@ -250,19 +260,25 @@ tagged `@visual` and grepped into the `chromium` project, so
 needs **no new step**. Two things that job's owner has to decide, because this
 work order deliberately did not edit a workflow:
 
-- **The runner is Linux and the committed set is `darwin`.** A `linux` set does
-  not exist, so on a Linux runner every one of the forty-eight comparisons
-  fails with "snapshot doesn't exist" (Playwright will not write a missing
-  snapshot under `CI`). Either generate and commit
-  `e2e/__screenshots__/linux/` from a Playwright container first, or grep
-  `@visual` out of the CI invocation until someone does. **Do not** let CI
-  write its own baselines — a baseline the runner produced and immediately
-  agreed with proves nothing.
-- **Where it belongs.** Per-PR in the existing `web-e2e` job is the natural
-  home: it is +17 s on the `chromium` project against a stack the job already
-  has up, and a visual regression is exactly the kind of thing that should
-  block the PR that caused it rather than surface in a nightly. WO-29's nightly
-  is the alternative if the Linux set is not wanted per-PR.
+- **The runner is Linux and the committed set is `darwin`, so on CI the
+  forty-eight comparisons currently SKIP.** They report the reason and the
+  command that fixes it, and the guard test above them still runs, so the
+  situation is visible in the job log rather than silent. Nothing is red and
+  nothing is falsely green — but nothing is gating on the runner either.
+  To make it gate: generate `e2e/__screenshots__/linux/` on a Linux host
+  (`mcr.microsoft.com/playwright:v1.62.1-noble` against the seeded stack, or
+  the runner itself with a one-off `--update-snapshots`), **look at the
+  forty-eight images**, and commit them. The suite then activates with no
+  code change. Do **not** wire CI to write its own — a baseline the runner
+  produced and immediately agreed with proves nothing, which is why
+  `--update-snapshots` was left out of the job rather than added to it.
+- **Where it belongs once a Linux set exists.** Per-PR in the existing
+  `web-e2e` job is the natural home: it is +17 s on the `chromium` project
+  against a stack the job already has up, and a visual regression is exactly
+  the kind of thing that should block the PR that caused it rather than
+  surface in a nightly. WO-29's nightly is the alternative if the Linux set is
+  not wanted per-PR — in which case grep `@visual` out of the `web-e2e`
+  invocation so the skip does not sit in the log forever.
 
 **WO-22 — landed.** `axe.spec.ts` iterates `STATES` in both themes (forty
 renders), so it inherits `reflow.spec.ts`'s partition claim that `STATES ∪

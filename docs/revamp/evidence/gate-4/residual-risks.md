@@ -38,7 +38,7 @@ who made it still remembers why.
 | **Owner** | [WO-28](../../06-WORK-ORDERS.md#wo-28--visual-regression-baselines), and after ship whoever owns [`web/e2e/visual.spec.ts`](../../../../web/e2e/visual.spec.ts). |
 | **Accepted at** | Gate 4, on the branch that introduced the tier. |
 | **Covered** | Forty-eight committed PNGs: the five slice steps (`05` §2.1) plus every degraded state that has a retained Gate 1 screenshot — twelve renders × light/dark × 412/1440 px, Chromium on `darwin`. |
-| **Not covered** | The other nine `states.ts` rows; the third audit width (320); every `DEFERRED_STATES` transition; Firefox and WebKit; Linux; forced-colours; reduced-motion as a *separate* axis; and every Storybook story. |
+| **Not covered** | The other nine `states.ts` rows; the third audit width (320); every `DEFERRED_STATES` transition; Firefox and WebKit; forced-colours; reduced-motion as a *separate* axis; every Storybook story; and — until a `linux` set is generated and reviewed — the CI runner, where the sweep skips rather than gates. |
 | **Why accepted** | Below. |
 | **What would change it** | Below. |
 
@@ -120,10 +120,15 @@ Any one of these, and the depth should be revisited rather than defended:
 - **The token layer stops being the only place values live.** The narrowness
   above leans on `web/tests/tokens.test.ts` — if literal colours or spacings
   start appearing in components, pixel comparison becomes the only check left.
-- **CI gains a Linux visual leg.** That is additive under
-  `e2e/__screenshots__/linux/` and costs a second set of bytes; it is worth it
-  only once someone actually reviews the Linux diffs. Wiring is
-  [`web/e2e/README.md`](../../../../web/e2e/README.md), "Regenerating".
+- **CI gains a Linux visual leg.** Today it does not: the `web-e2e` job runs on
+  a Linux runner with no `e2e/__screenshots__/linux/`, so the forty-eight
+  comparisons **skip there**, loudly, naming the command that would fix it. The
+  gate is real on a developer's macOS and inert on the runner, and that is a
+  second residual limit inside this one. Closing it is additive — generate the
+  Linux set, *look at the images*, commit them — and costs a second set of
+  bytes; it is worth doing once someone will actually review Linux diffs. See
+  [`web/e2e/README.md`](../../../../web/e2e/README.md), "For WO-24 (CI
+  wiring)".
 
 ### Evidence
 
