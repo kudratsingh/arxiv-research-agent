@@ -5,7 +5,40 @@
  * upstream request. It never enters the client bundle, URL, browser storage,
  * or EventSource constructor. Returning the upstream ReadableStream directly
  * preserves SSE and export-download behavior without buffering whole reports.
+ *
+ * WO-30 CHANGED TWO THINGS HERE AND NO OTHERS (RC-08).
+ *
+ *   1. The inline `process.env.ARXIV_API_KEY` read became a call to
+ *      `resolveUpstreamPrincipal(request)` — MT-01 seam S1
+ *      (04-ARCHITECTURE.md §10). The shared implementation returns the same
+ *      env key, so it is a no-op refactor and `tests/apiProxyRoute.test.ts`
+ *      proves it by still passing **unmodified**.
+ *   2. One structured JSON line per request goes to stdout (C6). It carries
+ *      a path TEMPLATE, never the raw path, never the query string, never a
+ *      header and never a body — see `lib/server/proxyLog.ts`.
+ *
+ * The contract 03 §2.1 calls "unchanged" is unchanged: credential injection,
+ * the request and response header allowlists, `runtime = "nodejs"`,
+ * `dynamic = "force-dynamic"`, and unbuffered stream/download pass-through.
+ * If any of those had moved, the frozen test file would be red.
+ *
+ * MT-01 SEAM S2 — `/api/auth/*` IS RESERVED, AND NO FILE IMPLEMENTS IT.
+ * Today `/api/auth/login` would fall into this catch-all and be forwarded
+ * upstream, where FastAPI 404s it. That is the correct behaviour for a
+ * product with no login, and it is also why the path is safe to reserve: in
+ * the App Router a more specific segment (`app/api/auth/[...path]/route.ts`)
+ * takes precedence over a catch-all, so MT-01 adds files and this file does
+ * not change. Nothing is added now (04 §10 S2, D-009). `tests/principal.test.ts`
+ * asserts the directory stays absent, and `docs/security.md` records the
+ * reservation.
  */
+
+import { resolveUpstreamPrincipal } from "@/lib/server/principal";
+import {
+  countStreamedBytes,
+  emitProxyLog,
+  pathTemplate,
+} from "@/lib/server/proxyLog";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -63,10 +96,32 @@ async function proxyRequest(
   request: Request,
   context: RouteContext
 ): Promise<Response> {
+  const startedAt = Date.now();
+  let segments: readonly string[] = [];
+
+  // C6: the log line is built from the TEMPLATE, resolved once here. Nothing
+  // downstream is handed the raw path, so nothing downstream can log it.
+  const log = (
+    status: number,
+    bytes: number,
+    outcome?: "misconfigured" | "upstream_unavailable"
+  ): void => {
+    emitProxyLog({
+      method: request.method,
+      pathTemplate: pathTemplate(segments),
+      status,
+      durationMs: Date.now() - startedAt,
+      bytes,
+      ...(outcome === undefined ? {} : { outcome }),
+    });
+  };
+
   let upstreamUrl: URL;
   try {
-    upstreamUrl = await buildUpstreamUrl(request, context);
+    segments = (await context.params).path;
+    upstreamUrl = buildUpstreamUrl(request, segments);
   } catch {
+    log(503, 0, "misconfigured");
     return Response.json(
       { detail: "api_proxy_misconfigured" },
       { status: 503 }
@@ -78,8 +133,10 @@ async function proxyRequest(
     const value = request.headers.get(name);
     if (value !== null) headers.set(name, value);
   }
-  const apiKey = process.env.ARXIV_API_KEY;
-  if (apiKey) headers.set("X-API-Key", apiKey);
+  // MT-01 seam S1. Identical behaviour to the inline env read it replaced:
+  // the header is set when a key is configured and omitted when it is not.
+  const principal = await resolveUpstreamPrincipal(request);
+  if (principal) headers.set("X-API-Key", principal.apiKey);
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
   const body = hasBody ? await request.arrayBuffer() : undefined;
@@ -95,6 +152,7 @@ async function proxyRequest(
       signal: request.signal,
     });
   } catch {
+    log(502, 0, "upstream_unavailable");
     return Response.json(
       { detail: "api_upstream_unavailable" },
       { status: 502 }
@@ -107,7 +165,12 @@ async function proxyRequest(
     if (value !== null) responseHeaders.set(name, value);
   }
 
-  return new Response(upstream.body, {
+  // Still the upstream stream, still unbuffered — see `countStreamedBytes`.
+  const counted = countStreamedBytes(upstream.body, request.signal, (bytes) =>
+    log(upstream.status, bytes)
+  );
+
+  return new Response(counted, {
     status: upstream.status,
     statusText: upstream.statusText,
     headers: responseHeaders,
@@ -115,10 +178,7 @@ async function proxyRequest(
 }
 
 /** Resolve the operator-controlled internal base and encoded route path. */
-async function buildUpstreamUrl(
-  request: Request,
-  context: RouteContext
-): Promise<URL> {
+function buildUpstreamUrl(request: Request, path: readonly string[]): URL {
   const base = new URL(
     process.env.API_INTERNAL_BASE ?? "http://localhost:8000"
   );
@@ -129,7 +189,6 @@ async function buildUpstreamUrl(
     throw new Error("API_INTERNAL_BASE must not contain credentials");
   }
 
-  const { path } = await context.params;
   const encodedPath = path.map(encodeURIComponent).join("/");
   const baseWithSlash = base.href.endsWith("/") ? base.href : `${base.href}/`;
   const upstream = new URL(encodedPath, baseWithSlash);
