@@ -51,23 +51,27 @@ const config: StorybookConfig = {
   },
 
   /**
-   * WO-18: the Markdown pipeline must be resolved by Vite, not by Node.
+   * Three packages must be resolved by Vite, not by Node.
    *
    * Same symptom, same cause and same fix as the `@radix-ui/*` entries WO-07
    * added to `server.deps.inline` in web/vitest.config.mts. The Next
    * framework mocks register a `module-alias` redirect from `react` to
    * `next/dist/compiled/react`, which Node's ESM loader cannot resolve
-   * because the target is a directory. `react-markdown` imports
-   * `react/jsx-runtime`, so the moment the Storybook Vitest project
-   * externalises it the story fails with "Cannot find module
-   * .../next/dist/compiled/react/jsx-runtime".
+   * because the target is a directory. So ANY dependency the Storybook
+   * Vitest project externalises and which then imports `react` fails on it:
+   * `react-markdown` imports `react/jsx-runtime` and dies with "Cannot find
+   * module .../next/dist/compiled/react/jsx-runtime" (WO-18), and
+   * `react-hook-form` imports `react` and dies with "Directory import ... is
+   * not supported" (WO-17). `remark-gfm` travels with the first.
    *
    * It is fixed HERE rather than in vitest.config.mts because the Storybook
    * project takes its Vite configuration from this file, and because the
-   * coverage thresholds in that file are not this work order's to touch.
-   * `ssr.noExternal` is the Vite-level spelling of the same instruction:
-   * bundle these two through Vite, and the `react` import inside them
-   * resolves the way every other module's does.
+   * coverage thresholds in that file are not a surface work order's to
+   * touch. `ssr.noExternal` is the Vite-level spelling of the same
+   * instruction: bundle these three through Vite, and the `react` import
+   * inside them resolves the way every other module's does.
+   *
+   * Zod needs no entry: it imports no React and externalises cleanly.
    *
    * `npm run build-storybook` is unaffected either way — a browser build
    * never externalises anything.
@@ -80,7 +84,7 @@ const config: StorybookConfig = {
       ...config,
       ssr: {
         ...config.ssr,
-        noExternal: [...inherited, "react-markdown", "remark-gfm"],
+        noExternal: [...inherited, "react-markdown", "remark-gfm", "react-hook-form"],
       },
     };
   },
