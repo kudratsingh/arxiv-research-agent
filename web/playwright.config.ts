@@ -47,7 +47,18 @@ process.env.ANTHROPIC_API_KEY = DISABLED_API_KEY;
 
 /** Tags, so one spec file can serve several projects without duplication. */
 const MOBILE_ONLY = /@device/;
-const CHROMIUM_ONLY = /@slice|@export/;
+/**
+ * `@axe` joins the chromium-only set for the same reason `@slice` and
+ * `@export` are in it, plus one of its own. The wall-clock reason: the sweep
+ * is forty navigations and forty full-document axe runs, and running it three
+ * times would treble the slowest tier for no new evidence. The evidence
+ * reason: the twelve retained baseline reports were taken in Chrome
+ * (`baseline/README.md`, "local Google Chrome 151"), and WO-22 criterion 1 is
+ * that the new reports are *directly comparable* to them — a Firefox or
+ * WebKit `color-contrast` measurement is a different measurement, not a
+ * stricter one.
+ */
+const CHROMIUM_ONLY = /@slice|@export|@axe/;
 
 export default defineConfig({
   testDir: "./e2e",
