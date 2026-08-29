@@ -286,3 +286,34 @@
      away. To be restated in WO-26's `known-gaps.md`.
 - Needs human review: no (delegated); listed here so the audit trail of
   every deviation from the ratified package is complete.
+
+## D-013 — Coordinator process incident: PR #103 merged with a red check
+
+- Date: 2026-08-29
+- Status: recorded; procedure corrected
+- What happened: the docs-only roadmap PR #103 was squash-merged while
+  its `web e2e (chromium + axe)` job was red. The coordinator's
+  verification pipeline (`gh pr checks 103 | awk … && gh pr merge …`)
+  keyed the merge on the pipeline's exit status — awk's, always 0 —
+  instead of `gh pr checks`' own; a `--watch …; echo` background
+  watcher had likewise masked the failure behind the echo's exit code.
+- Impact: none to `main`'s code. The diff was 15 documentation lines in
+  `planning/03-roadmap.md`; the tree was byte-identical to the state
+  that had passed the full 8-job matrix at PR #102.
+- The red itself: an infrastructure flake, not a regression — the
+  `web-e2e` image bake was rate-limited by Hugging Face (HTTP 429) while
+  downloading the MiniLM embedding weights. A `--failed` re-run of the
+  same run (33251684100) completed green end to end, retroactively
+  validating the merged state.
+- Corrections:
+  1. The merge gate is now a **bare, unpiped `gh pr checks <n>`** whose
+     own exit status `&&`-chains into the merge; filters may render the
+     output but never sit between the check and the decision. Watchers
+     signal "settled" only; the bare re-check decides.
+  2. The Hugging Face dependency in the CI image bake is recorded as a
+     reliability risk under fleet concurrency; caching the weights
+     (HF hub cache or a docker layer-cache) is queued as a CI hardening
+     candidate once WO-30 — the last sanctioned `ci.yml` editor —
+     merges. Until then the standing mitigation is a `--failed` re-run.
+- Needs human review: no (delegated); recorded per the D-011 precedent
+  that every merge-process incident enters the audit trail.
