@@ -1,0 +1,157 @@
+/* =========================================================================
+ * WO-14 — the thread rail's structure, as CSS rather than as utilities.
+ *
+ * THE ROW HEIGHT IS THE WHOLE REASON THIS FILE EXISTS (criterion 4).
+ * 03-DESIGN-BRIEF.md §2.2 row 2 asks for "three skeleton rows at real row
+ * height ... so nothing shifts", and a promise like that is only keepable
+ * if the loading row and the loaded row read their height from the SAME
+ * declaration. `--ew-thread-row-height` is that declaration: both states
+ * render `.ew-thread-row`, so "the skeleton is exactly as tall as the row
+ * it stands in for" is true by construction rather than by two utility
+ * strings that happen to agree today.
+ *
+ * The value is `--size-control-height-md` (40px) — the row IS a control,
+ * and 03 §3.6's control heights are the scale it belongs on. Under a
+ * coarse pointer the row grows to `--size-target-coarse` for the same
+ * reason every other target does (03 §7.4); both states grow together, so
+ * the no-shift property survives the media query.
+ *
+ * THE DEFINITE-HEIGHT CHAIN (WO-08's handoff). The shell's rail is a grid
+ * track with `min-height: 0`, and the rail's contents are handed a
+ * `min-h-0 flex-1` box. `.ew-thread-rail` continues that chain with
+ * `height: 100%` + `min-height: 0` so the LIST scrolls and the page does
+ * not — and stops at `height: auto` inside the drawer, where the dialog
+ * owns the scrolling and there is no definite height to inherit.
+ *
+ * NO LITERAL COLOUR AND NO LITERAL SIZE. Every value is a `var(--*)`;
+ * web/tests/tokens.test.ts scans this file with every other one under web/.
+ * ========================================================================= */
+
+.ew-thread-rail {
+  --ew-thread-row-height: var(--size-control-height-md);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Inside the drawer there is no definite height to fill: the dialog panel
+   sizes to its content and its own container scrolls. `height: auto` there
+   keeps a 100%-of-nothing from collapsing the list to zero. */
+[data-thread-drawer-rail] .ew-thread-rail {
+  height: auto;
+}
+
+/* -------------------------------------------------------------------------
+ * Chrome — rendered in EVERY state, including loading (criterion 4).
+ * ---------------------------------------------------------------------- */
+.ew-thread-rail__chrome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+.ew-thread-rail__heading {
+  color: var(--color-ink-faint);
+  font-size: var(--text-ui-xs-size);
+  line-height: var(--text-ui-xs-line);
+  letter-spacing: var(--text-ui-xs-tracking);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* The inline alert and the delete-failure notice sit ABOVE the list
+   (03 §2.2 row 4: "at the top of the rail"), inside the same gutter. */
+.ew-thread-rail__notice {
+  padding: 0 var(--space-3) var(--space-2);
+}
+
+/* -------------------------------------------------------------------------
+ * The list
+ * ---------------------------------------------------------------------- */
+.ew-thread-rail__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+/* Not a scroller inside the drawer: the dialog scrolls, so a second
+   scrolling box would trap the pointer in an unnamed region. */
+[data-thread-drawer-rail] .ew-thread-rail__list {
+  overflow-y: visible;
+}
+
+.ew-thread-rail__foot {
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+/* -------------------------------------------------------------------------
+ * One row — the height contract
+ *
+ * `min-height` rather than `height`: a long title wraps to two lines and
+ * the row grows. The skeleton stands in for the SHORTEST honest row, which
+ * is the only height that can be reserved before the titles are known.
+ * ---------------------------------------------------------------------- */
+.ew-thread-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--ew-thread-row-height);
+  border-radius: var(--radius-md);
+}
+
+.ew-thread-row:hover {
+  background-color: var(--color-sunken);
+}
+
+.ew-thread-row__link {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: var(--ew-thread-row-height);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  font-size: var(--text-ui-sm-size);
+  line-height: var(--text-ui-sm-line);
+}
+
+.ew-thread-row__link[aria-current="page"] {
+  background-color: var(--color-sunken);
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.ew-thread-row__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------
+ * The reserved owner slot (criterion 8, seam S4)
+ *
+ * Rendered in every row, empty and zero-height. It is `display: block` with
+ * no content rather than `display: none` so that MT-01 fills it by writing
+ * children into it, not by finding the place it should have been — and so
+ * that a reviewer can see it in the DOM today.
+ * ---------------------------------------------------------------------- */
+.ew-thread-row__owner {
+  display: block;
+  height: 0;
+  overflow: hidden;
+}
+
+@media (pointer: coarse) {
+  .ew-thread-rail {
+    --ew-thread-row-height: var(--size-target-coarse);
+  }
+}
