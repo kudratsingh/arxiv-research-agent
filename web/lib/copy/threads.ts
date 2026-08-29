@@ -139,12 +139,13 @@ export const WORKSPACE = {
   mainLandmark: "Workbench",
 } as const;
 
-/** `app/not-found.tsx` and the route error boundary (03 §2.2 rows 22, 21). */
-export const ROUTE_ERROR = {
-  notFoundHeading: "This page does not exist",
-  notFoundBody: "The address does not match anything in this workbench.",
-  notFoundAction: "Start a new question",
-  errorHeading: "This page could not be rendered",
-  errorBody: "Something failed while drawing this page. The run itself is unaffected.",
-  errorAction: "Try rendering it again",
-} as const;
+// `ROUTE_ERROR` MOVED TO ./recovery.ts (WO-09), AND IT WAS MEASURED, NOT
+// TIDIED. It is `app/not-found.tsx`'s and the route error boundaries' copy —
+// WO-09's surface — and 06-WORK-ORDERS.md §5.6's rule is one copy file per
+// surface. Keeping it here had a price the ratchet could see: an
+// `error.tsx` is a client boundary on BOTH routes in the group, so importing
+// this module from one made webpack emit a SECOND copy of the whole of
+// `threads.ts` beside the one the shell already loads. `/c/[id]`'s
+// first-load union carried both (200,395 B against a 199,680 B ceiling);
+// with `ROUTE_ERROR` in ./recovery.ts the boundaries import ~40 lines
+// instead of ~180 and the row passes. The strings themselves are unchanged.
