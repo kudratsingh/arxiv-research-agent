@@ -22,8 +22,10 @@ work order that closes it.
 6. **Three high-severity dependency advisories are accepted by name**, all in
    the Storybook dev chain — [§6](#6-the-audit-gate-exceptions).
 7. **This pack claims no accessibility conformance** — [§9](#9-what-this-pack-does-not-claim).
-8. **Five Storybook coverage rows are missing** and are a criterion-1 failure
-   this work order reports rather than fixes — [§1](#1-the-criterion-1-failure).
+8. **Five Storybook coverage rows are missing** — §4 rows **5** and **B**, and
+   the RC-10 union modules **`ThreadTimeline`**, **`ActiveRunPanel`** (WO-20)
+   and **`EmptyState`** (WO-14). This is criterion 1's failure, reported rather
+   than fixed — [§1](#1-the-criterion-1-failure).
 9. **One merged e2e assertion is flaky** — [§2](#2-a-flaky-assertion-in-the-merged-suite).
 10. **One product defect is pinned as an expected failure** — the theme
     hydration flash, [§3](#3-a-pinned-product-defect).
