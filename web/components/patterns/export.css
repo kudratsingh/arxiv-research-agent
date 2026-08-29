@@ -1,0 +1,78 @@
+/* =========================================================================
+ * WO-19 — the export disclosure.
+ *
+ * THE PANEL IS IN FLOW, NOT A POPOVER, AND THAT IS THE DESIGN. 03 §4.8 asks
+ * for "a `<button aria-expanded>` disclosure over a plain list of three
+ * `<a download>` links — the pattern 01-RESEARCH.md recommends over a
+ * half-built menu". A floating panel is what makes it half-built: it needs
+ * outside-click dismissal, collision detection, a portal, and a focus policy
+ * for the moment the trigger scrolls out from under it, and
+ * `ExportDropdown.tsx:32-51` already carries two of those as hand-rolled
+ * document listeners. Opening this one moves the briefing down by the height
+ * of three links, exactly as a disclosure should, and nothing has to be
+ * dismissed.
+ *
+ * THE LINKS ARE TARGETS, so they carry `ew-target ew-target--sm` from
+ * primitives.css and the display below is what gives that min-height
+ * something to apply to. `ew-focusable` is the one focus policy (WO-07);
+ * this file declares no focus style of its own.
+ *
+ * NO `font-family` HERE EITHER. `web/tests/fonts.test.ts` (WO-02 criterion
+ * 6) allows the declaration in app/tokens.css and nowhere else, so the link
+ * and the refusal carry Tailwind's `font-ui` utility instead, which resolves
+ * to `var(--font-ui)` through tailwind.config.ts.
+ *
+ * NO LITERAL COLOUR AND NO LITERAL LENGTH THAT A TOKEN OWNS.
+ * web/tests/tokens.test.ts scans this file with every other one under web/.
+ * ========================================================================= */
+
+.ew-export {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
+/* The primitive's panel already carries `ew-enter` (opacity only, so
+   reduced motion loses an animation and not information) and its own
+   padding; this narrows the padding to the list's own gutter so the links
+   line up under the trigger's label. */
+.ew-export__panel {
+  padding-left: var(--space-0);
+  padding-right: var(--space-0);
+}
+
+.ew-export__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-05);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ew-export__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-ui-sm-size);
+  line-height: var(--text-ui-sm-line);
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.ew-export__link:hover {
+  background-color: var(--color-sunken);
+}
+
+/* 03 §2.2 row 23. Reached only after the proxy has actually answered 409 —
+   the resting behaviour with no briefing is for the control to be absent,
+   which is `return null` in the component and needs no rule here. */
+.ew-export__refusal {
+  font-size: var(--text-ui-sm-size);
+  line-height: var(--text-ui-sm-line);
+  color: var(--color-ink-muted);
+}
