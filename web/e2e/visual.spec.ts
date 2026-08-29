@@ -1,4 +1,5 @@
-import { existsSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { expect, test } from "@playwright/test";
@@ -212,6 +213,22 @@ interface VisualState {
    * that table for one row.
    */
   drive?: (page: Page) => Promise<void>;
+  /**
+   * The element that IS this render's subject, scrolled into view when the
+   * viewport does not already contain it.
+   *
+   * ONE ROW NEEDS THIS AND IT WAS FOUND BY A DUPLICATE, NOT BY DESIGN.
+   * `toBeVisible()` means "has a box and is not `visibility: hidden`", not "is
+   * on screen", so `reconnecting` passed its ready condition at 412 with the
+   * spine's announcement below the fold — and the captured viewport was
+   * `running`'s, byte for byte. Two files, one picture, and one of them
+   * asserting nothing. The `no two committed snapshots are identical` test
+   * below is the permanent guard; this field is the fix.
+   *
+   * At 1440 the announcement is already on screen, so the scroll is a no-op
+   * and that snapshot is unaffected.
+   */
+  scrollTo?: string;
 }
 
 /** One of WO-21's rows, by id, so no path or ready condition is re-typed. */
@@ -270,6 +287,8 @@ const SLICE_STATES: readonly VisualState[] = [
       await interruptStream(page, FIXTURES.running);
     },
     ready: { kind: "selector", value: '[data-spine-state="reconnecting"]' },
+    // Without this, the 412 capture is `running`'s viewport byte for byte.
+    scrollTo: '[data-spine-part="announcement"]',
   },
   {
     ...row("thread-populated"),
@@ -501,6 +520,10 @@ test.describe("WO-28 criterion 1 — the slice and the degraded states, light an
             await expect(readyLocator(page, state.ready)).toBeVisible();
             // …and never photograph the wrong theme.
             await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+            // …and never photograph a viewport the subject is not inside.
+            if (state.scrollTo !== undefined) {
+              await page.locator(state.scrollTo).first().scrollIntoViewIfNeeded();
+            }
             await settleForCapture(page);
 
             await expect(page).toHaveScreenshot(`${state.id}-${theme}-${width}.png`, {
@@ -607,6 +630,49 @@ test.describe("WO-28 criterion 1 — the inventory is what the criterion asks fo
           `this run is "${process.platform}" ` +
           `(${existsSync(PLATFORM_DIR) ? "gating" : "SKIPPING — no set"}).`,
       );
+    },
+  );
+
+  /**
+   * Two files, one picture — the failure a name check cannot see.
+   *
+   * `no two renders share a snapshot name` proves the forty-eight files are
+   * forty-eight files. It does not prove they are forty-eight *pictures*, and
+   * they were not: `reconnecting` at 412 was byte-identical to `running` at
+   * 412, because `toBeVisible()` means "has a box", not "is on screen", and
+   * the spine's reconnect announcement sits below the fold at that width. The
+   * snapshot existed, passed, and asserted nothing about the state it was
+   * named after — the quietest way a visual gate can be wrong.
+   *
+   * Byte equality is the right test rather than a similarity threshold: two
+   * genuinely different states cannot compress to the same bytes, and two
+   * identical captures always do.
+   */
+  test(
+    "no two committed snapshots are identical",
+    { tag: "@visual" },
+    () => {
+      test.skip(!existsSync(PLATFORM_DIR), "no committed set for this platform");
+      const byDigest = new Map<string, string[]>();
+      for (const file of readdirSync(PLATFORM_DIR).sort()) {
+        if (!file.endsWith(".png")) continue;
+        const digest = createHash("sha256")
+          .update(readFileSync(join(PLATFORM_DIR, file)))
+          .digest("hex");
+        byDigest.set(digest, [...(byDigest.get(digest) ?? []), file]);
+      }
+      const collisions = [...byDigest.values()]
+        .filter((files) => files.length > 1)
+        .map((files) => files.join(" == "));
+      expect(
+        collisions,
+        "two snapshots are the same picture under different names, so one of " +
+          "them asserts nothing about the state it is named after. Either the " +
+          "render never reached the state (a ready condition that passes " +
+          "off-screen is the usual cause — see `scrollTo`), or the two states " +
+          "genuinely do not differ inside the viewport and one of them should " +
+          "not be in the table.",
+      ).toEqual([]);
     },
   );
 

@@ -151,7 +151,14 @@ The twelve renders are the five slice steps (`05-MIGRATION.md` §2.1) plus every
 degraded state that has a retained Gate 1 screenshot to be compared against.
 The list is in `visual.spec.ts` with each state's baseline file beside it, and
 the file's own inventory tests fail if the count moves, if a slice step goes
-missing, or if a named baseline screenshot no longer exists on disk.
+missing, if a named baseline screenshot no longer exists on disk, or if **two
+committed snapshots are byte-identical**.
+
+That last one is not hypothetical. `toBeVisible()` means "has a box", not "is
+on screen", so `reconnecting` at 412 passed its ready condition with the
+spine's announcement below the fold and captured `running`'s viewport byte for
+byte: two files, one picture, one of them asserting nothing about the state it
+was named after. The fix is `scrollTo` on that row; the guard is permanent.
 
 ### Where the bytes live, and why the path has a platform in it
 
