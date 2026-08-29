@@ -152,9 +152,9 @@ every PR; the *performance* budgets are asserted by Lighthouse CI on
 its own workflow (`.github/workflows/nightly.yml`, WO-29), not by the
 per-PR gate. `npm run lhci` is `node scripts/lhci-run.mjs`, which runs
 `lhci autorun` once per form factor against `web/lighthouserc.json`:
-four seeded states × three profiles (desktop 1350×940, the default
-mobile, and mobile 320×568 for the narrow-strip case) × three runs
-each, asserting per-URL category scores and Core Web Vitals ceilings.
+four seeded states × three profiles (mobile 412×823, desktop 1350×940,
+and mobile 320×568 for the narrow-strip case) × three runs each,
+asserting per-URL category scores and Core Web Vitals ceilings.
 Locally it needs the seeded stack and a base URL:
 
 ```bash
