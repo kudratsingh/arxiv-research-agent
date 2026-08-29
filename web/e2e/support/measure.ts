@@ -221,8 +221,23 @@ export async function installFirstPaintProbe(page: Page): Promise<void> {
   });
 }
 
-/** Read what `installFirstPaintProbe` recorded. */
+/**
+ * Read what `installFirstPaintProbe` recorded.
+ *
+ * `domcontentloaded` can win the race with the first animation-frame
+ * callback when several browser workers share one container. Waiting here
+ * does not move the sample: the init script still captures the first frame.
+ * It only waits until that already-scheduled callback has stored its result,
+ * instead of turning scheduler timing into a false "probe did not run".
+ */
 export async function readFirstPaint(page: Page): Promise<FirstPaintSample | null> {
+  await page.waitForFunction(
+    () =>
+      (window as unknown as Record<string, unknown>).__wo21FirstPaint !==
+      undefined,
+    undefined,
+    { timeout: 10_000 },
+  );
   return page.evaluate(
     () =>
       ((window as unknown as Record<string, unknown>).__wo21FirstPaint as

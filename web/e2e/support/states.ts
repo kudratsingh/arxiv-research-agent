@@ -59,12 +59,22 @@ export interface StateEntry {
   ready: ReadyCondition;
 }
 
-/** Either visible text, or a control resolved by role and accessible name. */
+/**
+ * A stable surface hook, visible text, or a control resolved by role and
+ * accessible name.
+ *
+ * Surface hooks are for states whose approved copy is intentionally
+ * normalized away from wire details. In particular, the rail never exposes
+ * an upstream error body as its user-facing sentence, and the product 404 no
+ * longer carries Next's framework-default wording.
+ */
 export type ReadyCondition =
+  | { kind: "selector"; value: string }
   | { kind: "text"; value: string | RegExp }
   | { kind: "role"; role: "textbox" | "button"; name: string };
 
 /** Sugar so the table below reads as a table. */
+const selector = (value: string): ReadyCondition => ({ kind: "selector", value });
 const text = (value: string | RegExp): ReadyCondition => ({ kind: "text", value });
 const textbox = (name: string): ReadyCondition => ({
   kind: "role",
@@ -74,9 +84,9 @@ const textbox = (name: string): ReadyCondition => ({
 
 /** Resolve a `ReadyCondition` against a page. */
 export function readyLocator(page: Page, ready: ReadyCondition) {
-  return ready.kind === "text"
-    ? page.getByText(ready.value).first()
-    : page.getByRole(ready.role, { name: ready.name }).first();
+  if (ready.kind === "selector") return page.locator(ready.value).first();
+  if (ready.kind === "text") return page.getByText(ready.value).first();
+  return page.getByRole(ready.role, { name: ready.name }).first();
 }
 
 /** JSON body helper for the interception entries. */
@@ -120,7 +130,7 @@ export const STATES: readonly StateEntry[] = [
         /* deliberately never settled */
       });
     },
-    ready: text("Loading…"),
+    ready: selector('[data-thread-rail-state="loading"]'),
   },
   {
     id: "rail-empty",
@@ -142,7 +152,9 @@ export const STATES: readonly StateEntry[] = [
         detail: "synthetic local upstream failure",
       });
     },
-    ready: text(/synthetic local upstream failure/),
+    // The raw upstream body is diagnostics, not product copy. WO-14 maps
+    // every failed list read onto one truthful rail-error surface.
+    ready: selector('[data-thread-rail-state="error"]'),
   },
   {
     id: "rail-error-proxy-503",
@@ -154,7 +166,7 @@ export const STATES: readonly StateEntry[] = [
         detail: "API_INTERNAL_BASE is not configured",
       });
     },
-    ready: text(/API_INTERNAL_BASE is not configured/),
+    ready: selector('[data-thread-rail-state="error"]'),
   },
   {
     id: "thread-empty",
@@ -307,7 +319,7 @@ export const STATES: readonly StateEntry[] = [
     id: "route-not-found",
     rows: ["22"],
     path: "/baseline-no-such-route",
-    ready: text("This page could not be found."),
+    ready: selector('[data-recovery-surface="not-found"]'),
   },
   {
     id: "attached-status-unknown",
