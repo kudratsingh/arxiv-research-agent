@@ -1,0 +1,104 @@
+/* =========================================================================
+ * WO-19 — the metrics strip, attached beneath the briefing.
+ *
+ * WHY THIS IS A FILE AND NOT A STRING OF UTILITIES. Two of the three rules
+ * below are acceptance criteria rather than taste, and one of them cannot be
+ * expressed as a utility class at all:
+ *
+ *   1. MONO NUMERALS (criterion 1). `tabular-nums` on the `dd`, which is the
+ *      half of "mono numerals" a family alone does not buy: `$0.1800` over
+ *      `$0.0225` only lines up when the glyphs are the same width. The
+ *      FAMILY itself is not declared here — `web/tests/fonts.test.ts`
+ *      (WO-02 criterion 6) allows a family declaration in app/tokens.css and
+ *      nowhere else, so the `dd` carries Tailwind's `font-mono` utility and
+ *      the `dt` carries `font-ui`, both of which resolve to the same tokens
+ *      through tailwind.config.ts. 03 §3.5 gives the mono family to
+ *      "identifiers and numerals", not to the words beside them.
+ *
+ *   2. ATTACHED, NOT FLOATING (criterion 1, 03 §4.7). The strip's only
+ *      chrome is a rule along its top edge, so it reads as the foot of the
+ *      briefing above it rather than as a dashboard card of its own. There
+ *      is no border box, no fill and no elevation: `JobSummary.tsx:11` is a
+ *      bordered white card, which is exactly the "floating dashboard row"
+ *      03 §4.7 rules out.
+ *
+ *   3. IT REFLOWS INSTEAD OF SCROLLING (03 §7.5, SC 1.4.10). `auto-fit` with
+ *      a minimum column width means five columns on a desktop and two on a
+ *      320px phone, with no horizontal pan anywhere between. A fixed
+ *      `grid-cols-5` would push the page past the viewport at the narrow end
+ *      — the failure the reflow sweep exists to catch.
+ *
+ * NO LITERAL COLOUR AND NO LITERAL LENGTH THAT A TOKEN OWNS.
+ * web/tests/tokens.test.ts scans this file with every other one under web/.
+ * The one bare length is the 1px rule, which the WO-18 fence in
+ * app/tokens.css also writes literally: there is no border-width token.
+ * ========================================================================= */
+
+.ew-metrics {
+  /* The narrowest a column may get before the grid drops one. "Quality
+     score" over "not reported" is the widest label/value pair in the set,
+     and both fit at this width in the UI family at 12px. */
+  --ew-metric-column-min: var(--space-24);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ew-metrics__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--ew-metric-column-min), 1fr));
+  gap: var(--space-3) var(--space-5);
+  margin: 0;
+  /* Longhands rather than the `border-top` shorthand, for the reason
+   * primitives.css gives for the focus ring: a shorthand carrying a var()
+   * is opaque to every CSSOM implementation, and the computed-value
+   * assertion in web/tests/patterns/MetricsStrip.test.tsx has to be able to
+   * read this back. The WO-18 fence in app/tokens.css writes its rules the
+   * same way. */
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--color-border-subtle);
+  padding-top: var(--space-3);
+}
+
+.ew-metrics__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-05);
+  min-width: 0;
+}
+
+.ew-metrics__label {
+  font-size: var(--text-ui-xs-size);
+  line-height: var(--text-ui-xs-line);
+  letter-spacing: var(--text-ui-xs-tracking);
+  color: var(--color-ink-muted);
+}
+
+/* Criterion 1's "mono numerals", and the whole reason a `dd` is styled
+   separately from the `dt` it sits under. */
+.ew-metrics__value {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-mono-sm-size);
+  line-height: var(--text-mono-sm-line);
+  color: var(--color-ink);
+}
+
+/* A missing number is quieter than a present one, but it is NOT a disabled
+   state: `--color-ink-muted` is the same ink the labels take and clears
+   contrast against the canvas, where `--color-ink-disabled` does not. The
+   dash carries no information the note below does not repeat in words, so
+   nothing is lost when colour is unavailable (03 §3.4). */
+.ew-metrics__value--absent {
+  color: var(--color-ink-muted);
+}
+
+/* Criterion 2's explanation. Visible, and rendered only when a dash is
+   actually on screen. */
+.ew-metrics__note {
+  font-size: var(--text-ui-xs-size);
+  line-height: var(--text-ui-xs-line);
+  color: var(--color-ink-muted);
+}
