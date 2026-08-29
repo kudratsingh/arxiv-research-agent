@@ -1,0 +1,47 @@
+# WO-30 / 05-MIGRATION.md C6 — a real capture of the proxy's request log.
+#
+# PROVENANCE. Every line below was read out of `docker logs` on the web
+# container of a seeded local stack (web/e2e/support/compose.e2e.yml) while
+# the chromium e2e suite drove it. None of them was written by hand; the
+# only editing was selection, so that each distinct shape appears once or
+# twice instead of the fifty-odd times the run produced. The three
+# `outcome` lines came from the same image started against a deliberately
+# broken `API_INTERNAL_BASE`, because a healthy stack cannot produce them.
+#
+# WHAT TO CHECK WHEN READING IT. C6 names five fields and three
+# prohibitions. The fields are `method`, `path`, `status`, `duration_ms`,
+# `bytes`. The prohibitions are the interesting part, and they are visible
+# here rather than merely asserted:
+#
+#   * No API key. `ARXIV_API_KEY` is injected as `X-API-Key` on the upstream
+#     hop and no header of any kind is logged.
+#   * No body. The two `/research/{id}/export` lines below differ only in
+#     `bytes` — 649 and 37224 — because one is a Markdown export and the
+#     other a .docx. The report text itself appears nowhere. The same holds
+#     for the two `/research/{id}/stream` lines: 13 bytes is a stream that
+#     carried one keepalive before the browser navigated away, 396 bytes one
+#     that replayed a run's frames. The frames are not in the log.
+#   * No raw id, and no query string. Both export requests carried
+#     `?format=`, and every `{id}` below was a real seeded identifier
+#     (`baseline-succeeded`, `baseline-populated`, …). A segment is printed
+#     only when it is a literal in web/contract/openapi.json.
+#
+# `#` lines are comments; everything else is one JSON object per line.
+# web/tests/proxyLogging.test.ts parses this file and re-checks the
+# prohibitions against it, so the sample is gated rather than decorative.
+{"event":"api_proxy_request","method":"GET","path":"/healthz","status":200,"duration_ms":173,"bytes":129}
+{"event":"api_proxy_request","method":"GET","path":"/healthz","status":200,"duration_ms":60,"bytes":129}
+{"event":"api_proxy_request","method":"GET","path":"/conversations","status":200,"duration_ms":24,"bytes":255}
+{"event":"api_proxy_request","method":"GET","path":"/conversations/{id}","status":200,"duration_ms":146,"bytes":2140}
+{"event":"api_proxy_request","method":"GET","path":"/conversations/{id}","status":200,"duration_ms":242,"bytes":130}
+{"event":"api_proxy_request","method":"GET","path":"/conversations/{id}","status":404,"duration_ms":42,"bytes":35}
+{"event":"api_proxy_request","method":"GET","path":"/research/{id}","status":200,"duration_ms":183,"bytes":377}
+{"event":"api_proxy_request","method":"GET","path":"/research/{id}","status":200,"duration_ms":211,"bytes":699}
+{"event":"api_proxy_request","method":"GET","path":"/research/{id}","status":404,"duration_ms":50,"bytes":26}
+{"event":"api_proxy_request","method":"GET","path":"/research/{id}/stream","status":200,"duration_ms":219,"bytes":13}
+{"event":"api_proxy_request","method":"GET","path":"/research/{id}/stream","status":200,"duration_ms":4551,"bytes":396}
+{"event":"api_proxy_request","method":"GET","path":"/research/{id}/export","status":200,"duration_ms":55,"bytes":649}
+{"event":"api_proxy_request","method":"GET","path":"/research/{id}/export","status":200,"duration_ms":567,"bytes":37224}
+{"event":"api_proxy_request","method":"GET","path":"/healthz","status":503,"duration_ms":1,"bytes":0,"outcome":"misconfigured"}
+{"event":"api_proxy_request","method":"GET","path":"/research/{id}/stream","status":503,"duration_ms":0,"bytes":0,"outcome":"misconfigured"}
+{"event":"api_proxy_request","method":"GET","path":"/conversations","status":502,"duration_ms":5,"bytes":0,"outcome":"upstream_unavailable"}

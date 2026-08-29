@@ -1,0 +1,30 @@
+
+> arxiv-research-agent-web@0.1.0 audit:gate
+> node scripts/audit-gate.mjs
+
+Dependency audit gate (05-MIGRATION.md C4)
+
+  production tree  (--omit=dev): 0 high/critical advisories
+  full tree        (incl. dev): 10 high/critical advisories, 10 accounted for by 10 exceptions
+    ok @lhci/cli (high, advisories 1109537, 1119441, 1120654, 1139346)
+       accepted 2026-08-29 by WO-29: @lhci/cli
+    ok @lhci/utils (high, advisories 1139346)
+       accepted 2026-08-29 by WO-29: @lhci/cli > @lhci/utils
+    ok @puppeteer/browsers (high, advisories 1139346)
+       accepted 2026-08-29 by WO-29: @lhci/cli > lighthouse > puppeteer-core > @puppeteer/browsers
+    ok @storybook/nextjs-vite (high, advisories 1138808, 1138809)
+       accepted 2026-08-29 by WO-24: @storybook/nextjs-vite
+    ok extract-zip (high, advisories 1139346) — extract-zip unvalidated symlink path traversal
+       accepted 2026-08-29 by WO-29: @lhci/cli > lighthouse > puppeteer-core > @puppeteer/browsers > extract-zip
+    ok image-size (high, advisories 1138808, 1138809) — image-size: ICNS parser allows denial of service through an infinite loop; image-size: JXL and HEIF parsers allow denial of service through infinite loops
+       accepted 2026-08-29 by WO-24: @storybook/nextjs-vite > vite-plugin-storybook-nextjs > image-size
+    ok lighthouse (high, advisories 1139346)
+       accepted 2026-08-29 by WO-29: @lhci/cli > lighthouse
+    ok puppeteer-core (high, advisories 1139346)
+       accepted 2026-08-29 by WO-29: @lhci/cli > lighthouse > puppeteer-core
+    ok tmp (high, advisories 1109537, 1120654) — tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter; tmp has Path Traversal via unsanitized prefix/postfix that enables directory escape
+       accepted 2026-08-29 by WO-29: @lhci/cli > tmp
+    ok vite-plugin-storybook-nextjs (high, advisories 1138808, 1138809)
+       accepted 2026-08-29 by WO-24: @storybook/nextjs-vite > vite-plugin-storybook-nextjs
+
+Full report written to /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-ae72ba156d632425f/web/npm-audit.json
