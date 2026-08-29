@@ -3,10 +3,20 @@
 Every piece of code merged into `main` has tests. Untested code doesn't
 merge. This page describes the suite **as it exists** — the layout on
 disk, the markers that select tiers, and what CI actually runs — plus
-one explicitly-labelled section for the e2e tier that is planned but
-not built. Earlier versions of this page described an aspirational
-directory layout; that drift is exactly how gaps hide, so the rule now
-is: this page documents reality, and planned work is labelled as such.
+one explicitly-labelled section for the Python e2e cassette tier that is
+planned but not built. Earlier versions of this page described an
+aspirational directory layout; that drift is exactly how gaps hide, so
+the rule now is: this page documents reality, and planned work is
+labelled as such.
+
+Two suites live here and they are selected differently. The **Python**
+suite is flat and marker-selected; that is what the sections up to
+"Selective execution" describe. The **web** suite under `web/` has its
+own tiers — unit, story, coverage, dependency audit, route budget and
+browser — and is described in "The web suite" below. `e2e` means
+different things in the two: in Python it is an unused marker reserved
+for a cassette tier, and in `web/` it is the Playwright tier, which is
+built and gating today.
 
 ## Layout — flat, marker-selected
 
@@ -41,22 +51,31 @@ carries no marker at all.** That matters for selection:
 ## What actually gates a merge
 
 The per-PR CI workflow (`.github/workflows/ci.yml`, design in ADR
-[0024](decisions/0024-pr-ci-lint-mypy-tests.md)) runs five parallel
+[0024](decisions/0024-pr-ci-lint-mypy-tests.md)) runs eight parallel
 jobs on every PR and every push to `main`:
 
-1. `ruff check .`
-2. `mypy --strict src/`
-3. `pytest -m "not e2e" -q` — **the entire Python suite** (the filter
-   only exists to keep the door closed on a future e2e tier)
-4. Docker image build + compose-file validation
-5. `web/`: TypeScript typecheck + ESLint + Vitest + Next.js build
+1. `lint` — `ruff check .`
+2. `typecheck` — `mypy --strict src/`
+3. `tests` — `pytest -m "not e2e" -q`, **the entire Python suite** (the
+   filter only exists to keep the door closed on a future e2e tier)
+4. `docker-build` — API image build + base and production compose-file
+   validation
+5. `web-image` — `docker build ./web`, run it against a stub upstream,
+   probe `/` and `/api/healthz` through the proxy
+6. `web` — TypeScript typecheck, ESLint, contract drift, Vitest **with
+   coverage thresholds**, the **dependency audit gate**, and the
+   production build **with the route budget check**
+7. `web-storybook` — story tests and the static Storybook build
+8. `web-e2e` — Compose up + seed + Playwright + axe, chromium only
 
 The nightly eval workflow (`.github/workflows/eval-nightly.yml`, ADR
 [0010](decisions/0010-nightly-eval-ci.md)) is the only job that spends
 Anthropic credits: it runs the LLM-judged benchmark and diffs against
-the stored baseline.
+the stored baseline. `ci.yml` itself also runs on a 03:20 UTC schedule,
+where the only behavioural difference is that `web-e2e` runs the full
+browser matrix instead of chromium alone.
 
-Local equivalent of the CI gate:
+Local equivalent of the Python half of the gate:
 
 ```bash
 .venv/bin/python -m pytest tests/ -q -m "not e2e"
@@ -76,6 +95,92 @@ would silently drop it — `-m "unit or integration"` selects ~720 of
 Either auto-apply the `unit` marker to unmarked tests in
 a `conftest.py` collection hook first, or keep `-m "not e2e"` as the
 single selection knob.
+
+## The web suite
+
+The frontend has its own tiers, wired by WO-24 against
+[`docs/revamp/05-MIGRATION.md`](revamp/05-MIGRATION.md) §3 (items C4,
+C7, C8, C9, C10) and [`04-ARCHITECTURE.md`](revamp/04-ARCHITECTURE.md)
+§7.5. Every one of them is a gate — a red job, not a report nobody
+reads.
+
+| Tier | Command | Job | What fails it |
+|---|---|---|---|
+| Unit + component | `npm run test` | `web` | any Vitest failure across the `unit` and `storybook` projects |
+| Coverage | `npm run test -- --coverage` | `web` | falling below the thresholds in `web/vitest.config.mts` |
+| Dependency audit | `npm run audit:gate` | `web` | any high/critical advisory in the production tree, or one in the dev tree that `web/audit-exceptions.json` does not name |
+| Route budgets | `npm run budgets` | `web` | a gated ceiling in `web/budgets.json` exceeded |
+| Storybook | `npm run build-storybook`, `npx vitest run --project=storybook` | `web-storybook` | a story that fails to render, fails axe, or fails to bundle |
+| Browser + axe | `npm run e2e` | `web-e2e` | any Playwright assertion, including the axe sweep over the state matrix |
+
+**Coverage (C10).** Thresholds are seeded at the *measured* value and
+ratcheted upward by the work order that raises them — never set
+aspirationally, because a threshold nobody can meet is a threshold that
+gets skipped. Vitest merges coverage across both projects in one run and
+only honours the option at the root, which is why the `web` job's single
+`npm run test -- --coverage` is what the floors are measured against;
+`web-storybook` runs the story project again on its own so a story
+regression is attributed rather than averaged in.
+
+**Dependency audit (C4).** Two gates in `web/scripts/audit-gate.mjs`,
+because one would have had to be wrong. The **production** tree
+(`npm audit --audit-level=high --omit=dev`) is gated at zero advisories
+and has no exception mechanism at all. The **dev** tree is gated against
+`web/audit-exceptions.json`, and fails on any advisory that file does
+not name — *and* on an entry that no longer matches anything npm
+reports, so an exception cannot outlive its advisory. Each entry carries
+the advisory ids, the dependency path, a written justification and a
+date; an empty justification is a hard error, the same contract WO-22's
+axe allowlist uses. The script takes no arguments and reads no
+environment variable, so there is no flag that softens it.
+
+**Route budgets (C7).** `web/scripts/route-budgets.mjs` gzips each
+route's first-load file union out of the Next build manifests and
+compares it with `web/budgets.json`. A ceiling can only move by editing
+`budgets.json` in the same commit, with the reason in the PR body
+([`04` §8.4](revamp/04-ARCHITECTURE.md)); the report is written before
+the script exits non-zero, so a breach uploads the evidence of its own
+breach as `budget-report.md`.
+
+**Browser tier (C8).** `web/e2e/README.md` is the manual.
+`npm run e2e:stack:up && npm run e2e:stack:seed && npm run e2e` brings
+up the local Compose stack under an isolating overlay, writes only
+`baseline-*` fixtures directly into Postgres and Redis, and runs
+Playwright plus `@axe-core/playwright` against it. **Chromium only per
+PR**; firefox, webkit and the two device projects run on the nightly
+schedule, so PR wall-clock stays bounded. Traces, screenshots, video,
+the HTML report and every axe JSON land under `web/build/e2e/` and are
+uploaded as an artifact whether the run passed or failed.
+
+**The cost boundary is structural.** No web tier ever makes a paid model
+call, and three independent mechanisms enforce it rather than one
+convention: the Compose overlay pins `ANTHROPIC_API_KEY` to the invalid
+sentinel `local-preview-disabled`, `playwright.config.ts` overwrites the
+variable in the runner process before any test loads (with
+`global-setup.ts` refusing to start if it is anything else), and
+`e2e/support/paid-path.ts` fulfils `POST /api/research` in the browser
+so the submit leg never reaches the backend. The `web-e2e` job
+hard-codes the same sentinel and is never given the repository secret;
+`web/tests/ci.test.ts` asserts that against the workflow's own text.
+
+**The build tool is pinned.** `web/package.json`'s build script is
+exactly `next build --webpack`, and `web/tests/ci.test.ts` asserts the
+exact string ([`05` §3.1](revamp/05-MIGRATION.md) B4). Turbopack is a
+separate ADR, so without that assertion the pin would be a sentence
+rather than a gate.
+
+Local equivalent of the web half of the gate:
+
+```bash
+cd web
+npm run typecheck && npm run lint && npm run contract:check
+npm run test -- --coverage
+npm run audit:gate
+npm run budgets
+npm run e2e:stack:up && npm run e2e:stack:seed
+npm run e2e -- --project=chromium
+npm run e2e:stack:down
+```
 
 ## The environment pin: `TEST_ENV`
 
