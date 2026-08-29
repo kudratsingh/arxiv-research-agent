@@ -14,8 +14,10 @@ states the principles, and points here for anything that needs more space.
 - `decisions/` — Architecture Decision Records (ADRs). Every non-trivial
   design choice gets one. See `decisions/TEMPLATE.md` for the format and
   `decisions/README.md` for the index.
-- `testing.md` — testing strategy: the flat layout, markers, what CI
-  actually runs, and the planned-but-unbuilt e2e cassette tier.
+- `testing.md` — testing strategy: the flat Python layout and its
+  markers, the web suite's tiers (coverage, dependency audit, route
+  budgets, Storybook, Playwright + axe), what CI actually runs, and the
+  planned-but-unbuilt Python e2e cassette tier.
 - `development.md` — local setup, Makefile targets, troubleshooting.
 - `security.md` — threat model and the prompt-injection defenses.
 - `eval.md` — evaluation strategy: benchmark, metrics, nightly CI.

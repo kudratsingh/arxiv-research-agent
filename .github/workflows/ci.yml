@@ -1,19 +1,40 @@
 name: ci
 
-# Per-PR checks: lint, typecheck, unit + integration tests.
+# Per-PR checks: lint, typecheck, unit + integration tests, and the web
+# tiers (coverage, dependency audit, route budgets, Storybook, browser).
 #
 # Runs on every PR against `main` and on every push to `main`. The
 # nightly eval (`.github/workflows/eval-nightly.yml`) handles the e2e
 # tier against real LLM calls — this workflow does not consume
-# Anthropic credits.
+# Anthropic credits. `web-e2e` below brings up the local Compose stack
+# with `ANTHROPIC_API_KEY=local-preview-disabled`, a deliberately invalid
+# sentinel, and no job here is given the repository secret.
 #
-# Design: docs/decisions/0024-pr-ci-lint-mypy-tests.md
+# Design: docs/decisions/0024-pr-ci-lint-mypy-tests.md; the web tiers are
+# docs/revamp/04-ARCHITECTURE.md §7.5 and docs/revamp/05-MIGRATION.md §3
+# items C4, C7, C8, C9, C10 (WO-24), on top of C1/C2 (WO-25).
 
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
+  schedule:
+    # WO-24 criterion 4 / 04 §7.5: "only chromium E2E runs per PR, the full
+    # browser matrix ... runs nightly, so PR wall-clock stays bounded". This
+    # is that nightly. The whole workflow runs, not just `web-e2e` — every
+    # other job is deterministic and cheap enough that splitting the trigger
+    # per job would cost more `if:` conditions on jobs this work order does
+    # not own than the runner minutes are worth, and a nightly full run also
+    # catches drift that no PR touches (a base-image change, a transitive
+    # dependency that went red overnight). `web-e2e` is the ONLY job whose
+    # behaviour differs by event.
+    #
+    # 03:20 UTC, ahead of the nightly eval's 04:00 and off the hour.
+    - cron: "20 3 * * *"
+  # Same full-matrix behaviour on demand, for when a browser-specific
+  # regression is suspected between nightlies.
+  workflow_dispatch:
 
 concurrency:
   # Cancel superseded PR runs but never cancel a main run — main
@@ -266,7 +287,10 @@ jobs:
   web:
     name: web (typecheck + lint + test + build)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # WO-24 raised this from 10: the job now also collects coverage, runs the
+    # dependency audit gate, and runs the production build once under
+    # `npm run budgets` instead of bare `npm run build`.
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: web
@@ -281,6 +305,29 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Dependency audit gate
+        # WO-24 / 05-MIGRATION.md C4. Two gates in one script
+        # (web/scripts/audit-gate.mjs), because one would have had to be
+        # wrong: `npm audit --audit-level=high --omit=dev` must report ZERO
+        # advisories and has no exception mechanism, while the dev tree is
+        # checked against web/audit-exceptions.json and fails on anything
+        # that file does not name — or on an entry that no longer matches.
+        # C4's baseline of 0 was captured before WO-06 added Storybook, whose
+        # framework package pulls an unfixed `image-size` advisory; the split
+        # keeps that from becoming a reason to lower `--audit-level`.
+        #
+        # Runs directly after `npm ci` so a red tree is reported before the
+        # rest of the job spends five minutes on it.
+        run: npm run audit:gate
+      - name: Upload npm audit report
+        # Collected into the Gate 4 evidence pack by WO-33.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-npm-audit
+          path: web/npm-audit.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: TypeScript typecheck
         run: npm run typecheck
       - name: ESLint
@@ -295,11 +342,213 @@ jobs:
         # contract is `tests/test_contract_openapi_snapshot.py` in the `tests`
         # job, which asserts the snapshot still equals `create_app().openapi()`.
         run: npm run contract:check
-      - name: Vitest
-        run: npm run test
-      - name: Next.js build
-        # Validates the full production build, including static
-        # generation of `/` and the server-side `/api` proxy route.
-        # The proxy resolves API_INTERNAL_BASE only when requested, so
-        # no API service or secret is needed at build time.
-        run: npm run build
+      - name: Vitest (with coverage thresholds)
+        # WO-24 / 05-MIGRATION.md C10. The thresholds live in
+        # web/vitest.config.mts, seeded at the measured value and ratcheted by
+        # each work order that raises them; `--coverage` is what makes them a
+        # gate rather than a comment. Vitest merges coverage across the `unit`
+        # and `storybook` projects in one run and only honours the option at
+        # the root, so this single invocation is what the floors are measured
+        # against — the story tests also run standalone in `web-storybook`,
+        # where a story regression is attributed rather than averaged in.
+        run: npm run test -- --coverage
+      - name: Upload coverage
+        # `json-summary` is the machine-readable copy WO-26 turns into
+        # `coverage-summary.md` for the Gate 3 evidence pack, and the input
+        # WO-31's ratchet reads.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-coverage
+          path: web/coverage
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Next.js build + route budgets
+        # WO-24 / 05-MIGRATION.md C7. `npm run budgets` IS `npm run build &&
+        # node scripts/route-budgets.mjs` (web/package.json), so the
+        # production build this step replaced is still validated in full —
+        # static generation of `/` and the server-side `/api` proxy route
+        # included, with no API service and no secret needed at build time —
+        # and the manifests it emits are then measured against
+        # web/budgets.json. Running `npm run build` separately first would
+        # build the app twice for one gate.
+        #
+        # There is no skip flag: route-budgets.mjs takes no arguments and
+        # reads no environment variables, so a ceiling can only move by
+        # editing budgets.json in the same commit (04 §8.4's ratchet rule).
+        run: npm run budgets
+      - name: Upload route budget report
+        # `always()` on purpose: the report is written BEFORE the script exits
+        # non-zero, so a breach uploads the evidence of its own breach.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-budget-report
+          path: web/budget-report.md
+          if-no-files-found: warn
+          retention-days: 14
+
+  web-storybook:
+    name: web storybook (static build + story tests)
+    # WO-24 / 05-MIGRATION.md C9. Two things this job proves that the `web`
+    # job cannot:
+    #
+    #   1. `storybook build` succeeds. The `storybook` Vitest project renders
+    #      every story through the addon's Vite pipeline, which is NOT the
+    #      browser build — a story can pass as a test and still fail to bundle
+    #      (a Node-only import, a missing static asset). Nothing before this
+    #      job ever ran the static build in CI.
+    #   2. A story regression is attributed to stories. In `web` the same
+    #      tests run merged with the unit project so coverage can be measured
+    #      across both in one process (Vitest only honours the coverage
+    #      option at the root); here they run alone, so a red run names the
+    #      tier.
+    #
+    # The static bundle is the artifact WO-26 indexes into the Gate 3
+    # evidence pack as `storybook/` + `storybook-states.md`.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Keep in lockstep with web/Dockerfile and the `web` job.
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Story tests
+        # The `storybook` project from web/vitest.config.mts: every story
+        # rendered with the real preview decorators, with axe run over the
+        # result at `test: "error"` (WO-06 criterion 3), so an inaccessible
+        # story fails here rather than showing a panel nobody opens.
+        run: npx vitest run --project=storybook
+      - name: Storybook static build
+        # Output goes to build/storybook, not storybook-static:
+        # web/tests/tokens.test.ts scans every file under web/ for literal
+        # colours and skips only node_modules, .next, out, build and .git.
+        run: npm run build-storybook
+      - name: Upload Storybook static build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-storybook
+          path: web/build/storybook
+          if-no-files-found: warn
+          retention-days: 14
+
+  web-e2e:
+    name: web e2e (${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'full matrix' || 'chromium' }} + axe)
+    # WO-24 / 05-MIGRATION.md C8. Compose up → seed → Playwright + axe,
+    # against the same seeded local stack WO-21 built for the desk
+    # (web/e2e/README.md is its manual). Nothing in this job re-describes the
+    # stack: `stack.sh` owns the Compose project name, both `-f` files and the
+    # `--wait` on the healthchecks, which is also why no `sleep` appears here.
+    #
+    # THE COST BOUNDARY. `ANTHROPIC_API_KEY` below is the invalid sentinel,
+    # hard-coded. It is never `${{ secrets.* }}` and must not become one: the
+    # repository secret exists for the nightly eval and this tier must not be
+    # able to reach a provider even by accident. Three independent mechanisms
+    # back it up — compose.e2e.yml pins the same value on the `app` service,
+    # playwright.config.ts overwrites it in the runner process before any test
+    # loads and global-setup.ts refuses to start if it is anything else, and
+    # support/paid-path.ts fulfils `POST /api/research` in the browser so the
+    # submit leg never reaches the backend. web/tests/ci.test.ts asserts this
+    # job's half of that against this file's own text.
+    #
+    # WALL CLOCK, MEASURED RATHER THAN ESTIMATED. `stack.sh up` builds both
+    # images from source, and a GitHub runner's daemon starts with an empty
+    # layer cache, so none of this shares `docker-build`'s `type=gha` buildx
+    # cache — Compose builds through the daemon, not through the buildx
+    # builder. That sounds worse than it measures: on this workflow's first
+    # green run `up` took 2m36s (the runtime lock installs published wheels;
+    # nothing compiles), the chromium suite 1m51s, and the job 5m13s end to
+    # end. The ceiling below is headroom for the nightly, which runs five
+    # projects instead of one, not a prediction about the per-PR path. If a
+    # future dependency does make the image expensive to build, the fix is a
+    # registry-published image (05 §3.1 B5 / R-12, a paused DEPLOY item), not
+    # a cache trick that silently stops working.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Never a real key. See "THE COST BOUNDARY" above.
+      ANTHROPIC_API_KEY: local-preview-disabled
+      # WO-24 criterion 4: chromium only per PR; every project nightly.
+      E2E_FULL_MATRIX: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Keep in lockstep with web/Dockerfile and the `web` job.
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        # Also what the StrictMode scenario's `next dev` server needs:
+        # playwright.config.ts starts one on its own port for the single
+        # assertion a production build cannot make (React's double effect
+        # invocation is development-only).
+        run: npm ci
+      - name: Install Playwright browsers
+        # Downloading firefox and webkit on every PR would add minutes for
+        # browsers no PR job runs. `e2e:install` is the three-browser form.
+        run: |
+          if [ "$E2E_FULL_MATRIX" = "true" ]; then
+            npm run e2e:install
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Compose up (seeded stack, disabled API key)
+        # `docker compose up -d --build --wait`, under the isolating overlay
+        # web/e2e/support/compose.e2e.yml. `--wait` blocks on the
+        # healthchecks the base file declares, so the seed cannot race an
+        # unmigrated Postgres or a booting app.
+        run: npm run e2e:stack:up
+      - name: Seed the fixtures
+        # Writes only `baseline-*` rows, directly into Postgres and Redis —
+        # behind the API, so there is no code path from this tier to a model.
+        run: npm run e2e:stack:seed
+      - name: Playwright + axe
+        # The `chromium` project is the per-PR set and carries the whole axe
+        # sweep (`@axe` is grepped into chromium only: the twelve retained
+        # baseline reports were taken in Chrome, so a WebKit contrast
+        # measurement would be a different measurement, not a stricter one).
+        # No argument at all is every project, which is the nightly set.
+        run: |
+          if [ "$E2E_FULL_MATRIX" = "true" ]; then
+            npm run e2e
+          else
+            npm run e2e -- --project=chromium
+          fi
+      - name: Upload traces, screenshots, axe JSON
+        # web/build/e2e holds all of it: test-results/ (traces, screenshots,
+        # video — retained on failure), report/, results.json,
+        # research-post-count.txt, and axe/*.json + the summary/baseline-map/
+        # contrast-proof TSVs WO-26 diffs against docs/revamp/baseline/axe/.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-e2e-${{ github.run_id }}
+          path: web/build/e2e
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Stack logs on failure
+        # A red Playwright run against a broken stack looks like a product
+        # defect until you read the app container's log. `stack.sh logs`
+        # carries `-p` and both `-f` files, like every other invocation.
+        if: failure()
+        run: bash ./e2e/support/stack.sh logs --no-color --tail 200 || true
+      - name: Tear down
+        # Always, and only ever through stack.sh — a bare `docker compose
+        # down` resolves the project from the working directory and the base
+        # file's hardcoded container names, which is how one stack removes
+        # another's containers (06-WORK-ORDERS.md §5.4).
+        if: always()
+        run: npm run e2e:stack:down || true
