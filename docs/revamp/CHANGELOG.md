@@ -1,5 +1,11 @@
 # Frontend revamp changelog
 
+## 2026-08-29 — Gate 3 closed (under user delegation)
+
+- Ratified as [`DECISIONS.md` D-014](DECISIONS.md#d-014--gate-3-ratified-under-the-standing-delegation): all 26 Gate 3 work orders merged; evidence pack (PR #107, honest 8/10) + criterion repairs (PR #108 stories; PR #111 mobile CLS 0.134→0.000 and `/c` LCP into budget) + re-verification addendum (PR #112) bring all ten criteria to PASS on `d3460a7`.
+- Gate 4 progress alongside the close: WO-30 proxy hardening merged (PR #109 — enforcing nonce CSP, structured proxy logging with whitelist redaction, body-parsing healthcheck, MT-01 seams; `apiProxyRoute.test.ts` byte-identical). In flight: WO-27 (a11y hardening), WO-29 (Lighthouse nightly), WO-31 (legacy removal); queued: WO-28, WO-32, WO-33.
+- Public-presentation campaign completed the same day: README overhaul with verified diagrams/screenshots/badges (PR #110), agent design docs with per-agent diagrams (PR #104), demo/eval/index accuracy pass (PR #106), roadmap entry (PR #103), incident record D-013 (PR #105).
+
 ## 2026-08-29 — EXEC: quality gates, route composition, and the 8-job CI
 
 - Merged on green CI: the probe-alignment follow-up from the merged-main integration run (PR #97, merged by the user), WO-19 MetricsStrip + ExportDisclosure (PR #98), WO-22 axe gate (PR #99), WO-24 CI wiring (PR #100), and WO-20 route composition (PR #101). **25/33 work orders merged; every Gate 3 implementation work order is on `main`.**

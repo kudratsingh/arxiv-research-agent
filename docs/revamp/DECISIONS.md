@@ -317,3 +317,48 @@
      merges. Until then the standing mitigation is a `--failed` re-run.
 - Needs human review: no (delegated); recorded per the D-011 precedent
   that every merge-process incident enters the audit trail.
+
+## D-014 — Gate 3 ratified (under the standing delegation)
+
+- Date: 2026-08-29
+- Status: **Gate 3 closed — approved**
+- Authority: the D-010 delegation.
+- Basis: all 26 Gate 3 work orders merged (PRs #74–#101 plus repairs);
+  evidence pack PR #107 measured 8/10 criteria PASS and reported the two
+  failures honestly; repairs merged as PR #108 (criterion 1 — 23 stories
+  closing §4 rows 5/B and the RC-10 union) and PR #111 (criterion 7 —
+  mobile CLS 0.134 → 0.000 on every route, `/c/[id]` mobile LCP
+  3.2–3.7 s → 1.3–1.4 s, Performance 85–88 → 100); addendum PR #112
+  re-verified both with the pack's own method on `d3460a7`
+  (10/10 criteria now hold; every number re-derived from committed
+  artifacts). The pack claims no accessibility conformance; the
+  known-gaps list is the Gate 4 workplan.
+- Rulings bundled into this close:
+  1. **Coverage `functions` floor re-seeded 95.05 → 87.5** (PR #108):
+     the dual-project function-list concatenation hazard documented in
+     `web/vitest.config.mts` fired when Storybook first loaded the
+     route-composition import graph; statements/lines/branches rose or
+     held. Structural re-seed, not a quality drop; the proper
+     de-duplication fix belongs to the config owner (follow-up).
+  2. **CSP `style-src-attr 'unsafe-inline'` accepted** (PR #109):
+     scoped to style *attributes* only (`style-src 'self'` intact,
+     honored separately by all three engines — measured, not assumed);
+     sole consumer is `Skeleton`'s geometry props; the source fix
+     spans seven call sites and is recorded as follow-up in
+     `docs/security.md`.
+  3. **`/` dynamic rendering accepted as inherent to the nonce CSP**
+     (PR #109): a per-request nonce cannot live in a cached document.
+     Consequences recorded: `/` fails the desktop bfcache audit by
+     design (`no-store`; the RC-18 gate is `/c/[id]`, which is
+     unchanged cell for cell), and WO-23's manifest cross-check for `/`
+     reads "skipped — not statically prerendered" (WO-31 asked to
+     restore equivalent corroboration if cheap).
+  4. **Near-ceiling Lighthouse cells carry both samples** (PR #111,
+     #112 practice): where a lab metric lands within ~10% of its
+     ceiling, two samples are committed and neither discarded; the
+     verdict is stated against the worse one.
+- Still reserved for the user: MT-01 (PROPOSED), anything cost-bearing
+  (DEPLOY, the never-yet-funded eval campaign), and WO-27's human
+  screen-reader transcription.
+- Needs human review: no (delegated); recorded with the full audit trail
+  per D-009–D-013.
