@@ -234,7 +234,15 @@ export function LandingComposer({
       value={question}
       onValueChange={setQuestion}
       onSubmit={handleSubmit}
-      pending={creating || state.phase === "submitting"}
+      // WO-20 ADDED `acceptedJobId !== null`, AND IT IS AN R-01 FIX RATHER
+      // THAN A POLISH. `submit()` resolves the moment `POST /research`
+      // answers, so between the hand-off firing and the browser actually
+      // leaving `/` the composer was idle again — and a second click in that
+      // window reuses the thread and buys a SECOND run. WO-13 could not see
+      // it: nothing mounted this component, and its own double-click test
+      // covers the in-flight window, which is a different window.
+      // `web/tests/HomePage.test.tsx` clicks after the hand-off and counts.
+      pending={creating || state.phase === "submitting" || acceptedJobId !== null}
       unreachable={unreachable}
       failure={failure}
       // H7: only a failure that happened AFTER the thread existed can

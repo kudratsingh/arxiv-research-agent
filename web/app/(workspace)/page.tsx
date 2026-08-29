@@ -1,82 +1,60 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
-import QueryForm from "@/components/QueryForm";
-import { ApiError, createConversation, submitResearch } from "@/lib/api";
+/**
+ * `/` — the landing composer (WO-20; 03 §2.1, §2.2 row 1).
+ *
+ * THE HAND-OFF IS UNCHANGED, AND THAT IS THE POINT (criterion 2, MUST-KEEP 1).
+ * `POST /conversations` → `POST /research` → `router.push('/c/{id}?job={job_id}')`,
+ * both ids percent-encoded, in that order. The three lines that did it by hand
+ * at `web/app/page.tsx:33-40` are now `LandingComposer`'s, verbatim in
+ * behaviour: `web/tests/features/LandingComposer.test.tsx` mirrors
+ * `web/tests/HomePage.test.tsx` assertion for assertion, and this route's own
+ * test drives the composed page over a mocked `fetch` so the ordering is
+ * asserted where it actually happens.
+ *
+ * WHY THE MACHINE IS MOUNTED HERE. `useJobRun().submit` is the only permitted
+ * path to `POST /research` (R-01, H6): the endpoint has no idempotency key
+ * (`routes.py:179-197`), so a duplicate is a second charge, and the machine's
+ * submission token is what makes a late or duplicated response unable to adopt
+ * a run nobody asked for twice. `autoAttach` is left on and `jobId` is null,
+ * so this provider never attaches to anything — it exists to own the one
+ * submission this page can make.
+ *
+ * WHAT IS DELIBERATELY NOT WIRED, AND WHY IT IS A BYTE QUESTION. Two of
+ * `LandingComposer`'s injection points stay at their defaults:
+ *
+ *   - `createThread` remains the plain `createConversation`, not
+ *     `useCreateConversation().mutateAsync`. The mutation needs a QueryClient
+ *     above this page, and TanStack Query in the `(workspace)` layout is
+ *     charged to BOTH routes' first-load JavaScript (+8,016 B gzip on `/` when
+ *     WO-08 measured it). The rail already keeps its own client in a lazy
+ *     chunk for exactly that reason; `/c/[id]` mounts one for the thread read.
+ *   - `unreachable` (03 §2.2 row 4) is not passed, because the fact belongs to
+ *     the rail's `GET /conversations` and reaching it from here needs the same
+ *     shared client. The rail still renders row 4's own alert; what is missing
+ *     is the composer's matching refusal, and buying it costs the route more
+ *     than the ceiling has.
+ *
+ * Both are recorded in the PR body rather than smoothed over.
+ */
 
-// WO-08 moved this file from `app/page.tsx` into the `(workspace)` route
-// group. A route group adds no URL segment, so this is still `/`.
-//
-// The only edit to its body: the manual shell wrapper it used to render
-// around itself is gone: the shell is now `app/(workspace)/layout.tsx`,
-// which wraps every route in the group — including the `<main id="main">` this page
-// never had. Everything else is untouched: the same two writes in the same
-// order, the same `?job=` hand-off, the same error handling. WO-13 and
-// WO-20 own this page's redesign.
+import { LandingComposer } from "@/components/features/LandingComposer";
+import { JobRunProvider } from "@/lib/job/provider";
 
 export default function HomePage() {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = useCallback(
-    async (query: string) => {
-      setBusy(true);
-      setError(null);
-      try {
-        // A new conversation is created for the very first query,
-        // then the query is submitted and we redirect into
-        // `/c/[id]?job=[job_id]`.
-        //
-        // ADR 0053: the `job` parameter is the whole point. This page
-        // used to throw the accepted job_id away and push a bare
-        // `/c/[id]`, and nothing downstream could recover it — the
-        // thread has no way to ask "which job is in flight?", and a
-        // job parked in `pending_review` is not in the conversation's
-        // job list either (the runner appends only on success). So the
-        // user paid for a planner call, watched an empty page, and the
-        // job died 30 minutes later on the HITL timeout. Carrying the
-        // id in the URL also makes a reload of the thread re-attach to
-        // the same job instead of buying a second one.
-        const conv = await createConversation();
-        const accepted = await submitResearch(query, {
-          conversation_id: conv.conversation_id,
-        });
-        router.push(
-          `/c/${encodeURIComponent(conv.conversation_id)}` +
-            `?job=${encodeURIComponent(accepted.job_id)}`
-        );
-      } catch (err) {
-        setBusy(false);
-        setError(
-          err instanceof ApiError
-            ? `submit failed: ${err.message}`
-            : String(err)
-        );
-      }
-    },
-    [router]
-  );
-
   return (
-    <div className="mx-auto flex h-full max-w-3xl flex-col justify-center gap-6 px-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          arxiv-research-agent
-        </h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Ask a research question to kick off a new conversation. Follow-ups
-          stay in the same thread and reuse prior findings as retrievable
-          context.
-        </p>
-      </header>
-      <QueryForm
-        onSubmit={handleSubmit}
-        busy={busy}
-        jobId={null}
-        error={error}
-      />
-    </div>
+    <JobRunProvider>
+      {/*
+        The composer is the first thing in `<main>` and its `h1` is the first
+        thing in the composer, which is WO-13 criterion 3 — the baseline's
+        heading did not start until roughly 440px down a 1200px viewport.
+        `overflow-y: auto` because `.ew-shell__surface` is a fixed-height box:
+        an over-length question grows the field and the column scrolls rather
+        than the page panning (04 §8.3).
+      */}
+      <div className="mx-auto flex h-full w-full max-w-3xl flex-col justify-center gap-6 overflow-y-auto px-6 py-8">
+        <LandingComposer />
+      </div>
+    </JobRunProvider>
   );
 }

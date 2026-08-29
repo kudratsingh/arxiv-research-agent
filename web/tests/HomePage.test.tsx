@@ -6,38 +6,42 @@
 // streamed it. The load-bearing assertions here are therefore about
 // *counting* — exactly one POST /research per submit — and about the
 // pushed URL carrying the job_id.
+//
+// WO-20 REWROTE THE PAGE UNDER THIS FILE AND LEFT THE FILE'S JOB ALONE.
+// `/` is now `JobRunProvider` + `LandingComposer` rather than `QueryForm` and
+// a hand-rolled `handleSubmit`, so the labels moved — "Research question" and
+// "Generate plan" are 03 §1.4's own words — and refusal is `aria-disabled`
+// rather than `disabled`, because a `disabled` button drops out of the tab
+// order and takes its own explanation with it (WO-13 criterion 7). Every
+// assertion below is the same claim as before against the composed route:
+// one thread, one run, in that order, with both ids percent-encoded in the
+// pushed URL, and nothing pushed when the submission failed.
+//
+// `web/tests/features/LandingComposer.test.tsx` makes the same claims one
+// layer down, against the component. This file is the ROUTE's copy of them,
+// which is what makes criterion 2 a statement about `/` rather than about a
+// component that `/` might or might not mount.
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 // WO-08 moved the page into the `(workspace)` route group. The group adds
 // no URL segment — `/` is still `/` — but it does add a path segment, so
-// this import moved with the file. Nothing else in this file changed, which
-// is the point: the hand-off contract is unaffected by the shell.
+// this import moved with the file.
 import HomePage from "@/app/(workspace)/page";
+import { FAILURE_COPY } from "@/lib/copy/errors";
+import { LANDING } from "@/lib/copy/composer";
+
+import {
+  installFakeEventSource,
+  uninstallFakeEventSource,
+} from "./support/FakeEventSource";
 
 const push = vi.fn();
 const replace = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace, prefetch: vi.fn(), refresh: vi.fn() }),
-}));
-
-// The sidebar renders `next/link`; the real component needs an app
-// router context this bare render has no reason to build.
-vi.mock("next/link", () => ({
-  default: ({
-    href,
-    children,
-    ...rest
-  }: {
-    href: string;
-    children: React.ReactNode;
-  }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
 }));
 
 const originalFetch = globalThis.fetch;
@@ -86,6 +90,28 @@ function installFetch(overrides: Record<string, () => Response> = {}): void {
         stream_url: "/research/job-1/stream",
       });
     }
+    // The machine reads the accepted run once it has adopted it. Free and
+    // read-only (`routes.py:215-232`); it is not what this file counts.
+    if (method === "GET" && apiPath.startsWith("/research/")) {
+      return jsonResp({
+        // Echoed, not hard-coded: this stub also answers the percent-encoded
+        // id, and returning a different one would let the machine adopt a run
+        // the submission never accepted.
+        job_id: decodeURIComponent(apiPath.slice("/research/".length)),
+        status: "pending",
+        query: "retrieval augmented verification",
+        created_at: 0,
+        completed_at: null,
+        result: null,
+        error: null,
+        error_type: null,
+        cost_usd: null,
+        llm_calls: null,
+        iterations: null,
+        quality_score: null,
+        plan: null,
+      });
+    }
     throw new Error(`unexpected request: ${key}`);
   }) as unknown as typeof fetch;
 }
@@ -98,17 +124,23 @@ beforeEach(() => {
   calls = [];
   push.mockClear();
   replace.mockClear();
+  installFakeEventSource();
   installFetch();
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  uninstallFakeEventSource();
 });
+
+function submitButton(): HTMLElement {
+  return screen.getByRole("button", { name: LANDING.submit });
+}
 
 async function submitQuery(query: string): Promise<void> {
   const user = userEvent.setup();
-  await user.type(screen.getByLabelText(/research question/i), query);
-  await user.click(screen.getByRole("button", { name: /run research/i }));
+  await user.type(screen.getByLabelText(LANDING.questionLabel), query);
+  await user.click(submitButton());
 }
 
 describe("HomePage submit hand-off (ADR 0053)", () => {
@@ -129,19 +161,36 @@ describe("HomePage submit hand-off (ADR 0053)", () => {
     expect(countOf("POST /conversations")).toBe(1);
   });
 
-  it("stays busy after submitting, so a second click cannot double-bill", async () => {
+  it("creates the thread before it buys the run, and only then hands off", async () => {
+    // MUST-KEEP 1 is an ORDERING as well as a URL shape: the run has to be
+    // submitted into a thread that already exists, or the id in the pushed
+    // URL names nothing.
+    render(<HomePage />);
+    await submitQuery("retrieval augmented verification");
+
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+    const writes = calls.filter((call) => call.startsWith("POST "));
+    expect(writes).toEqual(["POST /conversations", "POST /research"]);
+  });
+
+  it("stays refusing after the hand-off, so a second click cannot double-bill", async () => {
     const user = userEvent.setup();
     render(<HomePage />);
     await submitQuery("retrieval augmented verification");
     await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
 
-    // The redirect is the router's job and does not unmount the page
-    // in this test; the form must stay disabled meanwhile or an
-    // impatient second click buys a second planner run.
-    const button = screen.getByRole("button", { name: /running…/i });
-    expect(button).toBeDisabled();
-    await user.click(button);
+    // The redirect is the router's job and does not unmount the page in this
+    // test, so this is the real window: `submit()` has resolved, the run is
+    // adopted, and the browser has not left `/` yet. The control stays
+    // FOCUSABLE and refuses — `aria-disabled`, never `disabled` — so the
+    // reason travels with it (WO-13 criterion 7).
+    const pendingButton = screen.getByRole("button", {
+      name: LANDING.submitPending,
+    });
+    expect(pendingButton).toHaveAttribute("aria-disabled", "true");
+    await user.click(pendingButton);
     expect(countOf("POST /research")).toBe(1);
+    expect(countOf("POST /conversations")).toBe(1);
   });
 
   it("percent-encodes the ids it puts in the URL", async () => {
@@ -171,16 +220,24 @@ describe("HomePage submit hand-off (ADR 0053)", () => {
 
   it("reports a failed submit and does not navigate", async () => {
     installFetch({
-      "POST /research": () => jsonResp({ detail: "rate limited" }, 429),
+      "POST /research": () =>
+        jsonResp(
+          { detail: { error: "rate_limited", key_id: "local", limit_per_hour: 20 } },
+          429,
+        ),
     });
     render(<HomePage />);
     await submitQuery("retrieval augmented verification");
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/rate limited/);
+    // The normalized sentence, not the wire body: RC-16 keeps the raw string
+    // one disclosure away rather than making it the message.
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      FAILURE_COPY.rate_limited.sentence,
+    );
     expect(push).not.toHaveBeenCalled();
-    // Re-enabled, because there is no job to watch on the other page.
-    expect(
-      screen.getByRole("button", { name: /run research/i })
-    ).toBeEnabled();
+    // Re-enabled, because there is no run to watch on the other page: the
+    // same single control is the manual resubmit, and there is no automatic
+    // one anywhere on this path (R-01).
+    expect(submitButton()).not.toHaveAttribute("aria-disabled", "true");
   });
 });

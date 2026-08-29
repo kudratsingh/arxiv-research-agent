@@ -79,6 +79,18 @@ export function turnCount(count: number): string {
   return `${n} turn${n === 1 ? "" : "s"}`;
 }
 
+/**
+ * "Turn 3" — the collapsed row's own name (WO-20).
+ *
+ * Separate from `turnCount` because they are different claims: that one is
+ * how many turns the thread has, this one is which turn you are looking at.
+ * The ordinal comes from `ConversationJobSummary.ordinal` (`schemas.py:184`)
+ * and is the server's, never a rendering index.
+ */
+export function turnLabel(ordinal: number): string {
+  return `Turn ${Math.max(1, Math.trunc(ordinal))}`;
+}
+
 // ---------------------------------------------------------------------------
 // The thread surface (03 §2.2 rows 5, 21).
 // ---------------------------------------------------------------------------
@@ -98,6 +110,36 @@ export const THREAD = {
   notFoundBackToStart: "Start a new question",
   notFoundBackToList: "See the threads this deployment has",
   loadErrorHeading: "This thread could not be loaded",
+
+  // -------------------------------------------------------------------------
+  // WO-20's own strings — the route composition (03 §2.2 rows 5, 6, 7, 10, 12
+  // and §4 row B). Everything above this line was written by WO-12/WO-09 for
+  // this surface before the surface existed; nothing above it changed.
+  // -------------------------------------------------------------------------
+
+  /** The read that failed was `GET /conversations/{id}`, and it is retryable. */
+  loadErrorBody: "The research service did not answer for this thread.",
+  loadErrorRecovery: "Read it again. Nothing is sent again on its own.",
+
+  /** The accessible name of the list of turns. */
+  timelineLabel: "Turns in this thread",
+  /** The accessible name of the run panel pinned under the header. */
+  runLabel: "Current run",
+
+  /**
+   * §4 row B — `/c/[id]` with no `?job=`.
+   *
+   * Deliberately not an error and not an empty state: the thread is fine,
+   * there is simply no run attached to this page. Saying so is what stops
+   * the inert spine above it from reading as a run that has stalled.
+   */
+  noRun: "No run is attached to this page.",
+
+  /**
+   * 03 §2.2 row 16's recovery, in the words `COMPOSER.noAutoRetry` already
+   * uses for the same fact: asking again is a new run, and it is billable.
+   */
+  askAgain: "Ask the question again below. That starts a new billable run.",
 } as const;
 
 // ---------------------------------------------------------------------------

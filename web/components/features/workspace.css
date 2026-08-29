@@ -1,0 +1,97 @@
+/* =========================================================================
+ * WO-20 — the two routes' geometry, and the one rule it exists to keep.
+ *
+ * CRITERION 5: "Incoming events never move the report column — CLS 0.000
+ * during a live run." That is a statement about a GRID, not about a
+ * component, so it is expressed here rather than inside either feature.
+ *
+ * `.ew-thread` is three rows: the header, the run panel, and the reading
+ * column. The first two are `auto` and the third is `minmax(0, 1fr)`, so
+ * the reading column takes whatever is left and SCROLLS INSIDE ITSELF. A
+ * checkpoint arriving lands in `.ew-spine-ledger`, whose own `min-height`
+ * (WO-15, `spine.css`) was reserved for exactly this — the ledger holds its
+ * line before it has anything in it — so row 2 does not grow and row 3's top
+ * edge does not move.
+ *
+ * The one thing that WOULD move it is an aging clock: 03 §5.4's "updated 41 s
+ * ago" re-renders the status line every second and its text can rewrap.
+ * `ActiveRunPanel` therefore passes `now = null` to `spineInputs`, which is
+ * why that sentence is absent and the frame times live in the diagnostics
+ * disclosure instead. The trade is stated in `ActiveRunPanel.tsx`.
+ * ========================================================================= */
+
+.ew-thread {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.ew-thread__header {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--space-4) var(--space-6);
+  min-width: 0;
+}
+
+/* Row 2. `position: sticky` is not needed — it is already a fixed row of the
+   grid and cannot scroll away — but the border is, so the reading column
+   below it starts at a visible edge rather than at a guess. */
+.ew-thread__run {
+  border-bottom: 1px solid var(--color-border-subtle);
+  background-color: var(--color-sunken);
+  padding: var(--space-3) var(--space-6);
+  min-width: 0;
+}
+
+/* Row 3 — the only scrolling box on the route. `overscroll-behavior` keeps a
+   trackpad fling inside the reading column instead of bouncing the page. */
+.ew-thread__timeline {
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-5) var(--space-6);
+}
+
+/* One turn. Collapsed it is a question row and nothing else; expanded it
+   grows downward, inside the scroll region, so nothing above it moves. */
+.ew-thread__turn {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  min-width: 0;
+}
+
+.ew-thread__turn + .ew-thread__turn {
+  margin-top: var(--space-4);
+}
+
+.ew-thread__body {
+  border-top: 1px solid var(--color-border-subtle);
+  padding: var(--space-5);
+  min-width: 0;
+}
+
+/* The follow-up composer, portalled into WO-08's reserved slot. */
+.ew-thread__composer {
+  padding: var(--space-4) var(--space-6);
+  min-width: 0;
+}
+
+/* -------------------------------------------------------------------------
+ * The landing route.
+ *
+ * The composer is the first thing in `<main>` and the `h1` is the first thing
+ * in the composer (WO-13 criterion 3), so this is padding and a reading
+ * measure and nothing else.
+ * ---------------------------------------------------------------------- */
+.ew-landing {
+  display: flex;
+  min-height: 100%;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-8) var(--space-6);
+  overflow-y: auto;
+}
