@@ -40,8 +40,6 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import { VISUALLY_HIDDEN_CLASS } from "@/components/primitives/VisuallyHidden";
 import { THEME_CONTROL } from "@/lib/copy/shell";
-// TEMPORARY — WO-24 criterion 5, reverted in the next commit.
-import { WO24_BUDGET_BREACH } from "@/lib/wo24BudgetBreach";
 import {
   THEME_ATTRIBUTE,
   THEME_PREFERENCES,
@@ -174,7 +172,6 @@ export function ThemeToggle({ className }: ThemeToggleProps): React.ReactElement
         .filter(Boolean)
         .join(" ")}
       data-theme-toggle=""
-      data-wo24-budget-breach={WO24_BUDGET_BREACH}
     >
       {/* The group's accessible name. Clipped rather than absent: a
           fieldset with no legend is an unnamed group. */}
