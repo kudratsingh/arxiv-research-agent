@@ -81,6 +81,38 @@ import type { PlanEditorFieldsProps } from "./PlanEditor";
 // The resolver.
 // ---------------------------------------------------------------------------
 
+/**
+ * WO-30: turn off Zod's JIT before any schema is built.
+ *
+ * FOUND BY THE REPORT-ONLY RUN, NOT REASONED ABOUT. `web/e2e/csp.spec.ts`'s
+ * first sweep reported exactly one `script-src blocked=eval` violation
+ * across the whole §4 matrix, on the `plan-review` state, at
+ * `_next/static/chunks/295.*.js`. That is Zod 4's own feature probe:
+ *
+ *     let jitAvailable = memo(() => {
+ *       if (globalConfig.jitless || …) return false;
+ *       try { return Function(""), true } catch { return false }
+ *     });
+ *
+ * Zod compiles validators with `new Function` when it can and interprets
+ * them when it cannot, and the probe is inside a `try`, so the plan editor
+ * WORKS under the enforcing policy either way. What it does not do is stay
+ * quiet: the attempt is a genuine CSP violation, reported once per session
+ * in every operator's console, and criterion 1 asks for zero.
+ *
+ * THE ALTERNATIVE WAS `'unsafe-eval'`, AND IT IS NOT A REAL ALTERNATIVE.
+ * Adding it to `script-src` would let any injected string become code,
+ * which is most of what the policy exists to prevent — trading the whole
+ * control for a validator that runs slightly faster on a form with two
+ * lists in it. `jitless` is Zod's own documented switch for exactly this
+ * environment ("Useful in environments that disallow `eval`"), it changes
+ * no validation result, and it is set here rather than anywhere else
+ * because this module is the ONLY runtime importer of `zod` in the product
+ * — so the call cannot miss a schema, and `lib/plan/schema.ts` stays
+ * zod-free the way WO-17's bundle boundary requires.
+ */
+z.config({ jitless: true });
+
 /** Built once per module load, not per render: the bounds never change. */
 const planSchema = buildPlanSchema(z);
 

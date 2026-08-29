@@ -12,7 +12,7 @@
     "budgets": "npm run build && node scripts/route-budgets.mjs",
     "audit:gate": "node scripts/audit-gate.mjs",
     "start": "next start -p 3000",
-    "lint": "eslint app components lib --max-warnings 0",
+    "lint": "eslint app components lib middleware.ts --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006 --no-open",

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { readCspNonce } from "@/lib/server/csp";
 import { themeInitScript } from "@/lib/tokens";
 
 import { fontVariables } from "./fonts/fonts";
@@ -16,11 +17,16 @@ export const metadata: Metadata = {
     "Multi-agent research assistant for ML/AI papers. LangGraph + Claude with supervisor loop, faithfulness verifier, eval harness, FastAPI + SSE, Docker + Redis + Postgres.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // WO-30. `undefined` outside a request scope and in development, where
+  // `cspModeFor` returns `off` and no script needs one; a fresh per-request
+  // value under the enforcing policy. See lib/server/csp.ts.
+  const nonce = await readCspNonce();
+
   return (
     // suppressHydrationWarning: the script below writes data-theme and
     // data-theme-preference onto this element before React hydrates, so
@@ -36,10 +42,21 @@ export default function RootLayout({
           necessity -- anything deferred paints the light theme first
           and flashes. Its source lives in web/lib/tokens.ts so the
           localStorage key has exactly one definition; WO-21 asserts the
-          absence of the flash in Playwright, and C3's CSP will need to
-          hand this element a nonce once web/middleware.ts exists.
+          absence of the flash in Playwright.
+
+          WO-30 SUPPLIED THE NONCE THIS COMMENT USED TO PROMISE. Under
+          `script-src 'self' 'nonce-...' 'strict-dynamic'` the `'self'`
+          source is ignored by any browser that implements
+          `'strict-dynamic'`, so an inline script with no nonce is
+          refused outright -- which would mean no pre-paint theme, which
+          is the flash. Next stamps its own bundle tags automatically
+          (it reads the CSP off the request headers); author markup like
+          this element is the one place the value has to be threaded by
+          hand. web/e2e/csp.spec.ts asserts the themed first paint with
+          the enforcing header live, so a dropped nonce goes red rather
+          than quietly reintroducing the flash.
         */}
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       {/*
         WO-11's `<Providers>` IS NOT MOUNTED HERE, AND WO-08 MEASURED WHY.
