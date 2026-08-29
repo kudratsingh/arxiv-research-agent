@@ -1,5 +1,12 @@
 # Frontend revamp changelog
 
+## 2026-08-29 — Gate 4 closed with one reservation; EXEC complete (33/33)
+
+- Ratified as [`DECISIONS.md` D-015](DECISIONS.md#d-015--gate-4-ratified-with-one-reservation-under-the-standing-delegation): WO-27/28/29/31/32/33 merged (PRs #114–#120), the Gate 4 evidence pack and before/after report on main, the nightly Lighthouse gate proven by a real-runner failure (TBT 180 ms on a 2-core runner) diagnosed, ruled (warn at ratified ceilings, error at 2× per form factor), and re-proven green.
+- Reservation: RR-02 — the human screen-reader pass (protocol ready in `evidence/gate-4/manual/screen-reader.md`) is the one criterion a delegation cannot execute; reserved to the user.
+- Headline before/after (full report in `evidence/gate-4/`): axe 36 rule-entries/77 nodes → 0/0 across 120 audits; mobile CLS worst 0.134 → 0.000; `/c` mobile LCP 3.62 → 1.42 s; worst mobile scores 85/94/96 → 100/100/100; six bundle ceilings ratcheted down 24,576 B; tests 78 → 3,080 unit + 419 e2e + 284 stories; frontend CI 1 job → 4 jobs + a nightly matrix and Lighthouse gate.
+- Residual register RR-01–RR-19 with owners and revisit triggers; `design/tokens.json` status line corrected to implemented.
+
 ## 2026-08-29 — Gate 3 closed (under user delegation)
 
 - Ratified as [`DECISIONS.md` D-014](DECISIONS.md#d-014--gate-3-ratified-under-the-standing-delegation): all 26 Gate 3 work orders merged; evidence pack (PR #107, honest 8/10) + criterion repairs (PR #108 stories; PR #111 mobile CLS 0.134→0.000 and `/c` LCP into budget) + re-verification addendum (PR #112) bring all ten criteria to PASS on `d3460a7`.

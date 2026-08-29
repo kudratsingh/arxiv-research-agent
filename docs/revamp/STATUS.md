@@ -1,16 +1,15 @@
 # Frontend revamp status
 
-Updated: 2026-08-29 (Gate 3 closed; Gate 4 hardening wave in flight)  
+Updated: 2026-08-29 (Gate 4 closed with one reservation; EXEC complete)  
 Baseline: `e6e87396d32be5ae985c2d7cc0dd5ed6cf84b351`
 
 ## Current gate
 
-**Gate 3 — approved 2026-08-29 under user delegation ([`DECISIONS.md` D-014](DECISIONS.md#d-014--gate-3-ratified-under-the-standing-delegation)). Gate 4 hardening is in flight.**
+**Gate 4 — approved 2026-08-29 under user delegation with one reservation ([`DECISIONS.md` D-015](DECISIONS.md#d-015--gate-4-ratified-with-one-reservation-under-the-standing-delegation)). All 33 work orders are merged; the revamp implementation is complete.**
 
-- Gate 3 basis: evidence pack (PR #107) + repairs (PRs #108, #111) + re-verification addendum (PR #112); the pack's known-gaps list is the Gate 4 workplan. Rulings: [`DECISIONS.md` D-011](DECISIONS.md#d-011--exec-coordinator-rulings-m0-wave-under-the-same-delegation)–[D-014](DECISIONS.md#d-014--gate-3-ratified-under-the-standing-delegation).
-- Gate 4 merged so far: WO-30 proxy hardening (PR #109 — enforcing nonce CSP, proxy logging, healthcheck, MT-01 seams).
-- In flight: WO-27 (`feat/wo-27-a11y-hardening`), WO-29 (`ci/wo-29-lighthouse-nightly`), WO-31 (`chore/wo-31-legacy-removal`). Queued: WO-28 (after WO-27), WO-32 (after WO-31), WO-33 (last).
-- Reserved for the user: MT-01, DEPLOY, the paid eval campaign, and WO-27's human screen-reader transcription.
+- Gate 4 basis: WO-30/27/29/31/28/32/33 (PRs #109, #115, #116+#119, #114, #118, #117, #120); evidence pack + before/after report in [`evidence/gate-4/`](evidence/gate-4/); residual register RR-01–RR-19 with owners.
+- The reservation: RR-02 — the human screen-reader pass (protocol ready) is reserved to the user.
+- Reserved for the user otherwise: MT-01 (PROPOSED), DEPLOY, the paid eval campaign, the license decision, the social-preview upload.
 
 **Gate 2 — approved 2026-08-28 under user delegation.**
 
@@ -38,7 +37,7 @@ No backend contract has changed. No paid model, hosting, or provisioning action 
 | G2-03 | Phase 4 work orders + dependency graph | Opus author agent | done — merged (PR #72) after review corrections | `main` | — | 2026-08-28 |
 | G2-04 | Independent Gate 2 package review | Separate reviewer | done — approved (second pass) | `main` | — | 2026-08-28 |
 | MT-01 | Multi-tenancy backend proposal | Opus author agent | proposal merged (PR #69); PROPOSED | `main` | User's own approval gate; blocking questions in the proposal §8 | 2026-08-28 |
-| EXEC | Product implementation (33 work orders, 26 Gate 3 / 7 Gate 4) | Worktree agent fleet | Gate 3 set done (26/26); Gate 4: WO-30 merged, WO-27/29/31 in flight | per-WO branches | Merges gated on green CI | 2026-08-29 |
+| EXEC | Product implementation (33 work orders, 26 Gate 3 / 7 Gate 4) | Worktree agent fleet | **done — 33/33 merged; Gates 3 and 4 closed** | `main` | RR-02 human pass reserved to the user | 2026-08-29 |
 | DEPLOY | Hetzner CX23 Helsinki deployment | Unassigned | blocked | — | Server availability and explicit cost approval (reserved for the user) | 2026-08-28 |
 
 Deliverables: [`00-DISCOVERY.md`](00-DISCOVERY.md), [`baseline/`](baseline/README.md), [`01-RESEARCH.md`](01-RESEARCH.md), [`skills-installed.md`](skills-installed.md), [`02-DIRECTIONS.md`](02-DIRECTIONS.md), [`03-DESIGN-BRIEF.md`](03-DESIGN-BRIEF.md) + [`design/tokens.json`](design/tokens.json), [`04-ARCHITECTURE.md`](04-ARCHITECTURE.md), [`05-MIGRATION.md`](05-MIGRATION.md), [`06-WORK-ORDERS.md`](06-WORK-ORDERS.md), and [`../proposals/multi-tenancy.md`](../proposals/multi-tenancy.md).
@@ -61,4 +60,4 @@ Full provenance, hashes, community candidates, and fallbacks: [`skills-installed
 
 ## Next decision
 
-Gates 1–3 are decided. Gate 4 closes on the hardening/docs wave (WO-27–29, 31–33) and the before/after quality report (WO-33), to be ratified under the standing delegation and recorded in [`DECISIONS.md`](DECISIONS.md). The decisions that remain the user's: MT-01 approval (proposal §8 questions), anything cost-bearing (DEPLOY, a funded eval campaign), and the human screen-reader pass WO-27 prepares.
+All four gates are decided; the revamp implementation is complete on `main`. What remains is the user's alone: the RR-02 screen-reader pass (protocol at [`evidence/gate-4/manual/screen-reader.md`](evidence/gate-4/manual/screen-reader.md)), MT-01 approval (proposal §8 questions), anything cost-bearing (DEPLOY, a funded eval campaign), the license decision, and the GitHub social-preview upload. The residual register ([`evidence/gate-4/residual-risks.md`](evidence/gate-4/residual-risks.md)) carries every accepted limitation with its owner and revisit trigger.

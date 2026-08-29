@@ -362,3 +362,56 @@
   screen-reader transcription.
 - Needs human review: no (delegated); recorded with the full audit trail
   per D-009–D-013.
+
+## D-015 — Gate 4 ratified with one reservation (under the standing delegation)
+
+- Date: 2026-08-29
+- Status: **Gate 4 closed — approved, with RR-02 reserved to the user**
+- Authority: the D-010 delegation.
+- Basis: all seven Gate 4 work orders merged — WO-30 (PR #109),
+  WO-27 (#115), WO-29 (#116 + runner-ceiling amendment #119),
+  WO-31 (#114), WO-28 (#118), WO-32 (#117), WO-33 (#120). The Gate 4
+  evidence pack walks every §4.2 artifact, the §4.3 forbidden-claims
+  checklist, the twelve §11 ambiguity ratifications, and the
+  before/after quality report; the nightly Lighthouse gate is proven
+  by a real-runner failure diagnosed and a real-runner pass
+  (runs 33262680039 → 33265437903).
+- The reservation: **RR-02** — WO-27 criterion 3's screen-reader
+  transcriptions (VoiceOver + Safari on macOS and iOS; NVDA + Firefox)
+  require a human operator and were not executed; the protocol is
+  written and waiting. A delegation cannot manufacture a human
+  transcription, so the gate closes with this named as the one
+  outstanding criterion, owned by the user, tracked as RR-02 with
+  blocker status in `evidence/gate-4/residual-risks.md`.
+- Rulings bundled into this close:
+  1. **Nightly TBT runner ceiling** (PR #119): the ratified §8.2 TBT
+     ceilings stay asserted at `warn`; a runner `error` ceiling of 2×
+     the ratified value applies **per form factor** (mobile 300 ms,
+     desktop 100 ms) — the worker's per-form-factor amendment of the
+     coordinator's flat-300 wording is accepted as the more faithful
+     reading. Evidence: 36 mobile samples spanning 55–290 ms on 2-core
+     runners for cells that measure 10–63 ms locally. A future failure
+     here means a dedicated runner, not another doubling.
+  2. **WO-31's six budget ratchet-downs recorded** (PR #114), closing
+     `web/budgets.json`'s "to be recorded in DECISIONS.md" pointers:
+     `/` 167,936→166,912 B; `/c/[id]` 199,680→192,512 B; shared
+     runtime 141,312→139,264 B; CSS 12,288→11,264 B; fonts
+     122,880→109,568 B; derived total 334,848→313,344 B. Coverage
+     floors ratcheted up to 97.61/93.37/88.1/98.57.
+  3. **WO-28's superset reading accepted** (PR #118): the ambiguous
+     "four degraded states" is discharged by covering all seven
+     degraded states with retained baseline screenshots, so every
+     reading of the card is a subset.
+  4. **WO-33 findings routed to owners**: the budget report's false
+     "baseline not an ancestor" sentence (`route-budgets.mjs:661`,
+     WO-23 owner); two stale doc references (`ci.yml` line numbers,
+     a deleted-module pointer in 06 §11); `last-event-id`'s D-010 r15
+     reservation unpinned by test or comment (RR-14, WO-30 owner);
+     two pre-existing broken links in WO-27's pack. None changes a
+     gate verdict; all live in the residual register with owners.
+- The full residual register is `evidence/gate-4/residual-risks.md`
+  RR-01–RR-19. Reserved to the user beyond RR-02: MT-01 (PROPOSED),
+  DEPLOY, a funded eval campaign, the license decision, and the
+  GitHub social-preview upload.
+- Needs human review: RR-02 only; everything else delegated and
+  recorded per D-009–D-014.
