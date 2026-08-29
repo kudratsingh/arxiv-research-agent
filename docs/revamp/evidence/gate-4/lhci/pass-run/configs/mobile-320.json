@@ -1,0 +1,154 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3,
+      "url": [
+        "http://127.0.0.1:13295/",
+        "http://127.0.0.1:13295/c/baseline-populated"
+      ],
+      "settings": {
+        "onlyCategories": [
+          "performance",
+          "accessibility",
+          "best-practices"
+        ],
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.5600000000002,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 320,
+          "height": 568,
+          "deviceScaleFactor": 2,
+          "disabled": false
+        },
+        "chromeFlags": "--headless --no-sandbox --disable-gpu"
+      }
+    },
+    "assert": {
+      "includePassedAssertions": true,
+      "assertMatrix": [
+        {
+          "matchingUrlPattern": "^https?://[^/]+/$",
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated$",
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./build/lhci/mobile-320",
+      "reportFilenamePattern": "%%PATHNAME%%-%%DATETIME%%.%%EXTENSION%%"
+    }
+  }
+}

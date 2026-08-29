@@ -1,0 +1,1873 @@
+{
+  "generatedAt": "2026-08-29T15:55:54.456Z",
+  "baseUrl": "http://127.0.0.1:13295",
+  "assertionCount": 70,
+  "results": [
+    {
+      "profile": {
+        "id": "mobile-412",
+        "label": "Mobile, 412 x 823",
+        "ci": {
+          "collect": {
+            "numberOfRuns": 3,
+            "url": [
+              "http://127.0.0.1:13210/",
+              "http://127.0.0.1:13210/c/baseline-empty",
+              "http://127.0.0.1:13210/c/baseline-populated",
+              "http://127.0.0.1:13210/c/baseline-populated?job=baseline-plan-review"
+            ],
+            "settings": {
+              "onlyCategories": [
+                "performance",
+                "accessibility",
+                "best-practices"
+              ],
+              "formFactor": "mobile",
+              "throttlingMethod": "simulate",
+              "throttling": {
+                "rttMs": 150,
+                "throughputKbps": 1638.4,
+                "requestLatencyMs": 562.5,
+                "downloadThroughputKbps": 1474.5600000000002,
+                "uploadThroughputKbps": 675,
+                "cpuSlowdownMultiplier": 4
+              },
+              "screenEmulation": {
+                "mobile": true,
+                "width": 412,
+                "height": 823,
+                "deviceScaleFactor": 1.75,
+                "disabled": false
+              },
+              "chromeFlags": "--headless --no-sandbox --disable-gpu"
+            }
+          },
+          "assert": {
+            "includePassedAssertions": true,
+            "assertMatrix": [
+              {
+                "matchingUrlPattern": "^https?://[^/]+/$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.95,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 2500,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 150,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              },
+              {
+                "matchingUrlPattern": "^https?://[^/]+/c/baseline-empty$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.95,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 2500,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 150,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              },
+              {
+                "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.95,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 2500,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 150,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              },
+              {
+                "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated\\?job=baseline-plan-review$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.95,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 2500,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 150,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "upload": {
+            "target": "filesystem",
+            "outputDir": "./build/lhci/mobile-412",
+            "reportFilenamePattern": "%%PATHNAME%%-%%DATETIME%%.%%EXTENSION%%"
+          }
+        }
+      },
+      "status": 0,
+      "rows": [
+        {
+          "url": "http://127.0.0.1:13295/",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 1262.43,
+              "values": [
+                1244.2362,
+                1262.43,
+                1389.025
+              ]
+            },
+            "total-blocking-time": {
+              "median": 14,
+              "values": [
+                40,
+                14,
+                10
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "bf-cache": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "bfCacheReasons": [],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "url": "http://127.0.0.1:13295/c/baseline-empty",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 0.98,
+              "values": [
+                0.98,
+                1,
+                0.96
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 1823.3605499999999,
+              "values": [
+                1388.2180000000003,
+                1823.3605499999999,
+                2722.141
+              ]
+            },
+            "total-blocking-time": {
+              "median": 29,
+              "values": [
+                173,
+                11.5,
+                29
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "bf-cache": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "bfCacheReasons": [],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "url": "http://127.0.0.1:13295/c/baseline-populated",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 1365.9989,
+              "values": [
+                1405.7320999999997,
+                1365.9989,
+                1270.578
+              ]
+            },
+            "total-blocking-time": {
+              "median": 14,
+              "values": [
+                14,
+                12.5,
+                14
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0.0006111383796837512
+              ]
+            },
+            "bf-cache": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "bfCacheReasons": [],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "url": "http://127.0.0.1:13295/c/baseline-populated?job=baseline-plan-review",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 1317.0702,
+              "values": [
+                1403.99,
+                1310.3127,
+                1317.0702
+              ]
+            },
+            "total-blocking-time": {
+              "median": 67,
+              "values": [
+                66,
+                75.5,
+                67
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "bf-cache": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "bfCacheReasons": [],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "profile": {
+        "id": "desktop-1350",
+        "label": "Desktop, 1350 x 940",
+        "ci": {
+          "collect": {
+            "numberOfRuns": 3,
+            "url": [
+              "http://127.0.0.1:13210/",
+              "http://127.0.0.1:13210/c/baseline-empty",
+              "http://127.0.0.1:13210/c/baseline-populated",
+              "http://127.0.0.1:13210/c/baseline-populated?job=baseline-plan-review"
+            ],
+            "settings": {
+              "onlyCategories": [
+                "performance",
+                "accessibility",
+                "best-practices"
+              ],
+              "formFactor": "desktop",
+              "throttlingMethod": "simulate",
+              "throttling": {
+                "rttMs": 40,
+                "throughputKbps": 10240,
+                "requestLatencyMs": 0,
+                "downloadThroughputKbps": 0,
+                "uploadThroughputKbps": 0,
+                "cpuSlowdownMultiplier": 1
+              },
+              "screenEmulation": {
+                "mobile": false,
+                "width": 1350,
+                "height": 940,
+                "deviceScaleFactor": 1,
+                "disabled": false
+              },
+              "emulatedUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+              "chromeFlags": "--headless --no-sandbox --disable-gpu"
+            }
+          },
+          "assert": {
+            "includePassedAssertions": true,
+            "assertMatrix": [
+              {
+                "matchingUrlPattern": "^https?://[^/]+/$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.98,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 1200,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 50,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "warn",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              },
+              {
+                "matchingUrlPattern": "^https?://[^/]+/c/baseline-empty$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.98,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 1200,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 50,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "warn",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              },
+              {
+                "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.98,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 1200,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 50,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "warn",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              },
+              {
+                "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated\\?job=baseline-plan-review$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.98,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 1200,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 50,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "warn",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "upload": {
+            "target": "filesystem",
+            "outputDir": "./build/lhci/desktop-1350",
+            "reportFilenamePattern": "%%PATHNAME%%-%%DATETIME%%.%%EXTENSION%%"
+          }
+        }
+      },
+      "status": 0,
+      "rows": [
+        {
+          "url": "http://127.0.0.1:13295/",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 355.94,
+              "values": [
+                355.94,
+                564.8026000000001,
+                331.94590000000005
+              ]
+            },
+            "total-blocking-time": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "bf-cache": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "bfCacheReasons": [
+            "MainResourceHasCacheControlNoStore (Not actionable)",
+            "JsNetworkRequestReceivedCacheControlNoStoreResource (Not actionable)"
+          ],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.98,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 1200,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 50,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "warn",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "url": "http://127.0.0.1:13295/c/baseline-empty",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 336.3142,
+              "values": [
+                336.5373,
+                332.2019,
+                336.3142
+              ]
+            },
+            "total-blocking-time": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "bf-cache": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "bfCacheReasons": [
+            "MainResourceHasCacheControlNoStore (Not actionable)",
+            "JsNetworkRequestReceivedCacheControlNoStoreResource (Not actionable)"
+          ],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.98,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 1200,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 50,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "warn",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "url": "http://127.0.0.1:13295/c/baseline-populated",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 0.99,
+              "values": [
+                0.99,
+                1,
+                0.99
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 822.5623999999998,
+              "values": [
+                823.3854,
+                821.4574,
+                822.5623999999998
+              ]
+            },
+            "total-blocking-time": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "bf-cache": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "bfCacheReasons": [
+            "MainResourceHasCacheControlNoStore (Not actionable)",
+            "JsNetworkRequestReceivedCacheControlNoStoreResource (Not actionable)"
+          ],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.98,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 1200,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 50,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "warn",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "url": "http://127.0.0.1:13295/c/baseline-populated?job=baseline-plan-review",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 344.433,
+              "values": [
+                569.1470999999999,
+                333.0293,
+                344.433
+              ]
+            },
+            "total-blocking-time": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0.0001280343227388144,
+              "values": [
+                0.0001280343227388144,
+                0.0001280343227388144,
+                0.0001280343227388144
+              ]
+            },
+            "bf-cache": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "bfCacheReasons": [
+            "MainResourceHasCacheControlNoStore (Not actionable)",
+            "JsNetworkRequestReceivedCacheControlNoStoreResource (Not actionable)"
+          ],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.98,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 1200,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 50,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "warn",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "profile": {
+        "id": "mobile-320",
+        "label": "Mobile, 320 x 568 (04 §8.3 narrow strip)",
+        "ci": {
+          "collect": {
+            "numberOfRuns": 3,
+            "url": [
+              "http://127.0.0.1:13210/",
+              "http://127.0.0.1:13210/c/baseline-populated"
+            ],
+            "settings": {
+              "onlyCategories": [
+                "performance",
+                "accessibility",
+                "best-practices"
+              ],
+              "formFactor": "mobile",
+              "throttlingMethod": "simulate",
+              "throttling": {
+                "rttMs": 150,
+                "throughputKbps": 1638.4,
+                "requestLatencyMs": 562.5,
+                "downloadThroughputKbps": 1474.5600000000002,
+                "uploadThroughputKbps": 675,
+                "cpuSlowdownMultiplier": 4
+              },
+              "screenEmulation": {
+                "mobile": true,
+                "width": 320,
+                "height": 568,
+                "deviceScaleFactor": 2,
+                "disabled": false
+              },
+              "chromeFlags": "--headless --no-sandbox --disable-gpu"
+            }
+          },
+          "assert": {
+            "includePassedAssertions": true,
+            "assertMatrix": [
+              {
+                "matchingUrlPattern": "^https?://[^/]+/$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.95,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 2500,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 150,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              },
+              {
+                "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated$",
+                "assertions": {
+                  "categories:performance": [
+                    "error",
+                    {
+                      "minScore": 0.95,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "categories:accessibility": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "categories:best-practices": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ],
+                  "largest-contentful-paint": [
+                    "error",
+                    {
+                      "maxNumericValue": 2500,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "total-blocking-time": [
+                    "error",
+                    {
+                      "maxNumericValue": 150,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "cumulative-layout-shift": [
+                    "error",
+                    {
+                      "maxNumericValue": 0.02,
+                      "aggregationMethod": "median"
+                    }
+                  ],
+                  "bf-cache": [
+                    "error",
+                    {
+                      "minScore": 1,
+                      "aggregationMethod": "pessimistic"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "upload": {
+            "target": "filesystem",
+            "outputDir": "./build/lhci/mobile-320",
+            "reportFilenamePattern": "%%PATHNAME%%-%%DATETIME%%.%%EXTENSION%%"
+          }
+        }
+      },
+      "status": 0,
+      "rows": [
+        {
+          "url": "http://127.0.0.1:13295/",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 1,
+              "values": [
+                1,
+                0.98,
+                1
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 1362.2145999999998,
+              "values": [
+                1212.7959,
+                2341.51865,
+                1362.2145999999998
+              ]
+            },
+            "total-blocking-time": {
+              "median": 6.5,
+              "values": [
+                6.5,
+                24,
+                3.5
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "bf-cache": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "bfCacheReasons": [],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "url": "http://127.0.0.1:13295/c/baseline-populated",
+          "runs": 3,
+          "lighthouseVersion": "12.6.1",
+          "measured": {
+            "categories:performance": {
+              "median": 1,
+              "values": [
+                1,
+                0.98,
+                1
+              ]
+            },
+            "categories:accessibility": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "categories:best-practices": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            },
+            "largest-contentful-paint": {
+              "median": 1813.0367999999999,
+              "values": [
+                1215.3798,
+                2483.95715,
+                1813.0367999999999
+              ]
+            },
+            "total-blocking-time": {
+              "median": 6.5,
+              "values": [
+                6.5,
+                7.5,
+                6
+              ]
+            },
+            "cumulative-layout-shift": {
+              "median": 0,
+              "values": [
+                0,
+                0,
+                0
+              ]
+            },
+            "bf-cache": {
+              "median": 1,
+              "values": [
+                1,
+                1,
+                1
+              ]
+            }
+          },
+          "bfCacheReasons": [],
+          "assertions": {
+            "categories:performance": [
+              "error",
+              {
+                "minScore": 0.95,
+                "aggregationMethod": "median"
+              }
+            ],
+            "categories:accessibility": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "categories:best-practices": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ],
+            "largest-contentful-paint": [
+              "error",
+              {
+                "maxNumericValue": 2500,
+                "aggregationMethod": "median"
+              }
+            ],
+            "total-blocking-time": [
+              "error",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
+              }
+            ],
+            "cumulative-layout-shift": [
+              "error",
+              {
+                "maxNumericValue": 0.02,
+                "aggregationMethod": "median"
+              }
+            ],
+            "bf-cache": [
+              "error",
+              {
+                "minScore": 1,
+                "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

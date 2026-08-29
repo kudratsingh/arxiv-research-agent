@@ -1,0 +1,383 @@
+{
+  "source": "docs/revamp/04-ARCHITECTURE.md §8.2 (the lab performance targets) and §8.4 (\"Lighthouse budgets\"), docs/revamp/05-MIGRATION.md §3 item C11, RC-06 and RC-18. Written by WO-29.",
+  "$comment": [
+    "WHAT THIS FILE IS. The §8.2 table, encoded once per audited state and once per form factor,",
+    "as Lighthouse CI assertions. Nothing here is a preference: every ceiling below is the number",
+    "in 04-ARCHITECTURE.md §8.2, and 04 §8.4's ratchet rule governs it exactly as it governs",
+    "web/budgets.json -- a ceiling may only move in a PR that edits this file in the same commit",
+    "and says why in the PR body. web/tests/lighthouserc.test.ts re-states §8.2 independently and",
+    "fails on any drift, so the two cannot quietly diverge.",
+    "",
+    "THREE PROFILES, BECAUSE LIGHTHOUSE HAS ONE FORM FACTOR PER RUN. `collect.settings` is global",
+    "to an `lhci autorun` invocation, so the same URL cannot be audited at two form factors in one",
+    "run. `ci` below IS the mobile-412 profile -- a bare `npx lhci autorun` from web/ runs it and",
+    "asserts the mobile half of §8.2 -- and `profiles` carries the other two as complete,",
+    "literal, `ci`-shaped configs. Nothing is generated or merged: `scripts/lhci-run.mjs` writes",
+    "each one to disk verbatim and hands it to `lhci autorun --config`. The duplication is",
+    "deliberate and is gated by the test rather than removed by a merge step, because a merge step",
+    "is the thing that makes a config file stop meaning what it reads as.",
+    "",
+    "THE FOUR STATES are the four with retained Gate 1 baseline JSON and Gate 3 rerun JSON",
+    "(docs/revamp/evidence/gate-3/lighthouse-diff.md §3): landing, empty conversation, populated",
+    "report, plan review. `mobile-320` adds 04 §8.3's narrow-strip width for the two states the",
+    "Gate 3 pack audited there. The URLs are the seeded stack's `baseline-*` fixtures, written by",
+    "web/e2e/fixtures/seed.sh directly into Postgres and Redis -- POST /research is never called,",
+    "so no model provider is contacted by anything in this file.",
+    "",
+    "BASE URL. The host below is `web/e2e/support/stack.sh`'s default, which is what CI uses.",
+    "`scripts/lhci-run.mjs` substitutes $LHCI_BASE_URL when it is set, for a stack on another port.",
+    "Every `matchingUrlPattern` is host-agnostic (`^https?://[^/]+/...`) so the assertions bind to",
+    "the route, not to the port that happened to be free.",
+    "",
+    "AGGREGATION, STATED RATHER THAN DEFAULTED. LHCI's default `aggregationMethod` is",
+    "\"optimistic\" -- the friendliest of the three runs. That is not a gate, so every assertion",
+    "below sets the method explicitly:",
+    "  * median   for the four throttled, noisy measurements (LCP, TBT, CLS, Performance). These",
+    "             are simulated-throttling figures on shared CI hardware; PR #111 measured the same",
+    "             URL at LCP 1.29 s and 2.49 s in consecutive samples, so a worst-of-three gate",
+    "             would report the runner's mood, not the application's.",
+    "  * pessimistic for Accessibility, Best Practices and bf-cache. These are deterministic audits",
+    "             with no throttling term, so \"the worst run must also be 100\" costs nothing and",
+    "             is what §8.2's \"100, not approximated\" actually means. A `minScore` of 1 on a",
+    "             Lighthouse category is exact: category scores are capped at 1.",
+    "",
+    "`includePassedAssertions` IS ON, IN ALL THREE PROFILES. LHCI writes only FAILED assertions to",
+    "`.lighthouseci/assertion-results.json` by default, so a green run leaves behind an empty",
+    "array -- indistinguishable from a run that asserted nothing at all, which is the exact claim",
+    "this file has to be able to prove. With the flag on, the artifact carries one row per",
+    "evaluated assertion (70 of them), and the exit code is unchanged: `lhci assert` fails on",
+    "`!passed && level === \"error\"` either way.",
+    "",
+    "CLS AND RC-06. The gate is ≤ 0.02 (04 §8.2). The design intent is 0.000 (03-DESIGN-BRIEF.md",
+    "§3.5, §5.6, design/tokens.json \"cls-budget\"). RC-06 resolves the two as answers to different",
+    "questions and requires a written justification for any state that lands above 0.000. Both the",
+    "measured values and those justifications are in",
+    "docs/revamp/evidence/gate-4/lhci/README.md §4 -- not here, because a measurement belongs in",
+    "an evidence pack with the run that produced it.",
+    "",
+    "BF-CACHE AND RC-18, INCLUDING THE ONE DOCUMENTED DEVIATION. RC-18 requires the `bf-cache`",
+    "audit to pass on `/c/[id]`. It is asserted at `error` on every MOBILE cell -- all four states",
+    "at 412 px and both states at 320 px -- because that is where it measurably passes.",
+    "It is asserted at `warn` on every DESKTOP cell, and that is a deviation with a measured cause",
+    "rather than a threshold that was found inconvenient.",
+    "",
+    "The cause, in two parts. (1) Since WO-30 (#109) the root layout reads the per-request CSP",
+    "nonce from `headers()`, which opts EVERY document route into dynamic rendering, and Next",
+    "serves a dynamic document with",
+    "`Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`. A nonce-based CSP",
+    "and a bfcache-eligible cacheable document are mutually exclusive; web/middleware.ts says so",
+    "in its own header. Lighthouse reports exactly that -- `MainResourceHasCacheControlNoStore`",
+    "plus `JsNetworkRequestReceivedCacheControlNoStoreResource`, both classified",
+    "\"Not actionable\". (2) Chrome nevertheless ADMITS the same document to bfcache under mobile",
+    "emulation and refuses it under desktop emulation, on all four states, reproducibly, on both",
+    "Lighthouse 13.4.1 (the Gate 3 pack) and the 12.6.1 that @lhci/cli pins. So the deviation is",
+    "shaped by form factor, not by route: `/` passes on mobile and `/c/[id]` fails on desktop.",
+    "The lhci README §5 records the isolation runs, including the one that rules the user agent",
+    "out and the reason `formFactor` and `screenEmulation.mobile` cannot be varied independently.",
+    "",
+    "`warn` rather than `off` on the desktop cells, on purpose: the audit still runs and still",
+    "prints on every nightly, so the day the constraint lifts we see it instead of having deleted",
+    "the question."
+  ],
+
+  "states": [
+    {
+      "id": "landing",
+      "label": "Landing",
+      "path": "/",
+      "baseline": "docs/revamp/baseline/lighthouse/home-{mobile,desktop}.json"
+    },
+    {
+      "id": "conversation-empty",
+      "label": "Empty conversation",
+      "path": "/c/baseline-empty",
+      "baseline": "docs/revamp/evidence/gate-3/lighthouse/conversation-empty-{mobile,desktop}.gate3.json"
+    },
+    {
+      "id": "conversation-populated",
+      "label": "Populated report",
+      "path": "/c/baseline-populated",
+      "baseline": "docs/revamp/baseline/lighthouse/conversation-populated-{mobile,desktop}.json"
+    },
+    {
+      "id": "plan-review",
+      "label": "Plan review",
+      "path": "/c/baseline-populated?job=baseline-plan-review",
+      "baseline": "docs/revamp/evidence/gate-3/lighthouse/plan-review-{mobile,desktop}.gate3.json"
+    }
+  ],
+
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3,
+      "url": [
+        "http://127.0.0.1:13210/",
+        "http://127.0.0.1:13210/c/baseline-empty",
+        "http://127.0.0.1:13210/c/baseline-populated",
+        "http://127.0.0.1:13210/c/baseline-populated?job=baseline-plan-review"
+      ],
+      "settings": {
+        "onlyCategories": ["performance", "accessibility", "best-practices"],
+        "formFactor": "mobile",
+        "throttlingMethod": "simulate",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "requestLatencyMs": 562.5,
+          "downloadThroughputKbps": 1474.5600000000002,
+          "uploadThroughputKbps": 675,
+          "cpuSlowdownMultiplier": 4
+        },
+        "screenEmulation": {
+          "mobile": true,
+          "width": 412,
+          "height": 823,
+          "deviceScaleFactor": 1.75,
+          "disabled": false
+        },
+        "chromeFlags": "--headless --no-sandbox --disable-gpu"
+      }
+    },
+    "assert": {
+      "includePassedAssertions": true,
+      "assertMatrix": [
+        {
+          "matchingUrlPattern": "^https?://[^/]+/$",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.95, "aggregationMethod": "median" }],
+            "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+            "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+            "largest-contentful-paint": ["error", { "maxNumericValue": 2500, "aggregationMethod": "median" }],
+            "total-blocking-time": ["error", { "maxNumericValue": 150, "aggregationMethod": "median" }],
+            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+            "bf-cache": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/c/baseline-empty$",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.95, "aggregationMethod": "median" }],
+            "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+            "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+            "largest-contentful-paint": ["error", { "maxNumericValue": 2500, "aggregationMethod": "median" }],
+            "total-blocking-time": ["error", { "maxNumericValue": 150, "aggregationMethod": "median" }],
+            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+            "bf-cache": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated$",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.95, "aggregationMethod": "median" }],
+            "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+            "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+            "largest-contentful-paint": ["error", { "maxNumericValue": 2500, "aggregationMethod": "median" }],
+            "total-blocking-time": ["error", { "maxNumericValue": 150, "aggregationMethod": "median" }],
+            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+            "bf-cache": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated\\?job=baseline-plan-review$",
+          "assertions": {
+            "categories:performance": ["error", { "minScore": 0.95, "aggregationMethod": "median" }],
+            "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+            "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+            "largest-contentful-paint": ["error", { "maxNumericValue": 2500, "aggregationMethod": "median" }],
+            "total-blocking-time": ["error", { "maxNumericValue": 150, "aggregationMethod": "median" }],
+            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+            "bf-cache": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+          }
+        }
+      ]
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./build/lhci/mobile-412",
+      "reportFilenamePattern": "%%PATHNAME%%-%%DATETIME%%.%%EXTENSION%%"
+    }
+  },
+
+  "profiles": [
+    {
+      "id": "desktop-1350",
+      "label": "Desktop, 1350 x 940",
+      "$comment": [
+        "Lighthouse's own `--preset=desktop`, written out rather than referenced: @lhci/cli has no",
+        "`preset` option, so `collect.settings` has to carry what the preset would have set.",
+        "The four values are core/config/desktop-config.js + core/config/constants.js from the",
+        "pinned Lighthouse (`desktopDense4G`, `screenEmulationMetrics.desktop`,",
+        "`userAgents.desktop`), and tests/lighthouserc.test.ts pins them so a Lighthouse bump that",
+        "changes the preset cannot silently change what 'desktop' means here.",
+        "The desktop budgets are the tighter half of §8.2: LCP ≤ 1.20 s, TBT ≤ 50 ms, Perf ≥ 98."
+      ],
+      "ci": {
+        "collect": {
+          "numberOfRuns": 3,
+          "url": [
+            "http://127.0.0.1:13210/",
+            "http://127.0.0.1:13210/c/baseline-empty",
+            "http://127.0.0.1:13210/c/baseline-populated",
+            "http://127.0.0.1:13210/c/baseline-populated?job=baseline-plan-review"
+          ],
+          "settings": {
+            "onlyCategories": ["performance", "accessibility", "best-practices"],
+            "formFactor": "desktop",
+            "throttlingMethod": "simulate",
+            "throttling": {
+              "rttMs": 40,
+              "throughputKbps": 10240,
+              "requestLatencyMs": 0,
+              "downloadThroughputKbps": 0,
+              "uploadThroughputKbps": 0,
+              "cpuSlowdownMultiplier": 1
+            },
+            "screenEmulation": {
+              "mobile": false,
+              "width": 1350,
+              "height": 940,
+              "deviceScaleFactor": 1,
+              "disabled": false
+            },
+            "emulatedUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+            "chromeFlags": "--headless --no-sandbox --disable-gpu"
+          }
+        },
+        "assert": {
+          "includePassedAssertions": true,
+          "assertMatrix": [
+            {
+              "matchingUrlPattern": "^https?://[^/]+/$",
+              "assertions": {
+                "categories:performance": ["error", { "minScore": 0.98, "aggregationMethod": "median" }],
+                "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "largest-contentful-paint": ["error", { "maxNumericValue": 1200, "aggregationMethod": "median" }],
+                "total-blocking-time": ["error", { "maxNumericValue": 50, "aggregationMethod": "median" }],
+                "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+                "bf-cache": ["warn", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+              }
+            },
+            {
+              "matchingUrlPattern": "^https?://[^/]+/c/baseline-empty$",
+              "assertions": {
+                "categories:performance": ["error", { "minScore": 0.98, "aggregationMethod": "median" }],
+                "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "largest-contentful-paint": ["error", { "maxNumericValue": 1200, "aggregationMethod": "median" }],
+                "total-blocking-time": ["error", { "maxNumericValue": 50, "aggregationMethod": "median" }],
+                "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+                "bf-cache": ["warn", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+              }
+            },
+            {
+              "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated$",
+              "assertions": {
+                "categories:performance": ["error", { "minScore": 0.98, "aggregationMethod": "median" }],
+                "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "largest-contentful-paint": ["error", { "maxNumericValue": 1200, "aggregationMethod": "median" }],
+                "total-blocking-time": ["error", { "maxNumericValue": 50, "aggregationMethod": "median" }],
+                "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+                "bf-cache": ["warn", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+              }
+            },
+            {
+              "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated\\?job=baseline-plan-review$",
+              "assertions": {
+                "categories:performance": ["error", { "minScore": 0.98, "aggregationMethod": "median" }],
+                "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "largest-contentful-paint": ["error", { "maxNumericValue": 1200, "aggregationMethod": "median" }],
+                "total-blocking-time": ["error", { "maxNumericValue": 50, "aggregationMethod": "median" }],
+                "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+                "bf-cache": ["warn", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+              }
+            }
+          ]
+        },
+        "upload": {
+          "target": "filesystem",
+          "outputDir": "./build/lhci/desktop-1350",
+          "reportFilenamePattern": "%%PATHNAME%%-%%DATETIME%%.%%EXTENSION%%"
+        }
+      }
+    },
+    {
+      "id": "mobile-320",
+      "label": "Mobile, 320 x 568 (04 §8.3 narrow strip)",
+      "$comment": [
+        "04 §8.3 audits the narrow-strip repair at 320 px and the Gate 3 pack ran two states there",
+        "(`home-320.gate3.json`, `conversation-populated-320.gate3.json`). Same mobile budgets as",
+        "the 412 profile -- §8.2 has one mobile column, not one per width -- and the same",
+        "throttling; only the viewport differs, which is the point of the width.",
+        "Two states rather than four, matching the Gate 3 pack exactly, so the nightly's 320 px row",
+        "is comparable to a retained measurement instead of being a new claim with no before."
+      ],
+      "ci": {
+        "collect": {
+          "numberOfRuns": 3,
+          "url": [
+            "http://127.0.0.1:13210/",
+            "http://127.0.0.1:13210/c/baseline-populated"
+          ],
+          "settings": {
+            "onlyCategories": ["performance", "accessibility", "best-practices"],
+            "formFactor": "mobile",
+            "throttlingMethod": "simulate",
+            "throttling": {
+              "rttMs": 150,
+              "throughputKbps": 1638.4,
+              "requestLatencyMs": 562.5,
+              "downloadThroughputKbps": 1474.5600000000002,
+              "uploadThroughputKbps": 675,
+              "cpuSlowdownMultiplier": 4
+            },
+            "screenEmulation": {
+              "mobile": true,
+              "width": 320,
+              "height": 568,
+              "deviceScaleFactor": 2,
+              "disabled": false
+            },
+            "chromeFlags": "--headless --no-sandbox --disable-gpu"
+          }
+        },
+        "assert": {
+          "includePassedAssertions": true,
+          "assertMatrix": [
+            {
+              "matchingUrlPattern": "^https?://[^/]+/$",
+              "assertions": {
+                "categories:performance": ["error", { "minScore": 0.95, "aggregationMethod": "median" }],
+                "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "largest-contentful-paint": ["error", { "maxNumericValue": 2500, "aggregationMethod": "median" }],
+                "total-blocking-time": ["error", { "maxNumericValue": 150, "aggregationMethod": "median" }],
+                "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+                "bf-cache": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+              }
+            },
+            {
+              "matchingUrlPattern": "^https?://[^/]+/c/baseline-populated$",
+              "assertions": {
+                "categories:performance": ["error", { "minScore": 0.95, "aggregationMethod": "median" }],
+                "categories:accessibility": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "categories:best-practices": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }],
+                "largest-contentful-paint": ["error", { "maxNumericValue": 2500, "aggregationMethod": "median" }],
+                "total-blocking-time": ["error", { "maxNumericValue": 150, "aggregationMethod": "median" }],
+                "cumulative-layout-shift": ["error", { "maxNumericValue": 0.02, "aggregationMethod": "median" }],
+                "bf-cache": ["error", { "minScore": 1, "aggregationMethod": "pessimistic" }]
+              }
+            }
+          ]
+        },
+        "upload": {
+          "target": "filesystem",
+          "outputDir": "./build/lhci/mobile-320",
+          "reportFilenamePattern": "%%PATHNAME%%-%%DATETIME%%.%%EXTENSION%%"
+        }
+      }
+    }
+  ]
+}

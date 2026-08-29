@@ -1,0 +1,253 @@
+✅  .lighthouseci/ directory writable
+✅  Configuration file found
+✅  Chrome installation found
+⚠️   GitHub token not set
+Healthcheck passed!
+
+Running Lighthouse 3 time(s) on http://127.0.0.1:13295/
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13295/c/baseline-empty
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13295/c/baseline-populated
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://127.0.0.1:13295/c/baseline-populated?job=baseline-plan-review
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Done running Lighthouse!
+
+Checking assertions against 4 URL(s), 12 total run(s)
+
+7 result(s) for http://127.0.0.1:13295/ :
+
+  ✘  largest-contentful-paint failure for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=500
+           found: 1820.0759
+      all values: 1820.0759, 1358.7478999999998, 2332.4281499999997
+
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 1
+      all values: 1, 1, 0.98
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 8.5
+      all values: 8.5, 5, 13
+
+7 result(s) for http://127.0.0.1:13295/c/baseline-empty :
+
+  ✘  largest-contentful-paint failure for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=500
+           found: 1364.7756999999997
+      all values: 1364.7756999999997, 2498.7722, 1364.5431
+
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 1
+      all values: 1, 0.98, 1
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 7.5
+      all values: 7.5, 15, 7.5
+
+7 result(s) for http://127.0.0.1:13295/c/baseline-populated :
+
+  ✘  largest-contentful-paint failure for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=500
+           found: 1364.6504
+      all values: 1364.6504, 1371.0833, 1363.9995
+
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0.0006111383796837512
+      all values: 0, 0.0006111383796837512, 0.0006111383796837512
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 8
+      all values: 7.5, 10.5, 8
+
+7 result(s) for http://127.0.0.1:13295/c/baseline-populated?job=baseline-plan-review :
+
+  ✘  largest-contentful-paint failure for maxNumericValue assertion
+       Largest Contentful Paint
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/
+
+        expected: <=500
+           found: 1370.6128
+      all values: 2705.805, 1253.028, 1370.6128
+
+
+  ✅  bf-cache passing for minScore assertion
+       Page didn't prevent back/forward cache restoration
+       https://developer.chrome.com/docs/lighthouse/performance/bf-cache/
+
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.performance passing for minScore assertion
+        expected: >=0.95
+           found: 1
+      all values: 0.96, 1, 1
+
+
+  ✅  categories.accessibility passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  categories.best-practices passing for minScore assertion
+        expected: >=1
+           found: 1
+      all values: 1, 1, 1
+
+
+  ✅  cumulative-layout-shift passing for maxNumericValue assertion
+       Cumulative Layout Shift
+       https://web.dev/articles/cls
+
+        expected: <=0.02
+           found: 0
+      all values: 0, 0, 0
+
+
+  ✅  total-blocking-time passing for maxNumericValue assertion
+       Total Blocking Time
+       https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/
+
+        expected: <=150
+           found: 22
+      all values: 22, 14.5, 46
+
+Assertion failed. Exiting with status code 1.
+
+Dumping 12 reports to disk at /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci-fail/mobile-412...
+Done writing reports to disk.
+
+assert command failed. Exiting with status code 1.
+lhci autorun exit status: 1

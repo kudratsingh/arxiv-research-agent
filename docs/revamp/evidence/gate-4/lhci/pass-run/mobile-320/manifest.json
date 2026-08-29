@@ -1,0 +1,68 @@
+[
+  {
+    "url": "http://127.0.0.1:13295/",
+    "isRepresentativeRun": false,
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/-2026_08_29_15_54_58.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/-2026_08_29_15_54_58.json",
+    "summary": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1
+    }
+  },
+  {
+    "url": "http://127.0.0.1:13295/",
+    "isRepresentativeRun": false,
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/-2026_08_29_15_55_10.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/-2026_08_29_15_55_10.json",
+    "summary": {
+      "performance": 0.98,
+      "accessibility": 1,
+      "best-practices": 1
+    }
+  },
+  {
+    "url": "http://127.0.0.1:13295/c/baseline-populated",
+    "isRepresentativeRun": false,
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/c_baseline_populated-2026_08_29_15_55_32.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/c_baseline_populated-2026_08_29_15_55_32.json",
+    "summary": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1
+    }
+  },
+  {
+    "url": "http://127.0.0.1:13295/c/baseline-populated",
+    "isRepresentativeRun": false,
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/c_baseline_populated-2026_08_29_15_55_44.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/c_baseline_populated-2026_08_29_15_55_44.json",
+    "summary": {
+      "performance": 0.98,
+      "accessibility": 1,
+      "best-practices": 1
+    }
+  },
+  {
+    "url": "http://127.0.0.1:13295/",
+    "isRepresentativeRun": true,
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/-2026_08_29_15_54_47.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/-2026_08_29_15_54_47.json",
+    "summary": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1
+    }
+  },
+  {
+    "url": "http://127.0.0.1:13295/c/baseline-populated",
+    "isRepresentativeRun": true,
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/c_baseline_populated-2026_08_29_15_55_21.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/mobile-320/c_baseline_populated-2026_08_29_15_55_21.json",
+    "summary": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1
+    }
+  }
+]

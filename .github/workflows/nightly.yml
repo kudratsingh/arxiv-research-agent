@@ -1,0 +1,184 @@
+name: nightly-lighthouse
+
+# WO-29 / 05-MIGRATION.md §3 item C11 / 04-ARCHITECTURE.md §8.4 ("Lighthouse
+# budgets"): `lhci autorun` with the §8.2 assertions encoded per state and per
+# form factor, run against the seeded Compose stack.
+#
+# WHY NIGHTLY AND NOT PER-PR. 04 §8.4 says it outright — "Nightly rather than
+# per-PR because it needs the full Compose stack". The stack is app + web +
+# Redis + Postgres built from source; `ci.yml`'s `web-e2e` already pays that
+# cost once per PR for the browser tier, and paying it a second time for ten
+# Lighthouse audits × three runs each would add ~15 minutes to every PR to
+# catch a class of regression that is a day old at worst.
+#
+# WHY A SEPARATE FILE AND NOT `ci.yml`'S EXISTING `schedule:`. `ci.yml`
+# already carries a nightly cron (WO-24: the full browser matrix), so putting
+# this job there was the obvious alternative and it is rejected for three
+# reasons.
+#
+#   1. `ci` is the required status on every pull request. A job that only ever
+#      runs on `schedule` would sit permanently "skipped" in that check's
+#      matrix, and a red Lighthouse night would paint the same workflow name
+#      red that PR authors read as "my PR is broken".
+#   2. The two nightlies want different failure semantics. A browser-matrix
+#      failure is a product defect. A Lighthouse failure is a budget breach
+#      under 04 §8.4's ratchet rule, whose remedy is a PR that edits
+#      `web/lighthouserc.json` and says why — a different owner, a different
+#      response, and worth a different workflow name in the Actions list.
+#   3. `ci.yml` is three other work orders' surface (WO-24, WO-25, WO-30).
+#      WO-29's card names `nightly.yml`; adding a fourth owner to a file that
+#      is already shared, for a job that shares no step with anything in it,
+#      buys nothing.
+#
+# WHAT A RED RUN MEANS — WO-29 CRITERION 5. A failure here BLOCKS THE NEXT
+# GATE 3 / GATE 4 EVIDENCE RUN. The Gate 3 pack's Lighthouse section
+# (docs/revamp/evidence/gate-3/lighthouse-diff.md) and the Gate 4 pack
+# (docs/revamp/evidence/gate-4/lhci/) are both regenerated from this
+# workflow's artifact, so an evidence pack assembled while this workflow is
+# red would be publishing numbers that failed their own gate. The remedy is
+# either a fix or a ratchet PR under 04 §8.4 — never a re-run until it
+# passes, and never an edit to this file.
+#
+# THE COST BOUNDARY (06-WORK-ORDERS.md §0). `ANTHROPIC_API_KEY` below is the
+# invalid sentinel `local-preview-disabled`, hard-coded. It is never
+# `${{ secrets.* }}` and must not become one: the repository secret exists for
+# `eval-nightly.yml` and this tier must not be able to reach a provider even
+# by accident. Three mechanisms back it up — `web/e2e/support/compose.e2e.yml`
+# pins the same value on the `app` service, `web/e2e/fixtures/seed.sh` writes
+# fixtures directly into Postgres and Redis so `POST /research` is never
+# called, and `web/scripts/lhci-run.mjs` sets it again in the environment it
+# hands the Lighthouse child process. `web/tests/lighthouserc.test.ts` asserts
+# this file's half of that against its own text.
+
+on:
+  schedule:
+    # 05:10 UTC. Deliberately after `ci.yml`'s 03:20 browser matrix and
+    # `eval-nightly.yml`'s 04:00 campaign: all three build Docker images on a
+    # fresh runner, and a Lighthouse measurement is the one of the three that
+    # a busy shared runner can quietly distort.
+    - cron: "10 5 * * *"
+  # On demand, for a suspected regression between nightlies and for the
+  # verification run a WO that changes `lighthouserc.json` owes its reviewer.
+  workflow_dispatch:
+
+concurrency:
+  # Never two Lighthouse runs at once — they would contend for the same
+  # runner's CPU and both measurements would be wrong. A manual dispatch does
+  # not cancel a scheduled run in flight; it queues behind it.
+  group: nightly-lighthouse
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: lighthouse ci (§8.2, 3 profiles x 3 runs)
+    runs-on: ubuntu-latest
+    # Measured shape: `stack.sh up` builds both images cold (~3 min on this
+    # repo's runtime lock), then 10 audited cells x 3 runs each at roughly
+    # 20-40 s per audit. 45 min is headroom over that, not a prediction.
+    timeout-minutes: 45
+    env:
+      # Never a real key. See "THE COST BOUNDARY" above.
+      ANTHROPIC_API_KEY: local-preview-disabled
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Keep in lockstep with web/Dockerfile and ci.yml's `web` job.
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Locate Chrome
+        # `@lhci/cli` drives whatever Chrome `chrome-launcher` finds. The
+        # ubuntu runner image ships google-chrome-stable, but a runner image
+        # change that dropped it would otherwise surface as an opaque
+        # "Unable to connect to Chrome" three minutes into the collect step.
+        # Fail here instead, with the sentence that says whose problem it is.
+        run: |
+          chrome=$(command -v google-chrome-stable || command -v google-chrome || command -v chromium-browser || true)
+          if [ -z "$chrome" ]; then
+            echo "::error title=No Chrome on the runner::The runner image no longer provides google-chrome-stable, so Lighthouse has no browser to drive. This is a runner-image change, not a code defect: pin a Chrome in this workflow before re-running."
+            exit 1
+          fi
+          echo "CHROME_PATH=$chrome" >> "$GITHUB_ENV"
+          "$chrome" --version
+
+      - name: Compose up (seeded stack, disabled API key)
+        # `docker compose up -d --build --wait` under the isolating overlay
+        # web/e2e/support/compose.e2e.yml, exactly as ci.yml's `web-e2e` does.
+        # `--wait` blocks on the healthchecks the base file declares, so the
+        # seed below cannot race an unmigrated Postgres or a booting app, and
+        # nothing here needs a `sleep`.
+        run: npm run e2e:stack:up
+
+      - name: Seed the fixtures
+        # Writes only `baseline-*` rows, directly into Postgres and Redis —
+        # behind the API, so there is no code path from this tier to a model.
+        run: npm run e2e:stack:seed
+
+      - name: Lighthouse CI (all three §8.2 profiles)
+        # `npm run lhci` IS `node scripts/lhci-run.mjs`, which runs
+        # `lhci autorun --config=<profile>` once per form factor against
+        # web/lighthouserc.json and writes build/lhci/summary.md. It takes no
+        # arguments and reads no threshold from the environment: `LHCI_BASE_URL`
+        # only says *where* the stack is, never what is asserted about it
+        # (04 §8.4's ratchet rule).
+        run: |
+          LHCI_BASE_URL="$(bash ./e2e/support/stack.sh url)" npm run lhci
+
+      - name: Publish the measured table to the run summary
+        # `always()`: a breach is exactly when somebody wants to read the
+        # numbers, and lhci-run.mjs writes summary.md before it exits non-zero.
+        if: always()
+        run: |
+          if [ -f build/lhci/summary.md ]; then
+            cat build/lhci/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No build/lhci/summary.md — the collect step did not complete." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload the Lighthouse reports and the assertion results
+        # build/lhci holds the resolved per-profile configs, every raw LHR,
+        # each profile's manifest.json and assertion-results.json, and
+        # summary.{md,json}. This artifact is the input the Gate 4 evidence
+        # pack (docs/revamp/evidence/gate-4/lhci/) is refreshed from.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-${{ github.run_id }}
+          path: web/build/lhci
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Say what a red run blocks
+        # WO-29 criterion 5, as an annotation and not only as a comment at the
+        # top of this file: the person who opens a red run should read the
+        # consequence without reading the workflow source.
+        if: failure()
+        run: |
+          echo "::error title=Lighthouse budget regression::A §8.2 budget in web/lighthouserc.json was breached. This BLOCKS the next Gate 3 / Gate 4 evidence run — an evidence pack must not be regenerated from a run that failed its own gate. The remedy is a fix, or a ratchet PR under 04-ARCHITECTURE.md §8.4 that edits web/lighthouserc.json and states the reason in the PR body. Re-running this workflow until it passes is not one of the options."
+
+      - name: Stack logs on failure
+        # A red Lighthouse run against a broken stack looks like a performance
+        # regression until you read the app container's log. `stack.sh logs`
+        # carries `-p` and both `-f` files, like every other invocation.
+        if: failure()
+        run: bash ./e2e/support/stack.sh logs --no-color --tail 200 || true
+
+      - name: Tear down
+        # Always, and only ever through stack.sh — a bare `docker compose down`
+        # resolves the project from the working directory and the base file's
+        # hardcoded container names, which is how one stack removes another's
+        # containers (06-WORK-ORDERS.md §5.4).
+        if: always()
+        run: npm run e2e:stack:down || true
