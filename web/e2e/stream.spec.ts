@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { FIXTURES } from "./support/env";
 import { interruptStream, timeoutThenHold } from "./support/intercept";
 import { interceptPaidPath } from "./support/paid-path";
+import { RUN_PANEL } from "./support/states";
 
 /**
  * Criterion 4 — the two stream failures a seeded stack cannot produce on
@@ -42,7 +43,7 @@ test.describe("criterion 4 — interrupted 200 stream and stream_timeout", () =>
 
       // The run itself is untouched: nothing claims failure, nothing claims
       // success, and the job id in the URL is still the one being watched.
-      await expect(page.getByText("Current turn")).toBeVisible();
+      await expect(page.locator(RUN_PANEL)).toBeVisible();
       expect(new URL(page.url()).searchParams.get("job")).toBe(FIXTURES.running);
 
       expect(
@@ -73,7 +74,7 @@ test.describe("criterion 4 — interrupted 200 stream and stream_timeout", () =>
       await page.goto(`${THREAD}?job=${FIXTURES.streamTimeout}`, {
         waitUntil: "domcontentloaded",
       });
-      await expect(page.getByText("Current turn")).toBeVisible();
+      await expect(page.locator(RUN_PANEL)).toBeVisible();
 
       await expect
         .poll(() => stream.opens(), {

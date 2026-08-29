@@ -4,6 +4,7 @@ import type { Page } from "@playwright/test";
 import { fillComposer } from "./support/composer";
 import { DEV_BASE_URL, FIXTURES, SKIP_DEV_SERVER } from "./support/env";
 import { interceptPaidPath } from "./support/paid-path";
+import { RUN_PANEL } from "./support/states";
 
 /**
  * Criterion 3 — the paid-path proof. R-01, MUST-KEEP #3, 05 §2.1 step 1.
@@ -247,14 +248,17 @@ test.describe("criterion 3 — exactly one POST /api/research per submission", (
       // this pass submits would still be counted — the warm-up is not a way
       // to hide a first-mount POST.
       await page.goto(target, { waitUntil: "domcontentloaded", timeout: 120_000 });
-      await expect(page.getByText("Current turn")).toBeVisible({ timeout: 120_000 });
+      await expect(page.locator(RUN_PANEL)).toBeVisible({ timeout: 120_000 });
 
       // Now a clean mount against a compiled server, where the only thing
       // slow is React itself — and React here is a development build, so the
       // effects run twice.
       await page.reload({ waitUntil: "domcontentloaded" });
-      await expect(page.getByText("Current turn")).toBeVisible({ timeout: 30_000 });
-      await expect(page.getByText(FIXTURES.running)).toBeVisible();
+      await expect(page.locator(RUN_PANEL)).toBeVisible({ timeout: 30_000 });
+      await expect(page.locator(RUN_PANEL)).toHaveAttribute(
+        "data-run-job",
+        FIXTURES.running,
+      );
       await page.waitForTimeout(1_500);
 
       paid.expectExactly(0, "StrictMode double mount (attach path, next dev)");

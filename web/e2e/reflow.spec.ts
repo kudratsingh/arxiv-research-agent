@@ -111,7 +111,7 @@ test.describe("criterion 5 — reflow sweep and the work-surface floor", () => {
    * error and not-found renders whose column is intentionally short.
    */
   for (const [path, ready] of [
-    ["/", "arxiv-research-agent"],
+    ["/", "What should the literature settle?"],
     [`/c/baseline-populated`, "Scientific claim verification"],
   ] as const) {
     test(
@@ -125,6 +125,13 @@ test.describe("criterion 5 — reflow sweep and the work-surface floor", () => {
         // that hook does not exist. Gating on it would turn the red run into
         // "locator not found" instead of the number — 156 px — that is the
         // actual evidence.
+        //
+        // WO-20 CHANGED THE LANDING STRING. `/`'s content sentinel was
+        // "arxiv-research-agent", the legacy page's `h1`; the redesigned page
+        // renders 03 §1.4's display prompt instead. Re-taking the "before"
+        // measurement against `1f3f45a` therefore needs the old string, which
+        // is what the retained figure in this header records — the 156 px is
+        // evidence already taken, not a run this file can repeat unchanged.
         await expect(page.getByText(ready).first()).toBeVisible();
 
         const surface = await measureWorkSurface(page);

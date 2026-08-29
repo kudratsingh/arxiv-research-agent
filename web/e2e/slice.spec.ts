@@ -4,6 +4,7 @@ import { fillComposer } from "./support/composer";
 import { FIXTURES } from "./support/env";
 import { countStreamOpens, sseFrame } from "./support/intercept";
 import { interceptPaidPath } from "./support/paid-path";
+import { REPORT_READER, RUN_PANEL } from "./support/states";
 
 /**
  * Criterion 6 — the five slice steps, end to end, on chromium.
@@ -91,12 +92,17 @@ test.describe("criterion 6 — the five slice steps", () => {
       await page.goto(`${THREAD}?job=${FIXTURES.running}`, {
         waitUntil: "domcontentloaded",
       });
-      await expect(page.getByText("Current turn")).toBeVisible();
-      await expect(page.getByText(FIXTURES.running)).toBeVisible();
+      // The run the panel is attached to, read off its own hook. The legacy
+      // panel printed the id as text; the redesign does not print an opaque
+      // identifier at a reader, it carries it.
+      await expect(page.locator(RUN_PANEL)).toHaveAttribute(
+        "data-run-job",
+        FIXTURES.running,
+      );
 
       await page.reload({ waitUntil: "domcontentloaded" });
 
-      await expect(page.getByText("Current turn")).toBeVisible();
+      await expect(page.locator(RUN_PANEL)).toBeVisible();
       expect(
         new URL(page.url()).searchParams.get("job"),
         "the id lives in the URL, so a reload re-attaches instead of buying a " +
@@ -125,9 +131,14 @@ test.describe("criterion 6 — the five slice steps", () => {
         waitUntil: "domcontentloaded",
       });
 
-      await expect(page.getByText(/stream unavailable for job/)).toBeVisible();
+      // H8's sentence and its recovery, both from the dictionary. The legacy
+      // strings were the raw `useResearchStream` message; WO-12 replaced them
+      // and WO-20 put the replacement on the route.
       await expect(
-        page.getByText(/Ask the question again to start a new run/),
+        page.getByText("This run is no longer available."),
+      ).toBeVisible();
+      await expect(
+        page.getByText(/Ask the question again below/),
       ).toBeVisible();
 
       // The recovery is offered, never taken automatically.
@@ -162,7 +173,7 @@ test.describe("criterion 6 — the five slice steps", () => {
       await page.goto(`${THREAD}?job=${FIXTURES.running}`, {
         waitUntil: "domcontentloaded",
       });
-      await expect(page.getByText("Current turn")).toBeVisible();
+      await expect(page.locator(RUN_PANEL)).toBeVisible();
       const opensBeforeLeaving = stream.opens();
       expect(opensBeforeLeaving).toBeGreaterThanOrEqual(1);
 
@@ -174,7 +185,7 @@ test.describe("criterion 6 — the five slice steps", () => {
 
       await page.goBack({ waitUntil: "domcontentloaded" });
 
-      await expect(page.getByText("Current turn")).toBeVisible();
+      await expect(page.locator(RUN_PANEL)).toBeVisible();
       expect(
         new URL(page.url()).searchParams.get("job"),
         "coming back must re-adopt the job the URL names",
@@ -191,47 +202,63 @@ test.describe("criterion 6 — the five slice steps", () => {
   /**
    * STEP 3 — Plan review. The HITL boundary.
    *
-   * 🔴 A MEASURED GAP, RECORDED RATHER THAN ASSERTED. 05 §2.1 step 3 requires
-   * that "a seeded `pending_review` job renders its plan from `JobDetail.plan`
-   * **without** an SSE frame". On this commit it does not. This test was first
-   * written that way — the stream intercepted and held empty, no frames at
-   * all — and the plan never appeared. The reason is in the two sources:
-   * `useJobStream` attaches with `attachMode: "stream-first"`, and the backend
-   * replays `plan_ready` to a newly attached `pending_review` job
-   * (`src/api/streaming.py:464`), so the plan arrives as a FRAME and the
-   * seeded `JobDetail.plan` is never read. Cut the frame and the plan review
-   * surface is empty.
+   * 🟢 THE GAP THIS TEST RECORDED IS CLOSED, AND IT IS NOW THE ASSERTION.
+   * WO-21 wrote a 🔴 note here: 05 §2.1 step 3 requires that "a seeded
+   * `pending_review` job renders its plan from `JobDetail.plan` **without** an
+   * SSE frame", and it did not — `useResearchStream` attached stream-first, so
+   * the plan only ever arrived as the backend's replayed `plan_ready` frame
+   * (`src/api/streaming.py:464`) and cutting the frame left the surface empty.
+   * WO-10's machine attaches GET-FIRST (`attachMode: "get-first"`, the
+   * provider's default) and WO-20 put that machine on the route, so the read
+   * that was missing is now the first thing the route does.
    *
-   * That gap belongs to WO-17 (`PlanEditor`) and WO-20 (route composition),
-   * which is where the GET-first read lands. Pinning it red here would fail
-   * this work order for a defect it does not own, and pinning it green would
-   * be a lie, so what is asserted below is the part that IS true today and
-   * that must stay true after WO-17: attaching to a seeded `pending_review`
-   * job shows that job's real plan and its three resolutions, over the real
-   * stack, without spending anything.
+   * So the stream is intercepted and held open with no frames at all, exactly
+   * as the original attempt did, and the plan is asserted anyway. That is the
+   * whole requirement, and it is the difference between a surface that needs
+   * the server to push it and one that asks.
    */
   test(
-    "step 3 — a seeded pending_review job shows its plan and its resolutions",
+    "step 3 — a seeded pending_review job renders its plan with no SSE frame",
     { tag: "@slice" },
     async ({ page }, testInfo) => {
       const paid = await interceptPaidPath(page, testInfo);
+
+      // Held open, never fed. `plan_ready` cannot reach the client.
+      let frames = 0;
+      await page.route(
+        (url) => url.pathname === `/api/research/${FIXTURES.planReview}/stream`,
+        async (route) => {
+          frames += 1;
+          await route.fulfill({
+            status: 200,
+            contentType: "text/event-stream",
+            headers: { "cache-control": "no-cache" },
+            body: ": held open with no frames\n\n",
+          });
+        },
+      );
 
       await page.goto(`${THREAD}?job=${FIXTURES.planReview}`, {
         waitUntil: "domcontentloaded",
       });
 
-      await expect(page.getByText("Plan review").first()).toBeVisible();
-      // The seeded plan's own content — the values in `job:baseline-plan-review`.
+      await expect(page.getByRole("heading", { name: "Plan", exact: true })).toBeVisible();
+      // The seeded plan's own content — the values in `job:baseline-plan-review`,
+      // which can only have come from `GET /research/{id}`.
       await expect(
-        page.getByRole("textbox", { name: "Sub-questions #1" }),
+        page.getByRole("textbox", { name: "Sub-question 1" }),
       ).toHaveValue("Which verification architectures are currently used?");
       await expect(
-        page.getByRole("textbox", { name: "Search queries #1" }),
+        page.getByRole("textbox", { name: "arXiv query 1" }),
       ).toHaveValue("retrieval augmented claim verification");
 
       // The resolutions are present, reachable, and none of them is a default
       // the user could trip over.
-      await expect(page.getByRole("button", { name: "Approve as-is" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Approve plan" })).toBeVisible();
+
+      // The stream was opened and told the client nothing, which is what makes
+      // the assertion above about the GET rather than about the frame.
+      expect(frames).toBeGreaterThanOrEqual(1);
 
       // A pause is not a purchase.
       paid.expectExactly(0, "slice step 3 — plan review attach");
@@ -293,10 +320,10 @@ test.describe("criterion 6 — the five slice steps", () => {
       await page.goto(`${THREAD}?job=${FIXTURES.planReview}`, {
         waitUntil: "domcontentloaded",
       });
-      await expect(page.getByText("Plan review").first()).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Plan", exact: true })).toBeVisible();
       const readsBefore = detailReads;
 
-      await page.getByRole("button", { name: "Approve as-is" }).click();
+      await page.getByRole("button", { name: "Approve plan" }).click();
 
       await expect.poll(() => reviewCalls, { timeout: 10_000 }).toBe(1);
       await expect
@@ -311,9 +338,9 @@ test.describe("criterion 6 — the five slice steps", () => {
         .toBeGreaterThan(readsBefore);
 
       // Re-rendered, not stranded: the plan is on screen and actionable again.
-      await expect(page.getByText("Plan review").first()).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Plan", exact: true })).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "Approve as-is" }),
+        page.getByRole("button", { name: "Approve plan" }),
       ).toBeEnabled();
       // And exactly one review was sent. A retry loop here would hammer the
       // HITL endpoint on every conflict.
@@ -367,7 +394,7 @@ test.describe("criterion 6 — the five slice steps", () => {
       await page.goto(`${THREAD}?job=${FIXTURES.running}`, {
         waitUntil: "domcontentloaded",
       });
-      await expect(page.getByText("Current turn")).toBeVisible();
+      await expect(page.locator(RUN_PANEL)).toBeVisible();
 
       await expect
         .poll(() => detailReads, {
@@ -389,43 +416,107 @@ test.describe("criterion 6 — the five slice steps", () => {
    * present on the failed-with-partial-result turn as well as the succeeded
    * one.
    *
-   * 🔴 R-14, RECORDED AND NOT ASSERTED AWAY. 05 §2.1 step 5 requires that a
-   * failed-with-partial-result job "**shows** the report labelled partial and
-   * offers export". On this commit it does not: `ReportView.tsx:13-29`
-   * returns the failure notice and never reaches the report body, so the
-   * partial result the user paid for is invisible in the attached view. The
-   * backend permits the export (`src/api/routes.py:364-368`) and the
-   * transcript turn does offer it, which is the half that works. This spec
-   * asserts the half that works and does NOT pin the defect — WO-18's
-   * `ReportReader/PartialFromFailedRun` is the work order that fixes it, and a
-   * test pinning today's behaviour would fail that PR for succeeding.
+   * 🟢 R-14, CLOSED BY WO-18 AND COMPOSED BY WO-20. This spec used to record
+   * a gap here: 05 §2.1 step 5 requires that a failed-with-partial-result job
+   * "**shows** the report labelled partial and offers export", and
+   * `ReportView.tsx:13-29` returned the failure notice before ever reaching
+   * the report body — so the partial result the user paid for was invisible.
+   * `ReportReader` has no branch that suppresses a non-empty `markdown`, and
+   * WO-20 put it on the route, so the requirement is now asserted rather than
+   * recorded: the partial briefing renders UNDER its banner, and the export
+   * control is present on it.
+   *
+   * IT ALSO ASSERTS THE COLLAPSE RULE (WO-20 criterion 4). Only the newest
+   * turn is open, so exactly one briefing and one export control exist until
+   * an older turn is expanded by hand. The old count of two came from a
+   * transcript that rendered every expanded turn's export beside a report it
+   * had already parsed.
    */
   test(
-    "step 5 — the transcript renders both turns and offers export on each",
+    "step 5 — the newest turn reads, an older one expands, and both export",
     { tag: "@slice" },
     async ({ page }) => {
       await page.goto(THREAD, { waitUntil: "domcontentloaded" });
       await expect(
-        page.getByText("Scientific claim verification").first(),
+        page.getByRole("heading", { name: "Scientific claim verification" }),
       ).toBeVisible();
 
-      // Turn 1, succeeded, with a report body.
+      // Turn 2 — failed, with a retained partial report — is the newest and
+      // is open on arrival, so the briefing the run produced is on screen.
+      await expect(page.getByRole("button", { name: /Turn 2/ })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
+      await expect(
+        page.getByText(/Partial briefing \(verification incomplete\)/),
+      ).toBeVisible();
+      // NOT the "partial" banner, and that is a CONTRACT fact rather than a
+      // gap. `ConversationJobSummary` (`schemas.py:184-191`) carries no status
+      // and no error, so a turn read back from a thread cannot say whether its
+      // run failed — `lib/report/briefings.ts` says so in as many words and
+      // refuses to invent the difference. The banner belongs to the run this
+      // browser is watching, which is the `?job=` case below.
+      await expect(
+        page.getByText("Partial briefing from a run that failed."),
+      ).toHaveCount(0);
+
+      // One open turn, one briefing, one export control.
+      await expect(page.locator(REPORT_READER)).toHaveCount(1);
+      await expect(page.getByRole("button", { name: "Export" })).toHaveCount(1);
+
+      // Turn 1 is a question row until it is asked for.
       const turn1 = page.getByRole("button", { name: /Turn 1/ });
-      await expect(turn1).toBeVisible();
+      await expect(turn1).toHaveAttribute("aria-expanded", "false");
       await turn1.click();
       await expect(
         page.getByText(/Retrieval-Augmented Verification for Scientific Claims/),
       ).toBeVisible();
 
-      // Turn 2, failed but with a retained partial report. The last turn is
-      // auto-expanded on load (`ConversationThread.tsx:44-50`).
-      await expect(page.getByRole("button", { name: /Turn 2/ })).toBeVisible();
+      // Export is now offered on both, which is what criterion 7 downloads.
+      await expect(page.locator(REPORT_READER)).toHaveCount(2);
+      await expect(page.getByRole("button", { name: "Export" })).toHaveCount(2);
+    },
+  );
+
+  /**
+   * STEP 5, second half — R-14 as the requirement states it.
+   *
+   * 05 §2.1 step 5: a failed-with-partial-result run "**shows** the report
+   * labelled partial and offers export". `ReportView.tsx:13-29` returned the
+   * failure notice and never reached the body, so the partial result the user
+   * paid for was invisible — WO-21 recorded that as a 🔴 gap it could not
+   * assert. `ReportReader` has no branch that suppresses a non-empty
+   * `markdown`, and this is the state the label comes from: the run is
+   * ATTACHED, so `GET /research/{id}` supplies the status and the error that
+   * the thread's own job list cannot.
+   */
+  test(
+    "step 5 — an attached failed run shows its partial briefing, labelled, with export",
+    { tag: "@slice" },
+    async ({ page }, testInfo) => {
+      const paid = await interceptPaidPath(page, testInfo);
+
+      await page.goto(`${THREAD}?job=${FIXTURES.partialExport}`, {
+        waitUntil: "domcontentloaded",
+      });
+
+      // The label, above the briefing rather than instead of it (D-010 r2, H5).
+      await expect(
+        page.getByText("Partial briefing from a run that failed."),
+      ).toBeVisible();
       await expect(
         page.getByText(/Partial briefing \(verification incomplete\)/),
       ).toBeVisible();
+      await expect(
+        page.locator(`${REPORT_READER}[data-partial="true"]`),
+      ).toHaveCount(1);
 
-      // Export is offered on both, which is what criterion 7 then downloads.
-      await expect(page.getByRole("button", { name: "Export" })).toHaveCount(2);
+      // And the export the backend permits on a non-empty `result`
+      // (`routes.py:364-368`) is offered rather than withheld.
+      await expect(page.getByRole("button", { name: "Export" })).toHaveCount(1);
+
+      // Reading a failed run costs nothing.
+      paid.expectExactly(0, "slice step 5 — partial briefing from a failed run");
     },
   );
 });

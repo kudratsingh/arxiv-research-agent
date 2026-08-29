@@ -30,7 +30,11 @@ export async function fillComposer(
   text: string,
 ): Promise<{ box: Locator; submit: Locator }> {
   const box = page.getByRole("textbox", { name: "Research question" });
-  const submit = page.getByRole("button", { name: "Run research" });
+  // WO-20 mounted `QueryComposer` on `/`, so the control is 03 §1.4's
+  // "Generate plan" rather than `QueryForm`'s "Run research", and it refuses
+  // with `aria-disabled` rather than `disabled` — a `disabled` button drops
+  // out of the tab order and takes its own explanation with it (WO-13 c7).
+  const submit = page.getByRole("button", { name: "Generate plan" });
 
   await expect(box).toBeVisible();
   await expect(async () => {
@@ -41,9 +45,12 @@ export async function fillComposer(
     // attempt an observable state transition for the hydrated component.
     await box.fill("");
     await box.fill(text);
-    // Enabled is the observable that proves React saw the change: `disabled`
-    // is derived from the controlled value.
-    await expect(submit).toBeEnabled({ timeout: 2_000 });
+    // Not-refusing is the observable that proves React saw the change: the
+    // reason is derived from the controlled value, and an empty field is one
+    // of the three refusals `QueryComposer` states.
+    await expect(submit).not.toHaveAttribute("aria-disabled", "true", {
+      timeout: 2_000,
+    });
     // 45 s, and it costs nothing when things are healthy: a hydrated page
     // passes on the first attempt in milliseconds. The budget exists because
     // the full five-project run also compiles a `next dev` server for the

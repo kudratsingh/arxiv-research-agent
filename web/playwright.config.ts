@@ -57,8 +57,15 @@ const MOBILE_ONLY = /@device/;
  * that the new reports are *directly comparable* to them — a Firefox or
  * WebKit `color-contrast` measurement is a different measurement, not a
  * stricter one.
+ *
+ * `@cls` joins it for a harder reason than either: the `layout-shift`
+ * performance entry does not exist outside Chromium. Firefox and WebKit
+ * implement neither the entry type nor Cumulative Layout Shift, so the
+ * observer in `cls.spec.ts` would collect nothing and the assertion would pass
+ * without measuring anything — a green tick over an unmeasured surface, which
+ * is worse than no test.
  */
-const CHROMIUM_ONLY = /@slice|@export|@axe/;
+const CHROMIUM_ONLY = /@slice|@export|@axe|@cls/;
 
 export default defineConfig({
   testDir: "./e2e",

@@ -99,8 +99,22 @@ describe("criterion 2 — the route group adds no URL segment", () => {
 
 describe("criterion 2 — the `?job=` contract survives the move (ADR 0053)", () => {
   it("the landing page still hands the accepted job_id to /c/[id]", () => {
-    const source = readFileSync(path.join(APP_ROOT, "(workspace)", "page.tsx"), "utf8");
-    expect(source).toContain("?job=${encodeURIComponent(accepted.job_id)}");
+    // WO-20 MOVED THE EXPRESSION, NOT THE CONTRACT. The three lines that
+    // composed this URL by hand at `page.tsx:37-40` are now
+    // `LandingComposer.handoffHref`, which is the only place the route can
+    // reach it: the page mounts that component and nothing else. So the
+    // string is asserted where it now lives, and the page is asserted to be
+    // wired to it — two checks instead of one, because the hand-off crossing
+    // a file boundary is exactly when a source-text assertion stops being
+    // enough on its own.
+    const page = readFileSync(path.join(APP_ROOT, "(workspace)", "page.tsx"), "utf8");
+    expect(page).toContain("LandingComposer");
+
+    const composer = readFileSync(
+      path.join(WEB_ROOT, "components", "features", "LandingComposer.tsx"),
+      "utf8",
+    );
+    expect(composer).toContain("?job=${encodeURIComponent(jobId)}");
   });
 
   it("the conversation page still reads it back out of the URL", () => {

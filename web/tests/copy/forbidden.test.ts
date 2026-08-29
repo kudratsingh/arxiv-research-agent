@@ -221,6 +221,11 @@ const COMPOSED: Record<string, string[]> = {
     runCopy.failedPhrase(NODE),
   ],
   "threads.turnCount": [0, 1, 7].map((count) => threadsCopy.turnCount(count)),
+  // WO-20's collapsed row name. `0` and a fraction are driven too, because
+  // the ordinal arrives from the wire and the floor is this function's.
+  "threads.turnLabel": [0, 1, 2.7, 12].map((ordinal) =>
+    threadsCopy.turnLabel(ordinal),
+  ),
   // The title is the user's own question. Neutral placeholder: the gate is
   // over the sentence around it.
   "threads.deleteDialog": [

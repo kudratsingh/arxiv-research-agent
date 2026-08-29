@@ -56,21 +56,23 @@ import { STATES, readyLocator } from "./support/states";
  * pretend otherwise (04 §7.4, `baseline/README.md`).
  *
  * WHERE CRITERION 2 STANDS TODAY — READ THIS BEFORE THE FIRST FAILURE.
- * `landmark-one-main` and `region` failed 12 of 12 baseline states and now
- * fail **none**: WO-08's shell fixed them outright. The other four rules still
- * fail on some states, and in every case the offending markup is a *legacy*
- * component that WO-20 has not yet replaced — `EventLog.tsx`,
- * `ConversationThread.tsx`, `PlanReview.tsx`. `PENDING_COMPOSITION` names
- * each one with its file, its line and the work order that removes it, and
- * two of the nine are marked 🔴 because the *baseline never had them*: one is
- * a legacy literal that only started failing when WO-08's shell moved it onto
- * `--canvas`, and one is a button the baseline's capture caught disabled. It
- * is deliberately
- * **not** an allowlist: an allowlist hides a finding, whereas each entry here
- * is a pinned expectation that goes red in both directions — when a new
- * gated violation appears anywhere, and equally when one of these is finally
- * fixed and the entry must be deleted. `axe-allowlist.json` stays empty, and
- * `parseAllowlist` refuses to let any of the six rules into it at all.
+ * `landmark-one-main` and `region` failed 12 of 12 baseline states and fail
+ * **none** now: WO-08's shell fixed them outright. WO-22 opened this file with
+ * nine further findings still live, every one of them in a *legacy* component
+ * WO-20 had not yet replaced — `EventLog.tsx`, `ConversationThread.tsx`,
+ * `PlanReview.tsx` — pinned in `PENDING_COMPOSITION` with a file, a line and
+ * the work order that removed it. **WO-20 removed all nine**, the register
+ * test went red on every entry at once, and the entries were deleted. So
+ * criterion 2 is now an unqualified zero: no gated rule fails on any §4 state,
+ * in either theme, with nothing pinned and nothing excused.
+ *
+ * The register is deliberately **not** an allowlist: an allowlist hides a
+ * finding, whereas each entry is a pinned expectation that goes red in both
+ * directions — when a new gated violation appears anywhere, and equally when
+ * one of the pinned defects is finally fixed and the entry must be deleted.
+ * That second direction is what happened here. `axe-allowlist.json` stays
+ * empty, and `parseAllowlist` refuses to let any of the six rules into it at
+ * all.
  */
 
 const REPO_ROOT = join(__dirname, "..", "..");
@@ -232,206 +234,35 @@ interface PendingDefect {
   recognises: (node: AxeNode) => boolean;
 }
 
-/** Does any axe target of this node contain `fragment`? */
-function targetIncludes(node: AxeNode, fragment: string): boolean {
-  return node.target.some((part) => String(part).includes(fragment));
-}
-
-/** The measured colour pair axe recorded on this node, if it recorded one. */
-function measuredPair(node: AxeNode): { fg: string; bg: string } | null {
-  for (const check of [...node.any, ...node.all, ...node.none]) {
-    const data = check.data as { fgColor?: string; bgColor?: string } | undefined;
-    if (data?.fgColor === undefined || data.bgColor === undefined) continue;
-    return { fg: data.fgColor.toLowerCase(), bg: data.bgColor.toLowerCase() };
-  }
-  return null;
-}
-
-/**
- * Compare hex without caring about the `#` or the case.
- *
- * The three sources disagree on both: axe reports lower case with a sigil,
- * `tokens.json` reports upper case with a sigil, and the Tailwind values in
- * `LEGACY` carry no sigil at all so the literal-colour scan stays honest.
- */
-function sameColour(a: string, b: string): boolean {
-  return a.replace(/^#/, "").toLowerCase() === b.replace(/^#/, "").toLowerCase();
-}
-
-/** Recognise a `color-contrast` node by the colours axe actually measured. */
-function pairIs(node: AxeNode, fg: string, bg: string): boolean {
-  const pair = measuredPair(node);
-  return pair !== null && sameColour(pair.fg, fg) && sameColour(pair.bg, bg);
-}
-
-/**
- * Every gated violation that survives on this commit, with its owner.
- *
- * WHAT THIS LIST IS. Nine findings in three legacy files — `EventLog.tsx`,
- * `ConversationThread.tsx` and `PlanReview.tsx` — none of which the redesign
- * has composed away yet. Three of them are the *same nodes the retained
- * baseline failed on*, selector for selector: `.ml-2`,
- * `.dark\:text-slate-500` and `.text-amber-600` appear in
- * `baseline/axe/plan-review.json` and `cancelled.json` with the same colours
- * and the same ratios. Those are exactly the three regressions `03 §3.1`
- * tabulates, and they are still live because the surfaces that replace them
- * are not on a route. Two more are NOT in the baseline and are flagged 🔴
- * below: one the shell's new canvas exposed, one the baseline's capture
- * missed.
- *
- * WHAT IT IS NOT. It is not an allowlist. An allowlist entry hides a finding
- * and keeps hiding it; each entry here is a two-way pin — the sweep goes red
- * if a gated rule fails on anything this list does not recognise, and the
- * register test below goes red when one of these stops being observable, at
- * which point the entry must be deleted rather than left to excuse a
- * regression later. `parseAllowlist` additionally refuses to put any of the
- * six gated rules into `axe-allowlist.json` at all.
- *
- * WHY NOTHING HERE IS FIXED IN THIS BRANCH. Every file named below is one
- * WO-20 replaces wholesale, and the replacements
- * (`components/patterns/Diagnostics.tsx`, `components/patterns/PlanEditor*`,
- * `components/app/*`) are already merged and already correct. Patching the
- * legacy copies would collide with that work and buy nothing that outlives it.
- *
- * HOW THE RECOGNISERS NAME COLOURS. Wherever a colour has a name somewhere
- * authoritative it is read from there, never typed here: the three baseline
- * pairs come out of `tokens.json`'s `regressionsFixed`, and `--canvas` and
- * `--surface` come out of its light palette. Only two values have no name
- * anywhere — Tailwind's `slate-500`, `emerald-600` and `slate-950`, hard-coded
- * inside the legacy components, which is the defect itself — and those are
- * written below without the leading sigil, because `web/tests/tokens.test.ts`
- * (rightly) treats a six-digit hex in any `.ts` file under `web/` as a token
- * leak, and there is no token here to leak.
- */
-
-/** The three palette values the legacy components hard-code. Hex, no sigil. */
-const LEGACY = {
-  /** Tailwind `slate-500`: `ConversationThread.tsx:202`, `EventLog.tsx:42`. */
-  slate500: "64748b",
-  /** Tailwind `emerald-600`: `PlanReview.tsx:94`. */
-  emerald600: "059669",
-  /** Tailwind `slate-950`, the legacy dark event-log field. */
-  slate950: "020617",
-} as const;
-
 /** The three pairs `03 §3.1` retired, by (fg, bg), read from tokens.json. */
 const RETIRED = retiredPairs();
 
-/** `RETIRED[index]`, with a message when tokens.json stops having three. */
-function retired(index: number): { fg: string; bg: string } {
-  const pair = RETIRED[index];
-  if (pair === undefined) {
-    throw new Error(
-      `tokens.json regressionsFixed has ${RETIRED.length} entries; 03 §3.1 ` +
-        "names three, and PENDING_COMPOSITION is written against them.",
-    );
-  }
-  return pair;
-}
-
-const PENDING_COMPOSITION: readonly PendingDefect[] = [
-  {
-    rule: "color-contrast",
-    source: "web/components/ConversationThread.tsx:224",
-    removedBy: "WO-15 TraceSpine + WO-20 — `03 §3.1` row 1, `03 §7.1`",
-    why:
-      "The job-id label. This is regression row 1 of `03 §3.1` verbatim — " +
-      "slate-400 on slate-50 at 10.4px, ratio 2.45 — and it is the same " +
-      "`.ml-2` node `baseline/axe/running.json` failed on. The brief's " +
-      "replacement is `ink-muted` on `sunken` at 12px (5.44), proven in a real " +
-      "render by criterion 4 below and waiting for a surface to carry it.",
-    recognises: (node) => pairIs(node, retired(0).fg, retired(0).bg),
-  },
-  {
-    rule: "color-contrast",
-    source: "web/components/EventLog.tsx:42 (light theme)",
-    removedBy: "WO-16 Diagnostics + WO-20 — `03 §3.1` row 2, `03 §7.1`",
-    why:
-      "Event timestamps. Regression row 2 of `03 §3.1` verbatim — slate-400 " +
-      "on white at 12px, ratio 2.56 — and the same `.dark\\:text-slate-500` " +
-      "node `baseline/axe/plan-review.json` failed on. Replaced by `ink-muted` " +
-      "on `surface` (6.39), which criterion 4 measures at 6.38 in the browser.",
-    recognises: (node) => pairIs(node, retired(1).fg, retired(1).bg),
-  },
-  {
-    rule: "color-contrast",
-    source: "web/components/EventLog.tsx:42 (dark theme)",
-    removedBy: "WO-16 Diagnostics + WO-20",
-    why:
-      "The dark twin of the row above: slate-500 on slate-950 measures 4.23. " +
-      "The retained baseline never caught it — its only dark report is " +
-      "`conversation-populated-dark`, a thread with no run panel and therefore " +
-      "no event list. Sweeping both themes over all twenty states is what " +
-      "surfaces it.",
-    recognises: (node) => pairIs(node, LEGACY.slate500, LEGACY.slate950),
-  },
-  {
-    rule: "color-contrast",
-    source: "web/components/EventLog.tsx:13, :16, :17",
-    removedBy: "WO-16 Diagnostics + WO-17 PlanEditor + WO-20 — `03 §3.1` row 3",
-    why:
-      "The review/plan-ready event label. Regression row 3 of `03 §3.1` " +
-      "verbatim — amber-600 on white at 12px, ratio 3.18 — and the same " +
-      "`.text-amber-600` node the baseline failed on. Replaced by " +
-      "`review-text` on `surface` (6.08); criterion 4 measures it.",
-    recognises: (node) => pairIs(node, retired(2).fg, retired(2).bg),
-  },
-  {
-    rule: "color-contrast",
-    source: "web/components/ConversationThread.tsx:202, :221, :297",
-    removedBy: "WO-18/WO-19 surfaces + WO-20",
-    why:
-      "🔴 NOT IN THE BASELINE — a contrast pair that PASSED on `1f3f45a` and " +
-      "fails now. The legacy thread header paints its captions with Tailwind's " +
-      "`text-slate-500`, which measured 4.83 against the old white page and " +
-      "measures 4.41 against WO-08's `--canvas`. The regression is the " +
-      "un-migrated literal rather than the canvas — every token-driven caption " +
-      "on the same page measures 6.38 — but it is live on eight states today " +
-      "and the coordinator should route it rather than wait for WO-20.",
-    recognises: (node) => pairIs(node, LEGACY.slate500, lightToken("canvas")),
-  },
-  {
-    rule: "color-contrast",
-    source: "web/components/PlanReview.tsx:94",
-    removedBy: "WO-17 PlanEditor + WO-20",
-    why:
-      "🔴 NOT IN THE BASELINE. The legacy Approve button is white on " +
-      "emerald-600, which measures 3.76 at 14px against a 4.5 requirement. " +
-      "The baseline missed it because its plan-review capture caught the " +
-      "button in its disabled state, which 1.4.3 exempts and axe skips.",
-    recognises: (node) => pairIs(node, lightToken("surface"), LEGACY.emerald600),
-  },
-  {
-    rule: "aria-allowed-role",
-    source: "web/components/EventLog.tsx:33-35",
-    removedBy: "WO-16 Diagnostics + WO-20 — `03 §4.5`, `03 §7.1`",
-    why:
-      "`role=\"log\"` is written onto the `<ul>` itself, which strips the list " +
-      "semantics its `<li>` children need. The brief's fix — move the role to " +
-      "a wrapper `<div>` — is already implemented in " +
-      "`components/patterns/Diagnostics.tsx`; it is not on a route yet.",
-    recognises: (node) => targetIncludes(node, "max-h-80"),
-  },
-  {
-    rule: "listitem",
-    source: "web/components/EventLog.tsx:38",
-    removedBy: "WO-16 Diagnostics + WO-20 — same defect as the row above",
-    why:
-      "The second half of the `role=\"log\"` defect: with the parent's list " +
-      "role overwritten, every `<li>` is orphaned.",
-    recognises: (node) => targetIncludes(node, "grid-cols-"),
-  },
-  {
-    rule: "page-has-heading-one",
-    source: "web/components/ConversationThread.tsx:55, :84",
-    removedBy: "WO-09 NotFoundInline + WO-20 — `03 §7.1`",
-    why:
-      "The inline not-found branch returns before the `<h1>` at :199, so the " +
-      "page has no level-one heading. `03 §7.1` requires every state, " +
-      "including inline not-found, to render one.",
-    recognises: (node) => node.target.some((part) => String(part) === "html"),
-  },
-];
+/**
+ * THE REGISTER IS EMPTY, AND WO-20 IS WHY.
+ *
+ * WO-22 opened it with nine entries: six `color-contrast` findings, the
+ * `aria-allowed-role` / `listitem` pair from `EventLog`'s `role="log"` on a
+ * `<ul>`, and the missing `<h1>` on the inline not-found branch. Every one of
+ * them lived in `EventLog.tsx`, `ConversationThread.tsx` or `PlanReview.tsx` —
+ * modules whose replacements were already merged and already correct, and
+ * which only a route composition could stop rendering. WO-22 said so in as
+ * many words: "Every file named below is one WO-20 replaces wholesale."
+ *
+ * WO-20 replaced them. `app/(workspace)/c/[id]/page.tsx` renders
+ * `ThreadTimeline` and `ActiveRunPanel` — `Diagnostics` instead of
+ * `EventLog`, `PlanEditor` instead of `PlanReview`, `ReportReader` +
+ * `MetricsStrip` + `ExportDisclosure` instead of `ReportView` + `JobSummary` +
+ * `ExportDropdown`, and WO-09's `NotFound` for the 404 — and the register test
+ * below went red on all nine at once, which is exactly the signal it was
+ * built to give. They are deleted rather than kept, so criterion 2 is now an
+ * unqualified zero on every §4 state in both themes.
+ *
+ * IT STAYS EMPTY UNLESS SOMETHING IS BOTH BROKEN AND SCHEDULED. An entry here
+ * is not a suppression: it is a two-way pin that fails when the defect goes
+ * away. Adding one without a named owner and a dated replacement would turn
+ * it into the allowlist `parseAllowlist` refuses to be.
+ */
+const PENDING_COMPOSITION: readonly PendingDefect[] = [];
 
 /** Split gated violations into "known and pinned" and "new". */
 function splitPending(violations: readonly AxeViolation[]): {
@@ -634,7 +465,9 @@ test.describe("WO-22 criterion 2 — zero gated violations on every §4 state", 
             contrastPasses: samples.filter((sample) => sample.outcome === "pass").length,
           });
 
-          // ---- criterion 2, minus the four defects PENDING_COMPOSITION pins.
+          // ---- criterion 2. `PENDING_COMPOSITION` is empty since WO-20, so
+          // `pending.unexpected` is every gated violation there is, and this
+          // is the unqualified zero the criterion asks for.
           expect(
             pending.unexpected,
             "a gated rule failed on markup no PENDING_COMPOSITION entry " +
@@ -694,11 +527,14 @@ test.describe("WO-22 — the pending-composition register is still true", () => 
     { tag: "@axe" },
     async ({ page }) => {
       const seen = new Set<string>();
-      // `plan-review` in light carries five of the eight entries — both
-      // `EventLog` role defects and three of the contrast pairs; the same
-      // state in dark carries the sixth (`slate-500` on `slate-950`, which
-      // only exists in the dark event log); the inline not-found carries the
-      // missing `<h1>`. Three loads cover the register.
+      // The three loads that covered WO-22's nine entries: `plan-review` in
+      // light carried five of them, the same state in dark carried the sixth
+      // (`slate-500` on `slate-950`, which only existed in the dark event
+      // log), and the inline not-found carried the missing `<h1>`. The
+      // register is empty now, so these three loads observe nothing and the
+      // assertion below is trivially true — which is the correct shape for a
+      // ratchet with nothing left to hold. They are kept rather than deleted
+      // so the next entry anyone adds is checked the moment it is written.
       for (const [stateId, theme] of [
         ["plan-review", "light"],
         ["plan-review", "dark"],
