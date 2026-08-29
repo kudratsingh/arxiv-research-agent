@@ -51,7 +51,7 @@ const config: StorybookConfig = {
   },
 
   /**
-   * Three packages must be resolved by Vite, not by Node.
+   * Four packages must be resolved by Vite, not by Node.
    *
    * Same symptom, same cause and same fix as the `@radix-ui/*` entries WO-07
    * added to `server.deps.inline` in web/vitest.config.mts. The Next
@@ -64,11 +64,19 @@ const config: StorybookConfig = {
    * `react-hook-form` imports `react` and dies with "Directory import ... is
    * not supported" (WO-17). `remark-gfm` travels with the first.
    *
+   * `@tanstack/react-query` is the fourth, and it is the same failure to the
+   * letter — `QueryClientProvider.js` imports `react` and Node resolves it
+   * onto the aliased directory. It had no entry until the first story of a
+   * component that reads the query layer existed: nothing in Storybook
+   * loaded `lib/queries/` before `Features/ThreadTimeline`, which calls
+   * `useConversationDetail`. Added by the Gate 3 criterion-1 repair, for
+   * that reason and no other.
+   *
    * It is fixed HERE rather than in vitest.config.mts because the Storybook
    * project takes its Vite configuration from this file, and because the
    * coverage thresholds in that file are not a surface work order's to
    * touch. `ssr.noExternal` is the Vite-level spelling of the same
-   * instruction: bundle these three through Vite, and the `react` import
+   * instruction: bundle these four through Vite, and the `react` import
    * inside them resolves the way every other module's does.
    *
    * Zod needs no entry: it imports no React and externalises cleanly.
@@ -84,7 +92,13 @@ const config: StorybookConfig = {
       ...config,
       ssr: {
         ...config.ssr,
-        noExternal: [...inherited, "react-markdown", "remark-gfm", "react-hook-form"],
+        noExternal: [
+          ...inherited,
+          "react-markdown",
+          "remark-gfm",
+          "react-hook-form",
+          "@tanstack/react-query",
+        ],
       },
     };
   },
