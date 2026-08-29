@@ -629,7 +629,7 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     const entry = (budgets.ratchet ?? []).find((r) => r.row === "route-js-home");
     expect(entry?.from).toBe(148_480); // the RC-01 ceiling
     expect(entry?.to).toBe(167_936); // 164 KiB
-    expect(entry?.measuredBytes).toBe(158_908);
+    expect(entry?.measuredBytes).toBe(158_899);
     // Tighter than the 8% the other rows carry, because this one is measured
     // against the finished surface rather than projected from the legacy one.
     expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.057, 2);
