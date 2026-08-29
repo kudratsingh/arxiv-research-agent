@@ -11,12 +11,17 @@ labelled as such.
 
 Two suites live here and they are selected differently. The **Python**
 suite is flat and marker-selected; that is what the sections up to
-"Selective execution" describe. The **web** suite under `web/` has its
-own tiers — unit, story, coverage, dependency audit, route budget and
-browser — and is described in "The web suite" below. `e2e` means
-different things in the two: in Python it is an unused marker reserved
-for a cassette tier, and in `web/` it is the Playwright tier, which is
-built and gating today.
+"Selective execution" describe. The **web** suite under `web/` has
+**eight tiers** — unit, component, story, integration, contract, e2e,
+accessibility and budgets — described with a local command each in "The
+web suite" below. `e2e` means different things in the two: in Python it
+is an unused marker reserved for a cassette tier, and in `web/` it is
+the Playwright tier, which is built and gating today.
+
+Two numbers in this page are both eight and they are **not the same
+eight**: CI runs eight parallel *jobs*, and the web suite has eight
+*tiers*. Several tiers share the `web` job; two jobs (`lint`,
+`docker-build`) carry no web tier at all.
 
 ## Layout — flat, marker-selected
 
@@ -68,12 +73,19 @@ jobs on every PR and every push to `main`:
 7. `web-storybook` — story tests and the static Storybook build
 8. `web-e2e` — Compose up + seed + Playwright + axe, chromium only
 
-The nightly eval workflow (`.github/workflows/eval-nightly.yml`, ADR
-[0010](decisions/0010-nightly-eval-ci.md)) is the only job that spends
-Anthropic credits: it runs the LLM-judged benchmark and diffs against
-the stored baseline. `ci.yml` itself also runs on a 03:20 UTC schedule,
-where the only behavioural difference is that `web-e2e` runs the full
-browser matrix instead of chromium alone.
+Nothing else gates a merge. Three schedules run beside it, none of them
+blocking a PR:
+
+- `ci.yml` itself on a 03:20 UTC schedule, where the only behavioural
+  difference is that `web-e2e` runs the **full browser matrix** instead
+  of chromium alone.
+- `.github/workflows/nightly.yml` — Lighthouse CI against the seeded
+  stack (WO-29); see tier 8 below.
+- `.github/workflows/eval-nightly.yml` (ADR
+  [0010](decisions/0010-nightly-eval-ci.md)) — the LLM-judged benchmark
+  diffed against the stored baseline. **This is the only workflow in
+  the repo that spends Anthropic credits.** No web tier ever makes a
+  paid model call, structurally; see "The cost boundary" below.
 
 Local equivalent of the Python half of the gate:
 
@@ -98,20 +110,73 @@ single selection knob.
 
 ## The web suite
 
-The frontend has its own tiers, wired by WO-24 against
+The frontend has its own tiers, specified in
+[`04-ARCHITECTURE.md`](revamp/04-ARCHITECTURE.md) §7.1 and wired into
+CI by WO-24 against §7.5 and
 [`docs/revamp/05-MIGRATION.md`](revamp/05-MIGRATION.md) §3 (items C4,
-C7, C8, C9, C10) and [`04-ARCHITECTURE.md`](revamp/04-ARCHITECTURE.md)
-§7.5. Every one of them is a gate — a red job, not a report nobody
-reads.
+C7, C8, C9, C10). Every one of them is a gate — a red job, not a report
+nobody reads.
 
-| Tier | Command | Job | What fails it |
-|---|---|---|---|
-| Unit + component | `npm run test` | `web` | any Vitest failure across the `unit` and `storybook` projects |
-| Coverage | `npm run test -- --coverage` | `web` | falling below the thresholds in `web/vitest.config.mts` |
-| Dependency audit | `npm run audit:gate` | `web` | any high/critical advisory in the production tree, or one in the dev tree that `web/audit-exceptions.json` does not name |
-| Route budgets | `npm run budgets` | `web` | a gated ceiling in `web/budgets.json` exceeded |
-| Storybook | `npm run build-storybook`, `npx vitest run --project=storybook` | `web-storybook` | a story that fails to render, fails axe, or fails to bundle |
-| Browser + axe | `npm run e2e` | `web-e2e` | any Playwright assertion, including the axe sweep over the state matrix |
+### The eight tiers
+
+All commands run from `web/`. Vitest is configured with two *projects*
+— `unit` and `storybook` — and tiers 1, 2, 4 and 5 all live in the
+`unit` project, separated by directory rather than by a runner. A bare
+`npm run test` runs every Vitest tier (1–5) in one process.
+
+| # | Tier | What it covers | Local command | Job |
+|---|---|---|---|---|
+| 1 | Unit | `lib/api/` normalizers, the job reducer's total transition table, token/Tailwind parity | `npx vitest run --project=unit tests/job tests/api.test.ts tests/tokens.test.ts` | `web` |
+| 2 | Component | primitives and patterns through Testing Library — behaviour and a11y, never snapshots | `npx vitest run --project=unit tests/primitives tests/patterns` | `web` |
+| 3 | Story | every story renders and passes axe | `npx vitest run --project=storybook` | `web-storybook` |
+| 4 | Integration | features and query hooks against MSW handlers + recorded fixtures | `npx vitest run --project=unit tests/features tests/queries` | `web` |
+| 5 | Contract | fixture parse, generated-type drift, SSE event-name pinning | `npm run contract:check` then `npx vitest run --project=unit tests/contract` | `web` |
+| 6 | E2E | the vertical slice against the seeded local stack | `npm run e2e` (stack first — see below) | `web-e2e` |
+| 7 | Accessibility | axe over every state × theme, plus keyboard, zoom and reduced-motion probes; also per story at tier 3 | `npm run e2e -- --grep "@axe\|@a11y"` | `web-e2e`, `web-storybook` |
+| 8 | Budgets | per-route gzip ceilings in `web/budgets.json` | `npm run budgets` | `web` |
+
+Tier 3 runs in jsdom, not a real browser, so it needs no Playwright
+install; tiers 6 and 7 do. `npm run build-storybook` additionally
+proves the static bundle builds, which is what `web-storybook` uploads.
+
+Two further gates ride on these tiers rather than being tiers of their
+own — both are red jobs, not reports:
+
+| Gate | Command | What fails it |
+|---|---|---|
+| Coverage | `npm run test -- --coverage` | falling below the thresholds in `web/vitest.config.mts` |
+| Dependency audit | `npm run audit:gate` | any high/critical advisory in the production tree, or one in the dev tree that `web/audit-exceptions.json` does not name |
+
+**Tier 8's second half: Lighthouse, nightly.** The byte budgets gate
+every PR; the *performance* budgets are asserted by Lighthouse CI on
+its own workflow (`.github/workflows/nightly.yml`, WO-29), not by the
+per-PR gate. `npm run lhci` is `node scripts/lhci-run.mjs`, which runs
+`lhci autorun` once per form factor against `web/lighthouserc.json`:
+four seeded states × three profiles (desktop 1350×940, the default
+mobile, and mobile 320×568 for the narrow-strip case) × three runs
+each, asserting per-URL category scores and Core Web Vitals ceilings.
+Locally it needs the seeded stack and a base URL:
+
+```bash
+cd web
+npm run e2e:stack:up && npm run e2e:stack:seed
+LHCI_BASE_URL="$(bash ./e2e/support/stack.sh url)" npm run lhci
+npm run e2e:stack:down
+```
+
+Nightly rather than per-PR because it needs the full Compose stack, so
+a regression is caught within a day rather than at the gate. Reports,
+resolved configs and assertion results land in `web/build/lhci/`, and
+`summary.md` is written *before* the script exits non-zero, so a red
+run publishes its own numbers.
+
+**Every Lighthouse number is a lab number.** It is a throttled local
+run against a seeded stack, not field data — there is no RUM and no
+telemetry egress by design. Read it as a regression detector, not as
+what users experience. It also cannot catch the class of bug it once
+scored 98–99 through: a fast page whose usable content is squeezed into
+a narrow strip. The no-horizontal-scroll assertion at tier 6 is the
+gate that actually holds there.
 
 **Coverage (C10).** Thresholds are seeded at the *measured* value and
 ratcheted upward by the work order that raises them — never set
@@ -140,7 +205,9 @@ compares it with `web/budgets.json`. A ceiling can only move by editing
 `budgets.json` in the same commit, with the reason in the PR body
 ([`04` §8.4](revamp/04-ARCHITECTURE.md)); the report is written before
 the script exits non-zero, so a breach uploads the evidence of its own
-breach as `budget-report.md`.
+breach as `budget-report.md`. The ratified ceilings, the ratchet rule
+and every movement so far are recorded in ADR
+[0056](decisions/0056-design-tokens.md).
 
 **Browser tier (C8).** `web/e2e/README.md` is the manual.
 `npm run e2e:stack:up && npm run e2e:stack:seed && npm run e2e` brings
@@ -151,6 +218,41 @@ PR**; firefox, webkit and the two device projects run on the nightly
 schedule, so PR wall-clock stays bounded. Traces, screenshots, video,
 the HTML report and every axe JSON land under `web/build/e2e/` and are
 uploaded as an artifact whether the run passed or failed.
+
+**Accessibility tier (C9).** Axe runs at two tiers with two different
+jobs. Per story (tier 3) the Storybook a11y addon is configured
+`test: "error"`, so a violation **fails the story's component test**
+rather than decorating a panel nobody opened. Per state (tier 7)
+`@axe-core/playwright` sweeps the full state × theme matrix with the
+WCAG 2 A/AA + 2.1 A/AA + 2.2 AA + best-practice tag set — the same tags
+the retained baseline used, so results stay directly comparable. The
+audit viewport is pinned at the baseline's 1440×1200 because at
+Playwright's default 1280×720 axe downgrades below-the-fold contrast
+findings to `incomplete` and the sweep under-reports. Suppression is
+possible only through `web/e2e/axe-allowlist.json`, which requires a
+written justification per entry.
+
+Narrow widths are covered at tier 6 rather than here: `reflow.spec.ts`
+and `device.spec.ts` assert no horizontal scroll and usable layout at
+the small widths, and the device projects run on the nightly matrix.
+That split is deliberate — a contrast measurement wants a fixed
+viewport, a reflow assertion wants several.
+
+Beyond axe, WO-27 added a second `@a11y`-tagged group in the same job:
+`keyboard.spec.ts` walks tab order and focus restoration by pressing
+real keys and reading `document.activeElement`, `zoom.spec.ts` covers
+200%/400%, `motion.spec.ts` covers `prefers-reduced-motion`, and
+`axe-matrix.spec.ts` widens the sweep. These are **observations**, not
+judgements: the browser's own focus algorithm decides where focus goes
+and the test records where it landed.
+
+**A green run is still not a conformance claim.** What automation
+cannot establish stays manual Gate 4 evidence: whether an observed
+focus order makes sense to someone who cannot see the layout, whether
+a focus ring is *noticeable* rather than merely painted, announcement
+quality, and screen-reader comprehension (VoiceOver + Safari, NVDA +
+Firefox, transcribed by a person). Those are prose, and marked as
+prose.
 
 **The cost boundary is structural.** No web tier ever makes a paid model
 call, and three independent mechanisms enforce it rather than one

@@ -51,6 +51,68 @@ Troubleshooting below for why that exists.
 See [`testing.md`](testing.md) for the full test taxonomy and how CI
 selects tests per PR.
 
+## Working in `web/`
+
+The frontend has its own toolchain (`npm ci` in `web/`, Node
+`>=22.22.2` per `web/package.json`'s `engines`) and its own eight test
+tiers — commands for each are in
+[`testing.md`](testing.md#the-web-suite). Two house rules bind every
+change under `web/`, and both are enforced rather than trusted.
+
+### Rule 1 — exactly two persisted client preferences
+
+The product may write **two** keys to browser storage and no others
+(RC-05). Both are defined in one place, `web/lib/tokens.ts`:
+
+| Key | Values | What it is |
+|---|---|---|
+| `arxiv-agent.theme` | `"light"` \| `"dark"` \| `"system"` | The theme override, applied before first paint by an inline script in `app/layout.tsx` so there is no flash |
+| `arxiv-agent.rail-collapsed` | `"1"` \| `"0"` | Whether the thread rail is collapsed. `"1"` means collapsed; anything else, including a throw, means expanded |
+
+Both are **cosmetic and safely absent**, which is the property that
+matters: no job id, plan, checkpoint or query is ever written to browser
+storage, so nothing in storage can outlive `api_job_retention_sec`, and
+a rollback loses nothing but a preference. The job id lives in the URL
+as `?job=`, not in storage.
+
+Every read and write is wrapped in `try`/`catch`, because
+`localStorage` throws outright in a partitioned context. The failure
+mode must always be "the preference does not persist" and never "the
+control throws". If you add a third key, you are changing the rollback
+argument — that needs a decision, not a commit.
+
+### Rule 2 — the budget ratchet
+
+Every route in `web/` carries a gzip byte ceiling in `web/budgets.json`,
+checked by `npm run budgets` on every PR.
+
+**A ceiling may only move in a PR that edits `web/budgets.json` in the
+same commit and states the reason in the PR body.** There is no
+override: `web/scripts/route-budgets.mjs` accepts no command-line
+arguments and reads no environment variable, it errors if given any
+argv, and `web/tests/budgets.test.ts` asserts those properties against
+the script's own source text so they cannot quietly regress.
+
+Two things follow for day-to-day work:
+
+- **Measure before you argue.** A raise needs the measured number and
+  the in-budget alternative you rejected, both in the PR body. Both
+  raises on record carry theirs, and in one case the in-budget
+  alternative was *built and measured* before being rejected — it hit
+  the number but would have shipped a document with no `h1`, failing
+  the accessibility gate. Accessibility gate beats budget row.
+- **Ratchet down when you win bytes.** A ceiling left high after a
+  cleanup is headroom nobody earned. Re-seed at the measured value plus
+  modest headroom — never at a hairline over the measurement, because
+  repeated builds of an unchanged tree oscillate by a few bytes.
+
+Every movement is recorded inside `budgets.json`'s own `ratchet` array
+and printed by every budget report, so the history is readable without
+`git log`. The rule and the full history are ADR
+[0056](decisions/0056-design-tokens.md); the same file also holds the
+token contract, which is the other thing you cannot change casually
+(literal colours are an ESLint error outside `web/app/tokens.css`).
+
 ## OpenTelemetry: traces + metrics
 
 Both signals are off by default and share one exporter endpoint, so

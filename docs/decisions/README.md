@@ -284,6 +284,28 @@ never renumbered.
   loopback-safe local ports, parameterized Postgres credentials, and a
   Caddy HTTPS/basic-auth edge that is the only production host publish.
   Adds the reviewed single-host runbook and rollback contract.
+- [0055](0055-frontend-architecture-confirmation.md) — Confirm Next.js App
+  Router + the same-origin Node proxy as the frontend architecture. Makes
+  D-002 binding under three constraints: `web/app/api/[...path]/route.ts`
+  stays the **sole** credential boundary with `runtime = "nodejs"` and
+  `dynamic = "force-dynamic"` pinned; the proxy gains request logging and a
+  CSP before rollout (discharged); and Tailwind 4, TypeScript 7 and Turbopack
+  each need their own ADR. The decisive argument is one D-002 never made:
+  native `EventSource` and `<a download>` cannot carry a request header, so
+  under `ENABLE_API_AUTH=true` a same-origin server hop is the only mechanism
+  that makes the stream and the exports work at all. Also records the reserved
+  names (`/login`, `/settings`, `/api/auth/*`) and that `/` is dynamically
+  rendered as an inherent consequence of the per-request nonce.
+- [0056](0056-design-tokens.md) — Design tokens: one source of values
+  (`web/app/tokens.css`, the only file that may hold a literal colour), one
+  source of names (`web/lib/tokens.ts`), Tailwind built from that module, and
+  a bidirectional parity test plus an ESLint literal-colour ban instead of a
+  generator. Records the RC-02 reconciled role set — the brief's 23 colour
+  roles win, `04-ARCHITECTURE.md` §6.1's enumeration is superseded, `success`
+  and `warning` do not exist — and the RC-01 ratified route budgets with the
+  ratchet rule and the full movement history: D-011's shared-chunk raise,
+  D-012's `/` raise (accessibility gate beats budget row), and WO-31's
+  ratchet-down of six rows to the measured post-cleanup values.
 
 ## When to write an ADR
 
