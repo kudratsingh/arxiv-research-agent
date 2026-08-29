@@ -30,6 +30,15 @@ const WEB_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(WEB_ROOT, "..");
 const RC_PATH = path.join(WEB_ROOT, "lighthouserc.json");
 const WORKFLOW_PATH = path.join(REPO_ROOT, ".github", "workflows", "nightly.yml");
+const LHCI_README_PATH = path.join(
+  REPO_ROOT,
+  "docs",
+  "revamp",
+  "evidence",
+  "gate-4",
+  "lhci",
+  "README.md",
+);
 
 type Assertion = [level: string, options: Record<string, number | string>];
 type MatrixEntry = { matchingUrlPattern: string; assertions: Record<string, Assertion> };
@@ -47,6 +56,7 @@ type Rc = {
 const rcText = readFileSync(RC_PATH, "utf8");
 const rc = JSON.parse(rcText) as Rc;
 const workflow = readFileSync(WORKFLOW_PATH, "utf8");
+const lhciReadme = readFileSync(LHCI_README_PATH, "utf8");
 
 /** The three form-factor profiles, with `ci` named as the mobile-412 one. */
 const PROFILES: { id: string; ci: CiConfig }[] = [
@@ -54,14 +64,19 @@ const PROFILES: { id: string; ci: CiConfig }[] = [
   ...rc.profiles.map((profile) => ({ id: profile.id, ci: profile.ci })),
 ];
 
-/** 04-ARCHITECTURE.md §8.2, transcribed. Mobile and desktop columns. */
+/**
+ * 04-ARCHITECTURE.md §8.2, transcribed. Mobile and desktop columns.
+ *
+ * `total-blocking-time` is absent from this table on purpose — it is the one
+ * audit whose `error` level is NOT the ratified number, and it has its own
+ * describe block below. Every other row here is gated at §8.2's figure exactly.
+ */
 const BUDGETS = {
   mobile: {
     "categories:performance": { minScore: 0.95 },
     "categories:accessibility": { minScore: 1 },
     "categories:best-practices": { minScore: 1 },
     "largest-contentful-paint": { maxNumericValue: 2500 },
-    "total-blocking-time": { maxNumericValue: 150 },
     "cumulative-layout-shift": { maxNumericValue: 0.02 },
   },
   desktop: {
@@ -69,9 +84,23 @@ const BUDGETS = {
     "categories:accessibility": { minScore: 1 },
     "categories:best-practices": { minScore: 1 },
     "largest-contentful-paint": { maxNumericValue: 1200 },
-    "total-blocking-time": { maxNumericValue: 50 },
     "cumulative-layout-shift": { maxNumericValue: 0.02 },
   },
+} as const;
+
+/**
+ * §8.2's ratified TBT ceiling, and the runner ceiling the nightly is gated on.
+ *
+ * The ruling (WO-29 follow-up, to be recorded in DECISIONS.md at Gate 4 close):
+ * TBT is the only metric in the table that is real main-thread time rather than
+ * a Lantern simulation, so it is the only one that scales with the runner's
+ * actual CPU. The ratified ceiling stays, as a `warn`; the `error` sits at
+ * **twice** it — per form factor, so desktop is 100 and not a flat 300, because
+ * a flat 300 would be 6× a ceiling whose measured value on the runner is zero.
+ */
+const TBT = {
+  mobile: { ratified: 150, runner: 300 },
+  desktop: { ratified: 50, runner: 100 },
 } as const;
 
 /** Which §8.2 column each profile is gated by, and how many states it audits. */
@@ -94,6 +123,21 @@ const REQUIRED_ASSERTIONS = [
   "bf-cache",
 ];
 
+/**
+ * A profile's `assertMatrix` holds two kinds of entry, and telling them apart
+ * by shape rather than by array position keeps these tests from depending on
+ * the order somebody happened to write them in.
+ *
+ *   * a **state** entry — one per audited URL, carrying all seven audits;
+ *   * the **runner-ceiling** entry — one per profile, a catch-all pattern
+ *     carrying only the `warn`-level `total-blocking-time` row.
+ */
+const stateEntries = (entries: MatrixEntry[]): MatrixEntry[] =>
+  entries.filter((entry) => "categories:performance" in entry.assertions);
+
+const runnerEntries = (entries: MatrixEntry[]): MatrixEntry[] =>
+  entries.filter((entry) => !("categories:performance" in entry.assertions));
+
 describe("every §8.2 assertion is encoded, per state and per form factor", () => {
   it("carries exactly the three form-factor profiles", () => {
     expect(PROFILES.map((profile) => profile.id)).toEqual([
@@ -107,20 +151,24 @@ describe("every §8.2 assertion is encoded, per state and per form factor", () =
     const shape = PROFILE_SHAPE[id];
     expect(shape, `${id} has no expected shape in this test`).toBeDefined();
     expect(ci.collect.url).toHaveLength(shape!.states);
-    expect(ci.assert.assertMatrix).toHaveLength(shape!.states);
-    // One matrix entry per URL, and no URL left ungated: LHCI silently asserts
-    // nothing about a URL that matches no pattern, which is the one way this
-    // file could go green while measuring nothing.
+    // One entry per state, plus the single catch-all TBT runner-ceiling entry.
+    expect(ci.assert.assertMatrix).toHaveLength(shape!.states + 1);
+    // Every URL must match exactly one state entry and exactly one runner-ceiling
+    // entry — no URL left ungated, and no state gated twice. LHCI silently
+    // asserts nothing about a URL that matches no pattern, which is the one way
+    // this file could go green while measuring nothing.
     for (const url of ci.collect.url) {
       const matching = ci.assert.assertMatrix.filter((entry) =>
         new RegExp(entry.matchingUrlPattern).test(url),
       );
-      expect(matching, `no assertMatrix entry matches ${url} in ${id}`).toHaveLength(1);
+      expect(stateEntries(matching), `state entries matching ${url} in ${id}`).toHaveLength(1);
+      expect(runnerEntries(matching), `runner entries matching ${url} in ${id}`).toHaveLength(1);
+      expect(matching, `unexpected extra entry matching ${url} in ${id}`).toHaveLength(2);
     }
   });
 
   it.each(PROFILES)("$id gates all seven audits on every state", ({ id, ci }) => {
-    for (const entry of ci.assert.assertMatrix) {
+    for (const entry of stateEntries(ci.assert.assertMatrix)) {
       expect(
         Object.keys(entry.assertions).sort(),
         `${id} / ${entry.matchingUrlPattern}`,
@@ -128,33 +176,50 @@ describe("every §8.2 assertion is encoded, per state and per form factor", () =
     }
   });
 
+  it.each(PROFILES)("$id's runner-ceiling entry carries TBT and nothing else", ({ id, ci }) => {
+    // If this entry ever grew a second audit it would silently downgrade that
+    // audit's gate across every state in the profile, which is precisely the
+    // failure a catch-all pattern makes easy.
+    const runner = runnerEntries(ci.assert.assertMatrix);
+    expect(runner, id).toHaveLength(1);
+    expect(Object.keys(runner[0]!.assertions), id).toEqual(["total-blocking-time"]);
+  });
+
   it.each(PROFILES)("$id records the assertions that passed, not only the ones that failed", ({ ci }) => {
     // Without this, a green run's assertion-results.json is `[]` — which reads
     // identically to a run that matched no URL and asserted nothing. The
-    // evidence pack's whole claim is "70 assertions were evaluated"; this flag
+    // evidence pack's whole claim is "80 assertions were evaluated"; this flag
     // is what makes the artifact able to show it.
     expect(ci.assert.includePassedAssertions).toBe(true);
   });
 
-  it("evaluates 70 assertions in total — 28 + 28 + 14", () => {
+  it("evaluates 80 assertions in total — 32 + 32 + 16", () => {
     // Stated as a number so that deleting a state, or a form factor, is a
-    // deliberate edit to this line rather than a quieter run.
+    // deliberate edit to this line rather than a quieter run. Eight per cell,
+    // not seven: TBT is asserted twice (see the TBT describe block below), and
+    // LHCI evaluates every matching matrix entry rather than picking one — so
+    // the count must be summed across matching entries and never merged by
+    // audit id, which would hide ten assertions.
     const total = PROFILES.reduce(
       (sum, { ci }) =>
         sum +
-        ci.assert.assertMatrix.reduce(
-          (inner, entry) => inner + Object.keys(entry.assertions).length,
+        ci.collect.url.reduce(
+          (inner, url) =>
+            inner +
+            ci.assert.assertMatrix
+              .filter((entry) => new RegExp(entry.matchingUrlPattern).test(url))
+              .reduce((n, entry) => n + Object.keys(entry.assertions).length, 0),
           0,
         ),
       0,
     );
-    expect(total).toBe(70);
+    expect(total).toBe(80);
   });
 
   it.each(PROFILES)("$id's ceilings are §8.2's, to the number", ({ id, ci }) => {
     const column = PROFILE_SHAPE[id]!.column;
     const expected = BUDGETS[column];
-    for (const entry of ci.assert.assertMatrix) {
+    for (const entry of stateEntries(ci.assert.assertMatrix)) {
       for (const [auditId, budget] of Object.entries(expected)) {
         const [level, options] = entry.assertions[auditId]!;
         expect(level, `${id} / ${entry.matchingUrlPattern} / ${auditId}`).toBe("error");
@@ -168,9 +233,67 @@ describe("every §8.2 assertion is encoded, per state and per form factor", () =
   });
 });
 
+describe("total-blocking-time carries a runner ceiling, and only TBT does", () => {
+  // The WO-29 follow-up ruling. Nightly run 33262680039 measured 180 ms
+  // (runs: 216, 159, 180) on `?job=baseline-plan-review` mobile against the
+  // ratified 150 ms, on a commit that measures 52–63 ms locally; 69 of 70
+  // assertions passed and that was the only failure.
+
+  it.each(PROFILES)("$id gates the error level at exactly 2× the ratified ceiling", ({ id, ci }) => {
+    const { ratified, runner } = TBT[PROFILE_SHAPE[id]!.column];
+    // 2×, per form factor — the property that makes this a rule rather than a
+    // number somebody picked. Desktop is 100, not a flat 300.
+    expect(runner).toBe(ratified * 2);
+    for (const entry of stateEntries(ci.assert.assertMatrix)) {
+      const [level, options] = entry.assertions["total-blocking-time"]!;
+      expect(level, `${id} / ${entry.matchingUrlPattern}`).toBe("error");
+      expect(options["maxNumericValue"], `${id} / ${entry.matchingUrlPattern}`).toBe(runner);
+      expect(options["aggregationMethod"]).toBe("median");
+    }
+  });
+
+  it.each(PROFILES)("$id keeps the ratified ceiling as a warn on every cell", ({ id, ci }) => {
+    // The ratified number is not deleted, only demoted. If this row ever
+    // disappeared, 04 §8.2's actual budget would stop appearing in the nightly
+    // summary and the runner ceiling would silently become the only budget.
+    const { ratified } = TBT[PROFILE_SHAPE[id]!.column];
+    const runner = runnerEntries(ci.assert.assertMatrix);
+    expect(runner, id).toHaveLength(1);
+    const [level, options] = runner[0]!.assertions["total-blocking-time"]!;
+    expect(level, id).toBe("warn");
+    expect(options["maxNumericValue"], id).toBe(ratified);
+    expect(options["aggregationMethod"]).toBe("median");
+    // And it really does apply to every audited URL in the profile.
+    for (const url of ci.collect.url) {
+      expect(new RegExp(runner[0]!.matchingUrlPattern).test(url), `${id} / ${url}`).toBe(true);
+    }
+  });
+
+  it("no other audit was granted a runner ceiling", () => {
+    // LCP, CLS and the category scores are computed under simulated throttling
+    // (`throttlingMethod: "simulate"`), so Lantern models the CPU from the
+    // trace rather than measuring the host's — they all passed unchanged on the
+    // runner. TBT is real main-thread time and is the sole exception. Every
+    // other audit is still gated at §8.2's own figure, which the
+    // "ceilings are §8.2's, to the number" test above asserts directly.
+    for (const { id, ci } of PROFILES) {
+      for (const entry of runnerEntries(ci.assert.assertMatrix)) {
+        expect(Object.keys(entry.assertions), id).toEqual(["total-blocking-time"]);
+      }
+    }
+  });
+
+  it("the mechanics are documented in the config and in the evidence pack", () => {
+    for (const text of [rcText, lhciReadme]) {
+      expect(text).toMatch(/total.blocking.time/i);
+      expect(text).toContain("33262680039");
+    }
+  });
+});
+
 describe("criterion 2 — Accessibility 100 and Best Practices 100, met and not approximated", () => {
   it.each(PROFILES)("$id asserts both at minScore 1 with pessimistic aggregation", ({ ci }) => {
-    for (const entry of ci.assert.assertMatrix) {
+    for (const entry of stateEntries(ci.assert.assertMatrix)) {
       for (const auditId of ["categories:accessibility", "categories:best-practices"]) {
         const [level, options] = entry.assertions[auditId]!;
         expect(level).toBe("error");
@@ -188,7 +311,7 @@ describe("criterion 2 — Accessibility 100 and Best Practices 100, met and not 
 
 describe("criterion 3 — CLS is gated at ≤ 0.02 everywhere (RC-06)", () => {
   it.each(PROFILES)("$id gates CLS at 0.02 on every state", ({ ci }) => {
-    for (const entry of ci.assert.assertMatrix) {
+    for (const entry of stateEntries(ci.assert.assertMatrix)) {
       const [level, options] = entry.assertions["cumulative-layout-shift"]!;
       expect(level).toBe("error");
       expect(options["maxNumericValue"]).toBe(0.02);
@@ -210,7 +333,7 @@ describe("criterion 4 — the bf-cache audit (RC-18)", () => {
     // profiles, so it is gated there rather than merely observed.
     for (const { id, ci } of PROFILES) {
       if (PROFILE_SHAPE[id]!.column !== "mobile") continue;
-      for (const entry of ci.assert.assertMatrix) {
+      for (const entry of stateEntries(ci.assert.assertMatrix)) {
         const [level, options] = entry.assertions["bf-cache"]!;
         expect(level, `${id} / ${entry.matchingUrlPattern}`).toBe("error");
         expect(options["minScore"]).toBe(1);
@@ -226,7 +349,7 @@ describe("criterion 4 — the bf-cache audit (RC-18)", () => {
     // reason "Not actionable". `warn` keeps the audit running and printing;
     // `off` would delete the question.
     const desktop = PROFILES.find((profile) => profile.id === "desktop-1350")!;
-    for (const entry of desktop.ci.assert.assertMatrix) {
+    for (const entry of stateEntries(desktop.ci.assert.assertMatrix)) {
       const [level, options] = entry.assertions["bf-cache"]!;
       expect(level, entry.matchingUrlPattern).toBe("warn");
       expect(options["minScore"]).toBe(1);
@@ -236,23 +359,15 @@ describe("criterion 4 — the bf-cache audit (RC-18)", () => {
   });
 
   it("the deviation is restated in the evidence pack, not only in the config", () => {
-    const readme = readFileSync(
-      path.join(REPO_ROOT, "docs", "revamp", "evidence", "gate-4", "lhci", "README.md"),
-      "utf8",
-    );
-    expect(readme).toContain("MainResourceHasCacheControlNoStore");
-    expect(readme).toContain("bf-cache");
+    expect(lhciReadme).toContain("MainResourceHasCacheControlNoStore");
+    expect(lhciReadme).toContain("bf-cache");
   });
 });
 
 describe("criterion 6 — the lab-versus-field caveat is restated", () => {
   it("the lhci README says there is no field data", () => {
-    const readme = readFileSync(
-      path.join(REPO_ROOT, "docs", "revamp", "evidence", "gate-4", "lhci", "README.md"),
-      "utf8",
-    );
-    expect(readme).toMatch(/no field data/i);
-    expect(readme).toMatch(/lab/i);
+    expect(lhciReadme).toMatch(/no field data/i);
+    expect(lhciReadme).toMatch(/lab/i);
   });
 });
 

@@ -71,7 +71,7 @@
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 150,
+                "maxNumericValue": 300,
                 "aggregationMethod": "median"
               }
             ],
@@ -125,7 +125,7 @@
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 150,
+                "maxNumericValue": 300,
                 "aggregationMethod": "median"
               }
             ],
@@ -179,7 +179,7 @@
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 150,
+                "maxNumericValue": 300,
                 "aggregationMethod": "median"
               }
             ],
@@ -233,7 +233,7 @@
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 150,
+                "maxNumericValue": 300,
                 "aggregationMethod": "median"
               }
             ],
@@ -249,6 +249,28 @@
               {
                 "minScore": 1,
                 "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/",
+          "$comment": [
+            "THE RATIFIED CEILING, KEPT AS A WARNING (the WO-29 follow-up ruling).",
+            "One catch-all entry per profile, deliberately not one per state: runner CPU drift is a",
+            "property of the hardware, not of any route. LHCI evaluates EVERY matrix entry whose",
+            "pattern matches (@lhci/utils/src/assertions.js loops the whole matrix per URL), which is",
+            "how one audit carries two levels: `error` at the runner ceiling in the entries above,",
+            "`warn` at 04 §8.2's ratified number here. The warn row never fails a run -- it keeps the",
+            "real budget in every nightly summary, so drift toward it is visible long before it",
+            "becomes a regression, and the ratified number is never quietly deleted from the file."
+          ],
+          "assertions": {
+            "total-blocking-time": [
+              "warn",
+              {
+                "maxNumericValue": 150,
+                "aggregationMethod": "median"
               }
             ]
           }
