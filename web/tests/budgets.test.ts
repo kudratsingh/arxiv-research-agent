@@ -572,7 +572,12 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
   });
 
   it.each([
-    ["route-js-home", 148_480, 137_272],
+    // Raised from 148,480 B by WO-20 under the ratchet rule; see the `ratchet`
+    // record, and the assertion below that pins its measurement. `baselineBytes`
+    // is unchanged, because it is the retained Gate 1 figure for the LEGACY
+    // landing page and the report's baseline-reproduction table still means
+    // that.
+    ["route-js-home", 167_936, 137_272],
     ["route-js-conversation", 199_680, 184_745],
     // Raised from 122,880 B under the ratchet rule; see the `ratchet` record below.
     ["shared-framework-runtime", 141_312, null],
@@ -618,6 +623,21 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     // 8.0% headroom over the measured baseline, matching the other RC-01 rows.
     expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.08, 2);
     expect(entry?.perFileAtChange?.total).toBe(130_865);
+  });
+
+  it("carries the landing-route raise with its measured justification", () => {
+    const entry = (budgets.ratchet ?? []).find((r) => r.row === "route-js-home");
+    expect(entry?.from).toBe(148_480); // the RC-01 ceiling
+    expect(entry?.to).toBe(167_936); // 164 KiB
+    expect(entry?.measuredBytes).toBe(158_908);
+    // Tighter than the 8% the other rows carry, because this one is measured
+    // against the finished surface rather than projected from the legacy one.
+    expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.057, 2);
+    // The rejected alternative and its number are part of the justification,
+    // not a note somebody made elsewhere: a ratchet entry that only says the
+    // ceiling was too low is an assertion, and this one has to be an argument.
+    expect(entry?.why).toContain("143426");
+    expect(entry?.why).toContain("page-has-heading-one");
   });
 
   it("names WO-21 as the enforcer of the total-transferred row", () => {

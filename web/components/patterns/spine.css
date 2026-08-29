@@ -39,13 +39,42 @@
  * `min-height` rather than `height`: the row must not GROW when the first
  * tick arrives (that is the CLS budget), and must still accommodate a
  * wrapped label on a 320px viewport.
+ *
+ * A GRID RATHER THAN A FLEX ROW, AND WO-20 MEASURED WHY. The height was
+ * reserved here from the first line of this file; the WIDTHS were not. As a
+ * flex row the void was `flex: 1 1 var(--space-16)`, so it absorbed whatever
+ * the ledger left — and every tick that landed therefore SHRANK it and moved
+ * the word beside it. On a route that is a real layout shift with a real
+ * number: 0.0015 per checkpoint, measured in Chromium by `e2e/cls.spec.ts`
+ * against WO-20 criterion 5's "CLS 0.000 during a live run".
+ *
+ * Two `1fr` tracks fix it without giving up either property this file
+ * defends. The ledger owns track 1 and scrolls inside it (it is already a
+ * `ScrollRegion`), so a long ledger cannot squeeze the void — which is the
+ * thing 03 §5.8 forbids. The void owns track 2 with the same `--space-16`
+ * floor, so it is still dimensioned and still grows with the row rather than
+ * with the ledger's contents. Its width is now a function of the ROW, and a
+ * checkpoint arriving cannot change it.
  * ---------------------------------------------------------------------- */
 .ew-spine-run {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(var(--space-16), 1fr) auto;
   align-items: center;
   gap: var(--space-2);
   min-height: var(--size-target-min);
   min-width: 0;
+}
+
+/* Explicit placement, because the ledger is ABSENT until the first tick
+   (`CheckpointLedger` returns null for `empty="hidden"`) and auto-placement
+   would otherwise slide the void into track 1 and back out again — the same
+   shift in a new form. */
+.ew-spine-ledger {
+  grid-column: 1;
+}
+
+.ew-spine-void {
+  grid-column: 2;
 }
 
 /* The ledger reserves its line before it has anything in it, so the first
@@ -79,7 +108,11 @@
  * colours where a gradient does not.
  * ---------------------------------------------------------------------- */
 .ew-spine-void {
-  flex: 1 1 var(--space-16);
+  /* `flex: 1 1 var(--space-16)` was here and is gone with the flex row: on a
+     grid item the property is ignored, and leaving it would describe a
+     behaviour the row no longer has. The floor it named survives as the
+     track's own `minmax(var(--space-16), 1fr)` and as the `min-width` below,
+     which is what WO-15's test asserts. */
   min-width: var(--space-16);
   align-self: center;
   border-top-width: var(--size-trace-rule);

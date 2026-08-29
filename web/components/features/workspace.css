@@ -20,9 +20,11 @@
  * disclosure instead. The trade is stated in `ActiveRunPanel.tsx`.
  * ========================================================================= */
 
+/* Four rows: header, run panel, reading column, composer. Only the third
+   scrolls; the fourth is `auto` so the composer never scrolls away. */
 .ew-thread {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -37,11 +39,39 @@
 /* Row 2. `position: sticky` is not needed — it is already a fixed row of the
    grid and cannot scroll away — but the border is, so the reading column
    below it starts at a visible edge rather than at a guess. */
+/* `surface`, NOT `sunken`, AND THAT IS A MEASUREMENT. The spine's void
+   description is `text-ink-faint`, which is 4.29:1 on `--sunken` at 12px and
+   fails 1.4.3 — axe caught it on eight states the first time this panel was
+   rendered on a route (WO-22's gate, this branch). `ink-faint` on `--surface`
+   measures 5.03:1. The panel is separated from the reading column by its rule
+   rather than by a tint. */
 .ew-thread__run {
   border-bottom: 1px solid var(--color-border-subtle);
-  background-color: var(--color-sunken);
+  background-color: var(--color-surface);
   padding: var(--space-3) var(--space-6);
   min-width: 0;
+}
+
+/* THE ROW IS A FIXED BOX WHILE A RUN IS ATTACHED, AND BOTH HALVES OF THAT ARE
+   MEASURED.
+
+   Fixed, because a bounded-but-content-sized row still MOVES: the ledger's
+   scroll region gains a horizontal scrollbar when the ticks stop fitting, the
+   row grows 3px, and every element below it shifts. Chromium scored that at
+   0.038 across two checkpoints (`e2e/cls.spec.ts`, before this rule). A fixed
+   height makes the spine's own reflow invisible to row 3, which is exactly
+   what criterion 5 asks for.
+
+   14rem, because `.ew-shell__surface` is a fixed-height box and every pixel
+   here is a pixel the briefing does not get. On a 720px viewport the surface
+   is 669px, the header 79px and the follow-up composer 266px — 324px for this
+   row and the reading column together. At `45vh` this row took all of it, the
+   column measured ZERO, and the composer sat on top of the turns where a
+   click could not reach them (observed). 14rem leaves the column 100px there
+   and more at every taller viewport. */
+.ew-thread__run[data-run="attached"] {
+  height: 14rem;
+  overflow-y: auto;
 }
 
 /* Row 3 — the only scrolling box on the route. `overscroll-behavior` keeps a
@@ -50,6 +80,14 @@
   min-height: 0;
   min-width: 0;
   overflow-y: auto;
+  /* THE SCROLLBAR IS THE REPORT COLUMN'S WIDTH, AND IT IS RESERVED. Without
+     this, a checkpoint landing in the panel above changes this row's height
+     just enough to bring the scrollbar in or out — and the reading column
+     then narrows or widens by its width, re-wrapping every table cell in the
+     briefing. Measured: two horizontal shifts totalling 0.0088 on the table
+     in `baseline-succeeded`, caused by nothing but a scrollbar appearing.
+     `stable` keeps the gutter there whether it is used or not. */
+  scrollbar-gutter: stable;
   overscroll-behavior: contain;
   padding: var(--space-5) var(--space-6);
 }

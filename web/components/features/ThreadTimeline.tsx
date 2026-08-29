@@ -40,6 +40,7 @@
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 
+import { hasActiveRun } from "@/components/features/ActiveRunPanel";
 import { QueryComposer } from "@/components/features/QueryComposer";
 import { EmptyState } from "@/components/patterns/EmptyState";
 import { ExportDisclosure } from "@/components/patterns/ExportDisclosure";
@@ -206,11 +207,35 @@ export function ThreadTimeline({
         </p>
       </header>
 
-      <div className="ew-thread__run">{runPanel}</div>
+      {/*
+        `data-run` IS THE CLS CONTRACT, NOT DECORATION (criterion 5). With a
+        run attached this row is a FIXED box that scrolls inside itself, so a
+        checkpoint landing in the spine — or the 3px a scrollbar adds to the
+        ledger when the ticks stop fitting, which is what the browser actually
+        caught — cannot move the reading column below it. With no run it is
+        one sentence and takes one sentence's height, because a 224px empty
+        box on the commonest page on this route is 224px the briefing does not
+        get. `hasActiveRun` is the panel's own predicate so the two cannot
+        disagree about which of those it is.
+      */}
+      <div
+        className="ew-thread__run"
+        data-run={hasActiveRun(state) ? "attached" : "none"}
+      >
+        {runPanel}
+      </div>
 
       <div className="ew-thread__timeline">
         {briefings.length === 0 ? (
-          <EmptyState heading={THREAD.emptyHeading} body={THREAD.emptyBody} />
+          // `h2`, not `EmptyState`'s default `h3`: the only heading above it
+          // is the thread's own `h1`, and on a thread with no run there is no
+          // spine to supply the level in between — axe's `heading-order`
+          // caught the skip on this exact state.
+          <EmptyState
+            heading={THREAD.emptyHeading}
+            headingLevel={2}
+            body={THREAD.emptyBody}
+          />
         ) : (
           <ol aria-label={THREAD.timelineLabel} className="list-none">
             {briefings.map((briefing) => (

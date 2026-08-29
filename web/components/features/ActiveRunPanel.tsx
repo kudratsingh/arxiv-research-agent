@@ -52,7 +52,6 @@ import { TraceSpine } from "@/components/patterns/TraceSpine";
 import type { ReviewRequest } from "@/lib/api";
 import { describeFailure, rawErrorEvidence } from "@/lib/copy/errors";
 import { THREAD } from "@/lib/copy/threads";
-import { UNAVAILABLE_COPY } from "@/lib/copy/trace";
 import {
   useDebugPerf,
   useDiagnosticsRecorder,
@@ -84,6 +83,19 @@ export function planStatusOf(state: JobState): PlanEditorStatus {
     return "stale";
   }
   return "editing";
+}
+
+/**
+ * Is there a run on this page at all? §4 row B is the `false` case.
+ *
+ * Exported because `ThreadTimeline` needs the same answer for the row it
+ * gives this panel: with a run attached that row is a FIXED box, so nothing
+ * inside it can move the reading column (criterion 5); with no run it is one
+ * sentence and takes one sentence's height. Two files asking the question two
+ * ways is how those two answers drift apart.
+ */
+export function hasActiveRun(state: JobState): boolean {
+  return !(state.jobId === null && state.phase === "idle");
 }
 
 export interface ActiveRunPanelProps {
@@ -155,6 +167,22 @@ export function ActiveRunPanel({
   const failed = state.phase === "submit_failed" && state.failure !== null;
   const described = failed && state.failure !== null ? describeFailure(state.failure) : null;
 
+  /**
+   * §4 row B — `/c/[id]` with no `?job=`.
+   *
+   * ONE SENTENCE, NOT AN INERT SPINE, AND THAT IS A MEASUREMENT. `TraceSpine`
+   * renders its four segment names with nothing observed when `inputs` is
+   * `null`, on the reasonable ground that "the shape the user is about to
+   * meet is already on screen". Composed into this row it costs 428px of a
+   * 669px surface — measured in the browser on this branch — and squeezed the
+   * reading column to ZERO on a thread that has briefings to read and no run
+   * at all. The surface is a fixed-height box (`.ew-shell__surface`), so that
+   * height comes out of the thing the user came for. So the absence of a run
+   * is stated in the words the dictionary has for it and the column is given
+   * back. The spine returns the moment there is a run to trace.
+   */
+  const idle = state.jobId === null && state.phase === "idle";
+
   return (
     <section
       aria-label={THREAD.runLabel}
@@ -163,19 +191,25 @@ export function ActiveRunPanel({
       data-run-job={state.jobId ?? ""}
       className={["flex flex-col gap-3", className].filter(Boolean).join(" ")}
     >
-      <TraceSpine inputs={spineInputs(state)} legend={legend} />
-
-      {state.jobId === null && state.phase === "idle" ? (
+      {idle ? (
         <p className="text-ui-sm text-ink-muted">{THREAD.noRun}</p>
-      ) : null}
+      ) : (
+        <TraceSpine inputs={spineInputs(state)} legend={legend} />
+      )}
 
+      {/*
+        THE RECOVERY ONLY, BECAUSE THE SPINE ALREADY SAID THE SENTENCE. 03
+        §2.2 row 16 asks for `UNAVAILABLE_COPY` plus "ask the question again,
+        explicitly labelled as starting a new billable run". The spine's own
+        status line is that sentence (`lib/spine/state.ts`), and a banner
+        repeating it puts the same words on screen twice — which the first
+        browser run of this panel showed as a strict-mode locator violation
+        before it showed as a design problem. So this is the half the spine
+        does not carry, and the composer that does the asking is directly
+        below it.
+      */}
       {state.phase === "unavailable" ? (
-        <StatusBanner
-          severity="warning"
-          mark="dashed-square"
-          sentence={UNAVAILABLE_COPY}
-          recovery={THREAD.askAgain}
-        />
+        <p className="text-ui-sm text-ink-muted">{THREAD.askAgain}</p>
       ) : null}
 
       {described === null ? null : (
@@ -198,7 +232,12 @@ export function ActiveRunPanel({
         />
       ) : null}
 
-      <Diagnostics records={records} showVitals={perf} />
+      {/*
+        The disclosure is collapsed by default (04 §9.2), so it costs one row
+        — and it is where the frame log lives, which is where the "updated
+        41 s ago" figure this panel does not print can still be read.
+      */}
+      {idle ? null : <Diagnostics records={records} showVitals={perf} />}
     </section>
   );
 }

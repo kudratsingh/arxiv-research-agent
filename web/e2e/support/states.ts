@@ -24,7 +24,30 @@ import { FIXTURES } from "./env";
  * Selectors here are WO-08's dedicated hooks (`data-workbench-shell`,
  * `data-rail-mode`, …) and stable ARIA roles, never CSS classes. WO-20 will
  * swap the surfaces underneath; roles and data hooks are what survive that.
+ *
+ * WO-20 HAS NOW LANDED, AND THIS IS WHAT IT CHANGED. `/` and `/c/[id]` render
+ * `LandingComposer`, `ThreadTimeline` and `ActiveRunPanel` instead of
+ * `QueryForm` and `ConversationThread`, so the ready conditions below moved
+ * from the legacy strings to the designed ones — the approved copy in
+ * `lib/copy/`, and two new surface hooks (`data-surface="active-run"`,
+ * `data-report-reader`). Row 23 moved out of `DEFERRED_STATES` and into
+ * `STATES`, which is the move the partition test exists to force. Nothing
+ * about the table's SHAPE changed: same fields, same helpers, same
+ * `arrange` contract.
  */
+
+/**
+ * WO-20's run panel, by its own hook.
+ *
+ * Exported because four specs need it and a fourth copy of a selector string
+ * is how a rename becomes a silent skip. It replaces `getByText("Current
+ * turn")`, which was the legacy `ConversationThread` panel's caption — a
+ * sentence rather than a hook, and one the redesign does not print.
+ */
+export const RUN_PANEL = '[data-surface="active-run"]';
+
+/** WO-18's reading surface, for the specs that count briefings. */
+export const REPORT_READER = "[data-report-reader]";
 
 export interface StateEntry {
   /** Stable id, used in test titles and in the evidence table. */
@@ -116,7 +139,9 @@ export const STATES: readonly StateEntry[] = [
     id: "landing",
     rows: ["1"],
     path: "/",
-    ready: text("arxiv-research-agent"),
+    // 03 §1.4's display prompt, which is now the first heading in the
+    // document (`LANDING.heading`).
+    ready: text("What should the literature settle?"),
   },
   {
     id: "rail-loading",
@@ -140,7 +165,9 @@ export const STATES: readonly StateEntry[] = [
     arrange: async (page) => {
       await fulfilJson(page, CONVERSATIONS, 200, []);
     },
-    ready: text("arxiv-research-agent"),
+    // The rail's own empty state (`THREAD_RAIL.empty`), which 03 §2.2 row 3
+    // requires to be distinct from row 2's skeleton and from row 12.
+    ready: text("No threads yet. Your first question starts one."),
   },
   {
     id: "rail-error-upstream",
@@ -184,37 +211,55 @@ export const STATES: readonly StateEntry[] = [
     id: "plan-review",
     rows: ["9"],
     path: `${POPULATED}?job=${FIXTURES.planReview}`,
-    ready: text("Plan review"),
+    // WO-17's `PlanEditor` heading (`PLAN.heading`).
+    ready: text("Plan"),
   },
   {
     id: "running",
     rows: ["10"],
     path: `${POPULATED}?job=${FIXTURES.running}`,
-    ready: text("Current turn"),
+    // WO-20's run panel, which replaced the "Current turn" box. A hook
+    // rather than a sentence: the spine's status line is legitimately
+    // different in each of rows 10-16, and a sentence here would be pinning
+    // one of them from a test about layout.
+    ready: selector('[data-surface="active-run"]'),
   },
   {
     id: "cancelled",
     rows: ["13"],
     path: `${POPULATED}?job=${FIXTURES.cancelled}`,
-    ready: text(/cancelled/),
+    // 03 §3.4's status word for a cancelled run (`RUN_STATUS_WORD.cancelled`),
+    // which is a word before it is a mark and a mark before it is a colour.
+    ready: text("Cancelled"),
   },
   {
     id: "failed-partial",
     rows: ["14"],
     path: `${POPULATED}?job=${FIXTURES.failedPartial}`,
-    ready: text("Job failed"),
+    // D-010 ruling 2 and H5: the failure is a banner ABOVE a briefing that
+    // still renders, so the state is named by `REPORT.partial` rather than
+    // by the absence of a report.
+    ready: text("Partial briefing from a run that failed."),
   },
   {
     id: "failed-no-result",
-    rows: ["15"],
+    // ROW 23 TOO, AND THAT IS WHY IT LEFT `DEFERRED_STATES`. With no briefing
+    // there is nothing to export and `ExportDisclosure` renders NOTHING AT
+    // ALL rather than a disabled control (WO-19 criterion 4, 03 §2.2 row 23).
+    // That absence is only observable on a run whose `result` is empty, which
+    // is this one, so the two rows are one render and are swept as one.
+    rows: ["15", "23"],
     path: `${POPULATED}?job=${FIXTURES.failed}`,
-    ready: text("Job failed"),
+    ready: text("This run stopped before a briefing was written."),
   },
   {
     id: "expired",
     rows: ["16"],
     path: `${POPULATED}?job=${FIXTURES.expired}`,
-    ready: text(/stream unavailable for job/),
+    // H8's sentence, and the only one for an aged-out run
+    // (`UNAVAILABLE_COPY`). Never "deleted", never "no permission" — the API
+    // answers 404 for both and the client cannot tell which.
+    ready: text("This run is no longer available."),
   },
   {
     id: "submission-error-500",
@@ -313,7 +358,9 @@ export const STATES: readonly StateEntry[] = [
     id: "thread-not-found-inline",
     rows: ["21"],
     path: `/c/${FIXTURES.missingConversation}`,
-    ready: text("Conversation not found."),
+    // H8 again, on the thread rather than the run
+    // (`THREAD.notFoundHeading`), and now a real `h1`.
+    ready: text("This thread is not available"),
   },
   {
     id: "route-not-found",
@@ -336,7 +383,7 @@ export const STATES: readonly StateEntry[] = [
         { detail: "synthetic detail read failure" },
       );
     },
-    ready: text("Current turn"),
+    ready: selector('[data-surface="active-run"]'),
   },
 ] as const;
 
@@ -368,20 +415,15 @@ export const DEFERRED_STATES: readonly {
       "bfcache re-adopt). Their resting layout is `running`, which is swept.",
   },
   {
-    rows: ["23"],
-    why:
-      "Export refused (409) has no rendered state today: ExportDropdown.tsx:78 " +
-      "is a plain <a download>, so a 409 produces a failed browser download and " +
-      "no DOM. WO-19's ExportDisclosure/UnavailableNoReport is the surface; " +
-      "export.spec.ts asserts what exists now — content-disposition through the " +
-      "proxy for md/pdf/docx.",
-  },
-  {
     rows: ["24"],
     why:
-      "Delete confirmation is `window.confirm` today " +
-      "(ConversationSidebar.tsx:74), a native dialog with no DOM to measure. " +
-      "WO-14's ThreadRail/DeleteConfirm replaces it with a real dialog.",
+      "Delete confirmation is now WO-14's real APG dialog rather than " +
+      "`window.confirm`, so it HAS a DOM — but reaching it needs two clicks " +
+      "after navigation (the row's overflow menu, then Delete), and a " +
+      "`StateEntry` describes a URL plus route interception, not a script. " +
+      "Adding a post-navigation hook would change the shape of this table for " +
+      "one row; WO-14's own `tests/threads/confirmDialog.test.tsx` holds the " +
+      "dialog's behaviour and WO-22's axe sweep covers the rail that opens it.",
   },
   {
     rows: ["A"],
@@ -394,9 +436,11 @@ export const DEFERRED_STATES: readonly {
     rows: ["D", "E"],
     why:
       "Review-submitted-not-settled and review-conflict-409 are asserted as " +
-      "behaviour in slice.spec.ts step 3. Neither has a distinct layout in the " +
-      "legacy PlanReview; WO-17's PlanEditor/Submitting and /Conflict409 are " +
-      "the surfaces that will.",
+      "behaviour in slice.spec.ts step 3. WO-17's PlanEditor/Submitting and " +
+      "/Conflict409 are now on the route and both have a distinct layout, but " +
+      "each is entered by RESOLVING the review — a click that mutates a run — " +
+      "so like row 24 they are a script rather than a URL, and the resting " +
+      "layout the sweep measures is `plan-review`.",
   },
 ] as const;
 
