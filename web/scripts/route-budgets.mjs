@@ -302,12 +302,38 @@ function walk(dir, acc = []) {
  * into the HTML. Comparing it with the manifest-derived union proves the Next
  * 16 manifest substitution documented at the top of this file. Reported, never
  * gated: a mismatch is a signal for a human, not a budget breach.
+ *
+ * BOTH ROUTES ARE CURRENTLY UNCHECKABLE, FOR TWO DIFFERENT REASONS, and the
+ * report says which is which because the difference decides whether anyone
+ * should try to get the corroboration back:
+ *
+ *   - `/c/[id]` has a dynamic segment. There is no single HTML to compare
+ *     against and there never will be. Permanent.
+ *   - `/` WAS prerendered until WO-30's nonce CSP: a per-request nonce makes
+ *     the route dynamic by construction, so Next stops writing `index.html`.
+ *     Recoverable in principle — the served document still carries the real
+ *     script set — but only by booting `next start` and fetching the route,
+ *     which would turn this build-only script into one that needs a port and
+ *     a live server. Left as a recorded gap rather than paid for that way.
  */
 export function verifyAgainstPrerenderedHtml(nextDir, route, manifestFiles) {
   const rel = route === "/" ? "index.html" : `${route.replace(/^\//, "")}.html`;
   const htmlFile = path.join(nextDir, "server", "app", rel);
-  if (route.includes("[") || !fs.existsSync(htmlFile)) {
-    return { route, checked: false, reason: "not statically prerendered" };
+  if (route.includes("[")) {
+    return {
+      route,
+      checked: false,
+      reason: "dynamic route segment — no single prerendered HTML exists",
+    };
+  }
+  if (!fs.existsSync(htmlFile)) {
+    return {
+      route,
+      checked: false,
+      reason:
+        "server-rendered on demand — the per-request CSP nonce (WO-30) makes " +
+        "this route dynamic, so Next writes no HTML to compare against",
+    };
   }
   const html = fs.readFileSync(htmlFile, "utf8");
   const buildManifest = readJson(path.join(nextDir, "build-manifest.json"));

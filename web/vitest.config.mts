@@ -206,11 +206,46 @@ export default defineConfig(async () => ({
       // other three carry. Ruled by the coordinator under the standing
       // delegation; to be recorded in DECISIONS.md at Gate 3 close.
       // Previous value, for the audit trail: functions 95.05.
+      //
+      // ---------------------------------------------------------------
+      //
+      // WO-31 RE-SEEDED ALL FOUR, UPWARD, ON THE POST-CLEANUP TREE, at
+      // 3,001 tests across `unit` and `storybook`: 2456/2515 statements,
+      // 1676/1794 branches, 920/1043 functions, 2002/2030 lines. Previous
+      // values, for the audit trail: 94.56 / 88.5 / 87.5 / 95.94.
+      //
+      // WHY EVERY COLUMN ROSE, WHEN THIS WORK ORDER WROTE ALMOST NO TESTS.
+      // It deleted the nine legacy components, `lib/useResearchStream.ts`
+      // and the two M0 shims — twelve modules that were inside `include`
+      // above and that WO-20 had already stopped composing, so they were
+      // carrying their statements, branches and functions in the
+      // DENOMINATOR while nothing rendered them. Deleting a module nothing
+      // exercises raises the ratio without covering a single new line, and
+      // that is exactly what happened: statements 94.56 → 97.65, branches
+      // 88.50 → 93.42, lines 95.94 → 98.62.
+      //
+      // THE FUNCTIONS COLUMN MOVED LEAST — 87.5 → 88.2 — AND THE HAZARD
+      // DOCUMENTED ABOVE IS STILL WHY. PR #108's re-seed was caused by the
+      // dual-project function-list CONCATENATION, not by uncovered code,
+      // and this work order does not fix that: the stories that made
+      // `lib/queries/` and `lib/job/` doubly-instrumented are still there
+      // and still the right stories. So the denominator is still inflated
+      // by the double count, the column still lags the other three by ten
+      // points, and the proper fix is still de-duplicating the two
+      // projects' function lists in the merged report — which is this
+      // config's own problem, is not a deletion, and is not in a removal
+      // work order's licence. It stays queued.
+      //
+      // Three of the four are seeded AT the measurement, to the decimal,
+      // per this file's convention. `functions` is seeded at 88.1, just
+      // under its measured 88.2 — the same small headroom PR #108 gave it,
+      // and for the same reason: it is the one column whose denominator
+      // depends on which stories run rather than on what the tests cover.
       thresholds: {
-        statements: 94.56,
-        branches: 88.5,
-        functions: 87.5,
-        lines: 95.94,
+        statements: 97.65,
+        branches: 93.42,
+        functions: 88.1,
+        lines: 98.62,
       },
     },
     projects: [

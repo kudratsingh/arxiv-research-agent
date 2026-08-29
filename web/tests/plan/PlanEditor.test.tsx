@@ -168,6 +168,30 @@ describe("criterion 1 — exactly one enabled primary control, in every state", 
     expect(screen.queryByRole("button", { name: /approve as-is/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /save edits & approve/i })).toBeNull();
   });
+
+  /**
+   * WO-31's RC-03 equivalence table, discharging a retirement nothing pinned.
+   *
+   * `PlanReview.tsx` shipped a fourth control — Reset — and
+   * `tests/PlanReview.test.tsx › Reset restores the original plan after edits`
+   * asserted it restored the server's plan and then disabled itself. WO-17's
+   * control set is the relabelling primary plus Cancel, and Reset is not in
+   * it: 03 §4.6 gives the surface one primary and one destructive escape, and
+   * a third "undo" control competing with them is exactly the ambiguity
+   * criterion 1 above exists to prevent. The browser's own per-field undo
+   * (⌘Z in a textarea) is what a typo needs.
+   *
+   * That is a deliberate REMOVAL, not an oversight — but until this
+   * assertion it was the only one of the three retired controls whose
+   * absence nothing recorded, so a later PR could have added it back without
+   * any test noticing. Now it cannot.
+   */
+  it("has no Reset control — the third legacy button, retired with the other two", async () => {
+    await mountLoaded();
+    for (const name of [/^reset$/i, /^discard$/i, /^revert$/i, /^undo$/i]) {
+      expect(screen.queryByRole("button", { name })).toBeNull();
+    }
+  });
 });
 
 describe("criterion 1 — the label follows the working copy", () => {
