@@ -488,13 +488,17 @@ equivalents are in [`docs/testing.md`](docs/testing.md).
 pytest tests/ -q -m "not e2e"        # the Python half of the gate
 ```
 
-Two gaps, named rather than papered over. **No web tier ever makes a
-paid model call** — three independent mechanisms enforce that, not one
-convention. And the Python **`e2e` cassette tier is registered but not
-built**: no cassette fixtures are checked in, so everything between the
-single canned production-wiring smoke test and a nightly eval that has
-never run green (below) is uncovered. Treat cross-node integration
-changes with extra review care.
+Two things worth stating plainly rather than leaving to inference. The
+good one: **no tier under `web/` ever makes a paid model call**, and
+three independent mechanisms enforce that rather than one convention —
+the Compose overlay pins an invalid key, the Playwright config
+overwrites the variable before any test loads, and the submit leg is
+fulfilled in the browser so it never reaches the backend. The gap: the
+Python **`e2e` cassette tier is registered but not built**. No cassette
+fixtures are checked in, so everything between the single canned
+production-wiring smoke test and a nightly eval that has never run green
+(below) is uncovered — treat cross-node integration changes with extra
+review care.
 
 ## Eval
 
