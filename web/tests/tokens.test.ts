@@ -792,15 +792,83 @@ describe("criterion 1 — the ESLint rule fires on a real file", () => {
     },
   );
 
-  it("allow-lists the legacy components by path until WO-31", () => {
+  /**
+   * WO-31 acceptance criterion 3 — enforced with NO path allow-list.
+   *
+   * This test used to assert the opposite: that every legacy component was
+   * named in an `ignores` array "until WO-31". WO-01 needed that array
+   * because the nine components predated the token layer; WO-20 rewrote the
+   * two route files that were also on it, and this work order deleted the
+   * nine. Nothing is exempt any more, and the assertion is now the ratchet
+   * that keeps it that way — a per-file exemption added to silence a red
+   * lint fails here.
+   *
+   * The rule's `files` list still names `tests/fixtures/**`, which is not an
+   * exemption but its opposite: it is how `literal-colour.fixture.tsx` gets
+   * linted at all, and the test above is what proves the rule fires.
+   */
+  it("carries no path allow-list — the rule is enforced everywhere", () => {
     const config = readFileSync(path.join(WEB_ROOT, "eslint.config.mjs"), "utf8");
-    const components = readdirSync(path.join(WEB_ROOT, "components")).filter((file) =>
-      file.endsWith(".tsx"),
-    );
-    expect(components.length).toBeGreaterThan(0);
-    for (const component of components) {
-      expect(config, `${component} is not allow-listed`).toContain(`components/${component}`);
+
+    // The rule's own config block, from its `name` to the end of its
+    // `rules` key. An `ignores` anywhere inside it is an exemption.
+    const start = config.indexOf('name: "tokens/no-literal-colour"');
+    expect(start, "the no-literal-colour block is gone").toBeGreaterThan(-1);
+    const end = config.indexOf('"no-restricted-syntax": ["error", ...noLiteralColour]', start);
+    expect(end).toBeGreaterThan(start);
+    expect(config.slice(start, end)).not.toContain("ignores");
+
+    // And no entry the array used to name appears anywhere else in it.
+    // Nine were components WO-31 deleted; two were WO-08's route paths,
+    // which are alive and now in scope of the rule.
+    const DELETED_COMPONENTS = [
+      "components/ConversationSidebar.tsx",
+      "components/ConversationThread.tsx",
+      "components/ConversationsShell.tsx",
+      "components/EventLog.tsx",
+      "components/ExportDropdown.tsx",
+      "components/JobSummary.tsx",
+      "components/PlanReview.tsx",
+      "components/QueryForm.tsx",
+      "components/ReportView.tsx",
+    ];
+    const EXEMPTED_ROUTES = ["app/(workspace)/page.tsx", "app/(workspace)/c/**/page.tsx"];
+
+    for (const entry of [...DELETED_COMPONENTS, ...EXEMPTED_ROUTES]) {
+      expect(config, `${entry} is still named in the lint config`).not.toContain(entry);
     }
-    expect(config).toContain("WO-31");
+    for (const component of DELETED_COMPONENTS) {
+      expect(existsSync(path.join(WEB_ROOT, component)), `${component} still exists`).toBe(
+        false,
+      );
+    }
+  });
+
+  /**
+   * The rule now really does reach the two route files WO-01 exempted.
+   * Without this, "no allow-list" would be a claim about the config text
+   * rather than about what ESLint enforces.
+   */
+  it("lints the route files WO-01 had exempted", { timeout: 120_000 }, async () => {
+    const { ESLint } = await import("eslint");
+    const eslint = new ESLint({ cwd: WEB_ROOT });
+    const routes = ["app/(workspace)/page.tsx", "app/(workspace)/c/[id]/page.tsx"];
+
+    for (const route of routes) {
+      const [result] = await eslint.lintFiles([path.join(WEB_ROOT, route)]);
+      const config = await eslint.calculateConfigForFile(path.join(WEB_ROOT, route));
+      // In scope: the rule is configured for this file. `calculateConfig`
+      // normalizes the severity to its numeric form, so 2 IS "error".
+      const [severity, ...options] = config.rules?.["no-restricted-syntax"] ?? [];
+      expect(severity, `${route} is not linted`).toBe(2);
+      // ...and it is WO-01's colour selectors that are configured, not some
+      // other no-restricted-syntax block that replaced them.
+      expect(
+        JSON.stringify(options),
+        `${route} does not carry the colour selectors`,
+      ).toContain("Literal colours are not allowed here");
+      // ...and clean under it.
+      expect(result?.errorCount, `${route}: ${JSON.stringify(result?.messages ?? [])}`).toBe(0);
+    }
   });
 });

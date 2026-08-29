@@ -43,8 +43,23 @@ export interface RatchetEntry {
   pr?: string;
   authority?: string;
   measuredBytes?: number;
+  /** Display-only, e.g. "+5.1%". The numbers above are the record. */
+  headroom?: string;
   why: string;
   perFileAtChange?: Record<string, number>;
+  /**
+   * The movement this entry superseded, retained in full.
+   *
+   * A row may move more than once, and `tests/budgets.test.ts` requires the
+   * live ceiling to equal the LAST entry's `to` — so a second entry for the
+   * same row cannot simply be appended. WO-31 lowered two rows that WO-20
+   * and WO-23 had raised, and the earlier justifications are the reason
+   * those rows sit above their RC-01 ceilings at all; a smaller ceiling does
+   * not supersede that argument, so it is nested here rather than dropped.
+   */
+  previousMovement?: Omit<RatchetEntry, "row" | "previousMovement"> & {
+    note?: string;
+  };
 }
 
 export interface BudgetsFile {

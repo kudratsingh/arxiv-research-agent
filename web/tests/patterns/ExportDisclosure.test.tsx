@@ -154,6 +154,29 @@ describe("criterion 6 — href and download", () => {
     expect(exportHref("a b", "md")).toBe("/api/research/a%20b/export?format=md");
     expect(EXPORT_FORMATS).toEqual(["md", "pdf", "docx"]);
   });
+
+  /**
+   * WO-31's RC-03 equivalence table, closing a narrowing.
+   *
+   * `tests/ExportDropdown.test.tsx › URL-encodes the job_id path segment`
+   * split the href on `/` and asserted the id stayed ONE segment:
+   * `["", "api", "research", "a%20b%2F1", "export"]`. The space-only case
+   * above does not reach that claim — a `/` in the id would silently become
+   * a path separator and the same-origin test would still pass, because a
+   * traversal is still same-origin. The encoder is correct
+   * (`ExportDisclosure.tsx:99`); this is what makes it checkable.
+   */
+  it("keeps the job id in one path segment, whatever it contains", () => {
+    const href = exportHref("a b/1", "md");
+    expect(href).toBe("/api/research/a%20b%2F1/export?format=md");
+    expect(new URL(href, "https://example.invalid").pathname.split("/")).toEqual([
+      "",
+      "api",
+      "research",
+      "a%20b%2F1",
+      "export",
+    ]);
+  });
 });
 
 // ===========================================================================
@@ -222,6 +245,32 @@ describe("criterion 3 — the keyboard", () => {
     await user().keyboard("{Escape}");
     expect(trigger()).toHaveAttribute("aria-expanded", "false");
     expect(trigger()).toHaveFocus();
+  });
+
+  /**
+   * WO-31's RC-03 equivalence table, discharging a retirement nothing pinned.
+   *
+   * `tests/ExportDropdown.test.tsx › closes the menu when an item is clicked`
+   * asserted `role="menu"` was gone after a click, because close-on-select is
+   * a WAI-ARIA MENU behaviour. RC-09 replaced the menu with a disclosure of
+   * `<a download>` links, and a disclosure has no activation-dismisses-the-
+   * container contract — nor should it here, where taking the Markdown copy
+   * and then the PDF is one intent, and a panel that closed under the cursor
+   * would make the second one a re-open.
+   *
+   * So the behaviour is deliberately INVERTED rather than replaced, and it
+   * was unpinned in both directions until this test: nothing asserted the
+   * panel closed, and nothing asserted it stayed open either. Escape and the
+   * trigger remain the two ways out, and the tests either side of this one
+   * are them.
+   */
+  it("stays open when a format is taken, so a second one needs no re-open", async () => {
+    render(<ExportDisclosure jobId={JOB_ID} hasBriefing defaultOpen />);
+
+    await user().click(links()[0] as HTMLElement);
+
+    expect(trigger()).toHaveAttribute("aria-expanded", "true");
+    expect(links()).toHaveLength(EXPORT_FORMATS.length);
   });
 
   it("closes on Escape pressed on the trigger itself", async () => {

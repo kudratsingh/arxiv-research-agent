@@ -509,9 +509,9 @@ const terminalFrame =
  * The phase is unchanged because nothing about the *run* changed. The
  * connection is marked `reconnecting` because the server has closed
  * the response, and `useJobStream` reopens immediately rather than
- * waiting out the browser's default retry — the gap the current client
- * has at `useResearchStream.ts:59-66`, where the name is not even
- * registered.
+ * waiting out the browser's default retry — the gap the legacy client
+ * had at `useResearchStream.ts:59-66` (deleted in WO-31), where the
+ * name was not even registered.
  */
 const timeoutFrame = on("stream_timeout", (state, event) => ({
   ...noteFrame(state, event.frame),

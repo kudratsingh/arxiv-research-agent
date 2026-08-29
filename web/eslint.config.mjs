@@ -124,25 +124,22 @@ const noInlineText = [
   ),
 ].map((selector) => ({ selector, message: NO_INLINE_TEXT_MESSAGE }));
 
-const LEGACY_UNTOKENISED = [
-  // WO-08 moved both route files into the `(workspace)` route group. The
-  // group adds no URL segment, but it does add a path segment, so these two
-  // entries moved with them. The parentheses are literal — they are only
-  // extglob syntax when preceded by `?*+@!` — and
-  // web/tests/tokens.test.ts lints the real file to prove the pattern still
-  // matches.
-  "app/(workspace)/page.tsx",
-  "app/(workspace)/c/**/page.tsx",
-  "components/ConversationSidebar.tsx",
-  "components/ConversationThread.tsx",
-  "components/ConversationsShell.tsx",
-  "components/EventLog.tsx",
-  "components/ExportDropdown.tsx",
-  "components/JobSummary.tsx",
-  "components/PlanReview.tsx",
-  "components/QueryForm.tsx",
-  "components/ReportView.tsx",
-];
+/**
+ * WO-31 DELETED THE PATH ALLOW-LIST THAT USED TO SIT HERE.
+ *
+ * WO-01 shipped `tokens/no-literal-colour` with an `ignores` array naming
+ * the nine legacy components and the two route files, because those files
+ * predated the token layer and rewriting them was somebody else's work
+ * order. WO-20 rewrote the routes; this work order deletes the nine
+ * components. Every file the array named is either gone or tokenised, so
+ * the array is gone with them and the rule now applies to app/**,
+ * components/** and the fixtures with NO exemption of any kind
+ * (WO-31 acceptance criterion 3).
+ *
+ * `web/tests/tokens.test.ts` holds this open: it asserts the rule's config
+ * block carries no `ignores` key, so a later PR cannot reintroduce a
+ * per-file exemption to make a red lint go green.
+ */
 
 export default defineConfig([
   ...nextVitals,
@@ -163,7 +160,6 @@ export default defineConfig([
       "components/**/*.{ts,tsx}",
       "tests/fixtures/**/*.{ts,tsx}",
     ],
-    ignores: LEGACY_UNTOKENISED,
     rules: {
       "no-restricted-syntax": ["error", ...noLiteralColour],
     },
@@ -204,20 +200,23 @@ export default defineConfig([
         {
           patterns: [
             {
+              // `@/lib/api.ts` and `**/lib/api.ts` were the M0 shim's own
+              // spellings. WO-31 deleted `lib/api.ts`, so `@/lib/api` now
+              // resolves to `lib/api/index.ts` directly; the directory
+              // patterns above cover every remaining way in.
               group: [
                 "@/lib/api",
                 "@/lib/api/*",
-                "@/lib/api.ts",
                 "**/lib/api",
                 "**/lib/api/*",
-                "**/lib/api.ts",
               ],
               message: PRIMITIVE_BOUNDARY_MESSAGE,
             },
             {
+              // `@/lib/useResearchStream` was here until WO-31 deleted the
+              // adapter. `@tanstack/react-query` is the fetching hook a
+              // primitive would reach for now, and it is already listed.
               group: [
-                "@/lib/useResearchStream",
-                "**/useResearchStream",
                 "swr",
                 "swr/*",
                 "@tanstack/react-query",

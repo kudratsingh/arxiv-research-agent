@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ApiError, getJob, streamUrl, submitResearch } from "@/lib/api";
@@ -302,7 +302,27 @@ describe("normalized failures reach callers", () => {
   });
 });
 
-describe("the M0 compatibility shim", () => {
+/**
+ * WO-31 DELETED `lib/api.ts`, THE M0 COMPATIBILITY SHIM.
+ *
+ * This block used to assert that the shim re-exported the surface rather
+ * than re-implementing it. There is no shim any more, so that claim has no
+ * subject — but the claim underneath it is now MORE load-bearing than it
+ * was, not less, and it is the reason criterion 1 ("no module imports a
+ * deleted file") holds without touching ~50 import sites:
+ *
+ * `@/lib/api` used to name `lib/api.ts`. With that file gone the SAME
+ * specifier resolves, by directory-index resolution, to `lib/api/index.ts`
+ * — the real module the shim only ever re-exported. So no call site changed
+ * spelling, nothing points at a deleted file, and the build and typecheck
+ * prove it for the whole tree.
+ *
+ * What this block pins is that the resolution really is the real surface
+ * and not some other module that happens to answer to the name: every
+ * pinned export is the SAME BINDING as `@/lib/api/index`'s. Deleting the
+ * file without this would leave "it still resolves" as an assumption.
+ */
+describe("`@/lib/api` resolves to the real surface, with the shim deleted", () => {
   const NAMES = [
     "submitResearch",
     "getJob",
@@ -315,10 +335,17 @@ describe("the M0 compatibility shim", () => {
     "ApiError",
   ] as const;
 
-  it("re-exports every name 05-MIGRATION.md §1.1 pins", () => {
+  it("is not a file: lib/api.ts is gone and lib/api/index.ts is what answers", () => {
+    expect(existsSync(join(WEB_ROOT, "lib/api.ts"))).toBe(false);
+    expect(existsSync(join(WEB_ROOT, "lib/api/index.ts"))).toBe(true);
+    // `lib/types.ts`, the other M0 shim, had no consumer outside the nine
+    // deleted components and resolves to nothing at all.
+    expect(existsSync(join(WEB_ROOT, "lib/types.ts"))).toBe(false);
+  });
+
+  it("carries every name 05-MIGRATION.md §1.1 pins, as the same binding", () => {
     for (const name of NAMES) {
       expect(shim).toHaveProperty(name);
-      // Same binding, not a re-implementation.
       expect(shim[name]).toBe(surface[name]);
     }
   });
@@ -342,6 +369,7 @@ describe("the M0 compatibility shim", () => {
 
   it("keeps API_BASE pointing at the same-origin proxy", () => {
     expect(shim.API_BASE).toBe("/api");
+    expect(shim.API_BASE).toBe(surface.API_BASE);
   });
 });
 

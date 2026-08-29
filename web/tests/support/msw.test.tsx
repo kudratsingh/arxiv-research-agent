@@ -17,6 +17,7 @@ import {
   listConversations,
   submitResearch,
 } from "@/lib/api";
+import { useJobStream } from "@/lib/job/useJobStream";
 import { THEME_ATTRIBUTE, THEME_PREFERENCE_ATTRIBUTE } from "@/lib/tokens";
 
 import {
@@ -197,14 +198,31 @@ describe("render() applies the theme the tokens resolve against", () => {
 // ---------------------------------------------------------------------------
 
 describe("the harness composes: recorded stream + recorded fixtures", () => {
-  it("drives useResearchStream from live_success to the settled JobDetail", async () => {
+  it("drives useJobStream from live_success to the settled JobDetail", async () => {
     // §3.2's invariant end to end: the report body never arrives over SSE, so
     // the terminal frame is only a signal and every displayed value comes
     // from `GET /research/{id}` — here, the recorded `job.succeeded` body.
-    const { useResearchStream } = await import("@/lib/useResearchStream");
+    //
+    // WO-31 REPOINTED THIS AT `useJobStream`. It used to drive
+    // `lib/useResearchStream.ts`, the RC-03 adapter, which this work order
+    // deleted; the hook underneath is the same lifecycle and this file's
+    // subject was never the adapter. It is the HARNESS: MSW's recorded
+    // fixtures, the recorded frame script and the render helper reaching
+    // real application code together, which is the one thing
+    // `tests/job/stream.test.ts` cannot show because it stubs `JobClient`.
+    //
+    // `attachMode: "stream-first"` keeps the request order the assertions
+    // below are written against — the `EventSource` in the same tick as
+    // `attach()`, and one `GET /research/{id}`, the settling one. GET-first
+    // against this fixture would read a job that is already `succeeded` and
+    // settle without opening a stream at all, replaying nothing. The
+    // machine's own GET-first contract is covered in
+    // `tests/job/attach.test.ts`; see this PR's residuals note.
     installFakeEventSource({ script: "live_success" });
 
-    const { result } = renderHook(() => useResearchStream());
+    const { result } = renderHook(() =>
+      useJobStream({ attachMode: "stream-first" }),
+    );
 
     act(() => {
       result.current.attach("baseline-succeeded");
@@ -217,9 +235,13 @@ describe("the harness composes: recorded stream + recorded fixtures", () => {
       source.play();
     });
 
-    await waitFor(() => expect(result.current.status).toBe("done"));
-    expect(result.current.detail).toEqual(loadFixture("job.succeeded").body);
-    expect(result.current.events.map((event) => event.name)).toEqual([
+    await waitFor(() => expect(result.current.state.phase).toBe("settled"));
+    expect(result.current.state.detail).toEqual(loadFixture("job.succeeded").body);
+    expect(
+      result.current.state.frames
+        .filter((frame) => frame.name !== "stream_note")
+        .map((frame) => frame.name),
+    ).toEqual([
       "job_started",
       "node_completed",
       "node_completed",

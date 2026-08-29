@@ -572,19 +572,26 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
   });
 
   it.each([
-    // Raised from 148,480 B by WO-20 under the ratchet rule; see the `ratchet`
-    // record, and the assertion below that pins its measurement. `baselineBytes`
-    // is unchanged, because it is the retained Gate 1 figure for the LEGACY
-    // landing page and the report's baseline-reproduction table still means
-    // that.
-    ["route-js-home", 167_936, 137_272],
-    ["route-js-conversation", 199_680, 184_745],
-    // Raised from 122,880 B under the ratchet rule; see the `ratchet` record below.
-    ["shared-framework-runtime", 141_312, null],
-    ["emitted-css", 12_288, 4_288],
-    ["self-hosted-fonts", 122_880, 0],
+    // WO-31 RATCHETED SIX OF THE SEVEN DOWN, to the post-cleanup
+    // measurements taken on main at 8f0d738. Each movement has a per-row
+    // entry in the `ratchet` log with its measured figure and its headroom,
+    // and the two rows that had been RAISED before keep that earlier
+    // argument in the entry's `previousMovement`.
+    //
+    // `baselineBytes` is unchanged on every row: it is the retained Gate 1
+    // measurement, and the report's baseline-reproduction table is what
+    // proves this script still reproduces those figures. A ceiling moving
+    // must never move a baseline.
+    ["route-js-home", 166_912, 137_272],
+    ["route-js-conversation", 192_512, 184_745],
+    ["shared-framework-runtime", 139_264, null],
+    ["emitted-css", 11_264, 4_288],
+    ["self-hosted-fonts", 109_568, 0],
+    // The one row WO-31 could not ratchet: its `enforcedBy` names a WO-21
+    // Playwright transfer assertion that was never written, so there is no
+    // measurement to ratchet to. See the assertion further down.
     ["total-transferred-js", 245_760, null],
-    ["derived-total-first-load", 334_848, null],
+    ["derived-total-first-load", 313_344, null],
   ])("row %s carries the ratified ceiling in bytes", (id, budgetBytes, baselineBytes) => {
     const row = budgets.rows.find((r) => r.id === id);
     expect(row?.budgetBytes).toBe(budgetBytes);
@@ -615,29 +622,86 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     }
   });
 
-  it("carries the shared framework/runtime raise with its measured justification", () => {
+  it("carries the shared framework/runtime movements with their measured justifications", () => {
     const entry = (budgets.ratchet ?? []).find((r) => r.row === "shared-framework-runtime");
-    expect(entry?.from).toBe(122_880); // the RC-01 ceiling
-    expect(entry?.to).toBe(141_312); // 138 KiB
-    expect(entry?.measuredBytes).toBe(130_865);
-    // 8.0% headroom over the measured baseline, matching the other RC-01 rows.
-    expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.08, 2);
+    // WO-31's ratchet DOWN, against the current measurement (main d3460a7).
+    expect(entry?.from).toBe(141_312);
+    expect(entry?.to).toBe(139_264); // 136 KiB
+    expect(entry?.measuredBytes).toBe(131_641);
+    expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.058, 2);
+
+    // WO-23's raise, retained. It is the record of why this row exceeds
+    // RC-01's 122,880 B at all — React DOM plus the Next app-router runtime
+    // already totalled 128,973 B before any application code existed — and a
+    // smaller ceiling does not supersede that argument.
+    const before = entry?.previousMovement;
+    expect(before?.from).toBe(122_880); // the RC-01 ceiling
+    expect(before?.to).toBe(141_312); // 138 KiB
+    expect(before?.measuredBytes).toBe(130_865);
     expect(entry?.perFileAtChange?.total).toBe(130_865);
   });
 
-  it("carries the landing-route raise with its measured justification", () => {
+  it("carries the landing-route movements with their measured justifications", () => {
     const entry = (budgets.ratchet ?? []).find((r) => r.row === "route-js-home");
-    expect(entry?.from).toBe(148_480); // the RC-01 ceiling
-    expect(entry?.to).toBe(167_936); // 164 KiB
-    expect(entry?.measuredBytes).toBe(158_899);
-    // Tighter than the 8% the other rows carry, because this one is measured
+    expect(entry?.from).toBe(167_936);
+    expect(entry?.to).toBe(166_912); // 163 KiB
+    expect(entry?.measuredBytes).toBe(158_878);
+    // Tighter than the ~8% RC-01's rows carry, because this one is measured
     // against the finished surface rather than projected from the legacy one.
-    expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.057, 2);
+    expect((entry?.to ?? 0) / (entry?.measuredBytes ?? 1)).toBeCloseTo(1.051, 2);
+
+    const before = entry?.previousMovement;
+    expect(before?.from).toBe(148_480); // the RC-01 ceiling
+    expect(before?.to).toBe(167_936); // 164 KiB
+    expect(before?.measuredBytes).toBe(158_899);
     // The rejected alternative and its number are part of the justification,
     // not a note somebody made elsewhere: a ratchet entry that only says the
     // ceiling was too low is an assertion, and this one has to be an argument.
-    expect(entry?.why).toContain("143426");
-    expect(entry?.why).toContain("page-has-heading-one");
+    expect(before?.why).toContain("143426");
+    expect(before?.why).toContain("page-has-heading-one");
+  });
+
+  /**
+   * WO-31 criterion 5 — the ratchet went DOWN, on every row that had a
+   * measurement to go down to.
+   *
+   * Stated as one assertion rather than left implicit in the table above,
+   * because "ratcheted to the measured post-cleanup values" is the criterion
+   * and a later PR raising a row would otherwise only have to edit two
+   * numbers in the same file to look consistent.
+   */
+  it("ratcheted every measurable row DOWN, with headroom over its measurement", () => {
+    const lowered = (budgets.ratchet ?? []).filter((r) => r.pr?.startsWith("WO-31"));
+    expect(lowered.map((r) => r.row)).toEqual([
+      "route-js-home",
+      "route-js-conversation",
+      "shared-framework-runtime",
+      "emitted-css",
+      "self-hosted-fonts",
+      "derived-total-first-load",
+    ]);
+    for (const entry of lowered) {
+      expect(entry.to, `${entry.row} did not move down`).toBeLessThan(entry.from);
+      // A ratchet with no measurement behind it is a preference.
+      expect(entry.measuredBytes, `${entry.row} states no measurement`).toBeTypeOf("number");
+      // A ceiling below its own measurement is a red build, not a ratchet.
+      expect(entry.to, `${entry.row} is below what it measured`).toBeGreaterThan(
+        entry.measuredBytes ?? Infinity,
+      );
+    }
+  });
+
+  it("leaves the one row it cannot measure alone, and says why", () => {
+    // `total-transferred-js` is the only row with no measurement anywhere:
+    // its `enforcedBy` names a WO-21 Playwright transfer assertion that was
+    // never written, so there is nothing to ratchet to. It must therefore
+    // carry no WO-31 ratchet entry.
+    const row = budgets.rows.find((r) => r.id === "total-transferred-js");
+    expect(row?.budgetBytes).toBe(245_760);
+    expect(row?.enforcement).toBe("external");
+    expect(
+      (budgets.ratchet ?? []).some((r) => r.row === "total-transferred-js"),
+    ).toBe(false);
   });
 
   it("names WO-21 as the enforcer of the total-transferred row", () => {

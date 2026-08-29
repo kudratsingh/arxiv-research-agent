@@ -12,7 +12,7 @@
  * here restates a value from the stylesheet, it resolves them.
  */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -143,12 +143,19 @@ const FAILED_PARTIAL = loadFixture("job.failed_partial").body as {
 
 describe("criterion 2 — one renderer, and one only", () => {
   /**
-   * The two legacy components WO-20 stops composing and WO-31 deletes. They
-   * are named rather than globbed so that a THIRD renderer cannot appear
-   * without failing this test, and so the day they are deleted this list
-   * empties rather than silently going on covering something new.
+   * The two legacy components WO-20 stopped composing and WO-31 DELETED.
+   *
+   * They were named rather than globbed precisely so that this list would
+   * empty on the day they went, rather than silently go on covering
+   * something new — and that day is this commit. The list is kept, empty,
+   * because the assertion below is now the strong form of criterion 2:
+   * `lib/report/renderer.ts` is the ONLY importer of `react-markdown` in
+   * the whole tree, full stop, with no exception carried for anything.
    */
-  const LEGACY_RENDERERS = [
+  const LEGACY_RENDERERS: string[] = [];
+
+  /** What those two files were, so the deletion has a name here too. */
+  const DELETED_RENDERERS = [
     "components/ConversationThread.tsx",
     "components/ReportView.tsx",
   ];
@@ -175,7 +182,7 @@ describe("criterion 2 — one renderer, and one only", () => {
     return found.sort();
   }
 
-  it("is imported by exactly one live module and the two files WO-31 deletes", () => {
+  it("is imported by exactly one module in the whole tree", () => {
     const importers = sourceFiles().filter((relative) =>
       IMPORTS_MARKDOWN.test(readFileSync(path.join(WEB_ROOT, relative), "utf8")),
     );
@@ -196,12 +203,19 @@ describe("criterion 2 — one renderer, and one only", () => {
     }
   });
 
-  it("the legacy pair is still standing, so this test is not vacuous", () => {
-    // If WO-31 lands before this file is updated, the assertion above turns
-    // green for the wrong reason. This one turns red instead.
-    for (const relative of LEGACY_RENDERERS) {
-      const source = readFileSync(path.join(WEB_ROOT, relative), "utf8");
-      expect(IMPORTS_MARKDOWN.test(source), relative).toBe(true);
+  it("is not vacuous: the boundary really imports it, and the legacy pair is gone", () => {
+    // This test used to guard against WO-31 landing before the list above
+    // was updated — an empty LEGACY_RENDERERS would have made the assertion
+    // green for the wrong reason. WO-31 has landed, so the guard inverts:
+    // the ONE importer must really import react-markdown (otherwise the
+    // regex has drifted and "exactly one" means nothing), and the two files
+    // that used to be exempted must really be gone (otherwise they were
+    // dropped from the list rather than from the tree).
+    const boundary = readFileSync(path.join(WEB_ROOT, BOUNDARY), "utf8");
+    expect(IMPORTS_MARKDOWN.test(boundary), BOUNDARY).toBe(true);
+
+    for (const relative of DELETED_RENDERERS) {
+      expect(existsSync(path.join(WEB_ROOT, relative)), relative).toBe(false);
     }
   });
 

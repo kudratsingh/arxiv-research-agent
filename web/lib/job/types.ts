@@ -333,8 +333,10 @@ export type JobEvent =
       jobId: string;
       /**
        * `true` issues `GET /research/{id}` first and lands in
-       * `attaching` (§4.3). `false` is the legacy stream-first path
-       * kept alive for `useResearchStream`; see `useJobStream.ts`.
+       * `attaching` (§4.3) — the contract, and what every product
+       * caller sets. `false` is the legacy stream-first path, which
+       * outlived the `useResearchStream` adapter WO-31 deleted and is
+       * now set by the test harness only; see `useJobStream.ts`.
        */
       prefetch: boolean;
       at: number;
