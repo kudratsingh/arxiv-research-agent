@@ -1,0 +1,13 @@
+baseline report	live report	§4 rows
+home	landing.light	1
+conversation-empty	thread-empty.light	5+B
+conversation-populated	thread-populated.light	7
+conversation-populated-dark	thread-populated.dark	7
+plan-review	plan-review.light	9
+running	running.light	10
+failed-partial	failed-partial.light	14
+cancelled	cancelled.light	13
+expired-job	expired.light	16
+backend-offline	rail-error-upstream.light	4+F
+conversation-not-found	thread-not-found-inline.light	21
+framework-not-found	route-not-found.light	22

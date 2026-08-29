@@ -1,0 +1,1790 @@
+{
+  "config": {
+    "argv": [
+      "/opt/homebrew/Cellar/node@22/22.23.2_1/bin/node",
+      "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/node_modules/.bin/playwright",
+      "test",
+      "--config=build/wo26/pw.slice-matrix.config.ts",
+      "slice.spec.ts",
+      "--grep",
+      "@slice",
+      "--workers=2"
+    ],
+    "configFile": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/build/wo26/pw.slice-matrix.config.ts",
+    "rootDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/e2e/support/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/build/slice-matrix/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/build/slice-matrix/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/build/slice-matrix/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/build/slice-matrix/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "Pixel 7",
+        "name": "Pixel 7",
+        "testDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/build/slice-matrix/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "iPhone 15",
+        "name": "iPhone 15",
+        "testDir": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/build/slice-matrix/report",
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web/build/slice-matrix/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.1",
+    "workers": 2,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "slice.spec.ts",
+      "file": "slice.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "criterion 6 — the five slice steps",
+          "file": "slice.spec.ts",
+          "line": 31,
+          "column": 6,
+          "specs": [
+            {
+              "title": "step 1 — a new question submits once and hands off with ?job=",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1313,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:50.186Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-d9572a02e7b02969bdb3",
+              "file": "slice.spec.ts",
+              "line": 41,
+              "column": 7
+            },
+            {
+              "title": "step 2 — reloading mid-run re-adopts the same job and buys nothing",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2701,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:50.163Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-5e2a5d7740cb7fd0e21c",
+              "file": "slice.spec.ts",
+              "line": 86,
+              "column": 7
+            },
+            {
+              "title": "step 2 — an expired job is a dead end that says so",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1683,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:51.676Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-7c78ebcc69f40136d5aa",
+              "file": "slice.spec.ts",
+              "line": 124,
+              "column": 7
+            },
+            {
+              "title": "step 2 — back navigation re-adopts the same job, with no second POST",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2316,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:53.066Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-d0d52f786d3a9d66438c",
+              "file": "slice.spec.ts",
+              "line": 166,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a seeded pending_review job renders its plan with no SSE frame",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 989,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:53.373Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-3f3836a5763a04a6df47",
+              "file": "slice.spec.ts",
+              "line": 220,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a 409 on review refetches and re-renders, and is not a dead end",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1068,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:54.375Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-60b717a724ee15f8090a",
+              "file": "slice.spec.ts",
+              "line": 293,
+              "column": 7
+            },
+            {
+              "title": "step 4 — a terminal frame is reconciled against GET /research/{id}",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 884,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:55.396Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-2acdc4101e5c854b2506",
+              "file": "slice.spec.ts",
+              "line": 361,
+              "column": 7
+            },
+            {
+              "title": "step 5 — the newest turn reads, an older one expands, and both export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 961,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:55.463Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-7543bb0d7f89aaf92997",
+              "file": "slice.spec.ts",
+              "line": 435,
+              "column": 7
+            },
+            {
+              "title": "step 5 — an attached failed run shows its partial briefing, labelled, with export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 503,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:56.295Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-7d257646622cc202756b",
+              "file": "slice.spec.ts",
+              "line": 493,
+              "column": 7
+            },
+            {
+              "title": "step 1 — a new question submits once and hands off with ?job=",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3260,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:56.915Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-fa3c0577f60fb2091282",
+              "file": "slice.spec.ts",
+              "line": 41,
+              "column": 7
+            },
+            {
+              "title": "step 2 — reloading mid-run re-adopts the same job and buys nothing",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4264,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:51:57.225Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-151d7446766ffd1037ba",
+              "file": "slice.spec.ts",
+              "line": 86,
+              "column": 7
+            },
+            {
+              "title": "step 2 — an expired job is a dead end that says so",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1528,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:01.035Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-a06973799a9b8859cf02",
+              "file": "slice.spec.ts",
+              "line": 124,
+              "column": 7
+            },
+            {
+              "title": "step 2 — back navigation re-adopts the same job, with no second POST",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2474,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:02.572Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-bcd4088e74f783c31a5b",
+              "file": "slice.spec.ts",
+              "line": 166,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a seeded pending_review job renders its plan with no SSE frame",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 981,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:02.620Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-633d6790127c47d5ff76",
+              "file": "slice.spec.ts",
+              "line": 220,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a 409 on review refetches and re-renders, and is not a dead end",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1091,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:03.616Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-54617ae900d69b29ac1b",
+              "file": "slice.spec.ts",
+              "line": 293,
+              "column": 7
+            },
+            {
+              "title": "step 4 — a terminal frame is reconciled against GET /research/{id}",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 609,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:04.716Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-ca895b061f2fafecc765",
+              "file": "slice.spec.ts",
+              "line": 361,
+              "column": 7
+            },
+            {
+              "title": "step 5 — the newest turn reads, an older one expands, and both export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1059,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:05.056Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-bc64771d090e144995d6",
+              "file": "slice.spec.ts",
+              "line": 435,
+              "column": 7
+            },
+            {
+              "title": "step 5 — an attached failed run shows its partial briefing, labelled, with export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1072,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:05.332Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-bbdca309d0062cf2ff75",
+              "file": "slice.spec.ts",
+              "line": 493,
+              "column": 7
+            },
+            {
+              "title": "step 1 — a new question submits once and hands off with ?job=",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2076,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:06.857Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-5589280b0be3ebbf0cd0",
+              "file": "slice.spec.ts",
+              "line": 41,
+              "column": 7
+            },
+            {
+              "title": "step 2 — reloading mid-run re-adopts the same job and buys nothing",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 3211,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:07.011Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-ddef3b54a0119457d2d1",
+              "file": "slice.spec.ts",
+              "line": 86,
+              "column": 7
+            },
+            {
+              "title": "step 2 — an expired job is a dead end that says so",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1873,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:09.261Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-a2625fe6b3d80bbc1d3f",
+              "file": "slice.spec.ts",
+              "line": 124,
+              "column": 7
+            },
+            {
+              "title": "step 2 — back navigation re-adopts the same job, with no second POST",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2402,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:10.434Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-e1cb59150736fc976914",
+              "file": "slice.spec.ts",
+              "line": 166,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a seeded pending_review job renders its plan with no SSE frame",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1249,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:11.147Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-574930fba14eef41b296",
+              "file": "slice.spec.ts",
+              "line": 220,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a 409 on review refetches and re-renders, and is not a dead end",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1170,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:12.408Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-8284cfbe7a385dec142e",
+              "file": "slice.spec.ts",
+              "line": 293,
+              "column": 7
+            },
+            {
+              "title": "step 4 — a terminal frame is reconciled against GET /research/{id}",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 777,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:12.854Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-8b4780466238c1c9322c",
+              "file": "slice.spec.ts",
+              "line": 361,
+              "column": 7
+            },
+            {
+              "title": "step 5 — the newest turn reads, an older one expands, and both export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 835,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:13.591Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-d07e30b5a57b194d6cdb",
+              "file": "slice.spec.ts",
+              "line": 435,
+              "column": 7
+            },
+            {
+              "title": "step 5 — an attached failed run shows its partial briefing, labelled, with export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 802,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:13.643Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-88bdc1d5497231b572e6",
+              "file": "slice.spec.ts",
+              "line": 493,
+              "column": 7
+            },
+            {
+              "title": "step 1 — a new question submits once and hands off with ?job=",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1168,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:14.855Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-1fbc169d0dadde8887ef",
+              "file": "slice.spec.ts",
+              "line": 41,
+              "column": 7
+            },
+            {
+              "title": "step 2 — reloading mid-run re-adopts the same job and buys nothing",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2227,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:14.853Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-200137c3cf0f35845d41",
+              "file": "slice.spec.ts",
+              "line": 86,
+              "column": 7
+            },
+            {
+              "title": "step 2 — an expired job is a dead end that says so",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1559,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:16.336Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-9de8467bc473b5ffd3ca",
+              "file": "slice.spec.ts",
+              "line": 124,
+              "column": 7
+            },
+            {
+              "title": "step 2 — back navigation re-adopts the same job, with no second POST",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1638,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:17.391Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-4918102859c1e704ea8f",
+              "file": "slice.spec.ts",
+              "line": 166,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a seeded pending_review job renders its plan with no SSE frame",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 684,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:17.904Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-6adc26d18a1bd6cb58bb",
+              "file": "slice.spec.ts",
+              "line": 220,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a 409 on review refetches and re-renders, and is not a dead end",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 879,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:18.595Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-62e184fc411f037d9b94",
+              "file": "slice.spec.ts",
+              "line": 293,
+              "column": 7
+            },
+            {
+              "title": "step 4 — a terminal frame is reconciled against GET /research/{id}",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 448,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:19.036Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-305b1dc9e6eaa3c4c299",
+              "file": "slice.spec.ts",
+              "line": 361,
+              "column": 7
+            },
+            {
+              "title": "step 5 — the newest turn reads, an older one expands, and both export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 493,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:19.482Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-6b1409b5b521ebc1c984",
+              "file": "slice.spec.ts",
+              "line": 435,
+              "column": 7
+            },
+            {
+              "title": "step 5 — an attached failed run shows its partial briefing, labelled, with export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Pixel 7",
+                  "projectName": "Pixel 7",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 462,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:19.491Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-5175b7ceb57c4f0ba36d",
+              "file": "slice.spec.ts",
+              "line": 493,
+              "column": 7
+            },
+            {
+              "title": "step 1 — a new question submits once and hands off with ?job=",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1678,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:20.355Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-1bf29f7da269a49f1b42",
+              "file": "slice.spec.ts",
+              "line": 41,
+              "column": 7
+            },
+            {
+              "title": "step 2 — reloading mid-run re-adopts the same job and buys nothing",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2796,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:20.376Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-64a64f7b9413c09ee971",
+              "file": "slice.spec.ts",
+              "line": 86,
+              "column": 7
+            },
+            {
+              "title": "step 2 — an expired job is a dead end that says so",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1672,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:22.309Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-39cc47ed15162b5a3111",
+              "file": "slice.spec.ts",
+              "line": 124,
+              "column": 7
+            },
+            {
+              "title": "step 2 — back navigation re-adopts the same job, with no second POST",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1979,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:23.427Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-688ff3ac78c6cda7b65c",
+              "file": "slice.spec.ts",
+              "line": 166,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a seeded pending_review job renders its plan with no SSE frame",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 688,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:24.000Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-c021afb28b47e47c0d7e",
+              "file": "slice.spec.ts",
+              "line": 220,
+              "column": 7
+            },
+            {
+              "title": "step 3 — a 409 on review refetches and re-renders, and is not a dead end",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1021,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:24.697Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-0e847c699a840ff3cf66",
+              "file": "slice.spec.ts",
+              "line": 293,
+              "column": 7
+            },
+            {
+              "title": "step 4 — a terminal frame is reconciled against GET /research/{id}",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 674,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:25.418Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-ff67d9d4de551eaf93a3",
+              "file": "slice.spec.ts",
+              "line": 361,
+              "column": 7
+            },
+            {
+              "title": "step 5 — the newest turn reads, an older one expands, and both export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 707,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:25.733Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-0b3112b53d6687b96e55",
+              "file": "slice.spec.ts",
+              "line": 435,
+              "column": 7
+            },
+            {
+              "title": "step 5 — an attached failed run shows its partial briefing, labelled, with export",
+              "ok": true,
+              "tags": [
+                "slice"
+              ],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "iPhone 15",
+                  "projectName": "iPhone 15",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 609,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-29T12:52:26.104Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d66a1248c267d73544f7-881343c27182d7681bc8",
+              "file": "slice.spec.ts",
+              "line": 493,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-08-29T12:51:49.552Z",
+    "duration": 37199.69,
+    "expected": 45,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

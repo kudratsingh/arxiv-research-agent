@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/4c5c5e97-4474-4566-b9f7-89f156a2af2c/scratchpad/wo26-run/web
+
+
+ Test Files  1 passed (1)
+      Tests  63 passed (63)
+   Start at  05:59:22
+   Duration  987ms (transform 76ms, setup 174ms, import 42ms, tests 27ms, environment 617ms)
+

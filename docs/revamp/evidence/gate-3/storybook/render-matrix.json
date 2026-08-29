@@ -1,0 +1,1812 @@
+{
+  "generated": "2026-08-29T13:08:18.423Z",
+  "note": "WO-26 criterion 2. Every story rendered in each of three modes at each of RC-14's five widths, in real Chromium against the static Storybook build. A combination counts as rendered when Storybook sets body.sb-show-main, shows no error overlay, and the page raises no uncaught error. The `playFunctionErrors` block records combinations where the story MOUNTED but its play function's assertion did not hold; see storybook-states.md \u00a77.",
+  "storyCount": 261,
+  "modes": [
+    "light",
+    "dark",
+    "reduced-motion"
+  ],
+  "widths": [
+    320,
+    412,
+    768,
+    1024,
+    1440
+  ],
+  "combinations": 15,
+  "rendersAttempted": 3915,
+  "rendersMounted": 3915,
+  "errorOverlays": 0,
+  "uncaughtReactErrors": 0,
+  "perCombination": [
+    {
+      "mode": "dark",
+      "width": 320,
+      "rendered": 261,
+      "ok": 255,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "dark",
+      "width": 412,
+      "rendered": 261,
+      "ok": 255,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "dark",
+      "width": 768,
+      "rendered": 261,
+      "ok": 258,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "dark",
+      "width": 1024,
+      "rendered": 261,
+      "ok": 258,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "dark",
+      "width": 1440,
+      "rendered": 261,
+      "ok": 258,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "light",
+      "width": 320,
+      "rendered": 261,
+      "ok": 255,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "light",
+      "width": 412,
+      "rendered": 261,
+      "ok": 255,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "light",
+      "width": 768,
+      "rendered": 261,
+      "ok": 258,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "light",
+      "width": 1024,
+      "rendered": 261,
+      "ok": 258,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "light",
+      "width": 1440,
+      "rendered": 261,
+      "ok": 258,
+      "emptyByDesign": 7
+    },
+    {
+      "mode": "reduced-motion",
+      "width": 320,
+      "rendered": 261,
+      "ok": 258,
+      "emptyByDesign": 8
+    },
+    {
+      "mode": "reduced-motion",
+      "width": 412,
+      "rendered": 261,
+      "ok": 258,
+      "emptyByDesign": 8
+    },
+    {
+      "mode": "reduced-motion",
+      "width": 768,
+      "rendered": 261,
+      "ok": 261,
+      "emptyByDesign": 8
+    },
+    {
+      "mode": "reduced-motion",
+      "width": 1024,
+      "rendered": 261,
+      "ok": 261,
+      "emptyByDesign": 8
+    },
+    {
+      "mode": "reduced-motion",
+      "width": 1440,
+      "rendered": 261,
+      "ok": 261,
+      "emptyByDesign": 8
+    }
+  ],
+  "playFunctionErrors": {
+    "combinations": 48,
+    "stories": [
+      "shell-errorboundary--workspace",
+      "shell-notfoundframework--default",
+      "shell-workbenchshell--rail-collapse-toggle",
+      "threadrail--delete-confirm",
+      "threadrail--row-menu-open",
+      "threadrail-drawer--open"
+    ],
+    "detail": [
+      {
+        "story": "shell-errorboundary--workspace",
+        "modes": [
+          "dark",
+          "light",
+          "reduced-motion"
+        ],
+        "widths": [
+          320,
+          412
+        ],
+        "combinations": 6,
+        "message": [
+          "TestingLibraryElementError: Unable to find an accessible element with the role \"navigation\" and name \"Threads\""
+        ]
+      },
+      {
+        "story": "shell-notfoundframework--default",
+        "modes": [
+          "dark",
+          "light",
+          "reduced-motion"
+        ],
+        "widths": [
+          320,
+          412
+        ],
+        "combinations": 6,
+        "message": [
+          "TestingLibraryElementError: Unable to find an accessible element with the role \"navigation\" and name \"Threads\""
+        ]
+      },
+      {
+        "story": "shell-workbenchshell--rail-collapse-toggle",
+        "modes": [
+          "dark",
+          "light",
+          "reduced-motion"
+        ],
+        "widths": [
+          320,
+          412
+        ],
+        "combinations": 6,
+        "message": [
+          "TestingLibraryElementError: Unable to find an accessible element with the role \"button\" and name \"Collapse the rail\""
+        ]
+      },
+      {
+        "story": "threadrail--delete-confirm",
+        "modes": [
+          "dark",
+          "light"
+        ],
+        "widths": [
+          320,
+          412,
+          768,
+          1024,
+          1440
+        ],
+        "combinations": 10,
+        "message": [
+          "KI: expect(element).toBeVisible()"
+        ]
+      },
+      {
+        "story": "threadrail--row-menu-open",
+        "modes": [
+          "dark",
+          "light"
+        ],
+        "widths": [
+          320,
+          412,
+          768,
+          1024,
+          1440
+        ],
+        "combinations": 10,
+        "message": [
+          "KI: expect(element).toBeVisible()"
+        ]
+      },
+      {
+        "story": "threadrail-drawer--open",
+        "modes": [
+          "dark",
+          "light"
+        ],
+        "widths": [
+          320,
+          412,
+          768,
+          1024,
+          1440
+        ],
+        "combinations": 10,
+        "message": [
+          "KI: expect(element).toBeVisible()"
+        ]
+      }
+    ]
+  },
+  "stories": [
+    {
+      "id": "diagnostics--collapsed",
+      "title": "Diagnostics",
+      "name": "Collapsed",
+      "importPath": "./components/patterns/Diagnostics.stories.tsx"
+    },
+    {
+      "id": "diagnostics--empty",
+      "title": "Diagnostics",
+      "name": "Empty",
+      "importPath": "./components/patterns/Diagnostics.stories.tsx"
+    },
+    {
+      "id": "diagnostics--expanded",
+      "title": "Diagnostics",
+      "name": "Expanded",
+      "importPath": "./components/patterns/Diagnostics.stories.tsx"
+    },
+    {
+      "id": "diagnostics--stream-note",
+      "title": "Diagnostics",
+      "name": "Stream Note",
+      "importPath": "./components/patterns/Diagnostics.stories.tsx"
+    },
+    {
+      "id": "diagnostics--unknown-event",
+      "title": "Diagnostics",
+      "name": "Unknown Event",
+      "importPath": "./components/patterns/Diagnostics.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--dark",
+      "title": "Features/QueryComposer",
+      "name": "Dark",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--empty",
+      "title": "Features/QueryComposer",
+      "name": "Empty",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--failed-with-orphan-thread",
+      "title": "Features/QueryComposer",
+      "name": "Failed With Orphan Thread",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--filled",
+      "title": "Features/QueryComposer",
+      "name": "Filled",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--follow-up",
+      "title": "Features/QueryComposer",
+      "name": "Follow Up",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--forced-colours",
+      "title": "Features/QueryComposer",
+      "name": "Forced Colours",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--narrow",
+      "title": "Features/QueryComposer",
+      "name": "Narrow",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--near-limit",
+      "title": "Features/QueryComposer",
+      "name": "Near Limit",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--over-limit",
+      "title": "Features/QueryComposer",
+      "name": "Over Limit",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--proxy-misconfigured",
+      "title": "Features/QueryComposer",
+      "name": "Proxy Misconfigured",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--rate-limited",
+      "title": "Features/QueryComposer",
+      "name": "Rate Limited",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--submitting",
+      "title": "Features/QueryComposer",
+      "name": "Submitting",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--unauthorized",
+      "title": "Features/QueryComposer",
+      "name": "Unauthorized",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--unreachable",
+      "title": "Features/QueryComposer",
+      "name": "Unreachable",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--upstream-down",
+      "title": "Features/QueryComposer",
+      "name": "Upstream Down",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "features-querycomposer--validation",
+      "title": "Features/QueryComposer",
+      "name": "Validation",
+      "importPath": "./components/features/QueryComposer.stories.tsx"
+    },
+    {
+      "id": "foundations-colour--palette",
+      "title": "Foundations/Colour",
+      "name": "Palette",
+      "importPath": "./components/foundations/Colour.stories.tsx"
+    },
+    {
+      "id": "foundations-colour--palette-dark",
+      "title": "Foundations/Colour",
+      "name": "Palette Dark",
+      "importPath": "./components/foundations/Colour.stories.tsx"
+    },
+    {
+      "id": "foundations-colour--palette-forced-colors",
+      "title": "Foundations/Colour",
+      "name": "Palette Forced Colors",
+      "importPath": "./components/foundations/Colour.stories.tsx"
+    },
+    {
+      "id": "foundations-colour--palette-reduced-motion",
+      "title": "Foundations/Colour",
+      "name": "Palette Reduced Motion",
+      "importPath": "./components/foundations/Colour.stories.tsx"
+    },
+    {
+      "id": "foundations-colour--severities",
+      "title": "Foundations/Colour",
+      "name": "Severities",
+      "importPath": "./components/foundations/Colour.stories.tsx"
+    },
+    {
+      "id": "foundations-colour--severities-forced-colors",
+      "title": "Foundations/Colour",
+      "name": "Severities Forced Colors",
+      "importPath": "./components/foundations/Colour.stories.tsx"
+    },
+    {
+      "id": "foundations-space--elevation-scale",
+      "title": "Foundations/Space",
+      "name": "Elevation Scale",
+      "importPath": "./components/foundations/Space.stories.tsx"
+    },
+    {
+      "id": "foundations-space--radius",
+      "title": "Foundations/Space",
+      "name": "Radius",
+      "importPath": "./components/foundations/Space.stories.tsx"
+    },
+    {
+      "id": "foundations-space--scale",
+      "title": "Foundations/Space",
+      "name": "Scale",
+      "importPath": "./components/foundations/Space.stories.tsx"
+    },
+    {
+      "id": "foundations-space--sizes-and-layout",
+      "title": "Foundations/Space",
+      "name": "Sizes And Layout",
+      "importPath": "./components/foundations/Space.stories.tsx"
+    },
+    {
+      "id": "foundations-type--families",
+      "title": "Foundations/Type",
+      "name": "Families",
+      "importPath": "./components/foundations/Type.stories.tsx"
+    },
+    {
+      "id": "foundations-type--scale",
+      "title": "Foundations/Type",
+      "name": "Scale",
+      "importPath": "./components/foundations/Type.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--after-reconnect-gap",
+      "title": "Patterns/CheckpointLedger",
+      "name": "After Reconnect Gap",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--dark",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Dark",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--empty",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Empty",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--forced-colours",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Forced Colours",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--many",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Many",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--not-current",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Not Current",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--opaque-label",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Opaque Label",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--single-checkpoint",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Single Checkpoint",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--three-checkpoints",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Three Checkpoints",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-checkpointledger--unknown-node-label",
+      "title": "Patterns/CheckpointLedger",
+      "name": "Unknown Node Label",
+      "importPath": "./components/patterns/CheckpointLedger.stories.tsx"
+    },
+    {
+      "id": "patterns-exportdisclosure--closed",
+      "title": "Patterns/ExportDisclosure",
+      "name": "Closed",
+      "importPath": "./components/patterns/ExportDisclosure.stories.tsx"
+    },
+    {
+      "id": "patterns-exportdisclosure--dark",
+      "title": "Patterns/ExportDisclosure",
+      "name": "Dark",
+      "importPath": "./components/patterns/ExportDisclosure.stories.tsx"
+    },
+    {
+      "id": "patterns-exportdisclosure--keyboard-focus",
+      "title": "Patterns/ExportDisclosure",
+      "name": "Keyboard Focus",
+      "importPath": "./components/patterns/ExportDisclosure.stories.tsx"
+    },
+    {
+      "id": "patterns-exportdisclosure--on-failed-run",
+      "title": "Patterns/ExportDisclosure",
+      "name": "On Failed Run",
+      "importPath": "./components/patterns/ExportDisclosure.stories.tsx"
+    },
+    {
+      "id": "patterns-exportdisclosure--open",
+      "title": "Patterns/ExportDisclosure",
+      "name": "Open",
+      "importPath": "./components/patterns/ExportDisclosure.stories.tsx"
+    },
+    {
+      "id": "patterns-exportdisclosure--refused-409",
+      "title": "Patterns/ExportDisclosure",
+      "name": "Refused 409",
+      "importPath": "./components/patterns/ExportDisclosure.stories.tsx"
+    },
+    {
+      "id": "patterns-exportdisclosure--unavailable-no-report",
+      "title": "Patterns/ExportDisclosure",
+      "name": "Unavailable No Report",
+      "importPath": "./components/patterns/ExportDisclosure.stories.tsx"
+    },
+    {
+      "id": "patterns-metricsstrip--all-null",
+      "title": "Patterns/MetricsStrip",
+      "name": "All Null",
+      "importPath": "./components/patterns/MetricsStrip.stories.tsx"
+    },
+    {
+      "id": "patterns-metricsstrip--all-present",
+      "title": "Patterns/MetricsStrip",
+      "name": "All Present",
+      "importPath": "./components/patterns/MetricsStrip.stories.tsx"
+    },
+    {
+      "id": "patterns-metricsstrip--dark",
+      "title": "Patterns/MetricsStrip",
+      "name": "Dark",
+      "importPath": "./components/patterns/MetricsStrip.stories.tsx"
+    },
+    {
+      "id": "patterns-metricsstrip--forced-colours",
+      "title": "Patterns/MetricsStrip",
+      "name": "Forced Colours",
+      "importPath": "./components/patterns/MetricsStrip.stories.tsx"
+    },
+    {
+      "id": "patterns-metricsstrip--partial-failure-metrics",
+      "title": "Patterns/MetricsStrip",
+      "name": "Partial Failure Metrics",
+      "importPath": "./components/patterns/MetricsStrip.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--conflict-409",
+      "title": "Patterns/PlanEditor",
+      "name": "Conflict 409",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--default",
+      "title": "Patterns/PlanEditor",
+      "name": "Default",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--edited",
+      "title": "Patterns/PlanEditor",
+      "name": "Edited",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--empty-lists",
+      "title": "Patterns/PlanEditor",
+      "name": "Empty Lists",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--hitl-timed-out",
+      "title": "Patterns/PlanEditor",
+      "name": "Hitl Timed Out",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--item-at-max-length",
+      "title": "Patterns/PlanEditor",
+      "name": "Item At Max Length",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--max-items",
+      "title": "Patterns/PlanEditor",
+      "name": "Max Items",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--over-limit-refused",
+      "title": "Patterns/PlanEditor",
+      "name": "Over Limit Refused",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--resolving",
+      "title": "Patterns/PlanEditor",
+      "name": "Resolving",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--submitting",
+      "title": "Patterns/PlanEditor",
+      "name": "Submitting",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--submitting-cancel",
+      "title": "Patterns/PlanEditor",
+      "name": "Submitting Cancel",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--two-families",
+      "title": "Patterns/PlanEditor",
+      "name": "Two Families",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-planeditor--validation-422",
+      "title": "Patterns/PlanEditor",
+      "name": "Validation 422",
+      "importPath": "./components/patterns/PlanEditor.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--active-section",
+      "title": "Patterns/ReportReader",
+      "name": "Active Section",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--dark",
+      "title": "Patterns/ReportReader",
+      "name": "Dark",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--empty",
+      "title": "Patterns/ReportReader",
+      "name": "Empty",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--failed-with-no-briefing",
+      "title": "Patterns/ReportReader",
+      "name": "Failed With No Briefing",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--forced-colours",
+      "title": "Patterns/ReportReader",
+      "name": "Forced Colours",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--loading",
+      "title": "Patterns/ReportReader",
+      "name": "Loading",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--long-with-headings",
+      "title": "Patterns/ReportReader",
+      "name": "Long With Headings",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--partial-from-failed-run",
+      "title": "Patterns/ReportReader",
+      "name": "Partial From Failed Run",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--short",
+      "title": "Patterns/ReportReader",
+      "name": "Short",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--with-code-blocks",
+      "title": "Patterns/ReportReader",
+      "name": "With Code Blocks",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-reportreader--with-wide-table",
+      "title": "Patterns/ReportReader",
+      "name": "With Wide Table",
+      "importPath": "./components/patterns/ReportReader.stories.tsx"
+    },
+    {
+      "id": "patterns-sectionrail--absent",
+      "title": "Patterns/SectionRail",
+      "name": "Absent",
+      "importPath": "./components/patterns/SectionRail.stories.tsx"
+    },
+    {
+      "id": "patterns-sectionrail--active-heading",
+      "title": "Patterns/SectionRail",
+      "name": "Active Heading",
+      "importPath": "./components/patterns/SectionRail.stories.tsx"
+    },
+    {
+      "id": "patterns-sectionrail--dark",
+      "title": "Patterns/SectionRail",
+      "name": "Dark",
+      "importPath": "./components/patterns/SectionRail.stories.tsx"
+    },
+    {
+      "id": "patterns-sectionrail--deep-nesting",
+      "title": "Patterns/SectionRail",
+      "name": "Deep Nesting",
+      "importPath": "./components/patterns/SectionRail.stories.tsx"
+    },
+    {
+      "id": "patterns-sectionrail--forced-colours",
+      "title": "Patterns/SectionRail",
+      "name": "Forced Colours",
+      "importPath": "./components/patterns/SectionRail.stories.tsx"
+    },
+    {
+      "id": "patterns-sectionrail--long-sticky",
+      "title": "Patterns/SectionRail",
+      "name": "Long Sticky",
+      "importPath": "./components/patterns/SectionRail.stories.tsx"
+    },
+    {
+      "id": "patterns-sectionrail--short-list",
+      "title": "Patterns/SectionRail",
+      "name": "Short List",
+      "importPath": "./components/patterns/SectionRail.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--all-failures",
+      "title": "Patterns/StatusBanner",
+      "name": "All Failures",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--cancelled",
+      "title": "Patterns/StatusBanner",
+      "name": "Cancelled",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--conflict",
+      "title": "Patterns/StatusBanner",
+      "name": "Conflict",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--dark",
+      "title": "Patterns/StatusBanner",
+      "name": "Dark",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--error-type-not-reported",
+      "title": "Patterns/StatusBanner",
+      "name": "Error Type Not Reported",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--forced-colours",
+      "title": "Patterns/StatusBanner",
+      "name": "Forced Colours",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--live-regions",
+      "title": "Patterns/StatusBanner",
+      "name": "Live Regions",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--mapped-error-types",
+      "title": "Patterns/StatusBanner",
+      "name": "Mapped Error Types",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--not-found",
+      "title": "Patterns/StatusBanner",
+      "name": "Not Found",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--offline",
+      "title": "Patterns/StatusBanner",
+      "name": "Offline",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--overridden-mark",
+      "title": "Patterns/StatusBanner",
+      "name": "Overridden Mark",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--proxy-misconfigured",
+      "title": "Patterns/StatusBanner",
+      "name": "Proxy Misconfigured",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--rate-limited",
+      "title": "Patterns/StatusBanner",
+      "name": "Rate Limited",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--rate-limited-retry-after",
+      "title": "Patterns/StatusBanner",
+      "name": "Rate Limited Retry After",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--server-error",
+      "title": "Patterns/StatusBanner",
+      "name": "Server Error",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--severities",
+      "title": "Patterns/StatusBanner",
+      "name": "Severities",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--timeout",
+      "title": "Patterns/StatusBanner",
+      "name": "Timeout",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--unauthorized",
+      "title": "Patterns/StatusBanner",
+      "name": "Unauthorized",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--unknown",
+      "title": "Patterns/StatusBanner",
+      "name": "Unknown",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--unmapped-error-type",
+      "title": "Patterns/StatusBanner",
+      "name": "Unmapped Error Type",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--upstream-down",
+      "title": "Patterns/StatusBanner",
+      "name": "Upstream Down",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--upstream-unavailable",
+      "title": "Patterns/StatusBanner",
+      "name": "Upstream Unavailable",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-statusbanner--validation",
+      "title": "Patterns/StatusBanner",
+      "name": "Validation",
+      "importPath": "./components/patterns/StatusBanner.stories.tsx"
+    },
+    {
+      "id": "patterns-themetoggle--dark",
+      "title": "Patterns/ThemeToggle",
+      "name": "Dark",
+      "importPath": "./components/patterns/ThemeToggle.stories.tsx"
+    },
+    {
+      "id": "patterns-themetoggle--forced-colours",
+      "title": "Patterns/ThemeToggle",
+      "name": "Forced Colours",
+      "importPath": "./components/patterns/ThemeToggle.stories.tsx"
+    },
+    {
+      "id": "patterns-themetoggle--keyboard-focus",
+      "title": "Patterns/ThemeToggle",
+      "name": "Keyboard Focus",
+      "importPath": "./components/patterns/ThemeToggle.stories.tsx"
+    },
+    {
+      "id": "patterns-themetoggle--light",
+      "title": "Patterns/ThemeToggle",
+      "name": "Light",
+      "importPath": "./components/patterns/ThemeToggle.stories.tsx"
+    },
+    {
+      "id": "patterns-themetoggle--switching",
+      "title": "Patterns/ThemeToggle",
+      "name": "Switching",
+      "importPath": "./components/patterns/ThemeToggle.stories.tsx"
+    },
+    {
+      "id": "patterns-themetoggle--system",
+      "title": "Patterns/ThemeToggle",
+      "name": "System",
+      "importPath": "./components/patterns/ThemeToggle.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--awaiting-review",
+      "title": "Patterns/TraceSpine",
+      "name": "Awaiting Review",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--awaiting-review-before-the-poll",
+      "title": "Patterns/TraceSpine",
+      "name": "Awaiting Review Before The Poll",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--cancelled",
+      "title": "Patterns/TraceSpine",
+      "name": "Cancelled",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--dark",
+      "title": "Patterns/TraceSpine",
+      "name": "Dark",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--failed",
+      "title": "Patterns/TraceSpine",
+      "name": "Failed",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--failed-after-checkpoint",
+      "title": "Patterns/TraceSpine",
+      "name": "Failed After Checkpoint",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--forced-colours",
+      "title": "Patterns/TraceSpine",
+      "name": "Forced Colours",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--legend-open",
+      "title": "Patterns/TraceSpine",
+      "name": "Legend Open",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--narrow",
+      "title": "Patterns/TraceSpine",
+      "name": "Narrow",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--no-job",
+      "title": "Patterns/TraceSpine",
+      "name": "No Job",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--reconnecting",
+      "title": "Patterns/TraceSpine",
+      "name": "Reconnecting",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--reduced-motion",
+      "title": "Patterns/TraceSpine",
+      "name": "Reduced Motion",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--running-no-checkpoint",
+      "title": "Patterns/TraceSpine",
+      "name": "Running No Checkpoint",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--running-with-checkpoint",
+      "title": "Patterns/TraceSpine",
+      "name": "Running With Checkpoint",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--status-unknown",
+      "title": "Patterns/TraceSpine",
+      "name": "Status Unknown",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--stream-timeout",
+      "title": "Patterns/TraceSpine",
+      "name": "Stream Timeout",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--submitting",
+      "title": "Patterns/TraceSpine",
+      "name": "Submitting",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--succeeded",
+      "title": "Patterns/TraceSpine",
+      "name": "Succeeded",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--succeeded-from-history",
+      "title": "Patterns/TraceSpine",
+      "name": "Succeeded From History",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "patterns-tracespine--unavailable",
+      "title": "Patterns/TraceSpine",
+      "name": "Unavailable",
+      "importPath": "./components/patterns/TraceSpine.stories.tsx"
+    },
+    {
+      "id": "primitives-button--all-states",
+      "title": "Primitives/Button",
+      "name": "All States",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--busy",
+      "title": "Primitives/Button",
+      "name": "Busy",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--critical",
+      "title": "Primitives/Button",
+      "name": "Critical",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--dark",
+      "title": "Primitives/Button",
+      "name": "Dark",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--disabled",
+      "title": "Primitives/Button",
+      "name": "Disabled",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--forced-colours",
+      "title": "Primitives/Button",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--full-width",
+      "title": "Primitives/Button",
+      "name": "Full Width",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--ghost",
+      "title": "Primitives/Button",
+      "name": "Ghost",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--icon-only",
+      "title": "Primitives/Button",
+      "name": "Icon Only",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--primary",
+      "title": "Primitives/Button",
+      "name": "Primary",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--reduced-motion",
+      "title": "Primitives/Button",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-button--secondary",
+      "title": "Primitives/Button",
+      "name": "Secondary",
+      "importPath": "./components/primitives/Button.stories.tsx"
+    },
+    {
+      "id": "primitives-dialog--closed",
+      "title": "Primitives/Dialog",
+      "name": "Closed",
+      "importPath": "./components/primitives/Dialog.stories.tsx"
+    },
+    {
+      "id": "primitives-dialog--critical-tone",
+      "title": "Primitives/Dialog",
+      "name": "Critical Tone",
+      "importPath": "./components/primitives/Dialog.stories.tsx"
+    },
+    {
+      "id": "primitives-dialog--dark",
+      "title": "Primitives/Dialog",
+      "name": "Dark",
+      "importPath": "./components/primitives/Dialog.stories.tsx"
+    },
+    {
+      "id": "primitives-dialog--forced-colours",
+      "title": "Primitives/Dialog",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/Dialog.stories.tsx"
+    },
+    {
+      "id": "primitives-dialog--open",
+      "title": "Primitives/Dialog",
+      "name": "Open",
+      "importPath": "./components/primitives/Dialog.stories.tsx"
+    },
+    {
+      "id": "primitives-dialog--reduced-motion",
+      "title": "Primitives/Dialog",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/Dialog.stories.tsx"
+    },
+    {
+      "id": "primitives-dialog--title-only",
+      "title": "Primitives/Dialog",
+      "name": "Title Only",
+      "importPath": "./components/primitives/Dialog.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--all-states",
+      "title": "Primitives/Disclosure",
+      "name": "All States",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--closed",
+      "title": "Primitives/Disclosure",
+      "name": "Closed",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--controlled-closed",
+      "title": "Primitives/Disclosure",
+      "name": "Controlled Closed",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--controlled-open",
+      "title": "Primitives/Disclosure",
+      "name": "Controlled Open",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--dark",
+      "title": "Primitives/Disclosure",
+      "name": "Dark",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--forced-colours",
+      "title": "Primitives/Disclosure",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--open",
+      "title": "Primitives/Disclosure",
+      "name": "Open",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--reduced-motion",
+      "title": "Primitives/Disclosure",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-disclosure--with-aside",
+      "title": "Primitives/Disclosure",
+      "name": "With Aside",
+      "importPath": "./components/primitives/Disclosure.stories.tsx"
+    },
+    {
+      "id": "primitives-field--all-states",
+      "title": "Primitives/Field",
+      "name": "All States",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--dark",
+      "title": "Primitives/Field",
+      "name": "Dark",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--default",
+      "title": "Primitives/Field",
+      "name": "Default",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--disabled",
+      "title": "Primitives/Field",
+      "name": "Disabled",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--forced-colours",
+      "title": "Primitives/Field",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--invalid",
+      "title": "Primitives/Field",
+      "name": "Invalid",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--label-hidden",
+      "title": "Primitives/Field",
+      "name": "Label Hidden",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--reduced-motion",
+      "title": "Primitives/Field",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--required",
+      "title": "Primitives/Field",
+      "name": "Required",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-field--with-hint",
+      "title": "Primitives/Field",
+      "name": "With Hint",
+      "importPath": "./components/primitives/Field.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--aligned-start",
+      "title": "Primitives/Menu",
+      "name": "Aligned Start",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--closed",
+      "title": "Primitives/Menu",
+      "name": "Closed",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--dark",
+      "title": "Primitives/Menu",
+      "name": "Dark",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--forced-colours",
+      "title": "Primitives/Menu",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--inline-surface",
+      "title": "Primitives/Menu",
+      "name": "Inline Surface",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--named-menu",
+      "title": "Primitives/Menu",
+      "name": "Named Menu",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--open",
+      "title": "Primitives/Menu",
+      "name": "Open",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--reduced-motion",
+      "title": "Primitives/Menu",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-menu--with-disabled-item",
+      "title": "Primitives/Menu",
+      "name": "With Disabled Item",
+      "importPath": "./components/primitives/Menu.stories.tsx"
+    },
+    {
+      "id": "primitives-scrollregion--all-states",
+      "title": "Primitives/ScrollRegion",
+      "name": "All States",
+      "importPath": "./components/primitives/ScrollRegion.stories.tsx"
+    },
+    {
+      "id": "primitives-scrollregion--both-axes",
+      "title": "Primitives/ScrollRegion",
+      "name": "Both Axes",
+      "importPath": "./components/primitives/ScrollRegion.stories.tsx"
+    },
+    {
+      "id": "primitives-scrollregion--dark",
+      "title": "Primitives/ScrollRegion",
+      "name": "Dark",
+      "importPath": "./components/primitives/ScrollRegion.stories.tsx"
+    },
+    {
+      "id": "primitives-scrollregion--forced-colours",
+      "title": "Primitives/ScrollRegion",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/ScrollRegion.stories.tsx"
+    },
+    {
+      "id": "primitives-scrollregion--narrow-content",
+      "title": "Primitives/ScrollRegion",
+      "name": "Narrow Content",
+      "importPath": "./components/primitives/ScrollRegion.stories.tsx"
+    },
+    {
+      "id": "primitives-scrollregion--reduced-motion",
+      "title": "Primitives/ScrollRegion",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/ScrollRegion.stories.tsx"
+    },
+    {
+      "id": "primitives-scrollregion--wide-table",
+      "title": "Primitives/ScrollRegion",
+      "name": "Wide Table",
+      "importPath": "./components/primitives/ScrollRegion.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--all-states",
+      "title": "Primitives/Skeleton",
+      "name": "All States",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--dark",
+      "title": "Primitives/Skeleton",
+      "name": "Dark",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--forced-colours",
+      "title": "Primitives/Skeleton",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--labelled",
+      "title": "Primitives/Skeleton",
+      "name": "Labelled",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--narrow",
+      "title": "Primitives/Skeleton",
+      "name": "Narrow",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--one-line",
+      "title": "Primitives/Skeleton",
+      "name": "One Line",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--paragraph",
+      "title": "Primitives/Skeleton",
+      "name": "Paragraph",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--reduced-motion",
+      "title": "Primitives/Skeleton",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skeleton--titled",
+      "title": "Primitives/Skeleton",
+      "name": "Titled",
+      "importPath": "./components/primitives/Skeleton.stories.tsx"
+    },
+    {
+      "id": "primitives-skiplink--custom-target",
+      "title": "Primitives/SkipLink",
+      "name": "Custom Target",
+      "importPath": "./components/primitives/SkipLink.stories.tsx"
+    },
+    {
+      "id": "primitives-skiplink--dark",
+      "title": "Primitives/SkipLink",
+      "name": "Dark",
+      "importPath": "./components/primitives/SkipLink.stories.tsx"
+    },
+    {
+      "id": "primitives-skiplink--default",
+      "title": "Primitives/SkipLink",
+      "name": "Default",
+      "importPath": "./components/primitives/SkipLink.stories.tsx"
+    },
+    {
+      "id": "primitives-skiplink--focused",
+      "title": "Primitives/SkipLink",
+      "name": "Focused",
+      "importPath": "./components/primitives/SkipLink.stories.tsx"
+    },
+    {
+      "id": "primitives-skiplink--forced-colours",
+      "title": "Primitives/SkipLink",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/SkipLink.stories.tsx"
+    },
+    {
+      "id": "primitives-skiplink--reduced-motion",
+      "title": "Primitives/SkipLink",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/SkipLink.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--all-states",
+      "title": "Primitives/StatusBadge",
+      "name": "All States",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--critical",
+      "title": "Primitives/StatusBadge",
+      "name": "Critical",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--dark",
+      "title": "Primitives/StatusBadge",
+      "name": "Dark",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--forced-colours",
+      "title": "Primitives/StatusBadge",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--info",
+      "title": "Primitives/StatusBadge",
+      "name": "Info",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--live",
+      "title": "Primitives/StatusBadge",
+      "name": "Live",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--reduced-motion",
+      "title": "Primitives/StatusBadge",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--review",
+      "title": "Primitives/StatusBadge",
+      "name": "Review",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-statusbadge--warning",
+      "title": "Primitives/StatusBadge",
+      "name": "Warning",
+      "importPath": "./components/primitives/StatusBadge.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--all-states",
+      "title": "Primitives/Textarea",
+      "name": "All States",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--dark",
+      "title": "Primitives/Textarea",
+      "name": "Dark",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--disabled",
+      "title": "Primitives/Textarea",
+      "name": "Disabled",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--empty",
+      "title": "Primitives/Textarea",
+      "name": "Empty",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--filled",
+      "title": "Primitives/Textarea",
+      "name": "Filled",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--forced-colours",
+      "title": "Primitives/Textarea",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--invalid",
+      "title": "Primitives/Textarea",
+      "name": "Invalid",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--near-limit",
+      "title": "Primitives/Textarea",
+      "name": "Near Limit",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--over-limit",
+      "title": "Primitives/Textarea",
+      "name": "Over Limit",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--reduced-motion",
+      "title": "Primitives/Textarea",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-textarea--with-hint",
+      "title": "Primitives/Textarea",
+      "name": "With Hint",
+      "importPath": "./components/primitives/Textarea.stories.tsx"
+    },
+    {
+      "id": "primitives-visuallyhidden--all-states",
+      "title": "Primitives/VisuallyHidden",
+      "name": "All States",
+      "importPath": "./components/primitives/VisuallyHidden.stories.tsx"
+    },
+    {
+      "id": "primitives-visuallyhidden--as-heading",
+      "title": "Primitives/VisuallyHidden",
+      "name": "As Heading",
+      "importPath": "./components/primitives/VisuallyHidden.stories.tsx"
+    },
+    {
+      "id": "primitives-visuallyhidden--dark",
+      "title": "Primitives/VisuallyHidden",
+      "name": "Dark",
+      "importPath": "./components/primitives/VisuallyHidden.stories.tsx"
+    },
+    {
+      "id": "primitives-visuallyhidden--default",
+      "title": "Primitives/VisuallyHidden",
+      "name": "Default",
+      "importPath": "./components/primitives/VisuallyHidden.stories.tsx"
+    },
+    {
+      "id": "primitives-visuallyhidden--forced-colours",
+      "title": "Primitives/VisuallyHidden",
+      "name": "Forced Colours",
+      "importPath": "./components/primitives/VisuallyHidden.stories.tsx"
+    },
+    {
+      "id": "primitives-visuallyhidden--reduced-motion",
+      "title": "Primitives/VisuallyHidden",
+      "name": "Reduced Motion",
+      "importPath": "./components/primitives/VisuallyHidden.stories.tsx"
+    },
+    {
+      "id": "shell-errorboundary--global",
+      "title": "Shell/ErrorBoundary",
+      "name": "Global",
+      "importPath": "./components/app/ErrorBoundary.stories.tsx"
+    },
+    {
+      "id": "shell-errorboundary--thread",
+      "title": "Shell/ErrorBoundary",
+      "name": "Thread",
+      "importPath": "./components/app/ErrorBoundary.stories.tsx"
+    },
+    {
+      "id": "shell-errorboundary--workspace",
+      "title": "Shell/ErrorBoundary",
+      "name": "Workspace",
+      "importPath": "./components/app/ErrorBoundary.stories.tsx"
+    },
+    {
+      "id": "shell-identityslot--empty",
+      "title": "Shell/IdentitySlot",
+      "name": "Empty",
+      "importPath": "./components/app/IdentitySlot.stories.tsx"
+    },
+    {
+      "id": "shell-notfoundframework--default",
+      "title": "Shell/NotFoundFramework",
+      "name": "Default",
+      "importPath": "./components/app/NotFoundFramework.stories.tsx"
+    },
+    {
+      "id": "shell-notfoundframework--narrow",
+      "title": "Shell/NotFoundFramework",
+      "name": "Narrow",
+      "importPath": "./components/app/NotFoundFramework.stories.tsx"
+    },
+    {
+      "id": "shell-notfoundproduct--default",
+      "title": "Shell/NotFoundProduct",
+      "name": "Default",
+      "importPath": "./components/app/NotFoundProduct.stories.tsx"
+    },
+    {
+      "id": "shell-notfoundproduct--without-the-rail",
+      "title": "Shell/NotFoundProduct",
+      "name": "Without The Rail",
+      "importPath": "./components/app/NotFoundProduct.stories.tsx"
+    },
+    {
+      "id": "shell-skeleton--loaded",
+      "title": "Shell/Skeleton",
+      "name": "Loaded",
+      "importPath": "./components/app/Skeleton.stories.tsx"
+    },
+    {
+      "id": "shell-skeleton--loading",
+      "title": "Shell/Skeleton",
+      "name": "Loading",
+      "importPath": "./components/app/Skeleton.stories.tsx"
+    },
+    {
+      "id": "shell-skeleton--narrow",
+      "title": "Shell/Skeleton",
+      "name": "Narrow",
+      "importPath": "./components/app/Skeleton.stories.tsx"
+    },
+    {
+      "id": "shell-skiplinkfocused--focused",
+      "title": "Shell/SkipLinkFocused",
+      "name": "Focused",
+      "importPath": "./components/app/SkipLinkFocused.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--dark",
+      "title": "Shell/WorkbenchShell",
+      "name": "Dark",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--drawer-closed",
+      "title": "Shell/WorkbenchShell",
+      "name": "Drawer Closed",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--drawer-open",
+      "title": "Shell/WorkbenchShell",
+      "name": "Drawer Open",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--forced-colours",
+      "title": "Shell/WorkbenchShell",
+      "name": "Forced Colours",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--icon-strip",
+      "title": "Shell/WorkbenchShell",
+      "name": "Icon Strip",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--offline",
+      "title": "Shell/WorkbenchShell",
+      "name": "Offline",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--rail-collapse-toggle",
+      "title": "Shell/WorkbenchShell",
+      "name": "Rail Collapse Toggle",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--rail-collapsed",
+      "title": "Shell/WorkbenchShell",
+      "name": "Rail Collapsed",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "shell-workbenchshell--rail-expanded",
+      "title": "Shell/WorkbenchShell",
+      "name": "Rail Expanded",
+      "importPath": "./components/app/WorkbenchShell.stories.tsx"
+    },
+    {
+      "id": "threadrail--active-run-row",
+      "title": "ThreadRail",
+      "name": "Active Run Row",
+      "importPath": "./components/patterns/ThreadList.stories.tsx"
+    },
+    {
+      "id": "threadrail--delete-confirm",
+      "title": "ThreadRail",
+      "name": "Delete Confirm",
+      "importPath": "./components/patterns/ThreadList.stories.tsx"
+    },
+    {
+      "id": "threadrail--empty",
+      "title": "ThreadRail",
+      "name": "Empty",
+      "importPath": "./components/patterns/ThreadList.stories.tsx"
+    },
+    {
+      "id": "threadrail--error",
+      "title": "ThreadRail",
+      "name": "Error",
+      "importPath": "./components/patterns/ThreadList.stories.tsx"
+    },
+    {
+      "id": "threadrail--loading",
+      "title": "ThreadRail",
+      "name": "Loading",
+      "importPath": "./components/patterns/ThreadList.stories.tsx"
+    },
+    {
+      "id": "threadrail--populated",
+      "title": "ThreadRail",
+      "name": "Populated",
+      "importPath": "./components/patterns/ThreadList.stories.tsx"
+    },
+    {
+      "id": "threadrail--populated-with-more",
+      "title": "ThreadRail",
+      "name": "Populated With More",
+      "importPath": "./components/patterns/ThreadList.stories.tsx"
+    },
+    {
+      "id": "threadrail--row-menu-open",
+      "title": "ThreadRail",
+      "name": "Row Menu Open",
+      "importPath": "./components/patterns/ThreadList.stories.tsx"
+    },
+    {
+      "id": "threadrail-drawer--closed",
+      "title": "ThreadRail/Drawer",
+      "name": "Closed",
+      "importPath": "./components/features/ThreadDrawer.stories.tsx"
+    },
+    {
+      "id": "threadrail-drawer--open",
+      "title": "ThreadRail/Drawer",
+      "name": "Open",
+      "importPath": "./components/features/ThreadDrawer.stories.tsx"
+    }
+  ]
+}

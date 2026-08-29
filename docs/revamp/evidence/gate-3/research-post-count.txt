@@ -1,0 +1,36 @@
+# research-post-count.txt — WO-21 criterion 3
+#
+# One line per intentional-submission scenario. `POST /api/research` is
+# counted in the browser by web/e2e/support/paid-path.ts and must be
+# exactly 1 per intentional submission: the endpoint has no idempotency
+# key, so a duplicate is a duplicate paid run (R-01, MUST-KEEP #3).
+#
+# verdict	project	scenario	expected	research POSTs	conversation POSTs
+PASS	chromium	criterion 5 — checkpoints during a live run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	Enter key (ControlOrMeta+Enter)	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	single click	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	double click	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	repeated keyboard submit	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	StrictMode double mount (attach path, next dev)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	offline then online (offline attempt counted as 0)	expected=1	POST /api/research=1	POST /api/conversations=2
+PASS	chromium	slice step 2 — expired job	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 2 — reload mid-run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 1 — new question	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	slice step 3 — plan review attach	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 2 — back navigation (RC-18 bfcache)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 5 — partial briefing from a failed run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	interrupted stream (recovery is never a purchase)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	firefox	single click	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	firefox	double click	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	firefox	Enter key (ControlOrMeta+Enter)	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	firefox	repeated keyboard submit	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	firefox	offline then online (offline attempt counted as 0)	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	firefox	StrictMode double mount (attach path, next dev)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	firefox	interrupted stream (recovery is never a purchase)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	webkit	single click	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	webkit	double click	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	webkit	Enter key (ControlOrMeta+Enter)	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	webkit	repeated keyboard submit	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	webkit	StrictMode double mount (attach path, next dev)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	webkit	offline then online (offline attempt counted as 0)	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	webkit	interrupted stream (recovery is never a purchase)	expected=0	POST /api/research=0	POST /api/conversations=0

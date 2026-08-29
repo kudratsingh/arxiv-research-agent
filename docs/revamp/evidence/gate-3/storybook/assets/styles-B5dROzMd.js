@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CsOFd3vK.js";function t(...e){return e.filter(e=>!!e).join(` `)}function n(e){return`ew-target ew-target--${e}`}var r,i;function a(){return(a=e((()=>{r=`ew-focusable`,i={sm:`px-3 text-ui-sm`,md:`px-4 text-ui-base`,lg:`px-5 text-ui-base`}})))()}export{n as a,a as i,r as n,t as r,i as t};

@@ -1,0 +1,5 @@
+
+> arxiv-research-agent-web@0.1.0 contract:check
+> bash ./contract/check-generated-types.sh
+
+contract:check — generated types match contract/openapi.json

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CsOFd3vK.js";var t,n;function r(){return(r=e((()=>{t={offline:`Offline`,newQuestion:`Start a new question`,closeDrawer:`Close the thread drawer`,drawerList:`Thread list`},n={groupLabel:`Theme`,light:`Light`,dark:`Dark`,system:`System`}})))()}export{n,r,t};
