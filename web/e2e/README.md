@@ -75,6 +75,8 @@ Every default lives in `support/env.ts`. Nothing else hard-codes a port.
 | `support/intercept.ts` | interrupted-200 and `stream_timeout` streams |
 | `support/states.ts` | §4's state matrix, as a walkable table |
 | `support/measure.ts` | reflow, work surface, safe area, first paint |
+| `support/axe.ts` | WO-22's axe run, allowlist parser, contrast probe |
+| `axe-allowlist.json` | WO-22's suppression list — **empty, and stays empty** |
 | `fixtures/seed.sh` | the promoted Gate 1 seed, extended |
 | `*.spec.ts` | one file per criterion; see the header comment in each |
 
@@ -83,12 +85,12 @@ Every default lives in `support/env.ts`. Nothing else hard-codes a port.
 | Project | Runs | Why |
 |---|---|---|
 | `chromium` | everything except `@device` | the per-PR project |
-| `firefox`, `webkit` | everything except `@device`, `@slice`, `@export` | criteria 6 and 7 are pinned to chromium; running them three times adds wall clock, not evidence |
+| `firefox`, `webkit` | everything except `@device`, `@slice`, `@export`, `@axe` | criteria 6 and 7 are pinned to chromium; the axe sweep is pinned there too, because the twelve retained baseline reports were taken in Chrome and a WebKit contrast measurement is a *different* measurement, not a stricter one |
 | `Pixel 7` | `@device`, `@theme` | 412 × 915 — the width 04 §8.3 audits |
 | `iPhone 15` | `@device`, `@theme` | 393 × 852 on WebKit, where `env(safe-area-inset-*)` matters |
 
 Tags: `@paid-path`, `@stream`, `@reflow`, `@slice`, `@export`, `@theme`,
-`@device`.
+`@device`, `@axe`.
 
 ## Artifacts
 
@@ -97,6 +99,10 @@ Everything is written under `web/build/e2e/`, which is gitignored:
 | File | What |
 |---|---|
 | `research-post-count.txt` | one line per submission scenario — WO-21 criterion 3's evidence |
+| `axe/<state>.<theme>.json` | one full axe report per §4 state per theme, in the same shape as `docs/revamp/baseline/axe/*.json` so the two diff directly |
+| `axe/summary.tsv` | one row per state per theme: violations, gated, incomplete, contrast passes |
+| `axe/baseline-map.tsv` | which live report each retained baseline report corresponds to (WO-26 diffs these pairs) |
+| `axe/contrast-proof.tsv` | WO-22 criterion 4 — the three §3.1 replacement pairs, documented ratio beside the measured one |
 | `report/` | the HTML report |
 | `results.json` | machine-readable results, for CI summaries |
 | `test-results/` | traces, screenshots and video, retained on failure |
@@ -107,6 +113,26 @@ only `node_modules`, `.next`, `out`, `build` and `.git`. Playwright's HTML
 report is a JavaScript bundle full of literal colours, so a report written to
 the default `playwright-report/` turns the unit suite red. WO-06 put the
 Storybook static build under `build/` for the same reason.
+
+## The axe gate (WO-22)
+
+`axe.spec.ts` runs `@axe-core/playwright` 4.13.0 over every §4 state in both
+themes with the baseline's tag set (WCAG 2 A/AA + 2.1 A/AA + 2.2 AA +
+best-practice), asserts **zero** violations of `landmark-one-main`, `region`,
+`aria-allowed-role`, `listitem`, `color-contrast` and `page-has-heading-one`,
+and confirms the three `03 §3.1` replacement colour pairs in a real render.
+`04-ARCHITECTURE.md` §7.4 is its specification.
+
+```bash
+npm run e2e -- e2e/axe.spec.ts --project=chromium
+```
+
+`axe-allowlist.json` is a JSON array and is **empty**. An entry needs `rule`,
+`state`, `selector`, `owner` and a written `justification`; `parseAllowlist`
+refuses anything less, and refuses outright to suppress one of the six gated
+rules. What automation cannot establish — keyboard order, focus restoration,
+announcement quality, screen-reader comprehension — is WO-27's manual Gate 4
+evidence and is not claimed here.
 
 ## For WO-24 (CI wiring) and WO-22 (axe)
 
@@ -142,10 +168,28 @@ Notes it will need:
   rather than passing vacuously.
 - `retries` is 1 and `workers` is 2 under `CI`; `forbidOnly` is on.
 
-**WO-22.** `axe.spec.ts` should import `STATES` from `support/states.ts` rather
-than re-listing the state matrix: it already carries each state's path, its
-route interception, and a ready condition that keeps a run from passing
-against a blank page. `reflow.spec.ts`'s first test asserts that `STATES` and
-`DEFERRED_STATES` together partition the whole of §4, so anything iterating
-`STATES` inherits that coverage claim. Add `@axe` as a new tag and grep it into
-whichever projects the axe job runs.
+**WO-22 — landed.** `axe.spec.ts` iterates `STATES` in both themes (forty
+renders), so it inherits `reflow.spec.ts`'s partition claim that `STATES ∪
+DEFERRED_STATES` is the whole of §4. `@axe` is grepped into `chromium` only.
+Three notes for anyone touching it:
+
+- **The audit viewport is load-bearing.** It is 1440 × 1200, the baseline's
+  (`baseline/fixtures/axe-baseline.spec.ts:47`). axe cannot resolve a
+  composited background for an element below the fold, so it downgrades those
+  `color-contrast` findings to `incomplete`. At Playwright's default 1280 × 720
+  the sweep reported *three fewer* real violations than the retained baseline —
+  a gate that looked greener than the thing it was auditing.
+- **`settleForAudit` is not a sleep.** A thread route paints its header from
+  cache and fills the run panel and the event list afterwards; auditing between
+  those moments under-reports. It waits for two consecutive samples of the
+  serialised DOM to agree, capped, so a live stream still gets audited.
+- **`PENDING_COMPOSITION` is not an allowlist.** It pins the gated violations
+  that survive in the legacy components WO-20 has not replaced yet, each with
+  its file, its line and its owning work order. It fails in *both* directions:
+  a new gated violation anywhere goes red, and so does an entry that stops
+  matching — at which point the entry must be deleted, not kept.
+
+**WO-24.** `support/axe.ts` is written to be reused for the Storybook half of
+WO-22 criterion 5: `analyze(page, { include: "#storybook-root" })` runs the same
+tag set scoped to a story root, and `partition(...)` applies the same empty
+allowlist. Upload `web/build/e2e/axe/` with the rest of `web/build/e2e`.
