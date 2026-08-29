@@ -98,6 +98,23 @@
 }
 
 /* -------------------------------------------------------------------------
+ * The drawer disclosure — the Gate 3 criterion-7 CLS repair.
+ *
+ * WHY THERE IS NO RULE HERE AND ONLY AN OVERRIDE BELOW. The button is
+ * rendered at EVERY mode (WorkbenchShell.tsx says why), and below md it is
+ * simply the `Button` primitive's own `inline-flex`. This file's only job is
+ * to take it out of the layout at ≥768px, where the rail is persistent and
+ * the 56px icon strip carries its own trigger.
+ *
+ * The alternative — rendering it from `mode === "drawer"` — is what produced
+ * the 0.13357 shift the Gate 3 pack measured on all four routes: the server
+ * has no viewport, so the narrow first paint drew a header with no trigger
+ * and hydration inserted one, moving the workspace indicator 112.7px sideways
+ * and `main` 42px down. A control whose box appears after first paint is a
+ * layout shift however small the control is.
+ * ---------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------
  * Rail — the `nav[aria-label="Threads"]` landmark
  *
  * Not rendered at all below md: 04-ARCHITECTURE.md §8.3 item 1 is explicit
@@ -214,6 +231,13 @@
   .ew-shell {
     --ew-rail-width: var(--layout-rail-collapsed-width);
     grid-template-columns: var(--ew-rail-width) minmax(0, 1fr);
+  }
+
+  /* Two classes rather than one, so this beats the `inline-flex` utility the
+     Button primitive carries. Not `!important`: specificity is the mechanism
+     the rest of this file uses and a reader can compute it. */
+  .ew-shell__header .ew-shell__disclosure {
+    display: none;
   }
 }
 
