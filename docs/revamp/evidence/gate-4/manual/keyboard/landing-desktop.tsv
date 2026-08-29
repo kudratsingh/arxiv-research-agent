@@ -1,0 +1,13 @@
+# Landing · 1440
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	link	Skip to content	a	data-theme="light"	chrome	solid 2px @ 2px	self
+2	radio	System	input	data-theme-toggle	chrome	solid 2px @ 2px	sibling
+3	button	Collapse the rail	button	data-rail-collapse-toggle	rail	solid 2px @ 2px	self
+4	link	New research	a	data-thread-rail-new	rail	solid 2px @ 2px	self
+5	link	Empty research thread	a	data-thread-row-link="baseline-empty"	rail	solid 2px @ 2px	self
+6	button	Thread actions: Empty research thread	button	data-thread-row-menu="baseline-empty"	rail	solid 2px @ 2px	self
+7	link	Scientific claim verification	a	data-thread-row-link="baseline-populated"	rail	solid 2px @ 2px	self
+8	button	Thread actions: Scientific claim verification	button	data-thread-row-menu="baseline-populated"	rail	solid 2px @ 2px	self
+9	textbox	Research question	textarea	data-variant="landing"	main	solid 2px @ 2px	self
+10	button	Generate plan	button	data-variant="landing"	main	solid 2px @ 2px	self
+# document end after stop 10

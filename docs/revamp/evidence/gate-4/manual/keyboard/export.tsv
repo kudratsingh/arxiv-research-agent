@@ -1,0 +1,5 @@
+# Export · 1440
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	link	Markdown	a	data-export-link="true"	main	solid 2px @ 2px	self
+2	link	PDF	a	data-export-link="true"	main	solid 2px @ 2px	self
+3	link	Word	a	data-export-link="true"	main	solid 2px @ 2px	self

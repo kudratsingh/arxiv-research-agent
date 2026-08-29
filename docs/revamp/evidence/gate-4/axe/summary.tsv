@@ -1,0 +1,125 @@
+# WO-27 criterion 1 — the full matrix: every §4 state × light/dark × 320/412/1440.
+# The 320 and 412 rows come from web/e2e/axe-matrix.spec.ts; the 1440 rows from
+# web/e2e/axe.spec.ts (WO-22), in the same `npm run e2e` invocation.
+# axe-core 4.13.0, tags: wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa, best-practice
+state	theme	width	§4 rows	violations	gated	unlisted	incomplete	passes
+attached-status-unknown	dark	1440	(see WO-22)	0	0	0	0	41
+attached-status-unknown	dark	320	C	0	0	0	1	41
+attached-status-unknown	dark	412	C	0	0	0	0	41
+attached-status-unknown	light	1440	(see WO-22)	0	0	0	0	41
+attached-status-unknown	light	320	C	0	0	0	1	41
+attached-status-unknown	light	412	C	0	0	0	0	41
+cancelled	dark	1440	(see WO-22)	0	0	0	0	43
+cancelled	dark	320	13	0	0	0	1	43
+cancelled	dark	412	13	0	0	0	0	43
+cancelled	light	1440	(see WO-22)	0	0	0	0	43
+cancelled	light	320	13	0	0	0	1	43
+cancelled	light	412	13	0	0	0	0	43
+expired	dark	1440	(see WO-22)	0	0	0	0	41
+expired	dark	320	16	0	0	0	1	41
+expired	dark	412	16	0	0	0	0	41
+expired	light	1440	(see WO-22)	0	0	0	0	41
+expired	light	320	16	0	0	0	1	41
+expired	light	412	16	0	0	0	0	41
+failed-no-result	dark	1440	(see WO-22)	0	0	0	0	43
+failed-no-result	dark	320	15+23	0	0	0	1	43
+failed-no-result	dark	412	15+23	0	0	0	0	43
+failed-no-result	light	1440	(see WO-22)	0	0	0	0	43
+failed-no-result	light	320	15+23	0	0	0	1	43
+failed-no-result	light	412	15+23	0	0	0	0	43
+failed-partial	dark	1440	(see WO-22)	0	0	0	0	43
+failed-partial	dark	320	14	0	0	0	1	43
+failed-partial	dark	412	14	0	0	0	0	43
+failed-partial	light	1440	(see WO-22)	0	0	0	0	43
+failed-partial	light	320	14	0	0	0	1	43
+failed-partial	light	412	14	0	0	0	0	43
+landing	dark	1440	(see WO-22)	0	0	0	0	40
+landing	dark	320	1	0	0	0	0	41
+landing	dark	412	1	0	0	0	0	40
+landing	light	1440	(see WO-22)	0	0	0	0	40
+landing	light	320	1	0	0	0	0	41
+landing	light	412	1	0	0	0	0	40
+plan-review	dark	1440	(see WO-22)	0	0	0	0	43
+plan-review	dark	320	9	0	0	0	1	43
+plan-review	dark	412	9	0	0	0	0	43
+plan-review	light	1440	(see WO-22)	0	0	0	0	43
+plan-review	light	320	9	0	0	0	1	43
+plan-review	light	412	9	0	0	0	0	43
+rail-empty	dark	1440	(see WO-22)	0	0	0	0	40
+rail-empty	dark	320	3	0	0	0	1	31
+rail-empty	dark	412	3	0	0	0	1	31
+rail-empty	light	1440	(see WO-22)	0	0	0	0	40
+rail-empty	light	320	3	0	0	0	1	31
+rail-empty	light	412	3	0	0	0	1	31
+rail-error-proxy-503	dark	1440	(see WO-22)	0	0	0	0	40
+rail-error-proxy-503	dark	320	F	0	0	0	1	31
+rail-error-proxy-503	dark	412	F	0	0	0	1	31
+rail-error-proxy-503	light	1440	(see WO-22)	0	0	0	0	40
+rail-error-proxy-503	light	320	F	0	0	0	1	31
+rail-error-proxy-503	light	412	F	0	0	0	1	31
+rail-error-upstream	dark	1440	(see WO-22)	0	0	0	0	40
+rail-error-upstream	dark	320	4+F	0	0	0	1	31
+rail-error-upstream	dark	412	4+F	0	0	0	1	31
+rail-error-upstream	light	1440	(see WO-22)	0	0	0	0	40
+rail-error-upstream	light	320	4+F	0	0	0	1	31
+rail-error-upstream	light	412	4+F	0	0	0	1	31
+rail-loading	dark	1440	(see WO-22)	0	0	0	0	40
+rail-loading	dark	320	2+6	0	0	0	1	33
+rail-loading	dark	412	2+6	0	0	0	1	33
+rail-loading	light	1440	(see WO-22)	0	0	0	0	40
+rail-loading	light	320	2+6	0	0	0	1	33
+rail-loading	light	412	2+6	0	0	0	1	33
+rate-limited-429	dark	1440	(see WO-22)	0	0	0	0	40
+rate-limited-429	dark	320	18	0	0	0	0	41
+rate-limited-429	dark	412	18	0	0	0	0	40
+rate-limited-429	light	1440	(see WO-22)	0	0	0	0	40
+rate-limited-429	light	320	18	0	0	0	0	41
+rate-limited-429	light	412	18	0	0	0	0	40
+route-not-found	dark	1440	(see WO-22)	0	0	0	0	40
+route-not-found	dark	320	22	0	0	0	0	37
+route-not-found	dark	412	22	0	0	0	0	37
+route-not-found	light	1440	(see WO-22)	0	0	0	0	40
+route-not-found	light	320	22	0	0	0	0	37
+route-not-found	light	412	22	0	0	0	0	37
+running	dark	1440	(see WO-22)	0	0	0	0	43
+running	dark	320	10	0	0	0	1	43
+running	dark	412	10	0	0	0	0	43
+running	light	1440	(see WO-22)	0	0	0	0	43
+running	light	320	10	0	0	0	1	43
+running	light	412	10	0	0	0	0	43
+submission-error-500	dark	1440	(see WO-22)	0	0	0	0	40
+submission-error-500	dark	320	17	0	0	0	0	41
+submission-error-500	dark	412	17	0	0	0	0	40
+submission-error-500	light	1440	(see WO-22)	0	0	0	0	40
+submission-error-500	light	320	17	0	0	0	0	41
+submission-error-500	light	412	17	0	0	0	0	40
+thread-empty	dark	1440	(see WO-22)	0	0	0	0	41
+thread-empty	dark	320	5+B	0	0	0	1	40
+thread-empty	dark	412	5+B	0	0	0	0	39
+thread-empty	light	1440	(see WO-22)	0	0	0	0	41
+thread-empty	light	320	5+B	0	0	0	1	40
+thread-empty	light	412	5+B	0	0	0	0	39
+thread-not-found-inline	dark	1440	(see WO-22)	0	0	0	0	40
+thread-not-found-inline	dark	320	21	0	0	0	0	37
+thread-not-found-inline	dark	412	21	0	0	0	0	37
+thread-not-found-inline	light	1440	(see WO-22)	0	0	0	0	40
+thread-not-found-inline	light	320	21	0	0	0	0	37
+thread-not-found-inline	light	412	21	0	0	0	0	37
+thread-populated	dark	1440	(see WO-22)	0	0	0	0	46
+thread-populated	dark	320	7	0	0	0	1	46
+thread-populated	dark	412	7	0	0	0	0	46
+thread-populated	light	1440	(see WO-22)	0	0	0	0	46
+thread-populated	light	320	7	0	0	0	1	46
+thread-populated	light	412	7	0	0	0	0	46
+unauthorized-401	dark	1440	(see WO-22)	0	0	0	0	40
+unauthorized-401	dark	320	19	0	0	0	0	41
+unauthorized-401	dark	412	19	0	0	0	0	40
+unauthorized-401	light	1440	(see WO-22)	0	0	0	0	40
+unauthorized-401	light	320	19	0	0	0	0	41
+unauthorized-401	light	412	19	0	0	0	0	40
+validation-422	dark	1440	(see WO-22)	0	0	0	0	40
+validation-422	dark	320	20	0	0	0	0	41
+validation-422	dark	412	20	0	0	0	0	40
+validation-422	light	1440	(see WO-22)	0	0	0	0	40
+validation-422	light	320	20	0	0	0	0	41
+validation-422	light	412	20	0	0	0	0	40

@@ -1,0 +1,10 @@
+# Rail error · 1440
+stop	role	accessible name	tag	hook	region	focus ring	ring on
+1	link	Skip to content	a	data-theme="light"	chrome	solid 2px @ 2px	self
+2	radio	System	input	data-theme-toggle	chrome	solid 2px @ 2px	sibling
+3	button	Collapse the rail	button	data-rail-collapse-toggle	rail	solid 2px @ 2px	self
+4	link	New research	a	data-thread-rail-new	rail	solid 2px @ 2px	self
+5	button	Retry	button	data-thread-rail-retry	rail	solid 2px @ 2px	self
+6	textbox	Research question	textarea	data-variant="landing"	main	solid 2px @ 2px	self
+7	button	Generate plan	button	data-variant="landing"	main	solid 2px @ 2px	self
+8	(document)		body		chrome	none	none

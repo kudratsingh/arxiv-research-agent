@@ -36,3 +36,33 @@
   outline-color: var(--color-focus);
   outline-offset: var(--size-focus-ring-offset);
 }
+
+/* =========================================================================
+ * WO-27 criterion 6 — the selected option in forced colours.
+ *
+ * THE DEFECT THIS FIXES, AS MEASURED. The `:checked` rule above is the only
+ * thing that distinguishes the chosen theme from the other two, and it is a
+ * background tint. Forced-colors mode replaces every author background with
+ * `Canvas`, so in Chromium's light forced palette all three options measured
+ * `CanvasText` on `Canvas` — the same colour, the same weight, no border, no
+ * underline. Which theme is selected was not merely hard to see; it was not
+ * represented at all (SC 1.4.1). The measurement is in
+ * docs/revamp/evidence/gate-4/manual/reduced-motion.md §3; the values are not
+ * repeated here because web/tests/tokens.test.ts scans this file for literal
+ * colours.
+ *
+ * System colour keywords are the exception to the replacement: a value the
+ * author already wrote as `Highlight` is honoured rather than overridden,
+ * and `Highlight` / `HighlightText` is the pair the platform guarantees to
+ * be a legible selection in whatever theme the reader has chosen. That is
+ * why this is two declarations rather than `forced-color-adjust: none`,
+ * which would keep the product's own hues and defeat the mode outright.
+ *
+ * The tokens above are untouched: outside forced colours nothing changes.
+ * ========================================================================= */
+@media (forced-colors: active) {
+  .ew-theme-option input:checked + span {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}

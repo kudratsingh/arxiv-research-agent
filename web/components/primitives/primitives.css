@@ -129,6 +129,29 @@
 }
 
 /* -------------------------------------------------------------------------
+ * 3a. A closed disclosure is closed (WO-27 criterion 7)
+ *
+ * `hidden` hides through the USER-AGENT stylesheet's `[hidden] { display:
+ * none }`, and the cascade resolves origin before specificity: any author
+ * declaration of `display` wins, however weak. So a `Disclosure` whose caller
+ * passes a layout utility through `panelClassName` renders its panel
+ * displayed, tabbable and — if it holds one — announcing, while its trigger
+ * still reports `aria-expanded="false"`.
+ *
+ * `Diagnostics` passes `flex flex-col gap-3`, and WO-27's keyboard walk found
+ * its `role="log"` live region live on a collapsed disclosure: a third live
+ * region where 03 §7.3 allows two, and an `aria-expanded` that was not true.
+ * axe has no rule for the mismatch, so the full-matrix sweep passed over it.
+ *
+ * `.ew-disclosure-panel[hidden]` is (0,2,0) and beats any single utility
+ * class, so the policy holds for every caller rather than for the one that
+ * was caught.
+ * ---------------------------------------------------------------------- */
+.ew-disclosure-panel[hidden] {
+  display: none;
+}
+
+/* -------------------------------------------------------------------------
  * 4. Overflow — the ScrollRegion pan surface
  * ---------------------------------------------------------------------- */
 .ew-scroll-region {
@@ -199,5 +222,47 @@
   .ew-enter,
   .ew-pulse {
     animation: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Forced colours (WO-27 criterion 6, RC-17)
+ *
+ * THE DEFECT THIS FIXES, AS MEASURED. In forced-colors mode a browser
+ * replaces every author colour with one from the reader's own palette. It
+ * does that for the spine's words — they come back `CanvasText` — and it
+ * does NOT do it for the marks beside them: Chromium's user-agent sheet puts
+ *
+ *     svg { forced-color-adjust: preserve-parent-color; }
+ *
+ * on SVG content, which means "take the parent's already-forced colour"
+ * — but an `<svg>` carrying its OWN `color` declaration (which every `Mark`
+ * does, through the tone class that gives it its hue) has nothing to
+ * inherit, so it keeps the author value and opts out of the reader's
+ * palette entirely.
+ *
+ * Measured on this commit before the rule below existed, in Chromium's light
+ * forced palette: the `observed` mark kept `--color-signature-text` and the
+ * `not observed` marks kept `--color-ink-faint`, while every word around them
+ * came back as `CanvasText`. The exact values are in
+ * docs/revamp/evidence/gate-4/manual/reduced-motion.md; they are not written
+ * here because web/tests/tokens.test.ts scans this file for literal colours
+ * and is right to. Those two particular hues happen to be legible against
+ * Chromium's *emulated* palette — but that palette is the reader's to choose,
+ * and a shape drawn in a hue the product picked is exactly what
+ * forced-colors mode exists to prevent.
+ *
+ * `color: inherit` rather than `forced-color-adjust: auto`, and rather than
+ * `CanvasText`: 03 §3.4 says the mark is the redundant channel beside its
+ * word, so the right forced colour is *whatever that word ended up being* —
+ * `CanvasText` in the spine, `LinkText` inside a link, the button's forced
+ * colour inside a button. Inheriting gets all three right and hard-codes
+ * none of them. `svg[data-mark]` rather than `[data-mark]` so the rule wins
+ * on specificity against the Tailwind tone utility regardless of the order
+ * the two sheets are injected in.
+ * ---------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  svg[data-mark] {
+    color: inherit;
   }
 }

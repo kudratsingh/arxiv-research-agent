@@ -43,6 +43,44 @@ const SSE_HEADERS = {
 export interface StreamInterceptor {
   /** How many times the browser has opened the stream for this job. */
   opens(): number;
+  /**
+   * `Date.now()` at each open, in order.
+   *
+   * WHY A COUNT IS NOT ENOUGH, AND WHY THIS EXISTS (WO-27).
+   * `docs/revamp/evidence/gate-3/known-gaps.md` §2 records
+   * `stream.spec.ts`'s "an interrupted 200 stream is narrated, not raced" as
+   * intermittently red — 3 failures in 12 runs — with the diagnosis: "The
+   * assertion cannot distinguish the browser's retry from a client-initiated
+   * second open, which is the only thing it means to forbid."
+   *
+   * That is exactly right, and it is a property of the counter rather than
+   * of the product: `opens()` conflates two events that mean opposite things.
+   * `EventSource`'s own reconnection is the CORRECT behaviour the test exists
+   * to confirm the UI narrates; a second connection opened by the client is
+   * the defect. They are indistinguishable at the network layer and trivially
+   * distinguishable in TIME — the browser waits its reconnection interval
+   * (3 s in Chromium and WebKit, 5 s in Firefox) while a client-initiated
+   * reopen lands in the same task.
+   *
+   * So this records when, and `RACE_FLOOR_MS` below is the line between them.
+   */
+  openTimes(): number[];
+}
+
+/**
+ * The shortest gap between two opens that can still be the browser's own
+ * backoff rather than a client racing it.
+ *
+ * An order of magnitude below the smallest default reconnection interval any
+ * of the three engines uses, and two orders above the sub-10 ms a
+ * same-task reopen would show. The gap it has to separate is not close.
+ */
+export const RACE_FLOOR_MS = 1_000;
+
+/** The gaps between consecutive opens, in ms. */
+export function openGaps(interceptor: StreamInterceptor): number[] {
+  const times = interceptor.openTimes();
+  return times.slice(1).map((time, index) => time - (times[index] as number));
 }
 
 /**
@@ -59,11 +97,11 @@ export async function interruptStream(
   page: Page,
   jobId: string,
 ): Promise<StreamInterceptor> {
-  let opens = 0;
+  const times: number[] = [];
   await page.route(
     (url) => url.pathname === `/api/research/${jobId}/stream`,
     async (route) => {
-      opens += 1;
+      times.push(Date.now());
       await route.fulfill({
         status: 200,
         contentType: "text/event-stream",
@@ -72,7 +110,7 @@ export async function interruptStream(
       });
     },
   );
-  return { opens: () => opens };
+  return { opens: () => times.length, openTimes: () => [...times] };
 }
 
 /**
@@ -89,13 +127,13 @@ export async function timeoutThenHold(
   jobId: string,
   maxDurationSec = 300,
 ): Promise<StreamInterceptor> {
-  let opens = 0;
+  const times: number[] = [];
   await page.route(
     (url) => url.pathname === `/api/research/${jobId}/stream`,
     async (route) => {
-      opens += 1;
+      times.push(Date.now());
       const body =
-        opens === 1
+        times.length === 1
           ? // `src/api/streaming.py:300-308`, payload field for field.
             sseFrame("stream_timeout", {
               job_id: jobId,
@@ -112,7 +150,7 @@ export async function timeoutThenHold(
       });
     },
   );
-  return { opens: () => opens };
+  return { opens: () => times.length, openTimes: () => [...times] };
 }
 
 /**
@@ -125,13 +163,13 @@ export async function countStreamOpens(
   page: Page,
   jobId: string,
 ): Promise<StreamInterceptor> {
-  let opens = 0;
+  const times: number[] = [];
   await page.route(
     (url) => url.pathname === `/api/research/${jobId}/stream`,
     async (route) => {
-      opens += 1;
+      times.push(Date.now());
       await route.fallback();
     },
   );
-  return { opens: () => opens };
+  return { opens: () => times.length, openTimes: () => [...times] };
 }

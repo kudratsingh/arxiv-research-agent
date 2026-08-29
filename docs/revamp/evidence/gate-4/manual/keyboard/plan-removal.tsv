@@ -1,0 +1,4 @@
+action	focus after
+remove sub-question 2	textbox "Sub-question 2" [self]
+remove the new last row	textbox "Sub-question 1" [self]
+remove the only row	button "Add sub-question" [self]

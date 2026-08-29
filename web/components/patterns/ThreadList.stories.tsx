@@ -23,7 +23,7 @@
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, screen, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 
 import { THREAD_RAIL, THREAD_ROW, deleteDialog } from "@/lib/copy/threads";
 
@@ -135,13 +135,27 @@ export const Error: Story = {
  */
 export const DeleteConfirm: Story = {
   args: { pendingDelete: THREADS[0] },
+  // WO-27: `toBeVisible()` inside a `waitFor`, not beside a `findBy`.
+  //
+  // `findByRole("dialog")` retries until the dialog EXISTS, which it does the
+  // moment Radix portals it — while its enter transition is still running.
+  // `toBeVisible()` reads the composited `opacity`, so an assertion made in
+  // that window sees 0 and fails. Gate 3's render matrix caught it exactly
+  // that way: these three stories failed in light and dark at all five
+  // widths and passed under `prefers-reduced-motion` at all five, because
+  // `app/tokens.css` collapses the durations to 1ms there
+  // (`evidence/gate-3/known-gaps.md` §2d, group 1 — 30 of the 48 errors).
+  // Retrying the visibility check is the fix; slowing the component down for
+  // a test would not be.
   play: async () => {
     const dialog = await screen.findByRole("dialog");
     const copy = deleteDialog(THREADS[0]?.title ?? "");
-    await expect(within(dialog).getByText(copy.body)).toBeVisible();
-    await expect(
-      within(dialog).getByRole("button", { name: copy.confirm }),
-    ).toBeVisible();
+    await waitFor(async () => {
+      await expect(within(dialog).getByText(copy.body)).toBeVisible();
+      await expect(
+        within(dialog).getByRole("button", { name: copy.confirm }),
+      ).toBeVisible();
+    });
   },
 };
 
@@ -179,6 +193,12 @@ export const RowMenuOpen: Story = {
     trigger.focus();
     await userEvent.keyboard("{Enter}");
     const menu = await screen.findByRole("menu");
-    await expect(within(menu).getByRole("menuitem", { name: THREAD_ROW.delete })).toBeVisible();
+    // Same enter-transition race as `DeleteConfirm` above, for the same
+    // reason and with the same fix.
+    await waitFor(async () => {
+      await expect(
+        within(menu).getByRole("menuitem", { name: THREAD_ROW.delete }),
+      ).toBeVisible();
+    });
   },
 };

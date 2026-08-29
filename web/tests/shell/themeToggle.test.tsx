@@ -11,6 +11,8 @@
  * before the next reload rather than because of it.
  */
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ThemeToggle, readThemePreference } from "@/components/patterns/ThemeToggle";
@@ -157,5 +159,70 @@ describe("criterion 8 — the no-flash property's preconditions", () => {
   it("is not the source of truth: it reads the attribute the script wrote", () => {
     document.documentElement.setAttribute(THEME_PREFERENCE_ATTRIBUTE, "nonsense");
     expect(readThemePreference()).toBe("system");
+  });
+});
+
+/**
+ * WO-27 criterion 6/7 — the selected option survives forced colours.
+ *
+ * THE DEFECT. `.ew-theme-option input:checked + span` distinguishes the
+ * chosen theme with `background-color: var(--color-primary)` and nothing
+ * else — no border, no weight change, no underline. Forced-colors mode
+ * replaces every author background with `Canvas`, so WO-27's sweep measured
+ * all three options identical: same colour, same background, same weight.
+ * Which theme was selected was not represented at all (SC 1.4.1).
+ *
+ * WHY THE PROOF IS SPLIT. jsdom evaluates no `@media` block whose media list
+ * does not mention `screen` (see tests/primitives/support/css.ts), so
+ * `(forced-colors: active)` can never match here in either direction, and a
+ * computed-style assertion would be a fiction. The COMPOSITED proof is
+ * `web/e2e/motion.spec.ts` — "the theme control's selected option is visible
+ * in forced colours" — which runs in a real Chromium with the palette really
+ * replaced, and fails on this exact page if the block below is deleted.
+ * What this file proves is the two halves that are facts about the source:
+ * the rule exists and names system colours, and the selector it is written
+ * against matches what the component renders.
+ */
+describe("WO-27 — the checked option in forced colours", () => {
+  const THEME_TOGGLE_CSS = readFileSync(
+    path.join(__dirname, "..", "..", "components", "patterns", "ThemeToggle.css"),
+    "utf8",
+  ).replace(/\/\*[\s\S]*?\*\//g, "");
+
+  it("repaints the checked option with system colours under forced colours", () => {
+    const start = THEME_TOGGLE_CSS.indexOf("@media (forced-colors: active)");
+    expect(
+      start,
+      "ThemeToggle.css has no `@media (forced-colors: active)` block, so the " +
+        "selected theme is a background tint that forced colours erases.",
+    ).toBeGreaterThan(-1);
+    const block = THEME_TOGGLE_CSS.slice(start, THEME_TOGGLE_CSS.indexOf("\n}", start));
+
+    expect(block).toContain(".ew-theme-option input:checked + span");
+    // System colour KEYWORDS specifically: forced colours honours a value the
+    // author already wrote as a system colour and replaces everything else,
+    // which is why this is the fix and `forced-color-adjust: none` — which
+    // would keep the product's own hues and defeat the mode — is not.
+    expect(block).toContain("background-color: Highlight");
+    expect(block).toContain("color: HighlightText");
+    expect(
+      THEME_TOGGLE_CSS,
+      "`forced-color-adjust: none` opts the control out of the reader's " +
+        "palette instead of participating in it.",
+    ).not.toContain("forced-color-adjust");
+  });
+
+  it("renders markup the rule's selector actually matches", () => {
+    render(<ThemeToggle />, { theme: "light", themePreference: "system" });
+    const checked = document.querySelector<HTMLInputElement>(
+      ".ew-theme-option input:checked",
+    );
+    expect(checked, "no `.ew-theme-option input:checked` in the rendered toggle").not.toBeNull();
+    expect(
+      checked?.nextElementSibling?.tagName,
+      "the rule is written as `input:checked + span`, so the element after " +
+        "the input has to be that span — a wrapper between them would make " +
+        "the forced-colours rule silently stop matching.",
+    ).toBe("SPAN");
   });
 });

@@ -21,6 +21,27 @@
  * transform, so reduced motion removes an animation and not information
  * (criterion 9).
  *
+ * WHY THE PANEL CARRIES `ew-disclosure-panel` (WO-27 criterion 7). `hidden`
+ * hides an element through the user-agent stylesheet's `[hidden] { display:
+ * none }`, and **any author rule that sets `display` beats it** — origin
+ * wins before specificity is even consulted. A caller passing a layout
+ * utility through `panelClassName` therefore un-hides the panel while
+ * `aria-expanded` still says `false`, and neither the caller nor this
+ * component has any way to notice.
+ *
+ * That is not hypothetical: `Diagnostics` passes `panelClassName="flex flex-
+ * col gap-3"`, and WO-27's keyboard walk found its `role="log"` live region
+ * displayed, tabbable and announcing on a collapsed disclosure — the exact
+ * thing `Diagnostics`'s own header says cannot happen, and a third live
+ * region where 03 §7.3 allows two. axe has no rule for it, so the full-matrix
+ * sweep was green over it in both themes at all three widths.
+ *
+ * The class exists so `primitives.css` can carry a `.ew-disclosure-panel
+ * [hidden]` rule, whose specificity (0,2,0) beats any single utility class a
+ * caller can pass. It is deliberately a policy in the primitive rather than a
+ * rule in `Diagnostics`: the next caller to pass `grid` would reintroduce the
+ * defect, and would be just as right to.
+ *
  * Controlled and uncontrolled both work: pass `open` + `onOpenChange`, or
  * neither and let it own the boolean.
  */
@@ -121,7 +142,10 @@ export function Disclosure({
         role="group"
         aria-labelledby={buttonId}
         hidden={!isOpen}
-        className={cx("ew-enter px-2 py-2 text-ui-sm text-ink", panelClassName)}
+        className={cx(
+          "ew-disclosure-panel ew-enter px-2 py-2 text-ui-sm text-ink",
+          panelClassName,
+        )}
       >
         {children}
       </div>

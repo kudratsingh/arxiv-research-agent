@@ -1,0 +1,6 @@
+# 03 §3.7's four duration tokens, read off :root in a real render
+token	no-preference	reduce
+--duration-fast	120ms	1ms
+--duration-base	160ms	1ms
+--duration-slow	240ms	1ms
+--duration-ambient	2400ms	1ms

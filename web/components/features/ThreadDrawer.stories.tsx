@@ -18,7 +18,7 @@
  */
 
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, screen, within } from "storybook/test";
+import { expect, screen, waitFor, within } from "storybook/test";
 
 import { ThreadList, type ThreadSummary } from "@/components/patterns/ThreadList";
 import { THREAD_RAIL } from "@/lib/copy/threads";
@@ -56,13 +56,23 @@ export const Closed: Story = {
 export const Open: Story = {
   args: { open: true },
   parameters: { viewport: { defaultViewport: "w320" } },
+  // WO-27: the visibility check retries, because the drawer's enter
+  // transition is `--duration-slow` (240ms, the longest in the product —
+  // 03 §3.7 justifies it by the distance it travels). `findByRole` returns as
+  // soon as the dialog is portalled, which is the start of that transition,
+  // so a bare `toBeVisible()` read an opacity of 0. Gate 3's render matrix
+  // saw it fail in light and dark at all five widths and pass under
+  // `prefers-reduced-motion` at all five, which is the tell
+  // (`evidence/gate-3/known-gaps.md` §2d, group 1).
   play: async () => {
     const dialog = await screen.findByRole("dialog", { name: THREAD_RAIL.heading });
     // The rail is inside the dialog, and the dialog is the only scroller:
     // no second `region` focus stop wrapping it (see ThreadDrawer.tsx).
-    await expect(
-      within(dialog).getByRole("link", { name: /Retrieval-augmented/ }),
-    ).toBeVisible();
+    await waitFor(async () => {
+      await expect(
+        within(dialog).getByRole("link", { name: /Retrieval-augmented/ }),
+      ).toBeVisible();
+    });
     await expect(within(dialog).queryByRole("region")).toBeNull();
   },
 };
