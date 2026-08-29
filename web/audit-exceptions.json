@@ -1,0 +1,45 @@
+{
+  "source": "05-MIGRATION.md C4 — the dependency audit gate. Read by web/scripts/audit-gate.mjs.",
+  "policy": "An exception may only ever cover a devDependency chain. The production audit (`npm audit --audit-level=high --omit=dev`) is gated at zero advisories and consults nothing in this file — an entry naming a package that the production tree also reaches is rejected by the script rather than honoured.",
+  "exceptions": [
+    {
+      "package": "image-size",
+      "advisories": [1138808, 1138809],
+      "urls": [
+        "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+        "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq"
+      ],
+      "severity": "high",
+      "path": "@storybook/nextjs-vite > vite-plugin-storybook-nextjs > image-size",
+      "date": "2026-08-29",
+      "owner": "WO-24",
+      "justification": "Two CWE-835 infinite-loop denial-of-service advisories in image-size's ICNS and JXL/HEIF parsers, both fixed in no published release (`fixAvailable: false` as of this date). The package is reached only from @storybook/nextjs-vite, a devDependency: it parses image files at Storybook build time so `next/image` can be mocked, and the only images it is ever handed are the ones in this repository. `npm audit --omit=dev` reports zero advisories, so nothing that ships to a browser or to the container reaches this code. Remove this entry the day @storybook/nextjs-vite ships a release whose vite-plugin-storybook-nextjs pulls a fixed image-size — the script fails on a stale entry, so it cannot be forgotten."
+    },
+    {
+      "package": "vite-plugin-storybook-nextjs",
+      "advisories": [1138808, 1138809],
+      "urls": [
+        "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+        "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq"
+      ],
+      "severity": "high",
+      "path": "@storybook/nextjs-vite > vite-plugin-storybook-nextjs",
+      "date": "2026-08-29",
+      "owner": "WO-24",
+      "justification": "Not an advisory of its own: npm reports this package as high-severity purely because it depends on the image-size entry above, and it is listed separately because `npm audit` counts it separately (the reported total of three is three packages carrying two upstream GHSAs, not three distinct defects). Same dev-only reachability, same removal condition: it is a build-time Storybook framework plugin, absent from `npm audit --omit=dev` and from every shipped bundle."
+    },
+    {
+      "package": "@storybook/nextjs-vite",
+      "advisories": [1138808, 1138809],
+      "urls": [
+        "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+        "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq"
+      ],
+      "severity": "high",
+      "path": "@storybook/nextjs-vite",
+      "date": "2026-08-29",
+      "owner": "WO-24",
+      "justification": "The direct devDependency at the head of the same chain, reported high for the same two image-size advisories and for no defect of its own. WO-06 introduced it (04-ARCHITECTURE.md §5.2) and the C4 baseline of zero was captured before that, which is why the ruling recorded in the WO-24 PR body splits the gate: production dependencies stay at zero, and this dev chain is gated by name here instead of being waved through by a lowered --audit-level."
+    }
+  ]
+}
