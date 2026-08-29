@@ -460,17 +460,20 @@ jobs:
     # submit leg never reaches the backend. web/tests/ci.test.ts asserts this
     # job's half of that against this file's own text.
     #
-    # WALL CLOCK. `stack.sh up` builds the API image from ./Dockerfile, and a
-    # GitHub runner's daemon starts with an empty layer cache, so the ML stack
-    # (torch, sentence-transformers, faiss, PyMuPDF) compiles cold on every
-    # run — the same ~13-15 min the `docker-build` job documents, and the
-    # dominant cost here. It cannot share that job's `type=gha` buildx cache:
-    # Compose builds through the daemon, not through the buildx builder. The
-    # real fix is a registry-published image (05 §3.1 B5 / R-12), which is a
-    # paused DEPLOY-workstream item, so the honest answer today is a timeout
-    # with headroom rather than a cache trick that silently stops working.
+    # WALL CLOCK, MEASURED RATHER THAN ESTIMATED. `stack.sh up` builds both
+    # images from source, and a GitHub runner's daemon starts with an empty
+    # layer cache, so none of this shares `docker-build`'s `type=gha` buildx
+    # cache — Compose builds through the daemon, not through the buildx
+    # builder. That sounds worse than it measures: on this workflow's first
+    # green run `up` took 2m36s (the runtime lock installs published wheels;
+    # nothing compiles), the chromium suite 1m51s, and the job 5m13s end to
+    # end. The ceiling below is headroom for the nightly, which runs five
+    # projects instead of one, not a prediction about the per-PR path. If a
+    # future dependency does make the image expensive to build, the fix is a
+    # registry-published image (05 §3.1 B5 / R-12, a paused DEPLOY item), not
+    # a cache trick that silently stops working.
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     env:
       # Never a real key. See "THE COST BOUNDARY" above.
       ANTHROPIC_API_KEY: local-preview-disabled
