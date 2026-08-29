@@ -835,3 +835,18 @@ Product implementation remains intentionally blocked until Gate 1 is approved.
   three backend-feasible directions. No product code, API shape, paid model,
   hosting order, or deployment state changed. The detailed design brief is
   blocked on the human Gate 1 decisions recorded in `docs/revamp/STATUS.md`.
+- _2026-08-29_ — Frontend revamp EXEC: Gate 3 implementation set fully
+  merged (25/33 work orders, PRs #74–#101; bookkeeping #102). The waves:
+  M0 foundation (tokens, typed client, budgets, CI smoke), the M1–M3
+  surface wave (primitives → patterns → features), and the quality-gate
+  wave — axe gate with `landmark-one-main`/`region` 12→0 and an empty
+  allowlist, seeded Playwright harness with a paid-path interceptor,
+  route-JS budgets, an 8-job web CI, and the route composition that
+  retired the legacy thread UI (CLS 0.000, net route JS −4.2 KB).
+  Coordinator rulings under the standing delegation:
+  `docs/revamp/DECISIONS.md` D-011/D-012. In flight: the Gate 3
+  evidence pack (WO-26), proxy hardening (WO-30), and a
+  public-presentation polish (README/diagrams/screenshots, agent docs,
+  demo/eval accuracy). Remaining after those: WO-27–29, 31–33 toward
+  Gate 4. Reserved for the user: MT-01 approval and anything
+  cost-bearing (deploy, paid eval campaign).
