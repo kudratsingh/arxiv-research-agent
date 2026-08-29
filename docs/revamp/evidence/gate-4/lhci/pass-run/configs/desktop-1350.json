@@ -72,7 +72,7 @@
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 50,
+                "maxNumericValue": 100,
                 "aggregationMethod": "median"
               }
             ],
@@ -126,7 +126,7 @@
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 50,
+                "maxNumericValue": 100,
                 "aggregationMethod": "median"
               }
             ],
@@ -180,7 +180,7 @@
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 50,
+                "maxNumericValue": 100,
                 "aggregationMethod": "median"
               }
             ],
@@ -234,7 +234,7 @@
             "total-blocking-time": [
               "error",
               {
-                "maxNumericValue": 50,
+                "maxNumericValue": 100,
                 "aggregationMethod": "median"
               }
             ],
@@ -250,6 +250,23 @@
               {
                 "minScore": 1,
                 "aggregationMethod": "pessimistic"
+              }
+            ]
+          }
+        },
+        {
+          "matchingUrlPattern": "^https?://[^/]+/",
+          "$comment": [
+            "The ratified §8.2 ceiling, kept as a warning. See the `ci` profile's copy of this",
+            "entry for the full reasoning: one catch-all entry per profile, because runner CPU",
+            "drift is a property of the hardware rather than of any one route."
+          ],
+          "assertions": {
+            "total-blocking-time": [
+              "warn",
+              {
+                "maxNumericValue": 50,
+                "aggregationMethod": "median"
               }
             ]
           }

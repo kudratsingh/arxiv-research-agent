@@ -2,8 +2,8 @@
   {
     "url": "http://127.0.0.1:13295/",
     "isRepresentativeRun": false,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_15_52_19.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_15_52_19.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_16_58_52.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_16_58_52.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -13,8 +13,8 @@
   {
     "url": "http://127.0.0.1:13295/",
     "isRepresentativeRun": false,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_15_52_33.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_15_52_33.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_16_59_04.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_16_59_04.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -24,8 +24,8 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-empty",
     "isRepresentativeRun": false,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_15_52_55.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_15_52_55.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_16_59_32.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_16_59_32.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -35,8 +35,8 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-empty",
     "isRepresentativeRun": false,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_15_53_07.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_15_53_07.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_16_59_45.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_16_59_45.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -46,10 +46,10 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-populated",
     "isRepresentativeRun": false,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_53_29.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_53_29.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_19.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_19.json",
     "summary": {
-      "performance": 0.99,
+      "performance": 1,
       "accessibility": 1,
       "best-practices": 1
     }
@@ -57,8 +57,8 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-populated",
     "isRepresentativeRun": false,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_53_40.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_53_40.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_30.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_30.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -68,8 +68,8 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-populated?job=baseline-plan-review",
     "isRepresentativeRun": false,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_54_14.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_54_14.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_52.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_52.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -79,8 +79,8 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-populated?job=baseline-plan-review",
     "isRepresentativeRun": false,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_54_26.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_54_26.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_01_03.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_01_03.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -90,8 +90,8 @@
   {
     "url": "http://127.0.0.1:13295/",
     "isRepresentativeRun": true,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_15_52_44.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_15_52_44.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_16_59_16.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/-2026_08_29_16_59_16.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -101,8 +101,8 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-empty",
     "isRepresentativeRun": true,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_15_53_18.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_15_53_18.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_16_59_57.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_empty-2026_08_29_16_59_57.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,
@@ -112,10 +112,10 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-populated",
     "isRepresentativeRun": true,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_53_52.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_53_52.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_08.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_08.json",
     "summary": {
-      "performance": 0.99,
+      "performance": 1,
       "accessibility": 1,
       "best-practices": 1
     }
@@ -123,8 +123,8 @@
   {
     "url": "http://127.0.0.1:13295/c/baseline-populated?job=baseline-plan-review",
     "isRepresentativeRun": true,
-    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_54_03.html",
-    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_15_54_03.json",
+    "htmlPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_41.html",
+    "jsonPath": "/Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.claude/worktrees/agent-a8d16fa4a9b22f63f/web/build/lhci/desktop-1350/c_baseline_populated-2026_08_29_17_00_41.json",
     "summary": {
       "performance": 1,
       "accessibility": 1,

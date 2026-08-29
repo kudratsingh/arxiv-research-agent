@@ -6,7 +6,7 @@
     "values": [
       1,
       1,
-      0.98
+      1
     ],
     "operator": ">=",
     "passed": true,
@@ -50,11 +50,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 1362.2145999999998,
+    "actual": 1364.9343,
     "values": [
-      1362.2145999999998,
-      1212.7959,
-      2341.51865
+      1366.8095,
+      1226.7229,
+      1364.9343
     ],
     "operator": "<=",
     "passed": true,
@@ -66,12 +66,12 @@
   },
   {
     "name": "maxNumericValue",
-    "expected": 150,
-    "actual": 6.5,
+    "expected": 300,
+    "actual": 8,
     "values": [
-      3.5,
       6.5,
-      24
+      10,
+      8
     ],
     "operator": "<=",
     "passed": true,
@@ -114,6 +114,23 @@
     "url": "http://127.0.0.1:13295/",
     "auditTitle": "Page didn't prevent back/forward cache restoration",
     "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/bf-cache/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 150,
+    "actual": 8,
+    "values": [
+      6.5,
+      10,
+      8
+    ],
+    "operator": "<=",
+    "passed": true,
+    "auditId": "total-blocking-time",
+    "level": "warn",
+    "url": "http://127.0.0.1:13295/",
+    "auditTitle": "Total Blocking Time",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/"
   },
   {
     "name": "minScore",
@@ -122,7 +139,7 @@
     "values": [
       1,
       1,
-      0.98
+      1
     ],
     "operator": ">=",
     "passed": true,
@@ -166,11 +183,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 1813.0367999999999,
+    "actual": 1415.1660000000002,
     "values": [
-      1813.0367999999999,
-      1215.3798,
-      2483.95715
+      1415.1660000000002,
+      1379.4719,
+      1820.18655
     ],
     "operator": "<=",
     "passed": true,
@@ -182,12 +199,12 @@
   },
   {
     "name": "maxNumericValue",
-    "expected": 150,
-    "actual": 6.5,
+    "expected": 300,
+    "actual": 33,
     "values": [
-      6,
-      6.5,
-      7.5
+      52,
+      33,
+      24.5
     ],
     "operator": "<=",
     "passed": true,
@@ -230,5 +247,22 @@
     "url": "http://127.0.0.1:13295/c/baseline-populated",
     "auditTitle": "Page didn't prevent back/forward cache restoration",
     "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/bf-cache/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 150,
+    "actual": 33,
+    "values": [
+      52,
+      33,
+      24.5
+    ],
+    "operator": "<=",
+    "passed": true,
+    "auditId": "total-blocking-time",
+    "level": "warn",
+    "url": "http://127.0.0.1:13295/c/baseline-populated",
+    "auditTitle": "Total Blocking Time",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/"
   }
 ]

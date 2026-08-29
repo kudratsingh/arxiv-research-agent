@@ -232,18 +232,31 @@ function bfCacheReasons(runs) {
 }
 
 /**
+ * Every assertion LHCI will evaluate for one URL, as a flat list.
+ *
+ * A LIST AND NOT A MERGED MAP, DELIBERATELY. LHCI applies *every* matrix entry
+ * whose pattern matches the URL — `@lhci/utils/src/assertions.js` loops the
+ * whole matrix per URL rather than picking one — and `lighthouserc.json` uses
+ * that to assert `total-blocking-time` twice on every cell: `error` at the
+ * runner ceiling in the per-state entry, `warn` at 04 §8.2's ratified ceiling
+ * in the catch-all entry. Keying this by audit id would collapse those two
+ * into one and under-report the inventory by ten, which is exactly the kind of
+ * quiet miscount the evidence pack exists to rule out.
+ *
  * @param {Record<string, any>} ci
  * @param {string} url
- * @returns {Record<string, [string, Record<string, number | string>]>}
+ * @returns {{auditId: string, level: string, options: Record<string, number | string>}[]}
  */
 function assertionsForUrl(ci, url) {
-  /** @type {Record<string, [string, Record<string, number | string>]>} */
-  const merged = {};
+  /** @type {{auditId: string, level: string, options: Record<string, number | string>}[]} */
+  const all = [];
   for (const entry of ci.assert.assertMatrix) {
     if (!new RegExp(entry.matchingUrlPattern).test(url)) continue;
-    Object.assign(merged, entry.assertions);
+    for (const [auditId, [level, options]] of Object.entries(entry.assertions)) {
+      all.push({ auditId, level, options });
+    }
   }
-  return merged;
+  return all;
 }
 
 function main() {
@@ -273,7 +286,7 @@ function main() {
     for (const url of ci.collect.url) {
       const bucket = byUrl.get(url);
       const assertions = assertionsForUrl(ci, url);
-      assertionCount += Object.keys(assertions).length;
+      assertionCount += assertions.length;
       if (!bucket) {
         rows.push({ url, error: "no report collected", assertions });
         continue;
@@ -357,13 +370,41 @@ function renderSummary(results, assertionCount, baseUrl) {
       const m = row.measured;
       const score = (/** @type {string} */ id) => Math.round(m[id].median * 100);
       const bf = m["bf-cache"].median === 1 ? "pass" : "**fail**";
+      // TBT carries two ceilings (see lighthouserc.json's TBT comment): the
+      // ratified §8.2 number as a `warn`, and 2x it as the `error` the runner
+      // is actually gated on. Flagging the warn breach in the table is the
+      // point of keeping the ratified number at all — otherwise a run that
+      // drifted past 04 §8.2 and stayed under the runner ceiling would read as
+      // an unremarkable green row.
+      const warnTbt = row.assertions.find(
+        (/** @type {{auditId: string, level: string}} */ a) =>
+          a.auditId === "total-blocking-time" && a.level === "warn",
+      );
+      const tbtMedian = Math.round(m["total-blocking-time"].median);
+      const ratified = warnTbt ? Number(warnTbt.options["maxNumericValue"]) : Infinity;
+      const tbt = tbtMedian > ratified ? `**${tbtMedian} ms** ⚠️` : `${tbtMedian} ms`;
       lines.push(
         `| \`${label}\` | ${score("categories:performance")} | ${score("categories:accessibility")} ` +
           `| ${score("categories:best-practices")} | ${(m["largest-contentful-paint"].median / 1000).toFixed(2)} s ` +
-          `| ${Math.round(m["total-blocking-time"].median)} ms | ${m["cumulative-layout-shift"].median.toFixed(5)} | ${bf} |`,
+          `| ${tbt} | ${m["cumulative-layout-shift"].median.toFixed(5)} | ${bf} |`,
       );
     }
     lines.push("");
+    const warnCeiling = rows
+      .flatMap((/** @type {any} */ row) => row.assertions ?? [])
+      .find(
+        (/** @type {{auditId: string, level: string}} */ a) =>
+          a.auditId === "total-blocking-time" && a.level === "warn",
+      );
+    if (warnCeiling) {
+      lines.push(
+        `⚠️ on TBT means the measured median is past 04 §8.2's ratified ceiling of ` +
+          `${warnCeiling.options["maxNumericValue"]} ms without breaching the runner ceiling the run ` +
+          `is gated on. It is a warning, not a failure — see \`web/lighthouserc.json\`'s ` +
+          `"TOTAL BLOCKING TIME" comment.`,
+      );
+      lines.push("");
+    }
     lines.push("Per-run spread (median is what the assertions were evaluated against):");
     lines.push("");
     lines.push("| State | LCP runs (ms) | TBT runs (ms) | CLS runs | bf-cache reasons |");
