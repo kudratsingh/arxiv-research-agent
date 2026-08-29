@@ -62,12 +62,6 @@ export default function HomePage() {
   return (
     <div className="mx-auto flex h-full max-w-3xl flex-col justify-center gap-6 px-6">
       <header>
-        {/* TEMPORARY — WO-24 criterion 5, the deliberate axe violation. An
-            <li> whose parent is not a list fails axe's `listitem` rule, one
-            of the six WO-22 gates at zero. Reverted in the next commit; it
-            exists only so the CI failure it causes is a real run, not a
-            claim. */}
-        <li data-wo24-axe-breach>deliberate accessibility violation</li>
         <h1 className="text-2xl font-semibold tracking-tight">
           arxiv-research-agent
         </h1>
