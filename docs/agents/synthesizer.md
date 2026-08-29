@@ -1,13 +1,30 @@
 # Synthesizer agent
 
+## Purpose
+
 Turns paper analyses (and, when available, source-grounded evidence)
 into a structured markdown research briefing with an inline citation
 list. One of the five agents wired into both the fixed pipeline and
-the supervisor loop.
+the supervisor loop. The draft report **is** the product, which is why
+this is the one agent with no honest degraded output.
 
-Source: `src/agents/synthesizer.py`. Design rationale: ADRs
-[0016](../decisions/0016-evidence-store-source-text-verifier.md) and
-[0017](../decisions/0017-synthesizer-evidence-swap.md).
+Source: `src/agents/synthesizer.py`. Wiring:
+[`docs/architecture.md`](../architecture.md).
+
+## Flow
+
+```mermaid
+flowchart LR
+  IN["paper_analyses · papers<br/>query · critique"] --> PATH{"enable_evidence_store<br/>and state.evidence?"}
+  PATH -->|"no"| BASE["SYSTEM_PROMPT<br/>analyses only"]
+  PATH -->|"yes"| EVI["EVIDENCE_SYSTEM_PROMPT<br/>+ evidence bank by sub-question"]
+  BASE --> CALL["call_llm_json, max_tokens 8192<br/>one corrective retry"]
+  EVI --> CALL
+  CALL -->|"usable draft"| OUT["draft_report<br/>citations"]
+  CALL -->|"retry also unusable"| ERR["SynthesizerOutputError<br/>job fails with that error_type"]
+  OUT --> CRITIC["critic agent"]
+  OUT --> VER["verifier agent<br/>(supervisor loop only)"]
+```
 
 ## Inputs
 
@@ -17,12 +34,14 @@ Reads from `ResearchState`:
 - `paper_analyses` — required. Free-form summaries from the reader.
   Used as paper "shape" context (methodology / limitations) even on
   the evidence path.
-- `papers` — supplies author labels for the paper header lines.
+- `papers` — supplies author labels for the paper header lines and the
+  URL on each block.
 - `critique` — previous critic feedback, if any. Included verbatim so
   the LLM addresses it in this revision.
 - `evidence` — optional. When populated **and** `enable_evidence_store`
   is on, triggers the evidence path.
-- `sub_questions` — used to group evidence claims in prompt order.
+- `sub_questions` — used to group evidence claims in prompt order
+  (evidence path only).
 
 ## Outputs
 
@@ -32,11 +51,12 @@ Writes to `ResearchState`:
   citations. Shape is the same on both paths.
 - `citations` — list of `Citation` TypedDicts, one per cited paper.
 - A `messages` entry (`AIMessage` named `"synthesizer"`) summarizing
-  the run.
+  the run; on the evidence path it also names the grounded-claim count.
 
-## Two prompt paths
+## Prompt design
 
-`_use_evidence_path(state)` picks between them at call time:
+`_use_evidence_path(state)` picks between two system prompts at call
+time:
 
 ```
 enable_evidence_store  state.evidence   → path
@@ -47,12 +67,14 @@ True                   [claim, ...]     → evidence
 
 The base path is byte-identical to Sprint 1. The evidence path adds
 grounding rules to the system prompt and appends an evidence bank to
-the user prompt.
+the user prompt. Both paths use `max_tokens=8192`.
 
 ### Base path (Sprint 1 baseline)
 
 - `SYSTEM_PROMPT` — high-level rules (group by theme, compare methods,
-  cite inline, end with Key Takeaways + Open Questions).
+  identify consensus / contradictions / gaps, cite inline as
+  `[Author, Year]`, end with Key Takeaways + Open Questions, aim for
+  800-1500 words).
 - User prompt = `Research question` + `critique` (if any) + numbered
   `--- Paper N ---` blocks with title / authors / ID / URL / key
   findings / methodology / results / limitations / relevance.
@@ -67,11 +89,12 @@ directly against pre-flag numbers.
   missing coverage goes to "Open Questions" rather than being filled
   from the abstract, paraphrasing is fine but adding facts is not.
 - User prompt = base prompt + **sub-questions list** + **evidence
-  bank** grouped by `supports_question` in planner order. Within each
-  group, claims are sorted by `relevance_score` descending so the
-  strongest support comes first. Each entry shows author label,
-  section, relevance, the claim itself, and the verbatim
-  `source_text` excerpt.
+  bank** grouped by `supports_question` in planner order (claims the
+  reader couldn't attribute land under an "Unassigned excerpts"
+  heading rather than being dropped). Within each group, claims are
+  sorted by `relevance_score` descending so the strongest support
+  comes first. Each entry shows author label, section, relevance, the
+  claim itself, and the verbatim `source_text` excerpt.
 
 Response schema is unchanged (`draft_report` + `citations`). No claim
 IDs embedded in the report text — the grounding rules in the system
@@ -83,13 +106,15 @@ prompt do the work.
 |---|---|---|
 | Unparseable JSON, non-object JSON, or empty `draft_report` (typically `max_tokens` truncation) | `_call_with_one_retry` | Retried exactly once with a corrective "return only the JSON object" nudge — one cheap call can rescue the whole already-billed run (ADR 0041). The output cap is 8192 (was 4096, which left no margin over a full report's ~3000-3300 tokens and made truncation deterministic). |
 | Retry also unusable | `_call_with_one_retry` | Raises the typed `SynthesizerOutputError`, so the job's `error_type` names the real failure instead of a generic `JSONDecodeError`. The report is the product; there is no honest fallback for it. |
-| Malformed `citations` entries | `_parse_citations` | Individually dropped with a WARNING; a thinner citation list is still a real report, and the verifier/critic flag citation gaps downstream. |
+| `citations` is not a list | `_parse_citations` | Logged as `synthesizer_citations_not_a_list`; treated as no citations. The report still ships. |
+| Malformed `citations` entries (non-dict, or blank `title`) | `_parse_citations` | Individually dropped, tallied in one `synthesizer_citations_dropped` WARNING; a thinner citation list is still a real report, and the verifier/critic flag citation gaps downstream. |
 | Anthropic 429 / other transport exception | `call_llm_json` | Propagates. Synthesizer intentionally doesn't retry transport errors above the SDK layer (ADR 0009); the single ADR 0041 retry targets only *format* failures the SDK can't see. |
 | `EvidenceClaim.supports_question` doesn't match a planner sub-question | Reader `_parse_claim` | Already cleared to `""` at emission time, so it lands under "Unassigned excerpts" here. |
 | Evidence bank silent on a sub-question | Prompt design | LLM instructed to add it to "Open Questions" rather than fabricate coverage. |
 | Report cites a paper not in `state.papers` | Downstream | Caught by the citation-accuracy metric (offline) and the verifier's `missing_evidence` (online). |
+| Prompt injection carried through `source_text` | Not mitigated here | `EvidenceClaim.source_text` is deliberately verbatim; the synthesizer's prompt is not tag-wrapped. Listed in ADR 0020's non-goals. |
 
-## Configuration
+## Flags
 
 Settings that drive the synthesizer (see `src/config.py`):
 
@@ -112,6 +137,9 @@ Settings that drive the synthesizer (see `src/config.py`):
   by relevance within group, unassigned heading, verbatim
   `source_text`), evidence-path prompt shape, and full agent
   behavior including message summaries.
+- Parse defense: `tests/test_parse_defense.py` — the one-retry path,
+  the typed `SynthesizerOutputError`, and per-entry citation dropping
+  (ADR 0041).
 - LLM-call plumbing: `tests/test_agent_model_routing.py` (the
   `synthesizer_model` override) and `tests/test_agent_cache_flag.py`
   (the prompt-caching flag).
@@ -126,3 +154,26 @@ Settings that drive the synthesizer (see `src/config.py`):
 - `open_questions` / `evidence_gaps` state fields with dedicated
   producers (a critic or verifier extension). Report body still
   surfaces open questions inside the markdown for now.
+- Prompt-injection isolation for this agent's prompt — ADR 0020
+  non-goal, still open.
+
+## Related
+
+- **Hands off to** — [critic](critic.md) in the fixed pipeline; in the
+  supervisor loop, control returns to the
+  [supervisor](supervisor.md), which typically picks `verify` (see
+  [verifier](verifier.md)) or `critique` next. Re-entered from the
+  critic's `revision_target: "synthesizer"` and from the verifier's
+  `revise_report` recommendation.
+- **ADRs** — [0016](../decisions/0016-evidence-store-source-text-verifier.md)
+  (evidence store),
+  [0017](../decisions/0017-synthesizer-evidence-swap.md) (this agent's
+  evidence path),
+  [0041](../decisions/0041-retrieval-and-degradation-honesty.md)
+  (retry + typed failure),
+  [0021](../decisions/0021-cost-aware-model-routing.md) (model
+  routing), [0022](../decisions/0022-anthropic-prompt-caching.md)
+  (prompt caching),
+  [0020](../decisions/0020-prompt-injection-isolation-reader.md)
+  (isolation non-goals).
+- **Workflow wiring** — [`docs/architecture.md`](../architecture.md).
