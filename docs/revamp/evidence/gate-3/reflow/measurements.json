@@ -1,0 +1,773 @@
+{
+  "generated": "2026-08-29T12:52:52.552Z",
+  "widths": [
+    320,
+    360,
+    412
+  ],
+  "workSurfaceFloorAt412": 380,
+  "statesSwept": 20,
+  "deferred": [
+    {
+      "rows": [
+        "8"
+      ],
+      "why": "Dark mode is a theme AXIS over every other row, not a row of its own. It is swept as a variant inside the reflow sweep and asserted for pre-paint correctness in theme.spec.ts (WO-01's deferred proof)."
+    },
+    {
+      "rows": [
+        "11",
+        "12",
+        "25"
+      ],
+      "why": "Reconnecting / rejoined-after-reload / stream-recycled are transitions, not resting layouts. They are asserted for BEHAVIOUR in stream.spec.ts (interrupted 200, stream_timeout reopen) and attach.spec.ts (reload and bfcache re-adopt). Their resting layout is `running`, which is swept."
+    },
+    {
+      "rows": [
+        "24"
+      ],
+      "why": "Delete confirmation is now WO-14's real APG dialog rather than `window.confirm`, so it HAS a DOM — but reaching it needs two clicks after navigation (the row's overflow menu, then Delete), and a `StateEntry` describes a URL plus route interception, not a script. Adding a post-navigation hook would change the shape of this table for one row; WO-14's own `tests/threads/confirmDialog.test.tsx` holds the dialog's behaviour and WO-22's axe sweep covers the rail that opens it."
+    },
+    {
+      "rows": [
+        "A"
+      ],
+      "why": "The `router.push('/c/{id}?job=')` handoff is a navigation, and it is asserted end-to-end as slice step 1→2 in slice.spec.ts rather than measured as a layout."
+    },
+    {
+      "rows": [
+        "D",
+        "E"
+      ],
+      "why": "Review-submitted-not-settled and review-conflict-409 are asserted as behaviour in slice.spec.ts step 3. WO-17's PlanEditor/Submitting and /Conflict409 are now on the route and both have a distinct layout, but each is entered by RESOLVING the review — a click that mutates a run — so like row 24 they are a script rather than a URL, and the resting layout the sweep measures is `plan-review`."
+    }
+  ],
+  "samples": [
+    {
+      "state": "landing",
+      "rows": "1",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "landing",
+      "rows": "1",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "landing",
+      "rows": "1",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-loading",
+      "rows": "2+6",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-loading",
+      "rows": "2+6",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-loading",
+      "rows": "2+6",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-empty",
+      "rows": "3",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-empty",
+      "rows": "3",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-empty",
+      "rows": "3",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-error-upstream",
+      "rows": "4+F",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-error-upstream",
+      "rows": "4+F",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-error-upstream",
+      "rows": "4+F",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-error-proxy-503",
+      "rows": "F",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-error-proxy-503",
+      "rows": "F",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rail-error-proxy-503",
+      "rows": "F",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-empty",
+      "rows": "5+B",
+      "path": "/c/baseline-empty",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-empty",
+      "rows": "5+B",
+      "path": "/c/baseline-empty",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-empty",
+      "rows": "5+B",
+      "path": "/c/baseline-empty",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-populated",
+      "rows": "7",
+      "path": "/c/baseline-populated",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-populated",
+      "rows": "7",
+      "path": "/c/baseline-populated",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-populated",
+      "rows": "7",
+      "path": "/c/baseline-populated",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "plan-review",
+      "rows": "9",
+      "path": "/c/baseline-populated?job=baseline-plan-review",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 2787
+      },
+      "pass": true
+    },
+    {
+      "state": "plan-review",
+      "rows": "9",
+      "path": "/c/baseline-populated?job=baseline-plan-review",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 2826
+      },
+      "pass": true
+    },
+    {
+      "state": "plan-review",
+      "rows": "9",
+      "path": "/c/baseline-populated?job=baseline-plan-review",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 2826
+      },
+      "pass": true
+    },
+    {
+      "state": "running",
+      "rows": "10",
+      "path": "/c/baseline-populated?job=baseline-running",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 336
+      },
+      "pass": true
+    },
+    {
+      "state": "running",
+      "rows": "10",
+      "path": "/c/baseline-populated?job=baseline-running",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "running",
+      "rows": "10",
+      "path": "/c/baseline-populated?job=baseline-running",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "cancelled",
+      "rows": "13",
+      "path": "/c/baseline-populated?job=baseline-cancelled",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "table.w-max.min-w-full.border-collapse",
+        "width": 347
+      },
+      "pass": true
+    },
+    {
+      "state": "cancelled",
+      "rows": "13",
+      "path": "/c/baseline-populated?job=baseline-cancelled",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-3.text-ui-sm",
+        "width": 364
+      },
+      "pass": true
+    },
+    {
+      "state": "cancelled",
+      "rows": "13",
+      "path": "/c/baseline-populated?job=baseline-cancelled",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "failed-partial",
+      "rows": "14",
+      "path": "/c/baseline-populated?job=baseline-failed-partial",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "table.w-max.min-w-full.border-collapse",
+        "width": 347
+      },
+      "pass": true
+    },
+    {
+      "state": "failed-partial",
+      "rows": "14",
+      "path": "/c/baseline-populated?job=baseline-failed-partial",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-3.text-ui-sm",
+        "width": 364
+      },
+      "pass": true
+    },
+    {
+      "state": "failed-partial",
+      "rows": "14",
+      "path": "/c/baseline-populated?job=baseline-failed-partial",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "failed-no-result",
+      "rows": "15+23",
+      "path": "/c/baseline-populated?job=baseline-failed",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-3.text-ui-sm",
+        "width": 364
+      },
+      "pass": true
+    },
+    {
+      "state": "failed-no-result",
+      "rows": "15+23",
+      "path": "/c/baseline-populated?job=baseline-failed",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-3.text-ui-sm",
+        "width": 364
+      },
+      "pass": true
+    },
+    {
+      "state": "failed-no-result",
+      "rows": "15+23",
+      "path": "/c/baseline-populated?job=baseline-failed",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "expired",
+      "rows": "16",
+      "path": "/c/baseline-populated?job=baseline-expired",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 668
+      },
+      "pass": true
+    },
+    {
+      "state": "expired",
+      "rows": "16",
+      "path": "/c/baseline-populated?job=baseline-expired",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-3.text-ui-sm",
+        "width": 364
+      },
+      "pass": true
+    },
+    {
+      "state": "expired",
+      "rows": "16",
+      "path": "/c/baseline-populated?job=baseline-expired",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 668
+      },
+      "pass": true
+    },
+    {
+      "state": "submission-error-500",
+      "rows": "17",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "submission-error-500",
+      "rows": "17",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "submission-error-500",
+      "rows": "17",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rate-limited-429",
+      "rows": "18",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rate-limited-429",
+      "rows": "18",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "rate-limited-429",
+      "rows": "18",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "unauthorized-401",
+      "rows": "19",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "unauthorized-401",
+      "rows": "19",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "unauthorized-401",
+      "rows": "19",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "validation-422",
+      "rows": "20",
+      "path": "/",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "validation-422",
+      "rows": "20",
+      "path": "/",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "validation-422",
+      "rows": "20",
+      "path": "/",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-not-found-inline",
+      "rows": "21",
+      "path": "/c/baseline-not-found",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-not-found-inline",
+      "rows": "21",
+      "path": "/c/baseline-not-found",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "thread-not-found-inline",
+      "rows": "21",
+      "path": "/c/baseline-not-found",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "route-not-found",
+      "rows": "22",
+      "path": "/baseline-no-such-route",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "route-not-found",
+      "rows": "22",
+      "path": "/baseline-no-such-route",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "route-not-found",
+      "rows": "22",
+      "path": "/baseline-no-such-route",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": null,
+      "pass": true
+    },
+    {
+      "state": "attached-status-unknown",
+      "rows": "C",
+      "path": "/c/baseline-populated?job=baseline-running",
+      "width": 320,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 828
+      },
+      "pass": true
+    },
+    {
+      "state": "attached-status-unknown",
+      "rows": "C",
+      "path": "/c/baseline-populated?job=baseline-running",
+      "width": 360,
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 828
+      },
+      "pass": true
+    },
+    {
+      "state": "attached-status-unknown",
+      "rows": "C",
+      "path": "/c/baseline-populated?job=baseline-running",
+      "width": 412,
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "overflow": 0,
+      "widestOverflow": {
+        "selector": "td.px-3.py-1",
+        "width": 828
+      },
+      "pass": true
+    }
+  ],
+  "workSurface": [
+    {
+      "path": "/",
+      "viewportWidth": 412,
+      "workSurfaceWidth": 412,
+      "matched": "[data-workbench-shell] .ew-shell__surface",
+      "floor": 380,
+      "pass": true
+    },
+    {
+      "path": "/c/baseline-populated",
+      "viewportWidth": 412,
+      "workSurfaceWidth": 412,
+      "matched": "[data-workbench-shell] .ew-shell__surface",
+      "floor": 380,
+      "pass": true
+    }
+  ]
+}

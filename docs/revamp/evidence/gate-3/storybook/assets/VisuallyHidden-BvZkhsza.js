@@ -1,0 +1,10 @@
+import{n as e}from"./rolldown-runtime-CsOFd3vK.js";import{t}from"./jsx-runtime-CadfrxEJ.js";import"./primitives-C6B3pA6y.js";function n({children:e,as:t=`span`,id:n,className:a}){return(0,r.jsx)(t,{id:n,className:[i,a].filter(Boolean).join(` `),children:e})}var r,i;function a(){return(a=e((()=>{r=t(),i=`ew-visually-hidden`,n.__docgenInfo={description:``,methods:[],displayName:`VisuallyHidden`,props:{children:{required:!0,tsType:{name:`ReactNode`},description:``},as:{required:!1,tsType:{name:`union`,raw:`| "span"
+| "div"
+| "p"
+| "h1"
+| "h2"
+| "h3"
+| "h4"
+| "h5"
+| "h6"
+| "legend"`,elements:[{name:`literal`,value:`"span"`},{name:`literal`,value:`"div"`},{name:`literal`,value:`"p"`},{name:`literal`,value:`"h1"`},{name:`literal`,value:`"h2"`},{name:`literal`,value:`"h3"`},{name:`literal`,value:`"h4"`},{name:`literal`,value:`"h5"`},{name:`literal`,value:`"h6"`},{name:`literal`,value:`"legend"`}]},description:"Defaults to `span`.",defaultValue:{value:`"span"`,computed:!1}},id:{required:!1,tsType:{name:`string`},description:"So the text can be referenced by `aria-describedby` / `aria-labelledby`."},className:{required:!1,tsType:{name:`string`},description:``}}}})))()}export{n,a as r,i as t};

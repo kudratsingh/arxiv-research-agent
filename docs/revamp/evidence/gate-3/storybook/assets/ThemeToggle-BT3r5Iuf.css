@@ -1,0 +1,1 @@
+.ew-theme-option{cursor:pointer}.ew-theme-option input:checked+span{background-color:var(--color-primary);color:var(--color-primary-on)}.ew-theme-option input:focus-visible+span{outline-width:var(--size-focus-ring-width);outline-style:solid;outline-color:var(--color-focus);outline-offset:var(--size-focus-ring-offset)}

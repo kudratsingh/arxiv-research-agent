@@ -1,0 +1,38 @@
+# research-post-count.txt — WO-21 criterion 3
+#
+# One line per intentional-submission scenario. `POST /api/research` is
+# counted in the browser by web/e2e/support/paid-path.ts and must be
+# exactly 1 per intentional submission: the endpoint has no idempotency
+# key, so a duplicate is a duplicate paid run (R-01, MUST-KEEP #3).
+#
+# verdict	project	scenario	expected	research POSTs	conversation POSTs
+PASS	chromium	slice step 1 — new question	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	slice step 2 — reload mid-run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 2 — expired job	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 3 — plan review attach	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 2 — back navigation (RC-18 bfcache)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 5 — partial briefing from a failed run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	firefox	slice step 1 — new question	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	firefox	slice step 2 — expired job	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	firefox	slice step 2 — reload mid-run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	firefox	slice step 3 — plan review attach	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	firefox	slice step 2 — back navigation (RC-18 bfcache)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	firefox	slice step 5 — partial briefing from a failed run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	webkit	slice step 1 — new question	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	webkit	slice step 2 — reload mid-run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	webkit	slice step 2 — expired job	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	webkit	slice step 3 — plan review attach	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	webkit	slice step 2 — back navigation (RC-18 bfcache)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	webkit	slice step 5 — partial briefing from a failed run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	Pixel 7	slice step 1 — new question	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	Pixel 7	slice step 2 — reload mid-run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	Pixel 7	slice step 2 — expired job	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	Pixel 7	slice step 3 — plan review attach	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	Pixel 7	slice step 2 — back navigation (RC-18 bfcache)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	Pixel 7	slice step 5 — partial briefing from a failed run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	iPhone 15	slice step 1 — new question	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	iPhone 15	slice step 2 — reload mid-run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	iPhone 15	slice step 2 — expired job	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	iPhone 15	slice step 3 — plan review attach	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	iPhone 15	slice step 2 — back navigation (RC-18 bfcache)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	iPhone 15	slice step 5 — partial briefing from a failed run	expected=0	POST /api/research=0	POST /api/conversations=0

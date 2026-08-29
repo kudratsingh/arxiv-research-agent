@@ -1,0 +1,44 @@
+# WO-22 axe gate — one row per §4 state per theme.
+# axe-core tags: wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa, best-practice
+# gated at zero: landmark-one-main, region, aria-allowed-role, listitem, color-contrast, page-has-heading-one
+state	theme	§4 rows	violations	gated	unlisted	incomplete	contrast-passes
+landing	light	1	0	0	0	0	22
+rail-empty	light	3	0	0	0	0	21
+rail-loading	light	2+6	0	0	0	0	20
+rail-error-proxy-503	light	F	0	0	0	0	24
+thread-empty	light	5+B	0	0	0	0	18
+thread-populated	light	7	0	0	0	0	39
+rail-error-upstream	light	4+F	0	0	0	0	24
+plan-review	light	9	0	0	0	0	82
+cancelled	light	13	0	0	0	0	53
+failed-partial	light	14	0	0	0	0	72
+failed-no-result	light	15+23	0	0	0	0	64
+running	light	10	0	0	0	0	67
+expired	light	16	0	0	0	0	45
+submission-error-500	light	17	0	0	0	0	22
+unauthorized-401	light	19	0	0	0	0	22
+rate-limited-429	light	18	0	0	0	0	22
+validation-422	light	20	0	0	0	0	22
+thread-not-found-inline	light	21	0	0	0	0	13
+route-not-found	light	22	0	0	0	0	12
+attached-status-unknown	light	C	0	0	0	0	45
+landing	dark	1	0	0	0	0	22
+rail-loading	dark	2+6	0	0	0	0	20
+rail-empty	dark	3	0	0	0	0	21
+rail-error-proxy-503	dark	F	0	0	0	0	24
+thread-empty	dark	5+B	0	0	0	0	18
+thread-populated	dark	7	0	0	0	0	39
+rail-error-upstream	dark	4+F	0	0	0	0	24
+plan-review	dark	9	0	0	0	1	0
+running	dark	10	0	0	0	0	57
+cancelled	dark	13	0	0	0	0	57
+failed-partial	dark	14	0	0	0	0	68
+failed-no-result	dark	15+23	0	0	0	0	60
+expired	dark	16	0	0	0	0	45
+submission-error-500	dark	17	0	0	0	0	22
+rate-limited-429	dark	18	0	0	0	0	22
+unauthorized-401	dark	19	0	0	0	0	22
+validation-422	dark	20	0	0	0	0	22
+thread-not-found-inline	dark	21	0	0	0	0	13
+route-not-found	dark	22	0	0	0	0	12
+attached-status-unknown	dark	C	0	0	0	0	49

@@ -1,0 +1,4 @@
+pair	fg	bg	documented	measured	font-size	source
+light ink-muted / sunken	#4a636b	#e7eef0	5.44	5.43	12px	token probe only — no composed surface uses it yet
+light ink-muted / surface	#4a636b	#ffffff	6.39	6.38	12px	product surface (3 node(s), e.g. .ew-shell__workspace)
+light review-text / surface	#8c5610	#ffffff	6.08	6.08	12px	token probe only — no composed surface uses it yet

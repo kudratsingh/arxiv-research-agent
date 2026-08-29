@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CsOFd3vK.js";var t;function n(){return(n=e((()=>{t={ui:`font-ui`,report:`font-report`,mono:`font-mono`}})))()}export{n,t};
