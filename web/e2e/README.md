@@ -134,7 +134,7 @@ rules. What automation cannot establish — keyboard order, focus restoration,
 announcement quality, screen-reader comprehension — is WO-27's manual Gate 4
 evidence and is not claimed here.
 
-## For WO-24 (CI wiring) and WO-22 (axe)
+## For WO-24 (CI wiring)
 
 **WO-24.** The `web-e2e` job is three commands after `npm ci`:
 
@@ -189,7 +189,8 @@ Three notes for anyone touching it:
   a new gated violation anywhere goes red, and so does an entry that stops
   matching — at which point the entry must be deleted, not kept.
 
-**WO-24.** `support/axe.ts` is written to be reused for the Storybook half of
-WO-22 criterion 5: `analyze(page, { include: "#storybook-root" })` runs the same
-tag set scoped to a story root, and `partition(...)` applies the same empty
-allowlist. Upload `web/build/e2e/axe/` with the rest of `web/build/e2e`.
+**WO-24's Storybook half.** `support/axe.ts` is written to be reused for WO-22
+criterion 5: `analyze(page, { include: "#storybook-root" })` runs the same tag
+set scoped to a story root, and `partition(...)` applies the same empty
+allowlist. `web/build/e2e/axe/` is already inside the `web/build/e2e` upload
+path above, so no extra artifact step is needed.
