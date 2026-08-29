@@ -40,6 +40,84 @@
       "date": "2026-08-29",
       "owner": "WO-24",
       "justification": "The direct devDependency at the head of the same chain, reported high for the same two image-size advisories and for no defect of its own. WO-06 introduced it (04-ARCHITECTURE.md §5.2) and the C4 baseline of zero was captured before that, which is why the ruling recorded in the WO-24 PR body splits the gate: production dependencies stay at zero, and this dev chain is gated by name here instead of being waved through by a lowered --audit-level."
+    },
+    {
+      "package": "@lhci/cli",
+      "advisories": [1109537, 1119441, 1120654, 1139346],
+      "urls": [
+        "https://github.com/advisories/GHSA-52f5-9888-hmc6",
+        "https://github.com/advisories/GHSA-ph9p-34f9-6g65",
+        "https://github.com/advisories/GHSA-jmr9-qjv8-65gv",
+        "https://github.com/advisories/GHSA-w5hq-g745-h8pq"
+      ],
+      "severity": "high",
+      "path": "@lhci/cli",
+      "date": "2026-08-29",
+      "owner": "WO-29",
+      "justification": "The direct devDependency at the head of this chain, added by WO-29 for the nightly Lighthouse gate (04-ARCHITECTURE.md §8.4, 05-MIGRATION.md C11). npm reports it high for the four advisories carried by its own transitive tree — `tmp` (two) via the `inquirer` prompt it never runs unattended, `uuid` (moderate, listed here because npm attributes it upward) and `extract-zip` via `lighthouse > puppeteer-core > @puppeteer/browsers` — and for no defect of its own. `fixAvailable` names `@lhci/cli@0.1.0`, a downgrade of five minor versions to a release that predates the assertion syntax this gate is written in, so there is nothing to upgrade to. Reachability: this package is executed only by `.github/workflows/nightly.yml` and by `npm run lhci` on a developer's machine, against a Compose stack on 127.0.0.1; it is absent from `npm audit --omit=dev`, from every shipped bundle and from web/Dockerfile's production stage. The two file-system advisories (`tmp`, `extract-zip`) need an attacker who can already write to the runner's temp directory or serve the Chrome download, at which point the runner is lost regardless. Remove this entry the day @lhci/cli ships a release whose tree pulls fixed `tmp` and `extract-zip` — the script fails on a stale entry, so it cannot be forgotten."
+    },
+    {
+      "package": "@lhci/utils",
+      "advisories": [1139346],
+      "urls": ["https://github.com/advisories/GHSA-jmr9-qjv8-65gv"],
+      "severity": "high",
+      "path": "@lhci/cli > @lhci/utils",
+      "date": "2026-08-29",
+      "owner": "WO-29",
+      "justification": "Not an advisory of its own: npm reports this package high purely because it depends on the same pinned `lighthouse`, and so on down to `extract-zip`. It is listed separately because `npm audit` counts packages, not defects — the seven WO-29 entries in this file are seven packages carrying four upstream GHSAs. Same dev-only reachability and the same removal condition as the `@lhci/cli` entry above."
+    },
+    {
+      "package": "lighthouse",
+      "advisories": [1139346],
+      "urls": ["https://github.com/advisories/GHSA-jmr9-qjv8-65gv"],
+      "severity": "high",
+      "path": "@lhci/cli > lighthouse",
+      "date": "2026-08-29",
+      "owner": "WO-29",
+      "justification": "Lighthouse itself, pinned by @lhci/cli to an exact version (12.6.1) — which is the point: the audit tool has to be a fixed version or the budgets in web/lighthouserc.json would be measured against a moving scoring curve. Reported high only for the `extract-zip` symlink advisory two levels below it, through `puppeteer-core > @puppeteer/browsers`. It has no advisory of its own, it runs only in the nightly workflow and on a developer's machine, and it is absent from `npm audit --omit=dev`."
+    },
+    {
+      "package": "puppeteer-core",
+      "advisories": [1139346],
+      "urls": ["https://github.com/advisories/GHSA-jmr9-qjv8-65gv"],
+      "severity": "high",
+      "path": "@lhci/cli > lighthouse > puppeteer-core",
+      "date": "2026-08-29",
+      "owner": "WO-29",
+      "justification": "Lighthouse's browser driver, reported high only for the `extract-zip` advisory one level below it. No defect of its own and no separate upgrade path: its version is fixed by the `lighthouse` pin above. Dev-only, absent from the production audit and from every shipped bundle."
+    },
+    {
+      "package": "@puppeteer/browsers",
+      "advisories": [1139346],
+      "urls": ["https://github.com/advisories/GHSA-jmr9-qjv8-65gv"],
+      "severity": "high",
+      "path": "@lhci/cli > lighthouse > puppeteer-core > @puppeteer/browsers",
+      "date": "2026-08-29",
+      "owner": "WO-29",
+      "justification": "The browser-download helper that owns the `extract-zip` dependency. Reported high for that one advisory and nothing else. It is not even exercised here: `.github/workflows/nightly.yml` resolves the runner's preinstalled google-chrome-stable into CHROME_PATH and `web/lighthouserc.json` drives that binary, so no archive is downloaded or unpacked by this tier at all. Dev-only, absent from the production audit."
+    },
+    {
+      "package": "extract-zip",
+      "advisories": [1139346],
+      "urls": ["https://github.com/advisories/GHSA-jmr9-qjv8-65gv"],
+      "severity": "high",
+      "path": "@lhci/cli > lighthouse > puppeteer-core > @puppeteer/browsers > extract-zip",
+      "date": "2026-08-29",
+      "owner": "WO-29",
+      "justification": "The one real defect in this chain: `extract-zip` <= 2.0.1 follows symlinks out of the extraction directory, so an attacker who controls the archive can write outside it. Exploiting it needs a hostile Chrome archive, which needs control of the Puppeteer download host — and this tier downloads no archive at all, because the nightly points CHROME_PATH at the runner's preinstalled Chrome. `fixAvailable` names a @lhci/cli downgrade to 0.1.0 rather than a fixed extract-zip, so there is no version to move to. Dev-only, absent from `npm audit --omit=dev` and from the production image. Remove this entry when @puppeteer/browsers ships with extract-zip > 2.0.1 in the tree @lhci/cli resolves."
+    },
+    {
+      "package": "tmp",
+      "advisories": [1109537, 1120654],
+      "urls": [
+        "https://github.com/advisories/GHSA-52f5-9888-hmc6",
+        "https://github.com/advisories/GHSA-ph9p-34f9-6g65"
+      ],
+      "severity": "high",
+      "path": "@lhci/cli > tmp",
+      "date": "2026-08-29",
+      "owner": "WO-29",
+      "justification": "Two path-traversal advisories in `tmp` — an unsanitized `prefix`/`postfix` and a symlinked `dir` parameter — both requiring the caller to pass attacker-controlled options. @lhci/cli passes neither: it uses `tmp` for the scratch directory `lhci collect` writes LHRs into, with no user input on the path. The second copy in the tree is `external-editor`'s, reached only from `inquirer`'s interactive prompt, which the nightly never triggers because it runs `lhci autorun --config=<file>` with every answer already in the file. `fixAvailable` names a @lhci/cli downgrade to 0.1.0, not a fixed `tmp`. Dev-only, absent from the production audit and from the shipped image."
     }
   ]
 }

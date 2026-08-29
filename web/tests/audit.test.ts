@@ -307,17 +307,40 @@ describe("the dev half of the gate", () => {
 describe("web/audit-exceptions.json as checked in", () => {
   const exceptions = loadExceptions(WEB_ROOT);
 
-  it("covers the Storybook image-size chain and nothing else", () => {
-    // Three entries, two upstream GHSAs. If this list grows, the growth is a
-    // review conversation — which is the point of it being a file.
+  it("covers the Storybook image-size chain, the @lhci/cli chain, and nothing else", () => {
+    // Ten entries across two chains, five upstream GHSAs. If this list grows,
+    // the growth is a review conversation — which is the point of it being a
+    // file, and which is why this assertion is an exact list rather than a
+    // `toContain`. WO-29 added the second chain: `@lhci/cli` is the nightly
+    // Lighthouse gate's runner, and npm attributes its transitive `tmp`,
+    // `uuid` and `extract-zip` advisories to every package on the path down to
+    // them. Both chains are dev-only; the production audit is still gated at
+    // zero and consults nothing in this file.
     expect(exceptions.map((entry) => entry.package).sort()).toEqual([
+      "@lhci/cli",
+      "@lhci/utils",
+      "@puppeteer/browsers",
       "@storybook/nextjs-vite",
+      "extract-zip",
       "image-size",
+      "lighthouse",
+      "puppeteer-core",
+      "tmp",
       "vite-plugin-storybook-nextjs",
     ]);
-    for (const entry of exceptions) {
-      expect(entry.advisories).toEqual([1138808, 1138809]);
+    const byPackage = new Map(exceptions.map((entry) => [entry.package, entry.advisories]));
+    // The Storybook chain: two image-size GHSAs, on all three packages.
+    for (const name of ["@storybook/nextjs-vite", "image-size", "vite-plugin-storybook-nextjs"]) {
+      expect(byPackage.get(name), name).toEqual([1138808, 1138809]);
     }
+    // The @lhci/cli chain: `extract-zip` alone on the four packages that only
+    // carry it, both `tmp` advisories on `tmp`, and all four on the direct
+    // dependency at the head, which npm attributes everything to.
+    for (const name of ["@lhci/utils", "@puppeteer/browsers", "extract-zip", "lighthouse", "puppeteer-core"]) {
+      expect(byPackage.get(name), name).toEqual([1139346]);
+    }
+    expect(byPackage.get("tmp")).toEqual([1109537, 1120654]);
+    expect(byPackage.get("@lhci/cli")).toEqual([1109537, 1119441, 1120654, 1139346]);
   });
 
   it("gives every entry a real justification and an owner", () => {
