@@ -77,6 +77,18 @@ prompts got scrutinized independently:
   each expected topic, independent of what the report did with it
   (ADR 0013).
 
+**Which model judges.** All three LLM-judged metrics call
+`src.llm.call_llm_json` without a `model_name`, so every judge runs on
+`settings.anthropic_model` — `claude-sonnet-4-6` by default. There is
+deliberately no judge-specific model setting: the per-agent routing
+knobs (`READER_MODEL`, `CRITIC_MODEL`, `SYNTHESIZER_MODEL`, …, ADR
+0021) route the *product*, and pointing them at a cheaper model must
+not silently change what the benchmark is scored by. Changing the
+judge means changing `ANTHROPIC_MODEL` for the whole run, which also
+changes the system under test — so a judge swap invalidates the
+baseline and needs a fresh one, not a regression diff. Judge spend is
+metered separately from workflow spend (below).
+
 ### `src/eval/runner.py`
 
 **Landed.** Sequential batch runner with per-query error isolation
@@ -281,6 +293,70 @@ whether to ask for revisions). What that means in practice:
   with suspicion and read the per-query table before reverting
   anything.
 
+## The nightly workflow
+
+[`.github/workflows/eval-nightly.yml`](../.github/workflows/eval-nightly.yml)
+is the only automated caller of the runner. Cron `0 4 * * *` (04:00
+UTC), plus a `workflow_dispatch` with three inputs — `queries`,
+`threshold`, `max_budget_usd` — that map onto `--queries`,
+`regression_diff --threshold` and `--max-budget-usd`. Concurrency group
+`nightly-eval` with `cancel-in-progress: false`, so a manual dispatch
+queues behind a scheduled run rather than killing a paid campaign
+mid-flight. Job timeout: 120 minutes.
+
+`USE_MOCK_DATA: "false"` is pinned in the job env — the nightly
+measures live retrieval, which is the point of it. The first step is a
+preflight that fails the run with a titled annotation when the
+`ANTHROPIC_API_KEY` repository secret is unset, because that is an
+owner action (funding the campaign), not a code fix, and a generic
+"copy .env.example" failure fifteen steps later reads like a bug.
+
+The baseline comes from Actions artifacts, not from the repository: the
+built-in `gh` CLI finds the most recent completed run of this workflow
+on `main` and downloads its `eval-summary-latest` artifact. That step is
+`continue-on-error` — a missing baseline is first-run behavior, not a
+failure.
+
+Three uploads, all under `if: always()`, because a campaign that died
+at query 15 still has fourteen paid records worth keeping:
+
+| Artifact | Contents | Why |
+|---|---|---|
+| `eval-run-<github.run_id>` | the whole `outputs/eval/<run_id>/` directory | the durable record; 90-day retention |
+| `eval-summary-latest` | `summary.jsonl` alone, `overwrite: true` | **the next night's baseline** |
+| `regression-report-<github.run_id>` | `regression-report.md` | the diff, uploaded whether or not it was red |
+
+The diff step itself is `continue-on-error`, and a separate step turns
+its non-zero exit into the red workflow — that ordering is what lets
+the report upload before the run fails. `--allow-removed` is passed
+**only** on a manual `queries` dispatch: there a subset is intentional,
+while on the schedule a missing query means the batch truncated and the
+gate must fire.
+
+### Status: no green campaign yet
+
+**Every run of this workflow has failed — 54 of 54 between 2026-07-07
+and 2026-08-29.** The recent ones stop at the `ANTHROPIC_API_KEY`
+preflight; earlier ones died inside `Run eval` for the same missing
+secret before the preflight existed. Consequences, stated plainly
+because they are easy to miss:
+
+- No `summary.jsonl` has ever been produced by CI, and no
+  `eval-summary-latest` artifact exists in the repository's artifact
+  store.
+- The regression gate has therefore never compared two real runs. Its
+  thresholds, its aggregate table and its exit codes are unit-tested
+  (`tests/test_regression_diff.py`), not yet exercised on live data.
+- The README's eval-results block is still `(pending)`.
+- Every metric figure quoted anywhere in these docs — including
+  [`demo.md`](demo.md)'s `summary.jsonl` sample — is illustrative of
+  the *schema*, not a measured result.
+
+Unblocking this is a cost decision, not an engineering one: it needs
+the `ANTHROPIC_API_KEY` secret set and a funded 20-query campaign. Until
+then, treat "the eval harness works" as a claim about the harness's own
+tests.
+
 ## The published README block
 
 `src/eval/readme_update.py` patches the
@@ -304,6 +380,28 @@ publishes (ADR 0050):
   so any metric averaged over fewer runs than the `Queries` count is
   named under the table with its own denominator.
 
+Two gates sit in front of the patch in the workflow, on top of those
+three rules:
+
+- **A campaign that did not fully succeed does not publish.** The
+  update step carries an `if:` with no status function, which Actions
+  reads as `success() && …` — so any earlier red step (`Run eval`'s
+  non-zero exit, the regression failure) skips it. The block is a
+  published claim, and a campaign that errored, regressed or stopped on
+  its budget has not earned it.
+- **A `--queries` subset does not publish.** `if: inputs.queries == ''`
+  — otherwise a three-query dispatch would print "3 / 3 queries" as if
+  it were the whole benchmark (ADR 0050).
+
+When the patch does change `README.md`, the workflow opens (or updates)
+a PR on the fixed branch `nightly/eval-readme-update` via
+`peter-evans/create-pull-request@v7`, restricted to `README.md`. The
+block is never committed to `main` by the workflow itself — a human
+merges the PR.
+
+As of this writing that path has never run: see
+[Status: no green campaign yet](#status-no-green-campaign-yet).
+
 ## What "tested" means for eval code itself
 
 The eval code has its own unit tests: benchmark data invariants
@@ -322,14 +420,24 @@ codes (`tests/test_eval_runner.py`), the regression gate
 - ~~`feat/eval-runner`~~ — landed.
 - ~~`feat/anthropic-retry`~~ — landed. See ADR
   [0009](decisions/0009-anthropic-sdk-native-retry.md). SDK-native
-  retry (4 retries, exponential backoff) + 120s timeout on every
-  Claude call.
+  retry (`ANTHROPIC_MAX_RETRIES=4`, exponential backoff) + a 120s
+  per-attempt timeout on every Claude call — clamped down at client
+  construction when the retry envelope would not fit the job budget
+  (ADR 0051; see the campaign run-book above).
 - ~~`feat/eval-ci`~~ — landed. Nightly GitHub Actions workflow at
-  `.github/workflows/eval-nightly.yml` runs the benchmark, diffs
-  against the previous nightly (via built-in `gh` CLI + Actions
-  artifacts — no third-party actions), and fails the workflow on
-  regressions >10 points. See ADR
-  [0010](decisions/0010-nightly-eval-ci.md).
+  `.github/workflows/eval-nightly.yml` runs the benchmark and diffs
+  against the previous nightly, using the built-in `gh` CLI plus
+  Actions artifacts to carry the baseline rather than a third-party
+  action. Regressions fail the workflow: score metrics on the
+  `--threshold` epsilon, resource metrics on their two-leg bands (see
+  [Regression gate](#regression-gate)). See ADR
+  [0010](decisions/0010-nightly-eval-ci.md) and, for the current
+  thresholds, ADR
+  [0044](decisions/0044-eval-cost-accuracy-and-regression-thresholds.md).
+  The workflow's own README-block step does use
+  `peter-evans/create-pull-request@v7`; the measurement path does not.
+  **Never green yet** — see
+  [Status: no green campaign yet](#status-no-green-campaign-yet).
 - `feat/faithfulness-fulltext-source` — use cached full text
   (`.cache/pdfs/<id>.txt`) as faithfulness source when available,
   falling back to abstract. Underestimation of Phase-2 faithfulness
@@ -337,3 +445,8 @@ codes (`tests/test_eval_runner.py`), the regression gate
 - Hand-labeled calibration set (~20-30 (report, topic) pairs and
   (claim, source) pairs) once real eval runs give us data to calibrate
   against. Alignment with human judgment is currently unmeasured.
+- A funded first campaign. Everything downstream of it — the README
+  block, the regression baseline, the 3-repeat noise measurement in
+  [The statistics, honestly](#the-statistics-honestly), and the
+  calibration set above — is blocked on it, and it is a cost decision
+  reserved for the repository owner.

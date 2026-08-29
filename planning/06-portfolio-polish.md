@@ -1,11 +1,38 @@
 # Portfolio polish — what turns the repo into a resume artifact
 
-> **Status (2026-08-21)** — landed: README architecture diagrams
+> **Status (2026-08-29)** — landed: README architecture diagrams
 > (mermaid, both shapes), the demo page (`docs/demo.md`),
 > Dockerfile + compose, the FastAPI endpoint (ADR 0025+), per-PR CI
 > (ADR 0024), and the "Production considerations" README section.
-> Outstanding: the eval-results table is still awaiting its first
-> green campaign against `main` (the nightly workflow fills it in).
+>
+> Since 2026-08-21 the frontend revamp has overtaken items 5 and 6 by
+> a wide margin. A redesigned web UI — Direction A, the "Evidence
+> Workbench" — is on `main`, along with a Storybook, a Playwright +
+> axe browser tier running against a seeded key-disabled Compose
+> stack, route/bundle budgets, a dependency-audit gate, and a
+> generated-types contract check. `ci.yml` now runs **eight jobs** per
+> PR: ruff, mypy (strict), pytest, docker build, web image smoke, the
+> web tier (typecheck / ESLint / audit gate / contract drift / vitest
+> with coverage floors / build + route budgets), the Storybook static
+> build with story tests, and the E2E + axe job. Campaign state,
+> gates and decision log: [`docs/revamp/STATUS.md`](../docs/revamp/STATUS.md).
+>
+> In flight, not on `main`: the README overhaul (screenshots, badges,
+> repo metadata) on a sibling branch — item 1's successor, and the
+> thing that finally gives the 90-second experience below its visuals.
+>
+> Still outstanding: **item 3, the eval-results table.** It is not
+> blocked on code. `src/eval/readme_update.py`, the nightly workflow
+> and the PR-opening step all exist and are unit-tested; every one of
+> the workflow's 54 runs to date has failed at the missing
+> `ANTHROPIC_API_KEY` secret, so no campaign has ever produced a
+> `summary.jsonl` to publish. Unblocking it means funding a paid
+> 20-query campaign — **a decision reserved for the repository
+> owner**, not something an implementer can take. Detail and
+> consequences: [`docs/eval.md`](../docs/eval.md).
+>
+> Kept as written below for the record; the sketches in items 5 and 6
+> are the plan, not the shipped shape.
 
 These are the "presentation" items that separate a well-engineered
 codebase from a well-engineered codebase **that a reviewer can grok
