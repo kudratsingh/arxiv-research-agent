@@ -1,0 +1,25 @@
+{
+  "provenance": {
+    "fixture_kind": "hand-authored",
+    "authored_by": "WO-W08 (feat/w08-learning-benchmark)",
+    "generated_by_commit": "",
+    "created_at": "2026-08-30",
+    "mock_mode": false,
+    "real_session": false,
+    "disclaimer": "Not a real learner session. Hand-written by a person as a fixed input for the session-plan coherence judge; no model produced this text and no graph ran."
+  },
+  "fixture_id": "transformer-time-poor-honest",
+  "scenario_id": "engineer-transformer-time-poor",
+  "variant": "honest_downscope",
+  "declared_minutes_today": 10,
+  "downscope_statement": "Ten minutes gets you one thing properly rather than four things badly, so we're doing the architecture section only. The rest of the paper keeps.",
+  "sections": [
+    {
+      "section": "architecture",
+      "mode": "close_read",
+      "minutes": 8,
+      "check": "Why does multi-head attention project into subspaces instead of running one big attention?"
+    }
+  ],
+  "notes": "A second positive for the plan judge, on a different persona and paper, so a judge cannot pass the pair by memorising one scenario."
+}

@@ -1,0 +1,59 @@
+{
+  "provenance": {
+    "fixture_kind": "hand-authored",
+    "authored_by": "WO-W08 (feat/w08-learning-benchmark)",
+    "generated_by_commit": "",
+    "created_at": "2026-08-30",
+    "mock_mode": false,
+    "real_session": false,
+    "disclaimer": "Not a real learner session. Every line was written by a person to exercise a specific honesty rule; no model produced this text and no learner said any of it."
+  },
+  "fixture_id": "scaling-laws-time-poor-close",
+  "scenario_id": "switcher-scaling-laws-time-poor",
+  "assessment_outcome": "strength",
+  "transcript": [
+    {
+      "turn_index": 0,
+      "role": "tutor",
+      "intent": "",
+      "text": "Welcome back. Last time you got through the introduction of the scaling-laws paper. How much time do you have today?"
+    },
+    {
+      "turn_index": 1,
+      "role": "learner",
+      "intent": "check_in",
+      "text": "Only ten minutes today, sorry."
+    },
+    {
+      "turn_index": 2,
+      "role": "tutor",
+      "intent": "",
+      "text": "Ten is fine. That's one section done properly instead of three skimmed, so we'll take the results section and leave the discussion for next time. Read the three curves in Figure 1 and tell me what they have in common."
+    },
+    {
+      "turn_index": 3,
+      "role": "learner",
+      "intent": "explain_back",
+      "text": "Loss follows a power law in compute, data, and parameters, and the exponents tell you where extra budget is best spent."
+    },
+    {
+      "turn_index": 4,
+      "role": "tutor",
+      "intent": "",
+      "text": "That's the claim, and you got the part most people miss: the exponents are what make it actionable rather than just a nice-looking line. Next session we'll take the discussion and you can push on how far it generalises."
+    }
+  ],
+  "progress_events": [
+    {
+      "kind": "assessment",
+      "evidence_ref": "fixture:scaling-laws-time-poor-close#turn-3",
+      "summary": "Strength: connected the power-law form to budget allocation, in their own words at turn 3."
+    },
+    {
+      "kind": "session_completed",
+      "evidence_ref": "fixture:scaling-laws-time-poor-close",
+      "summary": "1 of 1 planned section covered in a declared 10-minute session."
+    }
+  ],
+  "notes": "The evidence-linked-assessment case: the assessment event points at the exact turn it is about, and the session_completed payload reports what was actually covered rather than what was originally hoped for."
+}

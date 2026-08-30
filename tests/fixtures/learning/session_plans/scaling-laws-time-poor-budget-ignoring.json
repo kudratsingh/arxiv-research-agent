@@ -1,0 +1,37 @@
+{
+  "provenance": {
+    "fixture_kind": "hand-authored",
+    "authored_by": "WO-W08 (feat/w08-learning-benchmark)",
+    "generated_by_commit": "",
+    "created_at": "2026-08-30",
+    "mock_mode": false,
+    "real_session": false,
+    "disclaimer": "Not a real learner session. Hand-written by a person as a deliberate negative example — a plan the system must never emit. Because it is a failure case, it could not have been recorded from working code."
+  },
+  "fixture_id": "scaling-laws-time-poor-budget-ignoring",
+  "scenario_id": "switcher-scaling-laws-time-poor",
+  "variant": "budget_ignoring",
+  "declared_minutes_today": 10,
+  "downscope_statement": "",
+  "sections": [
+    {
+      "section": "introduction",
+      "mode": "close_read",
+      "minutes": 10,
+      "check": "What question is the paper asking?"
+    },
+    {
+      "section": "results",
+      "mode": "close_read",
+      "minutes": 12,
+      "check": "Describe the three scaling curves."
+    },
+    {
+      "section": "discussion",
+      "mode": "close_read",
+      "minutes": 8,
+      "check": "What do the authors think this means for training budgets?"
+    }
+  ],
+  "notes": "The negative half of the WO-W09 c2 pair: 30 minutes of work scheduled into a declared 10-minute session, with no acknowledgement that anything was cut. A plan judge that scores this the same as its honest sibling is not measuring anything."
+}

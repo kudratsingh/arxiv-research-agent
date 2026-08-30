@@ -1,0 +1,12 @@
+# Intentionally empty — the WO-W08 soft completion gate.
+#
+# Recorded mock-session transcripts land here once WO-W03's session
+# graph merges and a scenario can be replayed through it under
+# `use_mock_data=true` with ANTHROPIC_API_KEY=local-preview-disabled.
+# The exact completion condition is in ../manifest.json under the
+# `recorded_mock_session_transcripts` entry.
+#
+# `src/eval/learning_fixtures.validate_fixtures` FAILS if this
+# directory holds a *.json fixture while the manifest entry is still
+# marked `pending`, so nothing hand-written can be passed off here as
+# a recording.

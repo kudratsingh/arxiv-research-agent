@@ -45,6 +45,70 @@ Invariants (protected by `tests/test_benchmark_queries.py`):
 - `expected_topics` is a non-empty list of non-empty strings
 - Domain diversity: at least 5 distinct domains
 
+### `src/eval/learning_benchmark.py`
+
+The guided-read benchmark, for the learning agent rather than the
+research workflow (Phase W, WO-W08). Its unit is a **scenario** — a
+learner persona × a paper from the flagship reading path × a
+deterministic script of what the learner types — because a tutoring
+session is a conversation, not a single query.
+
+Fifteen scenarios over the three personas from the plan (novice
+undergrad, career-switcher, time-poor industry engineer) and the eight
+papers of the "Reading your first papers" path. Scripts cover the
+behaviours the design calls load-bearing: *declares 10 minutes*,
+*answers wrongly then self-corrects*, *tries a prompt injection in the
+explain-back*, plus the honesty edges (overclaims a declared skill,
+abandons mid-session, disengages into one-word answers).
+
+`ScenarioExpectations` is deliberately structural — plan size, whether
+a downscope must be stated, which progress events must exist, which
+declared skills must survive — so the scripted tier can run in CI with
+zero spend. Judge-scored qualities live in the metrics module.
+
+Invariants (`validate_benchmark()`, asserted by
+`tests/test_learning_benchmark.py`):
+- Scenario / persona / paper ids unique; scenario ids kebab-case
+- Every script opens on a `check_in` and closes on an `explain_back` or
+  `end_session`, with dense, ordered turn indices — the simulator's
+  stop condition
+- Personas may only carry `declared` skills at `confidence = 1.0`
+- Close-read / skim section names come from
+  `src/tools/chunker.SECTION_HEADERS` — the same detector the briefing
+  guidance is keyed to
+- Only progress-event kinds Phase W actually writes may be expected
+- An `unassessed` outcome and an `assessment` event are mutually
+  exclusive — no fabricated grade
+- Coverage: a scenario per persona, a time-poor script, an adversarial
+  script whose canary is actually planted in a turn
+
+### `src/eval/learning_fixtures.py`
+
+Loader and validator for the fixtures the learning judges score against
+(`tests/fixtures/learning/`), indexed by a `manifest.json`. Two kinds,
+and the difference is enforced, not documented: **hand-authored**
+fixtures name no generating commit and set `mock_mode: false` because
+nothing generated them; **recorded-mock** fixtures must name the commit
+and the mock mode that produced them. No fixture may set
+`real_session: true`, and every disclaimer must contain
+`"Not a real learner session."` verbatim.
+
+Shipped now: four session plans, including the honest-downscope /
+budget-ignoring pair on one 10-minute scenario that the plan-coherence
+judge has to score differently, and three transcripts (an
+evidence-linked assessment, an unassessed close, a contained
+injection).
+
+**Not shipped, and the manifest says so.** The recorded mock-session
+transcripts wait on the session graph: the
+`recorded_mock_session_transcripts` set is marked `pending` with its
+blocker and completion condition written down, and `validate_fixtures`
+*fails* if a pending set holds any file — so nothing hand-written can
+be dropped in and inherit the credibility of a recording. When the
+graph lands, record the transcripts, stamp the provenance headers, and
+flip the entry to `complete`; the same validator then requires files
+instead of forbidding them.
+
 ### `src/eval/metrics.py`
 
 Four metrics, each of which landed as its own PR so the design and

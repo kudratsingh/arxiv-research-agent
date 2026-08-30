@@ -1,0 +1,37 @@
+{
+  "provenance": {
+    "fixture_kind": "hand-authored",
+    "authored_by": "WO-W08 (feat/w08-learning-benchmark)",
+    "generated_by_commit": "",
+    "created_at": "2026-08-30",
+    "mock_mode": false,
+    "real_session": false,
+    "disclaimer": "Not a real learner session. Hand-written by a person as a fixed input for the session-plan coherence judge; no model produced this text and no graph ran."
+  },
+  "fixture_id": "scaling-laws-full-budget-baseline",
+  "scenario_id": "switcher-scaling-laws-full-budget",
+  "variant": "baseline",
+  "declared_minutes_today": 30,
+  "downscope_statement": "",
+  "sections": [
+    {
+      "section": "introduction",
+      "mode": "close_read",
+      "minutes": 8,
+      "check": ""
+    },
+    {
+      "section": "results",
+      "mode": "close_read",
+      "minutes": 12,
+      "check": "Which of the three variables does the paper say matters most, and on what evidence?"
+    },
+    {
+      "section": "discussion",
+      "mode": "close_read",
+      "minutes": 8,
+      "check": "Where would you push back on the generalisation claim?"
+    }
+  ],
+  "notes": "The control arm for the time-poor pair: same persona, same paper, full budget. A plan judge should score this and the honest downscope similarly high and the budget-ignoring variant low — that ordering is the metric, not the absolute numbers."
+}
