@@ -76,11 +76,18 @@ import contextlib
 import json
 from collections.abc import AsyncIterator
 from dataclasses import fields
-from typing import Any
+from typing import Any, cast
 
 import redis.asyncio as redis_async
 
-from src.api.jobs import TERMINAL_STATUSES, Job, JobStatus
+from src.api.jobs import (
+    DEFAULT_JOB_KIND,
+    JOB_KINDS,
+    TERMINAL_STATUSES,
+    Job,
+    JobKind,
+    JobStatus,
+)
 from src.api.streaming import TERMINAL_EVENT_NAMES, TERMINAL_EVENT_STATUS
 from src.config import settings
 from src.observability import get_logger
@@ -250,13 +257,51 @@ def _job_from_json(payload: str) -> Job:
     The reconstructed job gets a fresh empty `event_queue` — that's
     correct: only the worker that created the job holds its live
     queue.
+
+    `kind` is coerced through `_kind_from_payload` for the same reason
+    `status` is coerced at all: it selects behaviour (which runtime
+    drives the job — ADR 0057), so an unrecognized value must be a
+    logged decision rather than a string that flows into a dict lookup
+    somewhere far away.
     """
     data = json.loads(payload)
     keep = _persistent_fields()
     kwargs: dict[str, Any] = {k: v for k, v in data.items() if k in keep}
     kwargs["status"] = JobStatus(data.get("status", "pending"))
+    kwargs["kind"] = _kind_from_payload(data.get("kind"))
     kwargs["created_at"] = float(data["created_at"])
     return Job(**kwargs)
+
+
+def _kind_from_payload(value: Any) -> JobKind:
+    """Read a stored `kind`, defaulting anything unrecognized.
+
+    Absent means a row written before job kinds existed, which is a
+    research job by definition and is silent. A *present* value this
+    build does not know means a peer worker with a wider vocabulary
+    wrote it — forward compatibility says keep serving the row rather
+    than crash the read, but the fallback is a real behaviour change
+    for that job (it will be driven by the research runtime), so it
+    warns.
+
+    Args:
+        value: The `kind` field off the stored row, or None.
+
+    Returns:
+        A known `JobKind`.
+    """
+    if value is None:
+        return DEFAULT_JOB_KIND
+    if isinstance(value, str) and value in JOB_KINDS:
+        return cast(JobKind, value)
+    log.warning(
+        "job_kind_unknown",
+        extra={
+            "kind": value,
+            "consequence": "driven_as_research",
+        },
+    )
+    return DEFAULT_JOB_KIND
 
 
 class RedisJobStore:
@@ -676,6 +721,7 @@ class RedisJobStore:
         job_id: str,
         action: str,
         plan: dict[str, Any] | None,
+        payload: dict[str, Any] | None = None,
     ) -> None:
         """Fan out a resume decision to any worker running the job.
 
@@ -683,26 +729,43 @@ class RedisJobStore:
         worker may be a different process — even in single-worker
         deployments this is safe and cheap (Redis local-loop
         publish, no consumer means no work).
+
+        ADR 0057 adds `payload` for parkings whose resume body is not
+        a plan — a session turn carries the learner's reply. The key
+        is additive and optional in both directions: a worker built
+        before it ignores the key, and one built after it reads
+        `None` from a message that omits it. That is what lets the
+        channel stay `hitl:resume:{job_id}` and stay duck-typed
+        rather than growing a second channel per job kind.
+
+        Args:
+            job_id: Job whose runner should wake.
+            action: The client's decision, for plan review.
+            plan: Edited plan for `action="revise"`.
+            payload: Resume body for a non-plan parking.
         """
-        payload = json.dumps(
-            {"action": action, "plan": plan}, separators=(",", ":")
+        body = json.dumps(
+            {"action": action, "plan": plan, "payload": payload},
+            separators=(",", ":"),
         )
-        await self._client.publish(_hitl_resume_channel(job_id), payload)
+        await self._client.publish(_hitl_resume_channel(job_id), body)
 
     async def watch_for_remote_resume(self, job: Job) -> None:
         """Subscribe to `hitl:resume:{job_id}`; hydrate + wake on message.
 
-        Runs as a background task spawned by the runner during
-        `_handle_hitl_pause`. On the first message received:
+        Runs as a background task spawned by the runner while a job is
+        parked — for any parking, not just plan review (ADR 0057); the
+        channel is keyed by job id, not by what the job waits for. On
+        the first message received:
 
-        1. Populates `job.resume_action` and `job.resume_plan` from
-           the payload (the review endpoint already wrote them to
-           Redis, but the runner might be holding a stale local
-           copy).
+        1. Populates `job.resume_action`, `job.resume_plan` and
+           `job.resume_payload` from the message (the resume endpoint
+           already wrote them to Redis, but the runner might be
+           holding a stale local copy).
         2. Sets `job.resume_event`, which is what the runner's
            `wait_for` is awaiting.
 
-        The task is cancelled from `_handle_hitl_pause`'s `finally`
+        The task is cancelled from `_park_until_resumed`'s `finally`
         clause once the resume completes (same-worker path fires
         the event directly, and the pub/sub subscription is torn
         down without ever seeing a message). Cancellation cleans up
@@ -727,6 +790,7 @@ class RedisJobStore:
                     continue
                 job.resume_action = parsed.get("action")
                 job.resume_plan = parsed.get("plan")
+                job.resume_payload = parsed.get("payload")
                 job.resume_event.set()
                 log.info(
                     "hitl_resume_received_via_pubsub",

@@ -17,6 +17,12 @@ Event names emitted by the runner:
   - `plan_ready`     — HITL breakpoint hit (ADR 0030); `plan` in data.
                        Not terminal — the stream stays open through the
                        review action + resumed nodes.
+  - `turn_ready`     — a `session` job parked in `awaiting_learner`
+                       (ADR 0057); `turn` in data. Not terminal, for
+                       exactly the reason `plan_ready` is not: the
+                       stream carries the whole session, and a frame
+                       that closed it would make every turn cost a
+                       reconnect.
   - `job_completed`  — terminal frame; `result` field populated
   - `job_failed`     — terminal frame; `error` + `error_type` populated
   - `job_cancelled`  — terminal frame; client cancel or app shutdown
@@ -112,6 +118,15 @@ TERMINAL_EVENT_NAMES: frozenset[str] = frozenset(TERMINAL_EVENT_STATUS)
 STREAM_CLOSING_EVENT_NAMES: frozenset[str] = TERMINAL_EVENT_NAMES | {
     STREAM_TIMEOUT_EVENT
 }
+
+# The frames that say "a human has to do something now". Not a
+# dispatch table — nothing branches on this set — but the deliberate
+# record ADR 0057 asks for: adding a parking status means adding a
+# pause frame, and a pause frame that leaked into either set above
+# would end the stream at the moment the human was supposed to act.
+# `tests/test_contract_sse_events.py` asserts the disjointness rather
+# than trusting this comment.
+PAUSE_EVENT_NAMES: frozenset[str] = frozenset({"plan_ready", "turn_ready"})
 
 
 def format_sse(event: str, data: dict[str, Any]) -> bytes:

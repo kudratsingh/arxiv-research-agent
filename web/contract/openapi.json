@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "19e8b170840c1bdee8cfced1cbe216203b3938be",
+    "commit": "5d53514466fa86d321b1428f5fe14a3cdd28b319",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -823,6 +823,12 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "Which graph this job drives \u2014 `research` or `session` (ADR 0057). Defaulted rather than required so the field is additive: a client written before it, and a recorded fixture captured before it, both stay valid.",
+            "default": "research"
           },
           "query": {
             "type": "string",

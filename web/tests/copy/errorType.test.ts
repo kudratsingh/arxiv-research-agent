@@ -48,9 +48,26 @@ const BRIEF_TABLE: Array<[string, string]> = [
   ],
 ];
 
-describe("criterion 6 — the nine mapped values", () => {
-  it("maps nine values", () => {
-    expect(MAPPED_ERROR_TYPES).toHaveLength(9);
+/**
+ * Values mapped since 03 §8.3 was written, with the ADR that added each.
+ *
+ * Kept apart from `BRIEF_TABLE` rather than merged into it: that table
+ * is a transcription of the design brief and stops being one the moment
+ * a row is invented for it. This list is the other half of the same
+ * claim — the map is exactly the brief plus what has actually landed —
+ * and `errorTypeDrift.test.ts` independently proves every entry is a
+ * value the backend can really produce.
+ */
+const ADDED_SINCE_THE_BRIEF = ["session_turn_timeout"]; // ADR 0057
+
+describe("criterion 6 — the mapped values", () => {
+  it("maps the brief's nine, plus every value added since, and nothing else", () => {
+    const expected = [
+      ...BRIEF_TABLE.map(([value]) => value),
+      "JobCancelledError",
+      ...ADDED_SINCE_THE_BRIEF,
+    ].sort();
+    expect([...MAPPED_ERROR_TYPES].sort()).toEqual(expected);
   });
 
   it.each(BRIEF_TABLE)("%s reads exactly as 03 §8.3 wrote it", (value, sentence) => {

@@ -2,7 +2,7 @@
  * WO-12 criterion 7 — the `error_type` drift test.
  *
  * "A test enumerates the `error_type` values the backend can produce
- * (`runner.py:1057`, `:1085`, `:1150`, `redriver.py:507`, plus
+ * (`runner.py:1476`, `:1506`, `:1534`, `:1599`, `redriver.py:518`, plus
  * `type(exc).__name__` for the named exception classes) and asserts each is
  * mapped or visibly falls through."
  *
@@ -18,11 +18,13 @@
  *
  * THE PRODUCIBLE SET HAS TWO HALVES.
  *
- *   1. Four deliberate literals, assigned to `job.error_type` in
- *      `runner.py` and `redriver.py`.
- *   2. `type(exc).__name__` at `runner.py:1219`, for every exception class
+ *   1. Five deliberate literals, assigned to `job.error_type` in
+ *      `runner.py` and `redriver.py` (ADR 0057 added the fifth,
+ *      `session_turn_timeout`).
+ *   2. `type(exc).__name__` at `runner.py:1669`, for every exception class
  *      that can reach the generic handler. An exception the runner catches
  *      by name FIRST cannot: `HitlTimeoutError` becomes `hitl_timeout`,
+ *      `SessionTurnTimeoutError` becomes `session_turn_timeout`,
  *      `CostBudgetExceeded` becomes `cost_budget_exceeded`, and
  *      `HitlCancelledError` sets no `error_type` at all because the job is
  *      `cancelled`, not `failed`. So the second half is "every exception
@@ -150,19 +152,23 @@ const PRODUCIBLE = [...DELIBERATE, ...FROM_CLASS_NAME].sort();
 // ---------------------------------------------------------------------------
 
 describe("the enumeration reads the real backend", () => {
-  it("finds the four deliberate values at their cited sites", () => {
+  it("finds the five deliberate values at their cited sites", () => {
     expect(DELIBERATE).toEqual([
       "cost_budget_exceeded",
       "hitl_timeout",
       "orphaned",
+      "session_turn_timeout",
       "timeout",
     ]);
     // The citations themselves, so a moved assignment is noticed rather
-    // than silently re-found somewhere the design brief never read.
-    expect(RUNNER.split("\n")[1056]).toContain('job.error_type = "hitl_timeout"');
-    expect(RUNNER.split("\n")[1084]).toContain('job.error_type = "cost_budget_exceeded"');
-    expect(RUNNER.split("\n")[1149]).toContain('job.error_type = "timeout"');
-    expect(REDRIVER.split("\n")[506]).toContain("job.error_type = ORPHANED_ERROR_TYPE");
+    // than silently re-found somewhere the design brief never read. The
+    // runner line numbers moved with ADR 0057's kind dispatch, which is
+    // this assertion working: a re-citation is a deliberate act.
+    expect(RUNNER.split("\n")[1475]).toContain('job.error_type = "session_turn_timeout"');
+    expect(RUNNER.split("\n")[1505]).toContain('job.error_type = "hitl_timeout"');
+    expect(RUNNER.split("\n")[1533]).toContain('job.error_type = "cost_budget_exceeded"');
+    expect(RUNNER.split("\n")[1598]).toContain('job.error_type = "timeout"');
+    expect(REDRIVER.split("\n")[517]).toContain("job.error_type = ORPHANED_ERROR_TYPE");
   });
 
   it("finds the generic branch that turns any other exception into a value", () => {
@@ -188,7 +194,7 @@ describe("the enumeration reads the real backend", () => {
     expect(pythonFiles(SRC).some((file) => !onTheJobPath(file))).toBe(true);
   });
 
-  it("finds the exception classes, and the three the runner intercepts first", () => {
+  it("finds the exception classes, and the four the runner intercepts first", () => {
     expect(EXCEPTION_CLASSES).toEqual([
       "AllPaperAnalysesFailedError",
       "ArxivUnavailableError",
@@ -197,9 +203,19 @@ describe("the enumeration reads the real backend", () => {
       "HitlTimeoutError",
       "JobCancelledError",
       "NoPapersFoundError",
+      "SessionTurnTimeoutError",
       "SynthesizerOutputError",
     ]);
-    for (const name of ["HitlTimeoutError", "CostBudgetExceeded", "HitlCancelledError"]) {
+    for (const name of [
+      "HitlTimeoutError",
+      "CostBudgetExceeded",
+      "HitlCancelledError",
+      // ADR 0057. It has to stay a direct `Exception` subclass and it has
+      // to stay intercepted: the regex above only recognises the builtin
+      // bases, so a shared parking base class would drop both timeout
+      // exceptions out of this enumeration entirely.
+      "SessionTurnTimeoutError",
+    ]) {
       expect(INTERCEPTED, name).toContain(name);
     }
     // ...leaving exactly the five 03 §8.3 names, derived rather than typed.
@@ -214,8 +230,8 @@ describe("the enumeration reads the real backend", () => {
 });
 
 describe("criterion 7 — every producible value is mapped or visibly falls through", () => {
-  it("enumerates nine values", () => {
-    expect(PRODUCIBLE).toHaveLength(9);
+  it("enumerates ten values", () => {
+    expect(PRODUCIBLE).toHaveLength(10);
   });
 
   it.each(PRODUCIBLE)("%s is mapped or falls through with its raw text", (value) => {
@@ -233,14 +249,14 @@ describe("criterion 7 — every producible value is mapped or visibly falls thro
     expect(described.errorType).toBe(value);
   });
 
-  it("maps all nine — the dictionary and the backend agree exactly", () => {
-    // Both directions. A tenth backend value fails the first half; a
+  it("maps all ten — the dictionary and the backend agree exactly", () => {
+    // Both directions. An eleventh backend value fails the first half; a
     // mapping entry for a value the backend can no longer produce fails
     // the second, which is what stops the table becoming folklore.
     expect([...MAPPED_ERROR_TYPES].sort()).toEqual(PRODUCIBLE);
   });
 
-  it("would notice a tenth value", () => {
+  it("would notice an eleventh value", () => {
     const described = describeErrorType("SomeFutureExceptionName", "boom");
     expect(described.mapped).toBe(false);
     expect(MAPPED_ERROR_TYPES).not.toContain("SomeFutureExceptionName");

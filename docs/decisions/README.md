@@ -306,6 +306,23 @@ never renumbered.
   ratchet rule and the full movement history: D-011's shared-chunk raise,
   D-012's `/` raise (accessibility gate beats budget row), and WO-31's
   ratchet-down of six rows to the measured post-cleanup values.
+- [0057](0057-job-kinds-and-awaiting-learner.md) — Give jobs a `kind`
+  (`research` | `session`, defaulted so the field is additive) and
+  generalize ADR 0030's `pending_review` parking into one mechanism
+  with two flavours: `ParkingSpec` + `_park_until_resumed`, with
+  `awaiting_learner` / `turn_ready` / `session_turn_timeout_sec` as
+  the second. One driver serves both kinds — `JobKindRuntime` is the
+  exhaustive record of the four decisions that differ (graph input,
+  pause policy, pause ceiling, outer timeout) — so a Phase W tutoring
+  session inherits the lease, cancel token, cost accumulator, outcome
+  metrics, redrive policy and attach-time replay instead of a second
+  runner earning them again. Reuses the ADR 0034 `hitl:resume:{job_id}`
+  channel with an additive `payload` key rather than a second channel,
+  and keeps `turn_ready` out of the terminal and stream-closing sets so
+  a session does not cost a reconnect per turn. Records the sequencing
+  that de-risked it: the generalization merged proven against
+  `pending_review` with no test touched, before the new state had any
+  client.
 - [0058](0058-learner-profile-store-and-provenance.md) — The learner
   profile store (Phase W, WO-W02): the first personal data this repo
   keeps, with `declared` / `inferred` / `assessed` provenance on every

@@ -7,7 +7,8 @@ implementations exist — `InMemoryJobStore` below (single worker, the
 default) and the Redis-backed `RedisJobStore` in `src.api.redis_store`
 (ADR 0027) — selected by `settings.job_store`.
 
-Design in ADR 0025.
+Design in ADR 0025; the second job kind and its parked status in
+ADR 0057.
 """
 
 from __future__ import annotations
@@ -17,25 +18,60 @@ import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol, get_args
+
+JobKind = Literal["research", "session"]
+"""What a job is driving (ADR 0057).
+
+`research` — the arXiv research graph: state in, nodes run, terminal
+state out. The only kind that existed before Phase W, and the default
+so every pre-existing row and every existing caller keeps meaning what
+it meant.
+
+`session` — a guided-read tutoring session (WO-W03): turn-shaped, so
+it parks in `awaiting_learner` between turns instead of driving to
+termination in one pass.
+
+Deliberately not a `StrEnum` like `JobStatus`: this value crosses the
+API boundary as a plain string on `JobDetail.kind`, is stored as one
+in Redis, and has no behaviour of its own — the per-kind behaviour
+lives in `src.api.runner`'s kind runtimes. `Literal` gets that checked
+by mypy at every call site without a wrapper type in between.
+"""
+
+JOB_KINDS: frozenset[str] = frozenset(get_args(JobKind))
+"""The `JobKind` values, for validating strings off the wire.
+
+Derived from the type rather than restated, so the two cannot drift.
+"""
+
+DEFAULT_JOB_KIND: JobKind = "research"
+"""What a job is when nothing says otherwise — including rows written
+by a worker built before job kinds existed."""
 
 
 class JobStatus(StrEnum):
     """Terminal + non-terminal states a job can be in.
 
-    `pending`        — accepted, not yet started (queued behind the semaphore).
-    `running`        — actively invoking the workflow.
-    `pending_review` — paused at the HITL breakpoint after the planner (ADR
-                       0030). Waiting for a human to review + resume via
-                       `POST /research/{id}/review`.
-    `succeeded`      — workflow returned; `result` populated.
-    `failed`         — workflow raised or timed out; `error` populated.
-    `cancelled`      — client called cancel or app is shutting down.
+    `pending`          — accepted, not yet started (queued behind the
+                         semaphore).
+    `running`          — actively invoking the workflow.
+    `pending_review`   — paused at the HITL breakpoint after the planner
+                         (ADR 0030). Waiting for a human to review +
+                         resume via `POST /research/{id}/review`.
+    `awaiting_learner` — a `session` job paused between turns (ADR
+                         0057), waiting for the learner's reply. The
+                         same parking machinery as `pending_review`,
+                         a different human and a different question.
+    `succeeded`        — workflow returned; `result` populated.
+    `failed`           — workflow raised or timed out; `error` populated.
+    `cancelled`        — client called cancel or app is shutting down.
     """
 
     pending = "pending"
     running = "running"
     pending_review = "pending_review"
+    awaiting_learner = "awaiting_learner"
     succeeded = "succeeded"
     failed = "failed"
     cancelled = "cancelled"
@@ -44,6 +80,19 @@ class JobStatus(StrEnum):
 TERMINAL_STATUSES: frozenset[JobStatus] = frozenset(
     {JobStatus.succeeded, JobStatus.failed, JobStatus.cancelled}
 )
+
+PARKED_STATUSES: frozenset[JobStatus] = frozenset(
+    {JobStatus.pending_review, JobStatus.awaiting_learner}
+)
+"""Non-terminal statuses in which a live runner is blocked on a human.
+
+Both are held open by a worker that is very much alive — it is sitting
+in `asyncio.wait_for(job.resume_event.wait(), ...)` and refreshing the
+job's lease the whole time. The redriver therefore treats a parked job
+with a live lease exactly as it treats a `running` one (left alone),
+and a parked job whose lease has expired exactly as an orphaned
+`running` one (failed, never requeued: the spend already happened).
+"""
 
 
 @dataclass
@@ -61,12 +110,17 @@ class Job:
     runner skip the pause without checking global settings. The
     `resume_event` is the intra-process signal the review endpoint
     sets to wake the runner; `resume_action` + `resume_plan` carry
-    the client's decision.
+    the client's decision, and `resume_payload` carries it for a
+    parking whose payload is not a plan (ADR 0057).
     """
 
     job_id: str
     query: str
     status: JobStatus = JobStatus.pending
+    # ADR 0057: which graph this job drives. Defaults to `research`,
+    # so every row written before this field existed — and every
+    # caller that never mentions it — keeps the behaviour it had.
+    kind: JobKind = DEFAULT_JOB_KIND
     created_at: float = field(default_factory=time.time)
     started_at: float | None = None
     completed_at: float | None = None
@@ -80,8 +134,22 @@ class Job:
     hitl_bypass: bool = False
     conversation_id: str | None = None
     plan: dict[str, Any] | None = None
+    # ADR 0057: `plan`'s counterpart for a parked session — the turn
+    # the learner is being asked to take. Transient in the same way:
+    # populated when the session graph interrupts, cleared on resume.
+    # It is on the row rather than only in the frame because ADR
+    # 0053's attach-time replay needs something to replay from, and a
+    # session surviving a page reload is the whole reason the session
+    # runs on the job model at all (SR-01).
+    turn: dict[str, Any] | None = None
     resume_action: str | None = None
     resume_plan: dict[str, Any] | None = None
+    # ADR 0057: the resume body for parkings that are not plan review.
+    # `resume_plan` is plan-shaped by name and by the `Plan` schema
+    # validating it; a session turn carries the learner's reply, which
+    # is neither. Kept as a separate field rather than widening
+    # `resume_plan` so the HITL contract stays exactly what it says.
+    resume_payload: dict[str, Any] | None = None
     # ADR 0036: owner of the resource under `enable_api_auth`. `None`
     # under auth-off deployments (all callers share one namespace)
     # and on rows written by pre-ADR-0036 code. Ownership checks in
@@ -97,7 +165,24 @@ class Job:
         return self.status in TERMINAL_STATUSES
 
     def is_awaiting_review(self) -> bool:
+        """True only for plan review — never for a session turn.
+
+        `POST /research/{id}/review` guards on this, and it must stay
+        narrow: a session parked in `awaiting_learner` is waiting for
+        a learner's answer, not for a plan decision, and resuming it
+        through the review endpoint would push an approve/revise/cancel
+        action into a graph that has no idea what to do with one.
+        """
         return self.status == JobStatus.pending_review
+
+    def is_parked(self) -> bool:
+        """True while a live runner is blocked on a human's reply.
+
+        The union of the parked statuses — see `PARKED_STATUSES` for
+        why the two belong together everywhere except the review
+        endpoint's guard.
+        """
+        return self.status in PARKED_STATUSES
 
     def elapsed_sec(self) -> float | None:
         """Wall-clock duration of the job, or None if not yet started."""

@@ -114,6 +114,15 @@ class JobDetail(BaseModel):
 
     job_id: str
     status: str
+    kind: str = Field(
+        default="research",
+        description=(
+            "Which graph this job drives — `research` or `session` "
+            "(ADR 0057). Defaulted rather than required so the field "
+            "is additive: a client written before it, and a recorded "
+            "fixture captured before it, both stay valid."
+        ),
+    )
     query: str
     created_at: float
     started_at: float | None = None

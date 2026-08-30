@@ -133,8 +133,38 @@ graph through `astream` (ADR
 [0040](decisions/0040-async-checkpointer-and-runner.md)), bounded by
 a process-wide semaphore (`api_max_concurrent_jobs`) and a hard
 timeout (`api_job_timeout_sec`). Job lifecycle:
-`pending → running → (pending_review →) succeeded / failed /
-cancelled`. `GET /research/{job_id}` polls status + result.
+`pending → running → (pending_review | awaiting_learner →)*
+succeeded / failed / cancelled`. `GET /research/{job_id}` polls
+status + result.
+
+**Job kinds.** A job carries a `kind` — `research` (the default, and
+everything above) or `session`, a guided-read tutoring run against a
+second graph (ADR
+[0057](decisions/0057-job-kinds-and-awaiting-learner.md)). One driver
+serves both: `runner.py`'s `JobKindRuntime` records the four
+decisions that differ — the graph input, what an interrupt means, how
+many interrupts are plausible, and the wall-clock ceiling — and
+nothing else in `run_job` branches on the kind. That is the point of
+the field: a session inherits the lease, the semaphore, the cancel
+token, the cost accumulator, the terminal persistence and the outcome
+metrics rather than a second driver having to earn them again.
+`JobDetail.kind` reports it, defaulted so the field is additive.
+
+**Parking.** A job can pause mid-graph and wait for a human, in
+exactly one shape: it moves to a non-terminal *parked* status, the
+runner publishes a frame naming the decision, and it blocks on the
+job's resume event until the resume endpoint sets it locally or a
+peer worker's pub/sub message does. Two parkings exist —
+`pending_review`/`plan_ready` bounded by `api_hitl_timeout_sec`
+(ADR 0030), and `awaiting_learner`/`turn_ready` bounded by
+`session_turn_timeout_sec` (ADR 0057) — and they share
+`runner.py`'s `ParkingSpec` + `_park_until_resumed`. The structural
+difference is how often: a research run reviews only its *first*
+interrupt and auto-resumes any re-plan, whereas a session parks on
+every turn, bounded by `session_max_turns`. A parked job is held open
+by a live worker refreshing its lease, so the redriver reads it as
+healthy rather than stale; an *orphaned* parked job is failed and
+never requeued, for the same reason an orphaned `running` job is.
 
 **Node execution + cancellation.** Agents are synchronous, so the
 async path runs each node on a lifespan-owned `ThreadPoolExecutor`
@@ -148,18 +178,22 @@ counted in `/healthz`'s `active_jobs`. ADR
 [0047](decisions/0047-bounded-executor-and-cooperative-cancel.md).
 
 **SSE streaming.** `GET /research/{job_id}/stream` streams events as
-the runner emits them: `node_completed`, `plan_ready`,
+the runner emits them: `node_completed`, `plan_ready`, `turn_ready`,
 `job_completed`, `job_failed`, `job_cancelled`, plus heartbeats so
 proxies don't drop the stream and a `stream_timeout` frame when
 `api_sse_max_duration_sec` closes a long-lived connection (ADRs
 [0026](decisions/0026-sse-streaming-endpoint.md) /
-[0038](decisions/0038-job-redriver-and-sse-stream.md)). Connecting to
+[0038](decisions/0038-job-redriver-and-sse-stream.md)). The two
+parking frames are deliberately neither terminal nor stream-closing:
+the connection carries the pause, so a session does not cost a
+reconnect per turn. Connecting to
 an already-finished job replays the single terminal frame and closes,
-which makes reconnects idempotent; connecting to a job parked in
-`pending_review` replays its `plan_ready` frame the same way, so a
-reconnect during plan review sees the plan instead of waiting out the
-HITL timeout in silence (ADR
-[0053](decisions/0053-api-web-container-preflight.md)). Under the Redis
+which makes reconnects idempotent; connecting to a parked job replays
+its pause frame the same way, so a reconnect during plan review sees
+the plan, and a page reload mid-session sees the turn, instead of
+waiting out the parking timeout in silence (ADRs
+[0053](decisions/0053-api-web-container-preflight.md) /
+[0057](decisions/0057-job-kinds-and-awaiting-learner.md)). Under the Redis
 job store, events fan out across workers via pub/sub on
 `events:{job_id}` so the streaming request need not land on the
 worker running the job (ADR

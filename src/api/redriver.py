@@ -375,11 +375,22 @@ class JobRedriver:
         """Requeue or fail one orphaned job.
 
         Only `pending` is eligible for requeue, and only when the
-        operator opted in. `running` and `pending_review` are always
-        failed: they already made LLM calls, so restarting them would
-        bill the operator a second time for work that was partly done
-        and is no longer recoverable (the intermediate state lived in
-        the dead worker's process).
+        operator opted in. `running` and the parked statuses
+        (`pending_review`, `awaiting_learner`) are always failed: they
+        already made LLM calls, so restarting them would bill the
+        operator a second time for work that was partly done and is no
+        longer recoverable (the intermediate state lived in the dead
+        worker's process).
+
+        Note what this method never has to decide (ADR 0057): whether
+        a *parked* job is an orphan at all. A live runner sitting in
+        `awaiting_learner` is refreshing the job's lease the entire
+        time it waits, so `_reconcile`'s `acquire_lease` fails and the
+        job is counted `skipped_live` before it ever reaches here — a
+        learner taking ten minutes over a passage looks exactly like a
+        reviewer taking ten minutes over a plan, which is to say like
+        a healthy job. Only a parking whose *worker* died gets this
+        far.
 
         Args:
             job: A non-terminal job with no live lease.
