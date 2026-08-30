@@ -501,11 +501,17 @@ class ProgressSummary:
 
 
 def _schedule_label(completed: int, planned: int | None) -> str:
-    if planned is None:
-        return f"{completed} session recorded" if completed == 1 else (
-            f"{completed} sessions recorded"
-        )
-    return f"{completed} of {planned} sessions"
+    """Render the one string this module produces.
+
+    Two forms and no third: session arithmetic when the path declared a
+    length, a bare count when it did not. `_SCHEDULE_LABEL_PATTERN`
+    pins both, so a percentage cannot be added here without failing a
+    named test.
+    """
+    if planned is not None:
+        return f"{completed} of {planned} sessions"
+    noun = "session" if completed == 1 else "sessions"
+    return f"{completed} {noun} recorded"
 
 
 def _payload_str(payload: Mapping[str, Any], key: str) -> str | None:
@@ -586,8 +592,11 @@ def summarize(
                 )
             )
 
-    # Paths that have only ever been assessed still deserve a row —
-    # "0 of 12 sessions" with an assessment recorded is a true state.
+    # A path that has been assessed but never sat still gets a row:
+    # "0 sessions recorded" with one assessment against it is a true
+    # state, and dropping the row would hide it. The denominator stays
+    # absent because only a session event ever declares one — the view
+    # does not invent a length for a path nobody has started.
     for path_id in path_assessments:
         path_sessions.setdefault(path_id, [])
 
