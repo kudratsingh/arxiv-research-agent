@@ -42,6 +42,7 @@ import contextlib
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextvars import ContextVar
+from dataclasses import dataclass
 from typing import Any
 
 from src.api.jobs import Job, JobStatus, JobStore
@@ -112,6 +113,118 @@ class HitlTimeoutError(Exception):
 
 class HitlCancelledError(Exception):
     """Client sent `action=cancel` from the review endpoint."""
+
+
+ParkFrameEmitter = Callable[[Job, dict[str, Any]], Awaitable[None]]
+"""Publishes the SSE frame that tells a client the job has parked.
+
+One per parking flavour, and each one spells its event name as a
+string literal at a real `_put_event` call. That is deliberate:
+`tests/test_contract_sse_events.py` scrapes those literals out of this
+module's source to prove no name escapes the pinned contract, and a
+name routed through a constant or a dataclass field would slip past
+the scraper.
+"""
+
+
+@dataclass(frozen=True)
+class ParkingSpec:
+    """One flavour of runner pause: where a job parks and how it wakes.
+
+    The runner has exactly one sanctioned way to stop mid-graph and
+    wait for a human — park the job in a *non-terminal* status,
+    publish a frame naming what the human has to decide, and block on
+    `job.resume_event` until the review endpoint sets it locally or a
+    peer worker's pub/sub message does (ADR 0034). ADR 0030 built that
+    for plan review; this record is the shape of it, so a second graph
+    can inherit the same lifecycle instead of growing a second copy.
+
+    `timeout_setting` is an attribute *name*, not a value, on purpose:
+    the runner reads module-level `settings` at call time so a test can
+    `monkeypatch.setattr(runner_module, "settings", ...)` (see
+    `tests/test_api_hitl.py::_app_with`), and a value captured at
+    import would ignore the patch.
+
+    Attributes:
+        status: Non-terminal status the job sits in while parked.
+        emit: Publishes the park frame. Never a terminal or
+            stream-closing event — the stream stays open across the
+            pause, exactly as it does for `plan_ready`.
+        timeout_setting: Name of the `settings` field bounding the wait.
+        timeout_error: Raised with the timeout message when nobody
+            resumes in time; `run_job` maps it to a terminal outcome.
+        log_event: Structured log event name emitted on the park.
+    """
+
+    status: JobStatus
+    emit: ParkFrameEmitter
+    timeout_setting: str
+    timeout_error: type[Exception]
+    log_event: str
+
+    def timeout_sec(self) -> int:
+        """The current bound on the parked wait, read fresh from settings."""
+        return int(getattr(settings, self.timeout_setting))
+
+
+async def _emit_plan_ready(job: Job, plan: dict[str, Any]) -> None:
+    """Publish the plan-review frame (ADR 0030).
+
+    `routes.py::_plan_ready_data` reproduces this payload byte for byte
+    for the ADR 0053 attach-time replay, so the two are edited
+    together or a reconnecting reviewer gets a different plan shape
+    than a connected one.
+    """
+    await _put_event(job, "plan_ready", {"job_id": job.job_id, "plan": plan})
+
+
+HITL_PARKING = ParkingSpec(
+    status=JobStatus.pending_review,
+    emit=_emit_plan_ready,
+    timeout_setting="api_hitl_timeout_sec",
+    timeout_error=HitlTimeoutError,
+    log_event="api_job_pending_review",
+)
+"""Plan review — the original parking, and the one that proves the shape."""
+
+
+@dataclass(frozen=True)
+class PauseContext:
+    """Everything a pause handler needs at one graph interrupt.
+
+    Bundled rather than passed as seven positional arguments because
+    the handler is a pluggable policy (`_invoke_streaming`'s
+    `on_pause`), and a policy's signature is a contract other modules
+    implement against.
+
+    Attributes:
+        app: The compiled graph, for `aupdate_state` on the resume.
+        config: LangGraph config carrying `thread_id`.
+        run_id: The thread id, lifted out of `config` for logging.
+        workflow_state: The `aget_state` snapshot at the interrupt.
+        job: Job being driven, or None for programmatic/eval callers
+            that must never pause.
+        store: Job store, or None for the same callers.
+        pause_number: 1-based count of interrupts seen on this run.
+    """
+
+    app: Any
+    config: dict[str, Any]
+    run_id: str
+    workflow_state: Any
+    job: Job | None
+    store: JobStore | None
+    pause_number: int
+
+
+PauseHandler = Callable[[PauseContext], Awaitable[None]]
+"""What to do when the compiled graph stops at an interrupt.
+
+Returning means "resume the graph"; raising ends the run. The handler
+owns the decision of whether *this* interrupt is a park at all — the
+research graph reviews only its first pause (ADR 0030's
+one-review-per-query intent) and auto-resumes the rest.
+"""
 
 
 def _initial_state(
@@ -255,6 +368,7 @@ async def _invoke_streaming(
     *,
     job: Job | None = None,
     store: JobStore | None = None,
+    on_pause: PauseHandler | None = None,
 ) -> dict[str, Any]:
     """Run the pre-compiled workflow, honoring the HITL breakpoint.
 
@@ -290,13 +404,19 @@ async def _invoke_streaming(
     is compiled with an interrupt: the runner just resumes immediately
     without waiting.
 
+    `on_pause` is the pause *policy*, defaulting to plan review. It is
+    a parameter rather than a hard-coded call so a second graph with a
+    different pause meaning can reuse this loop unchanged; the loop
+    itself only knows that an interrupt happened, never why.
+
     The workflow is pre-compiled at app startup and shared across
     jobs (ADR 0034) — previously we re-compiled per job, which
     opened a fresh checkpointer connection every time and never
     cleaned it up until process exit.
     """
     app = workflow
-    config = {"configurable": {"thread_id": run_id}}
+    config: dict[str, Any] = {"configurable": {"thread_id": run_id}}
+    handle_pause = on_pause if on_pause is not None else _handle_hitl_pause
 
     # Fallback final state for checkpointing-disabled runs, where
     # `aget_state` has nothing to answer from. Plain dict-merge is
@@ -359,61 +479,67 @@ async def _invoke_streaming(
                 f"(thread_id={run_id}); refusing to report a paused "
                 "graph as a finished job"
             )
-        if pauses == 1:
-            await _handle_hitl_pause(app, config, workflow_state, job, store)
-        else:
-            log.info(
-                "api_job_interrupt_auto_resumed",
-                extra={"thread_id": run_id, "pause_number": pauses},
+        await handle_pause(
+            PauseContext(
+                app=app,
+                config=config,
+                run_id=run_id,
+                workflow_state=workflow_state,
+                job=job,
+                store=store,
+                pause_number=pauses,
             )
+        )
         # Resume from checkpoint — `None` input means "continue from
         # where we paused"; anything else would restart the graph.
         stream_input = None
 
 
-async def _handle_hitl_pause(
-    app: Any,
-    config: dict[str, Any],
-    workflow_state: Any,
-    job: Job | None,
+async def _park_until_resumed(
+    job: Job,
     store: JobStore | None,
+    spec: ParkingSpec,
+    *,
+    payload: dict[str, Any],
+    log_extra: dict[str, Any] | None = None,
 ) -> None:
-    """Bridge the pause: populate `job.plan`, emit `plan_ready`, wait
-    on the resume signal, optionally apply edits.
+    """Park `job` per `spec` and block until something resumes it.
 
-    No-op when `job` is None (called from eval / programmatic
-    paths that shouldn't pause). When `job.hitl_bypass` is True the
-    runner resumes immediately without emitting a review event.
+    The three halves of a pause, in the order the rest of the system
+    depends on: the store row moves to the parked status *first* (a
+    client that polls `GET /research/{id}` the instant the frame lands
+    must not still read `running`), then the frame goes out, then the
+    runner waits.
 
     ADR 0034: when the store advertises a `watch_for_remote_resume`
-    method (`RedisJobStore` does), spawn a subscription task
-    alongside the local `resume_event` await. That's what lets a
-    review submitted to worker B wake the runner sitting on
-    worker A. Single-worker deployments and in-memory stores skip
-    the subscription and just await the local event.
-    """
-    if job is None:
-        return
-    if job.hitl_bypass:
-        # Compiled interrupt is unconditional; caller opted out.
-        return
+    method (`RedisJobStore` does), spawn a subscription task alongside
+    the local `resume_event` await. That's what lets a resume
+    submitted to worker B wake the runner sitting on worker A.
+    Single-worker deployments and in-memory stores skip the
+    subscription and just await the local event. The channel is the
+    same one for every parking flavour — it is keyed by job id, not by
+    what the job is waiting for.
 
-    plan_values = {
-        "sub_questions": list(workflow_state.values.get("sub_questions", [])),
-        "search_queries": list(workflow_state.values.get("search_queries", [])),
-    }
-    job.plan = plan_values
-    job.status = JobStatus.pending_review
+    Args:
+        job: The job to park. Mutated in place.
+        store: Job store, or None for programmatic callers.
+        spec: Which parking this is — status, frame, timeout, error.
+        payload: Parking-specific body handed to `spec.emit`.
+        log_extra: Extra structured-log fields for the park record.
+            `job_id` is always included.
+
+    Raises:
+        Exception: `spec.timeout_error`, when nobody resumed within
+            the spec's timeout. The caller turns that into a terminal
+            job outcome.
+    """
+    job.status = spec.status
     if store is not None:
         await store.update(job)
-    await _put_event(
-        job,
-        "plan_ready",
-        {"job_id": job.job_id, "plan": plan_values},
-    )
+    await spec.emit(job, payload)
     log.info(
-        "api_job_pending_review",
-        extra={"job_id": job.job_id, **_plan_shape(plan_values)},
+        spec.log_event,
+        extra={"job_id": job.job_id, **(log_extra or {})},
     )
 
     subscription: asyncio.Task[None] | None = None
@@ -423,15 +549,16 @@ async def _handle_hitl_pause(
             watch(job), name=f"hitl-resume-{job.job_id}"
         )
 
+    timeout_sec = spec.timeout_sec()
     try:
         try:
             await asyncio.wait_for(
                 job.resume_event.wait(),
-                timeout=settings.api_hitl_timeout_sec,
+                timeout=timeout_sec,
             )
         except TimeoutError as exc:
-            raise HitlTimeoutError(
-                f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
+            raise spec.timeout_error(
+                f"{spec.status.value} exceeded {timeout_sec}s"
             ) from exc
     finally:
         if subscription is not None:
@@ -439,22 +566,77 @@ async def _handle_hitl_pause(
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await subscription
 
+
+async def _unpark(job: Job, store: JobStore | None) -> None:
+    """Put a resumed job back to `running` and re-arm its resume event.
+
+    The event has to be cleared or the *next* park on the same job
+    returns instantly — which for a turn-shaped graph would drive the
+    whole session without ever waiting for the learner.
+    """
+    job.status = JobStatus.running
+    job.resume_event.clear()
+    if store is not None:
+        await store.update(job)
+
+
+async def _handle_hitl_pause(ctx: PauseContext) -> None:
+    """Bridge the pause: populate `job.plan`, emit `plan_ready`, wait
+    on the resume signal, optionally apply edits.
+
+    Only the FIRST interrupt of a run is a human review (ADR 0030's
+    one-review-per-query intent); `interrupt_after=["planner"]`
+    re-arms on every planner execution, so a critic-driven re-plan
+    parks the graph again and those pauses auto-resume silently.
+
+    No-op when `ctx.job` is None (called from eval / programmatic
+    paths that shouldn't pause). When `job.hitl_bypass` is True the
+    runner resumes immediately without emitting a review event.
+    """
+    if ctx.pause_number != 1:
+        log.info(
+            "api_job_interrupt_auto_resumed",
+            extra={
+                "thread_id": ctx.run_id,
+                "pause_number": ctx.pause_number,
+            },
+        )
+        return
+
+    job = ctx.job
+    if job is None:
+        return
+    if job.hitl_bypass:
+        # Compiled interrupt is unconditional; caller opted out.
+        return
+
+    values = ctx.workflow_state.values
+    plan_values = {
+        "sub_questions": list(values.get("sub_questions", [])),
+        "search_queries": list(values.get("search_queries", [])),
+    }
+    job.plan = plan_values
+    await _park_until_resumed(
+        job,
+        ctx.store,
+        HITL_PARKING,
+        payload=plan_values,
+        log_extra=_plan_shape(plan_values),
+    )
+
     if job.resume_action == "cancel":
         raise HitlCancelledError("client cancelled during plan review")
 
     if job.resume_action == "revise" and job.resume_plan:
-        await app.aupdate_state(config, job.resume_plan)
+        await ctx.app.aupdate_state(ctx.config, job.resume_plan)
         log.info(
             "api_job_plan_revised",
             extra={"job_id": job.job_id, **_plan_shape(job.resume_plan)},
         )
 
     # Back to running for the resume path.
-    job.status = JobStatus.running
     job.plan = None
-    job.resume_event.clear()
-    if store is not None:
-        await store.update(job)
+    await _unpark(job, ctx.store)
 
 
 def _plan_shape(plan: dict[str, Any]) -> dict[str, Any]:
