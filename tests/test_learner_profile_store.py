@@ -684,14 +684,28 @@ class TestPostgresProfileStore:
         assert await store.get("pilot-b") is None
 
     async def test_delete_removes_the_row(self, pg_url: str) -> None:
-        """Criterion 3: deletion is first-class and covered by a test."""
+        """Criterion 3: deletion is first-class and covered by a test.
+
+        The evidence-backed claims go in through `record_skill_entries`,
+        not through `put` — `put` is the learner's edit surface and
+        refuses to write anything but declarations, which is the point
+        of the write path and is asserted separately. The row under
+        deletion therefore holds all three provenances.
+        """
         store = PostgresProfileStore()
         await store.put(
-            LearnerProfile(
-                principal_key_id=PRINCIPAL,
-                skills=(declared(), inferred("attention"), assessed("rlhf")),
-            )
+            LearnerProfile(principal_key_id=PRINCIPAL, skills=(declared(),))
         )
+        await store.record_skill_entries(
+            PRINCIPAL, (inferred("attention"), assessed("rlhf"))
+        )
+        stored = await store.get(PRINCIPAL)
+        assert stored is not None
+        assert {entry.source for entry in stored.skills} == {
+            "declared",
+            "inferred",
+            "assessed",
+        }
 
         assert await store.delete(PRINCIPAL) is True
 
