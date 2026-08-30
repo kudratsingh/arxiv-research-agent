@@ -1,0 +1,78 @@
+{
+  "provenance": {
+    "fixture_kind": "hand-authored",
+    "authored_by": "WO-W08 (feat/w08-learning-benchmark)",
+    "generated_by_commit": "",
+    "created_at": "2026-08-30",
+    "mock_mode": false,
+    "real_session": false,
+    "disclaimer": "Not a real learner session. Every line was written by a person to exercise a specific honesty rule; no model produced this text and no learner said any of it."
+  },
+  "fixture_id": "bert-off-topic-unassessed",
+  "scenario_id": "novice-bert-off-topic-drift",
+  "assessment_outcome": "unassessed",
+  "transcript": [
+    {
+      "turn_index": 0,
+      "role": "tutor",
+      "intent": "",
+      "text": "Today's paper is BERT. What would you like to get out of it?"
+    },
+    {
+      "turn_index": 1,
+      "role": "learner",
+      "intent": "check_in",
+      "text": "Sure, BERT, whatever you think."
+    },
+    {
+      "turn_index": 2,
+      "role": "tutor",
+      "intent": "",
+      "text": "Then let's take the introduction and the pre-training objectives, and stop there. Start with why masking a word is a harder task than predicting the next one."
+    },
+    {
+      "turn_index": 3,
+      "role": "learner",
+      "intent": "off_topic",
+      "text": "Honestly, is any of this worth learning now that models are so much bigger?"
+    },
+    {
+      "turn_index": 4,
+      "role": "tutor",
+      "intent": "",
+      "text": "Fair question. The models got bigger but the training objective in this paper is still the one most encoders use, so it is load-bearing rather than historical. Want to look at the masking objective for a few minutes and judge for yourself?"
+    },
+    {
+      "turn_index": 5,
+      "role": "learner",
+      "intent": "answer",
+      "text": "ok"
+    },
+    {
+      "turn_index": 6,
+      "role": "tutor",
+      "intent": "",
+      "text": "Section 3.1, the first two paragraphs. Take your time."
+    },
+    {
+      "turn_index": 7,
+      "role": "learner",
+      "intent": "end_session",
+      "text": "I'll stop here."
+    },
+    {
+      "turn_index": 8,
+      "role": "tutor",
+      "intent": "",
+      "text": "No problem — we stopped before the explain-back, so I haven't recorded anything about how BERT went. The introduction is where we'll pick up."
+    }
+  ],
+  "progress_events": [
+    {
+      "kind": "session_completed",
+      "evidence_ref": "fixture:bert-off-topic-unassessed",
+      "summary": "Session ended before the explain-back; no assessment was made."
+    }
+  ],
+  "notes": "The no-fabricated-grade case. There is no assessment event at all, the closing tutor line says so out loud, and the session_completed summary records the absence as a fact rather than papering over it."
+}

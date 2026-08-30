@@ -1,0 +1,25 @@
+{
+  "provenance": {
+    "fixture_kind": "hand-authored",
+    "authored_by": "WO-W08 (feat/w08-learning-benchmark)",
+    "generated_by_commit": "",
+    "created_at": "2026-08-30",
+    "mock_mode": false,
+    "real_session": false,
+    "disclaimer": "Not a real learner session. Hand-written by a person as a fixed input for the session-plan coherence judge; no model produced this text and no graph ran."
+  },
+  "fixture_id": "scaling-laws-time-poor-honest",
+  "scenario_id": "switcher-scaling-laws-time-poor",
+  "variant": "honest_downscope",
+  "declared_minutes_today": 10,
+  "downscope_statement": "You said ten minutes, so today is one section instead of the three we'd planned. We'll pick up the introduction and the discussion next time — nothing is lost, it's just later.",
+  "sections": [
+    {
+      "section": "results",
+      "mode": "close_read",
+      "minutes": 8,
+      "check": "In your own words: what do the three power-law curves have in common, and what does that let you predict?"
+    }
+  ],
+  "notes": "The positive half of the WO-W09 c2 pair. Fits the declared budget, states the cut plainly, and keeps a comprehension check even at one section."
+}
