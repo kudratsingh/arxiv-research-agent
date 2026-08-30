@@ -199,6 +199,18 @@ threads; follow-up jobs get `prior_context` — top-K chunks retrieved
 from the thread's prior reports (`retriever.py`) — injected into the
 planner's prompt (ADR [0032](decisions/0032-conversation-mode.md)).
 
+**Learner profile.** Opt-in behind `enable_learner_profile` (which
+requires `enable_api_auth`): `GET/PUT/DELETE /learn/profile` keeps a
+small per-principal record of what a learner has declared about
+themselves, plus claims the system inferred or assessed. Every skill
+claim carries non-nullable `declared` / `inferred` / `assessed`
+provenance — enforced in the type, in the merge, and in the table's
+CHECK constraints — and the prompt serializer confines inferred
+claims to an "unconfirmed impressions" block so no prompt presents a
+guess as fact (ADR
+[0058](decisions/0058-learner-profile-store-and-provenance.md)). The
+flag is off by default, and the routes answer 404 while it is.
+
 **Export.** `GET /research/{job_id}/export?format=md|pdf|docx`
 renders the finished report via `src/api/exporters/` (ADR
 [0031](decisions/0031-multi-format-export.md)).

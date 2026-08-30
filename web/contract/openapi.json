@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "09508afebabd890823170d5a9cc91b5be97f9a64",
+    "commit": "08ee3fc8dd4962df6728386d64b46298310c721b",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -401,6 +401,72 @@
         }
       }
     },
+    "/learn/profile": {
+      "get": {
+        "summary": "The calling principal's learner profile.",
+        "description": "Read the profile belonging to the presented API key.\n\nA learner who has never written one has none: the response is 404,\nwhich the client renders as the empty state. Inventing a blank row\non read would make \"the learner has told us nothing\" and \"the\nlearner told us they are a beginner\" indistinguishable.\n\nEvery returned skill claim carries its `source`; there is no\nnullable provenance in the response schema. See ADR 0058.",
+        "operationId": "get_learner_profile_learn_profile_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnerProfileResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Replace what the learner has declared about themselves.",
+        "description": "Write the learner's own declarations.\n\nEverything this endpoint writes is `declared` by construction: the\nrequest schema has no provenance field, and the store's\n`replace_declared_skills` refuses a non-declared claim from this\npath. Inferred and assessed claims already on the profile survive\nthe write untouched \u2014 the learner edits what they said, and the\nsystem's observations stand on their evidence (01 \u00a71.2).\n\nDurable per-principal writes draw on the same per-key hourly\nbudget as `POST /research`, so a leaked key cannot accrete rows on\nthe shared Postgres with the limiter never firing (ADR 0043).",
+        "operationId": "put_learner_profile_learn_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnerProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete the calling principal's learner profile.",
+        "description": "Erase the profile \u2014 the first-class deletion 01 \u00a71.4 promises.\n\nRemoves the whole `learner_profiles` row: declarations, goals,\ninferred and assessed claims, and the free-text note. 204 whether\nor not a row existed, so the response never confirms whether a\ngiven principal had a profile.\n\n**What the promise does not cover**: the shared paper and\nembedding caches (`paper_cache`, `embedding_cache`) hold public\narXiv text, are not per-user, and are untouched by this call \u2014 the\ncaveat MT-01 \u00a77.3 states and 01 \u00a71.4 carries over. Progress events\n(WO-W07) join this promise when that table exists; the account-\nlevel deletion is this operation.",
+        "operationId": "delete_learner_profile_learn_profile_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
     "/healthz": {
       "get": {
         "summary": "Liveness + dependency status + per-worker concurrency.",
@@ -541,6 +607,101 @@
         ],
         "title": "ConversationListItem",
         "description": "`GET /conversations` \u2014 sidebar entry, no job bodies."
+      },
+      "GoalClaim": {
+        "properties": {
+          "goal_id": {
+            "type": "string",
+            "title": "Goal Id"
+          },
+          "statement": {
+            "type": "string",
+            "title": "Statement"
+          },
+          "target_date": {
+            "type": "string",
+            "title": "Target Date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "reached",
+              "abandoned"
+            ],
+            "title": "Status"
+          },
+          "priority": {
+            "type": "integer",
+            "title": "Priority"
+          }
+        },
+        "type": "object",
+        "required": [
+          "goal_id",
+          "statement",
+          "target_date",
+          "status",
+          "priority"
+        ],
+        "title": "GoalClaim",
+        "description": "One goal as the API returns it."
+      },
+      "GoalDeclaration": {
+        "properties": {
+          "goal_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goal Id",
+            "description": "Existing goal to update. Omit to create a new one."
+          },
+          "statement": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Statement",
+            "description": "Learner-authored, e.g. `read modern RLHF papers critically`. Treated as untrusted text everywhere it reaches a prompt (ADR 0058)."
+          },
+          "target_date": {
+            "type": "string",
+            "maxLength": 10,
+            "title": "Target Date",
+            "description": "ISO date (`YYYY-MM-DD`), or empty for open-ended.",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "reached",
+              "abandoned"
+            ],
+            "title": "Status",
+            "default": "active"
+          },
+          "priority": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Priority",
+            "default": 3
+          }
+        },
+        "type": "object",
+        "required": [
+          "statement"
+        ],
+        "title": "GoalDeclaration",
+        "description": "One goal the learner set for themselves."
       },
       "HTTPValidationError": {
         "properties": {
@@ -757,6 +918,62 @@
         "title": "JobDetail",
         "description": "`GET /research/{job_id}` \u2014 full lifecycle snapshot."
       },
+      "LearnerProfileResponse": {
+        "properties": {
+          "academic_level": {
+            "type": "string",
+            "enum": [
+              "",
+              "self-taught",
+              "undergrad",
+              "grad",
+              "postdoc",
+              "industry"
+            ],
+            "title": "Academic Level"
+          },
+          "time_budget_min_per_day": {
+            "type": "integer",
+            "title": "Time Budget Min Per Day"
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/GoalClaim"
+            },
+            "type": "array",
+            "title": "Goals"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillClaim"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "profile_note": {
+            "type": "string",
+            "title": "Profile Note"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "number",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_level",
+          "time_budget_min_per_day",
+          "profile_note",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "LearnerProfileResponse",
+        "description": "`GET`/`PUT /learn/profile` \u2014 the whole per-principal record.\n\nDeliberately smaller than the design sketch: no `style_signals`\nand no `preferred_days`. Every field here is a field the deletion\npromise has to cover."
+      },
       "Plan": {
         "properties": {
           "sub_questions": {
@@ -783,6 +1000,57 @@
         "type": "object",
         "title": "Plan",
         "description": "The planner's output, exposed for HITL review (ADR 0030).\n\nBoth lists are bounded (ADR 0042): each search query costs one\narXiv HTTP call plus a hard 3s politeness sleep on an executor\nthread, so an unbounded revised plan is a resource-exhaustion\nvector, not just bad input."
+      },
+      "ProfileUpdateRequest": {
+        "properties": {
+          "academic_level": {
+            "type": "string",
+            "enum": [
+              "",
+              "self-taught",
+              "undergrad",
+              "grad",
+              "postdoc",
+              "industry"
+            ],
+            "title": "Academic Level",
+            "default": ""
+          },
+          "time_budget_min_per_day": {
+            "type": "integer",
+            "maximum": 1440.0,
+            "minimum": 0.0,
+            "title": "Time Budget Min Per Day",
+            "description": "Minutes per day the learner says they have.",
+            "default": 0
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/GoalDeclaration"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Goals"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillDeclaration"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Skills"
+          },
+          "profile_note": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Profile Note",
+            "description": "Free text the learner wrote about themselves. Untrusted input \u2014 isolation-wrapped before it reaches any prompt (ADR 0058).",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "ProfileUpdateRequest",
+        "description": "Body for `PUT /learn/profile` \u2014 a full replacement of what the\nlearner has declared.\n\nClaims the system inferred or assessed are *not* addressable here:\nthey survive the write untouched, because the learner edits what\nthey said about themselves and the system's own observations stand\nor fall on their evidence."
       },
       "ResearchAccepted": {
         "properties": {
@@ -899,6 +1167,89 @@
         ],
         "title": "ReviewResponse",
         "description": "Response for `POST /research/{job_id}/review`.\n\n`status` is the job's status *at the moment the review was\naccepted* \u2014 always `pending_review` \u2014 not the post-resume state.\nThe resume is asynchronous: the runner applies the action after\nthis response is written, so clients should poll `status_url`\n(or watch the SSE stream) for the settled outcome rather than\nasserting on this snapshot."
+      },
+      "SkillClaim": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "aware",
+              "working",
+              "solid"
+            ],
+            "title": "Level"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "declared",
+              "inferred",
+              "assessed"
+            ],
+            "title": "Source",
+            "description": "Where the claim came from. `declared` = the learner said so. `inferred` = a guess from behaviour, capped at confidence 0.6 and never to be shown as fact. `assessed` = backed by the assessment event named in `evidence_ref`."
+          },
+          "evidence_ref": {
+            "type": "string",
+            "title": "Evidence Ref",
+            "description": "Session / assessment / artifact id behind the claim. Empty only for `declared`, which cites itself."
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence",
+            "description": "1.0 exactly for `declared` and reserved to it; at most 0.6 for `inferred`; strictly between for `assessed`."
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "description": "ISO-8601 UTC timestamp."
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "level",
+          "source",
+          "evidence_ref",
+          "confidence",
+          "updated_at"
+        ],
+        "title": "SkillClaim",
+        "description": "One skill claim as the API returns it \u2014 provenance mandatory."
+      },
+      "SkillDeclaration": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Skill",
+            "description": "Controlled-vocabulary skill name, e.g. `backprop`. Normalised to lowercase; letters, digits and + . / - only."
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "aware",
+              "working",
+              "solid"
+            ],
+            "title": "Level",
+            "description": "What the learner claims: none / aware / working / solid."
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "level"
+        ],
+        "title": "SkillDeclaration",
+        "description": "One skill the learner says they have.\n\nNo provenance field by design \u2014 see the section comment above."
       },
       "ValidationError": {
         "properties": {

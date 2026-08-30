@@ -39,6 +39,7 @@ import {
   type ConversationListItem,
   type JobDetail,
   type JobStatus,
+  type LearnerProfile,
   type Plan,
 } from "@/lib/api";
 
@@ -187,6 +188,47 @@ proves<Exact<z.infer<typeof conversationDetailSchema>, ConversationDetail>>(
   true
 );
 
+// ADR 0058. `source` is a real enum in the document — `src/api/schemas.py`
+// types it `Literal[...]`, not a bare `str` — so unlike `JobStatus` there is
+// no hand narrowing here and nothing to prove beyond the derivation. The
+// asymmetry is the point: a consumer cannot render a skill claim without
+// knowing where it came from, because provenance is neither optional nor
+// nullable on the wire.
+const learnerProfileSchema = z.strictObject({
+  academic_level: z.enum([
+    "",
+    "self-taught",
+    "undergrad",
+    "grad",
+    "postdoc",
+    "industry",
+  ]),
+  time_budget_min_per_day: z.number(),
+  goals: z.array(
+    z.strictObject({
+      goal_id: z.string(),
+      statement: z.string(),
+      target_date: z.string(),
+      status: z.enum(["active", "paused", "reached", "abandoned"]),
+      priority: z.number(),
+    })
+  ),
+  skills: z.array(
+    z.strictObject({
+      skill: z.string(),
+      level: z.enum(["none", "aware", "working", "solid"]),
+      source: z.enum(["declared", "inferred", "assessed"]),
+      evidence_ref: z.string(),
+      confidence: z.number(),
+      updated_at: z.string(),
+    })
+  ),
+  profile_note: z.string(),
+  created_at: z.number(),
+  updated_at: z.number(),
+});
+proves<Exact<z.infer<typeof learnerProfileSchema>, LearnerProfile>>(true);
+
 // ---------------------------------------------------------------------------
 // Error envelopes. Hand-written on purpose: none of these shapes is in the
 // OpenAPI document (04-ARCHITECTURE.md §3.4), so there is nothing to derive
@@ -238,6 +280,8 @@ const JOB_FIXTURES: Record<string, JobStatus> = {
 
 const CONVERSATION_FIXTURES = ["conversations.list", "conversations.detail"];
 
+const LEARN_FIXTURES = ["learn.profile"];
+
 const ERROR_FIXTURES: Record<string, { status: number; kind: ApiFailureKind }> =
   {
     "error.401": { status: 401, kind: "unauthorized" },
@@ -252,6 +296,7 @@ const ERROR_FIXTURES: Record<string, { status: number; kind: ApiFailureKind }> =
 const ALL_FIXTURES = [
   ...Object.keys(JOB_FIXTURES),
   ...CONVERSATION_FIXTURES,
+  ...LEARN_FIXTURES,
   ...Object.keys(ERROR_FIXTURES),
 ];
 
@@ -280,9 +325,11 @@ describe("contract/fixtures — inventory and provenance", () => {
       .map((file) => file.replace(/\.json$/, ""))
       .sort();
     expect(onDisk).toEqual([...ALL_FIXTURES].sort());
-    // Five job states, two conversation shapes, seven error envelopes.
+    // Five job states, two conversation shapes, one learner profile,
+    // seven error envelopes.
     expect(Object.keys(JOB_FIXTURES)).toHaveLength(5);
     expect(CONVERSATION_FIXTURES).toHaveLength(2);
+    expect(LEARN_FIXTURES).toHaveLength(1);
     expect(Object.keys(ERROR_FIXTURES)).toHaveLength(7);
   });
 
@@ -475,6 +522,65 @@ describe("contract/fixtures — conversations through the typed client", () => {
     expect(parsed.success).toBe(true);
     expect(detail.jobs.length).toBeGreaterThan(0);
     expect(detail.jobs[0]?.report).not.toBe("");
+  });
+});
+
+describe("contract/fixtures — the learner profile (ADR 0058)", () => {
+  it("learn.profile parses with provenance on every claim", () => {
+    const profile = load("learn.profile").body as LearnerProfile;
+
+    const parsed = learnerProfileSchema.safeParse(profile);
+    expect(parsed.error?.issues ?? []).toEqual([]);
+    expect(parsed.success).toBe(true);
+    expect(profile.skills.length).toBeGreaterThan(0);
+    for (const claim of profile.skills) {
+      expect(["declared", "inferred", "assessed"]).toContain(claim.source);
+    }
+  });
+
+  it("carries all three provenance values, so no consumer sees only one", () => {
+    // A fixture with only `declared` claims would let a surface render
+    // provenance as decoration and still pass. The recording deliberately
+    // holds one of each.
+    const profile = load("learn.profile").body as LearnerProfile;
+
+    expect(new Set(profile.skills.map((claim) => claim.source))).toEqual(
+      new Set(["declared", "assessed", "inferred"])
+    );
+  });
+
+  it("shows a contradiction as two claims, not one downgraded number", () => {
+    // 01 §1.2 / ADR 0058: an assessment that disagrees with a declaration
+    // lands *beside* it. The recorded body is the proof that the backend
+    // really does this, and the pin that stops a surface from collapsing
+    // the pair into one row.
+    const profile = load("learn.profile").body as LearnerProfile;
+    const backprop = profile.skills.filter(
+      (claim) => claim.skill === "backprop"
+    );
+
+    expect(backprop).toHaveLength(2);
+    const declared = backprop.find((claim) => claim.source === "declared");
+    const assessed = backprop.find((claim) => claim.source === "assessed");
+    expect(declared?.level).toBe("solid");
+    expect(assessed?.level).toBe("aware");
+  });
+
+  it("keeps confidence 1.0 for declared claims alone", () => {
+    const profile = load("learn.profile").body as LearnerProfile;
+
+    for (const claim of profile.skills) {
+      if (claim.source === "declared") {
+        expect(claim.confidence).toBe(1);
+        expect(claim.evidence_ref).toBe("");
+      } else {
+        expect(claim.confidence).toBeLessThan(1);
+        expect(claim.evidence_ref).not.toBe("");
+      }
+      if (claim.source === "inferred") {
+        expect(claim.confidence).toBeLessThanOrEqual(0.6);
+      }
+    }
   });
 });
 

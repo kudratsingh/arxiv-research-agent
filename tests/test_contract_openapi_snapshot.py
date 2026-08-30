@@ -84,10 +84,17 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
         "/research/{job_id}/stream",
         "/conversations",
         "/conversations/{conversation_id}",
+        "/learn/profile",
         "/healthz",
     }
     assert set(paths["/conversations"]) == {"get", "post"}
     assert set(paths["/conversations/{conversation_id}"]) == {"get", "delete"}
+    # WO-W02 / ADR 0058. The profile routes are mounted unconditionally
+    # — SR-07 keeps feature gating backend-only, so the document is the
+    # same in both positions of `enable_learner_profile` and the
+    # generated types never depend on a flag. Behaviour is what the
+    # flag changes: 404 `learner_profile_disabled` while it is off.
+    assert set(paths["/learn/profile"]) == {"get", "put", "delete"}
 
 
 def test_stream_and_export_are_undescribed_which_is_why_the_overlay_exists() -> (

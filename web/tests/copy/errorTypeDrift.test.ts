@@ -28,6 +28,17 @@
  *      `cancelled`, not `failed`. So the second half is "every exception
  *      class defined in src/, minus the ones runner.py intercepts", which
  *      is derived here rather than assumed.
+ *
+ * ONE SCOPE NARROWING, AND IT IS GUARDED. `error_type` is a field on a
+ * research `Job`. An exception class in a package the job path never enters
+ * cannot become one, and listing it here would force a copy entry for a
+ * value the backend cannot produce — precisely the folklore the last test in
+ * this file exists to prevent. `src/learning/` (ADR 0058) is such a package:
+ * its `ValueError`s are raised in the HTTP profile handlers and converted to
+ * a 422 body. The exclusion is not trusted either — `OFF_THE_JOB_PATH` is
+ * re-checked against the runner and the graph on every run, so the day a
+ * card wires the learning package into a graph node, this file fails and the
+ * narrowing has to be revisited.
  */
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -97,8 +108,22 @@ const DELIBERATE = [
 // Half 2 — `type(exc).__name__`.
 // ---------------------------------------------------------------------------
 
-/** Exception classes defined anywhere under `src/`. */
+/**
+ * Packages whose exceptions cannot reach `Job.error_type`.
+ *
+ * See the header. Guarded by "the off-the-job-path exclusion is still true"
+ * below, which reads the runner and the graph rather than taking this on
+ * faith.
+ */
+const OFF_THE_JOB_PATH = [path.join(SRC, "learning") + path.sep];
+
+function onTheJobPath(file: string): boolean {
+  return !OFF_THE_JOB_PATH.some((prefix) => file.startsWith(prefix));
+}
+
+/** Exception classes defined under `src/`, on the job path. */
 const EXCEPTION_CLASSES = pythonFiles(SRC)
+  .filter(onTheJobPath)
   .flatMap((file) => [
     ...readFileSync(file, "utf8").matchAll(
       /^class\s+(\w+)\((?:Exception|RuntimeError|ValueError|KeyError|OSError)\):/gm,
@@ -142,6 +167,25 @@ describe("the enumeration reads the real backend", () => {
 
   it("finds the generic branch that turns any other exception into a value", () => {
     expect(RUNNER).toContain("job.error_type = type(exc).__name__");
+  });
+
+  it("the off-the-job-path exclusion is still true of the runner and graph", () => {
+    // The narrowing in the header, re-derived. Nothing the runner drives may
+    // import the excluded package; the moment something does, its exceptions
+    // become producible `error_type` values and this exclusion has to go
+    // rather than quietly hide them from the copy table.
+    const jobPathSources = [
+      RUNNER,
+      read("src", "api", "jobs.py"),
+      read("src", "graph", "workflow.py"),
+      read("src", "graph", "state.py"),
+    ];
+    for (const source of jobPathSources) {
+      expect(source).not.toMatch(/\bsrc\.learning\b/);
+    }
+    // And the excluded package really does exist, so a rename cannot turn
+    // the exclusion into a silent no-op that stops excluding anything.
+    expect(pythonFiles(SRC).some((file) => !onTheJobPath(file))).toBe(true);
   });
 
   it("finds the exception classes, and the three the runner intercepts first", () => {

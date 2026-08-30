@@ -28,7 +28,7 @@
 #   bash web/contract/record.sh              # everything
 #   bash web/contract/record.sh http sse     # only those phases
 #
-# Phases: http sse ratelimited unauthorized proxy
+# Phases: http sse ratelimited unauthorized proxy learner
 #
 # ---------------------------------------------------------------------------
 # Reproducibility (R-10)
@@ -109,7 +109,7 @@ COMMIT="$(git -C "$ROOT" rev-parse HEAD)"
 
 PHASES="$*"
 if [ -z "$PHASES" ]; then
-  PHASES="http sse ratelimited unauthorized proxy"
+  PHASES="http sse ratelimited unauthorized proxy learner"
 fi
 
 phase_requested() {
@@ -289,6 +289,8 @@ TIMEOUT_APP="record-sse-timeout"
 TIMEOUT_APP_PORT=8098
 RATELIMIT_APP="record-ratelimit"
 RATELIMIT_APP_PORT=8097
+LEARNER_APP="record-learner"
+LEARNER_APP_PORT=8096
 
 # `docker-compose.yml` surfaces only a fixed set of variables to the app
 # service, and two settings these recordings need — `api_sse_max_duration_sec`
@@ -768,6 +770,92 @@ RATE_LIMIT_BACKEND=redis"
 }
 
 # ---------------------------------------------------------------------------
+# Phase: learner — the profile surface (ADR 0058).
+# ---------------------------------------------------------------------------
+
+record_learner() {
+  log "phase learner — GET /learn/profile with declared + inferred claims"
+  # Recorded straight off FastAPI on a variant container, for the same
+  # reason `ratelimited` is: `ENABLE_LEARNER_PROFILE` is not one of the
+  # variables the compose app service surfaces, and the flag refuses to
+  # load without `ENABLE_API_AUTH` (ADR 0058), which is not the posture
+  # the other HTTP fixtures are recorded in. The proxy would only add
+  # its allowlist filter, which `write_fixture` applies anyway.
+  #
+  # Every call below is free: the profile surface contacts no model.
+  app_variant_up "$LEARNER_APP" "$LEARNER_APP_PORT" \
+"ENABLE_API_AUTH=true
+API_KEYS=${RECORD_API_KEY_ID}:${RECORD_API_KEY_SECRET}
+ENABLE_LEARNER_PROFILE=true
+LEARNER_PROFILE_STORE=postgres"
+
+  local base="http://127.0.0.1:${LEARNER_APP_PORT}"
+
+  # Start from a known state so a re-run records the same bytes.
+  curl -sS -m 20 -o /dev/null -X DELETE \
+    -H "X-API-Key: ${RECORD_API_KEY_SECRET}" "$base/learn/profile"
+
+  # The learner declares. `PUT` can only ever write `declared` claims —
+  # the request schema has no provenance field at all.
+  curl -sS -m 20 -o /dev/null -X PUT \
+    -H 'content-type: application/json' \
+    -H "X-API-Key: ${RECORD_API_KEY_SECRET}" \
+    -d '{"academic_level":"grad","time_budget_min_per_day":20,
+         "goals":[{"goal_id":"g-rlhf","statement":"read modern RLHF papers critically","target_date":"2026-12-01","status":"active","priority":1}],
+         "skills":[{"skill":"backprop","level":"solid"},{"skill":"transformers","level":"working"}],
+         "profile_note":"Self-taught; I learn best from worked examples."}' \
+    "$base/learn/profile"
+
+  # An inferred claim and an assessed one, written through the store's
+  # own API rather than HTTP — which is the point: nothing a client can
+  # send produces either of these, so the fixture has to make them the
+  # way the session loop will (ADR 0058). The `assessed` claim
+  # deliberately contradicts the `declared` one so the recorded body
+  # shows both claims standing side by side.
+  docker exec -i "$LEARNER_APP" python - <<'PY' >/dev/null
+import asyncio
+
+from src.learning.profile_store import PostgresProfileStore, SkillEntry
+
+STAMP = "2026-08-30T00:00:00+00:00"
+entries = (
+    SkillEntry(
+        skill="backprop",
+        level="aware",
+        source="assessed",
+        evidence_ref="assessment:baseline-explain-back",
+        confidence=0.7,
+        updated_at=STAMP,
+    ),
+    SkillEntry(
+        skill="attention",
+        level="working",
+        source="inferred",
+        evidence_ref="session:baseline-guided-read",
+        confidence=0.5,
+        updated_at=STAMP,
+    ),
+)
+asyncio.run(PostgresProfileStore().record_skill_entries("web", entries))
+PY
+
+  curl -sS -m 20 -D "$WORK/h" -o "$WORK/b" \
+    -H "X-API-Key: ${RECORD_API_KEY_SECRET}" "$base/learn/profile"
+  write_fixture learn.profile \
+    "GET /learn/profile for a learner with declared, assessed and inferred claims" \
+    "FastAPI directly, ENABLE_API_AUTH=true, ENABLE_LEARNER_PROFILE=true" \
+    '{"authored": false, "volatile": "body.created_at, body.updated_at, and updated_at on the two declared claims are wall-clock write times and differ between recordings; the assessed and inferred claims carry a pinned timestamp because the store API writes the value it is handed"}' \
+    "$WORK/h" "$WORK/b"
+
+  # Leave the shared Postgres as it was found — the deletion promise,
+  # exercised as cleanup.
+  curl -sS -m 20 -o /dev/null -X DELETE \
+    -H "X-API-Key: ${RECORD_API_KEY_SECRET}" "$base/learn/profile"
+
+  app_variant_down "$LEARNER_APP"
+}
+
+# ---------------------------------------------------------------------------
 # Phase: unauthorized — 401 with WWW-Authenticate.
 # ---------------------------------------------------------------------------
 
@@ -857,5 +945,6 @@ if phase_requested sse; then record_sse; fi
 if phase_requested ratelimited; then record_ratelimited; fi
 if phase_requested unauthorized; then record_unauthorized; fi
 if phase_requested proxy; then record_proxy; fi
+if phase_requested learner; then record_learner; fi
 
 log "done. Stop the stack with: docker compose down"

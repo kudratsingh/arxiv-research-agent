@@ -306,6 +306,22 @@ never renumbered.
   ratchet rule and the full movement history: D-011's shared-chunk raise,
   D-012's `/` raise (accessibility gate beats budget row), and WO-31's
   ratchet-down of six rows to the measured post-cleanup values.
+- [0058](0058-learner-profile-store-and-provenance.md) — The learner
+  profile store (Phase W, WO-W02): the first personal data this repo
+  keeps, with `declared` / `inferred` / `assessed` provenance on every
+  skill claim made **unrepresentable to violate** at three layers — a
+  `source` field with no default and no `None`, `(skill, source)` keying
+  so a contradicting assessment lands beside a declaration instead of on
+  top of it, and `jsonb_path_exists` CHECK constraints that refuse a
+  bad claim to a `psql` session too. The serializer re-reads its own
+  output so an inferred claim cannot render outside the "unconfirmed
+  impressions" block, and learner-authored free text gets its own
+  `<untrusted_learner_text>` isolation tags on the ADR 0033 pattern.
+  Records `enable_learner_profile` (requiring `enable_api_auth` at
+  settings load), the `GET/PUT/DELETE /learn/profile` surface, the
+  first-class deletion promise **with its stated exception** (the
+  shared paper/embedding caches), and — as this decision's real cost —
+  that `principal_key_id` is a mutable display name until MT-01.
 
 ## When to write an ADR
 
