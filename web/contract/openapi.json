@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "5d53514466fa86d321b1428f5fe14a3cdd28b319",
+    "commit": "0424186df7cf23733b06028ed34dd8d45b087486",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -543,6 +543,65 @@
           }
         }
       }
+    },
+    "/learn/paths": {
+      "get": {
+        "summary": "Published learning paths (repo-shipped manifests, read-only).",
+        "description": "List every published path.\n\nA path below `published` is absent rather than listed-and-locked. In\nPhase W that means an install with no reviewed content answers with\nan empty list, which is the truthful answer to \"what can I read?\".",
+        "operationId": "list_learn_paths_learn_paths_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnPathList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/learn/paths/{path_id}": {
+      "get": {
+        "summary": "One published path: its entries, briefings, and licensing posture.",
+        "description": "Return one published path.\n\nAn unpublished path and an unknown path are the same 404 on purpose,\nthe same reasoning `_check_ownership` uses in `routes.py`: the\nexistence of unpublished draft content is not a client's business.",
+        "operationId": "get_learn_path_learn_paths__path_id__get",
+        "parameters": [
+          {
+            "name": "path_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnPathDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -981,6 +1040,443 @@
         ],
         "title": "JobDetail",
         "description": "`GET /research/{job_id}` \u2014 full lifecycle snapshot."
+      },
+      "LearnAbstract": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "source",
+          "url"
+        ],
+        "title": "LearnAbstract",
+        "description": "A paper abstract with the attribution it may not be shown without."
+      },
+      "LearnEntry": {
+        "properties": {
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "authors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Authors"
+          },
+          "author_count": {
+            "type": "integer",
+            "title": "Author Count"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "canonical_url": {
+            "type": "string",
+            "title": "Canonical Url"
+          },
+          "license_note": {
+            "type": "string",
+            "title": "License Note"
+          },
+          "license_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License Id"
+          },
+          "license_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License Url"
+          },
+          "attribution": {
+            "type": "string",
+            "title": "Attribution"
+          },
+          "provenance": {
+            "type": "string",
+            "title": "Provenance"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          },
+          "vocabulary": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Vocabulary"
+          },
+          "est_minutes": {
+            "type": "integer",
+            "title": "Est Minutes"
+          },
+          "reviewed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "sequencing_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequencing Note"
+          },
+          "sequencing_evidence_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequencing Evidence Url"
+          },
+          "staleness_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staleness Note"
+          },
+          "abstract": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LearnAbstract"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "briefing_markdown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Briefing Markdown",
+            "description": "Our briefing companion, markdown. Absent when the entry has no reviewed companion yet."
+          }
+        },
+        "type": "object",
+        "required": [
+          "position",
+          "resource_id",
+          "kind",
+          "title",
+          "authors",
+          "author_count",
+          "year",
+          "canonical_url",
+          "license_note",
+          "attribution",
+          "provenance",
+          "status",
+          "rationale",
+          "vocabulary",
+          "est_minutes"
+        ],
+        "title": "LearnEntry",
+        "description": "One item on a path, as a client sees it.\n\nThere is no full text and no PDF link here, and there is no field\nthat could carry one: `canonical_url` is the arXiv abs page, and the\nbriefing is our own prose. `provenance` and `attribution` travel with\nevery entry so the surface can label it at the point of display\n(`02` \u00a73.2) without a second request."
+      },
+      "LearnLicensing": {
+        "properties": {
+          "posture_id": {
+            "type": "string",
+            "const": "W-OD-3",
+            "title": "Posture Id"
+          },
+          "full_text": {
+            "type": "string",
+            "const": "link-out-only",
+            "title": "Full Text"
+          },
+          "abstracts": {
+            "type": "string",
+            "const": "displayed-with-attribution",
+            "title": "Abstracts"
+          },
+          "quotes": {
+            "type": "string",
+            "const": "sparing-and-attributed",
+            "title": "Quotes"
+          },
+          "s2_derived_facts": {
+            "type": "string",
+            "const": "link-back-required",
+            "title": "S2 Derived Facts"
+          },
+          "commercial_use": {
+            "type": "string",
+            "const": "none-through-phase-w",
+            "title": "Commercial Use"
+          },
+          "counsel_confirmed": {
+            "type": "boolean",
+            "title": "Counsel Confirmed"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "posture_id",
+          "full_text",
+          "abstracts",
+          "quotes",
+          "s2_derived_facts",
+          "commercial_use",
+          "counsel_confirmed",
+          "source"
+        ],
+        "title": "LearnLicensing",
+        "description": "The posture the path is published under, carried to the surface.\n\nRendered, not merely recorded: a link-out-only posture that the page\ndoes not state is indistinguishable from no posture at all.\n\nThe five posture fields are `Literal`s rather than `str` so the\ngenerated TypeScript types carry the exact values \u2014 a frontend\nbranching on `full_text` gets a closed union, and a `full_text`\nfield that could hold a paper never reaches `schema.d.ts`."
+      },
+      "LearnPathDetail": {
+        "properties": {
+          "path_id": {
+            "type": "string",
+            "title": "Path Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "goal": {
+            "type": "string",
+            "title": "Goal"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "fixture": {
+            "type": "boolean",
+            "title": "Fixture"
+          },
+          "banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner"
+          },
+          "entry_count": {
+            "type": "integer",
+            "title": "Entry Count"
+          },
+          "est_minutes_total": {
+            "type": "integer",
+            "title": "Est Minutes Total"
+          },
+          "licensing": {
+            "$ref": "#/components/schemas/LearnLicensing"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LearnEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path_id",
+          "kind",
+          "title",
+          "goal",
+          "version",
+          "status",
+          "updated_at",
+          "fixture",
+          "entry_count",
+          "est_minutes_total",
+          "licensing",
+          "entries"
+        ],
+        "title": "LearnPathDetail",
+        "description": "A path with its servable entries and the posture they ship under."
+      },
+      "LearnPathList": {
+        "properties": {
+          "paths": {
+            "items": {
+              "$ref": "#/components/schemas/LearnPathSummary"
+            },
+            "type": "array",
+            "title": "Paths"
+          }
+        },
+        "type": "object",
+        "required": [
+          "paths"
+        ],
+        "title": "LearnPathList",
+        "description": "`GET /learn/paths` \u2014 published paths only, `path_id` order."
+      },
+      "LearnPathSummary": {
+        "properties": {
+          "path_id": {
+            "type": "string",
+            "title": "Path Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "goal": {
+            "type": "string",
+            "title": "Goal"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          },
+          "fixture": {
+            "type": "boolean",
+            "title": "Fixture"
+          },
+          "banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner"
+          },
+          "entry_count": {
+            "type": "integer",
+            "title": "Entry Count"
+          },
+          "est_minutes_total": {
+            "type": "integer",
+            "title": "Est Minutes Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path_id",
+          "kind",
+          "title",
+          "goal",
+          "version",
+          "status",
+          "updated_at",
+          "fixture",
+          "entry_count",
+          "est_minutes_total"
+        ],
+        "title": "LearnPathSummary",
+        "description": "A path in the list view."
       },
       "LearnerProfileResponse": {
         "properties": {

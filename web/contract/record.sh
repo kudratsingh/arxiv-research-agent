@@ -28,7 +28,7 @@
 #   bash web/contract/record.sh              # everything
 #   bash web/contract/record.sh http sse     # only those phases
 #
-# Phases: http sse ratelimited unauthorized proxy learner
+# Phases: http sse ratelimited unauthorized learn proxy learner
 #
 # ---------------------------------------------------------------------------
 # Reproducibility (R-10)
@@ -109,7 +109,7 @@ COMMIT="$(git -C "$ROOT" rev-parse HEAD)"
 
 PHASES="$*"
 if [ -z "$PHASES" ]; then
-  PHASES="http sse ratelimited unauthorized proxy learner"
+  PHASES="http sse ratelimited unauthorized learn proxy learner"
 fi
 
 phase_requested() {
@@ -880,6 +880,35 @@ record_unauthorized() {
 }
 
 # ---------------------------------------------------------------------------
+# Phase: learn — the read-only learning-content surface (WO-W15).
+# ---------------------------------------------------------------------------
+#
+# Unlike every other phase, this one needs no seed. `GET /learn/paths*` reads
+# the manifests committed under `content/` and opens no store, so the body is
+# a pure function of the repository — which is why
+# `tests/test_contract_learn_fixtures.py` can re-derive these two bodies from
+# the app on every CI run instead of trusting the recorded bytes. Running this
+# phase is therefore optional: it exists so a reviewer can confirm the proxy
+# transport agrees with the in-process recording, and so the fixtures have the
+# same re-recording story as their neighbours.
+#
+# The flag is off by default (`src/config.py: enable_learn_content`), so the
+# stack is brought up with it on and reset afterwards.
+
+record_learn() {
+  log "phase learn — published paths and one path detail"
+  export ENABLE_LEARN_CONTENT=true
+  stack_up
+
+  record_get learn.paths /learn/paths "GET /api/learn/paths"
+  record_get learn.path.detail /learn/paths/fixture-guided-read \
+    "GET /api/learn/paths/fixture-guided-read"
+
+  unset ENABLE_LEARN_CONTENT
+  stack_up
+}
+
+# ---------------------------------------------------------------------------
 # Phase: proxy — 502 and 503, which FastAPI never emits.
 # ---------------------------------------------------------------------------
 
@@ -944,6 +973,7 @@ if phase_requested http; then record_http; fi
 if phase_requested sse; then record_sse; fi
 if phase_requested ratelimited; then record_ratelimited; fi
 if phase_requested unauthorized; then record_unauthorized; fi
+if phase_requested learn; then record_learn; fi
 if phase_requested proxy; then record_proxy; fi
 if phase_requested learner; then record_learner; fi
 

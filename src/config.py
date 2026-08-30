@@ -920,6 +920,33 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ Learning content (Phase W, WO-W15) -------------------------
+    # Comment-fenced like the section above, so the Phase W merge queue
+    # can order every card's config edit without a textual collision
+    # (planning/07-learning-platform/05-WEDGE-WORK-ORDERS.md §5.4).
+    enable_learn_content: bool = Field(
+        default=False,
+        description=(
+            "Serve the repo-shipped learning-path manifests over "
+            "`GET /learn/paths` and `GET /learn/paths/{path_id}`. Read "
+            "only: the endpoints hold no store, take no writes, and "
+            "return published, human-reviewed entries exclusively. Off "
+            "by default like every Phase W capability — with it off the "
+            "routes exist and answer 404 `learn_content_disabled`, which "
+            "is the honest report that this deployment publishes no "
+            "content. See planning/07-learning-platform/02-CONTENT.md."
+        ),
+    )
+    learn_content_root: str = Field(
+        default="",
+        description=(
+            "Directory holding `paths/<path_id>/path.json`. Empty (the "
+            "default) resolves to the `content/` directory shipped beside "
+            "`src/` in the repo and in the image. Set it only to serve a "
+            "content tree from outside the image."
+        ),
+    )
+
     @model_validator(mode="after")
     def _check_lease_invariant(self) -> Settings:
         """Reject a lease TTL a refresh cycle cannot keep alive.

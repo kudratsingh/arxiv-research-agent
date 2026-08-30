@@ -27,8 +27,8 @@
 /**
  * Every literal path segment in `web/contract/openapi.json`.
  *
- * Transcribed from the ten contract paths rather than imported from them:
- * the contract JSON is 31 KB and importing it would pull the whole document
+ * Transcribed from the twelve contract paths rather than imported from them:
+ * importing the contract JSON would pull the whole document
  * into the server bundle to answer a nine-word question. The transcription
  * is not trusted — `web/tests/proxyLogging.test.ts` rebuilds this set from
  * `contract/openapi.json` and fails on any difference, in both directions.
@@ -36,18 +36,20 @@
  *   /research, /research/{job_id}, /research/{job_id}/review,
  *   /research/{job_id}/export, /research/{job_id}/stream,
  *   /conversations, /conversations/{conversation_id}, /healthz,
- *   /learn/profile, /learn/progress
+ *   /learn/profile, /learn/progress, /learn/paths,
+ *   /learn/paths/{path_id}
  *
- * The three `learn*` words arrived with the Phase W learner surfaces
- * (WO-W02's profile, WO-W07's ledger). All are literals with no id in the
- * path, so the widening adds constant words to the log vocabulary and no
- * new way for a value to reach it.
+ * The learner literals arrived with WO-W02's profile, WO-W07's ledger, and
+ * WO-W15's paths. A `path_id` is a slug an editor chose, not a secret — but
+ * it is still an id, and the whitelist does not make exceptions for ids
+ * that look harmless.
  */
 export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
   "conversations",
   "export",
   "healthz",
   "learn",
+  "paths",
   "profile",
   "progress",
   "research",

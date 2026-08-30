@@ -72,6 +72,11 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
     A route dropped from the document would still pass the equality check
     above — both sides would simply lose it — so the surface itself is pinned
     separately.
+
+    `/learn/paths*` joined the set in WO-W15: the read-only learning-content
+    surface (`src/api/learn.py`), gated by `enable_learn_content`. The routes
+    exist in the document whatever the flag says, because the document
+    describes the server's shape, not one deployment's configuration.
     """
     document = _snapshot()
     paths = document["paths"]
@@ -91,6 +96,8 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
         "/conversations/{conversation_id}",
         "/learn/profile",
         "/healthz",
+        "/learn/paths",
+        "/learn/paths/{path_id}",
     }
     assert set(paths["/conversations"]) == {"get", "post"}
     assert set(paths["/conversations/{conversation_id}"]) == {"get", "delete"}
@@ -100,6 +107,38 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
     # generated types never depend on a flag. Behaviour is what the
     # flag changes: 404 `learner_profile_disabled` while it is off.
     assert set(paths["/learn/profile"]) == {"get", "put", "delete"}
+    # WO-W15, same rule, and read-only by construction: no writer ever
+    # appears on the content routes.
+    assert set(paths["/learn/paths"]) == {"get"}
+    assert set(paths["/learn/paths/{path_id}"]) == {"get"}
+
+
+def test_the_learn_schemas_carry_no_field_that_could_rehost_a_paper() -> None:
+    """WO-W15 c2, asserted on the contract the frontend generates from.
+
+    The manifest schema is checked in `tests/test_content_manifest.py`; this
+    is the other end — a response model that grew a `full_text` field would
+    put one in `schema.d.ts` and, from there, on a page.
+
+    The `Learn` prefix catches WO-W02's `LearnerProfile*` models too, which
+    is deliberate: the rule is about the learning surface as a whole, not
+    about one card's models.
+    """
+    schemas = _snapshot()["components"]["schemas"]
+    forbidden = {"body", "full_text", "fulltext", "pdf", "pdf_url", "transcript"}
+    checked = 0
+    for name, schema in schemas.items():
+        if not name.startswith("Learn"):
+            continue
+        checked += 1
+        for field, spec in schema.get("properties", {}).items():
+            if field not in forbidden:
+                continue
+            # A closed value is not a container. `LearnLicensing.full_text`
+            # is `const: "link-out-only"` — it states the posture and can
+            # hold nothing else, which is the clearest way to write it.
+            assert "const" in spec or "enum" in spec, f"{name}.{field}"
+    assert checked >= 5, "the Learn* schemas vanished from the snapshot"
 
 
 def test_stream_and_export_are_undescribed_which_is_why_the_overlay_exists() -> (

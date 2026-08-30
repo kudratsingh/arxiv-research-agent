@@ -448,10 +448,13 @@ describe("the committed OpenAPI snapshot", () => {
       "/conversations",
       "/conversations/{conversation_id}",
       "/healthz",
-      // ADR 0058. Both learner paths are mounted unconditionally: SR-07
+      // ADR 0058 and WO-W15. All learner paths are mounted unconditionally:
+      // SR-07
       // keeps feature gating backend-only, so the document is identical
-      // in both positions of `enable_learner_profile` and the generated
-      // types never depend on a flag.
+      // in every position of `enable_learner_profile` and
+      // `enable_learn_content`; generated types never depend on a flag.
+      "/learn/paths",
+      "/learn/paths/{path_id}",
       "/learn/profile",
       "/learn/progress",
       "/research",
