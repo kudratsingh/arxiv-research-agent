@@ -14,6 +14,7 @@ Fable planning agents and merged as records, not adoptions:
 | [`02-CONTENT.md`](02-CONTENT.md) | Content graph, curation pipelines, licensing reality, cold-start scope |
 | [`03-ARCHITECTURE-ROADMAP.md`](03-ARCHITECTURE-ROADMAP.md) | Delta architecture, L0–L4 phases (~71 WOs), owner decisions OD-1–12 |
 | [`04-STRATEGY-ALTERNATIVES.md`](04-STRATEGY-ALTERNATIVES.md) | Objective functions, alternatives, tradeoff matrix, cheap-test ladder |
+| [`06-DIRECTION-PORTFOLIO.md`](06-DIRECTION-PORTFOLIO.md) | The nine adopted directions: charters, shared core, evidence gates (LP-D2) |
 
 ## Owner decisions
 
@@ -33,6 +34,18 @@ scope once the owner explicitly approves each (deploy, eval funding,
 pilot inference); operator load is real; the pre-committed engagement
 thresholds (04 Rung 2; 03 LG-gates) stand and will be measured, not
 waived.
+
+**LP-D2 (2026-08-30) — the nine-direction portfolio adopted.** The
+owner rules that the nine alternative directions surveyed after LP-D1
+(research radar, literature-review workbench, lab/team workspace, R&D
+intelligence briefings, paper-reading companion, personal research
+memory, Papers-with-Code successor, newsletter/media, API play) are all
+long-term intents of the platform ("lets add all of them to docs
+because I want to build all of them into the platform"). Recorded and
+structured in [`06-DIRECTION-PORTFOLIO.md`](06-DIRECTION-PORTFOLIO.md):
+one shared core (Phase W), one direction in build at a time, each
+behind an evidence gate; order beyond "Phase W first" is decided at the
+gates, not now.
 
 Still owed by the owner before their respective gates (unchanged):
 eval funding (~first paid run), DEPLOY cost approval, MT-01 §8 answers
