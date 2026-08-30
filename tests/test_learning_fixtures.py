@@ -15,6 +15,7 @@ inherit the credibility of a recording.
 """
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -22,9 +23,9 @@ import pytest
 
 from src.eval.learning_benchmark import get_scenario
 from src.eval.learning_fixtures import (
+    FIXTURE_ERROR_PREFIX,
     FIXTURE_ROOT,
     REQUIRED_DISCLAIMER,
-    FixtureError,
     get_fixture_set,
     load_manifest,
     load_session_plans,
@@ -115,6 +116,25 @@ def _complete_set(
 class TestShippedFixturesAreHonest:
     def test_the_fixture_directory_validates(self) -> None:
         assert validate_fixtures() == []
+
+    def test_this_module_defines_no_exception_class(self) -> None:
+        # `web/tests/copy/errorTypeDrift.test.ts` enumerates every
+        # exception class under `src/` and requires user-facing copy for
+        # each, because any of them can surface as a `job.error_type`.
+        # Offline eval tooling has no honest copy to offer, so it defines
+        # none — asserted here so the constraint is visible from the
+        # Python side rather than only discovered in a web CI run.
+        source = (
+            Path(__file__).resolve().parents[1]
+            / "src"
+            / "eval"
+            / "learning_fixtures.py"
+        ).read_text(encoding="utf-8")
+        assert not re.search(
+            r"^class\s+\w+\((?:Exception|RuntimeError|ValueError|KeyError|OSError)\):",
+            source,
+            re.MULTILINE,
+        )
 
     def test_every_fixture_declares_its_provenance(self) -> None:
         for fixture in [*load_session_plans(), *load_transcripts()]:
@@ -517,12 +537,12 @@ class TestPlanFixtures:
 
 class TestLoaderFailsLoudly:
     def test_a_missing_manifest_raises(self, tmp_path: Path) -> None:
-        with pytest.raises(FixtureError, match="manifest is missing"):
+        with pytest.raises(ValueError, match="manifest is missing"):
             load_manifest(tmp_path)
 
     def test_invalid_json_raises(self, tmp_path: Path) -> None:
         (tmp_path / "manifest.json").write_text("{not json", encoding="utf-8")
-        with pytest.raises(FixtureError, match="invalid JSON"):
+        with pytest.raises(ValueError, match="invalid JSON"):
             load_manifest(tmp_path)
 
     def test_a_missing_manifest_field_raises(self, tmp_path: Path) -> None:
@@ -530,7 +550,14 @@ class TestLoaderFailsLoudly:
             json.dumps({"schema_version": 1, "fixture_sets": [{"name": "x"}]}),
             encoding="utf-8",
         )
-        with pytest.raises(FixtureError, match="must be a string"):
+        with pytest.raises(ValueError, match="must be a string"):
+            load_manifest(tmp_path)
+
+    def test_structural_failures_name_the_subsystem(self, tmp_path: Path) -> None:
+        # There is no `FixtureError` class to catch — see the note on
+        # FIXTURE_ERROR_PREFIX — so the message has to carry the
+        # identification a type would otherwise give a caller.
+        with pytest.raises(ValueError, match=FIXTURE_ERROR_PREFIX):
             load_manifest(tmp_path)
 
     def test_an_unsupported_schema_version_is_reported(self, tmp_path: Path) -> None:

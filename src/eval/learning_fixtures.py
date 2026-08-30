@@ -80,14 +80,31 @@ TRANSCRIPT_ROLES = frozenset({"tutor", "learner"})
 REQUIRED_DISCLAIMER = "Not a real learner session."
 
 
-class FixtureError(ValueError):
-    """A fixture file is unreadable or structurally wrong.
+#: Prefix on every `ValueError` the loaders raise, so a failure names
+#: the subsystem before it names the file.
+#:
+#: Structural failures raise; *semantic* problems (a plan that
+#: contradicts its scenario) are returned as a list by the validators
+#: instead, so a test can report all of them at once rather than making
+#: a fixture author play whack-a-mole.
+#:
+#: Deliberately a plain `ValueError` rather than a `FixtureError`
+#: subclass. `web/tests/copy/errorTypeDrift.test.ts` enumerates every
+#: exception class defined anywhere under `src/` and asserts each one is
+#: mapped to user-facing copy, because any of them can reach the API
+#: runner's generic handler and become a `job.error_type` the web tier
+#: renders. This module is offline eval tooling that never executes in
+#: the API process, so mapping it would be fiction — and evading the
+#: scan with a contrived base class would be worse. If a later card
+#: teaches that guard which directories the runner can actually reach,
+#: a typed exception becomes free; until then this costs callers only a
+#: type name.
+FIXTURE_ERROR_PREFIX = "learning fixture"
 
-    Raised by the loaders, which refuse to hand back a half-parsed
-    fixture. Semantic problems (a plan that contradicts its scenario)
-    are *returned* by the validators instead, so a test can report all
-    of them at once.
-    """
+
+def _fixture_error(message: str) -> ValueError:
+    """Build the loaders' structural-failure exception."""
+    return ValueError(f"{FIXTURE_ERROR_PREFIX}: {message}")
 
 
 class FixtureProvenance(TypedDict):
@@ -199,42 +216,42 @@ class FixtureManifest(TypedDict):
 # Typed JSON access
 #
 # `json.load` returns `Any`; these helpers turn that into typed values or
-# a `FixtureError` naming the file and key, so a malformed fixture fails
+# a `ValueError` naming the file and key, so a malformed fixture fails
 # with something an author can act on.
 # --------------------------------------------------------------------------
 
 
 def _obj(value: Any, where: str) -> dict[str, Any]:
     if not isinstance(value, dict):
-        raise FixtureError(f"{where}: expected an object, got {type(value).__name__}")
+        raise _fixture_error(f"{where}: expected an object, got {type(value).__name__}")
     return value
 
 
 def _str(payload: dict[str, Any], key: str, where: str) -> str:
     value = payload.get(key)
     if not isinstance(value, str):
-        raise FixtureError(f"{where}: {key!r} must be a string")
+        raise _fixture_error(f"{where}: {key!r} must be a string")
     return value
 
 
 def _int(payload: dict[str, Any], key: str, where: str) -> int:
     value = payload.get(key)
     if not isinstance(value, int) or isinstance(value, bool):
-        raise FixtureError(f"{where}: {key!r} must be an integer")
+        raise _fixture_error(f"{where}: {key!r} must be an integer")
     return value
 
 
 def _bool(payload: dict[str, Any], key: str, where: str) -> bool:
     value = payload.get(key)
     if not isinstance(value, bool):
-        raise FixtureError(f"{where}: {key!r} must be a boolean")
+        raise _fixture_error(f"{where}: {key!r} must be a boolean")
     return value
 
 
 def _list(payload: dict[str, Any], key: str, where: str) -> list[Any]:
     value = payload.get(key)
     if not isinstance(value, list):
-        raise FixtureError(f"{where}: {key!r} must be a list")
+        raise _fixture_error(f"{where}: {key!r} must be a list")
     return value
 
 
@@ -242,11 +259,11 @@ def _read_json(path: Path) -> dict[str, Any]:
     try:
         raw = path.read_text(encoding="utf-8")
     except OSError as exc:  # pragma: no cover - filesystem failure
-        raise FixtureError(f"{path}: unreadable ({exc})") from exc
+        raise _fixture_error(f"{path}: unreadable ({exc})") from exc
     try:
         return _obj(json.loads(raw), str(path))
     except json.JSONDecodeError as exc:
-        raise FixtureError(f"{path}: invalid JSON ({exc})") from exc
+        raise _fixture_error(f"{path}: invalid JSON ({exc})") from exc
 
 
 # --------------------------------------------------------------------------
@@ -340,14 +357,14 @@ def load_manifest(root: Path | None = None) -> FixtureManifest:
         entries are the point of the file, not an omission from it.
 
     Raises:
-        FixtureError: The manifest is missing or malformed. A missing
+        ValueError: The manifest is missing or malformed. A missing
             manifest is fatal rather than an empty default: fixtures with
             no index are fixtures with no provenance policy.
     """
     base = FIXTURE_ROOT if root is None else root
     path = base / MANIFEST_NAME
     if not path.is_file():
-        raise FixtureError(f"{path}: fixture manifest is missing")
+        raise _fixture_error(f"{path}: fixture manifest is missing")
     payload = _read_json(path)
     where = str(path)
 
@@ -400,7 +417,7 @@ def load_session_plans(root: Path | None = None) -> list[SessionPlanFixture]:
     """Load every session-plan fixture, in filename order.
 
     Raises:
-        FixtureError: Any file is unreadable or structurally wrong.
+        ValueError: Any file is unreadable or structurally wrong.
     """
     base = FIXTURE_ROOT if root is None else root
     manifest = load_manifest(base)
@@ -421,7 +438,7 @@ def load_transcripts(root: Path | None = None) -> list[SessionTranscriptFixture]
     Callers that need to tell them apart read `provenance.fixture_kind`.
 
     Raises:
-        FixtureError: Any file is unreadable or structurally wrong.
+        ValueError: Any file is unreadable or structurally wrong.
     """
     base = FIXTURE_ROOT if root is None else root
     manifest = load_manifest(base)
@@ -668,7 +685,7 @@ def validate_fixtures(root: Path | None = None) -> list[str]:
     Returns a list of problems, empty when the directory is honest.
 
     Raises:
-        FixtureError: The manifest itself, or a fixture file, is
+        ValueError: The manifest itself, or a fixture file, is
             unparseable. Structure is fatal; semantics are returned.
     """
     base = FIXTURE_ROOT if root is None else root
