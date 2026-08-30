@@ -40,7 +40,11 @@ import {
   type JobDetail,
   type JobStatus,
   type LearnerProfile,
+  type LearnerProgressSummary,
   type Plan,
+  type ProgressDailySessions,
+  type ProgressEvidence,
+  type ProgressSchedule,
 } from "@/lib/api";
 
 // Vitest runs from `web/`, where its config lives.
@@ -230,6 +234,55 @@ const learnerProfileSchema = z.strictObject({
 proves<Exact<z.infer<typeof learnerProfileSchema>, LearnerProfile>>(true);
 
 // ---------------------------------------------------------------------------
+// The learner progress ledger (WO-W07). Derived like the shapes above, and
+// carrying one extra assertion the others do not need: every number here is
+// accompanied by the `event_ids` it was counted from, and nothing in the
+// shape can express a mastery percentage. `01-LEARNING-AGENT.md` §4.1 bans
+// knowledge scalars; `strictObject` is what makes a backend that grows one
+// fail here rather than reach a surface.
+// ---------------------------------------------------------------------------
+
+const progressDailySessionsSchema = z.strictObject({
+  day: z.string(),
+  sessions: z.number(),
+  event_ids: z.array(z.string()),
+});
+proves<
+  Exact<z.infer<typeof progressDailySessionsSchema>, ProgressDailySessions>
+>(true);
+
+const progressScheduleSchema = z.strictObject({
+  path_id: z.string(),
+  sessions_completed: z.number(),
+  sessions_planned: z.number().nullable(),
+  schedule_label: z.string(),
+  assessments_recorded: z.number(),
+  event_ids: z.array(z.string()),
+});
+proves<Exact<z.infer<typeof progressScheduleSchema>, ProgressSchedule>>(true);
+
+const progressEvidenceSchema = z.strictObject({
+  event_id: z.string(),
+  ts: z.string(),
+  kind: z.string(),
+  evidence_ref: z.string().nullable(),
+  path_id: z.string().nullable(),
+});
+proves<Exact<z.infer<typeof progressEvidenceSchema>, ProgressEvidence>>(true);
+
+const learnerProgressSummarySchema = z.strictObject({
+  principal_key_id: z.string(),
+  event_count: z.number(),
+  sessions_per_day: z.array(progressDailySessionsSchema),
+  schedule_progress: z.array(progressScheduleSchema),
+  assessments: z.array(progressEvidenceSchema),
+  artifacts: z.array(progressEvidenceSchema),
+});
+proves<
+  Exact<z.infer<typeof learnerProgressSummarySchema>, LearnerProgressSummary>
+>(true);
+
+// ---------------------------------------------------------------------------
 // Error envelopes. Hand-written on purpose: none of these shapes is in the
 // OpenAPI document (04-ARCHITECTURE.md §3.4), so there is nothing to derive
 // them from and no compile-time proof to be had. They are transcribed from
@@ -280,7 +333,13 @@ const JOB_FIXTURES: Record<string, JobStatus> = {
 
 const CONVERSATION_FIXTURES = ["conversations.list", "conversations.detail"];
 
-const LEARN_FIXTURES = ["learn.profile"];
+/**
+ * The learner surfaces (Phase W). Its own array rather than entries in
+ * one of the others: the length assertions below are the inventory, and
+ * a new group has to declare itself instead of hiding inside an existing
+ * count.
+ */
+const LEARN_FIXTURES = ["learn.profile", "learn.progress"];
 
 const ERROR_FIXTURES: Record<string, { status: number; kind: ApiFailureKind }> =
   {
@@ -325,11 +384,11 @@ describe("contract/fixtures — inventory and provenance", () => {
       .map((file) => file.replace(/\.json$/, ""))
       .sort();
     expect(onDisk).toEqual([...ALL_FIXTURES].sort());
-    // Five job states, two conversation shapes, one learner profile,
-    // seven error envelopes.
+    // Five job states, two conversation shapes, two learner surfaces
+    // (the profile and the progress ledger), seven error envelopes.
     expect(Object.keys(JOB_FIXTURES)).toHaveLength(5);
     expect(CONVERSATION_FIXTURES).toHaveLength(2);
-    expect(LEARN_FIXTURES).toHaveLength(1);
+    expect(LEARN_FIXTURES).toHaveLength(2);
     expect(Object.keys(ERROR_FIXTURES)).toHaveLength(7);
   });
 
@@ -580,6 +639,74 @@ describe("contract/fixtures — the learner profile (ADR 0058)", () => {
       if (claim.source === "inferred") {
         expect(claim.confidence).toBeLessThanOrEqual(0.6);
       }
+describe("contract/fixtures — the learner progress ledger", () => {
+  // No `serve()` here: there is no client function for `/learn/progress`
+  // yet, so the fixture is validated against the derived schema directly.
+  // The client lands with the learning surfaces; freezing the shape now
+  // is the point of recording the fixture ahead of them.
+
+  it("learn.progress parses as the derived summary shape", () => {
+    const parsed = learnerProgressSummarySchema.safeParse(
+      load("learn.progress").body
+    );
+    expect(parsed.error?.issues ?? []).toEqual([]);
+    expect(parsed.success).toBe(true);
+  });
+
+  it("says out loud that it was authored rather than recorded", () => {
+    // The other thirteen fixtures come off a seeded stack. This one
+    // cannot: the endpoint is behind a default-off flag with no producer
+    // wired yet. The `authored_reason` is where that has to be admitted.
+    const recording = load("learn.progress").recording;
+    expect(recording.authored).toBe(true);
+    expect(recording.authored_reason ?? "").toContain(
+      "tests/fixtures/learning/progress_events_raw.json"
+    );
+  });
+
+  it("carries the events behind every number it reports", () => {
+    // 01-LEARNING-AGENT.md §4.4: no displayed claim without an event
+    // behind it. Each count equals the length of its own provenance list.
+    const body = learnerProgressSummarySchema.parse(
+      load("learn.progress").body
+    );
+    for (const day of body.sessions_per_day) {
+      expect(day.event_ids).toHaveLength(day.sessions);
+    }
+    for (const path of body.schedule_progress) {
+      expect(path.event_ids).toHaveLength(path.sessions_completed);
+    }
+    for (const record of [...body.assessments, ...body.artifacts]) {
+      expect(record.evidence_ref).not.toBe(null);
+      expect(record.evidence_ref).not.toBe("");
+    }
+  });
+
+  it("offers no mastery percentage anywhere in the payload", () => {
+    // The 01 §4.1 ban, checked on the wire bytes. The backend enforces
+    // it structurally (a payload-key CHECK plus a write-boundary walk);
+    // this is the consumer-side half of the same rule, and the same
+    // vocabulary WO-W14's copy gate uses.
+    const serialized = JSON.stringify(load("learn.progress").body);
+    for (const banned of [
+      "master",
+      "proficien",
+      "competenc",
+      "percent",
+      "pct",
+      "score",
+    ]) {
+      expect(serialized.toLowerCase()).not.toContain(banned);
+    }
+    expect(serialized).not.toContain("%");
+    // What it does carry is session arithmetic, explicitly labeled.
+    const body = learnerProgressSummarySchema.parse(
+      load("learn.progress").body
+    );
+    for (const path of body.schedule_progress) {
+      expect(path.schedule_label).toMatch(
+        /^\d+ of \d+ sessions$|^\d+ sessions? recorded$/
+      );
     }
   });
 });

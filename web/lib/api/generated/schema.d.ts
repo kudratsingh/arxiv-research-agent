@@ -249,6 +249,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/learn/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The learner's progress ledger, folded from its event log.
+         * @description Read this principal's progress events and fold them into a view.
+         *
+         *     There is no stored summary: the route reads the raw append-only log
+         *     and hands it to `summarize`, a pure function. Every number that
+         *     comes back carries the `event_ids` behind it, so a surface can
+         *     expand any claim into the events that produced it — 01 §4.4's "no
+         *     displayed claim without an event behind it".
+         *
+         *     What this endpoint deliberately cannot return is a mastery or
+         *     knowledge percentage (01 §4.1). `schedule_progress` is arithmetic
+         *     about sessions and is named so the client cannot mistake it for
+         *     knowledge.
+         *
+         *     Gated on `settings.enable_learner_profile` (404 when off — the
+         *     surface does not exist in that deployment) and scoped to the
+         *     caller's principal (ADR 0036). With the flag on and
+         *     `enable_api_auth` off there is no principal to scope to, and the
+         *     ledger has no anonymous rows, so the route refuses with 503 rather
+         *     than serving someone else's record.
+         */
+        get: operations["get_learn_progress_learn_progress_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -511,6 +549,35 @@ export interface components {
             updated_at: number;
         };
         /**
+         * LearnerProgressSummary
+         * @description `GET /learn/progress` — the whole ledger view for one principal.
+         *
+         *     Recomputable by construction: the route reads raw events and folds
+         *     them with `src.learning.progress_store.summarize`, a pure function
+         *     with no clock and no store access. There is no cached aggregate
+         *     anywhere, so the displayed record cannot drift from the log.
+         */
+        LearnerProgressSummary: {
+            /** Principal Key Id */
+            principal_key_id: string;
+            /**
+             * Event Count
+             * @description Events in the page this summary was folded from.
+             */
+            event_count: number;
+            /** Sessions Per Day */
+            sessions_per_day: components["schemas"]["ProgressDailySessions"][];
+            /**
+             * Schedule Progress
+             * @description Session arithmetic per path. Named `schedule_progress` so no surface can mistake it for knowledge (01 §4.1).
+             */
+            schedule_progress: components["schemas"]["ProgressSchedule"][];
+            /** Assessments */
+            assessments: components["schemas"]["ProgressEvidence"][];
+            /** Artifacts */
+            artifacts: components["schemas"]["ProgressEvidence"][];
+        };
+        /**
          * Plan
          * @description The planner's output, exposed for HITL review (ADR 0030).
          *
@@ -564,6 +631,94 @@ export interface components {
              * @default
              */
             profile_note: string;
+        };
+        /**
+         * ProgressDailySessions
+         * @description Sessions completed on one UTC day, with the events behind the count.
+         */
+        ProgressDailySessions: {
+            /**
+             * Day
+             * @description UTC calendar date, `YYYY-MM-DD`.
+             */
+            day: string;
+            /**
+             * Sessions
+             * @description How many `session_completed` events fall on this day.
+             */
+            sessions: number;
+            /**
+             * Event Ids
+             * @description The events this count is made of — exactly `sessions` ids. No displayed claim without an event behind it (01 §4.4).
+             */
+            event_ids: string[];
+        };
+        /**
+         * ProgressEvidence
+         * @description One recorded event, reduced to the fact and what proves it.
+         *
+         *     Carries no verdict. 01 §4.3 keeps the assessment judge's output as
+         *     advice to the tutor rather than a score shown to the learner, so
+         *     the ledger's public view of an assessment is that it happened,
+         *     when, and which transcript backs it.
+         */
+        ProgressEvidence: {
+            /** Event Id */
+            event_id: string;
+            /**
+             * Ts
+             * @description UTC ISO-8601 with a `Z` suffix.
+             */
+            ts: string;
+            /** Kind */
+            kind: string;
+            /**
+             * Evidence Ref
+             * @description The session transcript / artifact / plan this event points at. Never null for `assessment` — the store refuses such a write at the boundary.
+             */
+            evidence_ref: string | null;
+            /**
+             * Path Id
+             * @description The path this event belongs to, when it named one.
+             */
+            path_id: string | null;
+        };
+        /**
+         * ProgressSchedule
+         * @description Schedule arithmetic for one path. Not a knowledge claim.
+         *
+         *     01 §4.1 permits "14 of 21 sessions in this milestone complete"
+         *     because it is arithmetic about sessions, and requires it be
+         *     labeled as schedule progress rather than knowledge — hence
+         *     `schedule_label` and the `schedule_progress` field name on the
+         *     summary. There is deliberately no percentage here, and no field
+         *     that could carry one.
+         */
+        ProgressSchedule: {
+            /** Path Id */
+            path_id: string;
+            /** Sessions Completed */
+            sessions_completed: number;
+            /**
+             * Sessions Planned
+             * @description What the path last declared its length to be, or null when the path has never declared one. Null is reported as null — the view does not guess a denominator.
+             */
+            sessions_planned: number | null;
+            /**
+             * Schedule Label
+             * @description The renderable form, constrained to session arithmetic: `N of M sessions`, or `N sessions recorded` when the path length is unknown.
+             */
+            schedule_label: string;
+            /**
+             * Assessments Recorded
+             * @description Count of `assessment` events on this path. A count of events, never a grade; zero means unobserved, not zero knowledge (00 §5.4).
+             */
+            assessments_recorded: number;
+            /**
+             * Event Ids
+             * @description The `session_completed` events behind `sessions_completed`.
+             */
+            event_ids: string[];
         };
         /**
          * ResearchAccepted
@@ -1073,6 +1228,40 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    get_learn_progress_learn_progress_get: {
+        parameters: {
+            query?: {
+                /** @description How many events to fold into this summary, oldest first. */
+                limit?: number;
+                /** @description Events to skip, counted within the caller's own ledger. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearnerProgressSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

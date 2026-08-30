@@ -1,0 +1,90 @@
+{
+  "x-recording": {
+    "note": "JSON has no comment syntax, so this key carries the header. Unlike its siblings this fixture was NOT produced by `bash web/contract/record.sh` — see `authored_reason`. Refresh it by re-running `tests/test_progress_events.py`, which asserts this body against the live route.",
+    "case": "learn.progress",
+    "commit": "08ee3fc8dd4962df6728386d64b46298310c721b",
+    "request": "GET /learn/progress",
+    "transport": "in-process ASGI (httpx.ASGITransport) over create_app()",
+    "stack": "no containers: create_app() with ENABLE_API_AUTH=true, ENABLE_LEARNER_PROFILE=true, PROGRESS_EVENT_STORE=memory and ANTHROPIC_API_KEY=local-preview-disabled; no network, no LLM client constructed",
+    "headers": "content-type only; the proxy allowlist in web/app/api/[...path]/route.ts has no learner route yet, so nothing else is claimed",
+    "authored": true,
+    "authored_reason": "The recorder drives the seeded Compose stack, and `/learn/progress` is behind the default-off `enable_learner_profile` flag with no producer wired until WO-W03 — there is no seeded learner to record. The envelope above is therefore hand-written. The body is not: it is the verbatim response of the real route over the committed raw event log at tests/fixtures/learning/progress_events_raw.json, and tests/test_progress_events.py::TestContractFixture asserts the two stay byte-identical, so this file cannot drift from the endpoint the way an invented fixture would."
+  },
+  "status": 200,
+  "statusText": "OK",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "principal_key_id": "pilot-01",
+    "event_count": 8,
+    "sessions_per_day": [
+      {
+        "day": "2026-08-24",
+        "sessions": 2,
+        "event_ids": ["evt-0001", "evt-0003"]
+      },
+      {
+        "day": "2026-08-25",
+        "sessions": 2,
+        "event_ids": ["evt-0004", "evt-0006"]
+      },
+      {
+        "day": "2026-08-26",
+        "sessions": 1,
+        "event_ids": ["evt-0007"]
+      }
+    ],
+    "schedule_progress": [
+      {
+        "path_id": "attention-is-all-you-need",
+        "sessions_completed": 3,
+        "sessions_planned": 3,
+        "schedule_label": "3 of 3 sessions",
+        "assessments_recorded": 1,
+        "event_ids": ["evt-0001", "evt-0004", "evt-0007"]
+      },
+      {
+        "path_id": "eval-harness-basics",
+        "sessions_completed": 0,
+        "sessions_planned": null,
+        "schedule_label": "0 sessions recorded",
+        "assessments_recorded": 1,
+        "event_ids": []
+      },
+      {
+        "path_id": "rlhf-foundations",
+        "sessions_completed": 1,
+        "sessions_planned": null,
+        "schedule_label": "1 session recorded",
+        "assessments_recorded": 0,
+        "event_ids": ["evt-0006"]
+      }
+    ],
+    "assessments": [
+      {
+        "event_id": "evt-0002",
+        "ts": "2026-08-24T09:40:00.000000Z",
+        "kind": "assessment",
+        "evidence_ref": "transcript:s-1001#explain-back",
+        "path_id": "attention-is-all-you-need"
+      },
+      {
+        "event_id": "evt-0008",
+        "ts": "2026-08-26T08:10:00.000000Z",
+        "kind": "assessment",
+        "evidence_ref": "transcript:s-1005#probe",
+        "path_id": "eval-harness-basics"
+      }
+    ],
+    "artifacts": [
+      {
+        "event_id": "evt-0005",
+        "ts": "2026-08-25T08:50:00.000000Z",
+        "kind": "artifact_produced",
+        "evidence_ref": "job:9f2c1ab4d7e60351",
+        "path_id": "attention-is-all-you-need"
+      }
+    ]
+  }
+}

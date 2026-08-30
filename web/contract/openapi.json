@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "08ee3fc8dd4962df6728386d64b46298310c721b",
+    "commit": "19e8b170840c1bdee8cfced1cbe216203b3938be",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -463,6 +463,64 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/learn/progress": {
+      "get": {
+        "summary": "The learner's progress ledger, folded from its event log.",
+        "description": "Read this principal's progress events and fold them into a view.\n\nThere is no stored summary: the route reads the raw append-only log\nand hands it to `summarize`, a pure function. Every number that\ncomes back carries the `event_ids` behind it, so a surface can\nexpand any claim into the events that produced it \u2014 01 \u00a74.4's \"no\ndisplayed claim without an event behind it\".\n\nWhat this endpoint deliberately cannot return is a mastery or\nknowledge percentage (01 \u00a74.1). `schedule_progress` is arithmetic\nabout sessions and is named so the client cannot mistake it for\nknowledge.\n\nGated on `settings.enable_learner_profile` (404 when off \u2014 the\nsurface does not exist in that deployment) and scoped to the\ncaller's principal (ADR 0036). With the flag on and\n`enable_api_auth` off there is no principal to scope to, and the\nledger has no anonymous rows, so the route refuses with 503 rather\nthan serving someone else's record.",
+        "operationId": "get_learn_progress_learn_progress_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "description": "How many events to fold into this summary, oldest first.",
+              "default": 500,
+              "title": "Limit"
+            },
+            "description": "How many events to fold into this summary, oldest first."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Events to skip, counted within the caller's own ledger.",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Events to skip, counted within the caller's own ledger."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnerProgressSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       }
@@ -974,6 +1032,59 @@
         "title": "LearnerProfileResponse",
         "description": "`GET`/`PUT /learn/profile` \u2014 the whole per-principal record.\n\nDeliberately smaller than the design sketch: no `style_signals`\nand no `preferred_days`. Every field here is a field the deletion\npromise has to cover."
       },
+      "LearnerProgressSummary": {
+        "properties": {
+          "principal_key_id": {
+            "type": "string",
+            "title": "Principal Key Id"
+          },
+          "event_count": {
+            "type": "integer",
+            "title": "Event Count",
+            "description": "Events in the page this summary was folded from."
+          },
+          "sessions_per_day": {
+            "items": {
+              "$ref": "#/components/schemas/ProgressDailySessions"
+            },
+            "type": "array",
+            "title": "Sessions Per Day"
+          },
+          "schedule_progress": {
+            "items": {
+              "$ref": "#/components/schemas/ProgressSchedule"
+            },
+            "type": "array",
+            "title": "Schedule Progress",
+            "description": "Session arithmetic per path. Named `schedule_progress` so no surface can mistake it for knowledge (01 \u00a74.1)."
+          },
+          "assessments": {
+            "items": {
+              "$ref": "#/components/schemas/ProgressEvidence"
+            },
+            "type": "array",
+            "title": "Assessments"
+          },
+          "artifacts": {
+            "items": {
+              "$ref": "#/components/schemas/ProgressEvidence"
+            },
+            "type": "array",
+            "title": "Artifacts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "principal_key_id",
+          "event_count",
+          "sessions_per_day",
+          "schedule_progress",
+          "assessments",
+          "artifacts"
+        ],
+        "title": "LearnerProgressSummary",
+        "description": "`GET /learn/progress` \u2014 the whole ledger view for one principal.\n\nRecomputable by construction: the route reads raw events and folds\nthem with `src.learning.progress_store.summarize`, a pure function\nwith no clock and no store access. There is no cached aggregate\nanywhere, so the displayed record cannot drift from the log."
+      },
       "Plan": {
         "properties": {
           "sub_questions": {
@@ -1051,6 +1162,140 @@
         "type": "object",
         "title": "ProfileUpdateRequest",
         "description": "Body for `PUT /learn/profile` \u2014 a full replacement of what the\nlearner has declared.\n\nClaims the system inferred or assessed are *not* addressable here:\nthey survive the write untouched, because the learner edits what\nthey said about themselves and the system's own observations stand\nor fall on their evidence."
+      },
+      "ProgressDailySessions": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "title": "Day",
+            "description": "UTC calendar date, `YYYY-MM-DD`."
+          },
+          "sessions": {
+            "type": "integer",
+            "title": "Sessions",
+            "description": "How many `session_completed` events fall on this day."
+          },
+          "event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Event Ids",
+            "description": "The events this count is made of \u2014 exactly `sessions` ids. No displayed claim without an event behind it (01 \u00a74.4)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "sessions",
+          "event_ids"
+        ],
+        "title": "ProgressDailySessions",
+        "description": "Sessions completed on one UTC day, with the events behind the count."
+      },
+      "ProgressEvidence": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "ts": {
+            "type": "string",
+            "title": "Ts",
+            "description": "UTC ISO-8601 with a `Z` suffix."
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "evidence_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Ref",
+            "description": "The session transcript / artifact / plan this event points at. Never null for `assessment` \u2014 the store refuses such a write at the boundary."
+          },
+          "path_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path Id",
+            "description": "The path this event belongs to, when it named one."
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_id",
+          "ts",
+          "kind",
+          "evidence_ref",
+          "path_id"
+        ],
+        "title": "ProgressEvidence",
+        "description": "One recorded event, reduced to the fact and what proves it.\n\nCarries no verdict. 01 \u00a74.3 keeps the assessment judge's output as\nadvice to the tutor rather than a score shown to the learner, so\nthe ledger's public view of an assessment is that it happened,\nwhen, and which transcript backs it."
+      },
+      "ProgressSchedule": {
+        "properties": {
+          "path_id": {
+            "type": "string",
+            "title": "Path Id"
+          },
+          "sessions_completed": {
+            "type": "integer",
+            "title": "Sessions Completed"
+          },
+          "sessions_planned": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions Planned",
+            "description": "What the path last declared its length to be, or null when the path has never declared one. Null is reported as null \u2014 the view does not guess a denominator."
+          },
+          "schedule_label": {
+            "type": "string",
+            "title": "Schedule Label",
+            "description": "The renderable form, constrained to session arithmetic: `N of M sessions`, or `N sessions recorded` when the path length is unknown."
+          },
+          "assessments_recorded": {
+            "type": "integer",
+            "title": "Assessments Recorded",
+            "description": "Count of `assessment` events on this path. A count of events, never a grade; zero means unobserved, not zero knowledge (00 \u00a75.4)."
+          },
+          "event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Event Ids",
+            "description": "The `session_completed` events behind `sessions_completed`."
+          }
+        },
+        "type": "object",
+        "required": [
+          "path_id",
+          "sessions_completed",
+          "sessions_planned",
+          "schedule_label",
+          "assessments_recorded",
+          "event_ids"
+        ],
+        "title": "ProgressSchedule",
+        "description": "Schedule arithmetic for one path. Not a knowledge claim.\n\n01 \u00a74.1 permits \"14 of 21 sessions in this milestone complete\"\nbecause it is arithmetic about sessions, and requires it be\nlabeled as schedule progress rather than knowledge \u2014 hence\n`schedule_label` and the `schedule_progress` field name on the\nsummary. There is deliberately no percentage here, and no field\nthat could carry one."
       },
       "ResearchAccepted": {
         "properties": {

@@ -398,3 +398,122 @@ class LearnerProfileResponse(BaseModel):
     profile_note: str
     created_at: float
     updated_at: float
+
+
+# ---------------------------------------------------------------------------
+# Learner progress ledger (Phase W, WO-W07).
+#
+# Every model below is a *view* over the append-only event log in
+# `src/learning/progress_store.py` — derived, recomputable, and carrying
+# the event ids behind each number. None of them has a mastery or
+# knowledge scalar, and none can grow one: `01-LEARNING-AGENT.md` §4.1
+# bans mastery percentages, and `tests/test_progress_events.py`'s
+# `TestNoMasteryPercentage` asserts the ban over these field names and
+# over the generated OpenAPI properties.
+# ---------------------------------------------------------------------------
+
+
+class ProgressDailySessions(BaseModel):
+    """Sessions completed on one UTC day, with the events behind the count."""
+
+    day: str = Field(description="UTC calendar date, `YYYY-MM-DD`.")
+    sessions: int = Field(
+        description="How many `session_completed` events fall on this day."
+    )
+    event_ids: list[str] = Field(
+        description=(
+            "The events this count is made of — exactly `sessions` ids. "
+            "No displayed claim without an event behind it (01 §4.4)."
+        ),
+    )
+
+
+class ProgressSchedule(BaseModel):
+    """Schedule arithmetic for one path. Not a knowledge claim.
+
+    01 §4.1 permits "14 of 21 sessions in this milestone complete"
+    because it is arithmetic about sessions, and requires it be
+    labeled as schedule progress rather than knowledge — hence
+    `schedule_label` and the `schedule_progress` field name on the
+    summary. There is deliberately no percentage here, and no field
+    that could carry one.
+    """
+
+    path_id: str
+    sessions_completed: int
+    # Nullable but *required*: the response always carries the key, so
+    # the document says so and the generated client needs no guard. The
+    # same holds for every nullable field below.
+    sessions_planned: int | None = Field(
+        description=(
+            "What the path last declared its length to be, or null when "
+            "the path has never declared one. Null is reported as null — "
+            "the view does not guess a denominator."
+        ),
+    )
+    schedule_label: str = Field(
+        description=(
+            "The renderable form, constrained to session arithmetic: "
+            "`N of M sessions`, or `N sessions recorded` when the path "
+            "length is unknown."
+        ),
+    )
+    assessments_recorded: int = Field(
+        description=(
+            "Count of `assessment` events on this path. A count of "
+            "events, never a grade; zero means unobserved, not zero "
+            "knowledge (00 §5.4)."
+        ),
+    )
+    event_ids: list[str] = Field(
+        description="The `session_completed` events behind "
+        "`sessions_completed`."
+    )
+
+
+class ProgressEvidence(BaseModel):
+    """One recorded event, reduced to the fact and what proves it.
+
+    Carries no verdict. 01 §4.3 keeps the assessment judge's output as
+    advice to the tutor rather than a score shown to the learner, so
+    the ledger's public view of an assessment is that it happened,
+    when, and which transcript backs it.
+    """
+
+    event_id: str
+    ts: str = Field(description="UTC ISO-8601 with a `Z` suffix.")
+    kind: str
+    evidence_ref: str | None = Field(
+        description=(
+            "The session transcript / artifact / plan this event points "
+            "at. Never null for `assessment` — the store refuses such a "
+            "write at the boundary."
+        ),
+    )
+    path_id: str | None = Field(
+        description="The path this event belongs to, when it named one."
+    )
+
+
+class LearnerProgressSummary(BaseModel):
+    """`GET /learn/progress` — the whole ledger view for one principal.
+
+    Recomputable by construction: the route reads raw events and folds
+    them with `src.learning.progress_store.summarize`, a pure function
+    with no clock and no store access. There is no cached aggregate
+    anywhere, so the displayed record cannot drift from the log.
+    """
+
+    principal_key_id: str
+    event_count: int = Field(
+        description="Events in the page this summary was folded from."
+    )
+    sessions_per_day: list[ProgressDailySessions]
+    schedule_progress: list[ProgressSchedule] = Field(
+        description=(
+            "Session arithmetic per path. Named `schedule_progress` so no "
+            "surface can mistake it for knowledge (01 §4.1)."
+        ),
+    )
+    assessments: list[ProgressEvidence]
+    artifacts: list[ProgressEvidence]

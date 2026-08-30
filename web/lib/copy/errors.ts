@@ -5,8 +5,8 @@
 //   1. `ApiFailure.kind` — what happened to an HTTP call we made. Twelve
 //      variants, normalized by `lib/api/errors.ts` (04 §3.4).
 //   2. `JobDetail.error_type` — what the backend says happened to a RUN.
-//      Nine values it can produce (03 §8.3), and any future exception
-//      class name after that.
+//      Ten values it can produce (03 §8.3 plus WO-W07's ledger refusal),
+//      and any future exception class name after that.
 //
 // RC-16 governs the second one and is the reason this file exists rather
 // than a `switch` inside a component:
@@ -289,7 +289,7 @@ export function describeFailure(failure: ApiFailure): FailureCopy {
 }
 
 // ---------------------------------------------------------------------------
-// `JobDetail.error_type` — the nine values, and the visible fall-through
+// `JobDetail.error_type` — the ten values, and the visible fall-through
 // (criteria 6, 7, 8; 03 §8.3; RC-16).
 // ---------------------------------------------------------------------------
 
@@ -300,7 +300,7 @@ export interface ErrorTypeCopy {
 }
 
 /**
- * The nine `error_type` values this backend can produce, mapped.
+ * The ten `error_type` values this backend can produce, mapped.
  *
  * Four are deliberate constants — `hitl_timeout` (`runner.py:1057`),
  * `cost_budget_exceeded` (`:1085`), `timeout` (`:1150`) and `orphaned`
@@ -309,17 +309,21 @@ export interface ErrorTypeCopy {
  * `NoPapersFoundError` (`src/agents/search.py:49`),
  * `AllPaperAnalysesFailedError` (`src/agents/reader.py:141`),
  * `SynthesizerOutputError` (`src/agents/synthesizer.py:45`),
- * `ArxivUnavailableError` (`src/tools/arxiv_search.py:41`) and
- * `JobCancelledError` (`src/cancellation.py:65`).
+ * `ArxivUnavailableError` (`src/tools/arxiv_search.py:41`),
+ * `JobCancelledError` (`src/cancellation.py:65`) and
+ * `ProgressEventRejected` (`src/learning/progress_store.py`, WO-W07).
  *
  * `web/tests/copy/errorTypeDrift.test.ts` re-derives that list from the
- * Python sources on every run, so a tenth value cannot arrive silently.
+ * Python sources on every run, so an eleventh value cannot arrive
+ * silently — and it is what caught `ProgressEventRejected` the day the
+ * learner ledger landed.
  *
- * Eight sentences are 03 §8.3's, verbatim. The ninth — `JobCancelledError`
- * — has no row in §8.3's table because §8.3 lists it only as a producible
- * class name; it is mapped here rather than left to fall through, because
- * "The run failed." is the wrong sentence for a run that was stopped on
- * purpose, and the drift test would otherwise pass while the user read
+ * Eight sentences are 03 §8.3's, verbatim. The other two are not in §8.3's
+ * table: `JobCancelledError` appears there only as a producible class
+ * name, and `ProgressEventRejected` postdates the brief. Both are mapped
+ * rather than left to fall through, because "The run failed." is the wrong
+ * sentence for a run that was stopped on purpose and for a write the
+ * ledger refused — the drift test would otherwise pass while the user read
  * something untrue.
  */
 export const ERROR_TYPE_COPY = {
@@ -360,9 +364,23 @@ export const ERROR_TYPE_COPY = {
     sentence: "The run was stopped before it finished.",
     recovery: "Ask again to start a new run.",
   },
+  // WO-W07. The learner ledger refuses a write it cannot stand behind —
+  // an entry with no evidence, a reserved event kind, a field claiming a
+  // knowledge scalar. Raised at the store's write boundary, so it reaches
+  // this table the same way any other exception class does: through
+  // `job.error_type = type(exc).__name__`.
+  //
+  // The recovery sentence is a fact about the store, not reassurance:
+  // the table is append-only, so a refused write cannot have disturbed
+  // anything already in it.
+  ProgressEventRejected: {
+    sentence: "The ledger refused an entry from this run, so it was not saved.",
+    recovery:
+      "Ask again to start a new run. Entries already in the ledger are unchanged — the ledger only ever adds.",
+  },
 } as const satisfies Record<string, ErrorTypeCopy>;
 
-/** The nine keys, as a list, for the drift test and for stories. */
+/** The ten keys, as a list, for the drift test and for stories. */
 export const MAPPED_ERROR_TYPES = Object.keys(
   ERROR_TYPE_COPY,
 ) as Array<keyof typeof ERROR_TYPE_COPY>;

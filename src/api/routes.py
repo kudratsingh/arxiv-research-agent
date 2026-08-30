@@ -39,8 +39,12 @@ from src.api.schemas import (
     HealthResponse,
     JobDetail,
     LearnerProfileResponse,
+    LearnerProgressSummary,
     Plan,
     ProfileUpdateRequest,
+    ProgressDailySessions,
+    ProgressEvidence,
+    ProgressSchedule,
     ResearchAccepted,
     ResearchRequest,
     ReviewRequest,
@@ -60,6 +64,15 @@ from src.learning.profile_store import (
     SkillEntry,
     new_goal_id,
     utc_now_iso,
+)
+from src.learning.progress_store import (
+    DEFAULT_EVENT_LIMIT,
+    MAX_EVENT_LIMIT,
+    EvidenceRecord,
+    InMemoryProgressEventStore,
+    ProgressEventStore,
+    ProgressSummary,
+    summarize,
 )
 from src.observability import get_logger
 
@@ -893,6 +906,126 @@ async def delete_learner_profile(
         "api_learner_profile_deleted", extra={"existed": deleted}
     )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/learn/progress",
+    response_model=LearnerProgressSummary,
+    summary="The learner's progress ledger, folded from its event log.",
+)
+async def get_learn_progress(
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
+    limit: int = Query(
+        DEFAULT_EVENT_LIMIT,
+        ge=1,
+        le=MAX_EVENT_LIMIT,
+        description="How many events to fold into this summary, oldest first.",
+    ),
+    offset: int = Query(
+        0,
+        ge=0,
+        description="Events to skip, counted within the caller's own ledger.",
+    ),
+) -> LearnerProgressSummary:
+    """Read this principal's progress events and fold them into a view.
+
+    There is no stored summary: the route reads the raw append-only log
+    and hands it to `summarize`, a pure function. Every number that
+    comes back carries the `event_ids` behind it, so a surface can
+    expand any claim into the events that produced it — 01 §4.4's "no
+    displayed claim without an event behind it".
+
+    What this endpoint deliberately cannot return is a mastery or
+    knowledge percentage (01 §4.1). `schedule_progress` is arithmetic
+    about sessions and is named so the client cannot mistake it for
+    knowledge.
+
+    Gated on `settings.enable_learner_profile` (404 when off — the
+    surface does not exist in that deployment) and scoped to the
+    caller's principal (ADR 0036). With the flag on and
+    `enable_api_auth` off there is no principal to scope to, and the
+    ledger has no anonymous rows, so the route refuses with 503 rather
+    than serving someone else's record.
+    """
+    if not settings.enable_learner_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="learner_profile_disabled",
+        )
+    key_id = _principal_key_id(principal)
+    if key_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="learner_progress_requires_auth",
+        )
+
+    events = await _progress_event_store(request).list_events(
+        key_id, limit=limit, offset=offset
+    )
+    return _summary_to_response(summarize(key_id, events))
+
+
+def _progress_event_store(request: Request) -> ProgressEventStore:
+    """The app's ledger, read lazily.
+
+    Deliberately *not* part of `_get_state` — for the same reason
+    `_degraded_dependencies` is not: that helper reads every key
+    eagerly for every route, so a new required attribute there breaks
+    apps assembled without the full lifespan (several SSE and health
+    tests build exactly that). Only this route needs the ledger, so
+    only this route reaches for it, and an app without one falls back
+    to an empty in-process store rather than raising.
+    """
+    store: ProgressEventStore | None = getattr(
+        request.app.state, "progress_event_store", None
+    )
+    if store is None:  # pragma: no cover - lifespan always sets it
+        store = InMemoryProgressEventStore()
+        request.app.state.progress_event_store = store
+    return store
+
+
+def _summary_to_response(summary: ProgressSummary) -> LearnerProgressSummary:
+    """Serialize the store's view. A rename, not a computation.
+
+    Kept mechanical on purpose: if the API layer were allowed to derive
+    anything, the recomputability property would hold for the store and
+    not for what the client actually sees.
+    """
+    return LearnerProgressSummary(
+        principal_key_id=summary.principal_key_id,
+        event_count=summary.event_count,
+        sessions_per_day=[
+            ProgressDailySessions(
+                day=d.day, sessions=d.sessions, event_ids=list(d.event_ids)
+            )
+            for d in summary.sessions_per_day
+        ],
+        schedule_progress=[
+            ProgressSchedule(
+                path_id=p.path_id,
+                sessions_completed=p.sessions_completed,
+                sessions_planned=p.sessions_planned,
+                schedule_label=p.schedule_label,
+                assessments_recorded=p.assessments_recorded,
+                event_ids=list(p.event_ids),
+            )
+            for p in summary.schedule_progress
+        ],
+        assessments=[_evidence_to_response(e) for e in summary.assessments],
+        artifacts=[_evidence_to_response(e) for e in summary.artifacts],
+    )
+
+
+def _evidence_to_response(record: EvidenceRecord) -> ProgressEvidence:
+    return ProgressEvidence(
+        event_id=record.event_id,
+        ts=record.ts,
+        kind=record.kind,
+        evidence_ref=record.evidence_ref,
+        path_id=record.path_id,
+    )
 
 
 def _conversation_to_detail(conversation: Conversation) -> ConversationDetail:

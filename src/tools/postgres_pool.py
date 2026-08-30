@@ -209,6 +209,84 @@ CREATE TABLE IF NOT EXISTS learner_profiles (
 CREATE INDEX IF NOT EXISTS learner_profiles_updated_at_idx
     ON learner_profiles (updated_at);
 -- === END learner_profiles ==========================================
+
+-- === BEGIN progress_events (WO-W07, ADR 0058) ======================
+-- Appended after WO-W02's block, per the §5.4 merge order, and fenced
+-- in the same style so a later card can see where to add its own.
+--
+-- The learner's progress ledger (01 §4.4). Three structural rules
+-- live in the DDL rather than only in Python, because the honesty
+-- claims Gate W1 makes about this table have to survive a `psql`
+-- session, not just the store module:
+--
+--   1. APPEND-ONLY. A trigger refuses UPDATE outright and refuses
+--      DELETE unless the connection has opted into an account-level
+--      erasure (`SET LOCAL arxiv.progress_purge = 'on'`). Editing a
+--      recorded event is never legitimate; erasing a person's whole
+--      record is the WO-W02 privacy promise, so it gets a named,
+--      deliberate door instead of a blanket ban.
+--   2. EVIDENCE AT THE WRITE BOUNDARY. An `assessment` row without a
+--      non-blank `evidence_ref` is rejected by CHECK — 01 §4.3's rule
+--      that an assertion without evidence is malformed, applied to
+--      the record rather than to the judge.
+--   3. NO MASTERY SCALAR. 01 §4.1 bans mastery percentages. The
+--      CHECK below rejects any payload whose JSON *keys* (at any
+--      depth) read as a knowledge scalar. The token list is mirrored
+--      in `src/learning/progress_store.py::BANNED_SCALAR_TOKENS`,
+--      and a test asserts the two agree so the ban cannot drift.
+--      Matching on `"<key>":` rather than on free text keeps a
+--      learner transcript that happens to use the word "mastery"
+--      storable; only a *field* claiming one is refused.
+CREATE TABLE IF NOT EXISTS progress_events (
+    event_id TEXT PRIMARY KEY,
+    principal_key_id TEXT NOT NULL,
+    ts TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    kind TEXT NOT NULL,
+    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+    evidence_ref TEXT NULL,
+    CONSTRAINT progress_events_kind_allowed CHECK (
+        kind IN (
+            'session_completed', 'assessment', 'review_item',
+            'artifact_produced', 'plan_approved', 'replan'
+        )
+    ),
+    CONSTRAINT progress_events_assessment_needs_evidence CHECK (
+        kind <> 'assessment'
+        OR (evidence_ref IS NOT NULL AND btrim(evidence_ref) <> '')
+    ),
+    CONSTRAINT progress_events_no_mastery_scalar CHECK (
+        payload::text !~* '"[^"]*(master|proficien|competenc|percent|pct|score|knowledge_level|skill_level)[^"]*"[[:space:]]*:'
+    )
+);
+
+-- The ledger is always read per principal, newest first.
+CREATE INDEX IF NOT EXISTS progress_events_principal_ts_idx
+    ON progress_events (principal_key_id, ts DESC, event_id);
+
+-- Append-only enforcement. `CREATE OR REPLACE FUNCTION` plus
+-- `DROP TRIGGER IF EXISTS` keeps the whole block idempotent, which
+-- the shared `init_schema()` double-call test guards.
+CREATE OR REPLACE FUNCTION progress_events_append_only()
+RETURNS trigger AS $progress_events_append_only$
+BEGIN
+    IF TG_OP = 'DELETE'
+       AND current_setting('arxiv.progress_purge', true) = 'on' THEN
+        -- Account-level erasure (the WO-W02 deletion promise).
+        RETURN OLD;
+    END IF;
+    RAISE EXCEPTION
+        'progress_events is append-only (WO-W07): % refused. Correct a '
+        'recorded event by appending a new one; erase an account by '
+        'setting arxiv.progress_purge.', TG_OP
+        USING ERRCODE = 'restrict_violation';
+END;
+$progress_events_append_only$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS progress_events_append_only_trg ON progress_events;
+CREATE TRIGGER progress_events_append_only_trg
+    BEFORE UPDATE OR DELETE ON progress_events
+    FOR EACH ROW EXECUTE FUNCTION progress_events_append_only();
+-- === END progress_events ===========================================
 """
 
 

@@ -48,9 +48,14 @@ const BRIEF_TABLE: Array<[string, string]> = [
   ],
 ];
 
-describe("criterion 6 — the nine mapped values", () => {
-  it("maps nine values", () => {
-    expect(MAPPED_ERROR_TYPES).toHaveLength(9);
+describe("criterion 6 — the mapped values", () => {
+  it("maps the nine 03 §8.3 values plus WO-W07's ledger refusal", () => {
+    // The criterion quoted above says nine, and §8.3's nine are all still
+    // here — asserted one by one below. `ProgressEventRejected` arrived
+    // after the brief was written, so the count moves and the criterion
+    // does not: what it demands is coverage, not a fixed number.
+    expect(MAPPED_ERROR_TYPES).toHaveLength(10);
+    expect(MAPPED_ERROR_TYPES).toContain("ProgressEventRejected");
   });
 
   it.each(BRIEF_TABLE)("%s reads exactly as 03 §8.3 wrote it", (value, sentence) => {
