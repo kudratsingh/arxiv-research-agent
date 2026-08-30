@@ -1,5 +1,29 @@
 {
     "cSpell.words": [
         "dotenv"
-    ]
+    ],
+    "makefile.configureOnOpen": false,
+    "python.analysis.exclude": [
+        ".venv/**",
+        ".claude/**",
+        "web/node_modules/**",
+        "web/.next/**",
+        "outputs/**"
+    ],
+    "python.analysis.indexing": true,
+    "files.watcherExclude": {
+        "**/.venv/**": true,
+        "**/.claude/**": true,
+        "**/node_modules/**": true,
+        "**/.next/**": true,
+        "**/outputs/**": true,
+        "**/web/build/**": true
+    },
+    "search.exclude": {
+        "**/.venv": true,
+        "**/.claude": true,
+        "**/node_modules": true,
+        "**/.next": true,
+        "**/outputs": true
+    }
 }
