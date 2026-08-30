@@ -105,6 +105,110 @@ CREATE INDEX IF NOT EXISTS conversation_jobs_conversation_idx
     ON conversation_jobs (conversation_id, ordinal);
 CREATE INDEX IF NOT EXISTS conversation_jobs_job_id_idx
     ON conversation_jobs (job_id);
+
+-- === BEGIN learner_profiles (WO-W02, ADR 0058) =====================
+-- APPEND-ONLY SECTION. Phase W cards extend SCHEMA_DDL by adding a
+-- new comment-fenced block at the end, never by editing an earlier
+-- one; the merge order is W02 then W07, and `init_schema` idempotence
+-- is the shared guard both cards' tests assert
+-- (planning/07-learning-platform/05-WEDGE-WORK-ORDERS.md §5.4).
+--
+-- The first table in this repo that holds data about a *person*.
+-- Keyed on `principal_key_id` (ADR 0036) rather than a stable owner
+-- id, which is honest only for single-human / pilot deployments:
+-- MT-01's finding F1 says `key_id` is a mutable display name, so a
+-- reassigned key would inherit another human's skill history. Phase W
+-- handles that operationally (pilot keys are issued fresh per person
+-- and never reassigned, SR-02) and MT-01 / L0-05 is the real fix.
+--
+-- Provenance is enforced here, not only in Python. The CHECK
+-- constraints below make a claim without a source, a declared claim
+-- that is not confidence 1.0, an inferred claim above 0.6, or an
+-- evidence-free inference unrepresentable *at rest* — a direct psql
+-- INSERT is refused the same way the store is. The numeric bounds
+-- mirror `src/learning/profile_store.py`; a test asserts the two
+-- agree, because a cap that drifts is a cap that is not enforced.
+CREATE TABLE IF NOT EXISTS learner_profiles (
+    principal_key_id TEXT PRIMARY KEY,
+    academic_level TEXT NOT NULL DEFAULT '',
+    time_budget_min_per_day INTEGER NOT NULL DEFAULT 0,
+    goals JSONB NOT NULL DEFAULT '[]'::jsonb,
+    skills JSONB NOT NULL DEFAULT '[]'::jsonb,
+    profile_note TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    -- 01 §1.3: the profile refuses the anonymous principal. The flag
+    -- validator in `src/config.py` and the store both say so; the
+    -- table says so too, so no path can create an ownerless profile.
+    CONSTRAINT learner_profiles_principal_named
+        CHECK (principal_key_id <> ''),
+
+    CONSTRAINT learner_profiles_academic_level_vocab
+        CHECK (academic_level IN (
+            '', 'self-taught', 'undergrad', 'grad', 'postdoc', 'industry'
+        )),
+    CONSTRAINT learner_profiles_time_budget_bounded
+        CHECK (time_budget_min_per_day BETWEEN 0 AND 1440),
+    CONSTRAINT learner_profiles_profile_note_bounded
+        CHECK (length(profile_note) <= 1000),
+
+    CONSTRAINT learner_profiles_goals_capped
+        CHECK (jsonb_typeof(goals) = 'array'
+               AND jsonb_array_length(goals) <= 8),
+    CONSTRAINT learner_profiles_goals_shaped CHECK (
+        NOT jsonb_path_exists(goals, '$[*] ? (!exists(@.goal_id)
+            || !exists(@.statement) || !exists(@.status)
+            || !exists(@.priority) || !exists(@.target_date))')
+        AND NOT jsonb_path_exists(goals, '$[*] ? (@.status != "active"
+            && @.status != "paused" && @.status != "reached"
+            && @.status != "abandoned")')
+    ),
+
+    CONSTRAINT learner_profiles_skills_capped
+        CHECK (jsonb_typeof(skills) = 'array'
+               AND jsonb_array_length(skills) <= 40),
+
+    -- Every field present. There is no honest default for "where did
+    -- this claim come from", so a row missing `source` is refused
+    -- rather than defaulted.
+    CONSTRAINT learner_profiles_skills_complete CHECK (
+        NOT jsonb_path_exists(skills, '$[*] ? (!exists(@.skill)
+            || !exists(@.level) || !exists(@.source)
+            || !exists(@.evidence_ref) || !exists(@.confidence)
+            || !exists(@.updated_at))')
+    ),
+    CONSTRAINT learner_profiles_skills_vocab CHECK (
+        NOT jsonb_path_exists(skills, '$[*] ? (@.source != "declared"
+            && @.source != "inferred" && @.source != "assessed")')
+        AND NOT jsonb_path_exists(skills, '$[*] ? (@.level != "none"
+            && @.level != "aware" && @.level != "working"
+            && @.level != "solid")')
+    ),
+    -- 01 §1.2, the three honesty rules as arithmetic:
+    --   confidence 1.0 is reserved for `declared`, and `declared` is
+    --   nothing but 1.0; `inferred` is capped at 0.6; a non-declared
+    --   claim must cite the session or assessment behind it, and a
+    --   declared claim cites only itself.
+    CONSTRAINT learner_profiles_skills_provenance CHECK (
+        NOT jsonb_path_exists(skills, '$[*] ? (@.confidence <= 0.0
+            || @.confidence > 1.0)')
+        AND NOT jsonb_path_exists(skills, '$[*] ? (@.source == "declared"
+            && @.confidence != 1.0)')
+        AND NOT jsonb_path_exists(skills, '$[*] ? (@.source != "declared"
+            && @.confidence >= 1.0)')
+        AND NOT jsonb_path_exists(skills, '$[*] ? (@.source == "inferred"
+            && @.confidence > 0.6)')
+        AND NOT jsonb_path_exists(skills, '$[*] ? (@.source != "declared"
+            && @.evidence_ref == "")')
+        AND NOT jsonb_path_exists(skills, '$[*] ? (@.source == "declared"
+            && @.evidence_ref != "")')
+    )
+);
+
+CREATE INDEX IF NOT EXISTS learner_profiles_updated_at_idx
+    ON learner_profiles (updated_at);
+-- === END learner_profiles ==========================================
 """
 
 

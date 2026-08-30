@@ -11,6 +11,20 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from src.learning.profile_store import (
+    MAX_GOAL_ID_LEN,
+    MAX_GOAL_STATEMENT_LEN,
+    MAX_GOALS,
+    MAX_PROFILE_NOTE_LEN,
+    MAX_SKILL_ENTRIES,
+    MAX_SKILL_NAME_LEN,
+    MAX_TIME_BUDGET_MIN_PER_DAY,
+    AcademicLevel,
+    GoalStatus,
+    SkillLevel,
+    SkillSource,
+)
+
 # Bounded query length so a malformed client can't hand the workflow
 # a novel. 8k is comfortably above realistic research questions
 # (which are usually one or two sentences) and cheap to validate.
@@ -245,3 +259,142 @@ class HealthResponse(BaseModel):
         "<ExceptionName>`), keyed by dependency name. Only backends "
         "the deployment actually configures appear here.",
     )
+
+
+# ---------------------------------------------------------------------------
+# Learner profile schemas (Phase W, WO-W02, ADR 0058).
+#
+# The wire contract carries the same honesty rules the store does. Two
+# shapes, deliberately asymmetric:
+#
+# - The **request** shape has no `source`, `confidence`, or
+#   `evidence_ref` field anywhere. A client cannot state provenance,
+#   so a client cannot forge it: everything `PUT /learn/profile` writes
+#   is `declared` by construction, and inference / assessment reach the
+#   store through their own API with an evidence id attached.
+# - The **response** shape makes `source` a required enum on every
+#   claim, so no consumer can render a skill without knowing where it
+#   came from. There is no nullable provenance to fall back on.
+# ---------------------------------------------------------------------------
+
+
+class SkillDeclaration(BaseModel):
+    """One skill the learner says they have.
+
+    No provenance field by design — see the section comment above.
+    """
+
+    skill: str = Field(
+        min_length=1,
+        max_length=MAX_SKILL_NAME_LEN,
+        description="Controlled-vocabulary skill name, e.g. `backprop`. "
+        "Normalised to lowercase; letters, digits and + . / - only.",
+    )
+    level: SkillLevel = Field(
+        description="What the learner claims: none / aware / working / solid."
+    )
+
+
+class GoalDeclaration(BaseModel):
+    """One goal the learner set for themselves."""
+
+    goal_id: str | None = Field(
+        default=None,
+        max_length=MAX_GOAL_ID_LEN,
+        description="Existing goal to update. Omit to create a new one.",
+    )
+    statement: str = Field(
+        min_length=1,
+        max_length=MAX_GOAL_STATEMENT_LEN,
+        description="Learner-authored, e.g. `read modern RLHF papers "
+        "critically`. Treated as untrusted text everywhere it reaches a "
+        "prompt (ADR 0058).",
+    )
+    target_date: str = Field(
+        default="",
+        max_length=10,
+        description="ISO date (`YYYY-MM-DD`), or empty for open-ended.",
+    )
+    status: GoalStatus = Field(default="active")
+    priority: int = Field(default=3, ge=1, le=5)
+
+
+class ProfileUpdateRequest(BaseModel):
+    """Body for `PUT /learn/profile` — a full replacement of what the
+    learner has declared.
+
+    Claims the system inferred or assessed are *not* addressable here:
+    they survive the write untouched, because the learner edits what
+    they said about themselves and the system's own observations stand
+    or fall on their evidence.
+    """
+
+    academic_level: AcademicLevel = Field(default="")
+    time_budget_min_per_day: int = Field(
+        default=0,
+        ge=0,
+        le=MAX_TIME_BUDGET_MIN_PER_DAY,
+        description="Minutes per day the learner says they have.",
+    )
+    goals: list[GoalDeclaration] = Field(
+        default_factory=list, max_length=MAX_GOALS
+    )
+    skills: list[SkillDeclaration] = Field(
+        default_factory=list, max_length=MAX_SKILL_ENTRIES
+    )
+    profile_note: str = Field(
+        default="",
+        max_length=MAX_PROFILE_NOTE_LEN,
+        description="Free text the learner wrote about themselves. "
+        "Untrusted input — isolation-wrapped before it reaches any "
+        "prompt (ADR 0058).",
+    )
+
+
+class SkillClaim(BaseModel):
+    """One skill claim as the API returns it — provenance mandatory."""
+
+    skill: str
+    level: SkillLevel
+    source: SkillSource = Field(
+        description="Where the claim came from. `declared` = the "
+        "learner said so. `inferred` = a guess from behaviour, capped "
+        "at confidence 0.6 and never to be shown as fact. `assessed` = "
+        "backed by the assessment event named in `evidence_ref`."
+    )
+    evidence_ref: str = Field(
+        description="Session / assessment / artifact id behind the "
+        "claim. Empty only for `declared`, which cites itself."
+    )
+    confidence: float = Field(
+        description="1.0 exactly for `declared` and reserved to it; "
+        "at most 0.6 for `inferred`; strictly between for `assessed`."
+    )
+    updated_at: str = Field(description="ISO-8601 UTC timestamp.")
+
+
+class GoalClaim(BaseModel):
+    """One goal as the API returns it."""
+
+    goal_id: str
+    statement: str
+    target_date: str
+    status: GoalStatus
+    priority: int
+
+
+class LearnerProfileResponse(BaseModel):
+    """`GET`/`PUT /learn/profile` — the whole per-principal record.
+
+    Deliberately smaller than the design sketch: no `style_signals`
+    and no `preferred_days`. Every field here is a field the deletion
+    promise has to cover.
+    """
+
+    academic_level: AcademicLevel
+    time_budget_min_per_day: int
+    goals: list[GoalClaim] = Field(default_factory=list)
+    skills: list[SkillClaim] = Field(default_factory=list)
+    profile_note: str
+    created_at: float
+    updated_at: float

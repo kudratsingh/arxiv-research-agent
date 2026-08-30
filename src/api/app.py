@@ -54,6 +54,7 @@ from src.api.runner import SHUTDOWN_DRAIN_SEC, run_job
 from src.cancellation import abandoned_node_count
 from src.config import settings
 from src.graph.workflow import build_workflow as default_build_workflow
+from src.learning.profile_store import ProfileStore, build_profile_store
 from src.observability import get_logger
 from src.observability.metrics import (
     configure_metrics,
@@ -209,6 +210,7 @@ def create_app(
     build_workflow: Callable[[], Any] | None = None,
     store: JobStore | None = None,
     conversation_store: ConversationStore | None = None,
+    profile_store: ProfileStore | None = None,
     max_concurrent_jobs: int | None = None,
 ) -> FastAPI:
     """Build a FastAPI app instance.
@@ -223,6 +225,13 @@ def create_app(
             Defaults to whichever `ConversationStore`
             `settings.conversation_store` selects
             (`memory` / `postgres`).
+        profile_store: Learner-profile persistence (ADR 0058).
+            Defaults to whichever `ProfileStore`
+            `settings.learner_profile_store` selects. Constructed
+            regardless of `enable_learner_profile` — both
+            implementations are inert until a method runs, and the
+            route layer owns the flag check, so the flag stays a
+            single decision in one place.
         max_concurrent_jobs: Semaphore ceiling. Defaults to
             `settings.api_max_concurrent_jobs`.
     """
@@ -251,6 +260,9 @@ def create_app(
         conversation_store
         if conversation_store is not None
         else build_conversation_store()
+    )
+    prof_store: ProfileStore = (
+        profile_store if profile_store is not None else build_profile_store()
     )
     max_concurrent = max_concurrent_jobs or settings.api_max_concurrent_jobs
 
@@ -304,6 +316,7 @@ def create_app(
         app.state.workflow = compiled_workflow
         app.state.store = job_store
         app.state.conversation_store = conv_store
+        app.state.profile_store = prof_store
         app.state.semaphore = asyncio.Semaphore(max_concurrent)
         app.state.max_concurrent_jobs = max_concurrent
         app.state.tasks = set()
@@ -456,6 +469,8 @@ def create_app(
                 "max_concurrent_jobs": max_concurrent,
                 "store": type(job_store).__name__,
                 "conversation_store": type(conv_store).__name__,
+                "learner_profile_enabled": settings.enable_learner_profile,
+                "learner_profile_store": type(prof_store).__name__,
                 "auth_enabled": settings.enable_api_auth,
                 "api_keys_configured": len(app.state.api_keys),
                 "keystore_source": (

@@ -115,3 +115,23 @@ export interface ResearchSubmitOptions {
    */
   hitl_bypass?: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Learner profile (ADR 0058).
+//
+// `SkillClaim.source` is a real enum in the document — `src/api/schemas.py`
+// types it `Literal[...]`, not a bare `str` — so unlike `JobStatus` it needs
+// no hand narrowing, and a consumer cannot render a skill without knowing
+// where the claim came from. That is the point of the field.
+// ---------------------------------------------------------------------------
+
+export type SkillClaim = Serialized<Schemas["SkillClaim"]>;
+
+export type GoalClaim = Serialized<Schemas["GoalClaim"]>;
+
+export type LearnerProfile = Serialized<Schemas["LearnerProfileResponse"]>;
+
+export type ProfileUpdateRequest = Schemas["ProfileUpdateRequest"];
+
+/** `declared` | `inferred` | `assessed` — never nullable, never absent. */
+export type SkillSource = SkillClaim["source"];

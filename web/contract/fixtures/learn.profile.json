@@ -1,0 +1,68 @@
+{
+  "x-recording": {
+    "note": "Recorded response body and headers. DO NOT EDIT BY HAND — re-record with `bash web/contract/record.sh`. JSON has no comment syntax, so this key carries the header.",
+    "case": "learn.profile",
+    "commit": "08ee3fc8dd4962df6728386d64b46298310c721b",
+    "request": "GET /learn/profile for a learner with declared, assessed and inferred claims",
+    "transport": "FastAPI directly, ENABLE_API_AUTH=true, ENABLE_LEARNER_PROFILE=true",
+    "stack": "docker compose (app + web + redis + postgres) with ANTHROPIC_API_KEY=local-preview-disabled, seeded by docs/revamp/baseline/fixtures/seed-local-baseline.sh",
+    "headers": "filtered to the proxy response allowlist in web/app/api/[...path]/route.ts; volatile transport headers are dropped so the fixture is byte-stable",
+    "authored": false,
+    "volatile": "body.created_at, body.updated_at, and updated_at on the two declared claims are wall-clock write times and differ between recordings; the assessed and inferred claims carry a pinned timestamp because the store API writes the value it is handed"
+  },
+  "status": 200,
+  "statusText": "OK",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "academic_level": "grad",
+    "time_budget_min_per_day": 20,
+    "goals": [
+      {
+        "goal_id": "g-rlhf",
+        "statement": "read modern RLHF papers critically",
+        "target_date": "2026-12-01",
+        "status": "active",
+        "priority": 1
+      }
+    ],
+    "skills": [
+      {
+        "skill": "attention",
+        "level": "working",
+        "source": "inferred",
+        "evidence_ref": "session:baseline-guided-read",
+        "confidence": 0.5,
+        "updated_at": "2026-08-30T00:00:00+00:00"
+      },
+      {
+        "skill": "backprop",
+        "level": "aware",
+        "source": "assessed",
+        "evidence_ref": "assessment:baseline-explain-back",
+        "confidence": 0.7,
+        "updated_at": "2026-08-30T00:00:00+00:00"
+      },
+      {
+        "skill": "backprop",
+        "level": "solid",
+        "source": "declared",
+        "evidence_ref": "",
+        "confidence": 1.0,
+        "updated_at": "2026-08-30T08:12:45+00:00"
+      },
+      {
+        "skill": "transformers",
+        "level": "working",
+        "source": "declared",
+        "evidence_ref": "",
+        "confidence": 1.0,
+        "updated_at": "2026-08-30T08:12:45+00:00"
+      }
+    ],
+    "profile_note": "Self-taught; I learn best from worked examples.",
+    "created_at": 1788077565.699056,
+    "updated_at": 1788077567.541304
+  }
+}

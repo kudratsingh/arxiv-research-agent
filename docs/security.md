@@ -87,6 +87,41 @@ Wired at `src/agents/planner.py::_build_user_prompt` and
 as the reader; distinct tags so the guardrail can name the fields
 precisely.
 
+### Learner profile isolation + provenance (ADR 0058)
+
+The `learner_profiles` table is the first data this repo holds about a
+**person** rather than a paper, and it carries free text the learner
+authored (`profile_note`, goal statements) that reaches a prompt every
+session. Same defense pattern as the two above, third tag pair:
+
+1. `wrap_untrusted_learner_text()` wraps that text in
+   `<untrusted_learner_text>...</untrusted_learner_text>`, escaping any
+   close tag inside it.
+2. `LEARNER_TEXT_ISOLATION_INSTRUCTION` names the tag pair and the
+   thing it is protecting — the response schema, a claim's provenance,
+   and the line between an unconfirmed impression and a stated fact.
+3. Both behind `settings.enable_prompt_isolation`, like the reader and
+   the planner.
+
+Two properties do **not** depend on that flag, deliberately:
+
+- **No control token is learner-writable.** Skill names, levels,
+  sources, and evidence refs are validated to a slug shape at the
+  store boundary (`src/learning/profile_store.py`), so a colon, a
+  newline, or a tag never enters one. ADR 0020's supervisor lesson
+  applied where the value is written rather than where it is rendered.
+- **No prompt presents an inferred skill as fact.**
+  `render_profile_for_prompt` marks every claim with its provenance,
+  confines inferred claims to an "unconfirmed impressions" block, and
+  re-reads its own output — a misplaced marker raises rather than
+  reaching a model. Provenance itself is non-nullable in the type and
+  in the table's `CHECK` constraints, so an unlabelled claim cannot be
+  stored by any path, `psql` included.
+
+Deletion is a first-class operation (`DELETE /learn/profile`) covering
+the whole row. Its stated exception: the shared paper and embedding
+caches hold public arXiv text, are not per-user, and are untouched.
+
 ### Transport hardening (ADR 0033)
 
 - `ARXIV_API_URL` is `https://export.arxiv.org/api/query`. An
@@ -522,6 +557,19 @@ redriver.
   — asserts that adversarial-looking prior_context is wrapped, not
   obeyed, when `enable_prompt_isolation` is on, and that the flag
   gates whether the system instruction is added.
+- `tests/test_learner_profile_serializer.py` — jailbreak text planted
+  in `profile_note` and in a goal statement (including one that tries
+  to close the wrapper early) arrives isolation-wrapped, the guardrail
+  instruction names the boundary, a learner cannot forge a provenance
+  marker, and no inferred claim renders outside the "unconfirmed
+  impressions" block in **either** flag position.
+- `tests/test_learner_profile_store.py` — provenance is refused
+  without a source, above the inference cap, at a reserved confidence,
+  or without an evidence ref — in Python **and** by the table's CHECK
+  constraints against a direct `psql` INSERT.
+- `tests/test_learn_profile_routes.py` — a request body that names a
+  `source` is still stored as `declared`; principal B never sees or
+  destroys principal A's profile; the flag is a real off switch.
 - `tests/test_arxiv_search.py::test_search_arxiv_rejects_entity_expansion`
   — proves `defusedxml` refuses a billion-laughs payload.
 - `tests/test_pdf_parser.py::TestDownloadPdf` — proves declared-

@@ -190,6 +190,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/learn/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The calling principal's learner profile.
+         * @description Read the profile belonging to the presented API key.
+         *
+         *     A learner who has never written one has none: the response is 404,
+         *     which the client renders as the empty state. Inventing a blank row
+         *     on read would make "the learner has told us nothing" and "the
+         *     learner told us they are a beginner" indistinguishable.
+         *
+         *     Every returned skill claim carries its `source`; there is no
+         *     nullable provenance in the response schema. See ADR 0058.
+         */
+        get: operations["get_learner_profile_learn_profile_get"];
+        /**
+         * Replace what the learner has declared about themselves.
+         * @description Write the learner's own declarations.
+         *
+         *     Everything this endpoint writes is `declared` by construction: the
+         *     request schema has no provenance field, and the store's
+         *     `replace_declared_skills` refuses a non-declared claim from this
+         *     path. Inferred and assessed claims already on the profile survive
+         *     the write untouched — the learner edits what they said, and the
+         *     system's observations stand on their evidence (01 §1.2).
+         *
+         *     Durable per-principal writes draw on the same per-key hourly
+         *     budget as `POST /research`, so a leaked key cannot accrete rows on
+         *     the shared Postgres with the limiter never firing (ADR 0043).
+         */
+        put: operations["put_learner_profile_learn_profile_put"];
+        post?: never;
+        /**
+         * Delete the calling principal's learner profile.
+         * @description Erase the profile — the first-class deletion 01 §1.4 promises.
+         *
+         *     Removes the whole `learner_profiles` row: declarations, goals,
+         *     inferred and assessed claims, and the free-text note. 204 whether
+         *     or not a row existed, so the response never confirms whether a
+         *     given principal had a profile.
+         *
+         *     **What the promise does not cover**: the shared paper and
+         *     embedding caches (`paper_cache`, `embedding_cache`) hold public
+         *     arXiv text, are not per-user, and are untouched by this call — the
+         *     caveat MT-01 §7.3 states and 01 §1.4 carries over. Progress events
+         *     (WO-W07) join this promise when that table exists; the account-
+         *     level deletion is this operation.
+         */
+        delete: operations["delete_learner_profile_learn_profile_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -289,6 +348,58 @@ export interface components {
             /** Updated At */
             updated_at: number;
         };
+        /**
+         * GoalClaim
+         * @description One goal as the API returns it.
+         */
+        GoalClaim: {
+            /** Goal Id */
+            goal_id: string;
+            /** Statement */
+            statement: string;
+            /** Target Date */
+            target_date: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "paused" | "reached" | "abandoned";
+            /** Priority */
+            priority: number;
+        };
+        /**
+         * GoalDeclaration
+         * @description One goal the learner set for themselves.
+         */
+        GoalDeclaration: {
+            /**
+             * Goal Id
+             * @description Existing goal to update. Omit to create a new one.
+             */
+            goal_id?: string | null;
+            /**
+             * Statement
+             * @description Learner-authored, e.g. `read modern RLHF papers critically`. Treated as untrusted text everywhere it reaches a prompt (ADR 0058).
+             */
+            statement: string;
+            /**
+             * Target Date
+             * @description ISO date (`YYYY-MM-DD`), or empty for open-ended.
+             * @default
+             */
+            target_date: string;
+            /**
+             * Status
+             * @default active
+             * @enum {string}
+             */
+            status: "active" | "paused" | "reached" | "abandoned";
+            /**
+             * Priority
+             * @default 3
+             */
+            priority: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -373,6 +484,33 @@ export interface components {
             conversation_id?: string | null;
         };
         /**
+         * LearnerProfileResponse
+         * @description `GET`/`PUT /learn/profile` — the whole per-principal record.
+         *
+         *     Deliberately smaller than the design sketch: no `style_signals`
+         *     and no `preferred_days`. Every field here is a field the deletion
+         *     promise has to cover.
+         */
+        LearnerProfileResponse: {
+            /**
+             * Academic Level
+             * @enum {string}
+             */
+            academic_level: "" | "self-taught" | "undergrad" | "grad" | "postdoc" | "industry";
+            /** Time Budget Min Per Day */
+            time_budget_min_per_day: number;
+            /** Goals */
+            goals?: components["schemas"]["GoalClaim"][];
+            /** Skills */
+            skills?: components["schemas"]["SkillClaim"][];
+            /** Profile Note */
+            profile_note: string;
+            /** Created At */
+            created_at: number;
+            /** Updated At */
+            updated_at: number;
+        };
+        /**
          * Plan
          * @description The planner's output, exposed for HITL review (ADR 0030).
          *
@@ -392,6 +530,40 @@ export interface components {
              * @description Planner-generated arXiv search queries. The planner emits 2-6; the cap of 20 items x 500 chars is generous headroom (ADR 0042).
              */
             search_queries?: string[];
+        };
+        /**
+         * ProfileUpdateRequest
+         * @description Body for `PUT /learn/profile` — a full replacement of what the
+         *     learner has declared.
+         *
+         *     Claims the system inferred or assessed are *not* addressable here:
+         *     they survive the write untouched, because the learner edits what
+         *     they said about themselves and the system's own observations stand
+         *     or fall on their evidence.
+         */
+        ProfileUpdateRequest: {
+            /**
+             * Academic Level
+             * @default
+             * @enum {string}
+             */
+            academic_level: "" | "self-taught" | "undergrad" | "grad" | "postdoc" | "industry";
+            /**
+             * Time Budget Min Per Day
+             * @description Minutes per day the learner says they have.
+             * @default 0
+             */
+            time_budget_min_per_day: number;
+            /** Goals */
+            goals?: components["schemas"]["GoalDeclaration"][];
+            /** Skills */
+            skills?: components["schemas"]["SkillDeclaration"][];
+            /**
+             * Profile Note
+             * @description Free text the learner wrote about themselves. Untrusted input — isolation-wrapped before it reaches any prompt (ADR 0058).
+             * @default
+             */
+            profile_note: string;
         };
         /**
          * ResearchAccepted
@@ -463,6 +635,59 @@ export interface components {
             status: string;
             /** Action */
             action: string;
+        };
+        /**
+         * SkillClaim
+         * @description One skill claim as the API returns it — provenance mandatory.
+         */
+        SkillClaim: {
+            /** Skill */
+            skill: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "none" | "aware" | "working" | "solid";
+            /**
+             * Source
+             * @description Where the claim came from. `declared` = the learner said so. `inferred` = a guess from behaviour, capped at confidence 0.6 and never to be shown as fact. `assessed` = backed by the assessment event named in `evidence_ref`.
+             * @enum {string}
+             */
+            source: "declared" | "inferred" | "assessed";
+            /**
+             * Evidence Ref
+             * @description Session / assessment / artifact id behind the claim. Empty only for `declared`, which cites itself.
+             */
+            evidence_ref: string;
+            /**
+             * Confidence
+             * @description 1.0 exactly for `declared` and reserved to it; at most 0.6 for `inferred`; strictly between for `assessed`.
+             */
+            confidence: number;
+            /**
+             * Updated At
+             * @description ISO-8601 UTC timestamp.
+             */
+            updated_at: string;
+        };
+        /**
+         * SkillDeclaration
+         * @description One skill the learner says they have.
+         *
+         *     No provenance field by design — see the section comment above.
+         */
+        SkillDeclaration: {
+            /**
+             * Skill
+             * @description Controlled-vocabulary skill name, e.g. `backprop`. Normalised to lowercase; letters, digits and + . / - only.
+             */
+            skill: string;
+            /**
+             * Level
+             * @description What the learner claims: none / aware / working / solid.
+             * @enum {string}
+             */
+            level: "none" | "aware" | "working" | "solid";
         };
         /** ValidationError */
         ValidationError: {
@@ -777,6 +1002,77 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    get_learner_profile_learn_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearnerProfileResponse"];
+                };
+            };
+        };
+    };
+    put_learner_profile_learn_profile_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearnerProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_learner_profile_learn_profile_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -798,6 +798,63 @@ class Settings(BaseSettings):
         description="Per-request timeout for S2 API calls.",
     )
 
+    # ------ Learner profile (Phase W, WO-W02, ADR 0058) ----------------
+    # Comment-fenced so the Phase W merge queue can order every card's
+    # config edit without a textual collision
+    # (planning/07-learning-platform/05-WEDGE-WORK-ORDERS.md §5.4).
+    enable_learner_profile: bool = Field(
+        default=False,
+        description=(
+            "Mount the per-learner profile store and the "
+            "`GET/PUT/DELETE /learn/profile` endpoints. Off by default; "
+            "the routes answer 404 `learner_profile_disabled` while it "
+            "is off, so every existing surface is unchanged. Requires "
+            "`enable_api_auth` — the profile is keyed by the "
+            "authenticated principal and has no meaning for an "
+            "anonymous caller, so loading the two out of step is a "
+            "startup error rather than a runtime surprise. Until MT-01 "
+            "lands this is honest only for single-human / pilot "
+            "deployments, where keys are issued fresh per person and "
+            "never reassigned. See ADR 0058."
+        ),
+    )
+    learner_profile_store: Literal["memory", "postgres"] = Field(
+        default="memory",
+        description=(
+            "ProfileStore implementation, mirroring `conversation_store`. "
+            "`memory` = in-process, single-worker, dies with the "
+            "process. `postgres` = durable + shared across workers on "
+            "the ADR 0028 pool. Any deployment that actually carries "
+            "learners wants `postgres`: a profile that evaporates on "
+            "restart makes the deletion promise meaningless in the "
+            "other direction too. See ADR 0058."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _check_learner_profile_requires_auth(self) -> Settings:
+        """Refuse a learner profile with no principal to key it on.
+
+        01 §1.3 makes `enable_api_auth` a hard dependency of
+        `enable_learner_profile`: without it every caller is the
+        anonymous principal, and a per-learner record shared by
+        everyone is not a per-learner record. Both flags have valid
+        individual values that combine into a broken pair, so the
+        check belongs here rather than on either field. Failing at
+        settings load means the operator sees it before traffic,
+        instead of discovering it as a 404 per request.
+
+        Raises:
+            ValueError: When the profile is enabled without auth.
+        """
+        if self.enable_learner_profile and not self.enable_api_auth:
+            raise ValueError(
+                "enable_learner_profile requires enable_api_auth=true: the "
+                "profile is keyed by the authenticated principal and "
+                "refuses the anonymous one. See ADR 0058 and "
+                "planning/07-learning-platform/01-LEARNING-AGENT.md §1.3."
+            )
+        return self
 
     @model_validator(mode="after")
     def _check_lease_invariant(self) -> Settings:

@@ -35,13 +35,17 @@ from src.api.schemas import (
     ConversationDetail,
     ConversationJobSummary,
     ConversationListItem,
+    GoalClaim,
     HealthResponse,
     JobDetail,
+    LearnerProfileResponse,
     Plan,
+    ProfileUpdateRequest,
     ResearchAccepted,
     ResearchRequest,
     ReviewRequest,
     ReviewResponse,
+    SkillClaim,
 )
 from src.api.streaming import (
     format_sse,
@@ -49,6 +53,14 @@ from src.api.streaming import (
 )
 from src.cancellation import abandoned_node_count
 from src.config import settings
+from src.learning.profile_store import (
+    DECLARED_CONFIDENCE,
+    LearnerGoal,
+    LearnerProfile,
+    SkillEntry,
+    new_goal_id,
+    utc_now_iso,
+)
 from src.observability import get_logger
 
 log = get_logger(__name__)
@@ -653,6 +665,232 @@ async def delete_conversation(
     log.info(
         "api_conversation_deleted",
         extra={"conversation_id": conversation_id},
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# ---------------------------------------------------------------------------
+# Learner profile (Phase W, WO-W02, ADR 0058).
+#
+# There is no id in any of these paths. The profile is addressed by the
+# caller's own authenticated principal and nothing else, so a client
+# cannot name another principal's record — ADR 0036's scoping holds by
+# the shape of the route rather than by a `_check_ownership` call that
+# a future handler could forget to make. The tests assert it anyway.
+# ---------------------------------------------------------------------------
+
+
+def _profile_store(request: Request) -> Any:
+    """Return the mounted profile store, or 404 when it is off.
+
+    `enable_learner_profile=false` is not an error condition — the
+    capability simply is not mounted, so the resource does not exist.
+    404 rather than 503 because 503 promises "try again later", which
+    would be a lie about a flag. The routes themselves always exist
+    (SR-07: gating is backend-only), so the contract snapshot is
+    stable in both flag positions.
+    """
+    if not settings.enable_learner_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="learner_profile_disabled",
+        )
+    # Read straight off `app.state` rather than through `_get_state`:
+    # that helper resolves every key eagerly, so adding a required
+    # attribute to it would break the hand-built partial states several
+    # stream tests pass. Its own docstring says so.
+    store = getattr(request.app.state, "profile_store", None)
+    if store is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="learner_profile_disabled",
+        )
+    return store
+
+
+def _learner_key_id(caller: ApiKeyPrincipal | None) -> str:
+    """The caller's principal key id, or refuse the request.
+
+    Belt and braces behind the config validator: `settings` already
+    refuses `enable_learner_profile` without `enable_api_auth`, so
+    `caller` should never be `None` here. If some future wiring makes
+    it possible, the profile still refuses the anonymous principal
+    (01 §1.3) instead of writing a record everyone shares.
+    """
+    if caller is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="learner_profile_requires_auth",
+        )
+    return caller.key_id
+
+
+def _profile_to_response(profile: LearnerProfile) -> LearnerProfileResponse:
+    return LearnerProfileResponse(
+        academic_level=profile.academic_level,
+        time_budget_min_per_day=profile.time_budget_min_per_day,
+        goals=[
+            GoalClaim(
+                goal_id=goal.goal_id,
+                statement=goal.statement,
+                target_date=goal.target_date,
+                status=goal.status,
+                priority=goal.priority,
+            )
+            for goal in profile.goals
+        ],
+        skills=[
+            SkillClaim(
+                skill=entry.skill,
+                level=entry.level,
+                source=entry.source,
+                evidence_ref=entry.evidence_ref,
+                confidence=entry.confidence,
+                updated_at=entry.updated_at,
+            )
+            for entry in profile.skills
+        ],
+        profile_note=profile.profile_note,
+        created_at=profile.created_at,
+        updated_at=profile.updated_at,
+    )
+
+
+@router.get(
+    "/learn/profile",
+    response_model=LearnerProfileResponse,
+    summary="The calling principal's learner profile.",
+)
+async def get_learner_profile(
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
+) -> LearnerProfileResponse:
+    """Read the profile belonging to the presented API key.
+
+    A learner who has never written one has none: the response is 404,
+    which the client renders as the empty state. Inventing a blank row
+    on read would make "the learner has told us nothing" and "the
+    learner told us they are a beginner" indistinguishable.
+
+    Every returned skill claim carries its `source`; there is no
+    nullable provenance in the response schema. See ADR 0058.
+    """
+    store = _profile_store(request)
+    profile = await store.get(_learner_key_id(principal))
+    if profile is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="learner_profile_not_found",
+        )
+    return _profile_to_response(profile)
+
+
+@router.put(
+    "/learn/profile",
+    response_model=LearnerProfileResponse,
+    summary="Replace what the learner has declared about themselves.",
+)
+async def put_learner_profile(
+    body: ProfileUpdateRequest,
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
+) -> LearnerProfileResponse:
+    """Write the learner's own declarations.
+
+    Everything this endpoint writes is `declared` by construction: the
+    request schema has no provenance field, and the store's
+    `replace_declared_skills` refuses a non-declared claim from this
+    path. Inferred and assessed claims already on the profile survive
+    the write untouched — the learner edits what they said, and the
+    system's observations stand on their evidence (01 §1.2).
+
+    Durable per-principal writes draw on the same per-key hourly
+    budget as `POST /research`, so a leaked key cannot accrete rows on
+    the shared Postgres with the limiter never firing (ADR 0043).
+    """
+    store = _profile_store(request)
+    key_id = _learner_key_id(principal)
+    await enforce_rate_limit(request, principal)
+
+    now = utc_now_iso()
+    try:
+        profile = LearnerProfile(
+            principal_key_id=key_id,
+            academic_level=body.academic_level,
+            time_budget_min_per_day=body.time_budget_min_per_day,
+            goals=tuple(
+                LearnerGoal(
+                    goal_id=goal.goal_id or new_goal_id(),
+                    statement=goal.statement,
+                    target_date=goal.target_date,
+                    status=goal.status,
+                    priority=goal.priority,
+                )
+                for goal in body.goals
+            ),
+            skills=tuple(
+                SkillEntry(
+                    skill=skill.skill,
+                    level=skill.level,
+                    # Fixed, not read from the body. The wire format
+                    # cannot express any other value.
+                    source="declared",
+                    evidence_ref="",
+                    confidence=DECLARED_CONFIDENCE,
+                    updated_at=now,
+                )
+                for skill in body.skills
+            ),
+            profile_note=body.profile_note,
+        )
+    except ValueError as exc:
+        # Pydantic caught shape; this catches the domain rules the
+        # schema cannot express (duplicate skills after normalisation,
+        # a skill name that is not vocabulary-shaped, a bad ISO date).
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+
+    stored = await store.put(profile)
+    log.info(
+        "api_learner_profile_written",
+        extra={
+            "declared_skills": len(profile.skills),
+            "goals": len(profile.goals),
+        },
+    )
+    return _profile_to_response(stored)
+
+
+@router.delete(
+    "/learn/profile",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete the calling principal's learner profile.",
+)
+async def delete_learner_profile(
+    request: Request,
+    principal: ApiKeyPrincipal | None = Depends(require_principal),
+) -> Response:
+    """Erase the profile — the first-class deletion 01 §1.4 promises.
+
+    Removes the whole `learner_profiles` row: declarations, goals,
+    inferred and assessed claims, and the free-text note. 204 whether
+    or not a row existed, so the response never confirms whether a
+    given principal had a profile.
+
+    **What the promise does not cover**: the shared paper and
+    embedding caches (`paper_cache`, `embedding_cache`) hold public
+    arXiv text, are not per-user, and are untouched by this call — the
+    caveat MT-01 §7.3 states and 01 §1.4 carries over. Progress events
+    (WO-W07) join this promise when that table exists; the account-
+    level deletion is this operation.
+    """
+    store = _profile_store(request)
+    key_id = _learner_key_id(principal)
+    deleted = await store.delete(key_id)
+    log.info(
+        "api_learner_profile_deleted", extra={"existed": deleted}
     )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
