@@ -72,6 +72,36 @@ export type ConversationDetail = Serialized<Schemas["ConversationDetail"]>;
 
 export type HealthResponse = Serialized<Schemas["HealthResponse"]>;
 
+// ---------------------------------------------------------------------------
+// The learner progress ledger (WO-W07), served by `GET /learn/progress`
+// behind the default-off `enable_learner_profile` flag.
+//
+// Aliases only — there is no client function yet. The path surfaces
+// land with the learning-surface work orders; these types and the
+// `learn.progress` fixture exist now so those cards build against a
+// shape the backend has already frozen.
+//
+// Note what is absent and must stay absent: there is no mastery,
+// proficiency, or percentage member anywhere below.
+// `01-LEARNING-AGENT.md` §4.1 bans knowledge scalars, and the backend
+// enforces the ban structurally (see
+// `src/learning/progress_store.py`). `schedule_progress` is
+// arithmetic about sessions and is named so the UI cannot mistake it
+// for knowledge.
+// ---------------------------------------------------------------------------
+
+export type ProgressDailySessions = Serialized<
+  Schemas["ProgressDailySessions"]
+>;
+
+export type ProgressSchedule = Serialized<Schemas["ProgressSchedule"]>;
+
+export type ProgressEvidence = Serialized<Schemas["ProgressEvidence"]>;
+
+export type LearnerProgressSummary = Serialized<
+  Schemas["LearnerProgressSummary"]
+>;
+
 /** FastAPI's per-field 422 entry (`{loc, msg, type}`). */
 export type ValidationErrorItem = Schemas["ValidationError"];
 

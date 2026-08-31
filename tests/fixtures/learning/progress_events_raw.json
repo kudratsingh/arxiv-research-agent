@@ -1,0 +1,115 @@
+{
+  "x-fixture": {
+    "note": "A raw progress-event log — the ledger as it is stored, not a view of it. Hand-authored (no LLM call, no live stack) because Phase W has no producer wired yet; WO-W03 records real session events against this same shape. The recomputability test in tests/test_progress_events.py folds this into a summary and asserts the result byte-for-byte, so this file is the evidence behind every number that test checks.",
+    "owner": "WO-W07",
+    "principals": "pilot-01 (the subject) and pilot-02 (present only to prove the view never crosses principals)",
+    "covers": "two paths for pilot-01, one of them re-scoped shorter mid-path; a session with no path_id; a path assessed but never sat; an artifact; and one foreign-principal event"
+  },
+  "events": [
+    {
+      "event_id": "evt-0001",
+      "principal_key_id": "pilot-01",
+      "ts": "2026-08-24T09:15:00.000000Z",
+      "kind": "session_completed",
+      "payload": {
+        "path_id": "attention-is-all-you-need",
+        "sessions_planned": 4,
+        "minutes": 18
+      },
+      "evidence_ref": "session:s-1001"
+    },
+    {
+      "event_id": "evt-0002",
+      "principal_key_id": "pilot-01",
+      "ts": "2026-08-24T09:40:00.000000Z",
+      "kind": "assessment",
+      "payload": {
+        "path_id": "attention-is-all-you-need",
+        "probe": "explain-back",
+        "gaps": ["conflates the attention mask with padding"]
+      },
+      "evidence_ref": "transcript:s-1001#explain-back"
+    },
+    {
+      "event_id": "evt-0003",
+      "principal_key_id": "pilot-01",
+      "ts": "2026-08-24T20:00:00.000000Z",
+      "kind": "session_completed",
+      "payload": {
+        "minutes": 9
+      },
+      "evidence_ref": "session:s-1006"
+    },
+    {
+      "event_id": "evt-0004",
+      "principal_key_id": "pilot-01",
+      "ts": "2026-08-25T08:05:00.000000Z",
+      "kind": "session_completed",
+      "payload": {
+        "path_id": "attention-is-all-you-need",
+        "sessions_planned": 4,
+        "minutes": 21
+      },
+      "evidence_ref": "session:s-1002"
+    },
+    {
+      "event_id": "evt-0005",
+      "principal_key_id": "pilot-01",
+      "ts": "2026-08-25T08:50:00.000000Z",
+      "kind": "artifact_produced",
+      "payload": {
+        "path_id": "attention-is-all-you-need",
+        "title": "Briefing: positional encodings"
+      },
+      "evidence_ref": "job:9f2c1ab4d7e60351"
+    },
+    {
+      "event_id": "evt-0006",
+      "principal_key_id": "pilot-01",
+      "ts": "2026-08-25T19:30:00.000000Z",
+      "kind": "session_completed",
+      "payload": {
+        "path_id": "rlhf-foundations",
+        "minutes": 15
+      },
+      "evidence_ref": "session:s-1003"
+    },
+    {
+      "event_id": "evt-0007",
+      "principal_key_id": "pilot-01",
+      "ts": "2026-08-26T07:45:00.000000Z",
+      "kind": "session_completed",
+      "payload": {
+        "path_id": "attention-is-all-you-need",
+        "sessions_planned": 3,
+        "minutes": 24,
+        "note": "path re-scoped shorter after the check-in"
+      },
+      "evidence_ref": "session:s-1004"
+    },
+    {
+      "event_id": "evt-0008",
+      "principal_key_id": "pilot-01",
+      "ts": "2026-08-26T08:10:00.000000Z",
+      "kind": "assessment",
+      "payload": {
+        "path_id": "eval-harness-basics",
+        "probe": "explain-back",
+        "gaps": []
+      },
+      "evidence_ref": "transcript:s-1005#probe"
+    },
+    {
+      "event_id": "evt-0009",
+      "principal_key_id": "pilot-02",
+      "ts": "2026-08-25T10:00:00.000000Z",
+      "kind": "session_completed",
+      "payload": {
+        "path_id": "attention-is-all-you-need",
+        "sessions_planned": 4,
+        "minutes": 12
+      },
+      "evidence_ref": "session:s-2001"
+    }
+  ]
+}

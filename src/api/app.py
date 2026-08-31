@@ -55,6 +55,10 @@ from src.cancellation import abandoned_node_count
 from src.config import settings
 from src.graph.workflow import build_workflow as default_build_workflow
 from src.learning.profile_store import ProfileStore, build_profile_store
+from src.learning.progress_store import (
+    ProgressEventStore,
+    build_progress_event_store,
+)
 from src.observability import get_logger
 from src.observability.metrics import (
     configure_metrics,
@@ -211,6 +215,7 @@ def create_app(
     store: JobStore | None = None,
     conversation_store: ConversationStore | None = None,
     profile_store: ProfileStore | None = None,
+    progress_event_store: ProgressEventStore | None = None,
     max_concurrent_jobs: int | None = None,
 ) -> FastAPI:
     """Build a FastAPI app instance.
@@ -232,6 +237,10 @@ def create_app(
             implementations are inert until a method runs, and the
             route layer owns the flag check, so the flag stays a
             single decision in one place.
+        progress_event_store: Append-only learner progress ledger
+            (WO-W07). Defaults to whichever `ProgressEventStore`
+            `settings.progress_event_store` selects, and constructed
+            unconditionally for the same reason as the profile store.
         max_concurrent_jobs: Semaphore ceiling. Defaults to
             `settings.api_max_concurrent_jobs`.
     """
@@ -263,6 +272,15 @@ def create_app(
     )
     prof_store: ProfileStore = (
         profile_store if profile_store is not None else build_profile_store()
+    )
+    # WO-W07: built unconditionally, for the reason above. The default
+    # `memory` variant touches nothing, so `enable_learner_profile` stays
+    # the single gate and a flag-off deployment builds an empty ledger it
+    # never reads.
+    progress_store: ProgressEventStore = (
+        progress_event_store
+        if progress_event_store is not None
+        else build_progress_event_store()
     )
     max_concurrent = max_concurrent_jobs or settings.api_max_concurrent_jobs
 
@@ -317,6 +335,7 @@ def create_app(
         app.state.store = job_store
         app.state.conversation_store = conv_store
         app.state.profile_store = prof_store
+        app.state.progress_event_store = progress_store
         app.state.semaphore = asyncio.Semaphore(max_concurrent)
         app.state.max_concurrent_jobs = max_concurrent
         app.state.tasks = set()
@@ -471,6 +490,7 @@ def create_app(
                 "conversation_store": type(conv_store).__name__,
                 "learner_profile_enabled": settings.enable_learner_profile,
                 "learner_profile_store": type(prof_store).__name__,
+                "progress_event_store": type(progress_store).__name__,
                 "auth_enabled": settings.enable_api_auth,
                 "api_keys_configured": len(app.state.api_keys),
                 "keystore_source": (

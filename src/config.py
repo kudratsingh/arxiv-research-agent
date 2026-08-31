@@ -815,7 +815,10 @@ class Settings(BaseSettings):
             "startup error rather than a runtime surprise. Until MT-01 "
             "lands this is honest only for single-human / pilot "
             "deployments, where keys are issued fresh per person and "
-            "never reassigned. See ADR 0058."
+            "never reassigned. See ADR 0058. WO-W07 shares this gate: "
+            "`GET /learn/progress` answers the same 404 while it is off, "
+            "so the flag mounts the whole learner surface rather than "
+            "the profile alone."
         ),
     )
     learner_profile_store: Literal["memory", "postgres"] = Field(
@@ -855,6 +858,25 @@ class Settings(BaseSettings):
                 "planning/07-learning-platform/01-LEARNING-AGENT.md §1.3."
             )
         return self
+
+    # ------ Progress ledger (Phase W, WO-W07) --------------------------
+    # Own fenced section, appended after WO-W02's per 05 §5.4. The flag
+    # this endpoint is gated on is `enable_learner_profile` above —
+    # declared once, by WO-W02, and carrying the validator that refuses
+    # it without `enable_api_auth`. `progress_event_store` is WO-W07's
+    # alone.
+    progress_event_store: Literal["memory", "postgres"] = Field(
+        default="memory",
+        description=(
+            "ProgressEventStore implementation for the append-only "
+            "learner ledger (01 §4.4). `memory` = in-process, dies with "
+            "the process — fine for tests and single-worker local dev. "
+            "`postgres` = the `progress_events` table, durable and "
+            "shared across workers, where the append-only trigger and "
+            "the no-mastery-scalar CHECK actually bite. Mirrors "
+            "`conversation_store`'s shape (ADR 0032)."
+        ),
+    )
 
     @model_validator(mode="after")
     def _check_lease_invariant(self) -> Settings:

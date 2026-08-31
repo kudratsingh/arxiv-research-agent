@@ -284,3 +284,152 @@ Q7**, not settled policy.
   the need.
 - Retention (proposal 2) needs 01's Q7 answered before anything
   implements it.
+
+---
+
+## WO-W07 — the progress-events ledger (shared record)
+
+Folded into this ADR rather than given a number of its own, per
+WO-W07's card ("ADR shared with WO-W02's or its own") and the
+coordinator's ruling. The two cards describe one store family — the
+same package, the same principal key, the same flag, the same deletion
+promise — and splitting the record would have made the deletion
+promise in particular readable in only half the places it applies.
+**Implements**: WO-W07 in
+[`05-WEDGE-WORK-ORDERS.md`](../../planning/07-learning-platform/05-WEDGE-WORK-ORDERS.md#wo-w07--the-progress-events-store-and-honest-views).
+
+### Context
+
+[`01` §4.4](../../planning/07-learning-platform/01-LEARNING-AGENT.md#44-the-progress-record)
+makes progress an **event log**: everything a surface says about a
+learner is a *view* over that log — derived, recomputable, traceable
+to evidence. That is the web tier's state-machine honesty rule ("the
+machine never invents a stage") pointed at learning, and it only holds
+if the log cannot be edited to match a claim someone wants to make.
+
+[§4.1](../../planning/07-learning-platform/01-LEARNING-AGENT.md#41-principles)
+allows three currencies of progress — assessment events, repetition
+history, artifacts — and bans one: mastery percentages. "You are 87%
+through Transformers" is a claim about a latent variable no LLM judge
+can measure.
+
+### Decision
+
+**1. Append-only, with erasure as a named door.** `progress_events`
+has no update path and no per-event delete path: not on the Protocol
+(`PUBLIC_STORE_METHODS` pins the surface to `append`, `list_events`,
+`erase_principal`), not in the module's SQL, not on the HTTP surface.
+In Postgres a trigger refuses `UPDATE` outright and refuses `DELETE`
+unless the connection has set `arxiv.progress_purge`, which only
+`erase_principal` does and only inside its own transaction.
+
+Correcting a recorded event means *appending* a correcting one; the
+wrong event stays, because a ledger that can be rewritten is not
+evidence. Appends are idempotent on `event_id`, so a retried write
+re-reads the stored row rather than double-counting it.
+
+The purge door exists because a blanket `DELETE` ban would have made
+this ADR's own deletion promise a lie for this table. It closes the
+follow-up recorded above: **the deletion promise now covers the
+ledger, not just the profile.** The two properties are reconciled
+rather than traded — editing an event is impossible, erasing a
+person's whole record is a deliberate, auditable act.
+
+**2. Evidence at the write boundary.** `evidence_ref` points at the
+session transcript, artifact, or plan behind the event. For
+`assessment` it is required and non-blank, enforced both by
+`validate_event` and by a CHECK — the same rule
+[§4.3](../../planning/07-learning-platform/01-LEARNING-AGENT.md#43-explain-back-via-the-critic-pattern)
+applies to the judge (an assertion without evidence is malformed),
+applied to the record instead. The views carry the `event_id`s behind
+every number, so a count always expands into the events that made it.
+
+**3. No mastery scalar can exist here.** The §4.1 ban is structural in
+four places, so no single edit withdraws it:
+
+- a CHECK rejects any payload whose JSON *keys*, at any depth, read as
+  a knowledge scalar (`master`, `proficien`, `competenc`, `percent`,
+  `pct`, `score`, `knowledge_level`, `skill_level`);
+- `validate_event` walks the payload and refuses the same vocabulary
+  before any store sees it, with a test asserting the Python list and
+  the SQL alternation are the *same list* so they cannot drift;
+- no view dataclass or Pydantic model has a field that could hold one,
+  and the one rendered string is regex-pinned to session arithmetic;
+- a test walks the generated OpenAPI properties, because a field
+  banned in Python but published in the contract is a ban in name only.
+
+The CHECK anchors on `"<key>":` rather than on free text **on
+purpose**: a learner writing "I have not mastered this" in an
+explain-back must remain storable. The ban is on fields, not on
+speech — otherwise the honesty rule censors the evidence it exists to
+protect.
+
+What the views *do* expose is `schedule_progress`: arithmetic about
+sessions, which §4.1 explicitly permits provided it is labelled as
+schedule progress rather than knowledge. The field name is the label.
+
+**4. The kind vocabulary is reserved whole, writable in part.** All
+six §4.4 kinds are named in the CHECK so Phase L needs no migration,
+but the three with no producer (`review_item`, `plan_approved`,
+`replan`) are *refused* at the write boundary. Reserving a name is
+free; accepting writes for a feature that does not exist would seed
+the ledger with rows no view can read.
+
+**5. Keying, flags, routes.** Same as the profile: `principal_key_id`
+per ADR 0036 / SR-02, gated by the same `enable_learner_profile` (and
+therefore the same auth validator), with `progress_event_store`
+(`memory` | `postgres`) as WO-W07's only added setting.
+`GET /learn/progress` carries no id in its path, is mounted regardless
+of the flag, and answers the same 404 `learner_profile_disabled` while
+it is off. The route holds no cached aggregate: it reads raw events
+and folds them with a pure function, so the displayed record cannot
+drift from the log.
+
+### Alternatives considered
+
+- **A blanket `DELETE` ban.** Rejected: it contradicts the deletion
+  promise this ADR makes. The GUC-gated door keeps both properties.
+- **`ON CONFLICT DO UPDATE` for repeated appends.** Rejected: an
+  upsert is the update path this table does not have. `DO NOTHING`
+  plus a read-back gives idempotency without one.
+- **Storing the summary.** Rejected: a cached aggregate is a second
+  source of truth that can disagree with the log, which is precisely
+  the claim §4.4 makes impossible.
+- **Banning the mastery vocabulary in free text as well as in keys.**
+  Rejected: it would make a truthful learner transcript unstorable.
+- **Accepting reserved kinds and ignoring them at read time.**
+  Rejected: unreadable rows in an append-only table are permanent.
+- **Its own ADR number.** Rejected by the coordinator: §5.4 assigns
+  0057+ to five other cards and lists the same five as the index
+  editors. One shared record, no new index row.
+
+### Consequences
+
+**Positive**
+
+- Progress claims are auditable end to end: every number expands into
+  events, every event points at what produced it.
+- The mastery ban survives a `psql` session, not just a code review.
+- The deletion promise now covers every learner table.
+- Phase L adds producers for the reserved kinds without a migration.
+
+**Negative**
+
+- The append-only trigger means a genuinely bad event (a bug writing
+  nonsense) can only be superseded, never removed short of erasing the
+  whole principal. That is the intended trade, but it will feel wrong
+  the first time it happens.
+- The key-vocabulary CHECK is a substring rule, so a legitimate future
+  field containing e.g. `score` needs the vocabulary revisited rather
+  than silently renamed around.
+- `evidence_ref` is a string, not a foreign key: it spans sessions,
+  jobs, and plans, which live in different stores. Nothing verifies
+  the target resolves.
+
+**Follow-ups**
+
+- WO-W03/WO-W04 wire the first producers (`session_completed`,
+  `assessment`); nothing writes to the ledger until they land.
+- WO-W14 runs the matching forbidden-string gate over the UI; this
+  card is the same rule enforced where the data is born.
+- A ledger export (00 §5.4) is Phase L3.

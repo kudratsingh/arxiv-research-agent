@@ -13,7 +13,7 @@
  * segment only when that exact segment is a LITERAL in the API contract.
  * Anything else becomes `{id}`. So a job id, a conversation id, an export
  * filename or a value somebody puts in a path one day cannot reach the log
- * by being unusual — it can only reach it by being one of the eight words in
+ * by being unusual — it can only reach it by being one of the nine words in
  * `LITERAL_SEGMENTS`, and `web/tests/proxyLogging.test.ts` derives that set
  * from `contract/openapi.json` so a new endpoint fails the test rather than
  * silently widening the whitelist.
@@ -27,16 +27,21 @@
 /**
  * Every literal path segment in `web/contract/openapi.json`.
  *
- * Transcribed from the nine contract paths rather than imported from them:
+ * Transcribed from the ten contract paths rather than imported from them:
  * the contract JSON is 31 KB and importing it would pull the whole document
- * into the server bundle to answer an eight-word question. The transcription
+ * into the server bundle to answer a nine-word question. The transcription
  * is not trusted — `web/tests/proxyLogging.test.ts` rebuilds this set from
  * `contract/openapi.json` and fails on any difference, in both directions.
  *
  *   /research, /research/{job_id}, /research/{job_id}/review,
  *   /research/{job_id}/export, /research/{job_id}/stream,
  *   /conversations, /conversations/{conversation_id}, /healthz,
- *   /learn/profile
+ *   /learn/profile, /learn/progress
+ *
+ * The three `learn*` words arrived with the Phase W learner surfaces
+ * (WO-W02's profile, WO-W07's ledger). All are literals with no id in the
+ * path, so the widening adds constant words to the log vocabulary and no
+ * new way for a value to reach it.
  */
 export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
   "conversations",
@@ -44,6 +49,7 @@ export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
   "healthz",
   "learn",
   "profile",
+  "progress",
   "research",
   "review",
   "stream",

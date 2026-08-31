@@ -445,13 +445,21 @@ class TestTheFlagPairing:
 class TestTheStoreIsAddressedByTheCallerAlone:
     def test_no_route_path_carries_a_profile_id(self) -> None:
         """The reason there is no `_check_ownership` call on these
-        routes: there is no client-supplied id to check."""
+        routes: there is no client-supplied id to check.
+
+        Asserted over the whole `/learn` namespace rather than over
+        this card's one path. WO-W07 added `/learn/progress` on the
+        same principle, and the invariant is worth more applied to
+        every learner route than to the profile alone — a future card
+        that introduced `/learn/{something}` would fail here.
+        """
         from src.api.app import create_app as build
 
         paths = [p for p in build().openapi()["paths"] if p.startswith("/learn")]
 
-        assert paths == ["/learn/profile"]
-        assert "{" not in paths[0]
+        assert sorted(paths) == ["/learn/profile", "/learn/progress"]
+        for path in paths:
+            assert "{" not in path, path
 
     async def test_the_store_keys_on_the_presented_principal(
         self, client: httpx.AsyncClient, profile_store: InMemoryProfileStore

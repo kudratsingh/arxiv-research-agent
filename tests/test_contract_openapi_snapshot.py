@@ -77,6 +77,11 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
     paths = document["paths"]
 
     assert set(paths) == {
+        # WO-W07: the learner progress ledger. Present in the document
+        # whatever `enable_learner_profile` says — the flag is runtime
+        # behaviour (404 when off), not schema shape, so the contract
+        # describes one surface rather than two.
+        "/learn/progress",
         "/research",
         "/research/{job_id}",
         "/research/{job_id}/review",
