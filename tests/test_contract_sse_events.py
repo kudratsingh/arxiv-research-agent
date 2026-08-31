@@ -90,10 +90,10 @@ WEB_UNCONSUMED_EVENT_NAMES: dict[str, str] = {
 #: `JobDetail.status` is a bare `str` in the OpenAPI document, so the
 #: frontend's vocabulary is hand-written too and nothing generated it.
 WEB_UNRENDERED_JOB_STATUSES: dict[str, str] = {
-    # WO-W13 again, and for the same reason: the status only appears on
-    # a `kind="session"` job, and no route can create one. Adding it to
-    # the union today would oblige `machine.ts`, `spineState.ts` and
-    # `JOB_STATUS_WORD` to answer for a phase nothing can reach.
+    # WO-W13 owns the browser rendering. WO-W03 makes the backend status
+    # reachable, but adding it to the frontend union today would oblige
+    # `machine.ts`, `spineState.ts` and `JOB_STATUS_WORD` to invent a UI
+    # before the session surface card lands.
     "awaiting_learner": "WO-W13",
 }
 

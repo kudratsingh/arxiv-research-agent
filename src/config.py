@@ -81,9 +81,7 @@ class Settings(BaseSettings):
         default=False,
         description="Force built-in mock papers instead of hitting arXiv",
     )
-    max_papers: int = Field(
-        default=10, ge=1, le=50, description="Cap on ranked paper count"
-    )
+    max_papers: int = Field(default=10, ge=1, le=50, description="Cap on ranked paper count")
     results_per_query: int = Field(
         default=5,
         ge=1,
@@ -607,9 +605,7 @@ class Settings(BaseSettings):
     )
     otel_exporter_endpoint: str = Field(
         default="",
-        description=(
-            "OTLP HTTP endpoint (e.g. http://localhost:4318). Empty = console exporter."
-        ),
+        description=("OTLP HTTP endpoint (e.g. http://localhost:4318). Empty = console exporter."),
     )
     otel_metric_export_interval_sec: int = Field(
         default=60,
@@ -754,15 +750,13 @@ class Settings(BaseSettings):
     critic_model: str = Field(
         default="",
         description=(
-            "Model for the critic's quality judgment. Empty falls back "
-            "to anthropic_model."
+            "Model for the critic's quality judgment. Empty falls back to anthropic_model."
         ),
     )
     verifier_model: str = Field(
         default="",
         description=(
-            "Model for the runtime faithfulness verifier. Empty falls "
-            "back to anthropic_model."
+            "Model for the runtime faithfulness verifier. Empty falls back to anthropic_model."
         ),
     )
     supervisor_model: str = Field(
@@ -778,6 +772,14 @@ class Settings(BaseSettings):
         description=(
             "Model for the query refiner. Short generation task; Haiku "
             "is the recommended override. Empty = anthropic_model."
+        ),
+    )
+    tutor_model: str = Field(
+        default="",
+        description=(
+            "Model for guided-read check-in and tutor turns. Empty falls "
+            "back to anthropic_model; a cheaper model is expected for the "
+            "high-volume turn path, with quality measured by WO-W09/W10."
         ),
     )
 
@@ -947,6 +949,31 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ Guided-read sessions (Phase W, WO-W03) -------------------
+    enable_session_loop: bool = Field(
+        default=False,
+        description=(
+            "Mount POST/GET /learn/sessions and learner-turn resume. Off by "
+            "default. Requires the principal-scoped learner profile and "
+            "LangGraph checkpointing because every turn parks and resumes "
+            "from durable state. See 01-LEARNING-AGENT.md §5.4."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _check_session_loop_dependencies(self) -> Settings:
+        if self.enable_session_loop and not self.enable_learner_profile:
+            raise ValueError(
+                "enable_session_loop requires enable_learner_profile=true: "
+                "the session graph reads a principal-scoped Tier-1 profile."
+            )
+        if self.enable_session_loop and not self.enable_checkpointing:
+            raise ValueError(
+                "enable_session_loop requires enable_checkpointing=true: "
+                "learner turns resume from LangGraph checkpoints."
+            )
+        return self
+
     @model_validator(mode="after")
     def _check_lease_invariant(self) -> Settings:
         """Reject a lease TTL a refresh cycle cannot keep alive.
@@ -971,7 +998,6 @@ class Settings(BaseSettings):
                 f"ttl={self.job_lease_ttl_sec}. See ADR 0038."
             )
         return self
-
 
 
 settings = Settings()

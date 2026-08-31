@@ -52,11 +52,16 @@ from src.api.redriver import (
 )
 from src.api.routes import router
 from src.api.runner import SHUTDOWN_DRAIN_SEC, run_job
+from src.api.sessions import router as session_router
 from src.cancellation import abandoned_node_count
 from src.config import settings
+from src.graph.session_workflow import (
+    build_session_workflow as default_build_session_workflow,
+)
 from src.graph.workflow import build_workflow as default_build_workflow
 from src.learning.profile_store import ProfileStore, build_profile_store
 from src.learning.progress_store import (
+    ProgressEvent,
     ProgressEventStore,
     build_progress_event_store,
 )
@@ -93,9 +98,7 @@ async def _evict_terminal_jobs_forever(store: JobStore) -> None:
     while True:
         await asyncio.sleep(EVICT_SWEEP_INTERVAL_SEC)
         try:
-            evicted = await store.evict_older_than(
-                settings.api_job_retention_sec
-            )
+            evicted = await store.evict_older_than(settings.api_job_retention_sec)
             if evicted:
                 log.info("api_jobs_evicted", extra={"count": evicted})
         except Exception:
@@ -154,9 +157,7 @@ async def _redrive_forever(
             # Same bound as the startup sweep: past the lock's TTL this
             # sweep no longer holds it, so continuing would just race
             # whoever took it next.
-            report = await asyncio.wait_for(
-                redriver.sweep(), timeout=REDRIVE_LOCK_TTL_SEC
-            )
+            report = await asyncio.wait_for(redriver.sweep(), timeout=REDRIVE_LOCK_TTL_SEC)
         except TimeoutError:
             log.warning(
                 "job_redriver_periodic_timeout",
@@ -213,6 +214,7 @@ def _default_store() -> JobStore:
 def create_app(
     *,
     build_workflow: Callable[[], Any] | None = None,
+    build_session_workflow: Callable[[], Any] | None = None,
     store: JobStore | None = None,
     conversation_store: ConversationStore | None = None,
     profile_store: ProfileStore | None = None,
@@ -225,6 +227,10 @@ def create_app(
         build_workflow: Zero-arg factory that returns a compiled
             LangGraph app. Defaults to the production workflow. Tests
             inject a stub that yields fake state updates.
+        build_session_workflow: Optional zero-arg guided-session graph
+            factory. When omitted beside an injected research factory,
+            the injection is reused so legacy app tests do not open a
+            second real checkpointer.
         store: Persistence layer. Defaults to whichever `JobStore`
             `settings.job_store` selects (`memory` / `redis`).
         conversation_store: Conversation persistence (ADR 0032).
@@ -245,6 +251,7 @@ def create_app(
         max_concurrent_jobs: Semaphore ceiling. Defaults to
             `settings.api_max_concurrent_jobs`.
     """
+
     def _make_workflow(node_executor: ThreadPoolExecutor) -> Any:
         """Compile the graph this app will serve every job from.
 
@@ -261,27 +268,26 @@ def create_app(
         """
         if build_workflow is not None:
             return build_workflow()
-        return default_build_workflow(
-            async_checkpointer=True, node_executor=node_executor
-        )
+        return default_build_workflow(async_checkpointer=True, node_executor=node_executor)
+
+    def _make_session_workflow(node_executor: ThreadPoolExecutor) -> Any:
+        if build_session_workflow is not None:
+            return build_session_workflow()
+        if build_workflow is not None:
+            return build_workflow()
+        return default_build_session_workflow(async_checkpointer=True, node_executor=node_executor)
 
     job_store: JobStore = store if store is not None else _default_store()
     conv_store: ConversationStore = (
-        conversation_store
-        if conversation_store is not None
-        else build_conversation_store()
+        conversation_store if conversation_store is not None else build_conversation_store()
     )
-    prof_store: ProfileStore = (
-        profile_store if profile_store is not None else build_profile_store()
-    )
+    prof_store: ProfileStore = profile_store if profile_store is not None else build_profile_store()
     # WO-W07: built unconditionally, for the reason above. The default
     # `memory` variant touches nothing, so `enable_learner_profile` stays
     # the single gate and a flag-off deployment builds an empty ledger it
     # never reads.
     progress_store: ProgressEventStore = (
-        progress_event_store
-        if progress_event_store is not None
-        else build_progress_event_store()
+        progress_event_store if progress_event_store is not None else build_progress_event_store()
     )
     max_concurrent = max_concurrent_jobs or settings.api_max_concurrent_jobs
 
@@ -332,7 +338,18 @@ def create_app(
         compiled_workflow = _make_workflow(node_executor)
         if inspect.isawaitable(compiled_workflow):
             compiled_workflow = await compiled_workflow
+        if build_session_workflow is None and build_workflow is not None:
+            # A legacy injected factory represents one test/stub graph. Reuse
+            # its compiled instance instead of invoking the factory twice;
+            # tests that exercise sessions inject the second factory
+            # explicitly.
+            compiled_session_workflow = compiled_workflow
+        else:
+            compiled_session_workflow = _make_session_workflow(node_executor)
+            if inspect.isawaitable(compiled_session_workflow):
+                compiled_session_workflow = await compiled_session_workflow
         app.state.workflow = compiled_workflow
+        app.state.session_workflow = compiled_session_workflow
         app.state.store = job_store
         app.state.conversation_store = conv_store
         app.state.profile_store = prof_store
@@ -388,10 +405,14 @@ def create_app(
             task = asyncio.create_task(
                 run_job(
                     job,
-                    workflow=compiled_workflow,
+                    workflow=(
+                        compiled_session_workflow if job.kind == "session" else compiled_workflow
+                    ),
                     store=job_store,
                     semaphore=app.state.semaphore,
                     conversation_store=conv_store,
+                    progress_event_store=progress_store,
+                    progress_event_decoder=ProgressEvent.from_json_dict,
                 ),
                 name=f"job-{job.job_id}",
             )
@@ -448,13 +469,9 @@ def create_app(
         # redrive lock, so only one worker in the fleet reclaims per
         # tick and the rest no-op.
         redrive_task: asyncio.Task[None] | None = None
-        if settings.enable_job_redriver and callable(
-            getattr(job_store, "scan_jobs", None)
-        ):
+        if settings.enable_job_redriver and callable(getattr(job_store, "scan_jobs", None)):
             redrive_task = asyncio.create_task(
-                _redrive_forever(
-                    redriver, float(settings.job_redrive_interval_sec)
-                ),
+                _redrive_forever(redriver, float(settings.job_redrive_interval_sec)),
                 name="job-redrive-sweep",
             )
 
@@ -464,6 +481,7 @@ def create_app(
         reloader_task: asyncio.Task[None] | None = None
         keystore_reloader: KeystoreReloader | None = None
         if settings.api_keys_file:
+
             def _apply_keystore(new_keys: dict[str, ApiKeyPrincipal]) -> None:
                 # Dict assignment is atomic in CPython — no lock
                 # needed. Concurrent lookups either see the old or
@@ -477,9 +495,7 @@ def create_app(
             )
             initial = await keystore_reloader.initial_load()
             app.state.api_keys = initial
-            reloader_task = asyncio.create_task(
-                keystore_reloader.run(), name="keystore-reloader"
-            )
+            reloader_task = asyncio.create_task(keystore_reloader.run(), name="keystore-reloader")
         else:
             app.state.api_keys = api_keys
 
@@ -494,9 +510,7 @@ def create_app(
                 "progress_event_store": type(progress_store).__name__,
                 "auth_enabled": settings.enable_api_auth,
                 "api_keys_configured": len(app.state.api_keys),
-                "keystore_source": (
-                    "file" if settings.api_keys_file else "settings"
-                ),
+                "keystore_source": ("file" if settings.api_keys_file else "settings"),
                 "rate_limit_backend": settings.rate_limit_backend,
                 "checkpoint_backend": settings.checkpoint_backend,
                 "worker_id": WORKER_ID,
@@ -552,9 +566,7 @@ def create_app(
             # hold SIGTERM open past the orchestrator's grace period.
             # Without this join the process could not exit cleanly at
             # all: pool threads are non-daemon.
-            join_budget = min(
-                float(settings.api_job_drain_timeout_sec), SHUTDOWN_DRAIN_SEC
-            )
+            join_budget = min(float(settings.api_job_drain_timeout_sec), SHUTDOWN_DRAIN_SEC)
             node_executor.shutdown(wait=False, cancel_futures=True)
             try:
                 await asyncio.wait_for(
@@ -574,16 +586,18 @@ def create_app(
             # (aiosqlite connection / Postgres pool, ADR 0040) on the
             # production path, the sync ExitStack when a caller
             # injected a sync-mode factory.
-            aexit_stack = getattr(
-                compiled_workflow, "_checkpointer_aexit_stack", None
-            )
-            if aexit_stack is not None:
-                with contextlib.suppress(Exception):
-                    await aexit_stack.aclose()
-            exit_stack = getattr(compiled_workflow, "_checkpointer_exit_stack", None)
-            if exit_stack is not None:
-                with contextlib.suppress(Exception):
-                    exit_stack.close()
+            compiled_graphs = [compiled_workflow]
+            if compiled_session_workflow is not compiled_workflow:
+                compiled_graphs.append(compiled_session_workflow)
+            for compiled in compiled_graphs:
+                aexit_stack = getattr(compiled, "_checkpointer_aexit_stack", None)
+                if aexit_stack is not None:
+                    with contextlib.suppress(Exception):
+                        await aexit_stack.aclose()
+                exit_stack = getattr(compiled, "_checkpointer_exit_stack", None)
+                if exit_stack is not None:
+                    with contextlib.suppress(Exception):
+                        exit_stack.close()
             # Close the Redis connection pool if we own one. The
             # InMemoryJobStore has no `close` method — that's the
             # signal that this is a no-op path.
@@ -624,11 +638,7 @@ def create_app(
 
     # ADR 0033: CORS is opt-in via `settings.api_cors_allow_origins`.
     # Empty (default) => no CORS middleware, so same-origin only.
-    origins = [
-        o.strip()
-        for o in settings.api_cors_allow_origins.split(",")
-        if o.strip()
-    ]
+    origins = [o.strip() for o in settings.api_cors_allow_origins.split(",") if o.strip()]
     if origins:
         app.add_middleware(
             CORSMiddleware,
@@ -647,4 +657,5 @@ def create_app(
     # from the block above, and its routes 404 while
     # `enable_learn_content` is off.
     app.include_router(learn_router)
+    app.include_router(session_router)
     return app

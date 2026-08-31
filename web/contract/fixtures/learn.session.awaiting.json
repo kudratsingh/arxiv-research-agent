@@ -1,0 +1,45 @@
+{
+  "x-recording": {
+    "note": "Recorded response body and headers from the first learner park in the no-cost WO-W03 API integration path. DO NOT EDIT BY HAND; re-run tests/test_guided_session_graph.py with ANTHROPIC_API_KEY=local-preview-disabled.",
+    "case": "learn.session.awaiting",
+    "commit": "624e5c931fb765a36f65dcb6e1fea374cc35f931",
+    "request": "GET /learn/sessions/214bac7310a4459b as its owner",
+    "transport": "in-process ASGI against create_app(), ENABLE_SESSION_LOOP=true, SQLite checkpoint, in-memory profile/progress/job stores",
+    "stack": "no containers: recorded in process with USE_MOCK_DATA=true and ANTHROPIC_API_KEY=local-preview-disabled; the test fails on any model construction",
+    "authored": false,
+    "volatile": "session_id, created_at, started_at and elapsed_sec vary on a new recording"
+  },
+  "status": 200,
+  "statusText": "OK",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "session_id": "214bac7310a4459b",
+    "status": "awaiting_learner",
+    "kind": "session",
+    "path_id": "fixture-guided-read",
+    "resource_id": "arxiv:1706.03762",
+    "title": "Attention Is All You Need",
+    "created_at": 1788217106.0416489,
+    "started_at": 1788217106.042475,
+    "completed_at": null,
+    "elapsed_sec": 0.01,
+    "turn": {
+      "turn_number": 1,
+      "phase": "passage",
+      "kind": "reflection",
+      "prompt": "Before we read Attention Is All You Need, what do you expect it to help you understand? A sentence or two is enough.",
+      "feedback": "",
+      "activity": {
+        "kind": "reflection",
+        "instructions": "Before we read Attention Is All You Need, what do you expect it to help you understand? A sentence or two is enough."
+      }
+    },
+    "result": null,
+    "error": null,
+    "error_type": null,
+    "cost_usd": null,
+    "llm_calls": null
+  }
+}

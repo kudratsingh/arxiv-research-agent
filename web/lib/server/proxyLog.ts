@@ -13,7 +13,7 @@
  * segment only when that exact segment is a LITERAL in the API contract.
  * Anything else becomes `{id}`. So a job id, a conversation id, an export
  * filename or a value somebody puts in a path one day cannot reach the log
- * by being unusual — it can only reach it by being one of the nine words in
+ * by being unusual — it can only reach it by being one of the contract words in
  * `LITERAL_SEGMENTS`, and `web/tests/proxyLogging.test.ts` derives that set
  * from `contract/openapi.json` so a new endpoint fails the test rather than
  * silently widening the whitelist.
@@ -27,9 +27,9 @@
 /**
  * Every literal path segment in `web/contract/openapi.json`.
  *
- * Transcribed from the twelve contract paths rather than imported from them:
+ * Transcribed from the fifteen contract paths rather than imported from them:
  * importing the contract JSON would pull the whole document
- * into the server bundle to answer a nine-word question. The transcription
+ * into the server bundle to answer a small-set question. The transcription
  * is not trusted — `web/tests/proxyLogging.test.ts` rebuilds this set from
  * `contract/openapi.json` and fails on any difference, in both directions.
  *
@@ -37,7 +37,8 @@
  *   /research/{job_id}/export, /research/{job_id}/stream,
  *   /conversations, /conversations/{conversation_id}, /healthz,
  *   /learn/profile, /learn/progress, /learn/paths,
- *   /learn/paths/{path_id}
+ *   /learn/paths/{path_id}, /learn/sessions,
+ *   /learn/sessions/{session_id}, /learn/sessions/{session_id}/turn
  *
  * The learner literals arrived with WO-W02's profile, WO-W07's ledger, and
  * WO-W15's paths. A `path_id` is a slug an editor chose, not a secret — but
@@ -54,7 +55,9 @@ export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
   "progress",
   "research",
   "review",
+  "sessions",
   "stream",
+  "turn",
 ]);
 
 /** What an unrecognised segment is replaced by. Never the value itself. */

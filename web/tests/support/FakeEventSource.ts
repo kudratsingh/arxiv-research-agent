@@ -108,7 +108,7 @@ export interface SseScript {
 }
 
 /**
- * The nine recordings on disk.
+ * The ten recordings on disk.
  *
  * Six are 04-ARCHITECTURE.md §7.2's scenarios; three are
  * 03-DESIGN-BRIEF.md §5.9's obligations. `listSseScripts()` reads the
@@ -124,6 +124,7 @@ export const SSE_SCRIPT_NAMES = [
   "unknown_event_name",
   "unknown_state_delta_keys",
   "terminal_replay_no_node",
+  "session_turns",
 ] as const;
 
 export type SseScriptName = (typeof SSE_SCRIPT_NAMES)[number];

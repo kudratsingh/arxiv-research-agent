@@ -371,6 +371,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/learn/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start one checkpointed guided-read session. */
+        post: operations["create_session_learn_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learn/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one guided session and its currently parked turn. */
+        get: operations["get_session_learn_sessions__session_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learn/sessions/{session_id}/turn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume a parked guided session with the learner's reply. */
+        post: operations["submit_turn_learn_sessions__session_id__turn_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1034,6 +1085,88 @@ export interface components {
             /** Action */
             action: string;
         };
+        /** SessionAccepted */
+        SessionAccepted: {
+            /** Session Id */
+            session_id: string;
+            /** Status */
+            status: string;
+            /** Status Url */
+            status_url: string;
+            /** Stream Url */
+            stream_url: string;
+        };
+        /** SessionCreateRequest */
+        SessionCreateRequest: {
+            /** Path Id */
+            path_id: string;
+            /** Resource Id */
+            resource_id: string;
+            /** Available Minutes */
+            available_minutes?: number | null;
+        };
+        /** SessionDetail */
+        SessionDetail: {
+            /** Session Id */
+            session_id: string;
+            /** Status */
+            status: string;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "session";
+            /** Path Id */
+            path_id: string;
+            /** Resource Id */
+            resource_id: string;
+            /** Title */
+            title: string;
+            /** Created At */
+            created_at: number;
+            /** Started At */
+            started_at: number | null;
+            /** Completed At */
+            completed_at: number | null;
+            /** Elapsed Sec */
+            elapsed_sec: number | null;
+            /** Turn */
+            turn: {
+                [key: string]: unknown;
+            } | null;
+            /** Result */
+            result: string | null;
+            /** Error */
+            error: string | null;
+            /** Error Type */
+            error_type: string | null;
+            /** Cost Usd */
+            cost_usd: number | null;
+            /** Llm Calls */
+            llm_calls: number | null;
+        };
+        /** SessionTurnAccepted */
+        SessionTurnAccepted: {
+            /** Session Id */
+            session_id: string;
+            /** Status */
+            status: string;
+            /** Accepted */
+            accepted: boolean;
+        };
+        /** SessionTurnRequest */
+        SessionTurnRequest: {
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+            /**
+             * End Session
+             * @default false
+             */
+            end_session: boolean;
+        };
         /**
          * SkillClaim
          * @description One skill claim as the API returns it — provenance mandatory.
@@ -1566,6 +1699,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LearnPathDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_session_learn_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionAccepted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_learn_sessions__session_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_turn_learn_sessions__session_id__turn_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionTurnRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionTurnAccepted"];
                 };
             };
             /** @description Validation Error */

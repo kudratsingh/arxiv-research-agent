@@ -121,6 +121,13 @@ class Job:
     # so every row written before this field existed — and every
     # caller that never mentions it — keeps the behaviour it had.
     kind: JobKind = DEFAULT_JOB_KIND
+    # Structured, bounded input for non-research job kinds. W03 stores the
+    # selected paper/session spec and Tier-1 learner snapshot here so a
+    # session can be redriven on another worker without smuggling JSON into
+    # ``query`` or depending on process-local request state. Redis derives
+    # its persistent field list from this dataclass, so the payload round-
+    # trips automatically and old rows default to an empty mapping.
+    input_payload: dict[str, Any] = field(default_factory=dict)
     created_at: float = field(default_factory=time.time)
     started_at: float | None = None
     completed_at: float | None = None

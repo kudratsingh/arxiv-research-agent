@@ -117,6 +117,13 @@ const planReadySchema = z.strictObject({
 });
 proves<Exact<z.infer<typeof planReadySchema>, PlanReadyPayload>>(true);
 
+// WO-W03 records this backend frame before WO-W13 adds it to the browser's
+// consumed event union. Runtime validation still pins the opaque turn envelope.
+const turnReadySchema = z.strictObject({
+  job_id: z.string(),
+  turn: z.record(z.string(), z.unknown()),
+});
+
 /** Live terminal success — no `status`, and `llm_calls` present. */
 const jobCompletedSchema = z.strictObject({
   job_id: z.string(),
@@ -189,7 +196,13 @@ const BRIEF_OBLIGATIONS = [
   "terminal_replay_no_node",
 ];
 
-const ALL_SCRIPTS = [...ARCHITECTURE_SCENARIOS, ...BRIEF_OBLIGATIONS];
+const SESSION_SCENARIOS = ["session_turns"];
+
+const ALL_SCRIPTS = [
+  ...ARCHITECTURE_SCENARIOS,
+  ...BRIEF_OBLIGATIONS,
+  ...SESSION_SCENARIOS,
+];
 
 /**
  * Names no backend event uses, deliberately present in one script.
@@ -213,7 +226,7 @@ function isReplayShape(record: EventRecord): boolean {
 // ---------------------------------------------------------------------------
 
 describe("contract/sse — inventory and provenance", () => {
-  it("holds all six §7.2 scenarios plus the three §5.9 obligations", () => {
+  it("holds the research scenarios plus WO-W03's session recording", () => {
     const onDisk = readdirSync(SSE_DIR)
       .filter((file) => file.endsWith(".jsonl"))
       .map((file) => file.replace(/\.jsonl$/, ""))
@@ -221,6 +234,7 @@ describe("contract/sse — inventory and provenance", () => {
     expect(onDisk).toEqual([...ALL_SCRIPTS].sort());
     expect(ARCHITECTURE_SCENARIOS).toHaveLength(6);
     expect(BRIEF_OBLIGATIONS).toHaveLength(3);
+    expect(SESSION_SCENARIOS).toHaveLength(1);
   });
 
   it.each(ALL_SCRIPTS)("%s opens with a header naming its commit", (name) => {
@@ -266,7 +280,7 @@ describe("contract/sse — frame payloads match the events.ts overlay", () => {
   it.each(ALL_SCRIPTS)("%s carries only known or deliberately unknown names", (name) => {
     const known = new Set<string>(SERVER_EVENT_NAMES);
     for (const record of load(name).events) {
-      if (known.has(record.event)) continue;
+      if (known.has(record.event) || record.event === "turn_ready") continue;
       expect(DELIBERATELY_UNKNOWN).toContain(record.event);
       expect(name).toBe("unknown_event_name");
     }
@@ -283,6 +297,8 @@ describe("contract/sse — frame payloads match the events.ts overlay", () => {
             ? nodeCompletedSchema
             : record.event === "plan_ready"
               ? planReadySchema
+              : record.event === "turn_ready"
+                ? turnReadySchema
               : record.event === STREAM_TIMEOUT_EVENT
                 ? streamTimeoutSchema
                 : isReplayShape(record)
@@ -322,6 +338,21 @@ describe("contract/sse — frame payloads match the events.ts overlay", () => {
 });
 
 describe("contract/sse — the recorded scenarios say what they claim", () => {
+  it("session_turns records four monotonic learner pauses", () => {
+    const events = load("session_turns").events;
+    expect(events.map((event) => event.event)).toEqual([
+      "turn_ready",
+      "turn_ready",
+      "turn_ready",
+      "turn_ready",
+    ]);
+    expect(
+      events.map((event) =>
+        Number((event.data?.turn as Record<string, unknown>).turn_number)
+      )
+    ).toEqual([1, 2, 3, 4]);
+  });
+
   it("live_success ends on a live job_completed", () => {
     const events = load("live_success").events;
     const last = events[events.length - 1];

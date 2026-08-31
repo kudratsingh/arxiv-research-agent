@@ -20,6 +20,7 @@ graph shapes, checkpointing, the API layer — lives in
 | Supervisor | supervisor loop | `enable_supervisor` | [supervisor.md](supervisor.md) |
 | Verifier | supervisor loop | `enable_verifier` | [verifier.md](verifier.md) |
 | Query refiner | supervisor loop | `enable_query_refiner` | [query_refiner.md](query_refiner.md) |
+| Tutor | guided-read session graph | `enable_session_loop` | [tutor.md](tutor.md) |
 
 ## The two shapes
 

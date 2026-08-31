@@ -375,11 +375,21 @@ const ERROR_FIXTURES: Record<string, { status: number; kind: ApiFailureKind }> =
 // two responses are a pure function of the manifests in `content/`.
 const LEARN_CONTENT_FIXTURES = ["learn.paths", "learn.path.detail"];
 
+// WO-W03's session write/read/resume envelopes. The browser client arrives in
+// WO-W12/W13; until then Python validates these bodies against the same
+// Pydantic response models that generate OpenAPI.
+const LEARN_SESSION_FIXTURES = [
+  "learn.session.accepted",
+  "learn.session.awaiting",
+  "learn.session.turn.accepted",
+];
+
 const ALL_FIXTURES = [
   ...Object.keys(JOB_FIXTURES),
   ...CONVERSATION_FIXTURES,
   ...LEARN_FIXTURES,
   ...LEARN_CONTENT_FIXTURES,
+  ...LEARN_SESSION_FIXTURES,
   ...Object.keys(ERROR_FIXTURES),
 ];
 
@@ -410,11 +420,12 @@ describe("contract/fixtures — inventory and provenance", () => {
     expect(onDisk).toEqual([...ALL_FIXTURES].sort());
     // Five job states, two conversation shapes, two learner surfaces
     // (the profile and progress ledger), two learning-content reads, seven
-    // error envelopes.
+    // three session lifecycle envelopes, and seven error envelopes.
     expect(Object.keys(JOB_FIXTURES)).toHaveLength(5);
     expect(CONVERSATION_FIXTURES).toHaveLength(2);
     expect(LEARN_FIXTURES).toHaveLength(2);
     expect(LEARN_CONTENT_FIXTURES).toHaveLength(2);
+    expect(LEARN_SESSION_FIXTURES).toHaveLength(3);
     expect(Object.keys(ERROR_FIXTURES)).toHaveLength(7);
   });
 
