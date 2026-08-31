@@ -53,6 +53,9 @@ ROUTES_SRC = (ROOT / "src" / "api" / "routes.py").read_text(encoding="utf-8")
 EVENTS_TS = (ROOT / "web" / "lib" / "api" / "events.ts").read_text(
     encoding="utf-8"
 )
+MODELS_TS = (ROOT / "web" / "lib" / "api" / "models.ts").read_text(
+    encoding="utf-8"
+)
 
 #: `TERMINAL_EVENT_NAMES ∪ {job_started, node_completed} ∪ PAUSE_EVENT_NAMES ∪
 #: {STREAM_TIMEOUT_EVENT}` — written out rather than composed, because a pin
@@ -81,6 +84,17 @@ WEB_UNCONSUMED_EVENT_NAMES: dict[str, str] = {
     # rows into `web/lib/job/machine.ts`'s total transition table for a
     # phase that is unreachable.
     "turn_ready": "WO-W13",
+}
+
+#: `JobStatus` members the web tier does not render yet, same ledger shape.
+#: `JobDetail.status` is a bare `str` in the OpenAPI document, so the
+#: frontend's vocabulary is hand-written too and nothing generated it.
+WEB_UNRENDERED_JOB_STATUSES: dict[str, str] = {
+    # WO-W13 again, and for the same reason: the status only appears on
+    # a `kind="session"` job, and no route can create one. Adding it to
+    # the union today would oblige `machine.ts`, `spineState.ts` and
+    # `JOB_STATUS_WORD` to answer for a phase nothing can reach.
+    "awaiting_learner": "WO-W13",
 }
 
 #: The runner's own emit helpers. Both take `(job, event_name, payload)`.
@@ -239,6 +253,39 @@ def test_the_unconsumed_ledger_describes_reality_on_both_sides() -> None:
             "WEB_UNCONSUMED_EVENT_NAMES so the drift check covers it again"
         )
         assert owner, f"{name} has no owning work order"
+
+
+def test_the_web_client_declares_every_job_status_or_declares_the_gap() -> None:
+    """The drift check `JobStatus` never had, added because 0057 widened it.
+
+    `JobDetail.status` is a bare `str` in the OpenAPI document, so
+    nothing generates the frontend's view of the vocabulary either —
+    `web/lib/api/models.ts` narrows it by hand, exactly as it does the
+    event names, and until now nothing compared the two. That gap is
+    how `awaiting_learner` could reach a browser as a status the client
+    parses into a Zod enum that rejects it and a copy table that
+    answers `undefined`, with every build still green.
+
+    Same ledger shape as the events above, and the same two-sided
+    assertion: an entry has to name a status the backend really has,
+    and has to disappear the moment the web tier picks it up.
+    """
+    block = re.search(
+        r"export type JobStatus =(.*?);", MODELS_TS, re.DOTALL
+    )
+    assert block is not None, "JobStatus union not found in models.ts"
+    declared = set(re.findall(r'"([a-z_]+)"', block.group(1)))
+
+    backend = {status.value for status in JobStatus}
+    for status, owner in WEB_UNRENDERED_JOB_STATUSES.items():
+        assert status in backend, f"{status} is listed as unrendered but is not a JobStatus"
+        assert status not in declared, (
+            f"{status} is declared in models.ts; drop it from "
+            "WEB_UNRENDERED_JOB_STATUSES so the drift check covers it again"
+        )
+        assert owner, f"{status} has no owning work order"
+
+    assert declared == backend - set(WEB_UNRENDERED_JOB_STATUSES)
 
 
 def test_the_web_client_keeps_stream_timeout_out_of_the_terminal_set() -> None:

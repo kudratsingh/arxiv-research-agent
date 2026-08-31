@@ -185,8 +185,37 @@ with a real `_put_event` call in it rather than an event-name string.
   hold a semaphore permit. The per-turn timeout is the mechanism that
   actually ends an abandoned session; this is only the backstop.
 - **Negative**: the web tier now knowingly ignores an event the
-  backend emits. Bounded by the ledger above and by there being no
-  route that can create a `session` job yet.
+  backend emits, and a `JobStatus` member. Bounded by the ledgers in
+  `tests/test_contract_sse_events.py`
+  (`WEB_UNCONSUMED_EVENT_NAMES`, `WEB_UNRENDERED_JOB_STATUSES`) and by
+  there being no route that can create a `session` job yet. The status
+  ledger is a drift check that did not previously exist at all —
+  `JobDetail.status` is a bare `str` in the OpenAPI document, so
+  nothing generated the frontend's vocabulary and nothing compared the
+  two hand-written lists.
+- **Negative, and the one that is not merely deferred**: unlike
+  `kind`, **widening `JobStatus` is not backward compatible for an
+  already-running worker.** `RedisJobStore._job_from_json` reconstructs
+  the status with `JobStatus(...)` and no fallback, so a worker built
+  before this change that reads a row parked in `awaiting_learner`
+  raises `ValueError` out of `store.get` — a 500 on the job's detail,
+  stream and review endpoints. There is no fix available from this
+  side: a value the reader has never heard of cannot be honestly
+  mapped onto one it has, and defaulting it would report a parked
+  session as `pending`. The operational rule is therefore ordering —
+  **workers are upgraded before any job can park in a new status** —
+  which Phase W satisfies trivially, because no route creates a
+  `session` job until WO-W03/WO-W13. It is stated here so the next
+  status widening does not rediscover it during a deploy.
+- **Negative**: the ADR 0034 subscribe-after-publish window is now hit
+  once per *turn* rather than once per run. `watch_for_remote_resume`
+  is spawned after the frame goes out, so a resume published inside
+  that window has no subscriber; the runner then waits out the full
+  parking timeout. Pre-existing and unchanged in mechanism — closing
+  it means reordering ADR 0034's subscription, which is not this
+  card's to touch — but a session multiplies the exposure and its
+  timeout is terminal, so WO-W03 should subscribe before publishing
+  when it wires the turn endpoint.
 - **Follow-ups**: WO-W03 owns `SessionState`, `build_session_workflow`
   and the shape of the `turn` payload (`SESSION_TURN_STATE_KEY`);
   `_session_initial_state` seeds identity only and is replaced by that

@@ -213,6 +213,20 @@ class TestJobKind:
             assert runtime_for("curriculum") is RESEARCH_RUNTIME
         assert "api_job_unknown_kind" in caplog.text
 
+    @pytest.mark.parametrize("kind", [None, 7, ["session"], {"kind": "session"}])
+    def test_runtime_lookup_is_total_even_for_impossible_inputs(
+        self, kind: object
+    ) -> None:
+        """`run_job` resolves the runtime before its containment `try`.
+
+        It promises never to raise, so this lookup has to be total for
+        inputs the annotation says cannot occur — an unhashable one
+        would otherwise `TypeError` straight out of `run_job` and leave
+        the job non-terminal with its SSE clients hanging, which is the
+        precise failure the containment block exists to prevent.
+        """
+        assert runtime_for(kind) is RESEARCH_RUNTIME  # type: ignore[arg-type]
+
     def test_the_parked_statuses_are_non_terminal(self) -> None:
         assert {
             JobStatus.pending_review,
@@ -337,6 +351,10 @@ class TestSessionParking:
         assert settled.error_type == "session_turn_timeout"
         # The message names the parking, not the parking's owner.
         assert settled.error == "awaiting_learner exceeded 1s"
+        # ...and the terminal row does not still advertise the turn it
+        # was waiting on. A `failed` job carrying an open question would
+        # tell the Ledger a session is mid-flight when it is over.
+        assert settled.turn is None
         frames = _drain_frames(job)
         assert frames[-1]["event"] == "job_failed"
         assert frames[-1]["data"]["error_type"] == "session_turn_timeout"

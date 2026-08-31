@@ -455,7 +455,7 @@ class Settings(BaseSettings):
         ),
     )
 
-    # ------ Learning sessions (Phase W, ADR 0057) ---------------------
+    # ------ Learning sessions (Phase W, WO-W01, ADR 0057) -------------
     # The `session` job kind is turn-shaped: it parks in
     # `awaiting_learner` between turns the same way a research job
     # parks in `pending_review`, so it needs the same two bounds the

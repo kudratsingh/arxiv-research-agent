@@ -2,7 +2,7 @@
  * WO-12 criterion 7 — the `error_type` drift test.
  *
  * "A test enumerates the `error_type` values the backend can produce
- * (`runner.py:1476`, `:1506`, `:1534`, `:1599`, `redriver.py:518`, plus
+ * (`runner.py:1506`, `:1536`, `:1564`, `:1629`, `redriver.py:518`, plus
  * `type(exc).__name__` for the named exception classes) and asserts each is
  * mapped or visibly falls through."
  *
@@ -21,7 +21,7 @@
  *   1. Five deliberate literals, assigned to `job.error_type` in
  *      `runner.py` and `redriver.py` (ADR 0057 added the fifth,
  *      `session_turn_timeout`).
- *   2. `type(exc).__name__` at `runner.py:1669`, for every exception class
+ *   2. `type(exc).__name__` at `runner.py:1698`, for every exception class
  *      that can reach the generic handler. An exception the runner catches
  *      by name FIRST cannot: `HitlTimeoutError` becomes `hitl_timeout`,
  *      `SessionTurnTimeoutError` becomes `session_turn_timeout`,
@@ -164,10 +164,10 @@ describe("the enumeration reads the real backend", () => {
     // than silently re-found somewhere the design brief never read. The
     // runner line numbers moved with ADR 0057's kind dispatch, which is
     // this assertion working: a re-citation is a deliberate act.
-    expect(RUNNER.split("\n")[1475]).toContain('job.error_type = "session_turn_timeout"');
-    expect(RUNNER.split("\n")[1505]).toContain('job.error_type = "hitl_timeout"');
-    expect(RUNNER.split("\n")[1533]).toContain('job.error_type = "cost_budget_exceeded"');
-    expect(RUNNER.split("\n")[1598]).toContain('job.error_type = "timeout"');
+    expect(RUNNER.split("\n")[1505]).toContain('job.error_type = "session_turn_timeout"');
+    expect(RUNNER.split("\n")[1535]).toContain('job.error_type = "hitl_timeout"');
+    expect(RUNNER.split("\n")[1563]).toContain('job.error_type = "cost_budget_exceeded"');
+    expect(RUNNER.split("\n")[1628]).toContain('job.error_type = "timeout"');
     expect(REDRIVER.split("\n")[517]).toContain("job.error_type = ORPHANED_ERROR_TYPE");
   });
 

@@ -174,8 +174,17 @@ class ParkingSpec:
     log_event: str
 
     def timeout_sec(self) -> int:
-        """The current bound on the parked wait, read fresh from settings."""
-        return int(getattr(settings, self.timeout_setting))
+        """The current bound on the parked wait, read fresh from settings.
+
+        Annotated rather than `int(...)`-cast: the cast satisfied mypy at
+        the price of truncating whatever it was handed, and a test that
+        patches a fractional timeout in through `model_copy` (which
+        bypasses Pydantic's validation, as `tests/test_api_hitl.py` does)
+        would silently get a different wait — and a different message in
+        the timeout error — than it asked for.
+        """
+        value: int = getattr(settings, self.timeout_setting)
+        return value
 
 
 async def _emit_plan_ready(job: Job, plan: dict[str, Any]) -> None:
@@ -704,27 +713,40 @@ async def _handle_session_turn_pause(ctx: PauseContext) -> None:
     # On the row before the frame goes out, so a client that attaches
     # between the two gets the ADR 0053 replay rather than silence.
     job.turn = turn
-    await _park_until_resumed(
-        job,
-        ctx.store,
-        SESSION_TURN_PARKING,
-        payload=turn,
-        # No turn *content* in the log line: the payload is model
-        # output about a paper the learner is reading, and the
-        # observability rules keep user text out of records
-        # (ADR 0019). The count is what an operator needs.
-        log_extra={"turn_number": ctx.pause_number},
-    )
+    try:
+        await _park_until_resumed(
+            job,
+            ctx.store,
+            SESSION_TURN_PARKING,
+            payload=turn,
+            # No turn *content* in the log line: the payload is model
+            # output about a paper the learner is reading, and the
+            # observability rules keep user text out of records
+            # (ADR 0019). The count is what an operator needs.
+            log_extra={"turn_number": ctx.pause_number},
+        )
 
-    # The graph reads the learner's reply from the checkpoint, so the
-    # runner writes it there before resuming. `aupdate_state` merges
-    # into the interrupted thread — the same call plan revision makes,
-    # against a different key.
-    if job.resume_payload:
-        await ctx.app.aupdate_state(ctx.config, job.resume_payload)
+        # Take the reply before awaiting anything. `job` is shared with
+        # whatever hydrated the resume — the pub/sub watcher, or a
+        # future turn endpoint — and `aupdate_state` is a suspension
+        # point: reading the field twice could apply one reply and then
+        # null a second one that arrived in between, losing a turn the
+        # learner would have to be asked for again.
+        reply = job.resume_payload
+        job.resume_payload = None
+        if reply:
+            # The graph reads the learner's reply from the checkpoint,
+            # so the runner writes it there before resuming.
+            # `aupdate_state` merges into the interrupted thread — the
+            # same call plan revision makes, against a different key.
+            await ctx.app.aupdate_state(ctx.config, reply)
+    finally:
+        # Cleared on every exit, not just the resumed one. A job that
+        # times out or raises here goes terminal through `run_job`, and
+        # a terminal row still advertising the turn it was waiting on
+        # is a row that claims a question is open when it is not.
+        job.turn = None
 
-    job.turn = None
-    job.resume_payload = None
     await _unpark(job, ctx.store)
 
 
@@ -859,8 +881,16 @@ def runtime_for(kind: str) -> JobKindRuntime:
     how an operator finds out a job is being driven by the wrong
     policy — the alternative, a silent default, is how a session gets
     auto-resumed past every one of its turns.
+
+    Total by construction, including for inputs the annotation says
+    cannot happen. `run_job` calls this before its containment `try`
+    and promises never to raise, so a bare `kind not in JOB_KINDS`
+    would turn an unhashable value into a `TypeError` that escapes
+    `run_job` entirely and wedges the job non-terminal with its SSE
+    clients hanging — the exact failure the containment block exists
+    to prevent.
     """
-    if kind not in JOB_KINDS:
+    if not isinstance(kind, str) or kind not in JOB_KINDS:
         log.warning("api_job_unknown_kind", extra={"job_kind": kind})
         return RESEARCH_RUNTIME
     return JOB_KIND_RUNTIMES[cast(JobKind, kind)]
