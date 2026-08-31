@@ -489,6 +489,12 @@ export interface components {
             job_id: string;
             /** Status */
             status: string;
+            /**
+             * Kind
+             * @description Which graph this job drives — `research` or `session` (ADR 0057). Defaulted rather than required so the field is additive: a client written before it, and a recorded fixture captured before it, both stay valid.
+             * @default research
+             */
+            kind: string;
             /** Query */
             query: string;
             /** Created At */

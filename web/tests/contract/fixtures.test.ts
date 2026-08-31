@@ -143,9 +143,23 @@ const jobStatusSchema = z.enum([
 ]);
 proves<Exact<z.infer<typeof jobStatusSchema>, JobStatus>>(true);
 
+/**
+ * The second narrowing, and the one with a caveat (ADR 0057).
+ *
+ * `kind` is optional here because every fixture below was recorded
+ * before `src/api/schemas.py` grew the field — that is what "the
+ * field is additive" means in practice, and re-recording bodies just
+ * to acquire a key nothing reads yet would be churn. `.optional()`
+ * rather than a missing key is the load-bearing part: `.strictObject`
+ * still rejects the fixture that starts carrying `kind: "curriculum"`,
+ * which is the drift this file exists to catch.
+ */
+const jobKindSchema = z.enum(["research", "session"]);
+
 const jobDetailSchema = z.strictObject({
   job_id: z.string(),
   status: jobStatusSchema,
+  kind: jobKindSchema.optional(),
   query: z.string(),
   created_at: z.number(),
   started_at: z.number().nullable(),

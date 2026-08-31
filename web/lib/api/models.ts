@@ -50,6 +50,15 @@ export type JobStatus =
 
 export type ReviewAction = "approve" | "revise" | "cancel";
 
+/**
+ * Which graph a job drives (`src/api/jobs.py::JobKind`, ADR 0057).
+ *
+ * Same narrowing as `JobStatus`: the backend types it `str`, the
+ * vocabulary is closed, and pinning it here is a claim tested against
+ * recorded bodies rather than proved by the compiler.
+ */
+export type JobKind = "research" | "session";
+
 // ---------------------------------------------------------------------------
 // Request and response models.
 // ---------------------------------------------------------------------------
@@ -107,10 +116,27 @@ export type ValidationErrorItem = Schemas["ValidationError"];
 
 export type JobDetail = Omit<
   Serialized<Schemas["JobDetail"]>,
-  "status" | "plan"
+  "status" | "kind" | "plan"
 > & {
   /** Narrowed from the generated `string`; see the note above. */
   status: JobStatus & Schemas["JobDetail"]["status"];
+  /**
+   * Which graph the job drives (ADR 0057). Narrowed like `status`, and
+   * the one field `Serialized` is deliberately *not* applied to.
+   *
+   * A response from today's server always carries it — FastAPI
+   * renders the Pydantic default — so the general `Serialized`
+   * argument holds. What does not carry it is every body recorded
+   * before the field existed, which is the entire corpus
+   * `tests/contract/fixtures.test.ts` parses, plus any older worker
+   * still answering during a rolling deploy. Optional is therefore
+   * the true statement about what a consumer can find here today.
+   *
+   * WO-W13 is the card that makes it required: it is the first
+   * surface that reads `kind`, and re-recording the job fixtures
+   * against a session-aware stack is part of its work.
+   */
+  kind?: JobKind & Schemas["JobDetail"]["kind"];
   /** Populated when `status === "pending_review"` (ADR 0030). */
   plan: (Plan & NonNullable<Schemas["JobDetail"]["plan"]>) | null;
 };

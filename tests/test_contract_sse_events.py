@@ -17,6 +17,15 @@ This is the producer half. It does three things:
 
 The consumer half is `web/tests/contract/events.test.ts`. Adding a backend
 event breaks both.
+
+ADR 0057 adds the one case this design did not have before: a backend event
+the web tier does not consume *yet*. `turn_ready` is emitted by the session
+parking, and the surface that listens for it is WO-W13's — adding it to
+`web/lib/api/events.ts` today would force ten new rows into
+`web/lib/job/machine.ts`'s total transition table for a phase no route can
+reach. So the gap is declared, in `WEB_UNCONSUMED_EVENT_NAMES`, and tested
+from both directions: the backend must emit it, and the web client must not
+yet declare it. That is a ledger entry with an owner, not a hole.
 """
 
 from __future__ import annotations
@@ -29,6 +38,7 @@ import pytest
 from src.api.jobs import Job, JobStatus
 from src.api.routes import _terminal_event_name
 from src.api.streaming import (
+    PAUSE_EVENT_NAMES,
     STREAM_CLOSING_EVENT_NAMES,
     STREAM_TIMEOUT_EVENT,
     TERMINAL_EVENT_NAMES,
@@ -43,8 +53,11 @@ ROUTES_SRC = (ROOT / "src" / "api" / "routes.py").read_text(encoding="utf-8")
 EVENTS_TS = (ROOT / "web" / "lib" / "api" / "events.ts").read_text(
     encoding="utf-8"
 )
+MODELS_TS = (ROOT / "web" / "lib" / "api" / "models.ts").read_text(
+    encoding="utf-8"
+)
 
-#: `TERMINAL_EVENT_NAMES ∪ {job_started, node_completed, plan_ready} ∪
+#: `TERMINAL_EVENT_NAMES ∪ {job_started, node_completed} ∪ PAUSE_EVENT_NAMES ∪
 #: {STREAM_TIMEOUT_EVENT}` — written out rather than composed, because a pin
 #: that derives itself from its subject pins nothing.
 PINNED_EVENT_NAMES = frozenset(
@@ -52,12 +65,37 @@ PINNED_EVENT_NAMES = frozenset(
         "job_started",
         "node_completed",
         "plan_ready",
+        "turn_ready",
         "job_completed",
         "job_failed",
         "job_cancelled",
         "stream_timeout",
     }
 )
+
+#: Backend events the web tier does not listen for yet, with the work order
+#: that closes each. Every name here is one the server really emits, so the
+#: entry is a declared debt rather than an omission — and both halves are
+#: asserted below, so neither a forgotten pickup nor a premature one passes.
+WEB_UNCONSUMED_EVENT_NAMES: dict[str, str] = {
+    # WO-W13 (the guided-read session view) adds the listener. Until a
+    # route can create a `kind="session"` job there is nothing for the
+    # client to render, and declaring the name early would force ten
+    # rows into `web/lib/job/machine.ts`'s total transition table for a
+    # phase that is unreachable.
+    "turn_ready": "WO-W13",
+}
+
+#: `JobStatus` members the web tier does not render yet, same ledger shape.
+#: `JobDetail.status` is a bare `str` in the OpenAPI document, so the
+#: frontend's vocabulary is hand-written too and nothing generated it.
+WEB_UNRENDERED_JOB_STATUSES: dict[str, str] = {
+    # WO-W13 again, and for the same reason: the status only appears on
+    # a `kind="session"` job, and no route can create one. Adding it to
+    # the union today would oblige `machine.ts`, `spineState.ts` and
+    # `JOB_STATUS_WORD` to answer for a phase nothing can reach.
+    "awaiting_learner": "WO-W13",
+}
 
 #: The runner's own emit helpers. Both take `(job, event_name, payload)`.
 _RUNNER_EMIT = re.compile(
@@ -90,10 +128,26 @@ def _route_event_names() -> set[str]:
 def test_pinned_set_is_the_documented_union() -> None:
     assert (
         TERMINAL_EVENT_NAMES
-        | {"job_started", "node_completed", "plan_ready"}
+        | {"job_started", "node_completed"}
+        | PAUSE_EVENT_NAMES
         | {STREAM_TIMEOUT_EVENT}
         == PINNED_EVENT_NAMES
     )
+
+
+def test_pause_frames_never_end_the_stream() -> None:
+    """The property ADR 0057 asks to be asserted rather than commented.
+
+    A parking frame says "a human has to act now". Landing one in either
+    closing set would tear the connection down at exactly the moment the
+    human is supposed to act — and for a session, which parks once per
+    turn rather than once per run, that would be every turn.
+    """
+    assert {"plan_ready", "turn_ready"} == PAUSE_EVENT_NAMES
+    assert not (PAUSE_EVENT_NAMES & TERMINAL_EVENT_NAMES)
+    assert not (PAUSE_EVENT_NAMES & STREAM_CLOSING_EVENT_NAMES)
+    # And each is a real event, not a name that only exists in the set.
+    assert PAUSE_EVENT_NAMES <= PINNED_EVENT_NAMES
 
 
 def test_terminal_names_stay_derived_from_their_status_mapping() -> None:
@@ -118,8 +172,11 @@ def test_every_emitted_name_is_in_the_pinned_set() -> None:
     routes = _route_event_names()
 
     # Guard against a regex that quietly matches nothing.
-    assert len(runner) == 6, runner
+    assert len(runner) == 7, runner
     assert "plan_ready" in routes
+    # Both parking frames have an attach-time replay (ADR 0053/0057), so
+    # both are emitted from the route as well as from the runner.
+    assert routes >= PAUSE_EVENT_NAMES
 
     assert runner | routes | {STREAM_TIMEOUT_EVENT} == PINNED_EVENT_NAMES
 
@@ -150,22 +207,85 @@ def test_attach_replay_reuses_the_runner_terminal_names() -> None:
     assert replayed == TERMINAL_EVENT_NAMES
 
 
-def test_the_web_client_declares_exactly_the_same_set() -> None:
-    """Cross-side tie: `web/lib/api/events.ts` is hand-written, so read it.
-
-    The Vitest half asserts the same list from inside the module system; this
-    reads the source so that a backend change alone is enough to fail the
-    Python job, without anyone having to run the web suite.
-    """
+def _declared_server_event_names() -> set[str]:
     block = re.search(
         r"export const SERVER_EVENT_NAMES = \[(.*?)\] as const;",
         EVENTS_TS,
         re.DOTALL,
     )
     assert block is not None, "SERVER_EVENT_NAMES not found in events.ts"
+    return set(re.findall(r'"([a-z_]+)"', block.group(1)))
 
+
+def test_the_web_client_declares_exactly_the_same_set() -> None:
+    """Cross-side tie: `web/lib/api/events.ts` is hand-written, so read it.
+
+    The Vitest half asserts the same list from inside the module system; this
+    reads the source so that a backend change alone is enough to fail the
+    Python job, without anyone having to run the web suite.
+
+    "The same set" now means "the same set, minus the declared debts" —
+    see `WEB_UNCONSUMED_EVENT_NAMES`. A backend event that is neither
+    consumed nor listed there still fails here, which is the property
+    this test existed for.
+    """
+    assert (
+        _declared_server_event_names()
+        == PINNED_EVENT_NAMES - set(WEB_UNCONSUMED_EVENT_NAMES)
+    )
+
+
+def test_the_unconsumed_ledger_describes_reality_on_both_sides() -> None:
+    """A debt that is not real is worse than no ledger at all.
+
+    Both halves, because both ways of being wrong are silent: an entry
+    for an event the backend does not emit would excuse the web tier
+    from a name that will never arrive, and an entry for one the web
+    tier *has* since picked up would keep excusing it forever — the
+    listener would exist while the drift check went on ignoring it.
+    """
+    emitted = _runner_event_names() | _route_event_names()
+    declared = _declared_server_event_names()
+    for name, owner in WEB_UNCONSUMED_EVENT_NAMES.items():
+        assert name in emitted, f"{name} is listed as unconsumed but never emitted"
+        assert name not in declared, (
+            f"{name} is declared in events.ts; drop it from "
+            "WEB_UNCONSUMED_EVENT_NAMES so the drift check covers it again"
+        )
+        assert owner, f"{name} has no owning work order"
+
+
+def test_the_web_client_declares_every_job_status_or_declares_the_gap() -> None:
+    """The drift check `JobStatus` never had, added because 0057 widened it.
+
+    `JobDetail.status` is a bare `str` in the OpenAPI document, so
+    nothing generates the frontend's view of the vocabulary either —
+    `web/lib/api/models.ts` narrows it by hand, exactly as it does the
+    event names, and until now nothing compared the two. That gap is
+    how `awaiting_learner` could reach a browser as a status the client
+    parses into a Zod enum that rejects it and a copy table that
+    answers `undefined`, with every build still green.
+
+    Same ledger shape as the events above, and the same two-sided
+    assertion: an entry has to name a status the backend really has,
+    and has to disappear the moment the web tier picks it up.
+    """
+    block = re.search(
+        r"export type JobStatus =(.*?);", MODELS_TS, re.DOTALL
+    )
+    assert block is not None, "JobStatus union not found in models.ts"
     declared = set(re.findall(r'"([a-z_]+)"', block.group(1)))
-    assert declared == PINNED_EVENT_NAMES
+
+    backend = {status.value for status in JobStatus}
+    for status, owner in WEB_UNRENDERED_JOB_STATUSES.items():
+        assert status in backend, f"{status} is listed as unrendered but is not a JobStatus"
+        assert status not in declared, (
+            f"{status} is declared in models.ts; drop it from "
+            "WEB_UNRENDERED_JOB_STATUSES so the drift check covers it again"
+        )
+        assert owner, f"{status} has no owning work order"
+
+    assert declared == backend - set(WEB_UNRENDERED_JOB_STATUSES)
 
 
 def test_the_web_client_keeps_stream_timeout_out_of_the_terminal_set() -> None:

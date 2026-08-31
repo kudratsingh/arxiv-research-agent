@@ -327,6 +327,17 @@ export const ERROR_TYPE_COPY = {
     sentence: "The plan was not reviewed in time, so the run stopped.",
     recovery: "Ask again to start a new run.",
   },
+  session_turn_timeout: {
+    // ADR 0057's parked session. No surface renders this yet — WO-W13
+    // builds the one that will — but the drift test below derives the
+    // producible set from `src/`, so a backend `error_type` without a
+    // sentence is a gap the moment it exists, not the moment it is
+    // first seen. Names the timeout without naming a duration: the
+    // deadline is server configuration (`session_turn_timeout_sec`),
+    // not an API field, the same reason plan review has no countdown.
+    sentence: "The session was waiting for an answer for too long, so it ended.",
+    recovery: "Start the session again to carry on from where it stopped.",
+  },
   cost_budget_exceeded: {
     sentence: "The run reached this workspace's cost limit.",
     recovery: "Ask again with a narrower plan.",
@@ -362,7 +373,7 @@ export const ERROR_TYPE_COPY = {
   },
 } as const satisfies Record<string, ErrorTypeCopy>;
 
-/** The nine keys, as a list, for the drift test and for stories. */
+/** The keys, as a list, for the drift test and for stories. */
 export const MAPPED_ERROR_TYPES = Object.keys(
   ERROR_TYPE_COPY,
 ) as Array<keyof typeof ERROR_TYPE_COPY>;

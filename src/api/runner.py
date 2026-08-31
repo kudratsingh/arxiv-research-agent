@@ -42,9 +42,10 @@ import contextlib
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextvars import ContextVar
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, cast
 
-from src.api.jobs import Job, JobStatus, JobStore
+from src.api.jobs import JOB_KINDS, Job, JobKind, JobStatus, JobStore
 from src.api.redriver import WORKER_ID
 from src.cancellation import CancelToken, bind_cancel_token, reset_cancel_token
 from src.config import settings
@@ -112,6 +113,171 @@ class HitlTimeoutError(Exception):
 
 class HitlCancelledError(Exception):
     """Client sent `action=cancel` from the review endpoint."""
+
+
+class SessionTurnTimeoutError(Exception):
+    """A `session` job sat in `awaiting_learner` past its turn timeout.
+
+    Deliberately a sibling of `HitlTimeoutError` rather than a subclass
+    of a shared base: `run_job` catches both by name and writes a
+    different `error_type` for each, and `web/tests/copy/errorTypeDrift.test.ts`
+    derives the frontend's error vocabulary by matching `class X(Exception)`
+    in `src/`. A base class would hide both from that check.
+    """
+
+
+ParkFrameEmitter = Callable[[Job, dict[str, Any]], Awaitable[None]]
+"""Publishes the SSE frame that tells a client the job has parked.
+
+One per parking flavour, and each one spells its event name as a
+string literal at a real `_put_event` call. That is deliberate:
+`tests/test_contract_sse_events.py` scrapes those literals out of this
+module's source to prove no name escapes the pinned contract, and a
+name routed through a constant or a dataclass field would slip past
+the scraper.
+"""
+
+
+@dataclass(frozen=True)
+class ParkingSpec:
+    """One flavour of runner pause: where a job parks and how it wakes.
+
+    The runner has exactly one sanctioned way to stop mid-graph and
+    wait for a human — park the job in a *non-terminal* status,
+    publish a frame naming what the human has to decide, and block on
+    `job.resume_event` until the review endpoint sets it locally or a
+    peer worker's pub/sub message does (ADR 0034). ADR 0030 built that
+    for plan review; this record is the shape of it, so a second graph
+    can inherit the same lifecycle instead of growing a second copy.
+
+    `timeout_setting` is an attribute *name*, not a value, on purpose:
+    the runner reads module-level `settings` at call time so a test can
+    `monkeypatch.setattr(runner_module, "settings", ...)` (see
+    `tests/test_api_hitl.py::_app_with`), and a value captured at
+    import would ignore the patch.
+
+    Attributes:
+        status: Non-terminal status the job sits in while parked.
+        emit: Publishes the park frame. Never a terminal or
+            stream-closing event — the stream stays open across the
+            pause, exactly as it does for `plan_ready`.
+        timeout_setting: Name of the `settings` field bounding the wait.
+        timeout_error: Raised with the timeout message when nobody
+            resumes in time; `run_job` maps it to a terminal outcome.
+        log_event: Structured log event name emitted on the park.
+    """
+
+    status: JobStatus
+    emit: ParkFrameEmitter
+    timeout_setting: str
+    timeout_error: type[Exception]
+    log_event: str
+
+    def timeout_sec(self) -> int:
+        """The current bound on the parked wait, read fresh from settings.
+
+        Annotated rather than `int(...)`-cast: the cast satisfied mypy at
+        the price of truncating whatever it was handed, and a test that
+        patches a fractional timeout in through `model_copy` (which
+        bypasses Pydantic's validation, as `tests/test_api_hitl.py` does)
+        would silently get a different wait — and a different message in
+        the timeout error — than it asked for.
+        """
+        value: int = getattr(settings, self.timeout_setting)
+        return value
+
+
+async def _emit_plan_ready(job: Job, plan: dict[str, Any]) -> None:
+    """Publish the plan-review frame (ADR 0030).
+
+    `routes.py::_plan_ready_data` reproduces this payload byte for byte
+    for the ADR 0053 attach-time replay, so the two are edited
+    together or a reconnecting reviewer gets a different plan shape
+    than a connected one.
+    """
+    await _put_event(job, "plan_ready", {"job_id": job.job_id, "plan": plan})
+
+
+async def _emit_turn_ready(job: Job, turn: dict[str, Any]) -> None:
+    """Publish the learner-turn frame (ADR 0057).
+
+    `turn_ready` is a pause frame, not an outcome: like `plan_ready` it
+    is deliberately absent from `TERMINAL_EVENT_NAMES` and
+    `STREAM_CLOSING_EVENT_NAMES` in `src.api.streaming`, so the SSE
+    connection stays open across the whole session rather than being
+    torn down and re-established once per turn.
+    """
+    await _put_event(job, "turn_ready", {"job_id": job.job_id, "turn": turn})
+
+
+HITL_PARKING = ParkingSpec(
+    status=JobStatus.pending_review,
+    emit=_emit_plan_ready,
+    timeout_setting="api_hitl_timeout_sec",
+    timeout_error=HitlTimeoutError,
+    log_event="api_job_pending_review",
+)
+"""Plan review — the original parking, and the one that proves the shape."""
+
+SESSION_TURN_PARKING = ParkingSpec(
+    status=JobStatus.awaiting_learner,
+    emit=_emit_turn_ready,
+    timeout_setting="session_turn_timeout_sec",
+    timeout_error=SessionTurnTimeoutError,
+    log_event="api_job_awaiting_learner",
+)
+"""A guided-read session waiting for the learner's next turn (ADR 0057)."""
+
+SESSION_TURN_STATE_KEY = "turn"
+"""Where the session graph leaves the payload for the turn it parked on.
+
+The runner reads this key off the checkpoint at the interrupt and
+publishes whatever `dict` it finds. Keeping the shape opaque here is
+the point: WO-W03 owns what a turn contains, and SR-04 wants the
+activity payload to grow a research-task variant in Phase L without a
+runner change or a state migration. A session that parks without
+setting it still gets a well-formed (empty) frame rather than a
+`KeyError` mid-run.
+"""
+
+
+@dataclass(frozen=True)
+class PauseContext:
+    """Everything a pause handler needs at one graph interrupt.
+
+    Bundled rather than passed as seven positional arguments because
+    the handler is a pluggable policy (`_invoke_streaming`'s
+    `on_pause`), and a policy's signature is a contract other modules
+    implement against.
+
+    Attributes:
+        app: The compiled graph, for `aupdate_state` on the resume.
+        config: LangGraph config carrying `thread_id`.
+        run_id: The thread id, lifted out of `config` for logging.
+        workflow_state: The `aget_state` snapshot at the interrupt.
+        job: Job being driven, or None for programmatic/eval callers
+            that must never pause.
+        store: Job store, or None for the same callers.
+        pause_number: 1-based count of interrupts seen on this run.
+    """
+
+    app: Any
+    config: dict[str, Any]
+    run_id: str
+    workflow_state: Any
+    job: Job | None
+    store: JobStore | None
+    pause_number: int
+
+
+PauseHandler = Callable[[PauseContext], Awaitable[None]]
+"""What to do when the compiled graph stops at an interrupt.
+
+Returning means "resume the graph"; raising ends the run. The handler
+owns the decision of whether *this* interrupt is a park at all — the
+research graph reviews only its first pause (ADR 0030's
+one-review-per-query intent) and auto-resumes the rest.
+"""
 
 
 def _initial_state(
@@ -249,12 +415,14 @@ def _extract_final_metrics(state: dict[str, Any]) -> dict[str, Any]:
 
 async def _invoke_streaming(
     workflow: Any,
-    initial_state: ResearchState,
+    initial_state: ResearchState | dict[str, Any],
     run_id: str,
     on_node: Callable[[str, dict[str, Any]], Awaitable[None]],
     *,
     job: Job | None = None,
     store: JobStore | None = None,
+    on_pause: PauseHandler | None = None,
+    max_pauses: int | None = None,
 ) -> dict[str, Any]:
     """Run the pre-compiled workflow, honoring the HITL breakpoint.
 
@@ -290,13 +458,19 @@ async def _invoke_streaming(
     is compiled with an interrupt: the runner just resumes immediately
     without waiting.
 
+    `on_pause` is the pause *policy*, defaulting to plan review. It is
+    a parameter rather than a hard-coded call so a second graph with a
+    different pause meaning can reuse this loop unchanged; the loop
+    itself only knows that an interrupt happened, never why.
+
     The workflow is pre-compiled at app startup and shared across
     jobs (ADR 0034) — previously we re-compiled per job, which
     opened a fresh checkpointer connection every time and never
     cleaned it up until process exit.
     """
     app = workflow
-    config = {"configurable": {"thread_id": run_id}}
+    config: dict[str, Any] = {"configurable": {"thread_id": run_id}}
+    handle_pause = on_pause if on_pause is not None else _handle_hitl_pause
 
     # Fallback final state for checkpointing-disabled runs, where
     # `aget_state` has nothing to answer from. Plain dict-merge is
@@ -305,11 +479,7 @@ async def _invoke_streaming(
     # consumed from here.
     merged: dict[str, Any] = dict(initial_state)
 
-    # ADR 0030 intends one human review per query; every extra planner
-    # run re-arms the interrupt and is auto-resumed. `+ 2` margin: the
-    # initial planner run plus one defensive slot beyond the critic's
-    # own `max_iterations` force-approve.
-    max_pauses = settings.max_iterations + 2
+    pause_ceiling = max_pauses if max_pauses is not None else _research_max_pauses()
     pauses = 0
     stream_input: Any = initial_state
     while True:
@@ -353,67 +523,73 @@ async def _invoke_streaming(
             return dict(workflow_state.values)
 
         pauses += 1
-        if pauses > max_pauses:
+        if pauses > pause_ceiling:
             raise RuntimeError(
-                f"workflow still interrupted after {max_pauses} resumes "
+                f"workflow still interrupted after {pause_ceiling} resumes "
                 f"(thread_id={run_id}); refusing to report a paused "
                 "graph as a finished job"
             )
-        if pauses == 1:
-            await _handle_hitl_pause(app, config, workflow_state, job, store)
-        else:
-            log.info(
-                "api_job_interrupt_auto_resumed",
-                extra={"thread_id": run_id, "pause_number": pauses},
+        await handle_pause(
+            PauseContext(
+                app=app,
+                config=config,
+                run_id=run_id,
+                workflow_state=workflow_state,
+                job=job,
+                store=store,
+                pause_number=pauses,
             )
+        )
         # Resume from checkpoint — `None` input means "continue from
         # where we paused"; anything else would restart the graph.
         stream_input = None
 
 
-async def _handle_hitl_pause(
-    app: Any,
-    config: dict[str, Any],
-    workflow_state: Any,
-    job: Job | None,
+async def _park_until_resumed(
+    job: Job,
     store: JobStore | None,
+    spec: ParkingSpec,
+    *,
+    payload: dict[str, Any],
+    log_extra: dict[str, Any] | None = None,
 ) -> None:
-    """Bridge the pause: populate `job.plan`, emit `plan_ready`, wait
-    on the resume signal, optionally apply edits.
+    """Park `job` per `spec` and block until something resumes it.
 
-    No-op when `job` is None (called from eval / programmatic
-    paths that shouldn't pause). When `job.hitl_bypass` is True the
-    runner resumes immediately without emitting a review event.
+    The three steps of a pause, in the order the rest of the system
+    depends on: the store row moves to the parked status *first* (a
+    client that polls `GET /research/{id}` the instant the frame lands
+    must not still read `running`), then the frame goes out, then the
+    runner waits.
 
     ADR 0034: when the store advertises a `watch_for_remote_resume`
-    method (`RedisJobStore` does), spawn a subscription task
-    alongside the local `resume_event` await. That's what lets a
-    review submitted to worker B wake the runner sitting on
-    worker A. Single-worker deployments and in-memory stores skip
-    the subscription and just await the local event.
-    """
-    if job is None:
-        return
-    if job.hitl_bypass:
-        # Compiled interrupt is unconditional; caller opted out.
-        return
+    method (`RedisJobStore` does), spawn a subscription task alongside
+    the local `resume_event` await. That's what lets a resume
+    submitted to worker B wake the runner sitting on worker A.
+    Single-worker deployments and in-memory stores skip the
+    subscription and just await the local event. The channel is the
+    same one for every parking flavour — it is keyed by job id, not by
+    what the job is waiting for.
 
-    plan_values = {
-        "sub_questions": list(workflow_state.values.get("sub_questions", [])),
-        "search_queries": list(workflow_state.values.get("search_queries", [])),
-    }
-    job.plan = plan_values
-    job.status = JobStatus.pending_review
+    Args:
+        job: The job to park. Mutated in place.
+        store: Job store, or None for programmatic callers.
+        spec: Which parking this is — status, frame, timeout, error.
+        payload: Parking-specific body handed to `spec.emit`.
+        log_extra: Extra structured-log fields for the park record.
+            `job_id` is always included.
+
+    Raises:
+        Exception: `spec.timeout_error`, when nobody resumed within
+            the spec's timeout. The caller turns that into a terminal
+            job outcome.
+    """
+    job.status = spec.status
     if store is not None:
         await store.update(job)
-    await _put_event(
-        job,
-        "plan_ready",
-        {"job_id": job.job_id, "plan": plan_values},
-    )
+    await spec.emit(job, payload)
     log.info(
-        "api_job_pending_review",
-        extra={"job_id": job.job_id, **_plan_shape(plan_values)},
+        spec.log_event,
+        extra={"job_id": job.job_id, **(log_extra or {})},
     )
 
     subscription: asyncio.Task[None] | None = None
@@ -423,15 +599,16 @@ async def _handle_hitl_pause(
             watch(job), name=f"hitl-resume-{job.job_id}"
         )
 
+    timeout_sec = spec.timeout_sec()
     try:
         try:
             await asyncio.wait_for(
                 job.resume_event.wait(),
-                timeout=settings.api_hitl_timeout_sec,
+                timeout=timeout_sec,
             )
         except TimeoutError as exc:
-            raise HitlTimeoutError(
-                f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
+            raise spec.timeout_error(
+                f"{spec.status.value} exceeded {timeout_sec}s"
             ) from exc
     finally:
         if subscription is not None:
@@ -439,22 +616,284 @@ async def _handle_hitl_pause(
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await subscription
 
+
+async def _unpark(job: Job, store: JobStore | None) -> None:
+    """Put a resumed job back to `running` and re-arm its resume event.
+
+    The event has to be cleared or the *next* park on the same job
+    returns instantly — which for a turn-shaped graph would drive the
+    whole session without ever waiting for the learner.
+    """
+    job.status = JobStatus.running
+    job.resume_event.clear()
+    if store is not None:
+        await store.update(job)
+
+
+async def _handle_hitl_pause(ctx: PauseContext) -> None:
+    """Bridge the pause: populate `job.plan`, emit `plan_ready`, wait
+    on the resume signal, optionally apply edits.
+
+    Only the FIRST interrupt of a run is a human review (ADR 0030's
+    one-review-per-query intent); `interrupt_after=["planner"]`
+    re-arms on every planner execution, so a critic-driven re-plan
+    parks the graph again and those pauses auto-resume silently.
+
+    No-op when `ctx.job` is None (called from eval / programmatic
+    paths that shouldn't pause). When `job.hitl_bypass` is True the
+    runner resumes immediately without emitting a review event.
+    """
+    if ctx.pause_number != 1:
+        log.info(
+            "api_job_interrupt_auto_resumed",
+            extra={
+                "thread_id": ctx.run_id,
+                "pause_number": ctx.pause_number,
+            },
+        )
+        return
+
+    job = ctx.job
+    if job is None:
+        return
+    if job.hitl_bypass:
+        # Compiled interrupt is unconditional; caller opted out.
+        return
+
+    values = ctx.workflow_state.values
+    plan_values = {
+        "sub_questions": list(values.get("sub_questions", [])),
+        "search_queries": list(values.get("search_queries", [])),
+    }
+    job.plan = plan_values
+    await _park_until_resumed(
+        job,
+        ctx.store,
+        HITL_PARKING,
+        payload=plan_values,
+        log_extra=_plan_shape(plan_values),
+    )
+
     if job.resume_action == "cancel":
         raise HitlCancelledError("client cancelled during plan review")
 
     if job.resume_action == "revise" and job.resume_plan:
-        await app.aupdate_state(config, job.resume_plan)
+        await ctx.app.aupdate_state(ctx.config, job.resume_plan)
         log.info(
             "api_job_plan_revised",
             extra={"job_id": job.job_id, **_plan_shape(job.resume_plan)},
         )
 
     # Back to running for the resume path.
-    job.status = JobStatus.running
     job.plan = None
-    job.resume_event.clear()
-    if store is not None:
-        await store.update(job)
+    await _unpark(job, ctx.store)
+
+
+async def _handle_session_turn_pause(ctx: PauseContext) -> None:
+    """Park a `session` job on *every* interrupt (ADR 0057).
+
+    The one structural difference from plan review, and the reason the
+    pause policy is a parameter at all: a research run interrupts
+    incidentally (the planner re-arms `interrupt_after` on every
+    re-plan) and only its first pause is a human decision, whereas a
+    tutoring session interrupts *because* it is the learner's turn.
+    Auto-resuming any of them would run the whole session against
+    itself with nobody in the chair.
+
+    No-op when `ctx.job` is None, matching `_handle_hitl_pause`:
+    programmatic drivers of a session graph — the recorded-fixture
+    capture in WO-W08, for one — must not block on a human.
+    """
+    job = ctx.job
+    if job is None:
+        return
+
+    values = ctx.workflow_state.values
+    turn = dict(values.get(SESSION_TURN_STATE_KEY) or {})
+    # On the row before the frame goes out, so a client that attaches
+    # between the two gets the ADR 0053 replay rather than silence.
+    job.turn = turn
+    try:
+        await _park_until_resumed(
+            job,
+            ctx.store,
+            SESSION_TURN_PARKING,
+            payload=turn,
+            # No turn *content* in the log line: the payload is model
+            # output about a paper the learner is reading, and the
+            # observability rules keep user text out of records
+            # (ADR 0019). The count is what an operator needs.
+            log_extra={"turn_number": ctx.pause_number},
+        )
+
+        # Take the reply before awaiting anything. `job` is shared with
+        # whatever hydrated the resume — the pub/sub watcher, or a
+        # future turn endpoint — and `aupdate_state` is a suspension
+        # point: reading the field twice could apply one reply and then
+        # null a second one that arrived in between, losing a turn the
+        # learner would have to be asked for again.
+        reply = job.resume_payload
+        job.resume_payload = None
+        if reply:
+            # The graph reads the learner's reply from the checkpoint,
+            # so the runner writes it there before resuming.
+            # `aupdate_state` merges into the interrupted thread — the
+            # same call plan revision makes, against a different key.
+            await ctx.app.aupdate_state(ctx.config, reply)
+    finally:
+        # Cleared on every exit, not just the resumed one. A job that
+        # times out or raises here goes terminal through `run_job`, and
+        # a terminal row still advertising the turn it was waiting on
+        # is a row that claims a question is open when it is not.
+        job.turn = None
+
+    await _unpark(job, ctx.store)
+
+
+def _research_initial_state(job: Job, prior_context: str) -> dict[str, Any]:
+    """Adapter putting `_initial_state` behind the kind-runtime signature.
+
+    `_initial_state` keeps its `(query, run_id)` shape because
+    `tests/test_cli_run_recovery.py` compares it field-for-field
+    against the canonical `initial_research_state`.
+    """
+    return dict(_initial_state(job.query, job.job_id, prior_context=prior_context))
+
+
+def _session_initial_state(job: Job, prior_context: str) -> dict[str, Any]:
+    """Seed state for a `kind="session"` job — identity only.
+
+    `SessionState` and its constructor belong to WO-W03 and live
+    together in `src/graph/` under ADR 0052's "state and its
+    constructor are edited in one place" rule. The runner deliberately
+    does not restate that shape here: a second, drifting definition of
+    a state dict is the exact failure `test_cli_run_recovery.py`
+    guards the research state against. What the runner is entitled to
+    seed is what the runner knows — which checkpoint thread this is,
+    and what the learner asked for. The graph's entry node fills the
+    rest from the profile and content stores.
+
+    `prior_context` is accepted for signature symmetry and unused:
+    ADR 0032's retrieval is keyed on conversations of research
+    reports, and a session's memory is the Tier-1 store (WO-W05).
+    """
+    return {"run_id": job.job_id, "query": job.query}
+
+
+def _research_max_pauses() -> int:
+    """ADR 0030 intends one human review per query; every extra planner
+    run re-arms the interrupt and is auto-resumed. `+ 2` margin: the
+    initial planner run plus one defensive slot beyond the critic's own
+    `max_iterations` force-approve."""
+    return settings.max_iterations + 2
+
+
+def _session_max_pauses() -> int:
+    """Every session interrupt is a real learner turn, so the bound is
+    a turn count rather than a re-plan count."""
+    return settings.session_max_turns
+
+
+def _research_outer_timeout(job: Job, base_sec: float) -> float:
+    """Workflow budget plus headroom for one review cycle.
+
+    The per-job timeout caps the workflow's own wall-clock, never the
+    human's decision time — `api_hitl_timeout_sec` does that, inside
+    the parking. Without the headroom the outer `wait_for` would fire
+    mid-review and fail a job whose reviewer was still reading.
+    """
+    if settings.enable_hitl and not job.hitl_bypass:
+        return base_sec + settings.api_hitl_timeout_sec
+    return base_sec
+
+
+def _session_outer_timeout(job: Job, base_sec: float) -> float:
+    """Same reasoning, once per turn instead of once per run.
+
+    Deliberately generous: this is the backstop that stops a wedged
+    session pinning a worker forever, not the mechanism that ends an
+    abandoned one. `session_turn_timeout_sec` does that, per turn, and
+    fails the job with a `session_turn_timeout` that says why.
+    """
+    return base_sec + settings.session_turn_timeout_sec * settings.session_max_turns
+
+
+@dataclass(frozen=True)
+class JobKindRuntime:
+    """Everything `run_job` does differently for one job kind (ADR 0057).
+
+    The kinds share the whole lifecycle — the lease, the semaphore, the
+    cancel token, the cost accumulator, the terminal persistence and
+    metrics, every error path. What they do not share is four
+    decisions, and this record is the exhaustive list of them, so
+    "what changes when a third kind arrives" has an answer that is not
+    "read `run_job` and hope".
+
+    Every field is a callable rather than a value because all four read
+    `settings` (or the job) at call time; a value captured at import
+    would freeze the first `Settings` this module ever saw.
+
+    Attributes:
+        initial_state: Builds the graph input from the job and the
+            retrieved prior context.
+        on_pause: What an interrupt means for this kind.
+        max_pauses: How many interrupts are structurally plausible
+            before the runner concludes the graph and the runner
+            disagree and fails the job loudly.
+        outer_timeout: The job's wall-clock ceiling, given the base
+            `api_job_timeout_sec` budget. Must leave room for the
+            parked waits, which are bounded separately.
+    """
+
+    initial_state: Callable[[Job, str], dict[str, Any]]
+    on_pause: PauseHandler
+    max_pauses: Callable[[], int]
+    outer_timeout: Callable[[Job, float], float]
+
+
+RESEARCH_RUNTIME = JobKindRuntime(
+    initial_state=_research_initial_state,
+    on_pause=_handle_hitl_pause,
+    max_pauses=_research_max_pauses,
+    outer_timeout=_research_outer_timeout,
+)
+
+SESSION_RUNTIME = JobKindRuntime(
+    initial_state=_session_initial_state,
+    on_pause=_handle_session_turn_pause,
+    max_pauses=_session_max_pauses,
+    outer_timeout=_session_outer_timeout,
+)
+
+JOB_KIND_RUNTIMES: dict[JobKind, JobKindRuntime] = {
+    "research": RESEARCH_RUNTIME,
+    "session": SESSION_RUNTIME,
+}
+
+
+def runtime_for(kind: str) -> JobKindRuntime:
+    """The runtime for a job kind, defaulting to research.
+
+    Takes `str` rather than `JobKind` on purpose: the value can come
+    off a Redis row written by a worker with a wider vocabulary than
+    this build's. Falling back to the research runtime keeps such a
+    job running rather than crashing the worker, and the WARNING is
+    how an operator finds out a job is being driven by the wrong
+    policy — the alternative, a silent default, is how a session gets
+    auto-resumed past every one of its turns.
+
+    Total by construction, including for inputs the annotation says
+    cannot happen. `run_job` calls this before its containment `try`
+    and promises never to raise, so a bare `kind not in JOB_KINDS`
+    would turn an unhashable value into a `TypeError` that escapes
+    `run_job` entirely and wedges the job non-terminal with its SSE
+    clients hanging — the exact failure the containment block exists
+    to prevent.
+    """
+    if not isinstance(kind, str) or kind not in JOB_KINDS:
+        log.warning("api_job_unknown_kind", extra={"job_kind": kind})
+        return RESEARCH_RUNTIME
+    return JOB_KIND_RUNTIMES[cast(JobKind, kind)]
 
 
 def _plan_shape(plan: dict[str, Any]) -> dict[str, Any]:
@@ -874,6 +1313,15 @@ async def run_job(
     error containment: this function never raises — every failure
     ends up on the `Job` record.
 
+    One driver serves every job kind (ADR 0057). `job.kind` selects a
+    `JobKindRuntime` — the graph input, what an interrupt means, how
+    many interrupts are plausible, and the wall-clock ceiling — and
+    nothing else in here branches on it. That is the whole point of
+    the kind field: a session job gets the lease, the cancel token,
+    the cost accumulator, the terminal persistence and the outcome
+    metrics that took the research path fifty ADRs to get right,
+    rather than a second driver that would have to earn them again.
+
     When `job.conversation_id` is set and `conversation_store` is
     provided, the runner retrieves top-K chunks from prior jobs in
     that conversation before invoking the workflow, and appends the
@@ -912,6 +1360,9 @@ async def run_job(
             process's `WORKER_ID`; injectable for tests.
     """
     timeout = timeout_sec if timeout_sec is not None else settings.api_job_timeout_sec
+    # ADR 0057: the four decisions that differ per job kind, resolved
+    # once, up front. Everything below this line is shared lifecycle.
+    runtime = runtime_for(job.kind)
 
     # ADR 0038: take the lease *before* the semaphore, not after. A
     # job sits in `pending` for as long as the queue behind
@@ -1024,19 +1475,14 @@ async def run_job(
                         exc_info=True,
                     )
 
-            initial = _initial_state(
-                job.query, job.job_id, prior_context=prior_context
-            )
+            initial = runtime.initial_state(job, prior_context)
 
             # The overall timeout wraps only the workflow execution
-            # itself — not the HITL wait, which has its own
-            # `api_hitl_timeout_sec` inside `_handle_hitl_pause`.
-            # Compute a HITL-aware outer timeout: if HITL is enabled,
-            # allow enough headroom for one review cycle plus the
-            # workflow's own budget.
-            outer_timeout = timeout
-            if settings.enable_hitl and not job.hitl_bypass:
-                outer_timeout = timeout + settings.api_hitl_timeout_sec
+            # itself — not the parked waits, which have their own
+            # per-parking timeouts inside `_park_until_resumed`. The
+            # kind runtime sizes the headroom: one review cycle for
+            # research, one per turn for a session.
+            outer_timeout = runtime.outer_timeout(job, float(timeout))
 
             final_state = await asyncio.wait_for(
                 _invoke_streaming(
@@ -1046,9 +1492,42 @@ async def run_job(
                     on_node,
                     job=job,
                     store=store,
+                    on_pause=runtime.on_pause,
+                    max_pauses=runtime.max_pauses(),
                 ),
                 timeout=outer_timeout,
             )
+        except SessionTurnTimeoutError as exc:
+            # The learner stopped answering. Terminal, and named so the
+            # Ledger can tell an abandoned session apart from a broken
+            # one (WO-W07/W14) without parsing a message.
+            job.status = JobStatus.failed
+            job.error = str(exc)
+            job.error_type = "session_turn_timeout"
+            job.completed_at = time.time()
+            snapshot = costs.as_dict()
+            job.cost_usd = snapshot.get("total_cost_usd")
+            job.llm_calls = snapshot.get("call_count")
+            await _persist_terminal(store, job)
+            await _put_terminal_event(
+                job,
+                "job_failed",
+                {
+                    "job_id": job.job_id,
+                    "error": job.error,
+                    "error_type": job.error_type,
+                    "elapsed_sec": job.elapsed_sec(),
+                },
+            )
+            log.warning(
+                "api_job_session_turn_timeout",
+                extra={
+                    "job_id": job.job_id,
+                    "session_turn_timeout_sec": settings.session_turn_timeout_sec,
+                    **snapshot,
+                },
+            )
+            return
         except HitlTimeoutError:
             job.status = JobStatus.failed
             job.error = (

@@ -128,6 +128,7 @@ def _job_to_detail(job: Job) -> JobDetail:
     return JobDetail(
         job_id=job.job_id,
         status=job.status.value,
+        kind=job.kind,
         query=job.query,
         created_at=job.created_at,
         started_at=job.started_at,
@@ -487,6 +488,15 @@ async def stream_research(
         # closes.
         if job.status == JobStatus.pending_review and job.plan is not None:
             yield format_sse("plan_ready", _plan_ready_data(job))
+
+        # ADR 0057: the same replay for the same reason, one parking
+        # over. A learner reloading the page mid-session is not an
+        # edge case the way a reviewer's wifi blip is — it is the
+        # expected shape of a daily habit (SR-01), and it happens once
+        # per turn rather than once per run, so the silence this
+        # closes would be the common case rather than the rare one.
+        if job.status == JobStatus.awaiting_learner and job.turn is not None:
+            yield format_sse("turn_ready", _turn_ready_data(job))
 
         # ADR 0035: prefer the store's cross-worker event stream
         # (RedisJobStore pub/sub on `events:{job_id}`) when the
@@ -1223,6 +1233,19 @@ def _plan_ready_data(job: Job) -> dict[str, Any]:
             "search_queries": list(plan.get("search_queries", [])),
         },
     }
+
+
+def _turn_ready_data(job: Job) -> dict[str, Any]:
+    """The `turn_ready` payload, byte-identical to the runner's.
+
+    Same contract as `_plan_ready_data`: one event name, one shape,
+    whether the client was connected when the job parked or attached
+    afterwards. The turn body itself is passed through unexamined —
+    the session graph owns what a turn contains (WO-W03), and a route
+    that normalized it would be a second, drifting definition of a
+    shape it does not own.
+    """
+    return {"job_id": job.job_id, "turn": dict(job.turn or {})}
 
 
 def _terminal_event_data(job: Job) -> dict[str, Any]:

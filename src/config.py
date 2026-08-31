@@ -423,10 +423,10 @@ class Settings(BaseSettings):
         description=(
             "When true, orphaned jobs still in `pending` (accepted but "
             "never started, so no partial work and no spend) are "
-            "resubmitted instead of failed. `running` and "
-            "`pending_review` jobs are always failed with "
-            "`error_type=orphaned` — resuming them would double-charge "
-            "for LLM calls already made."
+            "resubmitted instead of failed. `running` and parked "
+            "(`pending_review`, `awaiting_learner`) jobs are always "
+            "failed with `error_type=orphaned` — resuming them would "
+            "double-charge for LLM calls already made."
         ),
     )
     job_redrive_max_scan: int = Field(
@@ -452,6 +452,48 @@ class Settings(BaseSettings):
             "`running` forever. Periodic sweeps close that. Only "
             "meaningful when `enable_job_redriver` is on and the "
             "store is Redis."
+        ),
+    )
+
+    # ------ Learning sessions (Phase W, WO-W01, ADR 0057) -------------
+    # The `session` job kind is turn-shaped: it parks in
+    # `awaiting_learner` between turns the same way a research job
+    # parks in `pending_review`, so it needs the same two bounds the
+    # HITL parking has — how long one wait may last, and how many
+    # waits one job may accumulate before the runner concludes the
+    # graph and the runner disagree structurally. No flag lives here:
+    # WO-W01 ships the lifecycle only, and the capability flags
+    # (`enable_session_loop` and the rest of the Phase W ladder) land
+    # with the graph that needs them.
+    session_turn_timeout_sec: int = Field(
+        default=1800,
+        ge=30,
+        le=86400,
+        description=(
+            "How long a `session` job sits in `awaiting_learner` "
+            "before the runner gives up and marks it failed with "
+            "error_type=session_turn_timeout. The learner-facing "
+            "mirror of `api_hitl_timeout_sec`, and separate from it "
+            "because the two wait on different humans doing different "
+            "things: a reviewer resolving one plan, versus a learner "
+            "reading a passage and answering."
+        ),
+    )
+    session_max_turns: int = Field(
+        default=40,
+        ge=1,
+        le=500,
+        description=(
+            "Upper bound on learner turns in one session job. The "
+            "research path bounds its resume loop with "
+            "`max_iterations + 2` because only its first interrupt is "
+            "a human review; a session parks on every turn, so it "
+            "needs its own ceiling. Overrunning it fails the job "
+            "loudly rather than reporting a paused graph as finished. "
+            "Also sizes the job's outer wall-clock allowance "
+            "(`session_max_turns * session_turn_timeout_sec` on top of "
+            "`api_job_timeout_sec`), so raising it lengthens the "
+            "backstop a wedged session takes to die."
         ),
     )
 
