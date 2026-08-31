@@ -197,33 +197,25 @@ describe("the enumeration reads the real backend", () => {
       "HitlTimeoutError",
       "JobCancelledError",
       "NoPapersFoundError",
-      // WO-W07's learner ledger refusing a write it cannot stand behind.
-      // Raised at a store boundary rather than inside a research node, but
-      // the derivation deliberately does not assume that: an exception the
-      // runner does not intercept by name becomes an `error_type`, so it
-      // needs a sentence whether or not one has been seen in the wild.
-      "ProgressEventRejected",
       "SynthesizerOutputError",
     ]);
     for (const name of ["HitlTimeoutError", "CostBudgetExceeded", "HitlCancelledError"]) {
       expect(INTERCEPTED, name).toContain(name);
     }
-    // ...leaving the five 03 §8.3 names plus WO-W07's, derived rather than
-    // typed.
+    // ...leaving exactly the five 03 §8.3 names, derived rather than typed.
     expect(FROM_CLASS_NAME).toEqual([
       "AllPaperAnalysesFailedError",
       "ArxivUnavailableError",
       "JobCancelledError",
       "NoPapersFoundError",
-      "ProgressEventRejected",
       "SynthesizerOutputError",
     ]);
   });
 });
 
 describe("criterion 7 — every producible value is mapped or visibly falls through", () => {
-  it("enumerates ten values", () => {
-    expect(PRODUCIBLE).toHaveLength(10);
+  it("enumerates nine values", () => {
+    expect(PRODUCIBLE).toHaveLength(9);
   });
 
   it.each(PRODUCIBLE)("%s is mapped or falls through with its raw text", (value) => {
@@ -241,8 +233,8 @@ describe("criterion 7 — every producible value is mapped or visibly falls thro
     expect(described.errorType).toBe(value);
   });
 
-  it("maps all ten — the dictionary and the backend agree exactly", () => {
-    // Both directions. An eleventh backend value fails the first half; a
+  it("maps all nine — the dictionary and the backend agree exactly", () => {
+    // Both directions. A tenth backend value fails the first half; a
     // mapping entry for a value the backend can no longer produce fails
     // the second, which is what stops the table becoming folklore.
     expect([...MAPPED_ERROR_TYPES].sort()).toEqual(PRODUCIBLE);

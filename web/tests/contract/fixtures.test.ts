@@ -639,6 +639,10 @@ describe("contract/fixtures — the learner profile (ADR 0058)", () => {
       if (claim.source === "inferred") {
         expect(claim.confidence).toBeLessThanOrEqual(0.6);
       }
+    }
+  });
+});
+
 describe("contract/fixtures — the learner progress ledger", () => {
   // No `serve()` here: there is no client function for `/learn/progress`
   // yet, so the fixture is validated against the derived schema directly.
