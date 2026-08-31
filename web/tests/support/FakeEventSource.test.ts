@@ -108,7 +108,7 @@ describe("FakeEventSource — the suite's only EventSource stub", () => {
 describe("FakeEventSource — script loading", () => {
   it("its script union is exactly what is on disk", () => {
     expect(listSseScripts()).toEqual([...SSE_SCRIPT_NAMES].sort());
-    expect(SSE_SCRIPT_NAMES).toHaveLength(9);
+    expect(SSE_SCRIPT_NAMES).toHaveLength(10);
   });
 
   it.each(SSE_SCRIPT_NAMES)("%s loads, segments, and keeps its header", (name) => {

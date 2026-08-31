@@ -187,9 +187,7 @@ def _job_to_json(job: Job) -> str:
     raised `TypeError` and 500'd the review (audit P0).
     """
     keep = _persistent_fields()
-    persistent = {
-        f.name: getattr(job, f.name) for f in fields(Job) if f.name in keep
-    }
+    persistent = {f.name: getattr(job, f.name) for f in fields(Job) if f.name in keep}
     # `json.dumps` serializes the StrEnum's value; make the intent
     # explicit rather than relying on that.
     persistent["status"] = str(job.status)
@@ -330,13 +328,9 @@ class RedisJobStore:
         # the module-level constants exactly, so the common case keeps
         # the historic key names.
         _stem = key_prefix.rstrip(":")
-        self._lease_prefix = (
-            LEASE_KEY_PREFIX if key_prefix == JOB_KEY_PREFIX else f"{_stem}lease:"
-        )
+        self._lease_prefix = LEASE_KEY_PREFIX if key_prefix == JOB_KEY_PREFIX else f"{_stem}lease:"
         self._redrive_lock_key = (
-            REDRIVE_LOCK_KEY
-            if key_prefix == JOB_KEY_PREFIX
-            else f"{_stem}redrive:lock"
+            REDRIVE_LOCK_KEY if key_prefix == JOB_KEY_PREFIX else f"{_stem}redrive:lock"
         )
         self._retention_sec = (
             retention_sec if retention_sec is not None else settings.api_job_retention_sec
@@ -431,11 +425,7 @@ class RedisJobStore:
             payload cannot wedge a job out of ever being finalized.
         """
         stored = await self._stored_status(job.job_id)
-        if (
-            stored is not None
-            and stored in TERMINAL_STATUSES
-            and stored != job.status
-        ):
+        if stored is not None and stored in TERMINAL_STATUSES and stored != job.status:
             result = job.result or ""
             record = {
                 "job_id": job.job_id,
@@ -495,9 +485,7 @@ class RedisJobStore:
 
             serialized = _job_to_json(job)
             if job.is_terminal() and self._retention_sec > 0:
-                await self._client.set(
-                    self._key(job.job_id), serialized, ex=self._retention_sec
-                )
+                await self._client.set(self._key(job.job_id), serialized, ex=self._retention_sec)
             else:
                 await self._client.set(self._key(job.job_id), serialized)
         finally:
@@ -544,17 +532,11 @@ class RedisJobStore:
         """
         key = self._key(job.job_id)
         serialized = _job_to_json(job)
-        ttl_sec = (
-            self._retention_sec
-            if job.is_terminal() and self._retention_sec > 0
-            else None
-        )
+        ttl_sec = self._retention_sec if job.is_terminal() and self._retention_sec > 0 else None
         try:
             async with self._client.pipeline() as pipe:
                 await pipe.watch(key)
-                stored = _status_from_payload(
-                    _as_text(await pipe.get(key)), key=key
-                )
+                stored = _status_from_payload(_as_text(await pipe.get(key)), key=key)
                 if stored != expected:
                     await pipe.unwatch()  # type: ignore[no-untyped-call]
                     log.info(
@@ -612,9 +594,7 @@ class RedisJobStore:
 
     # ---- ADR 0035: cross-worker SSE events ---------------------
 
-    async def publish_event(
-        self, job_id: str, event: str, data: dict[str, Any]
-    ) -> None:
+    async def publish_event(self, job_id: str, event: str, data: dict[str, Any]) -> None:
         """Fan out one SSE event to any streamer subscribed to the job.
 
         Called from the runner's `_put_event` / `_put_terminal_event`
@@ -662,14 +642,10 @@ class RedisJobStore:
                 )
                 return
 
-        payload = json.dumps(
-            {"event": event, "data": data}, separators=(",", ":")
-        )
+        payload = json.dumps({"event": event, "data": data}, separators=(",", ":"))
         await self._client.publish(_events_channel(job_id), payload)
 
-    async def subscribe_events(
-        self, job_id: str
-    ) -> AsyncIterator[dict[str, Any]]:
+    async def subscribe_events(self, job_id: str) -> AsyncIterator[dict[str, Any]]:
         """Yield SSE frames from `events:{job_id}` until a terminal event.
 
         Consumed by `stream_research` under RedisJobStore. Terminates
@@ -750,7 +726,9 @@ class RedisJobStore:
         )
         await self._client.publish(_hitl_resume_channel(job_id), body)
 
-    async def watch_for_remote_resume(self, job: Job) -> None:
+    async def watch_for_remote_resume(
+        self, job: Job, subscribed: asyncio.Event | None = None
+    ) -> None:
         """Subscribe to `hitl:resume:{job_id}`; hydrate + wake on message.
 
         Runs as a background task spawned by the runner while a job is
@@ -774,6 +752,8 @@ class RedisJobStore:
         pubsub = self._client.pubsub()
         try:
             await pubsub.subscribe(_hitl_resume_channel(job.job_id))
+            if subscribed is not None:
+                subscribed.set()
             async for message in pubsub.listen():
                 if message.get("type") != "message":
                     continue
@@ -812,9 +792,7 @@ class RedisJobStore:
 
     # ---- ADR 0038: worker leases + redrive scan -----------------
 
-    async def _compare_and_apply(
-        self, key: str, token: str, *, ttl_sec: int | None
-    ) -> bool:
+    async def _compare_and_apply(self, key: str, token: str, *, ttl_sec: int | None) -> bool:
         """Re-expire or delete `key`, but only while `token` still owns it.
 
         The check and the write have to be one atomic step: between a
@@ -858,9 +836,7 @@ class RedisJobStore:
             return False
         return bool(results) and bool(results[0])
 
-    async def acquire_lease(
-        self, job_id: str, worker_id: str, ttl_sec: int
-    ) -> bool:
+    async def acquire_lease(self, job_id: str, worker_id: str, ttl_sec: int) -> bool:
         """Claim `joblease:{job_id}` for `worker_id` if it is unheld.
 
         Args:
@@ -872,14 +848,10 @@ class RedisJobStore:
             True if this worker now holds the lease, False if another
             worker already does.
         """
-        acquired = await self._client.set(
-            self._lease_key(job_id), worker_id, nx=True, ex=ttl_sec
-        )
+        acquired = await self._client.set(self._lease_key(job_id), worker_id, nx=True, ex=ttl_sec)
         return bool(acquired)
 
-    async def refresh_lease(
-        self, job_id: str, worker_id: str, ttl_sec: int
-    ) -> bool:
+    async def refresh_lease(self, job_id: str, worker_id: str, ttl_sec: int) -> bool:
         """Extend a lease this worker still owns.
 
         Args:
@@ -892,9 +864,7 @@ class RedisJobStore:
             else claimed it, or a redriver already reclaimed the job.
             The runner treats that as a diagnostic, not a kill signal.
         """
-        return await self._compare_and_apply(
-            self._lease_key(job_id), worker_id, ttl_sec=ttl_sec
-        )
+        return await self._compare_and_apply(self._lease_key(job_id), worker_id, ttl_sec=ttl_sec)
 
     async def release_lease(self, job_id: str, worker_id: str) -> None:
         """Drop a lease this worker owns, so the job is reclaimable now.
@@ -906,9 +876,7 @@ class RedisJobStore:
             job_id: Job whose lease is being released.
             worker_id: Owner id that must still match the stored value.
         """
-        await self._compare_and_apply(
-            self._lease_key(job_id), worker_id, ttl_sec=None
-        )
+        await self._compare_and_apply(self._lease_key(job_id), worker_id, ttl_sec=None)
 
     async def has_lease(self, job_id: str) -> bool:
         """Whether any worker currently holds the job's lease.
@@ -957,9 +925,7 @@ class RedisJobStore:
                 pipe.ttl(key)
             ttls = await pipe.execute()
         return {
-            key
-            for key, ttl in zip(keys, ttls, strict=True)
-            if isinstance(ttl, int) and ttl != -1
+            key for key, ttl in zip(keys, ttls, strict=True) if isinstance(ttl, int) and ttl != -1
         }
 
     async def scan_jobs(self, *, max_scan: int) -> tuple[list[Job], bool]:
@@ -1003,9 +969,7 @@ class RedisJobStore:
         capped = False
 
         while True:
-            cursor, batch = await self._client.scan(
-                cursor=cursor, match=pattern, count=_SCAN_BATCH
-            )
+            cursor, batch = await self._client.scan(cursor=cursor, match=pattern, count=_SCAN_BATCH)
             keys = [k for k in (_as_text(raw) for raw in batch) if k is not None]
             fresh = [k for k in keys if k not in seen]
             seen.update(fresh)
@@ -1018,9 +982,7 @@ class RedisJobStore:
             if fresh:
                 skip = await self._terminal_keys(fresh)
                 hydrate = [k for k in fresh if k not in skip]
-                payloads = (
-                    await self._client.mget(hydrate) if hydrate else []
-                )
+                payloads = await self._client.mget(hydrate) if hydrate else []
                 for key, raw in zip(hydrate, payloads, strict=True):
                     payload = _as_text(raw)
                     if payload is None:
@@ -1044,9 +1006,7 @@ class RedisJobStore:
 
         return jobs, capped
 
-    async def try_acquire_redrive_lock(
-        self, ttl_sec: int, *, token: str
-    ) -> bool:
+    async def try_acquire_redrive_lock(self, ttl_sec: int, *, token: str) -> bool:
         """Claim the cluster-wide right to run one redrive sweep.
 
         Every worker boots at once after a deploy. Without this lock
@@ -1065,9 +1025,7 @@ class RedisJobStore:
             True if this worker won and should sweep, False if another
             worker is already sweeping.
         """
-        acquired = await self._client.set(
-            self._redrive_lock_key, token, nx=True, ex=ttl_sec
-        )
+        acquired = await self._client.set(self._redrive_lock_key, token, nx=True, ex=ttl_sec)
         return bool(acquired)
 
     async def release_redrive_lock(self, token: str) -> None:
@@ -1078,9 +1036,7 @@ class RedisJobStore:
                 A sweep that overran its TTL will not stomp on the
                 worker that legitimately took the lock next.
         """
-        await self._compare_and_apply(
-            self._redrive_lock_key, token, ttl_sec=None
-        )
+        await self._compare_and_apply(self._redrive_lock_key, token, ttl_sec=None)
 
 
 def build_redis_client(url: str) -> redis_async.Redis:

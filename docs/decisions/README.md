@@ -339,6 +339,15 @@ never renumbered.
   first-class deletion promise **with its stated exception** (the
   shared paper/embedding caches), and — as this decision's real cost —
   that `principal_key_id` is a mutable display name until MT-01.
+- [0059](0059-guided-read-session-graph.md) — The Phase W guided-read
+  graph and its replay-safe learner-turn protocol: a total `SessionState`,
+  four distinct dynamic-interrupt input nodes resumed with
+  `Command(resume=...)`, a session-typed ADR 0047 executor wrapper (because
+  LangGraph projects node input from runtime annotations), three owner-scoped
+  `/learn/sessions*` endpoints, subscribe-before-frame Redis ordering, and an
+  honest `recorded_ungraded` explain-back that writes evidence but no mastery
+  percentage. Records the stale-turn bug the integration proof found and why
+  casts or repeated `interrupt_after` updates are not safe substitutes.
 
 ## When to write an ADR
 

@@ -29,6 +29,7 @@ from typing import Any
 
 import fakeredis.aioredis
 import pytest
+from langgraph.types import Command
 
 from src.api import runner as runner_module
 from src.api.jobs import (
@@ -76,10 +77,15 @@ class TurnTakingStub:
 
     async def astream(
         self,
-        state: dict[str, Any] | None,
+        state: dict[str, Any] | Command[Any] | None,
         config: dict[str, Any] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
-        if state is not None:
+        if isinstance(state, Command):
+            resumed = state.resume
+            if isinstance(resumed, dict):
+                self.update_state_calls.append(dict(resumed))
+                self.state_values = {**self.state_values, **resumed}
+        elif state is not None:
             self.state_values = dict(state)
         self.turns_taken += 1
         if self.turns_taken <= self.turns:
@@ -103,9 +109,7 @@ class TurnTakingStub:
         next_nodes: tuple[str, ...] = ("tutor",) if self._interrupted else ()
         return SimpleNamespace(next=next_nodes, values=dict(self.state_values))
 
-    async def aupdate_state(
-        self, config: dict[str, Any] | None, values: dict[str, Any]
-    ) -> None:
+    async def aupdate_state(self, config: dict[str, Any] | None, values: dict[str, Any]) -> None:
         self.update_state_calls.append(dict(values))
         self.state_values = {**self.state_values, **values}
 
@@ -205,18 +209,14 @@ class TestJobKind:
         """
         assert set(JOB_KIND_RUNTIMES) == JOB_KINDS
 
-    def test_unknown_kinds_fall_back_loudly(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_unknown_kinds_fall_back_loudly(self, caplog: pytest.LogCaptureFixture) -> None:
         """A row from a worker with a wider vocabulary keeps running."""
         with caplog.at_level("WARNING"):
             assert runtime_for("curriculum") is RESEARCH_RUNTIME
         assert "api_job_unknown_kind" in caplog.text
 
     @pytest.mark.parametrize("kind", [None, 7, ["session"], {"kind": "session"}])
-    def test_runtime_lookup_is_total_even_for_impossible_inputs(
-        self, kind: object
-    ) -> None:
+    def test_runtime_lookup_is_total_even_for_impossible_inputs(self, kind: object) -> None:
         """`run_job` resolves the runtime before its containment `try`.
 
         It promises never to raise, so this lookup has to be total for
@@ -233,9 +233,7 @@ class TestJobKind:
             JobStatus.awaiting_learner,
         } == PARKED_STATUSES
         assert not (PARKED_STATUSES & TERMINAL_STATUSES)
-        assert Job(
-            job_id="j", query="q", status=JobStatus.awaiting_learner
-        ).is_parked()
+        assert Job(job_id="j", query="q", status=JobStatus.awaiting_learner).is_parked()
 
     def test_a_parked_session_is_not_awaiting_review(self) -> None:
         """`POST /research/{id}/review`'s guard must stay narrow.
@@ -262,9 +260,7 @@ class TestSessionParking:
         job = _session_job()
         await store.create(job)
 
-        task = asyncio.create_task(
-            run_job(job, stub, store, asyncio.Semaphore(1), timeout_sec=30)
-        )
+        task = asyncio.create_task(run_job(job, stub, store, asyncio.Semaphore(1), timeout_sec=30))
         parked = await _wait_for_status(store, job.job_id, JobStatus.awaiting_learner)
         assert parked.status == JobStatus.awaiting_learner
         # The frame is published after the store write, so a client that
@@ -280,7 +276,9 @@ class TestSessionParking:
             "turn": {"turn_number": 1, "prompt": "turn 1"},
         }
         # A pause frame, not an outcome: nothing terminal went out.
-        assert not [f for f in frames if f["event"].startswith("job_")and f["event"] != "job_started"]
+        assert not [
+            f for f in frames if f["event"].startswith("job_") and f["event"] != "job_started"
+        ]
 
         job.resume_payload = {"learner_reply": "because it weights tokens"}
         job.resume_event.set()
@@ -295,9 +293,7 @@ class TestSessionParking:
         assert settled.resume_payload is None
         assert not settled.resume_event.is_set()
         # The learner's reply reached the graph.
-        assert stub.update_state_calls == [
-            {"learner_reply": "because it weights tokens"}
-        ]
+        assert stub.update_state_calls == [{"learner_reply": "because it weights tokens"}]
 
     async def test_every_turn_parks_rather_than_auto_resuming(self) -> None:
         """The one structural difference from plan review.
@@ -310,9 +306,7 @@ class TestSessionParking:
         job = _session_job("sess-many")
         await store.create(job)
 
-        task = asyncio.create_task(
-            run_job(job, stub, store, asyncio.Semaphore(1), timeout_sec=30)
-        )
+        task = asyncio.create_task(run_job(job, stub, store, asyncio.Semaphore(1), timeout_sec=30))
         for expected_turn in (1, 2, 3):
             parked = await _wait_for_turn(store, job.job_id, expected_turn)
             assert parked.status == JobStatus.awaiting_learner, expected_turn
@@ -387,9 +381,7 @@ class TestSessionParking:
         settled = await store.get(job.job_id)
         assert settled is not None and settled.error_type == "session_turn_timeout"
 
-    async def test_the_pause_ceiling_is_a_turn_count(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_the_pause_ceiling_is_a_turn_count(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A session that never ends fails loudly instead of silently.
 
         The research path bounds its resume loop with
@@ -530,8 +522,7 @@ class TestRedisRoundTrip:
         store = RedisJobStore(shared_backend, retention_sec=60)
         await shared_backend.set(
             "job:legacy-row",
-            '{"job_id":"legacy-row","query":"q","status":"running",'
-            '"created_at":1.0}',
+            '{"job_id":"legacy-row","query":"q","status":"running","created_at":1.0}',
         )
         restored = await store.get("legacy-row")
         assert restored is not None
@@ -670,9 +661,7 @@ class TestResearchIsUntouched:
         monkeypatch.setattr(
             runner_module,
             "settings",
-            settings.model_copy(
-                update={"enable_hitl": True, "api_hitl_timeout_sec": 1800}
-            ),
+            settings.model_copy(update={"enable_hitl": True, "api_hitl_timeout_sec": 1800}),
         )
         job = Job(job_id="j", query="q")
         assert RESEARCH_RUNTIME.outer_timeout(job, 600.0) == 2400.0
@@ -685,9 +674,7 @@ class TestResearchIsUntouched:
         monkeypatch.setattr(
             runner_module,
             "settings",
-            settings.model_copy(
-                update={"session_turn_timeout_sec": 60, "session_max_turns": 5}
-            ),
+            settings.model_copy(update={"session_turn_timeout_sec": 60, "session_max_turns": 5}),
         )
         assert SESSION_RUNTIME.outer_timeout(_session_job(), 600.0) == 900.0
 

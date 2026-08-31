@@ -1,7 +1,7 @@
 """Async workflow runner used by the API layer.
 
 Drives the compiled LangGraph app through its async surface —
-`astream` / `aget_state` / `aupdate_state` — streaming intermediate
+`astream` / `aget_state` / `aupdate_state` / `Command(resume=...)` — streaming intermediate
 `(node, state_delta)` events to SSE consumers, recording final costs
 + metrics, and applying the per-job timeout. The compiled app MUST be
 built with `build_workflow(async_checkpointer=True)`: the sync savers
@@ -45,6 +45,8 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any, cast
 
+from langgraph.types import Command
+
 from src.api.jobs import JOB_KINDS, Job, JobKind, JobStatus, JobStore
 from src.api.redriver import WORKER_ID
 from src.cancellation import CancelToken, bind_cancel_token, reset_cancel_token
@@ -75,9 +77,7 @@ log = get_logger(__name__)
 # argument through every call site. Same pattern as
 # `_current_costs` in observability.costs. `run_job` sets it on
 # entry; the helpers read it.
-_current_store: ContextVar[JobStore | None] = ContextVar(
-    "current_store", default=None
-)
+_current_store: ContextVar[JobStore | None] = ContextVar("current_store", default=None)
 
 # The terminal frame is every SSE client's close signal and the store
 # write on a terminal transition is the job's outcome of record — both
@@ -251,7 +251,7 @@ class PauseContext:
     implement against.
 
     Attributes:
-        app: The compiled graph, for `aupdate_state` on the resume.
+        app: The compiled graph, for checkpoint reads and HITL edits.
         config: LangGraph config carrying `thread_id`.
         run_id: The thread id, lifted out of `config` for logging.
         workflow_state: The `aget_state` snapshot at the interrupt.
@@ -270,7 +270,7 @@ class PauseContext:
     pause_number: int
 
 
-PauseHandler = Callable[[PauseContext], Awaitable[None]]
+PauseHandler = Callable[[PauseContext], Awaitable[Any]]
 """What to do when the compiled graph stops at an interrupt.
 
 Returning means "resume the graph"; raising ends the run. The handler
@@ -280,9 +280,7 @@ one-review-per-query intent) and auto-resumes the rest.
 """
 
 
-def _initial_state(
-    query: str, run_id: str, *, prior_context: str = ""
-) -> ResearchState:
+def _initial_state(query: str, run_id: str, *, prior_context: str = "") -> ResearchState:
     """Fresh `ResearchState` — same shape used by the eval runner.
 
     Kept inline (rather than reusing `src.eval.runner._initial_state`)
@@ -432,7 +430,8 @@ async def _invoke_streaming(
     `workflow.aget_state(config).next`, transition the job to
     `pending_review`, emit `plan_ready`, and wait on
     `job.resume_event`. On resume, optionally apply edits via
-    `workflow.aupdate_state`, then stream on from the checkpoint.
+    `workflow.aupdate_state` or a dynamic-interrupt `Command`, then stream on
+    from the checkpoint.
 
     Resume runs in a LOOP, not a single second pass: LangGraph re-arms
     `interrupt_after=["planner"]` on *every* planner execution, so a
@@ -529,7 +528,7 @@ async def _invoke_streaming(
                 f"(thread_id={run_id}); refusing to report a paused "
                 "graph as a finished job"
             )
-        await handle_pause(
+        resume_input = await handle_pause(
             PauseContext(
                 app=app,
                 config=config,
@@ -540,9 +539,10 @@ async def _invoke_streaming(
                 pause_number=pauses,
             )
         )
-        # Resume from checkpoint — `None` input means "continue from
-        # where we paused"; anything else would restart the graph.
-        stream_input = None
+        # Research HITL returns ``None`` after optionally updating the
+        # checkpoint. Session turns return ``Command(resume=...)`` for their
+        # dynamic learner-input interrupt. Neither form restarts from START.
+        stream_input = resume_input
 
 
 async def _park_until_resumed(
@@ -586,18 +586,29 @@ async def _park_until_resumed(
     job.status = spec.status
     if store is not None:
         await store.update(job)
+
+    subscription: asyncio.Task[None] | None = None
+    watch = getattr(store, "watch_for_remote_resume", None) if store else None
+    if callable(watch):
+        # W03 closes ADR 0057's subscribe-after-publish window. Redis
+        # signals readiness only after SUBSCRIBE has completed, so a
+        # learner cannot see a turn frame before another worker is ready
+        # to receive its reply.
+        subscribed = asyncio.Event()
+        subscription = asyncio.create_task(watch(job, subscribed), name=f"hitl-resume-{job.job_id}")
+        try:
+            await asyncio.wait_for(subscribed.wait(), timeout=5.0)
+        except BaseException:
+            subscription.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await subscription
+            raise
+
     await spec.emit(job, payload)
     log.info(
         spec.log_event,
         extra={"job_id": job.job_id, **(log_extra or {})},
     )
-
-    subscription: asyncio.Task[None] | None = None
-    watch = getattr(store, "watch_for_remote_resume", None) if store else None
-    if callable(watch):
-        subscription = asyncio.create_task(
-            watch(job), name=f"hitl-resume-{job.job_id}"
-        )
 
     timeout_sec = spec.timeout_sec()
     try:
@@ -607,9 +618,7 @@ async def _park_until_resumed(
                 timeout=timeout_sec,
             )
         except TimeoutError as exc:
-            raise spec.timeout_error(
-                f"{spec.status.value} exceeded {timeout_sec}s"
-            ) from exc
+            raise spec.timeout_error(f"{spec.status.value} exceeded {timeout_sec}s") from exc
     finally:
         if subscription is not None:
             subscription.cancel()
@@ -655,7 +664,7 @@ async def _handle_hitl_pause(ctx: PauseContext) -> None:
 
     job = ctx.job
     if job is None:
-        return
+        return None
     if job.hitl_bypass:
         # Compiled interrupt is unconditional; caller opted out.
         return
@@ -689,7 +698,7 @@ async def _handle_hitl_pause(ctx: PauseContext) -> None:
     await _unpark(job, ctx.store)
 
 
-async def _handle_session_turn_pause(ctx: PauseContext) -> None:
+async def _handle_session_turn_pause(ctx: PauseContext) -> Command[Any] | None:
     """Park a `session` job on *every* interrupt (ADR 0057).
 
     The one structural difference from plan review, and the reason the
@@ -706,13 +715,14 @@ async def _handle_session_turn_pause(ctx: PauseContext) -> None:
     """
     job = ctx.job
     if job is None:
-        return
+        return None
 
     values = ctx.workflow_state.values
     turn = dict(values.get(SESSION_TURN_STATE_KEY) or {})
     # On the row before the frame goes out, so a client that attaches
     # between the two gets the ADR 0053 replay rather than silence.
     job.turn = turn
+    resume_command: Command[Any] | None = None
     try:
         await _park_until_resumed(
             job,
@@ -723,23 +733,21 @@ async def _handle_session_turn_pause(ctx: PauseContext) -> None:
             # output about a paper the learner is reading, and the
             # observability rules keep user text out of records
             # (ADR 0019). The count is what an operator needs.
-            log_extra={"turn_number": ctx.pause_number},
+            log_extra={
+                "pause_number": ctx.pause_number,
+                "turn_number": turn.get("turn_number"),
+                "state_turn_number": values.get("turn_number"),
+            },
         )
 
         # Take the reply before awaiting anything. `job` is shared with
-        # whatever hydrated the resume — the pub/sub watcher, or a
-        # future turn endpoint — and `aupdate_state` is a suspension
-        # point: reading the field twice could apply one reply and then
-        # null a second one that arrived in between, losing a turn the
-        # learner would have to be asked for again.
+        # whatever hydrated the resume — the pub/sub watcher or the turn
+        # endpoint. Reading the field once prevents a later reply from being
+        # nulled while the current Command is constructed.
         reply = job.resume_payload
         job.resume_payload = None
         if reply:
-            # The graph reads the learner's reply from the checkpoint,
-            # so the runner writes it there before resuming.
-            # `aupdate_state` merges into the interrupted thread — the
-            # same call plan revision makes, against a different key.
-            await ctx.app.aupdate_state(ctx.config, reply)
+            resume_command = Command(resume=reply)
     finally:
         # Cleared on every exit, not just the resumed one. A job that
         # times out or raises here goes terminal through `run_job`, and
@@ -748,6 +756,7 @@ async def _handle_session_turn_pause(ctx: PauseContext) -> None:
         job.turn = None
 
     await _unpark(job, ctx.store)
+    return resume_command
 
 
 def _research_initial_state(job: Job, prior_context: str) -> dict[str, Any]:
@@ -761,23 +770,15 @@ def _research_initial_state(job: Job, prior_context: str) -> dict[str, Any]:
 
 
 def _session_initial_state(job: Job, prior_context: str) -> dict[str, Any]:
-    """Seed state for a `kind="session"` job — identity only.
+    """Build W03's total ``SessionState`` from the persisted job input.
 
-    `SessionState` and its constructor belong to WO-W03 and live
-    together in `src/graph/` under ADR 0052's "state and its
-    constructor are edited in one place" rule. The runner deliberately
-    does not restate that shape here: a second, drifting definition of
-    a state dict is the exact failure `test_cli_run_recovery.py`
-    guards the research state against. What the runner is entitled to
-    seed is what the runner knows — which checkpoint thread this is,
-    and what the learner asked for. The graph's entry node fills the
-    rest from the profile and content stores.
-
-    `prior_context` is accepted for signature symmetry and unused:
-    ADR 0032's retrieval is keyed on conversations of research
-    reports, and a session's memory is the Tier-1 store (WO-W05).
+    ``prior_context`` is accepted for signature symmetry and unused:
+    ADR 0032's retrieval is for conversations of research reports; the
+    session's bounded Tier-1 block is already in ``job.input_payload``.
     """
-    return {"run_id": job.job_id, "query": job.query}
+    from src.graph.session_state import initial_session_state
+
+    return dict(initial_session_state(job.input_payload, job.job_id, job.query))
 
 
 def _research_max_pauses() -> int:
@@ -1037,9 +1038,7 @@ async def _persist_terminal(store: JobStore, job: Job) -> None:
     )
 
 
-def _log_lease_failure(
-    event: str, *, job_id: str, worker_id: str, consecutive: int
-) -> None:
+def _log_lease_failure(event: str, *, job_id: str, worker_id: str, consecutive: int) -> None:
     """Log one lease-keeper failure at a volume an outage survives.
 
     Every other `except` in this module carries `exc_info` (ADR 0051
@@ -1116,7 +1115,11 @@ async def _refresh_lease_forever(
     run_scope = bind_run_id(job_id)
     try:
         await _refresh_lease_loop(
-            refresh, job_id, worker_id, acquire=acquire, ttl_sec=ttl_sec,
+            refresh,
+            job_id,
+            worker_id,
+            acquire=acquire,
+            ttl_sec=ttl_sec,
             interval=interval,
         )
     finally:
@@ -1196,9 +1199,7 @@ async def _refresh_lease_loop(
 
 
 @contextlib.asynccontextmanager
-async def _job_lease(
-    store: JobStore, job_id: str, worker_id: str
-) -> AsyncIterator[None]:
+async def _job_lease(store: JobStore, job_id: str, worker_id: str) -> AsyncIterator[None]:
     """Hold `joblease:{job_id}` for as long as this worker runs the job.
 
     The lease is the liveness proof `src.api.redriver` checks before
@@ -1280,9 +1281,7 @@ async def _job_lease(
         return
 
     task = asyncio.create_task(
-        _refresh_lease_forever(
-            refresh, job_id, worker_id, acquire=None if holding else acquire
-        ),
+        _refresh_lease_forever(refresh, job_id, worker_id, acquire=None if holding else acquire),
         name=f"job-lease-{job_id}",
     )
     try:
@@ -1305,6 +1304,8 @@ async def run_job(
     *,
     timeout_sec: int | None = None,
     conversation_store: Any = None,
+    progress_event_store: Any = None,
+    progress_event_decoder: Callable[[dict[str, Any]], Any] | None = None,
     worker_id: str | None = None,
 ) -> None:
     """Execute one job to completion, updating the store as it goes.
@@ -1356,6 +1357,12 @@ async def run_job(
             `settings.api_job_timeout_sec`.
         conversation_store: Conversation persistence for the ADR-0032
             follow-up path. None disables prior-context retrieval.
+        progress_event_store: Append-only ledger used by session jobs.
+            Graph nodes produce validated event descriptors; the runner
+            persists them before declaring the job successful.
+        progress_event_decoder: Store-layer decoder for one serialized
+            event. Kept injected so the generic job path does not import
+            learner-only exception classes into its error vocabulary.
         worker_id: Id stamped on the job lease. Defaults to this
             process's `WORKER_ID`; injectable for tests.
     """
@@ -1454,9 +1461,7 @@ async def run_job(
                         retrieve_prior_context,
                     )
 
-                    conversation = await conversation_store.get(
-                        job.conversation_id
-                    )
+                    conversation = await conversation_store.get(job.conversation_id)
                     if conversation is not None and conversation.jobs:
                         chunks = await asyncio.to_thread(
                             retrieve_prior_context,
@@ -1497,6 +1502,23 @@ async def run_job(
                 ),
                 timeout=outer_timeout,
             )
+            if (
+                job.kind == "session"
+                and progress_event_store is not None
+                and progress_event_decoder is not None
+            ):
+                raw_events = final_state.get("progress_events", [])
+                if not isinstance(raw_events, list):
+                    raise ValueError("session progress_events must be a list")
+                for raw in raw_events:
+                    if not isinstance(raw, dict):
+                        raise ValueError("session progress event must be an object")
+                    event = progress_event_decoder(raw)
+                    if event.principal_key_id != job.principal_key_id:
+                        raise ValueError(
+                            "session progress event principal does not match job owner"
+                        )
+                    await progress_event_store.append(event)
         except SessionTurnTimeoutError as exc:
             # The learner stopped answering. Terminal, and named so the
             # Ledger can tell an abandoned session apart from a broken
@@ -1530,9 +1552,7 @@ async def run_job(
             return
         except HitlTimeoutError:
             job.status = JobStatus.failed
-            job.error = (
-                f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
-            )
+            job.error = f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
             job.error_type = "hitl_timeout"
             job.completed_at = time.time()
             snapshot = costs.as_dict()
@@ -1646,9 +1666,7 @@ async def run_job(
             # the semaphore permit is not. It stays held until the node
             # thread returns (or the drain budget expires), so the
             # concurrency ceiling keeps meaning what it says.
-            abandoned = await _drain_node_threads(
-                cancel_token, job, reason="job_timeout"
-            )
+            abandoned = await _drain_node_threads(cancel_token, job, reason="job_timeout")
             log.warning(
                 "api_job_timeout",
                 extra={
@@ -1711,9 +1729,7 @@ async def run_job(
                     "elapsed_sec": job.elapsed_sec(),
                 },
             )
-            log.exception(
-                "api_job_failed", extra={"job_id": job.job_id, **snapshot}
-            )
+            log.exception("api_job_failed", extra={"job_id": job.job_id, **snapshot})
             return
         else:
             metrics = _extract_final_metrics(final_state)
@@ -1803,15 +1819,11 @@ async def _append_to_conversation(conversation_store: Any, job: Job) -> None:
     # First-job auto-title. Only overwrites the default placeholder;
     # a client-set title stays intact.
     if added.ordinal == 1:
-        conversation: Conversation | None = await conversation_store.get(
-            job.conversation_id
-        )
+        conversation: Conversation | None = await conversation_store.get(job.conversation_id)
         if conversation is not None and conversation.title == "New conversation":
             # ADR 0048 added `update_title` to the ConversationStore
             # Protocol precisely for this call site: under the
             # Postgres store, mutating the fetched dataclass changed
             # nothing durable, so the auto-title silently vanished on
             # the next read from another worker.
-            await conversation_store.update_title(
-                job.conversation_id, title_from_query(job.query)
-            )
+            await conversation_store.update_title(job.conversation_id, title_from_query(job.query))

@@ -1,0 +1,23 @@
+{
+  "x-recording": {
+    "note": "Recorded response body and headers from the no-cost WO-W03 API integration path. DO NOT EDIT BY HAND; re-run tests/test_guided_session_graph.py with ANTHROPIC_API_KEY=local-preview-disabled.",
+    "case": "learn.session.accepted",
+    "commit": "624e5c931fb765a36f65dcb6e1fea374cc35f931",
+    "request": "POST /learn/sessions for fixture-guided-read / arxiv:1706.03762",
+    "transport": "in-process ASGI against create_app(), ENABLE_SESSION_LOOP=true, SQLite checkpoint, in-memory profile/progress/job stores",
+    "stack": "no containers: recorded in process with USE_MOCK_DATA=true and ANTHROPIC_API_KEY=local-preview-disabled; the test fails on any model construction",
+    "authored": false,
+    "volatile": "session_id is generated per request; URLs carry the same id"
+  },
+  "status": 202,
+  "statusText": "Accepted",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "session_id": "214bac7310a4459b",
+    "status": "pending",
+    "status_url": "/learn/sessions/214bac7310a4459b",
+    "stream_url": "/research/214bac7310a4459b/stream"
+  }
+}

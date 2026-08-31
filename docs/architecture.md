@@ -150,6 +150,15 @@ token, the cost accumulator, the terminal persistence and the outcome
 metrics rather than a second driver having to earn them again.
 `JobDetail.kind` reports it, defaulted so the field is additive.
 
+The guided-read graph is a bounded second shape: check-in, opening reflection,
+two guided questions, explain-back, guidance-only assessment, and append-only
+progress update. Each learner input is a distinct dynamic interrupt resumed by
+`Command(resume=...)`, so a checkpoint can be reattached by a new process
+without replaying the preceding tutor turn. Its async node wrapper is
+`SessionState`-typed rather than cast from the research wrapper because
+LangGraph uses the runtime annotation to project node inputs (ADR
+[0059](decisions/0059-guided-read-session-graph.md)).
+
 **Parking.** A job can pause mid-graph and wait for a human, in
 exactly one shape: it moves to a non-terminal *parked* status, the
 runner publishes a frame naming the decision, and it blocks on the

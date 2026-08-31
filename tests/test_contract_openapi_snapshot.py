@@ -98,6 +98,9 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
         "/healthz",
         "/learn/paths",
         "/learn/paths/{path_id}",
+        "/learn/sessions",
+        "/learn/sessions/{session_id}",
+        "/learn/sessions/{session_id}/turn",
     }
     assert set(paths["/conversations"]) == {"get", "post"}
     assert set(paths["/conversations/{conversation_id}"]) == {"get", "delete"}
