@@ -444,22 +444,27 @@ class TestTheFlagPairing:
 
 class TestTheStoreIsAddressedByTheCallerAlone:
     def test_no_route_path_carries_a_profile_id(self) -> None:
-        """The reason there is no `_check_ownership` call on these
-        routes: there is no client-supplied id to check.
+        """The principal-addressed routes never accept a profile id.
 
-        Asserted over the whole `/learn` namespace rather than over
-        this card's one path. WO-W07 added `/learn/progress` on the
-        same principle, and the invariant is worth more applied to
-        every learner route than to the profile alone — a future card
-        that introduced `/learn/{something}` would fail here.
+        WO-W15 legitimately adds `/learn/paths/{path_id}` for public
+        content, so the invariant cannot apply to every `/learn` route.
+        It applies to the profile and progress surfaces: neither may
+        let a caller select somebody else's principal-scoped record.
         """
         from src.api.app import create_app as build
 
-        paths = [p for p in build().openapi()["paths"] if p.startswith("/learn")]
+        paths = build().openapi()["paths"]
+        principal_paths = [
+            path
+            for path in paths
+            if path == "/learn/profile" or path == "/learn/progress"
+        ]
 
-        assert sorted(paths) == ["/learn/profile", "/learn/progress"]
-        for path in paths:
+        assert sorted(principal_paths) == ["/learn/profile", "/learn/progress"]
+        for path in principal_paths:
             assert "{" not in path, path
+        assert not any(path.startswith("/learn/profile/") for path in paths)
+        assert not any(path.startswith("/learn/progress/") for path in paths)
 
     async def test_the_store_keys_on_the_presented_principal(
         self, client: httpx.AsyncClient, profile_store: InMemoryProfileStore
