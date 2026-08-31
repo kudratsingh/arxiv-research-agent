@@ -1,0 +1,108 @@
+{
+  "manifest_version": 1,
+  "path_id": "fixture-guided-read",
+  "kind": "fixture",
+  "title": "Fixture path: guided read (demo scaffolding)",
+  "goal": "Give the local demo and the surface work orders a real path shape to render before any funded briefing exists.",
+  "version": 1,
+  "status": "published",
+  "updated_at": "2026-08-30",
+  "fixture": true,
+  "banner": "FIXTURE CONTENT. This path is demo scaffolding, not a reading path. Its briefings are placeholder prose written to exercise the layout; nothing here has been reviewed for accuracy and nothing here teaches these papers. The real path is `reading-first-papers`, which publishes when its briefings are generated and reviewed.",
+  "licensing": {
+    "posture_id": "W-OD-3",
+    "full_text": "link-out-only",
+    "abstracts": "displayed-with-attribution",
+    "quotes": "sparing-and-attributed",
+    "s2_derived_facts": "link-back-required",
+    "commercial_use": "none-through-phase-w",
+    "counsel_confirmed": false,
+    "source": "planning/07-learning-platform/02-CONTENT.md#22-papers"
+  },
+  "review": {
+    "owner": "kudratsingh",
+    "decisions": ["W-OD-3"],
+    "curation_minutes_per_entry": 2
+  },
+  "entries": [
+    {
+      "position": 1,
+      "resource_id": "arxiv:1706.03762",
+      "kind": "paper",
+      "title": "Attention Is All You Need",
+      "authors": ["Ashish Vaswani", "Noam Shazeer", "Niki Parmar"],
+      "author_count": 8,
+      "year": 2017,
+      "canonical_url": "https://arxiv.org/abs/1706.03762",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Vaswani et al., arXiv:1706.03762 (arXiv.org)",
+      "provenance": "curated",
+      "status": "published",
+      "rationale": "Fixture entry. A real, well-known paper so the link-out, the attribution line and the abstract block all render against something true.",
+      "vocabulary": ["self-attention", "positional encoding"],
+      "est_minutes": 120,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [],
+        "note": "Fixture ordering. No sequencing claim is being made."
+      },
+      "briefing_file": "briefings/01-fixture-transformer.md",
+      "briefing_provenance": "authored",
+      "reviewed_by": "WO-W15 fixture scaffolding (not an owner review)",
+      "reviewed_at": "2026-08-30"
+    },
+    {
+      "position": 2,
+      "resource_id": "arxiv:1810.04805",
+      "kind": "paper",
+      "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+      "authors": ["Jacob Devlin", "Ming-Wei Chang", "Kenton Lee", "Kristina Toutanova"],
+      "author_count": 4,
+      "year": 2018,
+      "canonical_url": "https://arxiv.org/abs/1810.04805",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Devlin et al., arXiv:1810.04805 (arXiv.org)",
+      "provenance": "curated",
+      "status": "published",
+      "rationale": "Fixture entry. Second position so the surface has a middle-of-path state to render, not just a first and a last.",
+      "vocabulary": ["masked language modelling", "fine-tuning"],
+      "est_minutes": 90,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [],
+        "note": "Fixture ordering. No sequencing claim is being made."
+      },
+      "briefing_file": "briefings/02-fixture-bert.md",
+      "briefing_provenance": "authored",
+      "reviewed_by": "WO-W15 fixture scaffolding (not an owner review)",
+      "reviewed_at": "2026-08-30"
+    },
+    {
+      "position": 3,
+      "resource_id": "arxiv:2305.18290",
+      "kind": "paper",
+      "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+      "authors": ["Rafael Rafailov", "Archit Sharma", "Eric Mitchell"],
+      "author_count": 6,
+      "year": 2023,
+      "canonical_url": "https://arxiv.org/abs/2305.18290",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Rafailov et al., arXiv:2305.18290 (arXiv.org)",
+      "provenance": "curated",
+      "status": "published",
+      "rationale": "Fixture entry carrying a staleness note, so the dated-slot rendering has a state to exercise before the real path ships one.",
+      "vocabulary": ["preference optimisation", "implicit reward"],
+      "est_minutes": 105,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [],
+        "note": "Fixture ordering. No sequencing claim is being made."
+      },
+      "staleness_note": "Fixture staleness note, dated 2026-08-30. Present so the surface has a dated-slot state to render; it describes nothing real.",
+      "briefing_file": "briefings/03-fixture-dpo.md",
+      "briefing_provenance": "authored",
+      "reviewed_by": "WO-W15 fixture scaffolding (not an owner review)",
+      "reviewed_at": "2026-08-30"
+    }
+  ]
+}

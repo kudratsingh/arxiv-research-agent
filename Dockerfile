@@ -90,6 +90,15 @@ PY
 # package. `--no-deps` because we already installed the pinned
 # transitive graph above.
 COPY src ./src
+
+# WO-W15: the learning-content manifests and their briefing companions.
+# They are data, not a Python package, so they sit beside `src/` rather
+# than inside it, and `src/content/loader.py` resolves them relative to
+# the source tree — the same path in the repo and in the image. Last,
+# because content changes far more often than code and this keeps the
+# dependency and model-bake layers cached.
+COPY content ./content
+
 RUN pip install --no-deps .
 
 # ---------- Runtime ----------------------------------------------------

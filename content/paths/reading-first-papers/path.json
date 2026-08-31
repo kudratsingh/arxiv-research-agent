@@ -1,0 +1,543 @@
+{
+  "manifest_version": 1,
+  "path_id": "reading-first-papers",
+  "kind": "flagship",
+  "title": "Reading your first papers",
+  "goal": "Read a modern language-modelling paper end to end and say what it claims, what it showed, and what has since replaced it.",
+  "version": 1,
+  "status": "proposed",
+  "updated_at": "2026-08-30",
+  "fixture": false,
+  "licensing": {
+    "posture_id": "W-OD-3",
+    "full_text": "link-out-only",
+    "abstracts": "displayed-with-attribution",
+    "quotes": "sparing-and-attributed",
+    "s2_derived_facts": "link-back-required",
+    "commercial_use": "none-through-phase-w",
+    "counsel_confirmed": false,
+    "source": "planning/07-learning-platform/02-CONTENT.md#22-papers"
+  },
+  "review": {
+    "owner": "kudratsingh",
+    "decisions": [
+      "W-OD-2",
+      "W-OD-3"
+    ],
+    "curation_minutes_per_entry": 10
+  },
+  "generation": {
+    "status": "deferred-awaiting-W-OD-2",
+    "decision": "W-OD-2",
+    "pipeline": "src/graph/workflow.py, one research run per paper entry",
+    "command": "MAX_COST_USD=1.00 ANTHROPIC_API_KEY=<real key> .venv/bin/python -m src.api.serve  # then per paper: curl -sS -XPOST localhost:8000/research -H 'content-type: application/json' -d '{\"query\":\"<briefing prompt for <resource_id>>\",\"hitl_bypass\":true}'",
+    "max_budget_usd": 12.0,
+    "est_cost_usd_per_briefing": 0.75,
+    "est_review_hours_per_briefing": [
+      1.0,
+      2.0
+    ],
+    "note": "The ceiling is enforced by the API runner between graph nodes (src/config.py max_cost_usd, ADR 0033); the CLI does not enforce it, which is why the campaign runs through POST /research and not `python -m src.main`. 10 paper entries x $1.00 ceiling + ~20% headroom for re-runs = $12.00. Not authorised: no briefing has been generated and no paid call has been made."
+  },
+  "entries": [
+    {
+      "position": 1,
+      "resource_id": "arxiv:1301.3781",
+      "kind": "paper",
+      "title": "Efficient Estimation of Word Representations in Vector Space",
+      "authors": [
+        "Tomas Mikolov",
+        "Kai Chen",
+        "Greg Corrado",
+        "Jeffrey Dean"
+      ],
+      "author_count": 4,
+      "year": 2013,
+      "canonical_url": "https://arxiv.org/abs/1301.3781",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Mikolov et al., arXiv:1301.3781 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "Opens the path on the one idea everything later assumes: meaning as geometry. It is also the shortest paper here, so the first read is a win rather than an ordeal.",
+      "vocabulary": [
+        "embedding",
+        "distributional hypothesis",
+        "softmax",
+        "negative sampling"
+      ],
+      "est_minutes": 60,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [],
+        "note": "First entry; nothing in this path precedes it. Chosen as the entry point on difficulty and length, not on citation ancestry."
+      },
+      "briefing_file": "briefings/01-word2vec.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 2,
+      "resource_id": "arxiv:1409.3215",
+      "kind": "paper",
+      "title": "Sequence to Sequence Learning with Neural Networks",
+      "authors": [
+        "Ilya Sutskever",
+        "Oriol Vinyals",
+        "Quoc V. Le"
+      ],
+      "author_count": 3,
+      "year": 2014,
+      "canonical_url": "https://arxiv.org/abs/1409.3215",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Sutskever et al., arXiv:1409.3215 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "The encoder-decoder shape, made concrete. Its own weakness — one fixed-size vector for a whole sentence — is the problem the next entry was written to solve.",
+      "vocabulary": [
+        "encoder-decoder",
+        "LSTM",
+        "hidden state",
+        "beam search"
+      ],
+      "est_minutes": 75,
+      "sequencing": {
+        "method": "citation_ancestry",
+        "cites": [
+          "arxiv:1301.3781"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:1409.3215",
+        "note": "Cites word2vec directly."
+      },
+      "briefing_file": "briefings/02-seq2seq.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 3,
+      "resource_id": "arxiv:1409.0473",
+      "kind": "paper",
+      "title": "Neural Machine Translation by Jointly Learning to Align and Translate",
+      "authors": [
+        "Dzmitry Bahdanau",
+        "Kyunghyun Cho",
+        "Yoshua Bengio"
+      ],
+      "author_count": 3,
+      "year": 2014,
+      "canonical_url": "https://arxiv.org/abs/1409.0473",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Bahdanau et al., arXiv:1409.0473 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "Attention arrives as a fix for a named bottleneck, not as an architecture. Read here it is an answer; read after the Transformer it is a design choice, which is the wrong lesson.",
+      "vocabulary": [
+        "alignment",
+        "context vector",
+        "soft attention",
+        "bidirectional RNN"
+      ],
+      "est_minutes": 75,
+      "sequencing": {
+        "method": "citation_ancestry",
+        "cites": [
+          "arxiv:1409.3215"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:1409.0473",
+        "note": "Placed after seq2seq on citation ancestry although its first arXiv posting is nine days earlier; the published version cites Sutskever et al."
+      },
+      "briefing_file": "briefings/03-bahdanau-attention.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 4,
+      "resource_id": "ext:illustrated-transformer",
+      "kind": "external_course",
+      "title": "The Illustrated Transformer",
+      "authors": [
+        "Jay Alammar"
+      ],
+      "author_count": 1,
+      "year": 2018,
+      "canonical_url": "https://jalammar.github.io/illustrated-transformer/",
+      "license_note": "Link-out only. The page states no reuse licence, so we link to it and describe it in our own words; nothing is mirrored, excerpted or reproduced.",
+      "attribution": "Jay Alammar, jalammar.github.io",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "The pictures most readers need before the next entry's notation lands. Offered as a warm-up, not a substitute: it explains the architecture, not the paper's argument.",
+      "vocabulary": [
+        "query",
+        "key",
+        "value",
+        "multi-head attention"
+      ],
+      "est_minutes": 45,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [],
+        "note": "Placed immediately before the Transformer paper as a prerequisite explainer. Not a paper; no citation ancestry applies."
+      }
+    },
+    {
+      "position": 5,
+      "resource_id": "arxiv:1706.03762",
+      "kind": "paper",
+      "title": "Attention Is All You Need",
+      "authors": [
+        "Ashish Vaswani",
+        "Noam Shazeer",
+        "Niki Parmar",
+        "Jakob Uszkoreit",
+        "Llion Jones",
+        "Aidan N. Gomez",
+        "Lukasz Kaiser",
+        "Illia Polosukhin"
+      ],
+      "author_count": 8,
+      "year": 2017,
+      "canonical_url": "https://arxiv.org/abs/1706.03762",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Vaswani et al., arXiv:1706.03762 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "The architecture everything after this runs on. Reached in this order it reads as 'remove the recurrence', which is one idea, rather than as eight new ideas at once.",
+      "vocabulary": [
+        "self-attention",
+        "positional encoding",
+        "layer normalisation",
+        "residual connection"
+      ],
+      "est_minutes": 120,
+      "sequencing": {
+        "method": "citation_ancestry",
+        "cites": [
+          "arxiv:1409.3215",
+          "arxiv:1409.0473"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:1706.03762",
+        "note": "Cites both predecessors directly; the citation DAG and the pedagogical order agree here."
+      },
+      "briefing_file": "briefings/05-transformer.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 6,
+      "resource_id": "ext:annotated-transformer",
+      "kind": "external_course",
+      "title": "The Annotated Transformer",
+      "authors": [
+        "Alexander Rush",
+        "harvardnlp contributors"
+      ],
+      "author_count": 2,
+      "year": 2018,
+      "canonical_url": "https://nlp.seas.harvard.edu/annotated-transformer/",
+      "license_note": "Link-out only. The companion repository is MIT-licensed and could in principle be adapted with attribution; Phase W does not exercise that, and the page itself is never mirrored.",
+      "license_id": "MIT",
+      "license_url": "https://github.com/harvardnlp/annotated-transformer",
+      "attribution": "Alexander Rush and contributors, Harvard NLP",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "The previous entry with a runnable implementation beside each equation. Pairs with it rather than following it; readers who prefer code first can start here.",
+      "vocabulary": [
+        "scaled dot-product attention",
+        "masking",
+        "label smoothing"
+      ],
+      "est_minutes": 120,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [],
+        "note": "Companion to position 5. Not a paper; no citation ancestry applies."
+      }
+    },
+    {
+      "position": 7,
+      "resource_id": "arxiv:1810.04805",
+      "kind": "paper",
+      "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+      "authors": [
+        "Jacob Devlin",
+        "Ming-Wei Chang",
+        "Kenton Lee",
+        "Kristina Toutanova"
+      ],
+      "author_count": 4,
+      "year": 2018,
+      "canonical_url": "https://arxiv.org/abs/1810.04805",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Devlin et al., arXiv:1810.04805 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "One half of the lineage split: encoder-only, bidirectional, fine-tuned per task. Read for the pre-training objective; the benchmark tables have not aged into anything useful.",
+      "vocabulary": [
+        "masked language modelling",
+        "pre-training",
+        "fine-tuning",
+        "[CLS] token"
+      ],
+      "est_minutes": 90,
+      "sequencing": {
+        "method": "citation_ancestry",
+        "cites": [
+          "arxiv:1706.03762"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:1810.04805",
+        "note": "Cites the Transformer directly."
+      },
+      "briefing_file": "briefings/07-bert.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 8,
+      "resource_id": "arxiv:2001.08361",
+      "kind": "paper",
+      "title": "Scaling Laws for Neural Language Models",
+      "authors": [
+        "Jared Kaplan",
+        "Sam McCandlish",
+        "Tom Henighan",
+        "Tom B. Brown"
+      ],
+      "author_count": 10,
+      "year": 2020,
+      "canonical_url": "https://arxiv.org/abs/2001.08361",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Kaplan et al., arXiv:2001.08361 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "Placed before GPT-3 because GPT-3 cites it: the prediction came first and the demonstration followed. In that order GPT-3 reads as a confirmation, not a surprise.",
+      "vocabulary": [
+        "power law",
+        "compute budget",
+        "loss curve",
+        "parameter count"
+      ],
+      "est_minutes": 90,
+      "sequencing": {
+        "method": "citation_ancestry",
+        "cites": [
+          "arxiv:1706.03762",
+          "arxiv:1810.04805"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:2001.08361",
+        "note": "Ordered before GPT-3 on citation ancestry and on date (Jan 2020 vs May 2020), which inverts the illustrative order sketched in 02 §2.3. The DAG is the tie-break, and it is unambiguous here."
+      },
+      "briefing_file": "briefings/08-scaling-laws.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 9,
+      "resource_id": "arxiv:2005.14165",
+      "kind": "paper",
+      "title": "Language Models are Few-Shot Learners",
+      "authors": [
+        "Tom B. Brown",
+        "Benjamin Mann",
+        "Nick Ryder",
+        "Melanie Subbiah"
+      ],
+      "author_count": 31,
+      "year": 2020,
+      "canonical_url": "https://arxiv.org/abs/2005.14165",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Brown et al., arXiv:2005.14165 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "The other half of the lineage, and the paper that changed what people ask a model to do. Seventy-five pages: the close read is the few-shot setup, not the per-task appendices.",
+      "vocabulary": [
+        "in-context learning",
+        "few-shot",
+        "zero-shot",
+        "prompt"
+      ],
+      "est_minutes": 120,
+      "sequencing": {
+        "method": "citation_ancestry",
+        "cites": [
+          "arxiv:1301.3781",
+          "arxiv:1706.03762",
+          "arxiv:1810.04805",
+          "arxiv:2001.08361"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:2005.14165",
+        "note": "Cites all four predecessors, including Kaplan et al. — the edge that fixes positions 8 and 9."
+      },
+      "briefing_file": "briefings/09-gpt3.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 10,
+      "resource_id": "arxiv:2203.15556",
+      "kind": "paper",
+      "title": "Training Compute-Optimal Large Language Models",
+      "authors": [
+        "Jordan Hoffmann",
+        "Sebastian Borgeaud",
+        "Arthur Mensch",
+        "Laurent Sifre"
+      ],
+      "author_count": 22,
+      "year": 2022,
+      "canonical_url": "https://arxiv.org/abs/2203.15556",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Hoffmann et al., arXiv:2203.15556 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "The correction, read directly after the two entries it revises so the disagreement is visible on the page. This is the path's worked example of 'what superseded it'.",
+      "vocabulary": [
+        "compute-optimal",
+        "token budget",
+        "isoFLOP",
+        "data scaling"
+      ],
+      "est_minutes": 90,
+      "sequencing": {
+        "method": "citation_ancestry",
+        "cites": [
+          "arxiv:1706.03762",
+          "arxiv:2001.08361",
+          "arxiv:2005.14165"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:2203.15556",
+        "note": "Cites both the scaling-law paper it revises and the model that followed it."
+      },
+      "briefing_file": "briefings/10-chinchilla.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 11,
+      "resource_id": "arxiv:2203.02155",
+      "kind": "paper",
+      "title": "Training language models to follow instructions with human feedback",
+      "authors": [
+        "Long Ouyang",
+        "Jeff Wu",
+        "Xu Jiang",
+        "Ryan Lowe"
+      ],
+      "author_count": 20,
+      "year": 2022,
+      "canonical_url": "https://arxiv.org/abs/2203.02155",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Ouyang et al., arXiv:2203.02155 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "Where a pre-trained model becomes a product: supervised fine-tuning, a reward model, then PPO. The pipeline every alignment paper since has been arguing with.",
+      "vocabulary": [
+        "RLHF",
+        "reward model",
+        "preference data",
+        "PPO"
+      ],
+      "est_minutes": 105,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [
+          "arxiv:2005.14165"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:2203.02155",
+        "note": "Contemporaneous with position 10 (both March 2022) and neither cites the other; ordered editorially — capability first, then the alignment step applied to it. It does cite GPT-3."
+      },
+      "briefing_file": "briefings/11-instructgpt.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 12,
+      "resource_id": "arxiv:2305.18290",
+      "kind": "paper",
+      "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+      "authors": [
+        "Rafael Rafailov",
+        "Archit Sharma",
+        "Eric Mitchell",
+        "Chelsea Finn"
+      ],
+      "author_count": 6,
+      "year": 2023,
+      "canonical_url": "https://arxiv.org/abs/2305.18290",
+      "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+      "attribution": "Rafailov et al., arXiv:2305.18290 (arXiv.org)",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "The current-paper slot, frozen. Closes the path by deleting the reward model the previous entry introduced — a clean, recent example of a pipeline being simplified away.",
+      "vocabulary": [
+        "preference optimisation",
+        "implicit reward",
+        "KL constraint",
+        "policy"
+      ],
+      "est_minutes": 105,
+      "sequencing": {
+        "method": "citation_ancestry",
+        "cites": [
+          "arxiv:2005.14165",
+          "arxiv:2203.02155"
+        ],
+        "evidence_url": "https://api.semanticscholar.org/arXiv:2305.18290",
+        "note": "Cites InstructGPT directly; it is the paper DPO argues with."
+      },
+      "staleness_note": "Frozen at 2026-08-30. WO-W15 does not accept 02 6 Q7's monthly rotation commitment for this slot; Phase W ships it dated rather than pretending it is current, and the rotation decision goes to Phase L.",
+      "briefing_file": "briefings/12-dpo.md",
+      "briefing_provenance": "generated"
+    },
+    {
+      "position": 13,
+      "resource_id": "ext:nn-zero-to-hero",
+      "kind": "external_course",
+      "title": "Neural Networks: Zero to Hero (course repository)",
+      "authors": [
+        "Andrej Karpathy"
+      ],
+      "author_count": 1,
+      "year": 2022,
+      "canonical_url": "https://github.com/karpathy/nn-zero-to-hero",
+      "license_note": "Link-out only. Repository code is MIT and may be adapted with attribution; Phase W does not exercise that right. The video series is deliberately absent — see L7_NO_YOUTUBE.",
+      "license_id": "MIT",
+      "license_url": "https://github.com/karpathy/nn-zero-to-hero/blob/master/LICENSE",
+      "attribution": "Andrej Karpathy",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "A parallel track for readers who want to build what they are reading about. Listed for the MIT-licensed notebooks; the video series stays out under the YouTube storage rule.",
+      "vocabulary": [
+        "backpropagation",
+        "autograd",
+        "tokeniser",
+        "GPT from scratch"
+      ],
+      "est_minutes": 300,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [],
+        "note": "Parallel track, not a step in the reading order. Placed at the end so the sequence above stays a sequence."
+      }
+    },
+    {
+      "position": 14,
+      "resource_id": "ext:fastai-course",
+      "kind": "external_course",
+      "title": "Practical Deep Learning for Coders",
+      "authors": [
+        "Jeremy Howard",
+        "Sylvain Gugger"
+      ],
+      "author_count": 2,
+      "year": 2022,
+      "canonical_url": "https://course.fast.ai/",
+      "license_note": "Link-out only. fastbook prose is explicitly not licensed for redistribution or change of format and bars commercial and broadcast use; we link and frame in our own words, and mirror nothing.",
+      "license_url": "https://github.com/fastai/fastbook",
+      "attribution": "Jeremy Howard, Sylvain Gugger and fast.ai",
+      "provenance": "curated",
+      "status": "proposed",
+      "rationale": "The recommended parallel track named in 02 §2.3. It teaches the practice this path deliberately skips; link-out only, which is what its licence permits.",
+      "vocabulary": [
+        "training loop",
+        "transfer learning",
+        "learning rate"
+      ],
+      "est_minutes": 600,
+      "sequencing": {
+        "method": "editorial",
+        "cites": [],
+        "note": "Parallel track, not a step in the reading order."
+      }
+    }
+  ]
+}

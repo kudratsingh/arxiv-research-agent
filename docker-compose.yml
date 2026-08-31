@@ -93,6 +93,14 @@ services:
       # entry so the server-only web proxy can authenticate upstream.
       ENABLE_API_AUTH: ${ENABLE_API_AUTH:-false}
       API_KEYS: ${API_KEYS:-}
+      # WO-W15: serve the repo-shipped learning paths. On here — and
+      # only here — because `docker compose up` is the zero-config demo
+      # and the only path it can publish is the *labeled fixture* one,
+      # whose banner says so in every response. The setting's own
+      # default is off (`src/config.py`), and the production overlay
+      # sets it back to false: nothing real publishes until its
+      # briefings are generated and reviewed.
+      ENABLE_LEARN_CONTENT: ${ENABLE_LEARN_CONTENT:-true}
       API_HOST: 0.0.0.0
       API_PORT: "8000"
       LOG_LEVEL: INFO

@@ -1,0 +1,142 @@
+{
+  "x-recording": {
+    "note": "Recorded response body and headers. DO NOT EDIT BY HAND \u2014 re-record with `bash web/contract/record.sh learn`. JSON has no comment syntax, so this key carries the header.",
+    "case": "learn.path.detail",
+    "commit": "08ee3fc8dd4962df6728386d64b46298310c721b",
+    "request": "GET /api/learn/paths/fixture-guided-read",
+    "transport": "in-process ASGI (httpx.ASGITransport) against create_app(), with ENABLE_LEARN_CONTENT=true. The learn endpoints read the repo-shipped content/ tree and touch neither Redis nor Postgres, so the body is a pure function of the committed manifests and is byte-identical through the Next.js /api proxy. `tests/test_contract_learn_fixtures.py` re-derives these bodies from the live app on every run, which is a stronger drift check than the recorded bytes alone. The `learn` phase in record.sh re-records them through the proxy for a reviewer who wants the full transport.",
+    "stack": "no containers: recorded in process with ANTHROPIC_API_KEY=local-preview-disabled. The learn endpoints read repo-shipped files, open no backing store, and construct no model client.",
+    "headers": "filtered to the proxy response allowlist in web/app/api/[...path]/route.ts",
+    "authored": false
+  },
+  "status": 200,
+  "statusText": "OK",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "path_id": "fixture-guided-read",
+    "kind": "fixture",
+    "title": "Fixture path: guided read (demo scaffolding)",
+    "goal": "Give the local demo and the surface work orders a real path shape to render before any funded briefing exists.",
+    "version": 1,
+    "status": "published",
+    "updated_at": "2026-08-30",
+    "fixture": true,
+    "banner": "FIXTURE CONTENT. This path is demo scaffolding, not a reading path. Its briefings are placeholder prose written to exercise the layout; nothing here has been reviewed for accuracy and nothing here teaches these papers. The real path is `reading-first-papers`, which publishes when its briefings are generated and reviewed.",
+    "entry_count": 3,
+    "est_minutes_total": 315,
+    "licensing": {
+      "posture_id": "W-OD-3",
+      "full_text": "link-out-only",
+      "abstracts": "displayed-with-attribution",
+      "quotes": "sparing-and-attributed",
+      "s2_derived_facts": "link-back-required",
+      "commercial_use": "none-through-phase-w",
+      "counsel_confirmed": false,
+      "source": "planning/07-learning-platform/02-CONTENT.md#22-papers"
+    },
+    "entries": [
+      {
+        "position": 1,
+        "resource_id": "arxiv:1706.03762",
+        "kind": "paper",
+        "title": "Attention Is All You Need",
+        "authors": [
+          "Ashish Vaswani",
+          "Noam Shazeer",
+          "Niki Parmar"
+        ],
+        "author_count": 8,
+        "year": 2017,
+        "canonical_url": "https://arxiv.org/abs/1706.03762",
+        "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+        "license_id": null,
+        "license_url": null,
+        "attribution": "Vaswani et al., arXiv:1706.03762 (arXiv.org)",
+        "provenance": "curated",
+        "status": "published",
+        "rationale": "Fixture entry. A real, well-known paper so the link-out, the attribution line and the abstract block all render against something true.",
+        "vocabulary": [
+          "self-attention",
+          "positional encoding"
+        ],
+        "est_minutes": 120,
+        "reviewed_by": "WO-W15 fixture scaffolding (not an owner review)",
+        "reviewed_at": "2026-08-30",
+        "sequencing_note": "Fixture ordering. No sequencing claim is being made.",
+        "sequencing_evidence_url": null,
+        "staleness_note": null,
+        "abstract": null,
+        "briefing_markdown": "> **FIXTURE CONTENT \u2014 authored placeholder, not a briefing.** This file\n> exists so the guided-read surfaces have a real document to lay out\n> before any funded briefing exists. It makes no claim about the paper\n> it sits beside and teaches nothing. The reviewed article will replace\n> every section below.\n\n## Why this paper, why now\n\n*Placeholder for the one paragraph that says what the sequence has built\nup to and why this entry comes next.* In the reviewed briefing this\nparagraph is the only place the path speaks in the first person about\nits own ordering, and it is the paragraph a reader skips at their cost.\n\nLength target: 120\u2013180 words. It names the previous entry, names the\nquestion the previous entry left open, and stops.\n\n## Read closely, skim, skip\n\n*Placeholder for the section-by-section guidance.* The reviewed briefing\nkeys this to the sections the existing chunker detects \u2014 Introduction,\nMethod, Results \u2014 so the guidance points at a real structure rather than\nat page numbers that differ per rendering.\n\n| Section | What to do |\n|---|---|\n| Placeholder section | Placeholder instruction |\n| Placeholder section | Placeholder instruction |\n| Placeholder section | Placeholder instruction |\n\n## Vocabulary you need first\n\n*Placeholder for the terms a reader must already hold.* Each one links\nback into the topic graph when the topic graph exists (Phase L); in\nPhase W they are the plain list carried on the manifest entry.\n\n- Placeholder term \u2014 placeholder gloss.\n- Placeholder term \u2014 placeholder gloss.\n\n## What it got wrong, and what superseded it\n\n*Placeholder for the temporal-honesty section.* The reviewed briefing\nsays plainly what has not survived, dates the claim, and links onward to\nthe entry that revises it \u2014 the section that distinguishes a reading\npath from a bibliography.\n\n---\n\nThe paper itself: <https://arxiv.org/abs/1706.03762> \u2014 Vaswani et al.,\non arXiv. This path links out and never re-hosts."
+      },
+      {
+        "position": 2,
+        "resource_id": "arxiv:1810.04805",
+        "kind": "paper",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "authors": [
+          "Jacob Devlin",
+          "Ming-Wei Chang",
+          "Kenton Lee",
+          "Kristina Toutanova"
+        ],
+        "author_count": 4,
+        "year": 2018,
+        "canonical_url": "https://arxiv.org/abs/1810.04805",
+        "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+        "license_id": null,
+        "license_url": null,
+        "attribution": "Devlin et al., arXiv:1810.04805 (arXiv.org)",
+        "provenance": "curated",
+        "status": "published",
+        "rationale": "Fixture entry. Second position so the surface has a middle-of-path state to render, not just a first and a last.",
+        "vocabulary": [
+          "masked language modelling",
+          "fine-tuning"
+        ],
+        "est_minutes": 90,
+        "reviewed_by": "WO-W15 fixture scaffolding (not an owner review)",
+        "reviewed_at": "2026-08-30",
+        "sequencing_note": "Fixture ordering. No sequencing claim is being made.",
+        "sequencing_evidence_url": null,
+        "staleness_note": null,
+        "abstract": null,
+        "briefing_markdown": "> **FIXTURE CONTENT \u2014 authored placeholder, not a briefing.** A\n> mid-path entry, present so the surfaces have a second document shape\n> to render: shorter than the first, with one quoted line, and no\n> tables. It makes no claim about the paper it sits beside.\n\n## Why this paper, why now\n\n*Placeholder.* This entry exists to give the path view a middle \u2014 a\nstate that is neither \"first, nothing before it\" nor \"last, nothing\nafter it\". The reviewed briefing's opening paragraph goes here.\n\n## Read closely, skim, skip\n\n*Placeholder.* Deliberately prose rather than a table, so the reader\nsurface is exercised against both shapes.\n\n## A quoted line, so the quote rules have something to hold\n\n> Placeholder quotation. The reviewed briefing quotes sparingly, marks\n> the quote, and attributes it on the line that follows.\n\n\u2014 Placeholder attribution, <https://arxiv.org/abs/1810.04805>\n\n## What it got wrong, and what superseded it\n\n*Placeholder.* Dated, specific, and linked onward in the reviewed\nversion.\n\n---\n\nThe paper itself: <https://arxiv.org/abs/1810.04805> \u2014 Devlin et al.,\non arXiv. This path links out and never re-hosts."
+      },
+      {
+        "position": 3,
+        "resource_id": "arxiv:2305.18290",
+        "kind": "paper",
+        "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+        "authors": [
+          "Rafael Rafailov",
+          "Archit Sharma",
+          "Eric Mitchell"
+        ],
+        "author_count": 6,
+        "year": 2023,
+        "canonical_url": "https://arxiv.org/abs/2305.18290",
+        "license_note": "Link out to the arXiv abs page. Title, authors and abstract are CC0 arXiv metadata; full text is never re-hosted or displayed.",
+        "license_id": null,
+        "license_url": null,
+        "attribution": "Rafailov et al., arXiv:2305.18290 (arXiv.org)",
+        "provenance": "curated",
+        "status": "published",
+        "rationale": "Fixture entry carrying a staleness note, so the dated-slot rendering has a state to exercise before the real path ships one.",
+        "vocabulary": [
+          "preference optimisation",
+          "implicit reward"
+        ],
+        "est_minutes": 105,
+        "reviewed_by": "WO-W15 fixture scaffolding (not an owner review)",
+        "reviewed_at": "2026-08-30",
+        "sequencing_note": "Fixture ordering. No sequencing claim is being made.",
+        "sequencing_evidence_url": null,
+        "staleness_note": "Fixture staleness note, dated 2026-08-30. Present so the surface has a dated-slot state to render; it describes nothing real.",
+        "abstract": null,
+        "briefing_markdown": "> **FIXTURE CONTENT \u2014 authored placeholder, not a briefing.** The last\n> entry on the fixture path, carrying a staleness note on its manifest\n> row so the dated-slot rendering has a state to exercise. It makes no\n> claim about the paper it sits beside.\n\n## Why this paper, why now\n\n*Placeholder.* The closing entry of a path has a job the others do not:\nit says what the reader can now do, and it says what it cannot promise.\nThe reviewed briefing's closing paragraph goes here.\n\n## Read closely, skim, skip\n\n*Placeholder.*\n\n## Vocabulary you need first\n\n- Placeholder term \u2014 placeholder gloss.\n\n## What it got wrong, and what superseded it\n\n*Placeholder.* This slot is the one the freshness policy calls\nfast-moving, and the manifest entry carries a dated staleness note\nrather than a claim to be current. Dated framing beats silently updated\ncontent.\n\n---\n\nThe paper itself: <https://arxiv.org/abs/2305.18290> \u2014 Rafailov et al.,\non arXiv. This path links out and never re-hosts."
+      }
+    ]
+  }
+}

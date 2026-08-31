@@ -1,0 +1,34 @@
+{
+  "x-recording": {
+    "note": "Recorded response body and headers. DO NOT EDIT BY HAND \u2014 re-record with `bash web/contract/record.sh learn`. JSON has no comment syntax, so this key carries the header.",
+    "case": "learn.paths",
+    "commit": "08ee3fc8dd4962df6728386d64b46298310c721b",
+    "request": "GET /api/learn/paths",
+    "transport": "in-process ASGI (httpx.ASGITransport) against create_app(), with ENABLE_LEARN_CONTENT=true. The learn endpoints read the repo-shipped content/ tree and touch neither Redis nor Postgres, so the body is a pure function of the committed manifests and is byte-identical through the Next.js /api proxy. `tests/test_contract_learn_fixtures.py` re-derives these bodies from the live app on every run, which is a stronger drift check than the recorded bytes alone. The `learn` phase in record.sh re-records them through the proxy for a reviewer who wants the full transport.",
+    "stack": "no containers: recorded in process with ANTHROPIC_API_KEY=local-preview-disabled. The learn endpoints read repo-shipped files, open no backing store, and construct no model client.",
+    "headers": "filtered to the proxy response allowlist in web/app/api/[...path]/route.ts",
+    "authored": false
+  },
+  "status": 200,
+  "statusText": "OK",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": {
+    "paths": [
+      {
+        "path_id": "fixture-guided-read",
+        "kind": "fixture",
+        "title": "Fixture path: guided read (demo scaffolding)",
+        "goal": "Give the local demo and the surface work orders a real path shape to render before any funded briefing exists.",
+        "version": 1,
+        "status": "published",
+        "updated_at": "2026-08-30",
+        "fixture": true,
+        "banner": "FIXTURE CONTENT. This path is demo scaffolding, not a reading path. Its briefings are placeholder prose written to exercise the layout; nothing here has been reviewed for accuracy and nothing here teaches these papers. The real path is `reading-first-papers`, which publishes when its briefings are generated and reviewed.",
+        "entry_count": 3,
+        "est_minutes_total": 315
+      }
+    ]
+  }
+}

@@ -323,6 +323,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/learn/paths": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Published learning paths (repo-shipped manifests, read-only).
+         * @description List every published path.
+         *
+         *     A path below `published` is absent rather than listed-and-locked. In
+         *     Phase W that means an install with no reviewed content answers with
+         *     an empty list, which is the truthful answer to "what can I read?".
+         */
+        get: operations["list_learn_paths_learn_paths_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learn/paths/{path_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One published path: its entries, briefings, and licensing posture.
+         * @description Return one published path.
+         *
+         *     An unpublished path and an unknown path are the same 404 on purpose,
+         *     the same reasoning `_check_ownership` uses in `routes.py`: the
+         *     existence of unpublished draft content is not a client's business.
+         */
+        get: operations["get_learn_path_learn_paths__path_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -526,6 +574,195 @@ export interface components {
              * @description If the job runs in a conversation, its id. See ADR 0032.
              */
             conversation_id?: string | null;
+        };
+        /**
+         * LearnAbstract
+         * @description A paper abstract with the attribution it may not be shown without.
+         */
+        LearnAbstract: {
+            /** Text */
+            text: string;
+            /** Source */
+            source: string;
+            /** Url */
+            url: string;
+        };
+        /**
+         * LearnEntry
+         * @description One item on a path, as a client sees it.
+         *
+         *     There is no full text and no PDF link here, and there is no field
+         *     that could carry one: `canonical_url` is the arXiv abs page, and the
+         *     briefing is our own prose. `provenance` and `attribution` travel with
+         *     every entry so the surface can label it at the point of display
+         *     (`02` §3.2) without a second request.
+         */
+        LearnEntry: {
+            /** Position */
+            position: number;
+            /** Resource Id */
+            resource_id: string;
+            /** Kind */
+            kind: string;
+            /** Title */
+            title: string;
+            /** Authors */
+            authors: string[];
+            /** Author Count */
+            author_count: number;
+            /** Year */
+            year: number;
+            /** Canonical Url */
+            canonical_url: string;
+            /** License Note */
+            license_note: string;
+            /** License Id */
+            license_id?: string | null;
+            /** License Url */
+            license_url?: string | null;
+            /** Attribution */
+            attribution: string;
+            /** Provenance */
+            provenance: string;
+            /** Status */
+            status: string;
+            /** Rationale */
+            rationale: string;
+            /** Vocabulary */
+            vocabulary: string[];
+            /** Est Minutes */
+            est_minutes: number;
+            /** Reviewed By */
+            reviewed_by?: string | null;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Sequencing Note */
+            sequencing_note?: string | null;
+            /** Sequencing Evidence Url */
+            sequencing_evidence_url?: string | null;
+            /** Staleness Note */
+            staleness_note?: string | null;
+            abstract?: components["schemas"]["LearnAbstract"] | null;
+            /**
+             * Briefing Markdown
+             * @description Our briefing companion, markdown. Absent when the entry has no reviewed companion yet.
+             */
+            briefing_markdown?: string | null;
+        };
+        /**
+         * LearnLicensing
+         * @description The posture the path is published under, carried to the surface.
+         *
+         *     Rendered, not merely recorded: a link-out-only posture that the page
+         *     does not state is indistinguishable from no posture at all.
+         *
+         *     The five posture fields are `Literal`s rather than `str` so the
+         *     generated TypeScript types carry the exact values — a frontend
+         *     branching on `full_text` gets a closed union, and a `full_text`
+         *     field that could hold a paper never reaches `schema.d.ts`.
+         */
+        LearnLicensing: {
+            /**
+             * Posture Id
+             * @constant
+             */
+            posture_id: "W-OD-3";
+            /**
+             * Full Text
+             * @constant
+             */
+            full_text: "link-out-only";
+            /**
+             * Abstracts
+             * @constant
+             */
+            abstracts: "displayed-with-attribution";
+            /**
+             * Quotes
+             * @constant
+             */
+            quotes: "sparing-and-attributed";
+            /**
+             * S2 Derived Facts
+             * @constant
+             */
+            s2_derived_facts: "link-back-required";
+            /**
+             * Commercial Use
+             * @constant
+             */
+            commercial_use: "none-through-phase-w";
+            /** Counsel Confirmed */
+            counsel_confirmed: boolean;
+            /** Source */
+            source: string;
+        };
+        /**
+         * LearnPathDetail
+         * @description A path with its servable entries and the posture they ship under.
+         */
+        LearnPathDetail: {
+            /** Path Id */
+            path_id: string;
+            /** Kind */
+            kind: string;
+            /** Title */
+            title: string;
+            /** Goal */
+            goal: string;
+            /** Version */
+            version: number;
+            /** Status */
+            status: string;
+            /** Updated At */
+            updated_at: string;
+            /** Fixture */
+            fixture: boolean;
+            /** Banner */
+            banner?: string | null;
+            /** Entry Count */
+            entry_count: number;
+            /** Est Minutes Total */
+            est_minutes_total: number;
+            licensing: components["schemas"]["LearnLicensing"];
+            /** Entries */
+            entries: components["schemas"]["LearnEntry"][];
+        };
+        /**
+         * LearnPathList
+         * @description `GET /learn/paths` — published paths only, `path_id` order.
+         */
+        LearnPathList: {
+            /** Paths */
+            paths: components["schemas"]["LearnPathSummary"][];
+        };
+        /**
+         * LearnPathSummary
+         * @description A path in the list view.
+         */
+        LearnPathSummary: {
+            /** Path Id */
+            path_id: string;
+            /** Kind */
+            kind: string;
+            /** Title */
+            title: string;
+            /** Goal */
+            goal: string;
+            /** Version */
+            version: number;
+            /** Status */
+            status: string;
+            /** Updated At */
+            updated_at: string;
+            /** Fixture */
+            fixture: boolean;
+            /** Banner */
+            banner?: string | null;
+            /** Entry Count */
+            entry_count: number;
+            /** Est Minutes Total */
+            est_minutes_total: number;
         };
         /**
          * LearnerProfileResponse
@@ -1287,6 +1524,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    list_learn_paths_learn_paths_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearnPathList"];
+                };
+            };
+        };
+    };
+    get_learn_path_learn_paths__path_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearnPathDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

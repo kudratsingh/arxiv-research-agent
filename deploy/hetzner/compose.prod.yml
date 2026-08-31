@@ -14,6 +14,12 @@ services:
       ENABLE_API_AUTH: "true"
       API_KEYS: web:${WEB_API_KEY:?WEB_API_KEY must be set}
       ENABLE_PROMPT_ISOLATION: "true"
+      # WO-W15: the base compose turns this on for the zero-config demo,
+      # where the only publishable path is labeled fixture scaffolding.
+      # A public deployment is not a demo, and the flagship path is
+      # still `proposed`, so production publishes nothing until the
+      # briefing campaign (W-OD-2) and its review are done.
+      ENABLE_LEARN_CONTENT: ${ENABLE_LEARN_CONTENT:-false}
       MAX_COST_USD: ${MAX_COST_USD:-2.00}
       API_KEY_HOURLY_LIMIT: ${API_KEY_HOURLY_LIMIT:-20}
       POSTGRES_URL: postgresql://arxiv:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/arxiv

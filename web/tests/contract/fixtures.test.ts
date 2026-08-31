@@ -366,10 +366,20 @@ const ERROR_FIXTURES: Record<string, { status: number; kind: ApiFailureKind }> =
     "error.503": { status: 503, kind: "proxy_misconfigured" },
   };
 
+// WO-W15's read-only learning-content surface. These carry no typed-client
+// assertions here yet because `lib/api` has no content reader — that arrives
+// with the `(learn)` surface (WO-W12). What they do carry is the inventory
+// and provenance checks below, plus a Python-side drift check that
+// re-derives both bodies from the live app on every CI run
+// (`tests/test_contract_learn_fixtures.py`) — possible only because these
+// two responses are a pure function of the manifests in `content/`.
+const LEARN_CONTENT_FIXTURES = ["learn.paths", "learn.path.detail"];
+
 const ALL_FIXTURES = [
   ...Object.keys(JOB_FIXTURES),
   ...CONVERSATION_FIXTURES,
   ...LEARN_FIXTURES,
+  ...LEARN_CONTENT_FIXTURES,
   ...Object.keys(ERROR_FIXTURES),
 ];
 
@@ -399,10 +409,12 @@ describe("contract/fixtures — inventory and provenance", () => {
       .sort();
     expect(onDisk).toEqual([...ALL_FIXTURES].sort());
     // Five job states, two conversation shapes, two learner surfaces
-    // (the profile and the progress ledger), seven error envelopes.
+    // (the profile and progress ledger), two learning-content reads, seven
+    // error envelopes.
     expect(Object.keys(JOB_FIXTURES)).toHaveLength(5);
     expect(CONVERSATION_FIXTURES).toHaveLength(2);
     expect(LEARN_FIXTURES).toHaveLength(2);
+    expect(LEARN_CONTENT_FIXTURES).toHaveLength(2);
     expect(Object.keys(ERROR_FIXTURES)).toHaveLength(7);
   });
 
@@ -504,17 +516,21 @@ describe("contract/fixtures — the recorder's safety properties", () => {
 
   it("reads job state only from per-job sub-resources", () => {
     // The GET side of the same rule. Every path handed to the fixture
-    // recorder is a single job or the conversations surface — reading a job
-    // is free, and there is no GET that could start one.
+    // recorder is a single job, the conversations surface, or a learning
+    // path — reading a job is free, reading a manifest touches no store at
+    // all, and there is no GET that could start one.
     const paths = [...code.matchAll(/record_get \S+ (\S+)/g)].map(
       (match) => match[1] ?? ""
     );
-    expect(paths).toHaveLength(7);
+    expect(paths).toHaveLength(9);
     for (const path of paths) {
-      expect(path).toMatch(/^\/(research\/[a-z-]+|conversations)/);
+      expect(path).toMatch(
+        /^\/(research\/[a-z-]+|conversations|learn\/paths)/
+      );
       expect(path).not.toBe("/research");
     }
     expect(paths).toContain("/research/baseline-succeeded");
+    expect(paths).toContain("/learn/paths");
   });
 
   it("re-seeds before recording so a re-run produces the same bytes", () => {

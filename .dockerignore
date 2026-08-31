@@ -20,6 +20,12 @@ planning/
 CLAUDE-Agent-Proj-1.md
 *.md
 !README.md
+# WO-W15: briefing companions are markdown *content*, not documentation.
+# The blanket `*.md` above would strip every one of them out of the build
+# context, and the learn endpoints would serve a path whose entries had
+# no companion — the one failure the manifest schema cannot catch,
+# because on disk the manifest would still be right.
+!content/**/*.md
 
 # Local runtime artifacts
 outputs/

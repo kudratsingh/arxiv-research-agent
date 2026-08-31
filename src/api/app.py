@@ -43,6 +43,7 @@ from src.api.conversations import (
     build_conversation_store,
 )
 from src.api.jobs import InMemoryJobStore, Job, JobStore
+from src.api.learn import router as learn_router
 from src.api.redriver import (
     REDRIVE_LOCK_TTL_SEC,
     WORKER_ID,
@@ -639,4 +640,11 @@ def create_app(
         log.info("api_cors_enabled", extra={"origins": origins})
 
     app.include_router(router)
+    # WO-W15: the read-only learning-content surface. Its own router and
+    # its own module, so the Phase W fleet does not three-way-merge
+    # `routes.py` (05-WEDGE-WORK-ORDERS.md §5.4). It holds no lifespan
+    # state — the manifests are files in the image — so it needs nothing
+    # from the block above, and its routes 404 while
+    # `enable_learn_content` is off.
+    app.include_router(learn_router)
     return app
