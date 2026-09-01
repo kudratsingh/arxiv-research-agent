@@ -59,7 +59,11 @@ from src.graph.session_workflow import (
     build_session_workflow as default_build_session_workflow,
 )
 from src.graph.workflow import build_workflow as default_build_workflow
-from src.learning.profile_store import ProfileStore, build_profile_store
+from src.learning.profile_store import (
+    ProfileStore,
+    build_profile_store,
+    skill_entry_from_mapping,
+)
 from src.learning.progress_store import (
     ProgressEvent,
     ProgressEventStore,
@@ -413,6 +417,8 @@ def create_app(
                     conversation_store=conv_store,
                     progress_event_store=progress_store,
                     progress_event_decoder=ProgressEvent.from_json_dict,
+                    profile_store=prof_store,
+                    profile_skill_decoder=skill_entry_from_mapping,
                 ),
                 name=f"job-{job.job_id}",
             )

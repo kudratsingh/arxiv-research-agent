@@ -17,6 +17,7 @@ from langgraph.types import interrupt
 from src.agents.assessment import assessment_judge
 from src.config import settings
 from src.graph.session_state import SessionState
+from src.learning.memory import generate_session_memory
 from src.learning.progress_store import new_event
 from src.llm import call_llm_json
 from src.observability import get_logger
@@ -64,7 +65,12 @@ def _available_minutes(state: SessionState) -> int:
     spec = state.get("session_spec", {})
     tier1 = state.get("tier1", {})
     requested = spec.get("available_minutes")
-    profile_budget = tier1.get("time_budget_min_per_day")
+    structured = tier1.get("structured_profile", {})
+    profile_budget = (
+        structured.get("time_budget_min_per_day")
+        if isinstance(structured, dict)
+        else tier1.get("time_budget_min_per_day")
+    )
     values = [
         value
         for value in (requested, profile_budget)
@@ -429,6 +435,7 @@ def progress_update_agent(state: SessionState) -> dict[str, Any]:
     resource_id = _string(spec.get("resource_id"), limit=128)
     common = {"path_id": path_id, "resource_id": resource_id}
 
+    memory_update = generate_session_memory(state)
     events = []
     assessment = state.get("assessment", {})
     if assessment:
@@ -459,6 +466,7 @@ def progress_update_agent(state: SessionState) -> dict[str, Any]:
     if isinstance(planned, int) and not isinstance(planned, bool) and planned > 0:
         payload["sessions_planned"] = planned
     payload["ended_early"] = bool(state.get("end_requested"))
+    payload["session_summary"] = memory_update.summary
     events.append(
         new_event(
             principal_key_id=principal,
@@ -479,6 +487,8 @@ def progress_update_agent(state: SessionState) -> dict[str, Any]:
     )
     return {
         "progress_events": events,
+        "session_summary": memory_update.summary,
+        "inference_batch": [entry.to_mapping() for entry in memory_update.inference_batch],
         "draft_report": result,
         "quality_score": None,
         "iteration": state.get("turn_number", 0),

@@ -354,6 +354,12 @@ never renumbered.
   at most one follow-up probe before a fixed edge to progress update. Raw judge
   output never enters learner-facing contracts, mock mode makes no call, and
   all outputs remain tutor guidance until the WO-W09 prior is owner-ratified.
+- [0061](0061-bounded-tier1-session-memory.md) — The Phase W memory subset:
+  a CI-enforced 2.5K-token-estimate Tier-1 ceiling, structural facts that win
+  over lossy prose, one visibly lossy close-time session summary, and a
+  transcript-grounded inference batch applied only after session close. A
+  `summary:*` id is structurally invalid as skill evidence; each inference must
+  instead cite the exact closing session.
 
 ## When to write an ADR
 

@@ -121,6 +121,11 @@ _SKILL_NAME_RE: Final = re.compile(r"^[a-z0-9][a-z0-9+./-]*(?: [a-z0-9+./-]+)*$"
 # reasoning: a short opaque token, never prose.
 _EVIDENCE_REF_RE: Final = re.compile(r"^[A-Za-z0-9][A-Za-z0-9:._-]*$")
 
+# Session summaries are lossy coaching memory, never primary evidence. Kept
+# local rather than imported from ``learning.memory`` to avoid a store <-
+# serializer <- store cycle; the exact prefix is pinned by WO-W05 tests.
+_SUMMARY_EVIDENCE_PREFIX: Final = "summary:"
+
 # ISO date, or "" for open-ended (01 §1.1's `LearnerGoal.target_date`).
 _ISO_DATE_RE: Final = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -339,6 +344,11 @@ def _validate_skill_entry(entry: SkillEntry) -> None:
         raise ProvenanceError(
             f"skill {entry.skill!r}: evidence_ref {entry.evidence_ref!r} is "
             "not an id-shaped token"
+        )
+    if entry.evidence_ref.startswith(_SUMMARY_EVIDENCE_PREFIX):
+        raise ProvenanceError(
+            f"skill {entry.skill!r}: a lossy session summary cannot be a "
+            "skill-claim evidence_ref; cite the session or assessment event"
         )
 
 
