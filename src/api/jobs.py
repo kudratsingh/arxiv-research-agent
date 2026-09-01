@@ -134,6 +134,10 @@ class Job:
     result: str | None = None
     error: str | None = None
     error_type: str | None = None
+    # WO-W06: explicit session-only product outcome. Empty means the cap
+    # never bound (and remains the default for every legacy Redis row).
+    cost_cap_status: Literal["", "refused", "degraded_close"] = ""
+    cost_cap_message: str | None = None
     cost_usd: float | None = None
     llm_calls: int | None = None
     iterations: int | None = None

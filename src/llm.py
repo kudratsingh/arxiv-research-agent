@@ -36,7 +36,7 @@ import anthropic
 from src.cancellation import check_cancelled
 from src.config import settings
 from src.observability import record_llm_call
-from src.observability.costs import current_costs, enforce_cost_cap
+from src.observability.costs import current_costs, effective_cost_cap, enforce_cost_cap
 from src.observability.logging import get_logger
 from src.observability.metrics import record_llm_upstream_error
 
@@ -145,7 +145,7 @@ def _check_cost_budget() -> None:
     costs = current_costs()
     if costs is None:
         return
-    enforce_cost_cap(costs, settings.max_cost_usd)
+    enforce_cost_cap(costs, effective_cost_cap(settings.max_cost_usd))
 
 
 def _build_system_param(

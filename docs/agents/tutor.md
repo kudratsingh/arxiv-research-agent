@@ -93,6 +93,7 @@ with an empty inference batch.
 | Tier-1 profile reaches every cap | Lower-priority skills are visibly omitted; goals, budget, and declared constraints are never truncated. |
 | Summary contradicts the profile | Structured facts win; the summary remains marked lossy. |
 | Summary id offered as skill evidence | The profile store rejects the claim. |
+| Session reaches its cost ceiling | The shared LLM choke point refuses the next call. The configured behavior either fails explicitly or closes with static honest copy; it never spends once more to apologize. |
 
 ## Flags
 
@@ -103,6 +104,10 @@ with an empty inference batch.
 - `use_mock_data` — deterministic no-client path used by tests/fixtures.
 - `session_turn_timeout_sec` / `session_max_turns` — parking and structural
   ceilings inherited by the shared runner.
+- `learning_session_max_cost_usd = 0.50` — session-only effective ceiling;
+  research jobs retain `max_cost_usd`.
+- `learning_session_cost_cap_behavior = "refuse"` — `refuse` or
+  `degraded_close`; both expose an explicit `cost_cap_status` and cost totals.
 - `enable_prompt_isolation` / `enable_prompt_caching` — prompt safety and cache
   behavior shared with the research agents.
 
@@ -121,3 +126,4 @@ reattaching to the same SQLite checkpoint.
 - [ADR 0059](../decisions/0059-guided-read-session-graph.md)
 - [ADR 0060](../decisions/0060-evidence-grounded-assessment-judge.md)
 - [ADR 0061](../decisions/0061-bounded-tier1-session-memory.md)
+- [ADR 0062](../decisions/0062-session-specific-cost-ceilings.md)

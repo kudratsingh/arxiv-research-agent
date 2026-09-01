@@ -29,7 +29,7 @@ it is raised against, not next to one of its raisers.
 from __future__ import annotations
 
 import threading
-from contextvars import ContextVar
+from contextvars import ContextVar, Token
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -180,7 +180,10 @@ def unpriced_models(config: Settings) -> set[str]:
         Resolved model ids missing from `PRICES_USD_PER_MILLION`; empty
         when the deployment is fully priced.
     """
-    return resolved_model_ids(config) - set(PRICES_USD_PER_MILLION)
+    missing = resolved_model_ids(config) - set(PRICES_USD_PER_MILLION)
+    for model in sorted(missing):
+        _warn_unpriced_model_once(model)
+    return missing
 
 
 def estimate_cost(
@@ -356,6 +359,10 @@ _current_costs: ContextVar[RunCosts | None] = ContextVar(
     "current_costs", default=None
 )
 
+_effective_cost_cap_usd: ContextVar[float | None] = ContextVar(
+    "effective_cost_cap_usd", default=None
+)
+
 
 def current_costs() -> RunCosts | None:
     """Return the run's cost accumulator, or `None` when no run is active."""
@@ -372,6 +379,28 @@ def start_cost_tracking() -> RunCosts:
     costs = RunCosts()
     _current_costs.set(costs)
     return costs
+
+
+def bind_effective_cost_cap(cap_usd: float) -> Token[float | None]:
+    """Bind this job's spend ceiling for every call in its context.
+
+    The runner uses the ordinary research ceiling for research jobs and the
+    tighter learning-session ceiling for session jobs. Context propagation
+    carries the value into executor-backed graph nodes without a second LLM
+    client or enforcement path.
+    """
+    return _effective_cost_cap_usd.set(cap_usd)
+
+
+def effective_cost_cap(default_cap_usd: float) -> float:
+    """Return the run-specific ceiling, or the caller's stable default."""
+    cap = _effective_cost_cap_usd.get()
+    return default_cap_usd if cap is None else cap
+
+
+def reset_effective_cost_cap(token: Token[float | None]) -> None:
+    """Restore the previous cap after a job leaves its task context."""
+    _effective_cost_cap_usd.reset(token)
 
 
 def record_llm_call(

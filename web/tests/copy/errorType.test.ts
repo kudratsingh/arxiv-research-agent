@@ -58,7 +58,10 @@ const BRIEF_TABLE: Array<[string, string]> = [
  * and `errorTypeDrift.test.ts` independently proves every entry is a
  * value the backend can really produce.
  */
-const ADDED_SINCE_THE_BRIEF = ["session_turn_timeout"]; // ADR 0057
+const ADDED_SINCE_THE_BRIEF = [
+  "session_turn_timeout", // ADR 0057
+  "session_cost_cap_refused", // ADR 0062
+];
 
 describe("criterion 6 — the mapped values", () => {
   it("maps the brief's nine, plus every value added since, and nothing else", () => {

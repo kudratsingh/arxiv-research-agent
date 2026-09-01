@@ -644,6 +644,23 @@ class Settings(BaseSettings):
             "independently as a stop condition."
         ),
     )
+    learning_session_max_cost_usd: float = Field(
+        default=0.50,
+        gt=0.0,
+        le=25.0,
+        description=(
+            "Per-session LLM spend ceiling. Bound as the effective cost cap "
+            "for session jobs only; research jobs continue to use max_cost_usd."
+        ),
+    )
+    learning_session_cost_cap_behavior: Literal["refuse", "degraded_close"] = Field(
+        default="refuse",
+        description=(
+            "Session behavior after the LLM choke point refuses a call at the "
+            "cost ceiling. refuse = terminal failure; degraded_close = honest "
+            "successful close with no further model output."
+        ),
+    )
     max_loop_iterations: int = Field(
         default=20,
         ge=1,

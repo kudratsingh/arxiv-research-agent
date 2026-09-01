@@ -64,3 +64,6 @@ that touch more than one:
 - `max_cost_usd` — checked by the supervisor before its own LLM call,
   and independently by the API runner between nodes under both shapes
   (ADRs 0033 / 0051).
+- `learning_session_max_cost_usd` — task-local override for guided-read
+  sessions at the same shared LLM choke point; it never changes a research
+  job's `max_cost_usd` ceiling (ADR 0062).

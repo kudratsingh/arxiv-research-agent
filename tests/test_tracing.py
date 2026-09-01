@@ -14,7 +14,9 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 )
 
 from src.config import Settings
+from src.observability import costs as costs_module
 from src.observability import tracing as tracing_module
+from src.observability.costs import RunCosts, current_costs
 from src.observability.tracing import traced_node
 
 
@@ -131,6 +133,40 @@ class TestTracedNodeEnabled:
 
         span = in_memory_tracer.get_finished_spans()[0]
         assert span.attributes["run_id"] == "rid-observed"
+
+    def test_records_cumulative_and_delta_llm_costs(
+        self, in_memory_tracer: InMemorySpanExporter
+    ) -> None:
+        accumulator = RunCosts()
+        accumulator.record(
+            "claude-haiku-4-5",
+            input_tokens=10,
+            output_tokens=2,
+            cost_usd=0.03,
+        )
+        token = costs_module._current_costs.set(accumulator)
+
+        def agent(state: dict) -> dict:
+            costs = current_costs()
+            assert costs is not None
+            costs.record(
+                "claude-haiku-4-5",
+                input_tokens=20,
+                output_tokens=4,
+                cost_usd=0.07,
+            )
+            return {}
+
+        try:
+            traced_node("tutor", agent)({"query": "q"})
+        finally:
+            costs_module._current_costs.reset(token)
+
+        attrs = in_memory_tracer.get_finished_spans()[0].attributes
+        assert attrs["llm.cost_usd"] == pytest.approx(0.10)
+        assert attrs["llm.cost_delta_usd"] == pytest.approx(0.07)
+        assert attrs["llm.call_count"] == 2
+        assert attrs["llm.call_delta"] == 1
 
     def test_exception_recorded_and_reraised(
         self, in_memory_tracer: InMemorySpanExporter

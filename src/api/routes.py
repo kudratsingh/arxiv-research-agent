@@ -1266,6 +1266,8 @@ def _terminal_event_data(job: Job) -> dict[str, Any]:
         "elapsed_sec": job.elapsed_sec(),
         "error": job.error,
         "error_type": job.error_type,
+        "cost_cap_status": job.cost_cap_status,
+        "cost_cap_message": job.cost_cap_message,
         "iterations": job.iterations,
         "quality_score": job.quality_score,
         "cost_usd": job.cost_usd,

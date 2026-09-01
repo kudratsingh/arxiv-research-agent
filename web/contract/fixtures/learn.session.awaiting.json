@@ -1,6 +1,6 @@
 {
   "x-recording": {
-    "note": "Recorded response body and headers from the first learner park in the no-cost WO-W03 API integration path. DO NOT EDIT BY HAND; re-run tests/test_guided_session_graph.py with ANTHROPIC_API_KEY=local-preview-disabled.",
+    "note": "Recorded response body and headers from the first learner park in the no-cost WO-W03 API integration path. WO-W06 added the two no-cap defaults from the same SessionDetail model; tests/test_guided_session_graph.py and tests/test_contract_session_fixtures.py verify them with ANTHROPIC_API_KEY=local-preview-disabled.",
     "case": "learn.session.awaiting",
     "commit": "624e5c931fb765a36f65dcb6e1fea374cc35f931",
     "request": "GET /learn/sessions/214bac7310a4459b as its owner",
@@ -39,6 +39,8 @@
     "result": null,
     "error": null,
     "error_type": null,
+    "cost_cap_status": "",
+    "cost_cap_message": null,
     "cost_usd": null,
     "llm_calls": null
   }

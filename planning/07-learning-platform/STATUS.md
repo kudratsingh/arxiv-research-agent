@@ -1,6 +1,6 @@
 # Learning platform campaign — status
 
-Updated: 2026-08-30
+Updated: 2026-09-01
 
 ## The campaign
 
@@ -14,6 +14,7 @@ Fable planning agents and merged as records, not adoptions:
 | [`02-CONTENT.md`](02-CONTENT.md) | Content graph, curation pipelines, licensing reality, cold-start scope |
 | [`03-ARCHITECTURE-ROADMAP.md`](03-ARCHITECTURE-ROADMAP.md) | Delta architecture, L0–L4 phases (~71 WOs), owner decisions OD-1–12 |
 | [`04-STRATEGY-ALTERNATIVES.md`](04-STRATEGY-ALTERNATIVES.md) | Objective functions, alternatives, tradeoff matrix, cheap-test ladder |
+| [`05-WEDGE-WORK-ORDERS.md`](05-WEDGE-WORK-ORDERS.md) | Phase W's 20 executable work orders, dependency graph, gates, and owner waits |
 | [`06-DIRECTION-PORTFOLIO.md`](06-DIRECTION-PORTFOLIO.md) | The nine adopted directions: charters, shared core, evidence gates (LP-D2) |
 
 ## Owner decisions
@@ -52,9 +53,25 @@ eval funding (~first paid run), DEPLOY cost approval, MT-01 §8 answers
 (deferred to Rung 3 / Phase L0), content licensing posture (02),
 notification channel (01/03).
 
-## Next
+## Phase W execution
 
-Phase W work-order planning (`05-WEDGE-WORK-ORDERS.md`, in flight):
-the wedge + agentic core decomposed into revamp-style work orders with
-a dependency graph and gates. Build begins when the owner approves that
-plan.
+The plan is approved and implementation is in progress. Thirteen of the 20
+cards are implemented and merged to their no-cost boundary through WO-W06:
+W01–W09, plus W12, W15, W16, and W18. Owner-dependent funded/public/pilot
+criteria on those cards remain visibly deferred. The merged work includes the
+shared job/session lifecycle, learner profile,
+guided-read graph, evidence-grounded assessment, bounded Tier-1 memory,
+per-session cost enforcement, honest progress ledger, deterministic eval
+fixtures/metrics, the path surface, guarded flagship content, static
+publication package, and pre-committed engagement reporter.
+
+The next no-cost critical-path cards are **W13** (session surface) and **W14**
+(honest ledger view). W10/W11 remain built only after a newly approved funded
+eval campaign; W17 remains blocked on pilot/deploy/inference approval; W19 can
+assemble the no-cost Gate W1 evidence while marking funded rows unresolved;
+W20 follows the 14-day pilot observation window.
+
+Standing cost lock (2026-08-30, reaffirmed by continuation): the paid nightly
+eval workflow is disabled, and no funded model run, deployment, public launch,
+or pilot invitation may occur without a fresh explicit owner approval. Local,
+mock, recorded-fixture, static, and CI validation continue under that lock.
