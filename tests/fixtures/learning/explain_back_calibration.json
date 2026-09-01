@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "labeled_by": "WO-W09 implementation author (Codex-assisted synthetic fixture authoring)",
+    "labeled_at": "2026-09-01",
+    "source_kind": "synthetic explain-backs; not real learner sessions",
+    "owner_ratified": false,
+    "ratified_by": "",
+    "limitations": "Implementation-authored prior for harness tests only. The repository owner/operator has not reviewed these labels, no paid judge has scored them, and they cannot clear Gate W1 or authorize assessed profile claims until W-OD-1 and owner ratification."
+  },
+  "cases": [
+    {
+      "calibration_id": "cal-001",
+      "paper_context": "Word2vec skip-gram predicts context words from a center word.",
+      "learner_explain_back": "Skip-gram takes the center word and predicts nearby context words.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-002",
+      "paper_context": "CBOW predicts the center word from surrounding context.",
+      "learner_explain_back": "CBOW uses the center word to predict all the words around it.",
+      "expected_gap_ids": ["direction-reversed"]
+    },
+    {
+      "calibration_id": "cal-003",
+      "paper_context": "Negative sampling replaces the full softmax objective with sampled binary classification.",
+      "learner_explain_back": "Negative sampling makes training cheaper by comparing a real pair against sampled non-pairs instead of normalizing over the whole vocabulary.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-004",
+      "paper_context": "Seq2seq maps a variable-length source sequence to a variable-length target sequence through an encoder-decoder.",
+      "learner_explain_back": "The encoder and decoder have to use sequences of exactly the same length.",
+      "expected_gap_ids": ["fixed-length-confusion"]
+    },
+    {
+      "calibration_id": "cal-005",
+      "paper_context": "Attention lets the decoder form a weighted combination of encoder states at each output step.",
+      "learner_explain_back": "At each generated token the decoder weights the encoder states and combines them, so it need not rely on one fixed vector.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-006",
+      "paper_context": "Attention weights are learned relevance weights, not proof of causal importance.",
+      "learner_explain_back": "The largest attention weight proves that input token caused the output.",
+      "expected_gap_ids": ["causal-overclaim"]
+    },
+    {
+      "calibration_id": "cal-007",
+      "paper_context": "The Transformer removes recurrence and uses self-attention plus position information.",
+      "learner_explain_back": "A Transformer processes tokens with self-attention instead of recurrence and adds positional encodings so order is represented.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-008",
+      "paper_context": "Scaled dot-product attention divides logits by the square root of key dimension before softmax.",
+      "learner_explain_back": "The square-root scaling is applied after softmax to make the probabilities sum to one.",
+      "expected_gap_ids": ["operation-order-confusion"]
+    },
+    {
+      "calibration_id": "cal-009",
+      "paper_context": "Multi-head attention projects queries, keys, and values into multiple learned subspaces.",
+      "learner_explain_back": "Multiple heads let the model form different learned projections and attend in parallel before combining the results.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-010",
+      "paper_context": "The decoder causal mask blocks attention to future target positions; padding masks serve a different purpose.",
+      "learner_explain_back": "The causal mask only hides padding tokens, so it does not affect which future words the decoder sees.",
+      "expected_gap_ids": ["mask-type-confusion", "future-leakage-confusion"]
+    },
+    {
+      "calibration_id": "cal-011",
+      "paper_context": "BERT pretrains a bidirectional encoder with masked-language modeling and next-sentence prediction in the original paper.",
+      "learner_explain_back": "BERT masks some tokens and learns from context on both sides; the original setup also includes a next-sentence objective.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-012",
+      "paper_context": "BERT is an encoder trained bidirectionally, unlike an autoregressive left-to-right decoder.",
+      "learner_explain_back": "BERT generates text left to right because each token can only see earlier tokens.",
+      "expected_gap_ids": ["architecture-confusion", "attention-direction-confusion"]
+    },
+    {
+      "calibration_id": "cal-013",
+      "paper_context": "GPT-style language modeling predicts the next token autoregressively.",
+      "learner_explain_back": "The model is trained to predict the next token from earlier tokens.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-014",
+      "paper_context": "Scaling-law fits are empirical power laws over a studied range, not guarantees at arbitrary scale.",
+      "learner_explain_back": "Because the fitted curve is a power law, performance is guaranteed to improve forever at exactly that rate.",
+      "expected_gap_ids": ["extrapolation-overclaim", "uncertainty-omission"]
+    },
+    {
+      "calibration_id": "cal-015",
+      "paper_context": "The scaling-laws paper relates loss to model size, data, and compute and uses fitted exponents for allocation decisions.",
+      "learner_explain_back": "Loss follows fitted power laws in parameters, data, and compute, and the exponents help decide how to allocate a training budget.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-016",
+      "paper_context": "In RLHF, comparison data trains a reward model and a policy is then optimized against that learned reward with a KL constraint.",
+      "learner_explain_back": "People rank outputs, and those rankings directly update the final policy; there is no intermediate model.",
+      "expected_gap_ids": ["reward-model-omission", "pipeline-confusion"]
+    },
+    {
+      "calibration_id": "cal-017",
+      "paper_context": "The KL penalty in InstructGPT discourages the policy from drifting too far from the supervised model.",
+      "learner_explain_back": "The reward model scores outputs, PPO optimizes the policy, and a KL term keeps it near the supervised model.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-018",
+      "paper_context": "Human preference labels reflect annotators and the collection process; they are not an objective definition of truth.",
+      "learner_explain_back": "Once humans prefer an answer, the reward model proves that answer is objectively true.",
+      "expected_gap_ids": ["preference-truth-confusion", "causal-overclaim"]
+    },
+    {
+      "calibration_id": "cal-019",
+      "paper_context": "A paper's reported benchmark result supports a bounded empirical claim under its stated setup.",
+      "learner_explain_back": "The model scored higher on the paper's test set under this setup; that does not by itself show it works in every domain.",
+      "expected_gap_ids": []
+    },
+    {
+      "calibration_id": "cal-020",
+      "paper_context": "Correlation in an observational result does not establish causation without an identification argument.",
+      "learner_explain_back": "The two measurements moved together, so changing the first one will definitely cause the second to change.",
+      "expected_gap_ids": ["causal-overclaim"]
+    }
+  ]
+}

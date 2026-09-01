@@ -357,6 +357,49 @@ whether to ask for revisions). What that means in practice:
   with suspicion and read the per-query table before reverting
   anything.
 
+## Guided-read learning metrics (Phase W)
+
+`src/eval/learning_metrics.py` adds the first evaluation layer for guided
+paper-reading sessions. It is separate from the research-query runner because
+its unit is a learner session rather than a research report, but it follows the
+same failure discipline: a judge exception or malformed JSON returns
+`metric=null` plus a named `metrics_error`. Invalid output never becomes a
+default or partial score.
+
+Two single-call judges are defined:
+
+- **Session-plan coherence** compares the plan with the scenario's declared
+  minutes and the paper's close-read/skim guidance. It scores section ordering,
+  load against the time budget, comprehension-check placement, and whether a
+  shortened session says plainly what was deferred. The paired 10-minute
+  fixtures prove the harness can distinguish an honest one-section plan from a
+  silent 30-minute plan; all unit-test judge responses are canned.
+- **Explain-back gaps** accepts only gaps whose evidence quote appears verbatim
+  in the learner's explain-back. It cannot cite tutor copy or invent a mastery
+  claim. Its checked-in calibration set contains 20 compact synthetic cases and
+  a deterministic exact-set/micro-F1 scorer.
+
+The calibration provenance is intentionally limiting, not decorative. The set
+was authored as a Codex-assisted implementation fixture on 2026-09-01; it is
+not composed of real learner sessions, has not been ratified by the repository
+owner/operator, and has not been scored by a live judge. It tests data flow and
+agreement arithmetic. It is **not** evidence that the assessment judge agrees
+with humans, cannot clear Gate W1, and cannot authorize assessed learner-profile
+claims. Owner review and the funded campaign remain W-OD-1.
+
+Two zero-call checks run in ordinary pytest: every progress event must carry a
+non-blank `evidence_ref`, and tutor/check-in copy is scanned against the small
+forbidden shame lexicon (for example, "you've fallen behind" and "you failed").
+The functions report every offending index/phrase so CI failures are actionable.
+
+### Paid calibration remains locked
+
+The production calibration step is deliberately absent from automated CI. It
+requires renewed owner approval, a ratified label set, and a campaign run under
+`--max-budget-usd`. Until its agreement bar is chosen and met, explain-back
+outputs are tutor guidance only. The disabled nightly research eval is not a
+substitute for this campaign and remains disabled independently.
+
 ## The nightly workflow
 
 [`.github/workflows/eval-nightly.yml`](../.github/workflows/eval-nightly.yml)
