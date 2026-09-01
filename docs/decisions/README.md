@@ -348,6 +348,12 @@ never renumbered.
   honest `recorded_ungraded` explain-back that writes evidence but no mastery
   percentage. Records the stale-turn bug the integration proof found and why
   casts or repeated `interrupt_after` updates are not safe substitutes.
+- [0060](0060-evidence-grounded-assessment-judge.md) — The default-off,
+  one-shot explain-back judge: exact response shape, learner-verbatim evidence
+  on every finding, whole-judgment degradation to explicit `unassessed`, and
+  at most one follow-up probe before a fixed edge to progress update. Raw judge
+  output never enters learner-facing contracts, mock mode makes no call, and
+  all outputs remain tutor guidance until the WO-W09 prior is owner-ratified.
 
 ## When to write an ADR
 

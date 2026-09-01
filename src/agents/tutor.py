@@ -14,6 +14,7 @@ from typing import Any, Literal
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.types import interrupt
 
+from src.agents.assessment import assessment_judge
 from src.config import settings
 from src.graph.session_state import SessionState
 from src.learning.progress_store import new_event
@@ -341,7 +342,9 @@ def tutor_agent(state: SessionState) -> dict[str, Any]:
 
 
 def assess_agent(state: SessionState) -> dict[str, Any]:
-    """Record explain-back evidence without pretending W04's judge exists."""
+    """Use the default-off judge or preserve W03's informal baseline."""
+    if settings.enable_assessment_judge:
+        return assessment_judge(state)
     reply = _string(state.get("learner_reply"), limit=4_000)
     quote = reply[:240]
     assessment = {
@@ -355,7 +358,65 @@ def assess_agent(state: SessionState) -> dict[str, Any]:
         "assessment": assessment,
         "learner_reply": "",
         "awaiting_assessment": False,
-        "messages": [HumanMessage(content=reply, name="learner_explain_back")],
+        "messages": [
+            HumanMessage(content=reply, name="learner_explain_back"),
+            AIMessage(
+                content=(
+                    "Thanks — I recorded your explain-back in your own words. "
+                    "The assessment judge is off, so I am not drawing a gap or "
+                    "strength conclusion from it."
+                ),
+                name="tutor",
+            ),
+        ],
+    }
+
+
+def route_after_assessment(state: SessionState) -> str:
+    """Offer at most one grounded follow-up probe, never a revision loop."""
+    assessment = state.get("assessment", {})
+    gaps = assessment.get("gaps")
+    probe = _string(assessment.get("follow_up_probe"), limit=400)
+    if assessment.get("status") == "assessed" and isinstance(gaps, list) and gaps and probe:
+        return "probe"
+    return "progress_update"
+
+
+def assessment_probe_agent(state: SessionState) -> dict[str, Any]:
+    """Turn the judge's grounded gap advice into one learner-facing question."""
+    probe = _string(state.get("assessment", {}).get("follow_up_probe"), limit=400)
+    activity = {"kind": "follow_up_probe", "instructions": probe}
+    return {
+        "activity": activity,
+        "turn": {
+            "turn_number": state.get("turn_number", 0) + 2,
+            "phase": "tutor",
+            "kind": "follow_up_probe",
+            "prompt": probe,
+            "feedback": (
+                "I found one point worth checking, based on the words in your "
+                "explain-back. This is a question, not a grade."
+            ),
+            "activity": activity,
+        },
+        "messages": [
+            AIMessage(
+                content=f"One follow-up, not a grade: {probe}",
+                name="tutor",
+            )
+        ],
+    }
+
+
+def record_assessment_probe_agent(state: SessionState) -> dict[str, Any]:
+    """Attach the one follow-up reply as evidence without judging it again."""
+    reply = _string(state.get("learner_reply"), limit=4_000)
+    assessment = dict(state.get("assessment", {}))
+    assessment["follow_up_response_quote"] = reply[:240]
+    return {
+        "assessment": assessment,
+        "learner_reply": "",
+        "messages": [HumanMessage(content=reply, name="learner_follow_up")],
     }
 
 
@@ -371,6 +432,9 @@ def progress_update_agent(state: SessionState) -> dict[str, Any]:
     events = []
     assessment = state.get("assessment", {})
     if assessment:
+        status = _string(assessment.get("status"), limit=40) or "recorded_ungraded"
+        gaps = assessment.get("gaps")
+        strengths = assessment.get("strengths")
         events.append(
             new_event(
                 principal_key_id=principal,
@@ -379,8 +443,14 @@ def progress_update_agent(state: SessionState) -> dict[str, Any]:
                 event_id=f"{run_id}:assessment",
                 payload={
                     **common,
-                    "result": "recorded_ungraded",
+                    "result": status,
                     "evidence_quote": _string(assessment.get("evidence_quote"), limit=240),
+                    "gaps": gaps if isinstance(gaps, list) else [],
+                    "strengths": strengths if isinstance(strengths, list) else [],
+                    "follow_up_response_quote": _string(
+                        assessment.get("follow_up_response_quote"), limit=240
+                    ),
+                    "note": _string(assessment.get("note"), limit=400),
                 },
             ).to_json_dict()
         )

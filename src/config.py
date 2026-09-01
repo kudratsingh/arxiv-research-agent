@@ -782,6 +782,14 @@ class Settings(BaseSettings):
             "high-volume turn path, with quality measured by WO-W09/W10."
         ),
     )
+    assessment_model: str = Field(
+        default="",
+        description=(
+            "Model for the one-shot explain-back assessment judge. Empty "
+            "falls back to anthropic_model. Outputs remain tutor guidance "
+            "until the WO-W09 calibration prior is owner-ratified."
+        ),
+    )
 
     # ------ Prompt caching (ADR 0022, Sprint 3) -----------------------
     enable_prompt_caching: bool = Field(
@@ -959,6 +967,14 @@ class Settings(BaseSettings):
             "from durable state. See 01-LEARNING-AGENT.md §5.4."
         ),
     )
+    enable_assessment_judge: bool = Field(
+        default=False,
+        description=(
+            "Run the one-shot explain-back judge inside guided-read sessions. "
+            "Off by default; requires enable_session_loop. Off preserves the "
+            "informal recorded-ungraded close. See ADR 0060."
+        ),
+    )
 
     @model_validator(mode="after")
     def _check_session_loop_dependencies(self) -> Settings:
@@ -971,6 +987,11 @@ class Settings(BaseSettings):
             raise ValueError(
                 "enable_session_loop requires enable_checkpointing=true: "
                 "learner turns resume from LangGraph checkpoints."
+            )
+        if self.enable_assessment_judge and not self.enable_session_loop:
+            raise ValueError(
+                "enable_assessment_judge requires enable_session_loop=true: "
+                "the judge only consumes a guided session explain-back."
             )
         return self
 
