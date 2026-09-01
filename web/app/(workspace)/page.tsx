@@ -39,6 +39,7 @@
  */
 
 import { LandingComposer } from "@/components/features/LandingComposer";
+import { LearnLandingEntry } from "@/components/features/LearnLandingEntry";
 import { JobRunProvider } from "@/lib/job/provider";
 
 export default function HomePage() {
@@ -54,6 +55,7 @@ export default function HomePage() {
       */}
       <div className="mx-auto flex h-full w-full max-w-3xl flex-col justify-center gap-6 overflow-y-auto px-6 py-8">
         <LandingComposer />
+        <LearnLandingEntry />
       </div>
     </JobRunProvider>
   );

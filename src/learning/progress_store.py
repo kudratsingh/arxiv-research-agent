@@ -465,6 +465,22 @@ class PathScheduleProgress:
 
 
 @dataclass(frozen=True)
+class ResourceObservation:
+    """Session events that name one concrete resource on a path.
+
+    This is the only view a path surface may use to mark a paper as
+    observed. A path-level session count cannot identify a paper and is
+    therefore insufficient evidence for a paper-position claim.
+    """
+
+    path_id: str
+    resource_id: str
+    sessions_completed: int
+    last_observed_at: str
+    event_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class EvidenceRecord:
     """One event, reduced to the fact it records and what proves it.
 
@@ -496,6 +512,7 @@ class ProgressSummary:
     event_count: int
     sessions_per_day: tuple[DailySessionCount, ...]
     schedule_progress: tuple[PathScheduleProgress, ...]
+    resource_observations: tuple[ResourceObservation, ...]
     assessments: tuple[EvidenceRecord, ...]
     artifacts: tuple[EvidenceRecord, ...]
 
@@ -554,6 +571,7 @@ def summarize(
     path_sessions: dict[str, list[str]] = {}
     path_planned: dict[str, int] = {}
     path_assessments: dict[str, int] = {}
+    resource_events: dict[tuple[str, str], list[ProgressEvent]] = {}
     assessments: list[EvidenceRecord] = []
     artifacts: list[EvidenceRecord] = []
 
@@ -569,6 +587,9 @@ def summarize(
                     # that was re-scoped shorter must not keep
                     # advertising its old length.
                     path_planned[path_id] = planned
+                resource_id = _payload_str(event.payload, "resource_id")
+                if resource_id is not None:
+                    resource_events.setdefault((path_id, resource_id), []).append(event)
         elif event.kind == "assessment":
             assessments.append(
                 EvidenceRecord(
@@ -615,12 +636,23 @@ def summarize(
         )
         for path_id, ids in sorted(path_sessions.items())
     )
+    resource_observations = tuple(
+        ResourceObservation(
+            path_id=path_id,
+            resource_id=resource_id,
+            sessions_completed=len(records),
+            last_observed_at=records[-1].ts,
+            event_ids=tuple(record.event_id for record in records),
+        )
+        for (path_id, resource_id), records in sorted(resource_events.items())
+    )
 
     return ProgressSummary(
         principal_key_id=principal_key_id,
         event_count=len(owned),
         sessions_per_day=sessions_per_day,
         schedule_progress=schedule_progress,
+        resource_observations=resource_observations,
         assessments=tuple(assessments),
         artifacts=tuple(artifacts),
     )

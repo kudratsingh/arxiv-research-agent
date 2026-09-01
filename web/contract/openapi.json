@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "624e5c931fb765a36f65dcb6e1fea374cc35f931",
+    "commit": "eddc630621352ebe181e0523d1de87566a442f98",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -1686,6 +1686,14 @@
             "title": "Schedule Progress",
             "description": "Session arithmetic per path. Named `schedule_progress` so no surface can mistake it for knowledge (01 \u00a74.1)."
           },
+          "resource_observations": {
+            "items": {
+              "$ref": "#/components/schemas/ProgressResourceObservation"
+            },
+            "type": "array",
+            "title": "Resource Observations",
+            "description": "Resource-level observations derived only from session events that named both path_id and resource_id."
+          },
           "assessments": {
             "items": {
               "$ref": "#/components/schemas/ProgressEvidence"
@@ -1707,6 +1715,7 @@
           "event_count",
           "sessions_per_day",
           "schedule_progress",
+          "resource_observations",
           "assessments",
           "artifacts"
         ],
@@ -1871,6 +1880,46 @@
         ],
         "title": "ProgressEvidence",
         "description": "One recorded event, reduced to the fact and what proves it.\n\nCarries no verdict. 01 \u00a74.3 keeps the assessment judge's output as\nadvice to the tutor rather than a score shown to the learner, so\nthe ledger's public view of an assessment is that it happened,\nwhen, and which transcript backs it."
+      },
+      "ProgressResourceObservation": {
+        "properties": {
+          "path_id": {
+            "type": "string",
+            "title": "Path Id"
+          },
+          "resource_id": {
+            "type": "string",
+            "title": "Resource Id"
+          },
+          "sessions_completed": {
+            "type": "integer",
+            "title": "Sessions Completed",
+            "description": "Count of completed sessions that named this exact resource."
+          },
+          "last_observed_at": {
+            "type": "string",
+            "title": "Last Observed At",
+            "description": "Latest supporting event timestamp."
+          },
+          "event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Event Ids",
+            "description": "The session_completed events behind this observation."
+          }
+        },
+        "type": "object",
+        "required": [
+          "path_id",
+          "resource_id",
+          "sessions_completed",
+          "last_observed_at",
+          "event_ids"
+        ],
+        "title": "ProgressResourceObservation",
+        "description": "Event-backed observation of one resource inside a path."
       },
       "ProgressSchedule": {
         "properties": {

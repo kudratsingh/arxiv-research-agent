@@ -44,6 +44,7 @@ from src.api.schemas import (
     ProfileUpdateRequest,
     ProgressDailySessions,
     ProgressEvidence,
+    ProgressResourceObservation,
     ProgressSchedule,
     ResearchAccepted,
     ResearchRequest,
@@ -1022,6 +1023,16 @@ def _summary_to_response(summary: ProgressSummary) -> LearnerProgressSummary:
                 event_ids=list(p.event_ids),
             )
             for p in summary.schedule_progress
+        ],
+        resource_observations=[
+            ProgressResourceObservation(
+                path_id=observation.path_id,
+                resource_id=observation.resource_id,
+                sessions_completed=observation.sessions_completed,
+                last_observed_at=observation.last_observed_at,
+                event_ids=list(observation.event_ids),
+            )
+            for observation in summary.resource_observations
         ],
         assessments=[_evidence_to_response(e) for e in summary.assessments],
         artifacts=[_evidence_to_response(e) for e in summary.artifacts],

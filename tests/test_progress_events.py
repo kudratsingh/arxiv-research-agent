@@ -51,6 +51,7 @@ from src.api.schemas import (
     LearnerProgressSummary,
     ProgressDailySessions,
     ProgressEvidence,
+    ProgressResourceObservation,
     ProgressSchedule,
 )
 from src.learning.progress_store import (
@@ -69,6 +70,7 @@ from src.learning.progress_store import (
     ProgressEventRejected,
     ProgressEventStore,
     ProgressSummary,
+    ResourceObservation,
     new_event,
     normalize_ts,
     summarize,
@@ -415,6 +417,36 @@ EXPECTED_SUMMARY = ProgressSummary(
             event_ids=("evt-0006",),
         ),
     ),
+    resource_observations=(
+        ResourceObservation(
+            path_id="attention-is-all-you-need",
+            resource_id="arxiv:1706.03762",
+            sessions_completed=1,
+            last_observed_at="2026-08-24T09:15:00.000000Z",
+            event_ids=("evt-0001",),
+        ),
+        ResourceObservation(
+            path_id="attention-is-all-you-need",
+            resource_id="arxiv:1810.04805",
+            sessions_completed=1,
+            last_observed_at="2026-08-25T08:05:00.000000Z",
+            event_ids=("evt-0004",),
+        ),
+        ResourceObservation(
+            path_id="attention-is-all-you-need",
+            resource_id="arxiv:2305.18290",
+            sessions_completed=1,
+            last_observed_at="2026-08-26T07:45:00.000000Z",
+            event_ids=("evt-0007",),
+        ),
+        ResourceObservation(
+            path_id="rlhf-foundations",
+            resource_id="arxiv:2203.02155",
+            sessions_completed=1,
+            last_observed_at="2026-08-25T19:30:00.000000Z",
+            event_ids=("evt-0006",),
+        ),
+    ),
     assessments=(
         EvidenceRecord(
             event_id="evt-0002",
@@ -559,6 +591,7 @@ def _view_field_names() -> set[str]:
         ProgressSummary,
         DailySessionCount,
         PathScheduleProgress,
+        ResourceObservation,
         EvidenceRecord,
     ):
         names.update(f.name for f in dataclasses.fields(view))
@@ -566,6 +599,7 @@ def _view_field_names() -> set[str]:
         LearnerProgressSummary,
         ProgressDailySessions,
         ProgressSchedule,
+        ProgressResourceObservation,
         ProgressEvidence,
     ):
         names.update(model.model_fields)

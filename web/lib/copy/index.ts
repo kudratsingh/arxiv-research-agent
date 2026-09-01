@@ -31,6 +31,7 @@
 import { NOT_REPORTED } from "./errors";
 
 export * from "./errors";
+export * from "./learn";
 export * from "./run";
 export * from "./threads";
 

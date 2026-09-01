@@ -109,6 +109,8 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
     JSON.stringify({
       "/page": "/",
       "/c/[id]/page": "/c/[id]",
+      "/learn/page": "/learn",
+      "/learn/paths/[id]/page": "/learn/paths/[id]",
       "/api/[...path]/route": "/api/[...path]",
     }),
   );
@@ -146,6 +148,18 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
   write(
     path.join(nextDir, "server/app/c/[id]/page_client-reference-manifest.js"),
     `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/c/[id]/page"]=${JSON.stringify(
+      { clientModules: convModules, entryCSSFiles: {} },
+    )};`,
+  );
+  write(
+    path.join(nextDir, "server/app/learn/page_client-reference-manifest.js"),
+    `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/learn/page"]=${JSON.stringify(
+      { clientModules: homeModules, entryCSSFiles: {} },
+    )};`,
+  );
+  write(
+    path.join(nextDir, "server/app/learn/paths/[id]/page_client-reference-manifest.js"),
+    `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/learn/paths/[id]/page"]=${JSON.stringify(
       { clientModules: convModules, entryCSSFiles: {} },
     )};`,
   );
@@ -559,10 +573,12 @@ describe("report format", () => {
 describe("the committed budgets.json encodes RC-01 in bytes", () => {
   const budgets = loadBudgets(BUDGETS_PATH);
 
-  it("has all seven reconciled rows", () => {
+  it("has the seven reconciled rows plus both W12 route rows", () => {
     expect(budgets.rows.map((r) => r.id)).toEqual([
       "route-js-home",
       "route-js-conversation",
+      "route-js-learn-list",
+      "route-js-learn-path",
       "shared-framework-runtime",
       "emitted-css",
       "self-hosted-fonts",
@@ -584,6 +600,8 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     // must never move a baseline.
     ["route-js-home", 166_912, 137_272],
     ["route-js-conversation", 192_512, 184_745],
+    ["route-js-learn-list", 166_912, null],
+    ["route-js-learn-path", 169_984, null],
     ["shared-framework-runtime", 139_264, null],
     ["emitted-css", 11_264, 4_288],
     ["self-hosted-fonts", 109_568, 0],
@@ -599,10 +617,10 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     expect(row?.baselineBytes ?? null).toBe(baselineBytes);
   });
 
-  it("gates the five per-asset-class rows, delegates one and only reports one", () => {
+  it("gates the seven per-asset-class rows, delegates one and only reports one", () => {
     const by = (enforcement: string) =>
       budgets.rows.filter((r) => r.enforcement === enforcement).map((r) => r.id);
-    expect(by("gated")).toHaveLength(5);
+    expect(by("gated")).toHaveLength(7);
     expect(by("external")).toEqual(["total-transferred-js"]);
     expect(by("reported")).toEqual(["derived-total-first-load"]);
   });
@@ -772,7 +790,7 @@ describe("run()", () => {
     const { result, reportPath } = run({ webDir: fixture.root, now: new Date(0) });
     expect(reportPath).toBe(path.join(fixture.root, "budget-report.md"));
     expect(fs.readFileSync(reportPath, "utf8")).toContain("# Route budget report");
-    expect(result.rows).toHaveLength(7);
+    expect(result.rows).toHaveLength(9);
   });
 
   it("explains how to fix a missing build instead of measuring nothing", () => {

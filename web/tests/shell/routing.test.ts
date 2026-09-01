@@ -59,8 +59,13 @@ function collectPages(dir: string, relative = ""): PageFile[] {
 describe("criterion 2 — the route group adds no URL segment", () => {
   const pages = collectPages(APP_ROOT);
 
-  it("serves exactly the two routes that existed before the move", () => {
-    expect(pages.map((page) => page.route).sort()).toEqual(["/", "/c/[id]"]);
+  it("keeps the workspace routes and adds the two parenthesis-free learning URLs", () => {
+    expect(pages.map((page) => page.route).sort()).toEqual([
+      "/",
+      "/c/[id]",
+      "/learn",
+      "/learn/paths/[id]",
+    ]);
   });
 
   it("serves them from inside the (workspace) group", () => {
@@ -69,12 +74,22 @@ describe("criterion 2 — the route group adds no URL segment", () => {
     expect(byRoute["/c/[id]"]).toBe("(workspace)/c/[id]/page.tsx");
   });
 
-  it("leaves no page file outside the group, so nothing bypasses the shell", () => {
+  it("leaves no page file outside a shell-owning route group", () => {
     // A page at `app/page.tsx` would render without the layout — which is
     // exactly how the missing `<main>` arrived in the first place
     // (04 §2.1: "both wrap manually today").
     for (const page of pages) {
-      expect(page.file.startsWith("(workspace)/"), `${page.file} is outside the shell`).toBe(true);
+      expect(
+        page.file.startsWith("(workspace)/") || page.file.startsWith("(learn)/"),
+        `${page.file} is outside a shell-owning group`,
+      ).toBe(true);
+    }
+  });
+
+  it("shares WorkbenchShell from both group layouts", () => {
+    for (const group of ["(workspace)", "(learn)"]) {
+      const layout = readFileSync(path.join(APP_ROOT, group, "layout.tsx"), "utf8");
+      expect(layout, group).toContain("WorkbenchShell");
     }
   });
 

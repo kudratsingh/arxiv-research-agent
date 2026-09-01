@@ -32,6 +32,7 @@
 import { describe, expect, it } from "vitest";
 
 import * as errorsCopy from "@/lib/copy/errors";
+import * as learnCopy from "@/lib/copy/learn";
 import * as runCopy from "@/lib/copy/run";
 import * as threadsCopy from "@/lib/copy/threads";
 import {
@@ -55,6 +56,7 @@ import type { JobState } from "@/lib/job/types";
 
 const MODULES = {
   errors: errorsCopy,
+  learn: learnCopy,
   run: runCopy,
   threads: threadsCopy,
 } as const;
@@ -245,7 +247,7 @@ const EVERY_STRING = [...STORED, ...COMPOSED_STRINGS];
 // ---------------------------------------------------------------------------
 
 describe("the gate covers the whole dictionary", () => {
-  it("found strings in all three modules", () => {
+  it("found strings in every copy module", () => {
     for (const entry of walked) {
       expect(entry.strings.length, entry.name).toBeGreaterThan(0);
     }

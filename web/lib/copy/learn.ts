@@ -1,0 +1,43 @@
+export const LEARN = {
+  navLabel: "Learning paths",
+  landingEyebrow: "Guided reading",
+  landingHeading: "Read papers with a path, not a pile.",
+  landingBody:
+    "Follow a deliberate paper sequence, use a briefing to orient yourself, then read the source on arXiv.",
+  landingAction: "Explore the reading path",
+  listEyebrow: "Path library",
+  listHeading: "Choose what to read next",
+  listBody:
+    "Each path orders primary sources and explains why they belong together. The paper always stays the source of record.",
+  listLoading: "Loading paths…",
+  listEmptyHeading: "No paths are published",
+  listEmptyBody: "There is no published reading sequence to show yet.",
+  pathLabel: "Reading path",
+  pathLoading: "Loading the path…",
+  pathUnavailableHeading: "This path is unavailable",
+  pathUnavailableBody:
+    "Learning content is not available from the research service right now.",
+  retry: "Try again",
+  backToPaths: "All paths",
+  openPath: "Open path",
+  entriesLabel: "Paper sequence",
+  papers: "papers",
+  minutes: "minutes",
+  updated: "Updated",
+  fixtureLabel: "Fixture content",
+  fixtureShort:
+    "Demo scaffolding only. These placeholder briefings are not reviewed learning material.",
+  noProgress: "No reading activity has been observed for this path.",
+  progressSource: "Position is shown only from recorded session events.",
+  observed: "Observed",
+  notObserved: "Not yet observed",
+  nextObserved: "Current observed position",
+  briefingAvailable: "Briefing available",
+  briefingUnavailable: "Briefing not yet available",
+  openPaper: "Open on arXiv",
+  whyHere: "Why it is here",
+  vocabulary: "Vocabulary",
+  attribution: "Source attribution",
+  linkOutOnly:
+    "This path links to arXiv and does not fetch or display paper full text.",
+} as const;

@@ -191,3 +191,13 @@ export type ProfileUpdateRequest = Schemas["ProfileUpdateRequest"];
 
 /** `declared` | `inferred` | `assessed` — never nullable, never absent. */
 export type SkillSource = SkillClaim["source"];
+
+// Learning content (WO-W12). These aliases preserve the generated
+// OpenAPI contract all the way to the path surfaces.
+export type LearnPathSummary = Schemas["LearnPathSummary"];
+export type LearnPathList = Schemas["LearnPathList"];
+export type LearnEntry = Schemas["LearnEntry"];
+export type LearnPathDetail = Schemas["LearnPathDetail"];
+
+export type ProgressResourceObservation =
+  Schemas["ProgressResourceObservation"];

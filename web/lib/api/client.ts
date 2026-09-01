@@ -16,6 +16,9 @@ import type {
   ConversationDetail,
   ConversationListItem,
   JobDetail,
+  LearnPathDetail,
+  LearnPathList,
+  LearnerProgressSummary,
   ResearchAccepted,
   ResearchSubmitOptions,
   ReviewRequest,
@@ -326,4 +329,43 @@ export async function deleteConversation(
     options,
     null
   );
+}
+
+// Learning content reads serve committed manifests. Neither call can start
+// a session or reach a model, so the normal bounded read policy applies.
+export async function listLearnPaths(
+  options?: RequestOptions
+): Promise<LearnPathList> {
+  const resp = await request(
+    "/learn/paths",
+    {},
+    options,
+    DEFAULT_READ_TIMEOUT_MS
+  );
+  return json<LearnPathList>(resp);
+}
+
+export async function getLearnPath(
+  pathId: string,
+  options?: RequestOptions
+): Promise<LearnPathDetail> {
+  const resp = await request(
+    `/learn/paths/${encodeURIComponent(pathId)}`,
+    {},
+    options,
+    DEFAULT_READ_TIMEOUT_MS
+  );
+  return json<LearnPathDetail>(resp);
+}
+
+export async function getLearnerProgress(
+  options?: RequestOptions
+): Promise<LearnerProgressSummary> {
+  const resp = await request(
+    "/learn/progress",
+    {},
+    options,
+    DEFAULT_READ_TIMEOUT_MS
+  );
+  return json<LearnerProgressSummary>(resp);
 }
