@@ -144,8 +144,8 @@ caches hold public arXiv text, are not per-user, and are untouched.
 
 ### Per-run cost cap (ADR 0033, moved to `call_llm` by ADR 0051)
 
-`src/llm.py::call_llm` checks the run's accumulated spend against
-`settings.max_cost_usd` **before every LLM call** and raises
+`src/llm.py::call_llm` checks the run's accumulated spend against its
+effective ceiling **before every LLM call** and raises
 `CostBudgetExceeded` at the ceiling (`enforce_cost_cap` lives in
 `src/observability/costs.py`). Because every entry point — CLI, eval
 campaign, API job — funnels through `call_llm`, the dollar ceiling
@@ -156,6 +156,14 @@ enforcement point) remains as the earlier, coarser stop. Under the
 API the job terminates as `failed` with
 `error_type=cost_budget_exceeded`; on the CLI the run aborts and the
 checkpoint salvage (ADR 0052) recovers any finished draft.
+
+ADR 0062 binds `learning_session_max_cost_usd` for session jobs only;
+all other paths retain `max_cost_usd`. The binding is task-local,
+propagates through the session graph's worker context, and is reset in
+the runner's terminal cleanup so concurrent or subsequent research
+jobs cannot inherit it. At-cap sessions expose an explicit refused or
+degraded-close outcome and never issue another model call for closing
+copy.
 
 ### API-key auth + rate limiting + CORS (ADR 0033)
 

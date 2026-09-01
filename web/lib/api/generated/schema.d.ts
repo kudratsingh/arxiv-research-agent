@@ -1170,6 +1170,13 @@ export interface components {
             error: string | null;
             /** Error Type */
             error_type: string | null;
+            /**
+             * Cost Cap Status
+             * @enum {string}
+             */
+            cost_cap_status: "" | "refused" | "degraded_close";
+            /** Cost Cap Message */
+            cost_cap_message: string | null;
             /** Cost Usd */
             cost_usd: number | null;
             /** Llm Calls */

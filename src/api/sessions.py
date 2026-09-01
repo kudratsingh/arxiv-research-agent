@@ -84,6 +84,8 @@ class SessionDetail(_Strict):
     result: str | None
     error: str | None
     error_type: str | None
+    cost_cap_status: Literal["", "refused", "degraded_close"]
+    cost_cap_message: str | None
     cost_usd: float | None
     llm_calls: int | None
 
@@ -189,6 +191,8 @@ def _session_detail(job: Job) -> SessionDetail:
         result=job.result,
         error=job.error,
         error_type=job.error_type,
+        cost_cap_status=job.cost_cap_status,
+        cost_cap_message=job.cost_cap_message,
         cost_usd=job.cost_usd,
         llm_calls=job.llm_calls,
     )

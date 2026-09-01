@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "eddc630621352ebe181e0523d1de87566a442f98",
+    "commit": "53c3c6c99aadc7b08855769c9e89ff08c6a2eb06",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -2265,6 +2265,26 @@
             ],
             "title": "Error Type"
           },
+          "cost_cap_status": {
+            "type": "string",
+            "enum": [
+              "",
+              "refused",
+              "degraded_close"
+            ],
+            "title": "Cost Cap Status"
+          },
+          "cost_cap_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Cap Message"
+          },
           "cost_usd": {
             "anyOf": [
               {
@@ -2305,6 +2325,8 @@
           "result",
           "error",
           "error_type",
+          "cost_cap_status",
+          "cost_cap_message",
           "cost_usd",
           "llm_calls"
         ],

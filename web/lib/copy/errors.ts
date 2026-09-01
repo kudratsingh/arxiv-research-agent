@@ -300,7 +300,7 @@ export interface ErrorTypeCopy {
 }
 
 /**
- * The nine `error_type` values this backend can produce, mapped.
+ * The `error_type` values this backend can produce, mapped.
  *
  * Four are deliberate constants — `hitl_timeout` (`runner.py:1057`),
  * `cost_budget_exceeded` (`:1085`), `timeout` (`:1150`) and `orphaned`
@@ -312,8 +312,8 @@ export interface ErrorTypeCopy {
  * `ArxivUnavailableError` (`src/tools/arxiv_search.py:41`) and
  * `JobCancelledError` (`src/cancellation.py:65`).
  *
- * `web/tests/copy/errorTypeDrift.test.ts` re-derives that list from the
- * Python sources on every run, so a tenth value cannot arrive silently.
+ * `web/tests/copy/errorTypeDrift.test.ts` re-derives the complete list from
+ * the Python sources on every run, so a new value cannot arrive silently.
  *
  * Eight sentences are 03 §8.3's, verbatim. The ninth — `JobCancelledError`
  * — has no row in §8.3's table because §8.3 lists it only as a producible
@@ -337,6 +337,12 @@ export const ERROR_TYPE_COPY = {
     // not an API field, the same reason plan review has no countdown.
     sentence: "The session was waiting for an answer for too long, so it ended.",
     recovery: "Start the session again to carry on from where it stopped.",
+  },
+  session_cost_cap_refused: {
+    // ADR 0062: the shared LLM choke point refused the next call. This copy
+    // never implies that a final tutor response was generated after the cap.
+    sentence: "The session reached its cost limit before another tutor response.",
+    recovery: "Start the session again to continue from the work already recorded.",
   },
   cost_budget_exceeded: {
     sentence: "The run reached this workspace's cost limit.",

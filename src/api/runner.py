@@ -53,8 +53,10 @@ from src.cancellation import CancelToken, bind_cancel_token, reset_cancel_token
 from src.config import settings
 from src.graph.state import ResearchState
 from src.observability import (
+    bind_effective_cost_cap,
     bind_run_id,
     get_logger,
+    reset_effective_cost_cap,
     reset_run_id,
     start_cost_tracking,
 )
@@ -124,6 +126,20 @@ class SessionTurnTimeoutError(Exception):
     derives the frontend's error vocabulary by matching `class X(Exception)`
     in `src/`. A base class would hide both from that check.
     """
+
+
+def _session_cost_cap_copy(cap_usd: float, behavior: str) -> str:
+    """Learner-facing copy hook for both configured at-cap outcomes."""
+    if behavior == "degraded_close":
+        return (
+            f"This session closed before another model call because it reached "
+            f"its ${cap_usd:.2f} cost limit. Your work so far remains recorded; "
+            "no further tutor response was generated."
+        )
+    return (
+        f"This session stopped before another model call because it reached "
+        f"its ${cap_usd:.2f} cost limit. No further tutor response was generated."
+    )
 
 
 ParkFrameEmitter = Callable[[Job, dict[str, Any]], Awaitable[None]]
@@ -1403,7 +1419,12 @@ async def run_job(
         cancel_token = CancelToken(job.job_id)
         cancel_scope = bind_cancel_token(cancel_token)
         costs = start_cost_tracking()
-        cap_usd = settings.max_cost_usd
+        cap_usd = (
+            settings.learning_session_max_cost_usd
+            if job.kind == "session"
+            else settings.max_cost_usd
+        )
+        cost_cap_scope = bind_effective_cost_cap(cap_usd)
 
         async def on_node(node_name: str, state_update: dict[str, Any]) -> None:
             # Only publish scalar fields — the papers/citations lists
@@ -1436,6 +1457,12 @@ async def run_job(
             # from the same accumulator, so whichever fires first is the
             # one `run_job` handles — there is no double-fire.
             _enforce_cost_cap(costs, cap_usd)
+            if job.kind == "session":
+                snapshot = costs.as_dict()
+                log.info(
+                    "learning_session_node_cost",
+                    extra={"job_id": job.job_id, "node": node_name, **snapshot},
+                )
 
         # Containment starts BEFORE the first store write, not after
         # the setup block: the audit showed a raise between the
@@ -1611,6 +1638,65 @@ async def run_job(
             )
             return
         except CostBudgetExceeded as exc:
+            if job.kind == "session":
+                behavior = settings.learning_session_cost_cap_behavior
+                job.cost_cap_status = (
+                    "degraded_close" if behavior == "degraded_close" else "refused"
+                )
+                job.cost_cap_message = _session_cost_cap_copy(exc.cap_usd, behavior)
+                job.completed_at = time.time()
+                snapshot = costs.as_dict()
+                job.cost_usd = snapshot.get("total_cost_usd")
+                job.llm_calls = snapshot.get("call_count")
+                if behavior == "degraded_close":
+                    job.status = JobStatus.succeeded
+                    job.result = job.cost_cap_message
+                    job.error = None
+                    job.error_type = None
+                    await _persist_terminal(store, job)
+                    await _put_terminal_event(
+                        job,
+                        "job_completed",
+                        {
+                            "job_id": job.job_id,
+                            "cost_usd": job.cost_usd,
+                            "llm_calls": job.llm_calls,
+                            "elapsed_sec": job.elapsed_sec(),
+                            "cost_cap_status": job.cost_cap_status,
+                            "cost_cap_message": job.cost_cap_message,
+                        },
+                    )
+                else:
+                    job.status = JobStatus.failed
+                    job.error = job.cost_cap_message
+                    job.error_type = "session_cost_cap_refused"
+                    job.result = exc.partial_report or None
+                    await _persist_terminal(store, job)
+                    await _put_terminal_event(
+                        job,
+                        "job_failed",
+                        {
+                            "job_id": job.job_id,
+                            "error": job.error,
+                            "error_type": job.error_type,
+                            "cost_usd": job.cost_usd,
+                            "llm_calls": job.llm_calls,
+                            "elapsed_sec": job.elapsed_sec(),
+                            "cost_cap_status": job.cost_cap_status,
+                            "cost_cap_message": job.cost_cap_message,
+                        },
+                    )
+                log.warning(
+                    "api_session_cost_cap_reached",
+                    extra={
+                        "job_id": job.job_id,
+                        "behavior": behavior,
+                        "cap_usd": exc.cap_usd,
+                        "spent_usd": exc.spent_usd,
+                        **snapshot,
+                    },
+                )
+                return
             job.status = JobStatus.failed
             job.error = str(exc)
             job.error_type = "cost_budget_exceeded"
@@ -1832,6 +1918,7 @@ async def run_job(
             # inline — leaving a *cancelled* token bound there would
             # abort the next unrelated LLM call in the same context.
             reset_cancel_token(cancel_scope)
+            reset_effective_cost_cap(cost_cap_scope)
 
 
 async def _append_to_conversation(conversation_store: Any, job: Job) -> None:

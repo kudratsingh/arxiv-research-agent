@@ -360,6 +360,12 @@ never renumbered.
   transcript-grounded inference batch applied only after session close. A
   `summary:*` id is structurally invalid as skill evidence; each inference must
   instead cite the exact closing session.
+- [0062](0062-session-specific-cost-ceilings.md) — A task-local effective
+  ceiling keeps guided-reading sessions at their own `$0.50` default while
+  research retains `max_cost_usd`, with the shared `call_llm` choke point still
+  authoritative. Both refused and degraded-close outcomes are explicit, model
+  routing warns when pricing is missing, and session node spans carry
+  cumulative and delta cost/call attributes.
 
 ## When to write an ADR
 

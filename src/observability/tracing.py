@@ -32,6 +32,7 @@ from opentelemetry.sdk.trace.export import (
 )
 
 from src.config import settings
+from src.observability.costs import current_costs
 from src.observability.logging import current_run_id, get_logger
 
 log = get_logger(__name__)
@@ -107,6 +108,8 @@ def traced_node(
 
     def wrapped(state: dict[str, Any]) -> T:
         with tracer.start_as_current_span(name) as span:
+            costs_before = current_costs()
+            before_snapshot = costs_before.as_dict() if costs_before is not None else None
             span.set_attribute("run_id", current_run_id())
             if isinstance(state, dict):
                 for key in ("query", "iteration"):
@@ -128,6 +131,21 @@ def traced_node(
                 score = result.get("quality_score")
                 if isinstance(score, (int, float)):
                     span.set_attribute("result.quality_score", float(score))
+            costs_after = current_costs()
+            if costs_after is not None:
+                after_snapshot = costs_after.as_dict()
+                after_usd = float(after_snapshot["total_cost_usd"])
+                after_calls = int(after_snapshot["call_count"])
+                before_usd = (
+                    float(before_snapshot["total_cost_usd"]) if before_snapshot is not None else 0.0
+                )
+                before_calls = (
+                    int(before_snapshot["call_count"]) if before_snapshot is not None else 0
+                )
+                span.set_attribute("llm.cost_usd", after_usd)
+                span.set_attribute("llm.cost_delta_usd", round(after_usd - before_usd, 6))
+                span.set_attribute("llm.call_count", after_calls)
+                span.set_attribute("llm.call_delta", after_calls - before_calls)
             return result
 
     return wrapped

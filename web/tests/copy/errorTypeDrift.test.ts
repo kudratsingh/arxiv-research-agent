@@ -18,10 +18,10 @@
  *
  * THE PRODUCIBLE SET HAS TWO HALVES.
  *
- *   1. Five deliberate literals, assigned to `job.error_type` in
- *      `runner.py` and `redriver.py` (ADR 0057 added the fifth,
- *      `session_turn_timeout`).
- *   2. `type(exc).__name__` at `runner.py:1698`, for every exception class
+ *   1. Six deliberate literals, assigned to `job.error_type` in
+ *      `runner.py` and `redriver.py` (ADR 0057 added
+ *      `session_turn_timeout`; ADR 0062 added `session_cost_cap_refused`).
+ *   2. `type(exc).__name__` in the runner's generic handler, for every exception class
  *      that can reach the generic handler. An exception the runner catches
  *      by name FIRST cannot: `HitlTimeoutError` becomes `hitl_timeout`,
  *      `SessionTurnTimeoutError` becomes `session_turn_timeout`,
@@ -157,22 +157,24 @@ const PRODUCIBLE = [...DELIBERATE, ...FROM_CLASS_NAME].sort();
 // ---------------------------------------------------------------------------
 
 describe("the enumeration reads the real backend", () => {
-  it("finds the five deliberate values at their cited sites", () => {
+  it("finds the six deliberate values at their cited sites", () => {
     expect(DELIBERATE).toEqual([
       "cost_budget_exceeded",
       "hitl_timeout",
       "orphaned",
+      "session_cost_cap_refused",
       "session_turn_timeout",
       "timeout",
     ]);
     // The citations themselves, so a moved assignment is noticed rather
     // than silently re-found somewhere the design brief never read. The
-    // runner line numbers moved with ADR 0057's kind dispatch, which is
-    // this assertion working: a re-citation is a deliberate act.
-    expect(RUNNER.split("\n")[1559]).toContain('job.error_type = "session_turn_timeout"');
-    expect(RUNNER.split("\n")[1587]).toContain('job.error_type = "hitl_timeout"');
-    expect(RUNNER.split("\n")[1615]).toContain('job.error_type = "cost_budget_exceeded"');
-    expect(RUNNER.split("\n")[1680]).toContain('job.error_type = "timeout"');
+    // Runner line numbers moved with ADRs 0057 and 0062, which is this
+    // assertion working: a re-citation is a deliberate act.
+    expect(RUNNER.split("\n")[1586]).toContain('job.error_type = "session_turn_timeout"');
+    expect(RUNNER.split("\n")[1614]).toContain('job.error_type = "hitl_timeout"');
+    expect(RUNNER.split("\n")[1671]).toContain('job.error_type = "session_cost_cap_refused"');
+    expect(RUNNER.split("\n")[1701]).toContain('job.error_type = "cost_budget_exceeded"');
+    expect(RUNNER.split("\n")[1766]).toContain('job.error_type = "timeout"');
     expect(REDRIVER.split("\n")[517]).toContain("job.error_type = ORPHANED_ERROR_TYPE");
   });
 
@@ -248,8 +250,8 @@ describe("the enumeration reads the real backend", () => {
 });
 
 describe("criterion 7 — every producible value is mapped or visibly falls through", () => {
-  it("enumerates ten values", () => {
-    expect(PRODUCIBLE).toHaveLength(10);
+  it("enumerates eleven values", () => {
+    expect(PRODUCIBLE).toHaveLength(11);
   });
 
   it.each(PRODUCIBLE)("%s is mapped or falls through with its raw text", (value) => {
@@ -267,14 +269,14 @@ describe("criterion 7 — every producible value is mapped or visibly falls thro
     expect(described.errorType).toBe(value);
   });
 
-  it("maps all ten — the dictionary and the backend agree exactly", () => {
-    // Both directions. An eleventh backend value fails the first half; a
+  it("maps all eleven — the dictionary and the backend agree exactly", () => {
+    // Both directions. A twelfth backend value fails the first half; a
     // mapping entry for a value the backend can no longer produce fails
     // the second, which is what stops the table becoming folklore.
     expect([...MAPPED_ERROR_TYPES].sort()).toEqual(PRODUCIBLE);
   });
 
-  it("would notice an eleventh value", () => {
+  it("would notice a twelfth value", () => {
     const described = describeErrorType("SomeFutureExceptionName", "boom");
     expect(described.mapped).toBe(false);
     expect(MAPPED_ERROR_TYPES).not.toContain("SomeFutureExceptionName");
