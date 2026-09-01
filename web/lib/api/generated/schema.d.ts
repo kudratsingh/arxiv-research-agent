@@ -866,6 +866,11 @@ export interface components {
              * @description Session arithmetic per path. Named `schedule_progress` so no surface can mistake it for knowledge (01 §4.1).
              */
             schedule_progress: components["schemas"]["ProgressSchedule"][];
+            /**
+             * Resource Observations
+             * @description Resource-level observations derived only from session events that named both path_id and resource_id.
+             */
+            resource_observations: components["schemas"]["ProgressResourceObservation"][];
             /** Assessments */
             assessments: components["schemas"]["ProgressEvidence"][];
             /** Artifacts */
@@ -976,6 +981,31 @@ export interface components {
              * @description The path this event belongs to, when it named one.
              */
             path_id: string | null;
+        };
+        /**
+         * ProgressResourceObservation
+         * @description Event-backed observation of one resource inside a path.
+         */
+        ProgressResourceObservation: {
+            /** Path Id */
+            path_id: string;
+            /** Resource Id */
+            resource_id: string;
+            /**
+             * Sessions Completed
+             * @description Count of completed sessions that named this exact resource.
+             */
+            sessions_completed: number;
+            /**
+             * Last Observed At
+             * @description Latest supporting event timestamp.
+             */
+            last_observed_at: string;
+            /**
+             * Event Ids
+             * @description The session_completed events behind this observation.
+             */
+            event_ids: string[];
         };
         /**
          * ProgressSchedule

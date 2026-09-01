@@ -23,6 +23,7 @@
  * composition does with it.
  */
 
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ConversationPage from "@/app/(workspace)/c/[id]/page";
@@ -63,15 +64,23 @@ vi.mock("@/components/features/ActiveRunPanel", () => ({
   ActiveRunPanel: ({
     conversationId,
     adoptJobId,
+    onSyncUrl,
   }: {
     conversationId: string;
     adoptJobId: string | null;
+    onSyncUrl: (href: string) => void;
   }) => (
     <div
       data-testid="run-panel"
       data-conversation-id={conversationId}
       data-adopt-job-id={adoptJobId ?? ""}
-    />
+    >
+      <button
+        type="button"
+        data-testid="sync-url"
+        onClick={() => onSyncUrl(`/c/${conversationId}?job=job-next`)}
+      />
+    </div>
   ),
 }));
 
@@ -184,5 +193,12 @@ describe("WO-20 criterion 3 — one machine, one job, told to everything under i
     for (const node of [thread, panel, composer]) {
       expect(node).toHaveAttribute("data-conversation-id", "conv-1");
     }
+  });
+
+  it("replaces the pre-attach URL when the run panel reports a job", async () => {
+    render(<ConversationPage />);
+
+    await userEvent.click(await screen.findByTestId("sync-url"));
+    expect(replace).toHaveBeenCalledWith("/c/conv-1?job=job-next");
   });
 });

@@ -25,8 +25,13 @@ export const PRINCIPAL = "shared";
 
 export type Principal = typeof PRINCIPAL;
 
-/** The two cache roots. A third would need a seam review, not a string. */
-export const QUERY_RESOURCES = ["conversations", "jobs"] as const;
+/** The cache roots. Another root would need a seam review, not a string. */
+export const QUERY_RESOURCES = [
+  "conversations",
+  "jobs",
+  "learnPaths",
+  "learnProgress",
+] as const;
 
 export type QueryResource = (typeof QUERY_RESOURCES)[number];
 
@@ -59,6 +64,17 @@ export const queryKeys = {
     all: () => ["jobs", PRINCIPAL] as const,
     details: () => ["jobs", PRINCIPAL, "detail"] as const,
     detail: (jobId: string) => ["jobs", PRINCIPAL, "detail", jobId] as const,
+  },
+  learnPaths: {
+    all: () => ["learnPaths", PRINCIPAL] as const,
+    list: () => ["learnPaths", PRINCIPAL, "list"] as const,
+    details: () => ["learnPaths", PRINCIPAL, "detail"] as const,
+    detail: (pathId: string) =>
+      ["learnPaths", PRINCIPAL, "detail", pathId] as const,
+  },
+  learnProgress: {
+    all: () => ["learnProgress", PRINCIPAL] as const,
+    summary: () => ["learnProgress", PRINCIPAL, "summary"] as const,
   },
 } as const;
 

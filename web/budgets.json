@@ -142,6 +142,32 @@
       "enforcedBy": "npm run budgets (this script)"
     },
     {
+      "id": "route-js-learn-list",
+      "kind": "route-first-load-js",
+      "route": "/learn",
+      "label": "`/learn` first-load JS, excl. polyfill",
+      "budgetBytes": 166912,
+      "budgetLabel": "163 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "WO-W12 initial route budget. Measured at 157647 B on main eddc630; 166912 B leaves 5.9% headroom while matching the existing home-route ceiling."
+    },
+    {
+      "id": "route-js-learn-path",
+      "kind": "route-first-load-js",
+      "route": "/learn/paths/[id]",
+      "label": "`/learn/paths/[id]` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "WO-W12 initial route budget. Measured at 160474 B on main eddc630; 169984 B leaves 5.9% headroom for dependency drift without inheriting the larger conversation-route allowance."
+    },
+    {
       "id": "shared-framework-runtime",
       "kind": "shared-first-load-js",
       "label": "Shared framework/runtime chunk",

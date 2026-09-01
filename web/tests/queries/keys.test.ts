@@ -43,6 +43,12 @@ const SAMPLES: Record<string, unknown[]> = {
   "queryKeys.jobs.all": [],
   "queryKeys.jobs.details": [],
   "queryKeys.jobs.detail": ["baseline-running"],
+  "queryKeys.learnPaths.all": [],
+  "queryKeys.learnPaths.list": [],
+  "queryKeys.learnPaths.details": [],
+  "queryKeys.learnPaths.detail": ["fixture-guided-read"],
+  "queryKeys.learnProgress.all": [],
+  "queryKeys.learnProgress.summary": [],
   "mutationKeys.conversations.create": [],
   "mutationKeys.conversations.delete": [],
   "mutationKeys.jobs.review": [],
@@ -166,6 +172,7 @@ describe("no key is built outside the factories", () => {
       "conversations.ts",
       "job.ts",
       "keys.ts",
+      "learn.ts",
     ]);
   });
 });

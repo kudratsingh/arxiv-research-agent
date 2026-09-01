@@ -13,6 +13,7 @@
       "kind": "session_completed",
       "payload": {
         "path_id": "attention-is-all-you-need",
+        "resource_id": "arxiv:1706.03762",
         "sessions_planned": 4,
         "minutes": 18
       },
@@ -25,6 +26,7 @@
       "kind": "assessment",
       "payload": {
         "path_id": "attention-is-all-you-need",
+        "resource_id": "arxiv:1706.03762",
         "probe": "explain-back",
         "gaps": ["conflates the attention mask with padding"]
       },
@@ -47,6 +49,7 @@
       "kind": "session_completed",
       "payload": {
         "path_id": "attention-is-all-you-need",
+        "resource_id": "arxiv:1810.04805",
         "sessions_planned": 4,
         "minutes": 21
       },
@@ -70,6 +73,7 @@
       "kind": "session_completed",
       "payload": {
         "path_id": "rlhf-foundations",
+        "resource_id": "arxiv:2203.02155",
         "minutes": 15
       },
       "evidence_ref": "session:s-1003"
@@ -81,6 +85,7 @@
       "kind": "session_completed",
       "payload": {
         "path_id": "attention-is-all-you-need",
+        "resource_id": "arxiv:2305.18290",
         "sessions_planned": 3,
         "minutes": 24,
         "note": "path re-scoped shorter after the check-in"

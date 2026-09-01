@@ -504,6 +504,20 @@ class ProgressEvidence(BaseModel):
     )
 
 
+class ProgressResourceObservation(BaseModel):
+    """Event-backed observation of one resource inside a path."""
+
+    path_id: str
+    resource_id: str
+    sessions_completed: int = Field(
+        description="Count of completed sessions that named this exact resource."
+    )
+    last_observed_at: str = Field(description="Latest supporting event timestamp.")
+    event_ids: list[str] = Field(
+        description="The session_completed events behind this observation."
+    )
+
+
 class LearnerProgressSummary(BaseModel):
     """`GET /learn/progress` — the whole ledger view for one principal.
 
@@ -523,6 +537,12 @@ class LearnerProgressSummary(BaseModel):
             "Session arithmetic per path. Named `schedule_progress` so no "
             "surface can mistake it for knowledge (01 §4.1)."
         ),
+    )
+    resource_observations: list[ProgressResourceObservation] = Field(
+        description=(
+            "Resource-level observations derived only from session events "
+            "that named both path_id and resource_id."
+        )
     )
     assessments: list[ProgressEvidence]
     artifacts: list[ProgressEvidence]

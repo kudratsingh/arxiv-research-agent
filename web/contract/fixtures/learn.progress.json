@@ -61,6 +61,36 @@
         "event_ids": ["evt-0006"]
       }
     ],
+    "resource_observations": [
+      {
+        "path_id": "attention-is-all-you-need",
+        "resource_id": "arxiv:1706.03762",
+        "sessions_completed": 1,
+        "last_observed_at": "2026-08-24T09:15:00.000000Z",
+        "event_ids": ["evt-0001"]
+      },
+      {
+        "path_id": "attention-is-all-you-need",
+        "resource_id": "arxiv:1810.04805",
+        "sessions_completed": 1,
+        "last_observed_at": "2026-08-25T08:05:00.000000Z",
+        "event_ids": ["evt-0004"]
+      },
+      {
+        "path_id": "attention-is-all-you-need",
+        "resource_id": "arxiv:2305.18290",
+        "sessions_completed": 1,
+        "last_observed_at": "2026-08-26T07:45:00.000000Z",
+        "event_ids": ["evt-0007"]
+      },
+      {
+        "path_id": "rlhf-foundations",
+        "resource_id": "arxiv:2203.02155",
+        "sessions_completed": 1,
+        "last_observed_at": "2026-08-25T19:30:00.000000Z",
+        "event_ids": ["evt-0006"]
+      }
+    ],
     "assessments": [
       {
         "event_id": "evt-0002",

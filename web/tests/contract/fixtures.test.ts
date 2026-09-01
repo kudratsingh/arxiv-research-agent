@@ -44,6 +44,7 @@ import {
   type Plan,
   type ProgressDailySessions,
   type ProgressEvidence,
+  type ProgressResourceObservation,
   type ProgressSchedule,
 } from "@/lib/api";
 
@@ -284,6 +285,20 @@ const progressEvidenceSchema = z.strictObject({
 });
 proves<Exact<z.infer<typeof progressEvidenceSchema>, ProgressEvidence>>(true);
 
+const progressResourceObservationSchema = z.strictObject({
+  path_id: z.string(),
+  resource_id: z.string(),
+  sessions_completed: z.number(),
+  last_observed_at: z.string(),
+  event_ids: z.array(z.string()),
+});
+proves<
+  Exact<
+    z.infer<typeof progressResourceObservationSchema>,
+    ProgressResourceObservation
+  >
+>(true);
+
 const learnerProgressSummarySchema = z.strictObject({
   principal_key_id: z.string(),
   event_count: z.number(),
@@ -291,6 +306,7 @@ const learnerProgressSummarySchema = z.strictObject({
   schedule_progress: z.array(progressScheduleSchema),
   assessments: z.array(progressEvidenceSchema),
   artifacts: z.array(progressEvidenceSchema),
+  resource_observations: z.array(progressResourceObservationSchema),
 });
 proves<
   Exact<z.infer<typeof learnerProgressSummarySchema>, LearnerProgressSummary>
