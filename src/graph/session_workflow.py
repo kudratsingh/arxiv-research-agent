@@ -21,10 +21,13 @@ from langgraph.graph import END, StateGraph
 
 from src.agents.tutor import (
     assess_agent,
+    assessment_probe_agent,
     check_in_agent,
     learner_input_agent,
     passage_agent,
     progress_update_agent,
+    record_assessment_probe_agent,
+    route_after_assessment,
     route_after_turn,
     tutor_agent,
 )
@@ -114,6 +117,15 @@ def _shape(wrap: SessionNodeWrapper) -> StateGraph[SessionState, Any, Any, Any]:
         name = f"tutor_{number}"
         graph.add_node(name, wrap(name, tutor_agent))
     graph.add_node("assess", wrap("assess", assess_agent))
+    graph.add_node("assessment_probe", wrap("assessment_probe", assessment_probe_agent))
+    graph.add_node(
+        "learner_input_assessment",
+        wrap("learner_input_assessment", learner_input_agent),
+    )
+    graph.add_node(
+        "record_assessment_probe",
+        wrap("record_assessment_probe", record_assessment_probe_agent),
+    )
     graph.add_node("progress_update", wrap("progress_update", progress_update_agent))
 
     graph.set_entry_point("check_in")
@@ -140,7 +152,14 @@ def _shape(wrap: SessionNodeWrapper) -> StateGraph[SessionState, Any, Any, Any]:
             "progress_update": "progress_update",
         },
     )
-    graph.add_edge("assess", "progress_update")
+    graph.add_conditional_edges(
+        "assess",
+        route_after_assessment,
+        {"probe": "assessment_probe", "progress_update": "progress_update"},
+    )
+    graph.add_edge("assessment_probe", "learner_input_assessment")
+    graph.add_edge("learner_input_assessment", "record_assessment_probe")
+    graph.add_edge("record_assessment_probe", "progress_update")
     graph.add_edge("progress_update", END)
     return graph
 
