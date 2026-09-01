@@ -169,10 +169,10 @@ describe("the enumeration reads the real backend", () => {
     // than silently re-found somewhere the design brief never read. The
     // runner line numbers moved with ADR 0057's kind dispatch, which is
     // this assertion working: a re-citation is a deliberate act.
-    expect(RUNNER.split("\n")[1527]).toContain('job.error_type = "session_turn_timeout"');
-    expect(RUNNER.split("\n")[1555]).toContain('job.error_type = "hitl_timeout"');
-    expect(RUNNER.split("\n")[1583]).toContain('job.error_type = "cost_budget_exceeded"');
-    expect(RUNNER.split("\n")[1648]).toContain('job.error_type = "timeout"');
+    expect(RUNNER.split("\n")[1559]).toContain('job.error_type = "session_turn_timeout"');
+    expect(RUNNER.split("\n")[1587]).toContain('job.error_type = "hitl_timeout"');
+    expect(RUNNER.split("\n")[1615]).toContain('job.error_type = "cost_budget_exceeded"');
+    expect(RUNNER.split("\n")[1680]).toContain('job.error_type = "timeout"');
     expect(REDRIVER.split("\n")[517]).toContain("job.error_type = ORPHANED_ERROR_TYPE");
   });
 

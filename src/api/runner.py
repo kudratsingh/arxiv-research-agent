@@ -1306,6 +1306,8 @@ async def run_job(
     conversation_store: Any = None,
     progress_event_store: Any = None,
     progress_event_decoder: Callable[[dict[str, Any]], Any] | None = None,
+    profile_store: Any = None,
+    profile_skill_decoder: Callable[[Any], Any] | None = None,
     worker_id: str | None = None,
 ) -> None:
     """Execute one job to completion, updating the store as it goes.
@@ -1363,6 +1365,11 @@ async def run_job(
         progress_event_decoder: Store-layer decoder for one serialized
             event. Kept injected so the generic job path does not import
             learner-only exception classes into its error vocabulary.
+        profile_store: Principal-scoped profile store for the session-close
+            inference batch. No batch means no profile write.
+        profile_skill_decoder: Provenance-validating decoder for one inferred
+            skill mapping. Injected for the same boundary reason as the event
+            decoder.
         worker_id: Id stamped on the job lease. Defaults to this
             process's `WORKER_ID`; injectable for tests.
     """
@@ -1519,6 +1526,31 @@ async def run_job(
                             "session progress event principal does not match job owner"
                         )
                     await progress_event_store.append(event)
+            if job.kind == "session":
+                raw_batch = final_state.get("inference_batch", [])
+                if not isinstance(raw_batch, list):
+                    raise ValueError("session inference_batch must be a list")
+                if raw_batch:
+                    if profile_store is None or profile_skill_decoder is None:
+                        raise ValueError("session inference batch has no profile write boundary")
+                    entries = []
+                    for raw in raw_batch:
+                        if not isinstance(raw, dict):
+                            raise ValueError("session inference entry must be an object")
+                        entry = profile_skill_decoder(raw)
+                        if entry.source != "inferred":
+                            raise ValueError(
+                                "session inference entry must have inferred provenance"
+                            )
+                        if entry.evidence_ref != f"session:{job.job_id}":
+                            raise ValueError(
+                                "session inference evidence_ref does not match the closing session"
+                            )
+                        entries.append(entry)
+                    await profile_store.record_skill_entries(
+                        job.principal_key_id,
+                        tuple(entries),
+                    )
         except SessionTurnTimeoutError as exc:
             # The learner stopped answering. Terminal, and named so the
             # Ledger can tell an abandoned session apart from a broken

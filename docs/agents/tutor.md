@@ -5,7 +5,8 @@
 Runs one bounded guided read against a published learning-path entry. It plans
 to the learner's declared time, asks one question at a time, records an
 explain-back in the learner's own words, and ends with an honest activity record
-rather than a mastery claim.
+rather than a mastery claim. At close it also creates the bounded, visibly
+lossy memory used by the next check-in.
 
 Source: `src/agents/tutor.py`. State and wiring:
 `src/graph/session_state.py`, `src/graph/session_workflow.py`, and ADR
@@ -20,6 +21,7 @@ flowchart LR
   R --> Q1["guided question 1"] --> Q2["guided question 2"]
   Q2 --> E["explain-back"] --> A["recorded_ungraded assessment"]
   A --> L["append-only progress events"]
+  L --> M["lossy summary + close-time inference batch"]
   R -->|"end early"| L
   Q1 -->|"end early"| L
   Q2 -->|"end early"| L
@@ -33,8 +35,10 @@ checkpointer rather than process memory.
 
 Reads from `SessionState`:
 
-- `tier1` — academic level, daily time budget, active goals, provenance-tagged
-  skills, and an isolation-wrapped profile note.
+- `tier1` — the `tier1.v1` block: structured goals, daily time budget and
+  declared constraints; provenance-tagged skills; active path position;
+  today's session; and the previous visibly lossy summary. Compact JSON is
+  hard-bounded to a 2.5K-token estimate.
 - `session_spec` — path/resource ids, paper title and canonical URL, approved
   briefing label, and close/skim guidance extracted from that companion.
 - `learner_reply` — the current reply only; learner prose never enters a routing
@@ -51,7 +55,10 @@ Reads from `SessionState`:
 - `assessment` — `recorded_ungraded`, guidance-only, with the learner's own
   explain-back quote. WO-W04 supplies judged gap findings.
 - `progress_events` — idempotently keyed `assessment` and `session_completed`
-  records for the principal's append-only ledger.
+  records for the principal's append-only ledger. The completion event carries
+  the lossy summary, which is never valid skill evidence.
+- `inference_batch` — optional unconfirmed skill claims, transcript-grounded
+  and citing the exact session. The runner applies them only after close.
 - `draft_report` — a short session record that explicitly says it is not a
   mastery score.
 
@@ -69,6 +76,8 @@ a prompt.
 Mock mode takes a deterministic branch before `call_llm_json`; no Anthropic
 client is constructed. Real-model JSON is allowlisted. An unusable plan becomes
 a visibly safe minimal plan; unusable tutor output becomes an honest re-ask.
+An unusable session-memory response becomes a deterministic activity summary
+with an empty inference batch.
 
 ## Failure modes
 
@@ -81,6 +90,9 @@ a visibly safe minimal plan; unusable tutor output becomes an honest re-ask.
 | Worker dies while parked | The checkpoint preserves transcript/next input; the job redriver's existing orphan policy remains authoritative. |
 | Learner never replies | `session_turn_timeout_sec` fails the job with the session timeout vocabulary. |
 | Learner ends early | Routes directly to the activity ledger with `ended_early=true`. |
+| Tier-1 profile reaches every cap | Lower-priority skills are visibly omitted; goals, budget, and declared constraints are never truncated. |
+| Summary contradicts the profile | Structured facts win; the summary remains marked lossy. |
+| Summary id offered as skill evidence | The profile store rejects the claim. |
 
 ## Flags
 
@@ -107,4 +119,5 @@ reattaching to the same SQLite checkpoint.
 - [ADR 0057](../decisions/0057-job-kinds-and-awaiting-learner.md)
 - [ADR 0058](../decisions/0058-learner-profile-store-and-provenance.md)
 - [ADR 0059](../decisions/0059-guided-read-session-graph.md)
-
+- [ADR 0060](../decisions/0060-evidence-grounded-assessment-judge.md)
+- [ADR 0061](../decisions/0061-bounded-tier1-session-memory.md)

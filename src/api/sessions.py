@@ -20,7 +20,8 @@ from src.api.runner import run_job
 from src.config import settings
 from src.content.loader import LoadedPath, loaded_paths
 from src.content.schema import ContentValidationError, Entry
-from src.learning.profile_store import LearnerProfile
+from src.learning.memory import build_tier1_memory, latest_session_summary
+from src.learning.profile_store import skill_entry_from_mapping
 from src.learning.progress_store import ProgressEvent
 from src.observability import get_logger
 
@@ -171,26 +172,6 @@ def _reading_guidance(path: LoadedPath, entry: Entry) -> list[dict[str, str]]:
     return guidance[:8] or [{"name": "paper overview", "mode": "skim"}]
 
 
-def _tier1(profile: LearnerProfile) -> dict[str, Any]:
-    """The bounded, provenance-preserving profile block every turn sees."""
-    return {
-        "academic_level": profile.academic_level,
-        "time_budget_min_per_day": profile.time_budget_min_per_day,
-        "goals": [
-            {
-                "goal_id": goal.goal_id,
-                "statement": goal.statement,
-                "status": goal.status,
-                "priority": goal.priority,
-            }
-            for goal in profile.goals
-            if goal.status == "active"
-        ],
-        "skills": [entry.to_mapping() for entry in profile.skills],
-        "profile_note": profile.profile_note,
-    }
-
-
 def _session_detail(job: Job) -> SessionDetail:
     spec = job.input_payload.get("session_spec", {})
     return SessionDetail(
@@ -239,6 +220,31 @@ async def create_session(
 
     session_id = uuid.uuid4().hex[:16]
     minutes = body.available_minutes or profile.time_budget_min_per_day or 20
+    session_spec = {
+        "path_id": path.path_id,
+        "resource_id": entry.resource_id,
+        "title": entry.title,
+        "canonical_url": entry.canonical_url,
+        "briefing_companion": entry.briefing_file,
+        "briefing_label": (briefing.header.label if briefing is not None else ""),
+        "reading_guidance": _reading_guidance(path, entry),
+        "available_minutes": minutes,
+        "path_position": entry.position,
+        "path_entry_count": len(path.manifest.servable_entries),
+    }
+    progress_store = request.app.state.progress_event_store
+    prior_events = await progress_store.list_events(principal_id, limit=2_000)
+    tier1 = build_tier1_memory(
+        profile,
+        active_path_position={
+            "path_id": path.path_id,
+            "resource_id": entry.resource_id,
+            "position": entry.position,
+            "entry_count": len(path.manifest.servable_entries),
+        },
+        session_spec=session_spec,
+        last_session_summary=latest_session_summary(prior_events),
+    )
     job = Job(
         job_id=session_id,
         query=f"Guided read: {entry.title}",
@@ -246,18 +252,8 @@ async def create_session(
         principal_key_id=principal_id,
         input_payload={
             "principal_key_id": principal_id,
-            "tier1": _tier1(profile),
-            "session_spec": {
-                "path_id": path.path_id,
-                "resource_id": entry.resource_id,
-                "title": entry.title,
-                "canonical_url": entry.canonical_url,
-                "briefing_companion": entry.briefing_file,
-                "briefing_label": (briefing.header.label if briefing is not None else ""),
-                "reading_guidance": _reading_guidance(path, entry),
-                "available_minutes": minutes,
-                "path_entry_count": len(path.manifest.servable_entries),
-            },
+            "tier1": tier1,
+            "session_spec": session_spec,
         },
     )
     store = request.app.state.store
@@ -270,6 +266,8 @@ async def create_session(
             semaphore=request.app.state.semaphore,
             progress_event_store=request.app.state.progress_event_store,
             progress_event_decoder=ProgressEvent.from_json_dict,
+            profile_store=profile_store,
+            profile_skill_decoder=skill_entry_from_mapping,
         ),
         name=f"session-{job.job_id}",
     )

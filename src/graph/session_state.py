@@ -40,6 +40,8 @@ class SessionState(TypedDict):
     turn_number: int
     awaiting_assessment: bool
     progress_events: list[dict[str, Any]]
+    session_summary: dict[str, Any]
+    inference_batch: list[dict[str, Any]]
     draft_report: str
     quality_score: float | None
     iteration: int
@@ -81,6 +83,8 @@ def initial_session_state(
         "turn_number": 0,
         "awaiting_assessment": False,
         "progress_events": [],
+        "session_summary": {},
+        "inference_batch": [],
         "draft_report": "",
         "quality_score": None,
         "iteration": 0,
