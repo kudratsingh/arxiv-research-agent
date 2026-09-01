@@ -46,6 +46,22 @@ describe("PathView", () => {
     expect(container.querySelector("iframe, embed, object")).toBeNull();
   });
 
+  it("states when an entry has no briefing and omits an empty vocabulary block", () => {
+    const entry = path.entries[0]!;
+    const sparsePath: LearnPathDetail = {
+      ...path,
+      fixture: false,
+      banner: null,
+      entry_count: 1,
+      entries: [{ ...entry, briefing_markdown: null, vocabulary: [] }],
+    };
+
+    render(<PathView path={sparsePath} />);
+    expect(screen.getByText(LEARN.briefingUnavailable)).toBeVisible();
+    expect(screen.queryByText(LEARN.vocabulary)).toBeNull();
+    expect(screen.queryByText(LEARN.fixtureLabel)).toBeNull();
+  });
+
   it("has an honest unavailable state", () => {
     render(<PathUnavailable />);
     expect(
