@@ -1144,6 +1144,88 @@ enforcement point for every future learning surface, which is why
 it owns the vocabulary file others append to
 ([§5.4](#54-fleet-coordination-hazards)).
 
+#### Coordinator-added cards (execution, 2026-09-02)
+
+Four cards the plan did not carry, added during execution and
+recorded here so the set is complete. Each names its merged PR or
+its branch; the rulings that created them are in
+[`STATUS.md`](STATUS.md) §"Phase W execution".
+
+##### WO-W13b — Start a guided-read session from the path view
+
+| Gate | Size | Depends | Track | State |
+|---|---|---|---|---|
+| W1 | S → M as built | WO-W12, WO-W13 | C | merged, PR #150 (`3ccb650`) |
+
+**Scope.** The start action on `/learn/paths/[id]` — the pattern
+renders it and never fetches, the feature owns the write, and the
+duplicate-submit guard is a `useRef` written before the `await`.
+`describeSessionStart` maps the refusal codes `src/api/sessions.py`
+actually raises, with the RC-16 fall-through showing the service's
+own word. The e2e tier's first mock-mode write pass-through, its
+precondition asserted against both the overlay and the running
+container. The darwin snapshot baseline regenerated (ten PNGs, stale
+since WO-W12) and the coverage floors re-seeded on the union tree.
+
+**Acceptance criteria** as merged in #150: the four new §4.2 states
+with stories and axe; the end-to-end row start → turn → reload →
+close on the seeded stack with `llm_calls === 0` read back; the
+`mode=` column in `research-post-count.txt`; the darwin set green.
+
+##### WO-W03b — The tutor close line no longer names the frame it rejects
+
+| Gate | Size | Depends | Track | State |
+|---|---|---|---|---|
+| W1 | S | WO-W03, WO-W14 | C | merged, PR #151 (`1026534`) |
+
+**Scope.** The three learner-facing sentences in
+`src/agents/tutor.py` that named a banned scalar in order to deny it
+— the `progress_update_agent` close line, the probe feedback, the
+probe transcript message. Each now states what the session did
+rather than what it is not. A backend `PEDAGOGY_DENY_LIST` mirrors
+WO-W14's `PEDAGOGY_PHRASES` (the dictionary stays the authority) and
+is scanned over everything `learner_facing_copy` collects, which now
+includes `draft_report`. `TUTOR_SYSTEM_PROMPT`'s prohibition is
+deliberately untouched: it addresses the model, not the learner. The
+fifteen recorded fixtures were re-recorded (provenance stamp only).
+
+##### WO-W17b — The identity slot under pilot mode
+
+| Gate | Size | Depends | Track | State |
+|---|---|---|---|---|
+| W2 | S | WO-W17 | C | merged, PR #153 (`72e65b9`) |
+
+**Scope.** The shell rendered *"Shared workspace — Everyone with
+access to this deployment sees these threads. There are no separate
+accounts."* Under `PILOT_EDGE_AUTH=on` neither clause was true, and
+it was shown to the people the separation is for. WO-W17 wrote the
+discrepancy down rather than editing another card's file (ADR 0063
+§Consequences, `docs/security.md`, `docs/architecture.md`,
+`evidence/gate-w2/pilot-record.md` §6). The fix is SR-07-compliant:
+a **server-resolved per-request descriptor** (`shared` / `pilot` /
+`unresolved`) derived at seam S1 and passed to the shell as a prop,
+never a runtime flag in `web/`. Merged with mode-off byte-identity
+proved twice and the pilot e2e at 5/5; the prerequisite it removes
+from W-OD-5 is closed.
+
+##### WO-W13c — The CI-only layout shift on `/c/[id]`
+
+| Gate | Size | Depends | Track | State |
+|---|---|---|---|---|
+| W1 | S | WO-W13 | C | in flight, `fix/w13c-cls-conversation-route` |
+
+**Scope.** `e2e/cls.spec.ts` reads `0.039` against an expected
+`0.000` on `/c/[id]` — three pixels down on one frame and back on
+the next — on main's runs for `4fbe239` and `3ccb650`, with an
+identical signature, never on a PR run, and passing on rerun and
+80/80 locally. The coordinator's state probe classified it
+**deterministic and CI-environment-conditioned**, not flaky. Pull
+the retained CI trace, reproduce on Linux, and fix at the cause.
+Rides along: interpolate the e2e overlay's daemon-global image tags
+(`arxiv-research-agent:local`, `arxiv-research-agent-web:wo21-e2e`),
+which two stacks on one machine contend for
+([§5.4](#54-fleet-coordination-hazards)).
+
 ### Track D — Content and pilots (Gates W1/W2)
 
 #### WO-W15 — The flagship path: "Reading your first papers"
@@ -1522,7 +1604,11 @@ over to Gate W1.
 | 17 | Ledger empty | WO-W14 | `Ledger/Empty` |
 | 18 | Ledger populated, evidence-linked | WO-W14 | `Ledger/WithEvidence` |
 | 19 | Ledger schedule-progress labeling | WO-W14 | `Ledger/ScheduleLabeled` |
-| 20 | Dark mode | all three | theme axis on every story (revamp mechanism) |
+| 20 | Dark mode | all four | theme axis on every story (revamp mechanism) |
+| 21 | Path view, start available | WO-W13b | `PathView/StartAvailable` |
+| 22 | Path view, start in flight (no progress claim) | WO-W13b | `PathView/Starting` |
+| 23 | Path view, start refused (mapped backend refusal) | WO-W13b | `PathView/StartRefused` |
+| 24 | Path view, start refused (unmapped; the service's own word, RC-16) | WO-W13b | `PathView/StartRefusedUnmapped` |
 
 ---
 
@@ -1675,6 +1761,7 @@ frozen-backend era is over, so collisions move into `src/`.
 | `web/lib/copy/index.ts` barrel + the forbidden-vocabulary list | W12, W13 (copy files), W14 (owner of the pedagogy vocabulary) | Per-surface copy files behind the barrel (revamp convention); the forbidden list has comment-fenced append sections, W14 owns the file |
 | `web/budgets.json` | W12, W13, W14 | Append-only per-route rows |
 | `docker-compose.yml` hardcoded `container_name` | Every WO running the seeded stack (W03 recording, W13 e2e, W19) | Carried verbatim from the revamp: run the stack under a scratchpad overlay with distinct names/ports; never run bare `docker compose down` while the fleet is active |
+| `web/e2e/support/compose.e2e.yml` + `seed.sh` + `paid-path.ts` | W13, W13b, W17, W17b, W13c | The overlay is shared harness: rebase before merge; container names and (after W13c) image tags interpolated so concurrent worktrees never collide; never a bare `docker compose down` |
 | `planning/07-learning-platform/evidence/gate-w*/` | W19, W20 (owners) | Producing work orders write into the pack; only W19/W20 author the index files |
 | `docs/decisions/README.md` ADR index | W01, W02, W03, W04, W17 | Coordinator assigns ADR numbers (0057+) at branch time so parallel cards don't claim the same number |
 

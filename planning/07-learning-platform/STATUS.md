@@ -1,6 +1,6 @@
 # Learning platform campaign — status
 
-Updated: 2026-09-01
+Updated: 2026-09-02
 
 ## The campaign
 
@@ -48,28 +48,180 @@ one shared core (Phase W), one direction in build at a time, each
 behind an evidence gate; order beyond "Phase W first" is decided at the
 gates, not now.
 
-Still owed by the owner before their respective gates (unchanged):
-eval funding (~first paid run), DEPLOY cost approval, MT-01 §8 answers
-(deferred to Rung 3 / Phase L0), content licensing posture (02),
-notification channel (01/03).
+Still owed by the owner before their respective gates: eval funding
+(~first paid run, now W-OD-1 and the one blocker on Gate W1's funded
+row), DEPLOY cost approval (inside W-OD-4/5), content licensing posture
+(02, W-OD-3), MT-01 §8 answers (deferred to Rung 3 / Phase L0),
+notification channel (01/03, not needed in Phase W). The current state
+of each is "Owner decisions now due" below.
 
 ## Phase W execution
 
-The plan is approved and implementation is in progress. Thirteen of the 20
-cards are implemented and merged to their no-cost boundary through WO-W06:
-W01–W09, plus W12, W15, W16, and W18. Owner-dependent funded/public/pilot
-criteria on those cards remain visibly deferred. The merged work includes the
-shared job/session lifecycle, learner profile,
-guided-read graph, evidence-grounded assessment, bounded Tier-1 memory,
-per-session cost enforcement, honest progress ledger, deterministic eval
-fixtures/metrics, the path surface, guarded flagship content, static
-publication package, and pre-committed engagement reporter.
+The plan is approved. Every planned card except WO-W20 is merged at its
+no-cost boundary, Gate W1's evidence pack is on `main`, and the gate is
+ruled below.
 
-The next no-cost critical-path cards are **W13** (session surface) and **W14**
-(honest ledger view). W10/W11 remain built only after a newly approved funded
-eval campaign; W17 remains blocked on pilot/deploy/inference approval; W19 can
-assemble the no-cost Gate W1 evidence while marking funded rows unresolved;
-W20 follows the 14-day pilot observation window.
+### Merge train, 2026-09-02
+
+Earlier merges (2026-08-30 → 09-01, thirteen cards, `a884533` … `2114c47`):
+WO-W08 #132, W02 #134, W07 #133, W01 #135, W15 #136, W03 #137, W12 #138,
+W09 #139, W18 #140, W16 #141, W04 #142, W05 #143, W06 #144.
+
+Today, in merge order:
+
+| Card | PR | Squash SHA | Subject |
+|---|---|---|---|
+| WO-W10 | #145 | `77a1798` | learner-simulation benchmark, scripted tier |
+| WO-W13 | #146 | `4fbe239` | the guided-read session view |
+| WO-W11 | #148 | `ba3e576` | eval wiring, nightly lane, recorded fixtures |
+| WO-W14 | #147 | `a9e26bf` | the Ledger view and the pedagogy honesty gate |
+| WO-W17 | #149 | `5bcf373` | pilot principals at the edge seam, the no-cost half (ADR 0063) |
+| WO-W13b | #150 | `3ccb650` | start a guided-read session from the path view |
+| WO-W03b | #151 | `1026534` | the tutor close line no longer names the frame it rejects |
+| WO-W17b | #153 | `72e65b9` | the identity slot tells the truth under pilot mode |
+| WO-W19 | #152 | `f6fce61` | the Gate W1 evidence pack and known gaps |
+
+Twenty-two PRs, #132 … #153. **Nineteen of the twenty planned cards are
+merged to their no-cost boundary**, plus the three coordinator-added cards
+(W13b, W03b, W17b); the owner-dependent funded/public/pilot criteria on them
+stay visibly deferred. **WO-W20 remains**, and waits on the 14-day pilot
+observation window (W-OD-4/5/6).
+
+In flight at the time of writing: **WO-W13c** alone
+(`fix/w13c-cls-conversation-route`; no PR open yet). This section is written
+against `f6fce61` and is amended when it lands.
+
+### Coordinator rulings made under the standing delegation
+
+All dated 2026-09-02. The owner may reopen any of them.
+
+1. **W10 and W11 were built to their no-cost boundary**, on the W09
+   precedent: the scripted tiers are real and CI-run; W09 c6, W10 c5 and
+   W11 c4 are deferred behind W-OD-1. Recorded in `docs/eval.md` and in
+   each card's PR body.
+2. **No ADR for W10's third cost-payer column** (`learner_cost_usd`) — it is
+   an application of ADR 0050, not a new decision. #145 flagged it; this is
+   the answer, documented in `docs/eval.md`.
+3. **No ADR for W13's e2e overlay turning `ENABLE_API_AUTH` on** and stamping
+   the seeded `baseline-*` rows with the stack's single principal — a harness
+   decision, documented in `web/e2e/support/compose.e2e.yml` and
+   `web/e2e/README.md`. #146 offered to write one; declined.
+4. **W14's pedagogy vocabulary is learn-scoped**, on the `LEXICON_PHRASES`
+   precedent ("Quality score" is the research metric's real name). Four W13
+   session copy keys — `replyHint`, `workingBody`, `unassessedBody`,
+   `recordedUngraded` — were reworded to satisfy it, before and after in
+   #147's body.
+5. **W11 c7**: the `engineer-rlhf-profile-note-injection` expectation moved to
+   the graph's documented rule; **graph behaviour unchanged**. W08's
+   recorded-fixture gate is closed with it, at fifteen transcripts (#148).
+6. **WO-W13b was added** to close a plan gap: no card in the plan owned the
+   session start action, so Gate W1's end-to-end row was unreachable in a
+   browser until #150. **No ADR for its mock-mode pass-through** — argued in
+   `web/e2e/support/mock-mode.ts`, `paid-path.ts` and `web/e2e/README.md`
+   instead. `session_cost_cap_refused` is **not** a start refusal (re-scope
+   confirmed): it is an `error_type` on a session that already exists.
+7. **WO-W03b was added**: the tutor's close line "This is an activity record,
+   not a mastery score." plants the frame W14's gate bans one tier down. #151
+   fixed three learner-facing denials in `src/agents/tutor.py` and added a
+   backend `PEDAGOGY_DENY_LIST` mirror; W14's dictionary stays the authority.
+8. **WO-W17b was added, and has closed it**: the identity slot's "Shared
+   workspace … There are no separate accounts." copy was false under
+   `PILOT_EDGE_AUTH=on`. The SR-07-compliant fix — a server-resolved
+   per-request descriptor (`shared` / `pilot` / `unresolved`) derived at seam
+   S1 and handed to the shell as a prop, not a runtime flag in `web/` —
+   merged as #153: mode-off byte-identical, pilot e2e 5/5 locally. The
+   W17 discrepancy recorded in ADR 0063 §Consequences, `docs/security.md`,
+   `docs/architecture.md` and `evidence/gate-w2/pilot-record.md` §6 is
+   **resolved**; nothing now blocks an invitation on that count (W-OD-5
+   still does).
+9. **WO-W13c was added**: `e2e/cls.spec.ts`'s 3-px layout shift on `/c/[id]`
+   failed on main's runs for `4fbe239` and `3ccb650` with an identical
+   signature, never on a PR run, and passed on rerun. The coordinator's state
+   probe of main `3ccb650` classified it **deterministic and
+   CI-environment-conditioned**, not flaky. W13c pulls the retained CI trace,
+   reproduces on Linux, fixes at the cause, and interpolates the e2e
+   overlay's daemon-global image tags.
+10. **The `nightly-eval` workflow remains disabled and all model spend
+    remains locked** — unchanged since 2026-08-30.
+
+### Gate W1 ruling — closed at the no-cost boundary
+
+**2026-09-02, under the standing delegation; the owner may reopen it: Gate W1
+is closed at the no-cost boundary.**
+
+WO-W19's pack (PR #152, merged as `f6fce61`) states three shapes of ruling
+rather than choosing one — close at the no-cost boundary "with the three
+unrun campaigns carried as named, dated exceptions into Gate W2's memo … the
+position the merged tree supports today, and the one every producing card was
+built for"; hold Gate W1 open until W-OD-1 lands; or close conditionally on
+WO-W13c reporting. **The
+first is taken.** The merged tree supports it, and nothing engineering can do
+resolves the funded row: it waits on money, not on code.
+
+Per the pack: seven of §6's ten rows resolve outright; the per-session cost
+row resolves on its own terms with every figure it reconciles a mock-mode
+figure; `known-gaps.md` is non-empty at **seventeen entries, one of them
+already resolved** (§6, the tutor close line, by #151). The funded-campaign
+row — the first funded calibration run (W09 c6), the first
+funded simulation campaign (W10 c5) and the nightly learning lane's first
+scheduled run (W11 c4) — is **UNRESOLVED**, and is carried into Gate W2's memo
+as a named, dated exception pending **W-OD-1**.
+
+The two conditional items the pack's third shape names are assigned rather
+than left pending: WO-W13c owns the `cls.spec.ts` failure (in flight), and
+WO-W03b closed the tutor's mastery-frame close line (#151, `known-gaps.md`
+§6, struck through in the merged pack). Neither blocks this close. The
+pack's own §6.1 carries the coordinator state-probe verdict — main HEALTHY
+on every tier at `3ccb650` — as the corroboration the close rests on
+beside CI.
+
+### Plan errata found in execution
+
+Recorded, not rewritten. The plan stands as merged; these are the places
+execution diverged from it.
+
+(a) **The four Phase W flags** are `enable_learner_profile` (W02, shared by
+W07), `enable_learn_content` (W15), `enable_session_loop` (W03) and
+`enable_assessment_judge` (W04) — all `default=False`. W01, W05, W06 and W07
+ship no flag of their own, each for a reason recorded in the tree.
+
+(b) **They are not independent.** A validator-enforced ladder —
+`enable_assessment_judge` → `enable_session_loop` → `enable_learner_profile`
+→ `enable_api_auth`, plus `enable_checkpointing` — raises at settings load,
+against §0's "independent default-off flag" constraint. A consequence: the
+zero-config auth-off `docker compose up` demo **cannot run a guided session**;
+the e2e overlay turns auth on in order to test one.
+
+(c) `docker-compose.yml` sets `ENABLE_LEARN_CONTENT` to `true` for the demo
+(the production overlay sets it back), so "default-off" is true of the code
+and not of the container a reader actually starts.
+
+(d) `session_cost_cap_refused` is an `error_type` on a session that already
+exists (`src/api/runner.py:1672`), not a create refusal — the W13 card reads
+it as a start refusal, and `POST /learn/sessions` cannot answer with it.
+
+(e) **SR-09 at the shipped defaults computes to `5 × 20 × 336 × $2.00 =
+$67,200`** worst case (#149's runbook work). W-OD-5 therefore cannot approve
+"the defaults"; it has to approve concrete values, withholding
+`POST /research` first per OD-7's posture.
+
+(f) `pytest -m "not e2e"` counts differ by environment and both are real:
+**2038 passed / 52 skipped** locally, which has no Postgres, against **2090
+passed / 0 skipped** in CI, which has the service those 52 need.
+
+### Owner decisions now due
+
+**W-OD-1 (eval funding) is the only blocker on Gate W1's funded row.** Sizing,
+from the cards: WO-W10's campaign is ≈15 sessions at roughly **$2–6** with a
+**$15** proposed ceiling — the same figure as the nightly lane's
+`DEFAULT_LEARNING_MAX_BUDGET_USD` — against §2's stated order of **$25–75 per
+campaign**. Setting the `ANTHROPIC_API_KEY` repository secret and approving
+that budget is the whole action.
+
+W-OD-2 (briefing generation, W15's content half), W-OD-3 (licensing posture),
+W-OD-4 (Rung 1 publication), W-OD-5 (pilots — which must approve concrete
+SR-09 values per erratum (e)) and W-OD-6 (threshold ratification, before any
+pilot starts) all remain open. W-OD-4/5/6 together gate WO-W20.
 
 Standing cost lock (2026-08-30, reaffirmed by continuation): the paid nightly
 eval workflow is disabled, and no funded model run, deployment, public launch,
