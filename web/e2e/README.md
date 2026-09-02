@@ -24,8 +24,9 @@ webkit once.
 
 ## The cost boundary
 
-**No automated tier ever runs a research job.** Three independent mechanisms,
-because one would be a convention rather than a boundary:
+**No automated tier ever runs a research job, and no tier ever contacts a
+model provider.** Four independent mechanisms, because one would be a
+convention rather than a boundary:
 
 1. `compose.e2e.yml` pins `ANTHROPIC_API_KEY=local-preview-disabled` on the
    `app` service, so the stack cannot reach a provider even if a real key is
@@ -38,9 +39,63 @@ because one would be a convention rather than a boundary:
    two session writes, `POST /api/learn/sessions` and
    `POST /api/learn/sessions/{id}/turn` — so the submit leg never reaches the
    backend at all.
+4. `compose.e2e.yml` pins `USE_MOCK_DATA=true` (WO-W13b). Under it the
+   session graph constructs no model client on any path, which is what makes
+   the one pass-through below safe.
 
 `fixtures/seed.sh` writes fixtures *behind* the API — direct Postgres and
 Redis — for the same reason: there is no code path from this tier to a model.
+
+### The one exception: the mock-mode session pass-through (WO-W13b)
+
+Gate W1's first row is a **whole** guided read on the seeded stack: start,
+park on `awaiting_learner`, turn, reload from the checkpoint, close. A
+fulfilled create starts no graph, so under mechanism 3 alone that row is
+unprovable — a suite that answers its own writes can only assert against its
+own fixtures. `session-flow.spec.ts` therefore opts into a second mode:
+
+```ts
+const paid = await interceptPaidPath(page, testInfo, {
+  sessionMode: "mock-pass-through",
+});
+```
+
+In that mode the two **session** writes are counted and recorded exactly as
+before and then forwarded to the backend. Nothing else changes:
+`POST /api/research` and `POST /api/conversations` are fulfilled in every
+mode and have no pass-through, because a research run under mock mode is
+still a run.
+
+**The precondition is asserted, not assumed.** `support/mock-mode.ts` refuses
+to install the pass-through unless the app service pins **both**
+`USE_MOCK_DATA=true` and `ANTHROPIC_API_KEY=local-preview-disabled` — checked
+in `compose.e2e.yml` (the file the stack is brought up from) and, when a
+Docker daemon is reachable, in the running container as well. A mismatch
+throws with the fix rather than skipping; a daemon it cannot reach is
+reported as `runtime=unverified` rather than passing quietly. The summary is
+printed into the run log and written into `research-post-count.txt`:
+
+```
+[mock-mode] guided-session pass-through armed: overlay=e2e/support/compose.e2e.yml
+  USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled
+  runtime=verified (arxiv-wo21-app)
+```
+
+Why mock mode is a construction rather than a hope: `check_in_agent` takes
+`_fallback_plan` (`src/agents/tutor.py:159`), `_tutor_prompts` returns two
+constants (`:248`), and `assess_agent`'s judge has its own mock branch
+(`src/agents/assessment.py:178`). No model client is built. The disabled key
+stays as the second, independent boundary — "it would have failed anyway" is
+a coincidence, not a cost boundary.
+
+**And the outcome is checked too.** After the session closes,
+`session-flow.spec.ts` reads `GET /api/learn/sessions/{id}` back and asserts
+`llm_calls === 0` and `cost_usd === 0`. The precondition says nothing will be
+spent; that line is the finished run agreeing.
+
+`research-post-count.txt` carries a `mode=` column so a forwarded count can
+never be read as an interdicted one, and `# `-prefixed lines in the body are
+the mock-mode preconditions, one per pass-through scenario.
 
 ## Ports, container names, and not breaking somebody else's stack
 
@@ -94,6 +149,14 @@ Two consequences worth knowing before you debug something:
   side-effect is a good one: every request this suite makes now goes through
   the credential boundary `web/app/api/[...path]/route.ts` describes, so the
   boundary is exercised rather than merely asserted about.
+- **The principal has a learner profile** (WO-W13b). `create_session` answers
+  404 `learner_profile_required` without one, and there is no default row by
+  design (ADR 0058). `fixtures/seed.sh` writes it through the application's
+  own `build_profile_store()`, idempotently, so a schema change fails the seed
+  rather than producing a row the API cannot read back. A side effect worth
+  knowing: with a profile present `GET /api/learn/progress` answers 200, so
+  `ledger.spec.ts` audits the populated Ledger rather than `LedgerUnavailable`
+  — that spec accepts either state and says so in its own header.
 
 `E2E_API_SECRET` is a committed local sentinel, not a secret. The stack has no
 reachable model provider, and CI needs no repository secret to run this tier.
@@ -163,9 +226,10 @@ tier.
 | `support/measure.ts` | reflow, work surface, safe area, first paint |
 | `support/axe.ts` | WO-22's axe run, allowlist parser, contrast probe |
 | `axe-allowlist.json` | WO-22's suppression list — **empty, and stays empty** |
+| `support/mock-mode.ts` | WO-W13b's mock-mode precondition for the session pass-through |
 | `fixtures/seed.sh` | the promoted Gate 1 seed, extended |
 | `__screenshots__/<platform>/` | WO-28's committed PNGs — 48 per platform |
-| `*.spec.ts` | one file per criterion; see the header comment in each. `session.spec.ts` is WO-W13's — criteria 2 and 4; `pilot.spec.ts` is WO-W17's — criteria 2 and 3, and skips itself without `E2E_PILOT=1` |
+| `*.spec.ts` | one file per criterion; see the header comment in each. `session.spec.ts` is WO-W13's — criteria 2 and 4; `session-flow.spec.ts` is WO-W13b's whole guided read, the only file that lets a write reach the backend; `pilot.spec.ts` is WO-W17's — criteria 2 and 3, and skips itself without `E2E_PILOT=1` |
 
 ## Projects and tags
 
@@ -190,7 +254,7 @@ Everything is written under `web/build/e2e/`, which is gitignored:
 
 | File | What |
 |---|---|
-| `research-post-count.txt` | one line per submission scenario — WO-21 criterion 3's evidence, plus WO-W13's session rows. Two row shapes, both legended in the file's own header: research rows count `/api/research` and `/api/conversations`, session rows count the two `/api/learn/sessions` writes |
+| `research-post-count.txt` | one line per submission scenario — WO-21 criterion 3's evidence, plus WO-W13's session rows. Two row shapes, both legended in the file's own header: research rows count `/api/research` and `/api/conversations`, session rows count the two `/api/learn/sessions` writes and carry WO-W13b's `mode=` column. `#` lines in the body are the mock-mode preconditions |
 | `axe/<state>.<theme>.json` | one full axe report per §4 state per theme, in the same shape as `docs/revamp/baseline/axe/*.json` so the two diff directly |
 | `axe/summary.tsv` | one row per state per theme: violations, gated, incomplete, contrast passes |
 | `axe/baseline-map.tsv` | which live report each retained baseline report corresponds to (WO-26 diffs these pairs) |

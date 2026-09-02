@@ -78,6 +78,30 @@
 # `API_KEYS` is `<name>:<secret>`; the *name* is the `key_id` that lands on a
 # row. It is a local sentinel, not a secret: this stack has no reachable
 # provider, and the value is committed on purpose so CI needs no secret.
+#
+# MOCK MODE, AND WHY IT IS A COST BOUNDARY RATHER THAN A CONVENIENCE
+# (WO-W13b, WO-W03 c5, Gate W1 row 1).
+#
+# Gate W1's first row is a full guided-read session end-to-end on this stack.
+# That needs `POST /learn/sessions` and `POST /learn/sessions/{id}/turn` to
+# actually RUN the graph — a write fulfilled in the browser starts nothing,
+# parks on nothing, and checkpoints nothing — so `session-flow.spec.ts` lets
+# those two through (`e2e/support/paid-path.ts`, mock-mode pass-through).
+# Letting a graph run is only safe because `USE_MOCK_DATA=true` means the
+# session graph constructs NO model client on any path: `check_in_agent`
+# takes `_fallback_plan` (`src/agents/tutor.py:159`), `_tutor_prompts`
+# returns two constants (`:248`), and `assess_agent`'s judge has its own mock
+# branch (`src/agents/assessment.py:178`). Zero paid calls by construction,
+# which is a different and stronger claim than "the key would not have
+# worked". `ANTHROPIC_API_KEY` above stays pinned as the second, independent
+# boundary; `e2e/support/mock-mode.ts` asserts BOTH before it forwards
+# anything, and fails the run loudly if either pin is gone.
+#
+# It changes nothing else in this tier. No spec drives a research run — every
+# `POST /api/research` is fulfilled in the browser and counted — so the mock
+# search fixture (`src/agents/search.py:170`) is unreachable from here, and
+# the full chromium project was run before and after this line was added with
+# the same result.
 
 services:
   app:
@@ -100,6 +124,10 @@ services:
       LEARNER_PROFILE_STORE: postgres
       PROGRESS_EVENT_STORE: postgres
       ENABLE_SESSION_LOOP: "true"
+      # WO-W13b. See "MOCK MODE" above. Asserted by e2e/support/mock-mode.ts
+      # before either session write is forwarded; do not remove without
+      # reading that file's header.
+      USE_MOCK_DATA: "true"
 
   web:
     container_name: ${E2E_WEB_CONTAINER:-arxiv-wo21-web}

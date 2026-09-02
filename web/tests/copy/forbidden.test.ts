@@ -218,6 +218,32 @@ const COMPOSED: Record<string, string[]> = {
     ...errorsCopy.rawErrorEvidence(null, null).flatMap((row) => [row.label, row.value]),
     ...errorsCopy.rawErrorEvidence("orphaned", "x").map((row) => row.label),
   ],
+  // WO-W13b's start refusals. Driven over every `ApiFailure` kind AND over
+  // every `detail` code `POST /learn/sessions` raises, because the mapping is
+  // keyed on the code rather than on the kind. Only `message` is gated:
+  // `detail` is the service's own word, rendered unedited (RC-16), which is
+  // the same rule `errors.describeErrorType`'s entry above follows.
+  "learn.describeSessionStart": [
+    null,
+    ...FAILURES,
+    ...[
+      "session_loop_disabled",
+      "session_loop_requires_auth",
+      "learner_profile_required",
+      "learn_content_invalid",
+      "learn_path_not_found",
+      "learn_resource_not_found",
+      "briefing_companion_required",
+      "a_code_this_dictionary_has_never_seen",
+    ].map(
+      (detail): ApiFailure => ({
+        kind: "not_found",
+        status: 404,
+        message: "",
+        raw: { detail },
+      }),
+    ),
+  ].map((failure) => learnCopy.describeSessionStart(failure).message),
   // WO-W14's Ledger. The kind and the schedule label arrive from the wire,
   // so both are driven with the API's own spellings plus a value this
   // surface has never seen — the fallback is ours and is gated, the wire's

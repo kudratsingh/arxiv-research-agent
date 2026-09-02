@@ -137,7 +137,7 @@ All commands run from `web/`. Vitest is configured with two *projects*
 | 3 | Story | every story renders and passes axe | `npx vitest run --project=storybook` | `web-storybook` |
 | 4 | Integration | features and query hooks against MSW handlers + recorded fixtures | `npx vitest run --project=unit tests/features tests/queries` | `web` |
 | 5 | Contract | fixture parse, generated-type drift, SSE event-name pinning | `npm run contract:check` then `npx vitest run --project=unit tests/contract` | `web` |
-| 6 | E2E | the vertical slice and the guided-read session against the seeded local stack | `npm run e2e` (stack first — see below) | `web-e2e` |
+| 6 | E2E | the vertical slice, the guided-read session, and one whole guided read start-to-close against the seeded local stack | `npm run e2e` (stack first — see below) | `web-e2e` |
 | 7 | Accessibility | axe over every state × theme, plus keyboard, zoom and reduced-motion probes; also per story at tier 3 | `npm run e2e -- --grep "@axe\|@a11y"` | `web-e2e`, `web-storybook` |
 | 8 | Budgets | per-route gzip ceilings in `web/budgets.json` | `npm run budgets` | `web` |
 
@@ -305,19 +305,32 @@ Firefox, transcribed by a person). Those are prose, and marked as
 prose.
 
 **The cost boundary is structural.** No web tier ever makes a paid model
-call, and three independent mechanisms enforce it rather than one
+call, and four independent mechanisms enforce it rather than one
 convention: the Compose overlay pins `ANTHROPIC_API_KEY` to the invalid
 sentinel `local-preview-disabled`, `playwright.config.ts` overwrites the
 variable in the runner process before any test loads (with
-`global-setup.ts` refusing to start if it is anything else), and
+`global-setup.ts` refusing to start if it is anything else),
 `e2e/support/paid-path.ts` fulfils every paid write in the browser —
 `POST /api/research`, `POST /api/conversations` and the two guided-session
 writes, `POST /api/learn/sessions` and `POST /api/learn/sessions/{id}/turn`
-— so no submit leg ever reaches the backend. Each count is recorded in
+— so no submit leg ever reaches the backend, and the overlay pins
+`USE_MOCK_DATA=true`, under which the session graph constructs no model
+client on any path. Each count is recorded in
 `web/build/e2e/research-post-count.txt`, one line per scenario, whether the
 assertion passed or failed. The `web-e2e` job
 hard-codes the same sentinel and is never given the repository secret;
 `web/tests/ci.test.ts` asserts that against the workflow's own text.
+
+The **one** place a write is forwarded rather than fulfilled is
+`e2e/session-flow.spec.ts`, which needs the graph to actually start, park,
+checkpoint and resume for Gate W1's end-to-end row. It opts in explicitly
+(`sessionMode: "mock-pass-through"`) and `e2e/support/mock-mode.ts` refuses
+unless both pins above are present — in the overlay and, when a Docker daemon
+is reachable, in the running container. The counts still land in
+`research-post-count.txt`, with a `mode=` column so a forwarded row cannot be
+read as an interdicted one, and the finished session's own `llm_calls` is
+asserted to be 0. `POST /api/research` has no such mode and is 0 on every
+row. `web/e2e/README.md` is the long form.
 
 **The build tool is pinned.** `web/package.json`'s build script is
 exactly `next build --webpack`, and `web/tests/ci.test.ts` asserts the

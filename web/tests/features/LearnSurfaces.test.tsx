@@ -15,6 +15,19 @@ import type { LearnPathList } from "@/lib/api";
 
 import { render, screen, waitFor } from "../support/render";
 
+// WO-W13b: `PathDetailSurface` now owns a write and routes on success, so it
+// reads `useRouter`. Nothing here starts a session — that flow is
+// `tests/features/PathDetailSurfaceStart.test.tsx` — but the hook still has to
+// be mounted for the surface to render at all.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 const originalFetch = globalThis.fetch;
 const pathList = listFixture.body as LearnPathList;
 
