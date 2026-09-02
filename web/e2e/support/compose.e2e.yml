@@ -32,6 +32,24 @@
 # `arxiv-research-agent-web:local` so that building the e2e image never
 # overwrites a developer's local tag, and so a stale `:local` from an
 # earlier branch is never silently reused for an e2e run.
+#
+# IMAGE TAGS ARE INTERPOLATED FOR THE REASON CONTAINER NAMES ARE (WO-W13c).
+#
+# An image tag is global to the Docker daemon in exactly the way a
+# `container_name` is, and until now neither of this stack's two tags could
+# move: `web` was pinned to the literal `arxiv-research-agent-web:wo21-e2e`,
+# and `app` inherited the base file's literal `arxiv-research-agent:local` —
+# the tag a developer's own `docker compose up` builds. So a second worktree
+# running this tier rebuilt both tags out from under the first, and an
+# `up --build` in either one could restart a healthy stack onto somebody
+# else's tree. That is the same class of collision §5.4 records for the
+# container names, and the reason `compose.pilot.yml` already interpolates
+# its own pair.
+#
+# The defaults below are the values that were literal here, so CI and a
+# single-worktree run are byte-for-byte unchanged; a second worktree exports
+# `E2E_APP_IMAGE` and `E2E_WEB_IMAGE` beside its own `E2E_COMPOSE_PROJECT`,
+# its ports and its `E2E_*_CONTAINER` names.
 
 #
 # `!override` ON EVERY `ports:` LIST, AND WHY IT IS NOT OPTIONAL.
@@ -106,6 +124,9 @@
 services:
   app:
     container_name: ${E2E_APP_CONTAINER:-arxiv-wo21-app}
+    # The base file's literal tag, as a default. See "IMAGE TAGS ARE
+    # INTERPOLATED" above.
+    image: ${E2E_APP_IMAGE:-arxiv-research-agent:local}
     ports: !override
       - "${E2E_APP_BIND_ADDRESS:-127.0.0.1}:${E2E_APP_PORT:-18210}:8000"
     environment:
@@ -131,7 +152,7 @@ services:
 
   web:
     container_name: ${E2E_WEB_CONTAINER:-arxiv-wo21-web}
-    image: arxiv-research-agent-web:wo21-e2e
+    image: ${E2E_WEB_IMAGE:-arxiv-research-agent-web:wo21-e2e}
     ports: !override
       - "${E2E_WEB_BIND_ADDRESS:-127.0.0.1}:${E2E_WEB_PORT:-13210}:3000"
     environment:

@@ -116,15 +116,38 @@ from the repository root will take down whatever else is running.
 | Web (browser target) | `127.0.0.1:13210` | `E2E_WEB_PORT`, or `E2E_BASE_URL` outright |
 | App (proxy target) | `127.0.0.1:18210` | `E2E_APP_PORT` |
 | Dev server (StrictMode only) | `localhost:13211` | `E2E_DEV_PORT`, `E2E_SKIP_DEV_SERVER=1` |
-| Containers | `arxiv-wo21-{app,web,redis,postgres}` | edit the overlay |
+| Containers | `arxiv-wo21-{app,web,redis,postgres}` | `E2E_APP_CONTAINER`, `E2E_WEB_CONTAINER`, `E2E_REDIS_CONTAINER`, `E2E_POSTGRES_CONTAINER` |
+| Images | `arxiv-research-agent:local`, `arxiv-research-agent-web:wo21-e2e` | `E2E_APP_IMAGE`, `E2E_WEB_IMAGE` |
 
-Container names are interpolated too — `E2E_APP_CONTAINER`,
-`E2E_WEB_CONTAINER`, `E2E_REDIS_CONTAINER`, `E2E_POSTGRES_CONTAINER`, the same
-variables `fixtures/seed.sh` reads. The defaults are the `arxiv-wo21-*` names
-above, so nothing that already worked moves; a second worktree exports its own
-alongside `E2E_COMPOSE_PROJECT` and the two stacks stop overlapping. Without
-that, a `container_name` is global to the daemon and the second `up` renames
-the first stack's containers out from under it.
+Container names are interpolated — the same variables `fixtures/seed.sh` reads.
+The defaults are the `arxiv-wo21-*` names above, so nothing that already worked
+moves; a second worktree exports its own alongside `E2E_COMPOSE_PROJECT` and the
+two stacks stop overlapping. Without that, a `container_name` is global to the
+daemon and the second `up` renames the first stack's containers out from under
+it.
+
+**Image tags are interpolated for the same reason** (WO-W13c). A tag is global
+to the daemon in exactly the way a container name is, and until W13c neither of
+this stack's two could move: `web` was pinned to the literal
+`arxiv-research-agent-web:wo21-e2e`, and `app` inherited the base file's
+`arxiv-research-agent:local` — the tag a developer's own `docker compose up`
+builds. So a second worktree's `up --build` rebuilt both out from under the
+first, and could restart a healthy stack onto somebody else's tree. The
+defaults are the values that were literal in the overlay, so CI and a
+single-worktree run are unchanged.
+
+A second worktree therefore needs five exports, not three:
+
+```bash
+export E2E_COMPOSE_PROJECT=arxiv-myworktree-e2e
+export E2E_WEB_PORT=13410 E2E_APP_PORT=18410 E2E_DEV_PORT=13411
+export E2E_APP_CONTAINER=arxiv-myworktree-app \
+       E2E_WEB_CONTAINER=arxiv-myworktree-web \
+       E2E_REDIS_CONTAINER=arxiv-myworktree-redis \
+       E2E_POSTGRES_CONTAINER=arxiv-myworktree-postgres
+export E2E_APP_IMAGE=arxiv-research-agent:myworktree-e2e \
+       E2E_WEB_IMAGE=arxiv-research-agent-web:myworktree-e2e
+```
 
 Every default lives in `support/env.ts`. Nothing else hard-codes a port.
 

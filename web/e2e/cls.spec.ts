@@ -119,6 +119,36 @@ test.describe("WO-20 criterion 5 — a live run does not move the reading column
             // The SOURCES, not just the number. A CLS figure with no node
             // attached to it is unactionable, and this message is the first
             // thing whoever breaks this rule will read.
+            //
+            // WHOLE RECTS AND THE PARENT, NOT A PAIR OF `top`s (WO-W13c).
+            // This message used to print `from`/`to` as the previous and
+            // current `top` and nothing else, and that cost a whole
+            // investigation. The CI failure it reported read as "five
+            // elements moved 3px down", which is true and is not the defect:
+            // the largest MOVE in the entry was 35px sideways (the ledger
+            // taking its grid track), and the 3px was not a move at all —
+            // it was a parent GROWING, which never appears in `sources`
+            // because an element that grows in place has not shifted. So
+            // every rect is printed whole, and every source's parent is
+            // printed with its box, because the thing that grew is the thing
+            // one level up. `PARENT_GEOMETRY` is the same shape the
+            // announcement-line test below asserts on.
+            const geometry = (element: Element | null) => {
+              if (element === null) return null;
+              const box = element.getBoundingClientRect();
+              const style = getComputedStyle(element);
+              return {
+                node: `${element.tagName.toLowerCase()}.${element.className}`,
+                box: [box.left, box.top, box.width, box.height].map((n) =>
+                  Number(n.toFixed(2)),
+                ),
+                lineHeight: style.lineHeight,
+                fontSize: style.fontSize,
+                display: style.display,
+                alignItems: style.alignItems,
+                alignSelf: style.alignSelf,
+              };
+            };
             const sources = (
               shift as unknown as {
                 sources?: { node?: Element; previousRect: DOMRectReadOnly; currentRect: DOMRectReadOnly }[];
@@ -132,8 +162,21 @@ test.describe("WO-20 criterion 5 — a live run does not move the reading column
                   source.node === undefined || source.node === null
                     ? "(detached)"
                     : `${source.node.tagName.toLowerCase()}.${source.node.className}`,
-                from: source.previousRect.top,
-                to: source.currentRect.top,
+                // [left, top, width, height], both frames, so a sideways
+                // move and a resize are visible rather than invisible.
+                prev: [
+                  source.previousRect.left,
+                  source.previousRect.top,
+                  source.previousRect.width,
+                  source.previousRect.height,
+                ],
+                cur: [
+                  source.currentRect.left,
+                  source.currentRect.top,
+                  source.currentRect.width,
+                  source.currentRect.height,
+                ],
+                parent: geometry(source.node?.parentElement ?? null),
               })),
             });
           }
@@ -169,6 +212,101 @@ test.describe("WO-20 criterion 5 — a live run does not move the reading column
 
       // Watching a run costs nothing.
       paid.expectExactly(0, "criterion 5 — checkpoints during a live run");
+    },
+  );
+
+  /**
+   * WO-W13c — the same criterion, measured where the shift actually came
+   * from rather than where it happened to be observed.
+   *
+   * WHY THE TEST ABOVE COULD NOT CATCH THIS, THOUGH IT IS THE TEST THAT WENT
+   * RED. It measures a WINDOW: everything Chromium reports between the mark
+   * and the drain. The defect is a STATE — the announcement line is 3px
+   * taller while the socket is open, because the `Live` badge joins a
+   * baseline-aligned row with a baseline synthesised from a 16px mark
+   * (`spine.css` rule 4). Whether the window ever contains that state is a
+   * question about frame scheduling, not about the surface: the badge mounts
+   * when the stream's headers land and unmounts when its body ends, and on a
+   * developer's machine React coalesces the two into a single commit that is
+   * never painted. It took a 2-vCPU CI runner to paint the frame in between,
+   * which is why this went red on main and green on every PR run of the same
+   * tree, twice, and why 80 local repeats and 10 in the Linux container all
+   * passed.
+   *
+   * So this test does not race anything. It parks the surface in the state,
+   * with a real open stream from the seeded stack rather than a fulfilled
+   * one, and asserts the geometry directly. Before the fix it reports the CI
+   * numbers exactly — a 23px line whose text starts 3px below its own top.
+   */
+  test(
+    "the Live badge sits on the announcement line without growing it",
+    { tag: "@cls" },
+    async ({ page }, testInfo) => {
+      const paid = await interceptPaidPath(page, testInfo);
+
+      // NO stream route here, deliberately. The seeded `baseline-running`
+      // row's SSE connection is left open by the stack, so the spine settles
+      // with `live === true` and the badge mounted and STAYS there — which
+      // is the state the window above only ever sees for one frame.
+      await page.goto(`${THREAD}?job=${FIXTURES.running}`, {
+        waitUntil: "domcontentloaded",
+      });
+      await expect(page.locator(RUN_PANEL)).toBeVisible();
+      await expect(page.locator('[data-spine-state][data-live="true"]')).toHaveCount(1);
+
+      const line = await page.evaluate(() => {
+        const announcement = document.querySelector('[data-spine-part="announcement"]');
+        const row = announcement?.parentElement ?? null;
+        if (row === null) return null;
+        const box = row.getBoundingClientRect();
+        const style = getComputedStyle(row);
+        return {
+          top: Number(box.top.toFixed(2)),
+          height: Number(box.height.toFixed(2)),
+          lineHeight: Number.parseFloat(style.lineHeight),
+          alignItems: style.alignItems,
+          badge: row.querySelector("[data-severity]") === null ? null : "present",
+          children: Array.from(row.children).map((child) => {
+            const childBox = child.getBoundingClientRect();
+            return {
+              node: `${child.tagName.toLowerCase()}.${child.className}`,
+              top: Number(childBox.top.toFixed(2)),
+              height: Number(childBox.height.toFixed(2)),
+            };
+          }),
+        };
+      });
+
+      expect(line, "the spine's announcement line is not on the page").not.toBeNull();
+      const row = line!;
+      // The state has to be the one under test. Without this the assertions
+      // below would pass vacuously on a connection that had already dropped.
+      expect(row.badge, "the Live badge is not on the line — nothing measured").toBe(
+        "present",
+      );
+      expect(row.alignItems, "the line is no longer baseline-aligned").toBe("baseline");
+
+      // THE INVARIANT, in the two numbers the CI failure printed. The line is
+      // exactly one line-height tall, and every item on it starts at the
+      // line's own top. A badge that claims a baseline breaks both at once:
+      // 23 against 20, and text at 253 against a line at 250.
+      expect(
+        row.height,
+        "the announcement line is taller than its own line-height, so mounting " +
+          "the Live badge moves the reading column (03 §5.6, criterion 7). " +
+          JSON.stringify(row),
+      ).toBe(row.lineHeight);
+      for (const child of row.children) {
+        expect(
+          child.top,
+          `'${child.node}' does not start at the announcement line's top, so the ` +
+            "line grew under it. " +
+            JSON.stringify(row),
+        ).toBe(row.top);
+      }
+
+      // Watching a run still costs nothing.
+      paid.expectExactly(0, "criterion 5 — the announcement line while live");
     },
   );
 });
