@@ -23,6 +23,11 @@ import type {
   ResearchSubmitOptions,
   ReviewRequest,
   ReviewResponse,
+  SessionAccepted,
+  SessionCreateRequest,
+  SessionDetail,
+  SessionTurnAccepted,
+  SessionTurnRequest,
 } from "./models";
 
 // Browser calls stay same-origin. The Next.js route handler at /api
@@ -368,4 +373,47 @@ export async function getLearnerProgress(
     DEFAULT_READ_TIMEOUT_MS
   );
   return json<LearnerProgressSummary>(resp);
+}
+
+// Guided-read sessions are non-idempotent writes. Like research submits,
+// neither write gets an automatic timeout or retry: losing the HTTP response
+// must never cause the browser to buy or submit a second turn.
+export async function createLearnSession(
+  body: SessionCreateRequest,
+  options?: RequestOptions
+): Promise<SessionAccepted> {
+  const resp = await request(
+    "/learn/sessions",
+    { method: "POST", headers: JSON_HEADERS, body: JSON.stringify(body) },
+    options,
+    null
+  );
+  return json<SessionAccepted>(resp);
+}
+
+export async function getLearnSession(
+  sessionId: string,
+  options?: RequestOptions
+): Promise<SessionDetail> {
+  const resp = await request(
+    `/learn/sessions/${encodeURIComponent(sessionId)}`,
+    {},
+    options,
+    DEFAULT_READ_TIMEOUT_MS
+  );
+  return json<SessionDetail>(resp);
+}
+
+export async function submitLearnSessionTurn(
+  sessionId: string,
+  body: SessionTurnRequest,
+  options?: RequestOptions
+): Promise<SessionTurnAccepted> {
+  const resp = await request(
+    `/learn/sessions/${encodeURIComponent(sessionId)}/turn`,
+    { method: "POST", headers: JSON_HEADERS, body: JSON.stringify(body) },
+    options,
+    null
+  );
+  return json<SessionTurnAccepted>(resp);
 }

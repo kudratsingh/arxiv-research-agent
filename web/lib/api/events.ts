@@ -40,6 +40,7 @@ export type SseEventName =
   | "job_started"
   | "node_completed"
   | "plan_ready"
+  | "turn_ready"
   | "job_completed"
   | "job_failed"
   | "job_cancelled"
@@ -58,6 +59,7 @@ export const SERVER_EVENT_NAMES = [
   "job_started",
   "node_completed",
   "plan_ready",
+  "turn_ready",
   "job_completed",
   "job_failed",
   "job_cancelled",

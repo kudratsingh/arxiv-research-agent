@@ -6,10 +6,18 @@
 // the whole table with zero mocking.
 //
 // The table below is TOTAL: `TRANSITIONS[phase][eventType]` exists for
-// all 10 × 25 combinations, and a combination the machine deliberately
+// all 11 × 26 combinations, and a combination the machine deliberately
 // ignores is written as `IGNORE`, not left out. There is no default
 // branch and no fall-through — a new phase or a new event fails
 // `npm run typecheck` until every cell is decided.
+//
+// WO-W13 added the eleventh phase and the twenty-sixth event —
+// `awaiting_learner` and `turn_ready`, for `kind="session"` jobs — and
+// paid the full price of the rule: 21 new cells, each decided here and
+// restated by hand in the test's EXPECTED matrix. A guided session
+// therefore reuses this reducer's transport, reconnect and terminal
+// handling instead of re-implementing them, which is the whole reason
+// the table is total in the first place.
 //
 // ---------------------------------------------------------------------
 // The four checkpoint rules (04-ARCHITECTURE.md §4.4), and where each
@@ -326,6 +334,15 @@ function adoptDetail(
       submission: null,
     };
   }
+  if (detail.status === "awaiting_learner") {
+    return {
+      ...base,
+      phase: "awaiting_learner",
+      plan: null,
+      review: null,
+      submission: null,
+    };
+  }
   return { ...base, phase: "live", plan: null, review: null, submission: null };
 }
 
@@ -497,6 +514,19 @@ const planFrame = on("plan_ready", (state, event) => {
   return { ...next, phase: "awaiting_review", plan, review: null };
 });
 
+/**
+ * `turn_ready` is a pause signal, not a transcript source. The payload is
+ * logged for diagnostics, while the UI reads the durable session snapshot
+ * before rendering the turn. That preserves the same GET-is-truth rule as
+ * terminal research events and makes reload behaviour identical to live SSE.
+ */
+const turnFrame = on("turn_ready", (state, event) => ({
+  ...noteFrame(state, event.frame),
+  phase: "awaiting_learner",
+  plan: null,
+  review: null,
+}));
+
 const terminalFrame =
   (name: "job_completed" | "job_failed" | "job_cancelled"): Transition =>
   (state, event) =>
@@ -568,6 +598,7 @@ const idle: TransitionRow = {
   job_started: IGNORE,
   node_completed: IGNORE,
   plan_ready: IGNORE,
+  turn_ready: IGNORE,
   job_completed: IGNORE,
   job_failed: IGNORE,
   job_cancelled: IGNORE,
@@ -629,6 +660,7 @@ const submitting: TransitionRow = {
   job_started: IGNORE,
   node_completed: IGNORE,
   plan_ready: IGNORE,
+  turn_ready: IGNORE,
   job_completed: IGNORE,
   job_failed: IGNORE,
   job_cancelled: IGNORE,
@@ -659,6 +691,7 @@ const submitFailed: TransitionRow = {
   job_started: IGNORE,
   node_completed: IGNORE,
   plan_ready: IGNORE,
+  turn_ready: IGNORE,
   job_completed: IGNORE,
   job_failed: IGNORE,
   job_cancelled: IGNORE,
@@ -714,6 +747,7 @@ const attaching: TransitionRow = {
   job_started: logFrame,
   node_completed: checkpointFrame,
   plan_ready: planFrame,
+  turn_ready: turnFrame,
   job_completed: terminalFrame("job_completed"),
   job_failed: terminalFrame("job_failed"),
   job_cancelled: terminalFrame("job_cancelled"),
@@ -744,6 +778,7 @@ const unavailable: TransitionRow = {
   job_started: IGNORE,
   node_completed: IGNORE,
   plan_ready: IGNORE,
+  turn_ready: IGNORE,
   job_completed: IGNORE,
   job_failed: IGNORE,
   job_cancelled: IGNORE,
@@ -780,6 +815,7 @@ const live: TransitionRow = {
   job_started: logFrame,
   node_completed: checkpointFrame,
   plan_ready: planFrame,
+  turn_ready: turnFrame,
   job_completed: terminalFrame("job_completed"),
   job_failed: terminalFrame("job_failed"),
   job_cancelled: terminalFrame("job_cancelled"),
@@ -793,6 +829,11 @@ const live: TransitionRow = {
   page_restored: restorePage,
   reset: resetAll,
 };
+
+// A learner pause has the same transport behaviour as a live run. The
+// distinct phase is what lets the session surface enable its composer only
+// when the server snapshot says a turn is actually parked.
+const awaitingLearner: TransitionRow = { ...live };
 
 const awaitingReview: TransitionRow = {
   submit_requested: startSubmission,
@@ -818,6 +859,7 @@ const awaitingReview: TransitionRow = {
   job_started: logFrame,
   node_completed: checkpointFrame,
   plan_ready: planFrame,
+  turn_ready: turnFrame,
   // `api_hitl_timeout_sec` fires here (`runner.py:1053-1057`).
   job_completed: terminalFrame("job_completed"),
   job_failed: terminalFrame("job_failed"),
@@ -892,6 +934,7 @@ const resolving: TransitionRow = {
   })),
   // The pause came back — another tab revised, or the runner re-asked.
   plan_ready: planFrame,
+  turn_ready: turnFrame,
   job_completed: terminalFrame("job_completed"),
   job_failed: terminalFrame("job_failed"),
   job_cancelled: terminalFrame("job_cancelled"),
@@ -943,6 +986,7 @@ const reconciling: TransitionRow = {
   job_started: IGNORE,
   node_completed: IGNORE,
   plan_ready: IGNORE,
+  turn_ready: IGNORE,
   job_completed: IGNORE,
   job_failed: IGNORE,
   job_cancelled: IGNORE,
@@ -976,6 +1020,7 @@ const settled: TransitionRow = {
   job_started: IGNORE,
   node_completed: IGNORE,
   plan_ready: IGNORE,
+  turn_ready: IGNORE,
   job_completed: IGNORE,
   job_failed: IGNORE,
   job_cancelled: IGNORE,
@@ -1005,6 +1050,7 @@ export const TRANSITIONS: Record<JobPhase, TransitionRow> = {
   unavailable,
   live,
   awaiting_review: awaitingReview,
+  awaiting_learner: awaitingLearner,
   resolving,
   reconciling,
   settled,

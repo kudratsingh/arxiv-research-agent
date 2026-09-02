@@ -32,6 +32,20 @@ import { FIXTURES } from "./env";
  * left the conversation POST doubled would still cost the user their budget,
  * so both are gated.
  *
+ * WHY THE TWO SESSION ROUTES ARE COUNTED (WO-W13). A guided session spends
+ * on both of its writes. `POST /api/learn/sessions` starts a graph run
+ * (`src/api/sessions.py:create_session` hands the job straight to `run_job`),
+ * and `POST /api/learn/sessions/{id}/turn` resumes one — a tutor inference
+ * per turn. Neither carries an idempotency key, for exactly the reason
+ * `POST /research` does not, so a duplicate is a duplicate paid turn and
+ * cannot be taken back. `session_max_turns` and WO-W06's per-session cost
+ * ceiling bound the TOTAL a session can spend; neither makes a duplicate
+ * free, and neither is a reason to stop counting. Both are FULFILLED rather
+ * than observed, on the same argument as the research POST: a counted-but-
+ * forwarded write would resume a real graph and leave the seeded session in
+ * a state the next run does not expect, which would make `seed.sh`
+ * non-idempotent.
+ *
  * PATH MATCHING IS EXACT, NOT GLOB. `**​/api/research` would also catch
  * `/api/research/{id}/export` and `/api/research/{id}/stream` in some
  * matchers; a URL predicate on `pathname` cannot.
@@ -39,7 +53,11 @@ import { FIXTURES } from "./env";
 
 /** One recorded write attempt, in order. */
 export interface PaidPathAttempt {
-  path: "/api/research" | "/api/conversations";
+  path:
+    | "/api/research"
+    | "/api/conversations"
+    | "/api/learn/sessions"
+    | "/api/learn/sessions/{id}/turn";
   query: string | null;
   conversationId: string | null;
   at: number;
@@ -50,6 +68,8 @@ export interface PaidPathInterceptor {
   researchPosts(): number;
   /** `POST /api/conversations` seen so far. */
   conversationPosts(): number;
+  sessionCreates(): number;
+  sessionTurns(): number;
   attempts(): readonly PaidPathAttempt[];
   /**
    * Assert the count and record the scenario in `research-post-count.txt`.
@@ -57,8 +77,14 @@ export interface PaidPathInterceptor {
    * artifact is the interesting one.
    */
   expectExactly(expected: number, scenario: string): void;
+  expectSessionExactly(
+    expectedCreates: number,
+    expectedTurns: number,
+    scenario: string
+  ): void;
   /** The `job_id` this interceptor hands back to the app. */
   readonly acceptedJobId: string;
+  readonly acceptedSessionId: string;
   /**
    * Make the two writes fail the way a disconnected network makes them fail,
    * while still counting the attempt.
@@ -171,6 +197,70 @@ export async function interceptPaidPath(
     },
   );
 
+  const acceptedSessionId = "e2e-guided-session";
+  await page.route(
+    (url) => url.pathname === "/api/learn/sessions",
+    async (route) => {
+      const request = route.request();
+      if (request.method() !== "POST") {
+        await route.fallback();
+        return;
+      }
+      attempts.push({
+        path: "/api/learn/sessions",
+        query: null,
+        conversationId: null,
+        at: Date.now(),
+      });
+      await settle();
+      if (offline) {
+        await route.abort("internetdisconnected");
+        return;
+      }
+      await route.fulfill({
+        status: 202,
+        contentType: "application/json",
+        body: JSON.stringify({
+          session_id: acceptedSessionId,
+          status: "pending",
+          status_url: `/learn/sessions/${acceptedSessionId}`,
+          stream_url: `/research/${acceptedSessionId}/stream`,
+        }),
+      });
+    },
+  );
+
+  await page.route(
+    (url) => /^\/api\/learn\/sessions\/[^/]+\/turn$/.test(url.pathname),
+    async (route) => {
+      const request = route.request();
+      if (request.method() !== "POST") {
+        await route.fallback();
+        return;
+      }
+      attempts.push({
+        path: "/api/learn/sessions/{id}/turn",
+        query: null,
+        conversationId: null,
+        at: Date.now(),
+      });
+      await settle();
+      if (offline) {
+        await route.abort("internetdisconnected");
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          session_id: acceptedSessionId,
+          status: "awaiting_learner",
+          accepted: true,
+        }),
+      });
+    },
+  );
+
   await page.route(
     (url) => url.pathname === "/api/conversations",
     async (route) => {
@@ -209,12 +299,19 @@ export async function interceptPaidPath(
     attempts.filter((a) => a.path === "/api/research").length;
   const conversationPosts = (): number =>
     attempts.filter((a) => a.path === "/api/conversations").length;
+  const sessionCreates = (): number =>
+    attempts.filter((a) => a.path === "/api/learn/sessions").length;
+  const sessionTurns = (): number =>
+    attempts.filter((a) => a.path === "/api/learn/sessions/{id}/turn").length;
 
   return {
     researchPosts,
     conversationPosts,
+    sessionCreates,
+    sessionTurns,
     attempts: () => attempts,
     acceptedJobId,
+    acceptedSessionId,
     setOffline(next: boolean): void {
       offline = next;
     },
@@ -238,17 +335,53 @@ export async function interceptPaidPath(
           "so every extra one is a second paid run that cannot be refunded.",
       ).toBe(expected);
     },
+    expectSessionExactly(expectedCreates, expectedTurns, scenario): void {
+      const creates = sessionCreates();
+      const turns = sessionTurns();
+      record(
+        testInfo,
+        [
+          creates === expectedCreates && turns === expectedTurns ? "PASS" : "FAIL",
+          testInfo.project.name,
+          scenario,
+          `expected_session_creates=${expectedCreates}`,
+          `POST /api/learn/sessions=${creates}`,
+          `expected_session_turns=${expectedTurns}`,
+          `POST /api/learn/sessions/{id}/turn=${turns}`,
+        ].join("\t"),
+      );
+      expect(creates, `${scenario}: unexpected session-create request count`).toBe(
+        expectedCreates
+      );
+      expect(turns, `${scenario}: unexpected session-turn request count`).toBe(
+        expectedTurns
+      );
+    },
   };
 }
 
-/** Header for the report, written once per run by the global setup. */
+/**
+ * Header for the report, written once per run by the global setup.
+ *
+ * TWO ROW SHAPES, AND THE LEGEND SAYS SO. `expectExactly` writes the
+ * research row WO-21 defined; `expectSessionExactly` writes WO-W13's session
+ * row, which counts two endpoints rather than one and therefore has a
+ * different column list. They share a file because they are the same claim
+ * about the same boundary — no automated tier issues a paid write — and a
+ * reader looking for that claim should find all of it in one place.
+ */
 export const REPORT_HEADER = [
-  "# research-post-count.txt — WO-21 criterion 3",
+  "# research-post-count.txt — WO-21 criterion 3, WO-W13 criterion 4",
   "#",
-  "# One line per intentional-submission scenario. `POST /api/research` is",
+  "# One line per intentional-submission scenario. Every paid write is",
   "# counted in the browser by web/e2e/support/paid-path.ts and must be",
-  "# exactly 1 per intentional submission: the endpoint has no idempotency",
-  "# key, so a duplicate is a duplicate paid run (R-01, MUST-KEEP #3).",
+  "# exactly 1 per intentional submission: none of these endpoints has an",
+  "# idempotency key, so a duplicate is a duplicate paid run (R-01,",
+  "# MUST-KEEP #3).",
   "#",
-  "# verdict\tproject\tscenario\texpected\tresearch POSTs\tconversation POSTs",
+  "# research rows:",
+  "#   verdict\tproject\tscenario\texpected\tresearch POSTs\tconversation POSTs",
+  "# session rows (WO-W13):",
+  "#   verdict\tproject\tscenario\texpected creates\tsession POSTs" +
+    "\texpected turns\tturn POSTs",
 ].join("\n");

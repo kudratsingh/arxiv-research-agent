@@ -185,6 +185,7 @@ export const JOB_STATUS_WORD = {
   pending: "queued",
   running: "running",
   pending_review: "waiting for your review",
+  awaiting_learner: "waiting for your response",
   succeeded: "complete",
   failed: "failed",
   cancelled: "cancelled",

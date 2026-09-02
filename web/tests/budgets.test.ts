@@ -111,6 +111,7 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
       "/c/[id]/page": "/c/[id]",
       "/learn/page": "/learn",
       "/learn/paths/[id]/page": "/learn/paths/[id]",
+      "/learn/sessions/[id]/page": "/learn/sessions/[id]",
       "/api/[...path]/route": "/api/[...path]",
     }),
   );
@@ -160,6 +161,16 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
   write(
     path.join(nextDir, "server/app/learn/paths/[id]/page_client-reference-manifest.js"),
     `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/learn/paths/[id]/page"]=${JSON.stringify(
+      { clientModules: convModules, entryCSSFiles: {} },
+    )};`,
+  );
+  // WO-W13. The session route composes `ReportReader`'s document surface, so
+  // in the real build its module set is the conversation route's shape rather
+  // than the landing page's — which is also why its ceiling is seeded just
+  // under `/c/[id]`'s. The fixture mirrors that.
+  write(
+    path.join(nextDir, "server/app/learn/sessions/[id]/page_client-reference-manifest.js"),
+    `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/learn/sessions/[id]/page"]=${JSON.stringify(
       { clientModules: convModules, entryCSSFiles: {} },
     )};`,
   );
@@ -573,12 +584,17 @@ describe("report format", () => {
 describe("the committed budgets.json encodes RC-01 in bytes", () => {
   const budgets = loadBudgets(BUDGETS_PATH);
 
-  it("has the seven reconciled rows plus both W12 route rows", () => {
+  it("has the seven reconciled rows plus the three (learn) route rows", () => {
     expect(budgets.rows.map((r) => r.id)).toEqual([
       "route-js-home",
       "route-js-conversation",
       "route-js-learn-list",
       "route-js-learn-path",
+      // WO-W13. A new row is an APPEND, not a ratchet: it is seeded at its
+      // first measurement with the usual headroom and has no ceiling to
+      // justify moving. Only a row whose ceiling moves needs a `ratchet`
+      // entry, which is why this id has none.
+      "route-js-learn-session",
       "shared-framework-runtime",
       "emitted-css",
       "self-hosted-fonts",
@@ -602,14 +618,22 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     ["route-js-conversation", 192_512, 184_745],
     ["route-js-learn-list", 166_912, null],
     ["route-js-learn-path", 169_984, null],
+    ["route-js-learn-session", 188_416, null],
     ["shared-framework-runtime", 139_264, null],
-    ["emitted-css", 11_264, 4_288],
+    // WO-W13 ratcheted this one UP, 11,264 -> 12,288: the guided-read
+    // session's two-column margin measured 11,335 B, 71 B over the WO-31
+    // ceiling. 12 KiB is the smallest whole-KiB ceiling above it and keeps
+    // less proportional headroom than the ceiling it replaces.
+    ["emitted-css", 12_288, 4_288],
     ["self-hosted-fonts", 109_568, 0],
     // The one row WO-31 could not ratchet: its `enforcedBy` names a WO-21
     // Playwright transfer assertion that was never written, so there is no
     // measurement to ratchet to. See the assertion further down.
     ["total-transferred-js", 245_760, null],
-    ["derived-total-first-load", 313_344, null],
+    // Mechanical: this row is defined as route-js-conversation +
+    // emitted-css + self-hosted-fonts, so the CSS movement above moves it by
+    // exactly the same 1,024 B. 192,512 + 12,288 + 109,568 = 314,368.
+    ["derived-total-first-load", 314_368, null],
   ])("row %s carries the ratified ceiling in bytes", (id, budgetBytes, baselineBytes) => {
     const row = budgets.rows.find((r) => r.id === id);
     expect(row?.budgetBytes).toBe(budgetBytes);
@@ -617,10 +641,13 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     expect(row?.baselineBytes ?? null).toBe(baselineBytes);
   });
 
-  it("gates the seven per-asset-class rows, delegates one and only reports one", () => {
+  it("gates the eight per-asset-class rows, delegates one and only reports one", () => {
     const by = (enforcement: string) =>
       budgets.rows.filter((r) => r.enforcement === enforcement).map((r) => r.id);
-    expect(by("gated")).toHaveLength(7);
+    // Seven at WO-31, plus WO-W13's `/learn/sessions/[id]`. A new route row
+    // is gated from its first commit; there is no "reported for a while
+    // first" grace, because a ceiling nobody enforces is a note.
+    expect(by("gated")).toHaveLength(8);
     expect(by("external")).toEqual(["total-transferred-js"]);
     expect(by("reported")).toEqual(["derived-total-first-load"]);
   });
@@ -631,12 +658,43 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     for (const entry of ratchet) {
       const row = budgets.rows.find((r) => r.id === entry.row);
       expect(row, `ratchet entry names unknown row ${entry.row}`).toBeDefined();
-      // The live ceiling must equal what the ratchet says it was moved to,
-      // so a ceiling can never drift away from its own justification.
-      expect(row?.budgetBytes).toBe(entry.to);
       expect(entry.from).not.toBe(entry.to);
       expect(entry.why.length).toBeGreaterThan(80);
       expect(Number.isInteger(entry.from) && Number.isInteger(entry.to)).toBe(true);
+    }
+
+    // THE LIVE CEILING MUST EQUAL THE LAST THING THE LOG SAYS IT MOVED TO,
+    // so a ceiling can never drift away from its own justification.
+    //
+    // Read per row rather than per entry, and that generalisation is
+    // WO-W13's: `emitted-css` now has TWO movements — WO-31's ratchet down
+    // to 11,264 and WO-W13's up to 12,288 — and a per-entry check would
+    // demand the live ceiling equal both. The log is APPEND-ONLY history, so
+    // the newest entry for a row is the one that has to match; the older
+    // ones are the audit trail and are asserted above for their own shape.
+    const latest = new Map<string, (typeof ratchet)[number]>();
+    for (const entry of ratchet) latest.set(entry.row, entry);
+    for (const [id, entry] of latest) {
+      const row = budgets.rows.find((r) => r.id === id);
+      expect(row?.budgetBytes, `${id} drifted from its newest ratchet entry`).toBe(
+        entry.to
+      );
+    }
+
+    // And the chain has no gap: each movement of a row starts where the
+    // previous one ended. A `from` that skips a value would be a ceiling
+    // that moved once without saying so.
+    const byRow = new Map<string, (typeof ratchet)[number][]>();
+    for (const entry of ratchet) {
+      byRow.set(entry.row, [...(byRow.get(entry.row) ?? []), entry]);
+    }
+    for (const [id, entries] of byRow) {
+      entries.forEach((entry, index) => {
+        if (index === 0) return;
+        expect(entry.from, `${id} ratchet chain has a gap at movement ${index}`).toBe(
+          entries[index - 1]!.to
+        );
+      });
     }
   });
 
@@ -790,7 +848,8 @@ describe("run()", () => {
     const { result, reportPath } = run({ webDir: fixture.root, now: new Date(0) });
     expect(reportPath).toBe(path.join(fixture.root, "budget-report.md"));
     expect(fs.readFileSync(reportPath, "utf8")).toContain("# Route budget report");
-    expect(result.rows).toHaveLength(9);
+    // Ten rows: the seven reconciled ones plus the three `(learn)` routes.
+    expect(result.rows).toHaveLength(10);
   });
 
   it("explains how to fix a missing build instead of measuring nothing", () => {

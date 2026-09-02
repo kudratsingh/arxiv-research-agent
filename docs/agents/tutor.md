@@ -52,8 +52,16 @@ Reads from `SessionState`:
   and two checks. Ten-minute sessions select one section.
 - `turn` / `activity` — opaque learner-facing payload for `turn_ready`.
 - `messages` — learner/tutor transcript entries retained by the checkpoint.
+  `GET /learn/sessions/{id}` projects them onto `SessionDetail.transcript` as
+  `{role: "learner" | "tutor", text}`, dropping the internal `check_in` plan
+  receipt — that is a receipt the tutor never showed the learner, so it is not
+  part of the reading margin the browser renders. The checkpoint, not the
+  stream, is the source: a reloaded page and a live one show the same margin.
 - `assessment` — `recorded_ungraded`, guidance-only, with the learner's own
-  explain-back quote. WO-W04 supplies judged gap findings.
+  explain-back quote. WO-W04 supplies judged gap findings. The HTTP surface
+  flattens this to `SessionDetail.assessment_status`, one of `""` (nothing
+  recorded yet), `recorded_ungraded`, `unassessed` or `assessed`, so a missing
+  assessment reaches the browser as a fact rather than as an absent field.
 - `progress_events` — idempotently keyed `assessment` and `session_completed`
   records for the principal's append-only ledger. The completion event carries
   the lossy summary, which is never valid skill evidence.
@@ -88,6 +96,7 @@ with an empty inference batch.
 | Missing/unpublished content or companion | Create returns a typed 404/409/503; no job is started. |
 | Malformed model JSON | Bounded fallback or re-ask; never a fabricated reading claim. |
 | Worker dies while parked | The checkpoint preserves transcript/next input; the job redriver's existing orphan policy remains authoritative. |
+| Checkpoint snapshot unreadable | `GET /learn/sessions/{id}` still serves the job row and reports `transcript_status: "unavailable"`, logging `api_session_transcript_unavailable`. The margin is never reconstructed from stream frames, because a margin assembled from whatever this connection happened to see is not the one the session actually has. |
 | Learner never replies | `session_turn_timeout_sec` fails the job with the session timeout vocabulary. |
 | Learner ends early | Routes directly to the activity ledger with `ended_early=true`. |
 | Tier-1 profile reaches every cap | Lower-priority skills are visibly omitted; goals, budget, and declared constraints are never truncated. |
@@ -115,12 +124,25 @@ with an empty inference batch.
 
 `tests/test_guided_session_graph.py` proves the four learner pauses through the
 HTTP surface, explain-back evidence, zero mock cost/calls, owner scoping, feature
-gating, ten-minute downscope, malformed-output defense, and a new graph process
-reattaching to the same SQLite checkpoint.
+gating, ten-minute downscope, malformed-output defense, a new graph process
+reattaching to the same SQLite checkpoint, and the reload contract the browser
+depends on — that a rehydrated `SessionDetail` carries the transcript with the
+`check_in` receipt filtered out.
+
+The browser half is `web/e2e/session.spec.ts`, against the seeded Compose stack
+with `ANTHROPIC_API_KEY=local-preview-disabled`. It does *not* mock the session
+read: the page fetches a real `awaiting_learner` job whose margin exists only in
+a seeded LangGraph checkpoint, so a reload that re-renders it is evidence of
+rehydration rather than of the test's own fixture. Both session writes stay
+interdicted in the browser by `web/e2e/support/paid-path.ts`, counted in
+`web/build/e2e/research-post-count.txt`.
 
 ## Related
 
-- [Architecture](../architecture.md)
+- [Architecture](../architecture.md) — the API layer's
+  "Guided-read sessions" paragraph and the web tier's job machine
+- `web/components/patterns/GuidedSessionView.tsx` — the browser surface, with
+  `web/lib/job/machine.ts`'s `awaiting_learner` phase and `turn_ready` event
 - [ADR 0057](../decisions/0057-job-kinds-and-awaiting-learner.md)
 - [ADR 0058](../decisions/0058-learner-profile-store-and-provenance.md)
 - [ADR 0059](../decisions/0059-guided-read-session-graph.md)

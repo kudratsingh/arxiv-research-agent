@@ -113,6 +113,28 @@
       "measuredBytes": 295759,
       "headroom": "+5.9%",
       "why": "THE DELETIONS SHIPPED ALMOST NO BYTES, AND THAT IS THE FINDING RATHER THAN A DISAPPOINTMENT. Measured against WO-20's figures on the SAME main (8f0d738), `/` moves 158899 -> 158839 B (-60) and `/c/[id]` 182784 -> 182723 B (-61) across this PR; the finals below sit 39 B and 53 B above those, which is #111's cost and not this PR's. The deletions are nearly free because WO-20 had already stopped COMPOSING the nine legacy components and the bundler had already tree-shaken them -- what WO-31 removes is dead FILES, not shipped weight. So this ratchet is not banking a saving this PR made. It closes the gap between ceilings that were projected from the LEGACY surface and the finished surface that is now what ships -- the one Gate-4 moment where every row is measured against the thing it gates. Not an independent decision: this row is defined as the sum of route-js-conversation, emitted-css and self-hosted-fonts, and 192512 + 11264 + 109568 = 313344 B (306 KiB) exactly, as 199680 + 12288 + 122880 = 334848 did before. It moves because its three components moved. It is reported, never gated (RC-01, WO-23 criterion 5). RE-MEASURED AFTER A REBASE. This PR's first measurement was taken on main at 8f0d738; `fix/mobile-shell-cls-lcp` then merged as #111 and the finals were retaken on the rebased tree at d3460a7. That fix costs `/` +39 B, `/c/[id]` +53 B and the CSS row +17 B -- its ~33 new declarations gzip to almost nothing -- and the font row not one byte, because it changes `preload` and emits no new face. Every ceiling below already carried that movement."
+    },
+    {
+      "row": "emitted-css",
+      "from": 11264,
+      "to": 12288,
+      "date": "2026-09-01",
+      "pr": "WO-W13 -- guided-read session view",
+      "authority": "WO-W13 acceptance criterion 5 requires a measured route budget row under the existing ratchet rule.",
+      "measuredBytes": 11335,
+      "headroom": "+8.4%",
+      "why": "The paper-reading margin is the first new two-column learning surface and adds 1,828 compressed CSS bytes over the WO-W31 measurement. The prior 11 KiB ceiling was exceeded by 71 B. The new 12 KiB ceiling is the smallest whole-KiB ceiling above the repeated branch measurement and preserves less proportional headroom than the previous 18.5% allowance. No skip path was added."
+    },
+    {
+      "row": "derived-total-first-load",
+      "from": 313344,
+      "to": 314368,
+      "date": "2026-09-01",
+      "pr": "WO-W13 -- guided-read session view",
+      "authority": "Mechanical consequence of the emitted-css ceiling movement; this row remains reported, not gated.",
+      "measuredBytes": 302205,
+      "headroom": "+4.0%",
+      "why": "This ceiling is defined as route-js-conversation + emitted-css + self-hosted-fonts. The CSS ceiling moved by 1,024 B, so the derived ceiling moves by exactly 1,024 B: 192512 + 12288 + 109568 = 314368 B."
     }
   ],
   "rows": [
@@ -168,6 +190,19 @@
       "note": "WO-W12 initial route budget. Measured at 160474 B on main eddc630; 169984 B leaves 5.9% headroom for dependency drift without inheriting the larger conversation-route allowance."
     },
     {
+      "id": "route-js-learn-session",
+      "kind": "route-first-load-js",
+      "route": "/learn/sessions/[id]",
+      "label": "`/learn/sessions/[id]` first-load JS, excl. polyfill",
+      "budgetBytes": 188416,
+      "budgetLabel": "184 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "WO-W13 initial route budget. Re-measured at 178331 B on the finished branch (188416 B leaves 5.7% headroom) and deliberately below the conversation-route ceiling: this route composes the same ReportReader document surface plus a margin column, so it should never cost more than a thread. The Markdown renderer stays lazy and is not counted in first-load JS."
+    },
+    {
       "id": "shared-framework-runtime",
       "kind": "shared-first-load-js",
       "label": "Shared framework/runtime chunk",
@@ -184,8 +219,8 @@
       "id": "emitted-css",
       "kind": "emitted-css",
       "label": "All emitted CSS",
-      "budgetBytes": 11264,
-      "budgetLabel": "11 KiB",
+      "budgetBytes": 12288,
+      "budgetLabel": "12 KiB",
       "baselineBytes": 4288,
       "gate": "every PR",
       "enforcement": "gated",
@@ -219,8 +254,8 @@
       "id": "derived-total-first-load",
       "kind": "derived-total-first-load",
       "label": "Derived: total first-load transfer for `/c/[id]`, cold cache",
-      "budgetBytes": 313344,
-      "budgetLabel": "306 KiB",
+      "budgetBytes": 314368,
+      "budgetLabel": "307 KiB",
       "baselineBytes": null,
       "gate": "reported, not gated",
       "enforcement": "reported",

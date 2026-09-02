@@ -92,7 +92,31 @@ export const FIXTURES = {
   /** WO-21: the leased running row the `stream_timeout` frame lands on. */
   streamTimeout: "baseline-stream-timeout",
   expired: "baseline-expired",
+  /**
+   * WO-W13: the guided-read session, parked mid-session.
+   *
+   * Two writes back it (`e2e/fixtures/seed.sh`): the `awaiting_learner` job
+   * row, and a real LangGraph checkpoint carrying the reading margin. The
+   * second is what criterion 2 is about — a reload that re-renders the
+   * transcript is only evidence if the transcript came out of durable state.
+   */
+  guidedSession: "baseline-guided-session",
 } as const;
+
+/**
+ * The single principal the e2e stack issues (WO-W13).
+ *
+ * `web/e2e/support/compose.e2e.yml` turns `ENABLE_API_AUTH` on, because the
+ * session loop cannot be mounted without it, and stamps every seeded row
+ * with this key_id. The browser never sees either half: the `web` service's
+ * server-side proxy injects the secret. Declared here for the same reason
+ * every other address in this file is — the seed, the overlay and the specs
+ * have to agree, and a value that agrees in two of three places is a suite
+ * passing against the wrong stack.
+ */
+export const E2E_PRINCIPAL = process.env.E2E_PRINCIPAL ?? "e2e";
+export const E2E_API_SECRET =
+  process.env.E2E_API_SECRET ?? "sk_e2e_local_preview_disabled";
 
 /** The three widths 04 §8.3 audits. */
 export const NARROW_WIDTHS = [320, 360, 412] as const;

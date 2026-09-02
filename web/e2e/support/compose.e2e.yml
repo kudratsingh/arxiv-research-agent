@@ -44,9 +44,44 @@
 # without the tag ("Bind for 0.0.0.0:8000 failed: port is already allocated").
 # `!override` needs Compose v2.24 or newer.
 
+#
+# CONTAINER NAMES ARE INTERPOLATED, NOT LITERAL (WO-W13).
+#
+# The paragraph above explains why the base file's names collide; the same
+# argument applies to *this* file's names once more than one Phase W worktree
+# runs the tier at the same time, which is the fleet arrangement
+# `planning/07-learning-platform/05-WEDGE-WORK-ORDERS.md` §5.4 describes. The
+# defaults are unchanged, so nothing that already worked moves; a second
+# worktree exports `E2E_APP_CONTAINER` and friends (the same variables
+# `e2e/fixtures/seed.sh` already reads) beside its own
+# `E2E_COMPOSE_PROJECT` and ports, and the two stacks stop overlapping.
+#
+# THE SESSION LOOP, AND WHY AUTH IS ON HERE (WO-W13).
+#
+# `GET /learn/sessions/{id}` is mounted only under `ENABLE_SESSION_LOOP`,
+# which `src/config.py` refuses without `ENABLE_LEARNER_PROFILE`, which it
+# refuses without `ENABLE_API_AUTH` — a guided session is keyed on a
+# principal, and a per-learner record shared by everyone is not one
+# (ADR 0058). So the browser tier cannot render a real session against a
+# real stack with auth off, and WO-W13 criterion 2 asks for exactly that.
+#
+# Turning auth on has one consequence the seed has to answer for:
+# `_check_ownership` (`src/api/routes.py:85-110`) makes a row whose
+# `principal_key_id` is NULL invisible under auth-on. Every `baseline-*`
+# fixture is therefore stamped with `E2E_PRINCIPAL` in
+# `e2e/fixtures/seed.sh`, and the browser reaches all of them through the
+# `web` service's server-side proxy, which injects `ARXIV_API_KEY`. The key
+# never enters the client bundle — which means this overlay also makes the
+# credential boundary `web/app/api/[...path]/route.ts` describes a thing the
+# suite exercises on every request rather than a thing it asserts about.
+#
+# `API_KEYS` is `<name>:<secret>`; the *name* is the `key_id` that lands on a
+# row. It is a local sentinel, not a secret: this stack has no reachable
+# provider, and the value is committed on purpose so CI needs no secret.
+
 services:
   app:
-    container_name: arxiv-wo21-app
+    container_name: ${E2E_APP_CONTAINER:-arxiv-wo21-app}
     ports: !override
       - "${E2E_APP_BIND_ADDRESS:-127.0.0.1}:${E2E_APP_PORT:-18210}:8000"
     environment:
@@ -56,15 +91,29 @@ services:
       # what keep it away from the synthetic non-terminal rows, and an e2e
       # stack with the redriver disabled would not prove that.
       ENABLE_JOB_REDRIVER: "true"
+      # WO-W13. See "THE SESSION LOOP" above.
+      ENABLE_API_AUTH: "true"
+      API_KEYS: "${E2E_PRINCIPAL:-e2e}:${E2E_API_SECRET:-sk_e2e_local_preview_disabled}"
+      ENABLE_LEARNER_PROFILE: "true"
+      # Durable and shared, matching the job and conversation stores. A
+      # profile that dies with the process would make a reload test lie.
+      LEARNER_PROFILE_STORE: postgres
+      PROGRESS_EVENT_STORE: postgres
+      ENABLE_SESSION_LOOP: "true"
 
   web:
-    container_name: arxiv-wo21-web
+    container_name: ${E2E_WEB_CONTAINER:-arxiv-wo21-web}
     image: arxiv-research-agent-web:wo21-e2e
     ports: !override
       - "${E2E_WEB_BIND_ADDRESS:-127.0.0.1}:${E2E_WEB_PORT:-13210}:3000"
+    environment:
+      # The secret half of the single `API_KEYS` entry above. Server-side
+      # only: `app/api/[...path]/route.ts` injects it upstream and it never
+      # reaches the browser.
+      ARXIV_API_KEY: "${E2E_API_SECRET:-sk_e2e_local_preview_disabled}"
 
   redis:
-    container_name: arxiv-wo21-redis
+    container_name: ${E2E_REDIS_CONTAINER:-arxiv-wo21-redis}
 
   postgres:
-    container_name: arxiv-wo21-postgres
+    container_name: ${E2E_POSTGRES_CONTAINER:-arxiv-wo21-postgres}

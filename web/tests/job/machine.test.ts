@@ -5,7 +5,7 @@
 // intercept and no `EventSource` to stub, because none of them is
 // reachable from `machine.ts`.
 //
-// `EXPECTED` below is written out by hand — all 10 phases × 25 events —
+// `EXPECTED` below is written out by hand — all 11 phases × 26 events —
 // rather than derived from `TRANSITIONS`, which would only prove the
 // table equals itself. It is a second, independent statement of what
 // the machine does, and the compiler forces it to stay total: adding a
@@ -35,7 +35,8 @@ import {
   type JobPhase,
   type JobState,
 } from "@/lib/job/types";
-import type { JobDetail } from "@/lib/api";
+import { sessionAsJobDetail } from "@/lib/job/session";
+import type { JobDetail, SessionDetail } from "@/lib/api";
 
 import { loadFixture } from "../support/handlers";
 
@@ -123,6 +124,14 @@ function sampleEvent(type: JobEventType): JobEvent {
           plan: { sub_questions: ["a"], search_queries: ["b"] },
         }),
       };
+    case "turn_ready":
+      return {
+        type,
+        frame: frame("turn_ready", {
+          job_id: "job-1",
+          turn: { turn_number: 1, kind: "reflection" },
+        }),
+      };
     case "job_completed":
     case "job_failed":
     case "job_cancelled":
@@ -183,6 +192,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: X,
     node_completed: X,
     plan_ready: X,
+    turn_ready: X,
     job_completed: X,
     job_failed: X,
     job_cancelled: X,
@@ -212,6 +222,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: X,
     node_completed: X,
     plan_ready: X,
+    turn_ready: X,
     job_completed: X,
     job_failed: X,
     job_cancelled: X,
@@ -240,6 +251,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: X,
     node_completed: X,
     plan_ready: X,
+    turn_ready: X,
     job_completed: X,
     job_failed: X,
     job_cancelled: X,
@@ -268,6 +280,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: "attaching",
     node_completed: "attaching",
     plan_ready: "awaiting_review",
+    turn_ready: "awaiting_learner",
     job_completed: "reconciling",
     job_failed: "reconciling",
     job_cancelled: "reconciling",
@@ -295,6 +308,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: X,
     node_completed: X,
     plan_ready: X,
+    turn_ready: X,
     job_completed: X,
     job_failed: X,
     job_cancelled: X,
@@ -322,6 +336,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: "live",
     node_completed: "live",
     plan_ready: "awaiting_review",
+    turn_ready: "awaiting_learner",
     job_completed: "reconciling",
     job_failed: "reconciling",
     job_cancelled: "reconciling",
@@ -333,6 +348,34 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     review_rejected: X,
     page_hidden: "live",
     page_restored: "live",
+    reset: "idle",
+  },
+  awaiting_learner: {
+    submit_requested: "submitting",
+    submit_accepted: X,
+    submit_rejected: X,
+    attach_requested: "attaching",
+    detail_resolved: "live",
+    detail_not_found: "unavailable",
+    detail_unreachable: "awaiting_learner",
+    stream_opened: "awaiting_learner",
+    stream_interrupted: "awaiting_learner",
+    stream_failed: "unavailable",
+    job_started: "awaiting_learner",
+    node_completed: "awaiting_learner",
+    plan_ready: "awaiting_review",
+    turn_ready: "awaiting_learner",
+    job_completed: "reconciling",
+    job_failed: "reconciling",
+    job_cancelled: "reconciling",
+    stream_timeout: "awaiting_learner",
+    unknown_frame: "awaiting_learner",
+    review_requested: X,
+    review_accepted: X,
+    review_conflict: X,
+    review_rejected: X,
+    page_hidden: "awaiting_learner",
+    page_restored: "awaiting_learner",
     reset: "idle",
   },
   awaiting_review: {
@@ -349,6 +392,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: "awaiting_review",
     node_completed: "awaiting_review",
     plan_ready: "awaiting_review",
+    turn_ready: "awaiting_learner",
     job_completed: "reconciling",
     job_failed: "reconciling",
     job_cancelled: "reconciling",
@@ -379,6 +423,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: "live",
     node_completed: "live",
     plan_ready: "awaiting_review",
+    turn_ready: "awaiting_learner",
     job_completed: "reconciling",
     job_failed: "reconciling",
     job_cancelled: "reconciling",
@@ -407,6 +452,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: X,
     node_completed: X,
     plan_ready: X,
+    turn_ready: X,
     job_completed: X,
     job_failed: X,
     job_cancelled: X,
@@ -436,6 +482,7 @@ const EXPECTED: Record<JobPhase, Record<JobEventType, Expected>> = {
     job_started: X,
     node_completed: X,
     plan_ready: X,
+    turn_ready: X,
     job_completed: X,
     job_failed: X,
     job_cancelled: X,
@@ -464,8 +511,8 @@ describe("the transition table is total", () => {
     expect(transitionMatrix()).toHaveLength(
       JOB_PHASES.length * JOB_EVENT_TYPES.length
     );
-    expect(JOB_PHASES).toHaveLength(10);
-    expect(JOB_EVENT_TYPES).toHaveLength(25);
+    expect(JOB_PHASES).toHaveLength(11);
+    expect(JOB_EVENT_TYPES).toHaveLength(26);
   });
 
   it("declares the same ignored set the expectation table does", () => {
@@ -738,5 +785,92 @@ describe("payload readers tolerate what the contract allows", () => {
     );
     expect(isReplayShape(frame("job_completed", { llm_calls: 11 }))).toBe(false);
     expect(isReplayShape(frame("job_completed", null))).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WO-W13 criterion 1, second half.
+//
+// The table above already decides every session cell, but "an unknown event
+// in a session run is tolerated exactly as the research machine tolerates it"
+// is a claim about *equality between two runs*, and a table of expected
+// phases cannot state it: both runs could be individually wrong in the same
+// way and the table would still be green. So it is asserted directly, by
+// running the identical event against both and comparing the whole state
+// delta rather than the phase.
+// ---------------------------------------------------------------------------
+
+describe("a session run tolerates what a research run tolerates", () => {
+  // From the recorded session fixture, through the same adapter the surface
+  // uses. Not an authored literal, for the reason at the top of this file.
+  const SESSION_DETAIL = sessionAsJobDetail(
+    loadFixture("learn.session.awaiting").body as SessionDetail
+  );
+
+  /** Everything the reducer may legitimately differ on between two runs. */
+  function shape(state: JobState) {
+    return {
+      frameCount: state.frames.length,
+      lastFrameName: state.frames.at(-1)?.name ?? null,
+      checkpoint: state.checkpoint,
+      observed: state.observed,
+      terminal: state.terminal,
+      failure: state.failure,
+      unavailableReason: state.unavailableReason,
+      plan: state.plan,
+      review: state.review,
+      connection: state.connection,
+    };
+  }
+
+  it("adopts awaiting_learner from the job's own status, not from a frame", () => {
+    const next = jobReducer(seedFor("attaching"), {
+      type: "detail_resolved",
+      detail: SESSION_DETAIL,
+      source: "attach",
+      at: 1,
+    });
+    expect(next.phase).toBe("awaiting_learner");
+    // The never-invent-a-stage rule: a parked session has published no
+    // checkpoint, so none is claimed.
+    expect(next.checkpoint).toBeNull();
+    expect(next.plan).toBeNull();
+  });
+
+  it("logs an unknown frame and changes nothing else, in either run", () => {
+    const event = sampleEvent("unknown_frame");
+    const research = jobReducer(seedFor("live"), event);
+    const session = jobReducer(seedFor("awaiting_learner"), event);
+
+    expect(shape(session)).toEqual(shape(research));
+    // Each run stays in the phase it was in: tolerating an unknown frame is
+    // never a reason to move.
+    expect(research.phase).toBe("live");
+    expect(session.phase).toBe("awaiting_learner");
+    expect(session.frames.at(-1)?.name).toBe("message");
+  });
+
+  it("treats a malformed turn_ready the way it treats a malformed plan_ready", () => {
+    const research = jobReducer(seedFor("live"), {
+      type: "plan_ready",
+      frame: frame("plan_ready", null),
+    });
+    const session = jobReducer(seedFor("awaiting_learner"), {
+      type: "turn_ready",
+      frame: frame("turn_ready", null),
+    });
+    // Both log the frame; neither invents the payload it did not receive.
+    expect(session.frames).toHaveLength(research.frames.length);
+    expect(session.plan).toBeNull();
+    expect(research.plan).toBeNull();
+  });
+
+  it("parks on turn_ready without claiming a checkpoint or a plan", () => {
+    const seed = { ...seedFor("live"), plan: { sub_questions: ["a"], search_queries: ["b"] } };
+    const next = jobReducer(seed, sampleEvent("turn_ready"));
+    expect(next.phase).toBe("awaiting_learner");
+    expect(next.plan).toBeNull();
+    expect(next.checkpoint).toBeNull();
+    expect(next.frames.at(-1)?.name).toBe("turn_ready");
   });
 });

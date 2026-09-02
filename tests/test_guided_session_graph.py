@@ -187,6 +187,11 @@ class TestSessionApiEndToEnd:
                 )
                 turn = parked["turn"]
                 assert isinstance(turn, dict)
+                if previous is None:
+                    assert parked["transcript"] == []
+                    assert parked["transcript_status"] == "available"
+                else:
+                    assert parked["transcript"]
                 seen_turns.append(turn)
                 previous = int(turn["turn_number"])
                 submitted = await client.post(
@@ -206,6 +211,16 @@ class TestSessionApiEndToEnd:
             assert "not a mastery score" in str(finished["result"])
             assert finished["cost_usd"] == 0.0
             assert finished["llm_calls"] == 0
+            assert finished["transcript_status"] == "available"
+            assert [entry["role"] for entry in finished["transcript"]].count(
+                "learner"
+            ) == 4
+            assert any(
+                "positional encoding" in entry["text"]
+                for entry in finished["transcript"]
+                if entry["role"] == "learner"
+            )
+            assert finished["assessment_status"] == "recorded_ungraded"
 
             events = await progress.list_events("alice")
             assert [event.kind for event in events] == [

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import LearnLayout from "@/app/(learn)/layout";
 import LearnPage from "@/app/(learn)/learn/page";
 import LearnPathPage from "@/app/(learn)/learn/paths/[id]/page";
+import LearnSessionPage from "@/app/(learn)/learn/sessions/[id]/page";
 
 import { render, screen } from "../support/render";
 
@@ -33,6 +34,12 @@ vi.mock("@/components/features/PathDetailSurface", () => ({
   ),
 }));
 
+vi.mock("@/components/features/SessionDetailSurface", () => ({
+  SessionDetailSurface: ({ sessionId }: { sessionId: string }) => (
+    <div data-testid="session-detail" data-session-id={sessionId} />
+  ),
+}));
+
 describe("the learning route group", () => {
   it("shares the workbench shell and query boundary", () => {
     render(<LearnLayout><div data-testid="child" /></LearnLayout>);
@@ -54,6 +61,20 @@ describe("the learning route group", () => {
     expect(screen.getByTestId("path-detail")).toHaveAttribute(
       "data-path-id",
       "fixture-guided-read"
+    );
+  });
+
+  it("passes the decoded dynamic segment to the session surface", async () => {
+    // Next has already decoded the segment, so the surface receives the raw
+    // session id and the client re-encodes it on the way out — which is why
+    // `getLearnSession` owns the `encodeURIComponent` and this route does not.
+    const page = await LearnSessionPage({
+      params: Promise.resolve({ id: "baseline guided/session" }),
+    });
+    render(page);
+    expect(screen.getByTestId("session-detail")).toHaveAttribute(
+      "data-session-id",
+      "baseline guided/session"
     );
   });
 });

@@ -400,7 +400,13 @@ API_HOST=0.0.0.0 API_PORT=8080 python -m src.api.serve
 | `GET`  | `/conversations` | List conversations (no job bodies). |
 | `GET`  | `/conversations/{id}` | Full thread with every job's report. |
 | `DELETE` | `/conversations/{id}` | Delete a conversation + all its jobs (CASCADE). |
-| `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` (+ `plan_ready` when HITL is on) → terminal frame. Reconnect-safe: attaching replays the terminal frame for a finished job and `plan_ready` for one awaiting review. |
+| `GET`  | `/learn/paths`, `/learn/paths/{path_id}` | Published reading paths, read-only. Off unless `enable_learn_content`. |
+| `GET/PUT/DELETE` | `/learn/profile` | Per-principal learner record. Off unless `enable_learner_profile` (which requires `enable_api_auth`). See ADR [0058](docs/decisions/0058-learner-profile-store-and-provenance.md). |
+| `GET`  | `/learn/progress` | The principal's append-only progress ledger. Same gate as the profile. |
+| `POST` | `/learn/sessions` | Start one guided-read session (a `kind="session"` job). Off unless `enable_session_loop`. See ADR [0057](docs/decisions/0057-job-kinds-and-awaiting-learner.md). |
+| `GET`  | `/learn/sessions/{session_id}` | Session snapshot: lifecycle and the parked `turn` from the job row, plus `transcript` / `transcript_status` / `assessment_status` rehydrated from the LangGraph checkpoint. This is what makes a mid-session reload work. |
+| `POST` | `/learn/sessions/{session_id}/turn` | Resume a session parked in `awaiting_learner`. Body: `{message, end_session?: bool}`. |
+| `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` (+ `plan_ready` when HITL is on, `turn_ready` for a guided session) → terminal frame. Reconnect-safe: attaching replays the terminal frame for a finished job, `plan_ready` for one awaiting review and `turn_ready` for one awaiting a learner. |
 | `GET`  | `/healthz` | Liveness + per-dependency status + concurrency headroom. Always 200; `status: degraded` in the body when a dependency is down. |
 | `GET`  | `/docs` | Auto-generated OpenAPI docs. |
 

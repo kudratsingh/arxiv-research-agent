@@ -124,11 +124,14 @@ already Brotli-compressed, so file size *is* wire weight.
 |---|---:|---|---|
 | `/` first-load JS | 166,912 B | 163 KiB | every PR |
 | `/c/[id]` first-load JS | 192,512 B | 188 KiB | every PR |
+| `/learn` first-load JS | 166,912 B | 163 KiB | every PR |
+| `/learn/paths/[id]` first-load JS | 169,984 B | 166 KiB | every PR |
+| `/learn/sessions/[id]` first-load JS | 188,416 B | 184 KiB | every PR |
 | Shared framework/runtime chunk | 139,264 B | 136 KiB | every PR |
-| All emitted CSS | 11,264 B | 11 KiB | every PR |
+| All emitted CSS | 12,288 B | 12 KiB | every PR |
 | All self-hosted fonts (woff2, latin subset) | 109,568 B | 107 KiB | every PR |
 | Total transferred JS on a settled report route | 245,760 B | 240 KiB | per-PR chromium E2E (external) |
-| *Derived:* total first-load transfer for `/c/[id]`, cold cache | 313,344 B | 306 KiB | reported, **not** gated |
+| *Derived:* total first-load transfer for `/c/[id]`, cold cache | 314,368 B | 307 KiB | reported, **not** gated |
 
 **The ratchet rule.** A ceiling may only move in a PR that edits
 `web/budgets.json` **in the same commit** and states the reason in the PR body.
@@ -147,6 +150,14 @@ uploads the evidence of its own breach.
 | 1 | Shared framework/runtime | 122,880 → 141,312 B | **D-011 ruling 1** (PR #77). Measured 130,865 B on untouched `main`: React DOM plus the Next app-router runtime exceed the inferred ceiling *before any application code*. 138 KiB gave 8.0% headroom, matching the other rows. |
 | 2 | `/` first-load JS | 148,480 → 167,936 B | **D-012 ruling 4** (PR #101). Measured 158,899 B. The in-budget alternative was built and measured, not assumed — a `React.lazy` composer landed `/` at 143,426 B, but Next resolved the lazy fallback into the prerendered HTML, so the route would have shipped a document with no `h1` and failed `page-has-heading-one`. **Accessibility gate beats budget row.** |
 | 3 | Six rows, downward | see below | **WO-31** (PR #114), same ratchet rule, ceilings re-seeded to the measured post-cleanup values. |
+| 4 | All emitted CSS | 11,264 → 12,288 B | **WO-W13**, the guided-read session view. The paper-reading margin is the first two-column learning surface and measured 11,335 B — 71 B over the WO-31 ceiling. 12 KiB is the smallest whole-KiB ceiling above the measurement, and it keeps *less* proportional headroom (8.4%) than the 18.5% the previous ceiling carried. No skip path was added. |
+| 5 | *Derived:* total first-load for `/c/[id]` | 313,344 → 314,368 B | **WO-W13**, mechanical. The row is defined as `route-js-conversation + emitted-css + self-hosted-fonts`; the CSS ceiling moved 1,024 B, so this moves by exactly 1,024 B — 192,512 + 12,288 + 109,568 = 314,368. Reported, never gated. |
+
+Three route rows were **added** rather than moved, so they are not ratchet
+entries: `/learn` and `/learn/paths/[id]` (WO-W12) and `/learn/sessions/[id]`
+(WO-W13). A new row is a new ceiling seeded at its first measurement with the
+usual headroom, which is the append half of `budgets.json`'s append-or-ratchet
+rule; only a row whose ceiling *moves* needs the written justification above.
 
 WO-31's ratchet-down, old → new, each measured on the rebased branch:
 
