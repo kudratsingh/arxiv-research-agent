@@ -123,7 +123,7 @@ resolution here:
 
 | Resolved by | Date | How |
 |---|---|---|
-| WO-W17b, PR #NNN | 2026-09-02 | The identity slot renders the principal the server resolved for the request. Both group layouts derive a `WorkspaceIdentity` (`web/lib/server/identity.ts`) from `PILOT_EDGE_AUTH` and the same two edge headers the credential seam reads, and hand it to `WorkbenchShell`: `shared` — the sentence above, byte-identical, on every deployment on `main`; `pilot` — "Pilot workspace", naming the edge-authenticated pilot and stating what is per person (threads, guided sessions, learner profile, ledger) and what is cached in common (paper and embedding caches); and `unresolved` for a request the edge did not vouch for. No runtime feature flag (SR-07), and the descriptor carries no key, no `key_id` and no fault. |
+| WO-W17b, PR #153 | 2026-09-02 | The identity slot renders the principal the server resolved for the request. Both group layouts derive a `WorkspaceIdentity` (`web/lib/server/identity.ts`) from `PILOT_EDGE_AUTH` and the same two edge headers the credential seam reads, and hand it to `WorkbenchShell`: `shared` — the sentence above, byte-identical, on every deployment on `main`; `pilot` — "Pilot workspace", naming the edge-authenticated pilot and stating what is per person (threads, guided sessions, learner profile, ledger) and what is cached in common (paper and embedding caches); and `unresolved` for a request the edge did not vouch for. No runtime feature flag (SR-07), and the descriptor carries no key, no `key_id` and no fault. |
 
 The onboarding note in `docs/runbooks/pilot.md` §8 no longer tells pilots to
 ignore the header. It tells them what the header should say — "Pilot workspace",

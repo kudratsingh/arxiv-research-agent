@@ -179,7 +179,7 @@ for that claim rather than a restatement of it.
   cohort is `PILOT_MAX_PRINCIPALS`; SR-02's "one key per person" is refused
   duplicates; "never the shared key" is a refusal rather than a branch order.
 - **Negative — the S7 sentence stopped being true, and the copy had not caught
-  up. RESOLVED by WO-W17b; the original entry is kept below because the
+  up. RESOLVED by WO-W17b (PR #153); the original entry is kept below because the
   reasoning it records is why the resolution looks the way it does.**
   `docs/security.md` says the edge login "is **not** a principal … two people
   with the same password are indistinguishable at every layer below Caddy", and
