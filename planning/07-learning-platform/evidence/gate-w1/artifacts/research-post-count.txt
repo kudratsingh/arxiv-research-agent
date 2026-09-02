@@ -1,0 +1,43 @@
+# research-post-count.txt — WO-21 criterion 3, WO-W13 criterion 4,
+# WO-W13b criterion 3
+#
+# One line per intentional-submission scenario. Every paid write is
+# counted in the browser by web/e2e/support/paid-path.ts and must be
+# exactly 1 per intentional submission: none of these endpoints has an
+# idempotency key, so a duplicate is a duplicate paid run (R-01,
+# MUST-KEEP #3).
+#
+# research rows:
+#   verdict	project	scenario	expected	research POSTs	conversation POSTs
+# session rows (WO-W13, + mode since WO-W13b):
+#   verdict	project	scenario	expected creates	session POSTs	expected turns	turn POSTs	mode
+#
+# mode=fulfil            the harness answered both session writes; nothing
+#                        reached the backend. Every scenario but the
+#                        end-to-end guided run.
+# mode=mock-pass-through counted, then FORWARDED to a stack asserted to
+#                        pin USE_MOCK_DATA=true and the disabled key, under
+#                        which the session graph constructs no model client
+#                        at all (WO-W13b, Gate W1 row 1). The preconditions
+#                        for each such scenario are the `#` lines below.
+#
+# `POST /api/research` is fulfilled in EVERY mode and has no pass-through:
+# its count is 0 on every row above, which is criterion 3's claim.
+PASS	chromium	criterion 5 — checkpoints during a live run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	single click	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	double click	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	Enter key (ControlOrMeta+Enter)	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	repeated keyboard submit	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	offline then online (offline attempt counted as 0)	expected=1	POST /api/research=1	POST /api/conversations=2
+PASS	chromium	StrictMode double mount (attach path, next dev)	expected=0	POST /api/research=0	POST /api/conversations=0
+# chromium	a session started from the path view runs, survives a reload, and closes	[mock-mode] guided-session pass-through armed: overlay=e2e/support/compose.e2e.yml USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled runtime=verified (arxiv-wo21-app)
+PASS	chromium	guided read, start to close, mock-mode pass-through	expected_session_creates=1	POST /api/learn/sessions=1	expected_session_turns=2	POST /api/learn/sessions/{id}/turn=2	mode=mock-pass-through
+PASS	chromium	session create is fulfilled in-browser	expected_session_creates=1	POST /api/learn/sessions=1	expected_session_turns=0	POST /api/learn/sessions/{id}/turn=0	mode=fulfil
+PASS	chromium	guided turn, double-clicked	expected_session_creates=0	POST /api/learn/sessions=0	expected_session_turns=1	POST /api/learn/sessions/{id}/turn=1	mode=fulfil
+PASS	chromium	slice step 1 — new question	expected=1	POST /api/research=1	POST /api/conversations=1
+PASS	chromium	slice step 2 — expired job	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 2 — reload mid-run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 3 — plan review attach	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 2 — back navigation (RC-18 bfcache)	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	slice step 5 — partial briefing from a failed run	expected=0	POST /api/research=0	POST /api/conversations=0
+PASS	chromium	interrupted stream (recovery is never a purchase)	expected=0	POST /api/research=0	POST /api/conversations=0

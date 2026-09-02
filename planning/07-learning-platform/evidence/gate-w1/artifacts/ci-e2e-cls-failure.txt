@@ -1,0 +1,67 @@
+# CI e2e — the cls.spec.ts layout-shift failure, both occurrences
+
+Copied verbatim from the GitHub Actions job logs. Timestamps are the
+runner's. Nothing below is edited except the removal of the log's
+leading ISO timestamp column on continuation lines.
+
+## Run 33619832961, attempt 1 — head 4fbe239 (WO-W13, PR #146)
+
+```
+  1) [chromium] › e2e/cls.spec.ts:50:7 › WO-20 criterion 5 — a live run does not move the reading column › three checkpoints arrive and the cumulative layout shift is 0.000 @cls 
+
+    Error: a checkpoint arriving moved the page. 03 §5.6: 'the last observed tick fades in over dur-fast, opacity only, no translation — a checkpoint arriving must never move the reading column'. Entries: [{"value":0.01866456773546007,"startTime":2109.4000000000233,"moved":[{"node":"div.flex flex-col","from":282,"to":285},{"node":"div.flex flex-col","from":326,"to":329},{"node":"span.text-ink-muted","from":250,"to":253},{"node":"span.","from":250,"to":253},{"node":"span.ew-spine-void","from":197,"to":197}]},{"value":0.020677395290798612,"startTime":2123.100000000035,"moved":[{"node":"div.flex flex-col","from":285,"to":282},{"node":"div.flex flex-col","from":329,"to":326},{"node":"span.text-ink-muted","from":253,"to":250},{"node":"span.","from":253,"to":250}]}]
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "0.000"
+    Received: "0.039"
+
+      166 |           "checkpoint arriving must never move the reading column'. Entries: " +
+      167 |           JSON.stringify(cls.entries),
+    > 168 |       ).toBe("0.000");
+          |         ^
+      169 |
+      170 |       // Watching a run costs nothing.
+      171 |       paid.expectExactly(0, "criterion 5 — checkpoints during a live run");
+        at /home/runner/work/arxiv-research-agent/arxiv-research-agent/web/e2e/cls.spec.ts:168:9
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    build/e2e/test-results/cls-WO-20-criterion-5-—-a--32604-ative-layout-shift-is-0-000-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+```
+
+Attempt 2 of the same run: all 8 jobs success.
+
+## Run 33630982183, attempt 1 — head 3ccb650 (WO-W13b, PR #150; main today)
+
+```
+  1) [chromium] › e2e/cls.spec.ts:50:7 › WO-20 criterion 5 — a live run does not move the reading column › three checkpoints arrive and the cumulative layout shift is 0.000 @cls 
+
+    Error: a checkpoint arriving moved the page. 03 §5.6: 'the last observed tick fades in over dur-fast, opacity only, no translation — a checkpoint arriving must never move the reading column'. Entries: [{"value":0.01866456773546007,"startTime":2294.899999999965,"moved":[{"node":"div.flex flex-col","from":282,"to":285},{"node":"div.flex flex-col","from":326,"to":329},{"node":"span.text-ink-muted","from":250,"to":253},{"node":"span.","from":250,"to":253},{"node":"span.ew-spine-void","from":197,"to":197}]},{"value":0.020677395290798612,"startTime":2312.5999999999767,"moved":[{"node":"div.flex flex-col","from":285,"to":282},{"node":"div.flex flex-col","from":329,"to":326},{"node":"span.text-ink-muted","from":253,"to":250},{"node":"span.","from":253,"to":250}]}]
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "0.000"
+    Received: "0.039"
+
+      166 |           "checkpoint arriving must never move the reading column'. Entries: " +
+      167 |           JSON.stringify(cls.entries),
+    > 168 |       ).toBe("0.000");
+          |         ^
+      169 |
+      170 |       // Watching a run costs nothing.
+      171 |       paid.expectExactly(0, "criterion 5 — checkpoints during a live run");
+```
+
+Job summary line, same log:
+
+```
+  1 failed
+    [chromium] › e2e/cls.spec.ts:50:7 › WO-20 criterion 5 — a live run does not move the reading column › three checkpoints arrive and the cumulative layout shift is 0.000 @cls 
+  52 skipped
+  263 passed (4.5m)
+```
+
+Attempt 2 of run 33630982183 (the `web e2e` job re-run alone,
+2026-09-02T12:55:11Z): **264 passed, 52 skipped, 0 failed** — 8/8 jobs
+success. The `cls` test passed on the fresh job with no change to the tree.
