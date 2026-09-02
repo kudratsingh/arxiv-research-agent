@@ -462,6 +462,7 @@ function eventFor(type: JobEventType) {
       return { type, jobId: "job-1", at: 1 } as const;
     case "job_started":
     case "plan_ready":
+    case "turn_ready":
     case "job_completed":
     case "job_failed":
     case "job_cancelled":

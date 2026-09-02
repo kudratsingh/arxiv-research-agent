@@ -138,6 +138,7 @@ const jobStatusSchema = z.enum([
   "pending",
   "running",
   "pending_review",
+  "awaiting_learner",
   "succeeded",
   "failed",
   "cancelled",

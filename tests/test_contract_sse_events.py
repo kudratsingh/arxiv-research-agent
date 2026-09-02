@@ -18,14 +18,22 @@ This is the producer half. It does three things:
 The consumer half is `web/tests/contract/events.test.ts`. Adding a backend
 event breaks both.
 
-ADR 0057 adds the one case this design did not have before: a backend event
-the web tier does not consume *yet*. `turn_ready` is emitted by the session
-parking, and the surface that listens for it is WO-W13's — adding it to
-`web/lib/api/events.ts` today would force ten new rows into
-`web/lib/job/machine.ts`'s total transition table for a phase no route can
-reach. So the gap is declared, in `WEB_UNCONSUMED_EVENT_NAMES`, and tested
-from both directions: the backend must emit it, and the web client must not
-yet declare it. That is a ledger entry with an owner, not a hole.
+ADR 0057 added the one case this design did not have before: a backend event
+the web tier did not consume *yet*. `turn_ready` was emitted by the session
+parking with no surface listening, so the gap was declared in
+`WEB_UNCONSUMED_EVENT_NAMES` and tested from both directions — the backend
+must emit it, and the web client must not yet declare it. A ledger entry
+with an owner, not a hole.
+
+WO-W13 CLOSED BOTH LEDGERS AND THEY ARE NOW EMPTY. `web/lib/api/events.ts`
+declares `turn_ready` and `web/lib/api/models.ts` declares
+`awaiting_learner`, so both names are back under the ordinary drift check —
+`_declared_server_event_names() == PINNED_EVENT_NAMES` with nothing
+subtracted. The two dicts stay in the file, empty, because they are the
+mechanism rather than the debt: the next backend event that arrives ahead of
+its surface gets an entry and an owner instead of a silent hole, and
+`test_the_unconsumed_ledger_describes_reality_on_both_sides` still fails an
+entry that has stopped being true in either direction.
 """
 
 from __future__ import annotations
@@ -78,23 +86,20 @@ PINNED_EVENT_NAMES = frozenset(
 #: entry is a declared debt rather than an omission — and both halves are
 #: asserted below, so neither a forgotten pickup nor a premature one passes.
 WEB_UNCONSUMED_EVENT_NAMES: dict[str, str] = {
-    # WO-W13 (the guided-read session view) adds the listener. Until a
-    # route can create a `kind="session"` job there is nothing for the
-    # client to render, and declaring the name early would force ten
-    # rows into `web/lib/job/machine.ts`'s total transition table for a
-    # phase that is unreachable.
-    "turn_ready": "WO-W13",
+    # EMPTY, and the assertions below are what keeps it honest rather than
+    # decorative. `turn_ready` was the only entry; WO-W13 declared it in
+    # `web/lib/api/events.ts` and decided all 11 x 26 cells of the machine's
+    # transition table for it, so the debt is paid and the name is covered by
+    # the ordinary cross-side tie again.
 }
 
 #: `JobStatus` members the web tier does not render yet, same ledger shape.
 #: `JobDetail.status` is a bare `str` in the OpenAPI document, so the
 #: frontend's vocabulary is hand-written too and nothing generated it.
 WEB_UNRENDERED_JOB_STATUSES: dict[str, str] = {
-    # WO-W13 owns the browser rendering. WO-W03 makes the backend status
-    # reachable, but adding it to the frontend union today would oblige
-    # `machine.ts`, `spineState.ts` and `JOB_STATUS_WORD` to invent a UI
-    # before the session surface card lands.
-    "awaiting_learner": "WO-W13",
+    # EMPTY, for the same reason. WO-W13 added `awaiting_learner` to the
+    # `JobStatus` union in `web/lib/api/models.ts` and gave it a phase, a
+    # surface and copy, so the status is rendered rather than merely parsed.
 }
 
 #: The runner's own emit helpers. Both take `(job, event_name, payload)`.

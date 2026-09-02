@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import re
 import uuid
+from collections.abc import Mapping
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -69,6 +70,11 @@ class SessionTurnAccepted(_Strict):
     accepted: bool
 
 
+class SessionTranscriptEntry(_Strict):
+    role: Literal["learner", "tutor"]
+    text: str
+
+
 class SessionDetail(_Strict):
     session_id: str
     status: str
@@ -81,6 +87,9 @@ class SessionDetail(_Strict):
     completed_at: float | None
     elapsed_sec: float | None
     turn: dict[str, Any] | None
+    transcript: list[SessionTranscriptEntry]
+    transcript_status: Literal["available", "unavailable"]
+    assessment_status: Literal["", "recorded_ungraded", "unassessed", "assessed"]
     result: str | None
     error: str | None
     error_type: str | None
@@ -174,8 +183,93 @@ def _reading_guidance(path: LoadedPath, entry: Entry) -> list[dict[str, str]]:
     return guidance[:8] or [{"name": "paper overview", "mode": "skim"}]
 
 
-def _session_detail(job: Job) -> SessionDetail:
+def _message_text(message: Any) -> str:
+    content = getattr(message, "content", "")
+    if isinstance(content, str):
+        return content.strip()
+    if not isinstance(content, list):
+        return ""
+    parts: list[str] = []
+    for block in content:
+        if isinstance(block, str):
+            parts.append(block)
+        elif isinstance(block, dict) and isinstance(block.get("text"), str):
+            parts.append(block["text"])
+    return "\n".join(parts).strip()
+
+
+def _transcript(values: dict[str, Any]) -> list[SessionTranscriptEntry]:
+    messages = values.get("messages")
+    if not isinstance(messages, list):
+        return []
+    entries: list[SessionTranscriptEntry] = []
+    for message in messages:
+        name = getattr(message, "name", None)
+        message_type = getattr(message, "type", None)
+        # The check-in message is an internal plan receipt ("Planned N
+        # sections"), not something the tutor presented to the learner.
+        if name == "check_in":
+            continue
+        learner = message_type == "human" or (
+            isinstance(name, str) and name.startswith("learner")
+        )
+        tutor = message_type == "ai" or name in {"check_in", "tutor"}
+        if not learner and not tutor:
+            continue
+        text = _message_text(message)
+        if not text:
+            continue
+        entries.append(
+            SessionTranscriptEntry(
+                role="learner" if learner else "tutor",
+                text=text,
+            )
+        )
+    return entries
+
+
+def _assessment_status(
+    values: dict[str, Any],
+) -> Literal["", "recorded_ungraded", "unassessed", "assessed"]:
+    assessment = values.get("assessment")
+    if not isinstance(assessment, dict):
+        return ""
+    status_value = assessment.get("status")
+    if status_value == "recorded_ungraded":
+        return "recorded_ungraded"
+    if status_value == "unassessed":
+        return "unassessed"
+    if status_value in {"assessed", "recorded"}:
+        return "assessed"
+    return ""
+
+
+async def _checkpoint_values(request: Request, job: Job) -> tuple[dict[str, Any], bool]:
+    workflow = getattr(request.app.state, "session_workflow", None)
+    read_state = getattr(workflow, "aget_state", None)
+    if not callable(read_state):
+        return {}, False
+    try:
+        snapshot = await read_state({"configurable": {"thread_id": job.job_id}})
+    except Exception:  # noqa: BLE001 - snapshot loss must not hide the job row
+        log.warning(
+            "api_session_transcript_unavailable",
+            extra={"job_id": job.job_id},
+            exc_info=True,
+        )
+        return {}, False
+    values = getattr(snapshot, "values", None)
+    return (dict(values), True) if isinstance(values, Mapping) else ({}, False)
+
+
+def _session_detail(
+    job: Job,
+    checkpoint_values: dict[str, Any] | None = None,
+    *,
+    transcript_available: bool = True,
+) -> SessionDetail:
     spec = job.input_payload.get("session_spec", {})
+    values = checkpoint_values or {}
     return SessionDetail(
         session_id=job.job_id,
         status=job.status.value,
@@ -188,6 +282,9 @@ def _session_detail(job: Job) -> SessionDetail:
         completed_at=job.completed_at,
         elapsed_sec=job.elapsed_sec(),
         turn=job.turn,
+        transcript=_transcript(values),
+        transcript_status="available" if transcript_available else "unavailable",
+        assessment_status=_assessment_status(values),
         result=job.result,
         error=job.error,
         error_type=job.error_type,
@@ -302,7 +399,8 @@ async def get_session(
 ) -> SessionDetail:
     _require_session_enabled()
     job = _owned_session(await request.app.state.store.get(session_id), principal)
-    return _session_detail(job)
+    values, available = await _checkpoint_values(request, job)
+    return _session_detail(job, values, transcript_available=available)
 
 
 @router.post(

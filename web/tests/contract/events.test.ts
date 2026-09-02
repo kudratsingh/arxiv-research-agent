@@ -23,7 +23,7 @@ import {
 } from "@/lib/api";
 
 /**
- * `TERMINAL_EVENT_NAMES ∪ {job_started, node_completed, plan_ready} ∪
+ * `TERMINAL_EVENT_NAMES ∪ {job_started, node_completed, plan_ready, turn_ready} ∪
  * {STREAM_TIMEOUT_EVENT}` — written out by hand rather than composed from the
  * constants under test, because a pin that derives itself from its subject
  * pins nothing.
@@ -40,6 +40,7 @@ const PINNED_SERVER_EVENTS = [
   "node_completed",
   "plan_ready",
   "stream_timeout",
+  "turn_ready",
 ];
 
 type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never;
@@ -62,6 +63,7 @@ describe("contract/events — the frozen SSE name set", () => {
         | "job_started"
         | "node_completed"
         | "plan_ready"
+        | "turn_ready"
         | "job_completed"
         | "job_failed"
         | "job_cancelled"

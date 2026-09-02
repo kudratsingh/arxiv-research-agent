@@ -6,9 +6,13 @@
 //   - **phase** (`JobPhase`) is the *machine's* state name — `idle`,
 //     `attaching`, `live`, `settled`. It is client-side only.
 //   - **status** (`JobStatus`, from `lib/api`) is the *server's* job
-//     status — `pending`, `running`, `pending_review`, `succeeded`,
-//     `failed`, `cancelled`. It is truth, and it arrives only from
-//     `GET /research/{job_id}`.
+//     status — `pending`, `running`, `pending_review`,
+//     `awaiting_learner`, `succeeded`, `failed`, `cancelled`. It is
+//     truth, and it arrives only from `GET /research/{job_id}` or, for
+//     a guided session, `GET /learn/sessions/{session_id}`.
+//     `tests/test_contract_sse_events.py` ties this union to the
+//     backend's `JobStatus` enum, so a status the server can produce
+//     and this file has never heard of fails the Python suite.
 //
 // Keeping them apart is not cosmetic: checkpoint rule 4
 // (04-ARCHITECTURE.md §4.4) is precisely "the checkpoint is never
@@ -29,12 +33,16 @@ import type {
 
 /**
  * Every state in 04-ARCHITECTURE.md §4.2's diagram, in the order the
- * diagram walks them.
+ * diagram walks them — plus `awaiting_learner`, which is not in that
+ * (frozen) diagram because Phase W added it.
  *
  * `submit_failed` is terminal *for that attempt only* — retrying is a
  * new run, never an automatic one (H6, R-01). `unavailable` is the
  * honest 404 landing: "no longer available", never "deleted" and never
- * "no permission" (H8).
+ * "no permission" (H8). `awaiting_learner` is the guided-session pause
+ * (ADR 0057): the same transport as `live`, with a distinct phase so
+ * the session surface enables its composer only when the server's own
+ * snapshot says a turn is parked, never because a frame arrived.
  */
 export const JOB_PHASES = [
   "idle",
@@ -44,6 +52,7 @@ export const JOB_PHASES = [
   "unavailable",
   "live",
   "awaiting_review",
+  "awaiting_learner",
   "resolving",
   "reconciling",
   "settled",
@@ -266,6 +275,7 @@ export const JOB_EVENT_TYPES = [
   "job_started",
   "node_completed",
   "plan_ready",
+  "turn_ready",
   "job_completed",
   "job_failed",
   "job_cancelled",
@@ -290,6 +300,7 @@ export const FRAME_EVENT_TYPES = [
   "job_started",
   "node_completed",
   "plan_ready",
+  "turn_ready",
   "job_completed",
   "job_failed",
   "job_cancelled",

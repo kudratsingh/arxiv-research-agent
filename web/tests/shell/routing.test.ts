@@ -65,6 +65,7 @@ describe("criterion 2 — the route group adds no URL segment", () => {
       "/c/[id]",
       "/learn",
       "/learn/paths/[id]",
+      "/learn/sessions/[id]",
     ]);
   });
 

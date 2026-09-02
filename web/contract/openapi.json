@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "53c3c6c99aadc7b08855769c9e89ff08c6a2eb06",
+    "commit": "2114c4788dc0aba3aaf1e6a388cda540ecad8c39",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -2232,6 +2232,31 @@
             ],
             "title": "Turn"
           },
+          "transcript": {
+            "items": {
+              "$ref": "#/components/schemas/SessionTranscriptEntry"
+            },
+            "type": "array",
+            "title": "Transcript"
+          },
+          "transcript_status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Transcript Status"
+          },
+          "assessment_status": {
+            "type": "string",
+            "enum": [
+              "",
+              "recorded_ungraded",
+              "unassessed",
+              "assessed"
+            ],
+            "title": "Assessment Status"
+          },
           "result": {
             "anyOf": [
               {
@@ -2322,6 +2347,9 @@
           "completed_at",
           "elapsed_sec",
           "turn",
+          "transcript",
+          "transcript_status",
+          "assessment_status",
           "result",
           "error",
           "error_type",
@@ -2331,6 +2359,29 @@
           "llm_calls"
         ],
         "title": "SessionDetail"
+      },
+      "SessionTranscriptEntry": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "learner",
+              "tutor"
+            ],
+            "title": "Role"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "text"
+        ],
+        "title": "SessionTranscriptEntry"
       },
       "SessionTurnAccepted": {
         "properties": {

@@ -36,6 +36,9 @@
         "instructions": "Before we read Attention Is All You Need, what do you expect it to help you understand? A sentence or two is enough."
       }
     },
+    "transcript": [],
+    "transcript_status": "available",
+    "assessment_status": "",
     "result": null,
     "error": null,
     "error_type": null,

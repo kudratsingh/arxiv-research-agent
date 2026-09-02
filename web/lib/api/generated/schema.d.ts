@@ -1164,6 +1164,18 @@ export interface components {
             turn: {
                 [key: string]: unknown;
             } | null;
+            /** Transcript */
+            transcript: components["schemas"]["SessionTranscriptEntry"][];
+            /**
+             * Transcript Status
+             * @enum {string}
+             */
+            transcript_status: "available" | "unavailable";
+            /**
+             * Assessment Status
+             * @enum {string}
+             */
+            assessment_status: "" | "recorded_ungraded" | "unassessed" | "assessed";
             /** Result */
             result: string | null;
             /** Error */
@@ -1181,6 +1193,16 @@ export interface components {
             cost_usd: number | null;
             /** Llm Calls */
             llm_calls: number | null;
+        };
+        /** SessionTranscriptEntry */
+        SessionTranscriptEntry: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "learner" | "tutor";
+            /** Text */
+            text: string;
         };
         /** SessionTurnAccepted */
         SessionTurnAccepted: {

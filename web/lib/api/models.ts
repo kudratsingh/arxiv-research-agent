@@ -44,6 +44,7 @@ export type JobStatus =
   | "pending"
   | "running"
   | "pending_review"
+  | "awaiting_learner"
   | "succeeded"
   | "failed"
   | "cancelled";
@@ -198,6 +199,18 @@ export type LearnPathSummary = Schemas["LearnPathSummary"];
 export type LearnPathList = Schemas["LearnPathList"];
 export type LearnEntry = Schemas["LearnEntry"];
 export type LearnPathDetail = Schemas["LearnPathDetail"];
+
+export type SessionCreateRequest = Schemas["SessionCreateRequest"];
+export type SessionAccepted = Schemas["SessionAccepted"];
+export type SessionTranscriptEntry = Schemas["SessionTranscriptEntry"];
+export type SessionTurnRequest = Schemas["SessionTurnRequest"];
+export type SessionTurnAccepted = Schemas["SessionTurnAccepted"];
+export type SessionDetail = Omit<
+  Serialized<Schemas["SessionDetail"]>,
+  "status"
+> & {
+  status: JobStatus & Schemas["SessionDetail"]["status"];
+};
 
 export type ProgressResourceObservation =
   Schemas["ProgressResourceObservation"];
