@@ -33,8 +33,11 @@ because one would be a convention rather than a boundary:
 2. `playwright.config.ts` overwrites `ANTHROPIC_API_KEY` in the runner process
    before any test loads, and `global-setup.ts` refuses to start if it is
    anything else.
-3. `support/paid-path.ts` intercepts and **fulfils** `POST /api/research` in
-   the browser, so the submit leg never reaches the backend at all.
+3. `support/paid-path.ts` intercepts and **fulfils** every paid write in the
+   browser — `POST /api/research`, `POST /api/conversations`, and WO-W13's
+   two session writes, `POST /api/learn/sessions` and
+   `POST /api/learn/sessions/{id}/turn` — so the submit leg never reaches the
+   backend at all.
 
 `fixtures/seed.sh` writes fixtures *behind* the API — direct Postgres and
 Redis — for the same reason: there is no code path from this tier to a model.
@@ -60,7 +63,40 @@ from the repository root will take down whatever else is running.
 | Dev server (StrictMode only) | `localhost:13211` | `E2E_DEV_PORT`, `E2E_SKIP_DEV_SERVER=1` |
 | Containers | `arxiv-wo21-{app,web,redis,postgres}` | edit the overlay |
 
+Container names are interpolated too — `E2E_APP_CONTAINER`,
+`E2E_WEB_CONTAINER`, `E2E_REDIS_CONTAINER`, `E2E_POSTGRES_CONTAINER`, the same
+variables `fixtures/seed.sh` reads. The defaults are the `arxiv-wo21-*` names
+above, so nothing that already worked moves; a second worktree exports its own
+alongside `E2E_COMPOSE_PROJECT` and the two stacks stop overlapping. Without
+that, a `container_name` is global to the daemon and the second `up` renames
+the first stack's containers out from under it.
+
 Every default lives in `support/env.ts`. Nothing else hard-codes a port.
+
+## API auth is ON in this tier, and why
+
+`compose.e2e.yml` sets `ENABLE_API_AUTH=true`, `ENABLE_LEARNER_PROFILE=true`
+and `ENABLE_SESSION_LOOP=true`. Not an option: `src/config.py` refuses the
+session loop without the learner profile and refuses the learner profile
+without auth, because a guided session is keyed on a principal. WO-W13
+criterion 2 wants a real session rendered against a real stack, so the tier
+runs with the whole ladder on.
+
+Two consequences worth knowing before you debug something:
+
+- **Every seeded row has an owner.** `_check_ownership`
+  (`src/api/routes.py:85-110`) makes a `principal_key_id: NULL` row *invisible*
+  under auth-on, so `fixtures/seed.sh` stamps `E2E_PRINCIPAL` (default `e2e`)
+  on every job and both conversations. A fixture that 404s after a hand-edit is
+  almost always a missing owner.
+- **The browser still holds no credential.** The `web` service's server-side
+  proxy injects `ARXIV_API_KEY`, exactly as it does in production. The
+  side-effect is a good one: every request this suite makes now goes through
+  the credential boundary `web/app/api/[...path]/route.ts` describes, so the
+  boundary is exercised rather than merely asserted about.
+
+`E2E_API_SECRET` is a committed local sentinel, not a secret. The stack has no
+reachable model provider, and CI needs no repository secret to run this tier.
 
 ## Layout
 
@@ -71,7 +107,7 @@ Every default lives in `support/env.ts`. Nothing else hard-codes a port.
 | `support/global-setup.ts` | refuses to run against an unseeded stack or a real key |
 | `support/stack.sh` | `up` / `seed` / `url` / `logs` / `down` |
 | `support/compose.e2e.yml` | the isolating overlay |
-| `support/paid-path.ts` | the `POST /api/research` interceptor and its report |
+| `support/paid-path.ts` | the paid-write interceptor (research, conversations, and the two session writes) and its report |
 | `support/intercept.ts` | interrupted-200 and `stream_timeout` streams |
 | `support/states.ts` | §4's state matrix, as a walkable table |
 | `support/measure.ts` | reflow, work surface, safe area, first paint |
@@ -79,7 +115,7 @@ Every default lives in `support/env.ts`. Nothing else hard-codes a port.
 | `axe-allowlist.json` | WO-22's suppression list — **empty, and stays empty** |
 | `fixtures/seed.sh` | the promoted Gate 1 seed, extended |
 | `__screenshots__/<platform>/` | WO-28's committed PNGs — 48 per platform |
-| `*.spec.ts` | one file per criterion; see the header comment in each |
+| `*.spec.ts` | one file per criterion; see the header comment in each. `session.spec.ts` is WO-W13's — criteria 2 and 4 |
 
 ## Projects and tags
 
@@ -99,7 +135,7 @@ Everything is written under `web/build/e2e/`, which is gitignored:
 
 | File | What |
 |---|---|
-| `research-post-count.txt` | one line per submission scenario — WO-21 criterion 3's evidence |
+| `research-post-count.txt` | one line per submission scenario — WO-21 criterion 3's evidence, plus WO-W13's session rows. Two row shapes, both legended in the file's own header: research rows count `/api/research` and `/api/conversations`, session rows count the two `/api/learn/sessions` writes |
 | `axe/<state>.<theme>.json` | one full axe report per §4 state per theme, in the same shape as `docs/revamp/baseline/axe/*.json` so the two diff directly |
 | `axe/summary.tsv` | one row per state per theme: violations, gated, incomplete, contrast passes |
 | `axe/baseline-map.tsv` | which live report each retained baseline report corresponds to (WO-26 diffs these pairs) |

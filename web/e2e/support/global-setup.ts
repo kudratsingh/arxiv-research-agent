@@ -69,12 +69,21 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
       ["job", `/api/research/${FIXTURES.succeeded}`],
       ["plan-review job", `/api/research/${FIXTURES.planReview}`],
       ["stream-timeout job", `/api/research/${FIXTURES.streamTimeout}`],
+      // WO-W13. A 404 here means one of three things and the message has to
+      // cover all of them: the seed did not run, the stack was brought up
+      // without `compose.e2e.yml` (so `ENABLE_SESSION_LOOP` is off and the
+      // route is not mounted at all), or auth is on and the row was written
+      // without an owner. All three are fixed by re-running `up` and `seed`
+      // through `stack.sh`, which is what the message says.
+      ["guided session", `/api/learn/sessions/${FIXTURES.guidedSession}`],
     ] as const) {
       const response = await api.get(path);
       if (!response.ok()) {
         throw new Error(
           `seed fixture missing: ${what} at ${path} -> ${response.status()}. ` +
-            "Run `npm run e2e:stack:seed`.",
+            "Run `npm run e2e:stack:up && npm run e2e:stack:seed` — `up` is " +
+            "named too because the session routes are mounted by the " +
+            "compose overlay's flags, not by the seed.",
         );
       }
     }

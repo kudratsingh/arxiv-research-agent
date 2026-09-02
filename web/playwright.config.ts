@@ -5,6 +5,7 @@ import {
   DEV_BASE_URL,
   DEV_SERVER_PORT,
   DISABLED_API_KEY,
+  E2E_API_SECRET,
   E2E_BASE_URL,
   SKIP_DEV_SERVER,
   UPSTREAM_BASE,
@@ -186,6 +187,12 @@ export default defineConfig({
           // host port instead of the Compose network.
           API_INTERNAL_BASE: UPSTREAM_BASE,
           ANTHROPIC_API_KEY: DISABLED_API_KEY,
+          // WO-W13. The e2e stack runs with `ENABLE_API_AUTH=true` (the
+          // session loop cannot be mounted without it), so the dev server's
+          // proxy needs the same server-side credential the `web` container
+          // gets. Not a secret: it is a local sentinel against a stack with
+          // no reachable provider, and it never enters the browser bundle.
+          ARXIV_API_KEY: E2E_API_SECRET,
         },
       },
 

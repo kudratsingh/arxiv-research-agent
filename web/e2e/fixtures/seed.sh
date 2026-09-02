@@ -73,6 +73,25 @@
 
 set -euo pipefail
 
+# WO-W13. `ENABLE_API_AUTH` is on in `web/e2e/support/compose.e2e.yml` (the
+# session loop cannot be mounted without it), and `_check_ownership`
+# (`src/api/routes.py:85-110`) makes a row whose `principal_key_id` is NULL
+# invisible under auth-on. So every fixture below is stamped with the single
+# principal the stack issues. The value is the NAME half of `API_KEYS`, not
+# the secret: it is what lands on a row and what the API compares.
+principal="${E2E_PRINCIPAL:-e2e}"
+api_secret="${E2E_API_SECRET:-sk_e2e_local_preview_disabled}"
+
+# Substitute the placeholder without unquoting the heredocs. The JSON rows
+# below are copied byte-for-byte from the Gate 1 baseline and must not start
+# being interpreted by the shell (`\n` inside a report body, `$` inside a
+# future one), so they stay `<<'JSON'` and the owner is patched on the way
+# past instead.
+seed_job() {
+  sed "s/__PRINCIPAL__/${principal}/g" \
+    | docker exec -i "$redis_container" redis-cli -x SET "$1"
+}
+
 postgres_container="${E2E_POSTGRES_CONTAINER:-${BASELINE_POSTGRES_CONTAINER:-arxiv-wo21-postgres}}"
 redis_container="${E2E_REDIS_CONTAINER:-${BASELINE_REDIS_CONTAINER:-arxiv-wo21-redis}}"
 app_container="${E2E_APP_CONTAINER:-arxiv-wo21-app}"
@@ -90,9 +109,10 @@ app_container="${E2E_APP_CONTAINER:-arxiv-wo21-app}"
 # conversation store is not Postgres has no schema to create and no reason to
 # fail the seed here.
 docker exec "$app_container" \
-  curl -fsS -o /dev/null "http://localhost:8000/conversations?limit=1" || true
+  curl -fsS -o /dev/null -H "X-API-Key: ${api_secret}" \
+  "http://localhost:8000/conversations?limit=1" || true
 
-docker exec -i "$postgres_container" psql -v ON_ERROR_STOP=1 -U arxiv -d arxiv <<'SQL'
+docker exec -i "$postgres_container" psql -v ON_ERROR_STOP=1 -v principal="$principal" -U arxiv -d arxiv <<'SQL'
 INSERT INTO conversations (
   conversation_id, title, created_at, updated_at, principal_key_id
 ) VALUES (
@@ -100,7 +120,7 @@ INSERT INTO conversations (
   'Scientific claim verification',
   '2026-08-28T02:16:02Z',
   '2026-08-28T02:17:04Z',
-  NULL
+  :'principal'
 ) ON CONFLICT (conversation_id) DO UPDATE SET
   title = EXCLUDED.title,
   updated_at = EXCLUDED.updated_at,
@@ -113,7 +133,7 @@ INSERT INTO conversations (
   'Empty research thread',
   '2026-08-28T02:18:02Z',
   '2026-08-28T02:18:02Z',
-  NULL
+  :'principal'
 ) ON CONFLICT (conversation_id) DO UPDATE SET
   title = EXCLUDED.title,
   updated_at = EXCLUDED.updated_at,
@@ -155,24 +175,24 @@ INSERT INTO conversation_jobs (
   created_at = EXCLUDED.created_at;
 SQL
 
-docker exec -i "$redis_container" redis-cli -x SET job:baseline-succeeded <<'JSON'
-{"job_id":"baseline-succeeded","query":"How should scientific research agents verify claims?","status":"succeeded","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883424.0,"result":"# Retrieval-Augmented Verification for Scientific Claims\n\n## Executive summary\n\nRecent systems combine retrieval, claim decomposition, and post-generation verification to reduce unsupported statements.\n\n## Findings\n\n- Evidence retrieval works best when queries are decomposed into independently verifiable claims.\n- Verification models should be calibrated separately from generation models.","error":null,"error_type":null,"cost_usd":0.42,"llm_calls":11,"iterations":2,"quality_score":0.86,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":null}
+seed_job job:baseline-succeeded <<'JSON'
+{"job_id":"baseline-succeeded","query":"How should scientific research agents verify claims?","status":"succeeded","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883424.0,"result":"# Retrieval-Augmented Verification for Scientific Claims\n\n## Executive summary\n\nRecent systems combine retrieval, claim decomposition, and post-generation verification to reduce unsupported statements.\n\n## Findings\n\n- Evidence retrieval works best when queries are decomposed into independently verifiable claims.\n- Verification models should be calibrated separately from generation models.","error":null,"error_type":null,"cost_usd":0.42,"llm_calls":11,"iterations":2,"quality_score":0.86,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
 JSON
 
-docker exec -i "$redis_container" redis-cli -x SET job:baseline-plan-review <<'JSON'
-{"job_id":"baseline-plan-review","query":"How should scientific research agents verify claims?","status":"pending_review","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":{"sub_questions":["Which verification architectures are currently used?","How is evidence provenance preserved?","What evaluation methods detect unsupported claims?"],"search_queries":["retrieval augmented claim verification","scientific evidence provenance language models","factuality evaluation research agents"]},"resume_action":null,"resume_plan":null,"principal_key_id":null}
+seed_job job:baseline-plan-review <<'JSON'
+{"job_id":"baseline-plan-review","query":"How should scientific research agents verify claims?","status":"pending_review","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":{"sub_questions":["Which verification architectures are currently used?","How is evidence provenance preserved?","What evaluation methods detect unsupported claims?"],"search_queries":["retrieval augmented claim verification","scientific evidence provenance language models","factuality evaluation research agents"]},"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
 JSON
 
-docker exec -i "$redis_container" redis-cli -x SET job:baseline-running <<'JSON'
-{"job_id":"baseline-running","query":"What evaluation methods make research agents reliable?","status":"running","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":null}
+seed_job job:baseline-running <<'JSON'
+{"job_id":"baseline-running","query":"What evaluation methods make research agents reliable?","status":"running","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
 JSON
 
-docker exec -i "$redis_container" redis-cli -x SET job:baseline-cancelled <<'JSON'
-{"job_id":"baseline-cancelled","query":"Compare retrieval strategies for scientific agents","status":"cancelled","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883380.0,"result":null,"error":null,"error_type":null,"cost_usd":0.03,"llm_calls":1,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":null}
+seed_job job:baseline-cancelled <<'JSON'
+{"job_id":"baseline-cancelled","query":"Compare retrieval strategies for scientific agents","status":"cancelled","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883380.0,"result":null,"error":null,"error_type":null,"cost_usd":0.03,"llm_calls":1,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
 JSON
 
-docker exec -i "$redis_container" redis-cli -x SET job:baseline-failed-partial <<'JSON'
-{"job_id":"baseline-failed-partial","query":"How can ML teams detect unsupported scientific claims?","status":"failed","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883400.0,"result":"# Partial briefing\n\nThe run retained an incomplete synthesis before verification failed.\n\n## What remains useful\n\n- Initial retrieval completed.\n- Final claim verification did not complete.","error":"Verification stopped before all claims could be checked.","error_type":"verification_incomplete","cost_usd":0.18,"llm_calls":4,"iterations":1,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":null}
+seed_job job:baseline-failed-partial <<'JSON'
+{"job_id":"baseline-failed-partial","query":"How can ML teams detect unsupported scientific claims?","status":"failed","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883400.0,"result":"# Partial briefing\n\nThe run retained an incomplete synthesis before verification failed.\n\n## What remains useful\n\n- Initial retrieval completed.\n- Final claim verification did not complete.","error":"Verification stopped before all claims could be checked.","error_type":"verification_incomplete","cost_usd":0.18,"llm_calls":4,"iterations":1,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
 JSON
 
 # WO-21. The row a `stream_timeout` frame is delivered against: non-terminal,
@@ -180,16 +200,16 @@ JSON
 # The frame itself is injected by `web/e2e/support/intercept.ts`, because a
 # real stack emits `stream_timeout` only when the SSE response reaches
 # `api_sse_max_duration_sec` — minutes of wall clock, and not on demand.
-docker exec -i "$redis_container" redis-cli -x SET job:baseline-stream-timeout <<'JSON'
-{"job_id":"baseline-stream-timeout","query":"Which reconnect strategies keep a long research stream honest?","status":"running","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":null}
+seed_job job:baseline-stream-timeout <<'JSON'
+{"job_id":"baseline-stream-timeout","query":"Which reconnect strategies keep a long research stream honest?","status":"running","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
 JSON
 
 # WO-21. The failed-with-partial-result job behind the `baseline-partial-export`
 # turn above. `error_type` is one of the nine mapped values
 # (`web/lib/copy/errors.ts:303`) rather than an invented string, so the copy
 # layer renders a real sentence for it.
-docker exec -i "$redis_container" redis-cli -x SET job:baseline-partial-export <<'JSON'
-{"job_id":"baseline-partial-export","query":"Which verification failures are worth reporting partially?","status":"failed","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883440.0,"result":"# Partial briefing (verification incomplete)\n\nThe run retained an incomplete synthesis before verification failed. It is shown because a partial answer the user paid for is not the same thing as no answer (R-14).\n\n## What completed\n\n- Retrieval over the three sub-questions finished.\n- Two of five claims were checked against their sources.\n\n| Stage | Status |\n|---|---|\n| Retrieval | complete |\n| Reading | complete |\n| Verification | stopped |\n\n## What did not\n\nFinal claim verification did not complete, so nothing below the fold was checked and no confidence label is reported.","error":"The briefing could not be assembled from what was read.","error_type":"SynthesizerOutputError","cost_usd":0.21,"llm_calls":6,"iterations":1,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":null}
+seed_job job:baseline-partial-export <<'JSON'
+{"job_id":"baseline-partial-export","query":"Which verification failures are worth reporting partially?","status":"failed","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883440.0,"result":"# Partial briefing (verification incomplete)\n\nThe run retained an incomplete synthesis before verification failed. It is shown because a partial answer the user paid for is not the same thing as no answer (R-14).\n\n## What completed\n\n- Retrieval over the three sub-questions finished.\n- Two of five claims were checked against their sources.\n\n| Stage | Status |\n|---|---|\n| Retrieval | complete |\n| Reading | complete |\n| Verification | stopped |\n\n## What did not\n\nFinal claim verification did not complete, so nothing below the fold was checked and no confidence label is reported.","error":"The briefing could not be assembled from what was read.","error_type":"SynthesizerOutputError","cost_usd":0.21,"llm_calls":6,"iterations":1,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
 JSON
 
 # WO-21. §4 row 15 — failed with NO result — has no fixture in the Gate 1 set:
@@ -197,8 +217,8 @@ JSON
 # render differently and the reflow sweep needs both. `error_type` is
 # `hitl_timeout`, a deliberate backend constant (`src/agents/../runner.py:1057`),
 # not an invented string.
-docker exec -i "$redis_container" redis-cli -x SET job:baseline-failed <<'JSON'
-{"job_id":"baseline-failed","query":"Which planner failures leave nothing to show?","status":"failed","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883368.0,"result":null,"error":"The plan was not reviewed within the allowed window.","error_type":"hitl_timeout","cost_usd":0.02,"llm_calls":1,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":null}
+seed_job job:baseline-failed <<'JSON'
+{"job_id":"baseline-failed","query":"Which planner failures leave nothing to show?","status":"failed","created_at":1787883362.0,"started_at":1787883364.0,"completed_at":1787883368.0,"result":null,"error":"The plan was not reviewed within the allowed window.","error_type":"hitl_timeout","cost_usd":0.02,"llm_calls":1,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":"baseline-populated","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
 JSON
 
 # Non-terminal test rows need a lease so the production redriver correctly
@@ -214,4 +234,101 @@ docker exec "$redis_container" redis-cli SET joblease:baseline-stream-timeout ba
 # even if a previous run created it.
 docker exec "$redis_container" redis-cli DEL job:baseline-expired >/dev/null
 
-echo "Seeded baseline-populated, baseline-empty, and job:baseline-* local fixtures."
+# ---------------------------------------------------------------------------
+# WO-W13 — the guided-read session, mid-session.
+#
+# WHY IT IS SEEDED BEHIND THE API, LIKE EVERYTHING ELSE HERE. The only way to
+# reach `awaiting_learner` through the front door is `POST /learn/sessions`,
+# which runs the session graph, which calls a model. This stack has no
+# reachable provider on purpose (property 4 above), so the state is written
+# rather than produced — the same rule as `baseline-plan-review`.
+#
+# IT IS TWO WRITES, NOT ONE, AND THAT IS THE POINT. `GET /learn/sessions/{id}`
+# reads the *job row* for lifecycle and the parked turn, and the *LangGraph
+# checkpoint* for the transcript (`src/api/sessions.py:248-262`). WO-W13
+# criterion 2 is about the second one: a reload that re-renders the reading
+# margin is only evidence if the margin came out of durable checkpointed
+# state rather than out of stream frames the browser happened to still hold.
+# Seeding only the job row would leave `transcript: []` and the assertion
+# would pass against nothing.
+
+seed_job job:baseline-guided-session <<'JSON'
+{"job_id":"baseline-guided-session","query":"Guided read: Attention Is All You Need","status":"awaiting_learner","kind":"session","input_payload":{"principal_key_id":"__PRINCIPAL__","tier1":{},"session_spec":{"path_id":"fixture-guided-read","resource_id":"arxiv:1706.03762","title":"Attention Is All You Need","canonical_url":"https://arxiv.org/abs/1706.03762","briefing_companion":"briefings/01-fixture-transformer.md","briefing_label":"Briefing companion","reading_guidance":[{"name":"Introduction","mode":"close"},{"name":"Method","mode":"skim"}],"available_minutes":20,"path_position":1,"path_entry_count":3}},"created_at":1787883362.0,"started_at":1787883364.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_cap_status":"","cost_cap_message":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":null,"plan":null,"turn":{"turn_number":2,"phase":"passage","kind":"guided_question","prompt":"You have read the Method section. Which connection between self-attention and the older recurrent approach feels least obvious to you?","feedback":"Your opening expectation is saved in the margin below.","activity":{"kind":"guided_question","instructions":"You have read the Method section. Which connection between self-attention and the older recurrent approach feels least obvious to you?"}},"resume_action":null,"resume_plan":null,"resume_payload":null,"principal_key_id":"__PRINCIPAL__"}
+JSON
+
+# Non-terminal, so it needs a lease for the same reason the two rows above do.
+docker exec "$redis_container" redis-cli SET joblease:baseline-guided-session baseline-fixture EX 86400 >/dev/null
+
+# The durable half. `aupdate_state` writes a checkpoint WITHOUT running a
+# node — verified before this was committed — so this reuses the app's own
+# graph and its own configured checkpointer instead of hand-writing
+# LangGraph's serialised channel rows, and it contacts nothing. `run_id` and
+# `turn_number` are set so the snapshot is a coherent session rather than a
+# bag of messages; `assessment` carries WO-W06's informal close, which is the
+# `recorded_ungraded` state WO-W13 renders as a fact rather than a grade.
+#
+# THE THREAD IS DELETED FIRST, AND THAT IS WHAT MAKES THIS IDEMPOTENT
+# (property 2 at the top of this file). Two things go wrong against an
+# already-seeded stack otherwise, and both were observed: `messages` reduces
+# with `add_messages`, so a second write APPENDS a second copy of the margin;
+# and `aupdate_state` on a thread that already has a checkpoint cannot infer
+# which node the update came from and raises `InvalidUpdateError: Ambiguous
+# update, specify as_node`. Naming a node would answer the second and not the
+# first. Deleting answers both, and leaves exactly one state to write into.
+docker exec -i "$app_container" python - <<'PY'
+import asyncio
+
+from langchain_core.messages import AIMessage, HumanMessage
+
+from src.graph.session_workflow import build_session_workflow
+
+THREAD = "baseline-guided-session"
+MARGIN = [
+    AIMessage(
+        content=(
+            "Before we read Attention Is All You Need, what do you expect it "
+            "to help you understand?"
+        ),
+        name="tutor",
+    ),
+    HumanMessage(
+        content=(
+            "I expected attention to replace recurrence as the way a model "
+            "relates distant tokens."
+        ),
+        name="learner",
+    ),
+    AIMessage(
+        content=(
+            "Hold on to that. Read section 3.2 and watch for what the paper "
+            "claims recurrence cost it."
+        ),
+        name="tutor",
+    ),
+]
+
+
+async def main() -> None:
+    workflow = await build_session_workflow(async_checkpointer=True)
+    config = {"configurable": {"thread_id": THREAD}}
+    await workflow.checkpointer.adelete_thread(THREAD)
+    await workflow.aupdate_state(
+        config,
+        {
+            "run_id": THREAD,
+            "messages": MARGIN,
+            "turn_number": 2,
+            "assessment": {"status": "recorded_ungraded"},
+        },
+    )
+    snapshot = await workflow.aget_state(config)
+    got = len(snapshot.values.get("messages", []))
+    if got != len(MARGIN):
+        raise SystemExit(f"checkpoint seed wrote {got} messages, expected {len(MARGIN)}")
+
+
+asyncio.run(main())
+PY
+
+
+echo "Seeded baseline-populated, baseline-empty, job:baseline-* and the guided-session checkpoint."
