@@ -38,6 +38,7 @@ import type { ReactNode } from "react";
 
 import ThreadRailBridge from "@/components/app/ThreadRailBridge";
 import { WorkbenchShell } from "@/components/app/WorkbenchShell";
+import { resolveWorkspaceIdentity } from "@/lib/server/identity";
 
 /**
  * The rail is passed in rather than defaulted inside the shell. See
@@ -45,11 +46,27 @@ import { WorkbenchShell } from "@/components/app/WorkbenchShell";
  * that reaches the data layer, and keeping it out of `WorkbenchShell.tsx` is
  * what lets the shell's stories and tests render the whole thing with no
  * network.
+ *
+ * WO-W17b MADE IT ASYNC, AND THIS IS THE ONLY PLACE THE IDENTITY COULD BE
+ * RESOLVED. The header's identity slot states who this deployment is serving
+ * (03 §6), and under the pilot edge overlay (ADR 0063) that is a property of
+ * the request rather than of the deployment. A client component cannot read a
+ * request header and must not read a credential setting; this layout is the
+ * lowest server component both routes in the group pass through, so the
+ * descriptor is derived here and handed down as a serialisable value with no
+ * key, no key id and no fault in it. `lib/server/identity.ts` never throws, so
+ * this `await` cannot replace the page with an error boundary.
  */
-export default function WorkspaceLayout({
+export default async function WorkspaceLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  return <WorkbenchShell rail={<ThreadRailBridge />}>{children}</WorkbenchShell>;
+  const identity = await resolveWorkspaceIdentity();
+
+  return (
+    <WorkbenchShell rail={<ThreadRailBridge />} identity={identity}>
+      {children}
+    </WorkbenchShell>
+  );
 }

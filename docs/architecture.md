@@ -335,16 +335,26 @@ landmark. Components are layered `foundations → primitives → patterns
 contains an `IdentitySlot` that **returns `null`**: it reserves a DOM
 position and a module name for a future account control without
 rendering an avatar, a "Sign in", or a disabled button. What occupies
-the header today is the truthful string "Shared workspace — Everyone
-with access to this deployment sees these threads. There are no
-separate accounts."
+the header is a sentence about the principal the server resolved for
+that request, and on every deployment on `main` — one key, one principal
+— that sentence is "Shared workspace — Everyone with access to this
+deployment sees these threads. There are no separate accounts."
 
-That string is true of every deployment on `main` and **false** under the
-default-off pilot overlay (`deploy/pilot/`, ADR
-[0063](decisions/0063-pilot-principal-edge-mapping.md)), where the edge
-login selects a principal and threads are per person. WO-W17 did not own
-`web/lib/copy/` and left it alone; `docs/security.md` §Follow-ups
-records that resolving it is a prerequisite to inviting a pilot.
+**Which sentence, is decided per request rather than by a flag
+(WO-W17b).** Both group layouts are server components; each derives a
+`WorkspaceIdentity` (`lib/server/identity.ts`) from the same environment
+and the same two edge headers `lib/server/pilot.ts` reads for the
+credential seam, and passes it to the shell as a serialisable prop. It
+has three values: `shared` (the sentence above), `pilot` — which names
+the pilot the edge authenticated and says what is per person and what is
+cached in common — and `unresolved`, for a request the edge did not
+vouch for under the default-off pilot overlay (`deploy/pilot/`, ADR
+[0063](decisions/0063-pilot-principal-edge-mapping.md)). The descriptor
+carries a username and nothing else: no key, no `key_id`, no fault. The
+web tier still has no runtime feature flag (SR-07), because this is not
+one — it is the request's own answer, and with the pilot mode off the
+rendered element is byte-identical to what it was before the descriptor
+existed.
 
 **The data layer.** `lib/api/` is a typed client whose types are
 *generated* from `contract/openapi.json` (a CI job fails on drift), and

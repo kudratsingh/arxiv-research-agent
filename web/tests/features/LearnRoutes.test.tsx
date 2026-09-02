@@ -46,8 +46,12 @@ vi.mock("@/components/features/LedgerSurface", () => ({
 }));
 
 describe("the learning route group", () => {
-  it("shares the workbench shell and query boundary", () => {
-    render(<LearnLayout><div data-testid="child" /></LearnLayout>);
+  it("shares the workbench shell and query boundary", async () => {
+    // `await LearnLayout(...)`: WO-W17b made both group layouts async server
+    // components so they can resolve the request's identity descriptor, and
+    // `createRoot` cannot render one. Same form the async root layout is
+    // already driven with in `tests/fonts.test.ts`.
+    render(await LearnLayout({ children: <div data-testid="child" /> }));
     expect(screen.getByTestId("shell")).toBeVisible();
     expect(screen.getByTestId("rail")).toBeVisible();
     expect(screen.getByTestId("child")).toBeVisible();

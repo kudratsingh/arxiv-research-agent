@@ -528,12 +528,35 @@ describe("criterion 4 — the key never reaches a log, a response, or a bundle",
     }
   });
 
-  it("is reachable from exactly one module, and that module is the seam", () => {
+  it("is reachable from two modules, and both of them are under lib/server/", () => {
+    // WO-W17b ADDED THE SECOND, AND IT IS NOT A SECOND CREDENTIAL PATH.
+    // `lib/server/identity.ts` calls the same parser and the same resolver to
+    // answer one question — who did the edge authenticate — and returns a
+    // `WorkspaceIdentity`, which has no field for a key, a key id or a fault.
+    // The credential half is still `principal.ts`, which is still the only
+    // module that reads `ARXIV_API_KEY` (`tests/principal.test.ts`) and is
+    // still imported only by the proxy route.
     const importers = walk(WEB_ROOT).filter((file) =>
       /from "@\/lib\/server\/pilot"/.test(code(file)),
     );
     expect(importers.map((file) => path.relative(WEB_ROOT, file)).sort()).toEqual([
+      "lib/server/identity.ts",
       "lib/server/principal.ts",
+    ]);
+  });
+
+  it("reaches the browser through two server layouts and nothing else", () => {
+    // The identity descriptor is the ONLY thing derived from the pilot
+    // configuration that a browser ever sees, so the list of modules that can
+    // derive one is pinned the way the credential seam's importer list is. A
+    // client component appearing here would be a client component importing
+    // `lib/server/**`.
+    const importers = walk(WEB_ROOT).filter((file) =>
+      /from "@\/lib\/server\/identity"/.test(code(file)),
+    );
+    expect(importers.map((file) => path.relative(WEB_ROOT, file)).sort()).toEqual([
+      "app/(learn)/layout.tsx",
+      "app/(workspace)/layout.tsx",
     ]);
   });
 
@@ -541,12 +564,17 @@ describe("criterion 4 — the key never reaches a log, a response, or a bundle",
     // The env variables carry the map and the edge secret. A `PILOT_` mention
     // in a client-reachable module would mean a second reader of one of them,
     // which is a second credential path — 04 §1.3 constraint 1's whole
-    // subject.
+    // subject. WO-W17b's `identity.ts` names the three variables and is under
+    // `lib/server/`; nothing it exports carries their values.
     const mentions = walk(WEB_ROOT)
       .filter((file) => /\bPILOT_[A-Z_]+\b/.test(code(file)))
       .map((file) => path.relative(WEB_ROOT, file))
       .sort();
-    expect(mentions).toEqual(["lib/server/pilot.ts", "lib/server/principal.ts"]);
+    expect(mentions).toEqual([
+      "lib/server/identity.ts",
+      "lib/server/pilot.ts",
+      "lib/server/principal.ts",
+    ]);
   });
 
   it.runIf(existsSync(path.join(WEB_ROOT, ".next", "static")))(
@@ -565,6 +593,15 @@ describe("criterion 4 — the key never reaches a log, a response, or a bundle",
         "sk_ada_secret",
         "PILOT_PRINCIPAL_MAP",
         "PILOT_EDGE_SECRET",
+        // WO-W17b. Two server layouts now derive a descriptor from the pilot
+        // configuration and hand it to a CLIENT component, so the mode
+        // variable and both header names join the scan: if the derivation had
+        // been written in the shell instead of above it, one of these five
+        // would be in a chunk a browser downloads.
+        "PILOT_EDGE_AUTH",
+        "PILOT_MODE_ENV",
+        "x-pilot-edge-key",
+        "x-pilot-user",
       ];
       for (const file of files) {
         const body = readFileSync(file, "utf8");

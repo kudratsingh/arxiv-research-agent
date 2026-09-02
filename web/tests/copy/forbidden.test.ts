@@ -334,6 +334,19 @@ const COMPOSED: Record<string, string[]> = {
     threadsCopy.deleteDialog(""),
     threadsCopy.deleteDialog("Retrieval-augmented evaluation"),
   ].flatMap((dialog) => Object.values(dialog)),
+  // WO-W17b's identity slot, ALL THREE DESCRIPTORS. The whole claim of that
+  // work order is that the slot says something different under the pilot edge
+  // overlay, so all three sentences belong inside this gate rather than only
+  // the one `main` renders — including the one that names a person, which is
+  // the sentence seam S6 would be most easily broken by. The username arrives
+  // from the edge and is the operator's own vocabulary (the H11 rule again),
+  // so it is driven with a neutral placeholder of the shape
+  // `PILOT_USERNAME_PATTERN` permits; the gate is over the sentence around it.
+  "threads.workspaceIndicator": [
+    threadsCopy.workspaceIndicator({ kind: "shared" }),
+    threadsCopy.workspaceIndicator({ kind: "pilot", username: "pilot-a" }),
+    threadsCopy.workspaceIndicator({ kind: "unresolved" }),
+  ].flatMap((copy) => [copy.indicator, copy.detail]),
 };
 
 const COMPOSED_STRINGS: CopyString[] = Object.entries(COMPOSED).flatMap(

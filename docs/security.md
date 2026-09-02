@@ -462,6 +462,14 @@ truthful string that occupies the header instead is "Shared workspace —
 Everyone with access to this deployment sees these threads. There are
 no separate accounts."
 
+That string is what a deployment **with one principal** resolves, which
+is every deployment on `main`. Under the pilot overlay below the same
+slot states the principal the edge authenticated instead — still no
+avatar, no account menu and no login control, because knowing a
+username is not the same as having a session. See
+[ADR 0063](decisions/0063-pilot-principal-edge-mapping.md) and
+`web/lib/server/identity.ts`.
+
 When MT-01 introduces real identity, it arrives at seam S1
 (`resolveUpstreamPrincipal`) or S3 (session middleware) — not by
 promoting this gate. Basic auth may then stay as an outer perimeter or
@@ -486,14 +494,19 @@ sole credential boundary and no key ever reaches a browser.
 
 **Two sentences in S7 above become false under this overlay, and they
 are the two that matter.** The edge login *is* a principal selector, and
-threads *are* per person. The web shell has not caught up — the header
-still renders "Shared workspace — Everyone with access to this
-deployment sees these threads. There are no separate accounts."
-(`web/lib/copy/threads.ts`), which under pilot mode is a false statement
-about data separation shown to the people the separation is for.
-`docs/runbooks/pilot.md`'s onboarding note tells pilots to ignore it.
-**Resolving this is a prerequisite to inviting anyone**, and it is
-recorded as a follow-up below rather than left to be noticed.
+threads *are* per person. **The shell says so (WO-W17b).** The two
+group layouts derive a `WorkspaceIdentity` per request from this
+section's own setting and its own two headers
+(`web/lib/server/identity.ts`) and hand it to the shell, which renders
+one of three sentences: the shared one above with the mode off; "Pilot
+workspace", naming the pilot the edge authenticated and saying what is
+per person (threads, guided sessions, learner profile, ledger) and what
+is shared (the paper and embedding caches), with the mode on; and
+"Principal not resolved" when the mode is on and the request resolved to
+nobody. It is **not** a feature flag — the derivation is a property of
+the request, the descriptor carries no key, no `key_id` and no fault,
+and with the mode off the rendered element is byte-identical to what it
+was before the descriptor existed.
 
 The guards, and what each one is for:
 
@@ -714,12 +727,16 @@ redriver.
 
 ## Follow-ups
 
-- **The shell's "Shared workspace" copy contradicts the pilot overlay**,
-  and must be resolved before any pilot is invited. `web/lib/copy/threads.ts`
-  states "Everyone with access to this deployment sees these threads. There
-  are no separate accounts."; under `PILOT_EDGE_AUTH=on` neither clause is
-  true. WO-W17 does not own `web/lib/copy/**` and left the string alone; ADR
-  0063's Consequences and `docs/runbooks/pilot.md` §8 both record it.
+- ~~**The shell's "Shared workspace" copy contradicts the pilot overlay**, and
+  must be resolved before any pilot is invited.~~ **DONE — WO-W17b.** The
+  identity slot now states the principal the server resolved for the request:
+  the shared sentence with the mode off (byte-identical to what it rendered
+  before), "Pilot workspace" naming the edge-authenticated pilot with the mode
+  on, and "Principal not resolved" when the mode is on and the request
+  resolved to nobody. Not a runtime flag (SR-07): the descriptor comes from
+  `web/lib/server/identity.ts`, carries no key, no `key_id` and no fault, and
+  is derived in the two group layouts rather than at the credential seam. See
+  "Pilot principals at the edge" above and ADR 0063's Consequences.
 - **An aggregate spend cap** (MT-01 F4, Phase L0-01). The pilot is bounded by
   the arithmetic in `docs/runbooks/pilot.md` §3 and by the provider account's
   own limit — neither of which is a control in this repository. Any cohort

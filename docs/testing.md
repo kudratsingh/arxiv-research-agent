@@ -152,12 +152,17 @@ pilot principals and no shared web key, under its own Playwright config
 stack — the pilot map and the shared key are mutually exclusive by
 design, and the `baseline-*` fixtures belong to a principal neither
 pilot holds — and no Phase W card edits a workflow, so **CI runs it as
-three skipped tests with a reason** and the isolation proof is a local
-run recorded in the WO-W17 PR. What CI *does* prove about the mode is
-the whole unit tier: `web/tests/pilotPrincipal.test.ts` drives the real
-route handler through every guard, and `web/tests/principal.test.ts`
-passes unmodified, which is the mode-off byte-identity claim.
-`web/e2e/README.md` §"The pilot tier" is the manual.
+five skipped tests with a reason** and the isolation proof is a local
+run recorded in the WO-W17 and WO-W17b PRs. What CI *does* prove about
+the mode is the whole unit tier: `web/tests/pilotPrincipal.test.ts`
+drives the real route handler through every guard,
+`web/tests/workspaceIdentity.test.ts` drives the identity descriptor the
+header renders through the same guards,
+`web/tests/shell/identity.test.tsx` compares the rendered identity slot
+against the markup it produced before that descriptor existed, and
+`web/tests/principal.test.ts` passes unmodified — which together are the
+mode-off byte-identity claim. `web/e2e/README.md` §"The pilot tier" is
+the manual.
 
 Two further gates ride on these tiers rather than being tiers of their
 own — both are red jobs, not reports:

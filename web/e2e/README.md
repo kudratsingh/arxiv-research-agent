@@ -229,7 +229,7 @@ tier.
 | `support/mock-mode.ts` | WO-W13b's mock-mode precondition for the session pass-through |
 | `fixtures/seed.sh` | the promoted Gate 1 seed, extended |
 | `__screenshots__/<platform>/` | WO-28's committed PNGs — 48 per platform |
-| `*.spec.ts` | one file per criterion; see the header comment in each. `session.spec.ts` is WO-W13's — criteria 2 and 4; `session-flow.spec.ts` is WO-W13b's whole guided read, the only file that lets a write reach the backend; `pilot.spec.ts` is WO-W17's — criteria 2 and 3, and skips itself without `E2E_PILOT=1` |
+| `*.spec.ts` | one file per criterion; see the header comment in each. `session.spec.ts` is WO-W13's — criteria 2 and 4; `session-flow.spec.ts` is WO-W13b's whole guided read, the only file that lets a write reach the backend; `pilot.spec.ts` is WO-W17's — criteria 2 and 3, plus WO-W17b's criterion 4 (the identity slot names the edge-authenticated pilot, and a document route the topology guard refuses says "Principal not resolved") — and skips itself without `E2E_PILOT=1` |
 
 ## Projects and tags
 

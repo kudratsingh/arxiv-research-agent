@@ -109,7 +109,9 @@ import { ThemeToggle } from "@/components/patterns/ThemeToggle";
 import { Button } from "@/components/primitives/Button";
 import { SkipLink } from "@/components/primitives/SkipLink";
 import { SHELL } from "@/lib/copy/shell";
-import { THREAD_RAIL, WORKSPACE } from "@/lib/copy/threads";
+import { THREAD_RAIL, WORKSPACE, workspaceIndicator } from "@/lib/copy/threads";
+import { SHARED_WORKSPACE_IDENTITY } from "@/lib/identity";
+import type { WorkspaceIdentity } from "@/lib/identity";
 import { RAIL_COLLAPSED_STORAGE_KEY } from "@/lib/tokens";
 
 import { IdentitySlot } from "./IdentitySlot";
@@ -138,6 +140,13 @@ const ThreadDrawer = lazy(() => import("@/components/features/ThreadDrawer"));
  * The header renders them as two nodes so the lead can carry emphasis. This
  * constant is the same sentence as one string, for the tests that assert
  * §6's wording and for any later surface that needs it whole.
+ *
+ * WO-W17b DID NOT CHANGE IT, AND THAT IS THE POINT. The header now renders
+ * whichever sentence the server's `WorkspaceIdentity` selects
+ * (`lib/copy/threads.ts::workspaceIndicator`), and for the `shared` descriptor
+ * — which is every deployment on `main` and the default of the prop below —
+ * that is these two strings, unchanged. This constant stays the shared
+ * sentence because that is what the tests naming §6's wording are about.
  */
 export const WORKSPACE_INDICATOR = `${WORKSPACE.indicator} — ${WORKSPACE.indicatorDetail}`;
 
@@ -308,6 +317,21 @@ export interface WorkbenchShellProps {
   defaultDrawerOpen?: boolean;
   /** Overrides `navigator.onLine`. Stories and tests only. */
   offline?: boolean;
+  /**
+   * Who the server resolved for this request (WO-W17b, seam S4/S6).
+   *
+   * NOT A FLAG, AND NOT A PREFERENCE. It is resolved per request by
+   * `lib/server/identity.ts` at the mounting layout, from the same environment
+   * and the same two edge headers the proxy's credential seam reads, and it is
+   * passed down as a value so this component has no branch of its own to be
+   * wrong about. It carries a username under pilot mode and NOTHING else: no
+   * key, no key id, no fault (`lib/identity.ts` has no field for one).
+   *
+   * Defaults to `shared`, which is what every deployment on `main` resolves
+   * and what every story, test and older render already assumed — so an
+   * omitted prop produces byte-identical markup.
+   */
+  identity?: WorkspaceIdentity;
 }
 
 export function WorkbenchShell({
@@ -317,6 +341,7 @@ export function WorkbenchShell({
   railCollapsed,
   defaultDrawerOpen = false,
   offline,
+  identity = SHARED_WORKSPACE_IDENTITY,
 }: WorkbenchShellProps): React.ReactElement {
   const measuredMode = useSyncExternalStore(mediaSubscribe, readRailMode, serverRailMode);
   const measuredCollapsed = useSyncExternalStore(
@@ -325,6 +350,12 @@ export function WorkbenchShell({
     serverRailCollapsed,
   );
   const measuredOffline = useSyncExternalStore(offlineSubscribe, readOffline, serverOffline);
+
+  // The server's answer, turned into the two strings the header prints. A
+  // pure function of a prop: no hook, no store, nothing to hydrate, and
+  // therefore no way for the first paint and the hydrated paint to disagree
+  // about who the reader is.
+  const workspace = workspaceIndicator(identity);
 
   const mode = railMode ?? measuredMode;
   // RC-04: the collapse toggle is "applied at ≥1024px only (below that,
@@ -428,9 +459,28 @@ export function WorkbenchShell({
             {THREAD_RAIL.openDrawer}
           </Button>
 
-          <p className="ew-shell__workspace">
-            <strong className="font-medium text-ink">{WORKSPACE.indicator}</strong>{" "}
-            {WORKSPACE.indicatorDetail}
+          {/*
+            The identity slot's occupant (03 §6, seam S6). Both halves are
+            always rendered, whichever descriptor selected them: the
+            qualification is the honest part and the shell does not get to
+            choose between them.
+
+            THE `data-` HOOK IS ABSENT UNDER `shared`, DELIBERATELY. WO-W17b
+            criterion 1 is that a deployment with the pilot mode off renders
+            this element byte for byte as it did before the descriptor
+            existed, and an added attribute is a changed byte. So the hook
+            appears only where there is something new to select — the same
+            `undefined`-means-absent pattern `data-workbench-offline` on the
+            wrapper above already uses.
+          */}
+          <p
+            className="ew-shell__workspace"
+            data-workspace-identity={
+              identity.kind === "shared" ? undefined : identity.kind
+            }
+          >
+            <strong className="font-medium text-ink">{workspace.indicator}</strong>{" "}
+            {workspace.detail}
           </p>
 
           <div className="ew-shell__actions">
