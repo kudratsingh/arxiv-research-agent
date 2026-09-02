@@ -1,0 +1,94 @@
+# The pilot edge (WO-W17, SR-08, ADR 0063).
+#
+# WHAT IS DIFFERENT FROM `deploy/hetzner/Caddyfile`, IN ONE SENTENCE: that
+# file's `basic_auth` is a DEPLOYMENT GATE with one shared credential
+# (`docs/security.md`, "S7 — the deployment gate is not an identity"); this
+# file's `basic_auth` has one credential per pilot and the authenticated
+# username is forwarded, so it selects a principal.
+#
+# The two are alternatives, not layers. Run the hetzner overlay for a
+# single-principal deployment and this one for the bounded pilot; running both
+# would leave two site blocks fighting over the same address. `deploy/pilot/README.md`
+# says which to use when.
+#
+# THE EDGE DOES THE AUTHENTICATING. The web tier maps, and mints nothing.
+# Caddy holds bcrypt hashes; the Next.js service holds a username→API-key map
+# and never sees a password. Neither of them can create a principal: pilot
+# keys are issued by hand into `api_keys_file` per `docs/runbooks/pilot.md`.
+{
+	email {$ACME_EMAIL}
+}
+# The site address. A hostname (`pilot.example.com`) turns on automatic
+# HTTPS; a bare port (`:80`) serves plain HTTP and is what the local e2e
+# tier uses, where the whole stack is on loopback and there is no name to
+# get a certificate for. Required — there is no default, because a default
+# here would be a guess about whether TLS is wanted.
+{$PILOT_SITE_ADDRESS} {
+	# ONE USER PER PILOT. The hashes live in a file this repository does not
+	# contain and must never contain: `deploy/pilot/pilot-users.caddy` is
+	# git-ignored, and `docs/runbooks/pilot.md` §"Issuing a pilot" is the only
+	# procedure that writes it. Shape, one pilot per line:
+	#
+	#     pilot-ada $2a$14$…
+	#
+	# `import` splices the file's tokens in at parse time, so a malformed
+	# file is a boot failure rather than a silently empty user list.
+	basic_auth {
+		import /etc/caddy/pilot-users.caddy
+	}
+
+	# Queries and plan revisions are small JSON documents. This rejects
+	# oversized bodies before Next.js or FastAPI buffers them.
+	request_body {
+		max_size 1MB
+	}
+
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), geolocation=(), microphone=()"
+		-Server
+	}
+
+	reverse_proxy web:3000 {
+		# THE TWO HEADERS THE WHOLE MECHANISM RESTS ON.
+		#
+		# `X-Pilot-User` carries the username Caddy just authenticated.
+		# `X-Pilot-Edge-Key` is the shared secret that lets the web tier prove
+		# the request came through this block rather than being posted
+		# directly at `web:3000` by anything else on the network. Both are
+		# read in `web/lib/server/pilot.ts`; the edge key is compared in
+		# constant time and never logged.
+		#
+		# `header_up <field> <value>` is a SET, and a set REPLACES whatever the
+		# client sent. That is what makes a spoofed `X-Pilot-User` from a
+		# browser harmless: it is overwritten here before Next.js ever sees it.
+		#
+		# DO NOT ADD `header_up -X-Pilot-User` "to be safe". Caddy's header
+		# handler applies additions, then sets, then DELETIONS — deletions run
+		# last, so a delete beside a set removes the value this line just
+		# wrote, and the web tier would answer 503 for every pilot. The set
+		# alone is both necessary and sufficient.
+		header_up X-Pilot-User {http.auth.user.id}
+		header_up X-Pilot-Edge-Key {$PILOT_EDGE_SECRET}
+	}
+
+	# Caddy already redacts `Authorization`, `Cookie` and `Set-Cookie` from the
+	# access log, which covers the basic-auth credential. `X-Pilot-Edge-Key` is
+	# added here because a CLIENT may send one — that value is a guess at the
+	# shared secret, and a log full of guesses is a log that teaches whoever
+	# reads it what the guesses were.
+	log {
+		output stdout
+		format filter {
+			wrap json
+			fields {
+				request>headers>X-Pilot-Edge-Key delete
+			}
+		}
+	}
+}

@@ -27,7 +27,11 @@
     "e2e:stack:seed": "bash ./e2e/support/stack.sh seed",
     "e2e:stack:down": "bash ./e2e/support/stack.sh down",
     "e2e:visual": "playwright test e2e/visual.spec.ts --project=chromium",
-    "e2e:visual:update": "playwright test e2e/visual.spec.ts --project=chromium --update-snapshots"
+    "e2e:visual:update": "playwright test e2e/visual.spec.ts --project=chromium --update-snapshots",
+    "e2e:pilot:stack:up": "E2E_PILOT=1 bash ./e2e/support/stack.sh up",
+    "e2e:pilot:stack:seed": "E2E_PILOT=1 bash ./e2e/support/stack.sh seed",
+    "e2e:pilot:stack:down": "E2E_PILOT=1 bash ./e2e/support/stack.sh down",
+    "e2e:pilot": "E2E_PILOT=1 playwright test -c playwright.pilot.config.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.23",

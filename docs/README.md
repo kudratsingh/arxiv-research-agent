@@ -37,6 +37,11 @@ more space. This page is the map of what "here" holds.
   licensing, and troubleshooting.
 - [`security.md`](security.md) — threat model and the prompt-injection
   defenses.
+- [`runbooks/`](runbooks/) — operational procedures for the things a
+  human does by hand, where a wrong step costs money or data.
+  [`runbooks/pilot.md`](runbooks/pilot.md) is the bounded pilot:
+  issuing and revoking a per-pilot key, the never-reassign rule, the
+  worst-case spend arithmetic, and the note that goes to each invitee.
 - [`eval.md`](eval.md) — evaluation: the benchmark, the four metrics,
   the runner's isolation and resume behavior, the campaign run-book,
   the regression gate, and the nightly workflow.

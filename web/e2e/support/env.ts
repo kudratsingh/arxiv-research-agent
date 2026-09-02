@@ -118,6 +118,77 @@ export const E2E_PRINCIPAL = process.env.E2E_PRINCIPAL ?? "e2e";
 export const E2E_API_SECRET =
   process.env.E2E_API_SECRET ?? "sk_e2e_local_preview_disabled";
 
+// --------------------------------------------------------------- WO-W17
+
+/**
+ * The pilot tier is OFF unless this is exactly `1`.
+ *
+ * `E2E_PILOT=1` selects a materially different stack: `support/compose.pilot.yml`
+ * puts a Caddy edge in front of `web`, turns `PILOT_EDGE_AUTH` on, empties
+ * `ARXIV_API_KEY`, and issues TWO principals instead of one. Under it the
+ * `baseline-*` fixtures — stamped with `E2E_PRINCIPAL` — are invisible to
+ * both pilots, so the ordinary suite has nothing to assert against. That is
+ * why the pilot spec has its own Playwright config (`playwright.pilot.config.ts`)
+ * rather than a tag inside the main one.
+ */
+export const E2E_PILOT_ENABLED = process.env.E2E_PILOT === "1";
+
+/** Host port the pilot edge publishes. Distinct from every other port here. */
+export const E2E_PILOT_EDGE_PORT = Number(
+  process.env.E2E_PILOT_EDGE_PORT ?? 13290,
+);
+
+/** Where a pilot's browser goes: the edge, so `basic_auth` is in the loop. */
+export const E2E_PILOT_BASE_URL =
+  process.env.E2E_PILOT_BASE_URL ??
+  `http://127.0.0.1:${E2E_PILOT_EDGE_PORT}`;
+
+/**
+ * The edge secret the local pilot stack uses.
+ *
+ * NOT A SECRET, AND SAYS SO IN ITS OWN VALUE — the same posture as
+ * `E2E_API_SECRET` above. It is 51 characters because
+ * `web/lib/server/pilot.ts` refuses anything under 32, and refusing a toy
+ * secret is one of the behaviours this tier exists to exercise.
+ */
+export const E2E_PILOT_EDGE_SECRET =
+  process.env.E2E_PILOT_EDGE_SECRET ??
+  "pilot_edge_secret_local_preview_disabled_0000000000";
+
+/**
+ * The two pilot principals the local stack issues.
+ *
+ * `password` is committed on purpose and is committed ONLY here: the edge
+ * never sees a plaintext password, it sees a bcrypt hash that
+ * `support/stack.sh` generates at `up` time into `build/e2e/`, which is
+ * git-ignored. So the repository contains a local sentinel that a spec can
+ * type, and contains no credential material for any deployment — which is the
+ * rule `deploy/pilot/README.md` states for the real thing.
+ *
+ * `keyId` is the NAME half of the stack's `API_KEYS` entry, which is what
+ * lands on a row (ADR 0036) and what `fixtures/seed.sh` stamps. `apiKey` is
+ * the secret half, and it is the value `web/tests/pilotPrincipal.test.ts`
+ * greps the built client bundle for.
+ */
+export const E2E_PILOTS = {
+  a: {
+    user: "pilot-a",
+    password: "pilot-a-local-preview-disabled",
+    keyId: "pilot-a",
+    apiKey: "sk_pilot_a_local_preview_disabled",
+    conversation: "baseline-pilot-a-thread",
+    session: "baseline-pilot-a-session",
+  },
+  b: {
+    user: "pilot-b",
+    password: "pilot-b-local-preview-disabled",
+    keyId: "pilot-b",
+    apiKey: "sk_pilot_b_local_preview_disabled",
+    conversation: "baseline-pilot-b-thread",
+    session: "baseline-pilot-b-session",
+  },
+} as const;
+
 /** The three widths 04 §8.3 audits. */
 export const NARROW_WIDTHS = [320, 360, 412] as const;
 

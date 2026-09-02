@@ -1,0 +1,106 @@
+# Compose overlay for the WO-W17 two-pilot stack. Third file, applied on top
+# of `docker-compose.yml` and `web/e2e/support/compose.e2e.yml`:
+#
+#   E2E_PILOT=1 bash web/e2e/support/stack.sh up
+#
+# WHY A THIRD OVERLAY AND NOT A FOURTH SPEC IN THE ORDINARY TIER. Turning
+# `PILOT_EDGE_AUTH` on changes what the whole stack is. `ARXIV_API_KEY` must be
+# EMPTY — the resolver refuses to serve when a pilot map and a shared key are
+# both configured — so the `web` container stops having a credential of its
+# own, and the `baseline-*` fixtures, which `fixtures/seed.sh` stamps with
+# `E2E_PRINCIPAL`, become invisible to both pilots (ADR 0036 `_check_ownership`).
+# There is no arrangement in which the ordinary suite and this one share a
+# stack, which is why the pilot spec has its own Playwright config
+# (`web/playwright.pilot.config.ts`) instead of a tag in the main one.
+#
+# THE EDGE IS THE COMMITTED PRODUCTION EDGE. `deploy/pilot/Caddyfile` is
+# mounted here unmodified — same `basic_auth`, same two `header_up` lines,
+# same log filter. What differs is only what an environment variable can
+# differ by: the site address is `:80` instead of a hostname, so there is no
+# ACME and no TLS on a loopback stack. A copy of the Caddyfile would prove
+# that the copy works.
+#
+# `web` STAYS PUBLISHED ON LOOPBACK, AND THAT IS DELIBERATE. It is the exact
+# condition MT-01's threat T6 names as the dangerous one — base compose
+# publishes the web tier, so "only the edge can reach it" is FALSE here — and
+# it is what lets `pilot.spec.ts` post a forged `X-Pilot-User` straight at the
+# web container and watch the topology guard refuse it. A stack that hid the
+# port would make the guard untestable and the test vacuous.
+#
+# THE COST BOUNDARY IS UNCHANGED. `ANTHROPIC_API_KEY` is pinned to
+# `local-preview-disabled` by `compose.e2e.yml`, which this file does not
+# touch, and the pilot spec issues no paid write of any kind.
+
+services:
+  app:
+    # TWO principals, where the e2e overlay issues one. The names are the
+    # `key_id`s that land on rows (ADR 0036) and that `fixtures/seed.sh`
+    # stamps; the secrets are local sentinels against a stack with no
+    # reachable provider, committed for the same reason
+    # `sk_e2e_local_preview_disabled` is.
+    #
+    # `API_KEYS` rather than `api_keys_file` here, unlike the real pilot
+    # overlay. The file path buys hot reload, which is ADR 0037's mechanism
+    # and is already covered by `tests/`; this tier is proving the WEB tier's
+    # mapping, and a bind-mounted keystore would add a moving part that tests
+    # nothing new.
+    #
+    # THE IMAGE TAGS ARE OVERRIDDEN FOR THE REASON THE CONTAINER NAMES ARE.
+    # `compose.e2e.yml` explains that a `container_name` is global to the
+    # Docker daemon and interpolates all four so two worktrees can run at once.
+    # An image TAG is global in exactly the same way, and it is not
+    # interpolated: two worktrees building `arxiv-research-agent-web:wo21-e2e`
+    # each overwrite the other's, so a stack that was already up can be
+    # restarted onto somebody else's build. The pilot tier gets its own tags so
+    # it cannot do that to the ordinary tier or to another worktree's.
+    image: ${E2E_PILOT_APP_IMAGE:-arxiv-research-agent:w17-pilot-e2e}
+    environment:
+      API_KEYS: "${E2E_PILOT_A_KEY_ID:-pilot-a}:${E2E_PILOT_A_SECRET:-sk_pilot_a_local_preview_disabled},${E2E_PILOT_B_KEY_ID:-pilot-b}:${E2E_PILOT_B_SECRET:-sk_pilot_b_local_preview_disabled}"
+
+  web:
+    image: ${E2E_PILOT_WEB_IMAGE:-arxiv-research-agent-web:w17-pilot-e2e}
+    environment:
+      # THE AMBIGUITY GUARD, EXERCISED RATHER THAN ASSERTED. `compose.e2e.yml`
+      # sets this to the single e2e secret; leaving it set would make every
+      # request 503 with `shared_key_also_set`. Emptying it is what a real
+      # pilot deployment does, and the reason `deploy/pilot/env.example` says
+      # so twice.
+      ARXIV_API_KEY: ""
+      PILOT_EDGE_AUTH: "on"
+      PILOT_EDGE_SECRET: "${E2E_PILOT_EDGE_SECRET:-pilot_edge_secret_local_preview_disabled_0000000000}"
+      PILOT_PRINCIPAL_MAP: '{"${E2E_PILOT_A_USER:-pilot-a}":{"key_id":"${E2E_PILOT_A_KEY_ID:-pilot-a}","api_key":"${E2E_PILOT_A_SECRET:-sk_pilot_a_local_preview_disabled}"},"${E2E_PILOT_B_USER:-pilot-b}":{"key_id":"${E2E_PILOT_B_KEY_ID:-pilot-b}","api_key":"${E2E_PILOT_B_SECRET:-sk_pilot_b_local_preview_disabled}"}}'
+      # See `deploy/pilot/compose.pilot.yml` for the whole argument: the
+      # container probe goes through the credential seam, the probe is not a
+      # pilot, and its 503 is correct behaviour. Liveness only here; `app`'s
+      # own healthcheck still proves FastAPI is serving.
+      HEALTHCHECK_URL: http://127.0.0.1:3000/
+
+  edge:
+    image: caddy:2.11.4-alpine
+    container_name: ${E2E_PILOT_EDGE_CONTAINER:-arxiv-w17-edge}
+    environment:
+      # A bare port: plain HTTP, no ACME, no certificate for a loopback
+      # address that has no name.
+      PILOT_SITE_ADDRESS: ":80"
+      ACME_EMAIL: e2e@local-preview-disabled.invalid
+      PILOT_EDGE_SECRET: "${E2E_PILOT_EDGE_SECRET:-pilot_edge_secret_local_preview_disabled_0000000000}"
+    ports:
+      - "${E2E_PILOT_EDGE_BIND_ADDRESS:-127.0.0.1}:${E2E_PILOT_EDGE_PORT:-13290}:80"
+    # RELATIVE PATHS RESOLVE FROM `docker-compose.yml`, NOT FROM THIS FILE —
+    # the project directory is the first `-f` file's directory, which is the
+    # repository root. `deploy/hetzner/compose.prod.yml` says the same thing
+    # in its header and mounts its Caddyfile the same way.
+    volumes:
+      - ./deploy/pilot/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Generated by `stack.sh up` under `web/build/`, which is git-ignored.
+      # Nothing bcrypt-shaped is committed by this work order.
+      - ${E2E_PILOT_USERS_FILE:-./web/build/e2e/pilot-users.caddy}:/etc/caddy/pilot-users.caddy:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:2019/config/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s

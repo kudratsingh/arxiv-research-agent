@@ -43,7 +43,12 @@ incidental, and each is argued in ADR
 
 - **The browser never holds a credential.** `X-API-Key` is attached
   server-side in the proxy route and nowhere else. Every call the
-  browser makes is same-origin.
+  browser makes is same-origin. *Which* key is attached is resolved by
+  `web/lib/server/principal.ts::resolveUpstreamPrincipal` — one shared
+  principal in every configuration on `main`, and one key per invited
+  pilot under the default-off `PILOT_EDGE_AUTH` mode (ADR
+  [0063](decisions/0063-pilot-principal-edge-mapping.md)). The mode
+  changes the answer; it does not move the boundary.
 - **The proxy is not optional.** Native `EventSource` and `<a download>`
   cannot carry a request header, so under `ENABLE_API_AUTH=true` —
   the production configuration — neither the event stream nor any
@@ -333,6 +338,13 @@ rendering an avatar, a "Sign in", or a disabled button. What occupies
 the header today is the truthful string "Shared workspace — Everyone
 with access to this deployment sees these threads. There are no
 separate accounts."
+
+That string is true of every deployment on `main` and **false** under the
+default-off pilot overlay (`deploy/pilot/`, ADR
+[0063](decisions/0063-pilot-principal-edge-mapping.md)), where the edge
+login selects a principal and threads are per person. WO-W17 did not own
+`web/lib/copy/` and left it alone; `docs/security.md` §Follow-ups
+records that resolving it is a prerequisite to inviting a pilot.
 
 **The data layer.** `lib/api/` is a typed client whose types are
 *generated* from `contract/openapi.json` (a CI job fails on drift), and

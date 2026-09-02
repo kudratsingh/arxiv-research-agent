@@ -82,6 +82,21 @@ set -euo pipefail
 principal="${E2E_PRINCIPAL:-e2e}"
 api_secret="${E2E_API_SECRET:-sk_e2e_local_preview_disabled}"
 
+# WO-W17. Under `E2E_PILOT=1` the stack issues TWO principals and no `e2e`
+# one (`web/e2e/support/compose.pilot.yml`), so the schema-warming call below
+# has to present a key the stack will actually accept — otherwise it 401s,
+# the lazy DDL never runs, and every INSERT after it fails with a confusing
+# `relation "conversations" does not exist`. The `baseline-*` rows are still
+# written under `principal`, deliberately: they belong to a third principal
+# neither pilot holds a key for, which makes "each pilot sees only their own"
+# an assertion about isolation rather than about an empty database.
+pilot="${E2E_PILOT:-}"
+pilot_a_key_id="${E2E_PILOT_A_KEY_ID:-pilot-a}"
+pilot_b_key_id="${E2E_PILOT_B_KEY_ID:-pilot-b}"
+if [ "${pilot}" = "1" ]; then
+  api_secret="${E2E_PILOT_A_SECRET:-sk_pilot_a_local_preview_disabled}"
+fi
+
 # Substitute the placeholder without unquoting the heredocs. The JSON rows
 # below are copied byte-for-byte from the Gate 1 baseline and must not start
 # being interpreted by the shell (`\n` inside a report body, `$` inside a
@@ -89,6 +104,13 @@ api_secret="${E2E_API_SECRET:-sk_e2e_local_preview_disabled}"
 # past instead.
 seed_job() {
   sed "s/__PRINCIPAL__/${principal}/g" \
+    | docker exec -i "$redis_container" redis-cli -x SET "$1"
+}
+
+# WO-W17. The same substitution with the owner passed in, because the pilot
+# rows below deliberately belong to two different principals.
+seed_job_owned_by() {
+  sed "s/__PRINCIPAL__/${2}/g" \
     | docker exec -i "$redis_container" redis-cli -x SET "$1"
 }
 
@@ -332,3 +354,132 @@ PY
 
 
 echo "Seeded baseline-populated, baseline-empty, job:baseline-* and the guided-session checkpoint."
+
+# ---------------------------------------------------------------------------
+# WO-W17 — two pilot principals, and one of each thing a pilot has.
+#
+# ONLY UNDER `E2E_PILOT=1`. Without the pilot overlay the stack issues one
+# principal and these rows would be owned by nobody who can read them, which
+# is not a fixture, it is litter.
+#
+# WHAT IS SEEDED, AND WHY EACH ONE. WO-W17 criterion 3 is "two pilot
+# principals each see only their own threads/sessions/profile/ledger", so
+# there is exactly one row of each of those four kinds per pilot, with a
+# distinguishable value in it. The assertion the spec makes is symmetric —
+# each pilot sees theirs AND does not see the other's — because a test that
+# only checked the first half would pass against a stack that showed
+# everything to everyone.
+#
+# Written behind the API for the same reason everything else here is: the only
+# front door to a session is `POST /learn/sessions`, which runs the graph,
+# which calls a model. This stack has no reachable provider (property 4).
+if [ "${pilot}" = "1" ]; then
+  docker exec -i "$postgres_container" psql -v ON_ERROR_STOP=1 \
+    -v a="$pilot_a_key_id" -v b="$pilot_b_key_id" -U arxiv -d arxiv <<'SQL'
+-- Threads. One each, with a title only its owner may ever see.
+INSERT INTO conversations (
+  conversation_id, title, created_at, updated_at, principal_key_id
+) VALUES (
+  'baseline-pilot-a-thread',
+  'Pilot A private thread',
+  '2026-09-01T09:00:00Z',
+  '2026-09-01T09:05:00Z',
+  :'a'
+), (
+  'baseline-pilot-b-thread',
+  'Pilot B private thread',
+  '2026-09-01T09:10:00Z',
+  '2026-09-01T09:15:00Z',
+  :'b'
+) ON CONFLICT (conversation_id) DO UPDATE SET
+  title = EXCLUDED.title,
+  updated_at = EXCLUDED.updated_at,
+  principal_key_id = EXCLUDED.principal_key_id;
+
+INSERT INTO conversation_jobs (
+  conversation_id, job_id, ordinal, query, report, created_at
+) VALUES (
+  'baseline-pilot-a-thread',
+  'baseline-pilot-a-run',
+  1,
+  'What does pilot A ask about?',
+  E'# Pilot A briefing\n\nOnly pilot A may read this.',
+  '2026-09-01T09:05:00Z'
+), (
+  'baseline-pilot-b-thread',
+  'baseline-pilot-b-run',
+  1,
+  'What does pilot B ask about?',
+  E'# Pilot B briefing\n\nOnly pilot B may read this.',
+  '2026-09-01T09:15:00Z'
+) ON CONFLICT (conversation_id, ordinal) DO UPDATE SET
+  job_id = EXCLUDED.job_id,
+  query = EXCLUDED.query,
+  report = EXCLUDED.report,
+  created_at = EXCLUDED.created_at;
+
+-- Profiles. `academic_level` differs so a leak is visible rather than
+-- inferred; empty `goals`/`skills` keep the row inside every ADR 0058 CHECK
+-- without pretending the pilot declared anything.
+INSERT INTO learner_profiles (
+  principal_key_id, academic_level, time_budget_min_per_day, profile_note
+) VALUES (
+  :'a', 'grad', 25, 'Pilot A profile note'
+), (
+  :'b', 'undergrad', 45, 'Pilot B profile note'
+) ON CONFLICT (principal_key_id) DO UPDATE SET
+  academic_level = EXCLUDED.academic_level,
+  time_budget_min_per_day = EXCLUDED.time_budget_min_per_day,
+  profile_note = EXCLUDED.profile_note,
+  updated_at = NOW();
+
+-- Ledgers. `progress_events` refuses UPDATE outright (WO-W07's append-only
+-- trigger), so this is `DO NOTHING` rather than an upsert — which is also
+-- what makes re-seeding idempotent here.
+INSERT INTO progress_events (
+  event_id, principal_key_id, ts, kind, payload, evidence_ref
+) VALUES (
+  'baseline-pilot-a-event',
+  :'a',
+  '2026-09-01T09:06:00Z',
+  'session_completed',
+  '{"session_id": "baseline-pilot-a-session", "minutes": 18}'::jsonb,
+  NULL
+), (
+  'baseline-pilot-b-event',
+  :'b',
+  '2026-09-01T09:16:00Z',
+  'session_completed',
+  '{"session_id": "baseline-pilot-b-session", "minutes": 22}'::jsonb,
+  NULL
+) ON CONFLICT (event_id) DO NOTHING;
+SQL
+
+  # Sessions. Parked at `awaiting_learner`, one per pilot, no checkpoint:
+  # `src/api/sessions.py::_checkpoint_values` returns an empty transcript for
+  # a thread that has none, and criterion 3 is about ownership rather than
+  # about rehydration (which `session.spec.ts` already proves).
+  seed_job_owned_by job:baseline-pilot-a-session "$pilot_a_key_id" <<'JSON'
+{"job_id":"baseline-pilot-a-session","query":"Guided read: pilot A","status":"awaiting_learner","kind":"session","input_payload":{"principal_key_id":"__PRINCIPAL__","tier1":{},"session_spec":{"path_id":"fixture-guided-read","resource_id":"arxiv:1706.03762","title":"Pilot A private session","canonical_url":"https://arxiv.org/abs/1706.03762","reading_guidance":[],"available_minutes":20,"path_position":1,"path_entry_count":1}},"created_at":1788339600.0,"started_at":1788339660.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_cap_status":"","cost_cap_message":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":null,"plan":null,"turn":null,"resume_action":null,"resume_plan":null,"resume_payload":null,"principal_key_id":"__PRINCIPAL__"}
+JSON
+
+  seed_job_owned_by job:baseline-pilot-b-session "$pilot_b_key_id" <<'JSON'
+{"job_id":"baseline-pilot-b-session","query":"Guided read: pilot B","status":"awaiting_learner","kind":"session","input_payload":{"principal_key_id":"__PRINCIPAL__","tier1":{},"session_spec":{"path_id":"fixture-guided-read","resource_id":"arxiv:1706.03762","title":"Pilot B private session","canonical_url":"https://arxiv.org/abs/1706.03762","reading_guidance":[],"available_minutes":20,"path_position":1,"path_entry_count":1}},"created_at":1788340200.0,"started_at":1788340260.0,"completed_at":null,"result":null,"error":null,"error_type":null,"cost_cap_status":"","cost_cap_message":null,"cost_usd":null,"llm_calls":null,"iterations":null,"quality_score":null,"hitl_bypass":false,"conversation_id":null,"plan":null,"turn":null,"resume_action":null,"resume_plan":null,"resume_payload":null,"principal_key_id":"__PRINCIPAL__"}
+JSON
+
+  # Non-terminal, so both need a lease for the reason the rows above do: the
+  # production redriver would otherwise rewrite them to `orphaned` mid-run.
+  docker exec "$redis_container" redis-cli SET joblease:baseline-pilot-a-session baseline-fixture EX 86400 >/dev/null
+  docker exec "$redis_container" redis-cli SET joblease:baseline-pilot-b-session baseline-fixture EX 86400 >/dev/null
+
+  # The runs behind the two threads, so each thread renders a transcript.
+  seed_job_owned_by job:baseline-pilot-a-run "$pilot_a_key_id" <<'JSON'
+{"job_id":"baseline-pilot-a-run","query":"What does pilot A ask about?","status":"succeeded","created_at":1788339600.0,"started_at":1788339660.0,"completed_at":1788339700.0,"result":"# Pilot A briefing\n\nOnly pilot A may read this.","error":null,"error_type":null,"cost_usd":0.11,"llm_calls":3,"iterations":1,"quality_score":0.8,"hitl_bypass":false,"conversation_id":"baseline-pilot-a-thread","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
+JSON
+
+  seed_job_owned_by job:baseline-pilot-b-run "$pilot_b_key_id" <<'JSON'
+{"job_id":"baseline-pilot-b-run","query":"What does pilot B ask about?","status":"succeeded","created_at":1788340200.0,"started_at":1788340260.0,"completed_at":1788340300.0,"result":"# Pilot B briefing\n\nOnly pilot B may read this.","error":null,"error_type":null,"cost_usd":0.12,"llm_calls":3,"iterations":1,"quality_score":0.8,"hitl_bypass":false,"conversation_id":"baseline-pilot-b-thread","plan":null,"resume_action":null,"resume_plan":null,"principal_key_id":"__PRINCIPAL__"}
+JSON
+
+  echo "Seeded the two WO-W17 pilot principals: threads, sessions, profiles and ledgers."
+fi

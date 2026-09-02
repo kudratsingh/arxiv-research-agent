@@ -34,11 +34,13 @@
  */
 
 import { resolveUpstreamPrincipal } from "@/lib/server/principal";
+import type { UpstreamPrincipal } from "@/lib/server/principal";
 import {
   countStreamedBytes,
   emitProxyLog,
   pathTemplate,
 } from "@/lib/server/proxyLog";
+import type { ProxyOutcome } from "@/lib/server/proxyLog";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -104,7 +106,7 @@ async function proxyRequest(
   const log = (
     status: number,
     bytes: number,
-    outcome?: "misconfigured" | "upstream_unavailable"
+    outcome?: ProxyOutcome
   ): void => {
     emitProxyLog({
       method: request.method,
@@ -135,7 +137,32 @@ async function proxyRequest(
   }
   // MT-01 seam S1. Identical behaviour to the inline env read it replaced:
   // the header is set when a key is configured and omitted when it is not.
-  const principal = await resolveUpstreamPrincipal(request);
+  //
+  // WO-W17 WRAPPED THE CALL AND CHANGED NOTHING ELSE. With `PILOT_EDGE_AUTH`
+  // off the seam cannot throw, so this `try` never fires and the frozen
+  // `tests/apiProxyRoute.test.ts` still passes unmodified. With it on, a
+  // refusal — spoofed username header, unknown username, broken or ambiguous
+  // configuration — arrives here as an exception rather than as a value,
+  // precisely so that it cannot be mistaken for `null` ("send no key") and
+  // forwarded upstream unauthenticated.
+  //
+  // The catch is unqualified on purpose. `PrincipalUnresolvedError` is the
+  // expected shape, but ANY failure to resolve a credential must fail closed,
+  // and the response body is the same in every case so that "this username
+  // does not exist" and "this deployment is misconfigured" are
+  // indistinguishable from outside. Which one it was is in the resolver's own
+  // `pilot_principal` log line, where the operator reads it and an attacker
+  // does not.
+  let principal: UpstreamPrincipal | null;
+  try {
+    principal = await resolveUpstreamPrincipal(request);
+  } catch {
+    log(503, 0, "principal_unresolved");
+    return Response.json(
+      { detail: "pilot_principal_unresolved" },
+      { status: 503 }
+    );
+  }
   if (principal) headers.set("X-API-Key", principal.apiKey);
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";

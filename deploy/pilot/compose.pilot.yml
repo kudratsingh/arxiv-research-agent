@@ -1,0 +1,144 @@
+# The bounded-pilot deployment overlay (WO-W17, SR-08/SR-09, ADR 0063).
+#
+# USE THIS INSTEAD OF `deploy/hetzner/compose.prod.yml`, NOT BESIDE IT. Both
+# files define a `caddy` service and both harden the same three services; the
+# prod overlay ALSO requires `WEB_API_KEY` at interpolation time, which a
+# pilot deployment does not have (there is no shared web key — that is the
+# whole point). Compose interpolates every file it loads before merging any of
+# them, so stacking the two would demand a credential this deployment must not
+# possess.
+#
+#   docker compose -f docker-compose.yml \
+#     -f deploy/pilot/compose.pilot.yml up --build -d
+#
+# `deploy/hetzner/README.md`'s provisioning contract still governs the host:
+# same server class, same Cloud Firewall, same "only the edge publishes a
+# port" rule. What changes is who the edge lets in and what the web tier does
+# with the answer.
+#
+# NOTHING HERE IS APPROVED TO RUN. W-OD-5 (the invitee names, the deployment,
+# the inference budget, the at-cap behaviour, and whether pilot keys keep
+# `POST /research` rights) is an open owner decision. This file is the
+# mechanism; `docs/runbooks/pilot.md` is the procedure; neither is permission.
+
+services:
+  app:
+    # Only the edge is host-published. The Next.js proxy reaches this service
+    # on the private Compose network.
+    ports: !reset []
+    environment:
+      ENABLE_API_AUTH: "true"
+      # THE KEYSTORE IS A FILE, NOT A STRING (ADR 0037). `API_KEYS` is read
+      # once at startup, so adding or revoking a pilot would need a restart —
+      # and a restart during a 14-day observation window is a data point
+      # nobody wanted. The file is polled by `KeystoreReloader`, so issuance is
+      # an edit and revocation is a deletion, both bounded by
+      # `API_KEYS_RELOAD_INTERVAL_SEC`. `docs/runbooks/pilot.md` is the
+      # procedure; the file itself is never committed.
+      API_KEYS: ""
+      API_KEYS_FILE: /run/secrets/pilot-keys.json
+      API_KEYS_RELOAD_INTERVAL_SEC: ${API_KEYS_RELOAD_INTERVAL_SEC:-30}
+      ENABLE_PROMPT_ISOLATION: "true"
+      # Per-principal, Redis-backed, and the second term of SR-09's spend
+      # arithmetic. Lower it before raising the cohort, never after.
+      API_KEY_HOURLY_LIMIT: ${API_KEY_HOURLY_LIMIT:-20}
+      MAX_COST_USD: ${MAX_COST_USD:-2.00}
+      LEARNING_SESSION_MAX_COST_USD: ${LEARNING_SESSION_MAX_COST_USD:-0.50}
+      # W-OD-5 chooses `refuse` or `degraded_close`. The default here is the
+      # setting's own default; the runbook records what was approved.
+      LEARNING_SESSION_COST_CAP_BEHAVIOR: ${LEARNING_SESSION_COST_CAP_BEHAVIOR:-refuse}
+      # WO-W15: the base compose turns this on for the zero-config demo. A
+      # pilot is not a demo, and the flagship path publishes nothing until the
+      # briefing campaign (W-OD-2) and its review are done.
+      ENABLE_LEARN_CONTENT: ${ENABLE_LEARN_CONTENT:-false}
+      POSTGRES_URL: postgresql://arxiv:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/arxiv
+    volumes:
+      # Read-only, and outside the image. The file holds every pilot's raw
+      # secret in cleartext — MT-01 finding F3, unfixed in Phase W and named
+      # as such in the runbook's risk section.
+      - ${PILOT_KEYSTORE_FILE:?PILOT_KEYSTORE_FILE must point at the pilot keystore JSON}:/run/secrets/pilot-keys.json:ro
+
+  web:
+    ports: !reset []
+    environment:
+      API_INTERNAL_BASE: http://app:8000
+      # EMPTY, AND THAT IS LOAD-BEARING. `web/lib/server/pilot.ts` refuses to
+      # serve when the pilot map and the shared key are BOTH configured: two
+      # configured answers to "whose credential is this" is an unanswered
+      # question, not a fallback chain. A non-empty value here turns every
+      # request into a 503, by design.
+      ARXIV_API_KEY: ""
+      PILOT_EDGE_AUTH: "on"
+      # The username→principal map. One JSON document, server-side only,
+      # never logged, never in a build argument, never `NEXT_PUBLIC_*`.
+      # Shape (at most five entries, SR-09):
+      #
+      #   {"pilot-ada": {"key_id": "pilot-ada-2026-09",
+      #                  "api_key": "sk_…"}}
+      #
+      # `key_id` must equal the NAME half of that pilot's `api_keys_file`
+      # entry — it is what lands on their rows (ADR 0036) — and `api_key` the
+      # secret half.
+      PILOT_PRINCIPAL_MAP: ${PILOT_PRINCIPAL_MAP:?PILOT_PRINCIPAL_MAP must be set}
+      # Shared with the edge below, and with nothing else. This is the whole
+      # topology guard: without it the web tier refuses every forwarded
+      # username. `openssl rand -hex 32`.
+      PILOT_EDGE_SECRET: ${PILOT_EDGE_SECRET:?PILOT_EDGE_SECRET must be set}
+      CSP_MODE: ${CSP_MODE:-enforce}
+      # THE HEALTHCHECK STOPS PROBING THROUGH THE PROXY, AND HERE IS WHY.
+      #
+      # `scripts/healthcheck.mjs` probes `/api/healthz`, which under pilot mode
+      # goes through the credential seam — and the probe is not a pilot, carries
+      # no edge key, and is therefore refused with 503. That refusal is correct
+      # behaviour, so the probe is the thing that has to change, not the guard.
+      #
+      # WHAT IS LOST: WO-30 / C5's property that a healthy `web` container
+      # proves it reached FastAPI. WHAT COVERS IT INSTEAD: the `app` service's
+      # own healthcheck still proves FastAPI is serving; the edge's healthcheck
+      # proves Caddy is; and the runbook's onboarding smoke test is an
+      # authenticated request through the whole chain, performed once per pilot
+      # at issuance. Recorded rather than left as a silent regression.
+      HEALTHCHECK_URL: http://127.0.0.1:3000/
+
+  postgres:
+    environment:
+      POSTGRES_USER: arxiv
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: arxiv
+
+  edge:
+    image: caddy:2.11.4-alpine
+    container_name: ${PILOT_EDGE_CONTAINER:-arxiv-research-agent-pilot-edge}
+    restart: unless-stopped
+    environment:
+      PILOT_SITE_ADDRESS: ${PILOT_SITE_ADDRESS:?PILOT_SITE_ADDRESS must be set}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL must be set}
+      PILOT_EDGE_SECRET: ${PILOT_EDGE_SECRET:?PILOT_EDGE_SECRET must be set}
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./deploy/pilot/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Generated by the operator, one bcrypt line per pilot, git-ignored.
+      # `docs/runbooks/pilot.md` §"Issuing a pilot" is the procedure.
+      - ${PILOT_USERS_FILE:?PILOT_USERS_FILE must point at the generated basic-auth file}:/etc/caddy/pilot-users.caddy:ro
+      - pilot-caddy-data:/data
+      - pilot-caddy-config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:2019/config/"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  pilot-caddy-data:
+  pilot-caddy-config:
