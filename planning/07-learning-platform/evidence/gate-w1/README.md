@@ -30,7 +30,7 @@ corrections are left visible.
 **This pack claims no learning outcome of any kind.** No real learner has been
 observed, no funded campaign has ever run in this repository, and every
 threshold in Phase W is a prior. [`known-gaps.md`](known-gaps.md) is the
-sixteen-entry checklist, and it is required reading beside this index.
+seventeen-entry checklist, and it is required reading beside this index.
 
 ---
 
@@ -59,7 +59,7 @@ W-OD-1**.
 | **7c** | *(§6 gives it no row of its own; W11 c4 belongs to the same decision)* the nightly learning lane's **first scheduled run** | ❌ **UNRESOLVED — waits on W-OD-1** | [`eval-harness.md`](eval-harness.md) §4. `eval-nightly.yml` is `disabled_manually` and stays disabled; the workflow's `DEFAULT_LEARNING_MAX_BUDGET_USD` is **$15** | **W11 c4** |
 | 8 | Per-session cost accounting reconciles; cap enforcement proven | ⚠️ **Resolved (no-cost boundary)** | [`cost-reconciliation.md`](cost-reconciliation.md) — `tests/test_session_cost_cap.py`, **6 tests**. `round(job.cost_usd, 2) == 0.09` on two billed calls; both at-cap behaviours with `workflow.client_constructed is False`. **Every figure is a mock-mode figure**; the price is unmeasured | W06 (#144), ADR 0062 |
 | 9 | Honesty inventory: provenance rules, no-inferred-as-fact, evidence-quoting judge, no-mastery-% gate | ✅ **Resolved** | [`honesty-inventory.md`](honesty-inventory.md) — `tests/test_learner_profile_store.py` **60**, `tests/test_learner_profile_serializer.py` **19**, `tests/test_progress_events.py` **76**, `tests/test_assessment_judge.py` **15**, `tests/test_learning_metrics.py` **23**, `web/tests/copy/forbidden.test.ts` **63** incl. the planted `"87% mastered"` fixture that MUST fail | W02 (#134), W04 (#142), W07 (#133), W14 (#147) |
-| 10 | `known-gaps.md` — what W1 does *not* prove | ✅ **Resolved** | [`known-gaps.md`](known-gaps.md) — **16 entries**, non-empty | **W19** |
+| 10 | `known-gaps.md` — what W1 does *not* prove | ✅ **Resolved** | [`known-gaps.md`](known-gaps.md) — **17 entries**, non-empty | **W19** |
 
 **Rows 1, 2, 4 and 5 were reproduced a second way.** Every citation in the
 table above is a CI run or a committed test. The **coordinator state-probe of
@@ -88,7 +88,7 @@ set the house rule against.
 | Path | What it is | Source |
 |---|---|---|
 | [`README.md`](README.md) | This index. | **W19** |
-| [`known-gaps.md`](known-gaps.md) | **16 entries.** What Gate W1 does not prove, each with owner and what would change it. | **W19** |
+| [`known-gaps.md`](known-gaps.md) | **17 entries** (one, §6, now resolved and kept struck through). What Gate W1 does not prove, each with owner and what would change it. | **W19** |
 | [`end-to-end-session.md`](end-to-end-session.md) | Rows 1–2. The browser proof, the three independent cost boundaries on it, the no-client-construction test, and the below-the-browser checkpoint reattachment. | W03/W13/W13b, collected by **W19** |
 | [`paid-path-interdiction.md`](paid-path-interdiction.md) | Row 4. The interceptor's two claims and their different strengths, and the A/B control for the mock-mode pin. | W13/W13b, collected by **W19** |
 | [`flags.md`](flags.md) | Row 3. The four-flag inventory, the ladder, the compose-default nuance, and every flag-off/flag-on test. | **W19** |
@@ -189,8 +189,19 @@ does not exist. None of these is W19's ruling; W19 is writing them down.
 8. **The `nightly-eval` workflow remains disabled. All model spend remains
    locked.**
 
-One more, for completeness: **WO-W03b is in flight** to resolve the tutor's
-close line (`known-gaps.md` §6).
+Three more, for completeness, all after the §5 merge train:
+
+- **WO-W03b merged** as PR [#151](https://github.com/kudratsingh/arxiv-research-agent/pull/151)
+  / `1026534` on 2026-09-02, resolving the tutor's close line
+  (`known-gaps.md` §6) and introducing the mirror coupling now recorded as
+  `known-gaps.md` §17. **It is one commit past this pack's baseline**, so no §6
+  status above moves on account of it.
+- **WO-W13c is in flight** (`fix/w13c-cls-conversation-route`) on the
+  `cls.spec.ts` failure and the e2e overlay's daemon-global image tags
+  (`known-gaps.md` §7, §8).
+- **WO-W17b is in flight** (`feat/w17b-pilot-identity-slot`) on the pilot
+  identity copy, under an SR-07-compliant server-resolved descriptor
+  (`known-gaps.md` §12).
 
 ---
 
@@ -331,7 +342,7 @@ its own tags**, as §5.4's mitigation requires. Upstreaming interpolated tags is
 
 **W19's two acceptance criteria are met.** Every §6 Gate W1 row resolves to an
 artifact in this directory or to an exact citation, each linked to its producing
-work order (criterion 1); `known-gaps.md` exists and is non-empty, at sixteen
+work order (criterion 1); `known-gaps.md` exists and is non-empty, at seventeen
 entries (criterion 2).
 
 **What is resolved at the no-cost boundary.** Seven of §6's ten rows are
@@ -375,7 +386,7 @@ them rather than choosing:
    CI-environment-conditioned** — 2 of 5 main CI runs since `4fbe239`, never on
    a PR, 80/80 green locally, regression window opening at WO-W13's
    `web/lib/job/machine.ts` change (`known-gaps.md` §7). The tutor's
-   mastery-frame close line (`known-gaps.md` §6, WO-W03b in flight) is the
-   natural companion condition.
+   mastery-frame close line is **no longer** a companion condition: WO-W03b
+   closed it in PR #151 (`known-gaps.md` §6), one commit past this baseline.
 
 Whichever it is, it belongs in [`STATUS.md`](../../STATUS.md) and not here.

@@ -167,7 +167,14 @@ over the painted page, and says in the code why.
 
 Not a defect in either card. It is an inconsistency between the copy tier's
 ruling and an agent string outside that tier's scope, and it is
-[`known-gaps.md`](known-gaps.md) §6 with **WO-W03b** in flight to close it.
+[`known-gaps.md`](known-gaps.md) §6 — **closed by WO-W03b**, PR
+[#151](https://github.com/kudratsingh/arxiv-research-agent/pull/151) /
+`1026534`, one commit past this pack's baseline. The line now reads *"The lines
+above are this session's activity record, drawn from the events it wrote."*, the
+spec's carve-out is gone so the whole painted page is scanned, and the ban now
+also binds the backend through `PEDAGOGY_DENY_LIST`
+(`tests/test_simulate_learner.py:315`) — a hand-maintained mirror that is itself
+[`known-gaps.md`](known-gaps.md) §17.
 
 ## 6. Fixture provenance, so no recording can pass as a session
 

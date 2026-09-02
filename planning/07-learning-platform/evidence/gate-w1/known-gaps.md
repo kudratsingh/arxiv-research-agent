@@ -3,17 +3,26 @@
 WO-W19 acceptance criterion 2: *"`known-gaps.md` exists and is non-empty (an
 empty gap list at a gate is the revamp's definition of dishonesty)."*
 
-This is the honest list. Sixteen entries. Each says what is not proven, why it
-is not proven, who owns it, and what would change it. Several are ordinary
-consequences of the no-cost boundary; two (§6, §12) are inconsistencies inside
-the merged tree that a reader would meet as a false or self-defeating sentence;
-two (§7, §16) are real test failures a re-run hides, and §7 is on `main`.
+This is the honest list. **Seventeen entries, one of them now resolved.** Each
+says what is not proven, why it is not proven, who owns it, and what would
+change it. Several are ordinary consequences of the no-cost boundary; §12 is an
+inconsistency inside the merged tree that a reader would meet as a false
+sentence; §7 and §16 are real test failures a re-run hides, and §7 is on `main`.
+
+**§6 is resolved** — by WO-W03b (PR #151, `1026534`), one commit after this
+pack's baseline. It is kept, struck through and marked, because a gap list that
+quietly loses its closed items cannot be audited. Its fix introduced **§17**.
 
 Assembled against `origin/main` at **`3ccb650`** on 2026-09-02, and revised
 against the **coordinator state-probe of main `3ccb650`, 2026-09-02** — an Opus
 agent run, not a CI run. The probe found main **HEALTHY on every tier**
 ([`README.md`](README.md) §6.1); it also **corrected §7** and **added §16**,
 and both corrections are kept visible rather than silently applied.
+
+Two cards are in flight against three of the seventeen: **WO-W13c**
+(`fix/w13c-cls-conversation-route` — §7 and §8) and **WO-W17b**
+(`feat/w17b-pilot-identity-slot` — §12). Neither is merged, and neither changes
+a §6 status in [`README.md`](README.md).
 
 ---
 
@@ -99,27 +108,53 @@ to tutor copy or plan shape fails [it] … it does mean a future card touching t
 session graph re-records."* The fix is `make record-learning-fixtures`, and the
 failure message names it.
 
-This is a live constraint on **WO-W03b** (§6 below), which changes a tutor
-string.
+It bound **WO-W03b** immediately: PR #151 changed one tutor string and
+re-recorded **all fifteen** fixtures in the same commit (§6). The first real
+encounter with this test went exactly as PR #148 said it would.
 
-## 6. The tutor's close line plants the frame WO-W14's gate bans one tier down.
+## 6. ~~The tutor's close line plants the frame WO-W14's gate bans one tier down.~~ — **RESOLVED**
 
-`src/agents/tutor.py:486` emits **"This is an activity record, not a mastery
-score."** WO-W14 removed exactly this construction from the copy dictionary,
-under 03 §5.5's ruling that *the dictionary does not use the word even to deny
-it, because a denial plants the frame it rejects*; four WO-W13 sentences were
-reworded for it (PR #147's table).
+**Resolved by WO-W03b, PR [#151](https://github.com/kudratsingh/arxiv-research-agent/pull/151),
+merged 2026-09-02T13:08:18Z as `1026534`.** The entry is kept rather than
+deleted, because a gap list that quietly loses its closed items cannot be
+audited.
 
-The agent string is outside `web/lib/copy/**` and so outside the gate.
-`session-flow.spec.ts` subtracts that one service-authored string before running
-the pedagogy scan over the painted page, and says in the code why. PR #150
-declined to fix it: *"it is WO-W03's agent, outside this card, and changing it
-moves a string the recorded learning fixtures may pin"* (§5 above).
+**What it was.** `src/agents/tutor.py:486` emitted **"This is an activity
+record, not a mastery score."** WO-W14 removed exactly this construction from
+the copy dictionary, under 03 §5.5's ruling that *the dictionary does not use
+the word even to deny it, because a denial plants the frame it rejects*; four
+WO-W13 sentences were reworded for it (PR #147's table). The agent string sat
+outside `web/lib/copy/**` and so outside the gate, and PR #150 declined to fix
+it: *"it is WO-W03's agent, outside this card, and changing it moves a string
+the recorded learning fixtures may pin"* (§5 above).
 
-**Owner: WO-W03b, in flight.** Until it merges, a learner who finishes a
-guided session reads the word "mastery" on the close.
+**What replaced it**, `src/agents/tutor.py:492` at `1026534`:
 
-## 7. `e2e/cls.spec.ts` fails on `main`, on two consecutive commits, and a re-run hides it.
+> The lines above are this session's activity record, drawn from the events it
+> wrote.
+
+It states what the session did instead of denying a scalar. PR #151's own
+summary: *"The two system prompts keep their prohibitions — they address the
+model, not the learner."*
+
+**Three consequences worth recording.**
+
+1. **WO-W13b's carve-out is gone.** `session-flow.spec.ts` no longer subtracts
+   a service-authored string before scanning the painted page — PR #151: *"The
+   subtraction is gone; the whole page is asserted."* The pedagogy gate now
+   covers the rendered session end to end.
+2. **§5 fired exactly as predicted.** All **fifteen** recorded fixtures were
+   re-recorded in the same PR, which is the brittle freshness test doing its
+   job on its first real encounter.
+3. **It added a new, smaller gap** — the hand-maintained backend mirror. See
+   **§17**.
+
+**This landed one commit *after* this pack's baseline.** The pack is assembled
+against `3ccb650`; `1026534` is its child. This entry and **§17** are the only
+two places in this directory that describe anything but `3ccb650` — said here
+rather than by silently re-basing the pack around a late fix.
+
+## 7. `e2e/cls.spec.ts` fails on `main`, on 2 of the last 5 runs, and a re-run hides it.
 
 Not a one-off. Verbatim log in
 [`artifacts/ci-e2e-cls-failure.txt`](artifacts/ci-e2e-cls-failure.txt).
@@ -149,8 +184,8 @@ An earlier draft of this entry called it "two consecutive heads of `main`".
   `3ccb650`. Three green runs sit between them (`ba3e576`, `a9e26bf`,
   `5bcf373`), so the two occurrences are **not** consecutive.
 - **Never on a PR run.** Only on `main`.
-- **80/80 green locally**, at up to **12 oversubscribed workers** — so it is not
-  a load or contention effect that local pressure can reproduce.
+- **80/80 green locally**, at **4 and at 12 workers** — so it is not a load or
+  contention effect that local oversubscription can reproduce.
 - **Three candidate causes eliminated by measurement**: a mono-font swap, the
   Live badge mount, and the ledger reserve.
 - **Classified as deterministic and CI-environment-conditioned**, not as a
@@ -165,8 +200,16 @@ no-translation rule on `/c/[id]`), and neither WO-W13 nor WO-W13b touches what
 that route renders — but the window makes W13 the place to start looking rather
 than a coincidence to note.
 
-**Owner: WO-W13c, in flight** — pulling the retained CI trace and reproducing on
-Linux.
+**Owner: WO-W13c, in flight** (`fix/w13c-cls-conversation-route`). Its plan, in
+order: pull the retained CI trace from run
+[33630982183](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33630982183),
+reproduce inside the Playwright **Linux** container, and **fix at the cause** —
+not by widening the assertion, which would delete the only evidence that `03`
+§5.6's no-translation rule is being kept.
+
+The same card also **interpolates the e2e overlay's daemon-global image tags**
+(§8), because a reproduction attempt needs a second stack on one machine and
+that is precisely what the hardcoded tags prevent.
 
 **The rest of this pack cites attempt 2 of run 33630982183, which is green.** It
 does so knowing that attempt 1 of the same run was not, and the pack does not
@@ -253,8 +296,12 @@ this wave, so the discrepancy was written into ADR 0063 §Consequences,
 invitation is sent. It is a false statement about data separation, shown to the
 people the separation is for."*
 
-**Owner: WO-W17b, in flight**, under an SR-07-compliant server-resolved
-descriptor.
+**Owner: WO-W17b, in flight** (`feat/w17b-pilot-identity-slot`), under an
+**SR-07-compliant server-resolved descriptor** — the identity the shell states
+is resolved on the server and handed down, rather than a client-side guess at
+which mode the deployment is in. That shape is why it is a card and not a copy
+edit: the true sentence differs per deployment, and only the server knows
+which.
 
 ## 13. The recorded W08/W03 divergence was resolved by moving an expectation.
 
@@ -325,3 +372,38 @@ PR. **Owner:** unassigned; WO-01 owns the theme foundation and WO-08 owns
 `ThemeToggle`. It does not touch a Gate W1 row — no learning surface is
 implicated — and it is recorded because a pack that lists only the failures
 inside its own scope is the sales document this file exists to prevent.
+
+## 17. The pedagogy deny-list now exists twice, and the copies are kept in step by hand.
+
+Introduced by the fix for §6. WO-W03b (PR
+[#151](https://github.com/kudratsingh/arxiv-research-agent/pull/151), `1026534`)
+needed the pedagogy ban to bind the **backend's** strings, because the session
+surface renders `SessionDetail.result` verbatim (RC-16/H11) — so a phrase the
+copy dictionary may not contain can still reach a learner if the tutor emits it.
+It added `PEDAGOGY_DENY_LIST` in `tests/test_simulate_learner.py:315`: twelve
+`(phrase id, regex)` pairs mirroring WO-W14's `PEDAGOGY_PHRASES` in
+`web/lib/copy/index.ts`.
+
+**The mirror is hand-maintained, and the module says so in its own docstring:**
+
+> The canonical list is `PEDAGOGY_PHRASES` in `web/lib/copy/index.ts` (owned by
+> WO-W14, inside the append-only fence); that gate is the authority […] Kept
+> small and deliberately re-typed rather than generated — a Node dependency in
+> a Python unit test would be a worse coupling than a list two reviewers can
+> diff by eye. Adding an entry there without adding it here costs nothing; the
+> reverse is what this guard is for.
+
+**The trade is argued and it is still a trade.** The asymmetry is real and it is
+the right way round: a phrase added to the web list but not the Python one
+leaves the backend guard *weaker*, never wrong, and the web gate still holds
+every copy module. But there is **no test that the two lists agree**, and
+nothing fails when they drift — unlike WO-W07's ledger ban, where
+`test_the_database_ban_and_the_python_ban_are_the_same_list` asserts exactly
+that property across its two copies. The precedent for a cross-tier list
+equality check exists in this repository; this pair does not use it.
+
+**Owner:** unassigned. **Changes when:** either a generated list replaces the
+re-typed one, or an equality assertion is added in the shape WO-W07 already
+uses. Neither is Gate W1's to require — the gap is one release of drift wide,
+not a live defect — but it should not go unrecorded, because the fix for a
+honesty gap quietly created a second place honesty rules have to be maintained.
