@@ -1,4 +1,4 @@
-.PHONY: help venv install install-dev clean clean-all test test-unit test-integration test-e2e test-all typecheck run eval simulate-learner admin-migrate
+.PHONY: help venv install install-dev clean clean-all test test-unit test-integration test-e2e test-all typecheck run eval simulate-learner record-learning-fixtures admin-migrate
 
 # ---- Configuration ---------------------------------------------------------
 
@@ -46,6 +46,7 @@ help:  ## Show this help
 	@echo "  make run QUERY='...'   Run the agent on QUERY"
 	@echo "  make eval              Run full benchmark eval (QUERIES=id1,id2 to filter)"
 	@echo "  make simulate-learner  Scripted learner-simulation benchmark (free, mock mode)"
+	@echo "  make record-learning-fixtures  Re-record the mock-session fixtures (free)"
 	@echo "  make admin-migrate     Report/repair legacy NULL-owner rows (ARGS='...')"
 	@echo "  make clean             Remove venv, caches, build artifacts"
 	@echo "                         (keeps .cache/checkpoints.sqlite — graph state)"
@@ -98,6 +99,16 @@ simulate-learner:  ## Replay learning scenarios against the session graph (free)
 	ENABLE_CHECKPOINTING=true \
 	$(VENV_PYTHON) -m src.eval.simulate_learner \
 		$(if $(SCENARIOS),--scenarios $(SCENARIOS),) $(ARGS)
+
+# Re-record tests/fixtures/learning/recorded_mock_sessions/ from the
+# current session graph. Run it after any change to the graph or to
+# tutor copy: the recordings are baselines, and
+# tests/test_record_learning_fixtures.py fails when they stop matching
+# what the graph produces. Same zero-spend pinning as the target above.
+record-learning-fixtures:  ## Re-record the mock-session transcript fixtures (free)
+	USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+	ENABLE_CHECKPOINTING=true \
+	$(VENV_PYTHON) -m src.eval.record_learning_fixtures $(ARGS)
 
 admin-migrate:  ## Admin: report/repair legacy NULL-owner rows (ARGS='report --store all')
 	$(VENV_PYTHON) -m src.api.admin_migrate $(ARGS)

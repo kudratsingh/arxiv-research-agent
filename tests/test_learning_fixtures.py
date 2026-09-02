@@ -21,10 +21,11 @@ from typing import Any
 
 import pytest
 
-from src.eval.learning_benchmark import get_scenario
+from src.eval.learning_benchmark import LEARNING_SCENARIOS, get_scenario
 from src.eval.learning_fixtures import (
     FIXTURE_ERROR_PREFIX,
     FIXTURE_ROOT,
+    RECORDED_UNGRADED,
     REQUIRED_DISCLAIMER,
     get_fixture_set,
     load_manifest,
@@ -167,33 +168,101 @@ class TestShippedFixturesAreHonest:
 
 
 class TestTheW03CompletionGate:
-    """The soft dependency, made executable rather than written down."""
+    """The soft dependency, made executable rather than written down.
 
-    def test_the_recorded_set_is_declared_pending_on_w03(self) -> None:
+    WO-W08 wrote this class to assert the recorded set was *absent* and
+    honestly marked so. WO-W11 recorded it, so the same class now
+    asserts the opposite half of the same rule: the set is complete, it
+    no longer names a blocker, it holds one recording per scenario, and
+    every recording carries the provenance a recording must carry. The
+    `tmp_path` cases below are unchanged — the pending rule stays armed
+    for the next set that needs it.
+    """
+
+    def test_the_recorded_set_is_complete_and_no_longer_blocked(self) -> None:
         manifest = load_manifest()
         entry = get_fixture_set(manifest, RECORDED_SET)
         assert entry is not None
-        assert entry["status"] == "pending"
-        assert entry["blocked_on"] == "WO-W03"
-        assert entry["completion_condition"].strip()
+        assert entry["status"] == "complete"
+        assert entry["blocked_on"] == ""
+        assert entry["completion_condition"] == ""
         assert entry["fixture_kind"] == "recorded-mock"
         assert entry["content_kind"] == "transcript"
-        # The condition has to be actionable, not a shrug.
-        assert "use_mock_data" in entry["completion_condition"]
+        # A complete set has to say how to reproduce itself, or the
+        # recordings become folklore the moment the graph changes.
+        assert "record_learning_fixtures" in entry["description"]
 
-    def test_the_pending_set_is_the_only_one_outstanding(self) -> None:
-        pending = pending_fixture_sets(load_manifest())
-        assert [e["name"] for e in pending] == [RECORDED_SET]
+    def test_nothing_is_outstanding_any_more(self) -> None:
+        assert pending_fixture_sets(load_manifest()) == []
 
-    def test_the_recorded_directory_holds_no_fixtures_yet(self) -> None:
+    def test_the_recorded_directory_holds_one_transcript_per_scenario(self) -> None:
         manifest = load_manifest()
         entry = get_fixture_set(manifest, RECORDED_SET)
         assert entry is not None
         directory = FIXTURE_ROOT / entry["directory"]
-        # The directory exists (so the slot is visible in the tree) and
-        # is empty of fixtures (so nothing is faked into it).
         assert directory.is_dir()
-        assert list(directory.glob("*.json")) == []
+        recorded = {path.stem for path in directory.glob("*.json")}
+        assert recorded == {s["scenario_id"] for s in LEARNING_SCENARIOS}
+
+    def test_every_recording_names_its_commit_and_its_mock_mode(self) -> None:
+        # WO-W08 c4, on the half of the fixture set that can satisfy it:
+        # a recording that named no commit could not be reproduced, and
+        # one that did not claim mock mode could not be shown to be free.
+        recorded = [
+            t
+            for t in load_transcripts()
+            if t["provenance"]["fixture_kind"] == "recorded-mock"
+        ]
+        assert len(recorded) == len(LEARNING_SCENARIOS)
+        for fixture in recorded:
+            provenance = fixture["provenance"]
+            label = fixture["fixture_id"]
+            assert provenance["generated_by_commit"].strip(), label
+            assert provenance["mock_mode"] is True, label
+            assert provenance["real_session"] is False, label
+            assert REQUIRED_DISCLAIMER in provenance["disclaimer"], label
+
+    def test_recordings_never_claim_a_grade_the_mock_graph_did_not_make(
+        self,
+    ) -> None:
+        # ADR 0060. With no calibrated judge, the only honest records are
+        # "an explain-back was taken but nothing graded it" and "no
+        # assessment happened at all".
+        for fixture in load_transcripts():
+            if fixture["provenance"]["fixture_kind"] != "recorded-mock":
+                continue
+            assert fixture["assessment_outcome"] in (
+                RECORDED_UNGRADED,
+                "unassessed",
+            ), fixture["fixture_id"]
+
+    def test_a_hand_authored_transcript_may_not_claim_the_ungraded_record(
+        self, tmp_path: Path
+    ) -> None:
+        # The marker belongs to recordings: only a session can have
+        # recorded something ungraded.
+        root = _write_root(
+            tmp_path,
+            sets=[
+                {
+                    "name": "hand_authored_transcripts",
+                    "status": "complete",
+                    "directory": "transcripts",
+                    "fixture_kind": "hand-authored",
+                    "content_kind": "transcript",
+                    "blocked_on": "",
+                    "completion_condition": "",
+                    "description": "test",
+                }
+            ],
+            files={
+                "transcripts/a.json": _transcript(
+                    assessment_outcome=RECORDED_UNGRADED
+                )
+            },
+        )
+        problems = validate_fixtures(root)
+        assert any("only a recorded fixture" in p for p in problems)
 
     def test_a_pending_set_holding_fixtures_is_rejected(self, tmp_path: Path) -> None:
         # This is the test that keeps the gate honest once someone is

@@ -40,11 +40,21 @@ split into separate fields, so the resource bands below now gate the
 product rather than the harness. Summaries produced before that ADR
 conflate the two and read a few percent high on cost.
 
+**Two lanes** (WO-W11). The research campaign
+(`src/eval/runner.py`) and the guided-read campaign
+(`src/eval/simulate_learner.py`) write different fields into different
+`summary.jsonl` files, so the differ carries one `MetricLane` per
+campaign: its id field, its metric set, its thresholds, its report
+vocabulary. `--lane research` is the default and is byte-for-byte what
+this module did before the learning lane existed — the research CLI
+call, its field order, its table and its exit codes are unchanged.
+
 Usage:
     python -m src.eval.regression_diff baseline.jsonl current.jsonl
     python -m src.eval.regression_diff baseline.jsonl current.jsonl --threshold 0.05
     python -m src.eval.regression_diff baseline.jsonl current.jsonl --output diff.md
     python -m src.eval.regression_diff baseline.jsonl subset.jsonl --allow-removed
+    python -m src.eval.regression_diff base.jsonl cur.jsonl --lane learning
 
 Exit codes:
     0 — no regressions above threshold
@@ -58,7 +68,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, NamedTuple, TypedDict
 
 # Absolute epsilon for the 0-1 score metrics only — resource metrics
 # below have their own bands. 0.10 is ADR 0010's estimate of typical
@@ -123,8 +133,230 @@ METRIC_DIRECTIONS: dict[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Lanes
+#
+# One campaign, one lane. Everything that differs between the research
+# runner's summaries and the learner simulator's — the id field, the
+# metric set, the bands, the words the report uses for its unit — lives
+# in a `MetricLane` so the diff logic itself stays single-copy. The
+# research lane is assembled from the module-level constants above, so
+# `--lane research` output is byte-for-byte what it was before this
+# structure existed.
+# ---------------------------------------------------------------------------
+
+
+class CostReference(NamedTuple):
+    """A per-unit cost range quoted from a planning document.
+
+    Rendered as a clearly-labelled row beside the measured means. It is
+    a **prior from a plan**, never a measurement: the whole point of
+    printing it is to let a reader see how far the campaign's real cost
+    sits from what the plan assumed, and a row that could be mistaken
+    for data would defeat that.
+
+    Attributes:
+        field: Metric field the estimate is about.
+        low: Low end of the planned range, in USD.
+        high: High end of the planned range, in USD.
+        source: Human-readable citation for the estimate.
+    """
+
+    field: str
+    low: float
+    high: float
+    source: str
+
+
+class MetricLane(NamedTuple):
+    """One campaign's field set, thresholds and report vocabulary.
+
+    Attributes:
+        name: CLI name (`--lane <name>`).
+        id_field: Summary-line key that identifies a record.
+        unit_singular: What one record is ("query", "session").
+        unit_plural: Plural of the same.
+        title: H1 of the rendered report.
+        metric_fields: Fields that are diffed **and** gate the run.
+        informational_fields: Fields that are tabulated but never gate.
+            Harness spend lives here: ADR 0050's split says the gate
+            reads the product, and a judge that got more expensive is
+            not a product regression.
+        resource_thresholds: Per-metric `(absolute_floor, relative)`
+            bands. A field listed here is judged on both legs; a field
+            absent from it is judged on the flat score threshold.
+        directions: Per-metric `higher_better` / `lower_better`.
+        columns: `(header, field)` pairs for the per-record table, in
+            render order.
+        cost_reference: Optional planned-cost row, or `None`.
+    """
+
+    name: str
+    id_field: str
+    unit_singular: str
+    unit_plural: str
+    title: str
+    metric_fields: tuple[str, ...]
+    informational_fields: tuple[str, ...]
+    resource_thresholds: dict[str, tuple[float, float]]
+    directions: dict[str, str]
+    columns: tuple[tuple[str, str], ...]
+    cost_reference: CostReference | None
+
+    @property
+    def tabulated_fields(self) -> tuple[str, ...]:
+        """Every field the report carries: gated ones first, then the rest."""
+        return self.metric_fields + self.informational_fields
+
+
+RESEARCH_LANE = MetricLane(
+    name="research",
+    id_field="query_id",
+    unit_singular="query",
+    unit_plural="queries",
+    title="Eval regression diff",
+    metric_fields=METRIC_FIELDS,
+    informational_fields=(),
+    resource_thresholds=RESOURCE_THRESHOLDS,
+    directions=METRIC_DIRECTIONS,
+    columns=(
+        ("Cit.Acc. Δ", "citation_accuracy"),
+        ("Complete. Δ", "completeness"),
+        ("Faithful. Δ", "faithfulness"),
+        ("Recall Δ", "retrieval_recall"),
+        ("Critic Δ", "critic_score"),
+        ("Iter Δ", "iterations"),
+        ("Calls Δ", "llm_calls"),
+        ("$ Δ", "cost_usd"),
+    ),
+    cost_reference=None,
+)
+
+# The guided-read campaign's fields, from
+# `simulate_learner.summary_line`. Three classes, and the class is what
+# decides the rule (ADR 0044):
+#
+# - **Rubric scores** — `shame_free_score`, `plan_coherence` — are 0-1
+#   LLM-judge outputs and take the flat score threshold, exactly as the
+#   research judges do.
+# - **Deterministic outcome rates** — `shame_free`,
+#   `downscope_honest`, `progress_events_evidence_linked`,
+#   `injection_contained` — are booleans per session. `_score` reads a
+#   bool as 1.0/0.0 (Python's `bool` is an `int`), so a per-session
+#   True→False flip is a delta of -1.0 and the aggregate is the *rate*
+#   over the campaign. They therefore also sit on the threshold leg,
+#   where any flip clears any sane epsilon. That is intended: these are
+#   not judged, they are observed, and one session that stopped
+#   containing an injection is a regression at any threshold.
+# - **Resource metrics** — `expectation_failures`, `llm_calls`,
+#   `cost_usd` — take two-leg bands, below.
+LEARNING_METRIC_FIELDS: tuple[str, ...] = (
+    "shame_free",
+    "shame_free_score",
+    "downscope_honest",
+    "plan_coherence",
+    "progress_events_evidence_linked",
+    "injection_contained",
+    "expectation_failures",
+    "llm_calls",
+    "cost_usd",
+)
+
+# Harness spend. Tabulated so a campaign's total is legible, never
+# gated: ADR 0050's rule is that the gate reads the product, and the
+# judges and the simulated learner are both rig.
+LEARNING_INFORMATIONAL_FIELDS: tuple[str, ...] = (
+    "learner_cost_usd",
+    "judge_cost_usd",
+    "total_cost_usd",
+)
+
+# Two-leg bands for the learning lane's count / dollar metrics.
+# Rationale, in the same shape as `RESOURCE_THRESHOLDS`:
+#
+# - `expectation_failures` counts WO-W08 structural expectations a
+#   session stopped meeting. Zero tolerance is deliberate: `(0.0, 0.0)`
+#   means a rise of one fires and a rise of zero does not. It is listed
+#   here rather than left to the score epsilon so that every
+#   `lower_better` field in this lane has an explicit, reviewed band —
+#   the invariant ADR 0044 exists to protect.
+# - `llm_calls` is the session graph's own call count. A session makes
+#   roughly 4-8 calls (check-in, tutor turns, assessment); floor 2.0
+#   absorbs one extra tutor turn, 25% catches a routing loop.
+# - `cost_usd` is the per-session product cost. `01` §6.1 estimates
+#   $0.07-0.17 a session, so the research lane's $0.10 floor would be
+#   most of a whole session and a 50% cost rise could never fire.
+#   $0.05 still swallows penny-level wiggles at this scale; the 25%
+#   relative leg is the research lane's, unchanged.
+#
+# Priors, like every other threshold in this file — no funded learning
+# campaign has run (W-OD-1), so nothing here is measured spread.
+LEARNING_RESOURCE_THRESHOLDS: dict[str, tuple[float, float]] = {
+    "expectation_failures": (0.0, 0.0),
+    "llm_calls": (2.0, 0.25),
+    "cost_usd": (0.05, 0.25),
+}
+
+LEARNING_METRIC_DIRECTIONS: dict[str, str] = {
+    "shame_free": "higher_better",
+    "shame_free_score": "higher_better",
+    "downscope_honest": "higher_better",
+    "plan_coherence": "higher_better",
+    "progress_events_evidence_linked": "higher_better",
+    "injection_contained": "higher_better",
+    "expectation_failures": "lower_better",
+    "llm_calls": "lower_better",
+    "cost_usd": "lower_better",
+}
+
+LEARNING_LANE = MetricLane(
+    name="learning",
+    id_field="record_id",
+    unit_singular="session",
+    unit_plural="sessions",
+    title="Learning-eval regression diff",
+    metric_fields=LEARNING_METRIC_FIELDS,
+    informational_fields=LEARNING_INFORMATIONAL_FIELDS,
+    resource_thresholds=LEARNING_RESOURCE_THRESHOLDS,
+    directions=LEARNING_METRIC_DIRECTIONS,
+    columns=(
+        ("Shame-free Δ", "shame_free"),
+        ("Shame rubric Δ", "shame_free_score"),
+        ("Downscope Δ", "downscope_honest"),
+        ("Plan coherence Δ", "plan_coherence"),
+        ("Evidence Δ", "progress_events_evidence_linked"),
+        ("Injection Δ", "injection_contained"),
+        ("Unmet Δ", "expectation_failures"),
+        ("Calls Δ", "llm_calls"),
+        ("$ Δ", "cost_usd"),
+    ),
+    cost_reference=CostReference(
+        field="cost_usd",
+        low=0.07,
+        high=0.17,
+        source=(
+            "planning/07-learning-platform/01-LEARNING-AGENT.md §6.1, "
+            '"Session online total"'
+        ),
+    ),
+)
+
+#: Selectable lanes, by `--lane` name.
+LANES: dict[str, MetricLane] = {
+    RESEARCH_LANE.name: RESEARCH_LANE,
+    LEARNING_LANE.name: LEARNING_LANE,
+}
+
+
 class QueryDiff(TypedDict):
-    """Per-query diff between baseline and current runs."""
+    """Per-record diff between baseline and current runs.
+
+    `query_id` holds whatever the lane's `id_field` names — a benchmark
+    query id on the research lane, a `<scenario>.rN` record id on the
+    learning one. The key keeps its original name because it is the
+    diff's identity slot, and renaming it would break every existing
+    consumer of a research report for no gain.
+    """
 
     query_id: str
     status: str  # "unchanged" | "regressed" | "improved" | "new" | "removed" | "errored" | "recovered"
@@ -138,6 +370,7 @@ class RegressionReport(TypedDict):
 
     diffs: list[QueryDiff]
     has_regressions: bool
+    lane: MetricLane
     threshold: float
     allow_removed: bool
     unscored: dict[str, int]
@@ -151,12 +384,25 @@ class RegressionReport(TypedDict):
 # ---------------------------------------------------------------------------
 
 
-def load_summary(path: Path) -> dict[str, dict[str, Any]]:
-    """Read a `summary.jsonl` file and index it by `query_id`.
+def load_summary(
+    path: Path, *, lane: MetricLane = RESEARCH_LANE
+) -> dict[str, dict[str, Any]]:
+    """Read a `summary.jsonl` file and index it by the lane's id field.
 
     Returns an empty dict when the file does not exist so first-run
     diffs (no baseline yet) degrade gracefully instead of crashing.
     Malformed JSON is a hard error.
+
+    Args:
+        path: The summary file. A missing file reads as empty.
+        lane: Which campaign wrote it — the research lane keys on
+            `query_id`, the learning lane on `record_id`.
+
+    Returns:
+        `{id: summary_line}`.
+
+    Raises:
+        ValueError: The file is not valid JSONL, or a line carries no id.
     """
     if not path.exists():
         return {}
@@ -172,10 +418,10 @@ def load_summary(path: Path) -> dict[str, dict[str, Any]]:
             raise ValueError(
                 f"{path}: invalid JSONL on line {line_no}: {exc.msg}"
             ) from exc
-        query_id = record.get("query_id")
+        query_id = record.get(lane.id_field)
         if not isinstance(query_id, str) or not query_id:
             raise ValueError(
-                f"{path}: line {line_no} has no query_id"
+                f"{path}: line {line_no} has no {lane.id_field}"
             )
         by_id[query_id] = record
     return by_id
@@ -195,7 +441,11 @@ def _score(record: dict[str, Any], field: str) -> float | None:
 
 
 def _significant(
-    field: str, magnitude: float, threshold: float, baseline: float | None
+    field: str,
+    magnitude: float,
+    threshold: float,
+    baseline: float | None,
+    lane: MetricLane = RESEARCH_LANE,
 ) -> bool:
     """Whether a directional move of `magnitude` is big enough to matter.
 
@@ -204,11 +454,11 @@ def _significant(
     be positive to ever return True.
 
     Score metrics compare against the flat `threshold`. Resource
-    metrics must clear both legs of their `RESOURCE_THRESHOLDS` band;
-    when the baseline is missing or non-positive the relative leg has
-    no meaningful denominator, so the absolute floor alone decides.
+    metrics must clear both legs of the lane's band; when the baseline
+    is missing or non-positive the relative leg has no meaningful
+    denominator, so the absolute floor alone decides.
     """
-    band = RESOURCE_THRESHOLDS.get(field)
+    band = lane.resource_thresholds.get(field)
     if band is None:
         return magnitude > threshold
     floor, relative = band
@@ -220,7 +470,11 @@ def _significant(
 
 
 def _is_regression(
-    field: str, delta: float, threshold: float, baseline: float | None = None
+    field: str,
+    delta: float,
+    threshold: float,
+    baseline: float | None = None,
+    lane: MetricLane = RESEARCH_LANE,
 ) -> bool:
     """Whether a per-metric delta counts as a regression, per direction.
 
@@ -229,18 +483,22 @@ def _is_regression(
     magnitude required depends on the metric class — see
     `_significant`.
     """
-    direction = METRIC_DIRECTIONS.get(field, "higher_better")
+    direction = lane.directions.get(field, "higher_better")
     adverse = -delta if direction == "higher_better" else delta
-    return adverse > 0 and _significant(field, adverse, threshold, baseline)
+    return adverse > 0 and _significant(field, adverse, threshold, baseline, lane)
 
 
 def _is_improvement(
-    field: str, delta: float, threshold: float, baseline: float | None = None
+    field: str,
+    delta: float,
+    threshold: float,
+    baseline: float | None = None,
+    lane: MetricLane = RESEARCH_LANE,
 ) -> bool:
     """Symmetric of `_is_regression` — did this metric get meaningfully better?"""
-    direction = METRIC_DIRECTIONS.get(field, "higher_better")
+    direction = lane.directions.get(field, "higher_better")
     favorable = delta if direction == "higher_better" else -delta
-    return favorable > 0 and _significant(field, favorable, threshold, baseline)
+    return favorable > 0 and _significant(field, favorable, threshold, baseline, lane)
 
 
 def _query_status(
@@ -248,6 +506,7 @@ def _query_status(
     current: dict[str, Any] | None,
     deltas: dict[str, float | None],
     threshold: float,
+    lane: MetricLane = RESEARCH_LANE,
 ) -> str:
     """Classify a single query's baseline-vs-current shape.
 
@@ -269,18 +528,27 @@ def _query_status(
     if baseline_err and not current_err:
         return "recovered"
 
+    # Only the lane's *gated* fields decide status. Informational
+    # columns (harness spend) are diffed and printed but never flip a
+    # run red or green — ADR 0050's product-vs-harness line.
+    gated = [
+        (field, deltas.get(field))
+        for field in lane.metric_fields
+        if deltas.get(field) is not None
+    ]
+
     regressed = any(
         delta is not None
-        and _is_regression(field, delta, threshold, _score(baseline, field))
-        for field, delta in deltas.items()
+        and _is_regression(field, delta, threshold, _score(baseline, field), lane)
+        for field, delta in gated
     )
     if regressed:
         return "regressed"
 
     improved = any(
         delta is not None
-        and _is_improvement(field, delta, threshold, _score(baseline, field))
-        for field, delta in deltas.items()
+        and _is_improvement(field, delta, threshold, _score(baseline, field), lane)
+        for field, delta in gated
     )
     if improved:
         return "improved"
@@ -294,28 +562,31 @@ def diff_summaries(
     threshold: float = DEFAULT_THRESHOLD,
     *,
     allow_removed: bool = False,
+    lane: MetricLane = RESEARCH_LANE,
 ) -> RegressionReport:
-    """Compute per-query diffs and aggregate rollups.
+    """Compute per-record diffs and aggregate rollups.
 
     Args:
-        baseline: `{query_id: summary_line}` from the reference run.
-        current: `{query_id: summary_line}` from the new run.
+        baseline: `{id: summary_line}` from the reference run.
+        current: `{id: summary_line}` from the new run.
         threshold: Minimum drop (as a raw score delta, e.g. `0.1`) that
             counts as a regression on a 0-1 score metric. Resource
-            metrics ignore it — they are judged by their
-            `RESOURCE_THRESHOLDS` bands.
-        allow_removed: Treat a query present in `baseline` but missing
+            metrics ignore it — they are judged by the lane's
+            two-leg bands.
+        allow_removed: Treat a record present in `baseline` but missing
             from `current` as expected rather than as a regression. Set
             it for a deliberate subset run (`--queries a,b` diffed
             against a full baseline); leave it off for the nightly,
-            where a vanished query means a truncated batch and the
+            where a vanished record means a truncated batch and the
             aggregate silently re-averages over a smaller denominator
             (ADR 0050).
+        lane: Which campaign's fields and thresholds to use. Defaults
+            to the research lane, so existing callers are unaffected.
 
     Returns:
-        `RegressionReport` with per-query status, per-metric deltas, and
-        aggregate baseline/current/delta rollups over queries present in
-        both runs.
+        `RegressionReport` with per-record status, per-metric deltas,
+        and aggregate baseline/current/delta rollups over records
+        present in both runs.
     """
     diffs: list[QueryDiff] = []
     query_ids = sorted(set(baseline) | set(current))
@@ -325,7 +596,7 @@ def diff_summaries(
         c = current.get(query_id)
 
         deltas: dict[str, float | None] = {}
-        for field in METRIC_FIELDS:
+        for field in lane.tabulated_fields:
             b_val = _score(b, field) if b else None
             c_val = _score(c, field) if c else None
             if b_val is None or c_val is None:
@@ -336,17 +607,17 @@ def diff_summaries(
         diffs.append(
             QueryDiff(
                 query_id=query_id,
-                status=_query_status(b, c, deltas, threshold),
+                status=_query_status(b, c, deltas, threshold, lane),
                 baseline_error=(b or {}).get("error"),
                 current_error=(c or {}).get("error"),
                 deltas=deltas,
             )
         )
 
-    aggregate_baseline = _aggregate_over_shared(baseline, current)
-    aggregate_current = _aggregate_over_shared(current, baseline)
+    aggregate_baseline = _aggregate_over_shared(baseline, current, lane)
+    aggregate_current = _aggregate_over_shared(current, baseline, lane)
     aggregate_deltas: dict[str, float | None] = {}
-    for field in METRIC_FIELDS:
+    for field in lane.tabulated_fields:
         base_val = aggregate_baseline.get(field)
         cur_val = aggregate_current.get(field)
         aggregate_deltas[field] = (
@@ -364,9 +635,10 @@ def diff_summaries(
     return RegressionReport(
         diffs=diffs,
         has_regressions=any(d["status"] in gating_statuses for d in diffs),
+        lane=lane,
         threshold=threshold,
         allow_removed=allow_removed,
-        unscored=_unscored_counts(baseline, current),
+        unscored=_unscored_counts(baseline, current, lane),
         aggregate_baseline=aggregate_baseline,
         aggregate_current=aggregate_current,
         aggregate_deltas=aggregate_deltas,
@@ -376,6 +648,7 @@ def diff_summaries(
 def _unscored_counts(
     baseline: dict[str, dict[str, Any]],
     current: dict[str, dict[str, Any]],
+    lane: MetricLane = RESEARCH_LANE,
 ) -> dict[str, int]:
     """Per metric: shared queries the baseline scored and the current run did not.
 
@@ -400,13 +673,14 @@ def _unscored_counts(
             if _score(baseline[qid], field) is not None
             and _score(current[qid], field) is None
         )
-        for field in METRIC_FIELDS
+        for field in lane.tabulated_fields
     }
 
 
 def _aggregate_over_shared(
     primary: dict[str, dict[str, Any]],
     secondary: dict[str, dict[str, Any]],
+    lane: MetricLane = RESEARCH_LANE,
 ) -> dict[str, float | None]:
     """Mean of `primary`'s scores across queries also present in `secondary`.
 
@@ -415,7 +689,7 @@ def _aggregate_over_shared(
     """
     shared = set(primary) & set(secondary)
     result: dict[str, float | None] = {}
-    for field in METRIC_FIELDS:
+    for field in lane.tabulated_fields:
         values = [
             _score(primary[qid], field)
             for qid in shared
@@ -444,12 +718,48 @@ def _fmt_score(value: float | None) -> str:
     return "-" if value is None else f"{value:.3f}"
 
 
+def _cost_reference_section(report: RegressionReport) -> list[str]:
+    """The per-unit cost table, when the lane quotes a planned estimate.
+
+    Gate W2 asks what a guided-read session costs. This section makes
+    the eval plumbing answer it rather than an ad-hoc script: the two
+    measured means sit beside the plan's estimate, and the estimate row
+    says in the row itself that it is an estimate. Lanes with no
+    `cost_reference` (the research lane) render nothing, so their report
+    is unchanged.
+    """
+    reference = report["lane"].cost_reference
+    if reference is None:
+        return []
+    unit = report["lane"].unit_singular
+    field = reference.field
+    return [
+        "",
+        f"## Cost per {unit} vs the plan's estimate",
+        "",
+        f"| Source | $ / {unit} |",
+        "|---|---:|",
+        f"| Baseline mean `{field}` (measured) "
+        f"| {_fmt_score(report['aggregate_baseline'].get(field))} |",
+        f"| Current mean `{field}` (measured) "
+        f"| {_fmt_score(report['aggregate_current'].get(field))} |",
+        f"| Plan estimate — **not a measurement** "
+        f"| {reference.low:.2f} – {reference.high:.2f} |",
+        "",
+        f"The estimate row is a prior quoted from {reference.source}. It was "
+        "written before any campaign ran and has never been checked against "
+        "one; it is here so the measured rows have something to be read "
+        "against, not as a target the campaign passed or failed.",
+    ]
+
+
 def format_report(report: RegressionReport) -> str:
     """Render a `RegressionReport` as a markdown document."""
+    lane = report["lane"]
     threshold = report["threshold"]
     resource_lines = "; ".join(
         f"`{field}` > +{floor:g} and > +{relative:.0%}"
-        for field, (floor, relative) in RESOURCE_THRESHOLDS.items()
+        for field, (floor, relative) in lane.resource_thresholds.items()
     )
     removed = sum(1 for d in report["diffs"] if d["status"] == "removed")
     new = sum(1 for d in report["diffs"] if d["status"] == "new")
@@ -461,12 +771,12 @@ def format_report(report: RegressionReport) -> str:
         else str(removed)
     )
     lines = [
-        "# Eval regression diff",
+        f"# {lane.title}",
         "",
         f"- **Score threshold**: `{threshold:.2f}` (a 0-1 score drop larger than this is a regression)",
         f"- **Resource bands** (both legs must be exceeded): {resource_lines}",
-        f"- **Queries**: {shared} compared, {removed_note} missing from the "
-        f"current run, {new} new",
+        f"- **{lane.unit_plural.capitalize()}**: {shared} compared, {removed_note} "
+        f"missing from the current run, {new} new",
         f"- **Regressions detected**: {'yes' if report['has_regressions'] else 'no'}",
     ]
 
@@ -500,46 +810,45 @@ def format_report(report: RegressionReport) -> str:
         # null score shrinks one row's denominator without shrinking the
         # section's.
         f"## Aggregate (over the {shared} of {baseline_total} baseline "
-        "queries present in both runs)",
+        f"{lane.unit_plural} present in both runs)",
         "",
         "| Metric | Baseline | Current | Delta | Compared |",
         "|---|---:|---:|---:|---:|",
     ]
-    for field in METRIC_FIELDS:
+    for field in lane.tabulated_fields:
         compared = sum(
             1
             for d in report["diffs"]
             if d["status"] not in ("removed", "new")
             and d["deltas"].get(field) is not None
         )
+        # Harness columns are printed so a campaign's real cost is
+        # legible, and marked so nobody reads them as part of the gate.
+        suffix = " *(not gated)*" if field in lane.informational_fields else ""
         lines.append(
-            f"| {field} "
+            f"| {field}{suffix} "
             f"| {_fmt_score(report['aggregate_baseline'].get(field))} "
             f"| {_fmt_score(report['aggregate_current'].get(field))} "
             f"| {_fmt_delta(report['aggregate_deltas'].get(field))} "
             f"| {compared} / {shared} |"
         )
 
+    lines += _cost_reference_section(report)
+
+    headers = " | ".join(header for header, _ in lane.columns)
+    alignment = "|".join("---:" for _ in lane.columns)
     lines += [
         "",
-        "## Per-query",
+        f"## Per-{lane.unit_singular}",
         "",
-        "| Query | Status | Cit.Acc. Δ | Complete. Δ | Faithful. Δ | Recall Δ | Critic Δ | Iter Δ | Calls Δ | $ Δ |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        f"| {lane.unit_singular.capitalize()} | Status | {headers} |",
+        f"|---|---|{alignment}|",
     ]
     for diff in report["diffs"]:
-        lines.append(
-            f"| {diff['query_id']} "
-            f"| {diff['status']} "
-            f"| {_fmt_delta(diff['deltas'].get('citation_accuracy'))} "
-            f"| {_fmt_delta(diff['deltas'].get('completeness'))} "
-            f"| {_fmt_delta(diff['deltas'].get('faithfulness'))} "
-            f"| {_fmt_delta(diff['deltas'].get('retrieval_recall'))} "
-            f"| {_fmt_delta(diff['deltas'].get('critic_score'))} "
-            f"| {_fmt_delta(diff['deltas'].get('iterations'))} "
-            f"| {_fmt_delta(diff['deltas'].get('llm_calls'))} "
-            f"| {_fmt_delta(diff['deltas'].get('cost_usd'))} |"
+        cells = " | ".join(
+            _fmt_delta(diff["deltas"].get(field)) for _, field in lane.columns
         )
+        lines.append(f"| {diff['query_id']} | {diff['status']} | {cells} |")
 
     errored = [d for d in report["diffs"] if d["status"] == "errored"]
     if errored:
@@ -572,14 +881,25 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "current", type=Path, help="Current summary.jsonl (must exist)"
     )
     parser.add_argument(
+        "--lane",
+        choices=sorted(LANES),
+        default=RESEARCH_LANE.name,
+        help=(
+            "Which campaign wrote these summaries. 'research' (default) "
+            "reads src/eval/runner.py's fields, keyed by query_id; "
+            "'learning' reads src/eval/simulate_learner.py's, keyed by "
+            "record_id."
+        ),
+    )
+    parser.add_argument(
         "--threshold",
         type=float,
         default=DEFAULT_THRESHOLD,
         help=(
             "Regression threshold on the 0-1 score metrics "
             f"(default: {DEFAULT_THRESHOLD}). Count and dollar metrics "
-            "use fixed per-metric bands instead — see "
-            "RESOURCE_THRESHOLDS."
+            "use fixed per-metric bands instead — see the lane's "
+            "resource thresholds."
         ),
     )
     parser.add_argument(
@@ -603,14 +923,15 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv if argv is not None else sys.argv[1:])
+    lane = LANES[args.lane]
 
     if not args.current.exists():
         print(f"Error: current file not found: {args.current}", file=sys.stderr)
         return 2
 
     try:
-        baseline = load_summary(args.baseline)
-        current = load_summary(args.current)
+        baseline = load_summary(args.baseline, lane=lane)
+        current = load_summary(args.current, lane=lane)
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
@@ -627,6 +948,7 @@ def main(argv: list[str] | None = None) -> int:
         current,
         threshold=args.threshold,
         allow_removed=args.allow_removed,
+        lane=lane,
     )
     markdown = format_report(report)
     print(markdown)

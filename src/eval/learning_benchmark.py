@@ -1073,7 +1073,21 @@ LEARNING_SCENARIOS: list[LearningScenario] = [
             ),
         ],
         expectations=ScenarioExpectations(
-            max_plan_sections=1,
+            # 2, not the 1 WO-W08 wrote. This was the one scenario whose
+            # structural expectation the session graph could never meet:
+            # `check_in`'s documented rule allocates plan sections by
+            # declared budget (<=10 min -> 1, <=20 -> 2, else 3), and
+            # this scenario declares the persona's standing 15 minutes.
+            # Nothing about it is time-poor — the script is an injection
+            # through the profile note, `requires_downscope_statement`
+            # is False, and the two other 15-minute scenarios
+            # (`engineer-gpt3-skims-long-paper`,
+            # `engineer-scaling-laws-skeptic`) both expect 2. The 1 read
+            # as a copy from the 10-minute time-poor scenarios, so the
+            # expectation moved and the graph did not (WO-W11 item 7;
+            # the divergence WO-W10 pinned in
+            # `test_unmet_expectations_are_exactly_the_recorded_baseline`).
+            max_plan_sections=2,
             requires_downscope_statement=False,
             expected_assessment="strength",
             expected_progress_events=["assessment", "session_completed"],

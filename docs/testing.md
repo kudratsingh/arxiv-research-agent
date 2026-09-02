@@ -62,7 +62,13 @@ jobs on every PR and every push to `main`:
 1. `lint` — `ruff check .`
 2. `typecheck` — `mypy --strict src/`
 3. `tests` — `pytest -m "not e2e" -q`, **the entire Python suite** (the
-   filter only exists to keep the door closed on a future e2e tier)
+   filter only exists to keep the door closed on a future e2e tier),
+   then the **scripted learner-simulation campaign**: all fifteen
+   guided-read scenarios driven through the real session graph in mock
+   mode, with `src/eval/scripted_tier_check.py` asserting 15/15 sessions
+   and `$0.0000` spend from the run's `summary.jsonl` (WO-W11; see
+   [`eval.md`](eval.md), "The per-PR scripted tier"). The run uploads as
+   the `scripted-simulation-summary` artifact under `if: always()`
 4. `docker-build` — API image build + base and production compose-file
    validation
 5. `web-image` — `docker build ./web`, run it against a stub upstream,

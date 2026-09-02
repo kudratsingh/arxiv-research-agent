@@ -15,6 +15,11 @@ import pytest
 
 from src.eval.regression_diff import (
     DEFAULT_THRESHOLD,
+    LEARNING_LANE,
+    LEARNING_RESOURCE_THRESHOLDS,
+    METRIC_DIRECTIONS,
+    METRIC_FIELDS,
+    RESEARCH_LANE,
     RESOURCE_THRESHOLDS,
     QueryDiff,
     RegressionReport,
@@ -499,6 +504,7 @@ class TestFormatReport:
     ) -> RegressionReport:
         return RegressionReport(
             allow_removed=allow_removed,
+            lane=RESEARCH_LANE,
             unscored=dict.fromkeys(
                 ("citation_accuracy", "completeness", "faithfulness"), 0
             ),
@@ -671,3 +677,333 @@ class TestThresholdBoundary:
 class TestDefaultThreshold:
     def test_default_threshold_exposed(self) -> None:
         assert 0.0 < DEFAULT_THRESHOLD < 1.0
+
+
+# ---------------------------------------------------------------------------
+# The learning lane (WO-W11)
+#
+# `src/eval/simulate_learner.py` writes a different summary shape than
+# `runner.py` does: keyed by `record_id`, scored on rubric judges plus
+# deterministic outcome booleans, with three cost columns instead of
+# one. These tests cover every field the lane gates on, in both
+# directions, plus the missing-session rule and the two-lane isolation
+# the card requires.
+# ---------------------------------------------------------------------------
+
+
+def _session(
+    record_id: str,
+    *,
+    shame_free: bool | None = True,
+    shame_free_score: float | None = None,
+    downscope_honest: bool | None = None,
+    plan_coherence: float | None = None,
+    progress_events_evidence_linked: bool | None = True,
+    injection_contained: bool | None = None,
+    expectation_failures: int | None = 0,
+    llm_calls: int | None = None,
+    cost_usd: float | None = None,
+    learner_cost_usd: float | None = None,
+    judge_cost_usd: float | None = None,
+    total_cost_usd: float | None = None,
+    error: str | None = None,
+) -> dict[str, Any]:
+    """One `simulate_learner.summary_line`-shaped row."""
+    return {
+        "record_id": record_id,
+        "shame_free": shame_free,
+        "shame_free_score": shame_free_score,
+        "downscope_honest": downscope_honest,
+        "plan_coherence": plan_coherence,
+        "progress_events_evidence_linked": progress_events_evidence_linked,
+        "injection_contained": injection_contained,
+        "expectation_failures": expectation_failures,
+        "llm_calls": llm_calls,
+        "cost_usd": cost_usd,
+        "learner_cost_usd": learner_cost_usd,
+        "judge_cost_usd": judge_cost_usd,
+        "total_cost_usd": total_cost_usd,
+        "error": error,
+    }
+
+
+def _learning_diff(
+    baseline: dict[str, dict[str, Any]],
+    current: dict[str, dict[str, Any]],
+    **kwargs: Any,
+) -> RegressionReport:
+    return diff_summaries(baseline, current, lane=LEARNING_LANE, **kwargs)
+
+
+class TestLearningLaneLoading:
+    def test_indexes_by_record_id(self, tmp_path: Path) -> None:
+        path = tmp_path / "summary.jsonl"
+        path.write_text(
+            "\n".join(
+                json.dumps(r)
+                for r in (_session("a.r1"), _session("b.r1"))
+            )
+        )
+        loaded = load_summary(path, lane=LEARNING_LANE)
+        assert set(loaded) == {"a.r1", "b.r1"}
+
+    def test_a_line_without_a_record_id_raises(self, tmp_path: Path) -> None:
+        path = tmp_path / "summary.jsonl"
+        path.write_text(json.dumps({"scenario_id": "x"}))
+        with pytest.raises(ValueError, match="record_id"):
+            load_summary(path, lane=LEARNING_LANE)
+
+    def test_a_research_summary_is_not_silently_readable_as_learning(
+        self, tmp_path: Path
+    ) -> None:
+        # The two lanes must not be confusable: a research summary fed
+        # to the learning lane fails loudly rather than producing an
+        # empty diff that reads green.
+        path = tmp_path / "summary.jsonl"
+        path.write_text(json.dumps(_line("q1", citation_accuracy=0.9)))
+        with pytest.raises(ValueError, match="record_id"):
+            load_summary(path, lane=LEARNING_LANE)
+
+
+class TestLearningLaneEveryGatedField:
+    """Every gated field, both directions. The card's criterion 1."""
+
+    ADVERSE: dict[str, tuple[Any, Any]] = {
+        # field: (baseline value, worse value)
+        "shame_free": (True, False),
+        "shame_free_score": (0.90, 0.70),
+        "downscope_honest": (True, False),
+        "plan_coherence": (0.85, 0.60),
+        "progress_events_evidence_linked": (True, False),
+        "injection_contained": (True, False),
+        "expectation_failures": (0, 1),
+        "llm_calls": (8, 20),
+        "cost_usd": (0.12, 0.40),
+    }
+
+    def test_every_gated_field_is_covered_by_this_class(self) -> None:
+        # Guards the guard: a field added to the lane without a case
+        # here would otherwise be silently untested.
+        assert set(self.ADVERSE) == set(LEARNING_LANE.metric_fields)
+
+    @pytest.mark.parametrize("field", sorted(ADVERSE))
+    def test_adverse_move_regresses(self, field: str) -> None:
+        good, bad = self.ADVERSE[field]
+        baseline = {"s.r1": _session("s.r1", **{field: good})}
+        current = {"s.r1": _session("s.r1", **{field: bad})}
+        report = _learning_diff(baseline, current)
+        assert report["diffs"][0]["status"] == "regressed", field
+        assert report["has_regressions"] is True
+
+    @pytest.mark.parametrize("field", sorted(ADVERSE))
+    def test_favorable_move_improves(self, field: str) -> None:
+        good, bad = self.ADVERSE[field]
+        baseline = {"s.r1": _session("s.r1", **{field: bad})}
+        current = {"s.r1": _session("s.r1", **{field: good})}
+        report = _learning_diff(baseline, current)
+        assert report["diffs"][0]["status"] == "improved", field
+        assert report["has_regressions"] is False
+
+    def test_deterministic_outcome_booleans_aggregate_as_rates(self) -> None:
+        # `_score` reads a bool as 1.0/0.0, so the aggregate of a
+        # per-session boolean is the campaign's rate for that outcome.
+        baseline = {
+            f"s{i}.r1": _session(f"s{i}.r1", injection_contained=True)
+            for i in range(4)
+        }
+        current = dict(baseline)
+        current["s0.r1"] = _session("s0.r1", injection_contained=False)
+        report = _learning_diff(baseline, current)
+        assert report["aggregate_baseline"]["injection_contained"] == 1.0
+        assert report["aggregate_current"]["injection_contained"] == 0.75
+
+
+class TestLearningLaneResourceBands:
+    def test_one_extra_unmet_expectation_regresses(self) -> None:
+        # Zero tolerance by design: a structural expectation that
+        # stopped being met is a regression at +1.
+        baseline = {"s.r1": _session("s.r1", expectation_failures=0)}
+        current = {"s.r1": _session("s.r1", expectation_failures=1)}
+        assert _learning_diff(baseline, current)["diffs"][0]["status"] == "regressed"
+
+    def test_a_penny_of_cost_drift_is_not_a_regression(self) -> None:
+        baseline = {"s.r1": _session("s.r1", cost_usd=0.12)}
+        current = {"s.r1": _session("s.r1", cost_usd=0.15)}
+        assert _learning_diff(baseline, current)["diffs"][0]["status"] == "unchanged"
+
+    def test_a_cost_move_clearing_only_the_relative_leg_is_unchanged(self) -> None:
+        # +33% but only +$0.04 — under the $0.05 floor.
+        baseline = {"s.r1": _session("s.r1", cost_usd=0.12)}
+        current = {"s.r1": _session("s.r1", cost_usd=0.16)}
+        assert _learning_diff(baseline, current)["diffs"][0]["status"] == "unchanged"
+
+    def test_a_cost_move_clearing_only_the_absolute_leg_is_unchanged(self) -> None:
+        # +$0.20 on a $2.00 baseline is 10% — under the relative leg.
+        baseline = {"s.r1": _session("s.r1", cost_usd=2.00)}
+        current = {"s.r1": _session("s.r1", cost_usd=2.20)}
+        assert _learning_diff(baseline, current)["diffs"][0]["status"] == "unchanged"
+
+    def test_one_extra_tutor_call_is_not_a_regression(self) -> None:
+        baseline = {"s.r1": _session("s.r1", llm_calls=8)}
+        current = {"s.r1": _session("s.r1", llm_calls=10)}
+        assert _learning_diff(baseline, current)["diffs"][0]["status"] == "unchanged"
+
+    def test_every_lower_better_field_has_an_explicit_band(self) -> None:
+        # The ADR 0044 invariant, per lane: a `lower_better` metric with
+        # no band would silently fall back to the score epsilon.
+        lower_better = {
+            field
+            for field, direction in LEARNING_LANE.directions.items()
+            if direction == "lower_better"
+        }
+        assert lower_better == set(LEARNING_RESOURCE_THRESHOLDS)
+
+    def test_the_lane_declares_a_direction_for_every_gated_field(self) -> None:
+        assert set(LEARNING_LANE.metric_fields) <= set(LEARNING_LANE.directions)
+
+
+class TestLearningLaneHarnessCostIsNotGated:
+    """ADR 0050's product-vs-harness line, enforced by the lane."""
+
+    def test_judge_cost_doubling_does_not_fail_the_run(self) -> None:
+        baseline = {"s.r1": _session("s.r1", judge_cost_usd=0.05)}
+        current = {"s.r1": _session("s.r1", judge_cost_usd=5.00)}
+        report = _learning_diff(baseline, current)
+        assert report["has_regressions"] is False
+        assert report["diffs"][0]["status"] == "unchanged"
+
+    def test_harness_cost_is_still_tabulated(self) -> None:
+        baseline = {"s.r1": _session("s.r1", judge_cost_usd=0.05)}
+        current = {"s.r1": _session("s.r1", judge_cost_usd=0.09)}
+        report = _learning_diff(baseline, current)
+        assert report["aggregate_current"]["judge_cost_usd"] == 0.09
+        md = format_report(report)
+        assert "judge_cost_usd *(not gated)*" in md
+
+    def test_informational_fields_are_disjoint_from_gated_ones(self) -> None:
+        assert not set(LEARNING_LANE.informational_fields) & set(
+            LEARNING_LANE.metric_fields
+        )
+
+
+class TestLearningLaneMissingSession:
+    """A baseline session absent from the current run is a regression."""
+
+    def test_missing_session_is_removed_and_fails_the_gate(self) -> None:
+        baseline = {
+            "a.r1": _session("a.r1"),
+            "b.r1": _session("b.r1"),
+        }
+        current = {"a.r1": _session("a.r1")}
+        report = _learning_diff(baseline, current)
+        statuses = {d["query_id"]: d["status"] for d in report["diffs"]}
+        assert statuses["b.r1"] == "removed"
+        assert report["has_regressions"] is True
+
+    def test_a_truncated_campaign_with_perfect_scores_still_fails(self) -> None:
+        baseline = {f"s{i}.r1": _session(f"s{i}.r1") for i in range(15)}
+        current = {f"s{i}.r1": _session(f"s{i}.r1") for i in range(9)}
+        report = _learning_diff(baseline, current)
+        assert report["has_regressions"] is True
+        md = format_report(report)
+        assert "9 of 15 baseline sessions present in both runs" in md
+
+    def test_allow_removed_opts_a_subset_run_out(self) -> None:
+        baseline = {"a.r1": _session("a.r1"), "b.r1": _session("b.r1")}
+        current = {"a.r1": _session("a.r1")}
+        report = _learning_diff(baseline, current, allow_removed=True)
+        assert report["has_regressions"] is False
+
+    def test_allow_removed_does_not_excuse_a_real_regression(self) -> None:
+        baseline = {"a.r1": _session("a.r1", shame_free=True), "b.r1": _session("b.r1")}
+        current = {"a.r1": _session("a.r1", shame_free=False)}
+        report = _learning_diff(baseline, current, allow_removed=True)
+        assert report["has_regressions"] is True
+
+    def test_a_new_session_is_not_a_regression(self) -> None:
+        baseline = {"a.r1": _session("a.r1")}
+        current = {"a.r1": _session("a.r1"), "b.r1": _session("b.r1")}
+        report = _learning_diff(baseline, current)
+        statuses = {d["query_id"]: d["status"] for d in report["diffs"]}
+        assert statuses["b.r1"] == "new"
+        assert report["has_regressions"] is False
+
+
+class TestLearningLaneReport:
+    def test_report_uses_session_vocabulary(self) -> None:
+        md = format_report(_learning_diff({}, {"s.r1": _session("s.r1")}))
+        assert md.startswith("# Learning-eval regression diff")
+        assert "## Per-session" in md
+        assert "**Sessions**:" in md
+
+    def test_report_carries_the_plan_cost_reference_row(self) -> None:
+        report = _learning_diff(
+            {"s.r1": _session("s.r1", cost_usd=0.11)},
+            {"s.r1": _session("s.r1", cost_usd=0.12)},
+        )
+        md = format_report(report)
+        assert "## Cost per session vs the plan's estimate" in md
+        assert "0.07 – 0.17" in md
+        # The row must say what it is, in the row.
+        assert "Plan estimate — **not a measurement**" in md
+        assert "01-LEARNING-AGENT.md §6.1" in md
+
+    def test_research_report_has_no_cost_reference_section(self) -> None:
+        md = format_report(diff_summaries({}, {"q1": _line("q1", cost_usd=0.5)}))
+        assert "Plan estimate" not in md
+        assert "## Per-query" in md
+
+    def test_every_lane_column_names_a_tabulated_field(self) -> None:
+        for lane in (RESEARCH_LANE, LEARNING_LANE):
+            for _, field in lane.columns:
+                assert field in lane.tabulated_fields, (lane.name, field)
+
+
+class TestLaneIsolation:
+    """The research lane's semantics are untouched by the new one."""
+
+    def test_the_research_lane_is_the_default_everywhere(self) -> None:
+        report = diff_summaries({}, {})
+        assert report["lane"] is RESEARCH_LANE
+        assert load_summary(Path("/nonexistent.jsonl")) == {}
+
+    def test_the_research_lane_still_uses_the_module_constants(self) -> None:
+        assert RESEARCH_LANE.metric_fields is METRIC_FIELDS
+        assert RESEARCH_LANE.resource_thresholds is RESOURCE_THRESHOLDS
+        assert RESEARCH_LANE.directions is METRIC_DIRECTIONS
+        assert RESEARCH_LANE.informational_fields == ()
+        assert RESEARCH_LANE.cost_reference is None
+
+    def test_a_learning_field_never_enters_the_research_field_set(self) -> None:
+        # The two summaries share `cost_usd` and `llm_calls` by design;
+        # nothing else may cross.
+        shared = set(METRIC_FIELDS) & set(LEARNING_LANE.tabulated_fields)
+        assert shared == {"cost_usd", "llm_calls"}
+
+    def test_cli_defaults_to_the_research_lane(self, tmp_path: Path) -> None:
+        baseline = tmp_path / "b.jsonl"
+        current = tmp_path / "c.jsonl"
+        baseline.write_text(json.dumps(_line("q1", citation_accuracy=0.9)))
+        current.write_text(json.dumps(_line("q1", citation_accuracy=0.9)))
+        output = tmp_path / "diff.md"
+        assert main([str(baseline), str(current), "--output", str(output)]) == 0
+        assert output.read_text().startswith("# Eval regression diff")
+
+    def test_cli_lane_learning_reads_record_ids(self, tmp_path: Path) -> None:
+        baseline = tmp_path / "b.jsonl"
+        current = tmp_path / "c.jsonl"
+        baseline.write_text(json.dumps(_session("s.r1", shame_free=True)))
+        current.write_text(json.dumps(_session("s.r1", shame_free=False)))
+        output = tmp_path / "diff.md"
+        code = main(
+            [
+                str(baseline),
+                str(current),
+                "--lane",
+                "learning",
+                "--output",
+                str(output),
+            ]
+        )
+        assert code == 1
+        assert "# Learning-eval regression diff" in output.read_text()

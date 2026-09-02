@@ -18,15 +18,32 @@ Two fixture kinds, and the difference is the point:
     it could never be recorded.
   - **recorded-mock** — captured from WO-W03's session graph running
     under `use_mock_data=true` with the disabled-key sentinel. These
-    **do not exist yet**: WO-W03 has not merged. The manifest carries
-    that set as `pending` with its completion condition written down,
-    and `validate_fixtures` enforces that a pending set is *empty* —
-    nothing can be smuggled in under the marker, and nothing here is
-    presentable as a real learner session.
+    now exist: `src/eval/record_learning_fixtures.py` replays every
+    benchmark scenario through `build_session_workflow()` and writes one
+    transcript per scenario. Each names the commit that produced it and
+    sets `mock_mode: true`, and none is presentable as a real learner
+    session.
 
-The completion gate is executable, not a comment: when WO-W03 lands and
-records transcripts, the manifest entry flips to `complete` and the
-same validator starts requiring files instead of forbidding them.
+The completion gate was executable, not a comment, and it has now
+fired: WO-W03 merged, WO-W11 recorded the transcripts, and the manifest
+entry flipped from `pending` to `complete` — at which point the same
+validator that *forbade* files in that directory started *requiring*
+them. A pending set still may not hold files, so the gate remains armed
+for the next set that needs one.
+
+Two vocabulary items belong to recordings alone, because they describe
+what the graph actually did rather than what a scenario hoped for:
+
+  - `RECORDED_UNGRADED` as an `assessment_outcome` — ADR 0060's honest
+    record when an explain-back was taken but no calibrated judge
+    scored it. A recording may carry it; a hand-authored fixture may
+    not, and a recording carrying it is *not* checked against the
+    scenario's `expected_assessment`, because that expectation
+    describes a graded session and the mock graph grades nothing.
+  - `SIMULATOR_FILLER_INTENT` as a learner turn's intent — the
+    simulator's content-free line, delivered when the tutor asked more
+    questions than the script anticipated. Labelling it honestly beats
+    dressing it up as one of the scenario's own intents.
 
 No LLM calls, no network, no graph — this module reads JSON and checks
 it.
@@ -78,6 +95,25 @@ TRANSCRIPT_ROLES = frozenset({"tutor", "learner"})
 #: rather than described so a fixture cannot soften the wording: the
 #: honesty rule is a string comparison.
 REQUIRED_DISCLAIMER = "Not a real learner session."
+
+#: Name of the recorded-mock fixture set in the manifest. Shared with
+#: `src/eval/record_learning_fixtures.py` so the recorder and the
+#: validator cannot drift onto different directories.
+RECORDED_SET_NAME = "recorded_mock_session_transcripts"
+
+#: The status the session graph records when an explain-back was taken
+#: but no calibrated assessment judge scored it (ADR 0060). It is
+#: deliberately *not* one of `ASSESSMENT_OUTCOMES`: it is not an
+#: outcome, it is the refusal to invent one. Only a `recorded-mock`
+#: transcript may carry it, because only a recording can honestly say
+#: that is what happened.
+RECORDED_UNGRADED = "recorded_ungraded"
+
+#: Intent stamped on a learner turn the simulator filled in with its
+#: content-free line rather than a scripted reply
+#: (`simulate_learner.SCRIPT_EXHAUSTED_REPLY`). Only valid in a
+#: recording: a hand-authored transcript has no simulator to blame.
+SIMULATOR_FILLER_INTENT = "simulator_filler"
 
 
 #: Prefix on every `ValueError` the loaders raise, so a failure names
@@ -596,7 +632,21 @@ def validate_transcript(
     if scenario is None:
         problems.append(f"{label}: unknown scenario_id {transcript['scenario_id']!r}")
 
-    if transcript["assessment_outcome"] not in ASSESSMENT_OUTCOMES:
+    outcome = transcript["assessment_outcome"]
+    if outcome == RECORDED_UNGRADED:
+        # ADR 0060's ungraded record. Allowed only in a recording, and
+        # never compared against the scenario's `expected_assessment`:
+        # that expectation describes a session a calibrated judge
+        # scored, and the mock graph scores nothing. Forcing `strength`
+        # into a file the system never graded is the fabrication these
+        # fixtures exist to make impossible.
+        if expected_kind != "recorded-mock":
+            problems.append(
+                f"{label}: only a recorded fixture may carry the ungraded "
+                f"assessment record {RECORDED_UNGRADED!r} — a hand-authored "
+                "transcript has no session to have recorded it"
+            )
+    elif outcome not in ASSESSMENT_OUTCOMES:
         problems.append(
             f"{label}: unknown assessment_outcome "
             f"{transcript['assessment_outcome']!r}"
@@ -622,7 +672,15 @@ def validate_transcript(
         if not turn["text"].strip():
             problems.append(f"{label}: turn {position} has empty text")
         if turn["role"] == "learner":
-            if turn["intent"] not in LEARNER_TURN_INTENTS:
+            # A recording may additionally carry the simulator's filler
+            # marker: the graph offers more pauses than a 2-4 turn
+            # script fills, and the honest label for those turns is
+            # "the harness said something content-free here", not one
+            # of the scenario's intents.
+            allowed = set(LEARNER_TURN_INTENTS)
+            if expected_kind == "recorded-mock":
+                allowed.add(SIMULATOR_FILLER_INTENT)
+            if turn["intent"] not in allowed:
                 problems.append(
                     f"{label}: learner turn {position} has unknown intent "
                     f"{turn['intent']!r}"
