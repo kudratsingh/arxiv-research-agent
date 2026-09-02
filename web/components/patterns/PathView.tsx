@@ -1,34 +1,130 @@
 import Link from "next/link";
+import { useId } from "react";
 
+import { Button } from "@/components/primitives/Button";
 import type {
   LearnEntry,
   LearnPathDetail,
   ProgressResourceObservation,
 } from "@/lib/api";
-import { LEARN } from "@/lib/copy/learn";
+import { LEARN, type SessionStartRefusal } from "@/lib/copy/learn";
 
 import "@/components/primitives/primitives.css";
 import "./path.css";
+
+/** One entry's refusal, as the feature hands it down. */
+export interface PathStartRefusal extends SessionStartRefusal {
+  /** Which entry was refused. No other entry on the path is affected. */
+  resourceId: string;
+}
 
 export interface PathViewProps {
   path: LearnPathDetail;
   /** Resource facts derived from recorded session events, or an empty list. */
   observations?: ProgressResourceObservation[];
+  /**
+   * Start one guided session on this entry.
+   *
+   * Omitted, no start affordance renders at all — this pattern never fetches
+   * and never offers a control for a write it cannot issue (04 §5.1). The
+   * feature that owns `createLearnSession` passes it; a story passes a spy.
+   */
+  onStartSession?: (entry: LearnEntry) => void;
+  /** The entry whose start POST is outstanding, or `null`. */
+  startingResourceId?: string | null;
+  /** The refusal to render, or `null`. */
+  startRefusal?: PathStartRefusal | null;
+}
+
+function StartAction({
+  entry,
+  describedBy,
+  onStartSession,
+  starting,
+  otherStarting,
+  refusal,
+}: {
+  entry: LearnEntry;
+  describedBy: string;
+  onStartSession: (entry: LearnEntry) => void;
+  starting: boolean;
+  otherStarting: boolean;
+  refusal: PathStartRefusal | null;
+}) {
+  return (
+    <div className="mt-5 border-t border-border-subtle pt-4">
+      <Button
+        variant="primary"
+        // `busy`, not `disabled`: the control stays focusable and announced
+        // while it refuses a second click, which is the argument
+        // `primitives/Button.tsx` makes and the session composer already
+        // follows. It is a refusal, not a progress indicator — no bar, no
+        // spinner and no claim about how far the service has got, because a
+        // POST that has not answered has produced no fact to report.
+        busy={starting}
+        // A start on ANOTHER entry is outstanding. Unavailable, but nothing
+        // on THIS control is working, so `aria-busy` would announce work that
+        // is not happening: `aria-disabled` is the honest half of the pair,
+        // and `Button` honours a caller's value with the same click guard.
+        aria-disabled={otherStarting || undefined}
+        aria-describedby={describedBy}
+        data-start-session={entry.resource_id}
+        onClick={() => onStartSession(entry)}
+      >
+        {starting ? LEARN.startingSession : LEARN.startSession}
+      </Button>
+
+      {refusal ? (
+        <div
+          role="alert"
+          data-start-refusal={entry.resource_id}
+          className="mt-4 border-l-2 border-critical bg-sunken px-4 py-3"
+        >
+          <p className="text-ui-sm font-semibold text-ink">
+            {LEARN.startRefusedHeading}
+          </p>
+          <p className="mt-1 max-w-measure text-ui-sm text-ink-muted">
+            {refusal.message}
+          </p>
+          {refusal.detail === null ? null : (
+            <dl className="mt-2">
+              <dt className="font-mono text-mono-xs uppercase text-ink-muted">
+                {LEARN.startRefusedDetail}
+              </dt>
+              {/* RC-16: the service's own word, verbatim and unedited. */}
+              <dd className="font-mono text-mono-xs text-ink">{refusal.detail}</dd>
+            </dl>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function EntryCard({
   entry,
   observations,
   latestObservedAt,
+  onStartSession,
+  startingResourceId,
+  startRefusal,
 }: {
   entry: LearnEntry;
   observations: ReadonlyMap<string, ProgressResourceObservation>;
   latestObservedAt: string | null;
+  onStartSession?: (entry: LearnEntry) => void;
+  startingResourceId: string | null;
+  startRefusal: PathStartRefusal | null;
 }) {
   const observation = observations.get(entry.resource_id);
   const observed = observation !== undefined;
   const current =
     observation !== undefined && observation.last_observed_at === latestObservedAt;
+  const titleId = useId();
+  const refusal =
+    startRefusal !== null && startRefusal.resourceId === entry.resource_id
+      ? startRefusal
+      : null;
 
   return (
     <li
@@ -49,7 +145,7 @@ function EntryCard({
                   ? LEARN.observed
                   : LEARN.notObserved}
             </p>
-            <h3 className="mt-2 font-report text-report-h2 text-ink">
+            <h3 id={titleId} className="mt-2 font-report text-report-h2 text-ink">
               {entry.title}
             </h3>
             <p className="mt-1 text-ui-xs text-ink-muted">{entry.attribution}</p>
@@ -89,6 +185,20 @@ function EntryCard({
             </dd>
           </dl>
         ) : null}
+
+        {onStartSession === undefined ? null : (
+          <StartAction
+            entry={entry}
+            describedBy={titleId}
+            onStartSession={onStartSession}
+            starting={startingResourceId === entry.resource_id}
+            otherStarting={
+              startingResourceId !== null &&
+              startingResourceId !== entry.resource_id
+            }
+            refusal={refusal}
+          />
+        )}
       </article>
     </li>
   );
@@ -123,7 +233,13 @@ export function PathUnavailable({ onRetry }: PathUnavailableProps) {
   );
 }
 
-export function PathView({ path, observations = [] }: PathViewProps) {
+export function PathView({
+  path,
+  observations = [],
+  onStartSession,
+  startingResourceId = null,
+  startRefusal = null,
+}: PathViewProps) {
   const pathObservations = observations.filter(
     (observation) => observation.path_id === path.path_id
   );
@@ -196,6 +312,9 @@ export function PathView({ path, observations = [] }: PathViewProps) {
             entry={entry}
             observations={byResource}
             latestObservedAt={latestObservedAt}
+            onStartSession={onStartSession}
+            startingResourceId={startingResourceId}
+            startRefusal={startRefusal}
           />
         ))}
       </ol>

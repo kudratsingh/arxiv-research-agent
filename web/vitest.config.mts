@@ -312,11 +312,49 @@ export default defineConfig(async () => ({
       // seeded at the luckier run goes red on somebody else's PR for no
       // reason of theirs. Even so both of those floors rise: branches
       // +0.43, functions +0.5.
+      //
+      // WO-W13b RE-SEEDED ALL FOUR, on the tree that adds the path view's
+      // start action REBASED ONTO WO-W17's merge (#149) — the last surface PR
+      // of the §5.4 group, which is the one the re-seed belongs to. 3,380
+      // tests across 155 files: 2874/2928 statements, 2002/2128 branches,
+      // 1058/1191 functions, 2357/2378 lines. Previous values, for the audit
+      // trail: 98.08 / 93.8 / 88.6 / 99.06.
+      //
+      // MEASURED ON THE UNION, NOT ON THIS BRANCH ALONE — the mistake WO-31's
+      // note records. On the pre-rebase tree this branch read
+      // 98.08 / 93.9 / 88.76 / 99.07; the union with WO-W17 is above that in
+      // every column, so seeding this branch's own numbers would have banked
+      // an allowance the tree does not need.
+      //
+      // WHY THEY ROSE. Two sets of code arrived with their tests. The start
+      // action: `lib/copy/learn.ts` is 100 in every column (its refusal mapper
+      // is driven over every `ApiFailure` kind AND every `detail` code
+      // `src/api/sessions.py` raises), `PathView.tsx` is 100/97.67/100/100,
+      // `PathDetailSurface.tsx` 96.96/86.66/100/100. And WO-W17's
+      // `lib/server/pilot.ts`, whose 623-test suite is what lifts `branches`
+      // the furthest.
+      //
+      // MEASURED THREE TIMES ON THE REBASED TREE, IDENTICAL EVERY TIME
+      // (98.15 / 94.07 / 88.83 / 99.11) — the `branches` variance WO-31 and
+      // WO-W14 both record did not appear here, but it appeared on this branch
+      // BEFORE the rebase (93.9, 93.95, 93.9, 93.95) and is a property of the
+      // storybook project's `play` functions rather than of one tree. So
+      // `statements` and `lines` are seeded AT the measurement; `branches` at
+      // 94.0, which clears the widest run-to-run swing this file has recorded
+      // in that column (0.05) rather than the swing this particular set of
+      // runs happened to show; and `functions` keeps the small headroom it has
+      // carried since PR #108 — 88.8 against a measured 88.83.
+      //
+      // ONE DISCARDED RUN, RECORDED RATHER THAN AVERAGED IN. A run taken while
+      // a Compose stack was building on the same machine failed four stories
+      // on 5 s interaction timeouts (`CheckpointLedger/Empty`,
+      // `Diagnostics/Expanded`, `Field/Dark`, `Textarea/Disabled`). That is
+      // load, not coverage, and its numbers were thrown away.
       thresholds: {
-        statements: 98.08,
-        branches: 93.8,
-        functions: 88.6,
-        lines: 99.06,
+        statements: 98.15,
+        branches: 94.0,
+        functions: 88.8,
+        lines: 99.11,
       },
     },
     projects: [

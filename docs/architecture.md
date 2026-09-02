@@ -447,6 +447,35 @@ not as a transcript source: the frame moves the phase, and the surface
 then re-reads `GET /learn/sessions/{id}` for what to render — which is
 why a live turn and a reloaded one produce the same screen.
 
+**Starting one.** The only browser path into a session is the start
+action on `/learn/paths/[id]`. `components/patterns/PathView.tsx`
+renders it per entry and never fetches: without an `onStartSession`
+prop no start control exists at all, so the pattern cannot offer a
+write it has no way to issue. `components/features/PathDetailSurface.tsx`
+owns the write. It sends the entry's `path_id`/`resource_id` and the
+entry's own declared `est_minutes` as `available_minutes`, and **omits**
+that field rather than clamping it when a manifest declares something
+outside the endpoint's 5–180 range — `create_session` already falls back
+to the learner's `time_budget_min_per_day`, and a clamped number would be
+one the surface invented. On 202 it routes to `/learn/sessions/{id}`.
+
+Two properties there are deliberate. The duplicate-submit guard is a
+`useRef` written synchronously before the `await`, not React state:
+`POST /learn/sessions` starts a graph run and carries no idempotency
+key, so a second click inside one frame would buy a second session, and
+a batched state update reads its pre-update value in exactly that
+window. And the refusal is *mapped*: `describeSessionStart` in
+`lib/copy/learn.ts` turns an `ApiFailure` into one of that dictionary's
+sentences, keyed on the `detail` codes `src/api/sessions.py` actually
+raises — the flag being off, no learner record for the credential, the
+content tree, the rate limit, an unreachable service. Anything it has no
+sentence for reads as the generic refusal **plus the service's own word,
+verbatim** (RC-16), so an unmapped backend refusal reaches the reader as
+something they can act on rather than as silence. WO-W06's
+`session_cost_cap_refused` is deliberately not in that table: it is an
+`error_type` on a session that already exists, so the surface that
+states it is the session view's cost-cap fact, not the start control.
+
 **The server boundary.** `middleware.ts` mints a per-request nonce and
 sets the CSP on every document response; the proxy route emits one
 structured JSON log line per proxied request with a path *template*

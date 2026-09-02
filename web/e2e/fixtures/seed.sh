@@ -353,7 +353,68 @@ asyncio.run(main())
 PY
 
 
-echo "Seeded baseline-populated, baseline-empty, job:baseline-* and the guided-session checkpoint."
+# ---------------------------------------------------------------------------
+# WO-W13b. The learner profile the START of a session needs.
+#
+# `create_session` refuses with 404 `learner_profile_required` when the
+# calling principal has no profile (`src/api/sessions.py`), and a profile is
+# per-principal by construction (ADR 0058) — there is no default row, and
+# inventing one on read would make "the learner has told us nothing" and "the
+# learner told us they are a beginner" indistinguishable
+# (`src/api/routes.py::get_learner_profile`). WO-W13's session spec never met
+# this because it READ a session that was already seeded; WO-W13b's flow spec
+# STARTS one, so the record has to exist first.
+#
+# WRITTEN THROUGH THE STORE, NOT THROUGH `PUT /learn/profile` AND NOT AS
+# HAND-WRITTEN SQL. The same argument the checkpoint block above makes: this
+# reuses the application's own `build_profile_store()` and its validation, so
+# a schema or constraint change fails the seed instead of producing a row the
+# API cannot read back. It contacts nothing — one Postgres upsert on the pool
+# the stack already has open.
+#
+# IDEMPOTENT: `put` is an upsert keyed on `principal_key_id`
+# (`src/learning/profile_store.py`), so re-seeding is a no-op.
+#
+# `time_budget_min_per_day` is the fallback `create_session` uses when a
+# request omits `available_minutes`. 20 is the figure the seeded
+# `baseline-guided-session` spec already carries, so the two fixtures agree.
+docker exec -i -e E2E_PRINCIPAL="$principal" "$app_container" python - <<'PY'
+import asyncio
+import os
+
+from src.learning.profile_store import LearnerProfile, build_profile_store
+from src.tools.postgres_pool import close_pool
+
+PRINCIPAL = os.environ["E2E_PRINCIPAL"]
+
+
+async def main() -> None:
+    store = build_profile_store()
+    await store.put(
+        LearnerProfile(
+            principal_key_id=PRINCIPAL,
+            academic_level="undergrad",
+            time_budget_min_per_day=20,
+            profile_note=(
+                "Seeded browser-tier learner. Fixture scaffolding for the "
+                "end-to-end guided-read run; not a real reader."
+            ),
+        )
+    )
+    if await store.get(PRINCIPAL) is None:
+        raise SystemExit("learner profile seed wrote nothing")
+
+
+asyncio.run(main())
+# Closed explicitly: the pool's `__del__` cannot join its worker thread at
+# interpreter shutdown, which prints a `PythonFinalizationError` traceback
+# after a seed that in fact succeeded. A confusing traceback on a green run
+# is how people learn to ignore tracebacks.
+close_pool()
+PY
+
+
+echo "Seeded baseline-populated, baseline-empty, job:baseline-*, the guided-session checkpoint and the e2e learner profile."
 
 # ---------------------------------------------------------------------------
 # WO-W17 — two pilot principals, and one of each thing a pilot has.

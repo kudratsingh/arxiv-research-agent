@@ -5,6 +5,7 @@ import { expect } from "@playwright/test";
 import type { Page, TestInfo } from "@playwright/test";
 
 import { FIXTURES } from "./env";
+import { assertMockModeStack } from "./mock-mode";
 
 /**
  * The paid-path interceptor (criterion 3; 04 §7.3 "The one paid-path rule";
@@ -46,10 +47,42 @@ import { FIXTURES } from "./env";
  * a state the next run does not expect, which would make `seed.sh`
  * non-idempotent.
  *
+ * THE ONE EXCEPTION, AND ITS PRECONDITION (WO-W13b). The two SESSION routes
+ * have a second mode — `sessionMode: "mock-pass-through"` — in which they are
+ * counted and recorded exactly as before and then FORWARDED to the backend.
+ * It exists for one test: Gate W1 row 1's full guided-read run, which needs
+ * the graph to actually start, park, checkpoint and resume. A fulfilled
+ * write starts nothing, so under the default mode that row is unprovable.
+ *
+ * Forwarding is gated on `support/mock-mode.ts`, which refuses unless the
+ * stack pins `USE_MOCK_DATA=true` AND `ANTHROPIC_API_KEY=local-preview-
+ * disabled` — checked in the overlay the stack is brought up from and, when
+ * a daemon is reachable, in the running container too. Under mock mode the
+ * session graph constructs no model client on any path (`src/agents/tutor.py`
+ * `:159` and `:248`, `src/agents/assessment.py:178`), so the pass-through
+ * spends nothing BY CONSTRUCTION rather than because a key would have been
+ * rejected. `/api/research` and `/api/conversations` have no such mode and
+ * never will: a research run under mock mode is still a run, and the claim
+ * this file exists to make about them is structural.
+ *
+ * The report says which mode each row was taken in, so a reader cannot
+ * mistake a forwarded count for an interdicted one.
+ *
  * PATH MATCHING IS EXACT, NOT GLOB. `**​/api/research` would also catch
  * `/api/research/{id}/export` and `/api/research/{id}/stream` in some
  * matchers; a URL predicate on `pathname` cannot.
  */
+
+/**
+ * How the two session writes are answered.
+ *
+ * `"fulfil"` — the harness answers them; nothing reaches the backend. The
+ * default, and the posture every spec but `session-flow.spec.ts` uses.
+ *
+ * `"mock-pass-through"` — counted, recorded, then forwarded to a stack that
+ * has been asserted to be in mock mode. See the header.
+ */
+export type PaidSessionMode = "fulfil" | "mock-pass-through";
 
 /** One recorded write attempt, in order. */
 export interface PaidPathAttempt {
@@ -82,6 +115,8 @@ export interface PaidPathInterceptor {
     expectedTurns: number,
     scenario: string
   ): void;
+  /** How the two session writes are being answered on this page. */
+  readonly sessionMode: PaidSessionMode;
   /** The `job_id` this interceptor hands back to the app. */
   readonly acceptedJobId: string;
   readonly acceptedSessionId: string;
@@ -126,15 +161,17 @@ function record(testInfo: TestInfo, line: string): void {
 }
 
 /**
- * Install the interceptor on a page.
- *
- * @param acceptedJobId the `job_id` handed back to the app. Defaults to the
- *   seeded running job, so the `?job=` handoff attaches to something real.
+ * Everything a caller may vary. An object rather than three positional
+ * arguments because the third would otherwise be a bare mode string at the
+ * end of two numbers, and a call site nobody can read is a call site nobody
+ * checks. No existing caller passed any of these.
  */
-export async function interceptPaidPath(
-  page: Page,
-  testInfo: TestInfo,
-  acceptedJobId: string = FIXTURES.running,
+export interface PaidPathOptions {
+  /**
+   * The `job_id` handed back to the app. Defaults to the seeded running job,
+   * so the `?job=` handoff attaches to something real.
+   */
+  acceptedJobId?: string;
   /**
    * Latency added to both writes.
    *
@@ -145,12 +182,41 @@ export async function interceptPaidPath(
    * takes against the seeded stack, which is the window a real double click
    * has to squeeze into.
    */
-  writeLatencyMs = 250,
+  writeLatencyMs?: number;
+  /**
+   * How the two session writes are answered. See `PaidSessionMode` and the
+   * header. `"mock-pass-through"` asserts the stack's mock-mode pins first
+   * and throws if either is missing.
+   */
+  sessionMode?: PaidSessionMode;
+}
+
+/** Install the interceptor on a page. */
+export async function interceptPaidPath(
+  page: Page,
+  testInfo: TestInfo,
+  options: PaidPathOptions = {},
 ): Promise<PaidPathInterceptor> {
+  const {
+    acceptedJobId = FIXTURES.running,
+    writeLatencyMs = 250,
+    sessionMode = "fulfil",
+  } = options;
   const attempts: PaidPathAttempt[] = [];
   let offline = false;
   const settle = (): Promise<void> =>
     new Promise((resolve) => setTimeout(resolve, writeLatencyMs));
+
+  if (sessionMode === "mock-pass-through") {
+    // Throws with the fix if either pin is missing. Printed AND recorded, so
+    // the precondition is visible in the run output rather than inferable
+    // from the absence of a failure.
+    const summary = assertMockModeStack();
+    // Printed, not only recorded: the check has to be readable in the run
+    // log, because a passing assertion that leaves no trace is not evidence.
+    console.log(summary);
+    record(testInfo, `# ${testInfo.project.name}\t${testInfo.title}\t${summary}`);
+  }
 
   const readBody = (raw: string | null): Record<string, unknown> => {
     if (raw === null) return {};
@@ -217,6 +283,13 @@ export async function interceptPaidPath(
         await route.abort("internetdisconnected");
         return;
       }
+      if (sessionMode === "mock-pass-through") {
+        // Counted above, then forwarded. The precondition was asserted before
+        // any route was installed, so reaching this line means the stack
+        // constructs no model client for what happens next.
+        await route.fallback();
+        return;
+      }
       await route.fulfill({
         status: 202,
         contentType: "application/json",
@@ -247,6 +320,10 @@ export async function interceptPaidPath(
       await settle();
       if (offline) {
         await route.abort("internetdisconnected");
+        return;
+      }
+      if (sessionMode === "mock-pass-through") {
+        await route.fallback();
         return;
       }
       await route.fulfill({
@@ -312,6 +389,7 @@ export async function interceptPaidPath(
     attempts: () => attempts,
     acceptedJobId,
     acceptedSessionId,
+    sessionMode,
     setOffline(next: boolean): void {
       offline = next;
     },
@@ -348,6 +426,9 @@ export async function interceptPaidPath(
           `POST /api/learn/sessions=${creates}`,
           `expected_session_turns=${expectedTurns}`,
           `POST /api/learn/sessions/{id}/turn=${turns}`,
+          // WO-W13b. Which posture the counts were taken under, so a
+          // forwarded row can never be read as an interdicted one.
+          `mode=${sessionMode}`,
         ].join("\t"),
       );
       expect(creates, `${scenario}: unexpected session-create request count`).toBe(
@@ -369,9 +450,17 @@ export async function interceptPaidPath(
  * different column list. They share a file because they are the same claim
  * about the same boundary — no automated tier issues a paid write — and a
  * reader looking for that claim should find all of it in one place.
+ *
+ * WO-W13b ADDS A COLUMN, NOT A THIRD SHAPE. `mode=` says how the two session
+ * writes were answered. Without it a `POST /api/learn/sessions=1` row is
+ * ambiguous between "the harness answered it" and "it reached the backend",
+ * and those are different claims — so the column is part of the evidence
+ * rather than decoration. Lines beginning `#` inside the body are the
+ * mock-mode preconditions, one per pass-through scenario.
  */
 export const REPORT_HEADER = [
-  "# research-post-count.txt — WO-21 criterion 3, WO-W13 criterion 4",
+  "# research-post-count.txt — WO-21 criterion 3, WO-W13 criterion 4,",
+  "# WO-W13b criterion 3",
   "#",
   "# One line per intentional-submission scenario. Every paid write is",
   "# counted in the browser by web/e2e/support/paid-path.ts and must be",
@@ -381,7 +470,19 @@ export const REPORT_HEADER = [
   "#",
   "# research rows:",
   "#   verdict\tproject\tscenario\texpected\tresearch POSTs\tconversation POSTs",
-  "# session rows (WO-W13):",
+  "# session rows (WO-W13, + mode since WO-W13b):",
   "#   verdict\tproject\tscenario\texpected creates\tsession POSTs" +
-    "\texpected turns\tturn POSTs",
+    "\texpected turns\tturn POSTs\tmode",
+  "#",
+  "# mode=fulfil            the harness answered both session writes; nothing",
+  "#                        reached the backend. Every scenario but the",
+  "#                        end-to-end guided run.",
+  "# mode=mock-pass-through counted, then FORWARDED to a stack asserted to",
+  "#                        pin USE_MOCK_DATA=true and the disabled key, under",
+  "#                        which the session graph constructs no model client",
+  "#                        at all (WO-W13b, Gate W1 row 1). The preconditions",
+  "#                        for each such scenario are the `#` lines below.",
+  "#",
+  "# `POST /api/research` is fulfilled in EVERY mode and has no pass-through:",
+  "# its count is 0 on every row above, which is criterion 3's claim.",
 ].join("\n");

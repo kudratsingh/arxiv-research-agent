@@ -155,13 +155,15 @@ test.describe("WO-W13 guided session", () => {
       const paid = await interceptPaidPath(page, testInfo);
       await page.goto(SESSION_URL, { waitUntil: "domcontentloaded" });
 
-      // No surface starts a session yet — the path view's start action is a
-      // later card — so this drives the route directly from the page, which
-      // is the same origin a surface would drive it from and the same place
-      // the interceptor sits. What it proves is the structural claim: with
-      // the interceptor installed, `POST /api/learn/sessions` is answered by
-      // the harness and never reaches the backend, so a start button landing
-      // later cannot spend on this tier by default.
+      // Driven directly from the page rather than through the path view's
+      // start action, which WO-W13b has since built: the claim here is
+      // structural and belongs to the DEFAULT posture. With the interceptor
+      // installed in its default `fulfil` mode, `POST /api/learn/sessions` is
+      // answered by the harness and never reaches the backend — so every spec
+      // in this tier except `session-flow.spec.ts`, which opts into the
+      // mock-mode pass-through explicitly, cannot spend on a session start
+      // even by accident. Driving it from `page.evaluate` is the same origin
+      // a surface drives it from and the same place the interceptor sits.
       const body = await page.evaluate(async () => {
         const response = await fetch("/api/learn/sessions", {
           method: "POST",
