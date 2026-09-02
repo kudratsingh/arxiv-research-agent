@@ -80,16 +80,16 @@ Today, in merge order:
 | WO-W03b | #151 | `1026534` | the tutor close line no longer names the frame it rejects |
 | WO-W17b | #153 | `72e65b9` | the identity slot tells the truth under pilot mode |
 | WO-W19 | #152 | `f6fce61` | the Gate W1 evidence pack and known gaps |
+| WO-W13c | #155 | `9fa99b8` | the Live badge no longer grows the spine's status line |
 
-Twenty-two PRs, #132 … #153. **Nineteen of the twenty planned cards are
-merged to their no-cost boundary**, plus the three coordinator-added cards
-(W13b, W03b, W17b); the owner-dependent funded/public/pilot criteria on them
-stay visibly deferred. **WO-W20 remains**, and waits on the 14-day pilot
-observation window (W-OD-4/5/6).
+Twenty-three PRs, #132 … #155 (#154 is this file's own bookkeeping, not a
+card). **Nineteen of the twenty planned cards are merged to their no-cost
+boundary**, plus the four coordinator-added cards (W13b, W03b, W17b, W13c);
+the owner-dependent funded/public/pilot criteria on them stay visibly deferred.
+**WO-W20 remains**, and waits on the 14-day pilot observation window
+(W-OD-4/5/6).
 
-In flight at the time of writing: **WO-W13c** alone
-(`fix/w13c-cls-conversation-route`; no PR open yet). This section is written
-against `f6fce61` and is amended when it lands.
+Nothing is in flight. This section is written against `9fa99b8`.
 
 ### Coordinator rulings made under the standing delegation
 
@@ -134,13 +134,20 @@ All dated 2026-09-02. The owner may reopen any of them.
    `docs/architecture.md` and `evidence/gate-w2/pilot-record.md` §6 is
    **resolved**; nothing now blocks an invitation on that count (W-OD-5
    still does).
-9. **WO-W13c was added**: `e2e/cls.spec.ts`'s 3-px layout shift on `/c/[id]`
-   failed on main's runs for `4fbe239` and `3ccb650` with an identical
-   signature, never on a PR run, and passed on rerun. The coordinator's state
-   probe of main `3ccb650` classified it **deterministic and
-   CI-environment-conditioned**, not flaky. W13c pulls the retained CI trace,
-   reproduces on Linux, fixes at the cause, and interpolates the e2e
-   overlay's daemon-global image tags.
+9. **WO-W13c was added, and has closed the failure**: `e2e/cls.spec.ts`'s 3-px
+   layout shift on `/c/[id]` failed on main's runs for `4fbe239` and `3ccb650`
+   with an identical signature, never on a PR run, and passed on rerun. The
+   coordinator's state probe of main `3ccb650` classified it **deterministic
+   and CI-environment-conditioned**, not flaky — which held. Its cause, found
+   by #155: the spine's status line is `items-baseline` and the `Live` badge is
+   its only non-text item, so Chromium takes the badge's baseline from the 16px
+   SVG that leads it and grows the line 20→23px whenever the badge is painted,
+   which only a 2-vCPU runner is slow enough to do. Fixed with
+   `align-self: center` on the badge, no height pinned, plus a new test that is
+   red without the fix and 20/20 green with it, a hardened CLS attribution, and
+   the e2e overlay's daemon-global image tags interpolated. Merged as #155
+   (`9fa99b8`); `known-gaps.md` §7 is resolved and §8's tag hazard with it.
+   **The probe's diagnosis was wrong in two places** — see erratum (g).
 10. **The `nightly-eval` workflow remains disabled and all model spend
     remains locked** — unchanged since 2026-08-30.
 
@@ -160,20 +167,22 @@ resolves the funded row: it waits on money, not on code.
 
 Per the pack: seven of §6's ten rows resolve outright; the per-session cost
 row resolves on its own terms with every figure it reconciles a mock-mode
-figure; `known-gaps.md` is non-empty at **seventeen entries, one of them
-already resolved** (§6, the tutor close line, by #151). The funded-campaign
+figure; `known-gaps.md` is non-empty at **seventeen entries, two of them now
+resolved** (§6, the tutor close line, by #151; §7, the `cls.spec.ts` failure, by
+#155 later the same day). The funded-campaign
 row — the first funded calibration run (W09 c6), the first
 funded simulation campaign (W10 c5) and the nightly learning lane's first
 scheduled run (W11 c4) — is **UNRESOLVED**, and is carried into Gate W2's memo
 as a named, dated exception pending **W-OD-1**.
 
 The two conditional items the pack's third shape names are assigned rather
-than left pending: WO-W13c owns the `cls.spec.ts` failure (in flight), and
-WO-W03b closed the tutor's mastery-frame close line (#151, `known-gaps.md`
-§6, struck through in the merged pack). Neither blocks this close. The
-pack's own §6.1 carries the coordinator state-probe verdict — main HEALTHY
-on every tier at `3ccb650` — as the corroboration the close rests on
-beside CI.
+than left pending: WO-W13c owns the `cls.spec.ts` failure — **and closed it the
+same day, #155, `9fa99b8`** — and WO-W03b closed the tutor's mastery-frame
+close line (#151, `known-gaps.md` §6, struck through in the merged pack).
+Neither blocked this close, and the pack's conditional third shape is now
+satisfied on its own terms as well. The pack's own §6.1 carries the
+coordinator state-probe verdict — main HEALTHY on every tier at `3ccb650` —
+as the corroboration the close rests on beside CI.
 
 ### Plan errata found in execution
 
@@ -208,6 +217,15 @@ $67,200`** worst case (#149's runbook work). W-OD-5 therefore cannot approve
 (f) `pytest -m "not e2e"` counts differ by environment and both are real:
 **2038 passed / 52 skipped** locally, which has no Postgres, against **2090
 passed / 0 skipped** in CI, which has the service those 52 need.
+
+(g) **The state probe's elimination of the Live badge mount was wrong**, and so
+was the regression window it drew at WO-W13's `web/lib/job/machine.ts`. The
+badge mount is the cause of the `cls.spec.ts` shift; the machine is not
+involved; the defect predates W13, whose change to that route was one of timing
+and not geometry (#155, `known-gaps.md` §7). The probe eliminated the badge by
+measuring the settled DOM, where the badge has already unmounted — recorded
+here so the next probe samples **across the stream's open and close frames**,
+and treats an element that grows in place as invisible to a shift attribution.
 
 ### Owner decisions now due
 

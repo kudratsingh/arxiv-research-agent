@@ -65,3 +65,21 @@ Job summary line, same log:
 Attempt 2 of run 33630982183 (the `web e2e` job re-run alone,
 2026-09-02T12:55:11Z): **264 passed, 52 skipped, 0 failed** — 8/8 jobs
 success. The `cls` test passed on the fresh job with no change to the tree.
+
+## Closing note, 2026-09-02 — fixed at the cause by WO-W13c
+
+PR #155 (`9fa99b8`) found it and fixed it. The spine's status line is
+`items-baseline`, and the `Live` badge is the only item on it that is not
+text: as a flex item it is blockified, its baseline is taken from its first
+item — a 16px SVG with no text baseline — and Chromium therefore synthesises
+it from the badge's bottom edge, three pixels below the text's. Aligning the
+two grows the line 20px → 23px and pushes both announcement spans 250 → 253,
+which is exactly what the entries above record. The line GREW; it did not
+shift, which is why the grown element never appears in `moved` and why
+`span.ew-spine-void` reads `197→197` — that one moved 35px sideways.
+
+Only the paint was environmental: the badge mounts when the stream's headers
+land and unmounts when its body ends, and only a 2-vCPU runner is slow enough
+to paint the frame in between. The fix is `align-self: center` on the badge.
+The log above is kept unedited as the record of the failure; see
+[`../known-gaps.md`](../known-gaps.md) §7.

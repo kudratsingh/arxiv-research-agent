@@ -1212,18 +1212,30 @@ from W-OD-5 is closed.
 
 | Gate | Size | Depends | Track | State |
 |---|---|---|---|---|
-| W1 | S | WO-W13 | C | in flight, `fix/w13c-cls-conversation-route` |
+| W1 | S | WO-W13 | C | merged, PR #155 (`9fa99b8`) |
 
-**Scope.** `e2e/cls.spec.ts` reads `0.039` against an expected
+**Scope.** `e2e/cls.spec.ts` read `0.039` against an expected
 `0.000` on `/c/[id]` — three pixels down on one frame and back on
 the next — on main's runs for `4fbe239` and `3ccb650`, with an
 identical signature, never on a PR run, and passing on rerun and
 80/80 locally. The coordinator's state probe classified it
-**deterministic and CI-environment-conditioned**, not flaky. Pull
-the retained CI trace, reproduce on Linux, and fix at the cause.
-Rides along: interpolate the e2e overlay's daemon-global image tags
-(`arxiv-research-agent:local`, `arxiv-research-agent-web:wo21-e2e`),
-which two stacks on one machine contend for
+**deterministic and CI-environment-conditioned**, not flaky, which
+held; its attribution of the cause did not. **The cause:** the
+spine's status line is `items-baseline` and the `Live` badge is its
+only non-text item, so Chromium synthesises the badge's baseline
+from the 16px SVG that leads it and the line grows 20→23px on the
+one frame a 2-vCPU runner is slow enough to paint. Fixed at the
+cause with `align-self: center` on the badge — no height pinned,
+the assertion not widened — with a new browser test that parks the
+surface in the live state and is red without the fix, a unit test
+on the class and the row, and a CLS attribution that now prints
+whole rects and each source's parent. The defect **predates
+WO-W13**, which changed this route's timing and not its geometry;
+`web/lib/job/machine.ts` is not involved
+([`STATUS.md`](STATUS.md) erratum (g)). Rode along: the e2e
+overlay's daemon-global image tags are interpolated
+(`E2E_APP_IMAGE`, `E2E_WEB_IMAGE`, defaults unchanged), which two
+stacks on one machine contended for
 ([§5.4](#54-fleet-coordination-hazards)).
 
 ### Track D — Content and pilots (Gates W1/W2)
