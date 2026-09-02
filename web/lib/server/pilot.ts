@@ -306,6 +306,29 @@ export function readPilotConfig(
 
 // ------------------------------------------------------------- the resolver
 
+/**
+ * The only thing the resolver reads off a request: two headers, by name.
+ *
+ * WHY A STRUCTURAL TYPE AND NOT `Request` (WO-W17b). `resolvePilotPrincipal`
+ * never touched a method, a body or a URL — it reads `X-Pilot-Edge-Key` and
+ * `X-Pilot-User`, and nothing else — and the second caller does not hold a
+ * `Request` at all: `lib/server/identity.ts` runs inside a server component,
+ * where `next/headers` hands back a `ReadonlyHeaders` and there is no request
+ * object to be had. Narrowing the parameter to what is actually read lets both
+ * callers pass what they have, and it makes the read surface of this function
+ * something the signature states rather than something a reader has to verify.
+ * `Request` satisfies it structurally, so `principal.ts` and every existing
+ * test are unchanged.
+ */
+export interface PilotHeaderReader {
+  get(name: string): string | null;
+}
+
+/** Anything carrying request headers: a `Request`, or a server component's. */
+export interface PilotHeaderCarrier {
+  readonly headers: PilotHeaderReader;
+}
+
 /** What one request resolved to. */
 export type PilotResolution =
   | {
@@ -327,7 +350,8 @@ export type PilotResolution =
  *   config: The parsed configuration. A `misconfigured` one refuses every
  *     request without inspecting it at all — an operator's mistake is not a
  *     per-caller condition.
- *   request: The browser request as the proxy received it.
+ *   request: The browser request as the proxy received it, or anything else
+ *     carrying that request's headers — see `PilotHeaderCarrier`.
  *
  * Returns:
  *   The pilot's principal, or a fault. The fault carries a username ONLY when
@@ -336,7 +360,7 @@ export type PilotResolution =
  */
 export function resolvePilotPrincipal(
   config: PilotConfig,
-  request: Request,
+  request: PilotHeaderCarrier,
 ): PilotResolution {
   if (config.mode === "misconfigured") {
     return { ok: false, fault: config.fault, username: null };

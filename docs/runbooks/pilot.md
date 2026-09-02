@@ -359,7 +359,10 @@ and none of it is a promise about a version that does not.
 > embedding cache. If you and another pilot read the same paper, the second
 > read is faster because the first one is on disk. Those caches hold the
 > paper's own text and vectors — not who fetched it, not what you asked about
-> it, and not anything you wrote.
+> it, and not anything you wrote. The header at the top of the page says the
+> same two things back to you, and names you: it should read "Pilot workspace"
+> with your username in it. If it says anything else, tell us — that is a
+> deployment fault, not a cosmetic one.
 >
 > **What we can see.** The operators can see everything in the database,
 > including your threads and what you wrote in a session. This is a five-person
@@ -376,9 +379,8 @@ and none of it is a promise about a version that does not.
 > tell you what happens to your data, and we can delete all of it on request.
 >
 > **What will be rough.** It costs us real money per session, so there are
-> ceilings: a session can refuse to continue if it reaches one. The interface
-> still calls itself a shared workspace in one or two places — ignore that, it
-> is stale wording, your data really is separate. There is no mobile app.
+> ceilings: a session can refuse to continue if it reaches one. There is no
+> mobile app.
 >
 > **How to reach us.** [channel]. If something looks wrong, it probably is;
 > please say so.

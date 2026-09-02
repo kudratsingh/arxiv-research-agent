@@ -93,7 +93,12 @@ afterEach(() => {
 
 describe("the (workspace) layout mounts the shell around its children", () => {
   it("renders the shell's landmarks around whatever the route is", async () => {
-    render(<WorkspaceLayout>{<h1>A route</h1>}</WorkspaceLayout>);
+    // `await WorkspaceLayout(...)` rather than `<WorkspaceLayout/>`: WO-W17b
+    // made it an async server component so it can resolve the request's
+    // identity descriptor, and `createRoot` cannot render one of those. It is
+    // the form `tests/fonts.test.ts` and `tests/tokens.test.ts` already use
+    // for the async root layout. Every assertion below is unchanged.
+    render(await WorkspaceLayout({ children: <h1>A route</h1> }));
 
     expect(document.querySelectorAll("main")).toHaveLength(1);
     expect(screen.getByRole("banner")).toBeInTheDocument();

@@ -33,7 +33,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, screen, userEvent, waitFor } from "storybook/test";
 
 import { railIsAvailable, railPresentation } from "@/.storybook/storyRail";
-import { THREAD_RAIL } from "@/lib/copy/threads";
+import { THREAD_RAIL, WORKSPACE, WORKSPACE_PILOT } from "@/lib/copy/threads";
 import { RAIL_COLLAPSED_STORAGE_KEY } from "@/lib/tokens";
 
 import { WorkbenchShell } from "./WorkbenchShell";
@@ -204,4 +204,96 @@ export const Dark: Story = {
 export const ForcedColours: Story = {
   args: { ...RailExpanded.args },
   globals: { theme: "forced-colors" },
+};
+
+/* =========================================================================
+ * The identity slot's three states (WO-W17b criterion 3).
+ *
+ * WHY THEY ARE STORIES OF THE SHELL AND NOT OF `IdentitySlot`. The slot
+ * component still renders `null` — D-009 is unchanged, and
+ * `IdentitySlot.stories.tsx` still asserts it draws nothing. What occupies the
+ * identity position is the sentence beside it (03 §6), and that sentence is
+ * the shell's to render, so this is where the three states are pickable, where
+ * the a11y addon runs axe over them, and where a reviewer can read all three
+ * side by side and check that the middle one does not read as a login.
+ *
+ * EACH STATE IS HERE IN BOTH THEMES because the indicator is the one place in
+ * the header where a lead in `text-ink` sits inside a paragraph in
+ * `text-ink-muted`, and that pair resolves differently under `[data-theme]`.
+ * The dark stories are the same args with one global changed, so a divergence
+ * between them would be a fact about the tokens rather than about this
+ * component.
+ *
+ * THE DESCRIPTOR IS A PROP, WHICH IS THE POINT. `lib/server/identity.ts`
+ * derives it per request in the two group layouts; the shell takes the answer
+ * and renders it. That is what lets these three states exist with no
+ * environment, no request, no network and no flag — SR-07's whole argument for
+ * why this is not a runtime feature flag.
+ * ========================================================================= */
+
+/** Every deployment on `main`: one key, one principal, one shared workspace. */
+export const IdentityShared: Story = {
+  args: { ...RailExpanded.args, identity: { kind: "shared" } },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText(WORKSPACE.indicatorDetail, { exact: false }),
+    ).toBeVisible();
+  },
+};
+
+export const IdentitySharedDark: Story = {
+  args: { ...IdentityShared.args },
+  globals: { theme: "dark" },
+};
+
+/**
+ * `PILOT_EDGE_AUTH=on`, and the edge vouched for this request.
+ *
+ * The username is the pilot's own and the browser already collected it from
+ * them at the edge's credential dialog, so showing it back is not a new
+ * disclosure. The sentence names what is per person AND what is shared,
+ * because `docs/runbooks/pilot.md` §8 told each pilot both.
+ */
+export const IdentityPilot: Story = {
+  args: {
+    ...RailExpanded.args,
+    identity: { kind: "pilot", username: "pilot-ada" },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(WORKSPACE_PILOT.indicator)).toBeVisible();
+    await expect(canvas.getByText(/pilot-ada/)).toBeVisible();
+    // The sentence this work order exists to remove must be gone, not merely
+    // qualified — a header carrying both would be worse than either.
+    await expect(canvas.queryByText(WORKSPACE.indicator)).toBeNull();
+  },
+};
+
+export const IdentityPilotDark: Story = {
+  args: { ...IdentityPilot.args },
+  globals: { theme: "dark" },
+};
+
+/**
+ * Pilot mode is on and this request resolved to nobody.
+ *
+ * A spoofed username header, a missing edge secret, a username nobody was
+ * issued, or a configuration the deployment refuses to serve under — the slot
+ * says the same thing for all of them, names no pilot, and gives no fault. The
+ * distinction between them is the operator's, and it reaches them through the
+ * `pilot_principal` log line.
+ */
+export const IdentityUnresolved: Story = {
+  args: { ...RailExpanded.args, identity: { kind: "unresolved" } },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText(WORKSPACE_PILOT.unresolvedIndicator),
+    ).toBeVisible();
+    await expect(canvas.queryByText(WORKSPACE.indicator)).toBeNull();
+    await expect(canvas.queryByText(/pilot-ada/)).toBeNull();
+  },
+};
+
+export const IdentityUnresolvedDark: Story = {
+  args: { ...IdentityUnresolved.args },
+  globals: { theme: "dark" },
 };

@@ -178,18 +178,45 @@ for that claim rather than a restatement of it.
 - **Positive.** Several rules that were prose become arithmetic. SR-09's ≤5
   cohort is `PILOT_MAX_PRINCIPALS`; SR-02's "one key per person" is refused
   duplicates; "never the shared key" is a refusal rather than a branch order.
-- **Negative — the S7 sentence stops being true, and the copy has not caught
-  up.** `docs/security.md` says the edge login "is **not** a principal … two
-  people with the same password are indistinguishable at every layer below
-  Caddy", and the shell renders "Shared workspace — Everyone with access to
-  this deployment sees these threads. There are no separate accounts."
+- **Negative — the S7 sentence stopped being true, and the copy had not caught
+  up. RESOLVED by WO-W17b (PR #153); the original entry is kept below because the
+  reasoning it records is why the resolution looks the way it does.**
+  `docs/security.md` says the edge login "is **not** a principal … two people
+  with the same password are indistinguishable at every layer below Caddy", and
+  the shell rendered "Shared workspace — Everyone with access to this
+  deployment sees these threads. There are no separate accounts."
   (`web/lib/copy/threads.ts`). Under `PILOT_EDGE_AUTH=on` both statements are
   **false**: the login selects a principal and threads are per person. WO-W17
-  does not own `web/lib/copy/**` (WO-W14 does this wave), so the string is
-  unchanged and the discrepancy is written down here, in `docs/security.md`,
-  and in the runbook's onboarding note, which tells pilots plainly to ignore
-  it. **This must be resolved before a pilot is invited** — it is a false
+  did not own `web/lib/copy/**` (WO-W14 did, that wave), so the string was left
+  alone and the discrepancy was written down here, in `docs/security.md`, and
+  in the runbook's onboarding note, which told pilots plainly to ignore it.
+  **It had to be resolved before a pilot was invited** — it is a false
   statement about data separation shown to the people the separation is for.
+
+  **How WO-W17b resolved it, and why not with a flag.** SR-07 keeps the web
+  tier free of runtime feature flags, and none was added. 03 §6 asks the
+  identity slot to be "reserved and occupied by truthful content", and the
+  truthful content is *the principal this deployment already resolves for this
+  request*. So `web/lib/server/identity.ts` derives a `WorkspaceIdentity` —
+  `shared`, `pilot` with the edge-authenticated username, or `unresolved` —
+  from this ADR's own two environment variables and its own two headers,
+  through `readPilotConfig` and `resolvePilotPrincipal` unchanged, in the two
+  group layouts that mount the shell; the shell renders the value and has no
+  branch of its own. Four properties make that safe to say out loud:
+
+  - It does **not** call `resolveUpstreamPrincipal`, so the credential
+    boundary is still exactly one module (04 §1.3 constraint 1), and
+    `web/tests/principal.test.ts` still passes unmodified.
+  - The descriptor has no field for a key, a key id or a fault, so a pilot's
+    browser learns their own username and nothing else. The client bundle is
+    scanned for the key material *and* for the `PILOT_` names.
+  - With the mode off the descriptor is `shared` and the rendered element is
+    byte-identical to what it was before — `web/tests/shell/identity.test.tsx`
+    compares it against the pre-change markup transcribed from this ADR's own
+    commit.
+  - Guard 3's refusals render as `unresolved`, never as `shared`: a request the
+    edge did not vouch for is nobody's, and saying it is everybody's would be
+    the same false statement one branch further along.
 - **Negative — the container healthcheck loses WO-30 / C5's property.**
   `scripts/healthcheck.mjs` probes `/api/healthz` through the proxy, which is
   the point of C5; under pilot mode the probe is not a pilot and is correctly

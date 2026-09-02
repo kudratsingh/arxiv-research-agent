@@ -11,6 +11,16 @@
 // `Conversation` is a **Thread** on screen, and stays `/conversations` on
 // the wire. Register 3 is the query keys and the API paths, which nothing
 // in this file touches.
+//
+// THE ONE IMPORT IN THIS FILE IS A TYPE AND IS ERASED. `WorkspaceIdentity`
+// (`lib/identity.ts`) is the descriptor the server resolves per request, and
+// `workspaceIndicator` below is the only composer in the dictionary whose
+// output depends on it. `import type` carries no edge into any bundle — the
+// module-graph walker in `web/tests/plan/bundle.test.ts` models that erasure
+// explicitly — and `lib/identity.ts` imports nothing itself, so the copy
+// layer stays what it was: strings, and no state.
+
+import type { WorkspaceIdentity } from "@/lib/identity";
 
 // ---------------------------------------------------------------------------
 // The rail (03 §2.2 rows 2, 3, 4).
@@ -193,12 +203,17 @@ export function deleteDialog(title: string): DeleteDialogCopy {
 // ---------------------------------------------------------------------------
 
 /**
- * The workspace indicator that occupies the identity slot today.
+ * The workspace indicator that occupies the identity slot.
  *
  * 03 §6: the slot is *reserved and occupied by truthful content*, not left
- * empty and not filled with a disabled account menu. What is true today is
- * that everyone reaching this deployment sees the same threads, because
- * there is one server key and one principal.
+ * empty and not filled with a disabled account menu. What is true of every
+ * deployment on `main` is that everyone reaching it sees the same threads,
+ * because there is one server key and one principal.
+ *
+ * WO-W17b: that is not true of a deployment running the pilot edge overlay,
+ * so which of these two blocks the shell renders is decided per request by the
+ * server. See `WORKSPACE_PILOT` and `workspaceIndicator` below; these strings
+ * are unchanged, character for character, and are what `shared` still gets.
  */
 export const WORKSPACE = {
   indicator: "Shared workspace",
@@ -207,6 +222,107 @@ export const WORKSPACE = {
   skipToContent: "Skip to content",
   mainLandmark: "Workbench",
 } as const;
+
+/**
+ * The same slot under the pilot edge overlay (WO-W17b, ADR 0063).
+ *
+ * WHY THIS EXISTS AT ALL. `WORKSPACE.indicatorDetail` above is true of every
+ * deployment on `main` and **false** under `PILOT_EDGE_AUTH=on`, where the
+ * edge authenticates one credential per pilot and every thread, guided
+ * session, learner profile and ledger row is scoped to that pilot's own
+ * principal (ADR 0036). ADR 0063 shipped the mapping and recorded the
+ * contradiction as a prerequisite to inviting anyone: "a false statement about
+ * data separation shown to the people the separation is for". This block is
+ * the true sentence for that deployment.
+ *
+ * IT IS NOT A SECOND VOICE FOR THE SAME FACT — it is a different fact, chosen
+ * per request by the server (`lib/server/identity.ts`) and never by a flag the
+ * client reads. 03 §6 asks the identity slot to be "reserved and occupied by
+ * truthful content"; which sentence is truthful depends on who the edge
+ * authenticated, which is a property of the request and of nothing else.
+ *
+ * WHAT IT MAY NOT SAY, AND WHY THE WORDING LOOKS INDIRECT. Seam S6 forbids
+ * ownership language, D-009 forbids faking a login, and MT-01 has still not
+ * delivered an account: there is no account page, no session, no sign-out, no
+ * profile to visit. So the sentence names the *act the edge performed on this
+ * request* rather than a status the reader holds, and it names the principal
+ * with the word the dictionary already uses for one (`THREAD.notFoundBody`).
+ * `web/tests/copy/forbidden.test.ts` holds every string here to the same
+ * deny-list as the rest of the dictionary, including its "says nothing about a
+ * signed-in user anywhere" rule.
+ *
+ * WHAT IS SHARED IS NAMED TOO. Two pilots reading the same paper share the
+ * paper cache and the embedding cache, which is what makes the second read
+ * fast — `docs/runbooks/pilot.md` §8 tells each pilot exactly that, and a
+ * header claiming total separation would contradict the note they were
+ * onboarded with.
+ *
+ * THE NAME IS `WORKSPACE_PILOT` AND NOT `PILOT_WORKSPACE`, ON PURPOSE.
+ * `web/tests/pilotPrincipal.test.ts` scans every shipped module for the token
+ * `PILOT_[A-Z_]+` and requires the result to be exactly the modules under
+ * `lib/server/`, because such a name outside that directory means a second
+ * reader of the principal map or the edge secret — a second credential path
+ * (04 §1.3 constraint 1). That scan is a real guard, and a copy constant
+ * wanting a nicer word order is not a reason to loosen it.
+ */
+export const WORKSPACE_PILOT = {
+  indicator: "Pilot workspace",
+  /**
+   * Pilot mode is on and this request resolved to NO principal: it did not
+   * arrive through the edge, or it carried a username nobody issued.
+   *
+   * It names no username — there is none it could name that would be evidence
+   * of anything, which is the entire content of the topology guard — and no
+   * fault: which part of the configuration or of the request failed is the
+   * operator's diagnostic, and it reaches them through the `pilot_principal`
+   * log line rather than through a stranger's browser.
+   */
+  unresolvedIndicator: "Principal not resolved",
+  unresolvedDetail:
+    "The edge that authenticates each request did not vouch for this one, so this page cannot say whose workspace it is. Requests are refused until it can. Ask the operator who issued your credential.",
+} as const;
+
+/** The indicator's two halves: the lead that carries emphasis, and the detail. */
+export interface WorkspaceIndicatorCopy {
+  indicator: string;
+  detail: string;
+}
+
+/**
+ * The sentence the identity slot renders, for the principal the server
+ * resolved (WO-W17b).
+ *
+ * `shared` returns `WORKSPACE`'s two strings unchanged, character for
+ * character. That is not incidental: it is what makes this change invisible to
+ * every deployment on `main`, and `web/tests/shell/identity.test.tsx` asserts
+ * the rendered element against the exact markup the shell produced before the
+ * descriptor existed.
+ *
+ * The username is the operator's own vocabulary, arriving from the edge
+ * through `lib/server/pilot.ts`'s pattern — the same treatment H11 gives a
+ * node label. The gate covers the sentence around it, not the name inside it.
+ */
+export function workspaceIndicator(
+  identity: WorkspaceIdentity,
+): WorkspaceIndicatorCopy {
+  switch (identity.kind) {
+    case "pilot":
+      return {
+        indicator: WORKSPACE_PILOT.indicator,
+        detail: `The edge authenticated this request as ${identity.username}. Threads, guided sessions, the learner profile and the ledger belong to that principal alone; the paper and embedding caches are shared with the other pilots.`,
+      };
+    case "unresolved":
+      return {
+        indicator: WORKSPACE_PILOT.unresolvedIndicator,
+        detail: WORKSPACE_PILOT.unresolvedDetail,
+      };
+    default:
+      return {
+        indicator: WORKSPACE.indicator,
+        detail: WORKSPACE.indicatorDetail,
+      };
+  }
+}
 
 // `ROUTE_ERROR` MOVED TO ./recovery.ts (WO-09), AND IT WAS MEASURED, NOT
 // TIDIED. It is `app/not-found.tsx`'s and the route error boundaries' copy —

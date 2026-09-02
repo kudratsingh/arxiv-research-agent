@@ -1,6 +1,15 @@
 /**
  * WO-W17 criteria 2 and 3 — two pilots on one stack, through the real edge.
  *
+ * WO-W17b ADDED THE HEADER'S HALF (its criterion 4). ADR 0063 shipped the
+ * mapping with one thing it could not fix: the shell still called this a
+ * shared workspace with no separate accounts, which is false here and was
+ * recorded as a prerequisite to inviting anyone. Two tests below are about the
+ * sentence rather than the credential — that each pilot's header names them
+ * and not the other, and that a document route the topology guard refuses
+ * renders "Principal not resolved" rather than the shared sentence. They run
+ * against the same stack, the same edge and the same guard.
+ *
  * WHAT IS REAL HERE. Everything. Each browser context authenticates against
  * the committed production edge (`deploy/pilot/Caddyfile`, mounted unmodified
  * by `e2e/support/compose.pilot.yml`) with its own `basic_auth` credential;
@@ -152,6 +161,63 @@ test.describe("WO-W17 pilot principals", { tag: ["@pilot"] }, () => {
     }
   });
 
+  /**
+   * WO-W17b criterion 4 — the header says whose workspace this is.
+   *
+   * THE ASSERTION IS SYMMETRIC FOR THE SAME REASON THE ONE ABOVE IS. Each
+   * pilot's header names them and does NOT name the other, in the same run, so
+   * a shell that printed a build-time constant or served a cached document
+   * fails rather than passing on the half that happens to be right.
+   *
+   * IT RUNS ON BOTH ROUTE GROUPS. `app/(workspace)/layout.tsx` and
+   * `app/(learn)/layout.tsx` resolve the descriptor independently, through the
+   * same function; a change to one of them that missed the other is a thing
+   * this catches and no unit test can.
+   *
+   * THE `shared` SENTENCE IS ASSERTED ABSENT, BY ITS TEXT. "There are no
+   * separate accounts" is what ADR 0063 recorded as a blocking issue: false
+   * under this overlay, and shown to the people the separation is for. Its
+   * absence here is what this work order is.
+   */
+  test("the identity slot names the pilot the edge authenticated, and only them", async ({
+    browser,
+  }) => {
+    const contexts = {
+      a: await contextFor(browser, E2E_PILOTS.a),
+      b: await contextFor(browser, E2E_PILOTS.b),
+    };
+    try {
+      for (const [name, side, other] of [
+        ["a", E2E_PILOTS.a, E2E_PILOTS.b],
+        ["b", E2E_PILOTS.b, E2E_PILOTS.a],
+      ] as const) {
+        const page = await contexts[name].newPage();
+        for (const route of ["/", "/learn"]) {
+          await page.goto(route, { waitUntil: "domcontentloaded" });
+          const slot = page.locator("[data-workspace-identity]");
+          await expect(slot, `${name} ${route}`).toHaveAttribute(
+            "data-workspace-identity",
+            "pilot",
+          );
+          await expect(slot, `${name} ${route}`).toContainText("Pilot workspace");
+          await expect(slot, `${name} ${route}`).toContainText(side.user);
+          await expect(slot, `${name} ${route}`).not.toContainText(other.user);
+          await expect(slot, `${name} ${route}`).not.toContainText(
+            "There are no separate accounts",
+          );
+          await expect(
+            page.getByText("Shared workspace"),
+            `${name} ${route}`,
+          ).toHaveCount(0);
+        }
+        await page.close();
+      }
+    } finally {
+      await contexts.a.close();
+      await contexts.b.close();
+    }
+  });
+
   test("no credential reaches the browser on any pilot page", async ({
     browser,
   }) => {
@@ -229,6 +295,90 @@ test.describe("WO-W17 pilot principals", { tag: ["@pilot"] }, () => {
       });
       expect(allowed.status(), "the control request was refused").toBe(200);
       expect(await allowed.text()).toContain(E2E_PILOTS.a.conversation);
+    } finally {
+      await direct.dispose();
+    }
+  });
+
+  /**
+   * WO-W17b criterion 4, second half — what the PAGE says when the guard fires.
+   *
+   * WHAT THIS PROVES AND WHAT IT DOES NOT. The three assertions above are about
+   * `/api`, where the answer is a 503. This one is about a DOCUMENT route, where
+   * there is no 503 to give: `app/(workspace)/layout.tsx` must render the page,
+   * because a layout that threw would replace it with an error boundary and say
+   * nothing at all. So the same forged request that gets a 503 from the proxy
+   * gets a 200 from `/` — carrying "Principal not resolved", carrying neither
+   * the shared sentence nor any username, and with a rail that is about to be
+   * refused by the API. That is exactly the state a stranger on the loopback
+   * port sees, and the header is the only part of it that says why.
+   *
+   * IT ALSO PROVES THE LAYOUT READS THE SAME HEADERS THE PROXY DOES, because the
+   * last request forges the *complete* set — edge key and username — and the
+   * header names that pilot. Without that control the three refusals above
+   * would pass against a shell that always said "Principal not resolved".
+   */
+  test("a document route refused by the topology guard says so in the header", async ({
+    playwright,
+  }) => {
+    const direct = await playwright.request.newContext({ baseURL: E2E_BASE_URL });
+    try {
+      for (const [label, headers] of [
+        ["no headers at all", {}],
+        ["a forged username with no edge key", { "x-pilot-user": E2E_PILOTS.a.user }],
+        [
+          "a forged username with a guessed edge key",
+          {
+            "x-pilot-user": E2E_PILOTS.a.user,
+            "x-pilot-edge-key": `${E2E_PILOT_EDGE_SECRET}x`,
+          },
+        ],
+        [
+          "a username nobody was issued, from the real edge key",
+          {
+            "x-pilot-user": "pilot-nobody",
+            "x-pilot-edge-key": E2E_PILOT_EDGE_SECRET,
+          },
+        ],
+      ] as const) {
+        const page = await direct.get("/", { headers });
+        expect(page.status(), label).toBe(200);
+        const html = await page.text();
+        expect(html, label).toContain("Principal not resolved");
+        // Never the sentence that is false here, and never a name.
+        expect(html, label).not.toContain("Shared workspace");
+        expect(html, label).not.toContain("There are no separate accounts");
+        expect(html, label).not.toContain(E2E_PILOTS.a.user);
+        expect(html, label).not.toContain(E2E_PILOTS.b.user);
+        // No fault, no key material, no configuration.
+        for (const leak of [
+          "untrusted_topology",
+          "unknown_username",
+          E2E_PILOTS.a.apiKey,
+          E2E_PILOTS.b.apiKey,
+          E2E_PILOT_EDGE_SECRET,
+          "PILOT_PRINCIPAL_MAP",
+        ]) {
+          expect(html, `${label}: ${leak}`).not.toContain(leak);
+        }
+      }
+
+      // THE CONTROL. Same container, same route, the complete forged header
+      // set — which is what the edge itself sends — and the header names the
+      // pilot. Without this the four refusals above would pass against a shell
+      // that had been hardcoded to the unresolved sentence.
+      const asPilot = await direct.get("/", {
+        headers: {
+          "x-pilot-user": E2E_PILOTS.a.user,
+          "x-pilot-edge-key": E2E_PILOT_EDGE_SECRET,
+        },
+      });
+      expect(asPilot.status(), "the control request was refused").toBe(200);
+      const controlHtml = await asPilot.text();
+      expect(controlHtml).toContain("Pilot workspace");
+      expect(controlHtml).toContain(E2E_PILOTS.a.user);
+      expect(controlHtml).not.toContain("Principal not resolved");
+      expect(controlHtml).not.toContain(E2E_PILOTS.a.apiKey);
     } finally {
       await direct.dispose();
     }

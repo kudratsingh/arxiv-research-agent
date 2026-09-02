@@ -108,7 +108,7 @@ Deleting the keystore entry is the revocation; the other two are cleanup
 (runbook §5). Data erasure is a separate, explicit act and the pilot is told
 which of the two happened.
 
-## 6. Blocking issue carried from WO-W17
+## 6. Blocking issue carried from WO-W17 — RESOLVED
 
 **The shell still says the workspace is shared.** `web/lib/copy/threads.ts`
 renders "Shared workspace — Everyone with access to this deployment sees these
@@ -123,4 +123,12 @@ resolution here:
 
 | Resolved by | Date | How |
 |---|---|---|
-| _pending_ | _pending_ | _pending_ |
+| WO-W17b, PR #153 | 2026-09-02 | The identity slot renders the principal the server resolved for the request. Both group layouts derive a `WorkspaceIdentity` (`web/lib/server/identity.ts`) from `PILOT_EDGE_AUTH` and the same two edge headers the credential seam reads, and hand it to `WorkbenchShell`: `shared` — the sentence above, byte-identical, on every deployment on `main`; `pilot` — "Pilot workspace", naming the edge-authenticated pilot and stating what is per person (threads, guided sessions, learner profile, ledger) and what is cached in common (paper and embedding caches); and `unresolved` for a request the edge did not vouch for. No runtime feature flag (SR-07), and the descriptor carries no key, no `key_id` and no fault. |
+
+The onboarding note in `docs/runbooks/pilot.md` §8 no longer tells pilots to
+ignore the header. It tells them what the header should say — "Pilot workspace",
+with their own username in it — and to report anything else as a deployment
+fault. `web/e2e/pilot.spec.ts` asserts against the real edge that each pilot's
+header names them and not the other, on a `(workspace)` route and a `(learn)`
+one, and that a document route the topology guard refuses renders "Principal not
+resolved" rather than the shared sentence or a username.
