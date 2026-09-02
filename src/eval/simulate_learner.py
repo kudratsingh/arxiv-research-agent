@@ -145,6 +145,21 @@ TIER_SCRIPTED = "scripted"
 TIER_FUNDED = "funded"
 TIERS = (TIER_SCRIPTED, TIER_FUNDED)
 
+#: The plan's per-session cost estimate, in USD
+#: (`planning/07-learning-platform/01-LEARNING-AGENT.md` §6.1, "Session
+#: online total"). Printed beside the measured mean so Gate W2's cost
+#: question is answered by eval plumbing rather than an ad-hoc script —
+#: and labelled, in the row, as the **estimate** it is. It was written
+#: before any campaign ran and has never been checked against one.
+PLANNED_SESSION_COST_USD: tuple[float, float] = (0.07, 0.17)
+
+#: Where that estimate comes from, quoted in the summary so a reader can
+#: go and disagree with it.
+PLANNED_SESSION_COST_SOURCE = (
+    "planning/07-learning-platform/01-LEARNING-AGENT.md §6.1, "
+    '"Session online total"'
+)
+
 #: Repeats below which a delta is noise, not a result
 #: (`planning/05-agentic-upgrade-plan.md`, "Judge noise mandates repeat
 #: runs"). The campaign warns rather than refuses: one repeat is a
@@ -1059,6 +1074,55 @@ def repeat_warning(repeats: int) -> str | None:
     )
 
 
+def _cost_against_plan(rows: list[dict[str, Any]]) -> list[str]:
+    """The measured per-session product cost beside the plan's estimate.
+
+    Gate W2 has to answer "what does a guided-read session cost", and
+    the answer should come from the same plumbing that runs the
+    sessions. `cost_usd` is the session graph's spend alone — the
+    product — so it is the only column that may be quoted as what a
+    learner's session costs; the simulated learner and the judges are
+    rig and stay out of this row.
+
+    The estimate row is labelled as an estimate *in the row*, because a
+    plan's number sitting in a results table is how a prior becomes a
+    measurement by accident. Under the scripted tier it sits beside a
+    measured $0.0000, which is honest: nothing was paid for.
+
+    Args:
+        rows: Completed sessions' summary rows.
+
+    Returns:
+        Markdown lines, or an empty list when no session reported a cost.
+    """
+    costs = [
+        float(row["cost_usd"])
+        for row in rows
+        if isinstance(row.get("cost_usd"), (int, float))
+        and not isinstance(row.get("cost_usd"), bool)
+    ]
+    if not costs:
+        return []
+    low, high = PLANNED_SESSION_COST_USD
+    measured = sum(costs) / len(costs)
+    return [
+        "",
+        "### Cost per session vs the plan's estimate",
+        "",
+        "| Source | $ / session |",
+        "|---|---:|",
+        f"| Measured mean `cost_usd` over {len(costs)} session(s) "
+        f"| {measured:.4f} |",
+        f"| Plan estimate — **not a measurement** | {low:.2f} – {high:.2f} |",
+        "",
+        f"The estimate is a prior quoted from {PLANNED_SESSION_COST_SOURCE}, "
+        "written before any campaign ran. `cost_usd` is the session graph's "
+        "spend only (ADR 0050): the simulated learner and the judges are "
+        "harness and are excluded, because neither is something a learner "
+        "pays for.",
+    ]
+
+
 def summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
     """Human-readable rollup: per-scenario table plus aggregates."""
     rows = [summary_line(r) for r in records]
@@ -1127,6 +1191,7 @@ def summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             f"- Mean session cost: {_mean(completed, 'cost_usd')}",
             f"- Mean judge cost: {_mean(completed, 'judge_cost_usd')}",
         ]
+        lines += _cost_against_plan(completed)
 
     warning = repeat_warning(max(repeats, 1))
     if warning:
@@ -1445,6 +1510,8 @@ __all__ = [
     "EXIT_BUDGET_STOP",
     "EXIT_INTERRUPTED",
     "EXIT_OK",
+    "PLANNED_SESSION_COST_SOURCE",
+    "PLANNED_SESSION_COST_USD",
     "REPEATS_FOR_CONFIDENCE",
     "SCRIPT_EXHAUSTED_REPLY",
     "SIMULATION_CAMPAIGN",

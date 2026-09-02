@@ -156,6 +156,47 @@ jobs:
         # durable selection knob.
         run: pytest -m "not e2e" -q
 
+      # WO-W11 c3. The learner-simulation benchmark's scripted tier, run
+      # as a campaign rather than as a unit test: every scenario driven
+      # through the real compiled session graph, records written to
+      # disk, and the resulting summary.jsonl asserted complete and free.
+      #
+      # Why here and not only in pytest: the unit tests exercise
+      # `run_scenario`, this exercises the *campaign* — the CLI, the
+      # durable record layout, the summary files, the cost accounting —
+      # which is the surface the nightly funded lane uses, and the
+      # artifact WO-W19 cites. ~2 s locally on the full 15-scenario set.
+      #
+      # Zero spend is structural, not hoped for: USE_MOCK_DATA=true keeps
+      # the graph on its mock path, the key is the same deliberately
+      # invalid sentinel every other job in this file uses, and
+      # `simulate_learner` refuses the scripted tier outright when
+      # USE_MOCK_DATA is false. The check then asserts $0.0000 and a zero
+      # call count on every row, so a session that quietly reached a
+      # model fails the job.
+      - name: Scripted learner simulation (zero spend)
+        env:
+          USE_MOCK_DATA: "true"
+          ANTHROPIC_API_KEY: local-preview-disabled
+          ENABLE_CHECKPOINTING: "true"
+        run: |
+          python -m src.eval.simulate_learner \
+            --output-dir outputs/eval/ci-scripted-tier
+          python -m src.eval.scripted_tier_check \
+            outputs/eval/ci-scripted-tier/summary.jsonl
+
+      - name: Upload scripted simulation summary
+        # `always()` so a failed assertion still leaves the evidence
+        # behind: the summary is what says *which* session regressed,
+        # and it is the artifact the Gate W1 evidence pack cites.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scripted-simulation-summary
+          path: outputs/eval/ci-scripted-tier
+          if-no-files-found: warn
+          retention-days: 30
+
   docker-build:
     name: docker build
     runs-on: ubuntu-latest

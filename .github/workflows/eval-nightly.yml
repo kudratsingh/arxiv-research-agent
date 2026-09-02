@@ -4,6 +4,27 @@ name: nightly-eval
 # as an artifact, diffs against the previous nightly's summary, and
 # fails the workflow if any query regressed beyond the threshold.
 #
+# Two lanes, deliberately separate jobs:
+#
+#   - `eval` — the research campaign (src/eval/runner.py). Unchanged
+#     since ADR 0010; its baseline artifact is `eval-summary-latest`.
+#   - `learning-eval` — the guided-read campaign
+#     (src/eval/simulate_learner.py, WO-W10). Its own budget input, its
+#     own baseline artifact `learning-summary-latest`, its own diff
+#     lane. Added by WO-W11.
+#
+# They share this file and nothing else. Separate jobs with separate
+# `max_budget_usd` inputs is the point: two campaigns now share one
+# nightly funding conversation, and the owner has to be able to fund
+# one without the other.
+#
+# **This workflow is disabled** (`disabled_manually`) and stays that
+# way until the W-OD-1 funding decision. Both lanes fail at their
+# `ANTHROPIC_API_KEY` preflight without it — visibly, with a titled
+# annotation naming the owner action, which is the honest failure the
+# research lane has had 54 nights running. See docs/eval.md,
+# "Status: no green campaign yet".
+#
 # Design: docs/decisions/0010-nightly-eval-ci.md
 
 on:
@@ -22,6 +43,22 @@ on:
         default: "0.10"
       max_budget_usd:
         description: "Stop the campaign once this much workflow+judge spend accumulates (empty = no ceiling)"
+        required: false
+        default: ""
+      learning_scenarios:
+        description: "Learning lane: comma-separated scenario IDs (empty = all)"
+        required: false
+        default: ""
+      learning_threshold:
+        description: "Learning lane: regression threshold on raw scores"
+        required: false
+        default: "0.10"
+      learning_repeats:
+        description: "Learning lane: runs per scenario (3 is the bar before a delta is believable)"
+        required: false
+        default: "1"
+      learning_max_budget_usd:
+        description: "Learning lane: campaign ceiling in USD, independent of the research lane's (empty = the workflow default)"
         required: false
         default: ""
 
@@ -269,3 +306,206 @@ jobs:
           add-paths: |
             README.md
           delete-branch: true
+
+  # ---------------------------------------------------------------------
+  # The learning lane (WO-W11)
+  #
+  # Same shape as the research lane above and deliberately so: the same
+  # preflight, the same "baseline from the previous run's artifact"
+  # chain, the same `continue-on-error` diff with a separate red-flip
+  # step, the same `if: always()` uploads. What differs is what it
+  # measures (guided-read sessions, not research queries), the field set
+  # the diff uses (`--lane learning`), and its budget input.
+  #
+  # It does not touch `eval-summary-latest`. That artifact name and its
+  # semantics belong to the research lane and are untouched by this
+  # card; this lane's baseline is `learning-summary-latest`.
+  #
+  # `needs:` is deliberately absent. The lanes are independent
+  # campaigns: a research regression must not suppress the learning
+  # measurement, and vice versa. They serialize only through the
+  # workflow-level concurrency group.
+  # ---------------------------------------------------------------------
+  learning-eval:
+    runs-on: ubuntu-latest
+    # 15 scenarios of ~12 tutor turns each, plus judges, plus the
+    # 120 s Anthropic timeout with retries. Smaller than the research
+    # lane's campaign; 90 minutes is headroom, not a target.
+    timeout-minutes: 90
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # The funded tier measures the real session graph. `simulate_learner`
+      # refuses `--tier funded` under USE_MOCK_DATA=true precisely so a
+      # campaign cannot bill nothing and call itself funded.
+      USE_MOCK_DATA: "false"
+      # The session graph pauses at every learner turn through LangGraph's
+      # durable interrupt, which needs a checkpointer.
+      ENABLE_CHECKPOINTING: "true"
+      # Ceiling used when the dispatch does not name one (a scheduled run
+      # never can). $15 is WO-W10's proposed ceiling for the full
+      # 15-scenario set at 01 §6.1's per-session estimates plus judge and
+      # simulated-learner spend — a judgment call, not a measurement.
+      DEFAULT_LEARNING_MAX_BUDGET_USD: "15"
+
+    steps:
+      # Identical in intent to the research lane's preflight, and worded
+      # for this campaign: a missing secret is an owner action, and the
+      # run must say so where it stops rather than dying fifteen steps
+      # later inside a generic client error.
+      - name: Check ANTHROPIC_API_KEY secret is set
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error title=Missing repository secret::ANTHROPIC_API_KEY is not set for this repository, so the nightly learning eval cannot make a single LLM call. This is an owner action, not a code fix: add the key under Settings > Secrets and variables > Actions > New repository secret (name: ANTHROPIC_API_KEY). The learning campaign is gated on the W-OD-1 funding decision (docs/eval.md); until it lands, this lane is expected to stop here rather than pretend to have measured something."
+            exit 1
+          fi
+          echo "ANTHROPIC_API_KEY present (${#ANTHROPIC_API_KEY} chars)."
+
+      # Second refusal, and it is about money rather than credentials.
+      # `--tier funded` will not start uncapped, so the ceiling is
+      # resolved and validated *before* the campaign, not discovered
+      # halfway through it.
+      - name: Resolve the campaign ceiling
+        id: budget
+        run: |
+          budget="${{ inputs.learning_max_budget_usd }}"
+          budget="${budget:-$DEFAULT_LEARNING_MAX_BUDGET_USD}"
+          if [ -z "$budget" ]; then
+            echo "::error title=No learning-eval budget ceiling::The funded learner simulation will not start without an explicit --max-budget-usd. Set the learning_max_budget_usd dispatch input, or restore DEFAULT_LEARNING_MAX_BUDGET_USD in this workflow."
+            exit 1
+          fi
+          echo "Learning campaign ceiling: \$$budget"
+          echo "max_budget_usd=$budget" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+
+      - name: Install project (locked dependency set)
+        run: |
+          python -m pip install --upgrade pip
+          # Nightly measures the deployed CPU runtime, not PyPI's
+          # CUDA-enabled Linux Torch artifact (ADR 0054).
+          torch_version=$(sed -n 's/^torch==//p' requirements-lock.txt)
+          test -n "$torch_version"
+          pip install --only-binary=:all: \
+            --index-url https://download.pytorch.org/whl/cpu \
+            "torch==$torch_version"
+          pip install -r requirements-lock.txt
+          pip install --no-deps -e .
+
+      - name: Download previous learning baseline
+        id: download-learning-baseline
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          mkdir -p learning-baseline
+          prev_run=$(gh run list \
+            --workflow=eval-nightly.yml \
+            --branch=main \
+            --status=completed \
+            --limit=5 \
+            --json databaseId,conclusion \
+            --jq 'map(select(.conclusion == "success" or .conclusion == "failure")) | .[0].databaseId' \
+            2>/dev/null || true)
+          if [ -z "$prev_run" ] || [ "$prev_run" = "null" ]; then
+            echo "No previous nightly run found — treating this as first-run baseline."
+            exit 0
+          fi
+          echo "Downloading learning-summary-latest from run $prev_run"
+          gh run download "$prev_run" \
+            --name learning-summary-latest \
+            --dir learning-baseline \
+            || echo "Baseline artifact missing on run $prev_run — first-run behavior."
+
+      # Non-zero here is real, same as the research lane: 3/4 mean
+      # sessions errored, 5 means the ceiling stopped the campaign, 130
+      # means it was cancelled. The uploads below still run.
+      - name: Run learner simulation (funded tier)
+        id: run-learning-eval
+        run: |
+          args=()
+          if [ -n "${{ inputs.learning_scenarios }}" ]; then
+            args+=(--scenarios "${{ inputs.learning_scenarios }}")
+          fi
+          repeats="${{ inputs.learning_repeats }}"
+          args+=(--repeats "${repeats:-1}")
+          python -m src.eval.simulate_learner \
+            --tier funded \
+            --max-budget-usd "${{ steps.budget.outputs.max_budget_usd }}" \
+            "${args[@]}"
+
+      - name: Locate current learning summary
+        id: find-learning-current
+        if: always()
+        run: |
+          latest_dir=$(ls -1dt outputs/eval/sim-*/ 2>/dev/null | head -n1 | sed 's:/$::')
+          if [ -z "$latest_dir" ]; then
+            echo "::warning::No learner-simulation output found under outputs/eval/sim-* — nothing to upload."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "run_dir=$latest_dir" >> "$GITHUB_OUTPUT"
+          echo "summary=$latest_dir/summary.jsonl" >> "$GITHUB_OUTPUT"
+
+      - name: Upload full learning run
+        if: always() && steps.find-learning-current.outputs.found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: learning-eval-run-${{ github.run_id }}
+          path: ${{ steps.find-learning-current.outputs.run_dir }}
+          retention-days: 90
+
+      - name: Upload latest learning summary (baseline for next run)
+        if: always() && steps.find-learning-current.outputs.found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: learning-summary-latest
+          path: ${{ steps.find-learning-current.outputs.summary }}
+          retention-days: 90
+          overwrite: true
+
+      - name: Diff against previous learning baseline
+        id: learning-diff
+        if: always() && steps.find-learning-current.outputs.found == 'true'
+        continue-on-error: true
+        run: |
+          threshold="${{ inputs.learning_threshold }}"
+          threshold="${threshold:-0.10}"
+          args=()
+          # A manual `--scenarios` dispatch is meant to be a subset, so
+          # the sessions it omits are not a truncated campaign. The
+          # schedule never passes this: there a missing session means the
+          # run died and the gate must fire.
+          if [ -n "${{ inputs.learning_scenarios }}" ]; then
+            args+=(--allow-removed)
+          fi
+          python -m src.eval.regression_diff \
+            --lane learning \
+            learning-baseline/summary.jsonl \
+            "${{ steps.find-learning-current.outputs.summary }}" \
+            --threshold "$threshold" \
+            --output learning-regression-report.md \
+            "${args[@]}"
+
+      - name: Upload learning regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: learning-regression-report-${{ github.run_id }}
+          path: learning-regression-report.md
+          if-no-files-found: ignore
+
+      - name: Fail if learning regression detected
+        if: steps.learning-diff.outcome == 'failure'
+        run: |
+          echo "::error::Nightly learning eval regressed against previous baseline. See the learning-regression-report artifact."
+          exit 1

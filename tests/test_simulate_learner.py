@@ -257,12 +257,18 @@ class TestScriptedTierRunsTheFullSet:
             )
 
     def test_unmet_expectations_are_exactly_the_recorded_baseline(self) -> None:
-        # A pinned baseline, not a green light. One WO-W08 expectation is
-        # stricter than WO-W03's mock fallback plan can satisfy:
-        # `engineer-rlhf-profile-note-injection` allows one plan section,
-        # and the fallback allocates two for a 15-minute budget
-        # (`_fallback_plan`: <=10 min -> 1, <=20 min -> 2). Recorded here
-        # so the divergence is visible and any *new* one fails this test.
+        # The recorded baseline is now empty, and that is a resolution
+        # rather than a relaxation. WO-W10 pinned one divergence here:
+        # `engineer-rlhf-profile-note-injection` allowed a single plan
+        # section while `check_in` allocates two for its declared
+        # 15 minutes (`_fallback_plan`: <=10 min -> 1, <=20 min -> 2).
+        # WO-W11 read the scenario's intent — an injection script at the
+        # persona's standing budget, not a time-poor one — and moved the
+        # *expectation* to 2, matching the graph's documented rule and
+        # the other two 15-minute scenarios. No graph behaviour changed.
+        #
+        # The assertion stays exact so a *new* divergence still fails
+        # here rather than being averaged away.
         unmet: dict[str, list[str]] = {}
         for scenario in LEARNING_SCENARIOS:
             record = sim.run_scenario(
@@ -271,11 +277,22 @@ class TestScriptedTierRunsTheFullSet:
             failures = record["outcomes"]["expectation_failures"]
             if failures:
                 unmet[scenario["scenario_id"]] = failures
-        assert unmet == {
-            "engineer-rlhf-profile-note-injection": [
-                "plan has 2 sections, expected at most 1"
+        assert unmet == {}
+
+    def test_the_fifteen_minute_scenarios_agree_with_the_graphs_plan_rule(
+        self,
+    ) -> None:
+        # The regression guard for WO-W11 item 7. `check_in` allocates
+        # plan sections from the declared budget; a scenario that
+        # declares 15 minutes and expects fewer than two sections is
+        # asking the graph for something its documented rule forbids,
+        # which is how the original divergence arose.
+        for scenario in LEARNING_SCENARIOS:
+            if scenario["declared_minutes_today"] != 15:
+                continue
+            assert scenario["expectations"]["max_plan_sections"] >= 2, scenario[
+                "scenario_id"
             ]
-        }
 
 
 # ---------------------------------------------------------------------------
@@ -445,6 +462,30 @@ class TestSummaryShape:
         assert "process metrics" in text
         assert "Session cost" in text and "Judge cost" in text
         assert "novice-transformer-baseline" in text
+
+    def test_summary_markdown_prints_cost_against_the_plans_estimate(self) -> None:
+        # WO-W11 c4: Gate W2's cost question is answered by the eval
+        # plumbing, with the plan's number labelled as an estimate in the
+        # row so it cannot be read as a measurement.
+        text = sim.summary_markdown([_record(cost=0.2, judge=0.1)], "sim-x")
+        low, high = sim.PLANNED_SESSION_COST_USD
+        assert "Cost per session vs the plan's estimate" in text
+        assert f"{low:.2f} – {high:.2f}" in text
+        assert "**not a measurement**" in text
+        assert "01-LEARNING-AGENT.md §6.1" in text
+        assert "Measured mean `cost_usd` over 1 session(s)" in text
+
+    def test_the_cost_row_quotes_the_product_cost_not_the_total(self) -> None:
+        # `cost_usd` alone. Quoting the harness's spend as what a session
+        # costs a learner is the exact confusion ADR 0050 split apart.
+        text = sim.summary_markdown([_record(cost=0.2, judge=5.0)], "sim-x")
+        assert "| 0.2000 |" in text
+
+    def test_a_campaign_with_no_cost_column_prints_no_cost_row(self) -> None:
+        record = _record()
+        record["costs"]["total_cost_usd"] = None
+        text = sim.summary_markdown([record], "sim-x")
+        assert "Cost per session vs the plan's estimate" not in text
 
 
 class TestRepeatWarning:

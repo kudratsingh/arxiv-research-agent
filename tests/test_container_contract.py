@@ -109,15 +109,26 @@ def test_image_preinstalls_the_locked_cpu_only_torch_wheel() -> None:
 
 def test_linux_python_gates_use_the_same_cpu_torch_artifact() -> None:
     cpu_index = "https://download.pytorch.org/whl/cpu"
-    # Typecheck and pytest each create a fresh environment; both must
-    # preinstall +cpu before the public-version full lock. Nightly is a
-    # third runtime consumer and must measure the same artifact.
-    assert CI_WORKFLOW.count(cpu_index) == 2
-    assert NIGHTLY_WORKFLOW.count(cpu_index) == 1
-    for workflow in (CI_WORKFLOW, NIGHTLY_WORKFLOW):
-        assert workflow.index(cpu_index) < workflow.index(
-            "pip install -r requirements-lock.txt"
+    full_lock = "pip install -r requirements-lock.txt"
+    # Every job that builds an environment from the public-version full
+    # lock must preinstall the `+cpu` wheel first, or it tests a
+    # deployment we never ship (ADR 0054). Counted per install rather
+    # than pinned to a magic number: the nightly now has two lanes
+    # (WO-W11's learning eval is the second), and a third should fail
+    # here only if it skips the rule — not merely for existing.
+    for workflow, label in (
+        (CI_WORKFLOW, "ci.yml"),
+        (NIGHTLY_WORKFLOW, "eval-nightly.yml"),
+    ):
+        cpu_at = [m.start() for m in re.finditer(re.escape(cpu_index), workflow)]
+        lock_at = [m.start() for m in re.finditer(re.escape(full_lock), workflow)]
+        assert cpu_at, f"{label}: no CPU-only torch preinstall"
+        assert len(cpu_at) == len(lock_at), (
+            f"{label}: {len(lock_at)} full-lock install(s) but "
+            f"{len(cpu_at)} CPU torch preinstall(s)"
         )
+        for cpu, lock in zip(cpu_at, lock_at, strict=True):
+            assert cpu < lock, f"{label}: full lock installed before the CPU wheel"
 
 
 def test_lock_is_installable_as_written() -> None:

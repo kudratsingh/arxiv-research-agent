@@ -23,13 +23,13 @@
     },
     {
       "name": "recorded_mock_session_transcripts",
-      "status": "pending",
+      "status": "complete",
       "directory": "recorded_mock_sessions",
       "fixture_kind": "recorded-mock",
       "content_kind": "transcript",
-      "blocked_on": "WO-W03",
-      "completion_condition": "WO-W03's session graph is merged, so a scenario can be replayed through `build_session_workflow()` under `use_mock_data=true` with ANTHROPIC_API_KEY=local-preview-disabled. Record one transcript per scenario in src/eval/learning_benchmark.LEARNING_SCENARIOS, stamp each provenance header with the generating commit and mock_mode=true, then flip this entry's status to 'complete' and clear blocked_on / completion_condition. Until then this directory MUST stay empty: src/eval/learning_fixtures.validate_fixtures fails if a pending set holds files, so no hand-written transcript can be passed off as a recording.",
-      "description": "Deterministic transcripts recorded from the session graph's mock mode. The WO-W08 soft completion gate (05-WEDGE-WORK-ORDERS.md §5.1, the dashed W03 -> W08 edge)."
+      "blocked_on": "",
+      "completion_condition": "",
+      "description": "Deterministic transcripts recorded from the session graph's mock mode, one per scenario in src/eval/learning_benchmark.LEARNING_SCENARIOS. The WO-W08 soft completion gate (05-WEDGE-WORK-ORDERS.md §5.1, the dashed W03 -> W08 edge), closed by WO-W11 once WO-W03's graph and WO-W10's simulator both merged. Re-record with `make record-learning-fixtures` (python -m src.eval.record_learning_fixtures) after any change to the session graph or tutor copy; the recording is byte-identical apart from the commit stamp, and tests/test_record_learning_fixtures.py fails if the checked-in files stop matching what the graph produces."
     }
   ]
 }

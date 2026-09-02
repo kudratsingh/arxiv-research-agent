@@ -95,19 +95,63 @@ and the mock mode that produced them. No fixture may set
 
 Shipped now: four session plans, including the honest-downscope /
 budget-ignoring pair on one 10-minute scenario that the plan-coherence
-judge has to score differently, and three transcripts (an
+judge has to score differently, three hand-authored transcripts (an
 evidence-linked assessment, an unassessed close, a contained
-injection).
+injection), and — since WO-W11 — fifteen **recorded** ones, below.
 
-**Not shipped, and the manifest says so.** The recorded mock-session
-transcripts wait on the session graph: the
-`recorded_mock_session_transcripts` set is marked `pending` with its
-blocker and completion condition written down, and `validate_fixtures`
-*fails* if a pending set holds any file — so nothing hand-written can
-be dropped in and inherit the credibility of a recording. When the
-graph lands, record the transcripts, stamp the provenance headers, and
-flip the entry to `complete`; the same validator then requires files
-instead of forbidding them.
+#### The recorded mock-session transcripts
+
+The `recorded_mock_session_transcripts` set was shipped `pending` on
+WO-W03 with its completion condition written down as an executable
+instruction rather than a promise, and `validate_fixtures` *failed* if
+a pending set held any file — so nothing hand-written could be dropped
+in and inherit the credibility of a recording. WO-W03 merged, WO-W10
+built the driver, and WO-W11 executed the condition: one transcript per
+scenario in `LEARNING_SCENARIOS`, recorded by replaying it through
+`build_session_workflow()` under `use_mock_data=true` with the
+disabled-key sentinel, each stamped with the generating commit and
+`mock_mode: true`. The manifest entry is now `complete`, and the same
+validator that forbade files there now requires them.
+
+Re-record after any change to the session graph or tutor copy:
+
+```bash
+make record-learning-fixtures
+# or, explicitly:
+USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+ENABLE_CHECKPOINTING=true \
+  python -m src.eval.record_learning_fixtures
+```
+
+`src/eval/record_learning_fixtures.py` is not a second driver — it
+calls `simulate_learner.drive_session`, the same code the benchmark
+runs, so the fixtures cannot drift into being recordings of a private
+simulator. It refuses to run outside mock mode and refuses to write a
+fixture that names no commit.
+
+Two properties make "these are recordings" checkable, and
+`tests/test_record_learning_fixtures.py` asserts both:
+
+- **Deterministic.** The graph mints a fresh run id per session and
+  writes it into every `evidence_ref`; the recorder substitutes it for
+  a stable id derived from the scenario id, and nothing else is
+  rewritten. Two recordings of the same code are byte-identical.
+- **Fresh.** A re-recording must reproduce the committed files byte for
+  byte, apart from the commit stamp. When that test fails, the fix is
+  to re-record and commit the diff — a change in tutor copy *should*
+  show up in the files that claim to be recordings of it.
+
+Two vocabulary items belong to recordings alone, because they describe
+what the graph did rather than what a scenario hoped for. A recording's
+`assessment_outcome` may be `recorded_ungraded` (ADR 0060's honest
+record when an explain-back was taken and no calibrated judge scored
+it), in which case it is deliberately *not* checked against the
+scenario's `expected_assessment` — that expectation describes a graded
+session, and writing `strength` into a file the mock graph never graded
+is exactly the fabrication these rules exist to prevent. And a learner
+turn may carry the intent `simulator_filler`, marking a turn the
+simulator filled with its content-free line rather than one the
+scenario scripted. A hand-authored fixture may use neither.
 
 ### `src/eval/simulate_learner.py`
 
@@ -300,6 +344,23 @@ when the queries it did run all passed.
 `src/eval/regression_diff.py` diffs two `summary.jsonl` runs and exits
 non-zero on regression — the nightly workflow
 (`.github/workflows/eval-nightly.yml`) turns that into a red run.
+
+Since WO-W11 the differ carries **two lanes**, because the research
+runner and the learner simulator write different summaries:
+
+| `--lane` | Reads | Keyed by | Nightly job |
+|---|---|---|---|
+| `research` (default) | `src/eval/runner.py` | `query_id` | `eval` |
+| `learning` | `src/eval/simulate_learner.py` | `record_id` | `learning-eval` |
+
+A `MetricLane` holds one campaign's id field, metric set, thresholds
+and report vocabulary; the diff logic itself is single-copy. The
+research lane is assembled from the same module constants it always
+used, its CLI call is unchanged, and its rendered report is byte-for-byte
+what it was — the learning lane is additive, not a rewrite. Feeding a
+research summary to `--lane learning` fails loudly on the missing
+`record_id` rather than producing an empty, green-looking diff.
+
 Metrics are judged by class (ADR
 [0044](decisions/0044-eval-cost-accuracy-and-regression-thresholds.md),
 revisiting ADR [0010](decisions/0010-nightly-eval-ci.md)'s single
@@ -316,6 +377,45 @@ resource bands are floor `+1` / `+50%` for `iterations`, `+4` /
 `+25%` for `llm_calls`, and `+$0.10` / `+25%` for `cost_usd` — sized
 so one extra critic revision, one extra rankable paper, or a $0.02
 cost wiggle can never fail the nightly on its own.
+
+### The learning lane's fields
+
+Three classes, same ADR 0044 system, different metrics:
+
+| Class | Fields | Rule |
+|---|---|---|
+| Rubric scores | `shame_free_score`, `plan_coherence` | absolute drop > `--threshold` (default 0.10) |
+| Deterministic outcome rates | `shame_free`, `downscope_honest`, `progress_events_evidence_linked`, `injection_contained` | same threshold leg; these are per-session booleans, so a flip is a delta of 1.0 and clears any epsilon |
+| Resource | `expectation_failures`, `llm_calls`, `cost_usd` | rise > absolute floor **and** > relative band |
+
+The outcome rates are booleans read as 1.0/0.0, which makes their
+aggregate the campaign's *rate* for that outcome — the fraction of
+sessions that stayed shame-free, contained the injection, and so on.
+They sit on the threshold leg deliberately: they are observed rather
+than judged, and one session that stopped containing an injection is a
+regression at any epsilon.
+
+The resource bands are `+0` / `+0%` for `expectation_failures` (zero
+tolerance: a WO-W08 structural expectation that stopped being met is a
+regression at +1), `+2` / `+25%` for `llm_calls`, and `+$0.05` / `+25%`
+for `cost_usd`. The cost floor is half the research lane's because a
+session costs a fraction of a research run — at `01` §6.1's $0.07–0.17
+estimate, a $0.10 floor is most of a whole session and a 50% cost rise
+could never fire.
+
+**Harness spend is tabulated, never gated.** `learner_cost_usd`,
+`judge_cost_usd` and `total_cost_usd` appear in the aggregate table
+marked *(not gated)*. ADR 0050's rule is that the gate reads the
+product; a judge that got more expensive is not a product regression.
+Only `cost_usd` may ever be quoted as what a guided read costs.
+
+The learning report also prints a **cost-per-session row against the
+plan's estimate** — the measured baseline and current means beside
+`01` §6.1's $0.07–0.17, labelled *not a measurement* in the row itself.
+Gate W2's cost question is answered by eval plumbing rather than an
+ad-hoc script, and the plan's prior is not allowed to quietly become
+data by sitting in a results table. `simulate_learner`'s own
+`summary.md` carries the same row.
 
 A **query present in the baseline but missing from the current run** is
 also a regression (ADR 0050). The usual cause is a truncated batch, and
@@ -534,15 +634,24 @@ differences are noise. It warns rather than refuses: one repeat is a
 perfectly good smoke run, and it is only a *comparison against a
 baseline* that needs three.
 
-### One recorded divergence
+### The one recorded divergence, resolved
 
-`engineer-rlhf-profile-note-injection` expects at most one plan section;
-WO-W03's mock fallback allocates two for its 15-minute budget
-(`_fallback_plan`: ≤10 min → 1 section, ≤20 min → 2). The scripted tier
-reports this as an unmet expectation rather than hiding it, and
-`test_unmet_expectations_are_exactly_the_recorded_baseline` pins the full
-set so a *new* divergence fails CI. Whether the expectation or the
-fallback should move is a WO-W08/WO-W03 question, not a simulator one.
+WO-W10 shipped with a single pinned divergence:
+`engineer-rlhf-profile-note-injection` expected at most one plan
+section, while `check_in` allocates two for its declared 15 minutes
+(`_fallback_plan`: ≤10 min → 1 section, ≤20 min → 2, else 3). WO-W11
+resolved it in favour of the **graph's rule**, because nothing about
+that scenario is time-poor: its script is an injection through the
+profile note, it sets `requires_downscope_statement: false`, and the two
+other 15-minute scenarios both expect two sections. The `1` read as a
+copy from the 10-minute time-poor scenarios, so the *expectation* moved
+to 2 and no graph behaviour changed.
+
+`test_unmet_expectations_are_exactly_the_recorded_baseline` still pins
+the set exactly — it now asserts the set is empty, so a *new* divergence
+still fails CI rather than being averaged away — and a companion test
+pins the general rule: a scenario declaring 15 minutes may not expect
+fewer than two plan sections.
 
 ### Simulation policy, and its limits
 
@@ -577,13 +686,51 @@ enter the Gate W1 pack **as priors**, not as a measurement, for the same
 reason every other threshold in this document does: nothing here has ever
 had a funded green campaign.
 
+## The per-PR scripted tier
+
+Every PR runs the scripted simulation as a **campaign**, not only as a
+unit test, in `ci.yml`'s Python job (step: *Scripted learner simulation
+(zero spend)*):
+
+```bash
+USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+ENABLE_CHECKPOINTING=true \
+  python -m src.eval.simulate_learner --output-dir outputs/eval/ci-scripted-tier
+python -m src.eval.scripted_tier_check outputs/eval/ci-scripted-tier/summary.jsonl
+```
+
+The unit tests exercise `run_scenario`; this exercises the CLI, the
+durable record layout, the summary files and the cost accounting — the
+surface the funded nightly lane uses. It takes about two seconds on the
+full fifteen scenarios.
+
+Zero spend is structural rather than hoped for. `USE_MOCK_DATA=true`
+keeps the graph on its mock path, the key is the same deliberately
+invalid sentinel the rest of `ci.yml` uses, `simulate_learner` refuses
+the scripted tier outright when `USE_MOCK_DATA` is false, and
+`src/eval/scripted_tier_check.py` then asserts every row: 15 of 15
+sessions, no errors, `$0.0000` across all four cost columns, a zero call
+count on all three call columns, and no unmet structural expectations.
+A dollar figure can round to zero; a call count cannot, which is why
+both are checked. The run directory uploads as the
+`scripted-simulation-summary` artifact under `if: always()`, so a red
+step still leaves the evidence of *which* session regressed — and so
+Gate W1's evidence pack has something to cite.
+
 ## The nightly workflow
 
 [`.github/workflows/eval-nightly.yml`](../.github/workflows/eval-nightly.yml)
-is the only automated caller of the runner. Cron `0 4 * * *` (04:00
-UTC), plus a `workflow_dispatch` with three inputs — `queries`,
-`threshold`, `max_budget_usd` — that map onto `--queries`,
-`regression_diff --threshold` and `--max-budget-usd`. Concurrency group
+is the only automated caller of the runner, and since WO-W11 it carries
+**two lanes as two independent jobs**: `eval` (research) and
+`learning-eval` (guided read). Cron `0 4 * * *` (04:00 UTC), plus a
+`workflow_dispatch` whose inputs are split per lane — `queries`,
+`threshold`, `max_budget_usd` for the research lane and
+`learning_scenarios`, `learning_threshold`, `learning_repeats`,
+`learning_max_budget_usd` for the learning one. The budget inputs are
+separate on purpose: two campaigns now share one funding conversation,
+and the owner has to be able to fund one without the other. There is no
+`needs:` between the jobs — a research regression must not suppress the
+learning measurement, or the reverse. Concurrency group
 `nightly-eval` with `cancel-in-progress: false`, so a manual dispatch
 queues behind a scheduled run rather than killing a paid campaign
 mid-flight. Job timeout: 120 minutes.
@@ -617,7 +764,54 @@ the report upload before the run fails. `--allow-removed` is passed
 while on the schedule a missing query means the batch truncated and the
 gate must fire.
 
-### Status: no green campaign yet
+### The learning lane
+
+`learning-eval` mirrors that shape step for step, and the mirroring is
+the design: same preflight with its own titled annotation, same
+"baseline from the previous run's artifact" chain, same
+`continue-on-error` diff with a separate red-flip step, same three
+`if: always()` uploads.
+
+| Artifact | Contents | Why |
+|---|---|---|
+| `learning-eval-run-<github.run_id>` | the whole `outputs/eval/sim-<run_id>/` directory | the durable record; 90-day retention |
+| `learning-summary-latest` | `summary.jsonl` alone, `overwrite: true` | **the next night's baseline** |
+| `learning-regression-report-<github.run_id>` | `learning-regression-report.md` | the diff, uploaded whether or not it was red |
+
+**The research lane's baseline chain is untouched.** `eval-summary-latest`
+keeps its name, its contents and its semantics; the learning lane
+downloads and uploads `learning-summary-latest` and nothing else. The
+two names never appear in each other's job.
+
+It runs the funded tier (`--tier funded`), so it has a second refusal
+the research lane does not: a step resolves the campaign ceiling before
+anything runs and fails with a titled annotation if it cannot, because
+`simulate_learner` will not start an uncapped paid campaign at all. A
+dispatch may pass `learning_max_budget_usd`; a scheduled run falls back
+to the workflow's `DEFAULT_LEARNING_MAX_BUDGET_USD` of **$15** — WO-W10's
+proposed ceiling for the full set at `01` §6.1's estimates plus judge
+and simulated-learner spend, a judgment call rather than a measurement.
+`--repeats` defaults to 1 and the runner prints the three-repeat warning
+accordingly; raise it on a dispatch when a delta actually has to mean
+something.
+
+### Status: disabled, and no green campaign yet
+
+**The workflow is disabled** (`disabled_manually`) and stays disabled
+until the **W-OD-1** funding decision. WO-W11 edited it — that is what
+added the learning lane — but did not enable it, did not dispatch it,
+and did not add a secret. Nothing in this repository has ever run a
+paid learning campaign.
+
+WO-W11's acceptance criterion 4, *the learning lane's first scheduled
+run*, is therefore **deferred behind W-OD-1**, exactly as WO-W09's paid
+calibration run and WO-W10's first funded campaign are. What is merged
+is the lane; what is not is the run. When the workflow is enabled and
+the secret is set, the learning lane's first night produces
+`learning-summary-latest` and every subsequent night diffs against it.
+Until then the lane would fail at its preflight with a titled
+annotation naming the owner action — the same honest failure the
+research lane has had, below.
 
 **Every run of this workflow has failed — 54 of 54 between 2026-07-07
 and 2026-08-29.** The recent ones stop at the `ANTHROPIC_API_KEY`
@@ -625,12 +819,15 @@ preflight; earlier ones died inside `Run eval` for the same missing
 secret before the preflight existed. Consequences, stated plainly
 because they are easy to miss:
 
-- No `summary.jsonl` has ever been produced by CI, and no
-  `eval-summary-latest` artifact exists in the repository's artifact
-  store.
-- The regression gate has therefore never compared two real runs. Its
-  thresholds, its aggregate table and its exit codes are unit-tested
-  (`tests/test_regression_diff.py`), not yet exercised on live data.
+- No `summary.jsonl` has ever been produced by CI, and neither an
+  `eval-summary-latest` nor a `learning-summary-latest` artifact exists
+  in the repository's artifact store.
+- The regression gate has therefore never compared two real runs, on
+  either lane. Its thresholds, its aggregate table and its exit codes
+  are unit-tested (`tests/test_regression_diff.py`), not yet exercised
+  on live data. The learning lane's bands are priors in exactly the
+  same sense as the research lane's — reasoned from the mechanics, not
+  measured.
 - The README's eval-results block is still `(pending)`.
 - Every metric figure quoted anywhere in these docs — including
   [`demo.md`](demo.md)'s `summary.jsonl` sample — is illustrative of
@@ -689,12 +886,17 @@ As of this writing that path has never run: see
 ## What "tested" means for eval code itself
 
 The eval code has its own unit tests: benchmark data invariants
-(`tests/test_benchmark_queries.py`), metric-scoring pure logic
-(`tests/test_metrics_*.py` — LLM-as-judge callers are unit-tested
+(`tests/test_benchmark_queries.py`, `tests/test_learning_benchmark.py`),
+metric-scoring pure logic (`tests/test_metrics_*.py`,
+`tests/test_learning_metrics.py` — LLM-as-judge callers are unit-tested
 against stubbed responses), the runner's isolation / resume / exit
-codes (`tests/test_eval_runner.py`), the regression gate
-(`tests/test_regression_diff.py`), and the README block
-(`tests/test_readme_update.py`).
+codes (`tests/test_eval_runner.py`), the simulator
+(`tests/test_simulate_learner.py`), both regression lanes
+(`tests/test_regression_diff.py`), the per-PR scripted-tier assertion
+(`tests/test_scripted_tier_check.py`), the fixture validator
+(`tests/test_learning_fixtures.py`), the recorded fixtures' determinism
+and freshness (`tests/test_record_learning_fixtures.py`), and the README
+block (`tests/test_readme_update.py`).
 
 ## Follow-ups
 
@@ -729,8 +931,11 @@ codes (`tests/test_eval_runner.py`), the regression gate
 - Hand-labeled calibration set (~20-30 (report, topic) pairs and
   (claim, source) pairs) once real eval runs give us data to calibrate
   against. Alignment with human judgment is currently unmeasured.
-- A funded first campaign. Everything downstream of it — the README
-  block, the regression baseline, the 3-repeat noise measurement in
-  [The statistics, honestly](#the-statistics-honestly), and the
-  calibration set above — is blocked on it, and it is a cost decision
-  reserved for the repository owner.
+- A funded first campaign, on **either** lane. Everything downstream of
+  it — the README block, both regression baselines
+  (`eval-summary-latest`, `learning-summary-latest`), the 3-repeat noise
+  measurement in [The statistics, honestly](#the-statistics-honestly),
+  the calibration set above, and the learning lane's first scheduled run
+  (WO-W11 c4) — is blocked on it. It is a cost decision reserved for the
+  repository owner, tracked as **W-OD-1**, and the nightly workflow stays
+  disabled until it lands.
