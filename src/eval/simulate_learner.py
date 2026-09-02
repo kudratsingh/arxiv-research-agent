@@ -549,6 +549,11 @@ def learner_facing_copy(state: dict[str, Any], replies: Sequence[SimulatedReply]
     script plants shaming text on purpose, and scoring the product for
     copy the learner typed would fail the session for the attack it
     successfully contained.
+
+    WO-W03b added `draft_report`. The session's close summary really is
+    shown — `SessionDetail.result`, rendered verbatim by `GuidedSessionView`
+    — and it was the one learner-facing string this collector could not
+    see, so the shame scan and the pedagogy guard both ran past it.
     """
     said = [str(reply.text) for reply in replies]
     texts: list[str] = []
@@ -573,6 +578,9 @@ def learner_facing_copy(state: dict[str, Any], replies: Sequence[SimulatedReply]
     summary_text = (state.get("session_summary") or {}).get("text")
     if isinstance(summary_text, str) and summary_text.strip():
         texts.append(summary_text)
+    close = state.get("draft_report")
+    if isinstance(close, str) and close.strip():
+        texts.append(close)
     return texts
 
 

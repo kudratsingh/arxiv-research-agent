@@ -4,9 +4,9 @@
 
 Runs one bounded guided read against a published learning-path entry. It plans
 to the learner's declared time, asks one question at a time, records an
-explain-back in the learner's own words, and ends with an honest activity record
-rather than a mastery claim. At close it also creates the bounded, visibly
-lossy memory used by the next check-in.
+explain-back in the learner's own words, and ends with an honest activity
+record. At close it also creates the bounded, visibly lossy memory used by the
+next check-in.
 
 Source: `src/agents/tutor.py`. State and wiring:
 `src/graph/session_state.py`, `src/graph/session_workflow.py`, and ADR
@@ -67,8 +67,41 @@ Reads from `SessionState`:
   the lossy summary, which is never valid skill evidence.
 - `inference_batch` — optional unconfirmed skill claims, transcript-grounded
   and citing the exact session. The runner applies them only after close.
-- `draft_report` — a short session record that explicitly says it is not a
-  mastery score.
+- `draft_report` — a short session record: the guided turns completed, whether
+  an explain-back was recorded, whether the learner ended early, and one
+  closing line — "The lines above are this session's activity record, drawn
+  from the events it wrote." It reaches the browser as `SessionDetail.result`
+  and `GuidedSessionView` renders it verbatim.
+
+## Learner-facing copy: state, never deny
+
+Every string this agent can show a learner is passed through unedited by the
+surface above it — RC-16/H11: a backend string is rendered verbatim or not at
+all. So the pedagogy vocabulary WO-W14 banned in `web/lib/copy/index.ts`
+(`PEDAGOGY_PHRASES`: mastery, score, grade, percentages, unlocked, streaks,
+badges, dashboards) binds this module too, **including any sentence written to
+reject it**. A denial plants the frame it rejects: until WO-W03b, "This is an
+activity record, not a mastery score" was the only place the session surface
+said "mastery score" at all, and WO-W13b's `web/e2e/session-flow.spec.ts` had
+to subtract that one service string before asserting the vocabulary over the
+painted page.
+
+The rule, therefore: say what the session did, not what it is not. Two lines
+were reworded under it —
+
+| Was | Is |
+|---|---|
+| `This is an activity record, not a mastery score.` | `The lines above are this session's activity record, drawn from the events it wrote.` |
+| `…based on the words in your explain-back. This is a question, not a grade.` | `…based on the words in your explain-back. Your answer is recorded with the rest of the session.` |
+
+The two system prompts are the deliberate exception: they are addressed to the
+model, not the learner, and there a prohibition *is* the instruction.
+
+Guarded by `tests/test_simulate_learner.py::TestLearnerFacingCopyNamesNoPedagogyScalar`,
+which replays all 15 scenarios and scans everything `learner_facing_copy`
+collects — plan copy, transcript, lossy summary and the close line — against a
+Python mirror of the deny-list, alongside
+`src/eval/learning_metrics.py::find_shaming_language`.
 
 ## Prompt design
 

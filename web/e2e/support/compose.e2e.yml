@@ -89,8 +89,8 @@
 # those two through (`e2e/support/paid-path.ts`, mock-mode pass-through).
 # Letting a graph run is only safe because `USE_MOCK_DATA=true` means the
 # session graph constructs NO model client on any path: `check_in_agent`
-# takes `_fallback_plan` (`src/agents/tutor.py:159`), `_tutor_prompts`
-# returns two constants (`:248`), and `assess_agent`'s judge has its own mock
+# takes `_fallback_plan` (`src/agents/tutor.py:165`), `_tutor_prompts`
+# returns two constants (`:254`), and `assess_agent`'s judge has its own mock
 # branch (`src/agents/assessment.py:178`). Zero paid calls by construction,
 # which is a different and stronger claim than "the key would not have
 # worked". `ANTHROPIC_API_KEY` above stays pinned as the second, independent

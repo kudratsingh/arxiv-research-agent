@@ -21,6 +21,8 @@ campaign is deferred to **W-OD-1**.
 from __future__ import annotations
 
 import json
+import re
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -293,6 +295,142 @@ class TestScriptedTierRunsTheFullSet:
             assert scenario["expectations"]["max_plan_sections"] >= 2, scenario[
                 "scenario_id"
             ]
+
+
+# ---------------------------------------------------------------------------
+# WO-W03b — the pedagogy vocabulary, on the backend's own strings
+# ---------------------------------------------------------------------------
+
+#: A Python mirror of the pedagogy deny-list. **The canonical list is
+#: `PEDAGOGY_PHRASES` in `web/lib/copy/index.ts`** (owned by WO-W14, inside
+#: the append-only fence); that gate is the authority and holds every copy
+#: module the `(learn)` route group imports. This is the same ban one tier
+#: *down*, where it has to hold for a different reason: the session surface
+#: renders the service's own strings verbatim (RC-16/H11), so a phrase the
+#: dictionary may not contain can still reach the learner if the tutor emits
+#: it. Kept small and deliberately re-typed rather than generated — a Node
+#: dependency in a Python unit test would be a worse coupling than a list two
+#: reviewers can diff by eye. Adding an entry there without adding it here
+#: costs nothing; the reverse is what this guard is for.
+PEDAGOGY_DENY_LIST: tuple[tuple[str, str], ...] = (
+    ("mastery", r"\bmaster(?:ed|s|ing|y)?\b"),
+    ("percentage of knowledge", r"%|\bpercent(?:age|ile)s?\b"),
+    ("unlocked", r"\bunlock(?:ed|s|ing)?\b"),
+    ("xp", r"\bxp\b|\bexperience points?\b|\bpoints? earned\b|\bearn(?:ed|s)? \d+\b"),
+    ("streak", r"\bstreaks?\b|\bchains?\b|\bfreezes?\b"),
+    (
+        "streak guilt",
+        r"\bdon['’]t (?:break|lose|stop)\b|\bkeep it up\b|\bfalling behind\b"
+        r"|\bfell behind\b|\byou missed\b|\bback on track\b",
+    ),
+    ("badge", r"\bbadges?\b|\bcertificates?\b|\bcertifications?\b"),
+    ("proficiency", r"\bproficien\w*|\bcompetenc\w*"),
+    (
+        "knowledge scalar",
+        r"\b(?:knowledge|skill|mastery|learning|comprehension)"
+        r"[ _-](?:level|score|scalar|meter|bar|rating)\b",
+    ),
+    ("score", r"\bscores?\b|\bscored\b|\bscoring\b"),
+    ("grade", r"\bgrades?\b|\bgraded\b|\bgrading\b|\bmarks? out of\b"),
+    ("dashboard", r"\bdashboards?\b"),
+)
+
+
+def _pedagogy_offenders(texts: Sequence[str]) -> list[tuple[str, str]]:
+    """Return `(phrase id, excerpt)` for every deny-list hit."""
+    offenders: list[tuple[str, str]] = []
+    for text in texts:
+        for phrase_id, pattern in PEDAGOGY_DENY_LIST:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match is None:
+                continue
+            start = max(0, match.start() - 40)
+            end = min(len(text), match.end() + 40)
+            offenders.append((phrase_id, text[start:end]))
+    return offenders
+
+
+@pytest.mark.usefixtures("_zero_spend")
+class TestLearnerFacingCopyNamesNoPedagogyScalar:
+    """WO-W03b: the tutor's own strings do not name the frame they reject.
+
+    WO-W14 removed "not a grade or a claim of mastery" from `web/lib/copy`
+    on the principle that a denial plants the frame it rejects. The session
+    surface renders `SessionDetail.result` — the tutor's close line —
+    verbatim (RC-16/H11), so the same rule has to bind the agent. WO-W13b's
+    `web/e2e/session-flow.spec.ts` had to subtract that one service string
+    from its painted-page assertion; this class is why the subtraction is
+    gone.
+    """
+
+    def test_no_scenario_shows_the_learner_a_pedagogy_scalar(self) -> None:
+        # Every scenario, through the real compiled graph in mock mode.
+        # `learner_facing_copy` excludes what the LEARNER typed, so an
+        # adversarial script that plants "mastery" on purpose does not
+        # fail the product for the attack it contained.
+        for scenario in LEARNING_SCENARIOS:
+            persona = get_persona(scenario["persona_id"])
+            paper = get_paper(scenario["paper_id"])
+            assert persona is not None and paper is not None
+            run = sim.drive_session(
+                scenario,
+                persona,
+                paper,
+                "pedagogy-probe",
+                tier=sim.TIER_SCRIPTED,
+                learner_model="",
+                costs_snapshot=dict,
+            )
+            copy_texts = sim.learner_facing_copy(run.state, run.replies)
+            assert _pedagogy_offenders(copy_texts) == [], scenario["scenario_id"]
+            # The deterministic shame lexicon over the same strings, so
+            # neither rewrite can be traded against the other.
+            assert metrics_module.find_shaming_language(copy_texts) == []
+
+    def test_the_close_line_is_among_the_strings_scanned(self) -> None:
+        # A deny-list over a collection that omits the offending string is
+        # a gate that cannot fire. `draft_report` is the close summary the
+        # browser paints; pin that the collector sees it, and that it is a
+        # positive record rather than a refusal.
+        scenario = get_scenario("novice-transformer-baseline")
+        assert scenario is not None
+        persona = get_persona(scenario["persona_id"])
+        paper = get_paper(scenario["paper_id"])
+        assert persona is not None and paper is not None
+        run = sim.drive_session(
+            scenario,
+            persona,
+            paper,
+            "close-line-probe",
+            tier=sim.TIER_SCRIPTED,
+            learner_model="",
+            costs_snapshot=dict,
+        )
+        close = run.state["draft_report"]
+        assert close.startswith("# Session complete:")
+        assert close in sim.learner_facing_copy(run.state, run.replies)
+        assert "activity record, drawn from the events it wrote" in close
+        # The construction this card removed, in either direction.
+        assert "not a" not in close
+
+    def test_the_guard_fires_on_a_planted_denial(self) -> None:
+        # Mutation check. The exact sentence WO-W03b removed is the probe:
+        # a denial trips the same pattern as a claim, which is the whole
+        # point of the rule.
+        planted = ["This is an activity record, not a mastery score."]
+        offenders = _pedagogy_offenders(planted)
+        # Three entries fire on one sentence — `mastery`, the `knowledge
+        # scalar` compound, and `score` — which is how thoroughly banned
+        # the construction is.
+        assert [phrase for phrase, _ in offenders] == [
+            "mastery",
+            "knowledge scalar",
+            "score",
+        ]
+        # ...and the shame lexicon does NOT catch it, which is why this
+        # guard exists alongside `find_shaming_language` rather than
+        # inside it.
+        assert metrics_module.find_shaming_language(planted) == []
 
 
 # ---------------------------------------------------------------------------

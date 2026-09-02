@@ -205,7 +205,7 @@ export const Working: Story = {
 // §4.2 row 10 — the explain-back prompt.
 // ---------------------------------------------------------------------------
 
-/** `src/agents/tutor.py:317-329` — the `explain_back` turn, as the tutor asks it. */
+/** `src/agents/tutor.py:323-335` — the `explain_back` turn, as the tutor asks it. */
 export const ExplainBack: Story = {
   args: {
     session: {
@@ -228,9 +228,9 @@ export const ExplainBack: Story = {
 // ---------------------------------------------------------------------------
 
 /**
- * `follow_up_probe` (`src/agents/tutor.py:392-407`), offered at most once and
- * never as a revision loop. The tutor's own framing — "a question, not a
- * grade" — is carried through as feedback rather than restated by the UI.
+ * `follow_up_probe` (`src/agents/tutor.py:398-413`), offered at most once and
+ * never as a revision loop. The tutor's own framing — what happens to the
+ * answer — is carried through as feedback rather than restated by the UI.
  */
 export const Probe: Story = {
   args: {
@@ -244,8 +244,11 @@ export const Probe: Story = {
         phase: "tutor",
         prompt:
           "You said the scaling factor is unclear. What would go wrong in the softmax if the dot products grew with the key dimension?",
+        // Mirrors `assessment_probe_agent` in src/agents/tutor.py verbatim.
+        // WO-W03b reworded it: the surface renders service copy unedited, so
+        // a denial there ("not a grade") plants the frame it rejects.
         feedback:
-          "I found one point worth checking, based on the words in your explain-back. This is a question, not a grade.",
+          "I found one point worth checking, based on the words in your explain-back. Your answer is recorded with the rest of the session.",
       },
     },
   },

@@ -82,8 +82,8 @@ printed into the run log and written into `research-post-count.txt`:
 ```
 
 Why mock mode is a construction rather than a hope: `check_in_agent` takes
-`_fallback_plan` (`src/agents/tutor.py:159`), `_tutor_prompts` returns two
-constants (`:248`), and `assess_agent`'s judge has its own mock branch
+`_fallback_plan` (`src/agents/tutor.py:165`), `_tutor_prompts` returns two
+constants (`:254`), and `assess_agent`'s judge has its own mock branch
 (`src/agents/assessment.py:178`). No model client is built. The disabled key
 stays as the second, independent boundary — "it would have failed anyway" is
 a coincidence, not a cost boundary.

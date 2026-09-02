@@ -19,7 +19,7 @@
     "created_at": "2026-09-02",
     "disclaimer": "Not a real learner session. Recorded from the session graph running in mock mode with a deliberately disabled API key; no model was called and no person was involved.",
     "fixture_kind": "recorded-mock",
-    "generated_by_commit": "77a179851746555921bc581e1b971e3950808289",
+    "generated_by_commit": "3ccb6504c56c29a6b320ec46538616436683b2ed",
     "mock_mode": true,
     "real_session": false
   },

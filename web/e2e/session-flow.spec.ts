@@ -22,8 +22,8 @@
  * disabled`, checked in the overlay and — when a daemon is reachable — in the
  * running container. Under `use_mock_data` the session graph constructs no
  * model client anywhere: `check_in_agent` returns `_fallback_plan`
- * (`src/agents/tutor.py:159`), `_tutor_prompts` returns two constants
- * (`:248`), `assess_agent`'s judge has its own mock branch
+ * (`src/agents/tutor.py:165`), `_tutor_prompts` returns two constants
+ * (`:254`), `assess_agent`'s judge has its own mock branch
  * (`src/agents/assessment.py:178`). Zero paid calls BY CONSTRUCTION, which is
  * a stronger claim than "the key would not have worked anyway". The
  * assertion is printed into the run log and recorded in
@@ -53,7 +53,7 @@ const FIRST_RESOURCE = "arxiv:1706.03762";
 const SESSION_URL = /\/learn\/sessions\/[0-9a-f]{16}$/;
 
 /**
- * The tutor's mock feedback, verbatim from `src/agents/tutor.py:248`.
+ * The tutor's mock feedback, verbatim from `src/agents/tutor.py:254`.
  *
  * Asserted because it is the shortest proof that the graph ran a tutor node
  * on this stack rather than the harness answering: no fixture in this tier
@@ -196,30 +196,23 @@ test.describe("WO-W13b — start, read, resume, close", () => {
       // source strings cannot see, and the same check `ledger.spec.ts` makes
       // for `/learn/progress`.
       //
-      // SCOPED TO THE WORDS THIS PRODUCT'S FRONT END CHOSE, and the exclusion
-      // is a finding rather than a convenience: the session's own close
-      // summary, `progress_update_agent`'s `draft_report`
-      // (`src/agents/tutor.py:486`), ends "This is an activity record, not a
-      // mastery score." It reaches `SessionDetail.result` and
-      // `GuidedSessionView` renders it verbatim, which is RC-16/H11 working
-      // as designed — a backend string is shown unedited or not at all.
-      // It is also the exact construction WO-W14 removed from the dictionary,
-      // one tier down: a denial plants the frame it rejects. Flagged for the
-      // coordinator; unfixable from this card without editing WO-W03's agent.
-      // Whitespace-collapsed on both sides before the subtraction: the
-      // service's `result` carries real newlines and `innerText` renders it
-      // as one wrapped paragraph, so a literal replace would silently remove
-      // nothing and the assertion would look scoped while being global.
-      const collapse = (text: string): string => text.replace(/\s+/g, " ").trim();
+      // NOTHING IS SUBTRACTED. This assertion used to exempt the session's
+      // own close summary — `progress_update_agent`'s `draft_report`, which
+      // reaches `SessionDetail.result` and is rendered verbatim (RC-16/H11:
+      // a backend string is shown unedited or not at all) — because it ended
+      // "This is an activity record, not a mastery score", the exact
+      // construction WO-W14 removed from the dictionary one tier down. That
+      // was flagged rather than papered over, and WO-W03b fixed the source:
+      // the close line now states the record instead of denying a scalar, so
+      // the whole painted page can be held to the vocabulary, service words
+      // included. The service's `result` is still asserted non-empty, so a
+      // page that painted no close summary cannot pass this vacuously.
       const painted = await page.locator("body").innerText();
-      const serviceClose = collapse(detail.result ?? "");
-      expect(serviceClose, "the service published no close summary").not.toBe("");
-      const ownWords = collapse(painted).replace(serviceClose, "");
-      expect(ownWords, "the service's close summary was not subtracted").not.toContain(
-        serviceClose
+      expect(detail.result ?? "", "the service published no close summary").not.toBe(
+        ""
       );
       expect(
-        ownWords,
+        painted,
         "a pedagogy scalar reached the rendered session surface"
       ).not.toMatch(/\bmaster(?:ed|y|s)?\b|\bstreaks?\b|\bxp\b|\bunlock(?:ed)?\b/i);
       // No percentage anywhere at all — not even in the service's own words.

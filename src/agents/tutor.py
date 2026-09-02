@@ -4,6 +4,12 @@ The real-model path is deliberately small and parse-defended; the recorded
 fixture path runs under ``use_mock_data=true`` without constructing an
 Anthropic client. Learner-authored prose is isolation-wrapped before it enters
 a prompt and is never copied into a control field.
+
+**Learner-facing copy states, it does not deny (WO-W03b).** The surface renders
+these strings unedited (RC-16/H11), so WO-W14's pedagogy vocabulary binds this
+module too — *including in a sentence written to reject it*, because a denial
+plants the frame it rejects. The system prompts below are the exception: they
+address the model, not the learner. See `docs/agents/tutor.md`.
 """
 
 from __future__ import annotations
@@ -401,13 +407,13 @@ def assessment_probe_agent(state: SessionState) -> dict[str, Any]:
             "prompt": probe,
             "feedback": (
                 "I found one point worth checking, based on the words in your "
-                "explain-back. This is a question, not a grade."
+                "explain-back. Your answer is recorded with the rest of the session."
             ),
             "activity": activity,
         },
         "messages": [
             AIMessage(
-                content=f"One follow-up, not a grade: {probe}",
+                content=f"One follow-up question: {probe}",
                 name="tutor",
             )
         ],
@@ -483,7 +489,8 @@ def progress_update_agent(state: SessionState) -> dict[str, Any]:
         f"- Guided turns completed: {state.get('turn_number', 0)}\n"
         f"- Explain-back recorded: {'yes' if assessment else 'no'}\n"
         f"- Ended early by learner: {'yes' if state.get('end_requested') else 'no'}\n"
-        "\nThis is an activity record, not a mastery score."
+        "\nThe lines above are this session's activity record, drawn from the "
+        "events it wrote."
     )
     return {
         "progress_events": events,

@@ -129,6 +129,14 @@ runs, so the fixtures cannot drift into being recordings of a private
 simulator. It refuses to run outside mock mode and refuses to write a
 fixture that names no commit.
 
+A transcript holds the turn-by-turn messages and the progress-event
+summaries, not the session's close summary (`draft_report`), so a copy
+change confined to the close line re-records to a commit-stamp-only
+diff — as WO-W03b's did. That is the recorder working, not a stale
+recording: the close line is covered by
+`tests/test_simulate_learner.py`, which scans everything
+`learner_facing_copy` collects.
+
 Two properties make "these are recordings" checkable, and
 `tests/test_record_learning_fixtures.py` asserts both:
 
