@@ -203,6 +203,19 @@
       "note": "WO-W13 initial route budget. Re-measured at 178331 B on the finished branch (188416 B leaves 5.7% headroom) and deliberately below the conversation-route ceiling: this route composes the same ReportReader document surface plus a margin column, so it should never cost more than a thread. The Markdown renderer stays lazy and is not counted in first-load JS."
     },
     {
+      "id": "route-js-learn-progress",
+      "kind": "route-first-load-js",
+      "route": "/learn/progress",
+      "label": "`/learn/progress` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "WO-W14 initial route budget for the Ledger. Measured at 163121 B on the tree rebased onto WO-W13 (main 4fbe239); 169984 B leaves 4.2% headroom and is deliberately the SAME ceiling as its sibling /learn/paths/[id] rather than the larger conversation-route allowance -- the two routes render the same shell over a different pattern, so a divergence between them would be a fact about drift rather than about the surface. NO EXISTING CEILING MOVES IN THIS PR. Both older learn rows were re-measured on the same build and both hold: /learn 160004 B and /learn/paths/[id] 160516 B against 166912 and 169984. Paired builds on the same tree with and without this PR's one link into the Ledger put its cost at 953 B on each of those two routes (159051 -> 160004 and 159563 -> 160516), the link plus the shared chunk it lands in. An earlier draft cost 3144 B instead, because importing LEDGER for two of its keys pulled lib/copy/errors.ts (19 KB of source) into both learn routes; the two strings are now their own export (LEDGER_ENTRY) and lib/copy/ledger.ts imports nothing at all. Recorded here because the next surface work order will meet the same trap."
+    },
+    {
       "id": "shared-framework-runtime",
       "kind": "shared-first-load-js",
       "label": "Shared framework/runtime chunk",

@@ -302,19 +302,25 @@ below; ADRs [0029](decisions/0029-nextjs-web-ui.md) and
 ## The web tier
 
 `web/` is not a single-page client. It is an App Router application
-with five routes in two groups, three separable layers, and a server
+with six routes in two groups, three separable layers, and a server
 boundary that is part of the security model rather than a convenience.
 
 **Routes.** `/` (the workspace) and `/c/[id]` (a thread) under the
 `(workspace)` group; `/learn` (the path library), `/learn/paths/[id]`
-(one reading path) and `/learn/sessions/[id]` (one guided session)
-under `(learn)`. Both groups mount the same shell, so the wedge is
-inside the workbench rather than beside it.
-`web/tests/shell/routing.test.ts` pins the set, so a route added
-without a decision fails the unit suite.
-`/login` and `/settings` are **reserved names with no files** — as is
-`web/app/api/auth/[...path]/route.ts` — because there is no identity
-yet and a disabled login control would be a fake one.
+(one reading path), `/learn/sessions/[id]` (one guided session) and
+`/learn/progress` (the **Ledger**) under `(learn)`. A parenthesised
+directory contributes no URL segment, and
+`web/tests/shell/routing.test.ts` pins the whole set against the
+filesystem, so a route added without a decision fails the unit suite.
+Both groups mount the same `WorkbenchShell`: the wedge is inside the
+workbench rather than beside it, and the learning surfaces get no
+second shell and no second navigation row — the anti-dashboard-soup
+rule in
+[`planning/07-learning-platform/00-VISION.md`](../planning/07-learning-platform/00-VISION.md)
+§5.5, made structural. `/login` and `/settings` are **reserved names
+with no files** — as is `web/app/api/auth/[...path]/route.ts` — because
+there is no identity yet and a disabled login control would be a fake
+one.
 
 **The shell.** `app/(workspace)/layout.tsx` and `app/(learn)/layout.tsx`
 each mount `WorkbenchShell`,
@@ -351,6 +357,39 @@ every stream open (including the browser's own automatic retry), and is
 never persisted or derived from a polled `JobDetail`. Terminal copy is
 therefore `failed after <checkpoint>` or plain `failed` — never
 `failed in <node>`, because no terminal payload carries a node.
+
+**The Ledger** (`/learn/progress`) is that same rule pointed at
+learning. `GET /learn/progress` returns a *view* folded from the
+append-only `progress_events` log (`src/learning/progress_store.py`),
+so the surface's job is to render what the events support and nothing
+else. `components/patterns/LedgerView.tsx` takes the summary as a prop
+and builds its rows through two pure functions whose row types cannot
+express an unbacked claim: an evidence row's `evidenceRef` is a
+non-nullable string, every row carries the `event_id`s it is made of,
+and anything that would violate either is dropped and *counted* in a
+footnote rather than silently omitted. Both properties are asserted
+over the rendered DOM in `web/tests/patterns/LedgerView.test.tsx`.
+Session arithmetic is rendered as one string — `Schedule · 3 of 3
+sessions` — so no layout can separate the figure from the word that
+says it is schedule progress rather than knowledge; a path with no
+assessment event reads "Not yet observed" rather than a zero; and the
+Ledger's export is **not built**, so no control offers it.
+
+**The pedagogy honesty gate.** `web/lib/copy/index.ts` carries a
+`PEDAGOGY_PHRASES` list — mastery, percentages, "unlocked", XP,
+streaks and streak-guilt phrasing, badges, proficiency, any knowledge
+scalar, "score", "grade", "dashboard" — and
+`web/tests/copy/forbidden.test.ts` applies it to every copy module the
+`(learn)` route group's import graph reaches. The module set is
+*discovered* by walking that graph, not listed, so a new learning
+surface is covered the moment it renders a string; a discovered module
+the gate's table does not carry fails the suite. The list is a strict
+extension of the product-wide deny-list rather than a replacement, and
+it is proven by a committed fixture that must fail —
+`web/tests/fixtures/copy-pedagogy.fixture.ts`, which says "87%
+mastered". This is the copy half of the ban the store already enforces
+structurally in `BANNED_SCALAR_TOKENS` and in the
+`progress_events_no_mastery_scalar` CHECK constraint.
 
 ### How a run travels
 
