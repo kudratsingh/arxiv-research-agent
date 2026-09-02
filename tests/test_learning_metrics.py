@@ -1,4 +1,7 @@
-"""WO-W09 learning metrics; every model call is replaced with canned JSON."""
+"""Learning metrics (WO-W09, plus WO-W10's shame-free copy judge).
+
+Every model call is replaced with canned JSON.
+"""
 
 from __future__ import annotations
 
@@ -23,6 +26,17 @@ def _plan_response(score: float) -> dict[str, Any]:
         "check_placement": _criterion(score),
         "downscope_honesty": _criterion(score),
         "summary": "Canned judge response.",
+    }
+
+
+def _shame_free_response(quotes: list[str] | None = None) -> dict[str, Any]:
+    return {
+        "score": 0.95,
+        "respects_effort": _criterion(1.0, "No blame."),
+        "avoids_deficit_framing": _criterion(0.9, "Describes the plan."),
+        "offers_a_next_step": _criterion(1.0, "Names one question."),
+        "offending_quotes": quotes or [],
+        "summary": "Copy is descriptive rather than evaluative.",
     }
 
 
@@ -174,6 +188,56 @@ class TestExplainBackJudge:
         assert outcome["metric"] is None
         assert "learner_explain_back" in str(outcome["metrics_error"])
         assert not called
+
+
+class TestShameFreeCopyJudge:
+    def test_a_valid_response_scores(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(
+            metrics, "call_llm_json", lambda **_: _shame_free_response()
+        )
+        envelope = metrics.measure_shame_free_copy(["Planned 1 section."])
+        assert envelope["metrics_error"] is None
+        assert envelope["metric"] is not None
+        assert envelope["metric"]["score"] == 0.95
+
+    def test_a_fabricated_quote_fails_the_whole_metric(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The evidence rule: a complaint about text the copy does not
+        # contain is how a rubric judge manufactures a regression.
+        monkeypatch.setattr(
+            metrics,
+            "call_llm_json",
+            lambda **_: _shame_free_response(["you have fallen behind"]),
+        )
+        envelope = metrics.measure_shame_free_copy(["Planned 1 section."])
+        assert envelope["metric"] is None
+        assert "not verbatim" in str(envelope["metrics_error"])
+
+    def test_an_extra_key_is_refused_rather_than_scored(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        payload = _shame_free_response()
+        payload["confidence"] = 0.4
+        monkeypatch.setattr(metrics, "call_llm_json", lambda **_: payload)
+        envelope = metrics.measure_shame_free_copy(["Planned 1 section."])
+        assert envelope["metric"] is None
+        assert envelope["metrics_error"] is not None
+
+    def test_a_raising_judge_becomes_a_named_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def _boom(**_: Any) -> dict[str, Any]:
+            raise RuntimeError("529 overloaded")
+
+        monkeypatch.setattr(metrics, "call_llm_json", _boom)
+        envelope = metrics.measure_shame_free_copy(["Planned 1 section."])
+        assert envelope["metric"] is None
+        assert "shame_free_copy: RuntimeError" in str(envelope["metrics_error"])
+
+    def test_empty_copy_is_an_error_not_a_perfect_score(self) -> None:
+        envelope = metrics.measure_shame_free_copy(["", "   "])
+        assert envelope["metric"] is None
 
 
 class TestCalibrationAgreement:

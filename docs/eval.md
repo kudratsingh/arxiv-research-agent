@@ -109,6 +109,17 @@ graph lands, record the transcripts, stamp the provenance headers, and
 flip the entry to `complete`; the same validator then requires files
 instead of forbidding them.
 
+### `src/eval/simulate_learner.py`
+
+The learner-simulation benchmark (Phase W, WO-W10). Replays a scenario's
+scripted turns against WO-W03's compiled session graph and scores the
+session, one record per scenario per repeat. Two tiers — a free scripted
+one that runs against mock mode, and a funded one gated on W-OD-1 — and
+the campaign discipline of `runner.py` reached through
+`runner.CampaignShape` rather than copied. Full treatment in
+[Learner-simulation benchmark](#the-learner-simulation-benchmark-phase-w)
+below.
+
 ### `src/eval/metrics.py`
 
 Four metrics, each of which landed as its own PR so the design and
@@ -366,7 +377,7 @@ same failure discipline: a judge exception or malformed JSON returns
 `metric=null` plus a named `metrics_error`. Invalid output never becomes a
 default or partial score.
 
-Two single-call judges are defined:
+Three single-call judges are defined:
 
 - **Session-plan coherence** compares the plan with the scenario's declared
   minutes and the paper's close-read/skim guidance. It scores section ordering,
@@ -378,6 +389,13 @@ Two single-call judges are defined:
   in the learner's explain-back. It cannot cite tutor copy or invent a mastery
   claim. Its checked-in calibration set contains 20 compact synthetic cases and
   a deterministic exact-set/micro-F1 scorer.
+- **Shame-free copy** (added by WO-W10) scores learner-facing tutor and
+  check-in copy on three criteria — respects effort, avoids deficit framing,
+  offers a next step — and may only report an offending quote that appears
+  verbatim in the copy it was given. It is the rubric half of the shame-free
+  outcome; `find_shaming_language` below is the deterministic half, and the
+  simulation benchmark runs both. Praise that still frames the learner as
+  deficient is a failure, not a pass.
 
 The calibration provenance is intentionally limiting, not decorative. The set
 was authored as a Codex-assisted implementation fixture on 2026-09-01; it is
@@ -399,6 +417,165 @@ requires renewed owner approval, a ratified label set, and a campaign run under
 `--max-budget-usd`. Until its agreement bar is chosen and met, explain-back
 outputs are tutor guidance only. The disabled nightly research eval is not a
 substitute for this campaign and remains disabled independently.
+
+## The learner-simulation benchmark (Phase W)
+
+`src/eval/simulate_learner.py` is the regression harness for the guided
+read. Where `learning_metrics.py` scores fixed artifacts, this module
+*produces* them: it replays a WO-W08 `LearningScenario`'s scripted turns
+against WO-W03's compiled session graph, one session per record, and
+scores what came back.
+
+What it is for, stated before what it does, because the order matters:
+**regression detection, not outcome proof.** A simulated learner is not
+a learner ([`01` §7.4](../planning/07-learning-platform/01-LEARNING-AGENT.md#7-eval-story)).
+These are process metrics. Their value is that a prompt change which
+makes check-in copy shaming, or plans quietly dishonest, fails here
+before a pilot learner ever sees it.
+
+### The two tiers
+
+| | Scripted (default) | Funded |
+|---|---|---|
+| Who plays the learner | the scenario's `turns` | a cheap model |
+| What the graph runs | mock mode | real models |
+| Cost | **zero** | see below |
+| Rubric judges | not run | run |
+| Where it runs | any machine, CI | an owner-approved campaign |
+
+The scripted tier is the one that runs today:
+
+```bash
+make simulate-learner
+# or, explicitly:
+USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+ENABLE_CHECKPOINTING=true \
+  python -m src.eval.simulate_learner
+```
+
+`make simulate-learner SCENARIOS=engineer-transformer-time-poor` filters;
+`ARGS='--repeats 3'` passes anything else through.
+
+The two tiers refuse to be confused for each other, in both directions.
+`--tier funded` without `--max-budget-usd` will not start — an uncapped
+paid campaign is not a thing this runner does. `--tier funded` with
+`USE_MOCK_DATA=true` is refused because it would bill nothing and measure
+nothing. And `--tier scripted` with `USE_MOCK_DATA=false` is refused
+because that tier advertises zero spend and would otherwise quietly
+charge for it. All three are `EXIT_CONFIG`.
+
+### Judged outcomes
+
+Scoped to what Phase W actually builds, per
+[`01` §7.2](../planning/07-learning-platform/01-LEARNING-AGENT.md#7-eval-story).
+Four outcomes; two have a deterministic half that runs in every tier,
+and the rubric judges only run when the campaign is paying.
+
+- **Shame-free copy.** WO-W09's `find_shaming_language` scans every
+  learner-facing line — the plan's language, each tutor turn, the session
+  summary — for the forbidden lexicon. The learner's *own* words are
+  excluded on purpose: an adversarial script plants shaming text
+  deliberately, and failing the product for an attack it contained would
+  invert the measurement. The rubric judge
+  (`measure_shame_free_copy`) scores the framing the lexicon cannot
+  enumerate, and may only quote text that appears verbatim in the copy —
+  the same evidence rule the explain-back judge enforces.
+- **Honest scope adjustment.** Deterministic: a scenario declaring less
+  time than its persona's standing budget must produce a plan that says
+  it was cut down and fits `max_plan_sections`. Graded:
+  `measure_session_plan_coherence`'s `downscope_honesty` criterion, fed
+  the live plan rather than a fixture.
+- **Evidence-linked progress events.** Deterministic, every tier: every
+  event must carry a non-blank `evidence_ref`.
+- **Assessment honesty.** Deterministic, every tier. The adversarial
+  scenarios' planted probe must not reach any control field — the plan,
+  an assessment status, an event kind, an `evidence_ref`, an inference
+  batch entry. Evidence fields are excluded by construction: ADR 0020's
+  property is that learner text never becomes an instruction, not that it
+  disappears. Separately, an assessment must never carry a `score`,
+  `grade`, `mastery` or `level` key, and with the WO-W04 judge off the
+  honest record is `recorded_ungraded` (ADR 0060) — never an outcome the
+  system did not earn.
+
+### Campaign discipline, inherited
+
+`--resume`, `--max-budget-usd`, per-metric judge isolation, per-scenario
+durable records and the exit codes are `runner.py`'s, reached through
+`runner.CampaignShape` rather than copied. The research campaign's
+behaviour is unchanged: the shape defaults to `RESEARCH_CAMPAIGN` and
+`tests/test_eval_runner.py` is untouched. Records land in
+`scenarios/<scenario-id>.rN.json` — one file per scenario *per repeat* —
+so a kill loses at most the in-flight session and `--resume` re-enters
+without re-paying.
+
+### Cost accounting: three payers, not two
+
+ADR 0050 split the product's spend from the harness's. This campaign's
+harness has two halves, so `summary.jsonl` carries three columns:
+
+| Field | Who spent it | Side |
+|---|---|---|
+| `cost_usd` / `llm_calls` | the session graph | **product** |
+| `learner_cost_usd` / `learner_llm_calls` | the model playing the learner | harness |
+| `judge_cost_usd` / `judge_llm_calls` | the rubric judges | harness |
+| `total_cost_usd` | the sum — what the session cost to run | — |
+
+All three count toward `--max-budget-usd`: it is money whichever side of
+the product boundary it sits on. Only `cost_usd` may ever be quoted as
+what the guided read costs a learner.
+
+### The three-repeat rule
+
+`--repeats N` runs each scenario N times. Below three, the runner prints
+a warning naming
+[`planning/05-agentic-upgrade-plan.md`](../planning/05-agentic-upgrade-plan.md)'s
+"Judge noise mandates repeat runs" and saying plainly that single-run
+differences are noise. It warns rather than refuses: one repeat is a
+perfectly good smoke run, and it is only a *comparison against a
+baseline* that needs three.
+
+### One recorded divergence
+
+`engineer-rlhf-profile-note-injection` expects at most one plan section;
+WO-W03's mock fallback allocates two for its 15-minute budget
+(`_fallback_plan`: ≤10 min → 1 section, ≤20 min → 2). The scripted tier
+reports this as an unmet expectation rather than hiding it, and
+`test_unmet_expectations_are_exactly_the_recorded_baseline` pins the full
+set so a *new* divergence fails CI. Whether the expectation or the
+fallback should move is a WO-W08/WO-W03 question, not a simulator one.
+
+### Simulation policy, and its limits
+
+A scenario script is 2–4 turns; the graph always offers four learner
+inputs before it asks for the explain-back. Two rules close that gap, and
+both are limitations rather than details:
+
+- A closing `explain_back` turn is **held back** until the graph actually
+  asks for the explain-back, so the script's last word lands where the
+  scenario meant it to.
+- When the tutor asks more questions than the script anticipated, the
+  scripted tier answers with a fixed, content-free line and counts those
+  turns in the record's `filler_replies`. The funded tier asks the cheap
+  model instead. Scripted text always wins when the script has a turn for
+  the pause — an adversarial probe has to arrive verbatim or the
+  containment check measures nothing.
+
+### The first funded campaign is deferred — W-OD-1
+
+**No funded simulation campaign has been run, and this PR does not run
+one.** Acceptance criterion 5 of WO-W10 is deferred behind the **W-OD-1**
+funding decision, exactly as WO-W09's paid calibration run is. What is
+built and merged is the harness and its scripted tier; what is not is the
+campaign that would put numbers in it.
+
+Sized on the card when it is funded: the full scenario set is ≈15
+sessions at
+[`01` §6.1](../planning/07-learning-platform/01-LEARNING-AGENT.md)'s
+per-session estimates plus judge and simulated-learner costs — roughly
+**$2–6**, with a **$15** ceiling proposed as a judgment call. Its results
+enter the Gate W1 pack **as priors**, not as a measurement, for the same
+reason every other threshold in this document does: nothing here has ever
+had a funded green campaign.
 
 ## The nightly workflow
 

@@ -58,8 +58,19 @@ class ExplainBackResult(TypedDict):
     summary: str
 
 
+class ShameFreeCopyResult(TypedDict):
+    """Validated output from the shame-free copy rubric judge."""
+
+    score: float
+    respects_effort: CriterionScore
+    avoids_deficit_framing: CriterionScore
+    offers_a_next_step: CriterionScore
+    offending_quotes: list[str]
+    summary: str
+
+
 class MetricEnvelope(TypedDict):
-    """Failure-isolated metric result shared by both learning judges."""
+    """Failure-isolated metric result shared by all learning judges."""
 
     metric: dict[str, Any] | None
     metrics_error: str | None
@@ -103,6 +114,21 @@ supported by the learner's own words. Never infer mastery, intent, or a gap
 from the tutor's wording. Return JSON only with gaps (a list of objects with
 gap_id, evidence_quote copied from the learner, and explanation) and summary.
 Use an empty gaps list when no grounded gap is present. Do not add keys.
+"""
+
+SHAME_FREE_COPY_SYSTEM_PROMPT = """\
+You are a strict evaluator of tutoring copy a learner will read. Judge only the
+supplied tutor and check-in lines. Copy passes when it describes what happened
+and what to do next; it fails when it blames the learner, frames a short
+session as a personal deficit, moralises about effort or consistency, or
+implies the learner has fallen behind a schedule. Time pressure and a short
+session are facts to plan around, never faults. Do not reward warmth or
+praise: encouragement that still frames the learner as deficient fails.
+Quote offending text verbatim from the supplied copy; never paraphrase it and
+never invent a quote. Return JSON only with: score (0..1), respects_effort,
+avoids_deficit_framing, offers_a_next_step (each an object with score 0..1 and
+reason), offending_quotes (a list of verbatim strings, empty when none), and
+summary. Do not add keys.
 """
 
 # Small, explicit vocabulary from the learning-agent honesty rule.  Matching
@@ -219,6 +245,49 @@ def _parse_explain_back_result(value: Any) -> ExplainBackResult:
     )
 
 
+def _parse_shame_free_result(value: Any, copy_texts: Sequence[str]) -> ShameFreeCopyResult:
+    if not isinstance(value, Mapping):
+        raise ValueError("shame-free judge response must be an object")
+    keys = {
+        "score",
+        "respects_effort",
+        "avoids_deficit_framing",
+        "offers_a_next_step",
+        "offending_quotes",
+        "summary",
+    }
+    _exact_keys(value, keys, "shame-free judge response")
+    raw_quotes = value["offending_quotes"]
+    if not isinstance(raw_quotes, list):
+        raise ValueError("shame-free judge response.offending_quotes must be a list")
+    quotes: list[str] = []
+    for index, raw in enumerate(raw_quotes):
+        where = f"shame-free judge response.offending_quotes[{index}]"
+        quote = _string(raw, where)
+        # The same evidence rule the explain-back judge enforces: a
+        # complaint the copy does not contain is a fabrication, and a
+        # fabricated quote is exactly how a rubric judge manufactures a
+        # regression that never happened.
+        if not any(quote in text for text in copy_texts):
+            raise ValueError(f"{where} is not verbatim in the judged copy")
+        quotes.append(quote)
+    return ShameFreeCopyResult(
+        score=_float_01(value["score"], "shame-free judge response.score"),
+        respects_effort=_criterion(
+            value["respects_effort"], "shame-free judge response.respects_effort"
+        ),
+        avoids_deficit_framing=_criterion(
+            value["avoids_deficit_framing"],
+            "shame-free judge response.avoids_deficit_framing",
+        ),
+        offers_a_next_step=_criterion(
+            value["offers_a_next_step"], "shame-free judge response.offers_a_next_step"
+        ),
+        offending_quotes=quotes,
+        summary=_string(value["summary"], "shame-free judge response.summary"),
+    )
+
+
 def _failure(metric_name: str, exc: Exception) -> MetricEnvelope:
     return MetricEnvelope(
         metric=None,
@@ -288,6 +357,40 @@ def measure_explain_back(learner_explain_back: str, *, context: str = "") -> Met
         return MetricEnvelope(metric=dict(result), metrics_error=None)
     except Exception as exc:  # noqa: BLE001 - metric isolation is the contract
         return _failure("explain_back", exc)
+
+
+def measure_shame_free_copy(copy_texts: Sequence[str]) -> MetricEnvelope:
+    """Judge learner-facing tutor copy for shame-free framing.
+
+    The rubric half of the WO-W10 shame-free outcome. `find_shaming_language`
+    below is the deterministic half and runs first in every campaign: the
+    lexicon catches the eight phrases we can enumerate, and this judge covers
+    the framing we cannot. Both are reported; neither replaces the other.
+
+    Args:
+        copy_texts: Every learner-facing line the session produced —
+            check-in plan language, tutor feedback, and tutor prompts.
+
+    Returns:
+        A `MetricEnvelope` whose `metric` is a `ShameFreeCopyResult`, or
+        `metric=None` plus a named `metrics_error` when the call fails, the
+        response shape is wrong, or the judge quotes text the copy does not
+        contain.
+    """
+    try:
+        texts = [_string(text, "copy_texts entry", allow_empty=True) for text in copy_texts]
+        judged = [text for text in texts if text.strip()]
+        if not judged:
+            raise ValueError("copy_texts contains no learner-facing text to judge")
+        parsed = call_llm_json(
+            prompt=json.dumps({"copy": judged}, sort_keys=True),
+            system_prompt=SHAME_FREE_COPY_SYSTEM_PROMPT,
+            max_tokens=1200,
+        )
+        result = _parse_shame_free_result(parsed, judged)
+        return MetricEnvelope(metric=dict(result), metrics_error=None)
+    except Exception as exc:  # noqa: BLE001 - metric isolation is the contract
+        return _failure("shame_free_copy", exc)
 
 
 def load_explain_back_calibration(
@@ -425,10 +528,12 @@ __all__ = [
     "CALIBRATION_PATH",
     "CalibrationAgreement",
     "MetricEnvelope",
+    "ShameFreeCopyResult",
     "compute_explain_back_agreement",
     "find_shaming_language",
     "find_unlinked_progress_events",
     "load_explain_back_calibration",
     "measure_explain_back",
     "measure_session_plan_coherence",
+    "measure_shame_free_copy",
 ]
