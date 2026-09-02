@@ -19,10 +19,18 @@ only at the no-cost boundary, one is this file, and **the funded-campaign row
 is UNRESOLVED** — it stands for three separate runs that have never happened,
 all waiting on **W-OD-1**.
 
+**Main is HEALTHY at `3ccb650` on every tier.** Not by CI's word alone: the
+**coordinator state-probe of main `3ccb650`, 2026-09-02** — an Opus agent run,
+not a CI run — booted the merged stack and ran every tier against the composed
+tree, which is the question a per-PR job structurally cannot answer.
+[§6.1](#61-the-coordinators-state-probe--main-is-healthy-at-3ccb650) carries its
+counts. It also corrected one entry in `known-gaps.md` and added another; both
+corrections are left visible.
+
 **This pack claims no learning outcome of any kind.** No real learner has been
 observed, no funded campaign has ever run in this repository, and every
 threshold in Phase W is a prior. [`known-gaps.md`](known-gaps.md) is the
-fifteen-entry checklist, and it is required reading beside this index.
+sixteen-entry checklist, and it is required reading beside this index.
 
 ---
 
@@ -51,7 +59,16 @@ W-OD-1**.
 | **7c** | *(§6 gives it no row of its own; W11 c4 belongs to the same decision)* the nightly learning lane's **first scheduled run** | ❌ **UNRESOLVED — waits on W-OD-1** | [`eval-harness.md`](eval-harness.md) §4. `eval-nightly.yml` is `disabled_manually` and stays disabled; the workflow's `DEFAULT_LEARNING_MAX_BUDGET_USD` is **$15** | **W11 c4** |
 | 8 | Per-session cost accounting reconciles; cap enforcement proven | ⚠️ **Resolved (no-cost boundary)** | [`cost-reconciliation.md`](cost-reconciliation.md) — `tests/test_session_cost_cap.py`, **6 tests**. `round(job.cost_usd, 2) == 0.09` on two billed calls; both at-cap behaviours with `workflow.client_constructed is False`. **Every figure is a mock-mode figure**; the price is unmeasured | W06 (#144), ADR 0062 |
 | 9 | Honesty inventory: provenance rules, no-inferred-as-fact, evidence-quoting judge, no-mastery-% gate | ✅ **Resolved** | [`honesty-inventory.md`](honesty-inventory.md) — `tests/test_learner_profile_store.py` **60**, `tests/test_learner_profile_serializer.py` **19**, `tests/test_progress_events.py` **76**, `tests/test_assessment_judge.py` **15**, `tests/test_learning_metrics.py` **23**, `web/tests/copy/forbidden.test.ts` **63** incl. the planted `"87% mastered"` fixture that MUST fail | W02 (#134), W04 (#142), W07 (#133), W14 (#147) |
-| 10 | `known-gaps.md` — what W1 does *not* prove | ✅ **Resolved** | [`known-gaps.md`](known-gaps.md) — **15 entries**, non-empty | **W19** |
+| 10 | `known-gaps.md` — what W1 does *not* prove | ✅ **Resolved** | [`known-gaps.md`](known-gaps.md) — **16 entries**, non-empty | **W19** |
+
+**Rows 1, 2, 4 and 5 were reproduced a second way.** Every citation in the
+table above is a CI run or a committed test. The **coordinator state-probe of
+main `3ccb650`, 2026-09-02** independently re-ran them against the merged tree
+and agrees: chromium **313 passed / 3 skipped / 0 failed**, every
+`research-post-count.txt` row PASS with `runtime=verified`, the guided-read row
+`creates=1 turns=2 mode=mock-pass-through`, **zero paid calls**, and the
+scripted campaign **15/15 at $0.0000**. Corroboration, not a second source of
+truth — [§6.1](#61-the-coordinators-state-probe--main-is-healthy-at-3ccb650).
 
 **Row 8's downgrade, stated plainly.** The row asks that accounting reconcile
 and the cap be enforced. Both are proven deterministically and neither needs a
@@ -71,7 +88,7 @@ set the house rule against.
 | Path | What it is | Source |
 |---|---|---|
 | [`README.md`](README.md) | This index. | **W19** |
-| [`known-gaps.md`](known-gaps.md) | **15 entries.** What Gate W1 does not prove, each with owner and what would change it. | **W19** |
+| [`known-gaps.md`](known-gaps.md) | **16 entries.** What Gate W1 does not prove, each with owner and what would change it. | **W19** |
 | [`end-to-end-session.md`](end-to-end-session.md) | Rows 1–2. The browser proof, the three independent cost boundaries on it, the no-client-construction test, and the below-the-browser checkpoint reattachment. | W03/W13/W13b, collected by **W19** |
 | [`paid-path-interdiction.md`](paid-path-interdiction.md) | Row 4. The interceptor's two claims and their different strengths, and the A/B control for the mock-mode pin. | W13/W13b, collected by **W19** |
 | [`flags.md`](flags.md) | Row 3. The four-flag inventory, the ladder, the compose-default nuance, and every flag-off/flag-on test. | **W19** |
@@ -214,10 +231,63 @@ Gate W2's and are cited here only where they bear on a W1 row or a gap.
 
 ---
 
-## 6. What CI proves, and what only a local run proved
+## 6. What CI proves, what the state probe proved, and what only a local run proved
 
-CI is the canonical evidence for every row above. Three things it does not
-cover, and one it covers differently than the PR bodies do.
+CI is the canonical evidence for every row above. §6.1 is the one integrated
+check that CI cannot perform on itself; §6.2 is what CI does not cover at all.
+
+### 6.1 The coordinator's state probe — main is HEALTHY at `3ccb650`
+
+**Cited throughout this pack as "coordinator state-probe of main `3ccb650`,
+2026-09-02". It is an Opus agent run, not a CI run**, and it is named that way
+everywhere so no reader mistakes it for a workflow artifact. What it adds that
+CI cannot: CI proves each PR green against the tree *it* was built on; the probe
+boots the merged stack and runs every tier against `3ccb650` itself, which is
+the composition question a per-PR job structurally cannot answer.
+
+**Verdict: HEALTHY on every tier.**
+
+| Tier | Result |
+|---|---|
+| `ruff` · `mypy --strict src/` | pass, **83 source files** |
+| `pytest -m "not e2e"` | **2038 passed, 52 skipped** |
+| Scripted simulation campaign | **15/15**, **$0.0000**; `scripted_tier_check` OK |
+| web typecheck · lint | pass |
+| Vitest (unit + component + integration + story) | **3372 passed, 8 skipped**, 155 files |
+| `npm run build` | **9 routes** |
+| `npm run budgets` | **9/9 gated PASS** |
+| `npm run audit:gate` | clean |
+| `.next/static` key scan | **74 passed** |
+| Playwright, chromium | **313 passed, 3 skipped, 0 failed** |
+| Playwright, firefox + webkit + Pixel 7 + iPhone 15 | **113 passed, 10 skipped, 1 failed** — the one failure is [`known-gaps.md`](known-gaps.md) §16 |
+| axe | **40 renders, 0 violations, 0 gated, 0 incomplete**; allowlist and `PENDING_COMPOSITION` both **empty** |
+| Visual | **48 darwin snapshots compared, all passing** |
+| `research-post-count.txt` | **every row PASS**, `runtime=verified`; the guided-read row `creates=1 turns=2 mode=mock-pass-through`; **zero paid calls** |
+
+Three of those close gaps CI leaves open, and they are marked as such in §6.2:
+the `.next/static` scan, the darwin visual set, and the full multi-browser
+matrix. The probe also independently reproduced Gate W1 rows **1, 2, 4 and 5**
+on the merged tree — the guided-read row with `runtime=verified` and zero paid
+calls is the same evidence as
+[`artifacts/research-post-count.txt`](artifacts/research-post-count.txt), and
+the 15/15 at $0.0000 the same as
+[`artifacts/scripted-simulation-summary.md`](artifacts/scripted-simulation-summary.md),
+both obtained a second way.
+
+**Two arithmetic reconciliations, because the numbers differ from CI's and both
+are right.**
+
+- **Playwright chromium.** The probe reads 313 passed / 3 skipped on darwin;
+  CI's attempt 2 reads 264 passed / 52 skipped. Both total **316**: CI runs
+  linux, where the 48 `@visual` snapshot comparisons and the rest of the darwin
+  set skip by their own guard. The probe's 3 skips are WO-W17's `pilot.spec.ts`
+  without `E2E_PILOT`.
+- **Vitest.** The probe reads 3372 passed / 8 skipped over 155 files; PR #150's
+  own run reported **3,380 passed**, 155 files, 0 failed. `3372 + 8 = 3380`.
+  The pack does not claim to know which side re-classified the eight; it
+  records both with their source.
+
+### 6.2 What CI does not cover
 
 **CI proves**, on `3ccb650` (run
 [33630982183](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33630982183),
@@ -231,18 +301,29 @@ image smoke.
 
 **CI does not prove:**
 
-| Not in CI | Why | Where it was proven |
-|---|---|---|
-| **The darwin visual baselines** — 48 PNGs, 10 regenerated by #150 | CI runs linux; no snapshot set is committed for it and `visual.spec.ts` skips by its own guard | PR #150, locally, on the final tree; the comparison run is green |
-| **The pilot two-principal isolation spec** (`pilot.spec.ts`, 3 tests) | needs a third overlay and a Caddy edge; **no Phase W card edits a workflow** (§5.4). CI reports 3 skipped with the reason printed | PR #149, locally: 3 passed |
-| **The `.next/static` key scan** | `npm test` runs before `npm run budgets`, so `.next/` does not exist and the test is `it.runIf`-skipped | PR #149, locally against a real build: 63 files, 0 hits |
-| **`deploy/pilot/compose.pilot.yml`** | the `docker-build` job's compose step covers the base file and the Hetzner overlay only | PR #149, locally: `docker compose config --quiet` clean, `caddy validate` + `caddy fmt` against the pinned image |
+| Not in CI | Why | Where it was proven | Re-proven by the probe? |
+|---|---|---|---|
+| **The darwin visual baselines** — 48 PNGs, 10 regenerated by #150 | CI runs linux; no snapshot set is committed for it and `visual.spec.ts` skips by its own guard | PR #150, locally, on the final tree; the comparison run is green | ✅ **48 compared, all passing** |
+| **The `.next/static` key scan** | `npm test` runs before `npm run budgets`, so `.next/` does not exist and the test is `it.runIf`-skipped | PR #149, locally against a real build: 63 files, 0 hits | ✅ **74 passed** |
+| **The multi-browser matrix** (firefox, webkit, Pixel 7, iPhone 15) | the `web-e2e` job runs `--project=chromium` only | the nightly browser matrix | ✅ **113 passed, 10 skipped, 1 failed** — §16 |
+| **The pilot two-principal isolation spec** (`pilot.spec.ts`, 3 tests) | needs a third overlay and a Caddy edge; **no Phase W card edits a workflow** (§5.4). CI reports 3 skipped with the reason printed | PR #149, locally: 3 passed | ❌ skipped there too (no `E2E_PILOT`) |
+| **`deploy/pilot/compose.pilot.yml`** | the `docker-build` job's compose step covers the base file and the Hetzner overlay only | PR #149, locally: `docker compose config --quiet` clean, `caddy validate` + `caddy fmt` against the pinned image | ❌ out of scope |
 
 **And one difference worth naming.** The PR bodies report
-`pytest -m "not e2e"` as *N passed, 52 skipped* (#150: **2038 passed, 52
-skipped**); CI reports **2090 passed, 0 skipped** for the same selection,
-because the runner has the Postgres service the 52 need. Both numbers are real
-and they are the same suite. Where this pack quotes a count it says which.
+`pytest -m "not e2e"` as *N passed, 52 skipped* (#150 and the state probe both:
+**2038 passed, 52 skipped**); CI reports **2090 passed, 0 skipped** for the same
+selection, because the runner has the Postgres service the 52 need. Both numbers
+are real and they are the same suite. Where this pack quotes a count it says
+which.
+
+**One harness hazard the probe had to work around, and it is not fixed.** The
+ordinary e2e overlay hardcodes daemon-global image tags —
+`arxiv-research-agent:local` and `arxiv-research-agent-web:wo21-e2e`. Two stacks
+on one machine therefore contend for the same tags, which is the
+`container_name` hazard [§5.4](../../05-WEDGE-WORK-ORDERS.md#54-fleet-coordination-hazards)
+already names, one layer down. The probe ran under a **scratchpad overlay with
+its own tags**, as §5.4's mitigation requires. Upstreaming interpolated tags is
+**queued with WO-W13c**.
 
 ---
 
@@ -250,7 +331,7 @@ and they are the same suite. Where this pack quotes a count it says which.
 
 **W19's two acceptance criteria are met.** Every §6 Gate W1 row resolves to an
 artifact in this directory or to an exact citation, each linked to its producing
-work order (criterion 1); `known-gaps.md` exists and is non-empty, at fifteen
+work order (criterion 1); `known-gaps.md` exists and is non-empty, at sixteen
 entries (criterion 2).
 
 **What is resolved at the no-cost boundary.** Seven of §6's ten rows are
@@ -289,9 +370,12 @@ them rather than choosing:
 2. **Hold Gate W1 open until W-OD-1 lands**, on the reading that "the agent is
    real and *measurable*" is not demonstrated until something has actually been
    measured with money.
-3. **Close it, conditionally, on two items being assigned first**: the
-   `cls.spec.ts` failure that has now been seen on two consecutive heads of
-   `main` (`known-gaps.md` §7), and the tutor's mastery-frame close line that
-   WO-W14's gate bans one tier down (§6, WO-W03b in flight).
+3. **Close it, conditionally, on WO-W13c reporting**: the `cls.spec.ts`
+   failure the state probe classifies as **deterministic and
+   CI-environment-conditioned** — 2 of 5 main CI runs since `4fbe239`, never on
+   a PR, 80/80 green locally, regression window opening at WO-W13's
+   `web/lib/job/machine.ts` change (`known-gaps.md` §7). The tutor's
+   mastery-frame close line (`known-gaps.md` §6, WO-W03b in flight) is the
+   natural companion condition.
 
 Whichever it is, it belongs in [`STATUS.md`](../../STATUS.md) and not here.

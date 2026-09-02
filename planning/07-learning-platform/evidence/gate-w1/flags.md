@@ -101,4 +101,7 @@ Two structural proofs sit beside them:
   the suite by constructing `Settings` with the flag set, not by a second
   full-suite run — so the row's *"full-suite runs both positions"* is satisfied
   **per test**, not by two whole-suite invocations. Stated plainly because the
-  wording invites the stronger reading.
+  wording invites the stronger reading. The **coordinator state-probe of main
+  `3ccb650`, 2026-09-02** ran the same selection outside CI and read **2038
+  passed, 52 skipped** — the same suite at all-flags-off, minus the 52 that
+  need CI's Postgres.

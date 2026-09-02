@@ -48,6 +48,12 @@ The numbers in it, quoted from that file: **15 sessions, 0 errors, 0 partial
 scores, 0 sessions with unmet expectations, $0.0000 session cost, $0.0000
 simulated-learner cost, $0.0000 judge cost, $0.0000 total.**
 
+**Independently re-run on the merged tree.** The coordinator state-probe of
+main `3ccb650`, 2026-09-02 (an Opus agent run, not a CI run) ran the same
+campaign and the same checker against `3ccb650` itself: **15/15 sessions,
+$0.0000**, `scripted_tier_check` OK. Same numbers, obtained without the
+workflow.
+
 Three properties of that artifact are worth naming, because they are the
 difference between a green check and evidence:
 

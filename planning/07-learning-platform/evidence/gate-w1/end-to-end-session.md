@@ -29,6 +29,13 @@ reason — [`known-gaps.md`](known-gaps.md) §7.
 | *"a session started from the path view runs, survives a reload, and closes"* (`:72`) | start from `/learn/paths/[id]` → `awaiting_learner` → learner turn → `page.reload()` → second turn → close |
 | *"the start action refuses one entry without disturbing the others"* (`:231`) | the service's own 404, mapped to a sentence, one entry refused, two still offering the action, URL unchanged |
 
+**Corroborated on the merged tree.** The coordinator state-probe of main
+`3ccb650`, 2026-09-02 (an Opus agent run, not a CI run) re-ran the whole
+chromium project against `3ccb650` itself: **313 passed, 3 skipped, 0 failed**,
+with the guided-read row recorded `creates=1 turns=2 mode=mock-pass-through`,
+`runtime=verified`, and **zero paid calls**. CI proves the spec green on the
+tree the PR was built on; the probe proves it green on the tree that merged.
+
 `web/e2e/session.spec.ts` — **4 tests**, WO-W13's, green beside it:
 
 - *"renders the checkpointed margin, and renders it again after a reload"* (`:64`)

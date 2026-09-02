@@ -42,6 +42,12 @@ And every research row in the same file still reads `POST /api/research=1` for
 an intentional submission and `0` everywhere else — WO-21 criterion 3
 unchanged, ten rows of it.
 
+**Reproduced independently.** The coordinator state-probe of main `3ccb650`,
+2026-09-02 — an Opus agent run, not a CI run — brought the stack up on the
+merged tree and reports **every row PASS with `runtime=verified`**, the
+guided-read row `creates=1 turns=2 mode=mock-pass-through`, and **zero paid
+calls**. Same file, same claims, obtained a second way.
+
 ## 2. Two claims, and they are different strengths
 
 | Route | Posture | Strength of the claim |
