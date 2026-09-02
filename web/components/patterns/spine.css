@@ -1,7 +1,7 @@
 /* =========================================================================
- * WO-15 — the trace spine's three structural rules.
+ * WO-15 — the trace spine's four structural rules.
  *
- * There are exactly three things this file exists for, and every one of
+ * There are exactly four things this file exists for, and every one of
  * them is an acceptance criterion rather than a style preference:
  *
  *   1. THE TICK ENTRANCE IS OPACITY AND NOTHING ELSE (03 §5.6, criterion
@@ -27,10 +27,17 @@
  *      that collapsed to nothing when the ledger got long would be the one
  *      thing the design cannot do: hide its own blind spot.
  *
+ *   4. THE ANNOUNCEMENT LINE CANNOT BE GROWN BY THE `Live` BADGE (03 §5.6,
+ *      criterion 7 again — WO-W13c). The status line is a BASELINE-aligned
+ *      flex row, and the badge that mounts on it when the socket opens is
+ *      the one item on it that has no text baseline of its own. See
+ *      `.ew-spine-live` below for the mechanism and the measurement.
+ *
  * NO LITERAL COLOUR, NO LITERAL DURATION AND NO LITERAL LENGTH THAT A TOKEN
  * OWNS. --size-trace-dot and --size-trace-rule were reserved by WO-01 for
  * exactly this surface; the reading column's stability comes from
- * min-height on the two rows a checkpoint can land in.
+ * min-height on the two rows a checkpoint can land in, and from rule 4 on
+ * the line below them.
  * ========================================================================= */
 
 /* -------------------------------------------------------------------------
@@ -124,6 +131,59 @@
  * kept, then a broken rule"). Still no motion: a break is a shape. */
 .ew-spine-void[data-current="false"] {
   border-top-style: dotted;
+}
+
+/* -------------------------------------------------------------------------
+ * 4. The announcement line does not grow when the `Live` badge mounts.
+ *
+ * WHAT WAS MEASURED, AND WHERE. `e2e/cls.spec.ts`'s criterion-5 test failed
+ * on main's CI runs for 4fbe239 and 3ccb650 with a byte-identical signature:
+ * two layout-shift entries one frame apart, the announcement span and the
+ * detail span moving 250 → 253 and then 253 → 250, and every disclosure
+ * below them moving the same 3px down and back. Driving the surface into
+ * the live state and measuring the line directly reproduces it on demand,
+ * on Linux AND on macOS: with the badge on the line the paragraph is 23px
+ * tall and its two text spans start at 253; without it the paragraph is
+ * 20px and they start at 250. The CI runs are not a platform difference —
+ * they are the only ones slow enough to PAINT the one frame in which the
+ * socket is open and the stream has not yet ended, so the badge's mount and
+ * unmount land in two frames instead of being coalesced into none.
+ *
+ * WHY THE BADGE GROWS A LINE ITS OWN HEIGHT FITS ON. The status line is
+ * `items-baseline` (the announcement and its detail must sit on one
+ * baseline; they are two sentences, not two boxes). `StatusBadge` is an
+ * `inline-flex`, so as a flex item it is blockified to `flex`, and a flex
+ * container's baseline is taken from its FIRST flex item — which here is
+ * the 16px `Mark`, an SVG with no text baseline. Chromium therefore
+ * synthesises the badge's baseline from its bottom edge — 18px down a 20px
+ * box, three below where the text beside it puts its own. Aligning those
+ * two baselines pushes the text down 3px and grows the line to 23px. The
+ * badge is exactly as tall as the line it is on; only its baseline
+ * disagrees.
+ *
+ * THE FIX IS ONE PROPERTY, AND IT IS THE HONEST ONE. The badge is a MARK
+ * beside a word, not a third sentence, so it has no business claiming a
+ * baseline on this line: it is centred on it instead. Its height already
+ * equals `--text-ui-sm-line`, so a centred badge occupies the line exactly
+ * and mounting or unmounting it moves nothing. No height is pinned here on
+ * purpose — the line still wraps at 320px, which a fixed height would
+ * forbid (03 §8.3) and which `min-height` could not protect anyway, because
+ * the defect was the line GROWING rather than collapsing.
+ *
+ * NOT `StatusBadge`'s OWN RULE TO DECLARE, and that was checked rather than
+ * assumed: this is the only `items-baseline` row in the product that holds
+ * a badge. The other four (`RouteError`'s digest `dl`, `PathView`'s entries
+ * heading, `LedgerView`'s two card headers) are text against text, where a
+ * shared baseline is the whole point and taking one item out of it would be
+ * the defect. A primitive that refused to be baseline-aligned anywhere
+ * would be fixing this line by breaking those.
+ *
+ * `web/tests/patterns/TraceSpine.test.tsx` holds the class to the badge;
+ * `e2e/cls.spec.ts` measures the geometry in Chromium, which is the only
+ * place layout exists.
+ * ---------------------------------------------------------------------- */
+.ew-spine-live {
+  align-self: center;
 }
 
 /* -------------------------------------------------------------------------

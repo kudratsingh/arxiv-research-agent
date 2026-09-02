@@ -625,6 +625,46 @@ describe("criterion 7 — an arriving checkpoint never moves the reading column"
     expect(after[2]).not.toBe(before[2]);
   });
 
+  /**
+   * WO-W13c. The two tests above are about the tick; this one is about the
+   * line UNDER it, and they are not the same claim.
+   *
+   * The `Live` badge is the only item on the announcement row that is not
+   * text, and the row is `items-baseline`. A flex container's baseline is
+   * taken from its first flex item, which inside `StatusBadge` is a 16px
+   * `Mark` — an SVG with no text baseline — so Chromium synthesises the
+   * badge's baseline from its bottom edge, 3px below the text's, and
+   * aligning the two grew the row from 20px to 23px every time a socket
+   * opened. That is a checkpoint arriving and moving the reading column,
+   * with no transform anywhere in this file for the audit above to find.
+   *
+   * jsdom cannot measure any of it, and `e2e/cls.spec.ts` does. What is
+   * assertable here is the mechanism: the class is on the badge in exactly
+   * the states that render one, and it takes the badge out of the row's
+   * baseline alignment without the row giving that alignment up.
+   */
+  it("the Live badge is centred on the announcement line, not baseline-aligned", () => {
+    expect(ruleBody(SPINE_CSS, ".ew-spine-live")).toMatch(/align-self:\s*center/);
+
+    const style = installStylesheet(SPINE_CSS);
+    for (const id of SPINE_STATES) {
+      const inputs = EVERY_STATE[id];
+      const { view, root } = spine(inputs);
+      const badge = root.querySelector(".ew-spine-live") as HTMLElement | null;
+      if (inputs.observation.connection !== "open") {
+        expect(badge, id).toBeNull();
+      } else {
+        expect(badge, id).not.toBeNull();
+        // The row it sits on is still baseline-aligned: the fix is the badge
+        // stepping out of that alignment, not the row giving it up.
+        expect(badge?.parentElement?.className, id).toContain("items-baseline");
+        expect(getComputedStyle(badge as HTMLElement).alignSelf, id).toBe("center");
+      }
+      view.unmount();
+    }
+    style.remove();
+  });
+
   it("DEFERRED TO WO-21: the CLS number itself", () => {
     // See this file's header. jsdom has no layout, so the measurement is
     // WO-21's Playwright tier; what is asserted above is every property

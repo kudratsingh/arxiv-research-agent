@@ -41,7 +41,12 @@
  *    jsdom cannot measure layout shift, so the CLS 0.000 claim is asserted
  *    here as "no property that could move anything" plus an unchanged-DOM
  *    check around an arriving tick, and MEASURED in WO-21's Playwright
- *    tier. That split is deliberate and is recorded in the test file.
+ *    tier. That split is deliberate and is recorded in the test file — and
+ *    WO-W13c is what the split costs when it is read as "no transform, so
+ *    nothing moves": the status line below moved 3px every time the socket
+ *    opened, because the `Live` badge joined a BASELINE-aligned row with a
+ *    baseline synthesised from a mark. `spine.css` rule 4 is the fix and
+ *    the measurement; nothing about it is visible in a transform audit.
  *
  *  - THE BLIND SPOT IS STATIC, AND AMBIENT MOTION NEEDS AN OPEN SOCKET
  *    (criterion 8, 03 §5.6). `.ew-spine-void` has no animation in any
@@ -266,7 +271,14 @@ export function TraceSpine({
             </span>
           )}
           {model.live ? (
-            <StatusBadge severity="live" ambient>
+            /* `ew-spine-live` is not decoration: it takes the badge OUT of
+               this line's baseline alignment. The badge's baseline is
+               synthesised from a 16px mark rather than from text, so
+               aligning it grew the line from 20px to 23px and moved the
+               reading column by 3px every time the socket opened — which is
+               criterion 7's "a checkpoint arriving must never move the
+               reading column". `spine.css` rule 4 has the measurement. */
+            <StatusBadge severity="live" ambient className="ew-spine-live">
               {SEGMENT_WORD.live}
             </StatusBadge>
           ) : null}
