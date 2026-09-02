@@ -88,7 +88,7 @@ set the house rule against.
 | Path | What it is | Source |
 |---|---|---|
 | [`README.md`](README.md) | This index. | **W19** |
-| [`known-gaps.md`](known-gaps.md) | **17 entries** (one, §6, now resolved and kept struck through). What Gate W1 does not prove, each with owner and what would change it. | **W19** |
+| [`known-gaps.md`](known-gaps.md) | **17 entries** (three — §6, §7 and §12 — now resolved and kept struck through). What Gate W1 does not prove, each with owner and what would change it. | **W19** |
 | [`end-to-end-session.md`](end-to-end-session.md) | Rows 1–2. The browser proof, the three independent cost boundaries on it, the no-client-construction test, and the below-the-browser checkpoint reattachment. | W03/W13/W13b, collected by **W19** |
 | [`paid-path-interdiction.md`](paid-path-interdiction.md) | Row 4. The interceptor's two claims and their different strengths, and the A/B control for the mock-mode pin. | W13/W13b, collected by **W19** |
 | [`flags.md`](flags.md) | Row 3. The four-flag inventory, the ladder, the compose-default nuance, and every flag-off/flag-on test. | **W19** |
@@ -97,7 +97,7 @@ set the house rule against.
 | [`honesty-inventory.md`](honesty-inventory.md) | Row 9. Four items, four owning cards, named tests with counts. | W02/W04/W07/W14, collected by **W19** |
 | [`artifacts/scripted-simulation-summary.md`](artifacts/scripted-simulation-summary.md) | **Copied verbatim.** `scripted-simulation-summary` artifact of CI run 33630982183 on `3ccb650`. 15 sessions, 0 errors, $0.0000 across all four cost columns. | CI, collected by **W19** |
 | [`artifacts/research-post-count.txt`](artifacts/research-post-count.txt) | **Copied verbatim.** `web-e2e-33630982183` artifact, attempt 2 (the green one). Carries the `mode=` rows and the `[mock-mode]` precondition line. | CI, collected by **W19** |
-| [`artifacts/ci-e2e-cls-failure.txt`](artifacts/ci-e2e-cls-failure.txt) | **Copied verbatim** from two GitHub Actions job logs: the `cls.spec.ts` failure on `4fbe239` and again on `3ccb650`. See [`known-gaps.md`](known-gaps.md) §7. | CI, collected by **W19** |
+| [`artifacts/ci-e2e-cls-failure.txt`](artifacts/ci-e2e-cls-failure.txt) | **Copied verbatim** from two GitHub Actions job logs: the `cls.spec.ts` failure on `4fbe239` and again on `3ccb650`. Cause found and fixed by WO-W13c (PR #155, `9fa99b8`, 2026-09-02); the log is kept as the record of the failure. See [`known-gaps.md`](known-gaps.md) §7. | CI, collected by **W19** |
 
 **Cited, not copied** (too large, or of no use out of context): the whole
 `web-e2e-33630982183` artifact (1.3 MB attempt 2 / 5.5 MB attempt 1 — axe
@@ -196,12 +196,21 @@ Three more, for completeness, all after the §5 merge train:
   (`known-gaps.md` §6) and introducing the mirror coupling now recorded as
   `known-gaps.md` §17. **It is one commit past this pack's baseline**, so no §6
   status above moves on account of it.
-- **WO-W13c is in flight** (`fix/w13c-cls-conversation-route`) on the
-  `cls.spec.ts` failure and the e2e overlay's daemon-global image tags
-  (`known-gaps.md` §7, §8).
-- **WO-W17b is in flight** (`feat/w17b-pilot-identity-slot`) on the pilot
-  identity copy, under an SR-07-compliant server-resolved descriptor
-  (`known-gaps.md` §12).
+- ~~**WO-W13c is in flight**~~ — **WO-W13c merged** as PR
+  [#155](https://github.com/kudratsingh/arxiv-research-agent/pull/155) /
+  `9fa99b8` on 2026-09-02, resolving the `cls.spec.ts` failure at its cause and
+  interpolating the e2e overlay's daemon-global image tags (`known-gaps.md` §7,
+  §8). **It is five commits past this pack's baseline**, so no §6 status above
+  moves on account of it.
+- ~~**WO-W17b is in flight**~~ — **WO-W17b merged** as PR
+  [#153](https://github.com/kudratsingh/arxiv-research-agent/pull/153) /
+  `72e65b9` on 2026-09-02, resolving the pilot identity copy under an
+  SR-07-compliant server-resolved descriptor — `shared` / `pilot` /
+  `unresolved`, derived per request on the server and handed to the shell as a
+  prop, mode-off byte-identity proved twice, pilot e2e **5 passed** locally
+  (`known-gaps.md` §12). **It is two commits past this pack's baseline, and
+  merged six minutes before the pack itself**, so no §6 status above moves on
+  account of it.
 
 ---
 
@@ -298,6 +307,23 @@ are right.**
   The pack does not claim to know which side re-classified the eight; it
   records both with their source.
 
+**Added 2026-09-02, after WO-W13c reported: two of the probe's `cls.spec.ts`
+findings were wrong, and PR
+[#155](https://github.com/kudratsingh/arxiv-research-agent/pull/155)
+(`9fa99b8`) overturned them.** The probe had listed *the Live badge mount*
+among the causes it **eliminated by measurement**, and placed the regression
+window at WO-W13's `web/lib/job/machine.ts` change. The badge mount **is** the
+cause — its baseline grows the spine's status line by 3px — the machine is not
+involved, and the defect **predates WO-W13**, whose change to this route was one
+of timing rather than geometry. Per #155, the elimination *"was measuring the
+settled DOM, where the badge is already gone"*: the sampling window did not
+include the mount frame. What the probe classified correctly is the part that
+held — deterministic and CI-environment-conditioned, not flaky, with the shape
+(2 of 5 main runs, never on a PR, 80/80 green locally) unchanged. The verdict
+above is unaffected: main was HEALTHY at `3ccb650` on every tier, and this is a
+correction to one gap's diagnosis, not to a tier result. The full record is
+[`known-gaps.md`](known-gaps.md) §7.
+
 ### 6.2 What CI does not cover
 
 **CI proves**, on `3ccb650` (run
@@ -333,8 +359,10 @@ ordinary e2e overlay hardcodes daemon-global image tags —
 on one machine therefore contend for the same tags, which is the
 `container_name` hazard [§5.4](../../05-WEDGE-WORK-ORDERS.md#54-fleet-coordination-hazards)
 already names, one layer down. The probe ran under a **scratchpad overlay with
-its own tags**, as §5.4's mitigation requires. Upstreaming interpolated tags is
-**queued with WO-W13c**.
+its own tags**, as §5.4's mitigation requires. ~~Upstreaming interpolated tags
+is **queued with WO-W13c**.~~ **Done 2026-09-02 by WO-W13c** (PR #155,
+`9fa99b8`): both tags are now interpolated — `E2E_APP_IMAGE`, `E2E_WEB_IMAGE`,
+defaults unchanged — and documented in `web/e2e/README.md`.
 
 ---
 
@@ -384,9 +412,21 @@ them rather than choosing:
 3. **Close it, conditionally, on WO-W13c reporting**: the `cls.spec.ts`
    failure the state probe classifies as **deterministic and
    CI-environment-conditioned** — 2 of 5 main CI runs since `4fbe239`, never on
-   a PR, 80/80 green locally, regression window opening at WO-W13's
-   `web/lib/job/machine.ts` change (`known-gaps.md` §7). The tutor's
+   a PR, 80/80 green locally, ~~regression window opening at WO-W13's
+   `web/lib/job/machine.ts` change~~ (`known-gaps.md` §7). The tutor's
    mastery-frame close line is **no longer** a companion condition: WO-W03b
    closed it in PR #151 (`known-gaps.md` §6), one commit past this baseline.
+
+   **Added 2026-09-02: WO-W13c has reported, and merged.** PR
+   [#155](https://github.com/kudratsingh/arxiv-research-agent/pull/155) /
+   `9fa99b8` fixed the failure at its cause — the `Live` badge, the only
+   non-text item on a baseline-aligned status line, taking its baseline from a
+   16px SVG and growing the line 20→23px — with a new browser test that goes
+   red without the fix and **20/20 green** with it. **This option's condition is
+   met.** The struck clause above is the probe's regression window, which #155
+   overturned: the machine is not involved and the defect predates WO-W13
+   (§6.1). The coordinator took option **1** on the day
+   ([`../../STATUS.md`](../../STATUS.md)); nothing here reopens it, and no §6
+   status above moves.
 
 Whichever it is, it belongs in [`STATUS.md`](../../STATUS.md) and not here.

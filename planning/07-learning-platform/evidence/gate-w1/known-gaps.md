@@ -3,26 +3,37 @@
 WO-W19 acceptance criterion 2: *"`known-gaps.md` exists and is non-empty (an
 empty gap list at a gate is the revamp's definition of dishonesty)."*
 
-This is the honest list. **Seventeen entries, one of them now resolved.** Each
+This is the honest list. **Seventeen entries, three of them now resolved.** Each
 says what is not proven, why it is not proven, who owns it, and what would
-change it. Several are ordinary consequences of the no-cost boundary; §12 is an
+change it. Several are ordinary consequences of the no-cost boundary; §12 was an
 inconsistency inside the merged tree that a reader would meet as a false
-sentence; §7 and §16 are real test failures a re-run hides, and §7 is on `main`.
+sentence, and it is fixed; §7 and §16 are real test failures a re-run hides, and
+§7 was on `main` until WO-W13c fixed it.
 
-**§6 is resolved** — by WO-W03b (PR #151, `1026534`), one commit after this
-pack's baseline. It is kept, struck through and marked, because a gap list that
-quietly loses its closed items cannot be audited. Its fix introduced **§17**.
+**Three entries are resolved**, each kept, struck through and marked, because a
+gap list that quietly loses its closed items cannot be audited:
+
+- **§6** — by WO-W03b (PR #151, `1026534`), one commit after this pack's
+  baseline. Its fix introduced **§17**.
+- **§7** — by WO-W13c (PR #155, `9fa99b8`), five commits after it. That fix also
+  closed the tag hazard recorded at the foot of **§8**, and overturned two of
+  the state probe's findings, which §7 records rather than deletes.
+- **§12** — by WO-W17b (PR #153, `72e65b9`), which merged six minutes *before*
+  this pack did. What closed is the false statement about data separation; the
+  entry's other half, WO-W17's deferred criterion 5, still waits on W-OD-5.
 
 Assembled against `origin/main` at **`3ccb650`** on 2026-09-02, and revised
 against the **coordinator state-probe of main `3ccb650`, 2026-09-02** — an Opus
 agent run, not a CI run. The probe found main **HEALTHY on every tier**
 ([`README.md`](README.md) §6.1); it also **corrected §7** and **added §16**,
-and both corrections are kept visible rather than silently applied.
+and both corrections are kept visible rather than silently applied. Two of the
+probe's own §7 findings were themselves wrong, and PR #155 corrected them; that
+correction is kept visible too, in §7.
 
-Two cards are in flight against three of the seventeen: **WO-W13c**
-(`fix/w13c-cls-conversation-route` — §7 and §8) and **WO-W17b**
-(`feat/w17b-pilot-identity-slot` — §12). Neither is merged, and neither changes
-a §6 status in [`README.md`](README.md).
+Two cards were in flight against three of the seventeen when this pack was
+assembled, and **both have since merged**: **WO-W13c** (§7 and §8) as PR #155,
+`9fa99b8`, and **WO-W17b** (§12) as PR #153, `72e65b9`. All three entries are
+marked below. Neither card changes a §6 status in [`README.md`](README.md).
 
 ---
 
@@ -150,11 +161,71 @@ model, not the learner."*
    **§17**.
 
 **This landed one commit *after* this pack's baseline.** The pack is assembled
-against `3ccb650`; `1026534` is its child. This entry and **§17** are the only
+against `3ccb650`; `1026534` is its child. This entry and **§17** were the only
 two places in this directory that describe anything but `3ccb650` — said here
-rather than by silently re-basing the pack around a late fix.
+rather than by silently re-basing the pack around a late fix. **§7, §8 and §12
+now do too**, for the same reason and in the same way: WO-W13c merged as
+`9fa99b8`, five commits past the baseline, and WO-W17b as `72e65b9`, two.
 
-## 7. `e2e/cls.spec.ts` fails on `main`, on 2 of the last 5 runs, and a re-run hides it.
+## 7. ~~`e2e/cls.spec.ts` fails on `main`, on 2 of the last 5 runs, and a re-run hides it.~~ — **RESOLVED**
+
+**Resolved by WO-W13c, PR [#155](https://github.com/kudratsingh/arxiv-research-agent/pull/155),
+merged 2026-09-02T13:47:17Z as `9fa99b8`.** The entry is kept rather than
+deleted, and so is the diagnosis it carried, because a gap list that quietly
+loses its closed items cannot be audited — and one that quietly loses its wrong
+answers teaches the next probe nothing. **Two of the state probe's findings
+below are wrong.** They are struck where they stand and corrected under *"What
+the probe got right, and where its elimination failed"*.
+
+**The cause.** The spine's status line is `flex flex-wrap items-baseline`, and
+`StatusBadge` is the only item on it that is not text. As a flex item it is
+blockified to `display:flex`, and a flex container's baseline is taken from its
+**first** flex item — the 16px `Mark`, an SVG with no text baseline — so
+Chromium synthesises the badge's baseline from its bottom edge, three pixels
+below where the text beside it puts its own. Aligning the two **grows** the
+line, and the growth pushes the paragraph's own children down. PR #155's direct
+measurement, taken by parking the surface in the live state:
+
+| | line height | announcement `top` | detail `top` |
+|---|---|---|---|
+| badge on the line | **23** | **253** | **253** |
+| badge absent | 20 | 250 | 250 |
+
+*"The CI numbers, exactly — and on macOS as well as Linux"* (#155). So the
+geometry was never platform-specific; only the *painting* was environmental.
+The badge mounts when the stream's headers land and unmounts when its body ends,
+and **only a 2-vCPU runner is slow enough to paint the frame in between** —
+everywhere else React coalesces the two commits into none.
+
+An element that grows in place has not shifted, so it never appears in
+Chromium's `sources`. That is why the entry's own tell was the *absence* of
+movement: `span.ew-spine-void` reads `197→197` because it moved **35px
+sideways**, not down, and *"nothing above y=250 moved down"* (#155).
+
+**The fix** is one property: `.ew-spine-live { align-self: center }` in
+`web/components/patterns/spine.css`, applied to the badge in `TraceSpine.tsx`.
+The badge's height already equals `--text-ui-sm-line`, so a centred badge
+occupies the line exactly and mounting or unmounting it moves nothing. **No
+height is pinned** — the line still wraps at 320px, which a fixed height would
+forbid, and `min-height` could not have caught a line that *grew*.
+
+**What now catches it.** A new `cls.spec.ts` test parks the surface in the live
+state with a real open stream and asserts the line's two numbers; on the Linux
+container (`playwright:v1.62.1-noble`, `--repeat-each=10`) it was **1/1 red
+including the retry** before the fix and **20/20 green** after, with the old
+spec 10/10 green throughout. The full `chromium` project on macOS reads **314
+passed, 3 skipped, 0 failed** after. `TraceSpine.test.tsx` holds the class to
+the badge in exactly the states that render one, and holds the row to
+`items-baseline` — the fix is the badge stepping out of that alignment, not the
+row giving it up. **The CLS attribution itself is hardened**: it now prints
+whole rects for both frames plus each source's *parent* with its computed
+styles, because the thing that grew is the thing one level up. Budgets: no
+ceiling moved (emitted CSS **11,335 → 11,365 B** against 12,288); coverage held.
+Four darwin PNGs were retaken — `running` and `plan-review`, 1440px, light and
+dark, the only sweep states whose stream stays open — because the committed
+pixels had the defect baked in.
+
+**What it was, as recorded before the fix**, kept below.
 
 Not a one-off. Verbatim log in
 [`artifacts/ci-e2e-cls-failure.txt`](artifacts/ci-e2e-cls-failure.txt).
@@ -186,36 +257,60 @@ An earlier draft of this entry called it "two consecutive heads of `main`".
 - **Never on a PR run.** Only on `main`.
 - **80/80 green locally**, at **4 and at 12 workers** — so it is not a load or
   contention effect that local oversubscription can reproduce.
-- **Three candidate causes eliminated by measurement**: a mono-font swap, the
-  Live badge mount, and the ledger reserve.
+- ~~**Three candidate causes eliminated by measurement**: a mono-font swap, the
+  Live badge mount, and the ledger reserve.~~ — **WRONG on one of the three.**
+  The **Live badge mount is the cause** (#155). The mono-font swap and the
+  ledger reserve stand eliminated.
 - **Classified as deterministic and CI-environment-conditioned**, not as a
   random flake — which is a materially worse finding than "flaky", because a
   deterministic failure that only the CI environment expresses will keep
   recurring on `main` until the environmental condition is named.
-- **The regression window opens at WO-W13's `web/lib/job/machine.ts` change**,
-  which is the first plausible edge in the range.
+- ~~**The regression window opens at WO-W13's `web/lib/job/machine.ts` change**,
+  which is the first plausible edge in the range.~~ — **WRONG.** The machine is
+  not involved; `awaiting_learner`/`turn_ready` and the transition table are
+  untouched by the fix. **The defect predates WO-W13**, which changed this
+  route's *timing* — auth on, a heavier stack — and not its geometry.
 
-The spec is WO-20's (`e2e/cls.spec.ts:50`, criterion 5, `03` §5.6's
+~~The spec is WO-20's (`e2e/cls.spec.ts:50`, criterion 5, `03` §5.6's
 no-translation rule on `/c/[id]`), and neither WO-W13 nor WO-W13b touches what
 that route renders — but the window makes W13 the place to start looking rather
-than a coincidence to note.
+than a coincidence to note.~~ The spec is still WO-20's, at the same line and
+under the same rule; the sentence about the window is not — W13 is where the
+*timing* changed, not where the defect entered.
 
-**Owner: WO-W13c, in flight** (`fix/w13c-cls-conversation-route`). Its plan, in
-order: pull the retained CI trace from run
+### What the probe got right, and where its elimination failed
+
+**Right, and it mattered.** The classification — *deterministic and
+CI-environment-conditioned, not flaky* — is exactly what #155 found: fixed
+geometry, reproducible on demand once the surface is parked in the live state,
+with only the paint of the intermediate frame conditioned on a slow runner. The
+shape it measured (2 of 5 main runs, never on a PR, 80/80 green locally at 4 and
+at 12 workers) is unchanged, and it is what ruled out load and contention.
+
+**Where it failed.** Per #155: *"the earlier elimination of 'the Live badge
+mount' was measuring the settled DOM, where the badge is already gone."* The
+probe's sampling window did not include the mount frame — the badge is on the
+line only between the stream's headers landing and its body ending — so the one
+state that expresses the defect was never in the sample. An elimination is only
+as strong as the window it samples, and this one was measured outside it.
+
+**Owner: WO-W13c — merged** (PR #155, `9fa99b8`). It did what its plan said, in
+order: pulled the retained CI trace from run
 [33630982183](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33630982183),
-reproduce inside the Playwright **Linux** container, and **fix at the cause** —
-not by widening the assertion, which would delete the only evidence that `03`
-§5.6's no-translation rule is being kept.
+reproduced inside the Playwright **Linux** container, and **fixed at the
+cause** — not by widening the assertion, which would have deleted the only
+evidence that `03` §5.6's no-translation rule is being kept.
 
-The same card also **interpolates the e2e overlay's daemon-global image tags**
+The same card also **interpolated the e2e overlay's daemon-global image tags**
 (§8), because a reproduction attempt needs a second stack on one machine and
-that is precisely what the hardcoded tags prevent.
+that is precisely what the hardcoded tags prevented.
 
 **The rest of this pack cites attempt 2 of run 33630982183, which is green.** It
 does so knowing that attempt 1 of the same run was not, and the pack does not
 treat a passing re-run as evidence that the first run did not happen. **This
-entry stays open until WO-W13c reports**, and a Gate W1 ruling should say
-explicitly whether it blocks.
+entry stayed open until WO-W13c reported**; it reported on 2026-09-02 with the
+cause above, and the Gate W1 ruling in [`../../STATUS.md`](../../STATUS.md) had
+already recorded that it did not block the close.
 
 ## 8. Three parts of the browser evidence exist only as local runs.
 
@@ -244,8 +339,12 @@ daemon-global image tags (`arxiv-research-agent:local`,
 `arxiv-research-agent-web:wo21-e2e`), so two stacks on one machine contend for
 the same tags — the `container_name` hazard §5.4 already names, one layer down.
 The probe worked around it with a scratchpad overlay carrying its own tags.
-Upstreaming interpolated tags is **queued with WO-W13c**; until then, anyone
-running a second stack must do what the probe did.
+~~Upstreaming interpolated tags is **queued with WO-W13c**; until then, anyone
+running a second stack must do what the probe did.~~ **Done: WO-W13c (PR #155,
+`9fa99b8`, 2026-09-02) interpolated both tags** — `E2E_APP_IMAGE` and
+`E2E_WEB_IMAGE`, defaults unchanged, documented in `web/e2e/README.md` with the
+five exports a second worktree needs. The three local-only items in the table
+above are unaffected; this paragraph's hazard is the part that closed.
 
 ## 9. `total-transferred-js` is still an unmeasured EXTERNAL budget row.
 
@@ -281,7 +380,29 @@ original §5 owned the session-start action. The consequence for this pack: the
 end-to-end row rests on a spec that has been on `main` for one CI run, and that
 run's `web e2e` job failed for the unrelated reason in §7.
 
-## 12. WO-W17 merged at half its scope; the identity copy on the pilot path is wrong.
+## 12. ~~WO-W17 merged at half its scope; the identity copy on the pilot path is wrong.~~ — **RESOLVED**
+
+**Resolved by WO-W17b, PR [#153](https://github.com/kudratsingh/arxiv-research-agent/pull/153),
+merged 2026-09-02T13:22:38Z as `72e65b9`** — six minutes before this pack itself
+landed (`f6fce61`, 13:29:05Z), so the entry was already describing a sentence
+that had left `main`. It is kept, struck through and marked, for the same reason
+§6 and §7 are.
+
+**The fix, in one sentence.** `web/lib/server/identity.ts` derives a
+serialisable per-request descriptor — `{kind:"shared"} | {kind:"pilot",
+username} | {kind:"unresolved"}` — *"from the **same** environment and the
+**same** two edge headers `lib/server/pilot.ts` already reads for the credential
+seam"*, and hands it to the shell as a prop, so *"the shell renders what it is
+handed and has no branch of its own to be wrong about"* (#153); **mode off is
+byte-identical, proved twice** — in jsdom against the pre-change JSX, and by
+diffing the SSR bytes of `/` between containers built on `3ccb650` and on the
+branch — and the pilot e2e read **5 passed** on an isolated local stack. No
+runtime flag was added to `web/`, per SR-07.
+
+**What #153 did not close is a deferral, not a defect.** The heading's first
+clause stands: WO-W17's criterion 5 — live pilot sessions — still waits on
+**W-OD-5**, which §10 says must approve concrete SR-09 values rather than the
+shipped defaults. What closed is the false statement about data separation.
 
 PR #149 shipped the no-cost half (ADR 0063). Criterion 5 — live pilot sessions —
 is **deferred to W-OD-5** and *"nothing here is authorised to run."*
@@ -296,12 +417,11 @@ this wave, so the discrepancy was written into ADR 0063 §Consequences,
 invitation is sent. It is a false statement about data separation, shown to the
 people the separation is for."*
 
-**Owner: WO-W17b, in flight** (`feat/w17b-pilot-identity-slot`), under an
-**SR-07-compliant server-resolved descriptor** — the identity the shell states
-is resolved on the server and handed down, rather than a client-side guess at
-which mode the deployment is in. That shape is why it is a card and not a copy
-edit: the true sentence differs per deployment, and only the server knows
-which.
+**Owner: WO-W17b — merged** (PR #153, `72e65b9`), under an **SR-07-compliant
+server-resolved descriptor** — the identity the shell states is resolved on the
+server and handed down, rather than a client-side guess at which mode the
+deployment is in. That shape is why it was a card and not a copy edit: the true
+sentence differs per deployment, and only the server knows which.
 
 ## 13. The recorded W08/W03 divergence was resolved by moving an expectation.
 
