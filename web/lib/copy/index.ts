@@ -32,6 +32,7 @@ import { NOT_REPORTED } from "./errors";
 
 export * from "./errors";
 export * from "./learn";
+export * from "./ledger";
 export * from "./run";
 export * from "./threads";
 
@@ -198,6 +199,122 @@ export const LEXICON_PHRASES: readonly ForbiddenPhrase[] = [
   },
 ];
 
+// ===========================================================================
+// BEGIN PEDAGOGY VOCABULARY — owned by WO-W14, APPEND-ONLY BELOW.
+//
+// A later learning work order adds entries to `PEDAGOGY_PHRASES` inside this
+// fence and touches nothing else in this file. That is the coordination rule
+// 05-WEDGE-WORK-ORDERS.md §5.4 assigns to this list, and it is why the list
+// lives in the dictionary rather than inside a test: it is reviewable in one
+// place, and a surface that wants to argue with it has to edit it.
+//
+// WHY IT IS A SEPARATE LIST AND NOT MORE ROWS IN `FORBIDDEN_PHRASES`. The
+// §5.5 deny-list holds for the whole product. This list holds for the copy
+// the `(learn)` route group renders, and one of its entries — `score` —
+// cannot hold product-wide, for exactly the reason `LEXICON_PHRASES` gives
+// about the same word: "quality score" is the research metric's real name
+// (`run.qualityLabel`, `metrics.qualityLabel`) and banning it everywhere
+// would fail the brief's own sentences. A learning surface is different:
+// 01-LEARNING-AGENT.md §4.3 keeps the assessment judge's output as advice to
+// the tutor rather than a number shown to the learner, so on these surfaces
+// there is no score to name.
+//
+// WHICH MODULES IT IS APPLIED TO IS *DISCOVERED*, NOT LISTED HERE. The gate
+// walks the import graph of `app/(learn)/` and holds every copy module it
+// reaches to this list, so WO-W13's session strings in `./learn.ts` — and
+// any module a future learning surface introduces — are covered the moment
+// they are rendered there, with no list to remember to update. A module the
+// walk finds that the gate's own table does not carry fails the coverage
+// assertion in `web/tests/copy/forbidden.test.ts` rather than escaping.
+// ===========================================================================
+
+/**
+ * The pedagogy vocabulary: RR-L09's enforcement point (03 §7).
+ *
+ * `01-LEARNING-AGENT.md` §4.1 names three allowed currencies of progress —
+ * assessment events, repetition history, artifacts — and one banned one:
+ * "You are 87% through Transformers" is a claim about a latent variable no
+ * LLM judge can measure. `00-VISION.md` §5.5 extends that to the lexicon a
+ * learning surface may use at all: **Demonstrated**, never mastered,
+ * completed or unlocked; **Ledger**, never profile, XP or stats; **Review
+ * due**, never streak.
+ *
+ * The backend already refuses to *store* such a thing — `BANNED_SCALAR_TOKENS`
+ * in `src/learning/progress_store.py` rejects the key at the write boundary,
+ * a CHECK constraint rejects it in the database, and `_SCHEDULE_LABEL_PATTERN`
+ * bounds what a label may say. This list is the same ban one tier up, where
+ * copy could reintroduce by wording what the store refuses by schema: a
+ * surface needs no field named `mastery` to render the sentence "87%
+ * mastered".
+ */
+export const PEDAGOGY_PHRASES: readonly ForbiddenPhrase[] = [
+  {
+    id: "mastery",
+    pattern: /\bmaster(?:ed|s|ing|y)?\b/i,
+    why: "00 §5.5: a demonstrated capability is **Demonstrated**. Mastery is the latent variable 01 §4.1 says nothing here can measure.",
+  },
+  {
+    id: "percentage of knowledge",
+    pattern: /%|\bpercent(?:age|ile)s?\b/i,
+    why: "01 §4.1's banned currency: a knowledge percentage has no denominator any event could supply.",
+  },
+  {
+    id: "unlocked",
+    pattern: /\bunlock(?:ed|s|ing)?\b/i,
+    why: "00 §5.5: content is not withheld and then released; a path is a sequence, not a gate.",
+  },
+  {
+    id: "xp",
+    pattern: /\bxp\b|\bexperience points?\b|\bpoints? earned\b|\bearn(?:ed|s)? \d+\b/i,
+    why: "00 §5.5: the record of demonstration is the **Ledger**, never XP or stats.",
+  },
+  {
+    id: "streak",
+    pattern: /\bstreaks?\b|\bchains?\b|\bfreezes?\b/i,
+    why: "00 §5.5: spaced-retrieval continuity is **Review due**, never a streak, chain or freeze.",
+  },
+  {
+    id: "streak guilt",
+    pattern:
+      /\bdon['’]t (?:break|lose|stop)\b|\bkeep it up\b|\bfalling behind\b|\bfell behind\b|\byou missed\b|\bback on track\b/i,
+    why: "00 §5.4: a lapse is a truthful state with a one-tap remedy, not a shame badge. Guilt is not a currency of progress.",
+  },
+  {
+    id: "badge",
+    pattern: /\bbadges?\b|\bcertificates?\b|\bcertifications?\b/i,
+    why: "00 §5.1: certificates attest attendance. Marcus's shareable proof falls out of the evidence, not out of a ribbon.",
+  },
+  {
+    id: "proficiency",
+    pattern: /\bproficien\w*|\bcompetenc\w*/i,
+    why: "Mirrors `BANNED_SCALAR_TOKENS` in src/learning/progress_store.py: both read as a knowledge scalar.",
+  },
+  {
+    id: "knowledge scalar",
+    pattern:
+      /\b(?:knowledge|skill|mastery|learning|comprehension)[ _-](?:level|score|scalar|meter|bar|rating)\b/i,
+    why: "01 §4.1: no scalar over a latent variable, whatever it is called.",
+  },
+  {
+    id: "score",
+    pattern: /\bscores?\b|\bscored\b|\bscoring\b/i,
+    why: "01 §4.3: the judge's output is advice to the tutor, never a number shown to the learner. Learn-surface only — 'quality score' is the research metric's real name.",
+  },
+  {
+    id: "grade",
+    pattern: /\bgrades?\b|\bgraded\b|\bgrading\b|\bmarks? out of\b/i,
+    why: "01 §4.3 and the tutor prompt's own prohibition: an assessment is `recorded_ungraded`. The surface may not grade what the agent refuses to.",
+  },
+  {
+    id: "dashboard",
+    pattern: /\bdashboards?\b/i,
+    why: "00 §5.5, the anti-dashboard-soup rule: the daily surface is **Today** and the record is the **Ledger**.",
+  },
+];
+
+// END PEDAGOGY VOCABULARY — append above this line.
+// ===========================================================================
+
 /**
  * The qualifiers 03 §5.5 REQUIRES, as opposed to the phrases it forbids.
  *
@@ -218,6 +335,21 @@ export const REQUIRED_QUALIFIERS = {
 export const DENY_LIST: readonly ForbiddenPhrase[] = [
   ...FORBIDDEN_PHRASES,
   ...OWNERSHIP_PHRASES,
+];
+
+/**
+ * What a `(learn)` copy module is held to: everything above, plus pedagogy.
+ *
+ * The product-wide list is not relaxed for the learning surfaces — a
+ * learning surface may no more invent an ETA than a run surface may. This
+ * is `DENY_LIST` with the vocabulary that only makes sense where a learner
+ * is reading, and it is the list
+ * `web/tests/copy/forbidden.test.ts` applies to every copy module the
+ * `(learn)` route group's import graph reaches.
+ */
+export const LEARN_DENY_LIST: readonly ForbiddenPhrase[] = [
+  ...DENY_LIST,
+  ...PEDAGOGY_PHRASES,
 ];
 
 /** The ids of every banned form `text` contains. Empty means clean. */

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import LearnLayout from "@/app/(learn)/layout";
 import LearnPage from "@/app/(learn)/learn/page";
 import LearnPathPage from "@/app/(learn)/learn/paths/[id]/page";
+import LearnProgressPage from "@/app/(learn)/learn/progress/page";
 import LearnSessionPage from "@/app/(learn)/learn/sessions/[id]/page";
 
 import { render, screen } from "../support/render";
@@ -40,6 +41,10 @@ vi.mock("@/components/features/SessionDetailSurface", () => ({
   ),
 }));
 
+vi.mock("@/components/features/LedgerSurface", () => ({
+  LedgerSurface: () => <div data-testid="ledger" />,
+}));
+
 describe("the learning route group", () => {
   it("shares the workbench shell and query boundary", () => {
     render(<LearnLayout><div data-testid="child" /></LearnLayout>);
@@ -51,6 +56,11 @@ describe("the learning route group", () => {
   it("composes the path-list route", () => {
     render(<LearnPage />);
     expect(screen.getByTestId("path-list")).toBeVisible();
+  });
+
+  it("composes the Ledger route inside the same shell and query boundary", () => {
+    render(<LearnProgressPage />);
+    expect(screen.getByTestId("ledger")).toBeVisible();
   });
 
   it("passes the decoded dynamic segment to the path surface", async () => {

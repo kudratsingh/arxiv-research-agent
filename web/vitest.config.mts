@@ -260,11 +260,63 @@ export default defineConfig(async () => ({
       // the same branch set under load. It is seeded at the LOWER of the
       // two. A column seeded at the luckier run is a column that goes red
       // on somebody else's PR for no reason of theirs.
+      //
+      // ---------------------------------------------------------------
+      //
+      // WO-W14 RE-SEEDED ALL FOUR, UPWARD, ON THE TREE REBASED ONTO WO-W13
+      // (main 4fbe239), at 3,313 tests across `unit` and `storybook`:
+      // 2721/2774 statements, 1869/1991 branches, 1040/1173 functions,
+      // 2216/2237 lines. Previous values, for the audit trail:
+      // 97.61 / 93.37 / 88.1 / 98.57.
+      //
+      // MEASURED ON THE UNION, NOT ON EITHER BRANCH. WO-W13 measured
+      // 98.04 / 93.67 / 88.16 / 99.04 on its own tree and did not re-seed;
+      // 05-WEDGE-WORK-ORDERS.md §5.4 gives the re-seed to whichever of the
+      // three Phase-W surface PRs merges last, which is this one, and the
+      // union is above WO-W13's figure in every column. Seeding either
+      // branch's own numbers would have made the other's merge red for a
+      // reason that has nothing to do with it — the mistake WO-31's note
+      // records about measuring before a rebase rather than after.
+      //
+      // WHY THEY ROSE. Two surfaces arrived with their tests rather than
+      // after them. All four Ledger modules — `lib/copy/ledger.ts`,
+      // `components/patterns/LedgerView.tsx`,
+      // `components/features/LedgerSurface.tsx` and
+      // `app/(learn)/learn/progress/page.tsx` — measure 100 in every column,
+      // including the two defensive branches the recorded contract fixture
+      // cannot reach (an event with no `path_id`, a timestamp with no date),
+      // which are driven from summaries derived from that fixture rather
+      // than left uncovered.
+      //
+      // THE FUNCTIONS HAZARD DOCUMENTED ABOVE DID NOT FIRE ON THIS BRANCH,
+      // and that is worth recording because it is the mechanism the hazard
+      // note prescribes rather than luck. `LedgerView.stories.tsx` imports
+      // `lib/copy/ledger` and the contract fixture and nothing else from
+      // `lib/` at runtime — the `LearnerProgressSummary` import is type-only
+      // and erased — so no module became newly doubly instrumented.
+      // `functions` still lags the other three by ten points for the reason
+      // the hazard note gives, and de-duplicating the two projects' function
+      // lists is still queued.
+      //
+      // MEASURED THREE TIMES ON THE REBASED TREE. `statements`, `functions`
+      // and `lines` read identically every time (98.08 / 88.66 / 99.06);
+      // `branches` read 93.82, 93.87 and 93.82 — WO-31's observed variance,
+      // in the same column, for the reason its note gives: the storybook
+      // project's `play` functions do not always walk the same branch set.
+      // The same variance appeared on this branch before the rebase (93.59,
+      // 93.59, 93.64), so it is a property of the suite rather than of one
+      // tree. `statements` and `lines` are therefore seeded AT the
+      // measurement; `branches` is seeded at 93.8, just under the LOWEST of
+      // the three, and `functions` keeps the small headroom this file has
+      // given it since PR #108 — 88.6 against a measured 88.66. A column
+      // seeded at the luckier run goes red on somebody else's PR for no
+      // reason of theirs. Even so both of those floors rise: branches
+      // +0.43, functions +0.5.
       thresholds: {
-        statements: 97.61,
-        branches: 93.37,
-        functions: 88.1,
-        lines: 98.57,
+        statements: 98.08,
+        branches: 93.8,
+        functions: 88.6,
+        lines: 99.06,
       },
     },
     projects: [

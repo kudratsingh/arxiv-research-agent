@@ -33,8 +33,8 @@ describe("guided-session honesty copy", () => {
         "complete": "This session advanced one guided reading and preserved your own explain-back as evidence.",
         "costCapDegraded": "The session closed with a bounded fallback instead of spending beyond its limit.",
         "costCapRefused": "The next model call was refused before spending beyond this session’s limit.",
-        "unassessed": "This is an explicit missing assessment, not a grade or a claim of mastery.",
-        "ungraded": "Your explain-back was saved as evidence. It has not been turned into a grade.",
+        "unassessed": "This is an explicit missing assessment. Nothing was judged and nothing is claimed.",
+        "ungraded": "Your explain-back was saved as evidence. It was recorded, not judged.",
       }
     `);
   });
@@ -70,7 +70,7 @@ describe("guided-session honesty copy", () => {
         "reconnecting": "Connection interrupted. The browser is reattaching to the same session.",
         "resumed": "Session restored from its durable checkpoint.",
         "transcriptUnavailable": "The session is available, but its saved reading margin could not be loaded. Nothing has been reconstructed from stream events.",
-        "workingBody": "No percentage or completion estimate is shown. The next observed checkpoint will appear when the service publishes it.",
+        "workingBody": "No completion estimate is shown. The next observed checkpoint will appear when the service publishes it.",
         "workingHeading": "The tutor is preparing the next prompt",
       }
     `);
@@ -80,10 +80,14 @@ describe("guided-session honesty copy", () => {
     // Word-boundary matched: a substring search would also fire on unrelated
     // prose, and a gate that cries wolf is a gate that gets relaxed.
     const banned = /\b(dashboards?|mastered|mastery)\b/i;
+    // NO CARVE-OUT. This test used to exempt `unassessedBody`, which said
+    // "not a grade or a claim of mastery" — the sentence that REFUSES the
+    // claim. WO-W14's pedagogy gate rules the other way, and this file now
+    // agrees with it: a learning surface does not use the word even to deny
+    // it, exactly as 03 §5.5 forbids "unknown" rather than "not unknown".
+    // The sentence was reworded, both refusals intact.
     const offenders = Object.entries(LEARN)
-      // `unassessedBody` says "a claim of mastery" — it is the sentence that
-      // REFUSES the claim, which is exactly the copy this rule wants.
-      .filter(([key, value]) => key !== "unassessedBody" && banned.test(value))
+      .filter(([, value]) => banned.test(value))
       .map(([key]) => key);
     expect(offenders).toEqual([]);
   });

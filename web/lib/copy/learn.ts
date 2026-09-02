@@ -54,14 +54,19 @@ export const LEARN = {
   learnerLabel: "Your note",
   currentTurnLabel: "Your turn",
   replyLabel: "Write your response",
+  // WO-W14 reworded: "is not scored as failure" tripped the pedagogy gate's
+  // `score` entry. A learning surface does not use the word even to deny it —
+  // the same discipline 03 §5.5 applies to "unknown".
   replyHint:
-    "Use your own words. Uncertainty is useful evidence and is not scored as failure.",
+    "Use your own words. Uncertainty is useful evidence, and saying so is not a failure.",
   submitTurn: "Continue the session",
   submittingTurn: "Recording your response…",
   endSession: "End after this response",
   workingHeading: "The tutor is preparing the next prompt",
+  // WO-W14 reworded: "No percentage" tripped the pedagogy gate. The sentence
+  // still refuses the estimate; it just no longer names the banned form.
   workingBody:
-    "No percentage or completion estimate is shown. The next observed checkpoint will appear when the service publishes it.",
+    "No completion estimate is shown. The next observed checkpoint will appear when the service publishes it.",
   reconnecting: "Connection interrupted. The browser is reattaching to the same session.",
   resumed: "Session restored from its durable checkpoint.",
   transcriptUnavailable:
@@ -72,10 +77,15 @@ export const LEARN = {
   costCapDegraded:
     "The session closed with a bounded fallback instead of spending beyond its limit.",
   unassessedHeading: "No assessment was recorded",
+  // WO-W14 reworded: "not a grade or a claim of mastery" tripped `grade` and
+  // `mastery`. Both refusals survive — nothing judged, nothing claimed —
+  // without planting the frame the sentence exists to reject.
   unassessedBody:
-    "This is an explicit missing assessment, not a grade or a claim of mastery.",
+    "This is an explicit missing assessment. Nothing was judged and nothing is claimed.",
+  // WO-W14 reworded: "turned into a grade" tripped `grade`. "Recorded, not
+  // judged" is the wire state (`recorded_ungraded`) said plainly.
   recordedUngraded:
-    "Your explain-back was saved as evidence. It has not been turned into a grade.",
+    "Your explain-back was saved as evidence. It was recorded, not judged.",
   completeHeading: "Session complete",
   completeAdvance:
     "This session advanced one guided reading and preserved your own explain-back as evidence.",

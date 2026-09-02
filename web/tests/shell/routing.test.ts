@@ -59,12 +59,15 @@ function collectPages(dir: string, relative = ""): PageFile[] {
 describe("criterion 2 — the route group adds no URL segment", () => {
   const pages = collectPages(APP_ROOT);
 
-  it("keeps the workspace routes and adds the two parenthesis-free learning URLs", () => {
+  it("keeps the workspace routes and adds the parenthesis-free learning URLs", () => {
     expect(pages.map((page) => page.route).sort()).toEqual([
       "/",
       "/c/[id]",
       "/learn",
       "/learn/paths/[id]",
+      // WO-W14. `(learn)` contributes no segment, so the Ledger is
+      // `/learn/progress` and not `/(learn)/learn/progress`.
+      "/learn/progress",
       "/learn/sessions/[id]",
     ]);
   });

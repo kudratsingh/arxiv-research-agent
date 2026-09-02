@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
+
 import { EmptyState } from "@/components/patterns/EmptyState";
 import { PathUnavailable } from "@/components/patterns/PathView";
 import { LEARN } from "@/lib/copy/learn";
+import { LEDGER_ENTRY } from "@/lib/copy/ledger";
 import { useLearnPaths } from "@/lib/queries/learn";
 
 import { PathList } from "./PathList";
@@ -36,6 +39,21 @@ export function PathListSurface() {
         </h1>
         <p className="mt-3 max-w-measure text-ui-base text-ink-muted">
           {LEARN.listBody}
+        </p>
+        {/*
+          WO-W14: the Ledger's one entry point. A route nothing links to is
+          a route nobody has, and 00 §5.5 allows exactly four surfaces —
+          so this is one link from the surface a reader is already on,
+          never a second row of navigation in the shell.
+        */}
+        <p className="mt-4 max-w-measure text-ui-sm text-ink-muted">
+          <Link
+            href="/learn/progress"
+            className="ew-focusable ew-target border-b border-primary font-medium text-primary hover:text-primary-strong"
+          >
+            {LEDGER_ENTRY.openLedger}
+          </Link>
+          <span className="ml-3">{LEDGER_ENTRY.entryBody}</span>
         </p>
       </header>
 

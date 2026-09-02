@@ -215,6 +215,36 @@ breach as `budget-report.md`. The ratified ceilings, the ratchet rule
 and every movement so far are recorded in ADR
 [0056](decisions/0056-design-tokens.md).
 
+**The copy honesty gates.** Every user-facing string lives in
+`web/lib/copy/`, and two mechanisms keep it there and keep it honest.
+An ESLint rule (`copy/no-inline-text`) rejects rendered string
+literals inside `components/patterns/` and `components/features/`;
+`web/tests/copy/forbidden.test.ts` walks every exported value of every
+copy module, **drives every exported composer**, and applies the
+forbidden-string deny-list, seam S6's ownership prohibition and the
+lexicon to the result. A composer with no entry in that file's table
+fails its coverage assertion rather than escaping the walk.
+
+The learning surfaces are held to one list more. `PEDAGOGY_PHRASES` in
+`web/lib/copy/index.ts` bans mastery, percentages, "unlocked", XP,
+streaks and streak-guilt phrasing, badges, proficiency, any knowledge
+scalar, "score", "grade" and "dashboard" — the copy half of the ban
+`src/learning/progress_store.py` already enforces at its write
+boundary and in a CHECK constraint. It applies to every copy module
+the `(learn)` route group's import graph reaches, and that set is
+**discovered by walking the graph** rather than listed, so a new
+learning surface is covered the moment it renders a string. It is
+scoped to those modules on purpose: "quality score" is the research
+metric's real name and cannot be banned product-wide.
+
+Both gates are proven by committed fixtures that **must fail** —
+`web/tests/fixtures/copy-inline.fixture.tsx` for the lint rule and
+`web/tests/fixtures/copy-pedagogy.fixture.ts` ("87% mastered") for the
+pedagogy list — because a rule nobody has watched fire is a convention
+rather than a gate. Neither fixture is inside `npm run lint`'s scope
+(`app`, `components`, `lib`), so a file that is supposed to fail
+cannot turn the repository red.
+
 **Browser tier (C8).** `web/e2e/README.md` is the manual.
 `npm run e2e:stack:up && npm run e2e:stack:seed && npm run e2e` brings
 up the local Compose stack under an isolating overlay, writes only

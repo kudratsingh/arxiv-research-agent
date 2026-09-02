@@ -111,6 +111,7 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
       "/c/[id]/page": "/c/[id]",
       "/learn/page": "/learn",
       "/learn/paths/[id]/page": "/learn/paths/[id]",
+      "/learn/progress/page": "/learn/progress",
       "/learn/sessions/[id]/page": "/learn/sessions/[id]",
       "/api/[...path]/route": "/api/[...path]",
     }),
@@ -172,6 +173,13 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
     path.join(nextDir, "server/app/learn/sessions/[id]/page_client-reference-manifest.js"),
     `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/learn/sessions/[id]/page"]=${JSON.stringify(
       { clientModules: convModules, entryCSSFiles: {} },
+    )};`,
+  );
+
+  write(
+    path.join(nextDir, "server/app/learn/progress/page_client-reference-manifest.js"),
+    `globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/learn/progress/page"]=${JSON.stringify(
+      { clientModules: homeModules, entryCSSFiles: {} },
     )};`,
   );
 
@@ -584,7 +592,7 @@ describe("report format", () => {
 describe("the committed budgets.json encodes RC-01 in bytes", () => {
   const budgets = loadBudgets(BUDGETS_PATH);
 
-  it("has the seven reconciled rows plus the three (learn) route rows", () => {
+  it("has the seven reconciled rows plus the four (learn) route rows", () => {
     expect(budgets.rows.map((r) => r.id)).toEqual([
       "route-js-home",
       "route-js-conversation",
@@ -595,6 +603,9 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
       // justify moving. Only a row whose ceiling moves needs a `ratchet`
       // entry, which is why this id has none.
       "route-js-learn-session",
+      // WO-W14's Ledger, appended after it for the same reason: the rows
+      // are read in order by the report and by the eye.
+      "route-js-learn-progress",
       "shared-framework-runtime",
       "emitted-css",
       "self-hosted-fonts",
@@ -619,6 +630,10 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     ["route-js-learn-list", 166_912, null],
     ["route-js-learn-path", 169_984, null],
     ["route-js-learn-session", 188_416, null],
+    // WO-W14 seeds the Ledger at its sibling /learn/paths/[id]'s ceiling.
+    // No `baselineBytes`: there is no Gate 1 measurement of a route that
+    // did not exist then.
+    ["route-js-learn-progress", 169_984, null],
     ["shared-framework-runtime", 139_264, null],
     // WO-W13 ratcheted this one UP, 11,264 -> 12,288: the guided-read
     // session's two-column margin measured 11,335 B, 71 B over the WO-31
@@ -644,10 +659,11 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
   it("gates the eight per-asset-class rows, delegates one and only reports one", () => {
     const by = (enforcement: string) =>
       budgets.rows.filter((r) => r.enforcement === enforcement).map((r) => r.id);
-    // Seven at WO-31, plus WO-W13's `/learn/sessions/[id]`. A new route row
-    // is gated from its first commit; there is no "reported for a while
-    // first" grace, because a ceiling nobody enforces is a note.
-    expect(by("gated")).toHaveLength(8);
+    // Seven at WO-31, plus WO-W13's `/learn/sessions/[id]` and WO-W14's
+    // `/learn/progress`. A new route row is gated from its first commit;
+    // there is no "reported for a while first" grace, because a ceiling
+    // nobody enforces is a note.
+    expect(by("gated")).toHaveLength(9);
     expect(by("external")).toEqual(["total-transferred-js"]);
     expect(by("reported")).toEqual(["derived-total-first-load"]);
   });
@@ -848,8 +864,8 @@ describe("run()", () => {
     const { result, reportPath } = run({ webDir: fixture.root, now: new Date(0) });
     expect(reportPath).toBe(path.join(fixture.root, "budget-report.md"));
     expect(fs.readFileSync(reportPath, "utf8")).toContain("# Route budget report");
-    // Ten rows: the seven reconciled ones plus the three `(learn)` routes.
-    expect(result.rows).toHaveLength(10);
+    // Eleven rows: the seven reconciled ones plus the four `(learn)` routes.
+    expect(result.rows).toHaveLength(11);
   });
 
   it("explains how to fix a missing build instead of measuring nothing", () => {
