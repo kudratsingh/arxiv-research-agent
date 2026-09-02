@@ -310,7 +310,7 @@ is the **only** rate-limited route — reads cost no LLM dollars (ADRs
 GET /research/{job_id}/stream
 ```
 
-Seven event names, and the list is the contract clients code against
+Eight event names, and the list is the contract clients code against
 (`src/api/streaming.py`). There is deliberately no `node_started` —
 the runner only emits after a node returns.
 
@@ -319,6 +319,7 @@ the runner only emits after a node returns.
 | `job_started` | `{job_id, query}` | no |
 | `node_completed` | `{node, state_delta}` — scalars only; the papers/citations lists are fetched from `GET /research/{job_id}` instead, so frames stay small | no |
 | `plan_ready` | `{job_id, plan: {sub_questions, search_queries}}` — the HITL breakpoint. **Not terminal**: the stream stays open through the review and the resumed nodes | no |
+| `turn_ready` | `{job_id, turn}` — the guided-session pause (ADR 0057), `plan_ready`'s counterpart for a `kind="session"` job. **Not terminal**: the stream stays open across the learner's reply. The payload is a pause *signal*; a client reads the turn and the transcript from `GET /learn/sessions/{session_id}`, which is what makes a live turn and a reloaded one render identically | no |
 | `job_completed` | `{job_id, iterations, quality_score, cost_usd, llm_calls, elapsed_sec}` | yes |
 | `job_failed` | `{job_id, error, error_type, elapsed_sec}` | yes |
 | `job_cancelled` | `{job_id, elapsed_sec}`, plus `reason` when a HITL `cancel` caused it | yes |

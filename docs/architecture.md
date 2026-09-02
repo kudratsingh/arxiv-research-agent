@@ -254,6 +254,27 @@ guess as fact (ADR
 [0058](decisions/0058-learner-profile-store-and-provenance.md)). The
 flag is off by default, and the routes answer 404 while it is.
 
+**Guided-read sessions.** Opt-in behind `enable_session_loop`, which
+requires `enable_learner_profile` (and so `enable_api_auth`) and
+`enable_checkpointing`. `POST /learn/sessions` starts one
+`kind="session"` job on the guided-read graph; `GET
+/learn/sessions/{id}` reads it; `POST /learn/sessions/{id}/turn`
+resumes a session parked in `awaiting_learner` with the learner's
+reply. `SessionDetail` is assembled from **two** durable sources, and
+the split matters: lifecycle fields and the currently parked `turn`
+come off the job row, while `transcript` — the learner/tutor
+exchange, with the internal `check_in` plan receipt filtered out —
+is rehydrated from the LangGraph checkpoint for that session's
+thread. A snapshot read that fails is reported as
+`transcript_status: "unavailable"` rather than reconstructed from
+stream events, and `assessment_status` (`""` /
+`recorded_ungraded` / `unassessed` / `assessed`) reports the judge's
+outcome as a fact rather than as a grade. That is what makes a
+mid-session reload work: the browser re-reads the session and gets
+the margin back, having held nothing (ADR
+[0057](decisions/0057-job-kinds-and-awaiting-learner.md), ADR
+[0059](decisions/0059-guided-read-session-graph.md)).
+
 **Export.** `GET /research/{job_id}/export?format=md|pdf|docx`
 renders the finished report via `src/api/exporters/` (ADR
 [0031](decisions/0031-multi-format-export.md)).
@@ -281,16 +302,22 @@ below; ADRs [0029](decisions/0029-nextjs-web-ui.md) and
 ## The web tier
 
 `web/` is not a single-page client. It is an App Router application
-with two routes, three separable layers, and a server boundary that is
-part of the security model rather than a convenience.
+with five routes in two groups, three separable layers, and a server
+boundary that is part of the security model rather than a convenience.
 
-**Routes.** `/` (the workspace) and `/c/[id]` (a thread), both under
-the `(workspace)` route group so they share one layout.
+**Routes.** `/` (the workspace) and `/c/[id]` (a thread) under the
+`(workspace)` group; `/learn` (the path library), `/learn/paths/[id]`
+(one reading path) and `/learn/sessions/[id]` (one guided session)
+under `(learn)`. Both groups mount the same shell, so the wedge is
+inside the workbench rather than beside it.
+`web/tests/shell/routing.test.ts` pins the set, so a route added
+without a decision fails the unit suite.
 `/login` and `/settings` are **reserved names with no files** — as is
 `web/app/api/auth/[...path]/route.ts` — because there is no identity
 yet and a disabled login control would be a fake one.
 
-**The shell.** `app/(workspace)/layout.tsx` mounts `WorkbenchShell`,
+**The shell.** `app/(workspace)/layout.tsx` and `app/(learn)/layout.tsx`
+each mount `WorkbenchShell`,
 which owns the header, the thread rail, the skip link and the main
 landmark. Components are layered `foundations → primitives → patterns
 → features`, so a primitive never imports a feature. The header
@@ -311,7 +338,7 @@ ever sees `API_INTERNAL_BASE`.
 
 **The job machine.** `lib/job/machine.ts` is a pure reducer — no clock,
 no network, no `EventSource`, no React. Its transition table is
-**total**: all 10 phases × 25 event types are decided explicitly, a
+**total**: all 11 phases × 26 event types are decided explicitly, a
 deliberately-ignored combination is written as `IGNORE` rather than
 omitted, and there is no default branch, so adding a phase or an event
 fails typecheck until every cell is decided. `lib/job/useJobStream.ts`
@@ -354,9 +381,20 @@ The job id travels in the URL as `?job=`, which is what makes a reload
 mid-run recoverable: the page attaches to an existing job rather than
 submitting a new one (ADR
 [0053](decisions/0053-api-web-container-preflight.md)). Reattaching
-replays the terminal frame for a finished job and `plan_ready` for one
-parked in review, so a dropped connection during plan review does not
-wait out the HITL timeout in silence.
+replays the terminal frame for a finished job, `plan_ready` for one
+parked in review and `turn_ready` for a session parked in
+`awaiting_learner`, so a dropped connection during a pause does not
+wait out the timeout in silence.
+
+The session surface reuses that whole machine rather than growing a
+second one. `awaiting_learner` is an eleventh phase and `turn_ready` a
+twenty-sixth event, both decided in every cell of the table above;
+`lib/job/session.ts` projects a `SessionDetail` onto the lifecycle
+fields the reducer consumes, so transport, reconnect and terminal
+handling are shared code. `turn_ready` is treated as a *pause signal*,
+not as a transcript source: the frame moves the phase, and the surface
+then re-reads `GET /learn/sessions/{id}` for what to render — which is
+why a live turn and a reloaded one produce the same screen.
 
 **The server boundary.** `middleware.ts` mints a per-request nonce and
 sets the CSP on every document response; the proxy route emits one

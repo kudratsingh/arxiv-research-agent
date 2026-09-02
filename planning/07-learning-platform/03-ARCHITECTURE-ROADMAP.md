@@ -494,7 +494,7 @@ New routes in the existing shell, as a `(learn)` route group beside
 | `/login`, `/settings` | The reserved names finally get files (MT-01 owns their shape: under C1, login is largely a redirect + "signed in as" + sign-out) | S–M |
 | `/learn` | Daily-session view: today's reviews + lesson + an honest "nothing due" state | L |
 | `/learn/paths/[id]` | Path view: the prerequisite DAG as a progress-annotated outline (not a graph viz in v1) | M |
-| `/learn/lessons/[id]` | Lesson reader — `ReportReader`'s document surface with progress + assessment blocks | L |
+| `/learn/sessions/[id]` | The guided-read session — `ReportReader`'s document surface carrying the briefing companion, with the learner/tutor margin beside it and the arXiv link-out in the header. **Built under this name, not `/learn/lessons/[id]`** (WO-W13): the backend resource is a *session* (`kind="session"`, `awaiting_learner`, `POST /learn/sessions`), and a URL that called it a lesson would be the only place in the system using a word the API does not. | L |
 | `/learn/progress` | Mastery/streak surface, evidence-first (numbers with provenance, no vanity gauges) | M |
 
 Every constraint the revamp ratified applies unchanged: tokens only
