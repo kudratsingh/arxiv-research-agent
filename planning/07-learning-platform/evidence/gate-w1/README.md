@@ -88,7 +88,7 @@ set the house rule against.
 | Path | What it is | Source |
 |---|---|---|
 | [`README.md`](README.md) | This index. | **W19** |
-| [`known-gaps.md`](known-gaps.md) | **17 entries** (two — §6 and §7 — now resolved and kept struck through). What Gate W1 does not prove, each with owner and what would change it. | **W19** |
+| [`known-gaps.md`](known-gaps.md) | **17 entries** (three — §6, §7 and §12 — now resolved and kept struck through). What Gate W1 does not prove, each with owner and what would change it. | **W19** |
 | [`end-to-end-session.md`](end-to-end-session.md) | Rows 1–2. The browser proof, the three independent cost boundaries on it, the no-client-construction test, and the below-the-browser checkpoint reattachment. | W03/W13/W13b, collected by **W19** |
 | [`paid-path-interdiction.md`](paid-path-interdiction.md) | Row 4. The interceptor's two claims and their different strengths, and the A/B control for the mock-mode pin. | W13/W13b, collected by **W19** |
 | [`flags.md`](flags.md) | Row 3. The four-flag inventory, the ladder, the compose-default nuance, and every flag-off/flag-on test. | **W19** |
@@ -202,9 +202,15 @@ Three more, for completeness, all after the §5 merge train:
   interpolating the e2e overlay's daemon-global image tags (`known-gaps.md` §7,
   §8). **It is five commits past this pack's baseline**, so no §6 status above
   moves on account of it.
-- **WO-W17b is in flight** (`feat/w17b-pilot-identity-slot`) on the pilot
-  identity copy, under an SR-07-compliant server-resolved descriptor
-  (`known-gaps.md` §12).
+- ~~**WO-W17b is in flight**~~ — **WO-W17b merged** as PR
+  [#153](https://github.com/kudratsingh/arxiv-research-agent/pull/153) /
+  `72e65b9` on 2026-09-02, resolving the pilot identity copy under an
+  SR-07-compliant server-resolved descriptor — `shared` / `pilot` /
+  `unresolved`, derived per request on the server and handed to the shell as a
+  prop, mode-off byte-identity proved twice, pilot e2e **5 passed** locally
+  (`known-gaps.md` §12). **It is two commits past this pack's baseline, and
+  merged six minutes before the pack itself**, so no §6 status above moves on
+  account of it.
 
 ---
 

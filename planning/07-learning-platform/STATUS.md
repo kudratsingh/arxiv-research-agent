@@ -167,10 +167,10 @@ resolves the funded row: it waits on money, not on code.
 
 Per the pack: seven of §6's ten rows resolve outright; the per-session cost
 row resolves on its own terms with every figure it reconciles a mock-mode
-figure; `known-gaps.md` is non-empty at **seventeen entries, two of them now
-resolved** (§6, the tutor close line, by #151; §7, the `cls.spec.ts` failure, by
-#155 later the same day). The funded-campaign
-row — the first funded calibration run (W09 c6), the first
+figure; `known-gaps.md` is non-empty at **seventeen entries, three of them now
+resolved** (§6, the tutor close line, by #151; §12, the pilot identity copy, by
+#153; §7, the `cls.spec.ts` failure, by #155 later the same day). The
+funded-campaign row — the first funded calibration run (W09 c6), the first
 funded simulation campaign (W10 c5) and the nightly learning lane's first
 scheduled run (W11 c4) — is **UNRESOLVED**, and is carried into Gate W2's memo
 as a named, dated exception pending **W-OD-1**.
