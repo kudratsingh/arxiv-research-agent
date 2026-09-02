@@ -61,7 +61,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from types import FrameType
-from typing import Any
+from typing import Any, NamedTuple
 
 from dotenv import load_dotenv
 
@@ -582,12 +582,45 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _queries_dir(output_dir: Path) -> Path:
-    """Directory holding one full JSON record per completed query."""
-    return output_dir / "queries"
+class CampaignShape(NamedTuple):
+    """The parts of a durable campaign layout that vary by campaign type.
+
+    ADR 0050's crash-safety properties are not specific to research
+    queries: write the full record the moment it exists, append its
+    summary row rather than rewriting the file at the end, and rebuild
+    both summaries from what is on disk so a subset run cannot publish
+    itself as a whole campaign. WO-W10's learner-simulation campaign
+    needs those guarantees over a differently-shaped record, so the
+    three functions below take what differs as one value instead of
+    being copied into a second module.
+
+    Attributes:
+        records_dirname: Subdirectory holding one JSON file per record.
+        id_field: Record key naming the record — also its filename.
+        summary_line: Projects one record onto its `summary.jsonl` row.
+        summary_markdown: Renders `summary.md` from records and run id.
+        order_key: Canonical sort key for a record id, so a rebuild is
+            deterministic whatever the output directory happens to hold.
+    """
+
+    records_dirname: str
+    id_field: str
+    summary_line: Callable[[dict[str, Any]], dict[str, Any]]
+    summary_markdown: Callable[[list[dict[str, Any]], str], str]
+    order_key: Callable[[str], tuple[int, str]]
 
 
-def persist_record(output_dir: Path, record: dict[str, Any]) -> None:
+def _queries_dir(output_dir: Path, shape: CampaignShape | None = None) -> Path:
+    """Directory holding one full JSON record per completed record."""
+    return output_dir / (shape or RESEARCH_CAMPAIGN).records_dirname
+
+
+def persist_record(
+    output_dir: Path,
+    record: dict[str, Any],
+    *,
+    shape: CampaignShape | None = None,
+) -> None:
     """Write one query's record to disk, immediately.
 
     Two writes per query, both cheap next to a multi-minute LLM run:
@@ -596,29 +629,46 @@ def persist_record(output_dir: Path, record: dict[str, Any]) -> None:
     file from an in-memory list at the end) is what makes a hard kill
     lose at most the in-flight query, and what stops a re-run from
     truncating a previous campaign's rows (ADR 0050).
+
+    Args:
+        output_dir: Campaign directory; created if it does not exist.
+        record: The full per-record dict to persist.
+        shape: Campaign layout. Defaults to the research campaign, so
+            existing callers are unaffected.
     """
-    queries_dir = _queries_dir(output_dir)
+    layout = shape or RESEARCH_CAMPAIGN
+    queries_dir = _queries_dir(output_dir, layout)
     queries_dir.mkdir(parents=True, exist_ok=True)
 
-    path = queries_dir / f"{record['query_id']}.json"
+    path = queries_dir / f"{record[layout.id_field]}.json"
     path.write_text(
         json.dumps(record, indent=2, default=str), encoding="utf-8"
     )
 
     with (output_dir / "summary.jsonl").open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(_summary_line(record), default=str) + "\n")
+        handle.write(json.dumps(layout.summary_line(record), default=str) + "\n")
         handle.flush()
 
 
-def load_records(output_dir: Path) -> dict[str, dict[str, Any]]:
+def load_records(
+    output_dir: Path, *, shape: CampaignShape | None = None
+) -> dict[str, dict[str, Any]]:
     """Read every `queries/*.json` record already in `output_dir`.
 
     The per-query files are the durable layer — `summary.jsonl` and
     `summary.md` are both derived from them. Unreadable files are
     skipped with a log line rather than failing the campaign: one
     corrupt record must not cost us the other nineteen.
+
+    Args:
+        output_dir: Campaign directory to read.
+        shape: Campaign layout. Defaults to the research campaign.
+
+    Returns:
+        Records keyed by their id field, empty when nothing is on disk.
     """
-    queries_dir = _queries_dir(output_dir)
+    layout = shape or RESEARCH_CAMPAIGN
+    queries_dir = _queries_dir(output_dir, layout)
     if not queries_dir.is_dir():
         return {}
 
@@ -630,9 +680,9 @@ def load_records(output_dir: Path) -> dict[str, dict[str, Any]]:
             log.exception("eval_record_unreadable", extra={"path": str(path)})
             continue
         if isinstance(payload, dict) and isinstance(
-            payload.get("query_id"), str
+            payload.get(layout.id_field), str
         ):
-            records[payload["query_id"]] = payload
+            records[payload[layout.id_field]] = payload
         else:
             log.warning("eval_record_malformed", extra={"path": str(path)})
     return records
@@ -651,7 +701,9 @@ def _benchmark_order(query_id: str) -> tuple[int, str]:
     return (len(BENCHMARK_QUERIES), query_id)
 
 
-def rebuild_summaries(output_dir: Path, run_id: str) -> list[dict[str, Any]]:
+def rebuild_summaries(
+    output_dir: Path, run_id: str, *, shape: CampaignShape | None = None
+) -> list[dict[str, Any]]:
     """Regenerate `summary.jsonl` + `summary.md` from `queries/*.json`.
 
     Derived from what is on disk rather than from the in-memory list so
@@ -660,26 +712,44 @@ def rebuild_summaries(output_dir: Path, run_id: str) -> list[dict[str, Any]]:
     made `readme_update` report "3 / 3 queries" for a 20-query run
     (ADR 0050).
 
+    Args:
+        output_dir: Campaign directory to rebuild in place.
+        run_id: Campaign id, used as the summary's title.
+        shape: Campaign layout. Defaults to the research campaign.
+
     Returns the records the summaries were built from, in benchmark
     order.
     """
-    by_id = load_records(output_dir)
+    layout = shape or RESEARCH_CAMPAIGN
+    by_id = load_records(output_dir, shape=layout)
     records = [
         by_id[query_id]
-        for query_id in sorted(by_id, key=_benchmark_order)
+        for query_id in sorted(by_id, key=layout.order_key)
     ]
     output_dir.mkdir(parents=True, exist_ok=True)
 
     summary_jsonl = "\n".join(
-        json.dumps(_summary_line(r), default=str) for r in records
+        json.dumps(layout.summary_line(r), default=str) for r in records
     )
     (output_dir / "summary.jsonl").write_text(
         summary_jsonl + ("\n" if summary_jsonl else ""), encoding="utf-8"
     )
     (output_dir / "summary.md").write_text(
-        _summary_markdown(records, run_id), encoding="utf-8"
+        layout.summary_markdown(records, run_id), encoding="utf-8"
     )
     return records
+
+
+#: The research campaign's layout — the default for every function
+#: above, so `runner.py`'s own behaviour is unchanged by the
+#: parameterization WO-W10 needed.
+RESEARCH_CAMPAIGN = CampaignShape(
+    records_dirname="queries",
+    id_field="query_id",
+    summary_line=_summary_line,
+    summary_markdown=_summary_markdown,
+    order_key=_benchmark_order,
+)
 
 
 # ---------------------------------------------------------------------------

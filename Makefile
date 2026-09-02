@@ -1,4 +1,4 @@
-.PHONY: help venv install install-dev clean clean-all test test-unit test-integration test-e2e test-all typecheck run eval admin-migrate
+.PHONY: help venv install install-dev clean clean-all test test-unit test-integration test-e2e test-all typecheck run eval simulate-learner admin-migrate
 
 # ---- Configuration ---------------------------------------------------------
 
@@ -45,6 +45,7 @@ help:  ## Show this help
 	@echo ""
 	@echo "  make run QUERY='...'   Run the agent on QUERY"
 	@echo "  make eval              Run full benchmark eval (QUERIES=id1,id2 to filter)"
+	@echo "  make simulate-learner  Scripted learner-simulation benchmark (free, mock mode)"
 	@echo "  make admin-migrate     Report/repair legacy NULL-owner rows (ARGS='...')"
 	@echo "  make clean             Remove venv, caches, build artifacts"
 	@echo "                         (keeps .cache/checkpoints.sqlite — graph state)"
@@ -86,6 +87,17 @@ run:  ## Run the agent: make run QUERY='your question'
 
 eval:  ## Batch-run the benchmark; make eval QUERIES=id1,id2 to filter
 	$(VENV_PYTHON) -m src.eval.runner $(if $(QUERIES),--queries $(QUERIES),)
+
+# The scripted tier only. Mock mode and the disabled-key sentinel are
+# pinned here rather than left to the caller's .env because this target
+# advertises zero spend, and `simulate_learner` refuses to start if the
+# environment contradicts that. The funded tier is deliberately absent:
+# it costs money and is gated on W-OD-1 (docs/eval.md).
+simulate-learner:  ## Replay learning scenarios against the session graph (free)
+	USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+	ENABLE_CHECKPOINTING=true \
+	$(VENV_PYTHON) -m src.eval.simulate_learner \
+		$(if $(SCENARIOS),--scenarios $(SCENARIOS),) $(ARGS)
 
 admin-migrate:  ## Admin: report/repair legacy NULL-owner rows (ARGS='report --store all')
 	$(VENV_PYTHON) -m src.api.admin_migrate $(ARGS)
