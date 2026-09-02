@@ -13,8 +13,8 @@
  * FORWARDING IS ONLY SAFE UNDER ONE PRECONDITION, AND IT IS ASSERTED RATHER
  * THAN ASSUMED. Under `USE_MOCK_DATA=true` the session graph makes **no
  * model call at all** — `check_in_agent` takes `_fallback_plan`
- * (`src/agents/tutor.py:159`), `_tutor_prompts` returns two constants
- * (`:248`), and the assessment agent takes its own mock branch
+ * (`src/agents/tutor.py:165`), `_tutor_prompts` returns two constants
+ * (`:254`), and the assessment agent takes its own mock branch
  * (`src/agents/assessment.py:178`). Zero paid calls by construction, not by
  * a key that happens to be invalid. `ANTHROPIC_API_KEY=local-preview-disabled`
  * is the second, independent boundary and is asserted here too — "it would

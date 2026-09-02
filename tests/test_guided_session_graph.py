@@ -208,7 +208,12 @@ class TestSessionApiEndToEnd:
                 "guided_question",
                 "explain_back",
             ]
-            assert "not a mastery score" in str(finished["result"])
+            # WO-W03b: the close line states the record instead of denying a
+            # scalar, because the surface renders `result` verbatim and a
+            # denial plants the frame it rejects (WO-W14's pedagogy gate).
+            close = str(finished["result"])
+            assert "activity record, drawn from the events it wrote" in close
+            assert "mastery" not in close and "score" not in close
             assert finished["cost_usd"] == 0.0
             assert finished["llm_calls"] == 0
             assert finished["transcript_status"] == "available"
