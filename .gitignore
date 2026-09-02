@@ -12,6 +12,13 @@ outputs/
 dist/
 build/
 
+# Pilot credentials (WO-W17). The bcrypt file the edge reads and the
+# cleartext keystore FastAPI hot-reloads. Both are generated per
+# deployment by docs/runbooks/pilot.md and neither may ever be committed;
+# the patterns are broad so a dated suffix cannot slip past.
+deploy/pilot/pilot-users*.caddy
+deploy/pilot/pilot-keys*.json
+
 # Web (Next.js) — mirrored in web/.gitignore for editors that
 # don't traverse subdir ignores.
 web/node_modules/

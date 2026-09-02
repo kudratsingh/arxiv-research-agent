@@ -87,8 +87,21 @@ export function pathTemplate(segments: readonly string[]): string {
   return `/${rendered}`;
 }
 
-/** Why a request did not reach FastAPI. Absent on the happy path. */
-export type ProxyOutcome = "misconfigured" | "upstream_unavailable";
+/**
+ * Why a request did not reach FastAPI. Absent on the happy path.
+ *
+ * `principal_unresolved` is WO-W17's. It is deliberately NOT folded into
+ * `misconfigured`: a 503 because `API_INTERNAL_BASE` is nonsense and a 503
+ * because the pilot edge mapping refused this request are different
+ * incidents, and the field an operator reads first should say which. The
+ * *reason* it refused lives in the resolver's own `pilot_principal` line
+ * (`lib/server/pilot.ts`) — this field says only that the credential seam
+ * answered instead of the upstream.
+ */
+export type ProxyOutcome =
+  | "misconfigured"
+  | "upstream_unavailable"
+  | "principal_unresolved";
 
 /** One request, as it will be serialised. */
 export interface ProxyLogRecord {

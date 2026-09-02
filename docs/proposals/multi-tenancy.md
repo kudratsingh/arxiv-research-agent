@@ -75,6 +75,29 @@ path (`docs/security.md:392-402`).
 
 ### 1.2 The web layer collapses every browser user into one principal
 
+> **Note added 2026-09-02 — seam S1 now carries a pilot mode, and this
+> document is still `PROPOSED`.** WO-W17 shipped a default-off,
+> topology-guarded mapping at exactly the seam §5.7 names: with
+> `PILOT_EDGE_AUTH=on`, the pilot edge authenticates one `basic_auth`
+> user per pilot and `resolveUpstreamPrincipal` maps that username to
+> that pilot's per-principal key
+> ([ADR 0063](../decisions/0063-pilot-principal-edge-mapping.md),
+> `web/lib/server/pilot.ts`). It is a deliberately hand-run slice of
+> §3's **Option C1**, sized for five invited people over fourteen days,
+> and it implements §6's **T6** mitigation verbatim — off by default,
+> explicit opt-in, never inferable, with the trust asserted by a shared
+> header secret rather than assumed from the network layout.
+>
+> **This does not approve, decide, or partially implement MT-01.** No
+> option below is chosen, no gate is passed, and nothing in §5 is built.
+> MT-01 **replaces** the pilot mapping rather than growing from it: ADR
+> 0063 is marked to be superseded, its whole surface is one web-tier
+> module plus a deploy overlay, and none of §1.3's five findings is
+> fixed by it — F1 is handled by a human rule in
+> `docs/runbooks/pilot.md`, and F3, F4 and T7 are unchanged. The
+> paragraphs below describe the deployment with the mode off, which is
+> every deployment on `main`.
+
 The Next.js server proxy attaches a single process-wide API key to
 every upstream request, with no per-request identity of any kind:
 

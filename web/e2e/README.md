@@ -98,15 +98,65 @@ Two consequences worth knowing before you debug something:
 `E2E_API_SECRET` is a committed local sentinel, not a secret. The stack has no
 reachable model provider, and CI needs no repository secret to run this tier.
 
+## The pilot tier (WO-W17) — a different stack, not a tag
+
+```bash
+cd web
+npm run e2e:pilot:stack:up      # base + e2e + pilot overlays, plus a Caddy edge
+npm run e2e:pilot:stack:seed
+npm run e2e:pilot               # playwright test -c playwright.pilot.config.ts
+npm run e2e:pilot:stack:down
+```
+
+`E2E_PILOT=1` adds a third `-f` (`support/compose.pilot.yml`). It mounts the
+**committed production edge**, `deploy/pilot/Caddyfile`, unmodified — one
+`basic_auth` credential per pilot, the authenticated username forwarded as
+`X-Pilot-User` — turns `PILOT_EDGE_AUTH` on, **empties `ARXIV_API_KEY`**, and
+issues two principals instead of one.
+
+**It cannot serve the ordinary suite, and that is why it has its own Playwright
+config.** With the map configured and the shared key empty, the `baseline-*`
+fixtures — stamped with `E2E_PRINCIPAL` — belong to a principal neither pilot
+holds a key for, so ADR 0036 correctly hides all of them and
+`support/global-setup.ts`'s preflight would refuse to start. `pilot.spec.ts`
+also carries `test.skip` on `E2E_PILOT`, so the main config collects it in CI
+and skips it with a reason rather than failing.
+
+Two things it does on purpose that look odd:
+
+- **`web` stays published on loopback.** That is the condition MT-01's threat
+  T6 calls dangerous, and it is what lets the spec post a forged
+  `X-Pilot-User` straight at the web container and watch the topology guard
+  refuse it with 503. A stack that hid the port would make the guard
+  untestable.
+- **`up` generates the edge's bcrypt file** into `build/e2e/pilot-users.caddy`,
+  from the plaintext sentinels in `support/env.ts`. Nothing bcrypt-shaped is
+  committed by this repository, for the deployment or for the tier that tests
+  it — `docs/runbooks/pilot.md` is the same procedure for a real pilot.
+
+| | default | override |
+|---|---|---|
+| Pilot edge (browser target) | `127.0.0.1:13290` | `E2E_PILOT_EDGE_PORT`, or `E2E_PILOT_BASE_URL` |
+| Edge container | `arxiv-w17-edge` | `E2E_PILOT_EDGE_CONTAINER` |
+| Images | `arxiv-research-agent{,-web}:w17-pilot-e2e` | `E2E_PILOT_APP_IMAGE`, `E2E_PILOT_WEB_IMAGE` |
+| Pilot credentials | `support/env.ts`'s `E2E_PILOTS` | `E2E_PILOT_A_*`, `E2E_PILOT_B_*` |
+
+The image tags are overridden for the reason the container names are: a tag is
+global to the Docker daemon, so two worktrees building `…:wo21-e2e` overwrite
+each other's. The pilot tier gets its own so it cannot do that to the ordinary
+tier.
+
 ## Layout
 
 | Path | What it is |
 |---|---|
 | `../playwright.config.ts` | five projects, tags, artifact locations |
+| `../playwright.pilot.config.ts` | WO-W17's one-spec config against the pilot edge |
 | `support/env.ts` | ports, base URLs, seeded ids, thresholds — one definition each |
 | `support/global-setup.ts` | refuses to run against an unseeded stack or a real key |
-| `support/stack.sh` | `up` / `seed` / `url` / `logs` / `down` |
+| `support/stack.sh` | `up` / `seed` / `url` / `logs` / `down`, and `E2E_PILOT=1` |
 | `support/compose.e2e.yml` | the isolating overlay |
+| `support/compose.pilot.yml` | WO-W17's third overlay: the edge, two principals, no shared key |
 | `support/paid-path.ts` | the paid-write interceptor (research, conversations, and the two session writes) and its report |
 | `support/intercept.ts` | interrupted-200 and `stream_timeout` streams |
 | `support/states.ts` | §4's state matrix, as a walkable table |
@@ -115,7 +165,7 @@ reachable model provider, and CI needs no repository secret to run this tier.
 | `axe-allowlist.json` | WO-22's suppression list — **empty, and stays empty** |
 | `fixtures/seed.sh` | the promoted Gate 1 seed, extended |
 | `__screenshots__/<platform>/` | WO-28's committed PNGs — 48 per platform |
-| `*.spec.ts` | one file per criterion; see the header comment in each. `session.spec.ts` is WO-W13's — criteria 2 and 4 |
+| `*.spec.ts` | one file per criterion; see the header comment in each. `session.spec.ts` is WO-W13's — criteria 2 and 4; `pilot.spec.ts` is WO-W17's — criteria 2 and 3, and skips itself without `E2E_PILOT=1` |
 
 ## Projects and tags
 
@@ -127,7 +177,12 @@ reachable model provider, and CI needs no repository secret to run this tier.
 | `iPhone 15` | `@device`, `@theme` | 393 × 852 on WebKit, where `env(safe-area-inset-*)` matters |
 
 Tags: `@paid-path`, `@stream`, `@reflow`, `@slice`, `@export`, `@theme`,
-`@device`, `@axe`, `@cls`, `@csp`, `@a11y`, `@visual`.
+`@device`, `@axe`, `@cls`, `@csp`, `@a11y`, `@visual`, `@pilot`.
+
+`@pilot` is the odd one out: it is not a project selector. `pilot.spec.ts`
+runs under its own config against its own stack, and the tag exists so that a
+run of the main config can be grepped out (`--grep-invert @pilot`) rather than
+relying on the spec's own skip.
 
 ## Artifacts
 

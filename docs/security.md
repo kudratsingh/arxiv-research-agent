@@ -414,6 +414,10 @@ than local Compose:
 
 ### S7 — the deployment gate is not an identity
 
+**Everything in this section describes the deployment on `main` and the
+`deploy/hetzner` overlay. The `deploy/pilot` overlay (WO-W17, ADR 0063)
+deliberately breaks two of its claims, and the next section says which.**
+
 The production Caddy edge asks the browser for HTTP basic auth before
 anything else is served (`deploy/hetzner/Caddyfile:8-10`):
 
@@ -463,6 +467,83 @@ When MT-01 introduces real identity, it arrives at seam S1
 promoting this gate. Basic auth may then stay as an outer perimeter or
 be removed, but it is not the mechanism being replaced, because it was
 never doing that job.
+
+### Pilot principals at the edge (WO-W17, ADR 0063)
+
+**Default off. Nothing on `main` enables it, and only the literal string
+`on` can.** `PILOT_EDGE_AUTH` is a web-tier setting; unset, empty and
+`off` are off, and any *other* value makes the deployment refuse to
+serve rather than quietly resolving the shared principal.
+
+With it on, `deploy/pilot/compose.pilot.yml` puts an edge in front of
+the web tier that carries **one `basic_auth` credential per pilot**
+instead of one for the site, forwards the authenticated username as
+`X-Pilot-User`, and `web/lib/server/pilot.ts` maps that username to that
+pilot's already-issued per-principal API key from a server-side
+environment map. The proxy then injects it as `X-API-Key` exactly as it
+injects the shared one, so `web/app/api/[...path]/route.ts` remains the
+sole credential boundary and no key ever reaches a browser.
+
+**Two sentences in S7 above become false under this overlay, and they
+are the two that matter.** The edge login *is* a principal selector, and
+threads *are* per person. The web shell has not caught up — the header
+still renders "Shared workspace — Everyone with access to this
+deployment sees these threads. There are no separate accounts."
+(`web/lib/copy/threads.ts`), which under pilot mode is a false statement
+about data separation shown to the people the separation is for.
+`docs/runbooks/pilot.md`'s onboarding note tells pilots to ignore it.
+**Resolving this is a prerequisite to inviting anyone**, and it is
+recorded as a follow-up below rather than left to be noticed.
+
+The guards, and what each one is for:
+
+- **The username header is refused unless the request came through the
+  edge.** The edge also sends `PILOT_EDGE_SECRET` as `X-Pilot-Edge-Key`,
+  compared over SHA-256 digests with `timingSafeEqual`. This is MT-01's
+  threat **T6** (identity-header spoofing) and its own mitigation:
+  topology is *asserted*, never inferred. Inferring it would be safe in
+  the production overlay, which publishes no port for `web`, and unsafe
+  in base compose, which publishes it to loopback — the failure shape
+  ADR 0039 recorded.
+- **An ambiguous configuration refuses to serve.** Pilot map plus a
+  non-empty `ARXIV_API_KEY` is a 503 for every request. Two configured
+  answers to "whose credential is this" is an unanswered question, and
+  the alternative — a fallback chain — is how a pilot silently becomes
+  the shared principal.
+- **An unknown username maps to no key**, 503, never the shared one.
+  Every refusal returns the same body (`pilot_principal_unresolved`), so
+  a response never reveals whether a username exists.
+- **The map refuses duplicates and a sixth pilot.** Two pilots sharing an
+  `api_key` or a `key_id` would read each other's profile and ledger
+  under ADR 0036; a sixth pilot is SR-09's re-trigger, not a bigger
+  pilot.
+- **Nothing mints a key.** Both halves are written by hand into
+  `api_keys_file` (hot-reloaded, ADR 0037) and the map, per the runbook.
+  Neither file is ever committed; `.gitignore` covers both.
+- **The key cannot reach a log.** The resolver's `pilot_principal` record
+  type has no field that can hold one, and the username is logged only
+  after the topology guard passes, so a forged header cannot write bytes
+  into the log.
+
+What it does **not** change: MT-01's findings F1 (`principal_key_id` is
+a mutable display name — handled by the runbook's never-reassign rule,
+which is a human control), F3 (the keystore is cleartext), F4 (no
+aggregate spend cap — SR-09's arithmetic in the runbook is a bound, not
+a control), and T7 (revocation latency is
+`api_keys_reload_interval_sec`). CSRF is unchanged and still out of
+scope: basic auth is not ambient the way a session cookie is.
+
+One deliberate regression: the `web` container's healthcheck stops
+probing `/api/healthz` through the proxy, because under pilot mode the
+probe is not a pilot and is correctly refused. It reports liveness only;
+`app`'s own healthcheck still proves FastAPI is serving, and the
+runbook's per-pilot smoke test is an authenticated request through the
+whole chain.
+
+Source: `web/lib/server/pilot.ts`, `web/lib/server/principal.ts`,
+`deploy/pilot/`. Tests: `web/tests/pilotPrincipal.test.ts` (the guards,
+the redaction, and the built-bundle scan) and `web/e2e/pilot.spec.ts`
+(two pilots on a seeded stack through the real edge).
 
 ### Per-principal Job + Conversation scoping (ADR 0036)
 
@@ -633,6 +714,22 @@ redriver.
 
 ## Follow-ups
 
+- **The shell's "Shared workspace" copy contradicts the pilot overlay**,
+  and must be resolved before any pilot is invited. `web/lib/copy/threads.ts`
+  states "Everyone with access to this deployment sees these threads. There
+  are no separate accounts."; under `PILOT_EDGE_AUTH=on` neither clause is
+  true. WO-W17 does not own `web/lib/copy/**` and left the string alone; ADR
+  0063's Consequences and `docs/runbooks/pilot.md` §8 both record it.
+- **An aggregate spend cap** (MT-01 F4, Phase L0-01). The pilot is bounded by
+  the arithmetic in `docs/runbooks/pilot.md` §3 and by the provider account's
+  own limit — neither of which is a control in this repository. Any cohort
+  beyond five, any public opening, or any scheduled work re-triggers this as a
+  prerequisite (SR-09).
+- **A role model, so "withhold `POST /research`" is a permission rather than a
+  `max_cost_usd` value.** `ApiKeyPrincipal` carries a `key_id` and nothing
+  else, so the pilot's expensive action is capped rather than removed (ADR
+  0063, runbook §9). This is the same follow-up the ADR 0039 note below asks
+  for, reached from the other direction.
 - **CSRF on the `/api` proxy**, the moment MT-01 introduces a session
   (seam S1 or S3). Not a gap in the current design — there is no
   per-user session to forge a request on behalf of — and a hard

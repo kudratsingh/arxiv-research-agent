@@ -366,6 +366,14 @@ never renumbered.
   authoritative. Both refused and degraded-close outcomes are explicit, model
   routing warns when pricing is missing, and session node spans carry
   cumulative and delta cost/call attributes.
+- [0063](0063-pilot-principal-edge-mapping.md) — A default-off, topology-guarded
+  mapping at MT-01 seam S1: the pilot edge authenticates one `basic_auth` user
+  per pilot and forwards the username, and `resolveUpstreamPrincipal` maps it
+  to that pilot's per-principal API key from a server-side env map. Only the
+  literal `on` enables it; the username is refused without the edge's shared
+  secret; an ambiguous configuration, an unknown username and a sixth pilot all
+  refuse to serve rather than falling back to the shared key. **To be superseded
+  by MT-01** — it is a hand-run slice of L0-03, not a foundation for one.
 
 ## When to write an ADR
 
