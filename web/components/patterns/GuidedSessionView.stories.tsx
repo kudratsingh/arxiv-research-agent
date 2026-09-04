@@ -205,7 +205,18 @@ export const Working: Story = {
 // §4.2 row 10 — the explain-back prompt.
 // ---------------------------------------------------------------------------
 
-/** `src/agents/tutor.py:323-335` — the `explain_back` turn, as the tutor asks it. */
+/**
+ * The `explain_back` turn as the tutor asks it — the prompt below is the
+ * literal `tutor_agent` sets on its `explain_back` branch
+ * (`src/agents/tutor.py`), copied here verbatim.
+ *
+ * The backend copy is recorded into
+ * `tests/fixtures/learning/recorded_mock_sessions/`, so
+ * `tests/test_record_learning_fixtures.py::TestTheCheckedInSetIsFresh` forces
+ * a re-record (`make record-learning-fixtures`) when it changes. Nothing
+ * compares THIS story's copy to the backend, so the re-record diff is the
+ * only signal that this file needs the same edit.
+ */
 export const ExplainBack: Story = {
   args: {
     session: {
@@ -228,9 +239,17 @@ export const ExplainBack: Story = {
 // ---------------------------------------------------------------------------
 
 /**
- * `follow_up_probe` (`src/agents/tutor.py:398-413`), offered at most once and
- * never as a revision loop. The tutor's own framing — what happens to the
- * answer — is carried through as feedback rather than restated by the UI.
+ * `follow_up_probe` — the turn `assessment_probe_agent` builds
+ * (`src/agents/tutor.py`), offered at most once and never as a revision loop.
+ * The tutor's own framing — what happens to the answer — is carried through as
+ * feedback rather than restated by the UI.
+ *
+ * NOTHING KEEPS THE FEEDBACK BELOW IN STEP WITH THE BACKEND. Unlike the
+ * explain-back copy, this string reaches no recorded fixture: under mock mode
+ * `assessment_judge` returns `unassessed`, so `route_after_assessment` never
+ * routes to the probe and `make record-learning-fixtures` records nothing that
+ * contains it. `assessment_probe_agent` and this story are the only two places
+ * the sentence exists, and no test compares them. Edit both together.
  */
 export const Probe: Story = {
   args: {

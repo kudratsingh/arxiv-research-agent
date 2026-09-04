@@ -13,10 +13,11 @@
  * FORWARDING IS ONLY SAFE UNDER ONE PRECONDITION, AND IT IS ASSERTED RATHER
  * THAN ASSUMED. Under `USE_MOCK_DATA=true` the session graph makes **no
  * model call at all** — `check_in_agent` takes `_fallback_plan`
- * (`src/agents/tutor.py:165`), `_tutor_prompts` returns two constants
- * (`:254`), and the assessment agent takes its own mock branch
- * (`src/agents/assessment.py:178`). Zero paid calls by construction, not by
- * a key that happens to be invalid. `ANTHROPIC_API_KEY=local-preview-disabled`
+ * (`src/agents/tutor.py`), `_tutor_prompts` returns two constants from its
+ * own `use_mock_data` branch (same file), and the assessment agent takes its
+ * own mock branch (`assessment_judge` in `src/agents/assessment.py`). Zero
+ * paid calls by construction, not by a key that happens to be invalid.
+ * `ANTHROPIC_API_KEY=local-preview-disabled`
  * is the second, independent boundary and is asserted here too — "it would
  * have failed anyway" is a coincidence, not a cost boundary, and the whole
  * point of this file is that the pass-through does not rest on one.
