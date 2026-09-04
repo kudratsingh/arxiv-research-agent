@@ -1,0 +1,3 @@
++ env OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONHASHSEED=0 ANTHROPIC_API_KEY=local-preview-disabled USE_MOCK_DATA=true ENABLE_CHECKPOINTING=true /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python -m src.eval.simulate_learner --output-dir build/gate-a3-scripted-tier
+Error: output directory build/gate-a3-scripted-tier is not empty. Re-running into it would overwrite a previous campaign's records. Pass --resume to continue that campaign (completed queries are skipped, not re-paid), or choose a fresh --output-dir.
+exit=2

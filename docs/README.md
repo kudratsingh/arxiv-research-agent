@@ -29,9 +29,13 @@ more space. This page is the map of what "here" holds.
   [`revamp/STATUS.md`](revamp/STATUS.md) is the index — read it first;
   the rest of the directory is only navigable through it.
 - [`testing.md`](testing.md) — testing strategy: the flat Python layout
-  and its markers, the web suite's tiers (coverage, dependency audit,
-  route budgets, Storybook, Playwright + axe), what CI actually runs,
-  and the planned-but-unbuilt Python e2e cassette tier.
+  and its two marker axes (tier and purpose), the web suite's tiers
+  (coverage, dependency audit, route budgets, Storybook, Playwright +
+  axe), and what CI actually runs — which since WO-A13 is every Python
+  tier under enforced project, per-package and patch coverage floors.
+  The Python e2e tier is built and gating, on mock mode rather than the
+  cassettes originally planned; that page records the difference,
+  because it is not the same tier.
 - [`development.md`](development.md) — local setup, Makefile targets,
   the optional OpenTelemetry collector wiring, dependency locking and
   licensing, and troubleshooting.
@@ -56,6 +60,15 @@ more space. This page is the map of what "here" holds.
   [`runbooks/pilot.md`](runbooks/pilot.md) is the bounded pilot:
   issuing and revoking a per-pilot key, the never-reassign rule, the
   worst-case spend arithmetic, and the note that goes to each invitee.
+- [`assurance/`](assurance/README.md) — the assurance evidence pack, and
+  the answer to "how do you know?". `assurance/README.md` is the index and
+  carries the **claim → enforcement table**: every claim in the top-level
+  README and in `architecture.md`, and the test, gate or instrument that
+  fails when it stops being true — including the ones nothing enforces and
+  the ones that are no longer true. Alongside it, a **system** card (this
+  project trains no model), a data-provenance record on the NIST AI 300-1
+  field set, and the framework mapping across NIST, OWASP, ISO 42001 and
+  the EU AI Act, with a deliberately non-empty out-of-reach column.
 - [`eval.md`](eval.md) — evaluation: the benchmark, the four metrics,
   the runner's isolation and resume behavior, the campaign run-book,
   the regression gate, and the nightly workflow.

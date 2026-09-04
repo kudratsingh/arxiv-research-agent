@@ -1,0 +1,7 @@
+commit=ed71098b2c7854f8608a9194c8f82201e941c87b
+commit_short=ed71098
+branch=assurance/wo-a14-evidence
+dirty=yes
+collected_utc=2026-09-04T22:41:19Z
+python=3.13.7
+src_module=/private/tmp/arxiv-asr-a14/src/__init__.py

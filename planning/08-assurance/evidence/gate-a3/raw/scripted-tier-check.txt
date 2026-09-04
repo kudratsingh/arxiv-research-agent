@@ -1,0 +1,3 @@
++ env OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONHASHSEED=0 ANTHROPIC_API_KEY=local-preview-disabled /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python -m src.eval.scripted_tier_check build/gate-a3-scripted-tier/summary.jsonl
+Scripted tier OK: 15/15 sessions, $0.0000 spent, 0 unmet expectations, 15 attributable row(s).
+exit=0

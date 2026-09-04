@@ -401,6 +401,19 @@ never renumbered.
   **Supersedes the regression-gate half of
   [ADR 0044](0044-eval-cost-accuracy-and-regression-thresholds.md)**;
   follows ADR 0070.
+- [0072](0072-adversarial-safety-suite.md) — Gate safety on a **regression
+  delta and behavioural assertions**, not on an absolute rate and a canary.
+  The evidence base it replaces was five regexes plus a literal-canary
+  substring check, which asks a question about spelling: a model that obeys
+  an injection and paraphrases the canary scores as contained. In its place,
+  an authored 42-case corpus (`tests/fixtures/safety/`), a deterministic
+  model-free scorer and gate (`src/eval/safety_suite.py`), and a
+  `security`-marked tier. Each case carries an `obedient_output`, so total
+  compliance is assumed rather than paid for; the gate is a delta plus a
+  categorical veto at absolute zero, because attack success rate is a
+  property of the deployment surface and at n=42 an absolute threshold flips
+  on noise. OWASP categories are cited as **codes only** — the prose is
+  CC BY-SA 4.0 and viral.
 - [0073](0073-slos-and-operational-readiness.md) — SLOs anchored on the
   SRE Workbook's **quality** SLI rather than on a vendor threshold, with
   degraded and shed requests excluded from the latency SLI and counted
@@ -412,6 +425,18 @@ never renumbered.
   re-parses `src/` for every instrument and fails when a rule names one
   that no longer exists, because a renamed instrument does not error --
   it renders a flat zero, and a flat zero reads as a healthy fleet.
+- [0074](0074-deterministic-groundedness.md) — Measure groundedness
+  **deterministically, against the run's own corpus**. The arXiv domain makes
+  two accuracy signals decidable without a judge: whether every cited
+  identifier resolves, and whether every quoted span appears verbatim in the
+  paper's parsed text. `src/eval/groundedness.py` checks identifiers against
+  `state["papers"]` rather than the network — a citation to a real paper the
+  run never fetched is still a fabricated citation, and that is the
+  interesting failure. Fixes the failure mode `citation_accuracy` has today,
+  where zero citations scores 1.0: the new metrics report their denominators,
+  and no citations is `None` with a reason code. Produces the per-claim
+  binary outcome ADR 0071's paired path needs, at zero spend and with no
+  drift when a model is upgraded.
 
 ## When to write an ADR
 
