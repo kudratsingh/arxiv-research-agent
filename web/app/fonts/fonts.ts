@@ -30,7 +30,7 @@
  *
  * AMENDED 2026-09-04 — known-gap §18. The paragraph above is kept, because
  * the measurement in it is still why `preload: false` is cheap; what it now
- * gets wrong is which routes touch which family. WO-W12 (#138) put
+ * gets wrong is which routes touch which family. WO-W12 (PR 138) put
  * `LearnLandingEntry` on the landing route, and that card is deliberately
  * typeset in the visual language of the learn surface it teases —
  * `font-report` on its heading, `font-mono` on its eyebrow. So the report
@@ -107,7 +107,7 @@ export const fontReport = localFont({
   // ./fallback.css are what make the later swap free.
   //
   // CORRECTED 2026-09-04 — known-gap §18. "Exactly one consumer" and "not the
-  // landing prompt" stopped being true at WO-W12 (#138). Since that work
+  // landing prompt" stopped being true at WO-W12 (PR 138). Since that work
   // order `components/features/LearnLandingEntry.tsx` sits on `/` and is the
   // landing route's only consumer of `--font-report` and `--font-mono`:
   // `font-report text-report-h2` on its heading, `font-mono text-mono-xs` on
@@ -116,7 +116,7 @@ export const fontReport = localFont({
   // only consumer anywhere either — the `/learn/**` headings take
   // `font-report` too.)
   //
-  // What that costs `/`, measured on the seeded stack and reported in #159:
+  // What that costs `/`, measured on the seeded stack and reported in PR 159:
   //
   //   font requests   1 (20,331 B, preloaded)  ->  3 (69,621 B, of which
   //                   49,290 B at VeryHigh, discovered after the CSS parse)
@@ -125,7 +125,7 @@ export const fontReport = localFont({
   //   bootup-time   98 ms  ->  124 ms
   //
   // `preload: false` still holds, but on a narrower claim than the one above:
-  // neither face paints `/`'s LCP element. With #159's `prefetch={false}` on
+  // neither face paints `/`'s LCP element. With PR 159's `prefetch={false}` on
   // that card, `/` is back at the LCP floor — 1360 ms median even at ×20 CPU
   // slowdown, `bf-cache` 1 — so these late-discovered bytes cost no
   // assertion, and `npm run budgets` passes 9/9 (`/` 162,913 B of 166,912;
@@ -152,7 +152,7 @@ export const fontMono = localFont({
   ],
   variable: "--font-mono-face",
   // `preload: false` — the header's paragraph, as amended 2026-09-04. This
-  // family still paints no route's LCP element, but since WO-W12 (#138) it is
+  // family still paints no route's LCP element, but since WO-W12 (PR 138) it is
   // no longer confined to job ids, timestamps and diagnostic rows: it also
   // sets the landing card's eyebrow, which is why `/` fetches it at all. The
   // measurement and the owner's ruling are on `fontReport` above.
