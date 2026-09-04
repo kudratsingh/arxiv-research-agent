@@ -13,7 +13,7 @@ import uuid
 from collections.abc import AsyncIterator
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import Response, StreamingResponse
 
 from src.api.auth import ApiKeyPrincipal, enforce_rate_limit, require_principal
@@ -58,6 +58,20 @@ from src.api.streaming import (
 )
 from src.cancellation import abandoned_node_count
 from src.config import settings
+from src.errors import (
+    ConversationNotFound,
+    InvalidLearnerProfile,
+    JobHasNoReport,
+    JobNotAwaitingReview,
+    JobNotFound,
+    LearnerProfileDisabled,
+    LearnerProfileNotFound,
+    LearnerProfileRequiresAuth,
+    LearnerProgressRequiresAuth,
+    NotFoundError,
+    ReviseRequiresPlan,
+    state_conflict_message,
+)
 from src.learning.profile_store import (
     DECLARED_CONFIDENCE,
     LearnerGoal,
@@ -81,12 +95,11 @@ log = get_logger(__name__)
 
 router = APIRouter()
 
-
 def _check_ownership(
     resource_principal_key_id: str | None,
     caller: ApiKeyPrincipal | None,
     *,
-    detail: str,
+    error: type[NotFoundError],
 ) -> None:
     """Enforce per-principal ownership on a resource (ADR 0036).
 
@@ -100,14 +113,17 @@ def _check_ownership(
     can't touch it" is an info-disclosure vector. From the client's
     perspective, resources owned by other principals simply don't
     exist.
+
+    ADR 0064: the caller passes the `AppError` *class* rather than a
+    detail string, and the parameter is typed `type[NotFoundError]` so
+    the 404-not-403 rule above is enforced by mypy instead of by
+    everyone remembering it.
     """
     if caller is None:
         return
     if resource_principal_key_id == caller.key_id:
         return
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=detail
-    )
+    raise error()
 
 
 def _principal_key_id(caller: ApiKeyPrincipal | None) -> str | None:
@@ -189,10 +205,7 @@ async def submit_research(
         conversation_store = state["conversation_store"]
         conversation = await conversation_store.get(body.conversation_id)
         if conversation is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="conversation_not_found",
-            )
+            raise ConversationNotFound()
         # ADR 0036: a caller can't piggyback on another principal's
         # conversation. `_check_ownership` returns 404 (not 403) so
         # this reads identically to "the id doesn't exist" from the
@@ -200,7 +213,7 @@ async def submit_research(
         _check_ownership(
             conversation.principal_key_id,
             principal,
-            detail="conversation_not_found",
+            error=ConversationNotFound,
         )
 
     job = Job(
@@ -252,10 +265,8 @@ async def get_research(
     state = _get_state(request)
     job = await state["store"].get(job_id)
     if job is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
-        )
-    _check_ownership(job.principal_key_id, principal, detail="job_not_found")
+        raise JobNotFound()
+    _check_ownership(job.principal_key_id, principal, error=JobNotFound)
     return _job_to_detail(job)
 
 
@@ -280,20 +291,17 @@ async def review_plan(
     state = _get_state(request)
     job = await state["store"].get(job_id)
     if job is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
-        )
-    _check_ownership(job.principal_key_id, principal, detail="job_not_found")
+        raise JobNotFound()
+    _check_ownership(job.principal_key_id, principal, error=JobNotFound)
     if not job.is_awaiting_review():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"job_not_awaiting_review (status={job.status.value})",
+        raise JobNotAwaitingReview(
+            public_message=state_conflict_message(
+                "resolve the plan review", job.status.value
+            ),
+            wire_detail=f"{JobNotAwaitingReview.code} (status={job.status.value})",
         )
     if body.action == "revise" and body.plan is None:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="revise_requires_plan",
-        )
+        raise ReviseRequiresPlan()
 
     job.resume_action = body.action
     if body.action == "revise" and body.plan is not None:
@@ -384,14 +392,14 @@ async def export_research(
     state = _get_state(request)
     job = await state["store"].get(job_id)
     if job is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
-        )
-    _check_ownership(job.principal_key_id, principal, detail="job_not_found")
+        raise JobNotFound()
+    _check_ownership(job.principal_key_id, principal, error=JobNotFound)
     if not job.result:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"job_has_no_report (status={job.status.value})",
+        raise JobHasNoReport(
+            public_message=state_conflict_message(
+                "export a report", job.status.value
+            ),
+            wire_detail=f"{JobHasNoReport.code} (status={job.status.value})",
         )
 
     media_type, ext, render = EXPORTERS[format]
@@ -446,17 +454,15 @@ async def stream_research(
         A `text/event-stream` response.
 
     Raises:
-        HTTPException: 404 when the job is unknown or owned by
+        JobNotFound: 404 when the job is unknown or owned by
             another principal (ADR 0036).
     """
     state = _get_state(request)
     store = state["store"]
     job = await store.get(job_id)
     if job is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="job_not_found"
-        )
-    _check_ownership(job.principal_key_id, principal, detail="job_not_found")
+        raise JobNotFound()
+    _check_ownership(job.principal_key_id, principal, error=JobNotFound)
 
     async def event_source() -> AsyncIterator[bytes]:
         # Terminal jobs replay a single frame and close — no
@@ -649,13 +655,11 @@ async def get_conversation(
     state = _get_state(request)
     conversation = await state["conversation_store"].get(conversation_id)
     if conversation is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
-        )
+        raise ConversationNotFound()
     _check_ownership(
         conversation.principal_key_id,
         principal,
-        detail="conversation_not_found",
+        error=ConversationNotFound,
     )
     return _conversation_to_detail(conversation)
 
@@ -683,9 +687,7 @@ async def delete_conversation(
         principal_key_id=_principal_key_id(principal),
     )
     if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="conversation_not_found"
-        )
+        raise ConversationNotFound()
     log.info(
         "api_conversation_deleted",
         extra={"conversation_id": conversation_id},
@@ -715,20 +717,14 @@ def _profile_store(request: Request) -> Any:
     stable in both flag positions.
     """
     if not settings.enable_learner_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="learner_profile_disabled",
-        )
+        raise LearnerProfileDisabled()
     # Read straight off `app.state` rather than through `_get_state`:
     # that helper resolves every key eagerly, so adding a required
     # attribute to it would break the hand-built partial states several
     # stream tests pass. Its own docstring says so.
     store = getattr(request.app.state, "profile_store", None)
     if store is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="learner_profile_disabled",
-        )
+        raise LearnerProfileDisabled()
     return store
 
 
@@ -742,10 +738,7 @@ def _learner_key_id(caller: ApiKeyPrincipal | None) -> str:
     (01 §1.3) instead of writing a record everyone shares.
     """
     if caller is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="learner_profile_requires_auth",
-        )
+        raise LearnerProfileRequiresAuth()
     return caller.key_id
 
 
@@ -802,10 +795,7 @@ async def get_learner_profile(
     store = _profile_store(request)
     profile = await store.get(_learner_key_id(principal))
     if profile is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="learner_profile_not_found",
-        )
+        raise LearnerProfileNotFound()
     return _profile_to_response(profile)
 
 
@@ -871,10 +861,14 @@ async def put_learner_profile(
         # Pydantic caught shape; this catches the domain rules the
         # schema cannot express (duplicate skills after normalisation,
         # a skill name that is not vocabulary-shaped, a bad ISO date).
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
-        ) from exc
+        #
+        # ADR 0064: `str(exc)` used to BE the response body. The rules
+        # this catches are ours and their messages are not sensitive,
+        # but `except ValueError` is a wide net — a `datetime` or a
+        # third-party parser landing here would have put its own text,
+        # of its own length, on the wire. The message now goes to the
+        # log with the request id and the client gets one code.
+        raise InvalidLearnerProfile(log_detail=str(exc)) from exc
 
     stored = await store.put(profile)
     log.info(
@@ -960,16 +954,10 @@ async def get_learn_progress(
     than serving someone else's record.
     """
     if not settings.enable_learner_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="learner_profile_disabled",
-        )
+        raise LearnerProfileDisabled()
     key_id = _principal_key_id(principal)
     if key_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="learner_progress_requires_auth",
-        )
+        raise LearnerProgressRequiresAuth()
 
     events = await _progress_event_store(request).list_events(
         key_id, limit=limit, offset=offset

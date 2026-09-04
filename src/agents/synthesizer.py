@@ -35,6 +35,7 @@ from typing import Any
 from langchain_core.messages import AIMessage
 
 from src.config import settings
+from src.errors import UpstreamModelOutput
 from src.graph.state import Citation, EvidenceClaim, ResearchState
 from src.llm import call_llm_json
 from src.observability import get_logger
@@ -42,14 +43,14 @@ from src.observability import get_logger
 log = get_logger(__name__)
 
 
-class SynthesizerOutputError(RuntimeError):
+class SynthesizerOutputError(UpstreamModelOutput):
     """The synthesizer produced no usable draft report, even after a retry.
 
     Raised when both the original call and the single corrective retry
-    yielded unparseable JSON or an empty `draft_report`. The API runner
-    maps the class name straight to the job's `error_type`, so the
-    failure reads as what it is — a synthesis output failure — rather
-    than a generic `JSONDecodeError` (ADR 0041).
+    yielded unparseable JSON or an empty `draft_report`. The failure
+    reads as what it is — a synthesis output failure — rather than a
+    generic `JSONDecodeError` (ADR 0041), and since ADR 0064 it reaches
+    the job as the stable code `upstream_model_output`.
     """
 
 

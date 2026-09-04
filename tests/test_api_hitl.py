@@ -734,4 +734,8 @@ class TestAgetStateFailureModes:
             ).json()
             body = await _wait_for_status(client, submit["job_id"], "failed")
             assert body["status"] == "failed"
-            assert body["error_type"] == "ValueError"
+            # ADR 0064: a bare `ValueError` is an internal invariant
+            # that escaped, so it lands as `internal_unexpected` — and
+            # "corrupt checkpoint blob for thread" stays in the log.
+            assert body["error_type"] == "internal_unexpected"
+            assert "corrupt checkpoint blob" not in str(body)

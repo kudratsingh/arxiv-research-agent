@@ -8,7 +8,7 @@ import uuid
 from collections.abc import Mapping
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.api.auth import (
@@ -21,6 +21,18 @@ from src.api.runner import run_job
 from src.config import settings
 from src.content.loader import LoadedPath, loaded_paths
 from src.content.schema import ContentValidationError, Entry
+from src.errors import (
+    BriefingCompanionRequired,
+    LearnContentInvalid,
+    LearnerProfileRequired,
+    LearnPathNotFound,
+    LearnResourceNotFound,
+    SessionLoopDisabled,
+    SessionLoopRequiresAuth,
+    SessionNotAwaitingLearner,
+    SessionNotFound,
+    state_conflict_message,
+)
 from src.learning.memory import build_tier1_memory, latest_session_summary
 from src.learning.profile_store import skill_entry_from_mapping
 from src.learning.progress_store import ProgressEvent
@@ -29,11 +41,16 @@ from src.observability import get_logger
 log = get_logger(__name__)
 router = APIRouter()
 
-DISABLED_DETAIL = "session_loop_disabled"
-PROFILE_REQUIRED_DETAIL = "learner_profile_required"
-CONTENT_INVALID_DETAIL = "learn_content_invalid"
-PATH_NOT_FOUND_DETAIL = "learn_path_not_found"
-RESOURCE_NOT_FOUND_DETAIL = "learn_resource_not_found"
+# ADR 0064 moved these five strings into `src/errors.py` as codes on
+# `AppError` subclasses. They stay bound here under their old names
+# because they are part of this module's public surface — several tests
+# import them to assert a response body — and because the code IS the
+# detail, so the two can no longer drift.
+DISABLED_DETAIL = SessionLoopDisabled.code
+PROFILE_REQUIRED_DETAIL = LearnerProfileRequired.code
+CONTENT_INVALID_DETAIL = LearnContentInvalid.code
+PATH_NOT_FOUND_DETAIL = LearnPathNotFound.code
+RESOURCE_NOT_FOUND_DETAIL = LearnResourceNotFound.code
 
 
 class _Strict(BaseModel):
@@ -101,25 +118,26 @@ class SessionDetail(_Strict):
 
 def _require_session_enabled() -> None:
     if not settings.enable_session_loop:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=DISABLED_DETAIL)
+        raise SessionLoopDisabled()
 
 
 def _principal_id(principal: ApiKeyPrincipal | None) -> str:
     if principal is None:
         # Config validation already makes this impossible for a correctly
         # configured session deployment. Keep the data boundary defensive.
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="session_loop_requires_auth",
+        raise SessionLoopRequiresAuth(
+            log_detail="enable_session_loop is on without an authenticated principal"
         )
     return principal.key_id
 
 
 def _owned_session(job: Job | None, principal: ApiKeyPrincipal | None) -> Job:
     if job is None or job.kind != "session":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="session_not_found")
+        raise SessionNotFound()
     if settings.enable_api_auth and (principal is None or job.principal_key_id != principal.key_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="session_not_found")
+        # Same 404-not-403 rule as `routes._check_ownership`: another
+        # principal's session must read as "does not exist".
+        raise SessionNotFound()
     return job
 
 
@@ -128,13 +146,10 @@ async def _content_entry(path_id: str, resource_id: str) -> tuple[LoadedPath, En
         paths = await asyncio.to_thread(loaded_paths)
     except ContentValidationError as exc:
         log.error("learn_content_invalid", extra={"rule": exc.rule, "error": str(exc)})
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=CONTENT_INVALID_DETAIL,
-        ) from exc
+        raise LearnContentInvalid(log_detail=f"{exc.rule}: {exc}") from exc
     path = paths.get(path_id)
     if path is None or path.manifest.status != "published":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=PATH_NOT_FOUND_DETAIL)
+        raise LearnPathNotFound()
     entry = next(
         (
             candidate
@@ -144,15 +159,9 @@ async def _content_entry(path_id: str, resource_id: str) -> tuple[LoadedPath, En
         None,
     )
     if entry is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=RESOURCE_NOT_FOUND_DETAIL,
-        )
+        raise LearnResourceNotFound()
     if path.servable_briefing(entry) is None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="briefing_companion_required",
-        )
+        raise BriefingCompanionRequired()
     return path, entry
 
 
@@ -312,10 +321,10 @@ async def create_session(
 
     profile_store = getattr(request.app.state, "profile_store", None)
     if profile_store is None:
-        raise HTTPException(status_code=404, detail=PROFILE_REQUIRED_DETAIL)
+        raise LearnerProfileRequired()
     profile = await profile_store.get(principal_id)
     if profile is None:
-        raise HTTPException(status_code=404, detail=PROFILE_REQUIRED_DETAIL)
+        raise LearnerProfileRequired()
     path, entry = await _content_entry(body.path_id, body.resource_id)
     briefing = path.servable_briefing(entry)
 
@@ -419,9 +428,14 @@ async def submit_turn(
     store = request.app.state.store
     job = _owned_session(await store.get(session_id), principal)
     if job.status != JobStatus.awaiting_learner:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"session_not_awaiting_learner (status={job.status.value})",
+        # The second of the two `detail` strings that keep a
+        # `(status=...)` suffix — see `routes._state_conflict_message`
+        # and ADR 0064.
+        raise SessionNotAwaitingLearner(
+            public_message=state_conflict_message(
+                "send a turn", job.status.value
+            ),
+            wire_detail=f"{SessionNotAwaitingLearner.code} (status={job.status.value})",
         )
     job.resume_payload = {
         "learner_reply": body.message.strip(),

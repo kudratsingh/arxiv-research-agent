@@ -288,7 +288,14 @@ class TestSubmitAndPoll:
         ) as client:
             resp = await client.get("/research/nonexistent")
             assert resp.status_code == 404
-            assert resp.json() == {"detail": "job_not_found"}
+            body = resp.json()
+            # ADR 0064: `detail` is unchanged — the envelope is
+            # additive over it, which is what keeps the recorded
+            # contract fixtures and the current web client working.
+            assert body["detail"] == "job_not_found"
+            assert body["error"]["code"] == "job_not_found"
+            assert body["error"]["retryable"] is False
+            assert body["error"]["request_id"] == resp.headers["X-Request-Id"]
 
     async def test_full_lifecycle_reaches_succeeded(self) -> None:
         app = _make_app_with_stub(StubWorkflow())
@@ -313,8 +320,13 @@ class TestSubmitAndPoll:
             submit = (await client.post("/research", json={"query": "q"})).json()
             final = await _wait_for_terminal(client, submit["job_id"])
             assert final["status"] == "failed"
-            assert final["error_type"] == "RuntimeError"
-            assert "stub workflow injected failure" in final["error"]
+            # ADR 0064: an untyped exception reaching the runner's
+            # generic handler is `internal_unexpected`, and its message
+            # — "stub workflow injected failure" here, a psycopg DSN in
+            # production — no longer reaches the client at all.
+            assert final["error_type"] == "internal_unexpected"
+            assert final["error"] == "internal_unexpected"
+            assert "stub workflow injected failure" not in str(final)
             assert final["result"] is None
 
 

@@ -21,6 +21,7 @@ import re
 import requests
 from defusedxml import ElementTree as ET
 
+from src.errors import UpstreamArxiv
 from src.graph.state import PaperMetadata
 from src.observability import get_logger
 from src.tools.http_session import build_retrying_session
@@ -38,15 +39,18 @@ _ARXIV_ABS_ID = re.compile(r"arxiv\.org/abs/([^?#]+?)(?:v\d+)?/?$", re.IGNORECAS
 log = get_logger(__name__)
 
 
-class ArxivUnavailableError(RuntimeError):
+class ArxivUnavailableError(UpstreamArxiv):
     """arXiv could not serve results — outage, rate limit, or bad response.
 
     Raised (only when a caller opts in via `raise_on_unavailable`) for a
     connection failure, a non-200 status, or arXiv's in-band 200
     "Rate exceeded" body. Distinct from a legitimate empty result set,
-    which is a successful search that found nothing. The API runner maps
-    a raised exception's class name to the job's `error_type`, so this
-    name is what operators see when retrieval itself was down.
+    which is a successful search that found nothing.
+
+    Re-parented onto `UpstreamArxiv` by ADR 0064, so the job's
+    `error_type` is now the stable code `upstream_arxiv` rather than
+    this class's name — the name can be refactored without forking a
+    metric series or breaking a client branch.
     """
 
 

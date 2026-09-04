@@ -23,6 +23,7 @@ from typing import Any
 from langchain_core.messages import AIMessage
 
 from src.config import settings
+from src.errors import NoPapersFound
 from src.graph.state import PaperMetadata, ResearchState
 from src.observability import get_logger
 from src.tools.arxiv_search import (
@@ -46,13 +47,14 @@ log = get_logger(__name__)
 MAX_SEARCH_QUERIES_PER_RUN = 12
 
 
-class NoPapersFoundError(RuntimeError):
+class NoPapersFoundError(NoPapersFound):
     """A live arXiv search completed but matched zero papers.
 
     Raised only when arXiv actually answered — a transport-level
     failure raises `ArxivUnavailableError` instead, so the job's
-    `error_type` (the runner maps it from the exception class name)
-    names the real cause. Never raised under `settings.use_mock_data`,
+    `error_type` (ADR 0064: the code `not_found_papers`, not this
+    class's name) names the real cause. Never raised under
+    `settings.use_mock_data`,
     and never raised when the state already carries papers from an
     earlier search (a supervisor-loop re-search that finds nothing
     keeps the prior result set instead of destroying it).

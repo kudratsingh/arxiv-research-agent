@@ -22,12 +22,12 @@ from unittest.mock import MagicMock
 import httpx
 import pytest
 from asgi_lifespan import LifespanManager
-from fastapi import HTTPException
 
 from src.api.app import create_app
 from src.api.auth import ApiKeyPrincipal
 from src.api.jobs import InMemoryJobStore
 from src.api.routes import _check_ownership, _principal_key_id
+from src.errors import ConversationNotFound, JobNotFound
 
 pytestmark = pytest.mark.unit
 
@@ -35,30 +35,33 @@ pytestmark = pytest.mark.unit
 class TestOwnershipHelper:
     def test_auth_off_never_blocks(self) -> None:
         # `caller is None` == auth off. Any resource is visible.
-        _check_ownership(None, None, detail="job_not_found")
-        _check_ownership("some_owner", None, detail="job_not_found")
+        _check_ownership(None, None, error=JobNotFound)
+        _check_ownership("some_owner", None, error=JobNotFound)
 
     def test_auth_on_matching_key_passes(self) -> None:
         caller = ApiKeyPrincipal(key_id="alice")
-        _check_ownership("alice", caller, detail="job_not_found")
+        _check_ownership("alice", caller, error=JobNotFound)
 
     def test_auth_on_mismatched_key_returns_404(self) -> None:
         caller = ApiKeyPrincipal(key_id="alice")
-        with pytest.raises(HTTPException) as exc:
-            _check_ownership("bob", caller, detail="job_not_found")
-        assert exc.value.status_code == 404
+        with pytest.raises(JobNotFound) as exc:
+            _check_ownership("bob", caller, error=JobNotFound)
+        assert exc.value.http_status == 404
         # 404, not 403 — leaking "this exists but you can't touch it"
-        # is an info-disclosure vector.
-        assert exc.value.detail == "job_not_found"
+        # is an info-disclosure vector. ADR 0064 puts the rule in the
+        # type: `_check_ownership` takes a `type[NotFoundError]`, so a
+        # 403 cannot be passed in by accident.
+        assert exc.value.code == "job_not_found"
+        assert exc.value.wire_detail == "job_not_found"
 
     def test_auth_on_null_owner_is_invisible(self) -> None:
         """Legacy rows written before ADR 0036 have `principal_key_id=None`.
         Under auth-on they must NOT be visible — otherwise turning auth
         on doesn't actually isolate legacy data."""
         caller = ApiKeyPrincipal(key_id="alice")
-        with pytest.raises(HTTPException) as exc:
-            _check_ownership(None, caller, detail="conversation_not_found")
-        assert exc.value.status_code == 404
+        with pytest.raises(ConversationNotFound) as exc:
+            _check_ownership(None, caller, error=ConversationNotFound)
+        assert exc.value.http_status == 404
 
 
 class TestPrincipalKeyIdHelper:

@@ -68,6 +68,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Literal, Protocol, get_args
 
+from src.errors import InvalidProgressEvent
 from src.observability import get_logger
 
 log = get_logger(__name__)
@@ -159,12 +160,17 @@ _SCHEDULE_LABEL_PATTERN = re.compile(r"^\d+ of \d+ sessions$|^\d+ sessions? reco
 _ISO_UTC_SUFFIX = "Z"
 
 
-class ProgressEventRejected(ValueError):
+class ProgressEventRejected(InvalidProgressEvent, ValueError):
     """A write the ledger refuses.
 
     Raised at the write boundary — before anything reaches a store —
     so the in-memory and Postgres implementations refuse identically
     and the caller gets the same message either way.
+
+    ADR 0064 gives it the code `invalid_progress_event` and keeps the
+    `ValueError` mixin: `_parse_ts` below catches `ValueError` around
+    `datetime.fromisoformat` and re-raises as this class, which stops
+    working the moment this stops being a `ValueError`.
     """
 
 

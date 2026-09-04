@@ -44,6 +44,7 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from typing import Any, Final, Literal, Protocol
 
+from src.errors import ForbiddenAnonymousPrincipal, InvalidProvenance
 from src.observability import get_logger
 
 log = get_logger(__name__)
@@ -132,22 +133,31 @@ _ISO_DATE_RE: Final = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _GOAL_ID_RE: Final = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
-class ProvenanceError(ValueError):
+class ProvenanceError(InvalidProvenance, ValueError):
     """A skill claim violates the declared/inferred/assessed rules.
 
     Raised at construction, at deserialisation, and at merge — the
     three doors into the store — so an offending claim never reaches
     a row, a prompt, or a response body.
+
+    ADR 0064 gives it the code `invalid_provenance` and keeps the
+    `ValueError` mixin: `src/api/routes.py`'s profile writer catches
+    `ValueError` to turn a domain-rule breach into a 422, and
+    `_coerce_skill_entry` below catches `ValueError` around `datetime`
+    parsing. Dropping the mixin would silently turn both into 500s.
     """
 
 
-class AnonymousPrincipalError(ValueError):
+class AnonymousPrincipalError(ForbiddenAnonymousPrincipal, ValueError):
     """A profile operation was attempted without a named principal.
 
     `enable_learner_profile` already refuses to load without
     `enable_api_auth` (see `src/config.py`), so this is the store's own
     belt-and-braces: 01 §1.3's "refuses to run against the anonymous
     principal", enforced where the write happens.
+
+    ADR 0064 keeps the `ValueError` mixin for the same reason
+    `ProvenanceError` does — the profile routes catch `ValueError`.
     """
 
 

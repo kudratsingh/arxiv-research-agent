@@ -33,6 +33,7 @@ from src.api.auth import (
 )
 from src.api.jobs import InMemoryJobStore
 from src.config import Settings
+from src.errors import RateLimitedError
 
 pytestmark = pytest.mark.unit
 
@@ -181,12 +182,15 @@ class TestInMemoryRateLimiter:
         await rl.check_and_record("k", now=100.0)
         await rl.check_and_record("k", now=101.0)
         await rl.check_and_record("k", now=102.0)
-        with pytest.raises(Exception) as exc:
+        with pytest.raises(RateLimitedError) as exc:
             await rl.check_and_record("k", now=103.0)
-        # HTTPException isn't in the module's public exports so check
-        # by attribute rather than isinstance.
-        assert getattr(exc.value, "status_code", None) == 429
-        assert "Retry-After" in getattr(exc.value, "headers", {})
+        # ADR 0064: the limiter raises the taxonomy's `RateLimitedError`
+        # rather than a bare `HTTPException`, so the status is read off
+        # the class and the code is assertable.
+        assert exc.value.http_status == 429
+        assert exc.value.code == "rate_limited"
+        assert exc.value.retryable is True
+        assert "Retry-After" in (exc.value.headers or {})
 
     @pytest.mark.asyncio
     async def test_window_slides(self) -> None:

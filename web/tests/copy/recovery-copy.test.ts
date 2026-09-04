@@ -116,8 +116,25 @@ describe("criterion 3 — a 404 means missing OR another principal's", () => {
   it("the backend really does answer 404 for an ownership mismatch", () => {
     // A 403 here would mean the client CAN tell the two cases apart, and
     // the copy below would then be under-informative rather than honest.
-    expect(ownership).toContain("HTTP_404_NOT_FOUND");
-    expect(ownership).not.toContain("HTTP_403_FORBIDDEN");
+    //
+    // ADR 0064 moved the status off the raise site and onto the error
+    // class, and made the rule a type: `_check_ownership` accepts a
+    // `type[NotFoundError]`, so passing a 403 is now a type error rather
+    // than a review miss. Both halves are checked — the signature here,
+    // and the family's status in `src/errors.py` — because either alone
+    // could drift into meaning nothing.
+    expect(ownership).toContain("error: type[NotFoundError]");
+    expect(ownership).not.toMatch(/Forbidden|HTTP_403/);
+
+    const errors = readFileSync(
+      path.join(REPO_ROOT, "src", "errors.py"),
+      "utf8",
+    );
+    const family = errors.slice(
+      errors.indexOf("class NotFoundError(AppError):"),
+      errors.indexOf("class UnauthorizedError(AppError):"),
+    );
+    expect(family).toContain("http_status = 404");
   });
 
   it("and does it deliberately, to avoid disclosing existence", () => {

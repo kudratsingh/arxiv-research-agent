@@ -1,54 +1,53 @@
 /**
- * WO-12 criterion 7 — the `error_type` drift test.
+ * WO-12 criterion 7 — the `error_type` drift test, rebased on ADR 0064.
  *
- * "A test enumerates the `error_type` values the backend can produce
- * (`runner.py:1506`, `:1536`, `:1564`, `:1629`, `redriver.py:518`, plus
- * `type(exc).__name__` for the named exception classes) and asserts each is
- * mapped or visibly falls through."
+ * "A test enumerates the `error_type` values the backend can produce and
+ * asserts each is mapped or visibly falls through."
  *
- * IT READS PYTHON, NOT A TRANSCRIBED LIST. `error_type` appears in no
- * OpenAPI schema as an enum — `schemas.py:110` types it `str | None` — so
+ * IT STILL READS PYTHON, NOT A TRANSCRIBED LIST. `error_type` appears in no
+ * OpenAPI schema as an enum — `schemas.py` types it `str | None` — so
  * nothing generates the frontend's view of it and a hand-copied list would
- * drift the day somebody adds a `raise`. This test derives the producible
- * set from `src/` on every run, exactly the way
- * `tests/test_contract_sse_events.py` derives the SSE event names from the
- * emit sites. No Python is added: the sources already say everything this
- * needs, and reading them from the web suite keeps the check on the side
- * that would otherwise silently render "The run failed." forever.
+ * drift the day somebody adds a `raise`.
  *
- * THE PRODUCIBLE SET HAS TWO HALVES.
+ * WHAT CHANGED, AND WHY THIS FILE IS SHORTER.
  *
- *   1. Six deliberate literals, assigned to `job.error_type` in
- *      `runner.py` and `redriver.py` (ADR 0057 added
- *      `session_turn_timeout`; ADR 0062 added `session_cost_cap_refused`).
- *   2. `type(exc).__name__` in the runner's generic handler, for every exception class
- *      that can reach the generic handler. An exception the runner catches
- *      by name FIRST cannot: `HitlTimeoutError` becomes `hitl_timeout`,
- *      `SessionTurnTimeoutError` becomes `session_turn_timeout`,
- *      `CostBudgetExceeded` becomes `cost_budget_exceeded`, and
- *      `HitlCancelledError` sets no `error_type` at all because the job is
- *      `cancelled`, not `failed`. So the second half is "every exception
- *      class defined in src/, minus the ones runner.py intercepts", which
- *      is derived here rather than assumed.
+ * This test used to derive the producible set by hand from five places at
+ * once: `job.error_type = "literal"` assignments in `runner.py` and
+ * `redriver.py`, their exact line numbers, and `type(exc).__name__` for
+ * every `class X(Exception)` under `src/` minus the ones the runner caught
+ * by name. That was the best available derivation while the backend had no
+ * error taxonomy — and it made two things load-bearing that had no business
+ * being load-bearing: the *base class* of an exception, and the *line
+ * number* of an assignment.
  *
- * ONE SCOPE NARROWING, AND IT IS GUARDED. `error_type` is a field on a
- * research `Job`. An exception class in a package the job path never enters
- * cannot become one, and listing it here would force a copy entry for a
- * value the backend cannot produce — precisely the folklore the last test in
- * this file exists to prevent. Three packages are such: `src/learning/`
- * (ADR 0058), whose `ValueError`s are raised in the HTTP profile handlers
- * and converted to a 422 body, and `src/content/` (WO-W15), whose
- * `ContentValidationError` is raised parsing a manifest off disk on the
- * read-only `GET /learn/paths*` path and converted to a 503. The third is
- * `src/contracts/` (P0-WO00): its shared kernel has no runtime integration;
- * P0-WO05 must add an explicit mapping or catch when it joins the job path.
- * The exclusion
- * is not trusted either — `OFF_THE_JOB_PATH` is re-checked against the
- * runner and the graph on every run, so the day a card wires either package
- * into a graph node, this file fails and the narrowing has to be revisited.
+ * ADR 0064 gave the backend one: `src/errors.py` defines `AppError` with a
+ * stable `code`, `ERROR_CODES` as the closed set, and `JOB_ERROR_TYPES` as
+ * the subset a *run* can carry. The Python side proves that subset is
+ * complete — `tests/test_errors.py::TestTheJobVocabulary` derives it from
+ * the runner's assignments, the redriver's, and every `AppError` subclass
+ * on the job path, in both directions. So the honest thing for this file to
+ * do is read that one declaration rather than re-implement a weaker version
+ * of the same derivation in TypeScript.
+ *
+ * The cross-side guarantee is unchanged and is what matters: a value the
+ * backend can produce and this dictionary has no sentence for fails here.
+ *
+ * THE SCOPE NARROWING THAT USED TO LIVE HERE IS NOW STRUCTURAL. This file
+ * used to carry an `OFF_THE_JOB_PATH` exclusion for `src/learning/`,
+ * `src/content/` and `src/contracts/` — packages whose exceptions cannot
+ * reach `Job.error_type` — plus a guard that re-derived the exclusion from
+ * the runner and the graph, because the enumeration was "every exception
+ * class under `src/`" and had to be narrowed by hand. Deriving from
+ * `JOB_ERROR_TYPES` removes the need: a failure only enters that set by
+ * being reachable from the runner, which the Python side proves. The one
+ * live obligation the exclusion carried forward is unchanged and belongs to
+ * its own card: `src/contracts/` (P0-WO00) has no runtime integration yet,
+ * and P0-WO05 must give its failures an `AppError` code — or catch them —
+ * when the shared kernel joins the job path. It will fail here if it does
+ * neither.
  */
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -61,201 +60,98 @@ import {
 
 const WEB_ROOT = path.resolve(__dirname, "..", "..");
 const REPO_ROOT = path.resolve(WEB_ROOT, "..");
-const SRC = path.join(REPO_ROOT, "src");
 
 function read(...segments: string[]): string {
   return readFileSync(path.join(REPO_ROOT, ...segments), "utf8");
 }
 
+const ERRORS_PY = read("src", "errors.py");
 const RUNNER = read("src", "api", "runner.py");
 const REDRIVER = read("src", "api", "redriver.py");
 
-/** Every `.py` under `src/`, recursively. */
-function pythonFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) return pythonFiles(full);
-    return entry.isFile() && entry.name.endsWith(".py") ? [full] : [];
-  });
-}
-
 // ---------------------------------------------------------------------------
-// Half 1 — the deliberate literals.
+// The producible set, read out of `src/errors.py`.
 // ---------------------------------------------------------------------------
 
-/** `job.error_type = "literal"`, wherever it appears. */
-function assignedLiterals(source: string): string[] {
-  return [...source.matchAll(/job\.error_type\s*=\s*"([a-z_]+)"/g)].map(
+/** The string members of a `frozenset({...})` bound to `name`. */
+function frozensetMembers(source: string, name: string): string[] {
+  const declaration = new RegExp(
+    `^${name}[^=]*=\\s*frozenset\\(\\s*\\{([\\s\\S]*?)\\}\\s*\\)`,
+    "m",
+  ).exec(source);
+  if (declaration === null) return [];
+  return [...(declaration[1] as string).matchAll(/"([a-z0-9_]+)"/g)].map(
     (match) => match[1] as string,
   );
 }
 
-/** `job.error_type = SOME_CONSTANT`, resolved through its own `Final[str]`. */
-function assignedConstants(source: string): string[] {
-  return [...source.matchAll(/job\.error_type\s*=\s*([A-Z][A-Z0-9_]+)\b/g)].flatMap(
-    (match) => {
-      const name = match[1] as string;
-      const declaration = new RegExp(
-        `^${name}\\s*(?::\\s*Final\\[str\\]\\s*)?=\\s*"([a-z_]+)"`,
-        "m",
-      ).exec(source);
-      return declaration === null ? [] : [declaration[1] as string];
-    },
-  );
-}
-
-const DELIBERATE = [
-  ...assignedLiterals(RUNNER),
-  ...assignedLiterals(REDRIVER),
-  ...assignedConstants(RUNNER),
-  ...assignedConstants(REDRIVER),
-].sort();
-
-// ---------------------------------------------------------------------------
-// Half 2 — `type(exc).__name__`.
-// ---------------------------------------------------------------------------
-
-/**
- * Packages whose exceptions cannot reach `Job.error_type`.
- *
- * See the header. Guarded by "the off-the-job-path exclusion is still true"
- * below, which reads the runner and the graph rather than taking this on
- * faith.
- */
-const OFF_THE_JOB_PATH = [
-  path.join(SRC, "learning") + path.sep,
-  path.join(SRC, "content") + path.sep,
-  path.join(SRC, "contracts") + path.sep,
-];
-
-function onTheJobPath(file: string): boolean {
-  return !OFF_THE_JOB_PATH.some((prefix) => file.startsWith(prefix));
-}
-
-/** Exception classes defined under `src/`, on the job path. */
-const EXCEPTION_CLASSES = pythonFiles(SRC)
-  .filter(onTheJobPath)
-  .flatMap((file) => [
-    ...readFileSync(file, "utf8").matchAll(
-      /^class\s+(\w+)\((?:Exception|RuntimeError|ValueError|KeyError|OSError)\):/gm,
-    ),
-  ])
-  .map((match) => match[1] as string)
-  .sort();
-
-/** Names `runner.py` catches before the generic `except Exception as exc`. */
-const INTERCEPTED = [
-  ...RUNNER.slice(0, RUNNER.indexOf("except Exception as exc:")).matchAll(
-    /^\s*except\s+([A-Za-z_][\w.]*)/gm,
-  ),
-]
-  .map((match) => (match[1] as string).replace(/^asyncio\./, ""))
-  .filter((name) => name !== "Exception");
-
-const FROM_CLASS_NAME = EXCEPTION_CLASSES.filter(
-  (name) => !INTERCEPTED.includes(name),
-);
-
-const PRODUCIBLE = [...DELIBERATE, ...FROM_CLASS_NAME].sort();
+const PRODUCIBLE = frozensetMembers(ERRORS_PY, "JOB_ERROR_TYPES").sort();
+const ALL_CODES = frozensetMembers(ERRORS_PY, "ERROR_CODES").sort();
 
 // ---------------------------------------------------------------------------
 
 describe("the enumeration reads the real backend", () => {
-  it("finds the six deliberate values at their cited sites", () => {
-    expect(DELIBERATE).toEqual([
-      "cost_budget_exceeded",
-      "hitl_timeout",
-      "orphaned",
-      "session_cost_cap_refused",
-      "session_turn_timeout",
-      "timeout",
-    ]);
-    // The citations themselves, so a moved assignment is noticed rather
-    // than silently re-found somewhere the design brief never read. The
-    // Runner line numbers moved with ADRs 0057 and 0062, which is this
-    // assertion working: a re-citation is a deliberate act.
-    expect(RUNNER.split("\n")[1586]).toContain('job.error_type = "session_turn_timeout"');
-    expect(RUNNER.split("\n")[1614]).toContain('job.error_type = "hitl_timeout"');
-    expect(RUNNER.split("\n")[1671]).toContain('job.error_type = "session_cost_cap_refused"');
-    expect(RUNNER.split("\n")[1701]).toContain('job.error_type = "cost_budget_exceeded"');
-    expect(RUNNER.split("\n")[1766]).toContain('job.error_type = "timeout"');
-    expect(REDRIVER.split("\n")[517]).toContain("job.error_type = ORPHANED_ERROR_TYPE");
+  it("finds a non-empty closed set and the job subset of it", () => {
+    // A regex that silently matched nothing would make every assertion
+    // below vacuous, so both sets are proven non-empty and related.
+    expect(PRODUCIBLE.length).toBeGreaterThan(0);
+    expect(ALL_CODES.length).toBeGreaterThan(PRODUCIBLE.length);
+    for (const value of PRODUCIBLE) {
+      expect(ALL_CODES, value).toContain(value);
+    }
   });
 
-  it("finds the generic branch that turns any other exception into a value", () => {
-    expect(RUNNER).toContain("job.error_type = type(exc).__name__");
+  it("finds the six deliberate assignments still in the runner and redriver", () => {
+    // The literals moved behind class constants (`JobTimeout.code`), so
+    // this pins the assignment sites by their class rather than by a
+    // string or a line number — a rename now has to change both sides of
+    // an import, which the Python type checker sees.
+    for (const [source, expression] of [
+      [RUNNER, "job.error_type = SessionTurnTimeout.code"],
+      [RUNNER, "job.error_type = HitlTimeout.code"],
+      [RUNNER, "job.error_type = BudgetExceededSession.code"],
+      [RUNNER, "job.error_type = BudgetExceededRun.code"],
+      [RUNNER, "job.error_type = JobTimeout.code"],
+      [REDRIVER, "job.error_type = ORPHANED_ERROR_TYPE"],
+    ] as const) {
+      expect(source).toContain(expression);
+    }
   });
 
-  it("the off-the-job-path exclusion is still true of the runner and graph", () => {
-    // The narrowing in the header, re-derived. Nothing the runner drives may
-    // import an excluded package; the moment something does, its exceptions
-    // become producible `error_type` values and that exclusion has to go
-    // rather than quietly hide them from the copy table.
-    const jobPathSources = [
-      RUNNER,
-      read("src", "api", "jobs.py"),
-      read("src", "graph", "workflow.py"),
-      read("src", "graph", "state.py"),
-    ];
-    // Derived from `OFF_THE_JOB_PATH` rather than listed again, so adding a
-    // package to the exclusion cannot forget to guard it.
-    const excludedPackages = OFF_THE_JOB_PATH.map((prefix) =>
-      path.basename(prefix.slice(0, -1)),
+  it("finds the generic branch, and proves it no longer leaks a class name", () => {
+    // The finding this whole ADR closes: the generic handler used to
+    // write `type(exc).__name__` into the job record, an API body, an
+    // SSE frame and a metric attribute.
+    expect(RUNNER).toContain("job.error_type = app_error.code");
+    expect(RUNNER).not.toMatch(/^\s*job\.error_type = type\(exc\)\.__name__$/m);
+    expect(RUNNER).not.toMatch(
+      /^\s*job\.error = f"\{type\(exc\)\.__name__\}: \{exc\}"$/m,
     );
-    expect(excludedPackages).toEqual(["learning", "content", "contracts"]);
-    for (const source of jobPathSources) {
-      for (const pkg of excludedPackages) {
-        expect(source).not.toMatch(new RegExp(`\\bsrc\\.${pkg}\\b`));
-      }
-    }
-    // And the excluded packages really do exist, so a rename cannot turn
-    // the exclusion into a silent no-op that stops excluding anything.
-    for (const prefix of OFF_THE_JOB_PATH) {
-      expect(
-        pythonFiles(SRC).some((file) => file.startsWith(prefix)),
-        prefix,
-      ).toBe(true);
-    }
   });
 
-  it("finds the exception classes, and the four the runner intercepts first", () => {
-    expect(EXCEPTION_CLASSES).toEqual([
-      "AllPaperAnalysesFailedError",
-      "ArxivUnavailableError",
-      "CostBudgetExceeded",
-      "HitlCancelledError",
-      "HitlTimeoutError",
-      "JobCancelledError",
+  it("the five class names it used to enumerate are gone from the vocabulary", () => {
+    // The old second half of this test. Each of these was an `error_type`
+    // value; each is now a code. Asserting their absence is what stops a
+    // half-finished revert from leaving the dictionary keyed on names the
+    // backend can no longer produce.
+    for (const legacy of [
       "NoPapersFoundError",
-      "SessionTurnTimeoutError",
+      "ArxivUnavailableError",
+      "AllPaperAnalysesFailedError",
       "SynthesizerOutputError",
-    ]);
-    for (const name of [
-      "HitlTimeoutError",
-      "CostBudgetExceeded",
-      "HitlCancelledError",
-      // ADR 0057. It has to stay a direct `Exception` subclass and it has
-      // to stay intercepted: the regex above only recognises the builtin
-      // bases, so a shared parking base class would drop both timeout
-      // exceptions out of this enumeration entirely.
-      "SessionTurnTimeoutError",
+      "JobCancelledError",
     ]) {
-      expect(INTERCEPTED, name).toContain(name);
+      expect(PRODUCIBLE, legacy).not.toContain(legacy);
+      expect(MAPPED_ERROR_TYPES as readonly string[], legacy).not.toContain(
+        legacy,
+      );
     }
-    // ...leaving exactly the five 03 §8.3 names, derived rather than typed.
-    expect(FROM_CLASS_NAME).toEqual([
-      "AllPaperAnalysesFailedError",
-      "ArxivUnavailableError",
-      "JobCancelledError",
-      "NoPapersFoundError",
-      "SynthesizerOutputError",
-    ]);
   });
 });
 
 describe("criterion 7 — every producible value is mapped or visibly falls through", () => {
-  it("enumerates eleven values", () => {
-    expect(PRODUCIBLE).toHaveLength(11);
+  it("enumerates twelve values", () => {
+    expect(PRODUCIBLE).toHaveLength(12);
   });
 
   it.each(PRODUCIBLE)("%s is mapped or falls through with its raw text", (value) => {
@@ -273,16 +169,29 @@ describe("criterion 7 — every producible value is mapped or visibly falls thro
     expect(described.errorType).toBe(value);
   });
 
-  it("maps all eleven — the dictionary and the backend agree exactly", () => {
-    // Both directions. A twelfth backend value fails the first half; a
+  it("maps all twelve — the dictionary and the backend agree exactly", () => {
+    // Both directions. A thirteenth backend value fails the first half; a
     // mapping entry for a value the backend can no longer produce fails
     // the second, which is what stops the table becoming folklore.
     expect([...MAPPED_ERROR_TYPES].sort()).toEqual(PRODUCIBLE);
   });
 
-  it("would notice a twelfth value", () => {
-    const described = describeErrorType("SomeFutureExceptionName", "boom");
+  it("would notice a thirteenth value", () => {
+    const described = describeErrorType("some_future_code", "boom");
     expect(described.mapped).toBe(false);
-    expect(MAPPED_ERROR_TYPES).not.toContain("SomeFutureExceptionName");
+    expect(MAPPED_ERROR_TYPES as readonly string[]).not.toContain(
+      "some_future_code",
+    );
+  });
+
+  it("maps no HTTP-boundary code, which is why the subset exists", () => {
+    // `ERROR_CODES` also holds forty-odd codes a route answers with —
+    // `job_not_found`, `missing_api_key`. A run never becomes one, so
+    // requiring a run-failure sentence for them would be inventing copy
+    // for states the reader cannot reach.
+    for (const value of ["job_not_found", "missing_api_key", "rate_limited"]) {
+      expect(ALL_CODES, value).toContain(value);
+      expect(PRODUCIBLE, value).not.toContain(value);
+    }
   });
 });
