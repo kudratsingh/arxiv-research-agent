@@ -33,10 +33,18 @@ a path. One test module per source module (`tests/test_chunker.py` ↔
 `src/tools/chunker.py`), named so the mapping is obvious. Fixtures
 live in the test modules that use them.
 
-The one exception is `tests/e2e/`, and it earns the directory rather
-than contradicting the rule: the tier has a harness of its own worth a
-scoped `conftest.py` (WO-A15), and inside the directory the modules are
-still flat and still marker-selected. Nothing selects on the path.
+Three directories exist — `tests/e2e/` (WO-A15), `tests/property/`
+(WO-A05) and `tests/fault/` (WO-A06) — and they earn the exception
+rather than contradicting the rule. Each holds a tier with a harness of
+its own worth a scoped `conftest.py`, and inside each directory the
+modules are still flat and still marker-selected.
+
+The rule, stated precisely so the next one does not have to re-argue
+it: **a directory may group tests by purpose; it may never be how a
+tier is selected.** `pytest -m fault` finds every fault test whether it
+lives in `tests/fault/` or beside the module it exercises, and moving a
+file between directories changes nothing about what runs. Nothing
+selects on the path.
 
 ## Markers: two orthogonal axes
 
@@ -666,6 +674,53 @@ ranking. It exists because the shipped configuration once compiled a
 job died before its first node — a wiring break no per-module test
 could see (ADR 0040). It is a smoke test, not a cassette tier: one
 happy path, canned LLM output, no recorded real responses.
+
+## The property tier
+
+`tests/property/`, selected by `pytest -m property`, run with Hypothesis. 36
+properties expand to 126 cases in roughly 15 seconds. Where the rest of the
+suite asserts that a specific input produces a specific output, these assert
+that **something is true of every input** — no chunk exceeds its budget,
+header-free text survives chunking byte-for-byte, a generated secret never
+appears in a redacted string, an encode/decode round-trip is the identity, a
+value outside a declared range is always refused.
+
+Two rules keep the tier honest:
+
+- **The profile is pinned and `derandomize` is on in CI**, so a failure is
+  reproducible from the report alone rather than "it failed once on Tuesday".
+- **A property must be able to fail.** WO-A05's PR body records six seeded
+  mutants — a deliberate off-by-one in the chunker window, a narrowed API-key
+  pattern, a dropped citation suffix — and shows each one being caught. A
+  property that no mutation can falsify is decoration, and the mutant check is
+  how you find out which kind you wrote.
+
+Run the wider profile before opening a PR: `HYPOTHESIS_PROFILE=explore` draws
+far more examples and has already falsified a property that the default
+profile passed — the property was wrong and the production code was right,
+which is the outcome worth knowing about before review rather than after.
+
+## The fault tier
+
+`tests/fault/`, selected by `pytest -m fault`, ~150 cases in about 10 seconds.
+Unit tests exercise the happy path, so error-handling code is the least-tested
+code in most systems by construction. This tier asserts what happens when a
+dependency fails: Redis gone at submit and mid-job, the Postgres pool
+exhausted, the model provider returning 429/500/timeout, cancellation between
+and inside nodes, a worker dying with its lease outstanding, the cost cap
+tripping mid-run, an SSE terminal frame that never lands.
+
+**Every fault test asserts the triple: the right error code, the right log
+event, and the right metric.** That is the point of the tier and not a style
+preference — it is what makes the error contract (ADR 0064), the log contract
+(ADR 0067) and the telemetry contract (ADR 0066) enforce each other instead of
+being three claims maintained separately. A test that only asserts "an
+exception was raised" does not belong here.
+
+Where a gap is known and not yet fixed, the tier pins it explicitly rather
+than staying silent — a Redis outage at submit currently moves no job metric
+at all, and there is an `assert_not_recorded` saying so, so the day someone
+fixes it the assertion fails and tells them.
 
 ## The e2e tier
 

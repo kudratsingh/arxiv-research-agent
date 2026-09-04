@@ -367,6 +367,13 @@ never renumbered.
   routing warns when pricing is missing, and session node spans carry
   cumulative and delta cost/call attributes.
 - [0063](0063-pilot-principal-edge-mapping.md) — A default-off, topology-guarded
+- [0064](0064-error-taxonomy-and-envelope.md) — every failure that leaves the process carries a stable code from a closed set, and an envelope carries it.
+- [0065](0065-test-isolation-and-coverage-floor.md) — the suite cannot reach the network, a real model client, or a developer `.env`; coverage has a measured floor that only ratchets up.
+- [0066](0066-genai-semantic-conventions.md) — telemetry uses the OpenTelemetry GenAI names, and a job is one trace from submit to model call.
+- [0067](0067-correlation-context-and-log-contract.md) — one correlation context for every signal, with an allowlisted, size-capped, redacted log payload.
+- [0068](0068-resilience-policy.md) — retry at one level per dependency, on a shared budget, with Full Jitter; a token bucket rather than a circuit breaker.
+- [0069](0069-property-based-testing.md) — invariants over generated input for the parsers, redaction, config and frame encoding.
+- [0070](0070-eval-integrity-provenance.md) — pinned judges, versioned rubrics, and a provenance block on every eval row.
   mapping at MT-01 seam S1: the pilot edge authenticates one `basic_auth` user
   per pilot and forwards the username, and `resolveUpstreamPrincipal` maps it
   to that pilot's per-principal API key from a server-side env map. Only the

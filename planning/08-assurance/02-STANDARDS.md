@@ -49,6 +49,16 @@ Only two attributes are **Required**: `gen_ai.operation.name` and
 attribute was renamed, and `gen_ai.system` is the single most likely stale
 name to appear in an implementation written from memory.
 
+**Corrected during WO-A07** (2026-09-04): the sentence above is scoped, and
+this page originally was not. Reading `spans.yaml` at the pinned SHA shows
+`gen_ai.provider.name` marked required on the **inference client span**
+(`gen_ai.inference.client`) and on the metric attribute group — **not** on
+`invoke_agent.internal`, `execute_tool.internal`, `invoke_workflow.internal`
+or `plan.internal`. A local PDF parse therefore carries no provider
+attribute, rather than a convenient `anthropic`. The implementer read the
+specification instead of trusting this page, which is the intended
+relationship between the two.
+
 - **Conditionally required**: `error.type`, `gen_ai.conversation.id`,
   `gen_ai.output.type`, `gen_ai.request.model`, `gen_ai.prompt.name` /
   `gen_ai.prompt.version`.

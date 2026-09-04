@@ -19,9 +19,9 @@ stops holding, because a criterion with no enforcement is a wish.
 4. Anything that did not close is written into `known-gaps.md` with a
    numbered section, an owner, and whether it blocks the next gate.
 
-## Gate A1 — Foundations
+## Gate A1 — Foundations — **CLOSED 2026-09-04**
 
-Closes after WO-A01, A02, A03.
+Closed by WO-A01, A02, A03. Evidence in [`STATUS.md`](STATUS.md).
 
 | # | Criterion | Enforced by |
 |---|---|---|
@@ -42,9 +42,9 @@ Closes after WO-A01, A02, A03.
 report with its measured floor, the marker census, and the diff of the error
 code set.
 
-## Gate A2 — Behaviour
+## Gate A2 — Behaviour — **CLOSED 2026-09-04**
 
-Closes after WO-A04, A05, A06, A07, A08, A15.
+Closed by WO-A04, A05, A06, A07, A08, A15. Evidence in [`STATUS.md`](STATUS.md).
 
 | # | Criterion | Enforced by |
 |---|---|---|
@@ -70,7 +70,7 @@ row showing the provenance block; the `$0.0000` assertion.
 
 ## Gate A3 — Assurance
 
-Closes after WO-A09, A10, A11, A12, A13, A14, A16.
+Closes after WO-A09, A10, A11, A12, A13, A14, A16, A17.
 
 | # | Criterion | Enforced by |
 |---|---|---|
