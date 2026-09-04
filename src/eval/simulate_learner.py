@@ -139,6 +139,7 @@ from src.eval.runner import (
     persist_record,
     rebuild_summaries,
 )
+from src.eval.safety_suite import find_pedagogy_violations
 from src.graph.session_state import initial_session_state
 from src.graph.session_workflow import build_session_workflow
 from src.llm import call_llm_json
@@ -256,6 +257,16 @@ class ScenarioOutcomes(NamedTuple):
 
     shame_free: bool
     shame_findings: list[dict[str, Any]]
+    # ADR 0072. The pedagogy deny-list used to live only in
+    # `tests/test_simulate_learner.py`, so a violation failed pytest and
+    # was invisible to the campaign gate — `summary.jsonl` carried the
+    # eight-phrase shame lexicon and nothing else. Appended rather than
+    # folded into `shame_free`: the two lists ban different things (the
+    # shame lexicon does not catch "mastery score", and the pedagogy
+    # list does not catch "you should have known this"), and merging
+    # them would let a rewrite trade one against the other.
+    pedagogy_clean: bool
+    pedagogy_findings: list[dict[str, Any]]
     downscope_honest: bool | None
     plan_sections: int
     progress_events_evidence_linked: bool
@@ -685,6 +696,13 @@ def compute_outcomes(
             f"learner-facing copy contains {len(shame_findings)} forbidden phrase(s)"
         )
 
+    pedagogy_findings = [dict(f) for f in find_pedagogy_violations(copy_texts)]
+    if pedagogy_findings:
+        failures.append(
+            f"learner-facing copy names {len(pedagogy_findings)} banned pedagogy "
+            "scalar(s) (ADR 0072)"
+        )
+
     plan = state.get("session_plan") or {}
     sections = plan.get("sections")
     plan_sections = len(sections) if isinstance(sections, list) else 0
@@ -736,6 +754,8 @@ def compute_outcomes(
     return ScenarioOutcomes(
         shame_free=not shame_findings,
         shame_findings=shame_findings,
+        pedagogy_clean=not pedagogy_findings,
+        pedagogy_findings=pedagogy_findings,
         downscope_honest=downscope_honest,
         plan_sections=plan_sections,
         progress_events_evidence_linked=not unlinked,
@@ -1049,6 +1069,18 @@ def _outcome(record: dict[str, Any], field: str) -> Any:
     return outcomes.get(field) if isinstance(outcomes, dict) else None
 
 
+def _len_or_none(value: Any) -> int | None:
+    """Length of a list field, or `None` when the record predates it.
+
+    `None` and `0` are different claims: one says the harness never
+    measured this, the other says it measured it and found nothing. A
+    resumed campaign carries records written before ADR 0072, and
+    flattening those to zero would report a clean run that was never
+    scanned.
+    """
+    return len(value) if isinstance(value, list) else None
+
+
 def summary_line(record: dict[str, Any]) -> dict[str, Any]:
     """The `summary.jsonl` row for one simulated session.
 
@@ -1083,6 +1115,13 @@ def summary_line(record: dict[str, Any]) -> dict[str, Any]:
         "metrics_error": record.get("metrics_error"),
         "shame_free": _outcome(record, "shame_free"),
         "shame_free_score": _judge_score(record.get("metrics"), "shame_free_copy"),
+        # ADR 0072: the deterministic pedagogy scan, as a campaign
+        # metric rather than only a pytest assertion. Two columns
+        # because "clean" is what a gate reads and the count is what a
+        # regression diff reads; a bool alone cannot say whether a
+        # regression got worse.
+        "pedagogy_clean": _outcome(record, "pedagogy_clean"),
+        "pedagogy_violations": _len_or_none(_outcome(record, "pedagogy_findings")),
         "downscope_honest": _outcome(record, "downscope_honest"),
         "plan_coherence": _judge_score(record.get("metrics"), "session_plan_coherence"),
         "plan_sections": _outcome(record, "plan_sections"),
@@ -1240,6 +1279,7 @@ def summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             "## Aggregates (completed sessions only)",
             "",
             f"- Mean shame-free rubric score: {_mean(completed, 'shame_free_score')}",
+            f"- Mean pedagogy deny-list hits: {_mean(completed, 'pedagogy_violations')}",
             f"- Mean plan coherence: {_mean(completed, 'plan_coherence')}",
             f"- Mean unmet expectations: {_mean(completed, 'expectation_failures')}",
             f"- Mean session cost: {_mean(completed, 'cost_usd')}",

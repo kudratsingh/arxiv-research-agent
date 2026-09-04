@@ -31,6 +31,7 @@ offs and threat model.
 from __future__ import annotations
 
 import re
+from typing import Final, NamedTuple
 
 # XML-style tags picked because they compose well with markdown, don't
 # collide with the reader's existing `[section]` formatting, and are
@@ -76,16 +77,150 @@ CONTROL_STRING_MAX_LEN = 300
 SECTION_NAME_MAX_LEN = 50
 _SECTION_ALLOWED = re.compile(r"^[A-Za-z0-9 \-/]+$")
 
+class JailbreakMarker(NamedTuple):
+    """One named jailbreak signature, with the category it belongs to.
+
+    Attributes:
+        marker_id: Stable, snake_case. It is what a safety finding
+            names, so a report can say *which* signal fired rather
+            than only that something did. Never renamed — the
+            adversarial baseline (WO-A11, ADR 0072) joins on it.
+        category: The OWASP Top 10 for Agentic Applications code this
+            signature belongs to (`ASI01`..`ASI10`), or an LLM Top 10
+            code where the agentic list has no closer home. A **code**,
+            deliberately: OWASP's prose is CC BY-SA 4.0 and viral, so
+            this repository cites the identifier and writes its own
+            descriptions.
+        pattern: The compiled signature.
+    """
+
+    marker_id: str
+    category: str
+    pattern: re.Pattern[str]
+
+
 # Common jailbreak preamble patterns. Not exhaustive (nor meant to be —
 # defense in depth, not pattern-matching-as-security), but a cheap
 # extra filter that catches the loudest signals if the model failed
 # to isolate them and instead echoed them back.
-_JAILBREAK_MARKERS = (
-    re.compile(r"ignore\s+(all|any|previous|prior|the)\s+", re.IGNORECASE),
-    re.compile(r"system\s*[:=]", re.IGNORECASE),
-    re.compile(r"###\s*(instruction|system|assistant)", re.IGNORECASE),
-    re.compile(r"</?(system|instruction|user|assistant)", re.IGNORECASE),
-    re.compile(r"^\s*you\s+are\s+", re.IGNORECASE),
+#
+# The first five entries are ADR 0020's original set, byte-identical:
+# every one of them was already load-bearing in `sanitize_control_string`
+# and `sanitize_section_names`, and changing a shipped filter's meaning
+# is not what "add coverage" means. The rest are ADR 0072's additions,
+# each aimed at an agentic category the original five cannot see —
+# ADR 0020 was written before this system had a tool surface, a
+# persistent learner profile or a second principal, and a filter for
+# "the model was told to role-play" does not detect "the model was told
+# to write a forged provenance marker into someone's profile".
+#
+# Every addition is deliberately narrow, because the cost of a false
+# positive here is a *blanked* control field: an arXiv paper about
+# secret sharing, base64 encodings or memory persistence must not lose
+# its `missing_context` to a pattern that fires on ordinary technical
+# prose. Each new signature therefore demands an imperative frame
+# ("persist **this** to your memory") rather than a bare topic word.
+JAILBREAK_MARKERS: Final[tuple[JailbreakMarker, ...]] = (
+    JailbreakMarker(
+        "ignore_preceding_instructions",
+        "ASI01",
+        re.compile(r"ignore\s+(all|any|previous|prior|the)\s+", re.IGNORECASE),
+    ),
+    JailbreakMarker(
+        "system_role_prefix",
+        "ASI07",
+        re.compile(r"system\s*[:=]", re.IGNORECASE),
+    ),
+    JailbreakMarker(
+        "markdown_role_header",
+        "ASI07",
+        re.compile(r"###\s*(instruction|system|assistant)", re.IGNORECASE),
+    ),
+    JailbreakMarker(
+        "role_tag",
+        "ASI07",
+        re.compile(r"</?(system|instruction|user|assistant)", re.IGNORECASE),
+    ),
+    JailbreakMarker(
+        "role_assignment",
+        "ASI03",
+        re.compile(r"^\s*you\s+are\s+", re.IGNORECASE),
+    ),
+    # --- ADR 0072 additions -------------------------------------------
+    JailbreakMarker(
+        "identity_override",
+        "ASI03",
+        re.compile(
+            r"\byou\s+are\s+now\b|\bact\s+as\s+(?:an?|the)\s|\bpretend\s+to\s+be\b"
+            r"|\bfrom\s+now\s+on[,\s]|\bdeveloper\s+mode\b",
+            re.IGNORECASE,
+        ),
+    ),
+    JailbreakMarker(
+        "tool_directive",
+        "ASI02",
+        re.compile(
+            r"\b(?:call|invoke|execute|trigger|use)\s+(?:the\s+)?[\w./-]{2,40}\s+"
+            r"(?:tool|api|endpoint)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    JailbreakMarker(
+        "exfiltration_directive",
+        "ASI02",
+        re.compile(
+            r"\b(?:send|post|upload|forward|transmit|exfiltrate|email|leak)\b"
+            r"[^.\n]{0,80}?"
+            r"(?:https?://|\bwww\.|[\w.+-]+@[\w-]+\.[a-z]{2,}|\b\d{1,3}(?:\.\d{1,3}){3}\b)",
+            re.IGNORECASE,
+        ),
+    ),
+    JailbreakMarker(
+        "memory_write_directive",
+        "ASI06",
+        re.compile(
+            r"\b(?:remember|memorize|memorise|persist|store|save|append|write)\s+"
+            r"(?:this|that|it|the\s+following)\b[^.\n]{0,60}?\b(?:to|in|into)\s+"
+            r"(?:your\s+)?(?:memory|profile|preferences|context|notes)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    JailbreakMarker(
+        "secret_disclosure_directive",
+        "LLM07",
+        re.compile(
+            r"\b(?:reveal|disclose|print|output|repeat|dump|echo|leak)\b[^.\n]{0,40}?"
+            r"\b(?:system\s+prompt|api[_\s-]?keys?|passwords?|credentials?"
+            r"|access\s+tokens?|env(?:ironment)?\s+variables?)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    JailbreakMarker(
+        "isolation_tag_echo",
+        "ASI07",
+        re.compile(r"</?untrusted_[a-z_]+>", re.IGNORECASE),
+    ),
+    JailbreakMarker(
+        "encoded_payload_directive",
+        "ASI05",
+        re.compile(
+            r"\bdecode\s+the\s+(?:following|text|string|payload)\b"
+            r"|\b(?:base64|rot13)[-\s]?decode\s+(?:this|it|the\s+following)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    JailbreakMarker(
+        "provenance_forgery",
+        "ASI09",
+        re.compile(r"\[(?:declared|assessed|inferred|verified|confirmed|system)\]", re.IGNORECASE),
+    ),
+)
+
+#: The compiled patterns alone, in registry order. Kept under the
+#: original private name so nothing that reached for it has to change,
+#: and derived rather than re-typed so the two can never disagree.
+_JAILBREAK_MARKERS: Final[tuple[re.Pattern[str], ...]] = tuple(
+    marker.pattern for marker in JAILBREAK_MARKERS
 )
 
 
@@ -223,3 +358,109 @@ def sanitize_section_names(values: list[str] | None) -> list[str]:
 def _matches_jailbreak(text: str) -> bool:
     """True when any known jailbreak marker matches somewhere in `text`."""
     return any(pattern.search(text) for pattern in _JAILBREAK_MARKERS)
+
+
+def jailbreak_markers(text: str) -> list[str]:
+    """Ids of every jailbreak marker that fires on `text`, in registry order.
+
+    The attributed form of `_matches_jailbreak`. The boolean is what a
+    sanitizer needs — it either blanks the field or it does not — but a
+    safety report has to say *which* signature fired, because "one
+    marker fired" and "four markers fired" are different claims about
+    the same string, and a category breakdown cannot be built out of a
+    bool.
+
+    Args:
+        text: Any string. A non-string is not accepted; callers that
+            may hold one should go through the sanitizers, which
+            already coerce.
+
+    Returns:
+        Marker ids in `JAILBREAK_MARKERS` order, possibly empty. Order
+        is the registry's rather than the match position's so two runs
+        over the same string produce byte-identical findings.
+    """
+    return [marker.marker_id for marker in JAILBREAK_MARKERS if marker.pattern.search(text)]
+
+
+class UntrustedBoundary(NamedTuple):
+    """One untrusted-content boundary: its tags and its guardrail.
+
+    The three wrappers above grew one ADR at a time (0020, 0033, 0058)
+    and nothing ever held them side by side. Naming them in one tuple
+    is what lets a test assert the property they were each written to
+    have *as a set*: three distinct tag pairs, three instructions, and
+    no instruction that names another boundary's tags.
+
+    Attributes:
+        name: Short, stable identifier for the source of the content.
+        open_tag: The literal opening delimiter.
+        close_tag: The literal closing delimiter.
+        instruction: The system-level guardrail that names this pair.
+    """
+
+    name: str
+    open_tag: str
+    close_tag: str
+    instruction: str
+
+
+#: Every untrusted-content boundary this system defines, in the order
+#: the ADRs added them. A new untrusted source gets an entry here and
+#: its own tag pair — reusing an existing pair would put a lie inside
+#: the mechanism that exists to make the boundary unambiguous, which is
+#: the reason `wrap_untrusted_learner_text` did not reuse the paper tags.
+UNTRUSTED_BOUNDARIES: Final[tuple[UntrustedBoundary, ...]] = (
+    UntrustedBoundary(
+        "paper_text",
+        UNTRUSTED_OPEN_TAG,
+        UNTRUSTED_CLOSE_TAG,
+        ISOLATION_SYSTEM_INSTRUCTION,
+    ),
+    UntrustedBoundary(
+        "prior_context",
+        UNTRUSTED_PRIOR_CONTEXT_OPEN_TAG,
+        UNTRUSTED_PRIOR_CONTEXT_CLOSE_TAG,
+        PRIOR_CONTEXT_ISOLATION_INSTRUCTION,
+    ),
+    UntrustedBoundary(
+        "learner_text",
+        UNTRUSTED_LEARNER_TEXT_OPEN_TAG,
+        UNTRUSTED_LEARNER_TEXT_CLOSE_TAG,
+        LEARNER_TEXT_ISOLATION_INSTRUCTION,
+    ),
+)
+
+
+def wrapper_integrity(wrapped: str, boundary: UntrustedBoundary) -> list[str]:
+    """Return every reason `wrapped` failed to contain its content.
+
+    A behavioural check on the wrapper rather than a check on the
+    payload: it does not ask "did the text look malicious", it asks
+    "did anything end up outside the delimiters". That is the property
+    the wrapper actually promises, and it is decidable from the output
+    string alone — no model, no heuristic.
+
+    Args:
+        wrapped: The output of one of the `wrap_untrusted*` helpers.
+        boundary: Which boundary it was supposed to be wrapped in.
+
+    Returns:
+        Human-readable problems, empty when the content is contained.
+        A single close tag in the trailing position and a single open
+        tag in the leading position is the whole contract; an inner
+        *open* tag is not a failure, because the final close tag still
+        terminates the region and everything before it is still inside.
+    """
+    problems: list[str] = []
+    if not wrapped.startswith(boundary.open_tag):
+        problems.append(f"{boundary.name}: content does not start with {boundary.open_tag}")
+    if not wrapped.endswith(boundary.close_tag):
+        problems.append(f"{boundary.name}: content does not end with {boundary.close_tag}")
+    closes = wrapped.count(boundary.close_tag)
+    if closes != 1:
+        problems.append(
+            f"{boundary.name}: {closes} close tag(s), expected exactly 1 — a payload "
+            "that closes the wrapper early escapes into the instruction context"
+        )
+    return problems
