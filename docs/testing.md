@@ -2,12 +2,13 @@
 
 Every piece of code merged into `main` has tests. Untested code doesn't
 merge. This page describes the suite **as it exists** — the layout on
-disk, the markers that select tiers, and what CI actually runs — plus
-one explicitly-labelled section for the Python e2e cassette tier that is
-planned but not built. Earlier versions of this page described an
-aspirational directory layout; that drift is exactly how gaps hide, so
-the rule now is: this page documents reality, and planned work is
-labelled as such.
+disk, the markers that select tiers, and what CI actually runs. Earlier
+versions of this page described an aspirational directory layout, and
+carried a section for an e2e tier that was planned but not built; that
+drift is exactly how gaps hide, so the rule is: this page documents
+reality, and planned work is labelled as such. The e2e tier is now
+built (WO-A15) and its section describes what it does, including what
+it still does not cover.
 
 Two suites live here and they are selected differently. The **Python**
 suite is flat and marker-selected; that is what the sections up to
@@ -15,8 +16,9 @@ suite is flat and marker-selected; that is what the sections up to
 **eight tiers** — unit, component, story, integration, contract, e2e,
 accessibility and budgets — described with a local command each in "The
 web suite" below. `e2e` means different things in the two: in Python it
-is an unused marker reserved for a cassette tier, and in `web/` it is
-the Playwright tier, which is built and gating today.
+is the whole-workflow tier in `tests/e2e/`, run from `make test-e2e`
+and not yet wired into CI, and in `web/` it is the Playwright tier,
+which is built and gating today.
 
 Two counts in this page are **not the same list**: CI runs **nine**
 parallel *jobs*, and the web suite has **eight** *tiers*. Several tiers
@@ -25,11 +27,16 @@ carry no web tier at all.
 
 ## Layout — flat, marker-selected
 
-All tests live **flat** in `tests/test_*.py` — there are no
-`tests/unit/`, `tests/integration/`, or `tests/e2e/` directories. One
-test module per source module (`tests/test_chunker.py` ↔
+Tests live **flat** in `tests/test_*.py` — there are no `tests/unit/`
+or `tests/integration/` directories, because the tier is a marker, not
+a path. One test module per source module (`tests/test_chunker.py` ↔
 `src/tools/chunker.py`), named so the mapping is obvious. Fixtures
 live in the test modules that use them.
+
+The one exception is `tests/e2e/`, and it earns the directory rather
+than contradicting the rule: the tier has a harness of its own worth a
+scoped `conftest.py` (WO-A15), and inside the directory the modules are
+still flat and still marker-selected. Nothing selects on the path.
 
 ## Markers: two orthogonal axes
 
@@ -49,8 +56,10 @@ never runs. There are two axes and they answer different questions
   fakeredis for Redis, `pytest-postgresql` for Postgres, an ASGI app
   driven through httpx, canned XML for arXiv, a checked-in sample PDF
   for PyMuPDF. Still no live network.
-- `e2e` — the full workflow end to end at zero spend. **Zero tests carry
-  this marker today** (see "Planned, not built" below).
+- `e2e` — a whole workflow end to end at zero spend, asserted on the
+  trajectory it took. 13 tests, in `tests/e2e/` (see "The e2e tier"
+  below). Excluded from the merge gate's selection, so a change here
+  does not move what CI runs.
 
 **Purpose — what a test protects. Zero or more, orthogonal to the tier.**
 
@@ -69,11 +78,11 @@ The purpose axis is what makes a boundary runnable on its own. Before
 it existed, "run the tenancy and injection tests" had no expression;
 now it is `make test-security`.
 
-**State of the suite** (measured, `pytest --collect-only`): **2,256
-tests collected** from **2,080 `def test_` functions** across **103
+**State of the suite** (measured, `pytest --collect-only`): **2,269
+tests collected** from **2,093 `def test_` functions** across **107
 modules** — the gap is parametrization. By tier: 1,929 `unit` + 327
-`integration` = 2,256, which is the whole suite, because the tier axis
-is a partition and a test module with no tier fails
+`integration` + 13 `e2e` = 2,269, which is the whole suite, because the
+tier axis is a partition and a test module with no tier fails
 `tests/test_harness_guards.py`. By purpose: 157 `security`, 86 `fault`,
 40 `contract`, 1 `network`, 0 `property`.
 
@@ -104,9 +113,11 @@ jobs on every PR and every push to `main`:
 
 1. `lint` — `ruff check .`
 2. `typecheck` — `mypy --strict src/`
-3. `tests` — `pytest -m "not e2e" -q`, **the entire Python suite** (the
-   filter only exists to keep the door closed on a future e2e tier),
-   then the **scripted learner-simulation campaign**: all fifteen
+3. `tests` — `pytest -m "not e2e" -q`, **the unit and integration
+   tiers**: 2,256 of the suite's 2,269 tests. The filter used to
+   exclude an empty set; since WO-A15 it excludes the 13 `e2e` tests,
+   which run from `make test-e2e` and are not yet wired into a CI job
+   of their own. Then the **scripted learner-simulation campaign**: all fifteen
    guided-read scenarios driven through the real session graph in mock
    mode, with `src/eval/scripted_tier_check.py` asserting 15/15 sessions
    and `$0.0000` spend from the run's `summary.jsonl` (WO-W11; see
@@ -595,6 +606,7 @@ not a speed:
 make test-security   # 157 tests: tenancy, injection, SSRF, auth, redaction
 make test-fault      #  86 tests: behaviour when a dependency fails
 make test-property   #   0 tests until WO-A05 lands the first one
+make test-e2e        #  13 tests: whole workflows, ~4.5s, $0.0000
 ```
 
 Path-based selection (running only the test modules that mirror a PR's
@@ -655,25 +667,131 @@ job died before its first node — a wiring break no per-module test
 could see (ADR 0040). It is a smoke test, not a cassette tier: one
 happy path, canned LLM output, no recorded real responses.
 
-## Planned, not built: the e2e cassette tier
+## The e2e tier
 
-The design calls for a third tier — the full LangGraph workflow run
-against recorded LLM cassettes (VCR-style, one recorded response per
-prompt) so a pipeline-level regression is caught deterministically and
-without API cost. **No such tests exist yet**: the `e2e` marker is
-registered but unused, and no cassette fixtures are checked in.
+`tests/e2e/`, marked `e2e`, **13 tests in ~4.5s**. Run it with `make
+test-e2e`. It drives whole workflows from a caller's first call to
+their last, and asserts on the **trajectory** each one took rather than
+on the prose it produced (WO-A15; design in
+`planning/08-assurance/03-ARCHITECTURE.md` §3.6).
 
-Name the consequence, because it has bitten more than once: with real
-LLM *content* untested, everything between the smoke test's single
-canned path and the nightly LLM-judged eval is uncovered — the ADR
-0040 wiring break lived in that gap, and ADR 0053's audit found five
-more sequence-level defects (`docker compose up` → UI → query) that
-no per-module test drove. Until the cassette tier is built, treat
-cross-node integration changes (workflow wiring, state schema,
-runner/streaming interplay) with extra review care, and do not claim
-e2e coverage anywhere.
+This page carried "planned, not built: the e2e cassette tier" for a
+long time, and the tier that got built is not the one that was planned.
+Two decisions differ from that plan and both are deliberate.
 
-When the tier is built it should: live in flat `tests/test_e2e_*.py`
-modules marked `e2e`, run on merge-to-`main` and nightly (not per-PR),
-and gate a live-API mode behind an env flag (e.g. `E2E_LIVE=1`) for
-local debugging only.
+**Mock mode, not cassettes.** Recording VCR-style cassettes needs a
+paid session to create and a second paid session every time a prompt
+changes. Mock mode is the zero-spend seam this repository already
+proves works: the scripted learner-simulation campaign has run all
+fifteen guided-read scenarios through the real session graph in the
+per-PR gate, for `$0.0000`, since WO-W11. The tier reuses that seam
+instead of buying a new one.
+
+**A directory, not flat modules.** Everything else in `tests/` is flat
+(see "Layout"), and the tier keeps that convention *inside*
+`tests/e2e/`. It has a directory because it has a shared harness worth
+one `conftest.py` — the settings installer, the canned agent surface,
+and the autouse cost ledger below — and because `tests/fixtures/e2e/`
+needs somewhere to belong.
+
+### What "mock mode" does and does not cover
+
+Worth stating plainly, because the asymmetry is easy to get wrong and
+costs money when you do. `USE_MOCK_DATA` swaps the arXiv search for
+five fixture papers (`src/agents/search.py`) and makes the tutor and
+the assessment judge deterministic (`src/agents/tutor.py`,
+`src/agents/assessment.py`). It does **not** touch `src/llm.py`. So:
+
+- the **session graph** runs free on mock mode alone — no Anthropic
+  client is constructed anywhere on its path, which is why
+  `simulate_learner` can drive fifteen sessions in CI;
+- the **research graph** does not. Its planner, reader, synthesizer and
+  critic call `call_llm_json` under mock mode exactly as they do in
+  production, so the tier cans those four per module, the way
+  `tests/test_api_smoke_e2e.py` does. `call_llm_json` is imported into
+  each agent's own namespace; patching `src.llm.call_llm_json` does
+  nothing.
+
+### Zero spend, asserted rather than assumed
+
+Every e2e test asserts its run cost exactly `$0.0000`. That is a
+deliverable of the tier, not a nicety, and it rests on four layers:
+
+1. `make test-e2e` pins `USE_MOCK_DATA=true` and the
+   `local-preview-disabled` sentinel, the same pair `simulate-learner`
+   pins.
+2. `tests/conftest.py` denies `src.llm._get_client` unless a fake is
+   installed, and denies any non-loopback socket. Both raise
+   `BaseException` subclasses, so the agents' `except Exception`
+   fallbacks cannot swallow them.
+3. The canned agent surface means `record_llm_call` is never reached,
+   so the accumulator cannot move.
+4. `tests/e2e/conftest.py`'s **autouse** `zero_spend_ledger` binds a
+   cost accumulator to every test in the directory and asserts at
+   teardown that it never moved — so a test added here gets the check
+   whether or not its author writes one.
+
+Two numbers, always, because they fail differently: a dollar total can
+round to zero from spend that really happened, a call count cannot.
+This is the pair `src/eval/scripted_tier_check.py` settled on for the
+same reason. Where a job runs in its own context — anything driven
+through `run_job` — the accumulator this fixture holds cannot see the
+job's spend, so those tests assert `cost_usd` and `llm_calls` on the
+job row and on the terminal SSE frame, and the exported markdown's
+`| Cost | $0.0000 |` line, which is the claim as a user reads it.
+
+### What each module asserts
+
+- `test_research_workflow.py` — the fixed pipeline start to report. The
+  node sequence read two independent ways (LangGraph's own `stream`
+  chunk keys and the `name` each agent stamped on its message), the
+  iteration count, citations that survived the synthesizer's parser,
+  and a bounded revision loop: a critic that never approves must route
+  back to the node it named and must stop at `max_iterations`.
+- `test_guided_session.py` — a guided read driven through all four of
+  its pauses with `Command(resume=...)`, the way
+  `src/eval/simulate_learner.py` drives it. Node sequence, the four
+  turn kinds in order, the honest `recorded_ungraded` assessment (ADR
+  0060), evidence-linked progress events, a pause that survives into a
+  rebuilt graph, and an early exit that closes without inventing an
+  assessment.
+- `test_http_surface.py` — submit, stream, fetch, export. It serves the
+  app with **uvicorn on an ephemeral loopback port** rather than
+  through `httpx.ASGITransport`, because that transport does not
+  stream: it runs the whole ASGI app to completion and buffers the
+  body, so an SSE response only arrives once the job has already
+  finished. A real socket is the only way to prove a client attached
+  mid-run is told what is happening while it happens. The conftest
+  network guard allows loopback by design; nothing leaves the machine.
+- `test_hitl_review.py` — the plan-review breakpoint driven to each of
+  its three ends (revise, approve, cancel), plus the `hitl_bypass`
+  path. `tests/test_api_hitl.py` already covers the route against a
+  stub; what only this can show is that the reviewer's decision reaches
+  the graph — the revised plan is read back out of the checkpointer
+  after the run, and a cancel is asserted to have stopped *at* the
+  planner rather than after searching and reading.
+
+### Where it runs, and what it still does not cover
+
+CI selects `-m "not e2e"`, so **this tier does not gate a merge yet**.
+The filter now excludes a real set rather than an empty one, which is
+the change WO-A15 makes; wiring the tier into a CI job is a separate,
+reviewable change with its own owner. Until then it is a `make`
+target, and it is fast enough (~4.5s) that running it before pushing a
+cross-node change costs nothing worth counting.
+
+The old warning on this page is half retired and half still true. The
+sequence-level gap is closed: workflow wiring, state schema, the
+router's revision branch, the HITL resume, the session pause and the
+SSE frame trajectory are all now driven end to end, and the class of
+break ADR 0040 records has a test that would have caught it. What is
+still uncovered is real LLM **content** — every model call in this tier
+is canned, so nothing here says a prompt change produced a worse
+report. That remains the nightly LLM-judged eval's job, and no test in
+`tests/` should be described as covering it.
+
+A live-API mode behind an `E2E_LIVE=1` flag was in the original plan
+and is deliberately not built. It would be a spend path with no gate in
+front of it in a repository whose whole assurance posture is that spend
+is structurally impossible in the test suite; the funded lane already
+exists for that, in `src/eval/`, where it is budgeted and metered.

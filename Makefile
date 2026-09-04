@@ -73,7 +73,7 @@ help:  ## Show this help
 	@echo "  make test              Run the unit tier (default per-PR check)"
 	@echo "  make test-unit         Run unit tests (pytest -m unit)"
 	@echo "  make test-integration  Run integration tests (pytest -m integration)"
-	@echo "  make test-e2e          Run e2e tests (pytest -m e2e)"
+	@echo "  make test-e2e          Run e2e tests, zero spend (pytest -m e2e)"
 	@echo "  make test-all          Run every tier (unit + integration + e2e)"
 	@echo "  make test-cov          Coverage over src/, project + per-package floors"
 	@echo "  make test-cov-diff     Patch coverage for this branch vs origin/main"
@@ -110,8 +110,23 @@ test-unit:  ## Unit tier: pure functions, no I/O
 test-integration:  ## Integration tier: external libs on fixtures
 	$(TEST_ENV) $(VENV_PYTHON) -m pytest -m integration tests/ -v
 
-test-e2e:  ## E2E tier: full workflow with cassettes
-	$(TEST_ENV) $(VENV_PYTHON) -m pytest -m e2e tests/ -v
+# Mock mode and the disabled-key sentinel are pinned here for the same
+# reason `simulate-learner` pins them below: this target advertises zero
+# spend, so the environment that makes it true belongs at the call site
+# rather than in whatever `.env` the caller happens to have.
+#
+# Both pins are a second layer, not the mechanism, and which is which
+# matters. `tests/conftest.py` scrubs every variable `Settings` reads
+# before collection and rebuilds the singleton, so USE_MOCK_DATA set
+# here never reaches a test — the tier sets mock mode on its own
+# `Settings` copy (`tests/e2e/conftest.py`). That same conftest
+# re-declares ANTHROPIC_API_KEY to this exact sentinel and denies
+# `src.llm._get_client` on top of it. What the pins add is a target
+# that stays correct against a harness that has not loaded, and a line
+# a reader can check without opening a conftest.
+test-e2e:  ## E2E tier: whole workflows end to end, at zero spend
+	$(TEST_ENV) USE_MOCK_DATA=true $(ZERO_SPEND) \
+	$(VENV_PYTHON) -m pytest -m e2e tests/ -v
 
 test-all:  ## Every tier
 	$(TEST_ENV) $(VENV_PYTHON) -m pytest tests/ -v

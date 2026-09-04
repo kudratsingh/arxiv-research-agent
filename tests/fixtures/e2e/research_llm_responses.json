@@ -1,0 +1,80 @@
+{
+  "_readme": [
+    "Canned model output for the e2e tier's research workflow (WO-A15).",
+    "",
+    "Not cassettes. Nothing here was recorded from a live model: recording",
+    "would need a paid session, and mock mode is already the zero-spend seam",
+    "the learning lane proves works (docs/testing.md, 'The e2e tier').",
+    "These are the smallest shapes each agent's parser accepts, so the graph",
+    "runs its real nodes, its real router and its real state reducers while",
+    "`call_llm_json` is never reached and the cost accumulator never moves.",
+    "",
+    "Shapes are pinned by the agents, not by preference:",
+    "  planner     -> sub_questions + search_queries (src/agents/planner.py)",
+    "  reader      -> key_findings/methodology/results_summary/limitations/",
+    "                 relevance (src/agents/reader.py::_analyze_paper)",
+    "  synthesizer -> draft_report + citations; a citation missing any of the",
+    "                 five Citation keys is silently dropped by",
+    "                 src/agents/synthesizer.py::_parse_citations, which is",
+    "                 why every entry below is complete",
+    "  critic      -> scores/average_score/critique/revision_needed/",
+    "                 revision_target (src/agents/critic.py)"
+  ],
+  "planner": {
+    "sub_questions": [
+      "What mechanisms produce hallucination in large language models?",
+      "Which mitigations have measurable effect?"
+    ],
+    "search_queries": [
+      "large language model hallucination survey",
+      "retrieval augmented generation hallucination mitigation"
+    ]
+  },
+  "reader": {
+    "key_findings": [
+      "Retrieval grounds generation in retrieved passages rather than parametric memory."
+    ],
+    "methodology": "Survey of mitigation techniques across 2020-2024 systems.",
+    "results_summary": "Grounded decoding reduces unsupported claims on the surveyed benchmarks.",
+    "limitations": "Abstract-only analysis; no reproduction of the reported numbers.",
+    "relevance": 0.9
+  },
+  "synthesizer": {
+    "draft_report": "# Hallucination in large language models\n\nRetrieval-augmented generation grounds model output in retrieved documents rather than parametric memory [Ji, 2023].\n\n## Evidence\n\nThe surveyed systems report fewer unsupported claims once decoding is conditioned on retrieved passages [Ji, 2023].\n",
+    "citations": [
+      {
+        "paper_id": "http://arxiv.org/abs/2311.05232",
+        "title": "A Survey on Hallucination in Large Language Models",
+        "authors": ["Ziwei Ji", "Nayeon Lee"],
+        "year": 2023,
+        "url": "http://arxiv.org/abs/2311.05232"
+      }
+    ]
+  },
+  "critic_approves": {
+    "scores": {
+      "completeness": 0.9,
+      "accuracy": 0.9,
+      "coherence": 0.9,
+      "depth": 0.8,
+      "balance": 0.9
+    },
+    "average_score": 0.88,
+    "critique": "Solid coverage of the question; claims are attributed.",
+    "revision_needed": false,
+    "revision_target": "none"
+  },
+  "critic_demands_synthesizer_revision": {
+    "scores": {
+      "completeness": 0.5,
+      "accuracy": 0.6,
+      "coherence": 0.5,
+      "depth": 0.4,
+      "balance": 0.5
+    },
+    "average_score": 0.5,
+    "critique": "The report asserts more than the cited passages support.",
+    "revision_needed": true,
+    "revision_target": "synthesizer"
+  }
+}

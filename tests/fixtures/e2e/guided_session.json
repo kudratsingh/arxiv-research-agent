@@ -1,0 +1,45 @@
+{
+  "_readme": [
+    "One guided-read session for the e2e tier (WO-A15, deliverable 2).",
+    "",
+    "`input_payload` is the bounded session input the API persists before it",
+    "starts the session graph — the same shape",
+    "src/eval/simulate_learner.py::session_input_payload builds from a",
+    "benchmark scenario. Written out by hand here rather than imported from",
+    "the learning benchmark so the e2e tier does not fail when a scenario is",
+    "re-tuned for a reason that has nothing to do with the graph's wiring.",
+    "",
+    "`learner_replies` is the script. Under mock mode the tutor's own copy is",
+    "deterministic (src/agents/tutor.py reads settings.use_mock_data), so the",
+    "learner's words are the only input that varies and the session is",
+    "reproducible turn for turn. The graph offers four bounded turns; the",
+    "fourth is the explain-back that the assessment reads."
+  ],
+  "input_payload": {
+    "principal_key_id": "e2e-learner",
+    "tier1": {
+      "time_budget_min_per_day": 25,
+      "academic_level": "undergraduate",
+      "profile_note": "Comfortable with linear algebra, new to attention.",
+      "declared_skills": [
+        {"skill_id": "linear-algebra", "level": "working"}
+      ],
+      "goals": [
+        {"goal_id": "read-transformers", "text": "Read Attention Is All You Need end to end"}
+      ]
+    },
+    "session_spec": {
+      "path_id": "e2e-transformers",
+      "resource_id": "arxiv:1706.03762",
+      "title": "Attention Is All You Need",
+      "available_minutes": 25,
+      "reading_guidance": "Start with the scaled dot-product attention section."
+    }
+  },
+  "learner_replies": [
+    "I want to understand why attention replaced recurrence.",
+    "The dot product scores every pair of tokens against each other.",
+    "Scaling by the square root of d_k keeps the softmax from saturating.",
+    "Each token reads every other token directly, so there is no recurrence to unroll."
+  ]
+}
