@@ -103,11 +103,25 @@ goes to the log with the request id, not to the client. This closes the
 
 ### 2.3 Resilience policy
 
-- **One breaker implementation** (`src/resilience.py`), applied to the model
-  provider and to each outbound HTTP dependency, configured from `Settings`.
-  Closed → open on N consecutive failures within a window; half-open probes
-  one call. Open returns `upstream_*` immediately rather than paying the full
-  retry envelope during an outage.
+- **A retry token bucket, not a circuit breaker** (`src/resilience.py`). A
+  shared budget throttles *retries* during an outage without introducing a
+  second mode to the success path. Standard-practice guidance is genuinely
+  split here — Nygard and Fowler argue for breakers, AWS argues against them
+  because they introduce modal behaviour that is hard to test — and
+  [`02-STANDARDS.md`](02-STANDARDS.md) §5.2 records why the bucket wins for
+  this repository: it is roughly twenty lines against the Redis that already
+  exists, it adds no untested mode, and it addresses the measured problem
+  (paying a full retry envelope per job during an outage) directly. **The
+  breaker is considered and rejected, not overlooked.**
+- **Retry at exactly one level of the stack.** Retry amplification is
+  multiplicative — three retries at five levels is 243× load — and this
+  repository currently retries in the model SDK, in `urllib3.Retry`, and in
+  three hand-rolled loops. Consolidating to one owning level is worth more
+  than any new mechanism.
+- **Full Jitter** for every backoff: `sleep = random(0, min(cap, base * 2**attempt))`.
+- **Timeouts are chosen from a false-timeout rate**, not a round number: pick
+  the percentile you are willing to cut off and say which, rather than
+  writing `30`.
 - **Every timeout is a setting.** The hardcoded arXiv `timeout=30` moves into
   `Settings`; the HTTP retry budget gets the same clamp treatment
   `llm.py:62-91` already applies, including the WARNING when it bites.
@@ -220,9 +234,24 @@ changes, in this order:
 
 ### 4.2 Statistics that match the claim
 
-- `src/eval/stats.py`: paired bootstrap confidence intervals over tasks, with
-  hierarchical resampling when repeats exist; Wilson intervals for binary
-  rates.
+- **Pairing before power.** Detecting a 5-point gain against an 80% baseline
+  needs roughly 906 items per arm unpaired and roughly 77 paired (McNemar) at
+  low discordance. Always score the baseline and the candidate on the same
+  items. At this repository's N, pairing is not an optimization — it is the
+  difference between a measurable gate and an unmeasurable one.
+- `src/eval/stats.py`: McNemar for paired binary outcomes; paired bootstrap
+  confidence intervals over tasks with hierarchical resampling when repeats
+  exist; Wilson intervals for binary rates; and the **rule of three** for a
+  clean suite (zero failures in n supports an upper bound near 3/n, not
+  "zero risk").
+- **A minimum-N guard, and an explicit CLT caveat.** Below a few hundred
+  datapoints the central-limit approximation materially *underestimates*
+  uncertainty — which is exactly the regime of a 20-query benchmark. The gate
+  reports that its interval is approximate at this N rather than quoting a
+  falsely narrow one.
+- **`pass^k`, not `pass@1`**, wherever a success rate is reported: the
+  probability that *all* k trials succeed is what a user of a repeated
+  workflow experiences.
 - The research lane gains `--repeats`, and both lanes **aggregate** repeats by
   task before diffing rather than comparing `r1` to `r1`.
 - The gate reports an interval and a decision, and is explicit that with
@@ -239,30 +268,66 @@ changes, in this order:
   product component grading itself is not a gate, and its parse-failure `0.0`
   coercion makes it actively misleading.
 
+**Bias controls, corrected by measurement.** Verbosity bias has collapsed in
+current judges (below 0.011 across a 21-judge study), so effort spent
+controlling for it is effort in the wrong place. **Position bias has not**
+(0.002–0.192) and is controlled by swap/AB+BA averaging — prompt-based
+debiasing has near-zero effect. And when judge quality is ever reported, it is
+reported as **φ/MCC with both positive rates**, never as raw agreement, which
+overstates chance-corrected agreement by 33–41 points; how abstentions are
+counted must be stated, because it swings measured accuracy by 10–34 points.
+See [`02-STANDARDS.md`](02-STANDARDS.md) §2.2.
+
 **Note the boundary:** measuring judges against *human* labels is deferred to
 the agent-engineering program's calibration work orders and to owner-approved
 spend. Phase A does the part that costs nothing — pinning, versioning,
-provenance, determinism, and mechanical bias probes (position and verbosity)
-on recorded fixtures.
+provenance, determinism, and position-bias probes on recorded fixtures.
 
 ### 4.3 Adversarial suite
 
 A first-class corpus (`tests/fixtures/safety/`) with a scored gate, replacing
 "5 regexes and a canary substring":
 
-- **Categories mapped to OWASP LLM Top 10** (see [`02-STANDARDS.md`](02-STANDARDS.md) §3):
-  direct and indirect prompt injection, instruction override, exfiltration
-  attempts, tool/scope escalation, source laundering, poisoned metadata,
-  cross-principal probing.
-- **Attack success rate** as the metric, with the denominator recorded, and
-  a **zero-tolerance** class (cross-principal leakage, key/secret echo) that
-  fails on a single hit.
+- **Categories mapped primarily to the OWASP Top 10 for Agentic Applications
+  (ASI01–ASI10)** and secondarily to the LLM Top 10 — for a tool-using agent
+  the agentic list is the relevant one ([`02-STANDARDS.md`](02-STANDARDS.md)
+  §3.2). Cite category **codes** and write our own descriptions: OWASP prose
+  is CC BY-SA 4.0, which is viral.
+- **Attack success rate with its denominator, gated as a regression-delta
+  against a fixed baseline — not as an absolute threshold.** ASR is a property
+  of the deployment surface rather than of the model, and at n=100 an observed
+  3% has a Wilson interval of roughly 1.0–8.5%, so an "ASR < 5%" gate flips on
+  noise. Absolute zero is reserved for **categorical hard violations**: a
+  secret exfiltrated, an unauthorised tool called, egress to a non-allowlisted
+  host.
+- **A three-state PROMOTE / HOLD / ROLLBACK decision**, safety veto evaluated
+  first, advisory-by-default until the baseline is trusted, and **zero model
+  calls inside the gate logic** — content-preserving wrappers flip 57–100% of
+  LLM-judge verdicts, so a judge in a gate is an attack surface, not a
+  control.
 - **Judged by deterministic checks first** — behavioural assertions on what
   the agent *did* (which tools ran, which fields changed, what left the
   process), not only on whether a canary string appeared. A model that obeys
   an injection while paraphrasing must fail.
 - The pedagogy deny-list becomes a campaign metric in `summary.jsonl`, not
   only a pytest assertion.
+
+### 4.4 Groundedness without a judge
+
+The domain hands this repository an accuracy signal most systems cannot have.
+Because the corpus is arXiv papers, two of the most valuable checks are
+**deterministic**:
+
+- does every cited arXiv identifier resolve to a real paper?
+- does every quoted span appear **verbatim** in the fetched PDF?
+
+That is hallucination measurement with **zero model calls**, and it is more
+defensible than any judge because it cannot be argued with. It also composes
+with §4.2: a deterministic per-claim outcome is a paired binary variable,
+which is precisely what McNemar needs.
+
+WO-A16 builds it. It is the single highest-value evaluation item available at
+zero spend, and it exists only because of the domain.
 
 ## 5. Telemetry architecture
 
@@ -303,7 +368,23 @@ should not undo it.
 - **Names follow the OpenTelemetry GenAI semantic conventions** where they
   exist, with the repository's existing names retained as aliases for one
   release so dashboards do not break silently. Exact names are fixed in
-  [`02-STANDARDS.md`](02-STANDARDS.md) §1, not invented here.
+  [`02-STANDARDS.md`](02-STANDARDS.md) §1, not invented here — note that the
+  provider attribute is `gen_ai.provider.name`, **not** the older
+  `gen_ai.system`, and that the conventions have moved to their own repository
+  with no tagged release, so the ADR pins a commit SHA.
+- **The graph nodes become conventional agent spans**, not bespoke ones:
+  `invoke_agent` (INTERNAL) per node, `plan` for the planner, `execute_tool`
+  for arXiv/Semantic Scholar/PDF/embedding calls, `invoke_workflow` for a run.
+  The conventions also define `gen_ai.invoke_agent.inference_calls` and
+  `.tool_calls` — exactly the per-invocation process counters an agent system
+  needs, already named for us.
+- **`gen_ai.evaluation.result` is a defined event** and is the target shape for
+  emitting eval verdicts onto traces later; WO-A08/A09 record it rather than
+  inventing a shape.
+- **MCP has conventions in the same repository** (`mcp.method.name`,
+  `mcp.session.id`, `mcp.client.operation.duration`, …). Adopting `gen_ai.*`
+  now makes the owner's stated next step a continuation rather than a second
+  convention to reconcile.
 - **RED for the HTTP surface** via one middleware: request count by
   route-template/method/status, duration histogram, in-flight gauge. Route
   *template*, never the raw path, or the cardinality bound is lost.
@@ -334,6 +415,19 @@ objectives with an error budget rather than as vibes:
 
 Initial objectives are **declared, not yet earned**. The doc says so, and the
 first honest job of the SLO is to be revised against measurement.
+
+Three framing points, from [`02-STANDARDS.md`](02-STANDARDS.md) §5.1:
+
+- The SRE Workbook already lists **quality** as a first-class SLI type — the
+  proportion of responses served in an undegraded state. Expressed as
+  good/valid events, error budgets and burn-rate alerting apply unmodified.
+  There is no credible published methodology specific to LLM quality budgets,
+  so this is the defensible anchor rather than a number from a vendor blog.
+- **Degraded and shed requests are excluded from the latency SLI** and counted
+  against quality instead. Otherwise degradation makes the dashboard look
+  better while the product gets worse.
+- **Compounding is the number to keep visible**: 95% per step across five
+  steps is 77.4% end to end.
 
 ## 6. Operability
 
@@ -366,9 +460,12 @@ absorb this work instead of colliding with it.
   35-second suite is a multi-hour job with no CI home, and the repository
   already has 24 hand-written "Mutation-check" notes. Recorded as a candidate
   for a later, out-of-CI cadence rather than half-done now.
-- **Schemathesis against the OpenAPI schema.** Attractive, but it pulls a
-  large dependency tree into a lock that ADR 0045 keeps deliberately small.
-  The property tier covers the same parsers directly.
+- **Schemathesis against the OpenAPI schema.** More attractive than first
+  assessed — `from_asgi` drives the FastAPI app in-process with no server or
+  port. Rejected for this phase on a concrete blocker: it hard-requires
+  `pytest>=9`, so adopting it forces a pytest major bump for the whole
+  repository as a side effect of a testing PR. Revisit deliberately, not
+  incidentally.
 - **A hosted collector, Grafana, or any running observability service.** Costs
   money and is an owner decision.
 - **Converting all 122 `ValueError` sites.** See §2.1.

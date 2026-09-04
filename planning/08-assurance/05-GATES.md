@@ -48,8 +48,9 @@ Closes after WO-A04, A05, A06, A07, A08, A15.
 
 | # | Criterion | Enforced by |
 |---|---|---|
-| A2.1 | An upstream outage opens a breaker instead of paying the full retry envelope | breaker state tests |
-| A2.2 | A healthy system behaves exactly as before the breaker existed | pass-through test |
+| A2.1 | An upstream outage exhausts a retry budget instead of every job paying a full retry envelope | token-bucket tests |
+| A2.2 | A healthy system behaves exactly as before | pass-through test |
+| A2.2b | Each dependency is retried at exactly one level of the stack | retry-consolidation test |
 | A2.3 | A Redis outage degrades the rate limiter rather than returning 500 | fault test |
 | A2.4 | A poison job dead-letters instead of looping | redriver attempt-counter test |
 | A2.5 | Every timeout is configuration, not a literal | settings test + grep assertion |
@@ -69,16 +70,18 @@ row showing the provenance block; the `$0.0000` assertion.
 
 ## Gate A3 — Assurance
 
-Closes after WO-A09, A10, A11, A12, A13, A14.
+Closes after WO-A09, A10, A11, A12, A13, A14, A16.
 
 | # | Criterion | Enforced by |
 |---|---|---|
-| A3.1 | The regression gate reports intervals and says when N is too small | stats tests + report snapshot |
+| A3.1 | The regression gate reports intervals, a PROMOTE/HOLD/ROLLBACK decision, and says when N is too small | stats tests + report snapshot |
+| A3.1b | Comparisons are paired, and no model call occurs inside gate logic | McNemar path test + gate-purity test |
 | A3.2 | A single quantized judge flip no longer trips the gate alone | epsilon test |
 | A3.3 | Repeats aggregate before they are compared | aggregation test |
 | A3.4 | `/readyz` fails when a dependency is down | readiness test |
 | A3.5 | HTTP RED metrics exist and are cardinality-bounded | middleware tests |
 | A3.6 | An obedient-but-paraphrasing injection response fails containment | safety suite |
+| A3.6b | Safety gates on a regression-delta, with absolute zero only for categorical hard violations | safety gate tests |
 | A3.7 | Attack success rate is reported with its denominator | safety gate artifact |
 | A3.8 | Zero-tolerance safety classes fail on a single occurrence | safety suite |
 | A3.9 | Every alerted metric name exists in the code | name-consistency test |
@@ -86,10 +89,12 @@ Closes after WO-A09, A10, A11, A12, A13, A14.
 | A3.11 | The new tiers gate on every PR | CI shape pin |
 | A3.12 | Every README claim maps to its enforcement, or is listed as unenforced | claim index |
 | A3.13 | The framework mapping has an honest "not satisfied" column | review |
+| A3.14 | A citation to a paper the run never retrieved is flagged | groundedness tests |
+| A3.15 | Zero citations is not scored as perfect | groundedness tests |
 
 **Evidence pack:** the CI run that gates the new tiers, the safety report with
-its denominators, the claim → enforcement index, the framework mapping, and
-the model card.
+its denominators, the groundedness report, the claim → enforcement index, the
+framework mapping, the SBOM, and the system card.
 
 ## What a gate does not do
 

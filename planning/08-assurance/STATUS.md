@@ -15,7 +15,7 @@ accurate compliant and does exactly what we say."*
 | [`01-BASELINE.md`](01-BASELINE.md) | What is measurably true on `0caefa2`, with `file:line` evidence — including what is already good |
 | [`02-STANDARDS.md`](02-STANDARDS.md) | The external standards adopted, what each actually requires, and what is deliberately skipped |
 | [`03-ARCHITECTURE.md`](03-ARCHITECTURE.md) | The target design the work orders implement, and the seams left open |
-| [`04-WORK-ORDERS.md`](04-WORK-ORDERS.md) | Fifteen executable work orders in three waves, with file ownership and acceptance |
+| [`04-WORK-ORDERS.md`](04-WORK-ORDERS.md) | Sixteen executable work orders in three waves, with file ownership and acceptance |
 | [`05-GATES.md`](05-GATES.md) | Gate A1/A2/A3 criteria and what enforces each |
 
 ## Method
@@ -32,6 +32,7 @@ estimated: `pytest -m "not e2e" -q` → **2042 passed, 52 skipped in 35.22s** on
 | Date | Event |
 |---|---|
 | 2026-09-04 | Recon complete; baseline measured; charter, baseline, architecture, work orders and gates written |
+| 2026-09-04 | Standards research returned and **materially corrected the plan**: the GenAI conventions moved repositories and have no release to pin (`gen_ai.provider.name`, not `gen_ai.system`); a retry token bucket replaced the circuit breaker in WO-A04; paired McNemar comparison replaced unpaired power assumptions in WO-A09 (~77 items vs ~906); the OWASP **Agentic** list (ASI01–ASI10) replaced the LLM Top 10 as the primary safety mapping, with its CC BY-SA licence constraint recorded; verbosity-bias controls were dropped as measurably obsolete while position bias and abstention handling were kept; and **WO-A16 was added** — the arXiv domain permits deterministic groundedness measurement, so hallucination can be measured with zero model calls |
 
 ## Coordination
 
