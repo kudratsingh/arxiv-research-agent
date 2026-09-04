@@ -101,11 +101,18 @@ describe("the enumeration reads the real backend", () => {
     }
   });
 
-  it("finds the six deliberate assignments still in the runner and redriver", () => {
+  it("finds the seven deliberate assignments still in the runner and redriver", () => {
     // The literals moved behind class constants (`JobTimeout.code`), so
     // this pins the assignment sites by their class rather than by a
     // string or a line number — a rename now has to change both sides of
     // an import, which the Python type checker sees.
+    //
+    // The seventh is ADR 0068's dead-letter. It is a *separate*
+    // assignment rather than an argument to the reclaim's, precisely so
+    // that it stays visible to this file: a code that reached the row
+    // through a default parameter would be invisible here, and the
+    // first anyone would learn of it is the run rendering "The run
+    // failed." forever.
     for (const [source, expression] of [
       [RUNNER, "job.error_type = SessionTurnTimeout.code"],
       [RUNNER, "job.error_type = HitlTimeout.code"],
@@ -113,6 +120,7 @@ describe("the enumeration reads the real backend", () => {
       [RUNNER, "job.error_type = BudgetExceededRun.code"],
       [RUNNER, "job.error_type = JobTimeout.code"],
       [REDRIVER, "job.error_type = ORPHANED_ERROR_TYPE"],
+      [REDRIVER, "job.error_type = DEAD_LETTER_ERROR_TYPE"],
     ] as const) {
       expect(source).toContain(expression);
     }
@@ -150,8 +158,8 @@ describe("the enumeration reads the real backend", () => {
 });
 
 describe("criterion 7 — every producible value is mapped or visibly falls through", () => {
-  it("enumerates twelve values", () => {
-    expect(PRODUCIBLE).toHaveLength(12);
+  it("enumerates thirteen values", () => {
+    expect(PRODUCIBLE).toHaveLength(13);
   });
 
   it.each(PRODUCIBLE)("%s is mapped or falls through with its raw text", (value) => {
@@ -169,14 +177,14 @@ describe("criterion 7 — every producible value is mapped or visibly falls thro
     expect(described.errorType).toBe(value);
   });
 
-  it("maps all twelve — the dictionary and the backend agree exactly", () => {
-    // Both directions. A thirteenth backend value fails the first half; a
+  it("maps all thirteen — the dictionary and the backend agree exactly", () => {
+    // Both directions. A fourteenth backend value fails the first half; a
     // mapping entry for a value the backend can no longer produce fails
     // the second, which is what stops the table becoming folklore.
     expect([...MAPPED_ERROR_TYPES].sort()).toEqual(PRODUCIBLE);
   });
 
-  it("would notice a thirteenth value", () => {
+  it("would notice a fourteenth value", () => {
     const described = describeErrorType("some_future_code", "boom");
     expect(described.mapped).toBe(false);
     expect(MAPPED_ERROR_TYPES as readonly string[]).not.toContain(

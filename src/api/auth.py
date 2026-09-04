@@ -44,6 +44,7 @@ from src.errors import (
 )
 from src.observability import get_logger
 from src.observability.metrics import record_rate_limit_rejection
+from src.resilience import record_degradation
 
 log = get_logger(__name__)
 
@@ -261,6 +262,18 @@ class RedisRateLimiter:
     small race under adversarial load — two concurrent requests
     might both squeak past at the boundary — is acceptable at demo
     scale; a stricter implementation would use a Lua script.
+
+    **A Redis failure degrades rather than raises** (ADR 0068). Before
+    that, an unguarded `pipe.execute()` meant a Redis blip answered
+    every submit with an opaque 500 — the rate limiter, a *defence*,
+    became the outage. Fail-open is the deliberate choice: the counter
+    exists to stop one key bursting past a courtesy quota, not to
+    protect a secret, and refusing every request because the counter is
+    unavailable trades a small over-serve for a total one. The fallback
+    is a real per-worker limiter, not an absence of one, so a fleet of
+    N workers still caps a key at N x `api_key_hourly_limit` while
+    Redis is away — and `resilience.record_degradation` makes the
+    weaker guarantee visible instead of silent.
     """
 
     def __init__(
@@ -275,6 +288,13 @@ class RedisRateLimiter:
         self.limit_per_hour = limit_per_hour
         self.window_sec = window_sec
         self._key_prefix = key_prefix
+        # Built eagerly and kept for the limiter's lifetime, so a
+        # degradation that spans several requests accumulates in one
+        # window. A fallback constructed per failure would forget every
+        # request it had just counted and cap nothing at all.
+        self._fallback = InMemoryRateLimiter(
+            limit_per_hour=limit_per_hour, window_sec=window_sec
+        )
 
     def _key(self, key_id: str) -> str:
         return f"{self._key_prefix}{key_id}"
@@ -283,6 +303,46 @@ class RedisRateLimiter:
         self, key_id: str, *, now: float | None = None
     ) -> None:
         ts = now if now is not None else time.time()
+        try:
+            retry_after = await self._count(key_id, ts)
+        except Exception as exc:  # noqa: BLE001 - see the class docstring
+            # Every Redis failure mode lands here on purpose: a
+            # connection error, a timeout, a MOVED from a resharded
+            # cluster, a decode error from a key some other tenant
+            # wrote. Narrowing the catch would mean enumerating a
+            # client library's exception tree and being wrong about it
+            # during an incident, and the correct response is the same
+            # for all of them.
+            record_degradation(
+                component="rate_limiter",
+                reason="redis_unavailable",
+                error=type(exc).__name__,
+            )
+            await self._fallback.check_and_record(key_id, now=ts)
+            return
+        if retry_after is not None:
+            # Raised out here rather than inside `_count`, so the
+            # `except` above can be as wide as it is without ever
+            # swallowing the 429 the limiter exists to produce.
+            _raise_429(
+                key_id, self.limit_per_hour, retry_after, backend="redis"
+            )
+
+    async def _count(self, key_id: str, ts: float) -> int | None:
+        """Record the submit and report whether it went over the cap.
+
+        Args:
+            key_id: Principal being counted.
+            ts: Timestamp of this submit.
+
+        Returns:
+            None when the principal is under its cap. Otherwise the
+            `Retry-After` seconds for the 429 the caller must raise.
+
+        Raises:
+            Exception: whatever the Redis client raises. The caller
+                turns that into a degradation, never into a 500.
+        """
         cutoff = ts - self.window_sec
         redis_key = self._key(key_id)
         member = uuid.uuid4().hex
@@ -295,22 +355,17 @@ class RedisRateLimiter:
             results = await pipe.execute()
 
         current_count = int(results[2])
-        if current_count > self.limit_per_hour:
-            # Over cap: roll back this record and 429.
-            await self._client.zrem(redis_key, member)
-            # Retry-After = seconds until the oldest surviving entry
-            # falls out of the window.
-            oldest = await self._client.zrange(
-                redis_key, 0, 0, withscores=True
-            )
-            if oldest:
-                _, oldest_ts = oldest[0]
-                retry_after = int(float(oldest_ts) + self.window_sec - ts) + 1
-            else:
-                retry_after = self.window_sec
-            _raise_429(
-                key_id, self.limit_per_hour, retry_after, backend="redis"
-            )
+        if current_count <= self.limit_per_hour:
+            return None
+        # Over cap: roll back this record and 429.
+        await self._client.zrem(redis_key, member)
+        # Retry-After = seconds until the oldest surviving entry
+        # falls out of the window.
+        oldest = await self._client.zrange(redis_key, 0, 0, withscores=True)
+        if oldest:
+            _, oldest_ts = oldest[0]
+            return int(float(oldest_ts) + self.window_sec - ts) + 1
+        return self.window_sec
 
 
 def build_rate_limiter(

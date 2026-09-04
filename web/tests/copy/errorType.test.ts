@@ -76,6 +76,7 @@ const ADDED_SINCE_THE_BRIEF = [
   "session_turn_timeout", // ADR 0057
   "session_cost_cap_refused", // ADR 0062
   "internal_unexpected", // ADR 0064
+  "internal_dead_letter", // ADR 0068
 ];
 
 describe("criterion 6 — the mapped values", () => {

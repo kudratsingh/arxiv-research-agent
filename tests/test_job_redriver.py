@@ -33,7 +33,13 @@ from src.api.redis_store import (
     _job_to_json,
     _lease_key,
 )
-from src.api.redriver import REDRIVE_LOCK_TTL_SEC, JobRedriver, RedriveReport
+from src.api.redriver import (
+    DEAD_LETTER_ERROR_TYPE,
+    REDRIVE_LOCK_TTL_SEC,
+    JobRedriver,
+    RedriveReport,
+)
+from src.errors import ERROR_CODES, JOB_ERROR_TYPES
 
 pytestmark = [pytest.mark.integration, pytest.mark.fault]
 
@@ -1009,3 +1015,252 @@ async def test_leaseless_run_reacquires_once_redis_recovers() -> None:
     # First acquire raised, a later one landed — not left leaseless.
     assert calls.count("acquire") >= 2
     assert "release" in calls
+
+
+# ---------------------------------------------------------------------------
+# ADR 0068 — the poison-message bound
+# ---------------------------------------------------------------------------
+
+
+async def _requeue_once(
+    store: RedisJobStore, job_id: str, resubmitted: list[str]
+) -> RedriveReport:
+    """Run one sweep with requeue enabled, mimicking a worker's boot.
+
+    The job is re-seeded `pending` before each sweep because that is
+    what the real loop looks like: `_requeue` writes the row back to
+    `pending` and hands it to a callback whose worker then dies before
+    reaching a terminal state, so the next sweep finds exactly the row
+    this helper recreates.
+    """
+
+    async def resubmit(job: Job) -> None:
+        resubmitted.append(job.job_id)
+
+    return await JobRedriver(
+        store,
+        WORKER_A,
+        requeue_pending=True,
+        max_attempts=3,
+        resubmit=resubmit,
+    ).sweep()
+
+
+@pytest.mark.asyncio
+async def test_the_nth_requeue_of_a_failing_job_dead_letters_it(
+    store: RedisJobStore,
+) -> None:
+    """`job_redrive_requeue_pending` was an unbounded loop.
+
+    A job that reliably kills the worker running it is, to every sweep,
+    an orphaned `pending` row that deserves another chance — so the
+    sweep gives it one, forever. The counter is what ends it.
+    """
+    resubmitted: list[str] = []
+
+    for attempt in range(1, 4):
+        await _seed(store, "job-poison", JobStatus.pending, started_at=None)
+        report = await _requeue_once(store, "job-poison", resubmitted)
+        assert report.requeued == 1, f"attempt {attempt} should still requeue"
+        assert report.dead_lettered == 0
+
+    assert resubmitted == ["job-poison"] * 3
+
+    # The fourth sweep is the one that gives up.
+    await _seed(store, "job-poison", JobStatus.pending, started_at=None)
+    report = await _requeue_once(store, "job-poison", resubmitted)
+
+    assert report.dead_lettered == 1
+    assert report.requeued == 0
+    assert report.orphaned == 1
+    assert resubmitted == ["job-poison"] * 3, "the fourth attempt never ran"
+
+
+@pytest.mark.asyncio
+async def test_a_dead_lettered_job_is_terminal_and_says_why(
+    store: RedisJobStore,
+) -> None:
+    resubmitted: list[str] = []
+    for _ in range(4):
+        await _seed(store, "job-poison", JobStatus.pending, started_at=None)
+        await _requeue_once(store, "job-poison", resubmitted)
+
+    dead = await store.get("job-poison")
+    assert dead is not None
+    assert dead.status == JobStatus.failed
+    assert dead.completed_at is not None
+    # Its own code, not `orphaned`: an orphan is retryable and this is
+    # the one thing that is provably not.
+    assert dead.error_type == DEAD_LETTER_ERROR_TYPE
+    assert dead.error is not None
+    assert "requeued 3 times" in dead.error
+    assert "Resubmit the query to retry" not in dead.error
+
+
+def test_the_dead_letter_code_is_in_the_closed_vocabulary() -> None:
+    """A run-carried code the frontend has no sentence for renders
+    "The run failed." forever, so the taxonomy is where this belongs."""
+    assert DEAD_LETTER_ERROR_TYPE in JOB_ERROR_TYPES
+    assert DEAD_LETTER_ERROR_TYPE in ERROR_CODES
+
+
+@pytest.mark.asyncio
+async def test_the_dead_letter_unhangs_subscribers_like_any_other_reclaim(
+    store: RedisJobStore,
+) -> None:
+    """The publish is the half that matters to a connected client."""
+    published: list[tuple[str, str]] = []
+    original = store.publish_event
+
+    async def spy(job_id: str, event: str, data: dict[str, Any]) -> None:
+        published.append((job_id, event))
+        await original(job_id, event, data)
+
+    store.publish_event = spy  # type: ignore[method-assign]
+
+    resubmitted: list[str] = []
+    for _ in range(4):
+        await _seed(store, "job-poison", JobStatus.pending, started_at=None)
+        await _requeue_once(store, "job-poison", resubmitted)
+
+    assert ("job-poison", "job_failed") in published
+
+
+@pytest.mark.asyncio
+async def test_a_healthy_requeue_is_unaffected_by_the_bound(
+    store: RedisJobStore,
+) -> None:
+    """One deploy, one requeue: the common case must not change."""
+    resubmitted: list[str] = []
+    await _seed(store, "job-once", JobStatus.pending, started_at=None)
+
+    report = await _requeue_once(store, "job-once", resubmitted)
+
+    assert report.requeued == 1
+    assert report.dead_lettered == 0
+    requeued = await store.get("job-once")
+    assert requeued is not None
+    assert requeued.status == JobStatus.pending
+    assert requeued.error_type is None
+
+
+@pytest.mark.asyncio
+async def test_the_counter_is_per_job(store: RedisJobStore) -> None:
+    """A noisy neighbour must not spend another job's allowance."""
+    resubmitted: list[str] = []
+    for _ in range(4):
+        await _seed(store, "job-poison", JobStatus.pending, started_at=None)
+        await _requeue_once(store, "job-poison", resubmitted)
+
+    await _seed(store, "job-innocent", JobStatus.pending, started_at=None)
+    report = await _requeue_once(store, "job-innocent", resubmitted)
+
+    assert report.requeued == 1
+    assert report.dead_lettered == 0
+
+
+@pytest.mark.asyncio
+async def test_the_counter_survives_the_requeue_reset(
+    store: RedisJobStore,
+) -> None:
+    """Why the count is a Redis key rather than a field on the row.
+
+    `_requeue` resets the job to a clean submit state — status,
+    timestamps, `error`, `error_type` — so a counter living on that row
+    is one field away from being zeroed by the very write it is meant
+    to bound.
+    """
+    resubmitted: list[str] = []
+    await _seed(store, "job-poison", JobStatus.pending, started_at=None)
+    await _requeue_once(store, "job-poison", resubmitted)
+
+    assert await store.bump_redrive_attempts("job-poison") == 2
+
+
+@pytest.mark.asyncio
+async def test_a_store_that_cannot_count_keeps_its_old_behaviour(
+    store: RedisJobStore,
+) -> None:
+    """The bound is duck-typed, like every other store capability here.
+
+    A store with no counter is a store whose jobs do not survive the
+    restart that produces an orphan in the first place, so refusing to
+    reconcile would be the wrong trade.
+    """
+    await _seed(store, "job-uncounted", JobStatus.pending, started_at=None)
+    resubmitted: list[str] = []
+
+    async def resubmit(job: Job) -> None:
+        resubmitted.append(job.job_id)
+
+    class Uncounted:
+        def __getattr__(self, name: str) -> Any:
+            if name in ("bump_redrive_attempts", "clear_redrive_attempts"):
+                raise AttributeError(name)
+            return getattr(store, name)
+
+    report = await JobRedriver(
+        Uncounted(), WORKER_A, requeue_pending=True, max_attempts=1, resubmit=resubmit
+    ).sweep()
+
+    assert report.requeued == 1
+    assert report.dead_lettered == 0
+
+
+@pytest.mark.asyncio
+async def test_a_counter_that_errors_does_not_abort_the_sweep(
+    store: RedisJobStore,
+) -> None:
+    """A Redis blip while reading the guard must not stop the reconcile."""
+    await _seed(store, "job-blip", JobStatus.pending, started_at=None)
+    resubmitted: list[str] = []
+
+    async def resubmit(job: Job) -> None:
+        resubmitted.append(job.job_id)
+
+    async def exploding(_job_id: str) -> int:
+        raise ConnectionError("redis blipped")
+
+    store.bump_redrive_attempts = exploding  # type: ignore[method-assign]
+
+    report = await JobRedriver(
+        store, WORKER_A, requeue_pending=True, max_attempts=1, resubmit=resubmit
+    ).sweep()
+
+    assert report.requeued == 1
+    assert resubmitted == ["job-blip"]
+
+
+@pytest.mark.asyncio
+async def test_a_store_that_counts_but_cannot_clear_still_dead_letters(
+    store: RedisJobStore,
+) -> None:
+    """Forgetting the count is best effort; giving up on the job is not.
+
+    The two halves are duck-typed independently, so a store that grew
+    one and not the other must still reach the terminal state rather
+    than failing the sweep on a missing convenience.
+    """
+
+    class NoClear:
+        def __getattr__(self, name: str) -> Any:
+            if name == "clear_redrive_attempts":
+                raise AttributeError(name)
+            return getattr(store, name)
+
+    resubmitted: list[str] = []
+
+    async def resubmit(job: Job) -> None:
+        resubmitted.append(job.job_id)
+
+    proxy = NoClear()
+    for _ in range(2):
+        await _seed(store, "job-poison", JobStatus.pending, started_at=None)
+        report = await JobRedriver(
+            proxy, WORKER_A, requeue_pending=True, max_attempts=1, resubmit=resubmit
+        ).sweep()
+
+    assert report.dead_lettered == 1
+    dead = await store.get("job-poison")
+    assert dead is not None
+    assert dead.error_type == DEAD_LETTER_ERROR_TYPE

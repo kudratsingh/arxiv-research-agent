@@ -168,6 +168,162 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ Resilience (Phase A, ADR 0068) ----------------------------
+    # Retry amplification is the measured problem: three retries at five
+    # levels of a stack is 243x load on a dependency that is already
+    # failing. The knobs below bound *retries* rather than requests, so
+    # a healthy deployment behaves exactly as it did without them.
+    enable_retry_budget: bool = Field(
+        default=True,
+        description=(
+            "Throttle retries through a per-process token bucket once a "
+            "dependency starts failing (ADR 0068). Off restores the "
+            "pre-budget behaviour exactly: every request pays its full "
+            "retry envelope. A kill switch, not a tuning knob."
+        ),
+    )
+    retry_budget_capacity: int = Field(
+        default=100,
+        ge=1,
+        le=100000,
+        description=(
+            "Retries one worker may spend against one dependency before "
+            "the budget starts refusing them. Per process, not per "
+            "fleet: N workers allow N x this, which is deliberate — a "
+            "shared budget would have to ask Redis for permission "
+            "during the outage it exists for."
+        ),
+    )
+    retry_budget_refill_per_sec: float = Field(
+        default=1.0,
+        gt=0.0,
+        le=1000.0,
+        description=(
+            "Retries returned to the budget per second. Must be > 0: it "
+            "is the only refill a fully drained bucket can earn, since "
+            "the success refund needs successes the outage is denying."
+        ),
+    )
+    retry_budget_success_refund: float = Field(
+        default=0.2,
+        gt=0.0,
+        le=1.0,
+        description=(
+            "Retries earned per successful call. 0.2 means five "
+            "successes buy one retry, matching the AWS SDKs' 5:1 "
+            "ratio — the budget tracks the retry/success ratio rather "
+            "than the absolute retry rate."
+        ),
+    )
+    http_backoff_max_sec: float = Field(
+        default=20.0,
+        gt=0.0,
+        le=600.0,
+        description=(
+            "Ceiling on one HTTP backoff, and the cap in the Full "
+            "Jitter draw `random(0, min(cap, base * 2**attempt))`. "
+            "urllib3's own default is 120s, which is a fifth of the "
+            "default job budget spent asleep."
+        ),
+    )
+    http_call_chain_budget_fraction: float = Field(
+        default=0.25,
+        gt=0.0,
+        le=1.0,
+        description=(
+            "Share of `api_job_timeout_sec` one HTTP call chain may "
+            "occupy in the worst case. `src/llm.py` gives the model "
+            "0.75 because a job is mostly model calls; HTTP is the "
+            "smaller half of a run, and a search node issues up to 12 "
+            "requests inside one job. Retries are trimmed against it, "
+            "never the per-attempt timeout."
+        ),
+    )
+    arxiv_timeout_sec: float = Field(
+        default=25.0,
+        gt=0.0,
+        le=300.0,
+        description=(
+            "Per-attempt timeout on an arXiv Atom API request. Chosen "
+            "from a false-timeout rate rather than a round number: this "
+            "deployment accepts abandoning the slowest ~0.1% of arXiv "
+            "responses (p99.9) and pays for the rest. The distribution "
+            "is not yet measured here, so 25s is a declared target and "
+            "ADR 0068 names the measurement that replaces it; the "
+            "previous hardcoded 30 was neither declared nor tunable."
+        ),
+    )
+    arxiv_pacing_sec: float = Field(
+        default=3.0,
+        ge=0.0,
+        le=60.0,
+        description=(
+            "Pause between consecutive live arXiv queries in one run. "
+            "arXiv asks API clients to space requests; 3s is the value "
+            "this repository has always used, now tunable and now "
+            "interruptible by a job cancel (ADR 0068)."
+        ),
+    )
+    redis_connect_timeout_sec: float = Field(
+        default=5.0,
+        gt=0.0,
+        le=120.0,
+        description=(
+            "TCP connect timeout for the Redis client. A same-host or "
+            "same-network Redis connects in under a millisecond, so 5s "
+            "is generous enough to survive one SYN retransmit and short "
+            "enough that an unreachable Redis fails a request instead "
+            "of hanging it. Unset before ADR 0068, which is why "
+            "`create_app` had to wrap one call in `asyncio.wait_for`."
+        ),
+    )
+    redis_socket_timeout_sec: float = Field(
+        default=5.0,
+        gt=0.0,
+        le=300.0,
+        description=(
+            "Per-command read/write timeout for the Redis client. "
+            "Every command this service issues is O(1) or a bounded "
+            "SCAN batch. Pub/sub is unaffected: redis-py passes "
+            "`math.inf` for blocking `listen()` reads precisely so a "
+            "socket timeout cannot end an idle SSE subscription."
+        ),
+    )
+    redis_health_check_interval_sec: int = Field(
+        default=30,
+        ge=0,
+        le=3600,
+        description=(
+            "How often a pooled Redis connection PINGs before reuse. "
+            "Closes the stale-connection window a load balancer or an "
+            "idle-timeout proxy opens; 0 disables the check."
+        ),
+    )
+    redis_max_retries: int = Field(
+        default=1,
+        ge=0,
+        le=10,
+        description=(
+            "Retries redis-py itself makes on a timeout or connection "
+            "error, with Full Jitter backoff. Redis is the one owning "
+            "level for Redis retries (ADR 0068) — no application loop "
+            "may add a second."
+        ),
+    )
+    job_redrive_max_attempts: int = Field(
+        default=3,
+        ge=1,
+        le=100,
+        description=(
+            "Requeues one job may receive before the redriver "
+            "dead-letters it as `internal_dead_letter` instead of "
+            "putting it back in flight. Without this bound an enabled "
+            "`job_redrive_requeue_pending` is a poison-message loop: a "
+            "job that reliably kills its worker is requeued by the "
+            "next sweep forever. See ADR 0068."
+        ),
+    )
+
     # ------ API auth + rate limiting (ADR 0033) ------------------------
     enable_api_auth: bool = Field(
         default=False,

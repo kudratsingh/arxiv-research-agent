@@ -119,7 +119,9 @@ best-effort and never derails the workflow.
 | arXiv answered, but zero papers matched | `search_agent` | Raises `NoPapersFoundError`, distinct from the transport case so the failure names its real cause. |
 | Some queries failed, others found papers | `search_agent` | Proceeds with what was found; logs `search_partial_arxiv_failure` at WARNING. |
 | Re-search (supervisor loop) found nothing but state already has papers | `search_agent` | Returns the prior papers unchanged and logs `search_empty_keeping_prior_papers` — an empty round must not destroy results an earlier round paid for. Neither typed error is raised on this path. |
-| Individual arXiv request 429 / 5xx | `src/tools/http_session.py` | Shared `urllib3.Retry` session (`http_max_retries`, `http_backoff_factor`) retries before the query counts as failed. |
+| Individual arXiv request 429 / 5xx | `src/tools/http_session.py` | Shared `urllib3.Retry` session (`http_max_retries`, `http_backoff_factor`) retries before the query counts as failed — and is the *only* level that does (ADR 0068). Backoff is Full Jitter, the retry count is clamped so `(retries + 1) x arxiv_timeout_sec` fits the job budget, and the retries are charged to a token bucket. |
+| arXiv is failing for every request, not just this one | `src/resilience.py` | Once the arXiv retry budget is exhausted the chain stops at the first retry instead of paying its full envelope. The failure is still `ArxivUnavailableError` / `upstream_arxiv` — the budget changes when the outage is reported, not what it is. |
+| The job is cancelled during the inter-query pause | `search_agent` | `interruptible_sleep` re-checks the cancel token every 50ms, so the node leaves promptly instead of sleeping through the runner's drain window (ADR 0068). |
 | Semantic Scholar unreachable or rate-limited | `_enrich_with_s2_references` | Per-seed failure is skipped; the run proceeds on the arXiv set alone. |
 | Adversarial paper title in a search result | Source adapters | `search_arxiv` and `_map_s2_paper` normalize titles to a single line capped at 300 characters, so a multi-line title can't imitate an instruction block in the reader's prompt (ADR 0020 / 0041). |
 
@@ -142,6 +144,16 @@ Settings that drive the search agent (see `src/config.py`):
   `semantic_scholar_api_key`.
 - `http_max_retries: int = 3` / `http_backoff_factor: float = 1.0` —
   retry policy shared with PDF downloads.
+- `arxiv_timeout_sec: float = 25.0` — per-attempt timeout on an arXiv
+  request, declared to the session builder as well as to `get` so the
+  retry count can be clamped against the job budget (ADR 0068). Was a
+  hardcoded `30`.
+- `arxiv_pacing_sec: float = 3.0` — pause between consecutive live
+  queries. Was a hardcoded `3`, and is now cancellable.
+- `enable_retry_budget: bool = True` plus `retry_budget_*` — the retry
+  token bucket that throttles retries during an arXiv outage
+  (ADR 0068). arXiv has its own bucket, so an arXiv outage cannot spend
+  the retries PDF downloads need.
 - `embedding_device: Literal = "cpu"` / `embedding_cache: Literal =
   "none"` — ranking substrate (ADRs 0028 / 0052).
 
