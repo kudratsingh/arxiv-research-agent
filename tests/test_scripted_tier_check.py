@@ -15,8 +15,21 @@ import pytest
 
 from src.eval import scripted_tier_check as check
 from src.eval.learning_benchmark import LEARNING_SCENARIOS
+from src.eval.provenance import (
+    PROVENANCE_KEY,
+    PROVENANCE_PRESENT_FIELDS,
+    PROVENANCE_REQUIRED_FIELDS,
+)
+from src.eval.simulate_learner import simulation_provenance
 
 pytestmark = pytest.mark.unit
+
+
+def _provenance(**overrides: Any) -> dict[str, Any]:
+    """A complete provenance block, as `simulate_learner` writes one."""
+    block = dict(simulation_provenance("scripted"))
+    block.update(overrides)
+    return block
 
 
 def _row(record_id: str = "s.r1", **overrides: Any) -> dict[str, Any]:
@@ -35,6 +48,7 @@ def _row(record_id: str = "s.r1", **overrides: Any) -> dict[str, Any]:
         "judge_cost_usd": None,
         "judge_llm_calls": None,
         "total_cost_usd": 0.0,
+        PROVENANCE_KEY: _provenance(),
     }
     row.update(overrides)
     return row
@@ -116,6 +130,58 @@ class TestMutations:
         rows[0]["cost_usd"] = 1.0
         rows[0]["expectation_failures"] = 2
         assert len(check.check_rows(rows, expected_sessions=1)) >= 3
+
+
+class TestProvenanceIsAsserted:
+    """ADR 0070: every row must be able to name what produced it.
+
+    Not a quality assertion — the precondition for one. WO-A09's
+    statistics are computed over these rows, and a row that cannot name
+    its judge, its rubric versions or its commit cannot participate in a
+    comparison at all.
+    """
+
+    def test_a_row_with_no_provenance_block_fails(self) -> None:
+        rows = _clean(1)
+        del rows[0][PROVENANCE_KEY]
+        problems = check.check_rows(rows, expected_sessions=1)
+        assert any("provenance" in p for p in problems)
+
+    @pytest.mark.parametrize("field", PROVENANCE_REQUIRED_FIELDS)
+    def test_an_empty_required_provenance_field_fails(self, field: str) -> None:
+        rows = _clean(1)
+        rows[0][PROVENANCE_KEY][field] = ""
+        problems = check.check_rows(rows, expected_sessions=1)
+        assert any(f"provenance.{field}" in p for p in problems)
+
+    @pytest.mark.parametrize("field", PROVENANCE_PRESENT_FIELDS)
+    def test_a_missing_present_only_provenance_field_fails(self, field: str) -> None:
+        rows = _clean(1)
+        del rows[0][PROVENANCE_KEY][field]
+        problems = check.check_rows(rows, expected_sessions=1)
+        assert any(f"provenance.{field}" in p for p in problems)
+
+    def test_an_empty_rubric_version_map_fails(self) -> None:
+        rows = _clean(1)
+        rows[0][PROVENANCE_KEY]["rubric_versions"] = {}
+        problems = check.check_rows(rows, expected_sessions=1)
+        assert any("rubric_versions" in p for p in problems)
+
+    def test_the_row_label_names_which_session_is_unattributable(self) -> None:
+        rows = _clean(1)
+        rows[0][PROVENANCE_KEY]["judge_model"] = ""
+        problems = check.check_rows(rows, expected_sessions=1)
+        assert any(p.startswith("s0.r1:") for p in problems)
+
+    def test_the_provenance_check_is_additive_to_the_zero_spend_checks(self) -> None:
+        # The scripted tier's cost assertions are the gate that has ever
+        # caught anything; ADR 0070 only ever adds to them.
+        rows = _clean(1)
+        rows[0]["cost_usd"] = 0.5
+        rows[0][PROVENANCE_KEY]["code_commit"] = ""
+        problems = check.check_rows(rows, expected_sessions=1)
+        assert any("cost_usd" in p for p in problems)
+        assert any("provenance.code_commit" in p for p in problems)
 
 
 class TestCLI:

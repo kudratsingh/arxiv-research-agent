@@ -7,10 +7,19 @@ skewing eval results.
 """
 
 import re
+from datetime import date
 
 import pytest
 
-from src.eval.benchmark_queries import BENCHMARK_QUERIES, get_queries
+from src.eval.benchmark_queries import (
+    BENCHMARK_QUERIES,
+    DATASET_AUTHOR,
+    DATASET_LICENSE,
+    DATASET_NAME,
+    RESEARCH_DATASET_VERSION,
+    get_queries,
+)
+from src.eval.provenance import dataset_fingerprint
 
 pytestmark = pytest.mark.unit
 
@@ -74,3 +83,68 @@ class TestGetQueries:
 
     def test_unknown_domain_returns_empty(self) -> None:
         assert get_queries(domain="nonexistent-domain") == []
+
+
+class TestDatasetProvenance:
+    """ADR 0070: a benchmark whose origin nobody recorded cannot support
+    a claim about the system it scores (NIST AI RMF MEASURE 2.1)."""
+
+    def test_every_query_names_an_author(self) -> None:
+        for q in BENCHMARK_QUERIES:
+            assert q["author"].strip(), q["query_id"]
+
+    def test_every_query_carries_an_iso_creation_date(self) -> None:
+        for q in BENCHMARK_QUERIES:
+            date.fromisoformat(q["created"])
+
+    def test_every_query_declares_a_licence(self) -> None:
+        for q in BENCHMARK_QUERIES:
+            assert q["license"].strip(), q["query_id"]
+
+    def test_the_licence_says_unlicensed_rather_than_guessing(self) -> None:
+        # This repository ships no LICENSE file. `UNLICENSED` is the
+        # honest value; inventing an SPDX id here would be a licensing
+        # claim the repository does not make.
+        assert DATASET_LICENSE == "UNLICENSED"
+        assert {q["license"] for q in BENCHMARK_QUERIES} == {DATASET_LICENSE}
+
+    def test_creation_dates_match_the_two_authoring_sessions(self) -> None:
+        # Ten queries landed with the eval scaffold, ten with the Sprint 1
+        # expansion; a single blanket date would be a fabricated record.
+        assert {q["created"] for q in BENCHMARK_QUERIES} == {
+            "2026-07-05",
+            "2026-07-07",
+        }
+
+    def test_the_contamination_note_survives(self) -> None:
+        # `hallucination-mitigation` is known to be covered by the
+        # built-in mock papers, so its retrieval recall is scored against
+        # papers hand-picked to match. Losing that annotation would make
+        # the query look like any other.
+        smoke = next(
+            q for q in BENCHMARK_QUERIES if q["query_id"] == "hallucination-mitigation"
+        )
+        assert "built-in mock papers" in smoke["notes"]
+
+    def test_the_author_constant_is_what_the_queries_carry(self) -> None:
+        assert {q["author"] for q in BENCHMARK_QUERIES} == {DATASET_AUTHOR}
+
+
+class TestDatasetVersion:
+    def test_the_version_names_the_dataset_and_its_size(self) -> None:
+        assert RESEARCH_DATASET_VERSION.startswith(
+            f"{DATASET_NAME}@{len(BENCHMARK_QUERIES)}:"
+        )
+
+    def test_the_version_is_derived_rather_than_declared(self) -> None:
+        # Editing a query must move the fingerprint without anyone
+        # remembering to bump a constant.
+        edited = [dict(q) for q in BENCHMARK_QUERIES]
+        edited[0]["query"] = edited[0]["query"] + " (edited)"
+        assert dataset_fingerprint(DATASET_NAME, edited) != RESEARCH_DATASET_VERSION
+
+    def test_the_version_is_stable_for_an_unchanged_dataset(self) -> None:
+        assert (
+            dataset_fingerprint(DATASET_NAME, BENCHMARK_QUERIES)
+            == RESEARCH_DATASET_VERSION
+        )

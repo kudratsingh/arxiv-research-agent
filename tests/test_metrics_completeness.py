@@ -9,7 +9,9 @@ from typing import Any
 
 import pytest
 
+from src.config import Settings
 from src.eval import metrics as metrics_module
+from src.eval import provenance as provenance_module
 from src.eval.metrics import (
     CompletenessResult,
     TopicCoverage,
@@ -156,10 +158,11 @@ class TestMeasureCompleteness:
         captured: dict[str, Any] = {}
 
         def fake_judge(
-            *, prompt: str, system_prompt: str, max_tokens: int
+            *, prompt: str, system_prompt: str, model_name: str, max_tokens: int
         ) -> dict[str, Any]:
             captured["prompt"] = prompt
             captured["system_prompt"] = system_prompt
+            captured["model_name"] = model_name
             captured["max_tokens"] = max_tokens
             return {
                 "coverage": [
@@ -198,3 +201,50 @@ class TestReturnedTypeShape:
         )
         entry = result["coverage"][0]
         assert set(TopicCoverage.__required_keys__) == set(entry.keys())
+
+
+class TestTheJudgeIsPinned:
+    """ADR 0070: the judge must not follow the product model.
+
+    Before this, `measure_completeness` passed no `model_name`, so
+    `src/llm.py` fell through to `settings.anthropic_model` — upgrading
+    the product silently changed the grader.
+    """
+
+    def test_the_judge_call_names_the_pinned_eval_model(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen: dict[str, Any] = {}
+
+        def fake_judge(**kwargs: Any) -> dict[str, Any]:
+            seen.update(kwargs)
+            return {"coverage": [{"topic": "alpha", "covered": True, "reason": "ok"}]}
+
+        monkeypatch.setattr(metrics_module, "call_llm_json", fake_judge)
+        monkeypatch.setattr(
+            provenance_module,
+            "settings",
+            Settings(anthropic_model="product-v2", eval_judge_model="judge-v1"),
+        )
+
+        measure_completeness("report", ["alpha"])
+
+        assert seen["model_name"] == "judge-v1"
+        assert seen["model_name"] != "product-v2"
+
+    def test_the_judge_model_is_read_per_call_not_at_import(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen: list[str] = []
+
+        def fake_judge(**kwargs: Any) -> dict[str, Any]:
+            seen.append(str(kwargs["model_name"]))
+            return {"coverage": [{"topic": "alpha", "covered": True, "reason": "ok"}]}
+
+        monkeypatch.setattr(metrics_module, "call_llm_json", fake_judge)
+        for model in ("judge-a", "judge-b"):
+            monkeypatch.setattr(
+                provenance_module, "settings", Settings(eval_judge_model=model)
+            )
+            measure_completeness("report", ["alpha"])
+        assert seen == ["judge-a", "judge-b"]

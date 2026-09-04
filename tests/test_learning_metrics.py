@@ -10,7 +10,9 @@ from typing import Any
 
 import pytest
 
+from src.config import Settings
 from src.eval import learning_metrics as metrics
+from src.eval import provenance as provenance_module
 from src.eval.learning_fixtures import load_session_plans
 
 pytestmark = pytest.mark.unit
@@ -336,3 +338,73 @@ class TestDeterministicChecks:
             case["calibration_id"]: case["expected_gap_ids"] for case in calibration["cases"]
         }
         assert metrics.compute_explain_back_agreement(calibration, outputs)["f1"] == 1.0
+
+
+class TestTheJudgesArePinned:
+    """ADR 0070: every learning judge names the pinned eval model.
+
+    Before this, all three passed no `model_name` and inherited
+    `settings.anthropic_model`, so a product-model upgrade moved the
+    ruler these sessions are measured with.
+    """
+
+    def _pin(self, monkeypatch: pytest.MonkeyPatch) -> list[str]:
+        seen: list[str] = []
+
+        def fake_call(**kwargs: Any) -> dict[str, Any]:
+            seen.append(str(kwargs["model_name"]))
+            raise ValueError("shape checked elsewhere; only the model matters here")
+
+        monkeypatch.setattr(metrics, "call_llm_json", fake_call)
+        monkeypatch.setattr(
+            provenance_module,
+            "settings",
+            Settings(anthropic_model="product-v2", eval_judge_model="judge-v1"),
+        )
+        return seen
+
+    def test_the_plan_judge_uses_the_eval_judge_model(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen = self._pin(monkeypatch)
+        plans = _plans_by_variant()
+        metrics.measure_session_plan_coherence(plans["honest_downscope"])
+        assert seen == ["judge-v1"]
+
+    def test_the_explain_back_judge_uses_the_eval_judge_model(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen = self._pin(monkeypatch)
+        metrics.measure_explain_back("The paper trains on pairs.")
+        assert seen == ["judge-v1"]
+
+    def test_the_shame_free_judge_uses_the_eval_judge_model(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen = self._pin(monkeypatch)
+        metrics.measure_shame_free_copy(["You have ten minutes; here is the plan."])
+        assert seen == ["judge-v1"]
+
+    def test_no_judge_falls_back_to_the_product_model(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen = self._pin(monkeypatch)
+        metrics.measure_explain_back("The paper trains on pairs.")
+        metrics.measure_shame_free_copy(["Here is the plan."])
+        assert "product-v2" not in seen
+
+
+class TestTheRubricRegistry:
+    def test_every_registered_rubric_names_a_prompt_this_module_defines(self) -> None:
+        prompts = {
+            metrics.PLAN_SYSTEM_PROMPT,
+            metrics.EXPLAIN_BACK_SYSTEM_PROMPT,
+            metrics.SHAME_FREE_COPY_SYSTEM_PROMPT,
+        }
+        assert {rubric.prompt for rubric in metrics.LEARNING_RUBRICS} == prompts
+
+    def test_the_simulation_subset_omits_the_calibration_only_judge(self) -> None:
+        # `explain_back` is scored against the calibration set, never
+        # inside a campaign; claiming its version on a session row would
+        # record a fact about the harness as a fact about the run.
+        assert "explain_back" not in {r.name for r in metrics.SIMULATION_RUBRICS}

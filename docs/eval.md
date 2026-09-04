@@ -39,11 +39,39 @@ Coverage across hallucination, retrieval, alignment, reasoning,
 fine-tuning, multimodal, efficiency, evaluation, architecture, and
 safety.
 
+Since ADR [0070](decisions/0070-eval-integrity-provenance.md) each query
+also carries **dataset provenance** — `author`, `created` and `license`
+— because a benchmark whose origin nobody recorded cannot support a
+claim about the system it scores (NIST AI RMF **MEASURE 2.1** asks for
+exactly this). The values are honest rather than tidy: two authoring
+dates (`2026-07-05` for the original ten, `2026-07-07` for the Sprint 1
+expansion), one author, and `license: "UNLICENSED"` — this repository
+ships no `LICENSE` file, so the query text carries no grant, and
+inventing an SPDX id here would be a licensing claim the repository does
+not make.
+
+**One query is contaminated, and says so.** `hallucination-mitigation`
+is annotated *"well-covered by the built-in mock papers"*. That is a
+contamination note, not a comment: its retrieval recall is scored
+against papers hand-picked to match it, so the number reads high for a
+reason that has nothing to do with search quality. A test asserts the
+annotation survives every edit to the file.
+
+`RESEARCH_DATASET_VERSION` is a **fingerprint of the list's own
+contents** — `research-benchmark@20:<sha256[:12]>` — computed at import
+and recorded on every summary row. Derived rather than declared, so
+there is no constant anybody can forget to bump: edit a query and the
+version moves, and a regression diff can see that the *benchmark*
+changed rather than the system. `simulate_learner` does the same for the
+scenario set as `LEARNING_DATASET_VERSION`.
+
 Invariants (protected by `tests/test_benchmark_queries.py`):
 - IDs are kebab-case slugs, unique
 - Every query is non-empty and ends with `?`
 - `expected_topics` is a non-empty list of non-empty strings
 - Domain diversity: at least 5 distinct domains
+- Every query names an author, an ISO creation date and a licence
+- The contamination note on `hallucination-mitigation` is still there
 
 ### `src/eval/learning_benchmark.py`
 
@@ -204,17 +232,32 @@ prompts got scrutinized independently:
   each expected topic, independent of what the report did with it
   (ADR 0013).
 
-**Which model judges.** All three LLM-judged metrics call
-`src.llm.call_llm_json` without a `model_name`, so every judge runs on
-`settings.anthropic_model` — `claude-sonnet-4-6` by default. There is
-deliberately no judge-specific model setting: the per-agent routing
-knobs (`READER_MODEL`, `CRITIC_MODEL`, `SYNTHESIZER_MODEL`, …, ADR
-0021) route the *product*, and pointing them at a cheaper model must
-not silently change what the benchmark is scored by. Changing the
-judge means changing `ANTHROPIC_MODEL` for the whole run, which also
-changes the system under test — so a judge swap invalidates the
-baseline and needs a fresh one, not a regression diff. Judge spend is
-metered separately from workflow spend (below).
+**Which model judges.** `EVAL_JUDGE_MODEL`
+(`settings.eval_judge_model`, default `claude-sonnet-4-6`), passed
+explicitly at every judge call site. Nothing inherits.
+
+This changed in ADR
+[0070](decisions/0070-eval-integrity-provenance.md), and the old
+behaviour is worth naming because it was a live defect: the three judges
+called `call_llm_json` with no `model_name`, `src/llm.py` fell through
+to `settings.anthropic_model`, and **upgrading the product model
+silently changed the judge**. The system graded itself with a moving
+ruler and no output said so.
+
+`eval_judge_model` is deliberately *not* shaped like the per-agent
+routing knobs of ADR 0021 (`READER_MODEL`, `CRITIC_MODEL`, …). Those
+default to `""` meaning "inherit `ANTHROPIC_MODEL`"; this one rejects
+the empty string at settings load, because inheritance is the thing
+being removed. It is still picked up by `resolved_model_ids()`, so an
+off-table judge model is detected and priced like any other routed id —
+judge spend is metered separately from workflow spend (below), and an
+unpriced judge would under-report it.
+
+**Changing `EVAL_JUDGE_MODEL` invalidates every existing baseline.** A
+regression diff across a judge swap compares two different instruments,
+and its verdict means nothing. The provenance block records the value,
+so the swap is visible in the data rather than only in somebody's
+memory.
 
 ### `src/eval/runner.py`
 
@@ -346,6 +389,133 @@ python -m src.eval.runner \
 Precedence is "why is the campaign incomplete" before "how did the
 queries go": an interrupted or budget-stopped run reports as such even
 when the queries it did run all passed.
+
+## Run provenance
+
+*ADR [0070](decisions/0070-eval-integrity-provenance.md).* A score is
+only worth a confidence interval if it is attributable. Before this,
+no row in either lane recorded which model judged it, which rubric text
+produced the verdict, or which commit ran the harness — so a red
+nightly could not tell "the product got worse" from "somebody upgraded
+the model", "somebody tightened a prompt" or "somebody added a
+benchmark query".
+
+Every record and every summary row of **both** lanes now carries one
+nested `provenance` block:
+
+| Field | What it answers |
+|---|---|
+| `harness_version` | which row schema this is |
+| `judge_model` | what graded it |
+| `product_model` | what was graded |
+| `rubric_versions` | `{name: version}`, for the rubrics this campaign ran |
+| `code_commit` | which checkout produced it |
+| `code_dirty` | `true` / `false` / `null` when nobody could check |
+| `dataset_version` | which benchmark, at which contents |
+| `tier` | `research`, or the learning lane's `scripted` / `funded` |
+| `seed` | the harness seed applied |
+| `mock_mode` | whether the run was against the built-in mock papers |
+| `captured_at` | when |
+
+Three properties are worth knowing about how it is written.
+
+**It is captured when the record is created, not when the summary is
+rendered.** `rebuild_summaries` re-derives `summary.jsonl` from the
+durable per-record JSON, possibly days later on a `--resume`; a block
+captured then would describe the rebuild rather than the run that
+produced the score.
+
+**A row that cannot say what produced it fails the gate.** A record
+written before ADR 0070 arrives with an empty block, and
+`scripted_tier_check` reports it. That is the correct answer rather than
+an inconvenience — such a row cannot participate in a comparison — but
+it does mean a campaign started before this change must be re-run rather
+than resumed.
+
+**A mixed campaign announces itself.** Both lanes' `summary.md` render
+the block and print `⚠ MIXED` when the rows disagree on any field. A
+`--resume` can re-enter a campaign under a different judge model or a
+different commit, and a summary that quoted only the first row would
+present two instruments as one measurement.
+
+`code_commit` is resolved from `git rev-parse HEAD` when git is
+available, then `GITHUB_SHA`, then the literal `"unknown"`. `code_dirty`
+is `null` rather than `false` on the fallback paths, because "nobody
+checked" and "checked and clean" are different claims about a result's
+reproducibility.
+
+### What the seed does not buy
+
+`EVAL_SEED` (`settings.eval_seed`, default `0`) is applied at the start
+of both campaigns and recorded on every row. It pins `random` and numpy
+— the generators anything under `src/` draws from.
+
+It does **not** make a campaign reproducible. The Anthropic Messages API
+exposes no sampling seed, and the judges are sampled at temperature 0.3.
+Recording the seed says what was pinned; it is not a claim of
+determinism, and it must not be read as one.
+
+### Rubric versions
+
+Every judge prompt carries a version constant beside it —
+`COMPLETENESS_RUBRIC_VERSION`, `FAITHFULNESS_RUBRIC_VERSION`,
+`RETRIEVAL_RECALL_RUBRIC_VERSION` in `metrics.py`, and
+`PLAN_RUBRIC_VERSION`, `EXPLAIN_BACK_RUBRIC_VERSION`,
+`SHAME_FREE_COPY_RUBRIC_VERSION` in `learning_metrics.py`. Bumping a
+version is the act that declares "scores from before and after this edit
+are not comparable".
+
+The version is not on the honour system. `tests/fixtures/eval/rubric_lock.json`
+records each rubric's shipped history as `(version, sha256-of-prompt)`
+entries, and `tests/test_eval_rubric_versions.py` asserts that the live
+text matches the newest locked entry, that the live version matches it,
+and that no rubric's history reuses a version or a digest. The only way
+to change a prompt is therefore to append an entry under a version that
+has never been used.
+
+To change a judge prompt:
+
+1. Edit the prompt.
+2. Bump its `*_RUBRIC_VERSION` constant.
+3. Append `{"version": "<new>", "sha256": "<new digest>"}` to that
+   rubric's list in the lock file. The failing test prints the digest.
+
+The bound, stated plainly: a determined edit can overwrite the last lock
+entry in place instead of appending. That is the limit of any
+checked-in baseline — it defends against forgetting, not against intent
+— and the overwrite reads as an overwrite in the diff.
+
+`citation_accuracy` has no rubric and gets no version: it is regex and
+set membership. A version constant on a deterministic metric would be
+provenance theatre.
+
+### Judge–human calibration remains unmeasured
+
+Provenance says *which* instrument produced a number. It says nothing
+about whether that instrument is any good, and this repository has never
+measured it: **judge–human agreement is unmeasured on all four research
+metrics**, and it is deferred rather than planned, because it needs
+labelled human verdicts nobody has produced.
+
+When it is measured, the reporting form is not negotiable:
+
+- Report **φ / MCC with both positive rates** — the judge's and the
+  human's. For binary verdicts Pearson, Spearman, Kendall, φ and MCC are
+  the same statistic, and κ = q·φ is not interpretable without the
+  positive rates.
+- **Never quote raw agreement.** It overstates chance-corrected
+  agreement by 33–41 percentage points: in a 21-judge study, 85% exact
+  match corresponded to a κ of about 0.48.
+- **State how abstentions were counted.** The choice swings measured
+  accuracy by 10–34 points on identical verdicts.
+
+Two related notes, so effort lands in the right place. **Verbosity bias
+has collapsed** (below 0.011 across all 21 judges measured); the
+2023-era "judges love long answers" folk model is out of date and this
+harness builds no machinery for it. **Position bias has not** collapsed
+and is worth controlling by swap/AB+BA averaging — but none of these
+judges runs a pairwise comparison, so there is no position to swap
+today. If a pairwise judge is ever added, that control comes with it.
 
 ## Regression gate
 
@@ -720,7 +890,15 @@ the scripted tier outright when `USE_MOCK_DATA` is false, and
 sessions, no errors, `$0.0000` across all four cost columns, a zero call
 count on all three call columns, and no unmet structural expectations.
 A dollar figure can round to zero; a call count cannot, which is why
-both are checked. The run directory uploads as the
+both are checked.
+
+Since ADR [0070](decisions/0070-eval-integrity-provenance.md) it also
+asserts, **additively**, that every row carries a complete provenance
+block. That is not a quality assertion; it is the precondition for one.
+The statistics that land on top of these rows are computed over the
+campaign, and a row that cannot name its judge, its rubric versions or
+its commit cannot participate in a comparison at all. Nothing the check
+already asserted changed. The run directory uploads as the
 `scripted-simulation-summary` artifact under `if: always()`, so a red
 step still leaves the evidence of *which* session regressed — and so
 Gate W1's evidence pack has something to cite.
@@ -938,7 +1116,11 @@ block (`tests/test_readme_update.py`).
   today is documented in ADR 0007.
 - Hand-labeled calibration set (~20-30 (report, topic) pairs and
   (claim, source) pairs) once real eval runs give us data to calibrate
-  against. Alignment with human judgment is currently unmeasured.
+  against. Alignment with human judgment is currently unmeasured — see
+  [Judge–human calibration remains
+  unmeasured](#judgehuman-calibration-remains-unmeasured) for the
+  reporting form it must take when it is measured (φ/MCC with both
+  positive rates, never raw agreement).
 - A funded first campaign, on **either** lane. Everything downstream of
   it — the README block, both regression baselines
   (`eval-summary-latest`, `learning-summary-latest`), the 3-repeat noise

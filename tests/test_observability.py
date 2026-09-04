@@ -268,9 +268,16 @@ class TestPriceTableCoverage:
         assert "claude-haiku-4-5" in resolved
         # Empty overrides resolve to the base model, not to "".
         assert "" not in resolved
-        # Untouched routing fields inherit the base, so the base is the
-        # only other id in play.
-        assert resolved == {"claude-opus-5", "claude-haiku-4-5"}
+        # Untouched routing fields inherit the base. `eval_judge_model`
+        # is the exception, and is meant to be: ADR 0070 pins the judge
+        # to a model id of its own so a product-model upgrade cannot
+        # move the ruler, which means it never inherits the base — and
+        # its spend has to be priced like any other routed model.
+        assert resolved == {
+            "claude-opus-5",
+            "claude-haiku-4-5",
+            config.eval_judge_model,
+        }
 
     def test_runtime_model_off_the_table_is_detected(self) -> None:
         """The check has to be able to *fail*, or it guarantees nothing.
