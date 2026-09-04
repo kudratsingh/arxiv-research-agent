@@ -557,6 +557,30 @@ pinned without a build by `tests/test_container_contract.py`).
   cannot overshoot by its whole spend. The retry envelope is clamped
   so one flaky call chain fits inside 75% of `api_job_timeout_sec`,
   and the SDK's own `retries_taken` is logged and counted per call.
+- **Resilience** — one owning level of retry per dependency, and a
+  budget for it (ADR
+  [0068](decisions/0068-resilience-policy.md)). Retry amplification is
+  multiplicative, so the policy is a *decision* before it is a
+  mechanism: the Anthropic SDK owns model retries, `urllib3.Retry`
+  (`src/tools/http_session.py`) owns arXiv / Semantic Scholar / PDF
+  retries, and `redis-py`'s own `Retry` owns Redis. Nothing above any
+  of them adds a loop. On top of that, `src/resilience.py` holds a
+  **retry token bucket** — a per-process budget a retry spends and a
+  first attempt never consults — so an outage stops costing every job a
+  full retry envelope while the healthy path stays a pass-through. A
+  circuit breaker was considered and rejected; the ADR records why.
+  Backoff is **Full Jitter** everywhere, the HTTP retry envelope is
+  clamped against the job budget the way `llm.py`'s has been since ADR
+  0051 (WARNING `retry_envelope_clamped` when it bites), and every
+  timeout on these paths — arXiv, the Redis connect and socket, the
+  inter-query pacing pause — is a setting justified by a false-timeout
+  rate rather than by a round number. Degradation is visible rather
+  than silent: the rate limiter falls back to its per-worker counter on
+  a Redis failure instead of answering 500, and says so; the redriver
+  dead-letters a job that has used its requeue allowance
+  (`internal_dead_letter`) instead of looping on it forever; and the
+  search pacing loop checks the cancel token, so a stopped job no
+  longer sleeps through its drain window.
 - **Embeddings** — MiniLM via sentence-transformers
   (`src/tools/embeddings.py`), shared by paper ranking, chunk
   ranking, and conversation retrieval. Torch's OpenMP pool is pinned

@@ -12,6 +12,7 @@ code (which substituted `MOCK_PAPERS` and returned a normal update),
 and the cap test fails without `MAX_SEARCH_QUERIES_PER_RUN` trimming.
 """
 
+import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -19,6 +20,12 @@ import pytest
 
 from src.agents import search as search_module
 from src.agents.search import MAX_SEARCH_QUERIES_PER_RUN, NoPapersFoundError, search_agent
+from src.cancellation import (
+    CancelToken,
+    JobCancelledError,
+    bind_cancel_token,
+    reset_cancel_token,
+)
 from src.config import Settings
 from src.graph.state import PaperMetadata
 from src.tools.arxiv_search import (
@@ -55,7 +62,15 @@ def _state(
 
 
 def _no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(search_module.time, "sleep", lambda _s: None)
+    """Skip the inter-query pacing wait.
+
+    Patches the name the agent imported rather than `time.sleep`: the
+    pacing wait is `resilience.interruptible_sleep` since ADR 0068, and
+    binding the module attribute keeps this test honest about *which*
+    wait it is skipping. The real one's cancellation behaviour is
+    `tests/test_resilience.py`'s to assert.
+    """
+    monkeypatch.setattr(search_module, "interruptible_sleep", lambda _s: None)
 
 
 def _live_settings(**overrides: Any) -> Settings:
@@ -241,3 +256,70 @@ class TestCanonicalDedup:
         )
         unique = deduplicate_papers([seed, s2_dup])
         assert unique == [seed]
+
+
+class TestThePacingLoopLetsACancelledJobOut:
+    """ADR 0068. `time.sleep(3)` per query, with no cancellation check.
+
+    `01-BASELINE.md` §2 measured the consequence: the runner gives a
+    cancelled job a 30s drain window, and a twelve-query plan could
+    spend all of it asleep between queries it was never going to
+    issue. The node held a pool thread the whole time.
+    """
+
+    def test_a_cancelled_job_stops_before_the_next_query(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(search_module, "settings", _live_settings())
+        _stub_ranker(monkeypatch)
+        issued: list[str] = []
+
+        def _record(q: str, max_results: int, raise_on_unavailable: bool = False) -> Any:
+            issued.append(q)
+            return [_paper()]
+
+        monkeypatch.setattr(search_module, "search_arxiv", _record)
+
+        token = CancelToken("job-cancel")
+        token.cancel("job_timeout")
+        scope = bind_cancel_token(token)
+        try:
+            started = time.monotonic()
+            with pytest.raises(JobCancelledError):
+                search_agent(_state(["q1", "q2", "q3"]))
+            elapsed = time.monotonic() - started
+        finally:
+            reset_cancel_token(scope)
+
+        # The first query runs; the pacing wait before the second is
+        # where the job leaves. Three seconds of pacing per remaining
+        # query is what this replaces.
+        assert issued == ["q1"]
+        assert elapsed < 1.0
+
+    def test_an_uncancelled_job_still_paces_itself(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The pause is a courtesy to arXiv, not an accident — removing
+        it would be the wrong fix, so the wait has to still happen."""
+        monkeypatch.setattr(
+            search_module, "settings", _live_settings(arxiv_pacing_sec=0.1)
+        )
+        _stub_ranker(monkeypatch)
+        monkeypatch.setattr(
+            search_module,
+            "search_arxiv",
+            lambda q, max_results, raise_on_unavailable=False: [_paper(arxiv_id=q)],
+        )
+
+        started = time.monotonic()
+        search_agent(_state(["q1", "q2", "q3"]))
+        elapsed = time.monotonic() - started
+
+        # Two pauses between three queries.
+        assert elapsed >= 0.2
+
+    def test_the_pause_is_configurable(self) -> None:
+        """It was a hardcoded 3 in the middle of the loop."""
+        assert Settings().arxiv_pacing_sec == 3.0
+        assert _live_settings(arxiv_pacing_sec=0.0).arxiv_pacing_sec == 0.0

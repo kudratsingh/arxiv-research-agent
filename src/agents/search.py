@@ -17,7 +17,6 @@ hardcoded off-topic papers.
 
 from __future__ import annotations
 
-import time
 from typing import Any
 
 from langchain_core.messages import AIMessage
@@ -26,6 +25,7 @@ from src.config import settings
 from src.errors import NoPapersFound
 from src.graph.state import PaperMetadata, ResearchState
 from src.observability import get_logger
+from src.resilience import interruptible_sleep
 from src.tools.arxiv_search import (
     ArxivUnavailableError,
     deduplicate_papers,
@@ -201,7 +201,12 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
     failed_queries = 0
     for i, sq in enumerate(search_queries):
         if i > 0:
-            time.sleep(3)
+            # Pacing, but cancellable. `time.sleep(3)` here held a node
+            # thread for three seconds per query regardless of the
+            # job's state, so a cancelled run with a twelve-query plan
+            # could spend its entire 30s drain window asleep between
+            # queries it was never going to issue (ADR 0068).
+            interruptible_sleep(settings.arxiv_pacing_sec)
         try:
             results = search_arxiv(
                 sq,

@@ -40,6 +40,7 @@ that by duck-typing `scan_jobs`, matching how `routes.py` detects
 
 from __future__ import annotations
 
+import contextlib
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass
@@ -96,6 +97,19 @@ REDRIVE_LOCK_TTL_SEC: Final[int] = 30
 
 ORPHANED_ERROR_TYPE: Final[str] = "orphaned"
 
+DEAD_LETTER_ERROR_TYPE: Final[str] = "internal_dead_letter"
+"""Terminal give-up: the job used its whole requeue allowance and never ran.
+
+Its own code rather than a reuse of `orphaned`, because the two tell an
+operator opposite things. `orphaned` means "a worker died under this
+job; resubmitting is expected to work" — which is exactly what the
+reclaim message advises. A dead-lettered job has *already* been
+resubmitted `job_redrive_max_attempts` times, so repeating that advice
+would be a lie, and a dashboard that could not separate the two would
+render a poison-message loop as a healthy reclaim rate. ADR 0068;
+`02-STANDARDS.md` §5.3 is the rule it follows.
+"""
+
 
 class OrphanOutcome(StrEnum):
     """What the sweep actually managed to do with one orphan.
@@ -105,10 +119,16 @@ class OrphanOutcome(StrEnum):
     between the re-read and the write. That is not a failure to
     reclaim — it is proof the job was never an orphan — so it counts
     with the other jobs left alone rather than as a reclaim.
+
+    `dead_lettered` is ADR 0068's: the job was eligible for requeue and
+    was refused one, because it has already had its allowance. Counted
+    apart from `failed` for the reason above — two different
+    operational events wearing the same terminal status.
     """
 
     requeued = "requeued"
     failed = "failed"
+    dead_lettered = "dead_lettered"
     skipped_live = "skipped_live"
 
 ResubmitCallback = Callable[[Job], Awaitable[None]]
@@ -128,7 +148,14 @@ class RedriveReport:
     returned, not keys examined — terminal rows are filtered inside
     `scan_jobs` (ADR 0048) and never reach the reconcile. `orphaned`
     is the subset that had no live lease and was actually reclaimed,
-    so `orphaned == failed + requeued`. `skipped_live` counts jobs
+    so `orphaned == failed + requeued + dead_lettered`. `dead_lettered`
+    is the ADR 0068 subset of the reclaims: jobs refused a requeue
+    because they had already used their allowance. It is a subset of
+    the reclaims and *not* of `failed`, so a sweep that dead-letters
+    one job reports `orphaned=1, dead_lettered=1, failed=0` — the row
+    is `failed` either way, but the two counters answer different
+    questions and merging them would hide a poison-message loop inside
+    a normal-looking failure count. `skipped_live` counts jobs
     left alone — because another worker still holds their lease,
     because the re-read under the claim showed them terminal, or
     because the reclaim's compare-and-set lost to the owner finishing
@@ -143,6 +170,7 @@ class RedriveReport:
     orphaned: int = 0
     failed: int = 0
     requeued: int = 0
+    dead_lettered: int = 0
     skipped_live: int = 0
     scan_capped: bool = False
 
@@ -194,6 +222,7 @@ class JobRedriver:
         *,
         max_scan: int | None = None,
         requeue_pending: bool | None = None,
+        max_attempts: int | None = None,
         lock_ttl_sec: int = REDRIVE_LOCK_TTL_SEC,
         resubmit: ResubmitCallback | None = None,
     ) -> None:
@@ -209,6 +238,9 @@ class JobRedriver:
             requeue_pending: Whether orphaned `pending` jobs are
                 resubmitted rather than failed. Defaults to
                 `settings.job_redrive_requeue_pending`.
+            max_attempts: Requeues one job may receive before it is
+                dead-lettered. Defaults to
+                `settings.job_redrive_max_attempts`.
             lock_ttl_sec: TTL on the cluster-wide redrive lock.
             resubmit: Callback that puts a requeued job back in flight.
                 Required for requeue to do anything; without it the
@@ -230,6 +262,11 @@ class JobRedriver:
             requeue_pending
             if requeue_pending is not None
             else settings.job_redrive_requeue_pending
+        )
+        self._max_attempts = (
+            max_attempts
+            if max_attempts is not None
+            else settings.job_redrive_max_attempts
         )
         self._lock_ttl_sec = lock_ttl_sec
         self._resubmit = resubmit
@@ -299,7 +336,7 @@ class JobRedriver:
         Returns:
             The populated report; not logged here, the caller does that.
         """
-        orphaned = failed = requeued = skipped_live = 0
+        orphaned = failed = requeued = dead_lettered = skipped_live = 0
 
         for job in jobs:
             if job.is_terminal():
@@ -346,6 +383,9 @@ class JobRedriver:
                 if outcome is OrphanOutcome.requeued:
                     orphaned += 1
                     requeued += 1
+                elif outcome is OrphanOutcome.dead_lettered:
+                    orphaned += 1
+                    dead_lettered += 1
                 elif outcome is OrphanOutcome.failed:
                     orphaned += 1
                     failed += 1
@@ -367,6 +407,7 @@ class JobRedriver:
             orphaned=orphaned,
             failed=failed,
             requeued=requeued,
+            dead_lettered=dead_lettered,
             skipped_live=skipped_live,
             scan_capped=scan_capped,
         )
@@ -396,9 +437,9 @@ class JobRedriver:
             job: A non-terminal job with no live lease.
 
         Returns:
-            What happened — requeued, failed, or `skipped_live` when
-            the reclaim's compare-and-set found the job had finished
-            after all.
+            What happened — requeued, dead-lettered, failed, or
+            `skipped_live` when the reclaim's compare-and-set found the
+            job had finished after all.
         """
         wants_requeue = (
             job.status == JobStatus.pending and self._requeue_pending
@@ -413,6 +454,15 @@ class JobRedriver:
                 extra={"job_id": job.job_id, "worker_id": self._worker_id},
             )
         elif wants_requeue and resubmit is not None:
+            # ADR 0068. The counter is read *before* the resubmit, not
+            # after: a job whose resubmit reliably kills its worker
+            # never gets to an "after". This is the poison-message
+            # bound, and without it `job_redrive_requeue_pending` is an
+            # unbounded loop — every sweep finds the same leaseless
+            # `pending` row and puts it back.
+            attempts = await self._count_requeue(job)
+            if attempts is not None and attempts > self._max_attempts:
+                return await self._dead_letter(job, attempts)
             try:
                 await self._requeue(job, resubmit)
             except Exception:
@@ -431,6 +481,83 @@ class JobRedriver:
         if await self._fail_orphan(job):
             return OrphanOutcome.failed
         return OrphanOutcome.skipped_live
+
+    async def _count_requeue(self, job: Job) -> int | None:
+        """Record that this job is about to be requeued, and count it.
+
+        Duck-typed on the store for the same reason `sweep` duck-types
+        `scan_jobs`: the counter lives in Redis, and a store that
+        cannot hold one — `InMemoryJobStore`, a test double — keeps the
+        behaviour it had. That is safe because the loop this bounds is
+        only reachable under the Redis store: jobs do not survive the
+        restart that produces an orphan anywhere else.
+
+        Args:
+            job: Job about to go back in flight.
+
+        Returns:
+            Requeues this job has now had, including the one being
+            considered, or None when the store cannot count. None means
+            "no bound available", and the caller requeues as before —
+            an unbounded loop is bad, but refusing to reconcile at all
+            because a test double is in play would be worse.
+        """
+        bump = getattr(self._store, "bump_redrive_attempts", None)
+        if not callable(bump):
+            return None
+        try:
+            return int(await bump(job.job_id))
+        except Exception:
+            # The counter is a guard, not the reconcile. A Redis blip
+            # while reading it must not turn a reclaimable job into an
+            # exception in the middle of a sweep.
+            log.warning(
+                "job_redriver_attempt_count_failed",
+                extra={"job_id": job.job_id, "worker_id": self._worker_id},
+            )
+            return None
+
+    async def _dead_letter(self, job: Job, attempts: int) -> OrphanOutcome:
+        """Refuse a further requeue and fail the job terminally.
+
+        The classic poison-message shape: a job that reliably kills the
+        worker running it is, to every sweep, an orphaned `pending` row
+        that deserves another chance. Bounding the chances is the only
+        thing that ends it, and the bound has to produce a *distinct*
+        terminal state — a job that quietly reports `orphaned` for the
+        fourth time is indistinguishable from three unlucky deploys.
+
+        Args:
+            job: The job being given up on.
+            attempts: Requeues it has now accumulated.
+
+        Returns:
+            `dead_lettered` when the write landed, `skipped_live` when
+            the compare-and-set showed the job finished after all.
+        """
+        log.warning(
+            "job_redriver_dead_lettered",
+            extra={
+                "job_id": job.job_id,
+                "worker_id": self._worker_id,
+                "attempt": attempts,
+                "cap": self._max_attempts,
+            },
+        )
+        landed = await self._write_dead_letter(job)
+        # Forget the count either way. If the reclaim landed the job is
+        # terminal and the counter has nothing left to bound; if it lost
+        # the race the job finished on its own, which is the same thing.
+        await self._forget_requeue_count(job)
+        return OrphanOutcome.dead_lettered if landed else OrphanOutcome.skipped_live
+
+    async def _forget_requeue_count(self, job: Job) -> None:
+        """Drop a job's requeue counter, best effort."""
+        clear = getattr(self._store, "clear_redrive_attempts", None)
+        if not callable(clear):
+            return
+        with contextlib.suppress(Exception):
+            await clear(job.job_id)
 
     async def _requeue(self, job: Job, resubmit: ResubmitCallback) -> None:
         """Reset a `pending` job to a clean submit state and hand it on.
@@ -494,17 +621,6 @@ class JobRedriver:
     async def _fail_orphan(self, job: Job) -> bool:
         """Mark a job failed and unhang whoever is streaming it.
 
-        The write applies the terminal retention TTL, so the row stops
-        living forever. The `job_failed` publish is the other half and
-        the more important one: an SSE client subscribed to
-        `events:{job_id}` is blocked until a terminal frame arrives,
-        and without this it never would.
-
-        Both halves are conditional on the compare-and-set landing
-        (ADR 0048). Publishing a `job_failed` for a job that actually
-        succeeded would be the worse bug of the two: the row would be
-        correct and every connected client would be told the opposite.
-
         Args:
             job: Orphaned job to reclaim.
 
@@ -522,6 +638,64 @@ class JobRedriver:
             f"Reclaimed by worker {self._worker_id}. Resubmit the query "
             f"to retry."
         )
+        return await self._commit_reclaim(job, previous=previous)
+
+    async def _write_dead_letter(self, job: Job) -> bool:
+        """Mark a job dead-lettered — the same write, a different name.
+
+        Deliberately not a parameter on `_fail_orphan`. Both this
+        assignment and that one are read *structurally*:
+        `tests/test_errors.py::TestTheJobVocabulary` parses this module
+        for `job.error_type = <constant>` to prove `JOB_ERROR_TYPES` is
+        the whole set a run can carry, and
+        `web/tests/copy/errorTypeDrift.test.ts` reads the same file to
+        prove the frontend has a sentence for each. A code that reached
+        the row through a default argument would be invisible to both,
+        and the first thing anyone would learn about it is that the
+        product renders "The run failed." forever.
+
+        Args:
+            job: The job being given up on.
+
+        Returns:
+            True if the write landed; False if the CAS showed the job
+            had already left the status the sweep acted on.
+        """
+        previous = job.status
+        job.status = JobStatus.failed
+        job.completed_at = time.time()
+        job.error_type = DEAD_LETTER_ERROR_TYPE
+        job.error = (
+            f"Job was requeued {self._max_attempts} times without ever "
+            f"reaching a terminal state, so it will not be requeued "
+            f"again. Something about this job stops the worker running "
+            f"it; resubmitting the same query unchanged is expected to "
+            f"fail the same way."
+        )
+        return await self._commit_reclaim(job, previous=previous)
+
+    async def _commit_reclaim(self, job: Job, *, previous: JobStatus) -> bool:
+        """Persist a reclaim, count it, and unhang its SSE subscribers.
+
+        The write applies the terminal retention TTL, so the row stops
+        living forever. The `job_failed` publish is the other half and
+        the more important one: an SSE client subscribed to
+        `events:{job_id}` is blocked until a terminal frame arrives,
+        and without this it never would.
+
+        Both halves are conditional on the compare-and-set landing
+        (ADR 0048). Publishing a `job_failed` for a job that actually
+        succeeded would be the worse bug of the two: the row would be
+        correct and every connected client would be told the opposite.
+
+        Args:
+            job: The job, already mutated into its terminal state.
+            previous: The status the sweep re-read under its claim,
+                which the compare-and-set is against.
+
+        Returns:
+            True if the reclaim landed.
+        """
         if not await self._write_reclaim(job, expected=previous):
             log.info(
                 "job_redriver_reclaim_lost_race",

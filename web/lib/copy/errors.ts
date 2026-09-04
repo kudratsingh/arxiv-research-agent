@@ -368,6 +368,17 @@ export const ERROR_TYPE_COPY = {
       "The run was interrupted by a server restart and could not be resumed safely.",
     recovery: "Ask again to start a new run.",
   },
+  internal_dead_letter: {
+    // ADR 0068's poison-message bound. Its whole reason for being a
+    // separate value from `orphaned` is that the recovery line has to
+    // differ: an orphan should be resubmitted, and this one has already
+    // been resubmitted several times and stopped its worker every time.
+    // Telling the reader to try again would be advice the server has
+    // just finished disproving.
+    sentence:
+      "The run could not be started after several attempts, so it was stopped.",
+    recovery: "Ask again with a different question, or copy the diagnostics into an issue.",
+  },
   not_found_papers: {
     sentence: "No matching arXiv papers were found for these queries.",
     recovery: "Ask again and edit the arXiv queries at review.",

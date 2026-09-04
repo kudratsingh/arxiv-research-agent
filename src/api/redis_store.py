@@ -79,6 +79,8 @@ from dataclasses import fields
 from typing import Any, cast
 
 import redis.asyncio as redis_async
+from redis.backoff import FullJitterBackoff
+from redis.retry import Retry
 
 from src.api.jobs import (
     DEFAULT_JOB_KIND,
@@ -94,6 +96,13 @@ from src.observability import get_logger
 
 log = get_logger(__name__)
 
+#: Base delay for redis-py's Full Jitter retry backoff, in seconds. Not
+#: a setting: it is the shape of the curve rather than a policy knob —
+#: the number of retries and the cap both come from `settings`, and a
+#: base below one round trip would make the retry indistinguishable
+#: from the attempt that just failed.
+_REDIS_BACKOFF_BASE_SEC = 0.05
+
 JOB_KEY_PREFIX = "job:"
 HITL_RESUME_CHANNEL_PREFIX = "hitl:resume:"
 EVENTS_CHANNEL_PREFIX = "events:"
@@ -101,6 +110,19 @@ EVENTS_CHANNEL_PREFIX = "events:"
 # job:*` in `scan_jobs` must not trip over lease keys.
 LEASE_KEY_PREFIX = "joblease:"
 REDRIVE_LOCK_KEY = "redrive:lock"
+
+#: How many times the redriver has put one job back in flight (ADR
+#: 0068). Like the lease key, deliberately outside the `job:` namespace
+#: so `SCAN MATCH job:*` never trips over it.
+#:
+#: It is a separate key rather than a field on the `Job` row for a
+#: reason that is about correctness, not about file ownership:
+#: `JobRedriver._requeue` resets the row to a clean submit state —
+#: status, timestamps, `error`, `error_type` — and a counter living on
+#: the thing being reset is a counter that any future addition to that
+#: reset silently zeroes, which turns the dead-letter bound back into
+#: the unbounded loop it exists to close.
+REDRIVE_ATTEMPTS_KEY_PREFIX = "redriveattempts:"
 
 # How many keys Redis returns per SCAN round trip. SCAN's COUNT is a
 # hint, not a guarantee; 200 keeps each round trip short enough that
@@ -331,6 +353,11 @@ class RedisJobStore:
         self._lease_prefix = LEASE_KEY_PREFIX if key_prefix == JOB_KEY_PREFIX else f"{_stem}lease:"
         self._redrive_lock_key = (
             REDRIVE_LOCK_KEY if key_prefix == JOB_KEY_PREFIX else f"{_stem}redrive:lock"
+        )
+        self._redrive_attempts_prefix = (
+            REDRIVE_ATTEMPTS_KEY_PREFIX
+            if key_prefix == JOB_KEY_PREFIX
+            else f"{_stem}redriveattempts:"
         )
         self._retention_sec = (
             retention_sec if retention_sec is not None else settings.api_job_retention_sec
@@ -1038,11 +1065,87 @@ class RedisJobStore:
         """
         await self._compare_and_apply(self._redrive_lock_key, token, ttl_sec=None)
 
+    def _redrive_attempts_key(self, job_id: str) -> str:
+        return f"{self._redrive_attempts_prefix}{job_id}"
+
+    async def bump_redrive_attempts(self, job_id: str) -> int:
+        """Count one requeue of `job_id` and return the running total.
+
+        ADR 0068. `INCR` is atomic, so two workers whose sweeps overlap
+        cannot both read "2" and both requeue a job on its third
+        attempt — which matters precisely because the redrive lock is
+        a de-duplication optimization and not a mutual exclusion
+        guarantee (see `REDRIVE_LOCK_TTL_SEC`).
+
+        The TTL matches the job row's retention, so the counter dies
+        with the job it counts rather than accumulating a key per job
+        forever. It is refreshed on each bump: a job being requeued is
+        by definition not finished, so its counter must outlive it.
+
+        Args:
+            job_id: Job about to be put back in flight.
+
+        Returns:
+            The number of requeues this job has now received,
+            including this one. Always >= 1.
+        """
+        key = self._redrive_attempts_key(job_id)
+        async with self._client.pipeline(transaction=True) as pipe:
+            pipe.incr(key)
+            if self._retention_sec > 0:
+                pipe.expire(key, self._retention_sec)
+            results = await pipe.execute()
+        return int(results[0])
+
+    async def clear_redrive_attempts(self, job_id: str) -> None:
+        """Forget a job's requeue count.
+
+        Called when the redriver stops requeueing a job — it has been
+        dead-lettered or failed — so a later job that somehow reuses
+        the id does not inherit a counter that is already at its cap.
+        """
+        await self._client.delete(self._redrive_attempts_key(job_id))
+
 
 def build_redis_client(url: str) -> redis_async.Redis:
     """Construct the async Redis client from a URL.
 
     Kept out of the store class so tests can inject a `fakeredis`
     client without touching URL parsing.
+
+    ADR 0068 gave it the four settings it had none of. Before them an
+    unreachable Redis did not fail a request, it *hung* one — the
+    client had no connect timeout and no socket timeout at all, which
+    is why `create_app` wraps its startup sweep in an
+    `asyncio.wait_for` (the tell `01-BASELINE.md` §2 records).
+
+    Redis is also the one owning level for Redis retries: `retry` here
+    is the whole policy, and no code above it may add a loop. One
+    retry with Full Jitter is the right size for a local-network
+    dependency — a second attempt covers a dropped connection or a
+    failover, and anything beyond that is an outage the caller should
+    be told about rather than a blip worth waiting through.
+
+    Pub/sub is deliberately unaffected by `socket_timeout`: redis-py
+    passes `math.inf` for blocking `listen()` reads (see
+    `redis/asyncio/connection.py::read_response`), so an idle SSE
+    subscription is not ended by a per-command timeout.
     """
-    return redis_async.from_url(url, decode_responses=False)
+    return redis_async.from_url(
+        url,
+        decode_responses=False,
+        socket_connect_timeout=settings.redis_connect_timeout_sec,
+        socket_timeout=settings.redis_socket_timeout_sec,
+        # PING a pooled connection that has been idle this long before
+        # reusing it, so a connection an idle-timeout proxy has already
+        # dropped surfaces as a reconnect instead of as a failed write.
+        health_check_interval=settings.redis_health_check_interval_sec,
+        retry_on_timeout=True,
+        retry=Retry(
+            FullJitterBackoff(
+                cap=settings.redis_socket_timeout_sec,
+                base=_REDIS_BACKOFF_BASE_SEC,
+            ),
+            retries=settings.redis_max_retries,
+        ),
+    )

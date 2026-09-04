@@ -16,7 +16,9 @@ from typing import Any
 
 import fakeredis.aioredis
 import pytest
+from redis.backoff import FullJitterBackoff
 
+import src.api.redis_store as redis_store_module
 from src.api.jobs import Job, JobStatus
 from src.api.redis_store import (
     JOB_KEY_PREFIX,
@@ -26,7 +28,9 @@ from src.api.redis_store import (
     _job_to_json,
     _lease_key,
     _persistent_fields,
+    build_redis_client,
 )
+from src.config import Settings
 
 pytestmark = pytest.mark.integration
 
@@ -1011,3 +1015,113 @@ class TestClose:
         # we only own the close-was-invoked contract.)
         store = RedisJobStore(fakeredis.aioredis.FakeRedis())
         await store.close()  # must not raise
+
+
+class TestTheClientHasTimeouts:
+    """ADR 0068. Before it, `from_url(url, decode_responses=False)` was
+    the whole configuration: no connect timeout, no socket timeout, no
+    health check and no retry. An unreachable Redis did not fail a
+    request, it hung one — which is why `create_app` still wraps its
+    startup sweep in an `asyncio.wait_for` (`01-BASELINE.md` §2 calls
+    that workaround "the tell")."""
+
+    def test_connect_and_socket_timeouts_come_from_settings(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            redis_store_module,
+            "settings",
+            Settings(redis_connect_timeout_sec=3.5, redis_socket_timeout_sec=4.5),
+        )
+        # Constructing the client opens no connection, so nothing here
+        # reaches a socket; the pool's kwargs are the configuration.
+        kwargs = build_redis_client(
+            "redis://localhost:6379/0"
+        ).connection_pool.connection_kwargs
+
+        assert kwargs["socket_connect_timeout"] == 3.5
+        assert kwargs["socket_timeout"] == 4.5
+
+    def test_a_health_check_interval_is_configured(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Closes the stale-connection window an idle-timeout proxy opens."""
+        monkeypatch.setattr(
+            redis_store_module,
+            "settings",
+            Settings(redis_health_check_interval_sec=17),
+        )
+        client = build_redis_client("redis://localhost:6379/0")
+        assert client.connection_pool.connection_kwargs["health_check_interval"] == 17
+
+    def test_redis_owns_its_own_retries_with_full_jitter(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """One owning level per dependency: redis-py's `Retry` is the
+        whole policy for Redis, and nothing above it may add a loop."""
+        monkeypatch.setattr(
+            redis_store_module, "settings", Settings(redis_max_retries=2)
+        )
+        client = build_redis_client("redis://localhost:6379/0")
+        kwargs = client.connection_pool.connection_kwargs
+        assert kwargs["retry_on_timeout"] is True
+        retry = kwargs["retry"]
+        assert retry._retries == 2
+        assert isinstance(retry._backoff, FullJitterBackoff)
+
+    def test_the_url_still_drives_the_connection(self) -> None:
+        """The settings are additive; parsing is unchanged."""
+        client = build_redis_client("redis://localhost:6399/3")
+        kwargs = client.connection_pool.connection_kwargs
+        assert kwargs["port"] == 6399
+        assert kwargs["db"] == 3
+        assert kwargs["decode_responses"] is False
+
+
+class TestTheRedriveAttemptCounter:
+    """ADR 0068's poison-message bound, at the storage layer."""
+
+    async def test_the_first_bump_reports_one(self, store: RedisJobStore) -> None:
+        assert await store.bump_redrive_attempts("job-1") == 1
+
+    async def test_bumps_accumulate(self, store: RedisJobStore) -> None:
+        counts = [await store.bump_redrive_attempts("job-1") for _ in range(4)]
+        assert counts == [1, 2, 3, 4]
+
+    async def test_counters_are_per_job(self, store: RedisJobStore) -> None:
+        await store.bump_redrive_attempts("job-1")
+        await store.bump_redrive_attempts("job-1")
+        assert await store.bump_redrive_attempts("job-2") == 1
+
+    async def test_the_counter_carries_the_retention_ttl(
+        self, store: RedisJobStore, redis_client: fakeredis.aioredis.FakeRedis
+    ) -> None:
+        """It must die with the job it counts, not accumulate a key forever."""
+        await store.bump_redrive_attempts("job-1")
+        ttl = await redis_client.ttl("redriveattempts:job-1")
+        assert 0 < ttl <= 3600
+
+    async def test_clearing_forgets_the_count(self, store: RedisJobStore) -> None:
+        await store.bump_redrive_attempts("job-1")
+        await store.clear_redrive_attempts("job-1")
+        assert await store.bump_redrive_attempts("job-1") == 1
+
+    async def test_the_key_is_outside_the_scanned_namespace(
+        self, store: RedisJobStore, redis_client: fakeredis.aioredis.FakeRedis
+    ) -> None:
+        """`scan_jobs` does `SCAN MATCH job:*`. A counter inside that
+        namespace would be hydrated as a job row and logged as a
+        corrupt payload on every sweep."""
+        await store.bump_redrive_attempts("job-1")
+        keys = [k.decode() for k in await redis_client.keys("*")]
+        assert keys == ["redriveattempts:job-1"]
+        assert not any(k.startswith(JOB_KEY_PREFIX) for k in keys)
+
+    async def test_a_custom_key_prefix_namespaces_the_counter(
+        self, redis_client: fakeredis.aioredis.FakeRedis
+    ) -> None:
+        """Two deployments sharing one Redis must not share a bound."""
+        tenant = RedisJobStore(redis_client, key_prefix="tenantb:", retention_sec=60)
+        await tenant.bump_redrive_attempts("job-1")
+        keys = [k.decode() for k in await redis_client.keys("*")]
+        assert keys == ["tenantbredriveattempts:job-1"]

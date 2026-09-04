@@ -493,6 +493,27 @@ class JobOrphaned(AppError):
     public_message = "The run was interrupted by a worker restart."
 
 
+class JobDeadLettered(AppError):
+    """The redriver used up the job's requeue allowance (ADR 0068).
+
+    `JobOrphaned`'s opposite number, and the reason it is a separate
+    code rather than a fourth `orphaned`: an orphan is retryable —
+    resubmitting is expected to work — while a dead-lettered job has
+    already been resubmitted `job_redrive_max_attempts` times and
+    stopped its worker every time. Telling that caller to try again
+    would be advice this system has just finished disproving, so
+    `retryable` is False.
+
+    Family-prefixed `internal_*` because the give-up is this
+    deployment's, not the request's: nothing about the submission is
+    malformed, and no upstream refused it.
+    """
+
+    code = "internal_dead_letter"
+    retryable = False
+    public_message = "The run could not be started and will not be retried."
+
+
 class JobCancelled(CancellationError):
     """A cooperative cancel fired (`src.cancellation.JobCancelledError`).
 
@@ -626,6 +647,7 @@ ERROR_CODES: Final[frozenset[str]] = frozenset(
         "cost_budget_exceeded",
         "session_cost_cap_refused",
         "orphaned",
+        "internal_dead_letter",
         "cancelled_job",
         "cancelled_by_reviewer",
         "upstream_arxiv",
@@ -661,6 +683,7 @@ JOB_ERROR_TYPES: Final[frozenset[str]] = frozenset(
         "cancelled_job",
         "cost_budget_exceeded",
         "hitl_timeout",
+        "internal_dead_letter",
         "internal_unexpected",
         "not_found_papers",
         "orphaned",

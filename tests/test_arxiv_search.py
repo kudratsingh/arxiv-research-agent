@@ -6,12 +6,16 @@ plus the existing happy-path and dedupe paths.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
 from defusedxml.common import EntitiesForbidden
 
+import src.tools.arxiv_search as arxiv_module
+from src.config import Settings
+from src.resilience import DEPENDENCY_ARXIV
 from src.tools.arxiv_search import (
     ARXIV_API_URL,
     deduplicate_papers,
@@ -117,3 +121,70 @@ def test_deduplicate_papers_keeps_first_by_id() -> None:
     titles = [p["title"] for p in seen]
     assert ids == ["a", "b"]
     assert titles == ["A", "B"]  # first-seen wins
+
+
+class TestTheTimeoutIsASettingNow:
+    """ADR 0068. `timeout=30` was the one un-tunable timeout in a
+    codebase that centralises every other knob, and it was also the
+    reason nothing could clamp the retry chain against the job budget:
+    a clamp needs to know the per-attempt cost."""
+
+    def test_the_request_timeout_comes_from_settings(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            arxiv_module, "settings", Settings(arxiv_timeout_sec=11.5)
+        )
+        with patch(
+            "src.tools.arxiv_search.build_retrying_session"
+        ) as fake_session_factory:
+            fake_session_factory.return_value.get.return_value = _mock_response(
+                ATOM_TEMPLATE.format(title="T", abstract="A", pdf_url="https://x/p.pdf")
+            )
+            search_arxiv("rag")
+            _, kwargs = fake_session_factory.return_value.get.call_args
+
+        assert kwargs["timeout"] == 11.5
+
+    def test_the_same_timeout_is_declared_to_the_session_builder(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Both, and it has to be both: urllib3 applies the timeout per
+        *attempt*, so the retry count can only be clamped by a builder
+        that was told what one attempt costs."""
+        monkeypatch.setattr(
+            arxiv_module, "settings", Settings(arxiv_timeout_sec=11.5)
+        )
+        with patch(
+            "src.tools.arxiv_search.build_retrying_session"
+        ) as fake_session_factory:
+            fake_session_factory.return_value.get.return_value = _mock_response(
+                ATOM_TEMPLATE.format(title="T", abstract="A", pdf_url="https://x/p.pdf")
+            )
+            search_arxiv("rag")
+
+        assert fake_session_factory.call_args.kwargs["timeout_sec"] == 11.5
+
+    def test_arxiv_retries_are_charged_to_their_own_budget(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An arXiv outage must not spend the retries PDF downloads need."""
+        monkeypatch.setattr(
+            arxiv_module, "settings", Settings(arxiv_timeout_sec=11.5)
+        )
+        with patch(
+            "src.tools.arxiv_search.build_retrying_session"
+        ) as fake_session_factory:
+            fake_session_factory.return_value.get.return_value = _mock_response(
+                ATOM_TEMPLATE.format(title="T", abstract="A", pdf_url="https://x/p.pdf")
+            )
+            search_arxiv("rag")
+
+        assert fake_session_factory.call_args.kwargs["dependency"] == DEPENDENCY_ARXIV
+
+    def test_no_hardcoded_timeout_survives_in_the_module(self) -> None:
+        """A structural guard, because the failure it prevents is a
+        *reintroduction*: the literal is easy to type and invisible
+        until a job's whole budget has gone into one query."""
+        source = Path(arxiv_module.__file__).read_text(encoding="utf-8")
+        assert "timeout=30" not in source

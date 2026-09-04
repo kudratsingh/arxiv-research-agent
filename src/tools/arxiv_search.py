@@ -21,9 +21,11 @@ import re
 import requests
 from defusedxml import ElementTree as ET
 
+from src.config import settings
 from src.errors import UpstreamArxiv
 from src.graph.state import PaperMetadata
 from src.observability import get_logger
+from src.resilience import DEPENDENCY_ARXIV, get_retry_budget
 from src.tools.http_session import build_retrying_session
 
 ARXIV_API_URL = "https://export.arxiv.org/api/query"
@@ -64,7 +66,10 @@ def search_arxiv(
 
     Uses the main arxiv.org API endpoint through a retrying session
     (see `tools/http_session.build_retrying_session`) so transient
-    429s and 5xxs don't turn into empty result sets.
+    429s and 5xxs don't turn into empty result sets. That session is
+    the *only* level that retries this dependency (ADR 0068): there is
+    no loop here, and adding one would multiply the load arXiv sees
+    during exactly the outage that produced the first failure.
 
     Args:
         query: Search query string (keyword phrase).
@@ -91,10 +96,18 @@ def search_arxiv(
         "sortOrder": "descending",
     }
 
-    session = build_retrying_session()
+    # The timeout is declared to the session builder as well as passed
+    # to `get`, because urllib3 applies it *per attempt*: the retry
+    # count has to be trimmed against `(retries + 1) * timeout` or one
+    # query's chain can outlive the job it belongs to (ADR 0068).
+    timeout_sec = settings.arxiv_timeout_sec
+    budget = get_retry_budget(DEPENDENCY_ARXIV)
+    session = build_retrying_session(
+        timeout_sec=timeout_sec, dependency=DEPENDENCY_ARXIV
+    )
     try:
         resp = session.get(
-            ARXIV_API_URL, params=params, timeout=30, allow_redirects=True
+            ARXIV_API_URL, params=params, timeout=timeout_sec, allow_redirects=True
         )
     except (requests.RequestException, OSError) as exc:
         log.warning(
@@ -117,6 +130,14 @@ def search_arxiv(
                 f"arXiv refused to serve results (status {resp.status_code})"
             )
         return []
+
+    # arXiv served us. Refund the budget's ratio share here rather than
+    # on any response at all: a 503 or an in-band "Rate exceeded" body
+    # is the dependency failing, and paying it a refund would let a
+    # steady stream of failures keep the bucket topped up — which is
+    # the one thing a retry budget must not do.
+    if budget is not None:
+        budget.on_success()
 
     root = ET.fromstring(resp.text)
     papers: list[PaperMetadata] = []
