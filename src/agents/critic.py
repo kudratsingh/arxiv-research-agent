@@ -166,9 +166,10 @@ def critic_agent(state: ResearchState) -> dict[str, Any]:
     # was in fact both. Compared against the pass number, so
     # `max_iterations` means what its name and its message say: the
     # number of critic passes a run may make. This is the same
-    # arithmetic `supervisor._fallback_route` already uses on the other
-    # side of the increment (`state["iteration"] < max_iterations`), so
-    # the two paths now agree on where the loop ends.
+    # arithmetic `supervisor._default_next_action` already uses on the
+    # other side of the increment (`state["iteration"] <
+    # max_iterations`), so the two paths now agree on where the loop
+    # ends.
     if iteration + 1 >= settings.max_iterations:
         revision_needed = False
         revision_target = ""

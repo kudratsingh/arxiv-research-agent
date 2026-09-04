@@ -95,7 +95,7 @@ may make, which is what the summary line has always claimed by printing
 against the count *coming in* rather than the pass about to be
 recorded, so a run made `max_iterations + 1` passes and the last one
 rendered `(iteration 3/2)` — a counter above its own ceiling.
-`supervisor._fallback_route` already read the post-increment counter
+`supervisor._default_next_action` already read the post-increment counter
 (`state["iteration"] < max_iterations`), so the two paths disagreed by
 one about where the loop ends; they now agree.
 
