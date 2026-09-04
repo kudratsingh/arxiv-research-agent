@@ -35,11 +35,14 @@
  * research `Job`. An exception class in a package the job path never enters
  * cannot become one, and listing it here would force a copy entry for a
  * value the backend cannot produce — precisely the folklore the last test in
- * this file exists to prevent. Two packages are such: `src/learning/`
+ * this file exists to prevent. Three packages are such: `src/learning/`
  * (ADR 0058), whose `ValueError`s are raised in the HTTP profile handlers
  * and converted to a 422 body, and `src/content/` (WO-W15), whose
  * `ContentValidationError` is raised parsing a manifest off disk on the
- * read-only `GET /learn/paths*` path and converted to a 503. The exclusion
+ * read-only `GET /learn/paths*` path and converted to a 503. The third is
+ * `src/contracts/` (P0-WO00): its shared kernel has no runtime integration;
+ * P0-WO05 must add an explicit mapping or catch when it joins the job path.
+ * The exclusion
  * is not trusted either — `OFF_THE_JOB_PATH` is re-checked against the
  * runner and the graph on every run, so the day a card wires either package
  * into a graph node, this file fails and the narrowing has to be revisited.
@@ -122,6 +125,7 @@ const DELIBERATE = [
 const OFF_THE_JOB_PATH = [
   path.join(SRC, "learning") + path.sep,
   path.join(SRC, "content") + path.sep,
+  path.join(SRC, "contracts") + path.sep,
 ];
 
 function onTheJobPath(file: string): boolean {
@@ -198,7 +202,7 @@ describe("the enumeration reads the real backend", () => {
     const excludedPackages = OFF_THE_JOB_PATH.map((prefix) =>
       path.basename(prefix.slice(0, -1)),
     );
-    expect(excludedPackages).toEqual(["learning", "content"]);
+    expect(excludedPackages).toEqual(["learning", "content", "contracts"]);
     for (const source of jobPathSources) {
       for (const pkg of excludedPackages) {
         expect(source).not.toMatch(new RegExp(`\\bsrc\\.${pkg}\\b`));
