@@ -29,18 +29,89 @@ flag citation gaps downstream.
 from __future__ import annotations
 
 import json
+import time
 from collections import defaultdict
-from typing import Any
+from typing import Any, Final
 
 from langchain_core.messages import AIMessage
 
 from src.config import settings
 from src.errors import UpstreamModelOutput
 from src.graph.state import Citation, EvidenceClaim, ResearchState
-from src.llm import call_llm_json
+from src.llm import _retry_envelope, call_llm_json
 from src.observability import get_logger
 
 log = get_logger(__name__)
+
+#: Share of `api_job_timeout_sec` this node's *pair* of attempts may
+#: occupy in the worst case. The same 0.75 `src/llm.py` gives a single
+#: model call chain: the synthesizer is one node of five, but it is the
+#: node that produces the deliverable, and a share below the model's own
+#: would refuse the corrective retry on every deployment — which would
+#: be deleting the recovery rather than bounding it.
+_RETRY_BUDGET_FRACTION: Final = 0.75
+
+
+def _worst_case_call_sec() -> float:
+    """Wall clock one `call_llm_json` can burn before it gives up.
+
+    Reads `src.llm._retry_envelope` — a private name, imported rather
+    than re-derived on purpose. The number this function needs is
+    whatever the SDK client was actually *constructed* with, and a
+    second copy of that arithmetic would agree with it right up until
+    someone changed one of them. `admin_migrate` reaches into
+    `postgres_pool._connection` for the same reason: the seam is
+    private to discourage callers, not to hide a fact.
+
+    Returns:
+        `(max_retries + 1) * timeout_sec`, the SDK applying its timeout
+        per attempt rather than per call chain.
+    """
+    max_retries, timeout_sec = _retry_envelope()
+    return (max_retries + 1) * timeout_sec
+
+
+def _second_attempt_fits(elapsed_sec: float) -> bool:
+    """True when a corrective retry still fits inside the job's budget.
+
+    ADR 0068 follow-up 3. `src/llm.py` clamps *one* call chain against
+    `api_job_timeout_sec`; it cannot see that this node makes the call
+    twice, and 2 x 5 x 120s against a 600s job was the worst case that
+    arithmetic left open. The retry survived WO-A04's consolidation
+    because it is a *semantic* retry — a different prompt, not the same
+    request, and the only thing that rescues a `max_tokens` truncation
+    — so the fix is to bound it, not to remove it.
+
+    Bounded against the time already spent rather than against the
+    static pair, because the pair's worst case is not what a healthy
+    run costs: a first attempt that returned in nine seconds leaves
+    almost the whole budget, and refusing the retry there would trade a
+    recoverable report for an arithmetic that never happened.
+
+    Args:
+        elapsed_sec: Wall clock the first attempt actually took.
+
+    Returns:
+        Whether to issue the second call.
+    """
+    budget_sec = settings.api_job_timeout_sec * _RETRY_BUDGET_FRACTION
+    worst_case_sec = _worst_case_call_sec()
+    if elapsed_sec + worst_case_sec <= budget_sec:
+        return True
+    # WARNING for the reason `src/llm.py` logs its own clamp at WARNING:
+    # the run is about to fail with `upstream_model_output` and the
+    # recovery that would have been tried was skipped by a budget, not
+    # by the model. Without this line the shape of the incident ("why
+    # did it not retry?") is unanswerable.
+    log.warning(
+        "synthesizer_retry_budget_exhausted",
+        extra={
+            "elapsed_sec": round(elapsed_sec, 1),
+            "budget_sec": budget_sec,
+            "worst_case_request_sec": worst_case_sec,
+        },
+    )
+    return False
 
 
 class SynthesizerOutputError(UpstreamModelOutput):
@@ -266,6 +337,14 @@ def _call_with_one_retry(user_prompt: str, system_prompt: str) -> dict[str, Any]
     extra call is cheap next to the already-billed reader fan-out it
     can rescue (ADR 0041).
 
+    The retry is bounded against the job budget (ADR 0068 follow-up 3):
+    the SDK's own envelope is clamped for *one* call and this node makes
+    two, so the second is issued only when `_second_attempt_fits` says
+    its worst case still lands inside `api_job_timeout_sec`. When it
+    does not, the node fails now with `SynthesizerOutputError` instead
+    of failing in two minutes with a job timeout — the same run, ended
+    by the code that describes it.
+
     Args:
         user_prompt: The assembled synthesis prompt.
         system_prompt: The active system prompt (base or evidence path).
@@ -275,9 +354,11 @@ def _call_with_one_retry(user_prompt: str, system_prompt: str) -> dict[str, Any]
         `draft_report` string.
 
     Raises:
-        SynthesizerOutputError: Both attempts were unusable.
+        SynthesizerOutputError: Both attempts were unusable, or the
+            first was unusable and the second did not fit the budget.
     """
     prompt = user_prompt
+    started = time.monotonic()
     for attempt in (1, 2):
         try:
             # 8192, not the old 4096: the prompt asks for an
@@ -310,6 +391,8 @@ def _call_with_one_retry(user_prompt: str, system_prompt: str) -> dict[str, Any]
         if str(parsed.get("draft_report") or "").strip():
             return parsed
         if attempt == 1:
+            if not _second_attempt_fits(time.monotonic() - started):
+                break
             log.warning(
                 "synthesizer_retrying_malformed_response",
                 extra={"attempt": attempt},

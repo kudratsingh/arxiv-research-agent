@@ -32,6 +32,7 @@ from src.cancellation import (
     reset_cancel_token,
 )
 from src.config import Settings
+from src.errors import UpstreamModel
 from src.llm import MAX_RETRIES, REQUEST_TIMEOUT_SEC
 from src.observability import costs as costs_module
 from src.observability.costs import CostBudgetExceeded, start_cost_tracking
@@ -640,15 +641,20 @@ class TestRetryVisibility:
         assert seen["latency_ms"] is not None
         assert seen["latency_ms"] >= 0.0
 
-    def test_status_error_logs_and_counts_then_reraises(
+    def test_status_error_logs_and_counts_then_raises_the_typed_code(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
         """529s that outlive the SDK's retries must leave a trace.
 
         By the time this escapes, the SDK has already burned every
         attempt — and before ADR 0051 that produced no log line, no
-        metric, and no `usage` to record. The exception itself must
-        still propagate untouched.
+        metric, and no `usage` to record.
+
+        What leaves the module is `UpstreamModel` (WO-A17), not the SDK
+        class: the runner's generic handler could only record an
+        `anthropic.*` exception as `internal_unexpected`. The SDK
+        exception stays chained as `__cause__`, so nothing is lost from
+        a traceback.
         """
         client = _FakeClient(raises=_status_error(529, "req_abc123"))
         monkeypatch.setattr(llm_module, "_get_client", lambda: client)
@@ -661,10 +667,14 @@ class TestRetryVisibility:
 
         with (
             caplog.at_level(logging.WARNING, logger="src.llm"),
-            pytest.raises(llm_module.anthropic.APIStatusError),
+            pytest.raises(UpstreamModel) as raised,
         ):
             llm_module.call_llm("u", model_name="claude-opus-5")
 
+        assert isinstance(raised.value.__cause__, llm_module.anthropic.APIStatusError)
+        # The status reaches the log detail, never the public sentence.
+        assert "529" in str(raised.value)
+        assert raised.value.message == UpstreamModel.public_message
         assert counted == [{"model": "claude-opus-5", "status": "529"}]
         records = [
             r for r in caplog.records if r.message == "llm_upstream_error"
@@ -697,10 +707,13 @@ class TestRetryVisibility:
 
         with (
             caplog.at_level(logging.WARNING, logger="src.llm"),
-            pytest.raises(llm_module.anthropic.APITimeoutError),
+            pytest.raises(UpstreamModel) as raised,
         ):
             llm_module.call_llm("u", model_name="claude-sonnet-4-6")
 
+        assert isinstance(
+            raised.value.__cause__, llm_module.anthropic.APITimeoutError
+        )
         assert counted == [
             {"model": "claude-sonnet-4-6", "status": "connection"}
         ]

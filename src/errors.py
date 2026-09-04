@@ -549,6 +549,35 @@ class UpstreamPaperRead(UpstreamError):
     public_message = "Papers were found but none of them could be read."
 
 
+class UpstreamModel(UpstreamError):
+    """The model provider refused the call, or never answered it.
+
+    The single most likely upstream failure this system has, and until
+    WO-A17 the only one with no code of its own. An
+    `anthropic.APIStatusError` or `APIConnectionError` escaping
+    `src/llm.py` reached the runner's generic handler and became
+    `internal_unexpected` — the code reserved for "an exception nobody
+    typed is one nobody predicted" — so a provider outage was
+    indistinguishable from a null dereference in
+    `research_jobs_total{error_type}`, which is the one signal an
+    on-call engineer reads first.
+
+    Deliberately distinct from `UpstreamModelOutput`, which is the
+    opposite failure: there the provider answered and the *content* was
+    unusable. Both are 502 and both inherit the family's
+    `retryable=True`, so the difference a client acts on is the sentence
+    — "the provider could not be reached" points at an outage that will
+    clear, "the output could not be used" at a run worth re-asking
+    differently.
+
+    Defined here rather than in a node module because every node reaches
+    the provider through `src/llm.py`; no agent owns it.
+    """
+
+    code = "upstream_model"
+    public_message = "The model provider could not be reached."
+
+
 class UpstreamModelOutput(UpstreamError):
     code = "upstream_model_output"
     public_message = "The model's output could not be used."
@@ -651,6 +680,7 @@ ERROR_CODES: Final[frozenset[str]] = frozenset(
         "cancelled_job",
         "cancelled_by_reviewer",
         "upstream_arxiv",
+        "upstream_model",
         "upstream_paper_read",
         "upstream_model_output",
         "not_found_papers",
@@ -691,6 +721,7 @@ JOB_ERROR_TYPES: Final[frozenset[str]] = frozenset(
         "session_turn_timeout",
         "timeout",
         "upstream_arxiv",
+        "upstream_model",
         "upstream_model_output",
         "upstream_paper_read",
     }

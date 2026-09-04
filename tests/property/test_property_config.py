@@ -38,14 +38,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.property]
 #: of an integer range first, and the endpoints are what a bound is.
 FIELD_EXAMPLES: Final = 20
 
-#: `_check_lease_invariant` couples these two: each has a valid range
-#: of its own, and values inside both ranges can still combine into a
-#: rejected pair. The generic sweeps would therefore fail on a value
-#: that is individually correct, so the pair gets its own property
-#: below — which is the better test anyway, since the coupling is the
-#: interesting part.
+#: Fields a `model_validator` couples to a second field: each has a
+#: valid range of its own, and values inside both ranges can still
+#: combine into a rejected pair. The generic sweeps would therefore fail
+#: on a value that is individually correct, so each pair gets its own
+#: property below — which is the better test anyway, since the coupling
+#: is the interesting part.
+#:
+#: The chunker pair joined the list when WO-A17 added
+#: `_check_chunker_budget_invariant`. This file's sweeps are what found
+#: the missing check: `overlap=500` with `max=100` satisfied both Fields
+#: and drove `_split_by_budget` into one chunk per character.
 COUPLED_FIELDS: Final[frozenset[str]] = frozenset(
-    {"job_lease_ttl_sec", "job_lease_refresh_sec"}
+    {
+        "job_lease_ttl_sec",
+        "job_lease_refresh_sec",
+        "chunker_max_tokens",
+        "chunker_overlap_tokens",
+    }
 )
 
 
@@ -254,3 +264,40 @@ def test_the_lease_pair_is_accepted_exactly_when_three_refreshes_fit(
     else:
         with pytest.raises(ValidationError):
             Settings(job_lease_ttl_sec=ttl, job_lease_refresh_sec=refresh)
+
+
+@given(
+    max_tokens=st.integers(min_value=100, max_value=4_000),
+    overlap=st.integers(min_value=0, max_value=500),
+)
+@settings(max_examples=FIELD_EXAMPLES * 5)
+def test_the_chunker_pair_is_accepted_exactly_when_the_overlap_fits(
+    max_tokens: int, overlap: int
+) -> None:
+    """`Settings` loads iff `overlap < max_tokens`, in both directions.
+
+    An equivalence, like the lease property above, because the
+    over-rejection half is the half that breaks working deployments:
+    the shipped defaults are `max=800, overlap=100`, and every pair with
+    an overlap under its budget must still load.
+
+    The rejected half is the defect this tier found. Both fields are
+    inside their individual ranges by construction here — `overlap` can
+    reach 500 and `max_tokens` can be as low as 100 — so a pair like
+    `(100, 500)` is exactly what an operator can write into an
+    environment file today. `_split_by_budget` answers it by advancing
+    its window one character at a time, which is not an error anyone
+    sees: it is a paper turned into tens of thousands of chunks, ranked
+    and partly sent to a model.
+    """
+    fits = overlap < max_tokens
+
+    if fits:
+        loaded = Settings(
+            chunker_max_tokens=max_tokens, chunker_overlap_tokens=overlap
+        )
+        assert loaded.chunker_max_tokens == max_tokens
+        assert loaded.chunker_overlap_tokens == overlap
+    else:
+        with pytest.raises(ValidationError):
+            Settings(chunker_max_tokens=max_tokens, chunker_overlap_tokens=overlap)

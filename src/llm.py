@@ -23,6 +23,12 @@ eval campaign, API job — funnels its LLM calls through:
   counted.
 - **Bounded call chain.** `max_retries x timeout` is clamped so one
   flaky call cannot eat a whole API job's timeout budget.
+- **A typed failure.** When the SDK gives up, the exception leaves this
+  module as `errors.UpstreamModel` (`upstream_model`) rather than as an
+  `anthropic.*` class that the runner's generic handler could only
+  record as `internal_unexpected`. A provider outage is the most likely
+  upstream failure this system has and it now says so in
+  `research_jobs_total{error_type}` (WO-A17).
 
 ADR 0066 adds the fourth thing this choke point is good for: it is the
 only place a model call can become a **span**. Before it did, the
@@ -44,6 +50,7 @@ import anthropic
 
 from src.cancellation import check_cancelled
 from src.config import settings
+from src.errors import UpstreamModel
 from src.observability import record_llm_call
 from src.observability.costs import current_costs, effective_cost_cap, enforce_cost_cap
 from src.observability.logging import get_logger
@@ -274,6 +281,9 @@ def call_llm(
             reached `settings.max_cost_usd` (ADR 0051). Only when a
             cost accumulator is bound: an untracked caller has no
             budget to exceed and is left alone.
+        UpstreamModel: When the provider refused the call or never
+            answered it, after the SDK exhausted its clamped envelope.
+            The `anthropic` exception is chained as `__cause__`.
     """
     # Before `_get_client`, not after: a cancelled job must not even
     # construct the client on a cold process. Cancellation outranks the
@@ -326,7 +336,9 @@ def call_llm(
                 started=started,
             )
             _record_failed_call(resolved_model, exc, started)
-            raise
+            raise UpstreamModel(
+                log_detail=_upstream_detail(exc, status=str(exc.status_code))
+            ) from exc
         except anthropic.APIConnectionError as exc:
             # Includes `APITimeoutError` — a client-side timeout is a
             # subclass, and the SDK retries it like any connection error.
@@ -338,7 +350,9 @@ def call_llm(
                 detail=type(exc).__name__,
             )
             _record_failed_call(resolved_model, exc, started)
-            raise
+            raise UpstreamModel(
+                log_detail=_upstream_detail(exc, status="connection")
+            ) from exc
 
         elapsed_sec = time.monotonic() - started
         latency_ms = elapsed_sec * 1000
@@ -391,6 +405,37 @@ def call_llm(
             latency_ms=latency_ms,
             retries=raw.retries_taken,
         )
+
+
+def _upstream_detail(exc: Exception, *, status: str) -> str:
+    """Log-side detail for the `UpstreamModel` an SDK failure becomes.
+
+    The conversion itself is spelled out at both `raise` sites rather
+    than returned from here, so the class name is visible in the source
+    — `tests/test_errors.py::TestTheJobVocabulary` derives the job's
+    error vocabulary by reading `raise` statements, and a code that
+    reached the taxonomy through a helper's return type would be
+    invisible to it. That is the same reason ADR 0068's dead-letter is a
+    separate assignment rather than a defaulted argument.
+
+    Why the conversion happens in this module at all: it is the one
+    place every entry point's model calls funnel through, the property
+    that already makes it the spend and retry choke point (ADR 0051).
+    Before it, an `anthropic.APIStatusError` travelled to the runner's
+    generic handler and became `internal_unexpected` — a provider outage
+    filed under the code reserved for exceptions nobody predicted.
+
+    Args:
+        exc: The SDK exception that escaped the client's own retries.
+        status: HTTP status as a string, or `"connection"`.
+
+    Returns:
+        The detail string. It names the SDK class and its message, which
+        is where the provider's own text is allowed to go: `log_detail`
+        reaches the log and `str(exc)` and never a client, while
+        `public_message` is the class's fixed sentence.
+    """
+    return f"{type(exc).__name__}({status}): {exc}"
 
 
 def _record_failed_call(

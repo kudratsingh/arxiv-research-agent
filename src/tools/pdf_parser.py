@@ -27,6 +27,15 @@ not resolve to a private, loopback, link-local, or otherwise
 non-public address. Redirects are never followed blindly; each hop is
 re-validated. arXiv URLs get their scheme upgraded to https before
 fetching.
+
+ADR 0068 finally puts the download inside the retry clamp: the
+per-attempt timeout is `settings.pdf_download_timeout_sec` rather than
+a module constant, and it is declared to `build_retrying_session` as
+well as passed to `get`, so `(retries + 1) * timeout` is trimmed
+against this dependency's share of the job budget. Note the shape the
+clamp does *not* cover: each redirect hop opens its own call chain, so
+a chain of redirects still multiplies by `_MAX_REDIRECTS + 1` — which
+is why that constant is small and every hop is validated.
 """
 
 from __future__ import annotations
@@ -47,8 +56,6 @@ from src.observability.semconv import TOOL_PDF_PARSE, TOOL_TYPE_EXTENSION
 from src.observability.tracing import traced_tool
 from src.tools.http_session import build_retrying_session
 from src.tools.paper_cache import DEFAULT_CACHE_DIR, PaperCache, get_paper_cache
-
-DOWNLOAD_TIMEOUT_SEC = 60
 
 # Read-chunk size for the streaming download. 64 KiB matches urllib3's
 # default and keeps the size check tight without thrashing on many
@@ -168,7 +175,14 @@ def _download_pdf(pdf_url: str, dest: Path) -> bool:
     `_is_fetchable` — following them blindly would let a public host
     302 the fetcher into an internal address (ADR 0041's SSRF guard).
     """
-    session = build_retrying_session()
+    # Declared to the session builder as well as passed to `get`, the
+    # way `arxiv_search` does it (ADR 0068): urllib3 applies the timeout
+    # *per attempt*, so the retry count can only be trimmed by something
+    # that knows what one attempt costs. Without the declaration this
+    # download was the one remaining call chain with no bound at all —
+    # 4 attempts x 60s, per redirect hop, inside a 600s job.
+    timeout_sec = settings.pdf_download_timeout_sec
+    session = build_retrying_session(timeout_sec=timeout_sec)
     max_bytes = settings.pdf_max_bytes
     url = _upgrade_arxiv_scheme(pdf_url)
 
@@ -179,7 +193,7 @@ def _download_pdf(pdf_url: str, dest: Path) -> bool:
         try:
             resp = session.get(
                 url,
-                timeout=DOWNLOAD_TIMEOUT_SEC,
+                timeout=timeout_sec,
                 allow_redirects=False,
                 stream=True,
             )

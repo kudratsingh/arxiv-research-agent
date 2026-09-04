@@ -120,9 +120,19 @@ codes a route answers with:
 | `cancelled_job` | A cooperative cancel fired. |
 | `not_found_papers` | arXiv answered, and matched nothing. |
 | `upstream_arxiv` | arXiv could not be reached. |
-| `upstream_paper_read` | Papers were found and none could be read. |
+| `upstream_model` | The model provider refused the call or never answered it, after the SDK spent its clamped retry envelope. |
+| `upstream_paper_read` | Papers were found and none could be read — for a reason other than the provider being down. |
 | `upstream_model_output` | The model's output was unusable after a retry. |
 | `internal_unexpected` | Anything else. Look up the `request_id` in the logs. |
+
+`upstream_model` and `upstream_model_output` are the two halves of "the
+model let us down" and the distinction is the actionable part: the first
+means the provider did not answer and the run is worth retrying, the
+second means it answered and what it said could not be used, which
+retrying does not fix. Before WO-A17 the first had no code at all —
+a provider outage arrived as `internal_unexpected` from most nodes and
+as `upstream_paper_read` from the reader, so the same incident carried
+two names and neither of them was its own.
 
 ### Where the contract is enforced
 

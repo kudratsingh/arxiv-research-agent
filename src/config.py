@@ -167,6 +167,26 @@ class Settings(BaseSettings):
             "PDF can't OOM the process. See ADR 0033."
         ),
     )
+    pdf_download_timeout_sec: float = Field(
+        default=60.0,
+        gt=0.0,
+        le=300.0,
+        description=(
+            "Per-attempt timeout on one PDF fetch. ADR 0068's follow-up "
+            "4: this was the last hardcoded timeout in the codebase "
+            "(`pdf_parser.DOWNLOAD_TIMEOUT_SEC = 60`), and a timeout "
+            "nothing declares is a timeout no clamp can see — the retry "
+            "envelope is trimmed against `(retries + 1) * timeout`, "
+            "which needs the attempt cost stated. The value is "
+            "unchanged from the constant, so the per-attempt behaviour "
+            "is what it always was; what changes is that at 60s only "
+            "two attempts fit `api_job_timeout_sec * "
+            "http_call_chain_budget_fraction`, so retries are trimmed "
+            "to 1 and `retry_envelope_clamped` says so once per "
+            "process. Larger than `arxiv_timeout_sec` because a PDF is "
+            "megabytes where an Atom feed is kilobytes."
+        ),
+    )
 
     # ------ Resilience (Phase A, ADR 0068) ----------------------------
     # Retry amplification is the measured problem: three retries at five
@@ -1220,6 +1240,40 @@ class Settings(BaseSettings):
                 f"job_lease_ttl_sec so two missed refreshes are "
                 f"survivable; got refresh={self.job_lease_refresh_sec} "
                 f"ttl={self.job_lease_ttl_sec}. See ADR 0038."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _check_chunker_budget_invariant(self) -> Settings:
+        """Reject an overlap the chunk budget cannot contain.
+
+        `_split_by_budget` advances its window with
+        `start = max(start + 1, end - overlap_chars)`. Once the overlap
+        reaches the budget, `end - overlap_chars` never gets past
+        `start`, the `max` floor takes over, and the loop emits roughly
+        one chunk per *character* — a paper becomes tens of thousands of
+        chunks, each of which is ranked and some of which are sent to a
+        model. That is a bill and a timeout, not an error message.
+
+        Same shape as `_check_lease_invariant` above and for the same
+        reason: `chunker_overlap_tokens` (0-500) and
+        `chunker_max_tokens` (100-4000) each validate fine on their own,
+        so `overlap=500` with `max=100` passes both Fields and is only
+        wrong as a pair. `tests/property/test_property_chunker.py`
+        already had to draw its budgets as a coupled pair to keep out of
+        the degradation, and ADR 0069 recorded it as a configuration
+        hazard; this turns the hazard into a load-time refusal.
+
+        Raises:
+            ValueError: When the overlap is not strictly under the
+                budget.
+        """
+        if self.chunker_overlap_tokens >= self.chunker_max_tokens:
+            raise ValueError(
+                "chunker_overlap_tokens must be strictly less than "
+                "chunker_max_tokens, or the chunker emits one chunk per "
+                f"character; got overlap={self.chunker_overlap_tokens} "
+                f"max={self.chunker_max_tokens}. See ADR 0069."
             )
         return self
 

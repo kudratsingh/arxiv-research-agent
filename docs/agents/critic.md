@@ -19,7 +19,7 @@ flowchart LR
   J -->|"parsed"| OUT["critique · quality_score<br/>revision_needed · revision_target<br/>iteration + 1"]
   J -->|"unparseable"| DEG["approve, score 0.0<br/>report still ships"]
   DEG --> OUT
-  OUT --> CAP{"iteration >= max_iterations?"}
+  OUT --> CAP{"iteration + 1 >= max_iterations?"}
   CAP -->|"yes"| FIN(["END — force-approved"])
   CAP -->|"no"| R{"route_after_critique"}
   R -->|"valid revision_target"| BACK["planner · search · synthesizer"]
@@ -83,11 +83,21 @@ the per-dimension `scores` object is not written to state at all. The
 ## Iteration cap
 
 After the LLM verdict, the agent force-approves when
-`iteration >= settings.max_iterations` — `revision_needed` and
+`iteration + 1 >= settings.max_iterations` — `revision_needed` and
 `revision_target` are overridden regardless of score. This is the fixed
 pipeline's loop-termination guarantee: without it, a persistently
 low-scoring draft would cycle forever. (The supervisor loop has its
 own independent caps — `max_loop_iterations` and `max_cost_usd`.)
+
+`max_iterations` therefore names the number of **critic passes** a run
+may make, which is what the summary line has always claimed by printing
+`iteration N/max_iterations`. Until WO-A17 the comparison was made
+against the count *coming in* rather than the pass about to be
+recorded, so a run made `max_iterations + 1` passes and the last one
+rendered `(iteration 3/2)` — a counter above its own ceiling.
+`supervisor._default_next_action` already read the post-increment counter
+(`state["iteration"] < max_iterations`), so the two paths disagreed by
+one about where the loop ends; they now agree.
 
 Downstream, `route_after_critique` (`src/graph/workflow.py`) routes to
 the named target only when `revision_needed` is true **and** the
@@ -133,10 +143,14 @@ Settings that drive the critic (see `src/config.py`):
 - LLM-call plumbing: `tests/test_agent_model_routing.py` (the
   `critic_model` override) and `tests/test_agent_cache_flag.py` (the
   prompt-caching flag), both with `call_llm_json` monkeypatched.
-- **Gap**: the force-approve-at-cap branch has no dedicated unit test
-  today (verified — no test in `tests/` exercises `critic_agent` with
-  `iteration >= max_iterations`). A good first test for anyone
-  touching this agent.
+- Iteration ceiling:
+  `tests/e2e/test_research_workflow.py::test_a_critic_that_never_approves_stops_at_the_iteration_ceiling`
+  — the e2e tier drives the compiled graph with a critic that demands a
+  revision every time and asserts the node trajectory, the final
+  counter, and the `N/max_iterations` text of the last message. It is
+  the tier that found the off-by-one, and it owns it: the branch is
+  invisible to a unit test of the critic, which never sees the loop it
+  bounds.
 - Judge quality itself is guarded by the nightly eval, not unit tests.
 
 ## Related

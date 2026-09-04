@@ -39,6 +39,7 @@ from src.resilience import (
     get_retry_budget,
     interruptible_sleep,
     record_degradation,
+    reset_clamp_warnings,
     reset_degradation_counts,
     reset_retry_budgets,
 )
@@ -85,18 +86,23 @@ def _budget(
 
 @pytest.fixture(autouse=True)
 def _isolate_process_state() -> Iterator[None]:
-    """Budgets and degradation counters are process-wide; the suite is one process.
+    """Budgets, degradation counters and clamp warnings are process-wide;
+    the suite is one process.
 
     Autouse, and on both sides of the test, because the leak is silent
     in exactly one direction: a test that drains a shared bucket makes
     a *later* test fail, in a different file, with an error that names
-    neither of them.
+    neither of them. The clamp's warn-once set leaks the same way and
+    worse — it makes a later test see *no* warning, which reads as the
+    warning having been removed.
     """
     reset_retry_budgets()
     reset_degradation_counts()
+    reset_clamp_warnings()
     yield
     reset_retry_budgets()
     reset_degradation_counts()
+    reset_clamp_warnings()
 
 
 class TestTheBudgetIsAPassThroughWhileItIsFull:
@@ -359,6 +365,65 @@ class TestTheRetryEnvelopeClamp:
                 configured_retries=3, timeout_sec=1.0, budget_sec=150.0, dependency="arxiv"
             )
         assert [r for r in caplog.records if r.getMessage() == "retry_envelope_clamped"] == []
+
+    def test_the_same_clamp_says_it_once_however_often_it_happens(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Once per distinct clamp per process, not once per call.
+
+        `pdf_parser` builds a session per download and a run downloads
+        one PDF per paper, so before this the same clamp announced
+        itself ten times a job. The way a WARNING stops being read is by
+        repeating; `costs._unpriced_warned` is the same guard for the
+        same reason, and this follows it rather than inventing a second
+        shape.
+
+        The clamp itself is not deduplicated — only its reporting. Every
+        call still returns the trimmed count.
+        """
+        with caplog.at_level("WARNING"):
+            returned = [
+                clamped_retry_envelope(
+                    configured_retries=3,
+                    timeout_sec=60.0,
+                    budget_sec=150.0,
+                    dependency="http",
+                )
+                for _ in range(10)
+            ]
+
+        assert returned == [1] * 10
+        assert (
+            len([r for r in caplog.records if r.getMessage() == "retry_envelope_clamped"])
+            == 1
+        )
+
+    def test_a_clamp_that_differs_in_any_respect_still_speaks(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The half that keeps warn-once from becoming warn-never.
+
+        `dependency` is a two-value vocabulary and every non-arXiv
+        caller shares `http`, so two call sites can clamp to the same
+        retry count for completely different reasons. Keyed on the whole
+        determinant, both are reported; keyed on `(dependency,
+        clamped)`, the second misconfiguration would be silenced on the
+        strength of having reported the first.
+        """
+        with caplog.at_level("WARNING"):
+            # Same dependency, same clamped value (1), different
+            # per-attempt cost — a different fact about a different
+            # call site.
+            clamped_retry_envelope(
+                configured_retries=3, timeout_sec=60.0, budget_sec=150.0, dependency="http"
+            )
+            clamped_retry_envelope(
+                configured_retries=3, timeout_sec=70.0, budget_sec=150.0, dependency="http"
+            )
+
+        records = [r for r in caplog.records if r.getMessage() == "retry_envelope_clamped"]
+        assert len(records) == 2
+        assert [r.timeout_sec for r in records] == [60.0, 70.0]  # type: ignore[attr-defined]
 
 
 class TestDegradationIsVisible:

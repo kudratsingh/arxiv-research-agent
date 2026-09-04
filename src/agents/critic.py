@@ -158,8 +158,19 @@ def critic_agent(state: ResearchState) -> dict[str, Any]:
     critique = str(parsed.get("critique") or "").strip()
     iteration = state.get("iteration", 0)
 
-    # Force approve if we've hit max iterations
-    if iteration >= settings.max_iterations:
+    # Force approve once this pass *is* the ceiling. `iteration` is the
+    # count coming in and the pass being recorded is `iteration + 1`, so
+    # comparing the incoming count let the run make `max_iterations + 1`
+    # passes and report `(iteration 3/2)` — a counter above its own
+    # ceiling, which is either a wrong ceiling or a wrong counter and
+    # was in fact both. Compared against the pass number, so
+    # `max_iterations` means what its name and its message say: the
+    # number of critic passes a run may make. This is the same
+    # arithmetic `supervisor._default_next_action` already uses on the
+    # other side of the increment (`state["iteration"] <
+    # max_iterations`), so the two paths now agree on where the loop
+    # ends.
+    if iteration + 1 >= settings.max_iterations:
         revision_needed = False
         revision_target = ""
 
