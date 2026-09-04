@@ -1,0 +1,18 @@
+{
+  "profile": "agent-contract-json/v1",
+  "payload": {
+    "amount_usd": "12.340000",
+    "data_class": "internal",
+    "enabled": true,
+    "object_ref": {
+      "digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "id": "fixture-object",
+      "kind": "source_snapshot",
+      "revision": "1.2.3"
+    },
+    "occurred_at": "2026-09-04T16:00:00.123456Z",
+    "repeat_index": 0
+  },
+  "canonical": "{\"amount_usd\":\"12.340000\",\"data_class\":\"internal\",\"enabled\":true,\"object_ref\":{\"digest\":\"sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\",\"id\":\"fixture-object\",\"kind\":\"source_snapshot\",\"revision\":\"1.2.3\"},\"occurred_at\":\"2026-09-04T16:00:00.123456Z\",\"repeat_index\":0}",
+  "digest": "sha256:8f5a2b330022849436d364058b9ed27189e42d456c021bd6dbc395da7c23dd3d"
+}
