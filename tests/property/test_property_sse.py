@@ -16,6 +16,7 @@ client codes against.
 from __future__ import annotations
 
 import json
+import string
 from typing import Any, Final
 
 import pytest
@@ -157,3 +158,48 @@ def test_a_terminal_event_always_closes_the_stream_but_not_the_reverse(
     # closed connection at that moment costs a reconnect per turn.
     if event in PAUSE_EVENT_NAMES:
         assert not closes_stream(event)
+
+
+#: Names built to carry a frame separator. `\r`, `\n` and `\r\n` are all
+#: line terminators to an `EventSource` parser, so all three have to be
+#: generated: a sanitiser that handled only `\n` would leave `\r` and
+#: `\r\n` splitting frames, and `\r\n` is the one a naive `replace("\n",
+#: "")` turns into a lone `CR` that still terminates the line.
+INJECTED_NAMES = st.builds(
+    lambda head, sep, tail: f"{head}{sep}{tail}",
+    st.text(alphabet=string.ascii_lowercase + "_", max_size=12),
+    st.sampled_from(["\n", "\r", "\r\n"]),
+    st.text(alphabet=string.ascii_lowercase + "_: ", max_size=20),
+)
+
+
+@given(event=INJECTED_NAMES, data=PAYLOADS)
+def test_a_newline_in_an_event_name_still_produces_exactly_one_frame(
+    event: str, data: dict[str, Any]
+) -> None:
+    """The frame count is a property of the encoder, not of its callers.
+
+    `test_one_call_produces_exactly_one_frame` above asks this question
+    of the payload and answers it with `json.dumps`. The event name had
+    no equivalent guard: `format_sse` interpolated it into the
+    `event:` line verbatim, so a name carrying a blank line produced
+    two frames — a truncated event, and a remainder the client would
+    route as an event nobody defined. Silent on the server, total on
+    the client.
+
+    Unreachable from the runner today, because every name it emits comes
+    from the closed set at the top of this file. That is the reason to
+    pin it now rather than an argument against doing so: the day a name
+    is derived from a job id, a tool name, or anything else a caller
+    supplies, the encoder is where the injection would have landed.
+    """
+    frame = format_sse(event, data)
+
+    assert frame.count(b"\n\n") == 1
+    assert frame.endswith(b"\n\n")
+    assert frame.count(b"\n") == 3
+    # And the surviving name is the input minus its line terminators —
+    # the sanitiser drops separators, it does not drop the routing key.
+    decoded_event, decoded_data = decode(frame)
+    assert decoded_event == event.replace("\r", "").replace("\n", "")
+    assert decoded_data == data

@@ -28,13 +28,22 @@ the anchor would be asserting something the rules never claimed.
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import string
+import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
+from types import ModuleType, SimpleNamespace
+from typing import Any
 
 import pytest
 from hypothesis import assume, given
+from hypothesis import settings as hyp_settings
 from hypothesis import strategies as st
 
-from src.observability import redact_text, redact_url
+from src.api.admin_migrate import assign_conversation_owner, assign_job_owner
+from src.observability import hash_principal, redact_text, redact_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.property, pytest.mark.security]
 
@@ -240,3 +249,168 @@ def test_redact_url_answers_for_any_string_at_all(text: str) -> None:
     if redacted != "***":
         authority = redacted.partition("://")[2].partition("/")[0]
         assert "@" not in authority or authority.startswith("***@")
+
+
+
+# ---------------------------------------------------------------------------
+# The other half of ADR 0067: a principal is hashed, not redacted.
+#
+# `redact_text` above catches credentials by *shape*. A keystore
+# `key_id` has no shape — `internal`, `partner-b`, an operator's own
+# handle — so no rule can find one in a string, and the only defence is
+# the call site choosing `hash_principal` over the raw value. That makes
+# the invariant a property of the call sites, and the two
+# admin-migration sweeps are where it was not being kept: both wrote
+# `extra={"owner": owner}` into a stream the log layer hashes principals
+# into everywhere else.
+#
+# **The fix under test is WO-A10's, not this work order's.** Both work
+# orders were told to fix it and A10's landed first; per the rule that
+# two implementations of one fix is worse than either, this file keeps
+# only the tests and points them at `principal_hash`, the field name A10
+# chose. A10 shipped the fix with the log contract's `owner` removal as
+# its guard and no test on the two lines themselves, and the removal
+# cannot answer the question these properties ask: the contract test is
+# an AST scan of call sites, so it proves the *name* is registered and
+# not that the value *arrives*. That distinction is not theoretical here
+# — `principal_hash` is a contract field with a precedence rule, fillable
+# from `extra` only while nothing has bound one, so "the caller passed
+# it" and "the record carries it" are genuinely different claims. These
+# assert the second.
+# ---------------------------------------------------------------------------
+
+#: Ids an operator can actually hand `--owner`. Shaped like real
+#: keystore ids rather than arbitrary text: a generator that produced
+#: `"a"` could satisfy a "not in the payload" assertion by accident,
+#: since one character appears in almost any string.
+PRINCIPAL_IDS = st.text(
+    alphabet=string.ascii_lowercase + string.digits + "-_", min_size=6, max_size=24
+)
+
+#: The logger both sweeps emit on.
+_MIGRATE_LOGGER = "src.api.admin_migrate"
+
+
+@contextmanager
+def _records() -> Iterator[list[logging.LogRecord]]:
+    """Collect this logger's records, without `caplog`.
+
+    A plain handler rather than the fixture because `caplog` is
+    function-scoped and Hypothesis refuses to reuse a function-scoped
+    fixture across generated inputs — correctly, since the records from
+    example 1 would still be sitting there for example 2 and the
+    absence assertions would be reading the wrong ones.
+    """
+    logger = logging.getLogger(_MIGRATE_LOGGER)
+    collected: list[logging.LogRecord] = []
+
+    class _Collect(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            collected.append(record)
+
+    handler = _Collect(level=logging.INFO)
+    previous_level, previous_propagate = logger.level, logger.propagate
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    # Nothing above this logger needs to see these lines, and letting
+    # them propagate would run them through the real JSON formatter.
+    logger.propagate = False
+    try:
+        yield collected
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(previous_level)
+        logger.propagate = previous_propagate
+
+
+@contextmanager
+def _stubbed_postgres() -> Iterator[None]:
+    """Stand in for the module `assign_conversation_owner` imports.
+
+    The `UPDATE` itself is `tests/test_admin_migrate.py`'s subject. All
+    this file needs is for the function to reach its log line, so the
+    cursor reports zero rows and the commit is a no-op.
+    """
+    cursor = SimpleNamespace(execute=lambda *_a, **_kw: None, rowcount=0)
+    connection = SimpleNamespace(cursor=lambda: _entered(cursor), commit=lambda: None)
+    module = ModuleType("src.tools.postgres_pool")
+    module.init_schema = lambda: None  # type: ignore[attr-defined]
+    module._connection = lambda: _entered(connection)  # type: ignore[attr-defined]
+    previous = sys.modules.get("src.tools.postgres_pool")
+    sys.modules["src.tools.postgres_pool"] = module
+    try:
+        yield
+    finally:
+        if previous is None:
+            del sys.modules["src.tools.postgres_pool"]
+        else:
+            sys.modules["src.tools.postgres_pool"] = previous
+
+
+@contextmanager
+def _entered(value: Any) -> Iterator[Any]:
+    """`value`, as a context manager that does nothing on the way out."""
+    yield value
+
+
+def _assert_hashed(record: logging.LogRecord, owner: str) -> None:
+    """The invariant, stated once for both sweeps.
+
+    Three claims, and each is load-bearing:
+
+    - the digest is *on the record*, not merely passed — the log
+      contract's AST scan cannot tell those apart, and `principal_hash`
+      is a contract field the formatter will refuse from `extra` if
+      anything has bound one;
+    - the raw key is not an attribute; and
+    - the raw key is nowhere else on the record either, which is what
+      catches an id that came back through the message or a second
+      field.
+
+    Both directions, because "the id is absent" is satisfiable by
+    logging nothing at all, and a sweep nobody can attribute is a sweep
+    nobody can audit.
+    """
+    assert getattr(record, "principal_hash", None) == hash_principal(owner)
+    assert not hasattr(record, "owner")
+    assert owner not in str(record.__dict__)
+
+
+@given(owner=PRINCIPAL_IDS)
+@hyp_settings(max_examples=40)
+def test_the_job_sweep_logs_a_principal_hash_and_never_the_id(owner: str) -> None:
+    """`assign_job_owner` names the principal by digest only.
+
+    Driven with an empty row list, which is the shape that isolates the
+    question: no row means no Redis call, and the summary line fires
+    anyway — it reports the sweep, not the writes. So what is asserted
+    is exactly the `extra` payload, with nothing else in the frame able
+    to supply or hide the id.
+    """
+    with _records() as records:
+        assert asyncio.run(assign_job_owner(None, [], owner, dry_run=False)) == 0
+
+    assigned = [r for r in records if r.getMessage() == "admin_migrate_jobs_assigned"]
+    assert len(assigned) == 1
+    _assert_hashed(assigned[0], owner)
+
+
+@given(owner=PRINCIPAL_IDS)
+@hyp_settings(max_examples=40)
+def test_the_conversation_sweep_logs_a_principal_hash_and_never_the_id(
+    owner: str,
+) -> None:
+    """The same invariant on the Postgres half of the same tool.
+
+    Two call sites six hundred lines apart, and only one of them being
+    fixed is the ordinary way a leak like this survives a review — so
+    both are asserted, by the same property.
+    """
+    with _stubbed_postgres(), _records() as records:
+        assign_conversation_owner(owner, dry_run=False)
+
+    assigned = [
+        r for r in records if r.getMessage() == "admin_migrate_conversations_assigned"
+    ]
+    assert len(assigned) == 1
+    _assert_hashed(assigned[0], owner)

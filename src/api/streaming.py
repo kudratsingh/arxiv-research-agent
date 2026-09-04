@@ -129,11 +129,29 @@ STREAM_CLOSING_EVENT_NAMES: frozenset[str] = TERMINAL_EVENT_NAMES | {
 PAUSE_EVENT_NAMES: frozenset[str] = frozenset({"plan_ready", "turn_ready"})
 
 
+#: The three line terminators the SSE spec recognises (CR, LF, CRLF),
+#: deleted from an event name before it reaches the wire. A `str`
+#: translation table rather than three `replace` calls so CRLF costs one
+#: pass and cannot leave a stray CR behind.
+_LINE_TERMINATORS: Mapping[int, None] = str.maketrans({"\r": None, "\n": None})
+
+
 def format_sse(event: str, data: dict[str, Any]) -> bytes:
     """Encode `(event, data)` as one SSE frame.
 
     The payload is JSON so clients don't have to guess at the shape;
     the event name is the routing signal.
+
+    The name is stripped of line terminators first. SSE has no framing
+    beyond the blank line, so a name containing one does not produce a
+    malformed frame — it produces *two* frames, and the client routes
+    the remainder as an event it has never heard of while the server
+    reports nothing. The `data:` line is already safe because
+    `json.dumps` escapes newlines inside strings; the event name had no
+    equivalent. Unreachable from the closed set of names the runner
+    emits today, and that is exactly why it is worth fixing now: the
+    day a name is derived from anything a client supplies, the injection
+    is already in the encoder.
 
     Args:
         event: SSE event name, used by the client as the routing key.
@@ -143,8 +161,15 @@ def format_sse(event: str, data: dict[str, Any]) -> bytes:
         The encoded frame, terminated by a blank line.
     """
     payload = json.dumps(data, separators=(",", ":"), sort_keys=True)
+    safe_event = event.translate(_LINE_TERMINATORS)
+    if safe_event != event:
+        # The sanitised name, never the raw one: this line exists
+        # because something put a frame separator in an event name, and
+        # echoing it verbatim would carry the same split into the log
+        # stream's own record of the incident.
+        log.warning("sse_event_name_sanitised", extra={"event": safe_event})
     # A trailing blank line terminates the frame per the SSE spec.
-    return f"event: {event}\ndata: {payload}\n\n".encode()
+    return f"event: {safe_event}\ndata: {payload}\n\n".encode()
 
 
 def format_heartbeat() -> bytes:

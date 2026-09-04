@@ -158,8 +158,13 @@ describe("the enumeration reads the real backend", () => {
 });
 
 describe("criterion 7 — every producible value is mapped or visibly falls through", () => {
-  it("enumerates thirteen values", () => {
-    expect(PRODUCIBLE).toHaveLength(13);
+  it("enumerates fourteen values", () => {
+    // Fourteen since WO-A17 added `upstream_model` — the code a
+    // model-provider outage now carries. It had been landing as
+    // `internal_unexpected`, which is in this set already, so the count
+    // is the only thing that moves when a failure stops being
+    // misfiled.
+    expect(PRODUCIBLE).toHaveLength(14);
   });
 
   it.each(PRODUCIBLE)("%s is mapped or falls through with its raw text", (value) => {
@@ -177,14 +182,14 @@ describe("criterion 7 — every producible value is mapped or visibly falls thro
     expect(described.errorType).toBe(value);
   });
 
-  it("maps all thirteen — the dictionary and the backend agree exactly", () => {
-    // Both directions. A fourteenth backend value fails the first half; a
+  it("maps all fourteen — the dictionary and the backend agree exactly", () => {
+    // Both directions. A fifteenth backend value fails the first half; a
     // mapping entry for a value the backend can no longer produce fails
     // the second, which is what stops the table becoming folklore.
     expect([...MAPPED_ERROR_TYPES].sort()).toEqual(PRODUCIBLE);
   });
 
-  it("would notice a fourteenth value", () => {
+  it("would notice a fifteenth value", () => {
     const described = describeErrorType("some_future_code", "boom");
     expect(described.mapped).toBe(false);
     expect(MAPPED_ERROR_TYPES as readonly string[]).not.toContain(

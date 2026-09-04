@@ -42,6 +42,13 @@ synthesize from. `JobCancelledError` is the deliberate exception to
 that containment: it aborts the fan-out instead of degrading papers,
 because it means the job it belongs to is already over (ADR 0047).
 
+WO-A17 splits that total-failure case in two. When every paper failed
+*on the provider* — an `errors.UpstreamModel` out of `src/llm.py` — the
+node raises `UpstreamModel` instead, so a model outage carries the same
+`error_type` here as it does from every other node.
+`AllPaperAnalysesFailedError` (`upstream_paper_read`) keeps the case it
+was named for: papers were found and this node could not read them.
+
 The *other* degradation — falling back to the abstract because the
 full text never arrived — is now reported rather than inferred (ADR
 0052). Each fallback logs one INFO line naming the stage that
@@ -62,7 +69,7 @@ from langchain_core.messages import AIMessage
 
 from src.cancellation import JobCancelledError, check_cancelled
 from src.config import settings
-from src.errors import UpstreamPaperRead
+from src.errors import UpstreamModel, UpstreamPaperRead
 from src.graph.state import (
     EvidenceClaim,
     PaperAnalysis,
@@ -742,6 +749,12 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
     )
     preferred: list[str] | None = requested if requested else None
 
+    # Tally of papers whose analysis died on the *provider* rather than
+    # on its own output (WO-A17). `list.append` is atomic under the GIL,
+    # so the fan-out's threads need no lock — the same idiom
+    # `_record_fallback` uses a hundred lines above.
+    provider_failures: list[str] = []
+
     def _analyze_or_degrade(
         p: PaperMetadata,
     ) -> tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal, bool]:
@@ -777,6 +790,17 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
             # judge and synthesis calls the ceiling existed to stop.
             raise
         except Exception as exc:
+            if isinstance(exc, UpstreamModel):
+                # Tallied, deliberately *not* re-raised. A provider
+                # failure on one paper is still one paper's failure —
+                # the SDK exhausting its envelope on a single call says
+                # nothing about the other nine, and the fan-out has
+                # already paid for them. What the tally buys is the
+                # aggregate below: a run where every paper died on the
+                # provider is a provider outage, and reporting it as
+                # `upstream_paper_read` would name the reader for the
+                # model's failure.
+                provider_failures.append(p["id"])
             log.warning(
                 "reader_paper_analysis_failed",
                 extra={
@@ -825,6 +849,20 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
 
     failed_count = sum(1 for _, _, _, ok in results if not ok)
     if papers and failed_count == len(papers):
+        if len(provider_failures) == len(papers):
+            # Every paper died on the provider, which is what a
+            # sustained model outage does to this fan-out. Name the
+            # outage (WO-A17): `upstream_paper_read` would say "papers
+            # were found but none could be read", which is true of the
+            # symptom and wrong about the cause — and it made the same
+            # outage carry a different `error_type` depending on which
+            # node happened to be running when it started.
+            raise UpstreamModel(
+                log_detail=(
+                    f"all {len(papers)} paper analyses failed on the model "
+                    f"provider"
+                )
+            )
         raise AllPaperAnalysesFailedError(
             f"all {len(papers)} paper analyses failed — no usable "
             f"analysis to synthesize from"

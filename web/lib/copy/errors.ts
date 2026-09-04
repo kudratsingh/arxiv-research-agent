@@ -391,6 +391,14 @@ export const ERROR_TYPE_COPY = {
     sentence: "Papers were found but none could be read.",
     recovery: "Ask again and edit the arXiv queries.",
   },
+  upstream_model: {
+    // The provider, not the output. `upstream_model_output` below is
+    // the opposite failure — the model answered and what it said could
+    // not be used — and the two recovery lines have to differ, because
+    // this one clears on its own and that one does not.
+    sentence: "The model provider could not be reached.",
+    recovery: "Ask again in a few minutes.",
+  },
   upstream_model_output: {
     sentence: "The briefing could not be assembled from what was read.",
     recovery: "Ask again to start a new run.",

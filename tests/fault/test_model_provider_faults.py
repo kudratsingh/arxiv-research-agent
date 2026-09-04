@@ -10,25 +10,31 @@ the leg that turns out to be wrong.
 
 | fault | code | events | metrics |
 |---|---|---|---|
-| HTTP 429 | `internal_unexpected` | `llm_upstream_error`, `api_job_failed` | `llm_upstream_errors_total{status="429"}`, `research_jobs_total` |
-| HTTP 500 | `internal_unexpected` | same | `…{status="500"}` |
-| timeout | `internal_unexpected` | same | `…{status="connection"}` |
-| reader gave up | `upstream_paper_read` | `api_job_failed` | `research_jobs_total{error_type="upstream_paper_read"}` |
+| HTTP 429 | `upstream_model` | `llm_upstream_error`, `api_job_failed` | `llm_upstream_errors_total{status="429"}`, `research_jobs_total` |
+| HTTP 500 | `upstream_model` | same | `…{status="500"}` |
+| timeout | `upstream_model` | same | `…{status="connection"}` |
+| every paper died on the provider | `upstream_model` | `api_job_failed` | `research_jobs_total{error_type="upstream_model"}` |
+| papers found, none readable | `upstream_paper_read` | `api_job_failed` | `research_jobs_total{error_type="upstream_paper_read"}` |
 
-**The gap this file documents.** WO-A06 was written expecting a job to
-terminate with `upstream_model` after the retry envelope is spent. No
-such code exists: WO-A01 shipped `upstream_arxiv`,
-`upstream_paper_read` and `upstream_model_output`, and nothing in
-`src/llm.py` converts an SDK error into any of them. A model-provider
-outage — the single most likely upstream failure this system has —
-therefore reaches `research_jobs_total{error_type}` as
-`internal_unexpected`, indistinguishable from a null dereference.
-`upstream_paper_read` only appears when the failure happens to pass
-through the reader's fan-out, which converts it on the way out.
+**The gap this file found, and WO-A17 closed.** WO-A06 was written
+expecting a job to terminate with `upstream_model` after the retry
+envelope is spent. No such code existed: WO-A01 shipped
+`upstream_arxiv`, `upstream_paper_read` and `upstream_model_output`, and
+nothing in `src/llm.py` converted an SDK error into any of them. A
+model-provider outage — the single most likely upstream failure this
+system has — reached `research_jobs_total{error_type}` as
+`internal_unexpected`, indistinguishable from a null dereference,
+*unless* it passed through the reader's fan-out, which converted it to
+`upstream_paper_read` on the way out. The same outage carried a
+different code depending on which node happened to be running, and that
+inconsistency was the part that mattered: neither name is one an
+on-call engineer can act on if the other is equally likely.
 
-The tests below assert the behaviour that exists rather than the one
-the work order assumed, and this docstring is the record of the
-difference.
+`src/llm.py` now raises `errors.UpstreamModel` from both SDK failure
+branches, and the reader raises the same class when *every* paper died
+on the provider — keeping `upstream_paper_read` for the case it was
+named for. The tests below are the ones that found the gap, rewritten
+to pin the fix rather than the symptom.
 """
 
 from __future__ import annotations
@@ -44,7 +50,7 @@ from src import llm as llm_module
 from src.agents.reader import AllPaperAnalysesFailedError
 from src.api.jobs import InMemoryJobStore, Job, JobStatus
 from src.api.runner import run_job
-from src.errors import JOB_ERROR_TYPES, AppError, UpstreamPaperRead
+from src.errors import JOB_ERROR_TYPES, UpstreamModel, UpstreamPaperRead
 
 from .conftest import ScriptedWorkflow, TripleObserver
 
@@ -159,6 +165,14 @@ class TestTheProviderRefusesTheCall:
         and 500 mean different things to an on-call engineer (throttled
         versus broken) and a counter that collapsed them would answer
         neither question.
+
+        The code is `upstream_model` and not `internal_unexpected`,
+        which is the half this test found and WO-A17 fixed. The old
+        answer was the code reserved for "an exception nobody typed is
+        one nobody predicted" — so the most predictable failure in the
+        system shared a metric series with genuine bugs, and an alert on
+        that series could not tell a provider incident from a
+        deployment regression.
         """
         client = _FailingSdkClient(build_error())
         monkeypatch.setattr(llm_module, "_get_client", lambda: client)
@@ -166,7 +180,10 @@ class TestTheProviderRefusesTheCall:
         job = await _run_job_whose_node_calls_the_model("upstream", scripted_workflow)
 
         assert job.status == JobStatus.failed
-        assert job.error_type == AppError.code
+        assert job.error_type == UpstreamModel.code
+        # It is a code a *run* can end as, so the frontend's copy
+        # dictionary owes it a sentence.
+        assert job.error_type in JOB_ERROR_TYPES
         # The job record carries a code, never the SDK's message.
         assert job.error == job.error_type
 
@@ -183,7 +200,7 @@ class TestTheProviderRefusesTheCall:
             code=job.error_type,
             event="api_job_failed",
             instrument="research_jobs_total",
-            attributes={"status": "failed", "error_type": AppError.code},
+            attributes={"status": "failed", "error_type": UpstreamModel.code},
         )
 
     async def test_the_sdk_owns_the_retry_envelope_and_nothing_wraps_it(
@@ -237,24 +254,70 @@ class TestTheProviderRefusesTheCall:
         assert triple.points("llm_upstream_errors_total") == []
 
 
-class TestTheFailureThatDoesGetATypedCode:
-    async def test_a_model_outage_seen_through_the_reader_names_the_upstream(
+class TestTheReaderNamesTheRightUpstream:
+    """The node that used to give the same outage a second name.
+
+    The reader is the only node with a fan-out, so it is the only one
+    that can distinguish "one paper's analysis was unusable" from "the
+    provider is down". WO-A17 makes it say which: a total failure whose
+    every cause was an `UpstreamModel` is a provider outage and is
+    reported as one; a total failure with any other cause keeps
+    `upstream_paper_read`, which is what that code was named for.
+    """
+
+    async def test_a_provider_outage_across_the_whole_fan_out_is_a_model_outage(
         self,
         triple: TripleObserver,
         scripted_workflow: type[ScriptedWorkflow],
         pinned_runner_settings: Any,
     ) -> None:
-        """The one path on which a model outage reaches a client as itself.
+        """Same outage, same code, whichever node was running.
+
+        This is the assertion the class above could not make before: a
+        429 that lands in the reader now reaches
+        `research_jobs_total{error_type}` under the same name as a 429
+        that lands in the planner. An operator alerting on that series
+        gets one signal for one incident instead of two for the same
+        one.
+        """
+        job = Job(job_id="provider-outage", query="q", hitl_bypass=True)
+        store = InMemoryJobStore()
+        await store.create(job)
+
+        await run_job(
+            job,
+            scripted_workflow(
+                raises=UpstreamModel(log_detail="all 3 paper analyses failed")
+            ),
+            store,
+            asyncio.Semaphore(1),
+        )
+
+        assert job.status == JobStatus.failed
+        assert job.error_type == UpstreamModel.code
+        assert job.error_type in JOB_ERROR_TYPES
+
+        triple.assert_triple(
+            code=job.error_type,
+            event="api_job_failed",
+            instrument="research_jobs_total",
+            attributes={"status": "failed", "error_type": UpstreamModel.code},
+        )
+
+    async def test_papers_that_are_merely_unreadable_keep_their_own_code(
+        self,
+        triple: TripleObserver,
+        scripted_workflow: type[ScriptedWorkflow],
+        pinned_runner_settings: Any,
+    ) -> None:
+        """The distinction the fix must not collapse.
 
         `AllPaperAnalysesFailedError` is re-parented onto
-        `UpstreamPaperRead`, so when every per-paper analysis fails —
-        which is what a sustained provider outage does to the reader's
-        fan-out — the job's `error_type` says `upstream_paper_read`
-        rather than `internal_unexpected`. That is the contrast with
-        the class above, and the reason the gap named in this module's
-        docstring is worth closing: the same outage produces a
-        different, less useful code depending on which node happened to
-        be running.
+        `UpstreamPaperRead`, and it stays that way: "papers were found
+        but none of them could be read" is a different incident from a
+        provider outage, with a different fix, and folding the two into
+        one code to make the previous test pass would have traded one
+        misnaming for another.
         """
         job = Job(job_id="unreadable", query="q", hitl_bypass=True)
         store = InMemoryJobStore()

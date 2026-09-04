@@ -77,6 +77,7 @@ const ADDED_SINCE_THE_BRIEF = [
   "session_cost_cap_refused", // ADR 0062
   "internal_unexpected", // ADR 0064
   "internal_dead_letter", // ADR 0068
+  "upstream_model", // WO-A17
 ];
 
 describe("criterion 6 — the mapped values", () => {

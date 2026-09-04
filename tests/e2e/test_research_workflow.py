@@ -165,6 +165,12 @@ class TestFullResearchWorkflow:
         Asserted as a trajectory rather than as a final state for
         exactly that reason: `iteration == 2` is also what a graph that
         re-ran the whole pipeline would report.
+
+        This is the test that found the off-by-one WO-A17 fixes. It used
+        to pin `max_iterations + 1` passes and a counter one above its
+        own ceiling — the shipped behaviour at the time, and unarguably
+        wrong the moment it was written down next to the message that
+        rendered `(iteration 3/2)`.
         """
         responses = e2e_fixtures("research_llm_responses")
         settings = install_settings(
@@ -188,25 +194,29 @@ class TestFullResearchWorkflow:
             "reader",
             "synthesizer",
             "critic",
-            # Two revisions, each back to the node the critic named —
-            # not a re-plan, not a re-search, and not a rerun of the
-            # whole pipeline. Then a third critic pass that the ceiling
-            # forces to approve.
-            "synthesizer",
-            "critic",
+            # One revision, back to the node the critic named — not a
+            # re-plan, not a re-search, and not a rerun of the whole
+            # pipeline. Then the second critic pass, which *is* the
+            # ceiling and so is forced to approve.
             "synthesizer",
             "critic",
         ]
 
-        # `max_iterations + 1`, and deliberately written that way rather
-        # than as a bare 3. The critic compares *before* it increments
-        # (`if iteration >= settings.max_iterations` then
-        # `"iteration": iteration + 1`), so the run makes one more pass
-        # than the ceiling names and the counter it reports overshoots
-        # it by one. That is the shipped behaviour, and pinning it here
-        # is the point: it is invisible to a unit test of the critic,
-        # which never sees the loop it bounds.
-        assert final["iteration"] == settings.max_iterations + 1
+        # Exactly `max_iterations`, and written that way rather than as
+        # a bare 2 so the assertion tracks the setting. The critic now
+        # compares the pass it is about to record (`iteration + 1`)
+        # against the ceiling, so `max_iterations` critic passes happen
+        # and the counter stops on its own ceiling instead of one above
+        # it. Invisible to a unit test of the critic, which never sees
+        # the loop it bounds — which is why this tier owns it.
+        assert final["iteration"] == settings.max_iterations
+
+        # And the learner-visible half of the same defect: the message
+        # the critic stamps on its last pass reads `2/2`, never `3/2`.
+        assert (
+            f"iteration {settings.max_iterations}/{settings.max_iterations}"
+            in final["messages"][-1].content
+        )
 
         # The ceiling ends the run by forcing an approval and clearing
         # the target, not by breaking the edge — so a passing run has a

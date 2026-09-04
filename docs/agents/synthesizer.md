@@ -18,10 +18,11 @@ flowchart LR
   IN["paper_analyses · papers<br/>query · critique"] --> PATH{"enable_evidence_store<br/>and state.evidence?"}
   PATH -->|"no"| BASE["SYSTEM_PROMPT<br/>analyses only"]
   PATH -->|"yes"| EVI["EVIDENCE_SYSTEM_PROMPT<br/>+ evidence bank by sub-question"]
-  BASE --> CALL["call_llm_json, max_tokens 8192<br/>one corrective retry"]
+  BASE --> CALL["call_llm_json, max_tokens 8192<br/>one corrective retry, budget permitting"]
   EVI --> CALL
   CALL -->|"usable draft"| OUT["draft_report<br/>citations"]
   CALL -->|"retry also unusable"| ERR["SynthesizerOutputError<br/>job fails with that error_type"]
+  CALL -->|"retry would overrun the job budget"| ERR
   OUT --> CRITIC["critic agent"]
   OUT --> VER["verifier agent<br/>(supervisor loop only)"]
 ```
@@ -106,6 +107,7 @@ prompt do the work.
 |---|---|---|
 | Unparseable JSON, non-object JSON, or empty `draft_report` (typically `max_tokens` truncation) | `_call_with_one_retry` | Retried exactly once with a corrective "return only the JSON object" nudge — one cheap call can rescue the whole already-billed run (ADR 0041). The output cap is 8192 (was 4096, which left no margin over a full report's ~3000-3300 tokens and made truncation deterministic). |
 | Retry also unusable | `_call_with_one_retry` | Raises the typed `SynthesizerOutputError`, so the job's `error_type` names the real failure instead of a generic `JSONDecodeError`. The report is the product; there is no honest fallback for it. |
+| First attempt unusable, and a second would not fit the job budget | `_second_attempt_fits` | The retry is skipped and `SynthesizerOutputError` is raised immediately, with a `synthesizer_retry_budget_exhausted` WARNING carrying the elapsed time, the budget and the worst case. ADR 0068 follow-up 3: `src/llm.py` clamps *one* call chain against `api_job_timeout_sec`, and this node makes the call twice — worst case 2 x 5 x 120s against a 600s job. Bounding the pair is the fix; removing the retry would delete a real recovery. |
 | `citations` is not a list | `_parse_citations` | Logged as `synthesizer_citations_not_a_list`; treated as no citations. The report still ships. |
 | Malformed `citations` entries (non-dict, or blank `title`) | `_parse_citations` | Individually dropped, tallied in one `synthesizer_citations_dropped` WARNING; a thinner citation list is still a real report, and the verifier/critic flag citation gaps downstream. |
 | Anthropic 429 / other transport exception | `call_llm_json` | Propagates. Synthesizer intentionally doesn't retry transport errors above the SDK layer (ADR 0009); the single ADR 0041 retry targets only *format* failures the SDK can't see. |
@@ -126,6 +128,12 @@ Settings that drive the synthesizer (see `src/config.py`):
   trade quality for cost.
 - `enable_prompt_caching: bool = False` — system-prompt caching
   (ADR 0022).
+- `api_job_timeout_sec: int = 600` — read here, not just by the runner.
+  The corrective retry is only issued when the first attempt's elapsed
+  time plus one more clamped call chain fits inside 75% of it — the
+  same share `src/llm.py` gives a single chain, because this node
+  produces the deliverable and a smaller share would refuse the retry
+  on every deployment.
 
 ## Testing
 
@@ -140,6 +148,11 @@ Settings that drive the synthesizer (see `src/config.py`):
 - Parse defense: `tests/test_parse_defense.py` — the one-retry path,
   the typed `SynthesizerOutputError`, and per-entry citation dropping
   (ADR 0041).
+- Retry budget: `tests/fault/test_call_chain_budget_faults.py` — the
+  fault tier drives a first attempt that returns something unusable
+  after most of the job budget has gone and asserts no second call is
+  made, that the WARNING carries the arithmetic, and that a fast first
+  attempt still gets its retry.
 - LLM-call plumbing: `tests/test_agent_model_routing.py` (the
   `synthesizer_model` override) and `tests/test_agent_cache_flag.py`
   (the prompt-caching flag).

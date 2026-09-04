@@ -311,6 +311,36 @@ class TestTheJobVocabulary:
                     found.add(cls.code)
         return found
 
+    def _raised_in(self, path: Path) -> set[str]:
+        """Codes of the `AppError` classes a module raises directly.
+
+        `src/llm.py` is the job path's one failure site that belongs to
+        no agent module — every node reaches the provider through it —
+        so its class lives in `src/errors.py` and the module-prefix
+        derivation below cannot see it. Read out of the source rather
+        than listed, for the same reason nothing else in this class is
+        listed: a hand-maintained entry is the one that goes stale.
+        """
+        import src.errors as errors_module
+
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        found: set[str] = set()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Raise):
+                continue
+            called = node.exc
+            name = (
+                called.func
+                if isinstance(called, ast.Call)
+                else called
+            )
+            if not isinstance(name, ast.Name):
+                continue
+            cls = getattr(errors_module, name.id, None)
+            if isinstance(cls, type) and issubclass(cls, AppError):
+                found.add(cls.code)
+        return found
+
     def test_every_statically_assigned_error_type_is_in_the_set(self) -> None:
         assigned = self._assigned_error_types(
             ROOT / "src" / "api" / "runner.py"
@@ -348,6 +378,7 @@ class TestTheJobVocabulary:
         producible.add(_as_app_error(JobCancelledError("j", "cancelled")).code)
         producible.add(_as_app_error(CostBudgetExceeded(1.0, 0.5)).code)
         producible.add(_as_app_error(RuntimeError("anything")).code)
+        producible |= self._raised_in(ROOT / "src" / "llm.py")
 
         assert producible <= JOB_ERROR_TYPES, producible - JOB_ERROR_TYPES
 
@@ -365,11 +396,17 @@ class TestTheJobVocabulary:
         static = self._assigned_error_types(
             ROOT / "src" / "api" / "runner.py"
         ) | self._assigned_error_types(ROOT / "src" / "api" / "redriver.py")
-        dynamic = {
-            cls.code
-            for cls in _subclasses(AppError)
-            if cls.__module__.startswith(("src.agents.", "src.tools."))
-        } | {"cancelled_job", "cost_budget_exceeded", "internal_unexpected"}
+        dynamic = (
+            {
+                cls.code
+                for cls in _subclasses(AppError)
+                if cls.__module__.startswith(("src.agents.", "src.tools."))
+            }
+            | {"cancelled_job", "cost_budget_exceeded", "internal_unexpected"}
+            # The model call is the job path's one failure site with no
+            # owning agent module; `src/llm.py` raises it by name.
+            | self._raised_in(ROOT / "src" / "llm.py")
+        )
 
         assert static | dynamic == JOB_ERROR_TYPES
 
