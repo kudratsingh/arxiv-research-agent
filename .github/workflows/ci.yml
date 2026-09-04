@@ -13,6 +13,15 @@ name: ci
 # Design: docs/decisions/0024-pr-ci-lint-mypy-tests.md; the web tiers are
 # docs/revamp/04-ARCHITECTURE.md §7.5 and docs/revamp/05-MIGRATION.md §3
 # items C4, C7, C8, C9, C10 (WO-24), on top of C1/C2 (WO-25).
+#
+# EVERY NETWORK STEP IN THIS FILE IS BOUNDED. Each `npm ci` carries a
+# step-level `timeout-minutes` and npm fetch settings (the reasoning is written
+# out once, on the `web` job's install step); the Playwright browser download
+# and the web image build carry their own. A job-level ceiling is a backstop
+# for the job, not a bound on a step that hangs — on 2026-09-04 an unbounded
+# advisory-endpoint call inside `web` consumed that job's whole 15 minutes and
+# its four real gates were cancelled unreported. `web-audit` exists because of
+# that day.
 
 on:
   pull_request:
@@ -270,6 +279,18 @@ jobs:
       - name: Build web image
         # Separate cache scope from the API image so the two builds do
         # not evict each other from the GHA cache.
+        #
+        # This job's `npm ci` is the one inside web/Dockerfile, so the
+        # NPM_CONFIG_FETCH_* env the other web jobs set cannot reach it — those
+        # are runner-process variables and this install runs in a build
+        # container. (Threading them through would mean `ARG`s in the
+        # Dockerfile, which changes the shipped image's build contract for a CI
+        # concern; not worth it.) A step bound is what is available, and it is
+        # the part that matters: 18 s measured on a green run (33731289742) and
+        # 1m21s on the degraded one, so 12 min is a wide ceiling that still
+        # leaves the smoke probes below room to run and report inside the
+        # job's 15.
+        timeout-minutes: 12
         uses: docker/build-push-action@v6
         with:
           context: ./web
@@ -367,9 +388,25 @@ jobs:
   web:
     name: web (typecheck + lint + test + build)
     runs-on: ubuntu-latest
-    # WO-24 raised this from 10: the job now also collects coverage, runs the
-    # dependency audit gate, and runs the production build once under
-    # `npm run budgets` instead of bare `npm run build`.
+    # Four gates live here and every one of them is local compute: typecheck,
+    # ESLint + contract drift, Vitest with coverage thresholds, and the
+    # production build under `npm run budgets`. Measured end to end on a green
+    # run they are ~4 min (run 33731289742: 4m50s including the audit this job
+    # no longer runs), and the only step in the job that touches the network is
+    # `npm ci`, which now carries its own bound below.
+    #
+    # The dependency audit used to run here, right after `npm ci`. It is a
+    # network-bound call to npm's advisory endpoint with no bound of its own,
+    # and on 2026-09-04 that endpoint degraded: the audit took 9m37s (run
+    # 33847548135) and 4m52s (run 33847950556) on top of a 4-7 min install, so
+    # this job hit the 15-minute ceiling and was CANCELLED before Vitest and
+    # the build finished — three PRs and three main runs produced no test
+    # result at all because of an advisory lookup. It is now `web-audit`, its
+    # own job with its own timeouts, so a slow registry costs one cheap rerun
+    # of one job instead of every gate in this one.
+    #
+    # 15 stays as headroom for a cold npm cache plus the coverage and build
+    # tiers; it is no longer a budget the registry can spend.
     timeout-minutes: 15
     defaults:
       run:
@@ -384,30 +421,34 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies
-        run: npm ci
-      - name: Dependency audit gate
-        # WO-24 / 05-MIGRATION.md C4. Two gates in one script
-        # (web/scripts/audit-gate.mjs), because one would have had to be
-        # wrong: `npm audit --audit-level=high --omit=dev` must report ZERO
-        # advisories and has no exception mechanism, while the dev tree is
-        # checked against web/audit-exceptions.json and fails on anything
-        # that file does not name — or on an entry that no longer matches.
-        # C4's baseline of 0 was captured before WO-06 added Storybook, whose
-        # framework package pulls an unfixed `image-size` advisory; the split
-        # keeps that from becoming a reason to lower `--audit-level`.
+        # THE NPM FETCH BOUNDS, stated once here and referenced by every other
+        # `npm ci` in this repository's workflows.
         #
-        # Runs directly after `npm ci` so a red tree is reported before the
-        # rest of the job spends five minutes on it.
-        run: npm run audit:gate
-      - name: Upload npm audit report
-        # Collected into the Gate 4 evidence pack by WO-33.
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-npm-audit
-          path: web/npm-audit.json
-          if-no-files-found: warn
-          retention-days: 14
+        # npm's defaults are fetch-timeout 300000 (five minutes PER REQUEST),
+        # fetch-retries 2 and fetch-retry-maxtimeout 60000 — so a single
+        # unresponsive registry request can burn ~15 min inside a step that
+        # declares no bound, which is exactly what happened on 2026-09-04.
+        # The values below are sized from the measured healthy shape: this
+        # whole install is 16-19 s on a green run (33731289742).
+        #
+        #   FETCH_TIMEOUT 60000        a request that has not answered in 60 s
+        #                              is not going to; fail it and retry.
+        #   FETCH_RETRIES 2            npm's default, kept deliberately — a
+        #                              flaky request should still be retried.
+        #                              The defect was the five-minute attempt,
+        #                              not the retry.
+        #   FETCH_RETRY_MAXTIMEOUT     caps the backoff between attempts at
+        #     20000                    20 s instead of 60 s.
+        #
+        # Worst case for one request is therefore 60 + 10 + 60 + 20 + 60 =
+        # 210 s, inside the 5-minute step bound — which is itself ~15x the
+        # measured install, so it only ever fires on a degraded registry.
+        timeout-minutes: 5
+        env:
+          NPM_CONFIG_FETCH_TIMEOUT: "60000"
+          NPM_CONFIG_FETCH_RETRIES: "2"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "20000"
+        run: npm ci
       - name: TypeScript typecheck
         run: npm run typecheck
       - name: ESLint
@@ -468,6 +509,86 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  web-audit:
+    name: web dependency audit
+    # WO-24 / 05-MIGRATION.md C4, moved out of the `web` job on 2026-09-04.
+    #
+    # WHAT THE GATE ASSERTS IS UNCHANGED. Two gates in one script
+    # (web/scripts/audit-gate.mjs), because one would have had to be wrong:
+    # `npm audit --audit-level=high --omit=dev` must report ZERO advisories and
+    # has no exception mechanism, while the dev tree is checked against
+    # web/audit-exceptions.json and fails on anything that file does not name —
+    # or on an entry that no longer matches. C4's baseline of 0 was captured
+    # before WO-06 added Storybook, whose framework package pulls an unfixed
+    # `image-size` advisory; the split keeps that from becoming a reason to
+    # lower `--audit-level`.
+    #
+    # WHY ITS OWN JOB. The gate's two `npm audit` calls are the only network
+    # I/O in the whole web tier that depends on a service other than the
+    # registry's package endpoints — npm's advisory database. When that service
+    # degraded (2026-09-04), the audit ran 5-10 min per call and the `web` job
+    # was cancelled at its 15-minute ceiling with typecheck, Vitest and the
+    # build unreported. The old rationale for running it early — "so a red tree
+    # is reported before the rest of the job spends five minutes on it" — is
+    # better served here: as a separate job it reports even earlier, in
+    # parallel, and its worst day cannot cancel a single unit test.
+    #
+    # IT IS STILL A HARD GATE. No `continue-on-error`. An audit that could not
+    # run is RED, not green — the same principle audit-gate.mjs applies to a
+    # non-JSON `npm audit` body. On 2026-09-04 the endpoint answered "0
+    # advisories, all 10 exceptions stale" while the GitHub advisory database
+    # still listed those advisories (image-size@2.0.2 GHSA-w3rx-r6r6-pgpr,
+    # tmp@0.1.0 GHSA-ph9p-34f9-6g65, extract-zip@2.0.1 GHSA-jmr9-qjv8-65gv):
+    # a data-source failure whose only correct outcome is a red job and a
+    # rerun, never a deleted exception.
+    runs-on: ubuntu-latest
+    # Install (5) + audit (6) + checkout/setup, with the step bounds below
+    # doing the real work. The job ceiling is the backstop, not the budget.
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Keep in lockstep with web/Dockerfile and the `web` job.
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        # Same bounds as the `web` job's install; the reasoning is written out
+        # there, in full, once.
+        timeout-minutes: 5
+        env:
+          NPM_CONFIG_FETCH_TIMEOUT: "60000"
+          NPM_CONFIG_FETCH_RETRIES: "2"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "20000"
+        run: npm ci
+      - name: Dependency audit gate
+        # 1 s on a green run (33731289742), 9m37s on the degraded one
+        # (33847548135). The script makes two sequential `npm audit` POSTs, so
+        # with the fetch bounds above its worst case is ~7 min and this
+        # 6-minute ceiling is what actually stops it — deliberately: a run that
+        # has spent six minutes failing to reach the advisory database has
+        # already told us everything it is going to. Red, and rerun.
+        timeout-minutes: 6
+        env:
+          NPM_CONFIG_FETCH_TIMEOUT: "60000"
+          NPM_CONFIG_FETCH_RETRIES: "2"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "20000"
+        run: npm run audit:gate
+      - name: Upload npm audit report
+        # Collected into the Gate 4 evidence pack by WO-33. Moved here with the
+        # step that writes it — `web` no longer produces this artifact.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-npm-audit
+          path: web/npm-audit.json
+          if-no-files-found: warn
+          retention-days: 14
+
   web-storybook:
     name: web storybook (static build + story tests)
     # WO-24 / 05-MIGRATION.md C9. Two things this job proves that the `web`
@@ -500,6 +621,15 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Install dependencies
+        # Same bounds as the `web` job's install; the reasoning is written out
+        # there, in full, once. This install measured 16 s on a green run and
+        # 6m15s on 2026-09-04's degraded registry (run 33847548135) — under
+        # this job's ceiling only because it had little left to do afterwards.
+        timeout-minutes: 5
+        env:
+          NPM_CONFIG_FETCH_TIMEOUT: "60000"
+          NPM_CONFIG_FETCH_RETRIES: "2"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "20000"
         run: npm ci
       - name: Story tests
         # The `storybook` project from web/vitest.config.mts: every story
@@ -575,10 +705,26 @@ jobs:
         # playwright.config.ts starts one on its own port for the single
         # assertion a production build cannot make (React's double effect
         # invocation is development-only).
+        #
+        # Same bounds as the `web` job's install; the reasoning is written out
+        # there, in full, once. Measured 19 s on a green run (33731289742).
+        timeout-minutes: 5
+        env:
+          NPM_CONFIG_FETCH_TIMEOUT: "60000"
+          NPM_CONFIG_FETCH_RETRIES: "2"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "20000"
         run: npm ci
       - name: Install Playwright browsers
         # Downloading firefox and webkit on every PR would add minutes for
         # browsers no PR job runs. `e2e:install` is the three-browser form.
+        #
+        # The other network step in this job, and it does NOT go to the npm
+        # registry — Playwright fetches its own browser bundles from its CDN
+        # and `--with-deps` runs apt, so the fetch settings above do not reach
+        # it and a step bound is the only thing that can. 2m02s measured for
+        # the full three-browser matrix (33731289742); 10 min is five times
+        # that, so it fires only when a download is genuinely stuck.
+        timeout-minutes: 10
         run: |
           if [ "$E2E_FULL_MATRIX" = "true" ]; then
             npm run e2e:install

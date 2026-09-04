@@ -94,8 +94,42 @@ describe("the web tiers are wired", () => {
     expect(workflow).toContain("npm run test -- --coverage");
   });
 
-  it("runs the dependency audit gate (C4)", () => {
+  it("runs the dependency audit gate (C4) as its own hard-gating job", () => {
     expect(workflow).toContain("npm run audit:gate");
+
+    // 2026-09-04: the gate is a network call to npm's advisory endpoint, and
+    // running it inside `web` let a degraded endpoint spend that job's whole
+    // 15-minute ceiling — typecheck, Vitest and the build were cancelled
+    // unreported on three PRs and three main runs. It is `web-audit` now, and
+    // the property that makes that a fix rather than a hiding place is that it
+    // stays RED when it cannot run: an audit that did not answer is not a
+    // passing audit.
+    const start = workflow.indexOf("\n  web-audit:");
+    const end = workflow.indexOf("\n  web-storybook:");
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const auditJob = workflow.slice(start, end);
+    expect(auditJob).toContain("name: web dependency audit");
+    expect(auditJob).toContain("npm run audit:gate");
+    // Comments stripped: the job's own prose says why there is no
+    // `continue-on-error` here, and that sentence is not the key.
+    expect(auditJob.replace(/^\s*#.*$/gm, "")).not.toMatch(/continue-on-error/);
+    // The artifact moved with the step that writes it; it is not duplicated.
+    expect(workflow.match(/name: web-npm-audit/g) ?? []).toHaveLength(1);
+    expect(auditJob).toContain("name: web-npm-audit");
+  });
+
+  it("bounds every npm install, so no step can spend a job's whole ceiling", () => {
+    // A job-level `timeout-minutes` is a backstop for the job, not a bound on
+    // a step that hangs. npm's default fetch-timeout is five minutes PER
+    // REQUEST with two retries, which is how one advisory lookup cost fifteen.
+    // The workflow overrides that beside every install, and every install
+    // declares its own step timeout.
+    const installs = workflow.match(/^ +run: npm ci$/gm) ?? [];
+    expect(installs.length).toBeGreaterThanOrEqual(4);
+    const bounded = workflow.match(/NPM_CONFIG_FETCH_TIMEOUT/g) ?? [];
+    // >= because the audit step carries the same settings for its own fetches.
+    expect(bounded.length).toBeGreaterThanOrEqual(installs.length);
   });
 
   it("runs the route budget check and uploads its report (C7)", () => {
