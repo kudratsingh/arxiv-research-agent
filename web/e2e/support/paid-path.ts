@@ -58,10 +58,11 @@ import { assertMockModeStack } from "./mock-mode";
  * stack pins `USE_MOCK_DATA=true` AND `ANTHROPIC_API_KEY=local-preview-
  * disabled` — checked in the overlay the stack is brought up from and, when
  * a daemon is reachable, in the running container too. Under mock mode the
- * session graph constructs no model client on any path (`src/agents/tutor.py`
- * `:165` and `:254`, `src/agents/assessment.py:178`), so the pass-through
- * spends nothing BY CONSTRUCTION rather than because a key would have been
- * rejected. `/api/research` and `/api/conversations` have no such mode and
+ * session graph constructs no model client on any path (`_fallback_plan` and
+ * `_tutor_prompts` in `src/agents/tutor.py`, `assessment_judge` in
+ * `src/agents/assessment.py` — each with its own `use_mock_data` branch), so
+ * the pass-through spends nothing BY CONSTRUCTION rather than because a key
+ * would have been rejected. `/api/research` and `/api/conversations` have no such mode and
  * never will: a research run under mock mode is still a run, and the claim
  * this file exists to make about them is structural.
  *

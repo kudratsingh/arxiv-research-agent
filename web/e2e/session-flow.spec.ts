@@ -22,10 +22,11 @@
  * disabled`, checked in the overlay and — when a daemon is reachable — in the
  * running container. Under `use_mock_data` the session graph constructs no
  * model client anywhere: `check_in_agent` returns `_fallback_plan`
- * (`src/agents/tutor.py:165`), `_tutor_prompts` returns two constants
- * (`:254`), `assess_agent`'s judge has its own mock branch
- * (`src/agents/assessment.py:178`). Zero paid calls BY CONSTRUCTION, which is
- * a stronger claim than "the key would not have worked anyway". The
+ * (`src/agents/tutor.py`), `_tutor_prompts` returns two constants from its
+ * own `use_mock_data` branch (same file), `assess_agent`'s judge has its own
+ * mock branch (`assessment_judge` in `src/agents/assessment.py`). Zero paid
+ * calls BY CONSTRUCTION, which is a stronger claim than "the key would not
+ * have worked anyway". The
  * assertion is printed into the run log and recorded in
  * `build/e2e/research-post-count.txt`, and the last test here reads
  * `llm_calls` back off the finished session as the outcome-side proof.
@@ -53,11 +54,20 @@ const FIRST_RESOURCE = "arxiv:1706.03762";
 const SESSION_URL = /\/learn\/sessions\/[0-9a-f]{16}$/;
 
 /**
- * The tutor's mock feedback, verbatim from `src/agents/tutor.py:254`.
+ * The tutor's mock feedback, verbatim from the `use_mock_data` branch of
+ * `_tutor_prompts` (`src/agents/tutor.py`).
  *
  * Asserted because it is the shortest proof that the graph ran a tutor node
  * on this stack rather than the harness answering: no fixture in this tier
  * contains it, and it only exists once `POST /turn` has resumed the run.
+ *
+ * Backend-side, the copy cannot drift silently: it is recorded into
+ * `tests/fixtures/learning/recorded_mock_sessions/`, and
+ * `tests/test_record_learning_fixtures.py::TestTheCheckedInSetIsFresh::
+ * test_a_fresh_recording_reproduces_the_committed_files` fails until someone
+ * re-records with `make record-learning-fixtures`. That obliges a visible
+ * diff on any change to this string; keeping THIS constant in step with it is
+ * still a manual step, and a mismatch shows up as this spec failing.
  */
 const MOCK_TUTOR_FEEDBACK = "I recorded that as your own observation";
 
