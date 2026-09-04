@@ -96,6 +96,19 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
+        # Same bounds as ci.yml's `web` job install, where the reasoning is
+        # written out in full: npm's default fetch-timeout is five minutes PER
+        # REQUEST with two retries, so one unresponsive registry request can
+        # burn a quarter-hour inside a step that declares no bound — which is
+        # what cancelled three `web` jobs on 2026-09-04. This install is
+        # seconds on a healthy run; 5 min is the fail-fast ceiling, and a
+        # nightly that dies at the install is far cheaper to reread than one
+        # that dies mid-Lighthouse with no measurement.
+        timeout-minutes: 5
+        env:
+          NPM_CONFIG_FETCH_TIMEOUT: "60000"
+          NPM_CONFIG_FETCH_RETRIES: "2"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "20000"
         run: npm ci
 
       - name: Locate Chrome

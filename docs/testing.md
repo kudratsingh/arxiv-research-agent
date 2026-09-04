@@ -18,10 +18,10 @@ web suite" below. `e2e` means different things in the two: in Python it
 is an unused marker reserved for a cassette tier, and in `web/` it is
 the Playwright tier, which is built and gating today.
 
-Two numbers in this page are both eight and they are **not the same
-eight**: CI runs eight parallel *jobs*, and the web suite has eight
-*tiers*. Several tiers share the `web` job; two jobs (`lint`,
-`docker-build`) carry no web tier at all.
+Two counts in this page are **not the same list**: CI runs **nine**
+parallel *jobs*, and the web suite has **eight** *tiers*. Several tiers
+share the `web` job; three jobs (`lint`, `docker-build`, `web-audit`)
+carry no web tier at all.
 
 ## Layout — flat, marker-selected
 
@@ -56,7 +56,7 @@ carries no marker at all.** That matters for selection:
 ## What actually gates a merge
 
 The per-PR CI workflow (`.github/workflows/ci.yml`, design in ADR
-[0024](decisions/0024-pr-ci-lint-mypy-tests.md)) runs eight parallel
+[0024](decisions/0024-pr-ci-lint-mypy-tests.md)) runs nine parallel
 jobs on every PR and every push to `main`:
 
 1. `lint` — `ruff check .`
@@ -74,10 +74,23 @@ jobs on every PR and every push to `main`:
 5. `web-image` — `docker build ./web`, run it against a stub upstream,
    probe `/` and `/api/healthz` through the proxy
 6. `web` — TypeScript typecheck, ESLint, contract drift, Vitest **with
-   coverage thresholds**, the **dependency audit gate**, and the
-   production build **with the route budget check**
-7. `web-storybook` — story tests and the static Storybook build
-8. `web-e2e` — Compose up + seed + Playwright + axe, chromium only
+   coverage thresholds**, and the production build **with the route
+   budget check**. Four gates, all of them local compute, ~4 min
+7. `web-audit` — the **dependency audit gate** (`npm run audit:gate`).
+   Its own job since 2026-09-04, because it is the one web gate whose
+   answer comes from a remote service (npm's advisory endpoint): when
+   that endpoint degraded, an unbounded audit call spent the whole
+   `web` job ceiling and the four gates above were cancelled unreported
+   on three PRs and three main runs. It is a **hard gate** — an audit
+   that could not run is red, not green — but it can no longer take
+   anything else down with it. Uploads the `web-npm-audit` artifact
+8. `web-storybook` — story tests and the static Storybook build
+9. `web-e2e` — Compose up + seed + Playwright + axe, chromium only
+
+Every network step in that workflow carries its own `timeout-minutes`
+and npm fetch bounds (`NPM_CONFIG_FETCH_TIMEOUT` and friends), because
+a job-level ceiling bounds the *job*, not a step that hangs — npm's
+default is a five-minute timeout **per request** with two retries.
 
 Nothing else gates a merge. Three schedules run beside it, none of them
 blocking a PR:
@@ -164,13 +177,15 @@ against the markup it produced before that descriptor existed, and
 mode-off byte-identity claim. `web/e2e/README.md` §"The pilot tier" is
 the manual.
 
-Two further gates ride on these tiers rather than being tiers of their
-own — both are red jobs, not reports:
+Two further gates are not tiers of their own — both are red jobs, not
+reports. Coverage rides on the Vitest tier inside `web`; the dependency
+audit runs as the separate `web-audit` job (see "What actually gates a
+merge" above for why it is not inside `web`):
 
-| Gate | Command | What fails it |
-|---|---|---|
-| Coverage | `npm run test -- --coverage` | falling below the thresholds in `web/vitest.config.mts` |
-| Dependency audit | `npm run audit:gate` | any high/critical advisory in the production tree, or one in the dev tree that `web/audit-exceptions.json` does not name |
+| Gate | Command | Where | What fails it |
+|---|---|---|---|
+| Coverage | `npm run test -- --coverage` | `web` | falling below the thresholds in `web/vitest.config.mts` |
+| Dependency audit | `npm run audit:gate` | `web-audit` | any high/critical advisory in the production tree, or one in the dev tree that `web/audit-exceptions.json` does not name — or an audit that could not reach npm's advisory endpoint inside its 6-minute bound |
 
 **Tier 8's second half: Lighthouse, nightly.** The byte budgets gate
 every PR; the *performance* budgets are asserted by Lighthouse CI on

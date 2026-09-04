@@ -476,19 +476,27 @@ restarts (the compose stack wires this up automatically).
 
 ## Tests and CI
 
-Every PR and every push to `main` runs **eight parallel jobs**: ruff,
+Every PR and every push to `main` runs **nine parallel jobs**: ruff,
 strict mypy, the whole Python suite (**1,447 tests**, unit + integration
 tiers), a Docker image build with base and production compose-file
 validation, a web image smoke test probing `/` and `/api/healthz`
 through the proxy, the web tier (TypeScript, ESLint, generated-type
-drift, **2,970 Vitest tests across 136 files** with coverage floors, a
-production build with per-route JS budgets, and a dependency-audit
-gate), the Storybook static build with story tests, and Playwright +
-`@axe-core/playwright` against a seeded Compose stack pinned to a
-deliberately invalid API key. The same workflow runs nightly with the
-full browser matrix (firefox, webkit and two device profiles) instead of
-chromium alone — the tiers, what fails each one, and the local
-equivalents are in [`docs/testing.md`](docs/testing.md).
+drift, **2,970 Vitest tests across 136 files** with coverage floors, and
+a production build with per-route JS budgets), the dependency-audit gate
+in its own bounded job, the Storybook static build with story tests, and
+Playwright + `@axe-core/playwright` against a seeded Compose stack
+pinned to a deliberately invalid API key. The same workflow runs
+nightly with the full browser matrix (firefox, webkit and two device
+profiles) instead of chromium alone — the tiers, what fails each one,
+and the local equivalents are in [`docs/testing.md`](docs/testing.md).
+
+The audit is a job of its own because it is the only web gate whose
+answer comes from a remote service: on 2026-09-04 npm's advisory
+endpoint degraded, an unbounded audit call spent the whole `web` job
+ceiling, and four gates that had nothing to do with the registry were
+cancelled without ever reporting. It is still a hard gate — an audit
+that could not run is red — and every network step in the workflow now
+carries its own timeout.
 
 ```bash
 pytest tests/ -q -m "not e2e"        # the Python half of the gate
