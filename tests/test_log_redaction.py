@@ -27,7 +27,7 @@ import pytest
 
 from src.observability import JsonFormatter, redact_text, redact_url
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.security]
 
 
 class TestRedactUrl:

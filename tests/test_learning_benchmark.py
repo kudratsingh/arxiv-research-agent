@@ -18,6 +18,8 @@ import copy
 import re
 from pathlib import Path
 
+import pytest
+
 from src.eval.learning_benchmark import (
     ASSESSMENT_OUTCOMES,
     BENCHMARK_PAPERS,
@@ -36,6 +38,8 @@ from src.eval.learning_benchmark import (
     validate_scenario,
 )
 from src.tools.chunker import SECTION_HEADERS
+
+pytestmark = pytest.mark.unit
 
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 

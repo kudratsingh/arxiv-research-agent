@@ -25,7 +25,7 @@ from src.api.schemas import (
     ReviewRequest,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.security]
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 

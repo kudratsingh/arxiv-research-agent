@@ -20,7 +20,7 @@ import pytest
 from src.api.auth import RedisRateLimiter
 from src.errors import RateLimitedError
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.security]
 
 
 @pytest.fixture

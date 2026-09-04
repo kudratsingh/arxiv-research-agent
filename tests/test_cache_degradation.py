@@ -26,7 +26,7 @@ from src.tools import pdf_parser as pdf_parser_module
 from src.tools.embeddings import encode_texts
 from src.tools.pdf_parser import parse_pdf
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.fault]
 
 
 class _ExplodingEmbeddingCache:

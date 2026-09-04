@@ -59,6 +59,8 @@ def _override_settings(monkeypatch: pytest.MonkeyPatch, **overrides: object) -> 
     monkeypatch.setattr(postgres_pool, "settings", fresh)
 
 
+# Per-class tiers: the Postgres section below is `integration`.
+@pytest.mark.unit
 class TestDiskPaperCache:
     def test_get_returns_none_for_missing_key(self, tmp_path: Path) -> None:
         cache = DiskPaperCache(tmp_path)
@@ -163,6 +165,7 @@ class TestPostgresPaperCache:
         assert row[1] == len("some body")
 
 
+@pytest.mark.unit
 class TestFactory:
     def test_defaults_to_disk_impl(
         self, monkeypatch: pytest.MonkeyPatch
@@ -207,6 +210,7 @@ class TestProtocolContract:
         cache.put_text("k1", "http://x/pdf", "body2")
         assert cache.get_text("k1") == "body2"
 
+    @pytest.mark.unit
     def test_disk_impl_satisfies_contract(self, tmp_path: Path) -> None:
         self._run_parity(DiskPaperCache(tmp_path))
 

@@ -5,12 +5,16 @@ normalization, deduplication, year-suffix handling, and the empty-input
 corner cases.
 """
 
+import pytest
+
 from src.eval.metrics import (
     CitationAccuracyResult,
     _normalize_first_author,
     measure_citation_accuracy,
 )
 from src.graph.state import Citation
+
+pytestmark = pytest.mark.unit
 
 
 def _mk_citation(

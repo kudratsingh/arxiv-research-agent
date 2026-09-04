@@ -53,7 +53,7 @@ from src.api.streaming import (
     TERMINAL_EVENT_STATUS,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER_SRC = (ROOT / "src" / "api" / "runner.py").read_text(encoding="utf-8")

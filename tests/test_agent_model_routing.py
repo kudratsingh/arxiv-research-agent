@@ -37,6 +37,8 @@ from src.agents import (
 )
 from src.config import Settings
 
+pytestmark = pytest.mark.unit
+
 
 def _capture_llm(monkeypatch: pytest.MonkeyPatch, module: Any) -> dict[str, Any]:
     """Replace the module's `call_llm_json` with a stub that records the model."""

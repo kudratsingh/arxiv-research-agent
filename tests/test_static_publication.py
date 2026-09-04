@@ -14,6 +14,8 @@ from src.content.static_publication import (
     validate_artifact,
 )
 
+pytestmark = pytest.mark.unit
+
 ROOT = Path(__file__).resolve().parents[1]
 REAL_PATH = ROOT / "content" / "paths" / "reading-first-papers"
 FIXTURE_PATH = ROOT / "content" / "paths" / "fixture-guided-read"

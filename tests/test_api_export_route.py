@@ -15,6 +15,8 @@ from httpx import ASGITransport, AsyncClient
 
 from src.api import create_app
 
+pytestmark = pytest.mark.integration
+
 
 class _StubWorkflow:
     """Bypass-friendly stub that yields a single planner node and

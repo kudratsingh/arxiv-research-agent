@@ -14,6 +14,8 @@ from src.api.streaming import (
     is_terminal_event,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestFormatSSE:
     def test_produces_valid_frame_structure(self) -> None:

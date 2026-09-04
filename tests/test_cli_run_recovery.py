@@ -34,7 +34,7 @@ import pytest
 from src import main as main_module
 from src.graph.state import ResearchState, initial_research_state
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.fault]
 
 
 class _StubApp:

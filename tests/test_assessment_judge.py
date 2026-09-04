@@ -13,7 +13,10 @@ from src.api.sessions import SessionDetail
 from src.cancellation import JobCancelledError
 from src.config import Settings
 from src.graph.session_state import initial_session_state
+from src.learning import memory as memory_module
 from src.observability.costs import CostBudgetExceeded
+
+pytestmark = pytest.mark.unit
 
 
 def _settings(tmp_path: Path, **overrides: object) -> Settings:
@@ -32,6 +35,24 @@ def _settings(tmp_path: Path, **overrides: object) -> Settings:
     }
     values.update(overrides)
     return Settings(**values)  # type: ignore[arg-type]
+
+
+@pytest.fixture(autouse=True)
+def _offline_session_memory(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Keep `generate_session_memory` off the wire.
+
+    `progress_update_agent` summarises the session before it emits any
+    event, and `src/learning/memory.py` reads its own module-level
+    settings to decide whether that summary is mocked or asked of Claude.
+    Neither of the two tests below patched that module, so both opened a
+    live TLS connection to the Anthropic API and passed on the summary
+    the degrade path produced afterwards. WO-A02's spend guard found it.
+
+    Autouse so the next test added here inherits the fix rather than
+    rediscovering it: the mocked branch returns the same summary the
+    degrade path did, so no assertion below changes meaning.
+    """
+    monkeypatch.setattr(memory_module, "settings", _settings(tmp_path, use_mock_data=True))
 
 
 def _state(

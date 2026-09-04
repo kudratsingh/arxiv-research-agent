@@ -55,6 +55,8 @@ from src.eval.runner import (
 from src.graph.state import ResearchState
 from src.observability.logging import current_run_id
 
+pytestmark = pytest.mark.unit
+
 # ---------------------------------------------------------------------------
 # State + record helpers
 # ---------------------------------------------------------------------------

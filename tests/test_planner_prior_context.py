@@ -8,6 +8,8 @@ import pytest
 
 from src.agents.planner import _build_user_prompt, planner_agent
 
+pytestmark = pytest.mark.unit
+
 
 def _state(**overrides: Any) -> dict[str, Any]:
     base: dict[str, Any] = {

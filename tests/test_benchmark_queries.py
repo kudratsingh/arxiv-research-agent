@@ -8,7 +8,11 @@ skewing eval results.
 
 import re
 
+import pytest
+
 from src.eval.benchmark_queries import BENCHMARK_QUERIES, get_queries
+
+pytestmark = pytest.mark.unit
 
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 

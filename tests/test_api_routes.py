@@ -21,6 +21,8 @@ from httpx import ASGITransport, AsyncClient
 from src.api import create_app
 from src.api.jobs import InMemoryJobStore
 
+pytestmark = pytest.mark.integration
+
 
 class StubWorkflow:
     """Minimal stand-in for a compiled LangGraph app.

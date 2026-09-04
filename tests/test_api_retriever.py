@@ -15,6 +15,8 @@ from src.api.retriever import (
     retrieve_prior_context,
 )
 
+pytestmark = pytest.mark.unit
+
 
 def _job(ordinal: int, query: str, report: str) -> ConversationJob:
     return ConversationJob(

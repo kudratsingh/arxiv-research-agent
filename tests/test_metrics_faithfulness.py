@@ -22,6 +22,8 @@ from src.eval.metrics import (
 )
 from src.graph.state import Citation, PaperMetadata
 
+pytestmark = pytest.mark.unit
+
 
 def _mk_paper(
     *, paper_id: str, first_author: str, abstract: str = "Some abstract."

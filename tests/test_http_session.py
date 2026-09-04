@@ -12,6 +12,8 @@ from src.config import Settings
 from src.tools import http_session as http_session_module
 from src.tools.http_session import RETRYABLE_STATUSES, build_retrying_session
 
+pytestmark = pytest.mark.unit
+
 
 class TestBuildRetryingSession:
     def _retry_policy(self, session) -> Retry:

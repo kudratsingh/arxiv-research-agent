@@ -35,7 +35,7 @@ from src.api.jobs import InMemoryJobStore
 from src.config import Settings
 from src.errors import RateLimitedError
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.security]
 
 
 @asynccontextmanager

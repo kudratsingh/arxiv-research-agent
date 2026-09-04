@@ -31,27 +31,70 @@ test module per source module (`tests/test_chunker.py` ↔
 `src/tools/chunker.py`), named so the mapping is obvious. Fixtures
 live in the test modules that use them.
 
-Tier membership is expressed with pytest markers, registered in
-`pyproject.toml` under `[tool.pytest.ini_options].markers`:
+## Markers: two orthogonal axes
 
-- `unit` — pure functions, no I/O, no network, no LLM calls. Fast,
-  deterministic.
-- `integration` — external libraries against local fixtures: fakeredis
-  for Redis, `pytest-postgresql` for Postgres, canned XML for arXiv,
-  a checked-in sample PDF for PyMuPDF. Still no live network.
-- `e2e` — reserved for the full-workflow cassette tier. **Zero tests
-  carry this marker today** (see "Planned, not built" below).
+Markers are registered in `pyproject.toml` under
+`[tool.pytest.ini_options].markers`, and `--strict-markers` means an
+unregistered one is a startup error rather than a test that silently
+never runs. There are two axes and they answer different questions
+(ADR [0065](decisions/0065-test-isolation-and-coverage-floor.md)).
 
-State of the suite on `main` at the time of writing: 1,400+ tests
-collected (1,426 at the last count), of which ~520 carry an explicit
-`unit` marker and ~200 carry `integration`. **Roughly half the suite
-carries no marker at all.** That matters for selection:
+**Tier — how much a test costs. Exactly one per test, enforced.**
 
-> An unmarked test is *conceptually* unit-tier, but `pytest -m unit`
-> only selects tests that literally carry the marker. A marker-filtered
-> run is therefore a subset of the suite, not "the fast tier".
-> The only filter that runs the whole suite is the exclusion filter
-> `-m "not e2e"` — which is what CI uses.
+- `unit` — a module or a function in isolation. No server, no compiled
+  LangGraph workflow, no live network. Temp-file I/O is allowed;
+  "no I/O at all" was never the operative rule here and pretending
+  otherwise just pushes tests into the wrong tier.
+- `integration` — external libraries and local servers on fixtures:
+  fakeredis for Redis, `pytest-postgresql` for Postgres, an ASGI app
+  driven through httpx, canned XML for arXiv, a checked-in sample PDF
+  for PyMuPDF. Still no live network.
+- `e2e` — the full workflow end to end at zero spend. **Zero tests carry
+  this marker today** (see "Planned, not built" below).
+
+**Purpose — what a test protects. Zero or more, orthogonal to the tier.**
+
+- `security` — asserts a boundary: tenancy scoping, prompt injection,
+  SSRF, auth, rate limiting, redaction.
+- `property` — hypothesis-driven; asserts an invariant over generated
+  input. **Zero members today**; the tier is WO-A05.
+- `fault` — asserts behaviour when a dependency fails.
+- `contract` — pins a wire shape: OpenAPI snapshot, SSE event names,
+  fixture parity, container and deployment contracts.
+- `network` — the opt-out from the conftest network guard. Exactly one
+  member, the test that proves the opt-out works. A second member should
+  be argued for in a PR body.
+
+The purpose axis is what makes a boundary runnable on its own. Before
+it existed, "run the tenancy and injection tests" had no expression;
+now it is `make test-security`.
+
+**State of the suite** (measured, `pytest --collect-only`): **2,256
+tests collected** from **2,080 `def test_` functions** across **103
+modules** — the gap is parametrization. By tier: 1,929 `unit` + 327
+`integration` = 2,256, which is the whole suite, because the tier axis
+is a partition and a test module with no tier fails
+`tests/test_harness_guards.py`. By purpose: 157 `security`, 86 `fault`,
+40 `contract`, 1 `network`, 0 `property`.
+
+> Earlier versions of this page reported 1,426 collected with "roughly
+> half the suite carrying no marker at all". Both halves of that are now
+> out of date: the count was stale, and the 38 unmarked modules were
+> tagged by WO-A02. `pytest -m unit` is now a real tier rather than an
+> arbitrary subset. CI still selects with `-m "not e2e"`.
+
+**One known gap in the tier data.** Twelve modules marked `unit` build
+a real ASGI app (`tests/test_api_auth.py`, `test_api_lazy_imports.py`,
+`test_api_learn_routes.py`, `test_bounded_executor_cancel.py`,
+`test_contract_learn_fixtures.py`, `test_contract_openapi_snapshot.py`,
+`test_errors.py`, `test_guided_session_graph.py`,
+`test_learn_profile_routes.py`, `test_otel_metrics.py`,
+`test_per_principal_scoping.py`, `test_workflow_startup_once.py`). By
+the definition above they are `integration`. WO-A02 classified the
+*previously unmarked* modules honestly but did not re-tier these,
+because moving twelve modules changes what `make test` runs and that
+belongs in its own reviewable PR. It does not affect the merge gate,
+which selects `-m "not e2e"`.
 
 ## What actually gates a merge
 
@@ -114,18 +157,27 @@ make typecheck
 .venv/bin/python -m ruff check src/ tests/
 ```
 
-**Known trap**: `make test` currently expands to `pytest -m unit`,
-which runs only the explicitly-marked subset — a green
-`make test` is **not** the merge gate. Until the Makefile is aligned
-with CI, use the commands above (or `make test-all`) before opening a
-PR. For the same reason, ADR 0024's follow-up — "add a merge-to-main
-variant that runs `pytest -m 'unit or integration'`" — must **not**
-be closed as written: with about half the suite unmarked, that filter
-would silently drop it — `-m "unit or integration"` selects ~720 of
-~1,430 tests today — while reporting a plausible-looking pass count.
-Either auto-apply the `unit` marker to unmarked tests in
-a `conftest.py` collection hook first, or keep `-m "not e2e"` as the
-single selection knob.
+Plus, for a change that touches `src/`, the coverage floors:
+
+```bash
+make test-cov        # project + per-package floors
+make test-cov-diff   # patch coverage for this branch vs origin/main
+```
+
+Neither runs in CI yet — wiring them into `.github/workflows/ci.yml`
+needs a workflow edit, which WO-A02 did not own. Until that lands they
+are a local gate, and the numbers below are the record of where the
+floors were set.
+
+**`make test` is still not the merge gate.** It expands to
+`pytest -m unit`, which now selects a real tier (1,929 of 2,256 tests)
+rather than an arbitrary subset — but it is a tier, not the suite. The
+merge gate is `-m "not e2e"`. ADR 0024's follow-up ("add a
+merge-to-main variant that runs `pytest -m 'unit or integration'`") is
+now *safe* to close as written, because the tier axis is a partition
+and `-m "unit or integration"` selects all 2,256 tests; the earlier
+objection — that filter silently dropping half the suite — no longer
+holds. It remains redundant with `-m "not e2e"`.
 
 ## The web suite
 
@@ -388,27 +440,188 @@ scikit-learn's own libomp copies, which initialize at import — before
 any Python code of ours runs. `TOKENIZERS_PARALLELISM=false` is
 unrelated to the crash; it only silences the HuggingFace
 fast-tokenizer fork warning. `tests/test_repo_hygiene.py` pins that
-every test target keeps the prefix.
+every test target keeps the prefix, and
+`tests/test_harness_guards.py::TestMakefileTestTargets` pins it for
+targets added after that file was written, by discovering them instead
+of listing them.
+
+`TEST_ENV` also carries `PYTHONHASHSEED=0`. That one is about
+determinism, not about crashes, and it has to be in the environment
+rather than in `conftest.py`: CPython reads it once at interpreter
+start, so setting it from inside a running process reaches only the
+subprocesses the suite spawns.
+
+## The harness: what `tests/conftest.py` guarantees
+
+Until ADR [0065](decisions/0065-test-isolation-and-coverage-floor.md)
+there was **no `conftest.py` anywhere** in the repository. Four
+properties everyone assumed held were only usually true, and the suite
+could not tell you when they did not. All four are now autouse — a test
+cannot forget them, and opting out leaves a marker in the diff.
+
+| Guarantee | What it does | Opt out |
+|---|---|---|
+| Env isolation | The developer's `.env` is not read, and every environment variable `Settings` declares is scrubbed before `src.config` is first imported. The suite then declares its own: `ANTHROPIC_API_KEY=local-preview-disabled`. `Settings(_env_file=...)` still works when a test asks for a file explicitly. | none |
+| Network guard | A `connect`/`connect_ex` to any non-loopback address raises `NetworkAccessDenied`, naming the test. Loopback and unix sockets pass, so `pytest-postgresql` and every ASGI transport are unaffected. DNS is untouched — `tests/test_pdf_parser.py` patches `getaddrinfo` for the SSRF checks. | `@pytest.mark.network` |
+| Spend guard | `src.llm._get_client` raises `LLMSpendDenied` unless a fake is installed — either by patching `_get_client` itself (twenty existing call sites) or by patching `src.llm.anthropic.Anthropic` (what `tests/test_llm.py::TestGetClient` does, since it tests the construction logic). The denial fires on exactly one condition: a real client about to be built with a real key. | install a fake |
+| Determinism | `random` reseeded before *every* test, so a failure reproduces from its node id without a recorded ordering. `numpy`'s global RNG too when it is loaded. A `frozen_clock` fixture is available (not autouse) for the modules that hand-patch time. | `frozen_clock` is opt-in |
+
+Both guard exceptions derive from `BaseException`, not `Exception`.
+That is deliberate: this codebase degrades gracefully on purpose, and
+around fifty `except Exception` sites implement that. A guard those
+handlers can swallow reports a green test for a run that reached the
+internet.
+
+**It found something on day one.** Three tests —
+`tests/test_assessment_judge.py::TestGraphIntegration` (two) and
+`tests/test_guided_session_graph.py::TestSessionApiEndToEnd` — were
+opening live TLS connections to the Anthropic API on every single run,
+including in CI. `progress_update_agent` summarises a session through
+`src/learning/memory.py`, which reads its *own* module-level settings;
+that module was missing from both files' per-module patch lists, so the
+summary call went to the real client, failed on the invalid key, and
+was absorbed by the module's degrade path. The assertions passed. This
+is precisely the failure mode `tests/test_api_smoke_e2e.py` had already
+described in prose — per-module monkeypatching is not a seam — and it
+is the argument for a structural guard over a convention.
+
+**Strictness that comes with it**, all in `[tool.pytest.ini_options]`:
+`--strict-markers` (an unregistered marker is a startup error, so
+`@pytest.mark.uni` can no longer be a test that never runs),
+`--strict-config`, `xfail_strict` (an xfail that starts passing is a
+failure), a 60-second per-test timeout via `pytest-timeout` — about 13×
+the slowest test measured (4.4s) — and `filterwarnings = ["error", ...]`.
+Three scoped exemptions remain, each naming the message it mutes: the
+SWIG `DeprecationWarning`s that faiss and PyMuPDF raise at import
+(`SwigPyObject`, `swigvarlink`, `SwigPyPacked`). They drop out when both
+projects ship a SWIG release that sets `__module__` on its builtin
+types. A fourth exemption was written for Starlette's
+`HTTP_422_UNPROCESSABLE_ENTITY` deprecation — attributed by stack level
+to FastAPI, but really ours, since `src/api/routes.py` read the
+deprecated alias — and was deleted before this landed: WO-A01's error
+taxonomy removed the last reader. A dead exemption is worse than none,
+so exemptions are re-tested, not inherited.
+
+## Coverage policy
+
+The web half has enforced coverage thresholds since WO-24. The Python
+half measured nothing at all — no `pytest-cov`, no `coverage`, nothing
+in the lock, the Makefile or CI. That asymmetry was the finding, not
+the percentage.
+
+**Branch coverage, not line coverage.** Line coverage systematically
+over-reports on compound conditions, and this codebase is full of them;
+a fully line-covered `if a and b` can leave half its outcomes untried.
+
+**Every floor is a measured value, rounded down. The rule is ratchet up
+only.** A threshold nobody can meet is a threshold that gets skipped —
+the same reasoning the web budgets and Vitest thresholds are set by.
+Raising a floor is a normal PR. Lowering one requires the reason in the
+PR body.
+
+Measured on `pytest -m "not e2e"` when the gate was adopted
+(11,214 statements, 3,216 branches):
+
+| Scope | Measured | Floor | Where the floor lives |
+|---|---|---|---|
+| project | 89.21% | **89** | `pyproject.toml` `[tool.coverage.report].fail_under` |
+| `src/api` | 86.60% | **86** | `Makefile` `COV_API` |
+| `src/agents` | 92.59% | **92** | `Makefile` `COV_AGENTS` |
+| `src/security` | 97.37% | **97** | `Makefile` `COV_SECURITY` |
+| `src/eval` | 91.05% | **91** | `Makefile` `COV_EVAL` |
+| changed lines | — | **90** | `Makefile` `COV_DIFF` (`make test-cov-diff`) |
+
+The per-package floors are in the Makefile because coverage.py's
+`fail_under` is global; a project number can hold steady while the one
+package that matters rots underneath it. For reference, the packages
+without a floor measured: `src/tools` 79.31%, `src/learning` 84.94%,
+`src/graph` 90.89%, `src/content` 92.97%, `src/observability` 94.89%.
+`src/tools` and `src/learning` are the two worth a floor next, and
+neither has one yet precisely because setting it would be aspirational
+rather than measured-and-held.
+
+**Patch coverage is the number that matters on a PR.** Project coverage
+improves logarithmically — a large diff can be entirely untested while
+the total barely moves. `make test-cov-diff` runs `diff-cover` against
+`origin/main`, entirely locally: no service, no account, no token.
+
+**Two integrity checks, because coverage gates get gamed.** Both live
+in `tests/test_harness_guards.py`:
+
+1. Exclusions are configured centrally in
+   `[tool.coverage.report].exclude_also`, each with a written reason,
+   and `[tool.coverage.run].omit` is empty and asserted empty — an
+   `omit` entry is an exclusion with no reason and no line in the
+   report. Inline `# pragma: no cover` is capped at its census (16) and
+   every one must carry a reason after a dash. Pragma growth is the most
+   reliable symptom of a gate being met on paper — and this check earned
+   its keep before it merged, catching four new pragmas that arrived
+   with WO-A01 and WO-A03 while WO-A02 was in review.
+2. `--cov-context=test` records which test executed each line, so
+   `coverage html --show-contexts` answers "who covers this?" — the
+   question that exposes code executed by a test that asserts nothing
+   about it.
+
+The real counter-pressure to coverage theatre is the `property` and
+`fault` tiers, not a higher percentage.
+
+## Flake policy
+
+**No blanket reruns.** Roughly one in six newly-flaky tests is masking a
+real production defect, so `--reruns` applied to everything converts
+that signal into green noise. The policy, for when a rerun plugin is
+eventually added (`pytest-rerunfailures` is not a dependency today —
+this paragraph is the policy, not the wiring):
+
+- Reruns apply **only** to tests explicitly marked flaky, and **only**
+  to error classes that are legitimately environmental:
+  `--only-rerun 'ConnectionError|TimeoutError'`. Never `AssertionError`
+  — an assertion that fails intermittently is a bug report.
+- Quarantine is a **marker plus a non-blocking job**, never a `skip`.
+  A skipped test is a deleted test that still looks present in the count.
+- The number of quarantined tests is capped and the cap is visible. A
+  quarantine that grows without a bound is a second, unmeasured suite.
+- A quarantined test carries the issue it is waiting on. No issue, no
+  quarantine.
 
 ## Selective execution
 
 The durable selection mechanism is the marker filter; `-m "not e2e"`
-is the only filter in production use. Path-based selection (running
-only the test modules that mirror a PR's changed source paths) was
-considered in ADR 0024 and deliberately deferred: at the suite's
-current wall clock (~tens of seconds), selection logic costs more to
-maintain than it saves. Revisit when a full run crosses ~2 minutes.
+is the only filter that gates a merge. The purpose axis adds three
+local selectors, each of which crosses tiers on purpose — a boundary is
+not a speed:
+
+```bash
+make test-security   # 157 tests: tenancy, injection, SSRF, auth, redaction
+make test-fault      #  86 tests: behaviour when a dependency fails
+make test-property   #   0 tests until WO-A05 lands the first one
+```
+
+Path-based selection (running only the test modules that mirror a PR's
+changed source paths) was considered in ADR 0024 and deliberately
+deferred: at the suite's current wall clock (~tens of seconds),
+selection logic costs more to maintain than it saves. Revisit when a
+full run crosses ~2 minutes.
 
 ## Test writing standards
 
 - One test module per source module, named `tests/test_<module>.py`.
 - Module-level `pytestmark = pytest.mark.unit` (or `integration`) on
-  new modules so tier membership is explicit rather than implied.
+  new modules so tier membership is explicit rather than implied. A
+  module with no tier fails `tests/test_harness_guards.py`, so this is
+  a gate rather than a convention. When one class in a module belongs to
+  a different tier, declare the tier **per class** rather than adding a
+  second module-level marker — two tiers on one test is also a failure.
+- Add a purpose marker when the test protects a boundary, an invariant,
+  a failure mode or a wire shape. `pytestmark = [pytest.mark.unit,
+  pytest.mark.security]` is the list form.
 - Prefer parametrized tests (`@pytest.mark.parametrize`) over
   copy-paste.
 - Never hit real external services in unit or integration tiers —
   fakeredis for Redis, `pytest-postgresql` for Postgres, monkeypatched
-  `call_llm_json` for Claude.
+  `call_llm_json` for Claude. The conftest network and spend guards
+  enforce this, but they are the floor: a test that trips one is a test
+  that was going to be wrong in CI.
 - Every PR ships with tests for its diff. Untested behavior fails
   review. Prefer tests that fail against the unfixed code.
 

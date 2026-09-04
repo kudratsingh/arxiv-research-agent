@@ -64,6 +64,27 @@ dev = [
     "fakeredis>=2.26.0,<3.0",
     "pytest-postgresql>=6.1.0,<9.0",
     "types-defusedxml>=0.7.0,<0.8",
+    # ---- Coverage and harness (ADR 0065) ---------------------------------
+    # 7.10.0 is the first coverage release with a real cp314 wheel; 7.9.0
+    # and older resolve to the pure-Python fallback, whose tracer is
+    # several times slower. pytest-cov 7.1.0 is the first release
+    # declaring 3.14 and the first that requires the cp314 coverage line,
+    # so the two floors move together.
+    "pytest-cov>=7.1.0,<8.0",
+    "coverage[toml]>=7.10.0,<8.0",
+    # Pure Python; 2.4.0 is the newest line and the one that requires the
+    # pytest>=7 plugin API this repo already exceeds.
+    "pytest-timeout>=2.4.0,<3.0",
+    # Added here so that no later work order has to move the lock.
+    # Nothing imports it yet — the property tier is WO-A05. 6.167.1 is the
+    # first release line declaring cp314; earlier releases install as
+    # pure-Python wheels but are untested on 3.14.
+    "hypothesis>=6.167.1,<7.0",
+    # Patch coverage. The project floor below is the ratchet; this judges
+    # a PR on the lines it changed, which is where a coverage gate earns
+    # its keep. Local-only: Apache-2.0, no account, no token, no network.
+    # 10.0.0 is the first release declaring 3.14 (9.2.0 stops at 3.12).
+    "diff-cover>=10.0.0,<11.0",
 ]
 
 [build-system]
@@ -131,24 +152,116 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = [
+    # A typo'd `@pytest.mark.uni` used to be a test that never ran and
+    # never complained. Both flags turn a silent misconfiguration into a
+    # startup error: `--strict-markers` rejects an unregistered marker,
+    # `--strict-config` rejects an unknown key in this table (ADR 0065).
+    "--strict-markers",
+    "--strict-config",
+]
+# An `xfail` that starts passing is a fixed bug nobody noticed, or an
+# assertion that stopped asserting. Either way it should be a failure.
+xfail_strict = true
+# Per-test ceiling, in seconds. The slowest test in the suite today is
+# 4.4s (`test_api_lazy_imports.py`, which starts a fresh interpreter), so
+# this is ~13x the measured worst case: high enough that a loaded CI
+# runner never trips it, low enough that a deadlock reports the test that
+# hung instead of consuming the job's whole wall clock. `signal` rather
+# than `thread` because SIGALRM raises inside the test and the session
+# carries on to report the rest; the thread method kills the process, so
+# one hang would hide every result after it. The cost is that a hang
+# inside a C extension (faiss, PyMuPDF) is not interruptible — accepted,
+# since no such hang has been observed and the alternative is worse.
+timeout = 60
+timeout_method = "signal"
 markers = [
-    # Test tiers per docs/testing.md. Note that `-m unit` selects only
-    # tests *explicitly* tagged `pytest.mark.unit` — unmarked tests are
-    # excluded by that filter, not treated as unit. CI's per-PR gate is
-    # `pytest -m "not e2e"` (see docs/development.md, Troubleshooting).
+    # Two orthogonal axes (docs/testing.md, ADR 0065). Every test carries
+    # exactly one *tier*; `tests/test_harness_guards.py` fails if one
+    # does not. Purpose markers are additional and optional, and exist so
+    # a boundary can be selected on its own — `pytest -m security` is a
+    # runnable gate, which it was not while the only axis was speed.
     #
-    # `unit`: pure functions, no I/O, fast.
-    # `integration`: exercises external libraries against local fixtures
-    # or canned responses. No live network.
-    # `e2e`: full workflow with recorded LLM cassettes. Runs nightly.
-    "unit: fast pure-function tests",
-    "integration: local-fixture tests against external libs",
-    "e2e: full workflow with recorded cassettes",
+    # Tier — mutually exclusive, one per test:
+    "unit: pure functions and single modules; no I/O, no ASGI app, no server",
+    "integration: external libraries, local servers or an ASGI app on fixtures; no live network",
+    "e2e: the full workflow end to end, at zero spend",
+    # Purpose — zero or more, orthogonal to the tier:
+    "security: asserts a boundary (tenancy, injection, SSRF, auth, redaction)",
+    "property: hypothesis-driven; asserts an invariant over generated input",
+    "fault: asserts behaviour when a dependency fails",
+    "contract: pins a wire shape (OpenAPI, SSE frames, fixtures, container)",
+    "network: opts out of the conftest network guard; expected users: none",
 ]
 asyncio_mode = "auto"
 filterwarnings = [
-    # Downstream C-extension noise — SwigPyObject / swigvarlink from
-    # faiss / PyMuPDF surface as harmless DeprecationWarnings.
+    # A warning nobody reads is a warning nobody acts on. Ours are
+    # errors; each exemption below is scoped to one message and says what
+    # would let us delete it (ADR 0065). Later entries win over earlier
+    # ones, so "error" stays first.
+    "error",
+    # Downstream C-extension noise — SwigPyObject / swigvarlink /
+    # SwigPyPacked from faiss / PyMuPDF surface as harmless
+    # DeprecationWarnings at import. Drops out when both projects ship a
+    # SWIG release that sets `__module__` on its builtin types.
     "ignore:builtin type SwigPyObject:DeprecationWarning",
     "ignore:builtin type swigvarlink:DeprecationWarning",
+    "ignore:builtin type SwigPyPacked:DeprecationWarning",
 ]
+
+# ---- Coverage (ADR 0065) --------------------------------------------------
+# The web half has enforced coverage thresholds since WO-24; the Python
+# half measured nothing. These floors are the *measured* values at
+# adoption rounded down, never aspirational, and they ratchet upward
+# only. See docs/testing.md, "Coverage policy".
+
+[tool.coverage.run]
+# Branch coverage, not line coverage. Line coverage systematically
+# over-reports on compound conditions, and this codebase is full of them
+# (`if a and b or c` in routing, guards and validators); a fully
+# line-covered `and` can leave half its outcomes untried.
+branch = true
+source = ["src"]
+# Under `build/`, which `.gitignore` already covers, rather than a
+# `.coverage` at the repo root that every `git status` would show and
+# somebody would eventually commit. Keeping the ignore rules unchanged
+# is deliberate: this work order does not own `.gitignore`.
+data_file = "build/.coverage"
+# Per-test contexts — which test executed each line — are switched on by
+# `make test-cov`'s `--cov-context=test` rather than by
+# `dynamic_context` here: pytest-cov owns the setting when it is driving
+# (it warns, and this suite turns warnings into errors) and its version
+# also labels setup/call/teardown separately. That mapping is what turns
+# "this line is covered" into "covered *by this test*", which is how
+# coverage theatre — code executed by a test that asserts nothing about
+# it — becomes visible. Read it with `coverage html --show-contexts`.
+# Nothing is omitted. An omit list is an untracked exclusion: the number
+# looks better and the file silently stops being measured. Line-level
+# exclusions go in `exclude_also` below, where each one carries a reason.
+omit = []
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+# Central exclusions with a written reason each, rather than inline
+# pragmas: a pragma is invisible in the report, and pragma growth is the
+# most reliable symptom of a gate being gamed rather than met.
+# `tests/test_coverage_pragmas.py` caps the inline ones at their census.
+exclude_also = [
+    # Import-only block; evaluated by mypy, never executed at runtime.
+    "if TYPE_CHECKING:",
+    # Module entry points. Exercised by `python -m src.<mod>` and by the
+    # Makefile targets, not by pytest.
+    "if __name__ == .__main__.:",
+    # Abstract declarations whose body is `...`; there is nothing to run.
+    "@(abc\\.)?abstractmethod",
+    # An explicitly unreachable branch. Reaching one is a bug report, not
+    # a coverage gap to be filled with a test that asserts it raises.
+    "raise NotImplementedError",
+]
+# Measured 89.2100% on the full per-PR gate (`pytest -m "not e2e"`) at
+# adoption, rounded down to the whole percent. Raising this is a normal
+# PR; lowering it requires the reason in the PR body (docs/testing.md).
+# Per-package floors live in the Makefile's `test-cov` target, because
+# coverage.py's `fail_under` is global — see docs/testing.md.
+fail_under = 89

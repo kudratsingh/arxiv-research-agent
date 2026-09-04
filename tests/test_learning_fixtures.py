@@ -35,6 +35,8 @@ from src.eval.learning_fixtures import (
     validate_fixtures,
 )
 
+pytestmark = pytest.mark.unit
+
 RECORDED_SET = "recorded_mock_session_transcripts"
 
 HAND_AUTHORED_PROVENANCE: dict[str, Any] = {

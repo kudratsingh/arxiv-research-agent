@@ -18,6 +18,8 @@ from src.eval.metrics import (
     measure_completeness,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestBuildCompletenessPrompt:
     def test_includes_report_verbatim(self) -> None:

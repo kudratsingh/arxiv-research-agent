@@ -1,4 +1,4 @@
-.PHONY: help venv install install-dev clean clean-all test test-unit test-integration test-e2e test-all typecheck run eval simulate-learner record-learning-fixtures admin-migrate
+.PHONY: help venv install install-dev clean clean-all test test-unit test-integration test-e2e test-all test-cov test-cov-diff test-security test-property test-fault typecheck run eval simulate-learner record-learning-fixtures admin-migrate
 
 # ---- Configuration ---------------------------------------------------------
 
@@ -25,7 +25,41 @@ VENV_PIP     := $(VENV)/bin/pip
 # does not prevent it). It silences the HuggingFace fast-tokenizer
 # fork warning, which the library prints as a paragraph into every
 # test log before disabling the pool itself.
-TEST_ENV := OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false
+#
+# PYTHONHASHSEED pins the parent interpreter's hash randomization.
+# `tests/conftest.py` exports it too, but CPython reads it once at
+# startup, so setting it from inside the process only reaches the
+# subprocesses the suite spawns — the parent has to be pinned here
+# (ADR 0065).
+TEST_ENV := OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONHASHSEED=0
+
+# Every gate that spends nothing says so out loud. `local-preview-disabled`
+# is an invalid key by construction, and `tests/conftest.py` denies the
+# Anthropic client constructor on top of it — belt and braces, because
+# this repository has already shipped a test suite that reached
+# api.anthropic.com on every run without anyone noticing (ADR 0065).
+ZERO_SPEND := ANTHROPIC_API_KEY=local-preview-disabled
+
+# ---- Coverage floors (ADR 0065) --------------------------------------------
+#
+# Measured, not aspirational: each number is the value observed when the
+# gate was adopted, rounded down to the whole percent. The rule is
+# **ratchet up only** — raising one is a normal PR, lowering one needs
+# the reason written in the PR body (docs/testing.md, "Coverage policy").
+#
+# The project floor lives in pyproject.toml because coverage.py's
+# `fail_under` is global; these four are per-package because a project
+# number can stay flat while the package that matters rots underneath it.
+COV_API      := 86
+COV_AGENTS   := 92
+COV_SECURITY := 97
+COV_EVAL     := 91
+
+# Patch coverage — the lines a branch adds or changes, not the project.
+# Higher than any floor above on purpose: new code has no legacy excuse,
+# and Google's published finding is that project coverage improves
+# logarithmically while patch coverage is where the gain actually lives.
+COV_DIFF     := 90
 
 # ---- Targets ---------------------------------------------------------------
 
@@ -41,6 +75,11 @@ help:  ## Show this help
 	@echo "  make test-integration  Run integration tests (pytest -m integration)"
 	@echo "  make test-e2e          Run e2e tests (pytest -m e2e)"
 	@echo "  make test-all          Run every tier (unit + integration + e2e)"
+	@echo "  make test-cov          Coverage over src/, project + per-package floors"
+	@echo "  make test-cov-diff     Patch coverage for this branch vs origin/main"
+	@echo "  make test-security     Tests that assert a security boundary"
+	@echo "  make test-property     Hypothesis invariant tests (empty until WO-A05)"
+	@echo "  make test-fault        Tests that assert behaviour under failure"
 	@echo "  make typecheck         Run mypy on src/"
 	@echo ""
 	@echo "  make run QUERY='...'   Run the agent on QUERY"
@@ -76,6 +115,67 @@ test-e2e:  ## E2E tier: full workflow with cassettes
 
 test-all:  ## Every tier
 	$(TEST_ENV) $(VENV_PYTHON) -m pytest tests/ -v
+
+# Coverage runs the CI gate's own selection (`-m "not e2e"`), because a
+# floor measured against a different set of tests than the one that
+# gates is a number about nothing. `--cov-context=test` records which
+# test executed each line; `coverage html --show-contexts` then answers
+# "who covers this?", which is how code that is executed but never
+# asserted on becomes visible.
+#
+# The project floor comes from pyproject.toml. The four per-package
+# reports below re-read the same data file, so they cost nothing extra
+# and each fails on its own — `make test-cov` reports the first floor
+# that breaks rather than one aggregate number that hides which package
+# rotted.
+test-cov:  ## Coverage over src/ with the project and per-package floors
+	$(TEST_ENV) $(ZERO_SPEND) $(VENV_PYTHON) -m pytest -m "not e2e" tests/ \
+		--cov=src --cov-context=test --cov-report=term-missing:skip-covered
+	@echo ""
+	@echo "Per-package floors (ratchet up only):"
+	@printf '  src/api       floor %s%%, actual ' '$(COV_API)'
+	@$(VENV_PYTHON) -m coverage report --include='src/api/*' \
+		--fail-under=$(COV_API) --format=total
+	@printf '  src/agents    floor %s%%, actual ' '$(COV_AGENTS)'
+	@$(VENV_PYTHON) -m coverage report --include='src/agents/*' \
+		--fail-under=$(COV_AGENTS) --format=total
+	@printf '  src/security  floor %s%%, actual ' '$(COV_SECURITY)'
+	@$(VENV_PYTHON) -m coverage report --include='src/security/*' \
+		--fail-under=$(COV_SECURITY) --format=total
+	@printf '  src/eval      floor %s%%, actual ' '$(COV_EVAL)'
+	@$(VENV_PYTHON) -m coverage report --include='src/eval/*' \
+		--fail-under=$(COV_EVAL) --format=total
+
+# Patch coverage. The floors above are the ratchet; this is the question
+# a reviewer actually wants answered — are the lines *this branch* added
+# covered? Project coverage moves logarithmically and a large diff can
+# be entirely untested while the total barely twitches. Runs entirely
+# locally against `git merge-base`; no service, no account, no token.
+test-cov-diff:  ## Patch coverage for this branch against origin/main
+	$(TEST_ENV) $(ZERO_SPEND) $(VENV_PYTHON) -m pytest -m "not e2e" tests/ \
+		--cov=src --cov-report=xml:build/coverage.xml -q
+	$(VENV_PYTHON) -m diff_cover.diff_cover_tool build/coverage.xml \
+		--compare-branch=origin/main --fail-under=$(COV_DIFF)
+
+# ---- Purpose selectors (ADR 0065) ------------------------------------------
+#
+# The second marker axis. Tier answers "how expensive is this test";
+# purpose answers "what does it protect", and until these existed the
+# tenancy, injection and SSRF boundaries could not be run on their own.
+# `-m security` crosses tiers on purpose: a boundary is not a speed.
+test-security:  ## Every test that asserts a security boundary
+	$(TEST_ENV) $(ZERO_SPEND) $(VENV_PYTHON) -m pytest -m "security and not e2e" tests/ -v
+
+# Exit 5 is pytest's "collected nothing", which is the *expected* state
+# of this tier until WO-A05 lands the first property test. Tolerated
+# here and nowhere else: every other exit code still fails the target,
+# so a broken property test is red the day one exists.
+test-property:  ## Hypothesis-driven invariant tests (empty until WO-A05)
+	@$(TEST_ENV) $(ZERO_SPEND) $(VENV_PYTHON) -m pytest -m "property and not e2e" tests/ -v \
+		|| [ $$? -eq 5 ]
+
+test-fault:  ## Behaviour when a dependency fails
+	$(TEST_ENV) $(ZERO_SPEND) $(VENV_PYTHON) -m pytest -m "fault and not e2e" tests/ -v
 
 typecheck:  ## Run mypy on the src tree
 	$(VENV_PYTHON) -m mypy src/

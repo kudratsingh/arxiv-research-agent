@@ -27,7 +27,7 @@ import pytest
 
 from src.api import create_app
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT_PATH = ROOT / "web" / "contract" / "openapi.json"

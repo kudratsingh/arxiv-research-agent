@@ -21,6 +21,8 @@ import pytest
 from src.api.exporters import EXPORTERS, FILENAME_EXTS, MEDIA_TYPES
 from src.api.jobs import Job, JobStatus
 
+pytestmark = pytest.mark.unit
+
 
 def _job(**overrides: object) -> Job:
     """Build a completed Job with a small canonical report body."""

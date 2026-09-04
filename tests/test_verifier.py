@@ -25,6 +25,8 @@ from src.agents.verifier import (
 from src.config import Settings
 from src.graph.state import ResearchState
 
+pytestmark = pytest.mark.unit
+
 
 def _empty_state(**overrides: Any) -> ResearchState:
     """A ResearchState with all fields present so TypedDict access is safe."""

@@ -13,6 +13,8 @@ import pytest
 from src.eval import learning_metrics as metrics
 from src.eval.learning_fixtures import load_session_plans
 
+pytestmark = pytest.mark.unit
+
 
 def _criterion(score: float, reason: str = "fixture reason") -> dict[str, Any]:
     return {"score": score, "reason": reason}
