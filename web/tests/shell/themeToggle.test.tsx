@@ -13,6 +13,8 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { render as testingLibraryRender } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ThemeToggle, readThemePreference } from "@/components/patterns/ThemeToggle";
@@ -25,7 +27,7 @@ import {
   themeInitScript,
 } from "@/lib/tokens";
 
-import { act, render, screen, user } from "../support/render";
+import { act, applyTestTheme, render, screen, user } from "../support/render";
 import { installMatchMedia, setPrefersDark, uninstallMatchMedia } from "./support";
 
 beforeEach(() => {
@@ -159,6 +161,77 @@ describe("criterion 8 — the no-flash property's preconditions", () => {
   it("is not the source of truth: it reads the attribute the script wrote", () => {
     document.documentElement.setAttribute(THEME_PREFERENCE_ATTRIBUTE, "nonsense");
     expect(readThemePreference()).toBe("system");
+  });
+});
+
+/**
+ * KNOWN GAP §16 — a click that lands before hydration.
+ *
+ * THE DEFECT THIS PINS. The radios are real markup from first paint, so a
+ * user can click one while the client bundle is still being parsed. The
+ * browser checks the radio itself; React is not there to hear the `change`,
+ * so `onChange` never runs — and, because React does not reset a hydrated
+ * input's checked state, the control was left showing "Dark" while
+ * `data-theme` stayed light and storage stayed empty. Permanently, not for a
+ * frame. `e2e/theme.spec.ts` expressed it as a flake at about three runs in
+ * ten on webkit; the engine only decided how often the race was lost.
+ *
+ * WHY THESE TESTS HYDRATE RATHER THAN RENDER. The bug lives in the gap
+ * between server markup and client attachment, and a plain `render()` has no
+ * such gap — it produces the DOM and the listeners in one act. So each case
+ * below builds the SERVER markup with `renderToString`, mutates it the way a
+ * browser mutates it (setting `checked`, which is exactly what a native label
+ * activation does and all it does), and only then hydrates.
+ */
+describe("known gap §16 — a choice made before hydration", () => {
+  /** The server markup, mutated as the browser would, then hydrated over. */
+  function hydrateOver(mutate: (container: HTMLElement) => void): void {
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(<ThemeToggle />);
+    document.body.appendChild(container);
+    mutate(container);
+    testingLibraryRender(<ThemeToggle />, { container, hydrate: true });
+  }
+
+  it("adopts the choice instead of dropping it", () => {
+    applyTestTheme("light", "system");
+    hydrateOver((container) => {
+      const dark = container.querySelector<HTMLInputElement>('input[value="dark"]');
+      expect(dark, "no dark radio in the server markup").not.toBeNull();
+      // Everything a label click does with no JavaScript attached.
+      dark!.checked = true;
+    });
+
+    expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("dark");
+    expect(document.documentElement.getAttribute(THEME_PREFERENCE_ATTRIBUTE)).toBe(
+      "dark",
+    );
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
+    expect(window.localStorage.length).toBe(1);
+  });
+
+  it("leaves a stored preference alone when nobody clicked anything", () => {
+    // The server markup checks `system` whatever is stored — a server render
+    // cannot know the choice — so a checked radio that disagrees with the
+    // stored preference is the NORMAL hydration state, not a user action.
+    // Reading it as one would overwrite the user's real choice with "system"
+    // on every load.
+    applyTestTheme("dark", "dark");
+    hydrateOver(() => {});
+
+    expect(window.localStorage.length).toBe(0);
+    expect(document.documentElement.getAttribute(THEME_PREFERENCE_ATTRIBUTE)).toBe(
+      "dark",
+    );
+  });
+
+  it("writes nothing when the group carries no selection at all", () => {
+    applyTestTheme("light", "system");
+    hydrateOver((container) => {
+      for (const input of container.querySelectorAll("input")) input.checked = false;
+    });
+
+    expect(window.localStorage.length).toBe(0);
   });
 });
 
