@@ -1,15 +1,21 @@
 // The plan editor's bounds, its working copy, and the rules that decide
 // what — if anything — gets sent (04 §4.5, WO-17 criteria 3, 4, 7).
 //
-// NOTHING HERE IMPORTS ZOD AT RUNTIME. `buildPlanSchema` takes the Zod
-// namespace as an argument and `import type` is erased by the compiler, so
-// this module carries no edge to `zod` in the module graph. That is what
-// lets the outer `PlanEditor` — which is on the `/c/[id]` first-load path —
-// use `isEdited`, the bounds and the 422 mapping without dragging Zod into
-// the route's chunk union (04 §8.1, R-11). The lazily-loaded
-// `PlanEditorFields` is the only module that imports Zod for real, and
-// `web/tests/plan/bundle.test.ts` proves the boundary from the import graph
-// and, when a production build is present, from the route manifests.
+// THIS MODULE IS ON `/c/[id]`'s FIRST-LOAD PATH, SO ITS IMPORTS ARE A BUDGET
+// DECISION. `PlanEditor` — the eager half — imports it for `isEdited`, the
+// bounds and the 422 mapping, so every value import here lands in the route's
+// chunk union (04 §8.1, R-11). React Hook Form is named here only as a TYPE,
+// which the compiler erases; the package itself is reached exclusively
+// through `React.lazy(() => import("./PlanEditorFields"))`.
+//
+// ZOD IS NOT IMPORTED AT ALL ANY MORE (`known-gaps.md` §19). `planResolver`
+// below is what the form validates with, and it is a pure function over
+// `planIssues` — the same function `reviewRequestFor` has always used. The
+// Zod schema that used to be the resolver now lives in
+// `web/tests/plan/schema.test.ts` as the DIFFERENTIAL ORACLE that file checks
+// this one against, case for case, on every run. `web/tests/plan/bundle.test.ts`
+// holds both facts: React Hook Form stays behind the `import()` boundary, and
+// Zod is in no shipped module and no emitted chunk.
 //
 // THE BOUNDS ARE THE SERVER'S, NOT A CLIENT PREFERENCE.
 // `web/tests/plan/schema.test.ts` re-derives both numbers from
@@ -18,11 +24,12 @@
 // stays a fact rather than a comment.
 //
 // EVERY DECISION IN THIS FILE IS A PURE FUNCTION. The component decides
-// nothing about validity on its own: it renders what `planIssues` and
-// `reviewRequestFor` return. That is what makes WO-17 criterion 3's claim —
-// 501 characters produce no request — provable without a DOM.
+// nothing about validity on its own: it renders what `planIssues`,
+// `planResolver` and `reviewRequestFor` return. That is what makes WO-17
+// criterion 3's claim — 501 characters produce no request — provable
+// without a DOM.
 
-import type * as ZodModule from "zod";
+import type { FieldErrors, Resolver } from "react-hook-form";
 
 import type { FieldIssue, Plan, ReviewRequest } from "@/lib/api";
 import {
@@ -36,18 +43,6 @@ import {
   removeSubQuestion,
   subQuestionLabel,
 } from "@/lib/copy/plan";
-
-/**
- * The Zod namespace as a TYPE ONLY.
- *
- * `import type` is erased by the compiler, so the import above creates no
- * edge to `zod` in the module graph a bundler walks — which is the whole
- * reason the schema is a factory over an injected namespace rather than a
- * module-level constant. `typeof ZodModule.z` rather than `typeof
- * ZodModule`: the package root re-exports the classic namespace under `z`,
- * and that is the object `PlanEditorFields` imports and hands in.
- */
-type Zod = typeof ZodModule.z;
 
 // ---------------------------------------------------------------------------
 // The bounds (`src/api/schemas.py:26-27`).
@@ -206,11 +201,12 @@ export interface PlanIssue {
 /**
  * Every bound violation in a draft, in reading order.
  *
- * This is the same rule set `buildPlanSchema` hands to React Hook Form's
- * resolver — written twice on purpose, and asserted equivalent in
- * `web/tests/plan/schema.test.ts`, because the resolver's copy runs inside
- * the lazily-loaded chunk and this one has to be callable from anywhere,
- * including from a test that never mounts a component.
+ * THIS IS NOW THE ONLY RULE SET THAT SHIPS. `planResolver` below is a thin
+ * translation of what this returns into React Hook Form's error tree, so the
+ * form and `reviewRequestFor` cannot disagree about what is valid — they run
+ * the same function. The second statement of these rules lives in
+ * `web/tests/plan/schema.test.ts`, in Zod, and that file asserts the two
+ * agree case for case; that copy is the oracle, not the implementation.
  */
 export function planIssues(draft: PlanDraft): PlanIssue[] {
   const issues: PlanIssue[] = [];
@@ -353,7 +349,7 @@ export function mapFieldIssues(issues: readonly FieldIssue[]): {
 }
 
 // ---------------------------------------------------------------------------
-// The Zod schema, built from an INJECTED namespace.
+// The form's shapes.
 // ---------------------------------------------------------------------------
 
 /** The form's value shape. React Hook Form's field arrays need objects. */
@@ -392,43 +388,73 @@ export function draftToValues(draft: PlanDraft): PlanFormValues {
   };
 }
 
-/** One list's Zod shape, with the same two messages `planIssues` produces. */
-function listSchema(z: Zod) {
-  return z
-    .array(
-      z.object({
-        value: z.string().superRefine((entry, ctx) => {
-          if (entry.length > MAX_PLAN_ITEM_LEN) {
-            ctx.addIssue({
-              code: "custom",
-              message: overItemLength(entry.length - MAX_PLAN_ITEM_LEN),
-            });
-          }
-        }),
-      }),
-    )
-    .superRefine((rows, ctx) => {
-      if (rows.length > MAX_PLAN_ITEMS) {
-        ctx.addIssue({
-          code: "custom",
-          message: atItemLimit(MAX_PLAN_ITEMS),
-        });
-      }
-    });
+// ---------------------------------------------------------------------------
+// The resolver. Pure, Zod-free, and the thing that actually ships.
+// ---------------------------------------------------------------------------
+
+/**
+ * How this module and its readers see one row's error slot.
+ *
+ * `planFormErrors` builds an array per list and hangs a `root` off it, which
+ * is React Hook Form's own slot for an error about the array rather than
+ * about one of its rows. The library's public `FieldErrors` type cannot
+ * express that union precisely, so the shape is declared once here — where it
+ * is written — and cast to where `PlanEditorFields` reads it, rather than
+ * being `any` at ten call sites.
+ */
+export type PlanRowError = { value?: { message?: string } } | undefined;
+
+export type PlanListErrors =
+  | (PlanRowError[] & { root?: { message?: string } })
+  | undefined;
+
+/**
+ * `planIssues` → React Hook Form's error tree.
+ *
+ * A row issue (`index` is a number) lands on the row. The list-level issue —
+ * too many rows — lands on `root`, which is the slot React Hook Form reserves
+ * for a complaint about the array itself.
+ */
+export function planFormErrors(
+  issues: readonly PlanIssue[],
+): FieldErrors<PlanFormValues> {
+  const errors: Record<string, unknown> = {};
+
+  for (const issue of issues) {
+    const rows = (errors[issue.list] ?? (errors[issue.list] = [])) as PlanRowError[] & {
+      root?: unknown;
+    };
+    const entry = { type: "validate", message: issue.message };
+    if (issue.index === null) rows.root = entry;
+    else rows[issue.index] = { value: entry };
+  }
+
+  return errors as FieldErrors<PlanFormValues>;
 }
 
 /**
- * The resolver's schema, over the injected Zod namespace.
+ * The form's resolver.
  *
- * The injection is the dynamic-import boundary made structural: this module
- * never names `zod` in a value position, so no bundler can follow an edge
- * from here to it. `PlanEditorFields` — which is only ever reached through
- * `React.lazy(() => import("./PlanEditorFields"))` — imports Zod for real
- * and hands it in.
+ * WHY THIS IS NOT A ZOD SCHEMA ANY MORE (`known-gaps.md` §19). Zod 4.4.3 is
+ * 296 KB raw / 73.6 KB gzip and evaluating it was a single ~250 ms long task
+ * on the 2-vCPU runner's regime, inside the chunk `React.lazy` fetches the
+ * moment the plan-review state renders — for a form whose entire rule set is
+ * "an entry is at most `MAX_PLAN_ITEM_LEN` characters" and "a list holds at
+ * most `MAX_PLAN_ITEMS` of them". Those two rules already existed here as
+ * `planIssues`, because `reviewRequestFor` — the function that decides
+ * whether a request is built at all — has always been Zod-free and is the
+ * real gate. So the schema was never the safety property; it was a second
+ * statement of it that cost 73.6 KB to ship. It is retained in
+ * `web/tests/plan/schema.test.ts` as the oracle that file compares this
+ * against, case for case, and is no longer shipped.
+ *
+ * Returning `values: {}` on failure is React Hook Form's contract for "do
+ * not submit": `handleSubmit`'s valid branch never runs, which is the
+ * mechanism behind criterion 3 — 501 characters produce no request because
+ * there is no code path from here to `onReview`.
  */
-export function buildPlanSchema(z: Zod) {
-  return z.object({
-    subQuestions: listSchema(z),
-    searchQueries: listSchema(z),
-  });
-}
+export const planResolver: Resolver<PlanFormValues> = (values) => {
+  const issues = planIssues(valuesToDraft(values));
+  if (issues.length === 0) return { values, errors: {} };
+  return { values: {}, errors: planFormErrors(issues) };
+};

@@ -6,13 +6,13 @@
  *
  * THIS MODULE IS THE DYNAMIC-IMPORT BOUNDARY. It is reached only through
  * `React.lazy(() => import("./PlanEditorFields"))` in `PlanEditor.tsx`, and
- * it is the only module in the product that imports `react-hook-form` or
- * `zod`. 04 §8.1 leaves `/` 10.9 KB of first-load headroom and `/c/[id]`
- * 14.6 KB; the two packages are ~9 KB and ~14 KB gzip, so they do not fit in
- * either and must not try to. `web/tests/plan/bundle.test.ts` walks the
- * static import graph from both route entrypoints and asserts neither
- * package is reachable without crossing an `import()`, and re-checks the
- * same claim against the build manifests when a production build exists.
+ * it is the only module in the product that imports `react-hook-form`.
+ * 04 §8.1 leaves `/` 10.9 KB of first-load headroom and `/c/[id]` 14.6 KB;
+ * the package is ~9 KB gzip, so it fits in neither and must not try to.
+ * `web/tests/plan/bundle.test.ts` walks the static import graph from both
+ * route entrypoints and asserts it is not reachable without crossing an
+ * `import()`, and re-checks the same claim against the build manifests when
+ * a production build exists.
  *
  * WHY REACT HOOK FORM EARNS ITS PLACE (04 §4.4's table). Two dynamic arrays
  * whose rows carry their own validation state, plus server errors that have
@@ -21,12 +21,25 @@
  * removal — which is what makes the focus rule in 03 §7.2 implementable —
  * and `setError` is how a 422 reaches a row instead of a page-level banner.
  *
- * WHY ZOD (`buildPlanSchema`). The client bounds must be the server's
- * bounds, exactly (`MAX_PLAN_ITEMS`, `MAX_PLAN_ITEM_LEN`,
- * `src/api/schemas.py:26-27`), so over-length input is refused in the form
- * rather than surfaced as a 422. The schema is built from the injected `z`
- * namespace by `lib/plan/schema.ts`, which is how the bounds stay readable
- * from a zod-free module that the eager half can import.
+ * ZOD DOES NOT (`known-gaps.md` §19). It used to: `buildPlanSchema` was this
+ * module's resolver, and it made the chunk `React.lazy` fetches at
+ * plan-review 296 KB raw / 73.6 KB gzip and a ~250 ms long task on the
+ * 2-vCPU runner's regime — for two bounds. Both are `planIssues` in
+ * `lib/plan/schema.ts`, which `reviewRequestFor` has always used and which
+ * has always been the thing that decides whether a request is built at all;
+ * `planResolver` there is now the eleven lines that put those issues on
+ * React Hook Form's rows. The Zod statement of the same rules is retained in
+ * `web/tests/plan/schema.test.ts` as the oracle that file compares the
+ * resolver against, so the bounds are still checked against a library on
+ * every run — they are just not shipped to a browser to do it.
+ *
+ * AND WO-30'S `z.config({ jitless: true })` GOES WITH IT. That call was here
+ * because Zod 4 probes for `new Function` at module evaluation, which the
+ * enforcing policy reports as a `script-src blocked=eval` violation once per
+ * session — the single violation `web/e2e/csp.spec.ts`'s report-only sweep
+ * found across the whole §4 matrix, and it was on this state. With the
+ * package gone there is no probe left to silence, and `csp.spec.ts` still
+ * gates the count at zero.
  *
  * CONTROLLED ROWS, NOT `register`. `Textarea` is not a `forwardRef`
  * component, so a `register()` ref cannot reach the element; `Controller`
@@ -49,9 +62,7 @@ import {
   type Control,
   type FieldErrors,
   type FieldPath,
-  type Resolver,
 } from "react-hook-form";
-import { z } from "zod";
 
 import { Button } from "@/components/primitives/Button";
 import { Textarea } from "@/components/primitives/Textarea";
@@ -60,116 +71,23 @@ import {
   MAX_PLAN_ITEMS,
   MAX_PLAN_ITEM_LEN,
   PLAN_LIST_SPECS,
-  buildPlanSchema,
   cancelRequest,
   draftToValues,
   isEdited,
   isListFull,
   mapFieldIssues,
+  planResolver,
   planToDraft,
   reviewRequestFor,
   valuesToDraft,
   type PlanDraft,
   type PlanFormValues,
+  type PlanListErrors,
   type PlanListKey,
   type PlanListSpec,
 } from "@/lib/plan/schema";
 
 import type { PlanEditorFieldsProps } from "./PlanEditor";
-
-// ---------------------------------------------------------------------------
-// The resolver.
-// ---------------------------------------------------------------------------
-
-/**
- * WO-30: turn off Zod's JIT before any schema is built.
- *
- * FOUND BY THE REPORT-ONLY RUN, NOT REASONED ABOUT. `web/e2e/csp.spec.ts`'s
- * first sweep reported exactly one `script-src blocked=eval` violation
- * across the whole §4 matrix, on the `plan-review` state, at
- * `_next/static/chunks/295.*.js`. That is Zod 4's own feature probe:
- *
- *     let jitAvailable = memo(() => {
- *       if (globalConfig.jitless || …) return false;
- *       try { return Function(""), true } catch { return false }
- *     });
- *
- * Zod compiles validators with `new Function` when it can and interprets
- * them when it cannot, and the probe is inside a `try`, so the plan editor
- * WORKS under the enforcing policy either way. What it does not do is stay
- * quiet: the attempt is a genuine CSP violation, reported once per session
- * in every operator's console, and criterion 1 asks for zero.
- *
- * THE ALTERNATIVE WAS `'unsafe-eval'`, AND IT IS NOT A REAL ALTERNATIVE.
- * Adding it to `script-src` would let any injected string become code,
- * which is most of what the policy exists to prevent — trading the whole
- * control for a validator that runs slightly faster on a form with two
- * lists in it. `jitless` is Zod's own documented switch for exactly this
- * environment ("Useful in environments that disallow `eval`"), it changes
- * no validation result, and it is set here rather than anywhere else
- * because this module is the ONLY runtime importer of `zod` in the product
- * — so the call cannot miss a schema, and `lib/plan/schema.ts` stays
- * zod-free the way WO-17's bundle boundary requires.
- */
-z.config({ jitless: true });
-
-/** Built once per module load, not per render: the bounds never change. */
-const planSchema = buildPlanSchema(z);
-
-/**
- * How this file reads its own error tree.
- *
- * `toFormErrors` builds an array per list and hangs a `root` off it, which
- * is React Hook Form's own slot for an error about the array rather than
- * about one of its rows. The library's public `FieldErrors` type cannot
- * express that union precisely, so the shape is declared once here and cast
- * to at the two places that read it, rather than being `any` at ten.
- */
-type RowError = { value?: { message?: string } } | undefined;
-type ListErrors = (RowError[] & { root?: { message?: string } }) | undefined;
-
-/**
- * Zod issues → React Hook Form's error tree.
- *
- * A row issue arrives as `["subQuestions", 3, "value"]` and lands on the
- * row. The list-level issue (too many rows) arrives as `["subQuestions"]`
- * and lands on `root`.
- */
-function toFormErrors(
-  issues: readonly { path: readonly PropertyKey[]; message: string }[],
-): FieldErrors<PlanFormValues> {
-  const errors: Record<string, unknown> = {};
-
-  for (const issue of issues) {
-    const [listKey, index] = issue.path;
-    // `String()` rather than a type guard: every path this schema produces
-    // starts with a list name, and a guard would be an unreachable branch
-    // pretending otherwise.
-    const key = String(listKey);
-    const rows = (errors[key] ?? (errors[key] = [])) as RowError[] & {
-      root?: unknown;
-    };
-    const entry = { type: "validate", message: issue.message };
-    if (typeof index === "number") rows[index] = { value: entry };
-    else rows.root = entry;
-  }
-
-  return errors as FieldErrors<PlanFormValues>;
-}
-
-/**
- * The resolver itself.
- *
- * Returning `values: {}` on failure is React Hook Form's contract for "do
- * not submit": `handleSubmit`'s valid branch never runs, which is the
- * mechanism behind criterion 3 — 501 characters produce no request because
- * there is no code path from here to `onReview`.
- */
-const planResolver: Resolver<PlanFormValues> = (values) => {
-  const parsed = planSchema.safeParse(values);
-  if (parsed.success) return { values, errors: {} };
-  return { values: {}, errors: toFormErrors(parsed.error.issues) };
-};
 
 /** The RHF path of one row's control. */
 function rowPath(list: PlanListKey, index: number): FieldPath<PlanFormValues> {
@@ -318,8 +236,10 @@ export default function PlanEditorFields({
       // `empty_plan` is the ONLY refusal that can reach here, and there is
       // deliberately no branch pretending otherwise: a `bounds` refusal is
       // caught by the resolver before `handleSubmit` calls this function at
-      // all, and `web/tests/plan/schema.test.ts` proves the Zod schema and
-      // `planIssues` agree case for case.
+      // all, and the resolver and `reviewRequestFor` now call the SAME
+      // `planIssues` — which is the strongest form that claim has taken.
+      // `web/tests/plan/schema.test.ts` still checks that function against a
+      // Zod schema of the same bounds, case for case.
       setFormNote(PLAN.emptyPlan);
       return;
     }
@@ -330,7 +250,7 @@ export default function PlanEditorFields({
   /** Invalid submit: put the caret where the problem is. */
   function focusFirstError(formErrors: FieldErrors<PlanFormValues>) {
     for (const list of ["subQuestions", "searchQueries"] as const) {
-      const rows = formErrors[list] as ListErrors;
+      const rows = formErrors[list] as PlanListErrors;
       if (!Array.isArray(rows)) continue;
       const index = rows.findIndex((row) => row !== undefined && row !== null);
       if (index >= 0) {
@@ -451,7 +371,7 @@ function PlanColumn({
   onAdd,
   onRemove,
 }: PlanColumnProps) {
-  const rows = errors[spec.key] as ListErrors;
+  const rows = errors[spec.key] as PlanListErrors;
   const rootMessage = rows?.root?.message;
 
   return (

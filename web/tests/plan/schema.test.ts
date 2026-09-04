@@ -12,25 +12,34 @@
  * vocabulary, for the same reason: the check belongs on the side that would
  * otherwise silently send a request the server refuses.
  *
- * The Zod schema is checked against the pure `planIssues` implementation
- * rather than against a restatement of the bounds, which is what makes
- * "written twice on purpose" safe: if the two ever disagree, this file says
- * so.
+ * ZOD LIVES HERE NOW, AND ONLY HERE (`known-gaps.md` §19). The form used to
+ * validate with `buildPlanSchema` out of `lib/plan/schema.ts`, which put all
+ * 296,426 B of `zod@4.4.3` into the chunk `React.lazy` fetches at
+ * plan-review and made it a ~250 ms long task on the 2-vCPU runner's regime.
+ * The shipped validator is now `planResolver` — `planIssues` translated onto
+ * React Hook Form's rows — and the Zod schema moved into this file, where it
+ * is the INDEPENDENT statement of the same two bounds that the block near the
+ * bottom runs the resolver against, case for case. So "written twice on
+ * purpose" still holds, and the second copy is still a library nobody in this
+ * repository maintains; what changed is that only one of the two is
+ * downloaded by a browser. A test file is not shipped code and is outside
+ * `coverage.include`, so the oracle costs the product nothing at all.
  */
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import type { ResolverOptions } from "react-hook-form";
 import { describe, expect, it } from "vitest";
-import * as ZodModule from "zod";
+import { z } from "zod";
 
 import type { FieldIssue, Plan } from "@/lib/api";
+import { atItemLimit, overItemLength } from "@/lib/copy/plan";
 import {
   MAX_PLAN_ITEMS,
   MAX_PLAN_ITEM_LEN,
   PLAN_LISTS,
   PLAN_LIST_SPECS,
-  buildPlanSchema,
   cancelRequest,
   draftToPlan,
   draftToValues,
@@ -39,12 +48,56 @@ import {
   mapFieldIssue,
   mapFieldIssues,
   planEquals,
+  planFormErrors,
   planIssues,
+  planResolver,
   planToDraft,
   reviewRequestFor,
   valuesToDraft,
   type PlanDraft,
+  type PlanFormValues,
+  type PlanListErrors,
 } from "@/lib/plan/schema";
+
+// ---------------------------------------------------------------------------
+// The oracle: the two bounds again, in Zod, exactly as the shipped resolver
+// stated them until `known-gaps.md` §19. Moved here verbatim from
+// `lib/plan/schema.ts` — the messages come from the same copy dictionary, so
+// a change to either sentence still has to agree in both places.
+// ---------------------------------------------------------------------------
+
+/** One list's Zod shape, with the same two messages `planIssues` produces. */
+function listSchema() {
+  return z
+    .array(
+      z.object({
+        value: z.string().superRefine((entry, ctx) => {
+          if (entry.length > MAX_PLAN_ITEM_LEN) {
+            ctx.addIssue({
+              code: "custom",
+              message: overItemLength(entry.length - MAX_PLAN_ITEM_LEN),
+            });
+          }
+        }),
+      }),
+    )
+    .superRefine((rows, ctx) => {
+      if (rows.length > MAX_PLAN_ITEMS) {
+        ctx.addIssue({
+          code: "custom",
+          message: atItemLimit(MAX_PLAN_ITEMS),
+        });
+      }
+    });
+}
+
+/** The whole form, in Zod. The only caller of `zod` outside `tests/contract`. */
+function buildPlanSchema() {
+  return z.object({
+    subQuestions: listSchema(),
+    searchQueries: listSchema(),
+  });
+}
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 const SCHEMAS_PY = readFileSync(
@@ -297,25 +350,53 @@ describe("criterion 4 — a 422 maps onto the offending row", () => {
 });
 
 // ---------------------------------------------------------------------------
-// The Zod schema, against the pure rules.
+// The Zod oracle, against the pure rules and against the shipped resolver.
 // ---------------------------------------------------------------------------
 
-describe("the Zod schema and planIssues agree", () => {
-  const schema = buildPlanSchema(ZodModule.z);
+/** Everything either side of the bounds, plus both boundary values. */
+const CASES: { name: string; value: PlanDraft }[] = [
+  { name: "a clean plan", value: draft() },
+  { name: "an over-length row", value: draft({ subQuestions: ["y".repeat(501)] }) },
+  {
+    name: "an at-limit row",
+    value: draft({ searchQueries: ["y".repeat(MAX_PLAN_ITEM_LEN)] }),
+  },
+  {
+    name: "too many rows",
+    value: draft({ searchQueries: Array.from({ length: 21 }, (_, i) => `q${i}`) }),
+  },
+  { name: "empty lists", value: { subQuestions: [], searchQueries: [] } },
+  {
+    name: "both lists over the cap",
+    value: {
+      subQuestions: Array.from({ length: MAX_PLAN_ITEMS + 3 }, (_, i) => `q${i}`),
+      searchQueries: Array.from({ length: MAX_PLAN_ITEMS + 1 }, (_, i) => `s${i}`),
+    },
+  },
+  {
+    // The case the old CASES list did not cover, and the one a hand-written
+    // checker is most likely to get wrong: a row issue and a list issue in
+    // the SAME column. Zod 4 runs an array's own check even when an element
+    // failed, so both are reported; so does `planIssues`.
+    name: "an over-length row inside an over-cap list",
+    value: {
+      subQuestions: Array.from({ length: MAX_PLAN_ITEMS + 1 }, (_, i) =>
+        i === 2 ? "y".repeat(MAX_PLAN_ITEM_LEN + 7) : `q${i}`,
+      ),
+      searchQueries: ["retrieval augmented claim verification"],
+    },
+  },
+  {
+    name: "an over-length row in one column, an over-cap list in the other",
+    value: {
+      subQuestions: ["y".repeat(MAX_PLAN_ITEM_LEN + 1)],
+      searchQueries: Array.from({ length: MAX_PLAN_ITEMS + 1 }, (_, i) => `s${i}`),
+    },
+  },
+];
 
-  const CASES: { name: string; value: PlanDraft }[] = [
-    { name: "a clean plan", value: draft() },
-    { name: "an over-length row", value: draft({ subQuestions: ["y".repeat(501)] }) },
-    {
-      name: "an at-limit row",
-      value: draft({ searchQueries: ["y".repeat(MAX_PLAN_ITEM_LEN)] }),
-    },
-    {
-      name: "too many rows",
-      value: draft({ searchQueries: Array.from({ length: 21 }, (_, i) => `q${i}`) }),
-    },
-    { name: "empty lists", value: { subQuestions: [], searchQueries: [] } },
-  ];
+describe("the Zod schema and planIssues agree", () => {
+  const schema = buildPlanSchema();
 
   it.each(CASES)("$name: the same verdict, and the same messages", ({ value }) => {
     const parsed = schema.safeParse(draftToValues(value));
@@ -343,6 +424,92 @@ describe("the Zod schema and planIssues agree", () => {
     expect(parsed.success).toBe(false);
     if (parsed.success) return;
     expect(parsed.error.issues[0]?.path).toEqual(["subQuestions"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The shipped resolver, against the Zod schema it replaced.
+// ---------------------------------------------------------------------------
+
+/**
+ * The error tree the DELETED Zod resolver built, reproduced verbatim.
+ *
+ * This is the function that used to live in `PlanEditorFields.tsx` — the same
+ * loop over the same `path`/`message` pairs — so that "removing Zod from the
+ * client changed nothing the user sees" is a measured equality between two
+ * trees rather than a claim about two bounds. If Zod and `planIssues` ever
+ * disagree about a message, an index, or which slot an issue lands in, the
+ * comparison below is what says so.
+ */
+function zodFormErrors(
+  issues: readonly { path: readonly PropertyKey[]; message: string }[],
+): Record<string, unknown> {
+  const errors: Record<string, unknown> = {};
+  for (const issue of issues) {
+    const [listKey, index] = issue.path;
+    const key = String(listKey);
+    const rows = (errors[key] ?? (errors[key] = [])) as unknown[] & {
+      root?: unknown;
+    };
+    const entry = { type: "validate", message: issue.message };
+    if (typeof index === "number") rows[index] = { value: entry };
+    else rows.root = entry;
+  }
+  return errors;
+}
+
+/** React Hook Form's own third argument, with nothing invented in it. */
+const RESOLVER_OPTIONS: ResolverOptions<PlanFormValues> = {
+  fields: {},
+  shouldUseNativeValidation: false,
+};
+
+describe("planResolver is what the Zod resolver was", () => {
+  const schema = buildPlanSchema();
+
+  it.each(CASES)("$name: byte-for-byte the same error tree", async ({ value }) => {
+    const values = draftToValues(value);
+    const parsed = schema.safeParse(values);
+    const result = await planResolver(values, undefined, RESOLVER_OPTIONS);
+
+    if (parsed.success) {
+      // The valid branch: React Hook Form is handed the values back and
+      // `handleSubmit` proceeds.
+      expect(result.errors).toEqual({});
+      expect(result.values).toEqual(values);
+      return;
+    }
+
+    expect(result.errors).toEqual(zodFormErrors(parsed.error.issues));
+    // Criterion 3's mechanism: no values means `handleSubmit`'s valid branch
+    // never runs, so there is no code path to `onReview`.
+    expect(result.values).toEqual({});
+  });
+
+  it("puts a row issue on the row, and only on the row", () => {
+    const errors = planFormErrors(
+      planIssues(draft({ subQuestions: ["ok", "z".repeat(MAX_PLAN_ITEM_LEN + 1)] })),
+    );
+    const rows = errors.subQuestions as PlanListErrors;
+    expect(rows?.[0]).toBeUndefined();
+    expect(rows?.[1]?.value?.message).toContain("1 character over the limit");
+    expect(rows?.root).toBeUndefined();
+    expect(errors.searchQueries).toBeUndefined();
+  });
+
+  it("puts a list issue on `root`, which is React Hook Form's array slot", () => {
+    const errors = planFormErrors(
+      planIssues(
+        draft({ searchQueries: Array.from({ length: MAX_PLAN_ITEMS + 1 }, () => "q") }),
+      ),
+    );
+    const rows = errors.searchQueries as PlanListErrors;
+    expect(rows?.root?.message).toContain("holds 20 entries at most");
+    expect(rows?.filter((row) => row !== undefined)).toEqual([]);
+  });
+
+  it("returns no errors at all for a plan inside the bounds", () => {
+    expect(planFormErrors(planIssues(draft()))).toEqual({});
   });
 });
 
