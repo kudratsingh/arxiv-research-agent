@@ -1,6 +1,21 @@
 /**
- * WO-17 criterion 10 — React Hook Form and Zod are DYNAMICALLY imported, and
- * neither is in a route's first-load JavaScript (R-11, 04 §8.1).
+ * WO-17 criterion 10 — React Hook Form is DYNAMICALLY imported and is not in
+ * a route's first-load JavaScript (R-11, 04 §8.1) — and, since
+ * `known-gaps.md` §19, Zod IS NOT IN THE CLIENT AT ALL.
+ *
+ * TWO CLAIMS, NOT ONE, BECAUSE THEY ARE NOT THE SAME STRENGTH.
+ *
+ *   * `react-hook-form` is BEHIND THE BOUNDARY. It ships, in the chunk
+ *     `React.lazy(() => import("./PlanEditorFields"))` fetches, and the
+ *     assertion is that no route reaches it without crossing that `import()`.
+ *   * `zod` is ABSENT. `planResolver` replaced `buildPlanSchema` as the
+ *     form's validator, so no shipped module imports the package in any way
+ *     — not statically, not through an `import()` either — and its signature
+ *     is in no emitted chunk. That is what took 296,426 B raw / 73,605 B gzip
+ *     and a ~250 ms long task out of the plan-review state. The Zod schema
+ *     survives as the unit test's differential oracle, in
+ *     `tests/plan/schema.test.ts`, which is not shipped code and is outside
+ *     `coverage.include`.
  *
  * TWO PROOFS, BECAUSE ONE OF THEM CANNOT ALWAYS RUN.
  *
@@ -10,8 +25,8 @@
  *      follows: static `import`/`export … from`, and side-effect imports.
  *      `import type` is not followed, because the compiler erases it, and
  *      `import()` is not followed, because that is the boundary being
- *      proved. If neither package is reachable that way, neither can be in
- *      a first-load chunk.
+ *      proved. If the package is not reachable that way, it cannot be in a
+ *      first-load chunk.
  *
  *   2. THE BUILD MANIFESTS (when `.next` exists). `npm run build` writes the
  *      route → chunk association WO-23's script already knows how to read,
@@ -22,19 +37,24 @@
  *
  * PROOF 1 IS SELF-TESTED. A graph walk that silently resolved nothing would
  * pass vacuously, so the same walker is pointed at `PlanEditorFields` — the
- * module behind the boundary — and REQUIRED to find both packages. Proof 2
- * is self-tested the same way: the signatures must be found somewhere in the
- * build before their absence from the first load means anything.
+ * module behind the boundary — and REQUIRED to find React Hook Form. Proof 2
+ * is self-tested the same way: its signature must be found somewhere in the
+ * build before its absence from the first load means anything. The absence
+ * claim about Zod needs no such anchor and could not have one: it is
+ * asserted against a build whose self-test — React Hook Form's signature —
+ * proves the chunks were read.
  *
  * WHY THIS DOES NOT REUSE `tests/diagnostics/support/source.ts`. WO-16 ships
  * a module-graph walker for the same shape of claim about `web-vitals`, and
  * one walker for both would be the better arrangement — except that its
  * `staticSpecifiers()` matches `from "…"` textually, which cannot tell
- * `import type * as ZodModule from "zod"` from a value import. That
- * distinction is not incidental here: type-only erasure is precisely the
- * mechanism that lets `lib/plan/schema.ts` name Zod's types while carrying
- * no edge to Zod, so a walker that could not model it would fail this file
- * for the wrong reason. Hence the TypeScript parser below. The route-entry
+ * `import type { Resolver } from "react-hook-form"` from a value import.
+ * That distinction is not incidental here — it is more load-bearing than it
+ * was: `lib/plan/schema.ts` is ON `/c/[id]`'s first-load path and names
+ * React Hook Form's types, so type-only erasure is the only thing standing
+ * between the library and the route's chunk union. A walker that could not
+ * model it would fail this file for the wrong reason. Hence the TypeScript
+ * parser below. The route-entry
  * DISCOVERY is shared in spirit and copied deliberately — see the note on
  * `discoverRouteFiles`.
  */
@@ -49,8 +69,14 @@ const WEB_ROOT = path.resolve(__dirname, "..", "..");
 const REPO_ROOT = path.resolve(WEB_ROOT, "..");
 const NEXT_DIR = path.join(WEB_ROOT, ".next");
 
-/** The two packages this work order added, and the pins they were added at. */
-const DYNAMIC_ONLY = ["react-hook-form", "zod"] as const;
+/** Ships, but only behind the `import()`. */
+const DYNAMIC_ONLY = ["react-hook-form"] as const;
+
+/** Does not ship at all. */
+const ABSENT_FROM_CLIENT = ["zod"] as const;
+
+/** Both packages WO-17 added, for the assertions about package.json. */
+const WO17_PACKAGES = [...DYNAMIC_ONLY, ...ABSENT_FROM_CLIENT] as const;
 
 // ---------------------------------------------------------------------------
 // A module graph, walked the way a bundler walks it.
@@ -243,8 +269,8 @@ describe("criterion 10 — the walker itself works", () => {
     expect(reached.packages.has("react")).toBe(true);
   });
 
-  it("finds both packages when it is pointed behind the boundary", () => {
-    // The self-test. If this ever stops finding them, the assertions below
+  it("finds the form library when it is pointed behind the boundary", () => {
+    // The self-test. If this ever stops finding it, the assertions below
     // are proving nothing.
     const reached = walk([PLAN_EDITOR_FIELDS]);
     for (const name of DYNAMIC_ONLY) {
@@ -259,18 +285,24 @@ describe("criterion 10 — the walker itself works", () => {
   });
 
   it("does not follow an import type — the compiler erases it", () => {
-    const edges = edgesOf(path.join(WEB_ROOT, "lib", "plan", "schema.ts"));
-    // `lib/plan/schema.ts` names the Zod namespace as a TYPE and takes the
-    // real one as an argument; that is what keeps the bounds readable from
-    // the eager half.
-    expect(edges.statics).not.toContain("zod");
-    expect(readFileSync(path.join(WEB_ROOT, "lib", "plan", "schema.ts"), "utf8")).toContain(
-      'import type * as ZodModule from "zod"',
+    // `lib/plan/schema.ts` is ON `/c/[id]`'s first-load path, because
+    // `PlanEditor` imports it eagerly for `isEdited`, the bounds and the 422
+    // mapping. It names React Hook Form's `Resolver` and `FieldErrors` in an
+    // `import type` so that `planResolver` can be typed against the library
+    // the lazy half uses without the library landing in the route's chunk
+    // union — the same erasure that used to keep Zod out, now doing the job
+    // that matters. If the `type` keyword ever goes, this fails.
+    const schemaFile = path.join(WEB_ROOT, "lib", "plan", "schema.ts");
+    const edges = edgesOf(schemaFile);
+    expect(readFileSync(schemaFile, "utf8")).toContain(
+      'import type { FieldErrors, Resolver } from "react-hook-form"',
     );
+    expect(edges.statics).not.toContain("react-hook-form");
+    expect(edges.dynamics).not.toContain("react-hook-form");
   });
 });
 
-describe("criterion 10 — neither package is in a route's static graph", () => {
+describe("criterion 10 — the form library is not in a route's static graph", () => {
   const fromRoutes = walk(ROUTE_ROOTS);
   const fromPlanEditor = walk([PLAN_EDITOR]);
 
@@ -296,24 +328,72 @@ describe("criterion 10 — neither package is in a route's static graph", () => 
     expect(fromRoutes.files.has(PLAN_EDITOR_FIELDS)).toBe(false);
   });
 
-  it("has exactly one module in the product that imports either package", () => {
+  it("has exactly one module in the product that imports it", () => {
     // Not "one module reachable from a root" — one module in the shipped
     // tree at all. A second importer anywhere in app/, components/ or lib/
-    // is a second chance for a bundler to pull the packages forward.
-    const importers = ["app", "components", "lib"]
+    // is a second chance for a bundler to pull the package forward.
+    expect(productImportersOf(DYNAMIC_ONLY)).toEqual([
+      "components/patterns/PlanEditorFields.tsx",
+    ]);
+  });
+});
+
+describe("§19 — Zod is imported by nothing that ships", () => {
+  it("is in no shipped module's static graph, in any of the three trees", () => {
+    // The stronger claim, and the one this file exists to keep true: not
+    // "behind a boundary" but "not there". `planResolver` is the validator
+    // now, so a static import would be a regression of 73,605 B gzip.
+    expect(productImportersOf(ABSENT_FROM_CLIENT)).toEqual([]);
+  });
+
+  it("is in no shipped module's DYNAMIC graph either", () => {
+    // The half the `DYNAMIC_ONLY` assertions above deliberately do not make.
+    // An `import("zod")` would move the cost to the first submit rather than
+    // remove it, and the walker would not see it as a static edge.
+    const dynamicImporters = ["app", "components", "lib"]
       .flatMap((dir) => sourceFiles(path.join(WEB_ROOT, dir)))
-      .filter((file) => {
-        const { statics } = edgesOf(file);
-        return statics.some((specifier) =>
-          DYNAMIC_ONLY.some((name) => specifier === name),
-        );
-      })
+      .filter((file) =>
+        edgesOf(file).dynamics.some((specifier) =>
+          ABSENT_FROM_CLIENT.some(
+            (name) => specifier === name || specifier.startsWith(`${name}/`),
+          ),
+        ),
+      )
       .map((file) => path.relative(WEB_ROOT, file))
       .sort();
 
-    expect(importers).toEqual(["components/patterns/PlanEditorFields.tsx"]);
+    expect(dynamicImporters).toEqual([]);
+  });
+
+  it("still builds the oracle, in the one place that is allowed to", () => {
+    // The counterweight, and the reason the absence above is safe to assert.
+    // The removal rests on `planResolver` and the Zod schema agreeing case
+    // for case; that comparison has to keep running, so the schema has to
+    // keep existing — in a test file, which is not shipped code, is not
+    // walked above, and is outside `coverage.include`.
+    const testFile = path.join(WEB_ROOT, "tests", "plan", "schema.test.ts");
+    const source = readFileSync(testFile, "utf8");
+    expect(edgesOf(testFile).statics).toContain("zod");
+    expect(source).toContain("function buildPlanSchema()");
+    expect(source).toContain("planResolver(values, undefined, RESOLVER_OPTIONS)");
   });
 });
+
+/**
+ * Every module under `app/`, `components/` and `lib/` that names one of
+ * `names` in a static import, relative to `web/` and sorted.
+ */
+function productImportersOf(names: readonly string[]): string[] {
+  return ["app", "components", "lib"]
+    .flatMap((dir) => sourceFiles(path.join(WEB_ROOT, dir)))
+    .filter((file) =>
+      edgesOf(file).statics.some((specifier) =>
+        names.some((name) => specifier === name || specifier.startsWith(`${name}/`)),
+      ),
+    )
+    .map((file) => path.relative(WEB_ROOT, file))
+    .sort();
+}
 
 // ---------------------------------------------------------------------------
 // Proof 2 — the build manifests, when there is a build.
@@ -323,14 +403,19 @@ describe("criterion 10 — neither package is in a route's static graph", () => 
  * Signatures that survive minification, because they are string literals or
  * object keys rather than identifiers.
  *
- * `$ZodString` is one of Zod 4's `$constructor()` names; `shouldUnregister`
- * is a React Hook Form option key. Both are asserted to exist SOMEWHERE in
- * the build before their absence from the first load is read as evidence.
+ * `shouldUnregister` is a React Hook Form option key, asserted to exist
+ * SOMEWHERE in the build before its absence from the first load is read as
+ * evidence. `$ZodString` is one of Zod 4's `$constructor()` names, and it is
+ * the opposite kind of check: it must be in NO chunk. The second name is
+ * `"custom"`-free on purpose — a short or common string would go green on a
+ * coincidence.
  */
 const SIGNATURES: Record<(typeof DYNAMIC_ONLY)[number], string> = {
-  zod: "$ZodString",
   "react-hook-form": "shouldUnregister",
 };
+
+/** Zod 4's `$constructor()` names, none of which may appear in a chunk. */
+const ZOD_SIGNATURES = ["$ZodString", "$ZodArray", "$ZodObject"] as const;
 
 /**
  * `data-surface="plan-editor"`, which only `PlanEditor.tsx` emits.
@@ -351,7 +436,7 @@ const surfaceInBuild =
   allChunkFiles().some((file) => readFileSync(file, "utf8").includes(SURFACE_MARKER));
 
 describe.skipIf(!surfaceInBuild)("criterion 10 — and again, in the build", () => {
-  it("finds both signatures somewhere in the emitted chunks", async () => {
+  it("finds the form library's signature somewhere in the emitted chunks", async () => {
     const chunks = allChunkFiles();
     expect(chunks.length).toBeGreaterThan(0);
     for (const [name, signature] of Object.entries(SIGNATURES)) {
@@ -361,7 +446,7 @@ describe.skipIf(!surfaceInBuild)("criterion 10 — and again, in the build", () 
   });
 
   it.each(["/", "/c/[id]"])(
-    "%s first-load JS contains neither package",
+    "%s first-load JS contains no form library",
     async (route) => {
       const budgets = await import("../../scripts/route-budgets.mjs");
       const files = budgets.routeFirstLoadFiles(NEXT_DIR, route);
@@ -377,7 +462,7 @@ describe.skipIf(!surfaceInBuild)("criterion 10 — and again, in the build", () 
     },
   );
 
-  it("the shared chunk contains neither package", async () => {
+  it("the shared chunk contains no form library", async () => {
     const budgets = await import("../../scripts/route-budgets.mjs");
     const files = budgets.sharedFirstLoadFiles(NEXT_DIR);
     const text = files
@@ -386,6 +471,23 @@ describe.skipIf(!surfaceInBuild)("criterion 10 — and again, in the build", () 
     for (const [name, signature] of Object.entries(SIGNATURES)) {
       expect(text.includes(signature), `${name} is in the shared chunk`).toBe(false);
     }
+  });
+
+  it("§19 — Zod is in no emitted chunk at all, first-load or lazy", () => {
+    // The saving, checked against the bytes rather than against the import
+    // graph: every `.js` under `.next/static/chunks`, which is the lazy
+    // plan-editor chunk as well as every route's first load.
+    const chunks = allChunkFiles();
+    expect(chunks.length).toBeGreaterThan(0);
+    const carrying = chunks
+      .filter((file) => {
+        const text = readFileSync(file, "utf8");
+        return ZOD_SIGNATURES.some((signature) => text.includes(signature));
+      })
+      .map((file) => path.relative(NEXT_DIR, file))
+      .sort();
+
+    expect(carrying).toEqual([]);
   });
 });
 
@@ -426,8 +528,17 @@ describe("the two dependencies WO-17 adds", () => {
     expect(pkg.dependencies["zod"]).toBe("4.4.3");
   });
 
-  it("keeps them as RUNTIME dependencies — the product imports them", () => {
-    for (const name of DYNAMIC_ONLY) {
+  it("keeps both listed, and NEITHER LISTING IS A CLAIM THAT IT SHIPS", () => {
+    // React Hook Form is a runtime dependency because the lazy chunk imports
+    // it. Zod's entries stay for three reasons that all outlive §19's
+    // removal, and none of which is "a browser downloads it":
+    //   * `tests/contract/**` parses the recorded fixtures with it;
+    //   * `lib/plan/schema.ts` names its types in an `import type`, which
+    //     `npm run typecheck` and `next build` both have to resolve;
+    //   * `tests/plan/schema.test.ts` builds the oracle from it.
+    // The assertion that it reaches no chunk is above, in the build half —
+    // this one only says the package is installed.
+    for (const name of WO17_PACKAGES) {
       expect(Object.hasOwn(pkg.dependencies, name), `${name} is not a dependency`).toBe(
         true,
       );
@@ -445,8 +556,9 @@ describe("the two dependencies WO-17 adds", () => {
 
   it("is never installed production-only, so the duplicate listing cannot bite", () => {
     // npm marks a package that appears in BOTH lists as `dev` in the
-    // lockfile, so a `--omit=dev` install would drop Zod. Nothing in this
-    // repository does such an install: the web image runs `npm ci
+    // lockfile, so a `--omit=dev` install would drop Zod — and the web image
+    // BUILDS with it, because the `import type` has to resolve. Nothing in
+    // this repository does such an install: the web image runs `npm ci
     // --ignore-scripts` and CI runs `npm ci`. This test is what keeps that
     // true rather than remembered.
     const installers = [
