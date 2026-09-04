@@ -1,0 +1,108 @@
+{
+  "_readme": [
+    "Fixture corpus for src/eval/groundedness.py (WO-A16, ADR 0074).",
+    "",
+    "Hand-authored, not recorded. This repository has no offline sample of",
+    "real arXiv PDF text and fetching one is what the harness forbids, so",
+    "the paper prose below is original. What is NOT invented is the set of",
+    "extraction artefacts planted in `pdf_text`: each is a code point a",
+    "TeX-set arXiv PDF genuinely extracts as, and each has its own test in",
+    "tests/test_groundedness.py.",
+    "",
+    "Artefacts planted in pdf_text, and where:",
+    "  U+FB01 / U+FB00  ligatures      'fine-tuned', 'differs', 'effect'",
+    "  '-' + newline    hyphenation    'inter-\\nnational'",
+    "  U+00AD           soft hyphen    'post-hoc \\u00adfilter'",
+    "  U+201C/U+201D    curly quotes   'closed-book'",
+    "  U+2013 / U+2014  en / em dash   '12.4\\u2013point', results sentence",
+    "  U+00A0           no-break space 'benchmark\\u00a0suite'",
+    "  U+200B           zero width sp. 'we measured\\u200b'",
+    "  U+000C           page break     between sections 1 and 2",
+    "",
+    "papers/citations are ResearchState shapes (src/graph/state.py).",
+    "paper 2401.00003 deliberately has NO pdf_text: it is the source-",
+    "incomplete case, where a quote cannot be falsified and must leave the",
+    "denominator rather than fail.",
+    "",
+    "No PDF is fetched, parsed or written by any test that reads this file.",
+    "",
+    "reports: grounded (everything resolves), hallucinated (a citation the",
+    "run never retrieved, a malformed id, a near-miss quote and a quote",
+    "attributed to the wrong paper), quiet (no quotations at all), and",
+    "partial_source (a quote that cannot be falsified, an elided quote,",
+    "and a quote with no attribution)."
+  ],
+  "papers": [
+    {
+      "id": "http://arxiv.org/abs/2401.00001",
+      "title": "Grounded Decoding for Scientific Summarisation",
+      "authors": [
+        "Amelia Rosen",
+        "Kofi Mensah"
+      ],
+      "abstract": "We study decoding strategies that condition generation on retrieved passages. The fine-tuned model attains a 12.4-point improvement over the closed-book baseline on our held-out split.",
+      "url": "http://arxiv.org/abs/2401.00001",
+      "pdf_url": "http://arxiv.org/pdf/2401.00001"
+    },
+    {
+      "id": "http://arxiv.org/abs/2401.00002",
+      "title": "A Survey of Retrieval Augmentation",
+      "authors": [
+        "Priya Nair"
+      ],
+      "abstract": "Retrieval augmentation has become the default remedy for factual error in generated text. We survey forty systems and group them by where the retrieved context enters the decoder.",
+      "url": "http://arxiv.org/abs/2401.00002",
+      "pdf_url": "http://arxiv.org/pdf/2401.00002"
+    },
+    {
+      "id": "http://arxiv.org/abs/2401.00003",
+      "title": "Constrained Beam Search Revisited",
+      "authors": [
+        "Tomas Lind"
+      ],
+      "abstract": "We revisit constrained beam search for grounded generation and report the conditions under which the constraint helps.",
+      "url": "http://arxiv.org/abs/2401.00003",
+      "pdf_url": "http://arxiv.org/pdf/2401.00003"
+    }
+  ],
+  "citations": [
+    {
+      "paper_id": "http://arxiv.org/abs/2401.00001",
+      "title": "Grounded Decoding for Scientific Summarisation",
+      "authors": [
+        "Amelia Rosen",
+        "Kofi Mensah"
+      ],
+      "year": "2024",
+      "url": "http://arxiv.org/abs/2401.00001"
+    },
+    {
+      "paper_id": "http://arxiv.org/abs/2401.00002",
+      "title": "A Survey of Retrieval Augmentation",
+      "authors": [
+        "Priya Nair"
+      ],
+      "year": "2024",
+      "url": "http://arxiv.org/abs/2401.00002"
+    },
+    {
+      "paper_id": "http://arxiv.org/abs/2401.00003",
+      "title": "Constrained Beam Search Revisited",
+      "authors": [
+        "Tomas Lind"
+      ],
+      "year": "2024",
+      "url": "http://arxiv.org/abs/2401.00003"
+    }
+  ],
+  "pdf_text": {
+    "arxiv:2401.00001": "Grounded Decoding for Scientific Summarisation\n\nAbstract\nWe study decoding strategies that condition generation on retrieved\npassages. The ﬁne-tuned model attains a 12.4–point improvement over\nthe “closed-book” baseline on our held-out split.\n\n1 Introduction\nSummarisation systems that write from parametric memory alone produce\nunsupported claims at a rate that grows with the length of the output.\nConstraining the decoder to spans present in the retrieved context inter-\nnational reviewers have called the most direct remedy available today.\n\f2 Method\nOur approach diﬀers from prior work in one respect: the constraint is\napplied at every step rather than as a post-hoc ­filter. State-of-the-\nart decoding reduces unsupported claims by 41% on the benchmark suite,\nand the eﬀect is stable across three seeds.\n\n3 Results\nWe report a 41% reduction in unsupported claims — the largest eﬀect\nwe measured​ — without a measurable loss of fluency.\n",
+    "arxiv:2401.00002": "A Survey of Retrieval Augmentation\n\nAbstract\nRetrieval augmentation has become the default remedy for factual error\nin generated text. We survey forty systems and group them by where the\nretrieved context enters the decoder.\n\n1 Scope\nThe retrieved context provides a form of implicit fact-checking during\ngeneration, and every system we surveyed exploits it in some form.\n"
+  },
+  "reports": {
+    "grounded": "# Grounded decoding\n\nConstrained decoding is the most direct remedy currently available\n(arXiv:2401.00001). The authors report that \"State-of-the-art decoding\nreduces unsupported claims by 41% on the benchmark suite\" [Rosen, 2024],\nand that the improvement is not bought with fluency.\n\nA quotation broken across a line of the source PDF still resolves: the\nintroduction argues that constraining the decoder is what\n\"international reviewers have called the most direct remedy available\ntoday\" [Rosen, 2024].\n\nThe survey frames the same mechanism differently, describing the\nretrieved context as \"a form of implicit fact-checking during\ngeneration\" [Nair, 2024].\n\nConstrained beam search is treated at length in arXiv:2401.00003, whose\n\"conditions under which the constraint helps\" we do not restate here.\n",
+    "hallucinated": "# Grounded decoding\n\nConstrained decoding is the most direct remedy currently available\n(arXiv:2401.00001), and the effect replicates in a later study\n(arXiv:2402.99999).\n\nThe authors report that \"State-of-the-art decoding reduces unsupported\nclaims by 62% on the benchmark suite\" [Rosen, 2024].\n\nThey further note that \"a form of implicit fact-checking during\ngeneration\" is what the constraint provides [Rosen, 2024].\n\nA companion paper is catalogued as arXiv:24x1.0000 in the appendix.\n",
+    "quiet": "# Grounded decoding\n\nConstrained decoding reduces unsupported claims. The effect is stable\nacross seeds, and it does not cost fluency.\n",
+    "partial_source": "# Grounded decoding\n\nThe constrained beam search paper argues that \"the constraint is applied\nat every step rather than as a post-hoc filter\" [Lind, 2024], a framing\nthis report follows throughout.\n\nThe results section reports \"a 41% reduction in unsupported claims ...\nwithout a measurable loss of fluency\" [Rosen, 2024].\n\nElsewhere the literature simply asserts that \"unsupported claims grow\nwith the length of the generated output\", with no source given at all.\n"
+  }
+}
