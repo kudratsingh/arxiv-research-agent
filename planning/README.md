@@ -10,6 +10,11 @@ Living log of enterprise-readiness plans, feature ideas, and roadmap for the arx
 4. [Architecture Refactors](04-architecture-refactors.md) — concrete code refactors that unlock the roadmap, mapped to current files.
 5. [Agentic Upgrade Plan](05-agentic-upgrade-plan.md) — the Sprint 2 focus: converting the fixed DAG into a supervisor loop, sequenced and constrained. Written after Sprint 1 wrap; incorporates the outside review recorded in PR #19.
 6. [Portfolio Polish](06-portfolio-polish.md) — architecture diagram, README demo, eval results table, Dockerfile, FastAPI endpoint, CI workflow, "Production considerations" section. Interleaves with Sprints 2-3; the presentation layer that makes the repo a resume artifact.
+7. [Agent Engineering Program](../docs/agent-engineering/README.md) — active,
+   forward-looking architecture and evaluation plan for adaptive compute,
+   robust verification, feedback learning, post-training, deep research, and
+   long-horizon agents. Unlike the historical sprint notes here, this is a
+   discussion draft and does not authorize implementation.
 
 ## How to use this folder
 
