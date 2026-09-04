@@ -16,9 +16,9 @@ suite is flat and marker-selected; that is what the sections up to
 **eight tiers** — unit, component, story, integration, contract, e2e,
 accessibility and budgets — described with a local command each in "The
 web suite" below. `e2e` means different things in the two: in Python it
-is the whole-workflow tier in `tests/e2e/`, run from `make test-e2e`
-and not yet wired into CI, and in `web/` it is the Playwright tier,
-which is built and gating today.
+is the whole-workflow tier in `tests/e2e/`, run from `make test-e2e` in
+mock mode at zero spend, and in `web/` it is the Playwright tier
+against a seeded Compose stack. Both gate a PR, in different jobs.
 
 Two counts in this page are **not the same list**: CI runs **nine**
 parallel *jobs*, and the web suite has **eight** *tiers*. Several tiers
@@ -121,16 +121,38 @@ jobs on every PR and every push to `main`:
 
 1. `lint` — `ruff check .`
 2. `typecheck` — `mypy --strict src/`
-3. `tests` — `pytest -m "not e2e" -q`, **the unit and integration
-   tiers**: 2,256 of the suite's 2,269 tests. The filter used to
-   exclude an empty set; since WO-A15 it excludes the 13 `e2e` tests,
-   which run from `make test-e2e` and are not yet wired into a CI job
-   of their own. Then the **scripted learner-simulation campaign**: all fifteen
-   guided-read scenarios driven through the real session graph in mock
-   mode, with `src/eval/scripted_tier_check.py` asserting 15/15 sessions
-   and `$0.0000` spend from the run's `summary.jsonl` (WO-W11; see
-   [`eval.md`](eval.md), "The per-PR scripted tier"). The run uploads as
-   the `scripted-simulation-summary` artifact under `if: always()`
+3. `tests` — **every Python tier, under coverage**. Five gates in one
+   job, and the reasoning for that shape is written out in the workflow:
+   - `make test-cov` — the unit and integration tiers, which is
+     everything but the 16 `e2e` tests. The runner reports **3,259
+     passed and 2 skipped** where a laptop reports 3,206 and 55:
+     Postgres is on PATH in this job, so the integration tests that
+     skip locally actually run. With the **project floor and the four
+     per-package floors** enforced — through the Makefile target, not a
+     pytest line copied into the workflow, so the floors have one
+     definition (`pyproject.toml` for the project number, `COV_API` /
+     `COV_AGENTS` / `COV_SECURITY` / `COV_EVAL` for the packages).
+     `property`, `fault` and `security` are purpose markers *inside*
+     this selection, so all three run here
+   - **patch coverage** — `diff-cover` against `origin/main` at the
+     `COV_DIFF` floor, reading the XML the step above wrote rather than
+     running the suite a second time
+   - **the `e2e` tier** — `make test-e2e`, 16 tests in ~5 s, in mock
+     mode at zero spend. Wired in by WO-A13; before that the `-m "not
+     e2e"` filter excluded it from CI entirely
+   - **the adversarial safety suite** (ADR 0072) — the 42-case corpus
+     against this checkout's own defences, publishing its
+     attack-success rate as an artifact
+   - the **scripted learner-simulation campaign**: all fifteen
+     guided-read scenarios driven through the real session graph in mock
+     mode, with `src/eval/scripted_tier_check.py` asserting 15/15
+     sessions and `$0.0000` spend from the run's `summary.jsonl` (WO-W11;
+     see [`eval.md`](eval.md), "The per-PR scripted tier")
+
+   Three artifacts, all under `if: always()` so a red run still leaves
+   its evidence: `python-coverage` (the XML, the term report and the
+   patch-coverage HTML), `safety-attack-success-rate` and
+   `scripted-simulation-summary`
 4. `docker-build` — API image build + base and production compose-file
    validation
 5. `web-image` — `docker build ./web`, run it against a stub upstream,
@@ -168,35 +190,35 @@ blocking a PR:
   the repo that spends Anthropic credits.** No web tier ever makes a
   paid model call, structurally; see "The cost boundary" below.
 
-Local equivalent of the Python half of the gate:
+Local equivalent of the Python half of the gate — the same commands CI
+runs, in the same order:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q -m "not e2e"
+make test-cov        # unit + integration under the project and package floors
+make test-cov-diff   # patch coverage for this branch vs origin/main
+make test-e2e        # the e2e tier, mock mode, zero spend
+.venv/bin/python -m src.eval.safety_suite
 make typecheck
 .venv/bin/python -m ruff check src/ tests/
 ```
 
-Plus, for a change that touches `src/`, the coverage floors:
-
-```bash
-make test-cov        # project + per-package floors
-make test-cov-diff   # patch coverage for this branch vs origin/main
-```
-
-Neither runs in CI yet — wiring them into `.github/workflows/ci.yml`
-needs a workflow edit, which WO-A02 did not own. Until that lands they
-are a local gate, and the numbers below are the record of where the
-floors were set.
+Both coverage floors gate a PR as of WO-A13; until then they were a
+local convention and the workflow ran a bare `pytest -m "not e2e" -q`.
+CI reaches the same targets with `make <target> VENV_PYTHON=python`,
+because `$(VENV_PYTHON)` is `.venv/bin/python` on a desk and a runner
+has no venv. The one difference is that CI's patch-coverage step reads
+the XML the coverage step already wrote instead of running the suite
+again; branch, floor and verdict are identical, so a green
+`make test-cov-diff` here means a green step there.
 
 **`make test` is still not the merge gate.** It expands to
-`pytest -m unit`, which now selects a real tier (1,929 of 2,256 tests)
+`pytest -m unit`, which selects a real tier (2,826 of 3,277 tests)
 rather than an arbitrary subset — but it is a tier, not the suite. The
-merge gate is `-m "not e2e"`. ADR 0024's follow-up ("add a
+merge gate is `-m "not e2e"` **plus the e2e tier as its own step**,
+which is every test in the repository. ADR 0024's follow-up ("add a
 merge-to-main variant that runs `pytest -m 'unit or integration'`") is
-now *safe* to close as written, because the tier axis is a partition
-and `-m "unit or integration"` selects all 2,256 tests; the earlier
-objection — that filter silently dropping half the suite — no longer
-holds. It remains redundant with `-m "not e2e"`.
+closed by that: `-m "unit or integration"` selects the same 3,261 tests
+`-m "not e2e"` does, and the 16 the filter drops are now run beside it.
 
 ## The web suite
 
@@ -559,10 +581,26 @@ without a floor measured: `src/tools` 79.31%, `src/learning` 84.94%,
 neither has one yet precisely because setting it would be aspirational
 rather than measured-and-held.
 
+**Ratchet from the desk number, not the CI one.** The same target
+reports **92.39%** in the `tests` job and **91.31%** on a laptop at the
+same commit, because CI puts Postgres on PATH and the integration tests
+that skip locally run there. A floor lifted to the CI measurement is a floor no
+developer can meet before pushing, which is how a gate stops being run
+locally at all.
+
 **Patch coverage is the number that matters on a PR.** Project coverage
 improves logarithmically — a large diff can be entirely untested while
 the total barely moves. `make test-cov-diff` runs `diff-cover` against
 `origin/main`, entirely locally: no service, no account, no token.
+
+**Both floors gate in CI since WO-A13**, in the `tests` job, through
+these same Makefile targets. The project and per-package floors fail
+the job from `make test-cov`; patch coverage fails it from `diff-cover`
+at `COV_DIFF`. The reports upload as the `python-coverage` artifact
+(XML, the term report, and an HTML page naming which of the PR's own
+lines are missing) with 30-day retention, because Gate A3 cites them.
+A run against `main` has an empty diff and diff-cover passes it — the
+patch floor is a claim about a change, and a push to `main` is not one.
 
 **Two integrity checks, because coverage gates get gamed.** Both live
 in `tests/test_harness_guards.py`:
@@ -580,6 +618,16 @@ in `tests/test_harness_guards.py`:
    `coverage html --show-contexts` answers "who covers this?" — the
    question that exposes code executed by a test that asserts nothing
    about it.
+
+**`make test-cov` pins `COVERAGE_CORE=ctrace`**, and it has to. From
+Python 3.14 — the version `.python-version` pins — coverage defaults to
+the `sys.monitoring` core, which does not support context switching,
+so pytest-cov's `--cov-context=test` makes it warn `no-sysmon-context`
+once per test; this suite turns warnings into errors, so the target
+errored on every test it ran. WO-A13 found it by running the target on
+CI for the first time: 3,208 tests, 6,414 errors, none of them about
+the code under test. A 3.13 desk venv never saw it, because below 3.14
+the C tracer is already the default.
 
 The real counter-pressure to coverage theatre is the `property` and
 `fault` tiers, not a higher percentage.
@@ -605,16 +653,18 @@ this paragraph is the policy, not the wiring):
 
 ## Selective execution
 
-The durable selection mechanism is the marker filter; `-m "not e2e"`
-is the only filter that gates a merge. The purpose axis adds three
-local selectors, each of which crosses tiers on purpose — a boundary is
-not a speed:
+The durable selection mechanism is the marker filter. Two of them gate
+a merge, in that order: `-m "not e2e"` under coverage, then `-m e2e`.
+The purpose axis adds three more selectors, each of which crosses tiers
+on purpose — a boundary is not a speed. They run inside the gate's
+first selection rather than beside it, so these targets are for running
+one of them alone, not for making it gate:
 
 ```bash
-make test-security   # 157 tests: tenancy, injection, SSRF, auth, redaction
-make test-fault      #  86 tests: behaviour when a dependency fails
-make test-property   #   0 tests until WO-A05 lands the first one
-make test-e2e        #  13 tests: whole workflows, ~4.5s, $0.0000
+make test-security   # 314 tests: tenancy, injection, SSRF, auth, redaction
+make test-fault      # 160 tests: behaviour when a dependency fails
+make test-property   # 152 tests: Hypothesis invariants
+make test-e2e        #  16 tests: whole workflows, ~5s, $0.0000
 ```
 
 Path-based selection (running only the test modules that mirror a PR's
@@ -724,7 +774,7 @@ fixes it the assertion fails and tells them.
 
 ## The e2e tier
 
-`tests/e2e/`, marked `e2e`, **13 tests in ~4.5s**. Run it with `make
+`tests/e2e/`, marked `e2e`, **16 tests in ~5s**. Run it with `make
 test-e2e`. It drives whole workflows from a caller's first call to
 their last, and asserts on the **trajectory** each one took rather than
 on the prose it produced (WO-A15; design in
@@ -828,12 +878,14 @@ job row and on the terminal SSE frame, and the exported markdown's
 
 ### Where it runs, and what it still does not cover
 
-CI selects `-m "not e2e"`, so **this tier does not gate a merge yet**.
-The filter now excludes a real set rather than an empty one, which is
-the change WO-A15 makes; wiring the tier into a CI job is a separate,
-reviewable change with its own owner. Until then it is a `make`
-target, and it is fast enough (~4.5s) that running it before pushing a
-cross-node change costs nothing worth counting.
+**This tier gates a merge.** WO-A15 built it, WO-A13 wired it in: the
+coverage step still selects `-m "not e2e"`, and `make test-e2e` runs
+immediately after it as its own step in the same `tests` job. It got a
+step rather than a job because 16 tests in 5 seconds do not justify a
+runner spin-up and a second install of the ML stack, and it stays
+outside the coverage selection because the floors were measured against
+`-m "not e2e"` — running the tier must not lift the project number and
+re-baseline a floor as a side effect.
 
 The old warning on this page is half retired and half still true. The
 sequence-level gap is closed: workflow wiring, state schema, the
