@@ -409,7 +409,8 @@ where they come from.
 7. **No `invoke_workflow` span on the CLI or eval paths.** The span is
    opened by `run_job`, so those entry points produce node spans with
    no workflow parent.
-8. **The redriver records `kind="unknown"`** when it fails an orphaned
+8. **The redriver records `kind="unknown"`** on both of its terminal
+   outcomes — a failed orphan and, since ADR 0068, a dead-lettered
    job. It has `job.kind` in hand but does not pass it;
    `src/api/redriver.py` belonged to another work order. A test pins
    the current value so the fix is visible when it lands.

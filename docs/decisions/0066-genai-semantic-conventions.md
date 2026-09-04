@@ -311,9 +311,10 @@ failures logged and never raised.
     names will change. `semconv.py` is the blast radius.
   - Two shapes of tool instrumentation coexist — a decorator on three
     tool modules and a call-site context manager for arXiv — because
-    `src/tools/arxiv_search.py` belongs to a peer work order this wave.
-    Cosmetic, and named in the gaps below so it is not mistaken for a
-    distinction.
+    `src/tools/arxiv_search.py` belonged to WO-A04 while this landed.
+    ADR 0068 has since merged, so folding arXiv onto the decorator is
+    now a free follow-up. Cosmetic either way, and named so it is not
+    mistaken for a distinction.
 
 ## Known gaps, deliberately left
 
@@ -323,9 +324,12 @@ failures logged and never raised.
    emitted by API workers only. Widening that was explicitly out of
    scope for this work order; tracing does not share the limitation,
    because `get_tracer()` configures lazily on first span.
-2. **The redriver's orphan-fail path records `kind="unknown"`.**
-   `_fail_orphan` has `job.kind` in hand but does not pass it, because
-   `src/api/redriver.py` belongs to WO-A04 this wave. The current value
+2. **The redriver's terminal path records `kind="unknown"`.**
+   `_commit_reclaim` has `job.kind` in hand but does not pass it,
+   because `src/api/redriver.py` belonged to WO-A04 while this landed.
+   ADR 0068 has since routed a second terminal state through that same
+   call — dead-lettering after `job_redrive_max_attempts` — so the gap
+   now covers both reclaim outcomes rather than one. The current value
    is pinned by a test so the fix shows up as a failing assertion
    rather than as a series quietly changing shape.
 3. **`TRACE_SAMPLE_RATIO` is not in `Settings`.** Same reason and same

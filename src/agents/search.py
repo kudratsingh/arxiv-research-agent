@@ -212,9 +212,12 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
         try:
             # The `execute_tool` span is opened here rather than inside
             # `search_arxiv` only because `src/tools/arxiv_search.py`
-            # belongs to a peer work order this wave; the other three
-            # tools carry the decorator on the function itself. ADR 0066
-            # records the fold-in.
+            # belonged to another work order while this landed (ADR
+            # 0068); the other three tools carry the decorator on the
+            # function itself. Folding this one onto the decorator is a
+            # free follow-up now that ADR 0068 has merged — the span is
+            # identical either way, so it is not worth a second edit to
+            # a file that just changed hands. ADR 0066 records it.
             with tool_span(TOOL_ARXIV_SEARCH, tool_type=TOOL_TYPE_EXTENSION):
                 results = search_arxiv(
                     sq,
