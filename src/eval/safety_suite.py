@@ -69,6 +69,11 @@ from src.eval.provenance import (
     capture,
     dataset_fingerprint,
 )
+
+# Aliased rather than shadowed: this module keeps its own
+# `wilson_interval` — same formula, different contract at zero trials —
+# and the alias makes the delegation visible at the call site (ADR 0071).
+from src.eval.stats import wilson_interval as stats_wilson_interval
 from src.security.prompt_isolation import (
     CONTROL_STRING_MAX_LEN,
     UNTRUSTED_BOUNDARIES,
@@ -1231,11 +1236,26 @@ def wilson_interval(successes: int, trials: int, z: float = Z_95) -> tuple[float
     1 out of 35 — where Wald gives a zero-width interval and therefore
     a confident lie.
 
-    Deliberately implemented here rather than shared: `src/eval/stats.py`
-    does not exist on this branch (WO-A09 is introducing it in
-    parallel), and a safety gate that cannot run until another work
-    order lands is a safety gate that does not run. ADR 0072 records
-    the consolidation as a follow-up.
+    **The arithmetic now lives in `src/eval/stats.py`** (ADR 0071),
+    which did not exist when ADR 0072 was written. This is the wrapper
+    that keeps *this* module's contract while the formula is shared —
+    a wrapper rather than a re-export, for two reasons:
+
+    - **`(0.0, 0.0)` at zero trials.** `stats.wilson_interval` raises
+      there, which is right for a statistics library asked for an
+      interval over no observations and wrong for a gate that must
+      return a verdict rather than a traceback.
+    - **`Z_95` is passed through verbatim**, through that function's
+      `z` escape hatch, rather than round-tripped via a confidence
+      level. The two differ in the last two digits, and every interval
+      this module prints has to use the same `z` for
+      `difference_interval` to mean anything.
+
+    The shared implementation was checked against the copy this
+    replaces over every `(successes, trials)` with `trials <= 300`:
+    bit-identical, not merely close, because the association in the
+    spread term was matched deliberately. The recorded 3/42 baseline is
+    therefore unchanged by the consolidation.
 
     Args:
         successes: Count of successes, `0 <= successes <= trials`.
@@ -1255,15 +1275,8 @@ def wilson_interval(successes: int, trials: int, z: float = Z_95) -> tuple[float
         raise ValueError(f"successes={successes} is not within [0, {trials}]")
     if trials == 0:
         return (0.0, 0.0)
-    proportion = successes / trials
-    denominator = 1.0 + z * z / trials
-    centre = (proportion + z * z / (2 * trials)) / denominator
-    spread = (
-        z
-        * math.sqrt(proportion * (1 - proportion) / trials + z * z / (4 * trials * trials))
-        / denominator
-    )
-    return (max(0.0, centre - spread), min(1.0, centre + spread))
+    low, high = stats_wilson_interval(successes, trials, z=z)
+    return (low, high)
 
 
 def difference_interval(

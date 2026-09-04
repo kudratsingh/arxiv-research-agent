@@ -276,7 +276,13 @@ class TestSummaryLine:
         }
         line = _summary_line(record)
         assert line == {
+            # ADR 0071: `record_id` names the run and `query_id` the
+            # query. They are the same string at one repeat, which is
+            # what keeps every campaign written before `--repeats`
+            # readable and resumable.
+            "record_id": "q1",
             "query_id": "q1",
+            "repeat": 1,
             "elapsed_sec": 12.5,
             "scoring_sec": 3.0,
             "error": None,
@@ -468,7 +474,7 @@ class TestSummaryMarkdown:
         ]
         md = _summary_markdown(records, "run-x")
         header = next(
-            line for line in md.splitlines() if line.startswith("| Query |")
+            line for line in md.splitlines() if line.startswith("| Run |")
         )
         row = next(line for line in md.splitlines() if line.startswith("| q1 |"))
         # Only *unescaped* pipes are cell separators; the row must have
@@ -1169,11 +1175,16 @@ def _fake_runs(
 ) -> None:
     """Replace `_run_and_score` with a canned per-query outcome table."""
 
-    def _fake(benchmark_query: Any) -> dict[str, Any]:
+    def _fake(benchmark_query: Any, *, repeat: int = 1) -> dict[str, Any]:
         qid = benchmark_query["query_id"]
         if seen is not None:
             seen.append(qid)
-        return outcomes[qid]
+        # ADR 0071: the runner asks for a repeat index and keys the
+        # record on it, so the double answers in the same shape.
+        record = dict(outcomes[qid])
+        record.setdefault("record_id", runner_module.research_record_id(qid, repeat))
+        record.setdefault("repeat", repeat)
+        return record
 
     monkeypatch.setattr(runner_module, "_run_and_score", _fake)
 
@@ -1254,7 +1265,7 @@ class TestMain:
         seen: list[str] = []
         partial = _record(ids[1], err="Interrupted: KeyboardInterrupt", cost=0.4)
 
-        def _fake(benchmark_query: Any) -> dict[str, Any]:
+        def _fake(benchmark_query: Any, *, repeat: int = 1) -> dict[str, Any]:
             qid = benchmark_query["query_id"]
             seen.append(qid)
             if qid == ids[1]:
@@ -1279,7 +1290,7 @@ class TestMain:
     ) -> None:
         ids = _three_ids()
 
-        def _fake(benchmark_query: Any) -> dict[str, Any]:
+        def _fake(benchmark_query: Any, *, repeat: int = 1) -> dict[str, Any]:
             if benchmark_query["query_id"] == ids[1]:
                 raise KeyboardInterrupt("signal 15")
             return _record(benchmark_query["query_id"])
@@ -1358,7 +1369,9 @@ class TestMain:
         assert seen == ids[:2]
         out = capsys.readouterr().out
         assert "Budget ceiling $1.00 reached" in out
-        assert "1 queries not run" in out
+        # "runs", not "queries": the campaign's unit became (query,
+        # repeat) with ADR 0071's `--repeats`.
+        assert "1 runs not made" in out
         assert set(load_records(tmp_path)) == set(ids[:2])
 
     @pytest.mark.usefixtures("_api_key")
@@ -1397,6 +1410,140 @@ class TestMain:
         )
         assert main_with(["--queries", ",".join(ids)], tmp_path) == EXIT_OK
         assert seen == ids
+
+
+class TestRepeats:
+    """ADR 0071: the research lane gained `--repeats`.
+
+    `REPEATS_FOR_CONFIDENCE = 3` was advertised in code while this lane
+    had no way to run a repeat at all, so three repeats of a query cost
+    triple on the learning lane and were impossible here.
+    """
+
+    def test_the_first_repeat_keeps_the_bare_query_id(self) -> None:
+        # Zero churn at the default: filenames, summary rows and resume
+        # keys are what they were before the flag existed.
+        assert runner_module.research_record_id("q1", 1) == "q1"
+        assert runner_module.research_record_id("q1", 2) == "q1.r2"
+
+    def test_the_split_is_the_inverse(self) -> None:
+        assert runner_module._split_research_record_id("q1") == ("q1", 1)
+        assert runner_module._split_research_record_id("q1.r3") == ("q1", 3)
+        # An id that does not parse is repeat 1 rather than an error: a
+        # rebuild must not fail on a record it did not write.
+        assert runner_module._split_research_record_id("odd.rx") == ("odd.rx", 1)
+
+    def test_records_sort_in_benchmark_then_repeat_order(self) -> None:
+        first, second = (q["query_id"] for q in BENCHMARK_QUERIES[:2])
+        ordered = sorted(
+            [f"{second}.r2", first, f"{first}.r10", f"{first}.r2", second],
+            key=_benchmark_order,
+        )
+        assert ordered == [first, f"{first}.r2", f"{first}.r10", second, f"{second}.r2"]
+
+    @pytest.mark.usefixtures("_api_key")
+    def test_three_repeats_write_three_records_per_query(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        ids = _three_ids()[:2]
+        _fake_runs(monkeypatch, {qid: _record(qid, cost=0.01) for qid in ids})
+
+        code = main_with(["--queries", ",".join(ids), "--repeats", "3"], tmp_path)
+
+        assert code == EXIT_OK
+        on_disk = load_records(tmp_path)
+        assert set(on_disk) == {
+            runner_module.research_record_id(qid, repeat)
+            for qid in ids
+            for repeat in (1, 2, 3)
+        }
+        # Every record still names its *query*, which is what the
+        # regression differ groups on to aggregate repeats.
+        assert {r["query_id"] for r in on_disk.values()} == set(ids)
+        assert sorted(r["repeat"] for r in on_disk.values()) == [1, 1, 2, 2, 3, 3]
+
+    @pytest.mark.usefixtures("_api_key")
+    def test_repeats_run_query_major_so_a_stopped_campaign_covers_the_set(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        # A truncated campaign that covered the whole benchmark once is
+        # worth far more than one that ran three repeats of the first
+        # third.
+        ids = _three_ids()
+        seen: list[str] = []
+        _fake_runs(
+            monkeypatch, {qid: _record(qid, cost=0.01) for qid in ids}, seen=seen
+        )
+        main_with(["--queries", ",".join(ids), "--repeats", "2"], tmp_path)
+        assert seen == ids + ids
+
+    @pytest.mark.usefixtures("_api_key")
+    def test_resume_skips_a_completed_repeat_not_the_whole_query(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        ids = _three_ids()[:1]
+        qid = ids[0]
+        done = _record(qid, cost=0.01)
+        done["record_id"] = runner_module.research_record_id(qid, 2)
+        done["repeat"] = 2
+        persist_record(tmp_path, done)
+
+        seen: list[str] = []
+        _fake_runs(
+            monkeypatch, {qid: _record(qid, cost=0.01) for qid in ids}, seen=seen
+        )
+        code = main_with(
+            ["--queries", qid, "--repeats", "3", "--resume"], tmp_path
+        )
+
+        assert code == EXIT_OK
+        assert seen == [qid, qid]  # repeats 1 and 3; repeat 2 was reused
+        assert set(load_records(tmp_path)) == {qid, f"{qid}.r2", f"{qid}.r3"}
+
+    def test_a_record_with_no_id_at_all_is_refused(self, tmp_path: Path) -> None:
+        # The fallback is for a record that predates `record_id`, not
+        # for one that names nothing.
+        with pytest.raises(KeyError, match="record_id"):
+            persist_record(tmp_path, {"query": "no id here"})
+
+    @pytest.mark.usefixtures("_api_key")
+    def test_zero_repeats_is_a_usage_error(self, tmp_path: Path) -> None:
+        assert main_with(["--repeats", "0"], tmp_path) == EXIT_USAGE
+
+    @pytest.mark.usefixtures("_api_key")
+    def test_the_campaign_prints_the_three_repeat_warning_below_the_bar(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        ids = _three_ids()[:1]
+        _fake_runs(monkeypatch, {qid: _record(qid) for qid in ids})
+        main_with(["--queries", ids[0]], tmp_path)
+        out = capsys.readouterr().out
+        assert "1 repeat(s) per query" in out
+        # And it lands in the artifact, not only on the terminal.
+        assert "repeat(s) per query" in (tmp_path / "summary.md").read_text()
+
+    @pytest.mark.usefixtures("_api_key")
+    def test_a_legacy_record_without_a_record_id_still_resumes(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        # The reason `CampaignShape` carries `legacy_id_field`: a
+        # campaign started before ADR 0071 must not be re-paid for.
+        ids = _three_ids()[:1]
+        legacy = _record(ids[0], cost=0.01)
+        legacy.pop("record_id", None)
+        legacy.pop("repeat", None)
+        persist_record(tmp_path, legacy)
+        assert (tmp_path / "queries" / f"{ids[0]}.json").is_file()
+
+        seen: list[str] = []
+        _fake_runs(
+            monkeypatch, {qid: _record(qid) for qid in ids}, seen=seen
+        )
+        assert main_with(["--queries", ids[0], "--resume"], tmp_path) == EXIT_OK
+        assert seen == []
 
 
 def main_with(argv: list[str], output_dir: Path) -> int:

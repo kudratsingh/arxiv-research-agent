@@ -282,12 +282,24 @@ is closed after every query. Writes three output layers:
 
 ```
 outputs/eval/<run_id>/
-    queries/<query_id>.json  — full record: state + metrics + timing + err
-    summary.jsonl            — one line per query (for dashboards / CI)
+    queries/<record_id>.json — full record: state + metrics + timing + err
+    summary.jsonl            — one line per run (for dashboards / CI)
     summary.md               — human-readable table + aggregates
 ```
 
 Run identifier: `YYYYMMDDTHHMMSSZ` UTC timestamp.
+
+**`--repeats N`** (ADR
+[0071](decisions/0071-eval-statistics-and-gates.md)) runs each query N
+times. A record's `record_id` is `<query_id>` for the first repeat and
+`<query_id>.rN` after it, while `query_id` keeps naming the *query* on
+every repeat — which is what the regression differ groups on to
+aggregate repeats before diffing. Keeping the first repeat unsuffixed is
+deliberate: a default campaign writes exactly the filenames, summary
+rows and resume keys it always did, and a campaign started before the
+flag existed still resumes without being re-paid for. Repeats run
+query-major, so a budget-stopped campaign covers the whole benchmark
+once before it runs anything twice.
 
 `queries/*.json` is the durable layer: it is written the moment a query
 finishes, and both summary files are derived from it at the end of the
@@ -343,6 +355,7 @@ make eval QUERIES=hallucination-mitigation,rag-multi-hop
 python -m src.eval.runner --output-dir custom/dir  # bypass Makefile
 python -m src.eval.runner --output-dir custom/dir --resume
 python -m src.eval.runner --max-budget-usd 25      # campaign ceiling
+python -m src.eval.runner --repeats 3              # 3 runs per query
 python -m src.eval.runner --help                   # full CLI reference
 ```
 
@@ -354,6 +367,11 @@ workflow+judge spend (including spend reused from a resumed campaign),
 so the final query can overshoot the ceiling by its own cost. It is a
 campaign ceiling, and the only one the eval path owns — the per-call
 dollar cap is ADR 0051's, at `call_llm`.
+
+`--repeats N` costs **N times as much** and buys one better estimate
+rather than N comparisons; the runner prints the three-repeat warning
+below three, on the terminal and in `summary.md`. See
+[The three-repeat rule](#the-three-repeat-rule).
 
 ### Campaign run-book
 
@@ -756,30 +774,57 @@ runner and the learner simulator write different summaries:
 | `research` (default) | `src/eval/runner.py` | `query_id` | `eval` |
 | `learning` | `src/eval/simulate_learner.py` | `record_id` | `learning-eval` |
 
-A `MetricLane` holds one campaign's id field, metric set, thresholds
-and report vocabulary; the diff logic itself is single-copy. The
-research lane is assembled from the same module constants it always
-used, its CLI call is unchanged, and its rendered report is byte-for-byte
-what it was — the learning lane is additive, not a rewrite. Feeding a
-research summary to `--lane learning` fails loudly on the missing
-`record_id` rather than producing an empty, green-looking diff.
+A `MetricLane` holds one campaign's id field, task field, metric set,
+thresholds and report vocabulary; the diff logic itself is single-copy.
+Feeding a research summary to `--lane learning` fails loudly on the
+missing `record_id` rather than producing an empty, green-looking diff.
+
+Exit codes:
+
+| Code | Meaning |
+|---|---|
+| 0 | `PROMOTE` or `HOLD` — no regression was established |
+| 1 | `ROLLBACK` — one or more regressions cleared their band |
+| 2 | invalid input (missing current file, bad JSONL) |
+| 3 | the two runs are not comparable; no verdict was reached |
 
 Metrics are judged by class (ADR
 [0044](decisions/0044-eval-cost-accuracy-and-regression-thresholds.md),
 revisiting ADR [0010](decisions/0010-nightly-eval-ci.md)'s single
-global threshold):
+global threshold; the score-metric rule below is ADR
+[0071](decisions/0071-eval-statistics-and-gates.md)'s):
 
 | Metric class | Metrics | Regression rule |
 |---|---|---|
-| Score (0-1 judge outputs) | `citation_accuracy`, `completeness`, `faithfulness`, `retrieval_recall`, `critic_score` | absolute drop > `--threshold` (default 0.10) |
+| Score, fine-grained | `citation_accuracy`, `faithfulness` | absolute drop > `--threshold` (default 0.10) |
+| Score, quantised | `completeness`, `retrieval_recall` | absolute drop > `1.5 x` the metric's quantum — **0.375**, so one flipped topic decision passes and two fire |
 | Resource (counts / dollars) | `iterations`, `llm_calls`, `cost_usd` | rise > per-metric absolute floor **and** > per-metric relative band (`RESOURCE_THRESHOLDS`) |
+| Diagnostic (never gates) | `critic_score` | tabulated, marked *(not gated)* |
 
-Both classes are direction-aware: a score rising or a cost falling
-past the same bounds is an *improvement*, never a regression. The
-resource bands are floor `+1` / `+50%` for `iterations`, `+4` /
+Both gating classes are direction-aware: a score rising or a cost
+falling past the same bounds is an *improvement*, never a regression.
+The resource bands are floor `+1` / `+50%` for `iterations`, `+4` /
 `+25%` for `llm_calls`, and `+$0.10` / `+25%` for `cost_usd` — sized
 so one extra critic revision, one extra rankable paper, or a $0.02
 cost wiggle can never fail the nightly on its own.
+
+**Why the quantised metrics get their own band.** `completeness` and
+`retrieval_recall` are both `matched / len(expected_topics)`, and 19 of
+the 20 benchmark queries declare four expected topics — so those metrics
+can only take the values 0, 0.25, 0.5, 0.75, 1.0. A flat 0.10 band sits
+*below* one step, which made a single borderline topic decision flipping
+a guaranteed red. `score_epsilon()` derives the band from the declared
+quantum (`SCORE_QUANTA`) instead, floored at `--threshold` so a
+fine-grained metric never gets a *narrower* band than the judge-noise
+estimate.
+
+**Why `critic_score` no longer gates.** It is produced by
+`src/agents/critic.py` — a component of the workflow under test — so
+gating on it lets the system decide whether it regressed. And
+`critic.py` coerces an unparseable judge response to `0.0`, which
+arrives at the differ as a full-scale quality collapse indistinguishable
+from a real one. It is still diffed and still printed, marked
+*(not gated)*.
 
 ### The learning lane's fields
 
@@ -788,8 +833,28 @@ Three classes, same ADR 0044 system, different metrics:
 | Class | Fields | Rule |
 |---|---|---|
 | Rubric scores | `shame_free_score`, `plan_coherence` | absolute drop > `--threshold` (default 0.10) |
-| Deterministic outcome rates | `shame_free`, `downscope_honest`, `progress_events_evidence_linked`, `injection_contained` | same threshold leg; these are per-session booleans, so a flip is a delta of 1.0 and clears any epsilon |
-| Resource | `expectation_failures`, `llm_calls`, `cost_usd` | rise > absolute floor **and** > relative band |
+| Deterministic outcome rates | `shame_free`, `pedagogy_clean`, `downscope_honest`, `progress_events_evidence_linked`, `injection_contained` | same threshold leg; these are per-session booleans, so a flip is a delta of 1.0 and clears any epsilon |
+| Resource | `expectation_failures`, `pedagogy_violations`, `llm_calls`, `cost_usd` | rise > absolute floor **and** > relative band |
+
+**`pedagogy_clean` / `pedagogy_violations`** (ADR
+[0072](decisions/0072-adversarial-safety-suite.md)) are the
+deterministic deny-list scan, gated here because that is what turns
+"fails pytest, invisible to the campaign gate" into a campaign metric.
+Both columns: the boolean is what a gate reads, and the count is what
+says whether an already-failing session got *worse*.
+`pedagogy_violations` takes `expectation_failures`' zero-tolerance band
+— a banned pedagogy scalar in learner-facing copy is not run-to-run
+variance. A campaign written before ADR 0072 carries `None` rather than
+`0`, and the differ reads that as an absent comparison rather than a
+clean one: "never scanned" and "scanned and clean" are different claims.
+
+**The safety veto is not part of the statistical decision, and it
+outranks it.** ADR 0072's categorical hard violations — a secret
+exfiltrated, an unauthorised tool called, egress to a non-allowlisted
+host — are absolute zero, and absolute zero is not a statistical claim:
+no baseline, interval or sample size makes a violation less of one.
+Where the two gates compose, the safety veto evaluates **first** and is
+binding even while the statistical arm here is advisory.
 
 The outcome rates are booleans read as 1.0/0.0, which makes their
 aggregate the campaign's *rate* for that outcome — the fraction of
@@ -837,39 +902,185 @@ regression — but the report never hides it. Each aggregate row carries
 a `Compared` column (`faithfulness … | 2 / 20`), and a metric the
 baseline scored while the current run did not gets named in the header.
 
-### The statistics, honestly
+### Comparability comes before comparison
 
-The gate compares **two single runs** of a nondeterministic system
-(live arXiv results, sampling temperature, a critic that decides
-whether to ask for revisions). What that means in practice:
+Since ADR [0070](decisions/0070-eval-integrity-provenance.md) every
+summary row carries a `provenance` block. ADR
+[0071](decisions/0071-eval-statistics-and-gates.md) makes the differ
+read it: when the two runs disagree on the **instrument** — `judge_model`,
+`rubric_versions`, `dataset_version`, `tier` or `mock_mode` — the
+comparison is refused, the report says which field moved, and the CLI
+exits **3** without reaching a verdict. A delta measured across a judge
+swap or a rubric edit is a measurement of the edit.
 
-- **Quantization dominates the score epsilon for ratio metrics.**
-  `completeness` and `retrieval_recall` move in steps of
-  `1/len(expected_topics)` — typically 0.20-0.25 per query. The 0.10
-  epsilon therefore filters *nothing* for those two: a single
-  borderline topic decision flipping registers as a full step and
-  fires the per-query gate. `citation_accuracy` and `faithfulness`
-  have finer denominators (citations / claims), where 0.10 is a real
-  noise filter.
-- **The thresholds are priors, not measured spread.** Nothing in
-  `src/eval` computes run-to-run variance today (no stdev, no
-  confidence intervals). The bands come from reasoning about the
-  mechanics (what one critic revision costs in calls and dollars),
-  not from data.
-- **What we can detect:** sustained quality collapses (a metric
-  dropping ≥ 2 quantization steps, or across several queries), call
-  or iteration runaway (loop bugs), and cost creep above 25%.
-- **What we cannot detect:** single-query, single-step ratio-metric
-  drops are indistinguishable from judge noise; slow drift below the
-  bands accumulates silently (ADR 0010 already documents the
-  gradual-drift blind spot — each nightly rebaselines on the previous
-  night).
-- **The fix, when we invest in it:** run the benchmark 3+ times
-  against an unchanged `main`, compute per-metric spread, and set the
-  thresholds at ~3x the observed noise. Until a 3-repeat baseline
-  exists, treat a red nightly on exactly one query and one metric
-  with suspicion and read the per-query table before reverting
-  anything.
+Two deliberate exclusions:
+
+- **`product_model` is not in that set.** A product model change is
+  usually the *subject* of a regression diff, so it is reported as a
+  note beside the numbers, never as a refusal.
+- **A run carrying no block at all is *unknown*, not *different*.**
+  Refusing there would turn every pre-ADR-0070 baseline into a permanent
+  red, so the comparison proceeds and the report states that the
+  attribution is missing. Only two blocks that *disagree* refuse.
+
+A campaign can also disagree with itself — `--resume` re-enters a
+campaign that may have been started under a different judge — and that
+is a refusal too.
+
+After a deliberate rubric bump the correct move is to **re-establish the
+baseline**, not to override the check: the previous night's summary is
+genuinely no longer comparable, and the workflow already treats a
+missing baseline as "this run becomes the baseline".
+
+### The statistics
+
+`src/eval/stats.py` (ADR
+[0071](decisions/0071-eval-statistics-and-gates.md)) holds the
+estimators. Everything in it is pure, seeded, stdlib-only, and unit
+tested against values computed by hand in the test — a bootstrap checked
+only against itself is not checked. **No model call happens anywhere in
+the gate**, and `tests/test_regression_diff.py` asserts it by running
+the whole diff with every `src/llm.py` entry point patched to raise: a
+judge inside a gate is an attack surface, not a control.
+
+**Pairing is the headline, and it is worth an order of magnitude.**
+Detecting a 5-point gain against an 80% baseline needs roughly **906
+items per arm unpaired** and roughly **77 paired** under McNemar at low
+discordance ([`02-STANDARDS.md`](../planning/08-assurance/02-STANDARDS.md)
+§2.3). Both figures are *reproduced* by the module rather than quoted —
+`unpaired_required_per_arm(baseline_rate=0.80, delta=0.05)` returns 906
+and `mcnemar_required_pairs(delta=0.05, discordance=0.05)` returns 77 —
+so the claim is checkable from this repository. Note what the 77 is:
+Connor's formula with the power term switched off, i.e. the smallest
+sample at which such a move is significant *at all*. At 80% power the
+same move needs **155**. Both are an order of magnitude below 906, which
+is the finding.
+
+At 20 queries and 15 scenarios, pairing is therefore not an
+optimisation — it is the difference between a gate that can measure
+something and one that cannot. Every comparison runs over the
+**intersection** of the two runs' tasks.
+
+| Estimator | Used for |
+|---|---|
+| `paired_bootstrap_delta` | 95% interval on the mean paired delta, resampling tasks — and repeats within tasks when a campaign has them |
+| `mcnemar` | Paired binary outcomes; exact binomial by default, because at single-digit discordant counts χ² reports p-values that are too small |
+| `wilson_interval` | Binary rates; Wald collapses to zero width at 20/20 and can return bounds outside `[0, 1]`. Also the safety suite's — see below |
+| `pass_hat_k` | `pass^k` — the probability that *all* k repeats succeed, which has displaced `pass@1` |
+| `rule_of_three` | A clean sweep's upper bound: zero failures in 20 runs supports ≈15%, not zero |
+| `mcnemar_required_pairs` / `unpaired_required_per_arm` | The power statement the report prints |
+| `pair_binary_outcomes` | Matching two arms' per-claim outcomes into those pairs — see below |
+
+`src/eval/safety_suite.py` (ADR
+[0072](decisions/0072-adversarial-safety-suite.md)) had its own copy of
+the Wilson formula, correctly — `stats.py` did not exist on that branch,
+and a safety gate that cannot run until another work order lands is a
+safety gate that does not run. It now delegates here, keeping its own
+contract in a thin wrapper: `(0.0, 0.0)` at zero trials, where this
+module raises, and its pinned `Z_95` passed straight through rather than
+round-tripped via a confidence level. The shared implementation writes
+the spread term in that module's own association, so the result is
+**bit-identical** over every `(successes, trials)` with `trials ≤ 300` —
+ADR 0072's recorded 3/42 = 2.46%–19.01% baseline did not move when the
+arithmetic was rehomed.
+
+#### An unmatched claim is counted, not scored
+
+ADR [0074](decisions/0074-deterministic-groundedness.md)'s
+`groundedness.paired_outcomes()` returns `{claim_id: grounded}` keyed by
+a content-derived id that is stable across arms and runs — exactly the
+paired binary variable McNemar needs. It left one question open on
+purpose: **is a claim present in one arm and absent from the other
+discordant, or out of scope?** McNemar's discordant cells *are* the
+test, so the answer moves the p-value directly, and ADR
+[0071](decisions/0071-eval-statistics-and-gates.md) §5b decides it.
+
+**Neither.** `pair_binary_outcomes` returns the matched pairs plus
+`unmatched_baseline` and `unmatched_candidate`, and the statistic is
+computed over the matched pairs alone.
+
+- Scoring an absence as **discordant** would read "did not make the
+  claim" as "failed to support the claim", punishing an arm for being
+  appropriately conservative — the behaviour a groundedness metric
+  should reward.
+- Scoring it as **concordant** would dilute the discordant cells with
+  items the arms never disagreed about, because one never spoke.
+- **Silently intersecting** is the cleanest arithmetic and hides the
+  case that matters most: a candidate that stops making a claim it used
+  to get right is a movement worth seeing, not a smaller denominator.
+
+So a caller reports `n=14 comparable, 6 unmatched` rather than a p-value
+over 14 that never mentions the 20. That is the same shape ADR 0074
+chose for its own undecidable quotes — `grounded=None` with a visible
+`excluded` count beside `source_coverage`. A large unmatched count means
+the two arms wrote about different things, and the p-value is then a
+statement about a subset whose size the reader has to check.
+
+**Repeats are aggregated by task before anything is diffed**, on both
+lanes. Before ADR 0071 the learning lane's `--repeats 3` produced
+`s.r1` / `s.r2` / `s.r3`, which the differ compared *pairwise* — three
+repeats cost triple and yielded three single-run comparisons. Now
+`aggregate_repeats` groups on the lane's task column (`query_id` /
+`scenario_id`), and the bootstrap resamples repeats *within* a task, so
+three repeats of one query are not counted as three independent
+observations (which would report an interval about `sqrt(3)` too
+narrow).
+
+### The gate ends in a decision
+
+| Verdict | Meaning | Exit |
+|---|---|---|
+| `PROMOTE` | No regression, on a comparison with enough paired items to have found one | 0 |
+| `HOLD` | Nothing cleared a band, and nothing here can rule out a move that did not | 0 |
+| `ROLLBACK` | A regression cleared its band, or the run lost records | 1 |
+
+`HOLD` also covers a sub-band move whose interval excludes zero: below
+the gate's band, but not explained by sampling.
+
+**At today's N the answer is `HOLD`, and the report prints the
+arithmetic** — 20 paired queries against the 155 an 80%-powered
+5-point test needs. That is the honest version of the flat ±0.10 band
+ADR 0044 already called "priors, not statistics". A gate that says
+*cannot distinguish* is worth more than one that says *fine* on the same
+evidence.
+
+### What the numbers still cannot do
+
+- **The interval is approximate, and narrower than the truth.** Below
+  roughly 200 datapoints the central-limit approximation every interval
+  here rests on **underestimates** uncertainty. The report says so in
+  words on every run under that line rather than printing a falsely
+  narrow number and leaving the reader to believe it. A Bayesian
+  treatment is the correct tool at this N
+  ([`02-STANDARDS.md`](../planning/08-assurance/02-STANDARDS.md) §2.3);
+  it needs a prior no campaign has produced yet.
+- **The bands are still priors, not measured spread.** No funded
+  campaign has ever run on either lane (**W-OD-1**), so nothing in
+  `RESOURCE_THRESHOLDS` or `SCORE_QUANTA` comes from observed
+  variance. The first 3-repeat baseline is what turns them into
+  measurements.
+- **Slices are diagnostic.** Only the lane's predeclared primary metric
+  (`faithfulness` on the research lane, `shame_free` on the learning
+  one) always gets an interval; the others get one when they moved
+  adversely, and carry no multiplicity correction. Simultaneous
+  per-metric tests on 20 queries produce false alarms by arithmetic.
+- **Slow drift below the bands still accumulates silently.** ADR 0010's
+  gradual-drift blind spot is unchanged — each nightly rebaselines on
+  the previous night.
+- **The gate's only citation signal is still the dishonest one.** The
+  research lane reads `citation_accuracy` from the summary row, which
+  `src/eval/metrics.py` produces — and it returns 1.0 for a report with
+  zero citations, and scores **1.0** on this repository's own e2e
+  fixture, where the report cites `arxiv:2311.05232` and the retrieved
+  corpus contains `2311.09000`. ADR
+  [0074](decisions/0074-deterministic-groundedness.md)'s
+  `citation_resolution_rate` scores that same fixture **0.0**, correctly.
+  The gate cannot read it yet: ADR 0074 shipped
+  `src/eval/groundedness.py` as a library and deliberately did not wire
+  it into `runner.py`'s summary row, because `metrics.py` belongs to
+  another work order. Wiring it invalidates every existing baseline and
+  must land with a version note; when it does, this gate needs no change
+  beyond moving `RESEARCH_LANE.primary_metric`.
 
 ## Guided-read learning metrics (Phase W)
 
@@ -1036,6 +1247,14 @@ a warning naming
 differences are noise. It warns rather than refuses: one repeat is a
 perfectly good smoke run, and it is only a *comparison against a
 baseline* that needs three.
+
+**Since ADR [0071](decisions/0071-eval-statistics-and-gates.md), repeats
+buy what they were supposed to buy.** The research runner has the flag
+too, both lanes print the warning on the terminal *and* in `summary.md`,
+and the regression differ aggregates repeats by task before diffing —
+so N repeats now give one tighter estimate rather than N separate
+single-run comparisons. See
+[The statistics](#the-statistics).
 
 ### The one recorded divergence, resolved
 
@@ -1349,7 +1568,8 @@ block (`tests/test_readme_update.py`).
 - A funded first campaign, on **either** lane. Everything downstream of
   it — the README block, both regression baselines
   (`eval-summary-latest`, `learning-summary-latest`), the 3-repeat noise
-  measurement in [The statistics, honestly](#the-statistics-honestly),
+  measurement in
+  [What the numbers still cannot do](#what-the-numbers-still-cannot-do),
   the calibration set above, and the learning lane's first scheduled run
   (WO-W11 c4) — is blocked on it. It is a cost decision reserved for the
   repository owner, tracked as **W-OD-1**, and the nightly workflow stays
