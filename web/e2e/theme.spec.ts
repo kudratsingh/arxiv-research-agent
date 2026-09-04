@@ -213,4 +213,67 @@ test.describe("WO-01 deferred proof — no theme flash before first paint", () =
       ).toBe(1);
     },
   );
+
+  /**
+   * KNOWN GAP §16, made deterministic.
+   *
+   * The test above used to fail about three runs in ten on webkit and
+   * occasionally on chromium, always at the `data-theme` assertion and never
+   * at the `toBeChecked()` one. That shape is the whole diagnosis: the click
+   * landed, the browser checked the radio natively, and React was still being
+   * parsed — so `ThemeToggle`'s `onChange` never ran, nothing was written,
+   * and the control was left showing a choice the document had not taken.
+   * Which engine wins that race is scheduling; that the interaction is lost
+   * when it is lost was the defect, and it belonged to a visitor on a slow
+   * connection long before it belonged to a test.
+   *
+   * This holds the client chunks until after the click instead of hoping to
+   * lose the race, so the pre-hydration window is entered on purpose and on
+   * every engine. It fails on the commit before the fix — `data-theme` stays
+   * `light` and `localStorage` stays empty, forever, not just for a moment.
+   */
+  test(
+    "a choice made before hydration is not dropped",
+    { tag: "@theme" },
+    async ({ page }) => {
+      let hydrate = (): void => {};
+      const held = new Promise<void>((resolve) => {
+        hydrate = resolve;
+      });
+      // Only the client bundle is held. The document, its CSS and the
+      // pre-paint inline script are untouched, so what renders is exactly
+      // what a real visitor sees while their JavaScript is still in flight.
+      await page.route("**/_next/static/chunks/**", async (route) => {
+        await held;
+        await route.continue();
+      });
+
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+
+      const toggle = page.locator("[data-theme-toggle]");
+      await toggle.getByText("Dark", { exact: true }).click();
+
+      // Nothing can have happened yet: this is the window the bug lived in.
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+      hydrate();
+
+      // The observable readiness signal is the effect of hydration itself —
+      // the choice being honoured — so this waits for the product's own
+      // output rather than for a duration.
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+      await expect(page.locator("html")).toHaveAttribute(
+        "data-theme-preference",
+        "dark",
+      );
+      await expect(toggle.getByRole("radio", { name: "Dark" })).toBeChecked();
+
+      const storage = await page.evaluate(() => ({
+        length: window.localStorage.length,
+        theme: window.localStorage.getItem("arxiv-agent.theme"),
+      }));
+      expect(storage.theme).toBe("dark");
+      expect(storage.length).toBe(1);
+    },
+  );
 });

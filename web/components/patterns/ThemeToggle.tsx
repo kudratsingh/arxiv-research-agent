@@ -21,6 +21,12 @@
  *      preference was already "system" at load, so a user who switches
  *      *to* system in this session would otherwise stop tracking the OS
  *      until the next reload.
+ *   4. ADOPT a choice made before hydration. The radios are real markup
+ *      from first paint, so a click can land while React is still being
+ *      parsed; the browser checks the radio and nothing else happens. The
+ *      mount effect below reads that back and completes the interaction
+ *      rather than leaving the control showing a choice the document
+ *      never took (known gap §16).
  *
  * WHY NATIVE RADIOS. Three `<input type="radio">` in a `<fieldset>` give
  * the group its accessible name from `<legend>`, arrow-key navigation, and
@@ -58,6 +64,14 @@ const THEME_LABEL: Record<ThemePreference, string> = {
 };
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+/**
+ * The radio group's `name`. Named once because the mount effect below reads
+ * the group back out of the DOM by it: radios sharing a `name` ARE one group
+ * to the platform, so the document-wide query and the rendered markup have to
+ * agree by construction rather than by two matching string literals.
+ */
+const RADIO_GROUP_NAME = "theme-preference";
 
 /* -------------------------------------------------------------------------
  * The store: `data-theme-preference` on the document element.
@@ -157,6 +171,48 @@ export function ThemeToggle({ className }: ThemeToggleProps): React.ReactElement
     };
   }, [preference]);
 
+  // Item 4 in the header: adopt a choice the user made BEFORE hydration.
+  //
+  // Between first paint and hydration the radios are live markup with no
+  // React attached. A click on a label checks its radio natively — the
+  // browser does that, not React — and `onChange` below is not there to
+  // hear it, so without this the choice is dropped and never recovered:
+  // the control sits showing "Dark" while `data-theme` stays light and
+  // storage stays empty. That is the whole of gap §16, and it is a defect
+  // for any visitor whose bundle lands late, not only for a test.
+  //
+  // WHAT MAKES THIS SAFE TO RUN ON EVERY MOUNT. The value that arrives in
+  // the server markup is `serverThemePreference()`, so a checked radio
+  // holding anything else can only have been checked by the user. Adopting
+  // is skipped when the checked radio already agrees with the live
+  // preference (nothing happened) and when it is the server's own default
+  // (React has not re-rendered from the client snapshot yet). Both guards
+  // are value comparisons rather than assumptions about when React's
+  // `useSyncExternalStore` re-render lands relative to this effect, which
+  // is deliberately not an ordering this component gets to depend on.
+  //
+  // WHY IT IS DECLARED AFTER THE `system` EFFECT AND NOT BEFORE IT. Both run
+  // in declaration order on the mount commit, and that one writes
+  // `data-theme` on the hydration pass because `preference` is still the
+  // server snapshot there — the defect `e2e/theme.spec.ts` declares with
+  // `test.fail`, which is not this change's to fix. Declared first, the
+  // adopted choice would be applied and then immediately overwritten.
+  //
+  // THE ONE CASE IT CANNOT SEE, recorded rather than left to be discovered:
+  // a pre-hydration click on the option the server already rendered as
+  // checked. It changes no DOM state and fires no `change` event, so
+  // nothing distinguishes it from no click at all.
+  useEffect(() => {
+    const chosen =
+      document.querySelector<HTMLInputElement>(
+        `input[name="${RADIO_GROUP_NAME}"]:checked`,
+      )?.value ?? null;
+    if (!isThemePreference(chosen)) return;
+    if (chosen === readThemePreference() || chosen === serverThemePreference())
+      return;
+    setThemePreference(chosen);
+  }, []);
+
   const onChange = useCallback((next: ThemePreference) => {
     setThemePreference(next);
   }, []);
@@ -181,7 +237,7 @@ export function ThemeToggle({ className }: ThemeToggleProps): React.ReactElement
         <label key={option} className="ew-theme-option">
           <input
             type="radio"
-            name="theme-preference"
+            name={RADIO_GROUP_NAME}
             value={option}
             checked={preference === option}
             onChange={() => onChange(option)}
