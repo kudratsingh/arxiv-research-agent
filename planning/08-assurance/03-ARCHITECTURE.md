@@ -54,7 +54,15 @@ against — because an open string used as a metric attribute is unbounded
 cardinality (baseline §5) and an open string used as a client field is an
 unversioned contract (baseline §2).
 
-Code families, one per boundary meaning:
+Code families, one per boundary meaning. **Corrected during WO-A01**: the
+table below reads as a naming scheme, and it is not one. Families are
+implemented as **base classes** carrying the status and the retryability;
+concrete codes keep their existing on-the-wire spelling (`job_not_found`,
+not `not_found_job`). Renaming them would have falsified
+`web/contract/fixtures/*.json`, forked three live
+`research_jobs_total{error_type}` series, and contradicted `src/config.py`,
+which documents `error_type=hitl_timeout`. Read the prefixes as families,
+never as a rename instruction:
 
 | Family | HTTP | Retryable | Example |
 |---|---|---|---|

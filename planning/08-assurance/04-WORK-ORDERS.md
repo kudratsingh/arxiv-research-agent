@@ -2,7 +2,7 @@
 
 Status: **READY FOR EXECUTION**
 
-Sixteen work orders in three waves. Each is one branch, one PR, one
+Seventeen work orders in three waves. Each is one branch, one PR, one
 reviewable diff, executed by a dedicated agent in its own worktree.
 
 > **Revised 2026-09-04** after the standards research pass returned. WO-A04
@@ -66,6 +66,14 @@ literal. **Never write `#<number>` in a `web/` file** — write `PR 159`.
   surrounding files.
 - Type annotations are mandatory (`mypy --strict` runs on `src/`).
 
+### 0.3b Scratchpad hygiene
+
+Concurrent agents in this project **share one scratchpad directory**. In wave 2
+two agents both wrote `pr-body.md` there, and one published the other's text to
+its PR before catching it. Name every scratch file for your work order —
+`wo-a09-pr-body.md`, never `pr-body.md` — and re-read what you wrote
+immediately before you use it.
+
 ### 0.4 Your PR body must state
 
 - what you ran and the exact result lines (test counts, mypy, ruff);
@@ -100,7 +108,7 @@ wave 1   A01 errors ──┬─────────────► A04 resi
          A03 context ───────────────► A07 telemetry ──► A10, A12 (w3)
 
 wave 2   A04  A05  A06  A07  A08  A15
-wave 3   A09  A10  A11  A12  A16  A13 (CI, last)  A14 (evidence, last)
+wave 3   A09  A10  A11  A12  A16  A17   A13 (CI, last)  A14 (evidence, last)
 ```
 
 `A13` and `A14` are last by construction: A13 wires the new tiers into CI and
@@ -126,6 +134,7 @@ must see them all merged; A14 assembles evidence from what actually landed.
 | A13 | CI wiring for the new tiers | 3 | — | all |
 | A14 | Assurance evidence pack and framework mapping | 3 | — | compliance |
 | A16 | Deterministic groundedness — hallucination measurement with no judge | 3 | 0074 | evaluation |
+| A17 | The defects the new tiers found | 3 | — | error handling / correctness |
 
 ---
 
@@ -1208,3 +1217,83 @@ it exists only because of the domain.
 - PDF text extraction is lossy; a quote check that is too strict measures the
   parser, not the agent. Calibrate against the existing fixtures and record
   what you found.
+
+
+## WO-A17 — The defects the new tiers found
+
+**Branch:** `assurance/wo-a17-defects`. **Depends:** wave 2 (all merged).
+
+### Objective
+
+Wave 2's tiers were built to find defects, and they did — on their first run,
+before any of them had gated a single PR. This work order fixes the ones that
+are genuinely product defects rather than gaps in the assurance layer itself.
+
+Each item below was found by a named tier and must land with a test **in that
+tier** proving it, so the fix is pinned by the mechanism that caught it.
+
+### Owns
+
+- `src/agents/critic.py`, `src/agents/synthesizer.py`
+- `src/api/streaming.py`, `src/api/admin_migrate.py`
+- `src/tools/pdf_parser.py`
+- `src/config.py` — the chunker cross-field validator only
+- `src/errors.py` — the new `upstream_model` code only
+- the corresponding tests, in the tier that found each defect
+- `docs/agents/critic.md`, `docs/agents/synthesizer.md`
+
+### Must not touch
+
+`src/api/app.py`, `src/api/routes.py`, `src/api/serve.py`, `src/api/runner.py`
+(WO-A10); `src/eval/**` (WO-A09/A16); `src/observability/**`.
+
+### The defects
+
+1. **The critic's ceiling is off by one** (found by the e2e tier). It compares
+   `iteration >= max_iterations` *before* incrementing, so a bounded run makes
+   one more pass than the ceiling names, and the learner-visible message
+   renders `(iteration 3/2)`. **Care required:** changing the loop bound
+   changes iteration counts that eval baselines and recorded fixtures read.
+   Determine the blast radius first and state it; if fixing the count would
+   require re-recording fixtures, fix the *message* and the comparison
+   separately and say which you did.
+2. **`CHUNKER_OVERLAP_TOKENS` may exceed `CHUNKER_MAX_TOKENS`** (found by the
+   property tier). The two validate independently, so `overlap=500` with
+   `budget=100` is accepted and makes `_split_by_budget` emit roughly one
+   chunk per character. Add a cross-field validator in the shape of the
+   existing `_check_lease_invariant`.
+3. **`format_sse` does not sanitise its event name** (found by the property
+   tier). A newline splits one frame into two. Unreachable today because the
+   name comes from a closed set; reachable the day a name derives from client
+   input.
+4. **No `upstream_model` code exists** (found by the fault tier). A
+   model-provider outage lands `internal_unexpected`, indistinguishable from a
+   null dereference — *unless* it passes through the reader, which converts it
+   to `upstream_paper_read`. **The same outage gets a different code depending
+   on which node was running**, which is the part that matters.
+5. **`admin_migrate.py:464,811` logs `owner` — a principal id — verbatim**
+   (found by WO-A03's review). The log layer went to some trouble to hash
+   principals; this writes one in clear.
+6. **`synthesizer.py:281`'s semantic retry multiplies against the SDK
+   envelope** (found by WO-A04). `for attempt in (1, 2)` is a legitimate
+   corrective retry and correctly survived the retry consolidation, but its
+   worst case is 2 × 5 × 120 s against a 600 s job budget. Bound it against
+   the remaining job budget the way `src/llm.py:62-91` clamps.
+7. **`pdf_parser.py`'s `DOWNLOAD_TIMEOUT_SEC` is still a constant** (found by
+   WO-A04) and receives no clamp. Make it a setting and clamp it.
+
+### Acceptance
+
+- Every fix has a test in the tier that found it, and the PR body names the
+  tier per defect.
+- Defect 1 states its blast radius on fixtures and eval baselines explicitly.
+- Defect 4's test proves a model-provider outage produces the **same** code
+  regardless of which node was running.
+- Full suite green, coverage floors hold, mypy strict, ruff clean, zero spend.
+
+### Traps
+
+- This is seven small changes, not one refactor. Keep them separable — if one
+  turns out to be large, land the other six and report.
+- Defect 1 is the only one that can change product behaviour. Treat it with
+  more suspicion than the rest.
