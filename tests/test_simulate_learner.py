@@ -309,9 +309,15 @@ class TestScriptedTierRunsTheFullSet:
 #: renders the service's own strings verbatim (RC-16/H11), so a phrase the
 #: dictionary may not contain can still reach the learner if the tutor emits
 #: it. Kept small and deliberately re-typed rather than generated — a Node
-#: dependency in a Python unit test would be a worse coupling than a list two
-#: reviewers can diff by eye. Adding an entry there without adding it here
-#: costs nothing; the reverse is what this guard is for.
+#: dependency in a Python unit test would be a worse coupling than a list one
+#: test can read. That test is
+#: `test_the_web_deny_list_and_the_python_mirror_are_the_same_list` below: it
+#: parses `PEDAGOGY_PHRASES` out of the TypeScript as text and fails on a
+#: changed id, a changed order, a drifted pattern source, or an entry that lost
+#: its case-insensitivity. Re-typing is what keeps the tiers uncoupled; that
+#: test is what makes re-typing safe rather than merely cheap, and it is why
+#: neither direction of drift is free any more (known-gap §17 — until it
+#: existed, the copies were kept in step by eye).
 PEDAGOGY_DENY_LIST: tuple[tuple[str, str], ...] = (
     ("mastery", r"\bmaster(?:ed|s|ing|y)?\b"),
     ("percentage of knowledge", r"%|\bpercent(?:age|ile)s?\b"),
@@ -348,6 +354,52 @@ def _pedagogy_offenders(texts: Sequence[str]) -> list[tuple[str, str]]:
             end = min(len(text), match.end() + 40)
             offenders.append((phrase_id, text[start:end]))
     return offenders
+
+
+#: The canonical list's file, located the way the other `web/**` readers in
+#: this suite locate theirs (`tests/test_contract_sse_events.py`,
+#: `tests/test_contract_learn_fixtures.py`).
+_COPY_TS = Path(__file__).resolve().parents[1] / "web" / "lib" / "copy" / "index.ts"
+
+#: One `{ id, pattern, why }` object of `PEDAGOGY_PHRASES`. The regex literal
+#: may sit on its own line (the formatter wraps the long ones), and its source
+#: may contain escapes but not a bare `/`, which is what closes it.
+_TS_PEDAGOGY_ENTRY = re.compile(
+    r"\{\s*id:\s*\"(?P<id>[^\"]+)\",\s*"
+    r"pattern:\s*/(?P<source>(?:\\.|[^/\\\n])+)/(?P<flags>[a-z]*)\s*,",
+    re.S,
+)
+
+
+def _ts_pedagogy_phrases() -> list[tuple[str, str, str]]:
+    """Read `PEDAGOGY_PHRASES` out of `web/lib/copy/index.ts` as text.
+
+    Returns `(id, regex source, flags)` in file order. Parsed rather than
+    imported on purpose: WO-W07's
+    `test_the_database_ban_and_the_python_ban_are_the_same_list` reads its
+    other tier's copy the same way, and a Node dependency in a Python unit
+    test would cost more than this reader does.
+    """
+    text = _COPY_TS.read_text(encoding="utf-8")
+    array = re.search(
+        r"export const PEDAGOGY_PHRASES:[^=]*=\s*\[(?P<body>.*?)\n\];", text, re.S
+    )
+    assert array is not None, f"PEDAGOGY_PHRASES is no longer an array literal in {_COPY_TS}"
+    body = array.group("body")
+    entries = [
+        # A `/` inside a TS regex literal is written `\/`; the same character
+        # needs no escape in a Python pattern string. That is the only
+        # difference the two syntaxes force on an otherwise identical rule.
+        (match.group("id"), match.group("source").replace("\\/", "/"), match.group("flags"))
+        for match in _TS_PEDAGOGY_ENTRY.finditer(body)
+    ]
+    declared = len(re.findall(r"^\s+id:\s*\"", body, re.M))
+    assert len(entries) == declared, (
+        f"read {len(entries)} of {declared} PEDAGOGY_PHRASES entries in {_COPY_TS}: "
+        "an entry's shape defeated this reader, so the comparison below would "
+        "silently skip it"
+    )
+    return entries
 
 
 @pytest.mark.usefixtures("_zero_spend")
@@ -431,6 +483,46 @@ class TestLearnerFacingCopyNamesNoPedagogyScalar:
         # guard exists alongside `find_shaming_language` rather than
         # inside it.
         assert metrics_module.find_shaming_language(planted) == []
+
+    def test_the_web_deny_list_and_the_python_mirror_are_the_same_list(
+        self,
+    ) -> None:
+        # Two enforcement points, one vocabulary — WO-W07's
+        # `test_the_database_ban_and_the_python_ban_are_the_same_list`
+        # applied to this pair (known-gap §17). Without it the copies
+        # drift and the weaker one becomes the real rule, which here
+        # means the backend keeps emitting a word the web tier has
+        # already banned.
+        canonical = _ts_pedagogy_phrases()
+        assert [phrase_id for phrase_id, _, _ in canonical] == [
+            phrase_id for phrase_id, _ in PEDAGOGY_DENY_LIST
+        ], (
+            "the two pedagogy deny-lists no longer carry the same ids in the "
+            f"same order:\n  web/lib/copy/index.ts: "
+            f"{[phrase_id for phrase_id, _, _ in canonical]}\n"
+            f"  PEDAGOGY_DENY_LIST:    {[phrase_id for phrase_id, _ in PEDAGOGY_DENY_LIST]}"
+        )
+        for (ts_id, ts_source, ts_flags), (_, py_source) in zip(
+            canonical, PEDAGOGY_DENY_LIST, strict=True
+        ):
+            assert ts_source == py_source, (
+                f"pedagogy phrase {ts_id!r} has drifted between the tiers:\n"
+                f"  web/lib/copy/index.ts: /{ts_source}/{ts_flags}\n"
+                f'  PEDAGOGY_DENY_LIST:    r"{py_source}"'
+            )
+            # The other half of "the same list": `_pedagogy_offenders`
+            # applies every mirror entry with `re.IGNORECASE`, so a TS
+            # entry that lost its `i` flag would be a narrower rule
+            # wearing an identical source.
+            assert "i" in ts_flags, (
+                f"pedagogy phrase {ts_id!r} lost its `i` flag:\n"
+                f"  web/lib/copy/index.ts: /{ts_source}/{ts_flags}\n"
+                f'  PEDAGOGY_DENY_LIST:    r"{py_source}" applied with re.IGNORECASE'
+            )
+        # ...and that the Python side really does fold case, rather than
+        # the flag assertion above holding one tier to a claim the other
+        # only appears to make.
+        assert [phrase for phrase, _ in _pedagogy_offenders(["MASTERED"])] == ["mastery"]
 
 
 # ---------------------------------------------------------------------------
