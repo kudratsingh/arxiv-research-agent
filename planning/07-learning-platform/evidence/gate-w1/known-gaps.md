@@ -3,14 +3,16 @@
 WO-W19 acceptance criterion 2: *"`known-gaps.md` exists and is non-empty (an
 empty gap list at a gate is the revamp's definition of dishonesty)."*
 
-This is the honest list. **Seventeen entries, three of them now resolved.** Each
+This is the honest list. **Twenty entries, five of them now resolved.** Each
 says what is not proven, why it is not proven, who owns it, and what would
 change it. Several are ordinary consequences of the no-cost boundary; §12 was an
 inconsistency inside the merged tree that a reader would meet as a false
-sentence, and it is fixed; §7 and §16 are real test failures a re-run hides, and
-§7 was on `main` until WO-W13c fixed it.
+sentence, and it is fixed; §7 and §16 were real test failures a re-run hides —
+§7 was on `main` until WO-W13c fixed it, and §16 turned out not to be a flaky
+probe at all but a product defect the probe was catching, which is the
+correction this file's own classification needed.
 
-**Three entries are resolved**, each kept, struck through and marked, because a
+**Five entries are resolved**, each kept, struck through and marked, because a
 gap list that quietly loses its closed items cannot be audited:
 
 - **§6** — by WO-W03b (PR #151, `1026534`), one commit after this pack's
@@ -21,6 +23,21 @@ gap list that quietly loses its closed items cannot be audited:
 - **§12** — by WO-W17b (PR #153, `72e65b9`), which merged six minutes *before*
   this pack did. What closed is the false statement about data separation; the
   entry's other half, WO-W17's deferred criterion 5, still waits on W-OD-5.
+- **§16** — by PR #160 (`337dbe4`), 2026-09-04, **and reclassified in the
+  closing**: what this entry called an undeclared intermittent was a product
+  defect in `ThemeToggle`, permanent for the user who hits it, which the probe
+  was reporting honestly.
+- **§17** — by PR #157 (`93a6caa`), 2026-09-04, in the shape the entry's own
+  "changes when" clause named: an equality assertion on the WO-W07 precedent.
+
+**Added 2026-09-04 — a four-PR follow-up wave.** Merged the same day by the
+coordinator under the standing delegation, in this order: #157 (`93a6caa`),
+#158 (`5b7ec23`), #160 (`337dbe4`), #159 (`2001d1b`). It closes **§16** and
+**§17** above and opens **§18**, **§19** and **§20** below. The execution
+record — including two process findings that belong there and not here — is
+[`../../STATUS.md`](../../STATUS.md). **No §6 status in
+[`README.md`](README.md) moves on account of it**, for the same reason the
+earlier late fixes moved none: they are commits past this pack's baseline.
 
 Assembled against `origin/main` at **`3ccb650`** on 2026-09-02, and revised
 against the **coordinator state-probe of main `3ccb650`, 2026-09-02** — an Opus
@@ -30,8 +47,8 @@ and both corrections are kept visible rather than silently applied. Two of the
 probe's own §7 findings were themselves wrong, and PR #155 corrected them; that
 correction is kept visible too, in §7.
 
-Two cards were in flight against three of the seventeen when this pack was
-assembled, and **both have since merged**: **WO-W13c** (§7 and §8) as PR #155,
+Two cards were in flight against three of the seventeen entries this pack was
+assembled with, and **both have since merged**: **WO-W13c** (§7 and §8) as PR #155,
 `9fa99b8`, and **WO-W17b** (§12) as PR #153, `72e65b9`. All three entries are
 marked below. Neither card changes a §6 status in [`README.md`](README.md).
 
@@ -99,7 +116,13 @@ new reader boots is not the thing Gate W1 proves.
 session write is forwarded. Under it, *"the session graph constructs **no**
 model client on any path"* — `check_in_agent` takes `_fallback_plan`, and
 `_tutor_prompts` returns two constants (`web/e2e/support/mock-mode.ts`,
-citing `src/agents/tutor.py:159` and `:248`).
+~~citing `src/agents/tutor.py:159` and `:248`~~). **Corrected 2026-09-04:**
+`mock-mode.ts` no longer cites line numbers. PR #158 (`5b7ec23`) replaced eight
+`src/agents/tutor.py:NNN` citations under `web/` with symbol references, having
+first established that **all four distinct cited line numbers were already
+stale** at `dce6e42` — including these two, which had drifted to `165` and `254`
+and landed on neither symbol their own sentence names. The quotation above is
+kept as this pack wrote it; the claim it supports is unchanged.
 
 That is the right posture for a cost boundary and it is a real limit on the
 claim. What the end-to-end row proves is that **the machinery** — graph,
@@ -469,7 +492,73 @@ boundary** and nowhere above it.
   `sessions_per_day` is deliberately not rendered, *"because a per-day grid is
   one CSS change from a streak calendar"* (PR #147).
 
-## 16. `theme.spec.ts:186` flakes on webkit, ~3 runs in 10.
+## 16. ~~`theme.spec.ts:186` flakes on webkit, \~3 runs in 10.~~ — **RESOLVED**
+
+**Resolved by PR [#160](https://github.com/kudratsingh/arxiv-research-agent/pull/160),
+merged 2026-09-04T07:10:45Z as `337dbe4`.** The entry is kept, struck through
+and marked, for the same reason §6, §7, §12 and §17 are.
+
+**This entry's own classification was wrong, and that is the finding.** It
+called the failure *an undeclared intermittent* — a flaky probe, owned by
+nobody, not touching a Gate W1 row. It was **a product defect that the probe was
+catching**, and the flake was only its most reproducible symptom. #160's own
+words: *"The probe asserted exactly what a user expects."*
+
+**What the defect is.** A label click on the theme control that lands **before
+React attaches** checks the radio natively. `onChange` is not there yet, so
+nothing is written; and React does not reset a hydrated input's checked state,
+so after hydration the control sits showing **Dark** while `data-theme` stays
+`light` and `localStorage` is empty — **permanently, not for a frame**. Anyone
+on a slow connection gets a control that silently drops their click and then
+lies about it.
+
+**The evidence chain, and why the old classification could not see it.**
+
+- Every failure landed on the **`data-theme` assertion** —
+  `expect(html).toHaveAttribute("data-theme", "dark")`, received `light`, with
+  `data-theme-preference="system"` — and **never** on the `toBeChecked()`
+  assertion above it. The radio *was* checked; the theme *was not* applied.
+- An in-page probe at the moment of the click found **no `__react*` keys** on
+  the dark `<input>`: React had not attached.
+- Holding `**/_next/static/chunks/**` until after the click made it
+  deterministic — **4/4 on chromium and webkit alike**. So the engine only
+  decided *how often the race was lost*, not whether the defect existed. "Webkit
+  only" was a sampling artefact, exactly as §7's failed elimination was.
+
+**Counts.** Before, on a seeded local stack at `--retries=0`:
+`theme.spec.ts -g "exactly one key" --project=webkit --repeat-each=20` read
+**3 failed, 17 passed**. After: **120 passed, 0 failed** on webkit and **120
+passed, 0 failed** on chromium at the same repeat; the full chromium project
+read **315 passed, 5 skipped, 0 failed** — one more test than before, the new
+one.
+
+**The fix.** One mount effect in `ThemeToggle.tsx` reads back the radio the
+group actually carries and finishes the interaction. It writes only when that
+value is neither the live preference (nothing happened) nor
+`serverThemePreference()` (React has not re-rendered from the client snapshot
+yet), so an ordinary load with a stored preference can never be mistaken for a
+user choosing "system". Both guards are value comparisons, not assumptions about
+when `useSyncExternalStore`'s re-render lands. It is declared **after** the
+existing `system` effect deliberately, which would otherwise overwrite the
+adopted choice a moment later.
+
+Two new tests, **both red on the parent commit**: `e2e/theme.spec.ts`'s *"a
+choice made before hydration is not dropped"*, which holds the client chunks
+until after the click so the window is entered on purpose (red on chromium
+**and** webkit without the fix), and three `tests/shell/themeToggle.test.tsx`
+cases hydrating over `renderToString` markup mutated the way a native label
+activation mutates it.
+
+**The residual, recorded in the source.** A pre-hydration click on **the option
+the server already rendered as checked** changes no DOM state and fires no
+event, so the effect cannot see it and nothing can. That case stays undetectable
+and is written down where the fix lives rather than claimed closed here.
+
+**Untouched:** the `theme.spec.ts:123` hydration defect, which carries
+`test.fail(true, …)`. It is still declared, still expected, and it *"still fails
+as declared in all 40 post-fix runs"* (#160).
+
+**What it was, as recorded before the fix**, kept below.
 
 Found by the coordinator state-probe of main `3ccb650`, 2026-09-02, in the
 nightly browser matrix: firefox + webkit + Pixel 7 + iPhone 15 read **113
@@ -480,20 +569,82 @@ only**, at roughly **3 in 10**.
 **It is pre-existing and it is not this train's.** No theme, shell or token
 source file changed across WO-W01 … WO-W13b. WO-W13's PR #146 already named the
 same test as *"a flake: it passes on re-run"* on chromium; the probe establishes
-that webkit expresses it far more often.
+that webkit expresses it far more often. — **This half stands**: the defect is
+in `ThemeToggle`, which WO-08 shipped, and no Phase W card touched it.
 
 It is distinct from the `theme.spec.ts:123` hydration defect, which is
-`test.fail(true, …)` — declared, expected, and not a gap. This one is an
-undeclared intermittent.
+`test.fail(true, …)` — declared, expected, and not a gap. ~~This one is an
+undeclared intermittent.~~ — **WRONG.** It was an undeclared *defect*, expressed
+intermittently. Calling the symptom the thing is what kept it unowned.
 
 **Not in per-PR CI at all:** the `web-e2e` job runs `--project=chromium`, so
 the multi-browser matrix is nightly-only and a webkit regression cannot fail a
-PR. **Owner:** unassigned; WO-01 owns the theme foundation and WO-08 owns
-`ThemeToggle`. It does not touch a Gate W1 row — no learning surface is
-implicated — and it is recorded because a pack that lists only the failures
-inside its own scope is the sales document this file exists to prevent.
+PR. ~~**Owner:** unassigned; WO-01 owns the theme foundation and WO-08 owns
+`ThemeToggle`.~~ — **Owner: PR #160, merged.** ~~It does not touch a Gate W1 row
+— no learning surface is implicated —~~ and it is recorded because a pack that
+lists only the failures inside its own scope is the sales document this file
+exists to prevent. The struck clause is true of the *row* and was the wrong
+reason to leave it alone: the reason to record it was that it was real, and it
+turned out to be worse than recorded.
 
-## 17. The pedagogy deny-list now exists twice, and the copies are kept in step by hand.
+## 17. ~~The pedagogy deny-list now exists twice, and the copies are kept in step by hand.~~ — **RESOLVED**
+
+**Resolved by PR [#157](https://github.com/kudratsingh/arxiv-research-agent/pull/157),
+merged 2026-09-04T06:13:47Z as `93a6caa`** — in exactly the shape this entry's
+"changes when" clause named, the second of the two options: *"an equality
+assertion is added in the shape WO-W07 already uses."* The entry is kept, struck
+through and marked, for the same reason §6, §7, §12 and §16 are.
+
+**What now fails when the copies drift.**
+`TestLearnerFacingCopyNamesNoPedagogyScalar::test_the_web_deny_list_and_the_python_mirror_are_the_same_list`
+in `tests/test_simulate_learner.py` asserts three things:
+
+1. **Same ids, same order** — the id lists compare as sequences, so an entry
+   added on one side only, renamed, or reordered fails. That is the asymmetry
+   this entry called *"the right way round"* and it is no longer free.
+2. **Equal pattern sources**, entry by entry, after the **one** normalisation
+   the two syntaxes honestly force — a `/` inside a TS regex literal is written
+   `\/` and needs no escape in a Python pattern string. Nothing else: no
+   case-folding, no whitespace stripping.
+3. **Case-insensitive on both sides** — every TS entry must still carry its `i`
+   flag, because `_pedagogy_offenders` applies the Python mirror with
+   `re.IGNORECASE`. A dropped flag would be a narrower rule wearing an identical
+   source, which assertion 2 alone would wave through. The Python half is
+   checked behaviourally (`_pedagogy_offenders(["MASTERED"])` must still name
+   `mastery`).
+
+**It reads the TS side as text.** `_ts_pedagogy_phrases()` slices the
+`PEDAGOGY_PHRASES` array literal out of `web/lib/copy/index.ts` and matches each
+`{ id, pattern, why }` object with one regex — **no Node, no import, no new
+dependency**, on the `tests/test_contract_sse_events.py` /
+`tests/test_contract_learn_fixtures.py` precedent for reading `web/**`. The
+argument this entry recorded for re-typing rather than generating is therefore
+kept: *"a Node dependency in a Python unit test would be a worse coupling."*
+What changed is that re-typing is now **safe** rather than merely cheap.
+
+**The text parser answers for its own failure mode.** The reader asserts it
+parsed as many entries as the array declares `id:` fields — **12 = 12** today —
+so an entry shape it cannot read fails loudly instead of silently shrinking the
+comparison.
+
+**Red/green proven three ways**, each perturbation reverted: a Python entry
+narrowed (`dashboards?` → `dashboard`), a TS entry stripped of its `i` flag
+(`streak`), and an entry added to the TS list only (`leaderboard` — precisely
+the previously-free asymmetry). Green as committed: **1 passed, 52 deselected**;
+`pytest tests/test_simulate_learner.py tests/test_progress_events.py -q` →
+**115 passed, 14 skipped**; the whole suite → **2042 passed, 52 skipped, 0
+failed**.
+
+**`web/lib/copy/index.ts` is untouched** — WO-W14's dictionary stays the
+authority, and the fence is not crossed.
+
+**The docstring quoted below is no longer what the module says.** #157 removed
+both false sentences from it: the mirror is not kept in step by *"a list two
+reviewers can diff by eye"*, and adding an entry on the web side without adding
+it here no longer *"costs nothing"* — assertion 1 is what makes that false. The
+docstring names the test instead.
+
+**What it was, as recorded before the fix**, kept below.
 
 Introduced by the fix for §6. WO-W03b (PR
 [#151](https://github.com/kudratsingh/arxiv-research-agent/pull/151), `1026534`)
@@ -522,8 +673,145 @@ nothing fails when they drift — unlike WO-W07's ledger ban, where
 that property across its two copies. The precedent for a cross-tier list
 equality check exists in this repository; this pair does not use it.
 
-**Owner:** unassigned. **Changes when:** either a generated list replaces the
-re-typed one, or an equality assertion is added in the shape WO-W07 already
-uses. Neither is Gate W1's to require — the gap is one release of drift wide,
-not a live defect — but it should not go unrecorded, because the fix for a
-honesty gap quietly created a second place honesty rules have to be maintained.
+~~**Owner:** unassigned.~~ — **Owner: PR #157, merged.** **Changes when:** either
+a generated list replaces the re-typed one, or an equality assertion is added in
+the shape WO-W07 already uses — **the second happened**, two days later. Neither
+is Gate W1's to require — the gap is one release of drift wide, not a live
+defect — but it should not go unrecorded, because the fix for a honesty gap
+quietly created a second place honesty rules have to be maintained.
+
+*(The second place still exists. What #157 removed is the silence around it: the
+list is still typed twice, and now a test says so out loud when the two copies
+stop agreeing.)*
+
+## 18. `/` now loads three font faces where the gate-4 pack measured one, and the premise that allowed it is false.
+
+Found by PR [#159](https://github.com/kudratsingh/arxiv-research-agent/pull/159)
+(`2001d1b`, 2026-09-04) while fixing the landing route's nightly Lighthouse
+failure. **Reported, deliberately not changed.**
+
+`web/components/features/LearnLandingEntry.tsx` (WO-W12, #138) is the landing
+route's only consumer of `--font-report` (Literata) and `--font-mono` (IBM Plex
+Mono), through `font-report text-report-h2` on its heading and `font-mono
+text-mono-xs` on its eyebrow. Both faces carry `preload: false` in
+`web/app/fonts/fonts.ts` on a premise written before that card existed and
+falsified by it:
+
+> `--font-report` has exactly one consumer in the whole product … so it sets no
+> pixel of any route's first paint: not the landing prompt
+
+**Measured** (`/`, `mobile-412`, medians, committed collect settings):
+
+| | gate-4 (`17e1fb6`) | today |
+|---|---:|---:|
+| Font requests on `/` | 1 (20,331 B, preloaded) | 3 (69,621 B; **49,290 B** of it at VeryHigh, discovered after CSS parse) |
+| `total-byte-weight` on `/` | 205,331 B | 262,231 B (**+27.7 %**) |
+| `mainthread-work-breakdown` | 220 ms | 276 ms |
+| `bootup-time` | 98 ms | 124 ms |
+
+**It is not currently costing an assertion.** With #159's `prefetch={false}` in
+place `/` is back at the LCP floor even at ×20 CPU slowdown, and `npm run
+budgets` passes with fonts at 103,476 B of a 109,568 B ceiling. **No ceiling
+moved.** This is a premise that has gone stale in a comment, and a byte cost
+that a reader of the gate-4 pack would not expect, not a live failure.
+
+**Owner: the repository owner — a typography ruling.** #159 declined it by
+design: *"correcting it means changing the typography of a shipped card to
+something other than the visual language of the surface it teases — a design
+ruling, not a perf repair."* **Changes when:** the owner rules — the heading and
+eyebrow move to the surface's default face, or the two faces are preloaded on
+`/` and the premise in `fonts.ts` is rewritten, or the ruling is that a card
+teasing the report surface should look like it and the bytes stand. Whichever it
+is, the false sentence in `web/app/fonts/fonts.ts` goes with it.
+
+## 19. `?job=baseline-plan-review` misses `categories:performance` on the 2-vCPU runner, and no Phase W change explains it.
+
+The second half of the nightly Lighthouse failure #159 fixed, and the half it
+**did not** fix. Nightly run
+[33740169240](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33740169240)
+(2026-09-03), job `lighthouse ci (§8.2, 3 profiles x 3 runs)`, profile
+`mobile-412`, state `/c/baseline-populated?job=baseline-plan-review`:
+
+| Assertion | Measured | Ceiling |
+|---|---:|---:|
+| `categories:performance` | 0.92 | ≥ 0.95 |
+| `total-blocking-time` | 237 ms | ≤ 300 error / ≤ 150 **warn** |
+
+**No attributable Phase W regression.** The Phase W suspects do not touch this
+state's render tree — W13 (#146), W13b (#150) and W14 (#147) add only
+`/learn/**` surfaces; W17b (#153) adds a server-resolved prop and copy; W13c
+(#155) adds one class name and one `align-self`. Against the gate-4 LHR for the
+same state, the two *work* metrics — the ones a blocking-time breach would show
+up in — are **down**, and the two byte counts are up by single-digit percents
+inside their ceilings:
+
+| | gate-4 | today |
+|---|---:|---:|
+| `total-byte-weight` | 376,477 B | 384,219 B (+2.1 %) |
+| `mainthread-work-breakdown` | 499 ms | **480 ms** |
+| `bootup-time` | 292 ms | **215 ms** |
+| `/c/[id]` first-load JS | 182,814 B | 187,902 B (+2.8 %, ceiling 192,512 B) |
+
+And the breach is not new: the gate-4 evidence pack already recorded this cell
+over the ratified 150 ms **on the runner at ratification** — medians of 180 ms
+and 214 ms across two nightlies of `17e1fb6`
+(`docs/revamp/evidence/gate-4/lhci/README.md` §11.2), single samples to 290 ms.
+237 ms is inside that band.
+
+**What the time is actually spent on**, from #159's runner-regime probe: the
+plan editor's lazy chunk is **296,426 B raw / 73,580 B gzip** and is a single
+**277 ms long task**. It is all of **`zod@4.4.3`** — `toJSONSchema`, the locale
+tables, the codecs, the `emoji`/`cuid`/`ulid` validators — pulled in by
+`lib/plan/schema.ts` for a form with a handful of string and array rules, and
+the plan-review state needs it at first render. **It predates Phase W: WO-17,
+PR #93.**
+
+**Owner:** the coordinator — #159 records the residual as *"a coordinator
+decision"* — **and the owner for the one remedy that spends money.** **Changes
+when:** one of the three remedies #159 names lands — a dedicated runner, a
+narrower audit, or a work order that shrinks the chunk. `web/lighthouserc.json`
+pre-committed against the fourth: *"a dedicated runner or a narrower audit — NOT
+another doubling."* No ceiling moved in #159 and none should move to close this.
+
+**Note the workflow's state.** `nightly.yml` is **disabled by owner order since
+2026-09-03**, so nothing is currently measuring this cell. A single verification
+run to confirm #159's fix on the runner — and to re-read this row — is a pending
+owner decision, recorded in [`../../STATUS.md`](../../STATUS.md).
+
+## 20. The follow-up-probe feedback string exists in two tiers with no test between them.
+
+Found by PR [#158](https://github.com/kudratsingh/arxiv-research-agent/pull/158)
+(`5b7ec23`, 2026-09-04) while replacing line-number citations with symbol
+references. The card set out to check what it was about to claim, and found one
+claim it could not make.
+
+Three backend string literals are quoted **verbatim** in the `web/` tier. Two
+are covered by WO-W11's recorded-fixture freshness test,
+`tests/test_record_learning_fixtures.py::TestTheCheckedInSetIsFresh::test_a_fresh_recording_reproduces_the_committed_files`
+(§5), which re-records the mock sessions and demands byte-identical output:
+
+- the **mock tutor feedback** (`session-flow.spec.ts`'s `MOCK_TUTOR_FEEDBACK`)
+  — present in the recorded fixtures, so the guard applies;
+- the **explain-back prompt** (the `ExplainBack` story) — present in the
+  recorded fixtures, so the guard applies to the backend copy.
+
+The third is not covered by anything. Under mock mode `assessment_judge` returns
+`unassessed`, so `route_after_assessment` never routes to the probe and **no
+recording contains the string**. `grep` finds it in exactly two places —
+`src/agents/tutor.py`, in `assessment_probe_agent`, and the `Probe` story — with
+no test between them. Change one and nothing anywhere goes red.
+
+**No guard was invented.** #158 wrote the fact into the comment beside the story
+instead, which is the honest half of the trade and not a fix.
+
+This is §14 seen from the other tier: the judge is default-off and *"no e2e
+drives the judge, because the judge needs a model"*, so the probe turn is
+unreachable in every environment this repository runs, and the story is the only
+place its shape is rendered at all.
+
+**Owner:** unassigned. **Changes when:** either the probe turn becomes
+reachable under mock mode — which is §14's problem and needs a decision about
+what a mock judge should return — or a direct equality assertion is added
+between the story's literal and the backend's, in the shape §17's resolution now
+uses for the pedagogy lists and WO-W07's `test_the_database_ban_and_the_python_ban_are_the_same_list`
+established. The second is cheap and does not need the first.

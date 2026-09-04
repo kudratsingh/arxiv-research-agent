@@ -1,6 +1,6 @@
 # Learning platform campaign — status
 
-Updated: 2026-09-02
+Updated: 2026-09-04
 
 ## The campaign
 
@@ -87,9 +87,123 @@ card). **Nineteen of the twenty planned cards are merged to their no-cost
 boundary**, plus the four coordinator-added cards (W13b, W03b, W17b, W13c);
 the owner-dependent funded/public/pilot criteria on them stay visibly deferred.
 **WO-W20 remains**, and waits on the 14-day pilot observation window
-(W-OD-4/5/6).
+(W-OD-4/5/6). *(Five more PRs have merged since — #156 on 2026-09-02, the
+evidence pack's own §7 bookkeeping, and the four of the follow-up wave below.
+None is a card, and the card counts above are unchanged.)*
 
-Nothing is in flight. This section is written against `9fa99b8`.
+Nothing was in flight when this train closed, at `9fa99b8`. The follow-up wave
+below carries `main` to `2001d1b`, and **this file is written against
+`2001d1b`**.
+
+### Follow-up wave (2026-09-04)
+
+Four PRs, merged the same morning by the coordinator under the standing
+delegation, squash, in this order. **None is a card** — they are not in
+`05-WEDGE-WORK-ORDERS.md` §5 and no WO number is claimed for them. **Two close
+known gaps (§16, §17); two open three more (§18, §19, §20).**
+
+| PR | Squash SHA | Merged (UTC) | Subject |
+|---|---|---|---|
+| [#157](https://github.com/kudratsingh/arxiv-research-agent/pull/157) | `93a6caa` | 06:13:47 | the two pedagogy deny-lists must be the same list |
+| [#158](https://github.com/kudratsingh/arxiv-research-agent/pull/158) | `5b7ec23` | 06:38:38 | cite `tutor.py` by symbol, not by line number |
+| [#160](https://github.com/kudratsingh/arxiv-research-agent/pull/160) | `337dbe4` | 07:10:45 | the theme control adopts a pre-hydration click |
+| [#159](https://github.com/kudratsingh/arxiv-research-agent/pull/159) | `2001d1b` | 07:16:04 | the landing entry no longer prefetches a `no-store` route |
+
+- **#157 closes `known-gaps.md` §17**, in the shape the entry's own "changes
+  when" clause named. `test_the_web_deny_list_and_the_python_mirror_are_the_same_list`
+  parses `PEDAGOGY_PHRASES` out of `web/lib/copy/index.ts` **as text** — no Node,
+  no import — and asserts same ids in the same order, equal pattern sources
+  entry by entry after the one normalisation the two syntaxes force (`\/` → `/`),
+  every TS entry still carrying its `i` flag, and that the reader parsed as many
+  entries as the array declares (12 = 12). Red/green proven three ways, each
+  perturbation reverted. Suite **2042 passed, 52 skipped**;
+  `web/lib/copy/index.ts` untouched.
+- **#158 opens `known-gaps.md` §20.** It replaced the `src/agents/tutor.py:NNN`
+  citations at **eight sites** under `web/` — the e2e README, `compose.e2e.yml`,
+  `mock-mode.ts`, `paid-path.ts`, `session-flow.spec.ts`,
+  `GuidedSessionView.stories.tsx` — with symbol references, having first
+  established that **all four distinct cited line numbers were already stale**
+  at `dce6e42`. Comments and a README only; no behaviour change. Checking what keeps three
+  verbatim backend literals in step found that one of them is unguarded: the
+  follow-up-probe feedback string lives in exactly two places
+  (`assessment_probe_agent` in `src/agents/tutor.py`, and the `Probe` story)
+  with **no test between them**, because under mock mode the judge returns
+  `unassessed` and the probe never runs, so no recorded fixture contains it. The
+  recorded-fixture freshness test covers the other two. No guard was invented;
+  the comment says so instead. Nine `machine.ts`/`client.ts`-style web→web line
+  refs were found stale and **left alone**, listed in the PR body.
+- **#160 closes `known-gaps.md` §16 — and reclassifies it.** The record had it as
+  a flaky probe: *"`theme.spec.ts:186` flakes on webkit, ~3 runs in 10 …
+  undeclared intermittent."* It is a **product defect**. A label click on the
+  theme control that lands before React attaches checks the radio natively;
+  `onChange` is not there yet, so nothing is written, and React does not reset a
+  hydrated input's checked state — the control shows **Dark** while `data-theme`
+  stays `light`, **permanently**. The evidence is that every failure hit the
+  `data-theme` assertion and **never** the `toBeChecked()` above it; no React
+  internals were on the input at click time; and holding
+  `_next/static/chunks/**` until after the click reproduced it **4/4 on chromium
+  *and* webkit** — the engine only decided how often the race was lost. Fixed by
+  a mount effect in `ThemeToggle.tsx` that adopts the checked radio when it is
+  neither the live preference nor the server preference. Counts: webkit
+  `--repeat-each=20` **3 failed / 17 passed → 120/120**, chromium **120/120**,
+  full chromium project **315 passed, 5 skipped, 0 failed**. The declared
+  `test.fail` at `theme.spec.ts:123` is untouched and still fails as declared.
+  **Residual, recorded in the source:** a pre-hydration click on the option the
+  server already rendered as checked changes no DOM state and fires no event, so
+  it stays undetectable.
+- **#159 fixes the nightly Lighthouse `mobile-412` failure and opens §18 and
+  §19.** The profile failed on the nightly runs of 2026-09-02 and 09-03 (run
+  [33740169240](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33740169240)
+  is the second); the workflow (`nightly.yml`) has been **disabled by owner
+  order since 09-03**. One cause for both `/`
+  breaches — `bf-cache` 0 and LCP 2715.962 ms against a 2500 ms ceiling:
+  `LearnLandingEntry.tsx` (WO-W12) is the only in-viewport `<Link>` to another
+  document route at 412×823, so the App Router prefetched `/learn?_rsc=…`; every
+  document route is dynamic because the root layout reads the CSP nonce, so the
+  prefetch answered `no-store`, and Chrome blocks bfcache for a script-initiated
+  no-store response (`JsNetworkRequestReceivedCacheControlNoStoreResource`).
+  `mobile-320` corroborates: the card is below the fold there, no prefetch
+  fires, and `/` passes. Fixed with `prefetch={false}` plus
+  `LearnLandingEntryPrefetch.test.tsx` as the per-PR guard, since the prop is
+  invisible in the DOM. All three profiles pass locally. **No ceiling moved.**
+
+**The two it did not fix are now `known-gaps.md` §18 and §19**, and both are
+owner decisions rather than engineering ones — see the ledger below.
+
+### Two process findings from the wave
+
+Execution record, not gaps. Both are about how the coordinator merged, and the
+second is about believing a tool.
+
+**(i) The merge gate was wrong, and is corrected.** `gh pr checks N && gh pr
+merge N` is **unsafe on gh 2.89.0**: a job that hits `timeout-minutes` ends
+*cancelled*, and `gh pr checks` exits **0** for a cancelled job. #157 merged that
+way with its `web (typecheck + lint + test + build)` job **cancelled at 15
+minutes**. It was harmless in the event — the diff was Python-only, and main's
+own run on `93a6caa` passed every job — but it was not verified, and "harmless
+in the event" is not a gate. **The gate is now:** watch the run, then require
+that `gh pr checks N --json name,bucket` return **≥8 entries, every one
+`bucket == "pass"`**, then merge. **Never `--auto`.**
+
+**(ii) `npm audit` was down on 2026-09-04, and the failure it produced looked
+exactly like a real one.** For several hours `npm audit` answered with **zero
+advisories for the whole tree**, after **4–12 minutes** per call. So
+`web/scripts/audit-gate.mjs` reported all **ten** entries in
+`web/audit-exceptions.json` stale and failed **by design** — that is what the
+gate is for. Main's CI on `5b7ec23` was red at that step and **only** that step,
+and the web job on two PRs was cancelled at its 15-minute timeout with install +
+audit taking **7–11 minutes** where a normal call is under a minute. **The
+exceptions were not deleted.** The coordinator checked each against the GitHub
+advisory database instead and found every one still live for the installed
+version — `image-size@2.0.2` (GHSA-w3rx-r6r6-pgpr, GHSA-5p2g-fcmc-qvqq),
+`tmp@0.1.0` (GHSA-ph9p-34f9-6g65), `extract-zip@2.0.1` (GHSA-jmr9-qjv8-65gv).
+Later runs (#160, #159) passed the step as the service recovered.
+
+**The lesson, stated as a rule:** a stale-exception failure that appears for
+**every entry at once** is a data-source failure until an advisory lookup says
+otherwise. The tempting fix — deleting the exceptions the gate calls stale —
+would have removed four real advisories from the repository's record on the
+word of a service that was returning nothing.
 
 ### Coordinator rulings made under the standing delegation
 
@@ -169,7 +283,10 @@ Per the pack: seven of §6's ten rows resolve outright; the per-session cost
 row resolves on its own terms with every figure it reconciles a mock-mode
 figure; `known-gaps.md` is non-empty at **seventeen entries, three of them now
 resolved** (§6, the tutor close line, by #151; §12, the pilot identity copy, by
-#153; §7, the `cls.spec.ts` failure, by #155 later the same day). The
+#153; §7, the `cls.spec.ts` failure, by #155 later the same day). *(As of
+2026-09-04 the file reads **twenty entries, five resolved**: the follow-up wave
+closed §16 and §17 and opened §18–§20. The ruling above is unchanged — none of
+the five is a §6 row, and the funded row is still the only UNRESOLVED one.)* The
 funded-campaign row — the first funded calibration run (W09 c6), the first
 funded simulation campaign (W10 c5) and the nightly learning lane's first
 scheduled run (W11 c4) — is **UNRESOLVED**, and is carried into Gate W2's memo
@@ -227,6 +344,18 @@ measuring the settled DOM, where the badge has already unmounted — recorded
 here so the next probe samples **across the stream's open and close frames**,
 and treats an element that grows in place as invisible to a shift attribution.
 
+(h) **The state probe read a product defect as an engine-specific flake**, which
+is (g)'s failure a second time and from the same cause: a window too narrow to
+contain the thing. `known-gaps.md` §16 recorded *"`theme.spec.ts:186` flakes on
+webkit, ~3 runs in 10 … an undeclared intermittent"* and left it unowned on the
+strength of that reading. #160 showed the defect reproduces **4/4 on chromium as
+well as webkit** once the client chunks are held until after the click; webkit
+only loses the race more often. Recorded here so the next probe asks, of any
+intermittent, **what the failing assertion actually was** — every failure here
+hit `data-theme` and never `toBeChecked()`, and that one fact separates "the
+test is flaky" from "the product drops the click" without any further
+measurement.
+
 ### Owner decisions now due
 
 **W-OD-1 (eval funding) is the only blocker on Gate W1's funded row.** Sizing,
@@ -240,6 +369,38 @@ W-OD-2 (briefing generation, W15's content half), W-OD-3 (licensing posture),
 W-OD-4 (Rung 1 publication), W-OD-5 (pilots — which must approve concrete
 SR-09 values per erratum (e)) and W-OD-6 (threshold ratification, before any
 pilot starts) all remain open. W-OD-4/5/6 together gate WO-W20.
+
+**Three more await a ruling as of 2026-09-04, from the follow-up wave.** They
+are **not** numbered W-OD-7/8/9: the W-OD series is the plan's, these are
+execution's, and adding to it would rewrite a document that stands as merged.
+
+1. **Re-enable `nightly.yml` for one verification run.** It has been disabled by
+   owner order since 2026-09-03. #159 fixed the `mobile-412` `/` failure and all
+   three profiles pass locally, but nothing has confirmed it **on the 2-vCPU
+   runner**, which is the machine the failure was conditioned on. The ask is one
+   run, not a re-enable; the standing cost lock is unaffected — the Lighthouse
+   lane buys nothing.
+2. **A typography ruling on the landing card's fonts** (`known-gaps.md` §18).
+   `LearnLandingEntry` puts Literata and IBM Plex Mono on `/`, where the gate-4
+   pack measured one face: `total-byte-weight` **205,331 → 262,231 B**. It costs
+   no assertion today and no ceiling moved. #159 declined to fix it because the
+   fix changes the typography of a shipped card — *"a design ruling, not a perf
+   repair"*. The options are: move the heading and eyebrow to the surface's
+   default face; preload the two faces on `/` and correct the now-false premise
+   in `web/app/fonts/fonts.ts`; or rule that the card should look like the
+   surface it teases and let the bytes stand.
+3. **A remedy for plan-review's runner performance** (`known-gaps.md` §19).
+   `?job=baseline-plan-review` reads `categories:performance` **0.92** against a
+   **≥0.95** ceiling on the runner, with **no attributable Phase W regression**
+   — main-thread work and bootup are both *down* against gate-4. The 277 ms long
+   task is the plan editor's lazy chunk, **all of `zod@4.4.3`**, pulled in by
+   `lib/plan/schema.ts`, and it **predates Phase W** (WO-17, #93). Three
+   remedies: a dedicated runner, a narrower audit, or a work order to shrink the
+   chunk. `web/lighthouserc.json` pre-committed against the fourth — *"NOT
+   another doubling"* — and no ceiling should move to close this.
+
+Items 2 and 3 cost engineering time or money and neither is Gate W1's; item 1 is
+a workflow the owner switched off and only the owner switches back on.
 
 Standing cost lock (2026-08-30, reaffirmed by continuation): the paid nightly
 eval workflow is disabled, and no funded model run, deployment, public launch,

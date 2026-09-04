@@ -30,7 +30,17 @@ corrections are left visible.
 **This pack claims no learning outcome of any kind.** No real learner has been
 observed, no funded campaign has ever run in this repository, and every
 threshold in Phase W is a prior. [`known-gaps.md`](known-gaps.md) is the
-seventeen-entry checklist, and it is required reading beside this index.
+~~seventeen~~ **twenty**-entry checklist, and it is required reading beside this
+index.
+
+**Added 2026-09-04 — a four-PR follow-up wave landed.** #157 (`93a6caa`), #158
+(`5b7ec23`), #160 (`337dbe4`) and #159 (`2001d1b`), merged that day in that
+order. It **closes** `known-gaps.md` §16 and §17 and **opens** §18, §19 and
+§20; §16's closing also reclassifies it — a product defect, not a flaky probe.
+**No §6 status below moves on account of it**, for the same reason the earlier
+late fixes moved none: every one of the four is a commit past this pack's
+baseline. The rulings and the two process findings are in
+[`../../STATUS.md`](../../STATUS.md).
 
 ---
 
@@ -59,7 +69,7 @@ W-OD-1**.
 | **7c** | *(§6 gives it no row of its own; W11 c4 belongs to the same decision)* the nightly learning lane's **first scheduled run** | ❌ **UNRESOLVED — waits on W-OD-1** | [`eval-harness.md`](eval-harness.md) §4. `eval-nightly.yml` is `disabled_manually` and stays disabled; the workflow's `DEFAULT_LEARNING_MAX_BUDGET_USD` is **$15** | **W11 c4** |
 | 8 | Per-session cost accounting reconciles; cap enforcement proven | ⚠️ **Resolved (no-cost boundary)** | [`cost-reconciliation.md`](cost-reconciliation.md) — `tests/test_session_cost_cap.py`, **6 tests**. `round(job.cost_usd, 2) == 0.09` on two billed calls; both at-cap behaviours with `workflow.client_constructed is False`. **Every figure is a mock-mode figure**; the price is unmeasured | W06 (#144), ADR 0062 |
 | 9 | Honesty inventory: provenance rules, no-inferred-as-fact, evidence-quoting judge, no-mastery-% gate | ✅ **Resolved** | [`honesty-inventory.md`](honesty-inventory.md) — `tests/test_learner_profile_store.py` **60**, `tests/test_learner_profile_serializer.py` **19**, `tests/test_progress_events.py` **76**, `tests/test_assessment_judge.py` **15**, `tests/test_learning_metrics.py` **23**, `web/tests/copy/forbidden.test.ts` **63** incl. the planted `"87% mastered"` fixture that MUST fail | W02 (#134), W04 (#142), W07 (#133), W14 (#147) |
-| 10 | `known-gaps.md` — what W1 does *not* prove | ✅ **Resolved** | [`known-gaps.md`](known-gaps.md) — **17 entries**, non-empty | **W19** |
+| 10 | `known-gaps.md` — what W1 does *not* prove | ✅ **Resolved** | [`known-gaps.md`](known-gaps.md) — **17 entries** at assembly, **20 as of 2026-09-04** (five resolved and kept struck through), non-empty either way | **W19** |
 
 **Rows 1, 2, 4 and 5 were reproduced a second way.** Every citation in the
 table above is a CI run or a committed test. The **coordinator state-probe of
@@ -88,7 +98,7 @@ set the house rule against.
 | Path | What it is | Source |
 |---|---|---|
 | [`README.md`](README.md) | This index. | **W19** |
-| [`known-gaps.md`](known-gaps.md) | **17 entries** (three — §6, §7 and §12 — now resolved and kept struck through). What Gate W1 does not prove, each with owner and what would change it. | **W19** |
+| [`known-gaps.md`](known-gaps.md) | **20 entries** as of 2026-09-04 — 17 at assembly, plus §18–§20 from the follow-up wave; **five** (§6, §7, §12, §16, §17) now resolved and kept struck through. What Gate W1 does not prove, each with owner and what would change it. | **W19** |
 | [`end-to-end-session.md`](end-to-end-session.md) | Rows 1–2. The browser proof, the three independent cost boundaries on it, the no-client-construction test, and the below-the-browser checkpoint reattachment. | W03/W13/W13b, collected by **W19** |
 | [`paid-path-interdiction.md`](paid-path-interdiction.md) | Row 4. The interceptor's two claims and their different strengths, and the A/B control for the mock-mode pin. | W13/W13b, collected by **W19** |
 | [`flags.md`](flags.md) | Row 3. The four-flag inventory, the ladder, the compose-default nuance, and every flag-off/flag-on test. | **W19** |
@@ -212,6 +222,30 @@ Three more, for completeness, all after the §5 merge train:
   merged six minutes before the pack itself**, so no §6 status above moves on
   account of it.
 
+**Added 2026-09-04 — the follow-up wave.** Four PRs, merged that day in this
+order, none of them a §5 card:
+
+- **#157** / `93a6caa` — an equality assertion between WO-W14's
+  `PEDAGOGY_PHRASES` and WO-W03b's Python mirror, on the WO-W07 precedent.
+  **Closes `known-gaps.md` §17.**
+- **#158** / `5b7ec23` — eight `src/agents/tutor.py:NNN` citations under `web/`
+  replaced by symbol references; all four distinct cited line numbers were
+  already stale. Its finding — the follow-up-probe feedback string with no test
+  between its two tiers — **opens `known-gaps.md` §20**; and it made that file's
+  own §4 quotation of two of those line numbers stale, which §4 now records
+  rather than silently rewrites.
+- **#160** / `337dbe4` — **closes `known-gaps.md` §16 and reclassifies it**: a
+  pre-hydration click on the theme control was permanently dropped, a product
+  defect the nightly matrix's "webkit flake" was reporting honestly. §6.1's
+  multi-browser row is annotated below.
+- **#159** / `2001d1b` — the landing entry's `<Link>` no longer prefetches a
+  `no-store` route, which was both `/`'s `bf-cache` 0 and its LCP breach on the
+  nightly Lighthouse `mobile-412` profile. Two things it did **not** fix
+  **open §18 and §19**.
+
+**No §6 status above moves on account of any of them**, and none touches this
+directory's evidence: all four are commits past the baseline.
+
 ---
 
 ## 5. The merge train
@@ -279,7 +313,7 @@ the composition question a per-PR job structurally cannot answer.
 | `npm run audit:gate` | clean |
 | `.next/static` key scan | **74 passed** |
 | Playwright, chromium | **313 passed, 3 skipped, 0 failed** |
-| Playwright, firefox + webkit + Pixel 7 + iPhone 15 | **113 passed, 10 skipped, 1 failed** — the one failure is [`known-gaps.md`](known-gaps.md) §16 |
+| Playwright, firefox + webkit + Pixel 7 + iPhone 15 | **113 passed, 10 skipped, 1 failed** — the one failure is [`known-gaps.md`](known-gaps.md) §16. **Fixed 2026-09-04** by PR [#160](https://github.com/kudratsingh/arxiv-research-agent/pull/160) / `337dbe4`, at its cause in `ThemeToggle` — and the probe's reading of it as a webkit flake was wrong; see below |
 | axe | **40 renders, 0 violations, 0 gated, 0 incomplete**; allowlist and `PENDING_COMPOSITION` both **empty** |
 | Visual | **48 darwin snapshots compared, all passing** |
 | `research-post-count.txt` | **every row PASS**, `runtime=verified`; the guided-read row `creates=1 turns=2 mode=mock-pass-through`; **zero paid calls** |
@@ -324,6 +358,24 @@ above is unaffected: main was HEALTHY at `3ccb650` on every tier, and this is a
 correction to one gap's diagnosis, not to a tier result. The full record is
 [`known-gaps.md`](known-gaps.md) §7.
 
+**Added 2026-09-04, after PR
+[#160](https://github.com/kudratsingh/arxiv-research-agent/pull/160)
+(`337dbe4`): the probe's *other* classification was wrong too, in the same
+way.** The multi-browser row's single failure was recorded as an **undeclared
+intermittent on webkit, ~3 runs in 10** (§16). It is a **product defect in
+`ThemeToggle`**: a label click that lands before React attaches checks the radio
+natively, `onChange` is not there yet, nothing is written, and React does not
+reset a hydrated input's checked state — so the control shows Dark while
+`data-theme` stays light, permanently. Every failure hit the `data-theme`
+assertion and **never** the `toBeChecked()` above it, and holding
+`_next/static/chunks/**` until after the click reproduced it **4/4 on chromium
+as well as webkit**. The engine only decided how often the race was lost. Twice
+now, a probe finding has been narrowed by the window it sampled — §7's
+elimination measured the settled DOM, and this one read a timing-dependent
+defect as an engine-specific flake. The verdict above is again unaffected: the
+tier count is what it was. The full record is
+[`known-gaps.md`](known-gaps.md) §16.
+
 ### 6.2 What CI does not cover
 
 **CI proves**, on `3ccb650` (run
@@ -342,7 +394,7 @@ image smoke.
 |---|---|---|---|
 | **The darwin visual baselines** — 48 PNGs, 10 regenerated by #150 | CI runs linux; no snapshot set is committed for it and `visual.spec.ts` skips by its own guard | PR #150, locally, on the final tree; the comparison run is green | ✅ **48 compared, all passing** |
 | **The `.next/static` key scan** | `npm test` runs before `npm run budgets`, so `.next/` does not exist and the test is `it.runIf`-skipped | PR #149, locally against a real build: 63 files, 0 hits | ✅ **74 passed** |
-| **The multi-browser matrix** (firefox, webkit, Pixel 7, iPhone 15) | the `web-e2e` job runs `--project=chromium` only | the nightly browser matrix | ✅ **113 passed, 10 skipped, 1 failed** — §16 |
+| **The multi-browser matrix** (firefox, webkit, Pixel 7, iPhone 15) | the `web-e2e` job runs `--project=chromium` only | the nightly browser matrix | ✅ **113 passed, 10 skipped, 1 failed** — §16, **resolved 2026-09-04 by #160 (`337dbe4`)**, which also showed the failure was not webkit-specific |
 | **The pilot two-principal isolation spec** (`pilot.spec.ts`, 3 tests) | needs a third overlay and a Caddy edge; **no Phase W card edits a workflow** (§5.4). CI reports 3 skipped with the reason printed | PR #149, locally: 3 passed | ❌ skipped there too (no `E2E_PILOT`) |
 | **`deploy/pilot/compose.pilot.yml`** | the `docker-build` job's compose step covers the base file and the Hetzner overlay only | PR #149, locally: `docker compose config --quiet` clean, `caddy validate` + `caddy fmt` against the pinned image | ❌ out of scope |
 
@@ -371,7 +423,8 @@ defaults unchanged — and documented in `web/e2e/README.md`.
 **W19's two acceptance criteria are met.** Every §6 Gate W1 row resolves to an
 artifact in this directory or to an exact citation, each linked to its producing
 work order (criterion 1); `known-gaps.md` exists and is non-empty, at seventeen
-entries (criterion 2).
+entries (criterion 2) — **twenty as of 2026-09-04**, five of them resolved and
+kept struck through. The criterion is non-emptiness, and it is met either way.
 
 **What is resolved at the no-cost boundary.** Seven of §6's ten rows are
 resolved outright, one is this pack's own `known-gaps.md`, and one —
