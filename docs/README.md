@@ -37,8 +37,22 @@ more space. This page is the map of what "here" holds.
   licensing, and troubleshooting.
 - [`security.md`](security.md) — threat model and the prompt-injection
   defenses.
-- [`runbooks/`](runbooks/) — operational procedures for the things a
-  human does by hand, where a wrong step costs money or data.
+- [`observability.md`](observability.md) — the log contract (envelope,
+  event names, the `extra` allowlist, redaction) and the telemetry
+  contract (spans, metrics, the GenAI conventional names), plus what the
+  one HTTP middleware does to every request.
+- [`reliability.md`](reliability.md) — how this service fails and what
+  "working" is defined to mean: the error contract, the SLIs with the
+  exact instrument behind each one, the error budgets and their
+  burn-rate arithmetic, the degradation ladder, and an explicit list of
+  what cannot be measured yet.
+- [`runbooks/`](runbooks/README.md) — operational procedures for the
+  things a human does by hand, where a wrong step costs money or data.
+  [`runbooks/README.md`](runbooks/README.md) is the index: one page per
+  incident the instruments make visible — model-provider outage, Redis
+  loss, Postgres loss, cost-cap storm, queue saturation, poison job,
+  injection alarm — each naming the signal, the first three commands,
+  the containment and the rollback.
   [`runbooks/pilot.md`](runbooks/pilot.md) is the bounded pilot:
   issuing and revoking a per-pilot key, the never-reassign rule, the
   worst-case spend arithmetic, and the note that goes to each invitee.
@@ -47,6 +61,13 @@ more space. This page is the map of what "here" holds.
   the regression gate, and the nightly workflow.
 - [`demo.md`](demo.md) — a canonical end-to-end example run, across all
   three surfaces: CLI, HTTP API, and the browser workbench.
+
+Alert rules, a Grafana dashboard, a collector config and the compose
+overlay that would run them live outside this directory, in
+[`deploy/observability/`](../deploy/observability/README.md). They are
+reviewable files and **nothing runs them** — standing up a collector
+costs money and is the owner's call. `docs/reliability.md` derives every
+objective they watch.
 
 The roadmap and sprint log live in
 [`planning/03-roadmap.md`](../planning/03-roadmap.md) — that file is

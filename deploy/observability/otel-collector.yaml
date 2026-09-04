@@ -1,0 +1,90 @@
+# OpenTelemetry Collector config for the optional observability overlay.
+#
+# NOT part of the default stack. See README.md in this directory for how
+# to run it and why it is opt-in.
+#
+# ---------------------------------------------------------------------
+# The one setting everything else in this directory depends on
+# ---------------------------------------------------------------------
+#
+# `add_metric_suffixes: false` is the reason `alerts.yml` and
+# `dashboard.json` can be checked against `src/` by a test.
+#
+# With suffixing ON (the exporter default) the Prometheus name is the
+# OTel name put through a *unit table*: `s` becomes `_seconds`, a
+# monotonic sum gains `_total`, and a unit the table does not know is
+# appended verbatim. `llm_cost_usd_total` carries unit `USD`, which the
+# table does not know, so its exported name is not one anybody would
+# guess from the source — and `tests/test_operability_docs.py` could
+# only check it by reimplementing the exporter's unit table and being
+# subtly wrong about it during the next upgrade.
+#
+# With suffixing OFF there is exactly one transformation left, it is
+# stated in the specification, and it is four characters of Python:
+# every character outside `[A-Za-z0-9_:]` becomes `_`. So
+# `gen_ai.client.token.usage` is `gen_ai_client_token_usage` in
+# Prometheus and nothing else, and one grep finds the instrument that
+# emits it.
+#
+# The cost is real and worth naming: the unit is no longer in the metric
+# name, so a reader cannot tell seconds from milliseconds by looking. It
+# is recorded in the instrument's `description` (exported as the metric
+# HELP text), in `docs/observability.md`, and in every panel's `unit`
+# field in `dashboard.json`. Every duration in this repository is in
+# seconds, per the conventions.
+#
+# If you turn suffixing back on, `alerts.yml`, `dashboard.json` and the
+# name map in `tests/test_operability_docs.py` all have to move together.
+# The test asserts this line is here so that "we changed the exporter"
+# cannot be a silent change to what the alert rules mean.
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        # The app exports OTLP over HTTP and appends `/v1/metrics` and
+        # `/v1/traces` itself; `OTEL_EXPORTER_ENDPOINT` is the base URL.
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # A collector with no memory ceiling is a second outage during the
+  # first one: it buffers what it cannot export until the host OOMs.
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 75
+    spike_limit_percentage: 15
+  batch:
+    timeout: 10s
+
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    # See the block at the top of this file. Do not flip this without
+    # moving the alert rules, the dashboard and the test together.
+    add_metric_suffixes: false
+    # Resource attributes (`service.name`, `service.version`) land on
+    # `target_info` rather than on every series, which is the
+    # convention's own guidance and keeps cardinality off the hot
+    # metrics.
+    resource_to_telemetry_conversion:
+      enabled: false
+  # Traces have no backend in this overlay on purpose: a trace store is
+  # a second running cost and a second decision. `debug` proves the
+  # pipeline works and nothing more. Point this at Tempo/Jaeger when
+  # somebody has decided to pay for one.
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus]
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug]
+  telemetry:
+    logs:
+      level: warn

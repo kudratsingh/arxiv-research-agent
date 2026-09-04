@@ -1,0 +1,186 @@
+# Log-event alarms — the incidents this repository can see but cannot
+# yet count.
+#
+# NOT a Prometheus rule file, and deliberately not written to look like
+# one. Every signal below is a log event and nothing more: no
+# instrument in `src/` emits a metric for it, so a PromQL rule for it
+# would match nothing forever. `alerts.yml` says the same thing from the
+# other side — writing a rule against a series that does not exist is
+# the failure that whole directory exists to prevent.
+#
+# ## The schema
+#
+# One list, `alerts`, of mappings:
+#
+#   name       an identifier, in the same CamelCase as `alerts.yml`
+#   events     log event names. Every one is a member of `KNOWN_EVENTS`
+#              in `src/observability/logging.py`, and
+#              `tests/test_operability_docs.py` fails if one stops
+#              being. That closure is what makes these names safe to
+#              put in an alerting backend: when the last emitter of an
+#              event is deleted, a test says so, instead of the alarm
+#              quietly matching nothing.
+#   level      the level the event is emitted at, so a backend can
+#              filter before it matches.
+#   window     the period the threshold counts over.
+#   threshold  occurrences in `window` that constitute the alarm.
+#   severity   page | ticket, the same two values `alerts.yml` uses.
+#   runbook    a path, relative to the repository root.
+#   why        why the count is what it is. Every threshold here is
+#              declared, not earned.
+#
+# ## How to run these
+#
+# There is no shipped backend, on purpose. The log stream is one JSON
+# object per line on stderr, so any of these works with no change to
+# the application:
+#
+#   - `docker compose logs -f app | jq 'select(.message == "...")'`
+#     during an incident;
+#   - a Loki/Elastic/CloudWatch query, if one is ever paid for;
+#   - the OpenTelemetry Collector's `count` connector, which turns
+#     matched log records into a metric — at which point these become
+#     ordinary Prometheus rules and move to `alerts.yml`. That is the
+#     upgrade path, and the reason this file's schema names events
+#     rather than queries.
+
+alerts:
+  # -------------------------------------------------------------------
+  # Injection
+  # -------------------------------------------------------------------
+  - name: SupervisorReceivedAnUnknownAction
+    events:
+      - route_after_supervisor_unknown_action_endpoint
+      - route_after_supervisor_disabled_action_endpoint
+      - supervisor_invalid_action_fallback
+    level: WARNING
+    window: 1h
+    threshold: 1
+    severity: page
+    runbook: docs/runbooks/injection-alarm.md
+    why: >-
+      The supervisor's action vocabulary is a closed set and the model is
+      the only thing that writes into it. An action outside that set is
+      either a stale checkpoint from a build with different flags, or the
+      loop being redirected by content the reader ingested — and the
+      graph cannot tell you which, because both arrive as the same
+      string. Threshold 1: this is the only runtime signal of the
+      injection class ADR 0020 exists for, and it is rare enough in
+      normal operation that suppressing the first one would defeat it.
+
+  - name: ReaderControlOutputUnparseable
+    events:
+      - critic_response_unparseable
+      - critic_response_not_an_object
+      - critic_revision_target_invalid
+      - planner_response_unparseable
+      - planner_response_not_an_object
+      - synthesizer_response_unparseable
+      - synthesizer_response_not_an_object
+      - session_tutor_unparseable
+      - session_check_in_unparseable
+    level: WARNING
+    window: 1h
+    threshold: 10
+    severity: ticket
+    runbook: docs/runbooks/injection-alarm.md
+    why: >-
+      Structured-output parse failures are ordinary at a low rate and are
+      the second-loudest injection tell at a high one: a payload that
+      talks a node out of its output contract produces exactly this. Ten
+      an hour is the declared line between "the model had a bad
+      afternoon" and "something is steering it".
+
+  # -------------------------------------------------------------------
+  # The degradation ladder (docs/reliability.md §5)
+  # -------------------------------------------------------------------
+  #
+  # Every rung below emits a distinct marker and none of them emits a
+  # metric. That is the gap §7 of `docs/reliability.md` records: until
+  # `record_degradation` folds into the OTel instruments, the quality
+  # SLI cannot be computed from metrics for most of the ladder, and
+  # these alarms are the whole of the coverage.
+  - name: ResilienceDegraded
+    events:
+      - resilience_degraded
+    level: WARNING
+    window: 15m
+    threshold: 1
+    severity: page
+    runbook: docs/runbooks/redis-loss.md
+    why: >-
+      The one event `resilience.record_degradation` emits, carrying
+      `component` and a bounded `reason`. Today the only caller is the
+      rate limiter falling open to its per-worker fallback, which is a
+      weaker guarantee than the configuration claims — and the
+      `rate_limit_rejections_total{backend="memory"}` rule in
+      `alerts.yml` only fires once somebody is actually rejected, which
+      may be hours later. This one fires on the degradation itself.
+
+  - name: ReaderDegradedToAbstractOnly
+    events:
+      - reader_degraded_to_abstract_only
+      - reader_paper_abstract_only
+    level: WARNING
+    window: 1h
+    threshold: 5
+    severity: ticket
+    runbook: docs/runbooks/model-provider-outage.md
+    why: >-
+      The rung `02-STANDARDS.md` §5.3 names as this repository's own
+      instance of the trap: the reader falls back to abstract-only, it is
+      tallied and logged, and it never reaches the user. Reports keep
+      being produced, the job-success SLI stays green, and the product
+      quietly got worse. Five an hour is the declared line; the real fix
+      is to disclose it in the report, which is not this work order's.
+
+  - name: SearchServedNoRealResults
+    events:
+      - search_mock_data_served
+      - search_partial_arxiv_failure
+      - search_empty_keeping_prior_papers
+    level: WARNING
+    window: 1h
+    threshold: 3
+    severity: ticket
+    runbook: docs/runbooks/model-provider-outage.md
+    why: >-
+      Reduced-tool mode. `search_mock_data_served` on a production
+      deployment is the loudest of the three — it means the fixture path
+      is serving a real user — and it is the reason this alarm exists at
+      a threshold of three rather than being folded into the reader one.
+
+  - name: TerminalStateOrStreamLost
+    events:
+      - api_job_terminal_persist_failed
+      - sse_terminal_publish_gave_up
+      - sse_terminal_frame_suppressed
+      - job_cas_write_aborted
+    level: WARNING
+    window: 1h
+    threshold: 1
+    severity: page
+    runbook: docs/runbooks/postgres-loss.md
+    why: >-
+      A job finished and the client was never told, or the row never
+      landed. This is the failure that produces a support message
+      ("it just spun forever") with a green dashboard behind it, because
+      the work succeeded — only the last write did not. Threshold 1.
+
+  - name: KeystoreReloadBroken
+    events:
+      - keystore_reload_parse_failed
+      - keystore_reloader_iteration_failed
+      - keystore_file_missing
+    level: WARNING
+    window: 15m
+    threshold: 1
+    severity: page
+    runbook: docs/runbooks/redis-loss.md
+    why: >-
+      The keystore reloader retains the *current* keystore on a parse
+      error, which is the right behaviour and is also why a broken edit
+      is invisible: authentication keeps working with the old file, so a
+      revocation an operator believes they performed has not happened.
+      `docs/runbooks/pilot.md` §5 calls step 1 the revocation; this is
+      the alarm that says step 1 silently did not take.

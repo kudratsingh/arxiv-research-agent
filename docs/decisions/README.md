@@ -401,6 +401,17 @@ never renumbered.
   **Supersedes the regression-gate half of
   [ADR 0044](0044-eval-cost-accuracy-and-regression-thresholds.md)**;
   follows ADR 0070.
+- [0073](0073-slos-and-operational-readiness.md) — SLOs anchored on the
+  SRE Workbook's **quality** SLI rather than on a vendor threshold, with
+  degraded and shed requests excluded from the latency SLI and counted
+  against quality, the compounding arithmetic (0.95^5 = 77.4% across the
+  five-node research graph) stated in the document, and every objective
+  marked *declared, not earned*. Seven runbooks, alert rules and a
+  dashboard ship under `deploy/observability/` as reviewable files that
+  nothing runs. The deliverable is `tests/test_operability_docs.py`: it
+  re-parses `src/` for every instrument and fails when a rule names one
+  that no longer exists, because a renamed instrument does not error --
+  it renders a flat zero, and a flat zero reads as a healthy fleet.
 
 ## When to write an ADR
 

@@ -1,0 +1,504 @@
+# Prometheus alert rules for arxiv-research-agent.
+#
+# NOT wired into the default stack. `deploy/observability/README.md`
+# says how to run them; `docs/reliability.md` derives every objective
+# these rules watch, and every threshold below is **declared, not
+# earned** — no deployment has yet produced the measurements that would
+# justify one. Revising them against measurement is the first honest job
+# of an SLO, not an admission that this file was wrong.
+#
+# ## Three rules this file obeys
+#
+# 1. **Every metric name here exists in `src/`.**
+#    `tests/test_operability_docs.py` re-parses `src/` for every
+#    `meter.create_*` call and fails when a name in an `expr` below has
+#    no instrument behind it. That test is the point of this directory:
+#    a renamed instrument does not make a rule error, it makes the rule
+#    match nothing, forever, silently — which reads exactly like a
+#    healthy fleet.
+#
+# 2. **Names are the OTel names with dots replaced by underscores, and
+#    nothing else.** `deploy/observability/otel-collector.yaml` sets
+#    `add_metric_suffixes: false` to make that true. Read the block at
+#    the top of that file before changing it.
+#
+# 3. **Every `runbook` annotation points at a file that exists, and
+#    every `signal_events` name is in `KNOWN_EVENTS`.** Same test. A
+#    runbook that names a signal nothing emits is worse than no runbook,
+#    because it costs an operator ten minutes during an incident before
+#    they conclude the signal is broken rather than the fleet healthy.
+#
+# ## Why there is a `minimum events` guard on the burn-rate rules
+#
+# Burn-rate alerting is a ratio, and a ratio over a small denominator is
+# noise. At a 99.5% objective the expected number of errors in a healthy
+# hour only exceeds one at ~200 requests/hour; below that, a single
+# failure produces a burn rate of 30x or more and pages. The SRE
+# Workbook says the same thing in general form — burn-rate windows
+# assume enough traffic for the ratio to mean something — and this
+# deployment's expected volume is a five-person pilot. So each burn rule
+# carries an `and` clause requiring a floor of events in the long
+# window. The floor is a declared number too; it is stated on each rule.
+#
+# ## What is deliberately not here
+#
+# **The injection alarm and the degradation ladder.** Neither emits a
+# metric today. They are in `log-alerts.yml`, in the shape a log-based
+# alerting backend takes, with the missing instruments named in
+# `docs/reliability.md` §7. Writing a PromQL rule for a series that does
+# not exist would be the exact failure this file's first rule prevents.
+
+groups:
+  # ===================================================================
+  # SLO burn rates — docs/reliability.md §3
+  # ===================================================================
+  #
+  # Multiwindow, multi-burn-rate, from the SRE Workbook's recommended
+  # parameters. The arithmetic, so the constants are checkable rather
+  # than copied:
+  #
+  #   a burn rate of B sustained for a window W consumes B x W / 28d
+  #   of the budget.
+  #
+  #   14.4 x  1h / 672h = 2.1%  of the budget in an hour   -> page
+  #    6   x  6h / 672h = 5.4%  of the budget in six hours -> page
+  #    3   x 24h / 672h = 10.7% of the budget in a day     -> ticket
+  #    1   x 72h / 672h = 10.7% of the budget in three days-> ticket
+  #
+  # The short window on each rule (1/12th of the long one) exists so the
+  # alert *resets* promptly once the burn stops. Without it a rule that
+  # fired on a five-minute outage stays firing for the length of its
+  # long window, and an operator learns to ignore it.
+  #
+  # Two rules per SLO, not four. The 3x/1d and 1x/3d tickets need a
+  # ticket queue to land in, and this repository has none; they are
+  # written down here so that adding them later is uncommenting, not
+  # rederiving.
+  - name: slo_burn
+    rules:
+      - alert: ApiAvailabilityBudgetBurnFast
+        # 14.4 x the 0.5% budget = a 7.2% error ratio.
+        expr: >-
+          (
+            sum(rate(http_server_request_duration_count{http_response_status_code=~"5..",http_route!="/healthz",http_route!="/readyz"}[1h]))
+            /
+            sum(rate(http_server_request_duration_count{http_route!="/healthz",http_route!="/readyz"}[1h]))
+          ) > 0.072
+          and
+          (
+            sum(rate(http_server_request_duration_count{http_response_status_code=~"5..",http_route!="/healthz",http_route!="/readyz"}[5m]))
+            /
+            sum(rate(http_server_request_duration_count{http_route!="/healthz",http_route!="/readyz"}[5m]))
+          ) > 0.072
+          and
+          sum(increase(http_server_request_duration_count{http_route!="/healthz",http_route!="/readyz"}[1h])) >= 200
+        for: 2m
+        labels:
+          severity: page
+          slo: api_availability
+        annotations:
+          summary: "API availability is burning its 28-day budget 14.4x too fast"
+          description: >-
+            More than 7.2% of non-probe API requests are answering 5xx over
+            both the last hour and the last five minutes, on at least 200
+            requests. At this rate the whole 28-day error budget is gone in
+            under two days. A 4xx is not counted: a client sending bad
+            requests is not this service failing.
+          runbook: docs/runbooks/README.md
+          signal_events: api_request_failed api_health_dependency_degraded
+
+      - alert: ApiAvailabilityBudgetBurnSlow
+        # 6 x the 0.5% budget = a 3% error ratio.
+        expr: >-
+          (
+            sum(rate(http_server_request_duration_count{http_response_status_code=~"5..",http_route!="/healthz",http_route!="/readyz"}[6h]))
+            /
+            sum(rate(http_server_request_duration_count{http_route!="/healthz",http_route!="/readyz"}[6h]))
+          ) > 0.03
+          and
+          (
+            sum(rate(http_server_request_duration_count{http_response_status_code=~"5..",http_route!="/healthz",http_route!="/readyz"}[30m]))
+            /
+            sum(rate(http_server_request_duration_count{http_route!="/healthz",http_route!="/readyz"}[30m]))
+          ) > 0.03
+          and
+          sum(increase(http_server_request_duration_count{http_route!="/healthz",http_route!="/readyz"}[6h])) >= 200
+        for: 15m
+        labels:
+          severity: ticket
+          slo: api_availability
+        annotations:
+          summary: "API availability is burning its 28-day budget 6x too fast"
+          description: >-
+            5% of the 28-day budget will be gone in six hours at this rate.
+            Not a page; it is the shape of a dependency that is failing some
+            of the time rather than all of it.
+          runbook: docs/runbooks/README.md
+          signal_events: api_request_failed api_health_dependency_degraded
+
+      - alert: JobSuccessBudgetBurnFast
+        # Job success SLO is 95%, so the budget is 5% and 14.4x is a
+        # 72% failure ratio. That sounds enormous and is correct: at a
+        # 95% objective, three-quarters of jobs failing really is the
+        # rate that empties four weeks of budget in two days.
+        #
+        # `degraded_close` is in the denominator and not the numerator
+        # on purpose (docs/reliability.md §4): the job row says
+        # `succeeded`, the learner got a polite close, and counting it
+        # as a success is how budget exhaustion became invisible.
+        # `cancelled` is excluded from both — a person stopping their
+        # own job is not the service failing.
+        expr: >-
+          (
+            sum(rate(research_jobs_total{status!="succeeded",status!="cancelled"}[1h]))
+            /
+            sum(rate(research_jobs_total{status!="cancelled"}[1h]))
+          ) > 0.72
+          and
+          (
+            sum(rate(research_jobs_total{status!="succeeded",status!="cancelled"}[5m]))
+            /
+            sum(rate(research_jobs_total{status!="cancelled"}[5m]))
+          ) > 0.72
+          and
+          sum(increase(research_jobs_total{status!="cancelled"}[1h])) >= 10
+        for: 5m
+        labels:
+          severity: page
+          slo: job_success
+        annotations:
+          summary: "Research jobs are failing fast enough to empty the budget in two days"
+          description: >-
+            Over 72% of terminal jobs are ending in something other than a
+            clean success, on at least 10 jobs in the last hour. The floor is
+            10 rather than 200 because a job is a minutes-long unit of work,
+            not a request; a fleet serving a five-person pilot will not
+            produce 200 jobs an hour and a rule that waits for them would
+            never fire.
+          runbook: docs/runbooks/README.md
+          signal_events: api_job_failed run_failed api_job_timeout
+
+  # ===================================================================
+  # Dependency and provider incidents — one rule per runbook
+  # ===================================================================
+  - name: dependencies
+    rules:
+      - alert: ModelProviderErrorRateHigh
+        # SLI objective is < 2% (docs/reliability.md §3). Alerting at
+        # 10% rather than 2% is deliberate: 2% is the objective, and an
+        # alert on the objective fires on every ordinary bad afternoon.
+        # The budget rules above are what watch the objective; this
+        # watches for an outage.
+        expr: >-
+          (
+            sum(rate(gen_ai_client_operation_duration_count{error_type!="none"}[10m]))
+            /
+            sum(rate(gen_ai_client_operation_duration_count[10m]))
+          ) > 0.10
+          and
+          sum(increase(gen_ai_client_operation_duration_count[10m])) >= 5
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "More than 10% of model calls are failing"
+          description: >-
+            `gen_ai.client.operation.duration` counts every provider call,
+            successful or not, and carries `error.type`. A sustained failure
+            ratio here means the SDK's own retry envelope has been exhausted,
+            not that one call was slow — `llm_retries_total` is where retries
+            that eventually succeeded show up.
+          runbook: docs/runbooks/model-provider-outage.md
+          signal_events: llm_upstream_error llm_retry_budget_clamped
+
+      - alert: ModelProviderNoSuccessfulCalls
+        expr: >-
+          sum(rate(llm_upstream_errors_total[10m])) > 0
+          and
+          sum(rate(llm_calls_total[10m])) == 0
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "Every model call is failing — no successful call in ten minutes"
+          description: >-
+            `llm_calls_total` is bumped from the cost choke point, which only
+            runs on a call that returned; `llm_upstream_errors_total` is
+            bumped when the SDK gives up. Errors with no successes at all is a
+            total provider outage, an expired credential, or a spend cap on
+            the provider side.
+          runbook: docs/runbooks/model-provider-outage.md
+          signal_events: llm_upstream_error llm_client_configured
+
+      - alert: RateLimiterFellBackToMemory
+        # The single most precise Redis signal this repository emits on
+        # a metric. Under `RATE_LIMIT_BACKEND=redis` a 429 labelled
+        # `backend="memory"` can only mean the Redis limiter raised and
+        # the fail-open fallback answered (ADR 0068) — so the per-key
+        # quota is now per *worker*, i.e. N x the configured limit
+        # across N workers.
+        expr: sum(rate(rate_limit_rejections_total{backend="memory"}[5m])) > 0
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "The rate limiter is serving a weaker guarantee than it is configured for"
+          description: >-
+            429s are being issued by the in-process fallback limiter. On a
+            deployment configured for the Redis backend this means Redis is
+            unreachable from at least one worker and the per-principal hourly
+            cap has silently become per-worker.
+          runbook: docs/runbooks/redis-loss.md
+          signal_events: resilience_degraded api_health_dependency_degraded
+
+      - alert: SubmitPathFailing
+        # The Redis/Postgres discriminator is in the log, not the
+        # metric: `api_health_dependency_degraded` names which backend.
+        # This rule only says "writes are failing".
+        expr: >-
+          sum(rate(http_server_request_duration_count{http_route="/research",http_response_status_code=~"5.."}[10m])) > 0
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "POST /research is returning 5xx — the job store is probably down"
+          description: >-
+            Before WO-A07 a Redis outage at submit moved no instrument at all,
+            because the request never became a job and the fleet read as idle
+            rather than as failing. This is the rule that closes that: a
+            failing submit path is a failing store, a failing rate limiter
+            that did not fail open, or a bug at the boundary. The log's
+            `api_health_dependency_degraded` line names the dependency.
+          runbook: docs/runbooks/redis-loss.md
+          signal_events: api_health_dependency_degraded api_request_failed
+
+      - alert: JobsOrphanedByDeadWorkers
+        expr: sum(increase(research_jobs_total{error_type="orphaned"}[30m])) > 0
+        for: 0m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "The redriver is reclaiming jobs whose worker vanished"
+          description: >-
+            An `orphaned` terminal means a worker exited without publishing a
+            terminal state and the redriver reclaimed the row. One is a
+            restart. A stream of them is a worker crashing, an OOM kill, or a
+            grace period shorter than the drain.
+          runbook: docs/runbooks/postgres-loss.md
+          signal_events: job_redriver_reclaimed job_redriver_swept api_shutdown
+
+  # ===================================================================
+  # Spend
+  # ===================================================================
+  - name: cost
+    rules:
+      - alert: CostCapStorm
+        # `error_type` here is ADR 0064's stable code, the same string
+        # the API answers with, so this matcher cannot drift from the
+        # error contract without `tests/test_errors.py` failing first.
+        expr: >-
+          sum(increase(research_jobs_total{error_type="cost_budget_exceeded"}[30m]))
+          + sum(increase(research_jobs_total{status="degraded_close"}[30m])) > 3
+        for: 0m
+        labels:
+          severity: page
+        annotations:
+          summary: "Jobs are hitting their spend ceilings repeatedly"
+          description: >-
+            More than three runs in half an hour ended at a cost cap, either
+            by refusal (`cost_budget_exceeded`) or by ADR 0062's polite close
+            (`degraded_close`). The caps are working; the question is why the
+            work now costs more than they allow — a prompt change, a longer
+            paper set, a retry loop, or a principal doing something
+            expensive on purpose.
+          runbook: docs/runbooks/cost-cap-storm.md
+          signal_events: api_job_cost_budget_exceeded api_session_cost_cap_reached supervisor_cost_budget_stop
+
+      - alert: SpendRateHigh
+        # DECLARED, NOT EARNED, and the one threshold here that is a
+        # pure placeholder: no approved budget exists to derive it from.
+        # The derivation to run once one does, from
+        # `docs/runbooks/pilot.md` §3:
+        #
+        #     usd_per_hour_ceiling = approved_budget / (24 x observation_days)
+        #
+        # A $50 budget over the 14-day window is $0.15/hour. The 1.00
+        # below is 6x that, chosen so the rule does not fire on a single
+        # ordinary research run at `MAX_COST_USD=2.00` spread over an
+        # hour — which is to say it is derived from the per-job ceiling,
+        # not from a budget, because a budget is what does not exist.
+        expr: sum(rate(llm_cost_usd_total[1h])) * 3600 > 1.00
+        for: 15m
+        labels:
+          severity: page
+        annotations:
+          summary: "Model spend is above 1.00 USD/hour"
+          description: >-
+            `llm_cost_usd_total` is estimated from the token counts and the
+            pinned price table, not billed by the provider, so treat it as the
+            shape of the spend and not the invoice. There is no aggregate cap
+            in this repository (MT-01 F4) — the per-job ceilings bound one job
+            and nothing bounds the sum, which is why this rule is a page and
+            not a ticket.
+          runbook: docs/runbooks/cost-cap-storm.md
+          signal_events: llm_call api_job_cost_budget_exceeded
+
+  # ===================================================================
+  # Saturation and poison work
+  # ===================================================================
+  - name: saturation
+    rules:
+      - alert: QueueSaturated
+        # `research_queue_saturation_ratio` is owned jobs divided by
+        # `api_max_concurrent_jobs`, per worker. 1.0 means every permit
+        # is held; above 1.0 means work is queueing behind the ceiling.
+        # `max` and not `avg`: one full worker is a real queue for
+        # whoever landed on it, and averaging it across a fleet hides
+        # exactly the case a readiness probe exists to drain.
+        expr: max(research_queue_saturation_ratio) >= 1
+        for: 10m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "A worker has been at its concurrency ceiling for ten minutes"
+          description: >-
+            `/readyz` is already returning 503 for this worker, so an
+            orchestrator that reads it will drain. Nothing in the shipped
+            compose stack reads it — the healthcheck polls `/healthz`, which
+            is always 200 by design — so on that deployment this rule is the
+            only thing that will tell you.
+          runbook: docs/runbooks/queue-saturation.md
+          signal_events: api_job_submitted api_node_executor_drain_timeout
+
+      - alert: QueueWaitP95High
+        # 60s of queueing before a job starts. Declared: the objective
+        # in docs/reliability.md is on total job latency, and 10% of a
+        # 600s research budget spent waiting is the share this deployment
+        # is willing to lose to queueing.
+        expr: >-
+          histogram_quantile(0.95, sum by (le, kind) (rate(research_job_queue_wait_seconds_bucket[30m]))) > 60
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Jobs are waiting more than a minute for a concurrency permit"
+          description: >-
+            The USE 'wait' for the job queue. It rises before saturation does,
+            because a queue that is draining slowly still drains — which makes
+            it the earlier of the two signals and the one worth acting on.
+          runbook: docs/runbooks/queue-saturation.md
+          signal_events: api_job_submitted
+
+      - alert: AbandonedNodeThreads
+        # ADR 0047: a node thread whose drain budget expired is no
+        # longer waited on but is still running, still holding a pool
+        # slot and still able to spend. It is counted in `active_jobs`,
+        # so it eats concurrency that `research_queue_depth` reports as
+        # contention rather than as leak.
+        expr: max(research_abandoned_node_threads) > 0
+        for: 30m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "A worker is carrying node threads it gave up waiting for"
+          description: >-
+            These threads never come back on their own. They hold pool slots
+            and can still issue model calls, so a worker that accumulates them
+            loses capacity and gains spend at the same time. The only
+            containment is to restart the worker.
+          runbook: docs/runbooks/queue-saturation.md
+          signal_events: api_job_node_drain_expired api_node_executor_drain_timeout
+
+      - alert: PoisonJobDeadLettered
+        expr: sum(increase(research_jobs_total{error_type="internal_dead_letter"}[1h])) > 0
+        for: 0m
+        labels:
+          severity: page
+        annotations:
+          summary: "A job was dead-lettered after exhausting its redrive attempts"
+          description: >-
+            The redriver requeued this job `job_redrive_max_attempts` times
+            and each attempt killed the worker that took it. That is the
+            definition of a poison job: it is not the worker that is broken,
+            it is the work. Until it is off the queue it will keep taking
+            workers down.
+          runbook: docs/runbooks/poison-job.md
+          signal_events: job_redriver_dead_lettered job_redriver_requeued job_redriver_reclaimed
+
+  # ===================================================================
+  # Latency — the SLI that excludes degraded and shed requests
+  # ===================================================================
+  - name: latency
+    rules:
+      - alert: SubmitLatencyP95High
+        # docs/reliability.md §3: p95 of POST /research under 500ms.
+        #
+        # The exclusions are the whole point of this rule and are argued
+        # in §5 of that document. 429 is a shed request and 503 is a
+        # refused one; both are fast, both are the service declining to
+        # work, and leaving them in the latency SLI means that shedding
+        # harder makes the latency panel look better while the product
+        # gets worse. They are counted against quality instead.
+        expr: >-
+          histogram_quantile(0.95,
+            sum by (le) (
+              rate(http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code!="429",http_response_status_code!="503"}[30m])
+            )
+          ) > 0.5
+        for: 15m
+        labels:
+          severity: ticket
+          slo: submit_latency
+        annotations:
+          summary: "POST /research p95 is over 500ms"
+          description: >-
+            Submit is a write to the job store and a return; it does no model
+            work. A p95 above half a second means the store is slow, not that
+            research is slow. Job wall-clock is a different SLI with a
+            different instrument (`research_job_duration_seconds`).
+          runbook: docs/runbooks/redis-loss.md
+          signal_events: api_request_completed api_health_dependency_degraded
+
+      - alert: ResearchJobLatencyP95High
+        # 600s, the same figure as `API_JOB_TIMEOUT_SEC`'s shipped
+        # default — so a p95 at this line means half the fleet's slow
+        # jobs are being killed by the timeout rather than finishing.
+        expr: >-
+          histogram_quantile(0.95,
+            sum by (le) (rate(research_job_duration_seconds_bucket{kind="research",status="succeeded"}[6h]))
+          ) > 600
+        for: 30m
+        labels:
+          severity: ticket
+          slo: job_latency
+        annotations:
+          summary: "Successful research jobs have a p95 wall clock over ten minutes"
+          description: >-
+            Cut to `status="succeeded"` deliberately: a timeout kill lands in
+            the histogram at exactly the timeout, so including failures would
+            make the p95 converge on `API_JOB_TIMEOUT_SEC` and stop being a
+            measurement of anything.
+          runbook: docs/runbooks/model-provider-outage.md
+          signal_events: run_completed api_job_timeout
+
+      - alert: ToolLatencyP95High
+        # arXiv and Semantic Scholar are the slow tools and the ones
+        # that fail. 30s is `arxiv_timeout_sec`'s shipped per-attempt
+        # value, so a p95 here means attempts are timing out and the
+        # clamped retry envelope is spending the job's budget on them.
+        expr: >-
+          histogram_quantile(0.95,
+            sum by (le, gen_ai_tool_name) (rate(gen_ai_execute_tool_duration_bucket[30m]))
+          ) > 30
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "A tool's p95 execution time is over 30 seconds"
+          description: >-
+            Named by `gen_ai.tool.name`, which is a closed set of five
+            constants — so the label tells you whether it is arXiv, Semantic
+            Scholar, a PDF fetch, a parse, or the embedding ranker without
+            reading a log.
+          runbook: docs/runbooks/model-provider-outage.md
+          signal_events: arxiv_search_request_failed semantic_scholar_request_failed pdf_download_failed

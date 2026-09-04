@@ -1,0 +1,498 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "The Prometheus that scrapes the collector in deploy/observability/compose.observability.yml",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "" },
+    { "type": "panel", "id": "stat", "name": "Stat", "version": "" }
+  ],
+  "title": "arxiv-research-agent — SLIs, RED and USE",
+  "uid": "arxiv-research-agent-slo",
+  "description": "Every instrument the repository emits, once. Metric names are the OpenTelemetry names with dots replaced by underscores, which holds only while deploy/observability/otel-collector.yaml keeps add_metric_suffixes false. tests/test_operability_docs.py asserts every name below still has an instrument behind it in src/.",
+  "tags": ["arxiv-research-agent", "slo", "red", "use"],
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "utc",
+  "panels": [
+    {
+      "type": "row",
+      "title": "Service level indicators — docs/reliability.md §3",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "API availability (28d)",
+      "description": "Non-5xx over total, health probes excluded. A 4xx is not counted as unavailability: a client sending bad requests is not this service failing. Objective 99.5%, declared not earned.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 3,
+          "min": 0.9,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 0.995 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1 - (sum(increase(http_server_request_duration_count{http_response_status_code=~\"5..\",http_route!=\"/healthz\",http_route!=\"/readyz\"}[28d])) / clamp_min(sum(increase(http_server_request_duration_count{http_route!=\"/healthz\",http_route!=\"/readyz\"}[28d])), 1))",
+          "legendFormat": "availability"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Job success (28d)",
+      "description": "Succeeded over terminal-minus-cancelled. degraded_close is in the denominator and not the numerator: the job row says succeeded, but the learner hit a spend ceiling and counting that as a clean run is how budget exhaustion became invisible. Objective 95%, declared not earned.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 3,
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 0.95 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(research_jobs_total{status=\"succeeded\"}[28d])) / clamp_min(sum(increase(research_jobs_total{status!=\"cancelled\"}[28d])), 1)",
+          "legendFormat": "job success"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Model call error rate (24h)",
+      "description": "gen_ai.client.operation.duration counts every provider call, successful or not, and carries error.type — so its count is both the numerator and the denominator. Objective under 2%, declared not earned.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.02 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(gen_ai_client_operation_duration_count{error_type!=\"none\"}[24h])) / clamp_min(sum(increase(gen_ai_client_operation_duration_count[24h])), 1)",
+          "legendFormat": "model error rate"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "HTTP surface — RED",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Request rate by route",
+      "description": "The R of RED. There is no request counter and that is not an omission — a histogram carries its own count, so rate(count) is the rate.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (http_route) (rate(http_server_request_duration_count[5m]))",
+          "legendFormat": "{{http_route}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "5xx rate by route",
+      "description": "The E of RED. Route template only — a raw path carries job ids and would be one series per job.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (http_route) (rate(http_server_request_duration_count{http_response_status_code=~\"5..\"}[5m]))",
+          "legendFormat": "{{http_route}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Request latency p95 by route — shed requests excluded",
+      "description": "429 and 503 are dropped here and counted against quality instead. Leaving them in means shedding harder makes this panel look better while the product gets worse. /research/{job_id}/stream is also dropped: it is an SSE connection held open for the life of a job, so its observations are job durations, not request latencies.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, http_route) (rate(http_server_request_duration_bucket{http_response_status_code!=\"429\",http_response_status_code!=\"503\",http_route!=\"/research/{job_id}/stream\"}[10m])))",
+          "legendFormat": "{{http_route}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Requests in flight",
+      "description": "An UpDownCounter, not a sampled gauge. An SSE client correctly holds this up for the whole run, which is why it is worth watching next to the latency panel rather than inside it.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (http_request_method) (http_server_active_requests)",
+          "legendFormat": "{{http_request_method}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Jobs",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Terminal jobs by status and error type",
+      "description": "status takes one value that is not a JobStatus: degraded_close, for a session closed politely at its cost ceiling (ADR 0062). error_type is ADR 0064's stable code, the same string the API answers with.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status, error_type, kind) (increase(research_jobs_total[1h]))",
+          "legendFormat": "{{kind}} {{status}} / {{error_type}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Job wall clock p95 by kind — successes only",
+      "description": "Cut to succeeded deliberately: a timeout kill lands in the histogram at exactly API_JOB_TIMEOUT_SEC, so including failures makes the p95 converge on the timeout and stop measuring anything.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(research_job_duration_seconds_bucket{status=\"succeeded\"}[1h])))",
+          "legendFormat": "{{kind}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Queue wait p95 by kind",
+      "description": "The USE wait for the job queue: time between acceptance and start, spent behind api_max_concurrent_jobs. Rises before saturation does.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 34 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(research_job_queue_wait_seconds_bucket[1h])))",
+          "legendFormat": "{{kind}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Workflow duration p95 — the conventional reading",
+      "description": "gen_ai.invoke_workflow.duration is the conventional alias of research_job_duration_seconds; both are emitted for one release so a dashboard does not break silently on the rename. They are not identical: the job histogram runs from acceptance through the terminal write, this one bounds the workflow span, and the gap between the two panels is the queue wait plus the terminal persistence.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 34 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, gen_ai_workflow_name) (rate(gen_ai_invoke_workflow_duration_bucket[1h])))",
+          "legendFormat": "{{gen_ai_workflow_name}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Saturation — USE",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 42 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Owned jobs and abandoned node threads (per worker)",
+      "description": "research_active_jobs is queued plus running plus the node threads this worker gave up waiting on (ADR 0047). Those threads still hold pool slots and can still spend, so they are broken out rather than hidden.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 43 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "research_active_jobs",
+          "legendFormat": "active"
+        },
+        {
+          "refId": "B",
+          "expr": "research_abandoned_node_threads",
+          "legendFormat": "abandoned threads"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Queue depth (per worker)",
+      "description": "active_jobs minus api_max_concurrent_jobs, floored at zero. An upper bound: abandoned threads are counted as though they still held a permit, so this errs toward more contended than it is — the useful direction for the error to point.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 43 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "research_queue_depth",
+          "legendFormat": "depth"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Queue saturation ratio (per worker)",
+      "description": "Owned jobs over api_max_concurrent_jobs. 1.0 means every permit is held and /readyz is already returning 503 for this worker.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 43 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "research_queue_saturation_ratio",
+          "legendFormat": "saturation"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Model calls and spend",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 51 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Spend rate, USD/hour by model",
+      "description": "Estimated from token counts and the pinned price table, not billed by the provider. The conventions define no cost metric, so llm_cost_usd_total is the only name this has and it is not an alias for anything.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 52 },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (model) (rate(llm_cost_usd_total[1h])) * 3600",
+          "legendFormat": "{{model}}"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Model calls, retries and upstream errors",
+      "description": "llm_calls_total counts calls that returned; llm_retries_total is the SDK's own retries_taken, so retries that eventually succeeded are visible instead of looking like slow calls; llm_upstream_errors_total is what is left when the SDK gives up, labelled by HTTP status or by connection.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 52 },
+      "fieldConfig": { "defaults": { "unit": "cps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (model) (rate(llm_calls_total[10m]))",
+          "legendFormat": "ok {{model}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (model) (rate(llm_retries_total[10m]))",
+          "legendFormat": "retries {{model}}"
+        },
+        {
+          "refId": "C",
+          "expr": "sum by (model, status) (rate(llm_upstream_errors_total[10m]))",
+          "legendFormat": "error {{model}} {{status}}"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Token rate by type",
+      "description": "gen_ai.client.token.usage is a histogram of tokens per call, so its sum over time is the token rate. Anthropic's two prompt-cache buckets ride on the conventional cache_read / cache_write attributes rather than on private names.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 60 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (gen_ai_token_type) (rate(gen_ai_client_token_usage_sum[10m]))",
+          "legendFormat": "{{gen_ai_token_type}}"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Model call latency p95 by model",
+      "description": "Wall clock for the whole call chain, retries included — the same figure the chat span measured. In seconds, per the conventions, not milliseconds.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 60 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, gen_ai_request_model) (rate(gen_ai_client_operation_duration_bucket[10m])))",
+          "legendFormat": "{{gen_ai_request_model}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Agents and tools",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 68 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Agent invocation duration p95 by node",
+      "description": "One in-process agent span per graph node, named by gen_ai.agent.name. The planner reports as plan rather than invoke_agent because planning here is a named node of the graph rather than an inferred phase.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 69 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_duration_bucket[30m])))",
+          "legendFormat": "{{gen_ai_agent_name}}"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Model calls and tool calls per agent invocation (p95)",
+      "description": "The two per-invocation process counters the conventions already name for an agent system. A tool call is counted by the tool span itself, so this can never disagree with the number of execute_tool spans under the node. A step change here is the shape of a loop that stopped terminating.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 69 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_inference_calls_bucket[30m])))",
+          "legendFormat": "inference {{gen_ai_agent_name}}"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le, gen_ai_agent_name) (rate(gen_ai_invoke_agent_tool_calls_bucket[30m])))",
+          "legendFormat": "tools {{gen_ai_agent_name}}"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Tool execution p95 by tool",
+      "description": "gen_ai.tool.name is a closed set of five constants, opened with a constant rather than a caller-supplied string, which is what keeps this panel's cardinality finite.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 77 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, gen_ai_tool_name) (rate(gen_ai_execute_tool_duration_bucket[30m])))",
+          "legendFormat": "{{gen_ai_tool_name}}"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Rate-limit refusals by limiter backend",
+      "description": "The honest-refusal rung of the degradation ladder, and the sharpest Redis signal on any metric: under RATE_LIMIT_BACKEND=redis a 429 labelled memory can only mean the Redis limiter raised and the fail-open fallback answered, so the per-principal cap has silently become per-worker.",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 77 },
+      "fieldConfig": { "defaults": { "unit": "cps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (backend) (rate(rate_limit_rejections_total[10m]))",
+          "legendFormat": "{{backend}}"
+        }
+      ]
+    }
+  ]
+}

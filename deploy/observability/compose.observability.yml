@@ -1,0 +1,99 @@
+# Optional observability overlay — a collector and a rule evaluator.
+#
+# ## This is not wired into anything
+#
+# `docker-compose.yml` does not reference this file and must not. Two
+# reasons, and the second is the one that matters:
+#
+# 1. A collector and a Prometheus are two more processes, two more
+#    volumes and a disk that grows without asking. On a single Hetzner
+#    box that is a real cost, and standing it up is the owner's call.
+# 2. `docker compose up` is the zero-config demo. Every service in the
+#    default path has to be something a stranger can run without a
+#    decision. This is not that.
+#
+# `tests/test_operability_docs.py` asserts the default compose file
+# never grows a reference to this one.
+#
+# ## Running it
+#
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f deploy/observability/compose.observability.yml \
+#     up -d
+#
+# Then:
+#   http://127.0.0.1:9090/alerts   the rules in alerts.yml, evaluating
+#   http://127.0.0.1:8889/metrics  the collector's Prometheus surface
+#
+# Import `dashboard.json` into a Grafana pointed at the Prometheus. No
+# Grafana service ships here: the dashboard is a file, and a fourth
+# process to render it is another decision this overlay does not make
+# for you.
+#
+# ## Both ports are loopback-bound
+#
+# Same rule the base stack applies to `app` and `web`: a
+# Docker-published port bypasses a host's ufw rules. Neither of these
+# has authentication, and the metrics carry route templates, model
+# names and spend.
+
+services:
+  otel-collector:
+    # Pinned, not `latest`. A collector that changes its Prometheus
+    # name translation under you is exactly the silent alerting rot
+    # this directory exists to prevent.
+    image: otel/opentelemetry-collector-contrib:0.140.0
+    container_name: arxiv-research-agent-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./deploy/observability/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "${OTEL_PROM_BIND_ADDRESS:-127.0.0.1}:${OTEL_PROM_PORT:-8889}:8889"
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    container_name: arxiv-research-agent-prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      # 15 days. Long enough to look back over an incident, far short of
+      # the 28-day SLO window — which is deliberate: a 28-day error
+      # budget read off a 15-day store would be a number with half its
+      # evidence missing, and `docs/reliability.md` says to compute the
+      # budget from the burn-rate rules rather than from a long query.
+      - "--storage.tsdb.retention.time=15d"
+    volumes:
+      - ./deploy/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/observability/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_BIND_ADDRESS:-127.0.0.1}:${PROMETHEUS_PORT:-9090}:9090"
+    depends_on:
+      - otel-collector
+
+  # Turn the app's exporters on. This is an override of the base
+  # service, not a new one — the only edit the overlay makes to
+  # anything that ships by default, and it is additive environment.
+  app:
+    environment:
+      ENABLE_TRACING: "true"
+      ENABLE_METRICS: "true"
+      OTEL_EXPORTER_ENDPOINT: "http://otel-collector:4318"
+      OTEL_SERVICE_NAME: "arxiv-research-agent"
+      # Match Prometheus' scrape interval. Pushing less often than the
+      # scrape makes every other sample a repeat; pushing more often
+      # just discards work.
+      OTEL_METRIC_EXPORT_INTERVAL_SEC: "15"
+      # One trace in ten. Metrics are complete regardless — sampling
+      # applies to traces only — so this trades trace coverage for
+      # collector cost and nothing in `alerts.yml` depends on it.
+      TRACE_SAMPLE_RATIO: "0.1"
+      # Deliberately absent: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT.
+      # Turning it on sends paper text, research queries and learner
+      # writing to the collector. `docs/observability.md` has the
+      # trade; the default is off and this overlay does not change it.
+
+volumes:
+  prometheus-data:
