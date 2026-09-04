@@ -139,6 +139,18 @@ class TestTheShapeOfTheJobCounter:
 
         WO-A07 adds `kind` to this set. When it lands, this assertion
         gains `"kind"` and nothing else in `tests/fault/` moves.
+
+        It landed (ADR 0066), and it moved *both* assertions below
+        rather than the one this docstring predicted: `kind` is on the
+        duration histogram too. That is a different judgement from the
+        `error_type` one, not an inconsistency with it. Splitting
+        duration by error type divides an already-thin histogram a
+        dozen ways to answer a question nobody asks. Splitting it by
+        `kind` divides it in exactly two, and the two halves are
+        genuinely different distributions — a research job is minutes
+        of graph, a guided-read session runs at a learner's pace — so
+        merging them leaves p95 meaningless for both, which is exactly
+        why no session SLO could be built before.
         """
         job = Job(job_id="shape", query="q", hitl_bypass=True)
         store = InMemoryJobStore()
@@ -152,15 +164,16 @@ class TestTheShapeOfTheJobCounter:
 
         points = triple.points("research_jobs_total")
         assert len(points) == 1
-        assert set(dict(points[0].attributes)) == {"status", "error_type"}
+        assert set(dict(points[0].attributes)) == {"status", "error_type", "kind"}
 
         timed = triple.points("research_job_duration_seconds")
         assert len(timed) == 1
         # Deliberately *not* keyed on `error_type`: the duration
         # question is "how long do failures take", not "how long does
         # each kind of failure take", and splitting it would divide an
-        # already-thin histogram across a dozen series.
-        assert set(dict(timed[0].attributes)) == {"status"}
+        # already-thin histogram across a dozen series. `kind` is the
+        # one split worth paying for — see the docstring.
+        assert set(dict(timed[0].attributes)) == {"status", "kind"}
 
     def test_the_no_error_sentinel_is_a_literal_not_an_omission(self) -> None:
         """A missing key would make success a different series shape.

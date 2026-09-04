@@ -212,10 +212,17 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "job_cas_write_aborted",
         "job_cas_write_stale",
         "job_kind_unknown",
+        # Emitted through `_log_lease_failure`'s `event` parameter in
+        # `src/api/runner.py` rather than as literals at the two call
+        # sites, so the contract test's AST scan cannot see either.
+        # Registered by hand, and the parameter is typed
+        # `LeaseFailureEvent` so a typo is a mypy error instead of a
+        # line stamped `unregistered_event` in production.
         "job_lease_acquire_error",
         "job_lease_acquired_late",
         "job_lease_contended",
         "job_lease_lost",
+        "job_lease_refresh_error",
         "job_redriver_attempt_count_failed",
         "job_redriver_dead_lettered",
         "job_redriver_periodic_failed",

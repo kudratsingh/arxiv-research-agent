@@ -85,6 +85,30 @@ def _server_address(client: anthropic.Anthropic) -> str:
     host = getattr(getattr(client, "base_url", None), "host", None)
     return host if isinstance(host, str) and host else _DEFAULT_SERVER_ADDRESS
 
+
+def _describes(source: object, field: str) -> str | None:
+    """Read a field that only *describes* the call, never one it needs.
+
+    The line this draws is the point. `usage.input_tokens` and
+    `content` are read directly and must be there: cost accounting and
+    the returned text depend on them, so a response missing either is
+    genuinely broken and should fail loudly. `id`, `model` and
+    `stop_reason` are read only to put `gen_ai.response.*` on a span —
+    nothing the caller receives depends on them — and an observability
+    read must never be able to fail the call it is observing. An SDK
+    upgrade that renames `stop_reason` should cost one absent span
+    attribute, not every model response in the fleet.
+
+    Args:
+        source: The parsed response.
+        field: Attribute name.
+
+    Returns:
+        The value when it is a non-empty string, else `None`.
+    """
+    value = getattr(source, field, None)
+    return value if isinstance(value, str) and value else None
+
 # Back-compat re-exports so existing callers (`from src.llm import DEFAULT_MODEL`)
 # keep working while we migrate to `settings.anthropic_model` at call sites.
 DEFAULT_MODEL = settings.anthropic_model
@@ -333,19 +357,26 @@ def call_llm(
         # measured the call. Anthropic's two prompt-cache buckets
         # (ADR 0022) have conventional names of their own, so nothing
         # here needs a private one.
-        span.set_attribute(GEN_AI_RESPONSE_ID, response.id)
-        span.set_attribute(GEN_AI_RESPONSE_MODEL, response.model)
-        if response.stop_reason is not None:
-            span.set_attribute(
-                GEN_AI_RESPONSE_FINISH_REASONS, [response.stop_reason]
-            )
+        #
+        # The three *descriptive* fields go through `_describes`; the
+        # token counts do not. See `_describes` for why that line is
+        # where it is.
+        response_id = _describes(response, "id")
+        response_model = _describes(response, "model")
+        finish_reason = _describes(response, "stop_reason")
+        if response_id is not None:
+            span.set_attribute(GEN_AI_RESPONSE_ID, response_id)
+        if response_model is not None:
+            span.set_attribute(GEN_AI_RESPONSE_MODEL, response_model)
+        if finish_reason is not None:
+            span.set_attribute(GEN_AI_RESPONSE_FINISH_REASONS, [finish_reason])
         span.set_attribute(GEN_AI_USAGE_INPUT_TOKENS, response.usage.input_tokens)
         span.set_attribute(GEN_AI_USAGE_OUTPUT_TOKENS, response.usage.output_tokens)
         span.set_attribute(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, cache_read)
         span.set_attribute(GEN_AI_USAGE_CACHE_WRITE_INPUT_TOKENS, cache_write)
         record_genai_client_call(
             request_model=resolved_model,
-            response_model=response.model,
+            response_model=response_model,
             input_tokens=response.usage.input_tokens,
             output_tokens=response.usage.output_tokens,
             duration_sec=elapsed_sec,

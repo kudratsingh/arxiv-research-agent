@@ -43,7 +43,7 @@ import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from langgraph.types import Command
 
@@ -1120,7 +1120,25 @@ async def _persist_terminal(store: JobStore, job: Job) -> None:
     )
 
 
-def _log_lease_failure(event: str, *, job_id: str, worker_id: str, consecutive: int) -> None:
+#: The two event names `_log_lease_failure` can emit.
+#:
+#: A `Literal` rather than a bare `str` because these names reach
+#: `log.warning` through a *variable*, which `tests/test_log_contract`'s
+#: AST scan cannot see — so the registry cannot be derived for them and
+#: both are registered by hand in `KNOWN_EVENTS`. Typing the parameter
+#: puts the guarantee back in a stronger place than the scan had it: a
+#: typo at a call site is now a mypy error rather than a line that
+#: ships stamped `unregistered_event`.
+#:
+#: Inlining the helper to make the names literal was the alternative,
+#: and it would duplicate the first-warns-then-debugs volume control
+#: this helper exists to hold in one place (ADR 0066, routed finding).
+LeaseFailureEvent = Literal["job_lease_refresh_error", "job_lease_acquire_error"]
+
+
+def _log_lease_failure(
+    event: LeaseFailureEvent, *, job_id: str, worker_id: str, consecutive: int
+) -> None:
     """Log one lease-keeper failure at a volume an outage survives.
 
     Every other `except` in this module carries `exc_info` (ADR 0051

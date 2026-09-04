@@ -349,3 +349,19 @@ failures logged and never raised.
 7. **`server.address` falls back to a constant** when the client
    singleton has been replaced by a test double that does not emulate
    `base_url`. Every real deployment resolves it from the SDK client.
+   The same rule covers `gen_ai.response.{id,model,finish_reasons}`,
+   read through `llm._describes`: a field that only *describes* a call
+   must never be able to fail it, so an SDK upgrade that renames
+   `stop_reason` costs one absent span attribute rather than every
+   model response in the fleet. Token counts are read directly,
+   because cost accounting genuinely depends on them.
+8. **`job_lease_refresh_error` was emitted but unregistered** (found by
+   WO-A06, routed here). Both lease-failure names reach `log.warning`
+   through `_log_lease_failure`'s `event` parameter, so the contract
+   test's AST scan cannot see either and `JsonFormatter` was stamping
+   `unregistered_event` on every one in production. Registered by hand
+   with a comment, and the parameter is now typed `LeaseFailureEvent`
+   — a `Literal` of the two names — so a typo is a mypy error. Inlining
+   the helper to make the names literal was the alternative and would
+   duplicate the first-warns-then-debugs volume control the helper
+   exists to hold in one place.

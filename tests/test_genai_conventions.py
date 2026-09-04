@@ -1351,3 +1351,62 @@ class TestFailingScopesAreRecorded:
         span = _named(spans, "chat claude-sonnet-4-6")
         assert span.attributes["error.type"] == "TimeoutError"
         assert span.status.status_code is ot_trace.StatusCode.ERROR
+
+
+class TestObservabilityCannotBreakTheCall:
+    """A descriptive span attribute must never fail a working call.
+
+    `gen_ai.response.{id,model,finish_reasons}` exist only to describe
+    the round trip; nothing the caller receives depends on them. So
+    they are read through `llm._describes`, and an SDK upgrade that
+    renames `stop_reason` costs one absent span attribute rather than
+    every model response in the fleet. The token counts are read
+    directly, because cost accounting genuinely does depend on them and
+    a response missing them is broken.
+    """
+
+    def test_a_response_without_the_descriptive_fields_still_returns(
+        self, spans: InMemorySpanExporter, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from src import llm as llm_module
+
+        usage = SimpleNamespace(
+            input_tokens=10,
+            output_tokens=5,
+            cache_read_input_tokens=0,
+            cache_creation_input_tokens=0,
+        )
+        parsed = SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="ok")], usage=usage
+        )
+        client = SimpleNamespace(
+            messages=SimpleNamespace(
+                with_raw_response=SimpleNamespace(
+                    create=lambda **_kwargs: SimpleNamespace(
+                        retries_taken=0, parse=lambda: parsed
+                    )
+                )
+            )
+        )
+        monkeypatch.setattr(llm_module, "_get_client", lambda: client)
+        monkeypatch.setattr(
+            llm_module, "settings", Settings(anthropic_model="claude-sonnet-4-6")
+        )
+
+        assert llm_module.call_llm("u") == "ok"
+
+        span = _named(spans, "chat claude-sonnet-4-6")
+        # The required pair and the usage are there; the descriptive
+        # attributes are simply absent rather than fabricated.
+        assert span.attributes["gen_ai.provider.name"] == "anthropic"
+        assert span.attributes["gen_ai.usage.input_tokens"] == 10
+        assert "gen_ai.response.id" not in span.attributes
+        assert "gen_ai.response.model" not in span.attributes
+        assert "gen_ai.response.finish_reasons" not in span.attributes
+
+    def test_a_blank_field_is_treated_as_absent(self) -> None:
+        from src import llm as llm_module
+
+        assert llm_module._describes(SimpleNamespace(model=""), "model") is None
+        assert llm_module._describes(SimpleNamespace(model=7), "model") is None
+        assert llm_module._describes(SimpleNamespace(model="m"), "model") == "m"
