@@ -3,16 +3,19 @@
 WO-W19 acceptance criterion 2: *"`known-gaps.md` exists and is non-empty (an
 empty gap list at a gate is the revamp's definition of dishonesty)."*
 
-This is the honest list. **Twenty entries, five of them now resolved.** Each
+This is the honest list. **Twenty entries, seven of them now resolved.** Each
 says what is not proven, why it is not proven, who owns it, and what would
 change it. Several are ordinary consequences of the no-cost boundary; §12 was an
 inconsistency inside the merged tree that a reader would meet as a false
 sentence, and it is fixed; §7 and §16 were real test failures a re-run hides —
 §7 was on `main` until WO-W13c fixed it, and §16 turned out not to be a flaky
 probe at all but a product defect the probe was catching, which is the
-correction this file's own classification needed.
+correction this file's own classification needed. **§18** was a false sentence
+in a source comment and closed on an owner's ruling rather than by code;
+**§19** was a number on a machine this repository does not own, and only a run
+on that machine could close it.
 
-**Five entries are resolved**, each kept, struck through and marked, because a
+**Seven entries are resolved**, each kept, struck through and marked, because a
 gap list that quietly loses its closed items cannot be audited:
 
 - **§6** — by WO-W03b (PR #151, `1026534`), one commit after this pack's
@@ -29,6 +32,15 @@ gap list that quietly loses its closed items cannot be audited:
   was reporting honestly.
 - **§17** — by PR #157 (`93a6caa`), 2026-09-04, in the shape the entry's own
   "changes when" clause named: an equality assertion on the WO-W07 precedent.
+- **§18** — by the **repository owner's ruling** of 2026-09-04: the bytes stand,
+  the false premise is corrected, restyling the landing card is declined. The
+  only entry here closed by a ruling rather than by code. Recorded in
+  `web/app/fonts/fonts.ts` by PR #162, **open at the time of writing** and
+  blocked only by the npm audit outage.
+- **§19** — by PR #164 (`737caa4`), 2026-09-04, **at the error ceiling**, and
+  read on the runner rather than extrapolated. Its residual — the ratified
+  150 ms TBT **warn** row — is re-scoped to the Next app-router runtime and
+  React DOM, and stays a warning, not a gap.
 
 **Added 2026-09-04 — a four-PR follow-up wave.** Merged the same day by the
 coordinator under the standing delegation, in this order: #157 (`93a6caa`),
@@ -38,6 +50,18 @@ record — including two process findings that belong there and not here — is
 [`../../STATUS.md`](../../STATUS.md). **No §6 status in
 [`README.md`](README.md) moves on account of it**, for the same reason the
 earlier late fixes moved none: they are commits past this pack's baseline.
+
+**Closed 2026-09-04 — the wave's own closing, three more PRs.** #163
+(`c93662d`) and #164 (`737caa4`) merged after the wave was recorded as #161
+(`a7dd452`); **#162 is open at the time of writing**, held by the npm audit
+outage and not by anything in its own diff. They close **both** gaps the wave
+opened: **§18** on the owner's ruling and **§19** on #164 plus nightly run
+33859118052 — the first runner reading of that cell since 2026-09-03, and the
+only thing that could have closed it. `nightly.yml` was re-enabled by owner
+order for that verification and **disabled again by owner order** once it was
+done. **§20 is untouched**, no ceiling moved anywhere in the closing, and **no
+§6 status in [`README.md`](README.md) moves** — #163 and #164 are commits past
+the baseline like the four before them, and #162 is not merged at all.
 
 Assembled against `origin/main` at **`3ccb650`** on 2026-09-02, and revised
 against the **coordinator state-probe of main `3ccb650`, 2026-09-02** — an Opus
@@ -684,7 +708,51 @@ quietly created a second place honesty rules have to be maintained.
 list is still typed twice, and now a test says so out loud when the two copies
 stop agreeing.)*
 
-## 18. `/` now loads three font faces where the gate-4 pack measured one, and the premise that allowed it is false.
+## 18. ~~`/` now loads three font faces where the gate-4 pack measured one, and the premise that allowed it is false.~~ — **RESOLVED**
+
+**Resolved by the repository owner's ruling of 2026-09-04 — option A of the
+three this entry named — recorded in the source by PR
+[#162](https://github.com/kudratsingh/arxiv-research-agent/pull/162), which is
+open at the time of writing.** What closes the entry is the ruling, not the
+merge: this entry named the owner as its sole owner and a ruling as the only
+thing that could change it. #162 is unmerged for a reason unrelated to it:
+**eight of its nine checks are green and only `web dependency audit` is red**,
+on the npm advisory-endpoint outage [`../../STATUS.md`](../../STATUS.md)
+records, which repeated reruns did not clear, and the owner chose to skip that
+check rather than wait on a data source. The change it carries is
+**comment-only** — one file, no export, no value. The entry is kept, struck
+through and marked, for the same reason §6, §7, §12, §16 and §17 are.
+
+**The ruling, as recorded in `web/app/fonts/fonts.ts`:**
+
+> OWNER'S RULING, 2026-09-04: accepted. The bytes stay — they are inside every
+> asserted ceiling. The alternative, restyling the landing card away from the
+> learn surface's typography so `/` fetches one face again, was declined.
+
+**What changed is a comment, and only a comment.** One file, no export, no
+value, no import moved. Nothing is deleted either: both original paragraphs stay
+in place as the WO-02 / Gate 3 record, the header's followed by an
+`AMENDED 2026-09-04` note and the report face's by a `CORRECTED 2026-09-04`
+note, and `fontMono` gains the local note it never had. Together they now state
+
+- **which faces `/` loads and why** — three, because `LearnLandingEntry`
+  (WO-W12) is the landing route's only consumer of `--font-report` and
+  `--font-mono`, deliberately typeset in the learn surface's visual language;
+- **what that costs**, as the before/after table below, every figure quoted from
+  #159 rather than re-measured;
+- **that `preload: false` still holds, on a narrower claim than the original** —
+  neither face paints `/`'s LCP element, and with #159's `prefetch={false}` `/`
+  is back at the LCP floor, so these late-discovered bytes cost no assertion;
+- **the owner's ruling**, dated, with the declined alternative named.
+
+**So the bytes stand and the false sentence goes, which is what this entry said
+would happen either way.** No ceiling moved and none was asked to: `npm run
+budgets` passes with fonts at 103,476 B of a 109,568 B ceiling. **On `main` the
+sentence is still there** until #162 lands — the ruling is what closes this
+entry, the merge is what publishes it, and this file says which is which rather
+than reading one as the other.
+
+**What it was, as recorded before the ruling**, kept below.
 
 Found by PR [#159](https://github.com/kudratsingh/arxiv-research-agent/pull/159)
 (`2001d1b`, 2026-09-04) while fixing the landing route's nightly Lighthouse
@@ -724,7 +792,76 @@ eyebrow move to the surface's default face, or the two faces are preloaded on
 teasing the report surface should look like it and the bytes stand. Whichever it
 is, the false sentence in `web/app/fonts/fonts.ts` goes with it.
 
-## 19. `?job=baseline-plan-review` misses `categories:performance` on the 2-vCPU runner, and no Phase W change explains it.
+## 19. ~~`?job=baseline-plan-review` misses `categories:performance` on the 2-vCPU runner, and no Phase W change explains it.~~ — **RESOLVED**, with the warn row re-scoped
+
+**Resolved by PR [#164](https://github.com/kudratsingh/arxiv-research-agent/pull/164),
+merged 2026-09-04T09:35:18Z as `737caa4`** — the third of the three remedies
+this entry names, *"a work order that shrinks the chunk"*, and the only one that
+spends nothing. **No ceiling moved, exactly as this entry required.** The entry
+is kept, struck through and marked, for the same reason §6, §7, §12, §16, §17
+and §18 are.
+
+**What the fix was.** `PlanEditorFields.tsx` built its Zod schema *at module
+evaluation*, so all of `zod@4.4.3` ran the instant the lazy plan-review chunk
+loaded — before any interaction, on a state whose whole point is that the run is
+paused waiting for one. The client resolver is now `planResolver`, a pure
+function over `planIssues`, which is the function `reviewRequestFor` on the
+submit path always used; the form and the request builder now run the **same**
+function and cannot disagree about what is valid. The Zod schema is not deleted:
+it moved verbatim into `web/tests/plan/schema.test.ts` as a **differential
+oracle**, asserting the two error trees deep-equal over **8 cases** (5 before),
+and `bundle.test.ts` now asserts Zod is in no shipped module's static graph, no
+shipped module's `import()` graph and no emitted chunk.
+
+| | raw | gzip |
+|---|---:|---:|
+| before — `PlanEditorFields` + RHF + Zod | 314,066 B | 73,605 B |
+| after — `PlanEditorFields` + RHF | **37,113 B** | **12,839 B** |
+| | **−88.2 %** | **−82.6 %** |
+
+**No budget row moved and none was ratcheted**: the saving is entirely in a
+lazy chunk, and the only row that would carry it — `total-transferred-js` — has
+`enforcement: external` and is not measured here.
+
+**The runner read it, which is the only thing that could close this entry.**
+`nightly.yml` was re-enabled by owner order for verification (below); run
+[33859118052](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33859118052)
+on `737caa4`, job `lighthouse ci (§8.2, 3 profiles x 3 runs)`, profile
+`mobile-412`, same state, medians of 3:
+
+| Assertion | 2026-09-03 (33740169240) | 2026-09-04 (33859118052) | Ceiling |
+|---|---:|---:|---|
+| `categories:performance` | 0.92 | **0.96** (0.95, 0.97, 0.96) | ≥ 0.95 — **passes** |
+| `total-blocking-time` | 237 ms | **204 ms** (204, 204, 219) | ≤ 300 error — **passes**; ≤ 150 **warn** — still over |
+| `largest-contentful-paint` | — | 1871 ms | ≤ 2500 |
+| `bf-cache` | — | 1 | ≥ 1 |
+
+The same run also confirms **#159**'s fix on the machine it was conditioned on —
+`/` reads `categories:performance` **0.98**, LCP **2264 ms**, TBT **99 ms**,
+`bf-cache` **1** — and **all three profiles PASS, 80 assertions, `lhci autorun`
+exit 0**.
+
+**The residual, re-scoped rather than closed silently.** 204 ms is inside the
+300 ms **error** row and above the 150 ms **warn** row — which
+`web/lighthouserc.json` keeps as a warning by the WO-29 follow-up ruling, and
+which this cell was already over *on the runner at ratification* (medians 180 ms
+and 214 ms, `docs/revamp/evidence/gate-4/lhci/README.md` §11.2). With Zod gone
+the cell is **framework-bound**: #164's ×20 probe reads the remaining long tasks
+as the Next app-router client runtime (`3794-*.js`, 65,630 B gzip) and React DOM
+(63,400 B), of which `web/budgets.json`'s own ratchet record says *"React DOM
+and the Next app-router client runtime are not ours to cut."* **So what is left
+is a warning owned by the framework, not a gap owned by product code**, and
+there is no product code on this cell left to cut. No ceiling should move for
+it, and none has.
+
+**Note the workflow's state — it is off again.** `nightly.yml` was re-enabled by
+owner order on 2026-09-04 for verification only, ran twice (33850155834 on
+`2001d1b`, the #159 fix; 33859118052 on `737caa4`, the #164 fix — **both
+PASS**), and was then **disabled again by owner order**. Nothing is measuring
+this cell now, and nothing will until the owner asks; see
+[`../../STATUS.md`](../../STATUS.md).
+
+**What it was, as recorded before the fix**, kept below.
 
 The second half of the nightly Lighthouse failure #159 fixed, and the half it
 **did not** fix. Nightly run

@@ -42,6 +42,25 @@ late fixes moved none: every one of the four is a commit past this pack's
 baseline. The rulings and the two process findings are in
 [`../../STATUS.md`](../../STATUS.md).
 
+**Closed 2026-09-04 — the wave's closing, three more PRs.** #163 (`c93662d`)
+and #164 (`737caa4`) merged after the wave was recorded as #161 (`a7dd452`);
+**#162 is open at the time of writing**, its eight other checks green and only
+`web dependency audit` red on the npm advisory-endpoint outage, and its diff is
+comment-only. They **close both gaps the wave opened**: **§18** by the repository
+owner's ruling — the bytes on `/` stand and the false premise in
+`web/app/fonts/fonts.ts` is corrected — and **§19** by #164 shrinking the plan
+editor's lazy chunk (314,066 → 37,113 B raw) *and* by nightly run
+[33859118052](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33859118052)
+on `737caa4` reading the cell at **0.96** against ≥ 0.95, which is the only
+thing that could have closed it. `nightly.yml` was re-enabled by owner order for
+that verification and **disabled again by owner order** afterwards; §19's
+residual — the ratified 150 ms TBT **warn** row — is re-scoped to the Next
+app-router runtime and React DOM and stays a warning. **§20 is untouched**, no
+ceiling moved, and **no §6 status below moves on account of any of the three**:
+#163 and #164 are commits past this pack's baseline, like the four before them,
+and #162 is not merged at all. `known-gaps.md` is now **twenty entries, seven
+resolved**.
+
 ---
 
 ## 1. The §6 Gate W1 table — every row
@@ -69,7 +88,7 @@ W-OD-1**.
 | **7c** | *(§6 gives it no row of its own; W11 c4 belongs to the same decision)* the nightly learning lane's **first scheduled run** | ❌ **UNRESOLVED — waits on W-OD-1** | [`eval-harness.md`](eval-harness.md) §4. `eval-nightly.yml` is `disabled_manually` and stays disabled; the workflow's `DEFAULT_LEARNING_MAX_BUDGET_USD` is **$15** | **W11 c4** |
 | 8 | Per-session cost accounting reconciles; cap enforcement proven | ⚠️ **Resolved (no-cost boundary)** | [`cost-reconciliation.md`](cost-reconciliation.md) — `tests/test_session_cost_cap.py`, **6 tests**. `round(job.cost_usd, 2) == 0.09` on two billed calls; both at-cap behaviours with `workflow.client_constructed is False`. **Every figure is a mock-mode figure**; the price is unmeasured | W06 (#144), ADR 0062 |
 | 9 | Honesty inventory: provenance rules, no-inferred-as-fact, evidence-quoting judge, no-mastery-% gate | ✅ **Resolved** | [`honesty-inventory.md`](honesty-inventory.md) — `tests/test_learner_profile_store.py` **60**, `tests/test_learner_profile_serializer.py` **19**, `tests/test_progress_events.py` **76**, `tests/test_assessment_judge.py` **15**, `tests/test_learning_metrics.py` **23**, `web/tests/copy/forbidden.test.ts` **63** incl. the planted `"87% mastered"` fixture that MUST fail | W02 (#134), W04 (#142), W07 (#133), W14 (#147) |
-| 10 | `known-gaps.md` — what W1 does *not* prove | ✅ **Resolved** | [`known-gaps.md`](known-gaps.md) — **17 entries** at assembly, **20 as of 2026-09-04** (five resolved and kept struck through), non-empty either way | **W19** |
+| 10 | `known-gaps.md` — what W1 does *not* prove | ✅ **Resolved** | [`known-gaps.md`](known-gaps.md) — **17 entries** at assembly, **20 as of 2026-09-04** (seven resolved and kept struck through), non-empty either way | **W19** |
 
 **Rows 1, 2, 4 and 5 were reproduced a second way.** Every citation in the
 table above is a CI run or a committed test. The **coordinator state-probe of
@@ -98,7 +117,7 @@ set the house rule against.
 | Path | What it is | Source |
 |---|---|---|
 | [`README.md`](README.md) | This index. | **W19** |
-| [`known-gaps.md`](known-gaps.md) | **20 entries** as of 2026-09-04 — 17 at assembly, plus §18–§20 from the follow-up wave; **five** (§6, §7, §12, §16, §17) now resolved and kept struck through. What Gate W1 does not prove, each with owner and what would change it. | **W19** |
+| [`known-gaps.md`](known-gaps.md) | **20 entries** as of 2026-09-04 — 17 at assembly, plus §18–§20 from the follow-up wave; **seven** (§6, §7, §12, §16, §17, §18, §19) now resolved and kept struck through. What Gate W1 does not prove, each with owner and what would change it. | **W19** |
 | [`end-to-end-session.md`](end-to-end-session.md) | Rows 1–2. The browser proof, the three independent cost boundaries on it, the no-client-construction test, and the below-the-browser checkpoint reattachment. | W03/W13/W13b, collected by **W19** |
 | [`paid-path-interdiction.md`](paid-path-interdiction.md) | Row 4. The interceptor's two claims and their different strengths, and the A/B control for the mock-mode pin. | W13/W13b, collected by **W19** |
 | [`flags.md`](flags.md) | Row 3. The four-flag inventory, the ladder, the compose-default nuance, and every flag-off/flag-on test. | **W19** |
@@ -245,6 +264,36 @@ order, none of them a §5 card:
 
 **No §6 status above moves on account of any of them**, and none touches this
 directory's evidence: all four are commits past the baseline.
+
+**Added 2026-09-04 — the wave's closing.** Three more, after the wave was
+recorded as #161 (`a7dd452`), and none of them a §5 card either. Two merged;
+the third is open at the time of writing:
+
+- **#163** / `c93662d` — the dependency audit moves out of the `web` job into a
+  bounded `web dependency audit` job, with every `npm ci` in `ci.yml` and
+  `nightly.yml` given a step bound and npm fetch bounds. **The per-PR merge gate
+  now counts nine checks, not eight.** No gap opens or closes.
+- **#164** / `737caa4` — the plan editor no longer evaluates `zod@4.4.3` at
+  mount; its lazy chunk goes **314,066 → 37,113 B** raw with the Zod schema kept
+  as a differential oracle in the tests. **Closes `known-gaps.md` §19** once the
+  runner reads it, below.
+- **#162**, open at the time of writing — a comment-only correction in
+  `web/app/fonts/fonts.ts` carrying the repository owner's typography ruling of
+  2026-09-04. **Closes `known-gaps.md` §18** — the only entry in that file
+  closed by a ruling rather than by code, which is why the ruling closes it and
+  the merge does not. Eight of its nine checks are green; the ninth is
+  `web dependency audit`, red on the npm advisory-endpoint outage.
+
+And the measurement that closes §19: `nightly.yml`, disabled since 2026-09-03,
+was **re-enabled by owner order for verification**, passed on `2001d1b`
+(run 33850155834, confirming #159's `/` fix on the 2-vCPU runner) and on
+`737caa4` (run 33859118052 — `?job=baseline-plan-review` at **0.96** against
+≥ 0.95, TBT **204 ms** against the 300 ms error row; all three profiles, 80
+assertions, exit 0), and was then **disabled again by owner order**.
+
+**No §6 status above moves on account of any of these either**, and none touches
+this directory's evidence: the six merged ones are commits past the baseline,
+and #162 is not merged at all.
 
 ---
 
@@ -423,7 +472,7 @@ defaults unchanged — and documented in `web/e2e/README.md`.
 **W19's two acceptance criteria are met.** Every §6 Gate W1 row resolves to an
 artifact in this directory or to an exact citation, each linked to its producing
 work order (criterion 1); `known-gaps.md` exists and is non-empty, at seventeen
-entries (criterion 2) — **twenty as of 2026-09-04**, five of them resolved and
+entries (criterion 2) — **twenty as of 2026-09-04**, seven of them resolved and
 kept struck through. The criterion is non-emptiness, and it is met either way.
 
 **What is resolved at the no-cost boundary.** Seven of §6's ten rows are
