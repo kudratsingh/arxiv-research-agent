@@ -45,9 +45,43 @@ conflate the two and read a few percent high on cost.
 (`src/eval/simulate_learner.py`) write different fields into different
 `summary.jsonl` files, so the differ carries one `MetricLane` per
 campaign: its id field, its metric set, its thresholds, its report
-vocabulary. `--lane research` is the default and is byte-for-byte what
-this module did before the learning lane existed — the research CLI
-call, its field order, its table and its exit codes are unchanged.
+vocabulary.
+
+**Statistics, and a three-state decision** (ADR 0071, superseding ADR
+0044's bands). Four things changed:
+
+- **Repeats are aggregated by task before anything is diffed**, on both
+  lanes. Three runs of one query are three observations of that query,
+  not three queries; comparing `r1` to `r1` cost triple and bought
+  nothing.
+- **The comparison is paired** — the baseline and the candidate are
+  scored on the same tasks, and `src/eval/stats.py` estimates the mean
+  paired delta with a hierarchical bootstrap that resamples tasks, and
+  repeats within tasks. Pairing is worth an order of magnitude of
+  sample size, which at 20 queries is the difference between a gate
+  that can measure something and one that cannot.
+- **The score epsilon is derived from each metric's quantum** instead
+  of one shared 0.10. `completeness` and `retrieval_recall` move in
+  steps of `1/len(expected_topics)`, so a flat 0.10 filtered nothing
+  for them and one flipped topic decision was a guaranteed red.
+- **The report ends in PROMOTE / HOLD / ROLLBACK**, and says plainly
+  when N is too small to separate a move from noise. At this
+  repository's N that is usually the answer, and printing it is the
+  point: an honest gate that says "cannot distinguish" is worth more
+  than a confident one that cannot.
+
+**No model call happens anywhere in this module.** A judge inside a
+gate is an attack surface, not a control — content-preserving wrappers
+flip 57-100% of LLM-judge verdicts. `tests/test_regression_diff.py`
+holds that as an assertion, not as an intention.
+
+**Rows must be comparable before they may be compared.** Since ADR 0070
+every summary row carries a `provenance` block. When the two runs
+disagree on the *instrument* — judge model, rubric versions, dataset
+fingerprint, tier, mock mode — this module refuses the comparison and
+exits 3 rather than reporting a movement that is really a
+reconfiguration. A run that carries no block at all is unknown rather
+than incomparable: it is compared, with a warning.
 
 Usage:
     python -m src.eval.regression_diff baseline.jsonl current.jsonl
@@ -57,9 +91,10 @@ Usage:
     python -m src.eval.regression_diff base.jsonl cur.jsonl --lane learning
 
 Exit codes:
-    0 — no regressions above threshold
-    1 — one or more regressions detected
+    0 — PROMOTE or HOLD: no regression was established
+    1 — ROLLBACK: one or more regressions detected
     2 — invalid input (missing current file, bad JSONL)
+    3 — the two runs are not comparable; no verdict was reached
 """
 
 from __future__ import annotations
@@ -67,30 +102,135 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, NamedTuple, TypedDict
+from statistics import fmean
+from typing import Any, Final, Literal, NamedTuple, TypedDict
 
-# Absolute epsilon for the 0-1 score metrics only — resource metrics
-# below have their own bands. 0.10 is ADR 0010's estimate of typical
-# LLM-as-judge noise on a single run; note that completeness and
-# retrieval_recall quantize in steps of 1/len(expected_topics)
-# (typically 0.20-0.25), so for those two the epsilon filters nothing
-# and a single flipped topic decision registers as a full step. See
-# docs/eval.md ("Regression gate statistics") for what that means in
-# practice.
+from src.eval.provenance import PROVENANCE_KEY
+from src.eval.stats import (
+    BootstrapResult,
+    Interval,
+    McNemarResult,
+    PairedSample,
+    mcnemar,
+    mcnemar_required_pairs,
+    paired_bootstrap_delta,
+    pass_hat_k,
+    power_statement,
+    rule_of_three,
+    small_sample_caveat,
+    wilson_interval,
+)
+
+# Absolute epsilon floor for the 0-1 score metrics only — resource
+# metrics below have their own bands, and a metric with a declared
+# quantum gets a wider band still (`score_epsilon`). 0.10 is ADR 0010's
+# estimate of typical LLM-as-judge noise on a single run.
 DEFAULT_THRESHOLD = 0.10
 
-# Metrics to diff. Kept as a tuple so ordering in the report is stable.
+# Exit statuses. `main()` returns exactly one; the docstring above is
+# the operator-facing copy.
+EXIT_OK = 0
+EXIT_REGRESSION = 1
+EXIT_INVALID = 2
+EXIT_INCOMPARABLE = 3
+
+# Quantisation step of the metrics whose score is a ratio over a small
+# hand-declared denominator. `completeness` and `retrieval_recall` are
+# both `matched / len(expected_topics)`, and 19 of the 20 benchmark
+# queries declare four topics (one declares five), so the coarsest step
+# a single query can take is 0.25 — the value used here, because a band
+# has to survive the coarsest query it will meet, not the average one.
+#
+# Declared rather than inferred from the data: inferring a denominator
+# from observed values guesses wrong exactly when a run is degenerate
+# (every query scoring 0.0 or 1.0), which is when the gate matters
+# most. When a query's topic list changes, this constant is what has to
+# move, and `tests/test_regression_diff.py` pins it against the
+# dataset.
+SCORE_QUANTA: dict[str, float] = {
+    "completeness": 0.25,
+    "retrieval_recall": 0.25,
+}
+
+# How many quanta a quantised metric must move before the gate calls it
+# a regression. Strictly between 1 and 2 so that one flipped judge
+# decision passes and two do not — which is the whole defect ADR 0044's
+# flat 0.10 left open, since 0.10 sits *below* one step and therefore
+# fired on every single flip.
+#
+# 1.5 rather than 1.01: the band is compared against a *task* delta, and
+# a task whose repeats were aggregated can move by a fraction of a step,
+# so the midpoint keeps the rule "one step is noise, two steps are a
+# regression" true for both a single run and an aggregate.
+QUANTUM_TOLERANCE: Final[float] = 1.5
+
+# Provenance fields whose disagreement between the two runs makes a
+# comparison meaningless, because the *instrument* moved rather than the
+# thing being measured (ADR 0070, ADR 0071).
+#
+# `product_model` is deliberately absent: a product model change is
+# exactly what a regression diff exists to evaluate, so it is reported
+# as context, never as a refusal. `code_commit` and `seed` differ by
+# construction. `harness_version` is absent because an additive schema
+# bump leaves every field this module reads in place, and a removal is
+# already forbidden by ADR 0070.
+COMPARABILITY_FIELDS: Final[tuple[str, ...]] = (
+    "judge_model",
+    "rubric_versions",
+    "dataset_version",
+    "tier",
+    "mock_mode",
+)
+
+# Reserved keys on an aggregated task row. Underscore-prefixed because
+# no `summary.jsonl` field is, so they cannot collide with a metric a
+# lane adds later; they carry the repeat structure that a mean throws
+# away and the bootstrap needs back.
+REPEAT_VALUES_KEY: Final[str] = "_repeat_values"
+REPEAT_COUNT_KEY: Final[str] = "_repeats"
+ERRORED_REPEATS_KEY: Final[str] = "_errored_repeats"
+PROVENANCE_BLOCKS_KEY: Final[str] = "_provenance_blocks"
+
+# The effect the power statement is written about: a 5-point move
+# against an 80% baseline. Not a threshold anything is gated on — it is
+# the yardstick `02-STANDARDS.md` §2.3's 77-versus-906 finding is
+# quoted at, and printing the gate's own N against it is what turns
+# "the sample is small" into a number.
+GATE_EFFECT_SIZE: Final[float] = 0.05
+GATE_BASELINE_RATE: Final[float] = 0.80
+
+# Bootstrap seed used when a caller does not pick one. Fixed rather than
+# drawn so two runs of the differ over the same summaries produce the
+# same interval — a gate whose verdict moves when nothing moved is not a
+# gate.
+DEFAULT_SEED: Final[int] = 0
+
+# Metrics that gate the research lane. Kept as a tuple so ordering in
+# the report is stable.
+#
+# `critic_score` was removed from this list by ADR 0071 and moved to
+# `RESEARCH_INFORMATIONAL_FIELDS`. Two reasons, and the second is the
+# one that forced it: the critic is a component of the product grading
+# its own output, so gating on it lets the system decide whether it
+# regressed; and `critic.py` coerces an unparseable judge response to
+# `0.0`, which arrives at this module as a full-scale quality collapse
+# indistinguishable from a real one. It is still diffed and still
+# printed — as a diagnostic.
 METRIC_FIELDS: tuple[str, ...] = (
     "citation_accuracy",
     "completeness",
     "faithfulness",
     "retrieval_recall",
-    "critic_score",
     "iterations",
     "llm_calls",
     "cost_usd",
 )
+
+# Research-lane fields that are tabulated but never gate. See the note
+# on `critic_score` above.
+RESEARCH_INFORMATIONAL_FIELDS: tuple[str, ...] = ("critic_score",)
 
 # Per-metric bands for the count / dollar metrics: (absolute_floor,
 # relative_fraction). A move counts as significant only when it
@@ -173,7 +313,9 @@ class MetricLane(NamedTuple):
 
     Attributes:
         name: CLI name (`--lane <name>`).
-        id_field: Summary-line key that identifies a record.
+        id_field: Summary-line key that identifies a *record* — one run
+            of one task. On a campaign with repeats, several records
+            share a task.
         unit_singular: What one record is ("query", "session").
         unit_plural: Plural of the same.
         title: H1 of the rendered report.
@@ -181,14 +323,29 @@ class MetricLane(NamedTuple):
         informational_fields: Fields that are tabulated but never gate.
             Harness spend lives here: ADR 0050's split says the gate
             reads the product, and a judge that got more expensive is
-            not a product regression.
+            not a product regression. So does `critic_score`, which ADR
+            0071 demoted.
         resource_thresholds: Per-metric `(absolute_floor, relative)`
             bands. A field listed here is judged on both legs; a field
-            absent from it is judged on the flat score threshold.
+            absent from it is judged on the score epsilon.
         directions: Per-metric `higher_better` / `lower_better`.
         columns: `(header, field)` pairs for the per-record table, in
             render order.
         cost_reference: Optional planned-cost row, or `None`.
+        task_field: Summary-line key naming the *task* a record scored —
+            the benchmark query, the scenario. Repeats of one task share
+            it, and it is the unit repeats are aggregated over and the
+            unit the bootstrap resamples, because the query is what is
+            independent, not the run. Defaults to `id_field` for a lane
+            whose records are its tasks.
+        score_quanta: Per-metric quantisation step, for metrics whose
+            score is a ratio over a small declared denominator. Absent
+            means "continuous enough for the flat epsilon".
+        primary_metric: The metric predeclared as the comparison's
+            subject. Its interval is always computed; every other
+            metric's is diagnostic, because twenty per-metric tests on
+            twenty queries manufacture false alarms by arithmetic
+            (`02-STANDARDS.md` §2.3).
     """
 
     name: str
@@ -202,11 +359,19 @@ class MetricLane(NamedTuple):
     directions: dict[str, str]
     columns: tuple[tuple[str, str], ...]
     cost_reference: CostReference | None
+    task_field: str = ""
+    score_quanta: dict[str, float] = {}  # noqa: RUF012 — frozen by NamedTuple
+    primary_metric: str = ""
 
     @property
     def tabulated_fields(self) -> tuple[str, ...]:
         """Every field the report carries: gated ones first, then the rest."""
         return self.metric_fields + self.informational_fields
+
+    @property
+    def group_field(self) -> str:
+        """The key repeats are aggregated on — `task_field` or the id."""
+        return self.task_field or self.id_field
 
 
 RESEARCH_LANE = MetricLane(
@@ -216,7 +381,7 @@ RESEARCH_LANE = MetricLane(
     unit_plural="queries",
     title="Eval regression diff",
     metric_fields=METRIC_FIELDS,
-    informational_fields=(),
+    informational_fields=RESEARCH_INFORMATIONAL_FIELDS,
     resource_thresholds=RESOURCE_THRESHOLDS,
     directions=METRIC_DIRECTIONS,
     columns=(
@@ -230,6 +395,21 @@ RESEARCH_LANE = MetricLane(
         ("$ Δ", "cost_usd"),
     ),
     cost_reference=None,
+    # A research record *is* its query: `--repeats` gives repeats of one
+    # query the record ids `q`, `q.r2`, `q.r3` while leaving `query_id`
+    # naming the query on all three, so the summary rows group on it
+    # without the differ having to parse an id.
+    task_field="query_id",
+    score_quanta=SCORE_QUANTA,
+    # Predeclared: `faithfulness` is the claim the product actually
+    # makes — that what the report says is supported by what it cites —
+    # and it is the only research metric whose denominator (claims) is
+    # large enough for a 0.10 band to be a noise filter rather than a
+    # rounding error. `citation_accuracy` is the obvious alternative and
+    # is the better long-run choice once WO-A16's deterministic
+    # groundedness replaces the judged version; ADR 0071 records that
+    # hand-off rather than pre-empting it.
+    primary_metric="faithfulness",
 )
 
 # The guided-read campaign's fields, from
@@ -253,6 +433,20 @@ RESEARCH_LANE = MetricLane(
 LEARNING_METRIC_FIELDS: tuple[str, ...] = (
     "shame_free",
     "shame_free_score",
+    # ADR 0072's deterministic pedagogy scan, which `simulate_learner`
+    # writes and nothing read: the deny-list failed pytest and was
+    # invisible to the campaign gate. Two columns because they answer
+    # different questions — `pedagogy_clean` is the per-session boolean
+    # a gate reads, and `pedagogy_violations` is the count that says
+    # whether an already-failing session got worse.
+    #
+    # A campaign written before ADR 0072 carries neither, which reads
+    # here as an absent field: delta `None`, no gate effect, and the
+    # `Compared` column says `0 / N`. That is the correct answer —
+    # `simulate_learner` distinguishes "never scanned" (`None`) from
+    # "scanned and clean" (`0`), and this differ must not collapse them.
+    "pedagogy_clean",
+    "pedagogy_violations",
     "downscope_honest",
     "plan_coherence",
     "progress_events_evidence_linked",
@@ -293,6 +487,10 @@ LEARNING_INFORMATIONAL_FIELDS: tuple[str, ...] = (
 # campaign has run (W-OD-1), so nothing here is measured spread.
 LEARNING_RESOURCE_THRESHOLDS: dict[str, tuple[float, float]] = {
     "expectation_failures": (0.0, 0.0),
+    # Same zero tolerance, and for the same reason: a banned pedagogy
+    # scalar reaching learner-facing copy is not variance. `(0.0, 0.0)`
+    # means one extra hit fires and zero extra does not.
+    "pedagogy_violations": (0.0, 0.0),
     "llm_calls": (2.0, 0.25),
     "cost_usd": (0.05, 0.25),
 }
@@ -300,6 +498,8 @@ LEARNING_RESOURCE_THRESHOLDS: dict[str, tuple[float, float]] = {
 LEARNING_METRIC_DIRECTIONS: dict[str, str] = {
     "shame_free": "higher_better",
     "shame_free_score": "higher_better",
+    "pedagogy_clean": "higher_better",
+    "pedagogy_violations": "lower_better",
     "downscope_honest": "higher_better",
     "plan_coherence": "higher_better",
     "progress_events_evidence_linked": "higher_better",
@@ -322,6 +522,8 @@ LEARNING_LANE = MetricLane(
     columns=(
         ("Shame-free Δ", "shame_free"),
         ("Shame rubric Δ", "shame_free_score"),
+        ("Pedagogy Δ", "pedagogy_clean"),
+        ("Pedagogy hits Δ", "pedagogy_violations"),
         ("Downscope Δ", "downscope_honest"),
         ("Plan coherence Δ", "plan_coherence"),
         ("Evidence Δ", "progress_events_evidence_linked"),
@@ -330,6 +532,21 @@ LEARNING_LANE = MetricLane(
         ("Calls Δ", "llm_calls"),
         ("$ Δ", "cost_usd"),
     ),
+    # The learning lane's records are `<scenario>.rN`, so the task is
+    # named by its own column rather than parsed back out of the id.
+    task_field="scenario_id",
+    # Empty on purpose. The learning lane's coarse metrics are the
+    # per-session booleans, whose quantum is 1.0 — deriving a band from
+    # that would give them an epsilon of 1.5 and make them ungatable.
+    # They are *observed*, not judged, and one session that stopped
+    # containing an injection is a regression at any epsilon, so they
+    # keep the flat threshold they have always had.
+    score_quanta={},
+    # Predeclared: the pedagogy outcome is what the guided-read product
+    # claims, it is deterministic rather than judged, and it is binary
+    # per session — which makes it the one metric on either lane that
+    # McNemar can be run on directly.
+    primary_metric="shame_free",
     cost_reference=CostReference(
         field="cost_usd",
         low=0.07,
@@ -365,6 +582,92 @@ class QueryDiff(TypedDict):
     deltas: dict[str, float | None]  # metric_field -> current - baseline
 
 
+class Comparability(NamedTuple):
+    """Whether two campaigns' provenance permits comparing them at all.
+
+    Attributes:
+        comparable: False when the two runs disagree on a
+            `COMPARABILITY_FIELDS` value, or when one run disagrees with
+            itself. Either way the instrument moved, and a delta
+            measured across it describes the reconfiguration rather than
+            the product.
+        conflicts: Human-readable descriptions of each disagreement.
+        notes: Things worth saying that are not refusals — a run with no
+            provenance block at all, a dirty working tree, a product
+            model that moved (which is what a comparison is *for*).
+    """
+
+    comparable: bool
+    conflicts: tuple[str, ...]
+    notes: tuple[str, ...]
+
+
+class MetricStatistics(NamedTuple):
+    """The statistical view of one metric's paired comparison.
+
+    Attributes:
+        field: Metric name.
+        bootstrap: Paired bootstrap over tasks, or `None` when fewer
+            than one task carried the metric in both runs.
+        mcnemar: McNemar's test, present only when the metric is binary
+            on every paired task in both runs — the case pairing was
+            built for, and the form WO-A16's per-claim groundedness
+            outcomes will arrive in.
+        epsilon: The band this metric had to clear to gate.
+        primary: Whether this is the lane's predeclared metric. Every
+            other row is diagnostic and uncorrected for multiplicity.
+    """
+
+    field: str
+    bootstrap: BootstrapResult | None
+    mcnemar: McNemarResult | None
+    epsilon: float
+    primary: bool
+
+
+class Reliability(NamedTuple):
+    """A binary success rate over tasks, with what it supports.
+
+    Attributes:
+        label: What succeeded, for the report's row.
+        successes: Tasks that succeeded.
+        tasks: Tasks scored.
+        interval: Wilson interval for the rate.
+        pass_k: `pass^k` across repeats, or `None` at one repeat where
+            it is the rate itself.
+        repeats: The `k` in `pass^k`.
+    """
+
+    label: str
+    successes: int
+    tasks: int
+    interval: Interval
+    pass_k: float | None
+    repeats: int
+
+    @property
+    def rate(self) -> float:
+        """Observed success rate."""
+        return self.successes / self.tasks if self.tasks else 0.0
+
+
+class Decision(NamedTuple):
+    """The gate's three-state verdict.
+
+    Attributes:
+        verdict: `PROMOTE` — no regression, and the comparison had
+            enough paired items to have found one. `ROLLBACK` — a
+            regression cleared its band, or the run lost records.
+            `HOLD` — everything else, and at this repository's N that is
+            usually the honest answer: no regression was seen, and this
+            comparison could not have seen one.
+        reasons: Why, in the order they were decided.
+    """
+
+    verdict: Literal["PROMOTE", "HOLD", "ROLLBACK"]
+    reasons: tuple[str, ...]
+
+
 class RegressionReport(TypedDict):
     """Aggregate diff over two eval runs."""
 
@@ -377,6 +680,12 @@ class RegressionReport(TypedDict):
     aggregate_baseline: dict[str, float | None]
     aggregate_current: dict[str, float | None]
     aggregate_deltas: dict[str, float | None]
+    comparability: Comparability
+    statistics: dict[str, MetricStatistics]
+    reliability: list[Reliability]
+    decision: Decision
+    paired_tasks: int
+    repeats: int
 
 
 # ---------------------------------------------------------------------------
@@ -384,14 +693,17 @@ class RegressionReport(TypedDict):
 # ---------------------------------------------------------------------------
 
 
-def load_summary(
+def load_rows(
     path: Path, *, lane: MetricLane = RESEARCH_LANE
-) -> dict[str, dict[str, Any]]:
-    """Read a `summary.jsonl` file and index it by the lane's id field.
+) -> list[dict[str, Any]]:
+    """Read a `summary.jsonl` file into its rows, in file order.
 
-    Returns an empty dict when the file does not exist so first-run
-    diffs (no baseline yet) degrade gracefully instead of crashing.
-    Malformed JSON is a hard error.
+    One row per *record*: a campaign run with `--repeats 3` yields three
+    rows per task. Aggregating them is `aggregate_repeats`' job, and it
+    is deliberately a separate step — the raw rows are what the
+    provenance check has to read, because a campaign whose repeats were
+    produced by two different judges is exactly the thing a mean would
+    hide.
 
     Args:
         path: The summary file. A missing file reads as empty.
@@ -399,15 +711,15 @@ def load_summary(
             `query_id`, the learning lane on `record_id`.
 
     Returns:
-        `{id: summary_line}`.
+        The rows.
 
     Raises:
         ValueError: The file is not valid JSONL, or a line carries no id.
     """
     if not path.exists():
-        return {}
+        return []
 
-    by_id: dict[str, dict[str, Any]] = {}
+    rows: list[dict[str, Any]] = []
     for line_no, raw in enumerate(path.read_text().splitlines(), start=1):
         stripped = raw.strip()
         if not stripped:
@@ -418,13 +730,122 @@ def load_summary(
             raise ValueError(
                 f"{path}: invalid JSONL on line {line_no}: {exc.msg}"
             ) from exc
-        query_id = record.get(lane.id_field)
-        if not isinstance(query_id, str) or not query_id:
+        record_id = record.get(lane.id_field)
+        if not isinstance(record_id, str) or not record_id:
             raise ValueError(
                 f"{path}: line {line_no} has no {lane.id_field}"
             )
-        by_id[query_id] = record
-    return by_id
+        rows.append(record)
+    return rows
+
+
+def _group_key(row: Mapping[str, Any], lane: MetricLane) -> str:
+    """The task a row belongs to.
+
+    Falls back to the record id when the lane's task column is absent,
+    which is what a summary written before the column existed looks
+    like. Falling back means such a campaign aggregates nothing rather
+    than collapsing unrelated records together — the safe direction, and
+    the report's repeat count makes it visible.
+    """
+    task = row.get(lane.group_field)
+    if isinstance(task, str) and task:
+        return task
+    return str(row[lane.id_field])
+
+
+def aggregate_repeats(
+    rows: Sequence[Mapping[str, Any]], *, lane: MetricLane = RESEARCH_LANE
+) -> dict[str, dict[str, Any]]:
+    """Collapse a campaign's repeats into one row per task.
+
+    Three runs of one benchmark query are three observations of that
+    query, not three queries. Before ADR 0071 the differ compared `r1`
+    to `r1` and `r2` to `r2`, so three repeats cost triple and still
+    produced three single-run comparisons — the exact opposite of what
+    repeats are for.
+
+    Each metric becomes the mean of its non-null values across the
+    task's repeats, and the individual values are kept under
+    `REPEAT_VALUES_KEY` so the bootstrap can resample within a task
+    instead of treating three repeats as three independent tasks (which
+    would report an interval about `sqrt(3)` too narrow).
+
+    `error` survives only when **every** repeat errored: a task that
+    produced two good runs and one failure is a measurement of the two,
+    and `ERRORED_REPEATS_KEY` carries the count so the report can say so
+    rather than the mean quietly absorbing it.
+
+    Args:
+        rows: Summary rows, from one campaign.
+        lane: Which campaign wrote them.
+
+    Returns:
+        `{task_id: aggregated_row}`.
+    """
+    grouped: dict[str, list[Mapping[str, Any]]] = {}
+    for row in rows:
+        grouped.setdefault(_group_key(row, lane), []).append(row)
+
+    aggregated: dict[str, dict[str, Any]] = {}
+    for task_id, group in grouped.items():
+        merged: dict[str, Any] = dict(group[0])
+        merged[lane.group_field] = task_id
+        values: dict[str, tuple[float, ...]] = {}
+        for field in lane.tabulated_fields:
+            present = tuple(
+                value
+                for value in (_score(dict(row), field) for row in group)
+                if value is not None
+            )
+            values[field] = present
+            merged[field] = fmean(present) if present else None
+        errors = [row.get("error") for row in group if row.get("error")]
+        merged["error"] = errors[0] if len(errors) == len(group) else None
+        merged["metrics_error"] = next(
+            (row.get("metrics_error") for row in group if row.get("metrics_error")),
+            None,
+        )
+        merged[REPEAT_VALUES_KEY] = values
+        merged[REPEAT_COUNT_KEY] = len(group)
+        merged[ERRORED_REPEATS_KEY] = len(errors)
+        # Every repeat's block, not the first one's: `--resume` can
+        # re-enter a campaign under a different judge model, and a task
+        # whose three repeats were graded by two instruments must not
+        # present as one measurement.
+        merged[PROVENANCE_BLOCKS_KEY] = [
+            block
+            for block in (row.get(PROVENANCE_KEY) for row in group)
+            if isinstance(block, dict) and block
+        ]
+        aggregated[task_id] = merged
+    return aggregated
+
+
+def load_summary(
+    path: Path, *, lane: MetricLane = RESEARCH_LANE
+) -> dict[str, dict[str, Any]]:
+    """Read a `summary.jsonl` file into one aggregated row per task.
+
+    `load_rows` then `aggregate_repeats`. A campaign that ran one repeat
+    per task — every campaign before ADR 0071 — comes back exactly as it
+    did before, because the mean of one value is that value.
+
+    Returns an empty dict when the file does not exist so first-run
+    diffs (no baseline yet) degrade gracefully instead of crashing.
+    Malformed JSON is a hard error.
+
+    Args:
+        path: The summary file. A missing file reads as empty.
+        lane: Which campaign wrote it.
+
+    Returns:
+        `{task_id: aggregated_row}`.
+
+    Raises:
+        ValueError: The file is not valid JSONL, or a line carries no id.
+    """
+    return aggregate_repeats(load_rows(path, lane=lane), lane=lane)
 
 
 # ---------------------------------------------------------------------------
@@ -440,6 +861,37 @@ def _score(record: dict[str, Any], field: str) -> float | None:
     return None
 
 
+def score_epsilon(
+    field: str, threshold: float, lane: MetricLane = RESEARCH_LANE
+) -> float:
+    """The band a 0-1 score metric must clear, derived from its quantum.
+
+    ADR 0044 gave every score metric the same 0.10, justified as typical
+    LLM-judge noise. That reasoning holds for a metric with a fine
+    denominator and breaks completely for one whose score can only take
+    the values `k/4`: for `completeness` and `retrieval_recall` the flat
+    band sat *below* one step, so a single borderline topic decision
+    flipping was a guaranteed red and the epsilon filtered nothing.
+
+    A metric with a declared quantum gets `QUANTUM_TOLERANCE` steps
+    instead — one step passes, two fire — floored at `threshold` so a
+    fine-grained metric never gets a *narrower* band than the judge
+    noise estimate.
+
+    Args:
+        field: Metric name.
+        threshold: The flat score epsilon, from `--threshold`.
+        lane: Which campaign's quanta to read.
+
+    Returns:
+        The absolute move this metric must exceed.
+    """
+    quantum = lane.score_quanta.get(field)
+    if quantum is None:
+        return threshold
+    return max(threshold, QUANTUM_TOLERANCE * quantum)
+
+
 def _significant(
     field: str,
     magnitude: float,
@@ -453,14 +905,14 @@ def _significant(
     test (adverse for regressions, favorable for improvements) and must
     be positive to ever return True.
 
-    Score metrics compare against the flat `threshold`. Resource
-    metrics must clear both legs of the lane's band; when the baseline
-    is missing or non-positive the relative leg has no meaningful
-    denominator, so the absolute floor alone decides.
+    Score metrics compare against `score_epsilon`. Resource metrics must
+    clear both legs of the lane's band; when the baseline is missing or
+    non-positive the relative leg has no meaningful denominator, so the
+    absolute floor alone decides.
     """
     band = lane.resource_thresholds.get(field)
     if band is None:
-        return magnitude > threshold
+        return magnitude > score_epsilon(field, threshold, lane)
     floor, relative = band
     if magnitude <= floor:
         return False
@@ -563,6 +1015,7 @@ def diff_summaries(
     *,
     allow_removed: bool = False,
     lane: MetricLane = RESEARCH_LANE,
+    seed: int = DEFAULT_SEED,
 ) -> RegressionReport:
     """Compute per-record diffs and aggregate rollups.
 
@@ -582,11 +1035,14 @@ def diff_summaries(
             (ADR 0050).
         lane: Which campaign's fields and thresholds to use. Defaults
             to the research lane, so existing callers are unaffected.
+        seed: Seed for the paired bootstrap, so two runs of the differ
+            over the same summaries produce the same interval.
 
     Returns:
         `RegressionReport` with per-record status, per-metric deltas,
-        and aggregate baseline/current/delta rollups over records
-        present in both runs.
+        aggregate rollups over records present in both runs, the
+        provenance comparability check, the paired statistics and the
+        PROMOTE / HOLD / ROLLBACK decision.
     """
     diffs: list[QueryDiff] = []
     query_ids = sorted(set(baseline) | set(current))
@@ -632,7 +1088,7 @@ def diff_summaries(
         () if allow_removed else ("removed",)
     )
 
-    return RegressionReport(
+    report = RegressionReport(
         diffs=diffs,
         has_regressions=any(d["status"] in gating_statuses for d in diffs),
         lane=lane,
@@ -642,7 +1098,28 @@ def diff_summaries(
         aggregate_baseline=aggregate_baseline,
         aggregate_current=aggregate_current,
         aggregate_deltas=aggregate_deltas,
+        comparability=check_comparability(baseline, current),
+        statistics=compute_statistics(
+            baseline,
+            current,
+            lane=lane,
+            threshold=threshold,
+            aggregate_deltas=aggregate_deltas,
+            seed=seed,
+        ),
+        reliability=_reliability(current, lane),
+        # Filled in below: `decide` reads the report it is deciding on,
+        # which is the only way its rules can be stated once instead of
+        # being re-derived from the pieces.
+        decision=Decision(verdict="HOLD", reasons=()),
+        paired_tasks=len(set(baseline) & set(current)),
+        repeats=max(
+            (_repeat_count(row) for row in current.values()),
+            default=1,
+        ),
     )
+    report["decision"] = decide(report)
+    return report
 
 
 def _unscored_counts(
@@ -700,6 +1177,478 @@ def _aggregate_over_shared(
             sum(values_typed) / len(values_typed) if values_typed else None
         )
     return result
+
+
+# ---------------------------------------------------------------------------
+# Comparability — may these two runs be compared at all?
+# ---------------------------------------------------------------------------
+
+
+def _provenance_blocks(rows: Mapping[str, Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Every provenance block in a campaign, one per record.
+
+    Reads the per-repeat list `aggregate_repeats` stores when it has
+    one, and falls back to the row's own block so a hand-built row — a
+    test's, or a caller that assembled the mapping itself — is still
+    checked.
+    """
+    blocks: list[dict[str, Any]] = []
+    for row in rows.values():
+        stored = row.get(PROVENANCE_BLOCKS_KEY)
+        if isinstance(stored, list):
+            blocks.extend(block for block in stored if isinstance(block, dict) and block)
+            continue
+        own = row.get(PROVENANCE_KEY)
+        if isinstance(own, dict) and own:
+            blocks.append(own)
+    return blocks
+
+
+def _provenance_values(blocks: Sequence[Mapping[str, Any]], field: str) -> set[str]:
+    """The distinct values `field` takes across `blocks`, as strings.
+
+    `rubric_versions` is a mapping, so it is flattened to a sorted
+    `name@version` list first — two rows that ran the same rubrics at
+    the same versions must compare equal whatever order the keys
+    happened to be written in.
+    """
+    values: set[str] = set()
+    for block in blocks:
+        if field not in block:
+            continue
+        value = block[field]
+        if isinstance(value, dict):
+            values.add(
+                ", ".join(f"{name}@{version}" for name, version in sorted(value.items()))
+            )
+        else:
+            values.add(str(value))
+    return values
+
+
+def check_comparability(
+    baseline: Mapping[str, Mapping[str, Any]],
+    current: Mapping[str, Mapping[str, Any]],
+) -> Comparability:
+    """Decide whether these two campaigns measure the same thing.
+
+    ADR 0070 put a `provenance` block on every row precisely so this
+    question could be asked. A delta measured across a judge-model swap,
+    a rubric edit or a changed benchmark is a measurement of the change
+    in instrument; reporting it as a quality movement is the failure the
+    block exists to prevent, so this module refuses rather than reports.
+
+    Three outcomes, and the distinction between the last two matters:
+
+    - **Comparable.** Both runs carry blocks and they agree on every
+      `COMPARABILITY_FIELDS` value.
+    - **Not comparable.** They disagree — or one run disagrees with
+      itself, which a resumed campaign can do.
+    - **Comparable, with a note.** One or both runs carry no block at
+      all. Absence is *unknown*, not *different*: refusing here would
+      turn every pre-ADR-0070 baseline into a permanent red, so the
+      comparison proceeds and the report says the attribution is
+      missing.
+
+    Args:
+        baseline: Aggregated baseline rows.
+        current: Aggregated current rows.
+
+    Returns:
+        The verdict, its conflicts, and any notes.
+    """
+    baseline_blocks = _provenance_blocks(baseline)
+    current_blocks = _provenance_blocks(current)
+
+    notes: list[str] = []
+    if baseline and not baseline_blocks:
+        notes.append(
+            "No baseline row carries a provenance block, so this comparison "
+            "cannot confirm the two runs used the same judge, rubrics and "
+            "dataset. The usual cause is a summary written before ADR 0070."
+        )
+    if current and not current_blocks:
+        notes.append(
+            "No current row carries a provenance block. A row that cannot "
+            "name what produced it cannot support a claim about what changed."
+        )
+    if not baseline_blocks or not current_blocks:
+        return Comparability(comparable=True, conflicts=(), notes=tuple(notes))
+
+    conflicts: list[str] = []
+    for field in COMPARABILITY_FIELDS:
+        baseline_values = _provenance_values(baseline_blocks, field)
+        current_values = _provenance_values(current_blocks, field)
+        for label, values in (
+            ("baseline", baseline_values),
+            ("current", current_values),
+        ):
+            if len(values) > 1:
+                conflicts.append(
+                    f"the {label} run disagrees with itself on "
+                    f"`{field}`: {', '.join(sorted(values))}"
+                )
+        if (
+            len(baseline_values) == 1
+            and len(current_values) == 1
+            and baseline_values != current_values
+        ):
+            conflicts.append(
+                f"`{field}` moved: baseline {next(iter(baseline_values))!r} "
+                f"-> current {next(iter(current_values))!r}"
+            )
+
+    product_models = _provenance_values(
+        baseline_blocks, "product_model"
+    ) | _provenance_values(current_blocks, "product_model")
+    if len(product_models) > 1:
+        notes.append(
+            "The product model differs between the two runs "
+            f"({', '.join(sorted(product_models))}). That is not a reason to "
+            "refuse the comparison — it is usually its subject — but any "
+            "movement below should be read as the model's, not the code's."
+        )
+    if "True" in _provenance_values(
+        baseline_blocks, "code_dirty"
+    ) | _provenance_values(current_blocks, "code_dirty"):
+        notes.append(
+            "At least one run was produced from a dirty working tree, so its "
+            "`code_commit` does not identify the code that ran."
+        )
+
+    return Comparability(
+        comparable=not conflicts, conflicts=tuple(conflicts), notes=tuple(notes)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Statistics
+# ---------------------------------------------------------------------------
+
+
+def _repeat_values(row: Mapping[str, Any], field: str) -> tuple[float, ...]:
+    """One task's individual repeat values for `field`.
+
+    Falls back to the aggregated scalar so a caller that assembled its
+    own mapping — every existing test, and any code holding rows it
+    built by hand — still produces a one-observation task rather than an
+    empty one.
+    """
+    stored = row.get(REPEAT_VALUES_KEY)
+    if isinstance(stored, dict):
+        values = stored.get(field)
+        if isinstance(values, (tuple, list)):
+            return tuple(float(value) for value in values)
+    value = _score(dict(row), field)
+    return () if value is None else (value,)
+
+
+def paired_samples(
+    baseline: Mapping[str, Mapping[str, Any]],
+    current: Mapping[str, Mapping[str, Any]],
+    field: str,
+) -> list[PairedSample]:
+    """Tasks scored for `field` in **both** runs, in id order.
+
+    The intersection, always. Scoring the baseline and the candidate on
+    the same items is the whole reason a 20-query benchmark can say
+    anything at all — unpaired, detecting a 5-point move against an 80%
+    baseline would need roughly 906 items per arm.
+    """
+    return [
+        PairedSample(
+            task_id=task_id,
+            baseline=_repeat_values(baseline[task_id], field),
+            candidate=_repeat_values(current[task_id], field),
+        )
+        for task_id in sorted(set(baseline) & set(current))
+        if _repeat_values(baseline[task_id], field)
+        and _repeat_values(current[task_id], field)
+    ]
+
+
+def _mcnemar_if_binary(samples: Sequence[PairedSample]) -> McNemarResult | None:
+    """McNemar's test, when every paired task is binary in both arms.
+
+    All-or-nothing on purpose. Running the test over the subset of tasks
+    that happen to be binary and dropping the rest would select on the
+    outcome — the tasks whose repeats disagreed are exactly the
+    interesting ones — so a metric that is not binary everywhere simply
+    does not get this row.
+    """
+    if not samples:
+        return None
+    pairs: list[tuple[bool, bool]] = []
+    for sample in samples:
+        baseline_mean = fmean(sample.baseline)
+        candidate_mean = fmean(sample.candidate)
+        if baseline_mean not in (0.0, 1.0) or candidate_mean not in (0.0, 1.0):
+            return None
+        pairs.append((bool(baseline_mean), bool(candidate_mean)))
+    return mcnemar(pairs)
+
+
+def compute_statistics(
+    baseline: Mapping[str, Mapping[str, Any]],
+    current: Mapping[str, Mapping[str, Any]],
+    *,
+    lane: MetricLane = RESEARCH_LANE,
+    threshold: float = DEFAULT_THRESHOLD,
+    aggregate_deltas: Mapping[str, float | None] | None = None,
+    seed: int = DEFAULT_SEED,
+) -> dict[str, MetricStatistics]:
+    """Intervals for the primary metric, and for anything that moved down.
+
+    Not for every metric. `02-STANDARDS.md` §2.3 is explicit that a
+    primary metric is predeclared and slices are diagnostic unless a
+    multiplicity correction was declared in advance — twenty
+    simultaneous per-metric tests on twenty queries manufacture false
+    alarms by arithmetic. So the primary metric always gets an interval,
+    and the others get one only when their aggregate moved in the
+    adverse direction, where a reader is about to ask "is that real?"
+    and deserves the answer.
+
+    Args:
+        baseline: Aggregated baseline rows.
+        current: Aggregated current rows.
+        lane: Which campaign's fields to read.
+        threshold: The flat score epsilon, for the reported band.
+        aggregate_deltas: Per-metric aggregate deltas, used to pick the
+            diagnostic metrics. `None` analyses only the primary.
+        seed: Bootstrap seed.
+
+    Returns:
+        `{field: MetricStatistics}`, in `tabulated_fields` order.
+    """
+    wanted = {lane.primary_metric} if lane.primary_metric else set()
+    for field, delta in (aggregate_deltas or {}).items():
+        if delta is None:
+            continue
+        direction = lane.directions.get(field, "higher_better")
+        adverse = -delta if direction == "higher_better" else delta
+        if adverse > 0:
+            wanted.add(field)
+
+    result: dict[str, MetricStatistics] = {}
+    for field in lane.tabulated_fields:
+        if field not in wanted:
+            continue
+        samples = paired_samples(baseline, current, field)
+        if not samples:
+            continue
+        result[field] = MetricStatistics(
+            field=field,
+            bootstrap=paired_bootstrap_delta(samples, seed=seed),
+            mcnemar=_mcnemar_if_binary(samples),
+            epsilon=score_epsilon(field, threshold, lane),
+            primary=field == lane.primary_metric,
+        )
+    return result
+
+
+def _repeat_count(row: Mapping[str, Any]) -> int:
+    """How many records were folded into this task's row."""
+    count = row.get(REPEAT_COUNT_KEY)
+    return count if isinstance(count, int) and count > 0 else 1
+
+
+def _binary_reliability(
+    rows: Mapping[str, Mapping[str, Any]], field: str, label: str
+) -> Reliability | None:
+    """A binary metric's campaign rate, its Wilson interval and `pass^k`.
+
+    `None` when the metric is not binary — a rate is only a rate when
+    the underlying observation is a success or a failure.
+    """
+    per_task = [values for values in (_repeat_values(rows[task], field) for task in rows) if values]
+    if not per_task or any(value not in (0.0, 1.0) for values in per_task for value in values):
+        return None
+    trials = sum(len(values) for values in per_task)
+    successes = int(sum(sum(values) for values in per_task))
+    repeats = min(len(values) for values in per_task)
+    pass_k = (
+        fmean(
+            pass_hat_k(int(sum(values)), len(values), repeats) for values in per_task
+        )
+        if repeats > 1
+        else None
+    )
+    return Reliability(
+        label=label,
+        successes=successes,
+        tasks=trials,
+        interval=wilson_interval(successes, trials),
+        pass_k=pass_k,
+        repeats=repeats,
+    )
+
+
+def _completion_reliability(
+    rows: Mapping[str, Mapping[str, Any]], lane: MetricLane
+) -> Reliability | None:
+    """The campaign's own success rate: records that ran without erroring.
+
+    Present on both lanes and deterministic on both, which makes it the
+    one place `pass^k` and the rule of three always have something to
+    say — every judged metric on the research lane is a ratio rather
+    than a success.
+    """
+    if not rows:
+        return None
+    per_task: list[tuple[int, int]] = []
+    for row in rows.values():
+        repeats = _repeat_count(row)
+        errored = row.get(ERRORED_REPEATS_KEY)
+        if not isinstance(errored, int):
+            errored = repeats if row.get("error") else 0
+        per_task.append((repeats - errored, repeats))
+    trials = sum(repeats for _, repeats in per_task)
+    successes = sum(good for good, _ in per_task)
+    repeats = min(repeats for _, repeats in per_task)
+    pass_k = (
+        fmean(pass_hat_k(good, total, repeats) for good, total in per_task)
+        if repeats > 1
+        else None
+    )
+    return Reliability(
+        label=f"{lane.unit_plural} that ran without erroring",
+        successes=successes,
+        tasks=trials,
+        interval=wilson_interval(successes, trials),
+        pass_k=pass_k,
+        repeats=repeats,
+    )
+
+
+def _reliability(
+    rows: Mapping[str, Mapping[str, Any]], lane: MetricLane
+) -> list[Reliability]:
+    """Every binary rate the current run supports, campaign rate first."""
+    rates: list[Reliability] = []
+    completion = _completion_reliability(rows, lane)
+    if completion is not None:
+        rates.append(completion)
+    for field in lane.metric_fields:
+        # Only *gated quality* metrics can be success rates. A resource
+        # metric is excluded even when its values happen to be 0 and 1 —
+        # the scripted tier's `cost_usd` is $0.00 on every session, and
+        # calling that a 0% success rate would be arithmetic dressed as
+        # a finding. So is anything `lower_better`.
+        if (
+            field in lane.resource_thresholds
+            or lane.directions.get(field, "higher_better") != "higher_better"
+        ):
+            continue
+        rate = _binary_reliability(rows, field, f"`{field}`")
+        if rate is not None:
+            rates.append(rate)
+    return rates
+
+
+# ---------------------------------------------------------------------------
+# The decision
+# ---------------------------------------------------------------------------
+
+
+def decide(report: RegressionReport) -> Decision:
+    """PROMOTE / HOLD / ROLLBACK, with the reasoning attached.
+
+    Order matters, and the first rule is the one ADR 0071 is about: a
+    comparison across a moved instrument produces no verdict at all.
+    After that, a regression that cleared its band is a ROLLBACK, and
+    everything else is PROMOTE only if the comparison had the paired
+    items to have found a regression — at 20 queries it does not, so
+    the honest answer is HOLD and the report says why.
+
+    Args:
+        report: A populated `RegressionReport`.
+
+    Returns:
+        The verdict and its reasons.
+    """
+    lane = report["lane"]
+    comparability = report["comparability"]
+    if not comparability.comparable:
+        return Decision(
+            verdict="HOLD",
+            reasons=(
+                "These two runs were not produced by the same instrument, so "
+                "no verdict was reached: "
+                + "; ".join(comparability.conflicts)
+                + ". Re-establish the baseline under the current "
+                "configuration before reading a delta as a quality movement.",
+            ),
+        )
+
+    if report["has_regressions"]:
+        offenders = {
+            status: [
+                diff["query_id"] for diff in report["diffs"] if diff["status"] == status
+            ]
+            for status in ("regressed", "errored", "removed")
+        }
+        reasons = [
+            f"{len(ids)} {lane.unit_singular if len(ids) == 1 else lane.unit_plural} "
+            f"{status}: {', '.join(sorted(ids))}"
+            for status, ids in offenders.items()
+            if ids and not (status == "removed" and report["allow_removed"])
+        ]
+        return Decision(verdict="ROLLBACK", reasons=tuple(reasons))
+
+    paired = report["paired_tasks"]
+    if paired == 0:
+        return Decision(
+            verdict="HOLD",
+            reasons=(
+                f"No {lane.unit_singular} appears in both runs, so nothing was "
+                "compared. The usual cause is a first run with no baseline "
+                "yet.",
+            ),
+        )
+
+    primary = report["statistics"].get(lane.primary_metric)
+    if primary is not None and primary.bootstrap is not None:
+        interval = primary.bootstrap.interval
+        direction = lane.directions.get(lane.primary_metric, "higher_better")
+        adverse_bound = interval.high if direction == "higher_better" else interval.low
+        if interval.excludes_zero() and (
+            adverse_bound < 0 if direction == "higher_better" else adverse_bound > 0
+        ):
+            return Decision(
+                verdict="HOLD",
+                reasons=(
+                    f"`{lane.primary_metric}` moved {primary.bootstrap.point:+.3f} "
+                    f"with a 95% interval of {interval} that excludes zero — "
+                    "below the gate's band, but not explained by sampling. "
+                    "Investigate before promoting.",
+                ),
+            )
+
+    required = mcnemar_required_pairs(
+        delta=GATE_EFFECT_SIZE, discordance=GATE_EFFECT_SIZE, power=0.8
+    )
+    if paired < required:
+        return Decision(
+            verdict="HOLD",
+            reasons=(
+                f"No metric cleared its band, but {paired} paired "
+                f"{lane.unit_plural} cannot detect a "
+                f"{GATE_EFFECT_SIZE:.0%} move against a baseline of "
+                f"{GATE_BASELINE_RATE:.0%} — about {required} paired "
+                "items are needed at 80% power. This is not evidence that "
+                "nothing changed; it is evidence that this comparison could "
+                "not have told you.",
+            ),
+        )
+
+    return Decision(
+        verdict="PROMOTE",
+        reasons=(
+            f"No metric cleared its band across {paired} paired "
+            f"{lane.unit_plural}, and the comparison carried enough of them "
+            "to have found a regression that size.",
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -770,13 +1719,30 @@ def format_report(report: RegressionReport) -> str:
         if report["allow_removed"]
         else str(removed)
     )
+    quantised = "; ".join(
+        f"`{field}` > {score_epsilon(field, threshold, lane):.2f} "
+        f"({QUANTUM_TOLERANCE:g} x its {quantum:g} quantum)"
+        for field, quantum in sorted(lane.score_quanta.items())
+    )
+    decision = report["decision"]
+    repeats = report["repeats"]
     lines = [
         f"# {lane.title}",
         "",
-        f"- **Score threshold**: `{threshold:.2f}` (a 0-1 score drop larger than this is a regression)",
+        f"- **Decision**: **{decision.verdict}**",
+        f"- **Score epsilon**: `{threshold:.2f}` (a 0-1 score drop larger than this is a regression)"
+        + (f"; per-quantum bands: {quantised}" if quantised else ""),
         f"- **Resource bands** (both legs must be exceeded): {resource_lines}",
         f"- **{lane.unit_plural.capitalize()}**: {shared} compared, {removed_note} "
         f"missing from the current run, {new} new",
+        f"- **Repeats per {lane.unit_singular}**: {repeats}"
+        + (
+            " — aggregated by "
+            f"{lane.group_field} before diffing, so repeats are observations "
+            "of one task rather than separate tasks"
+            if repeats > 1
+            else ""
+        ),
         f"- **Regressions detected**: {'yes' if report['has_regressions'] else 'no'}",
     ]
 
@@ -862,7 +1828,197 @@ def format_report(report: RegressionReport) -> str:
                 f"- `{diff['query_id']}`: {diff['current_error']}"
             )
 
+    lines += _decision_section(report)
+
     return "\n".join(lines) + "\n"
+
+
+def _decision_section(report: RegressionReport) -> list[str]:
+    """The verdict, the intervals behind it, and what N does not support.
+
+    Placed last on purpose: it is the part a reader should leave with,
+    and every table above it is the evidence it is drawn from.
+    """
+    decision = report["decision"]
+    lines = [
+        "",
+        "## Decision",
+        "",
+        f"### {decision.verdict}",
+        "",
+    ]
+    lines += [f"- {reason}" for reason in decision.reasons]
+    lines += [
+        "",
+        "`PROMOTE` — no regression, on a comparison large enough to have "
+        "found one. `ROLLBACK` — a regression cleared its band. `HOLD` — "
+        "neither: nothing cleared a band, and nothing here can rule out a "
+        "move that did not. A gate that says *cannot distinguish* is worth "
+        "more than one that says *fine* on the same evidence.",
+    ]
+    lines += _comparability_section(report)
+    lines += _statistics_section(report)
+    lines += _reliability_section(report)
+    return lines
+
+
+def _comparability_section(report: RegressionReport) -> list[str]:
+    """The provenance verdict, when there is anything to say about it."""
+    comparability = report["comparability"]
+    if comparability.comparable and not comparability.notes:
+        return []
+    lines = ["", "### Comparability", ""]
+    if not comparability.comparable:
+        lines += [
+            "**These runs were produced by different instruments, so this "
+            "differ refused to compare them** (ADR 0070, ADR 0071):",
+            "",
+        ]
+        lines += [f"- {conflict}" for conflict in comparability.conflicts]
+        lines += [
+            "",
+            "A judge model, a rubric version or a benchmark that moved "
+            "changes what the numbers *mean*; a delta measured across that "
+            "change describes the change, not the product. Re-run the "
+            "baseline under the current configuration.",
+        ]
+    lines += [f"- {note}" for note in comparability.notes]
+    return lines
+
+
+def _statistics_section(report: RegressionReport) -> list[str]:
+    """Intervals for the primary metric and anything that moved down."""
+    lane = report["lane"]
+    statistics = report["statistics"]
+    paired = report["paired_tasks"]
+    lines = ["", "### Statistics", ""]
+
+    if not statistics:
+        lines.append(
+            "No metric was scored in both runs, so there is nothing to put an "
+            "interval on."
+        )
+        return lines
+
+    lines += [
+        f"Primary metric: `{lane.primary_metric}`, predeclared. Every other "
+        "row is **diagnostic** — it is here because the metric moved "
+        "adversely, it carries no multiplicity correction, and a set of "
+        "simultaneous per-metric tests on a benchmark this size produces "
+        "false alarms by arithmetic.",
+        "",
+        "| Metric | Paired Δ | 95% interval | Band | McNemar | Role |",
+        "|---|---:|---:|---:|---:|---|",
+    ]
+    for field in lane.tabulated_fields:
+        stat = statistics.get(field)
+        if stat is None or stat.bootstrap is None:
+            continue
+        test = (
+            f"b={stat.mcnemar.baseline_only} c={stat.mcnemar.candidate_only}, "
+            f"p={stat.mcnemar.p_value:.3f} ({stat.mcnemar.method})"
+            if stat.mcnemar is not None
+            else "-"
+        )
+        lines.append(
+            f"| `{field}` "
+            f"| {stat.bootstrap.point:+.3f} "
+            f"| {stat.bootstrap.interval} "
+            f"| {stat.epsilon:.2f} "
+            f"| {test} "
+            f"| {'primary' if stat.primary else 'diagnostic'} |"
+        )
+
+    hierarchical = any(
+        stat.bootstrap is not None and stat.bootstrap.hierarchical
+        for stat in statistics.values()
+    )
+    resamples = next(
+        (
+            stat.bootstrap.resamples
+            for stat in statistics.values()
+            if stat.bootstrap is not None
+        ),
+        0,
+    )
+    seed = next(
+        (
+            stat.bootstrap.seed
+            for stat in statistics.values()
+            if stat.bootstrap is not None
+        ),
+        0,
+    )
+    lines += [
+        "",
+        f"Intervals are percentile paired bootstraps over {lane.unit_plural} "
+        f"({resamples} resamples, seed {seed})"
+        + (
+            ", resampling repeats within each "
+            f"{lane.unit_singular} as well so three repeats are not counted "
+            "as three independent observations."
+            if hierarchical
+            else "."
+        ),
+        "",
+        power_statement(
+            paired, delta=GATE_EFFECT_SIZE, baseline_rate=GATE_BASELINE_RATE
+        ),
+    ]
+    caveat = small_sample_caveat(paired)
+    if caveat:
+        lines += ["", caveat]
+    return lines
+
+
+def _reliability_section(report: RegressionReport) -> list[str]:
+    """Success rates with Wilson intervals, `pass^k`, and the rule of three."""
+    rates = report["reliability"]
+    if not rates:
+        return []
+    lines = [
+        "",
+        "### Reliability (current run)",
+        "",
+        "| Outcome | Rate | 95% Wilson | pass^k |",
+        "|---|---:|---:|---:|",
+    ]
+    for rate in rates:
+        pass_k = (
+            f"{rate.pass_k:.3f} (k={rate.repeats})"
+            if rate.pass_k is not None
+            else f"n/a (k={rate.repeats})"
+        )
+        lines.append(
+            f"| {rate.label} "
+            f"| {rate.successes} / {rate.tasks} = {rate.rate:.3f} "
+            f"| [{rate.interval.low:.3f}, {rate.interval.high:.3f}] "
+            f"| {pass_k} |"
+        )
+    lines += [
+        "",
+        "`pass^k` is the probability that **all** k repeats succeed — what a "
+        "user of a repeated workflow experiences, and the statistic that has "
+        "displaced `pass@1`. It reads `n/a` at one repeat, where it is the "
+        "rate itself.",
+    ]
+    # Quoted for the campaign's own completion rate — `rates[0]`, the
+    # only row whose denominator is every run — rather than for whichever
+    # listed outcome happens to have the fewest observations. `3/n` on a
+    # two-observation row is 150%, which is arithmetically true and says
+    # nothing; anchoring the sentence to one named denominator is what
+    # makes it a claim.
+    completion = rates[0]
+    if completion.successes == completion.tasks:
+        bound = min(1.0, rule_of_three(completion.tasks))
+        lines += [
+            "",
+            "**A clean sweep is not zero risk.** Zero failures in "
+            f"{completion.tasks} runs bounds the failure rate at roughly "
+            f"**{bound:.1%}** by the rule of three — not at zero. That is "
+            "what a green run on a benchmark this size supports.",
+        ]
+    return lines
 
 
 # ---------------------------------------------------------------------------
@@ -896,10 +2052,22 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         type=float,
         default=DEFAULT_THRESHOLD,
         help=(
-            "Regression threshold on the 0-1 score metrics "
-            f"(default: {DEFAULT_THRESHOLD}). Count and dollar metrics "
-            "use fixed per-metric bands instead — see the lane's "
+            "Floor for the regression epsilon on the 0-1 score metrics "
+            f"(default: {DEFAULT_THRESHOLD}). A metric with a declared "
+            "quantum gets a wider band derived from it, so one flipped "
+            "judge decision passes and two do not. Count and dollar "
+            "metrics use fixed per-metric bands instead — see the lane's "
             "resource thresholds."
+        ),
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=DEFAULT_SEED,
+        help=(
+            "Seed for the paired bootstrap "
+            f"(default: {DEFAULT_SEED}). Fixed so re-running the differ "
+            "over unchanged summaries cannot change its verdict."
         ),
     )
     parser.add_argument(
@@ -927,14 +2095,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.current.exists():
         print(f"Error: current file not found: {args.current}", file=sys.stderr)
-        return 2
+        return EXIT_INVALID
 
     try:
         baseline = load_summary(args.baseline, lane=lane)
         current = load_summary(args.current, lane=lane)
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
-        return 2
+        return EXIT_INVALID
 
     if not baseline:
         print(
@@ -949,6 +2117,7 @@ def main(argv: list[str] | None = None) -> int:
         threshold=args.threshold,
         allow_removed=args.allow_removed,
         lane=lane,
+        seed=args.seed,
     )
     markdown = format_report(report)
     print(markdown)
@@ -956,7 +2125,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.output:
         args.output.write_text(markdown, encoding="utf-8")
 
-    return 1 if report["has_regressions"] else 0
+    # The decision, not `has_regressions`, decides the status. The two
+    # agree except when the runs are not comparable, where a regression
+    # may not be asserted at all and the caller is told the comparison
+    # failed rather than the product did.
+    if not report["comparability"].comparable:
+        print(
+            "Error: the baseline and current runs are not comparable; "
+            "no verdict was reached.",
+            file=sys.stderr,
+        )
+        return EXIT_INCOMPARABLE
+    return EXIT_REGRESSION if report["decision"].verdict == "ROLLBACK" else EXIT_OK
 
 
 if __name__ == "__main__":

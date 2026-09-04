@@ -1,8 +1,28 @@
 # 0044. Refresh the price table and split the regression gate by metric class
 
-- **Status**: accepted
+- **Status**: **partly superseded by
+  [ADR 0071](0071-eval-statistics-and-gates.md)** — its regression-gate
+  half is replaced; its price-table half stands
 - **Date**: 2026-08-20
 - **Deciders**: maintainer
+
+> **What ADR 0071 replaced.** The flat ±0.10 score epsilon is gone: a
+> metric with a declared quantum now gets `1.5 x quantum`, so one
+> flipped topic decision passes and two fire. That closes the
+> "score-metric quantization is documented but not fixed" item this
+> ADR's own consequences left open. `critic_score` was demoted from the
+> gated set to a printed diagnostic. Repeats are aggregated by task
+> before diffing, the comparison is paired, and the report ends in a
+> PROMOTE / HOLD / ROLLBACK decision with an interval and an explicit
+> statement of what its N cannot separate.
+>
+> **What still stands.** Everything about the price table
+> (`PRICES_USD_PER_MILLION`, `PRICES_LAST_VERIFIED`, the config-coverage
+> test), and the *shape* of the gate this ADR introduced: metrics are
+> judged by class, not by one scalar, and the two-leg
+> absolute-plus-relative bands for the count and dollar metrics are
+> unchanged. ADR 0071 refines the score-metric leg; it does not revisit
+> the class split, which was right.
 
 ## Context
 

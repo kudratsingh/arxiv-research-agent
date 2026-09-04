@@ -123,6 +123,16 @@ _ERROR_CELL_MAX = 200
 #: that is the question that decides if the numbers mean anything.
 RESEARCH_TIER = "research"
 
+#: Repeats per query below which a comparison against a baseline is not
+#: believable, from `planning/05-agentic-upgrade-plan.md` ("Judge noise
+#: mandates repeat runs"). `simulate_learner` declares the same number
+#: for the learning lane and cannot share this one: that module imports
+#: this one, so a shared constant would have to live here and be
+#: imported there, which is a change to a file this work order does not
+#: own. Both quote the same planning document, and
+#: `tests/test_eval_stats.py` pins them equal.
+REPEATS_FOR_CONFIDENCE = 3
+
 
 def research_provenance() -> RunProvenance:
     """Provenance for one research-campaign record.
@@ -282,7 +292,42 @@ def _cost_delta(
     return delta
 
 
-def _run_and_score(benchmark_query: BenchmarkQuery) -> dict[str, Any]:
+def research_record_id(query_id: str, repeat: int) -> str:
+    """Durable record key for one query's `repeat`-th run.
+
+    The first repeat keeps the bare `query_id`, so a default campaign —
+    every campaign before ADR 0071 — writes exactly the filenames,
+    summary rows and resume keys it always did, and a campaign already
+    on disk stays resumable. Later repeats take the `.rN` suffix the
+    learning lane already uses; benchmark ids are kebab-case, so the
+    suffix cannot collide with one.
+
+    Args:
+        query_id: The benchmark query.
+        repeat: 1-based repeat index.
+
+    Returns:
+        The record id.
+    """
+    return query_id if repeat <= 1 else f"{query_id}.r{repeat}"
+
+
+def _split_research_record_id(value: str) -> tuple[str, int]:
+    """Inverse of `research_record_id`; an unsuffixed id is repeat 1.
+
+    Deliberately local rather than shared with `simulate_learner`'s
+    equivalent: that module imports this one, so the dependency can only
+    run one way, and each lane owns the id scheme it writes.
+    """
+    query_id, _, suffix = value.rpartition(".r")
+    if query_id and suffix.isdigit():
+        return query_id, int(suffix)
+    return value, 1
+
+
+def _run_and_score(
+    benchmark_query: BenchmarkQuery, *, repeat: int = 1
+) -> dict[str, Any]:
     """Invoke the workflow, apply metrics, capture timing / errors / costs.
 
     Never raises for a workflow or judge failure — errors are captured
@@ -294,6 +339,14 @@ def _run_and_score(benchmark_query: BenchmarkQuery) -> dict[str, Any]:
     The returned record splits harness spend from product spend:
     `costs` / `elapsed_sec` cover the workflow invocation only, while
     `judge_costs` / `scoring_sec` cover the metric calls that follow it.
+
+    Args:
+        benchmark_query: The query to run and score.
+        repeat: 1-based repeat index within the campaign. `query_id`
+            keeps naming the *query* on every repeat and `record_id`
+            distinguishes them, which is what lets the regression differ
+            aggregate repeats by task instead of comparing `r1` to `r1`
+            (ADR 0071).
     """
     run_id = uuid.uuid4().hex[:16]
     token = bind_run_id(run_id)
@@ -303,7 +356,9 @@ def _run_and_score(benchmark_query: BenchmarkQuery) -> dict[str, Any]:
 
     record: dict[str, Any] = {
         "run_id": run_id,
+        "record_id": research_record_id(benchmark_query["query_id"], repeat),
         "query_id": benchmark_query["query_id"],
+        "repeat": repeat,
         "query": benchmark_query["query"],
         "domain": benchmark_query["domain"],
         "elapsed_sec": 0.0,
@@ -479,6 +534,11 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
     arrives with an empty block and fails the provenance check, which is
     the correct answer: a row that cannot name its judge, its rubric
     versions or its commit cannot participate in a comparison.
+
+    `record_id` names the run and `query_id` names the *query*, which
+    on a `--repeats 3` campaign three rows share. That split is what the
+    regression differ groups on to aggregate repeats before diffing
+    (ADR 0071); at one repeat the two are the same string.
     """
     metrics = record.get("metrics")
     state = record.get("state") or {}
@@ -487,7 +547,9 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
     workflow_cost = costs.get("total_cost_usd")
     judge_cost = judge_costs.get("total_cost_usd")
     return {
+        "record_id": record.get("record_id") or record["query_id"],
         "query_id": record["query_id"],
+        "repeat": record.get("repeat", 1),
         "elapsed_sec": record.get("elapsed_sec"),
         "scoring_sec": record.get("scoring_sec"),
         "error": record.get("error"),
@@ -568,19 +630,32 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
     judge_cost = sum(r.get("judge_cost_usd") or 0.0 for r in lines_summary)
     errors = sum(1 for r in records if r.get("error"))
     scoring_failures = sum(1 for r in records if r.get("metrics_error"))
+    repeats = max((r.get("repeat") or 1 for r in lines_summary), default=1)
+    queries = len({r["query_id"] for r in lines_summary})
     lines = [
         f"# Eval run `{run_id}`",
         "",
-        f"- **Queries**: {len(records)}",
+        f"- **Queries**: {queries}",
+        f"- **Runs**: {len(records)}",
+        f"- **Repeats per query**: {repeats}",
         f"- **Errors**: {errors}",
         f"- **Partial scores** (judge failed, run kept): {scoring_failures}",
         f"- **Workflow cost**: ${workflow_cost:.4f}",
         f"- **Judge cost**: ${judge_cost:.4f}",
         f"- **Total cost**: ${workflow_cost + judge_cost:.4f}",
+    ]
+    warning = repeat_warning(repeats)
+    if warning:
+        # In the artifact, not only on the terminal that produced it:
+        # the summary is what a reader opens weeks later, and the
+        # repeat count is the first thing that decides whether its
+        # aggregates support a comparison (ADR 0071).
+        lines += ["", f"> {warning}"]
+    lines += [
         "",
-        "## Per-query results",
+        "## Per-run results",
         "",
-        "| Query | Cit.Acc. | Complete. | Faithful. | Recall | Critic | Iter | Sec | $ | Calls | Judge $ | Error |",
+        "| Run | Cit.Acc. | Complete. | Faithful. | Recall | Critic | Iter | Sec | $ | Calls | Judge $ | Error |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for s in lines_summary:
@@ -589,7 +664,7 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             "| "
             + " | ".join(
                 [
-                    s["query_id"],
+                    s["record_id"],
                     _fmt(s["citation_accuracy"]),
                     _fmt(s["completeness"]),
                     _fmt(s["faithfulness"]),
@@ -617,9 +692,9 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             f"- Mean faithfulness: {_mean(successful, 'faithfulness')}",
             f"- Mean retrieval recall: {_mean(successful, 'retrieval_recall')}",
             f"- Mean critic score: {_mean(successful, 'critic_score')}",
-            f"- Mean workflow cost per query: {_mean(successful, 'cost_usd')}",
-            f"- Mean workflow LLM calls per query: {_mean(successful, 'llm_calls')}",
-            f"- Mean judge cost per query: {_mean(successful, 'judge_cost_usd')}",
+            f"- Mean workflow cost per run: {_mean(successful, 'cost_usd')}",
+            f"- Mean workflow LLM calls per run: {_mean(successful, 'llm_calls')}",
+            f"- Mean judge cost per run: {_mean(successful, 'judge_cost_usd')}",
         ]
 
     lines += provenance_markdown(lines_summary)
@@ -651,6 +726,12 @@ class CampaignShape(NamedTuple):
         summary_markdown: Renders `summary.md` from records and run id.
         order_key: Canonical sort key for a record id, so a rebuild is
             deterministic whatever the output directory happens to hold.
+        legacy_id_field: Key an older record used before `id_field`
+            existed, read only when `id_field` is absent. The research
+            campaign gained `record_id` with ADR 0071's `--repeats`;
+            without this fallback a `--resume` into a campaign started
+            before it would treat every record on disk as malformed and
+            re-pay for the whole batch.
     """
 
     records_dirname: str
@@ -658,11 +739,28 @@ class CampaignShape(NamedTuple):
     summary_line: Callable[[dict[str, Any]], dict[str, Any]]
     summary_markdown: Callable[[list[dict[str, Any]], str], str]
     order_key: Callable[[str], tuple[int, str]]
+    legacy_id_field: str | None = None
 
 
 def _queries_dir(output_dir: Path, shape: CampaignShape | None = None) -> Path:
     """Directory holding one full JSON record per completed record."""
     return output_dir / (shape or RESEARCH_CAMPAIGN).records_dirname
+
+
+def _record_key(record: dict[str, Any], layout: CampaignShape) -> str | None:
+    """The durable key for one record: `id_field`, else `legacy_id_field`.
+
+    The fallback is what keeps ADR 0071's `record_id` additive. A record
+    written by an earlier harness — or by a caller that only knows about
+    `query_id` — still persists to the same filename and resumes under
+    the same key, so adding a repeat dimension cost no existing campaign
+    its resumability.
+    """
+    for field in (layout.id_field, layout.legacy_id_field):
+        value = record.get(field) if field else None
+        if isinstance(value, str) and value:
+            return value
+    return None
 
 
 def persist_record(
@@ -690,7 +788,10 @@ def persist_record(
     queries_dir = _queries_dir(output_dir, layout)
     queries_dir.mkdir(parents=True, exist_ok=True)
 
-    path = queries_dir / f"{record[layout.id_field]}.json"
+    key = _record_key(record, layout)
+    if key is None:
+        raise KeyError(layout.id_field)
+    path = queries_dir / f"{key}.json"
     path.write_text(
         json.dumps(record, indent=2, default=str), encoding="utf-8"
     )
@@ -729,26 +830,26 @@ def load_records(
         except (OSError, json.JSONDecodeError):
             log.exception("eval_record_unreadable", extra={"path": str(path)})
             continue
-        if isinstance(payload, dict) and isinstance(
-            payload.get(layout.id_field), str
-        ):
-            records[payload[layout.id_field]] = payload
+        record_id = _record_key(payload, layout) if isinstance(payload, dict) else None
+        if record_id is not None:
+            records[record_id] = payload
         else:
             log.warning("eval_record_malformed", extra={"path": str(path)})
     return records
 
 
-def _benchmark_order(query_id: str) -> tuple[int, str]:
-    """Sort key placing benchmark queries in their canonical order.
+def _benchmark_order(record_id: str) -> tuple[int, str]:
+    """Sort key placing records in benchmark order, then repeat order.
 
     Unknown IDs (a renamed or retired query whose record is still in
     the directory) sort after the known ones, alphabetically, so the
     rebuild is deterministic whatever the directory holds.
     """
+    query_id, repeat = _split_research_record_id(record_id)
     for index, query in enumerate(BENCHMARK_QUERIES):
         if query["query_id"] == query_id:
-            return (index, query_id)
-    return (len(BENCHMARK_QUERIES), query_id)
+            return (index, f"{repeat:04d}")
+    return (len(BENCHMARK_QUERIES), record_id)
 
 
 def rebuild_summaries(
@@ -795,10 +896,11 @@ def rebuild_summaries(
 #: parameterization WO-W10 needed.
 RESEARCH_CAMPAIGN = CampaignShape(
     records_dirname="queries",
-    id_field="query_id",
+    id_field="record_id",
     summary_line=_summary_line,
     summary_markdown=_summary_markdown,
     order_key=_benchmark_order,
+    legacy_id_field="query_id",
 )
 
 
@@ -845,6 +947,20 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--repeats",
+        type=int,
+        default=1,
+        help=(
+            f"Runs per query. {REPEATS_FOR_CONFIDENCE} is the bar before "
+            "a delta against a baseline is believable on a benchmark "
+            "this small; the regression differ aggregates repeats by "
+            "query before diffing, so N repeats buy a tighter estimate "
+            "of one number rather than N separate comparisons "
+            "(ADR 0071). Default: 1. Note that N repeats cost N times "
+            "as much."
+        ),
+    )
+    parser.add_argument(
         "--max-budget-usd",
         type=float,
         default=None,
@@ -855,6 +971,29 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     return parser.parse_args(argv)
+
+
+def repeat_warning(repeats: int) -> str | None:
+    """The three-repeat warning, or `None` when the campaign earned silence.
+
+    The research lane's copy of the rule the learning lane has had since
+    WO-W10, and the reason `REPEATS_FOR_CONFIDENCE` was advertised in
+    code while no research campaign could act on it: until ADR 0071
+    there was no `--repeats` flag here at all.
+
+    It warns rather than refuses — one repeat is a perfectly good smoke
+    run, and it is only a *comparison against a baseline* that needs
+    three.
+    """
+    if repeats >= REPEATS_FOR_CONFIDENCE:
+        return None
+    return (
+        f"WARNING: this campaign ran {repeats} repeat(s) per query. "
+        f"{REPEATS_FOR_CONFIDENCE} repeats are the bar before a delta against "
+        "a baseline is believable on an LLM-judged benchmark this small "
+        '(planning/05-agentic-upgrade-plan.md, "Judge noise mandates repeat '
+        'runs"). Read single-run differences as noise, not as a regression.'
+    )
 
 
 def _check_output_dir(output_dir: Path, *, resume: bool) -> str | None:
@@ -970,6 +1109,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         return EXIT_CONFIG
 
+    if args.repeats < 1:
+        print("Error: --repeats must be at least 1.", file=sys.stderr)
+        return EXIT_USAGE
+
     selected = _select_queries(args.queries)
 
     # Pinned before the first query, so every record's `seed` field
@@ -988,13 +1131,27 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_USAGE
 
     already_done = load_records(output_dir) if args.resume else {}
-    pending = [q for q in selected if q["query_id"] not in already_done]
-    skipped = len(selected) - len(pending)
+    # One entry per (query, repeat), in query-major order so a
+    # budget-stopped campaign has every query's first repeat before it
+    # has any query's second — a truncated campaign that covered the
+    # whole benchmark once is worth far more than one that ran three
+    # repeats of the first third.
+    pending = [
+        (benchmark_query, repeat)
+        for repeat in range(1, args.repeats + 1)
+        for benchmark_query in selected
+        if research_record_id(benchmark_query["query_id"], repeat) not in already_done
+    ]
+    skipped = (len(selected) * args.repeats) - len(pending)
 
     print(
-        f"Eval run {run_id}: {len(pending)} queries -> {output_dir}"
+        f"Eval run {run_id}: {len(pending)} runs "
+        f"({len(selected)} queries x {args.repeats} repeat(s)) -> {output_dir}"
         + (f" (resuming, {skipped} already done)" if skipped else "")
     )
+    warning = repeat_warning(args.repeats)
+    if warning:
+        print(warning)
 
     attempted = 0
     errored = 0
@@ -1008,12 +1165,13 @@ def main(argv: list[str] | None = None) -> int:
     budget_stopped = False
     restore_handler = _install_interrupt_handler()
     try:
-        for i, benchmark_query in enumerate(pending, 1):
+        for i, (benchmark_query, repeat) in enumerate(pending, 1):
             print(
-                f"[{i}/{len(pending)}] {benchmark_query['query_id']}: "
+                f"[{i}/{len(pending)}] "
+                f"{research_record_id(benchmark_query['query_id'], repeat)}: "
                 f"{benchmark_query['query']}"
             )
-            record = _run_and_score(benchmark_query)
+            record = _run_and_score(benchmark_query, repeat=repeat)
             attempted += 1
             if record.get("error"):
                 errored += 1
@@ -1027,8 +1185,8 @@ def main(argv: list[str] | None = None) -> int:
                 budget_stopped = True
                 print(
                     f"\nBudget ceiling ${args.max_budget_usd:.2f} reached "
-                    f"(spent ${spend:.4f} over {attempted} queries). "
-                    f"Stopping — {len(pending) - i} queries not run."
+                    f"(spent ${spend:.4f} over {attempted} runs). "
+                    f"Stopping — {len(pending) - i} runs not made."
                 )
                 break
     except KeyboardInterrupt as exc:

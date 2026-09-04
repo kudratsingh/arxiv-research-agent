@@ -15,18 +15,30 @@ import pytest
 
 from src.eval.regression_diff import (
     DEFAULT_THRESHOLD,
+    EXIT_INCOMPARABLE,
+    EXIT_INVALID,
+    EXIT_OK,
+    EXIT_REGRESSION,
     LEARNING_LANE,
     LEARNING_RESOURCE_THRESHOLDS,
     METRIC_DIRECTIONS,
     METRIC_FIELDS,
+    QUANTUM_TOLERANCE,
     RESEARCH_LANE,
     RESOURCE_THRESHOLDS,
+    SCORE_QUANTA,
+    Comparability,
+    Decision,
     QueryDiff,
     RegressionReport,
+    aggregate_repeats,
+    check_comparability,
     diff_summaries,
     format_report,
+    load_rows,
     load_summary,
     main,
+    score_epsilon,
 )
 
 pytestmark = pytest.mark.unit
@@ -102,8 +114,11 @@ class TestDiffSummariesClassification:
         assert report["has_regressions"] is False
 
     def test_regression_when_metric_drops_beyond_threshold(self) -> None:
+        # `faithfulness` has no declared quantum, so it is judged on the
+        # flat epsilon. `completeness` is the quantised case and has its
+        # own tests below.
         baseline = {"q1": _line("q1", citation_accuracy=0.9, completeness=0.8, faithfulness=0.8)}
-        current = {"q1": _line("q1", citation_accuracy=0.9, completeness=0.5, faithfulness=0.8)}
+        current = {"q1": _line("q1", citation_accuracy=0.9, completeness=0.8, faithfulness=0.5)}
         report = diff_summaries(baseline, current, threshold=0.1)
         assert report["diffs"][0]["status"] == "regressed"
         assert report["has_regressions"] is True
@@ -542,6 +557,18 @@ class TestFormatReport:
                 "faithfulness": 0.0,
                 "critic_score": 0.0,
             },
+            # ADR 0071's additions. Hand-built here rather than derived,
+            # because these tests are about the renderer: a report the
+            # differ never produced still has to render.
+            comparability=Comparability(comparable=True, conflicts=(), notes=()),
+            statistics={},
+            reliability=[],
+            decision=Decision(
+                verdict="ROLLBACK" if has_regressions else "HOLD",
+                reasons=("fixture",),
+            ),
+            paired_tasks=1,
+            repeats=1,
         )
 
     def test_no_regressions_flag_reflected(self) -> None:
@@ -696,6 +723,8 @@ def _session(
     *,
     shame_free: bool | None = True,
     shame_free_score: float | None = None,
+    pedagogy_clean: bool | None = True,
+    pedagogy_violations: int | None = 0,
     downscope_honest: bool | None = None,
     plan_coherence: float | None = None,
     progress_events_evidence_linked: bool | None = True,
@@ -713,6 +742,8 @@ def _session(
         "record_id": record_id,
         "shame_free": shame_free,
         "shame_free_score": shame_free_score,
+        "pedagogy_clean": pedagogy_clean,
+        "pedagogy_violations": pedagogy_violations,
         "downscope_honest": downscope_honest,
         "plan_coherence": plan_coherence,
         "progress_events_evidence_linked": progress_events_evidence_linked,
@@ -772,6 +803,11 @@ class TestLearningLaneEveryGatedField:
         # field: (baseline value, worse value)
         "shame_free": (True, False),
         "shame_free_score": (0.90, 0.70),
+        # ADR 0072's pedagogy scan. Zero tolerance on the count, for the
+        # same reason `expectation_failures` has it: a banned pedagogy
+        # scalar in learner-facing copy is not run-to-run variance.
+        "pedagogy_clean": (True, False),
+        "pedagogy_violations": (0, 1),
         "downscope_honest": (True, False),
         "plan_coherence": (0.85, 0.60),
         "progress_events_evidence_linked": (True, False),
@@ -803,6 +839,33 @@ class TestLearningLaneEveryGatedField:
         report = _learning_diff(baseline, current)
         assert report["diffs"][0]["status"] == "improved", field
         assert report["has_regressions"] is False
+
+    def test_a_row_predating_the_pedagogy_scan_does_not_gate(self) -> None:
+        # `simulate_learner` writes `None` rather than `0` when a record
+        # predates ADR 0072 — "never scanned" and "scanned and clean" are
+        # different claims. A missing field must therefore read as an
+        # absent comparison, not as a clean one and not as a regression.
+        before = _session("s.r1")
+        del before["pedagogy_clean"]
+        del before["pedagogy_violations"]
+        after = _session("s.r1", pedagogy_clean=True, pedagogy_violations=0)
+        report = _learning_diff({"s.r1": before}, {"s.r1": after})
+        assert report["diffs"][0]["deltas"]["pedagogy_clean"] is None
+        assert report["diffs"][0]["status"] == "unchanged"
+        assert report["has_regressions"] is False
+
+    def test_an_explicit_null_pedagogy_scan_does_not_gate_either(self) -> None:
+        baseline = {"s.r1": _session("s.r1", pedagogy_clean=None, pedagogy_violations=None)}
+        current = {"s.r1": _session("s.r1", pedagogy_clean=True, pedagogy_violations=0)}
+        report = _learning_diff(baseline, current)
+        assert report["diffs"][0]["deltas"]["pedagogy_violations"] is None
+        assert report["has_regressions"] is False
+
+    def test_one_extra_pedagogy_hit_fires_at_zero_tolerance(self) -> None:
+        baseline = {"s.r1": _session("s.r1", pedagogy_clean=False, pedagogy_violations=1)}
+        current = {"s.r1": _session("s.r1", pedagogy_clean=False, pedagogy_violations=2)}
+        report = _learning_diff(baseline, current)
+        assert report["diffs"][0]["status"] == "regressed"
 
     def test_deterministic_outcome_booleans_aggregate_as_rates(self) -> None:
         # `_score` reads a bool as 1.0/0.0, so the aggregate of a
@@ -971,7 +1034,9 @@ class TestLaneIsolation:
         assert RESEARCH_LANE.metric_fields is METRIC_FIELDS
         assert RESEARCH_LANE.resource_thresholds is RESOURCE_THRESHOLDS
         assert RESEARCH_LANE.directions is METRIC_DIRECTIONS
-        assert RESEARCH_LANE.informational_fields == ()
+        # ADR 0071 demoted `critic_score` to a diagnostic; the lane's
+        # informational set is where a demoted metric lands.
+        assert RESEARCH_LANE.informational_fields == ("critic_score",)
         assert RESEARCH_LANE.cost_reference is None
 
     def test_a_learning_field_never_enters_the_research_field_set(self) -> None:
@@ -1007,3 +1072,543 @@ class TestLaneIsolation:
         )
         assert code == 1
         assert "# Learning-eval regression diff" in output.read_text()
+
+
+# ---------------------------------------------------------------------------
+# ADR 0071 — repeats, quanta, comparability, statistics and the decision
+# ---------------------------------------------------------------------------
+
+
+def _rows(*lines: dict[str, Any]) -> list[dict[str, Any]]:
+    """A campaign's raw summary rows, as `load_rows` would return them."""
+    return list(lines)
+
+
+def _repeat(query_id: str, repeat: int, **scores: Any) -> dict[str, Any]:
+    """One research row for `query_id`'s `repeat`-th run."""
+    row = _line(query_id, **scores)
+    row["record_id"] = query_id if repeat == 1 else f"{query_id}.r{repeat}"
+    row["repeat"] = repeat
+    return row
+
+
+def _provenanced(row: dict[str, Any], **overrides: Any) -> dict[str, Any]:
+    """A row carrying a complete-enough provenance block."""
+    block = {
+        "harness_version": "1.0.0",
+        "judge_model": "judge-a",
+        "product_model": "product-a",
+        "rubric_versions": {"completeness": "1.0"},
+        "code_commit": "c0ffee",
+        "code_dirty": False,
+        "dataset_version": "research-benchmark@20:abc",
+        "tier": "research",
+        "seed": 0,
+        "mock_mode": False,
+        "captured_at": "2026-09-04T00:00:00+00:00",
+    }
+    block.update(overrides)
+    return {**row, "provenance": block}
+
+
+class TestRepeatAggregation:
+    def test_repeats_of_one_query_become_one_task(self) -> None:
+        rows = _rows(
+            _repeat("q1", 1, faithfulness=0.6),
+            _repeat("q1", 2, faithfulness=0.8),
+            _repeat("q1", 3, faithfulness=0.7),
+        )
+        aggregated = aggregate_repeats(rows, lane=RESEARCH_LANE)
+        assert set(aggregated) == {"q1"}
+        assert aggregated["q1"]["faithfulness"] == pytest.approx(0.7)
+        assert aggregated["q1"]["_repeats"] == 3
+
+    def test_a_single_repeat_campaign_is_unchanged_by_aggregation(self) -> None:
+        # Every campaign written before ADR 0071 must read exactly as it
+        # did: the mean of one value is that value.
+        row = _line("q1", faithfulness=0.61, cost_usd=0.5)
+        aggregated = aggregate_repeats(_rows(row), lane=RESEARCH_LANE)
+        assert aggregated["q1"]["faithfulness"] == pytest.approx(0.61)
+        assert aggregated["q1"]["cost_usd"] == pytest.approx(0.5)
+        assert aggregated["q1"]["_repeats"] == 1
+
+    def test_nulls_shrink_the_mean_s_denominator_not_the_task(self) -> None:
+        rows = _rows(
+            _repeat("q1", 1, faithfulness=0.6),
+            _repeat("q1", 2, faithfulness=None),
+        )
+        aggregated = aggregate_repeats(rows, lane=RESEARCH_LANE)
+        assert aggregated["q1"]["faithfulness"] == pytest.approx(0.6)
+        assert aggregated["q1"]["_repeat_values"]["faithfulness"] == (0.6,)
+
+    def test_a_task_survives_one_errored_repeat(self) -> None:
+        rows = _rows(
+            _repeat("q1", 1, faithfulness=0.6),
+            _repeat("q1", 2, error="boom"),
+        )
+        aggregated = aggregate_repeats(rows, lane=RESEARCH_LANE)
+        # Two good runs and one failure is a measurement of the good
+        # ones, and the failure count says so rather than the mean
+        # absorbing it.
+        assert aggregated["q1"]["error"] is None
+        assert aggregated["q1"]["_errored_repeats"] == 1
+
+    def test_a_task_whose_every_repeat_errored_is_an_errored_task(self) -> None:
+        rows = _rows(
+            _repeat("q1", 1, error="boom"),
+            _repeat("q1", 2, error="boom again"),
+        )
+        aggregated = aggregate_repeats(rows, lane=RESEARCH_LANE)
+        assert aggregated["q1"]["error"] == "boom"
+        assert aggregated["q1"]["_errored_repeats"] == 2
+
+    def test_the_learning_lane_groups_on_scenario_id(self) -> None:
+        rows = _rows(
+            {**_session("s1.r1", shame_free=True), "scenario_id": "s1"},
+            {**_session("s1.r2", shame_free=False), "scenario_id": "s1"},
+            {**_session("s2.r1", shame_free=True), "scenario_id": "s2"},
+        )
+        aggregated = aggregate_repeats(rows, lane=LEARNING_LANE)
+        assert set(aggregated) == {"s1", "s2"}
+        assert aggregated["s1"]["shame_free"] == pytest.approx(0.5)
+
+    def test_a_row_with_no_task_column_falls_back_to_its_record_id(self) -> None:
+        # Safe direction: such a campaign aggregates nothing rather than
+        # collapsing unrelated records together.
+        rows = _rows(_session("s1.r1"), _session("s1.r2"))
+        aggregated = aggregate_repeats(rows, lane=LEARNING_LANE)
+        assert set(aggregated) == {"s1.r1", "s1.r2"}
+
+    def test_load_summary_aggregates_a_repeated_campaign_from_disk(
+        self, tmp_path: Path
+    ) -> None:
+        path = tmp_path / "summary.jsonl"
+        path.write_text(
+            "\n".join(
+                json.dumps(row)
+                for row in (
+                    _repeat("q1", 1, faithfulness=0.4),
+                    _repeat("q1", 2, faithfulness=0.6),
+                )
+            )
+        )
+        assert len(load_rows(path)) == 2
+        aggregated = load_summary(path)
+        assert set(aggregated) == {"q1"}
+        assert aggregated["q1"]["faithfulness"] == pytest.approx(0.5)
+
+    def test_three_identical_repeats_give_a_zero_width_interval(self) -> None:
+        # ADR 0071's acceptance criterion. Three repeats of identical
+        # rows must produce no regression and an interval of zero width:
+        # nothing moved, and no resample can move it.
+        rows = _rows(
+            *(_repeat(qid, r, faithfulness=0.8, completeness=0.75)
+              for qid in ("q1", "q2", "q3")
+              for r in (1, 2, 3))
+        )
+        aggregated = aggregate_repeats(rows, lane=RESEARCH_LANE)
+        report = diff_summaries(dict(aggregated), dict(aggregated))
+        assert report["has_regressions"] is False
+        assert report["repeats"] == 3
+        interval = report["statistics"]["faithfulness"].bootstrap.interval
+        assert interval.width == pytest.approx(0.0)
+        assert report["decision"].verdict == "HOLD"
+
+
+class TestQuantisedEpsilon:
+    def test_the_declared_quanta_match_the_benchmark_denominator(self) -> None:
+        # `completeness` and `retrieval_recall` are both
+        # `matched / len(expected_topics)`, and the coarsest topic list
+        # in the benchmark decides the band a query can take in one step.
+        from src.eval.benchmark_queries import BENCHMARK_QUERIES
+
+        coarsest = max(1.0 / len(q["expected_topics"]) for q in BENCHMARK_QUERIES)
+        assert set(SCORE_QUANTA) == {"completeness", "retrieval_recall"}
+        for quantum in SCORE_QUANTA.values():
+            assert quantum == pytest.approx(coarsest)
+
+    def test_a_quantised_metric_gets_a_wider_band_than_the_flat_epsilon(self) -> None:
+        assert score_epsilon("completeness", 0.10) == pytest.approx(
+            QUANTUM_TOLERANCE * SCORE_QUANTA["completeness"]
+        )
+        assert score_epsilon("faithfulness", 0.10) == pytest.approx(0.10)
+
+    def test_a_coarse_metric_never_gets_a_narrower_band_than_judge_noise(self) -> None:
+        # A very large `--threshold` still wins: the quantum widens the
+        # band, it does not cap it.
+        assert score_epsilon("completeness", 0.90) == pytest.approx(0.90)
+
+    def test_one_flipped_topic_decision_no_longer_trips_the_gate(self) -> None:
+        # ADR 0071's acceptance criterion, and the defect ADR 0044 left
+        # open: `completeness` moves in steps of 0.25, so under a flat
+        # 0.10 band a single borderline topic decision flipping was a
+        # guaranteed red.
+        baseline = {"q1": _line("q1", completeness=0.75, faithfulness=0.8)}
+        current = {"q1": _line("q1", completeness=0.50, faithfulness=0.8)}
+        report = diff_summaries(baseline, current, threshold=0.10)
+        assert report["diffs"][0]["status"] == "unchanged"
+        assert report["has_regressions"] is False
+
+    def test_two_flipped_topic_decisions_still_do(self) -> None:
+        baseline = {"q1": _line("q1", completeness=0.75, faithfulness=0.8)}
+        current = {"q1": _line("q1", completeness=0.25, faithfulness=0.8)}
+        report = diff_summaries(baseline, current, threshold=0.10)
+        assert report["diffs"][0]["status"] == "regressed"
+        assert report["has_regressions"] is True
+
+    def test_the_quantised_band_is_symmetric_for_improvements(self) -> None:
+        baseline = {"q1": _line("q1", completeness=0.25, faithfulness=0.8)}
+        one_step = {"q1": _line("q1", completeness=0.50, faithfulness=0.8)}
+        two_steps = {"q1": _line("q1", completeness=0.75, faithfulness=0.8)}
+        assert diff_summaries(baseline, one_step)["diffs"][0]["status"] == "unchanged"
+        assert diff_summaries(baseline, two_steps)["diffs"][0]["status"] == "improved"
+
+    def test_the_report_states_the_derived_bands(self) -> None:
+        md = format_report(
+            diff_summaries(
+                {"q1": _line("q1", completeness=0.75)},
+                {"q1": _line("q1", completeness=0.75)},
+            )
+        )
+        assert "quantum" in md
+        assert "`completeness` > 0.38" in md
+
+
+class TestCriticScoreIsADiagnostic:
+    def test_a_critic_collapse_alone_does_not_fail_the_gate(self) -> None:
+        # `critic.py` coerces an unparseable judge response to 0.0, which
+        # arrives here as a full-scale quality collapse indistinguishable
+        # from a real one — and it is the product grading its own output.
+        baseline = {"q1": _line("q1", critic_score=0.9, faithfulness=0.8)}
+        current = {"q1": _line("q1", critic_score=0.0, faithfulness=0.8)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "unchanged"
+        assert report["has_regressions"] is False
+
+    def test_it_is_still_diffed_and_still_printed(self) -> None:
+        baseline = {"q1": _line("q1", critic_score=0.9, faithfulness=0.8)}
+        current = {"q1": _line("q1", critic_score=0.0, faithfulness=0.8)}
+        report = diff_summaries(baseline, current)
+        assert report["aggregate_deltas"]["critic_score"] == pytest.approx(-0.9)
+        md = format_report(report)
+        assert "critic_score *(not gated)*" in md
+
+    def test_critic_score_is_absent_from_the_gated_field_set(self) -> None:
+        assert "critic_score" not in METRIC_FIELDS
+        assert "critic_score" in RESEARCH_LANE.tabulated_fields
+
+
+class TestComparability:
+    def test_matching_provenance_compares(self) -> None:
+        baseline = {"q1": _provenanced(_line("q1", faithfulness=0.8))}
+        current = {"q1": _provenanced(_line("q1", faithfulness=0.8))}
+        verdict = check_comparability(baseline, current)
+        assert verdict.comparable is True
+        assert verdict.conflicts == ()
+
+    def test_a_moved_judge_refuses_the_comparison(self) -> None:
+        baseline = {"q1": _provenanced(_line("q1", faithfulness=0.8))}
+        current = {
+            "q1": _provenanced(_line("q1", faithfulness=0.3), judge_model="judge-b")
+        }
+        verdict = check_comparability(baseline, current)
+        assert verdict.comparable is False
+        assert any("judge_model" in conflict for conflict in verdict.conflicts)
+
+    @pytest.mark.parametrize(
+        "field",
+        ["judge_model", "dataset_version", "tier", "mock_mode"],
+    )
+    def test_every_instrument_field_refuses(self, field: str) -> None:
+        baseline = {"q1": _provenanced(_line("q1"))}
+        current = {"q1": _provenanced(_line("q1"), **{field: "moved"})}
+        assert check_comparability(baseline, current).comparable is False
+
+    def test_a_bumped_rubric_version_refuses(self) -> None:
+        baseline = {"q1": _provenanced(_line("q1"))}
+        current = {
+            "q1": _provenanced(_line("q1"), rubric_versions={"completeness": "2.0"})
+        }
+        verdict = check_comparability(baseline, current)
+        assert verdict.comparable is False
+        assert any("rubric_versions" in c for c in verdict.conflicts)
+
+    def test_rubric_key_order_is_not_a_conflict(self) -> None:
+        baseline = {"q1": _provenanced(_line("q1"), rubric_versions={"a": "1", "b": "2"})}
+        current = {"q1": _provenanced(_line("q1"), rubric_versions={"b": "2", "a": "1"})}
+        assert check_comparability(baseline, current).comparable is True
+
+    def test_a_block_missing_a_field_contributes_no_value_for_it(self) -> None:
+        # A block written by an older harness can lack a field this
+        # check reads. Absence contributes nothing rather than an
+        # empty-string value that would look like a disagreement.
+        thin = dict(_provenanced(_line("q1")))
+        del thin["provenance"]["tier"]
+        verdict = check_comparability({"q1": thin}, {"q1": _provenanced(_line("q1"))})
+        assert verdict.comparable is True
+
+    def test_a_moved_product_model_is_a_note_not_a_refusal(self) -> None:
+        # It is usually the *subject* of the comparison.
+        baseline = {"q1": _provenanced(_line("q1"))}
+        current = {"q1": _provenanced(_line("q1"), product_model="product-b")}
+        verdict = check_comparability(baseline, current)
+        assert verdict.comparable is True
+        assert any("product model differs" in note for note in verdict.notes)
+
+    def test_a_dirty_tree_is_a_note(self) -> None:
+        baseline = {"q1": _provenanced(_line("q1"), code_dirty=True)}
+        current = {"q1": _provenanced(_line("q1"))}
+        verdict = check_comparability(baseline, current)
+        assert verdict.comparable is True
+        assert any("dirty working tree" in note for note in verdict.notes)
+
+    def test_a_campaign_that_disagrees_with_itself_refuses(self) -> None:
+        # `--resume` can re-enter a campaign under a different judge.
+        rows = _rows(
+            _provenanced(_repeat("q1", 1, faithfulness=0.8)),
+            _provenanced(_repeat("q1", 2, faithfulness=0.8), judge_model="judge-b"),
+        )
+        aggregated = aggregate_repeats(rows, lane=RESEARCH_LANE)
+        verdict = check_comparability(aggregated, aggregated)
+        assert verdict.comparable is False
+        assert any("disagrees with itself" in c for c in verdict.conflicts)
+
+    def test_absent_provenance_is_unknown_not_incomparable(self) -> None:
+        # Refusing here would turn every pre-ADR-0070 baseline into a
+        # permanent red.
+        baseline = {"q1": _line("q1", faithfulness=0.8)}
+        current = {"q1": _provenanced(_line("q1", faithfulness=0.8))}
+        verdict = check_comparability(baseline, current)
+        assert verdict.comparable is True
+        assert any("carries a provenance block" in note for note in verdict.notes)
+
+    def test_an_incomparable_run_reaches_no_verdict(self) -> None:
+        baseline = {"q1": _provenanced(_line("q1", faithfulness=0.9))}
+        current = {
+            "q1": _provenanced(_line("q1", faithfulness=0.1), judge_model="judge-b")
+        }
+        report = diff_summaries(baseline, current)
+        assert report["decision"].verdict == "HOLD"
+        assert "not produced by the same instrument" in report["decision"].reasons[0]
+        md = format_report(report)
+        assert "refused to compare them" in md
+
+    def test_the_cli_exits_three_when_the_runs_are_incomparable(
+        self, tmp_path: Path
+    ) -> None:
+        baseline = tmp_path / "b.jsonl"
+        current = tmp_path / "c.jsonl"
+        baseline.write_text(json.dumps(_provenanced(_line("q1", faithfulness=0.9))))
+        current.write_text(
+            json.dumps(
+                _provenanced(_line("q1", faithfulness=0.1), judge_model="judge-b")
+            )
+        )
+        assert main([str(baseline), str(current)]) == EXIT_INCOMPARABLE
+
+
+class TestStatisticsAndDecision:
+    def test_an_unchanged_small_campaign_holds_rather_than_promoting(self) -> None:
+        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(20)}
+        report = diff_summaries(dict(rows), dict(rows))
+        assert report["decision"].verdict == "HOLD"
+        assert "cannot detect" in report["decision"].reasons[0]
+
+    def test_a_large_enough_clean_comparison_promotes(self) -> None:
+        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(200)}
+        report = diff_summaries(dict(rows), dict(rows))
+        assert report["decision"].verdict == "PROMOTE"
+
+    def test_a_regression_rolls_back_and_names_the_query(self) -> None:
+        baseline = {"q1": _line("q1", faithfulness=0.9)}
+        current = {"q1": _line("q1", faithfulness=0.5)}
+        report = diff_summaries(baseline, current)
+        assert report["decision"].verdict == "ROLLBACK"
+        assert "q1" in report["decision"].reasons[0]
+        assert main_code(report) == EXIT_REGRESSION
+
+    def test_a_missing_baseline_holds(self) -> None:
+        report = diff_summaries({}, {"q1": _line("q1", faithfulness=0.8)})
+        assert report["decision"].verdict == "HOLD"
+        assert "nothing was compared" in report["decision"].reasons[0]
+
+    def test_a_sub_band_move_whose_interval_excludes_zero_holds(self) -> None:
+        # Every query moved down by the same 0.05 — below the 0.10 band,
+        # so nothing gates, but no resample can put zero in the interval.
+        # Promoting on that would be the gate saying "fine" about a
+        # movement it can see.
+        baseline = {f"q{i}": _line(f"q{i}", faithfulness=0.80) for i in range(200)}
+        current = {f"q{i}": _line(f"q{i}", faithfulness=0.75) for i in range(200)}
+        report = diff_summaries(baseline, current)
+        assert report["has_regressions"] is False
+        assert report["decision"].verdict == "HOLD"
+        assert "excludes zero" in report["decision"].reasons[0]
+
+    def test_the_primary_metric_always_gets_an_interval(self) -> None:
+        rows = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.9)}
+        report = diff_summaries(dict(rows), dict(rows))
+        assert set(report["statistics"]) == {"faithfulness"}
+        assert report["statistics"]["faithfulness"].primary is True
+
+    def test_a_metric_that_moved_down_gets_a_diagnostic_interval(self) -> None:
+        baseline = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.9)}
+        current = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.85)}
+        report = diff_summaries(baseline, current)
+        assert set(report["statistics"]) == {"faithfulness", "citation_accuracy"}
+        assert report["statistics"]["citation_accuracy"].primary is False
+
+    def test_a_metric_that_improved_gets_no_interval(self) -> None:
+        # Twenty simultaneous per-metric tests on twenty queries
+        # manufacture false alarms by arithmetic, so slices are only
+        # analysed where a reader is about to ask "is that real?".
+        baseline = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.5)}
+        current = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.9)}
+        report = diff_summaries(baseline, current)
+        assert "citation_accuracy" not in report["statistics"]
+
+    def test_mcnemar_appears_for_a_binary_metric_and_not_a_ratio(self) -> None:
+        binary = {
+            f"s{i}": {**_session(f"s{i}.r1", shame_free=i % 2 == 0), "scenario_id": f"s{i}"}
+            for i in range(6)
+        }
+        moved = {
+            f"s{i}": {**_session(f"s{i}.r1", shame_free=True), "scenario_id": f"s{i}"}
+            for i in range(6)
+        }
+        report = diff_summaries(binary, moved, lane=LEARNING_LANE)
+        test = report["statistics"]["shame_free"].mcnemar
+        assert test is not None
+        assert test.candidate_only == 3
+        assert test.baseline_only == 0
+
+        ratio = {"q1": _line("q1", faithfulness=0.83)}
+        assert diff_summaries(ratio, ratio)["statistics"]["faithfulness"].mcnemar is None
+
+    def test_the_seed_makes_the_interval_reproducible(self) -> None:
+        baseline = {f"q{i}": _line(f"q{i}", faithfulness=0.5 + i / 40) for i in range(10)}
+        current = {f"q{i}": _line(f"q{i}", faithfulness=0.6 + i / 40) for i in range(10)}
+        first = diff_summaries(baseline, current, seed=42)
+        second = diff_summaries(baseline, current, seed=42)
+        assert (
+            first["statistics"]["faithfulness"].bootstrap.interval
+            == second["statistics"]["faithfulness"].bootstrap.interval
+        )
+
+    def test_the_report_carries_the_decision_power_and_caveat(self) -> None:
+        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(20)}
+        md = format_report(diff_summaries(dict(rows), dict(rows)))
+        assert "## Decision" in md
+        assert "### HOLD" in md
+        assert "**Power.**" in md
+        assert "77 pairs" in md
+        assert "906" in md
+        assert "approximate at n=20" in md
+
+    def test_the_report_states_the_rule_of_three_on_a_clean_sweep(self) -> None:
+        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(20)}
+        md = format_report(diff_summaries(dict(rows), dict(rows)))
+        assert "Zero failures in 20 runs" in md
+        assert "15.0%" in md
+
+    def test_pass_k_is_reported_beside_a_success_rate(self) -> None:
+        rows = aggregate_repeats(
+            _rows(
+                *(
+                    {
+                        **_session(f"s{i}.r{r}", shame_free=not (i == 0 and r == 1)),
+                        "scenario_id": f"s{i}",
+                    }
+                    for i in range(4)
+                    for r in (1, 2, 3)
+                )
+            ),
+            lane=LEARNING_LANE,
+        )
+        report = diff_summaries(dict(rows), dict(rows), lane=LEARNING_LANE)
+        shame = next(r for r in report["reliability"] if r.label == "`shame_free`")
+        assert shame.repeats == 3
+        # Three scenarios are clean (pass^3 = 1) and one had a failure,
+        # so its pass^3 is C(2,3)/C(3,3) = 0 — mean 0.75.
+        assert shame.pass_k == pytest.approx(0.75)
+        assert "pass^k" in format_report(report)
+
+    def test_a_resource_metric_is_never_read_as_a_success_rate(self) -> None:
+        # The scripted tier spends $0.00 on every session; calling that a
+        # 0% success rate would be arithmetic dressed as a finding.
+        rows = {
+            f"s{i}": {**_session(f"s{i}.r1", cost_usd=0.0), "scenario_id": f"s{i}"}
+            for i in range(4)
+        }
+        report = diff_summaries(dict(rows), dict(rows), lane=LEARNING_LANE)
+        labels = [rate.label for rate in report["reliability"]]
+        assert "`cost_usd`" not in labels
+        assert "`expectation_failures`" not in labels
+        assert "`shame_free`" in labels
+
+
+class TestTheGateMakesNoModelCall:
+    def test_the_whole_diff_runs_with_every_llm_entry_point_broken(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # ADR 0071 and 02-STANDARDS.md §3.4: content-preserving wrappers
+        # flip 57-100% of LLM-judge verdicts, so a judge inside a gate is
+        # an attack surface rather than a control. This is that rule as
+        # an assertion instead of an intention.
+        import src.llm as llm_module
+
+        def _explode(*args: Any, **kwargs: Any) -> Any:
+            raise AssertionError("the regression gate called a model")
+
+        monkeypatch.setattr(llm_module, "call_llm", _explode)
+        monkeypatch.setattr(llm_module, "call_llm_json", _explode)
+        monkeypatch.setattr(llm_module, "_get_client", _explode)
+
+        baseline = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(5)}
+        current = {f"q{i}": _line(f"q{i}", faithfulness=0.4) for i in range(5)}
+        report = diff_summaries(baseline, current)
+        assert report["decision"].verdict == "ROLLBACK"
+        assert format_report(report)
+
+    def test_stats_imports_nothing_from_the_product(self) -> None:
+        # A gate whose statistics module can reach the graph is a gate
+        # that can be made to run one.
+        source = (
+            Path(__file__).resolve().parents[1] / "src" / "eval" / "stats.py"
+        ).read_text()
+        assert "import src." not in source
+        assert "from src." not in source
+
+
+def main_code(report: RegressionReport) -> int:
+    """The exit status `main` would return for `report`."""
+    if not report["comparability"].comparable:
+        return EXIT_INCOMPARABLE
+    return EXIT_REGRESSION if report["decision"].verdict == "ROLLBACK" else EXIT_OK
+
+
+class TestCliStatuses:
+    def test_a_clean_run_exits_zero(self, tmp_path: Path) -> None:
+        baseline = tmp_path / "b.jsonl"
+        current = tmp_path / "c.jsonl"
+        baseline.write_text(json.dumps(_line("q1", faithfulness=0.8)))
+        current.write_text(json.dumps(_line("q1", faithfulness=0.8)))
+        assert main([str(baseline), str(current)]) == EXIT_OK
+
+    def test_a_missing_current_file_exits_invalid(self, tmp_path: Path) -> None:
+        assert main([str(tmp_path / "b.jsonl"), str(tmp_path / "nope.jsonl")]) == (
+            EXIT_INVALID
+        )
+
+    def test_malformed_jsonl_exits_invalid(self, tmp_path: Path) -> None:
+        baseline = tmp_path / "b.jsonl"
+        current = tmp_path / "c.jsonl"
+        baseline.write_text("{not json")
+        current.write_text(json.dumps(_line("q1", faithfulness=0.8)))
+        assert main([str(baseline), str(current)]) == EXIT_INVALID
+
+    def test_the_seed_flag_is_accepted(self, tmp_path: Path) -> None:
+        baseline = tmp_path / "b.jsonl"
+        current = tmp_path / "c.jsonl"
+        baseline.write_text(json.dumps(_line("q1", faithfulness=0.8)))
+        current.write_text(json.dumps(_line("q1", faithfulness=0.8)))
+        assert main([str(baseline), str(current), "--seed", "7"]) == EXIT_OK

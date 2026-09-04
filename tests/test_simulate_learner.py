@@ -1246,7 +1246,12 @@ class TestCampaignShapeIsolation:
         from src.eval.runner import RESEARCH_CAMPAIGN
 
         assert RESEARCH_CAMPAIGN.records_dirname == "queries"
-        assert RESEARCH_CAMPAIGN.id_field == "query_id"
+        # ADR 0071 gave the research campaign a repeat dimension, so its
+        # records are keyed by `record_id` like this campaign's. The
+        # legacy fallback is what keeps that additive: a record carrying
+        # only `query_id` still persists and resumes under the same key.
+        assert RESEARCH_CAMPAIGN.id_field == "record_id"
+        assert RESEARCH_CAMPAIGN.legacy_id_field == "query_id"
         assert sim.SIMULATION_CAMPAIGN.records_dirname == "scenarios"
         assert sim.SIMULATION_CAMPAIGN.id_field == "record_id"
 

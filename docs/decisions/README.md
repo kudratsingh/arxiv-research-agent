@@ -155,6 +155,11 @@ never renumbered.
   config model defaults; nightly regression gate split by metric
   class — score epsilon per ADR 0010, two-leg absolute+relative
   bands for counts/dollars. Revisits ADR 0010; follows ADR 0012.
+  **Regression-gate half superseded by
+  [ADR 0071](0071-eval-statistics-and-gates.md)** — the flat score
+  epsilon is replaced by a per-quantum band, `critic_score` is demoted,
+  repeats are aggregated, and the gate ends in a three-state decision.
+  Its price-table half and its metric-class split stand.
 - [0045](0045-supply-chain-pinning-lockfile-and-license-posture.md) —
   Supply-chain hardening: bounded version ranges +
   `requirements-lock.txt` (CI installs the lock), explicit `src`
@@ -367,13 +372,6 @@ never renumbered.
   routing warns when pricing is missing, and session node spans carry
   cumulative and delta cost/call attributes.
 - [0063](0063-pilot-principal-edge-mapping.md) — A default-off, topology-guarded
-- [0064](0064-error-taxonomy-and-envelope.md) — every failure that leaves the process carries a stable code from a closed set, and an envelope carries it.
-- [0065](0065-test-isolation-and-coverage-floor.md) — the suite cannot reach the network, a real model client, or a developer `.env`; coverage has a measured floor that only ratchets up.
-- [0066](0066-genai-semantic-conventions.md) — telemetry uses the OpenTelemetry GenAI names, and a job is one trace from submit to model call.
-- [0067](0067-correlation-context-and-log-contract.md) — one correlation context for every signal, with an allowlisted, size-capped, redacted log payload.
-- [0068](0068-resilience-policy.md) — retry at one level per dependency, on a shared budget, with Full Jitter; a token bucket rather than a circuit breaker.
-- [0069](0069-property-based-testing.md) — invariants over generated input for the parsers, redaction, config and frame encoding.
-- [0070](0070-eval-integrity-provenance.md) — pinned judges, versioned rubrics, and a provenance block on every eval row.
   mapping at MT-01 seam S1: the pilot edge authenticates one `basic_auth` user
   per pilot and forwards the username, and `resolveUpstreamPrincipal` maps it
   to that pilot's per-principal API key from a server-side env map. Only the
@@ -381,6 +379,28 @@ never renumbered.
   secret; an ambiguous configuration, an unknown username and a sixth pilot all
   refuse to serve rather than falling back to the shared key. **To be superseded
   by MT-01** — it is a hand-run slice of L0-03, not a foundation for one.
+- [0064](0064-error-taxonomy-and-envelope.md) — every failure that leaves the process carries a stable code from a closed set, and an envelope carries it.
+- [0065](0065-test-isolation-and-coverage-floor.md) — the suite cannot reach the network, a real model client, or a developer `.env`; coverage has a measured floor that only ratchets up.
+- [0066](0066-genai-semantic-conventions.md) — telemetry uses the OpenTelemetry GenAI names, and a job is one trace from submit to model call.
+- [0067](0067-correlation-context-and-log-contract.md) — one correlation context for every signal, with an allowlisted, size-capped, redacted log payload.
+- [0068](0068-resilience-policy.md) — retry at one level per dependency, on a shared budget, with Full Jitter; a token bucket rather than a circuit breaker.
+- [0069](0069-property-based-testing.md) — invariants over generated input for the parsers, redaction, config and frame encoding.
+- [0070](0070-eval-integrity-provenance.md) — pinned judges, versioned rubrics, and a provenance block on every eval row.
+- [0071](0071-eval-statistics-and-gates.md) — Eval statistics and
+  aggregate gates: the comparison is paired (906 items per arm unpaired
+  versus 77 paired — both reproduced by `src/eval/stats.py` rather than
+  quoted), repeats are aggregated by task on both lanes before anything
+  is diffed and the research runner gains `--repeats`, the score epsilon
+  is derived from each metric's quantum so one flipped topic decision
+  passes and two fire, `critic_score` is demoted from gate to
+  diagnostic, two runs whose provenance says they are not comparable are
+  refused rather than diffed, and the report ends in PROMOTE / HOLD /
+  ROLLBACK carrying an interval, `pass^k`, the rule of three, and an
+  explicit statement that at N=20 the central-limit approximation
+  underestimates uncertainty. Zero model calls inside the gate.
+  **Supersedes the regression-gate half of
+  [ADR 0044](0044-eval-cost-accuracy-and-regression-thresholds.md)**;
+  follows ADR 0070.
 
 ## When to write an ADR
 
