@@ -381,6 +381,57 @@ def _initial_state(query: str, run_id: str, *, prior_context: str = "") -> Resea
     }
 
 
+def terminal_event_data(job: Job) -> dict[str, Any]:
+    """The one payload shape a terminal SSE frame has (WO-A10).
+
+    Before this there were two, and they disagreed. The runner's *live*
+    `job_completed` carried `iterations` / `quality_score` /
+    `llm_calls`; the route's *replay* — the frame a client gets when it
+    reconnects after the job ended — carried `status` / `error` /
+    `error_type` instead. Neither was wrong on its own; together they
+    meant a browser that read `data.status` off the live frame got a
+    `KeyError`, and one that read `data.quality_score` off the replay
+    got `undefined`, for the same event name on the same endpoint. Which
+    one a client saw depended on whether it was connected when the job
+    ended, i.e. on a race.
+
+    So: one function, and the union of the two field sets rather than
+    the intersection. The union, because every field was already load
+    bearing for somebody — dropping `quality_score` would blind the
+    live stream and dropping `status` would blind the reconnect — and
+    because a frame is one small JSON object emitted once per job, so
+    the cost of carrying eleven fields instead of six is nothing set
+    against a client that has to branch on which shape it got.
+
+    It lives in this module rather than in `routes.py` because
+    `routes.py` already imports `run_job` from here; the reverse import
+    would be a cycle.
+
+    Args:
+        job: A job in a terminal state, with its cost snapshot already
+            written onto the row.
+
+    Returns:
+        The `data` object for `job_completed` / `job_failed` /
+        `job_cancelled`. Keys are always present; values may be `None`
+        for a field the job never acquired, which is what lets a client
+        read a key unconditionally.
+    """
+    return {
+        "job_id": job.job_id,
+        "status": job.status.value,
+        "elapsed_sec": job.elapsed_sec(),
+        "error": job.error,
+        "error_type": job.error_type,
+        "cost_cap_status": job.cost_cap_status,
+        "cost_cap_message": job.cost_cap_message,
+        "iterations": job.iterations,
+        "quality_score": job.quality_score,
+        "cost_usd": job.cost_usd,
+        "llm_calls": job.llm_calls,
+    }
+
+
 async def _put_event(job: Job, event: str, data: dict[str, Any]) -> None:
     """Emit an event to whichever SSE delivery mechanism is active.
 
@@ -1776,17 +1827,11 @@ async def run_job(
                     job.error = None
                     job.error_type = None
                     await _persist_terminal(store, job)
+                    # WO-A10: the same builder the reconnect replay uses,
+                    # so a degraded close reads identically whether the
+                    # learner's tab was open when it happened.
                     await _put_terminal_event(
-                        job,
-                        "job_completed",
-                        {
-                            "job_id": job.job_id,
-                            "cost_usd": job.cost_usd,
-                            "llm_calls": job.llm_calls,
-                            "elapsed_sec": job.elapsed_sec(),
-                            "cost_cap_status": job.cost_cap_status,
-                            "cost_cap_message": job.cost_cap_message,
-                        },
+                        job, "job_completed", terminal_event_data(job)
                     )
                 else:
                     job.status = JobStatus.failed
@@ -2033,18 +2078,10 @@ async def run_job(
                         exc_info=True,
                     )
 
-            await _put_terminal_event(
-                job,
-                "job_completed",
-                {
-                    "job_id": job.job_id,
-                    "iterations": job.iterations,
-                    "quality_score": job.quality_score,
-                    "cost_usd": job.cost_usd,
-                    "llm_calls": job.llm_calls,
-                    "elapsed_sec": job.elapsed_sec(),
-                },
-            )
+            # WO-A10: one shape for the live frame and the replay. See
+            # `terminal_event_data` for what the two used to disagree
+            # about and why the union rather than the intersection.
+            await _put_terminal_event(job, "job_completed", terminal_event_data(job))
             log.info(
                 "api_job_completed",
                 extra={

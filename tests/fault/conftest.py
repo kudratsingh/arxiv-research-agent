@@ -63,6 +63,12 @@ LIVE_INSTRUMENTS: frozenset[str] = frozenset(
         "llm_retries_total",
         "llm_upstream_errors_total",
         "rate_limit_rejections_total",
+        # WO-A10's HTTP RED histogram. Stable-conventions naming, and
+        # the one instrument in this set that can see a failure which
+        # never became a job — which is exactly the gap
+        # `test_redis_faults.py`'s submit scenario had recorded as an
+        # empty metric leg.
+        "http.server.request.duration",
     }
 )
 

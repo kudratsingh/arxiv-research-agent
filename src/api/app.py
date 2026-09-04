@@ -9,6 +9,12 @@ The factory takes injectable overrides for `build_workflow` and
 `store` so tests can stub without patching `src.graph.workflow` or
 `src.api.redis_store`.
 
+It also owns the HTTP edge's observability: `ObservabilityMiddleware`
+mints or adopts a request id, binds the ADR 0067 correlation context,
+extracts inbound W3C trace context, records the RED metrics keyed on
+the route template, and emits the one structured access line that
+replaces uvicorn's (WO-A10).
+
 The lifespan also runs the ADR-0038 startup redriver before serving
 traffic, so jobs orphaned by the previous generation of workers are
 reconciled (and their SSE clients unhung) rather than left claiming
@@ -24,24 +30,30 @@ import asyncio
 import contextlib
 import inspect
 import random
+import re
+import time
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Final
 
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from opentelemetry import trace
+from starlette.datastructures import Headers, MutableHeaders
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from src.api.auth import (
     ApiKeyPrincipal,
     KeystoreReloader,
     build_rate_limiter,
     parse_api_keys,
+    require_principal,
 )
 from src.api.conversations import (
     ConversationStore,
@@ -83,13 +95,32 @@ from src.learning.progress_store import (
     build_progress_event_store,
 )
 from src.observability import get_logger
+from src.observability.context import (
+    bind_context,
+    hash_principal,
+    reset_context,
+)
 from src.observability.metrics import (
     configure_metrics,
     metrics_enabled,
+    record_http_active_request,
+    record_http_server_request,
     register_runtime_gauges,
     shutdown_metrics,
 )
-from src.observability.tracing import shutdown_tracing
+from src.observability.semconv import (
+    ERROR_TYPE,
+    HTTP_REQUEST_METHOD,
+    HTTP_RESPONSE_STATUS_CODE,
+    HTTP_ROUTE,
+    URL_SCHEME,
+    http_request_method,
+)
+from src.observability.tracing import (
+    attached_trace_context,
+    get_tracer,
+    shutdown_tracing,
+)
 
 log = get_logger(__name__)
 
@@ -97,18 +128,16 @@ log = get_logger(__name__)
 def _request_id(request: Request) -> str:
     """The correlation id for one failed request.
 
-    There is no request-id infrastructure in this process yet — WO-A10
-    adds the middleware that mints one per request and puts it in the
-    observability context. Until then the id is generated *here*, at the
-    moment of failure, which is enough to tie a client's error body to
-    the ERROR log line beside it and is the whole reason the field
-    exists in the envelope.
+    `ObservabilityMiddleware` has already put one on `request.state` and
+    on every log record for this request, so this reads it back rather
+    than minting a competing second identity — the seam ADR 0064 left
+    open, now closed by WO-A10.
 
-    It reads `request.state.request_id` first so that when the
-    middleware lands this function needs no edit: the same id will then
-    already be on the request and every log record for it, and the
-    locally-minted fallback becomes dead code rather than a competing
-    second identity. See ADR 0064 "Seams".
+    The fallback survives because the handlers are reachable without the
+    middleware: `TestClient(app)` on a router mounted by hand, and any
+    caller that invokes a handler directly. An id minted here is still
+    better than none — it ties the client's error body to the ERROR log
+    line beside it, which is the whole reason the field exists.
     """
     existing = getattr(request.state, "request_id", None)
     return existing if isinstance(existing, str) and existing else uuid.uuid4().hex
@@ -295,6 +324,379 @@ async def _handle_unexpected(request: Request, exc: Exception) -> JSONResponse:
     request.state.request_id = request_id
     _log_boundary_error(request, error, request_id=request_id, exc_info=True)
     return _error_response(request, error)
+
+
+# ---------------------------------------------------------------------------
+# The observability middleware (WO-A10)
+# ---------------------------------------------------------------------------
+
+#: Both the header a caller may supply and the one every response
+#: carries back. One name in both directions, because a gateway that
+#: stamps an id on the way in expects to read it on the way out.
+REQUEST_ID_HEADER: Final = "X-Request-Id"
+
+#: The span attribute for the request id. It must be the name ADR
+#: 0067's `CONTEXT_FIELDS` gives the same fact — the log payload and the
+#: span have to spell it identically or a query joining a trace to its
+#: lines finds nothing. Written out rather than indexed out of that
+#: tuple, because a positional index into a field list is a bug waiting
+#: for a reordering; `tests/test_api_middleware.py` asserts the
+#: membership instead.
+CONTEXT_FIELD_REQUEST_ID: Final = "request_id"
+
+#: An inbound request id is caller-controlled text that ends up in an
+#: indexed log store, in a response header, and on a span. So it is
+#: adopted only when it looks like an identifier: the character class is
+#: what a UUID, a ULID, a W3C trace id or an nginx `$request_id` all fit
+#: inside, and nothing else. Anything outside it — a newline aimed at
+#: the log stream, a 4 KB blob aimed at the index, a header-splitting
+#: `\r\n` — is not sanitized, it is discarded, and a fresh id is minted
+#: in its place. Sanitizing would keep an attacker's string on the line
+#: in a mangled form; discarding keeps the field trustworthy.
+MAX_REQUEST_ID_CHARS: Final = 128
+_REQUEST_ID_PATTERN: Final = re.compile(rf"\A[A-Za-z0-9._:\-]{{1,{MAX_REQUEST_ID_CHARS}}}\Z")
+
+#: Cap for `http.request.method_original`, which is raw client bytes and
+#: is only ever set on a *span* (never on a metric attribute — that is
+#: what `_OTHER` is for). Sixteen characters is longer than every method
+#: any registry defines and short enough that the field cannot become a
+#: payload.
+_MAX_METHOD_ORIGINAL_CHARS: Final = 16
+
+
+def _resolve_request_id(headers: Headers) -> str:
+    """Adopt the caller's request id, or mint one.
+
+    Adopting matters more than minting: a request that arrives from the
+    Next.js proxy, a load balancer or another service already has an id
+    in that hop's logs, and minting a second one here means an operator
+    holding the caller's id can never find our side of the same request.
+
+    Args:
+        headers: The inbound request headers.
+
+    Returns:
+        The caller's id when it is well-formed, else a fresh hex id.
+    """
+    supplied = headers.get(REQUEST_ID_HEADER)
+    if supplied and _REQUEST_ID_PATTERN.match(supplied):
+        return supplied
+    return uuid.uuid4().hex
+
+
+def _http_error_type(status_code: int, exception_type: str | None) -> str | None:
+    """The conventional `error.type` for one served request.
+
+    Three cases, in the order the conventions state them:
+
+    - The application raised before or during the response — the
+      exception's class name, which is the most specific fact available.
+    - The response was a 5xx — the status code as a string. A 5xx that
+      was *handled* (ADR 0064's envelope) has no exception to name, and
+      the conventions say to fall back to the status.
+    - Anything else, 4xx included — no error. A client sending a bad
+      request is not a server failure, and counting it as one is how an
+      availability SLI ends up measuring the client's behaviour.
+
+    Args:
+        status_code: The status actually sent, or 500 when nothing was.
+        exception_type: Class name of an exception that escaped, or None.
+
+    Returns:
+        The attribute value, or None for a request that did not fail.
+    """
+    if exception_type is not None:
+        return exception_type
+    if status_code >= 500:
+        return str(status_code)
+    return None
+
+
+def _route_template(scope: Scope) -> str | None:
+    """The matched route template, or None when nothing matched.
+
+    FastAPI puts the matched `APIRoute` on the scope during routing, so
+    this is only meaningful *after* the application has run — which is
+    why every caller here reads it in a `finally`.
+
+    Never the raw path. `/research/{job_id}` is one series and one log
+    field; `/research/9f2c…` is one per job, and both a metric store and
+    a log index charge for that by the cardinal.
+    """
+    route = scope.get("route")
+    path = getattr(route, "path", None)
+    return path if isinstance(path, str) else None
+
+
+class ObservabilityMiddleware:
+    """One pass over every HTTP request: id, context, trace, RED, access.
+
+    A raw ASGI middleware rather than a `BaseHTTPMiddleware` subclass,
+    and that is not a style preference. `BaseHTTPMiddleware` runs the
+    downstream application in a separate anyio task and proxies
+    `receive` through a memory stream, which breaks
+    `Request.is_disconnected()` — the exact call `stream_research` uses
+    to decide when to stop an SSE stream (`routes.py`). Wrapping the
+    streaming surface of this app in a middleware that hides client
+    disconnects would trade an access log for leaked pub/sub
+    connections. A raw ASGI callable touches neither channel: it reads
+    the status off `http.response.start` on the way past and otherwise
+    hands `receive` and `send` through untouched.
+
+    Five things happen here, in one place because they all key off the
+    same request and would otherwise be five things that could disagree
+    about which request they were describing:
+
+    1. **A request id**, adopted from the caller when well-formed
+       (`_resolve_request_id`) and echoed in the response header. It
+       lands on `scope["state"]` too, which is where ADR 0064's error
+       envelope reads it from, so the body, the header and the log line
+       carry one value.
+    2. **The ADR 0067 context**, bound for the life of the request, so
+       every line any code emits under it carries `request_id` and —
+       when auth is on — a salted `principal_hash`.
+    3. **Inbound W3C trace context**, extracted at the edge. ADR 0066
+       already made a job one trace from submission inward; this is the
+       missing outer hop, so a caller's trace continues into ours
+       instead of stopping at the socket.
+    4. **RED metrics**, keyed on the route *template*.
+    5. **One structured access line**, replacing uvicorn's prose one
+       (`serve.py` turns that off).
+
+    Ordering note: this middleware is added **last** in `create_app`,
+    which makes it the outermost user middleware — so a CORS preflight,
+    a 404 for an unrouted path and a 405 from the router are all
+    measured, and the duration includes everything below it.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self._app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            # Lifespan and websocket scopes have no status, no route and
+            # no duration worth a histogram. Nothing to add, so add
+            # nothing rather than half of it.
+            await self._app(scope, receive, send)
+            return
+
+        headers = Headers(scope=scope)
+        request_id = _resolve_request_id(headers)
+        # `scope["state"]` is what `Request.state` is backed by, so
+        # writing here is what makes `_request_id(request)` in the
+        # exception handlers below read the same value.
+        state = scope.setdefault("state", {})
+        state["request_id"] = request_id
+
+        method = http_request_method(scope.get("method", ""))
+        raw_method = scope.get("method", "")
+        scheme = scope.get("scheme", "http")
+
+        status_code = 500
+        response_started = False
+
+        async def send_wrapper(message: Message) -> None:
+            nonlocal status_code, response_started
+            if message["type"] == "http.response.start":
+                response_started = True
+                status_code = int(message["status"])
+                message.setdefault("headers", [])
+                response_headers = MutableHeaders(scope=message)
+                # ADR 0064's `_error_response` sets this itself, with the
+                # same value; appending a second copy would hand the
+                # client two headers of one name and let a proxy pick.
+                if REQUEST_ID_HEADER not in response_headers:
+                    response_headers.append(REQUEST_ID_HEADER, request_id)
+            await send(message)
+
+        principal_hash = await _principal_hash(scope, receive)
+        started = time.perf_counter()
+        token = bind_context(request_id=request_id, principal_hash=principal_hash)
+        # Last statement before the `try`, so the `+1` and the `-1` in
+        # its `finally` are a pair by construction. Anything between
+        # them that could raise would leave the counter climbing, and a
+        # counter that only climbs reads as a permanently saturated
+        # worker.
+        record_http_active_request(method=method, scheme=scheme, delta=1)
+        exception_type: str | None = None
+        try:
+            with contextlib.ExitStack() as stack:
+                # The whole header mapping, not a hand-picked
+                # `traceparent`: the propagator decides which keys it
+                # owns, so a deployment that configures B3 or Jaeger
+                # propagation keeps working without an edit here.
+                stack.enter_context(attached_trace_context(dict(headers)))
+                span = self._start_span(stack, method, scheme, request_id)
+                try:
+                    await self._app(scope, receive, send_wrapper)
+                except BaseException as exc:
+                    # `BaseException`, so a client disconnect
+                    # (`CancelledError` on an SSE stream) is measured
+                    # and logged like any other outcome rather than
+                    # vanishing. Re-raised untouched: this middleware
+                    # observes, it does not handle.
+                    exception_type = type(exc).__name__
+                    raise
+                finally:
+                    self._finish(
+                        span=span,
+                        scope=scope,
+                        method=method,
+                        raw_method=raw_method,
+                        scheme=scheme,
+                        # A response that never started is a 500 to the
+                        # client, whatever the ASGI server writes on the
+                        # socket, so it is recorded as one.
+                        status_code=status_code if response_started else 500,
+                        exception_type=exception_type,
+                        duration_sec=time.perf_counter() - started,
+                    )
+        finally:
+            reset_context(token)
+            record_http_active_request(method=method, scheme=scheme, delta=-1)
+
+    def _start_span(
+        self,
+        stack: contextlib.ExitStack,
+        method: str,
+        scheme: str,
+        request_id: str,
+    ) -> trace.Span | None:
+        """Open the SERVER span, or None when tracing is off.
+
+        Guarded on the flag rather than relying on OTel's no-op tracer,
+        and the reason is a correctness one rather than a cost one: a
+        no-op tracer makes `INVALID_SPAN` current, which would *replace*
+        an inbound trace context that had just been attached — so a
+        deployment with tracing off would silently stop propagating a
+        caller's `traceparent` onto the job row it submitted.
+
+        The span is named for the method alone; `_finish` renames it
+        once routing has said which template matched, which is the same
+        two-step every ASGI instrumentation performs because a span has
+        to start before the router runs.
+
+        `request_id` rides on the span so trace-to-log navigation works
+        in both directions: the access line names the span, and the span
+        names the id every other line for that request carries. Only
+        this one context field is set — `run_id`, `job_id` and
+        `job_kind` are not bound at the HTTP edge, and copying an
+        unbound field would write nothing but noise.
+        """
+        if not settings.enable_tracing:
+            return None
+        span = stack.enter_context(
+            get_tracer().start_as_current_span(method, kind=trace.SpanKind.SERVER)
+        )
+        span.set_attribute(HTTP_REQUEST_METHOD, method)
+        span.set_attribute(URL_SCHEME, scheme)
+        span.set_attribute(CONTEXT_FIELD_REQUEST_ID, request_id)
+        return span
+
+    def _finish(
+        self,
+        *,
+        span: trace.Span | None,
+        scope: Scope,
+        method: str,
+        raw_method: str,
+        scheme: str,
+        status_code: int,
+        exception_type: str | None,
+        duration_sec: float,
+    ) -> None:
+        """Close out one request: span, metric, access line — in that order.
+
+        Order matters only for the last step: the access line is emitted
+        while the span is still current, so it carries `trace_id` and
+        `span_id` and an operator can jump from the line to the trace.
+        """
+        route = _route_template(scope)
+        error_type = _http_error_type(status_code, exception_type)
+
+        if span is not None:
+            if route is not None:
+                # `{method} {route}` is the conventional server span
+                # name, and it cannot be known before the router runs.
+                span.update_name(f"{method} {route}")
+                span.set_attribute(HTTP_ROUTE, route)
+            if method != raw_method and raw_method:
+                # Conditionally required when the method was replaced by
+                # `_OTHER`. On the span only: a span is one record, so
+                # unbounded input costs one field, whereas the same
+                # value on a metric attribute would mint a series per
+                # value — which is the attack `_OTHER` exists to stop.
+                span.set_attribute(
+                    "http.request.method_original",
+                    raw_method[:_MAX_METHOD_ORIGINAL_CHARS],
+                )
+            span.set_attribute(HTTP_RESPONSE_STATUS_CODE, status_code)
+            if error_type is not None:
+                span.set_attribute(ERROR_TYPE, error_type)
+                span.set_status(trace.Status(trace.StatusCode.ERROR, error_type))
+
+        record_http_server_request(
+            method=method,
+            route=route,
+            status_code=status_code,
+            scheme=scheme,
+            duration_sec=duration_sec,
+            error_type=error_type,
+        )
+
+        # One line per served request, always INFO. The 4xx/5xx
+        # judgement is already made — and made once — by ADR 0064's
+        # `api_request_rejected` / `api_request_failed`; a second
+        # WARNING here would double-report every failure and make
+        # "count of WARNING lines" mean nothing.
+        #
+        # `request_id`, `principal_hash`, `trace_id` and `span_id` are
+        # not passed: they are on the bound context and the formatter
+        # puts them on every line, and passing them again would be a
+        # second spelling of the same fact.
+        log.info(
+            "api_request_completed",
+            extra={
+                "method": method,
+                "route": route,
+                "http_status": status_code,
+                "elapsed_ms": round(duration_sec * 1000, 3),
+                "error_type": error_type,
+            },
+        )
+
+
+async def _principal_hash(scope: Scope, receive: Receive) -> str | None:
+    """The salted digest of the calling principal, best-effort.
+
+    Resolved through `require_principal` — the same function the routes
+    depend on — rather than through a second copy of the lookup, so the
+    log stream cannot come to disagree with the authorization decision
+    about who a caller is. It costs one extra constant-time keystore
+    scan per request, which is the price of not having two answers.
+
+    Every failure is swallowed and returns `None`. This function
+    authorizes nothing: a missing or invalid key must still produce the
+    401 the route dependency raises, and an observability helper that
+    could turn a request into a 500 would be a worse bug than the
+    missing field it was added to supply.
+
+    Args:
+        scope: The ASGI scope, for `app.state.api_keys` and the header.
+        receive: Passed to `Request` and never called — the body is not
+            read here, and reading it would consume it before the route.
+
+    Returns:
+        A 12-character salted digest, or None when auth is off, the key
+        is absent or invalid, or anything at all went wrong.
+    """
+    try:
+        principal = await require_principal(Request(scope, receive))
+    except Exception:  # noqa: BLE001 - observability must never fail a request
+        return None
+    if principal is None:
+        return None
+    return hash_principal(principal.key_id)
 
 
 # How often the in-memory retention sweep runs (ADR 0040). Coarse on
@@ -896,6 +1298,16 @@ def create_app(
             allow_headers=["Content-Type", "X-API-Key"],
         )
         log.info("api_cors_enabled", extra={"origins": origins})
+
+    # WO-A10. Added last, which makes it the **outermost** user
+    # middleware: `add_middleware` inserts at the front of the stack, so
+    # the last registration is the first to see a request. That is the
+    # position this one needs — a CORS preflight, a 404 for a path no
+    # route matched and a 405 from the router are all requests a fleet
+    # has to be able to see, and the duration it records is the one the
+    # client experienced rather than the one that remained after the
+    # layers above had taken their cut.
+    app.add_middleware(ObservabilityMiddleware)
 
     app.include_router(router)
     # WO-W15: the read-only learning-content surface. Its own router and

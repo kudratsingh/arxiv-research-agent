@@ -166,6 +166,12 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "api_learner_profile_written",
         "api_node_executor_drain_timeout",
         "api_prior_context_failed",
+        # WO-A10's access line — one per served request, replacing the
+        # uvicorn access line that used to arrive as prose in the JSON
+        # stream. INFO whatever the status: the 4xx/5xx *judgement*
+        # belongs to the two events below, and a second WARNING here
+        # would double-report every failure.
+        "api_request_completed",
         # ADR 0064's four exception handlers. `api_request_rejected` is
         # every 4xx the boundary answers; `api_request_failed` is the
         # 5xx line that did not exist at all before those handlers did.
@@ -426,6 +432,15 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "goals",
         "has_plan",
         "hitl_timeout_sec",
+        # WO-A10. `http_status`, `method` and `route` were already being
+        # passed by `_log_boundary_error` in `src/api/app.py` and were
+        # already being *dropped*: that call site splats a dict built on
+        # the line above, so the contract test's AST scan never saw the
+        # keys and nothing failed — the three most useful fields on an
+        # `api_request_failed` line simply were not on it. Registering
+        # them is the fix; the access line uses the same three names
+        # rather than inventing `status`/`path` synonyms beside them.
+        "http_status",
         "impl",
         "include_all_auth_off",
         "input_tokens",
@@ -457,6 +472,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "metrics",
         "metrics_enabled",
         "metrics_error",
+        "method",
         "model",
         "n_abstract_only",
         "n_chunks_indexed",
@@ -477,7 +493,13 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "origins",
         "orphaned",
         "output_tokens",
-        "owner",
+        # `owner` is deliberately **absent**, and its removal is the
+        # point rather than a tidy-up. `src/api/admin_migrate.py` logged
+        # a principal's `key_id` under that name in clear, on a line the
+        # retention window keeps — the exact thing `principal_hash`
+        # exists to stop (ADR 0067). Leaving the key registered would
+        # let the next call site do it again silently; with it gone, the
+        # contract test fails on the attempt (WO-A10).
         "paper_id",
         "paper_key",
         "parsed_keys",
@@ -493,6 +515,12 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "previous_public_turn",
         "previous_status",
         "prices_last_verified",
+        # A contract field, and therefore only fillable from `extra`
+        # when nothing has *bound* one — the formatter's precedence rule
+        # holds. Registered for the one caller that has a principal in
+        # hand outside a request scope: `admin_migrate`, which hashes it
+        # rather than binding a whole context for a CLI sweep (WO-A10).
+        "principal_hash",
         "processed_turns",
         "progress_event_store",
         "progress_events",
@@ -523,6 +551,11 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "result_len",
         "retries",
         "revision_target",
+        # The matched route **template**, never the raw path — the same
+        # rule the `http.route` metric attribute follows, for the same
+        # reason: a path carries job and conversation ids and a log
+        # field gets indexed (WO-A10).
+        "route",
         "rule",
         "run_id",
         "sample_ratio",

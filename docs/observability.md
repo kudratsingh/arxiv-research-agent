@@ -21,6 +21,12 @@ The three signals join on the same identifiers: a log line carries
 `trace_id` and `span_id` whenever a span is live, and `run_id` /
 `job_id` are the same values on all three.
 
+[The HTTP edge](#the-http-edge) is where both contracts start. One
+middleware mints or adopts the request id, binds the correlation
+context, extracts inbound trace context, records the RED metrics and
+writes the access line — so everything below it is handed a request
+that is already identified, joined to a trace, and counted.
+
 ## The envelope
 
 Present on every record, whether anything is bound or not:
@@ -200,6 +206,96 @@ those would delete the ids operators join on.
 URL: it parses where the regex matches, and returns `***` for input it
 cannot parse rather than passing an unproven string through.
 
+## The HTTP edge
+
+One middleware — `ObservabilityMiddleware` in `src/api/app.py` — owns
+everything that happens to a request before and after the router sees
+it. It is a raw ASGI callable rather than a `BaseHTTPMiddleware`
+subclass, because `BaseHTTPMiddleware` proxies `receive` through a
+memory stream and breaks `Request.is_disconnected()`, which is the call
+`GET /research/{job_id}/stream` uses to notice that an SSE client has
+gone away. Trading that for an access log would leak a pub/sub
+connection per disconnect.
+
+It is registered **last** in `create_app`, which puts it outermost: a
+CORS preflight, a 404 for an unrouted path and a 405 from the router
+are all requests a fleet has to be able to see.
+
+### The request id
+
+`X-Request-Id`, in both directions. An inbound one is **adopted** when
+it matches `[A-Za-z0-9._:-]{1,128}` — a UUID, a ULID, a W3C trace id
+and an nginx `$request_id` all fit inside that — so an operator holding
+the caller's id can find our side of the same request. Anything else is
+*discarded* rather than sanitized, and a fresh one minted: keeping an
+attacker's string on the line in a mangled form leaves the field
+untrustworthy, and this value ends up in an indexed store, in a
+response header and on a span.
+
+One value reaches four places: the response header, ADR 0064's error
+envelope (`error.request_id`), every log line the request emits (via
+the bound context), and the `request_id` attribute on its server span.
+
+### The access line
+
+`api_request_completed`, at INFO whatever the status, with the facts as
+fields:
+
+```json
+{"ts":"...","level":"INFO","logger":"src.api.app","message":"api_request_completed",
+ "request_id":"bffb…","method":"GET","route":"/research/{job_id}","http_status":200,
+ "elapsed_ms":7.918,"error_type":null}
+```
+
+It replaces uvicorn's, which `serve.py` turns off with
+`access_log=False`. Under `log_config=None` and with the access log on,
+`uvicorn.access` records propagate into our root handler and arrive as
+JSON whose `message` is the prose
+`'127.0.0.1:52344 - "GET /research/9f2c HTTP/1.1" 200'` — five facts in
+one string, none of them a field, with the raw path inside it.
+
+It stays INFO for a 5xx on purpose: the 4xx/5xx judgement is made once,
+by ADR 0064's `api_request_rejected` / `api_request_failed`, and a
+second WARNING here would double-report every failure.
+
+`route` is the route **template**, never the raw path — the same rule
+the `http.route` metric attribute follows, and for the same reason: a
+path carries job and conversation ids, and a log field is indexed per
+value. A request that matched no route reports `route: null`.
+
+### Liveness and readiness
+
+| Endpoint | Question | Status |
+|---|---|---|
+| `/healthz` | Is this process alive? | **Always 200**, with `status: degraded` in the body when a dependency is down |
+| `/readyz` | Can this worker take more traffic? | 200 when ready, **503** when a dependency is down or the queue is saturated |
+
+`/healthz` keeps its always-200 semantics deliberately (ADR 0042):
+restarting a worker does not fix a dead Redis, so a liveness probe that
+503s on dependency failure turns a backend blip into a rolling-restart
+storm. That was only ever safe once readiness existed — without
+`/readyz` an orchestrator had no way to drain a worker whose Redis had
+gone away, and every submit it kept receiving could only 500.
+
+Both endpoints run the same probes through one helper, so they cannot
+come to disagree about whether Redis is up, and they share one latched
+edge set, so an outage logs `api_health_dependency_degraded` once
+however many probes observe it.
+
+`/readyz` also 503s at saturation — `active_jobs >= max_concurrent_jobs`
+— because a job accepted then would sit in `pending` behind the
+concurrency ceiling. The body is the same shape either way, and the
+*reason* is readable from it (`dependencies` names a failed backend;
+`active_jobs` against `max_concurrent_jobs` shows saturation) rather
+than needing a third `status` value.
+
+`/readyz` is deliberately **absent** from
+`web/contract/openapi.json`. That document is the frontend's generated
+contract — snapshotted by a test, regenerated into `schema.d.ts`, and
+pinned again in `web/tests/api.test.ts` — and `/readyz` has no browser
+client. It is documented here and in
+[`architecture.md`](architecture.md) instead.
+
 ## Traces
 
 Off by default (`ENABLE_TRACING`). With no `OTEL_EXPORTER_ENDPOINT`,
@@ -216,7 +312,7 @@ the job row** when the `Job` is constructed, and **attached by the
 worker** before it opens the run's span:
 
 ```
-POST /research                     (the request's span)
+POST /research                     (ObservabilityMiddleware, SERVER)
 └── invoke_workflow research       (run_job, after attaching job.trace_context)
     ├── plan planner
     │   └── chat claude-sonnet-4-6
@@ -230,10 +326,25 @@ POST /research                     (the request's span)
 sampled, which every consumer reads as "no parent" — that is why CLI
 runs and tests work with no provider installed.
 
+The **outer hop** is the middleware's. It extracts inbound W3C context
+from the request headers, so a caller who already had a trace — the
+Next.js proxy, another service — gets one trace across the hop instead
+of two disconnected halves; and when nobody upstream had one, the
+server span is the root that submit and its job then share. The whole
+header mapping is handed to the propagator rather than a hand-picked
+`traceparent`, so a deployment configured for B3 or Jaeger propagation
+keeps working with no edit at the edge.
+
+The span is opened before routing (a span has to start before the
+router runs) and **renamed** in the middleware's `finally` once the
+matched template is known — the same two-step every ASGI
+instrumentation performs.
+
 ### The spans
 
 | Span name | Kind | Opened by |
 |---|---|---|
+| `{method} {route}` | SERVER | `ObservabilityMiddleware`, per HTTP request |
 | `invoke_workflow {research\|session}` | INTERNAL | `run_job` |
 | `invoke_agent {node}` | INTERNAL | `traced_node`, per graph node |
 | `plan {node}` | INTERNAL | `traced_node`, for the planner only |
@@ -244,12 +355,13 @@ Attributes, all from `src/observability/semconv.py`:
 
 | Span | Attributes |
 |---|---|
+| `{method} {route}` | `http.request.method`, `http.route`, `http.response.status_code`, `url.scheme`, `error.type`, `request_id`, plus `http.request.method_original` when the method collapsed to `_OTHER` |
 | `invoke_workflow` | `gen_ai.operation.name`, `gen_ai.workflow.name`, `gen_ai.conversation.id`, `error.type` |
 | `invoke_agent` / `plan` | `gen_ai.operation.name`, `gen_ai.agent.name`, `error.type`, plus `run_id`, `state.iteration`, `result.*_count`, `llm.cost_usd`, `llm.cost_delta_usd`, `llm.call_count`, `llm.call_delta` |
 | `execute_tool` | `gen_ai.operation.name`, `gen_ai.tool.name`, `gen_ai.tool.type`, `error.type` |
 | `chat` | `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.request.max_tokens`, `gen_ai.request.temperature`, `server.address`, `gen_ai.response.id`, `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `error.type` |
 
-Three things about that table are worth knowing rather than
+Four things about that table are worth knowing rather than
 rediscovering:
 
 - **The provider attribute is `gen_ai.provider.name`, not
@@ -259,7 +371,13 @@ rediscovering:
   the inference span; the four in-process spans do not take it, and a
   local PDF parse has no inference provider to name.
 - **`error.type` is the exception class name, never the message.** A
-  message routinely carries the input that caused it.
+  message routinely carries the input that caused it. On the server
+  span it falls back to the status code as a string for a 5xx that was
+  already handled and left no exception to name.
+- **`http.request.method_original` is on the span and never on a
+  metric.** A span is one record, so a rejected method costs one field
+  there; the same value as a metric attribute would mint a series per
+  value, which is what `_OTHER` exists to stop.
 
 ### Sampling
 
@@ -311,6 +429,56 @@ and the ones this repository could not answer before. A tool call is
 counted by the tool span itself, so the counter can never disagree with
 the number of `execute_tool` spans under the node.
 
+### The HTTP surface — RED
+
+Unlike the GenAI family, the HTTP conventions are **stable**, so these
+names are pinned by the specification rather than by a commit:
+
+| Instrument | Kind | Unit | Attributes |
+|---|---|---|---|
+| `http.server.request.duration` | histogram | `s` | `http.request.method`, `http.route`, `http.response.status_code`, `url.scheme`, `error.type` |
+| `http.server.active_requests` | up/down counter | `{request}` | `http.request.method`, `url.scheme` |
+
+**There is no request counter, and that is not an omission.** A
+histogram carries its own `count`, so `rate(count)` is the R of RED and
+`rate(count) by http.response.status_code` is the E — which is exactly
+why the conventions define no `http.server.request.total`. Adding one
+would double the write volume to answer a question this already
+answers, under a name no off-the-shelf dashboard reads.
+
+Three attribute rules, all from the specification rather than from us:
+
+- **`http.route` is the template**, `/research/{job_id}`, never the raw
+  path. The path carries a job id, so the raw form is one series per
+  job.
+- **`http.route` is absent when nothing matched.** The attribute is
+  conditionally required precisely so "no route" is expressible;
+  filling it with the path would put one series per 404'd URL into the
+  store, which anyone outside can fire at will.
+- **An unknown method becomes `_OTHER`.** `http.request.method` is
+  attacker-controlled on an open port, and a loop sending `AAAA`…`ZZZZ`
+  would otherwise mint a series per request.
+
+`error.type` follows the same "every series has one shape" rule as the
+GenAI instruments: `"none"` for a request that did not fail, the
+exception class for one that raised, and the status code as a string
+for a 5xx that ADR 0064's boundary had already handled. A 4xx is not an
+error — counting a client's bad request as a server failure is how an
+availability SLI ends up measuring the caller's behaviour.
+
+Together with the queue gauges below, this is what closed the gap the
+fault tier had recorded: a Redis outage at submit used to move **no
+instrument at all**, because the request never became a job, so a fleet
+whose Redis had died read as idle rather than as failing.
+
+One caveat when reading the histogram: `GET /research/{job_id}/stream`
+is an SSE connection held open for the life of a job, so its
+observations are job durations rather than request latencies and land
+in the top bucket. Cut latency panels by `http.route` and leave that one
+out; it is honest data about a different question. It is also why the
+in-flight counter is worth watching separately — an SSE client holds
+`http.server.active_requests` up for the whole run, correctly.
+
 ### Repository instruments
 
 | Instrument | Kind | Attributes |
@@ -357,10 +525,15 @@ conventions define no cost metric, so that is the only name it has.
 ### No attribute is unbounded
 
 Everything above attributes by a closed set — a job kind, a terminal
-status, an error *type*, a model id, a graph node name, a tool name.
+status, an error *type*, a model id, a graph node name, a tool name, a
+route template, a known HTTP method.
 Nothing takes a query, a job id, a URL, a paper id or a principal.
 `tests/test_genai_conventions.py` drives a job with a distinctive query
 and asserts none of it reaches a metric attribute.
+
+The HTTP surface is the only one whose attributes come from *outside*
+the process, which is why two of its three rules above are containment
+rules rather than naming ones.
 
 ## Adding to the contract
 
@@ -377,44 +550,47 @@ where they come from.
 
 ## Known gaps
 
-1. **uvicorn access lines are not JSON.** `serve.py` runs with
-   `log_config=None`, so access lines arrive as unparsed text alongside
-   the JSON stream. WO-A10 owns the fix; nothing here changes it.
-2. **The content-capture and sampling flags are not in `Settings`.**
+1. **The content-capture and sampling flags are not in `Settings`.**
    `content_capture_enabled()` and `trace_sample_ratio()` read
    `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`,
    `LOG_CAPTURE_USER_CONTENT` and `TRACE_SAMPLE_RATIO` from the
    environment, because `src/config.py` belonged to other work orders
    in both waves. WO-A12 folds all three into `Settings`, at which
    point the env vars stay as the pydantic-settings aliases.
-3. **The context is defined but not yet bound at the edges.** Nothing in
-   `src/api/**` calls `bind_context` yet, so `request_id`,
-   `principal_hash` and `job_kind` are absent from live lines until
-   WO-A10 wires them. The contract is in place first on purpose: the
-   fields have to exist before anything can fill them.
-4. **`admin_migrate` logs `owner` verbatim**, which is a principal
-   identifier. It should become a `principal_hash`; the file belongs to
-   another work order.
-5. **A schema standard is landing.** ISO/IEC FDIS 24970 (AI system
+2. **The `job_failed` and `job_cancelled` SSE frames still have two
+   shapes.** WO-A10 reconciled the two `job_completed` frames onto one
+   builder (`src/api/runner.py::terminal_event_data`) and the route's
+   replay uses it for every terminal frame — but the runner's *live*
+   failure and cancellation frames still build their own smaller
+   payloads at eight call sites, because that work order owned only the
+   `job_completed` one. A client reading a live `job_failed` still gets
+   `{job_id, error, error_type, elapsed_sec}` where the replay gives it
+   eleven fields. Same defect, same fix, one call site at a time.
+3. **`src/api/redriver.py` keeps its own copy of the terminal payload.**
+   Its `_terminal_event_data` says it is "kept field-for-field in sync"
+   with the route's and no longer is; it predates the shared builder and
+   belongs to another work order. Merging it is a three-line change
+   whenever that file is next opened.
+4. **A schema standard is landing.** ISO/IEC FDIS 24970 (AI system
    logging) is at stage 50.20 and likely to become the reference for
    exactly the fields above. The field names are therefore constants in
    two places — the envelope block in `logging.py` and `CONTEXT_FIELDS`
    / `context_fields()` in `context.py` — rather than literals scattered
    through the formatter, so remapping is an edit rather than a hunt.
-6. **Metrics exist only inside API workers.** `configure_metrics()`
+5. **Metrics exist only inside API workers.** `configure_metrics()`
    has one caller — the API lifespan — so `make run` and `make eval`
    install no meter provider and every record helper returns on its
    `None` check. Deliberate for the server-shaped instruments;
    widening it was out of scope for ADR 0066.
-7. **No `invoke_workflow` span on the CLI or eval paths.** The span is
+6. **No `invoke_workflow` span on the CLI or eval paths.** The span is
    opened by `run_job`, so those entry points produce node spans with
    no workflow parent.
-8. **The redriver records `kind="unknown"`** on both of its terminal
+7. **The redriver records `kind="unknown"`** on both of its terminal
    outcomes — a failed orphan and, since ADR 0068, a dead-lettered
    job. It has `job.kind` in hand but does not pass it;
    `src/api/redriver.py` belonged to another work order. A test pins
    the current value so the fix is visible when it lands.
-9. **The GenAI conventions are pre-stable and will churn.** They have
+8. **The GenAI conventions are pre-stable and will churn.** They have
    left the core semantic-conventions repository and their new home has
    no tagged release, so ADR 0066 pins a commit SHA. Every `gen_ai.*`
    name is a constant in `src/observability/semconv.py` — one file to

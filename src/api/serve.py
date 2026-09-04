@@ -7,6 +7,17 @@ that sets `log_config=None` (the uvicorn CLI cannot express that —
 shutdown below, so the two environments cannot drift. Host and port
 come from `settings`, so a container sets API_HOST/API_PORT env
 vars rather than flags.
+
+WO-A10 turns uvicorn's own access log off here. With `log_config=None`
+its `uvicorn.access` records propagate to our root handler and are
+emitted as JSON whose `message` is the prose
+`'127.0.0.1:52344 - "GET /research/9f2c HTTP/1.1" 200'` — one string
+carrying five facts, none of them a field, and with the raw path
+inside it. `ObservabilityMiddleware` emits `api_request_completed`
+instead, with `method`, `route` (the *template*), `http_status` and
+`elapsed_ms` as fields, joined to the trace and the request id. Two
+access logs for one request would be strictly worse than either, so
+this is a replacement rather than an addition.
 """
 
 from __future__ import annotations
@@ -35,6 +46,10 @@ def main() -> None:
         host=settings.api_host,
         port=settings.api_port,
         log_config=None,  # defer to our JSON structured logger
+        # WO-A10: `ObservabilityMiddleware` owns the access line now.
+        # This clears `uvicorn.access`'s handlers and stops it
+        # propagating, so the prose line cannot reach the JSON stream.
+        access_log=False,
         timeout_graceful_shutdown=GRACEFUL_SHUTDOWN_TIMEOUT_SEC,
     )
 

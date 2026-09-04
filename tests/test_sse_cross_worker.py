@@ -270,14 +270,27 @@ async def test_runner_publishes_terminal_frame_to_other_worker(
         "job_completed",
     ]
     terminal = received[-1]["data"]
+    # WO-A10 reconciled the live frame with the one the route replays to
+    # a client that attaches after the job has ended. This pin gained
+    # `status`, `error`, `error_type`, `cost_cap_status` and
+    # `cost_cap_message` as a result: they were on the replay and absent
+    # here, so which shape a client saw depended on whether it happened
+    # to be connected when the job finished. `terminal_event_data` in
+    # `src/api/runner.py` is now the only place the list exists.
     assert set(terminal) == {
         "job_id",
+        "status",
+        "elapsed_sec",
+        "error",
+        "error_type",
+        "cost_cap_status",
+        "cost_cap_message",
         "iterations",
         "quality_score",
         "cost_usd",
         "llm_calls",
-        "elapsed_sec",
     }
+    assert terminal["status"] == "succeeded"
     assert terminal["job_id"] == "job-e2e"
     assert terminal["iterations"] == 1
     assert terminal["quality_score"] == 0.9
