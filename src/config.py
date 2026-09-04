@@ -182,9 +182,9 @@ class Settings(BaseSettings):
             "is what it always was; what changes is that at 60s only "
             "two attempts fit `api_job_timeout_sec * "
             "http_call_chain_budget_fraction`, so retries are trimmed "
-            "to 1 and `retry_envelope_clamped` says so. Larger than "
-            "`arxiv_timeout_sec` because a PDF is megabytes where an "
-            "Atom feed is kilobytes."
+            "to 1 and `retry_envelope_clamped` says so once per "
+            "process. Larger than `arxiv_timeout_sec` because a PDF is "
+            "megabytes where an Atom feed is kilobytes."
         ),
     )
 

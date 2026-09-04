@@ -160,7 +160,9 @@ def build_retrying_session(
             `session.get`. Supplying it turns on the ADR 0068 clamp:
             retries are trimmed until `(retries + 1) * timeout_sec`
             fits this dependency's share of the job budget, and a
-            `retry_envelope_clamped` WARNING says so. Omitting it keeps
+            `retry_envelope_clamped` WARNING says so — once per
+            distinct clamp per process, because this builder is called
+            per download and a run downloads one PDF per paper. Omitting it keeps
             the historical behaviour, which is what every call site
             that has not yet declared its timeout still gets.
         dependency: Which retry budget this session's retries are

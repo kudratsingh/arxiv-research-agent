@@ -849,14 +849,38 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
 
     failed_count = sum(1 for _, _, _, ok in results if not ok)
     if papers and failed_count == len(papers):
+        # Two exits from one condition, and the reason they are two is
+        # worth stating here rather than leaving to be re-derived.
+        #
+        # "Every paper failed" has two completely different causes with
+        # two completely different fixes. Either the provider stopped
+        # answering — in which case nothing about this deployment, these
+        # papers or these prompts is wrong and the answer is to wait —
+        # or the papers were fetched and this node could not turn any of
+        # them into an analysis, in which case the run is the problem
+        # and re-asking with different queries is the move. An operator
+        # reading `research_jobs_total{error_type}` has to be able to
+        # tell those apart, because the first is an incident somewhere
+        # else and the second is an incident here.
+        #
+        # This node is the only one that *can* tell them apart, which is
+        # why the split lives here and not at the boundary. Every other
+        # node makes one model call, so its failure is its cause; this
+        # one makes `len(papers)` of them and contains each failure
+        # individually (ADR 0041), so by the time it knows the fan-out
+        # produced nothing it also knows what each paper died of. That
+        # is what `provider_failures` is: the reader's answer to a
+        # question no later layer has the evidence to ask.
+        #
+        # The unanimity requirement is deliberate and is the
+        # conservative direction. A mixed run — some papers lost to the
+        # provider, some to their own unusable output — is not a
+        # provider outage, and calling it one would point an operator
+        # at Anthropic's status page for a problem in this repository.
+        # `upstream_paper_read` is the honest answer whenever the cause
+        # is not unanimous, because it describes the symptom without
+        # claiming a cause.
         if len(provider_failures) == len(papers):
-            # Every paper died on the provider, which is what a
-            # sustained model outage does to this fan-out. Name the
-            # outage (WO-A17): `upstream_paper_read` would say "papers
-            # were found but none could be read", which is true of the
-            # symptom and wrong about the cause — and it made the same
-            # outage carry a different `error_type` depending on which
-            # node happened to be running when it started.
             raise UpstreamModel(
                 log_detail=(
                     f"all {len(papers)} paper analyses failed on the model "

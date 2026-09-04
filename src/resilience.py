@@ -81,6 +81,7 @@ __all__ = [
     "get_retry_budget",
     "interruptible_sleep",
     "record_degradation",
+    "reset_clamp_warnings",
     "reset_degradation_counts",
     "reset_retry_budgets",
 ]
@@ -301,6 +302,75 @@ def reset_retry_budgets() -> None:
 # The retry-envelope clamp — the shape `src/llm.py:62-91` established
 # ---------------------------------------------------------------------------
 
+#: Clamps already reported, keyed by the four inputs and the one output
+#: that the WARNING is made of. Once per distinct clamp per process, not
+#: once per call, for the reason `costs._unpriced_warned` exists: a call
+#: site inside a per-paper loop turns a line that matters into hundreds
+#: of lines that don't, and the way a warning stops being read is by
+#: repeating. `pdf_parser` is that call site — one download per paper,
+#: the same clamp every time.
+#:
+#: Keyed on the whole determinant rather than on `(dependency, clamped)`
+#: alone, because `dependency` is a two-value vocabulary and every
+#: non-arXiv caller shares `http`: PDFs at 60s and Semantic Scholar at
+#: some other timeout can clamp to the same retry count for completely
+#: different reasons, and a key that collapsed them would silence the
+#: second misconfiguration on the strength of having reported the
+#: first. The rule this key implements is exactly "the same clamp does
+#: not repeat itself, and any clamp that differs in any respect
+#: speaks" — which is the only version of it that cannot under-warn.
+#:
+#: Guarded by a lock because the reader's fan-out builds sessions from
+#: a thread pool.
+_clamp_warned: set[tuple[str, int, int, float, float]] = set()
+_clamp_lock = threading.Lock()
+
+
+def _warn_clamp_once(
+    *,
+    dependency: str,
+    clamped: int,
+    configured_retries: int,
+    timeout_sec: float,
+    budget_sec: float,
+) -> None:
+    """Emit the clamp WARNING the first time this exact clamp happens.
+
+    Returns silently on every later call with the same five values.
+    WARNING and not INFO, unchanged: the operator configured a retry
+    count this deployment will not honour, and the shape of the incident
+    that follows ("why did it only try twice?") is unanswerable without
+    the line. What changes is only how often it is worth saying.
+    """
+    key = (dependency, clamped, configured_retries, timeout_sec, budget_sec)
+    with _clamp_lock:
+        if key in _clamp_warned:
+            return
+        _clamp_warned.add(key)
+    log.warning(
+        "retry_envelope_clamped",
+        extra={
+            "dependency": dependency,
+            "max_retries": clamped,
+            "configured_max_retries": configured_retries,
+            "timeout_sec": timeout_sec,
+            "budget_sec": budget_sec,
+            "worst_case_request_sec": (clamped + 1) * timeout_sec,
+        },
+    )
+
+
+def reset_clamp_warnings() -> None:
+    """Forget which clamps have already warned.
+
+    Test seam only, mirroring `costs.reset_unpriced_warnings`: the
+    warn-once set is process-global and the suite is one process, so a
+    test that asserts the warning fires needs a way back to a clean
+    slate that does not reach into module internals.
+    """
+    with _clamp_lock:
+        _clamp_warned.clear()
+
 
 def clamped_retry_envelope(
     *,
@@ -326,6 +396,10 @@ def clamped_retry_envelope(
     but healthy* responses, which is the failure mode that looks like
     an outage while the dependency is fine.
 
+    A clamp that bites warns **once per distinct clamp per process**
+    (`_warn_clamp_once`). The clamp itself is unconditional — every call
+    is trimmed — and only the reporting is deduplicated.
+
     Args:
         configured_retries: What the operator asked for.
         timeout_sec: Per-attempt timeout the retries will be spent at.
@@ -343,20 +417,12 @@ def clamped_retry_envelope(
     affordable_attempts = max(1, int(budget_sec // timeout_sec)) if timeout_sec > 0 else 1
     clamped = max(0, min(configured_retries, affordable_attempts - 1))
     if clamped < configured_retries:
-        # WARNING, not INFO: the operator configured a retry count this
-        # deployment silently will not honour, and the shape of the
-        # incident that follows ("why did it only try twice?") is
-        # unanswerable without this line.
-        log.warning(
-            "retry_envelope_clamped",
-            extra={
-                "dependency": dependency,
-                "max_retries": clamped,
-                "configured_max_retries": configured_retries,
-                "timeout_sec": timeout_sec,
-                "budget_sec": budget_sec,
-                "worst_case_request_sec": (clamped + 1) * timeout_sec,
-            },
+        _warn_clamp_once(
+            dependency=dependency,
+            clamped=clamped,
+            configured_retries=configured_retries,
+            timeout_sec=timeout_sec,
+            budget_sec=budget_sec,
         )
     return clamped
 

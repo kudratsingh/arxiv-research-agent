@@ -20,6 +20,7 @@ observable: a call that is not made, and a WARNING that says why.
 | the synthesizer's first attempt returns something unusable, late | no second call | `synthesizer_retry_budget_exhausted` |
 | the same, but early | the retry happens | `synthesizer_retrying_malformed_response` |
 | a PDF timeout the job budget cannot afford four attempts of | retries trimmed | `retry_envelope_clamped` |
+| ten downloads clamped the same way in one run | still trimmed | one line, not ten |
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ import requests
 from src import llm as llm_module
 from src.agents import synthesizer as synth_module
 from src.config import Settings
+from src.resilience import reset_clamp_warnings
 from src.tools import http_session as http_module
 from src.tools import pdf_parser as pdf_module
 
@@ -115,6 +117,11 @@ def _pin_http(monkeypatch: pytest.MonkeyPatch, *, pdf_download_timeout_sec: floa
     )
     monkeypatch.setattr(pdf_module, "settings", pinned)
     monkeypatch.setattr(http_module, "settings", pinned)
+    # The clamp warns once per distinct clamp per *process*, and the
+    # suite is one process — so a test that asserts the warning fires
+    # has to start from a clean slate or it is asserting on whether some
+    # earlier file happened to clamp the same way.
+    reset_clamp_warnings()
 
     real_builder = pdf_module.build_retrying_session
 
@@ -295,6 +302,37 @@ class TestThePdfDownloadChain:
         assert record.timeout_sec == 60.0  # type: ignore[attr-defined]
         assert record.worst_case_request_sec == 120.0  # type: ignore[attr-defined]
         assert record.budget_sec == pytest.approx(150.0)  # type: ignore[attr-defined]
+
+    def test_a_whole_run_of_downloads_reports_the_clamp_once(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        tmp_path: Path,
+    ) -> None:
+        """The production shape: one paper, one download, one session.
+
+        `_download_pdf` builds its own session, and the reader calls it
+        once per paper — so an unconditional WARNING here is ten lines a
+        job saying the same thing, which is how a line that matters gets
+        lost in the lines that don't. The clamp still applies to every
+        download; only the reporting is deduplicated, on the same
+        warn-once shape `costs._unpriced_warned` uses.
+        """
+        _pin_http(monkeypatch, pdf_download_timeout_sec=60.0)
+
+        with caplog.at_level(logging.WARNING):
+            for i in range(10):
+                assert (
+                    pdf_module._download_pdf(
+                        f"https://arxiv.org/pdf/2311.0900{i}", tmp_path / f"{i}.pdf"
+                    )
+                    is False
+                )
+
+        assert (
+            len([r for r in caplog.records if r.message == "retry_envelope_clamped"])
+            == 1
+        )
 
     def test_a_timeout_the_budget_can_afford_leaves_the_retries_alone(
         self,
