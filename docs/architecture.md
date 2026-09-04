@@ -132,6 +132,33 @@ lives in [`docs/agents/`](agents/) — one page per agent.
 `app.py::create_app`; routes: `routes.py`). Design in ADR
 [0025](decisions/0025-fastapi-async-job-model.md).
 
+**The edge.** One raw-ASGI middleware
+(`app.py::ObservabilityMiddleware`) wraps every request, outermost in
+the stack. It adopts the caller's `X-Request-Id` when it is well-formed
+and mints one otherwise, echoes it in the response header and in the
+error envelope, binds the ADR 0067 correlation context so every log
+line for that request carries the id and a salted `principal_hash`,
+extracts inbound W3C trace context so a caller's trace continues into
+ours, opens the `{method} {route}` SERVER span, records the RED metrics
+keyed on the route **template**, and writes one structured access line
+in place of uvicorn's prose one (`serve.py` runs with
+`access_log=False`). Raw ASGI rather than `BaseHTTPMiddleware` because
+the latter proxies `receive` and breaks `Request.is_disconnected()`,
+which the SSE route depends on. Details in
+[`observability.md`](observability.md#the-http-edge).
+
+**Health and readiness.** `GET /healthz` is liveness and is **always
+200** — restarting a worker does not fix a dead Redis, so a liveness
+probe that 503s on dependency failure turns a backend blip into a
+rolling-restart storm (ADR 0042). `GET /readyz` is readiness and
+returns **503** when a required dependency is down or when every
+concurrency permit is taken, so an orchestrator can drain a worker
+instead of sending it submits that can only fail. Both run the same
+probes through one helper and share one latched edge set, so they
+cannot disagree and an outage is logged once. `/readyz` is deliberately
+not in the OpenAPI document: that document is the frontend's generated
+contract, and `/readyz` has no browser client.
+
 **Job model.** `POST /research` returns `202 Accepted` with a
 `job_id` immediately; the runner (`runner.py`) drives the compiled
 graph through `astream` (ADR
@@ -216,6 +243,18 @@ on that path sees only events published after it connects — which is
 why the replays above are snapshots read from the job row, not a
 backlog.
 
+The `job_completed` frame has **one** payload shape whether a client
+watched the run or attached after it ended. It used to have two: the
+runner's live frame carried `iterations` / `quality_score` /
+`llm_calls`, the route's replay carried `status` / `error` /
+`error_type`, so a browser reading `data.status` got a `KeyError` if it
+happened to be connected when the job finished. Both now build through
+`runner.py::terminal_event_data`, which carries the union — every field
+was load bearing for one of the two readers. The live `job_failed` and
+`job_cancelled` frames are still the runner's own smaller payloads;
+that is a recorded gap in
+[`observability.md`](observability.md#known-gaps), not a second design.
+
 **Job leases + redriver.** Under the Redis job store, a worker holds
 `joblease:{job_id}` (TTL `job_lease_ttl_sec`, refreshed in the
 background) while it runs a job; a worker that dies stops refreshing,
@@ -285,7 +324,9 @@ renders the finished report via `src/api/exporters/` (ADR
 [0031](decisions/0031-multi-format-export.md)).
 
 **Auth, scoping, rate limiting** (`auth.py`). Opt-in behind
-`enable_api_auth`: every route (except `/healthz`) requires an
+`enable_api_auth`: every route except the two probes (`/healthz`,
+`/readyz` — an orchestrator cannot present a key, and both report only
+counts and dependency *types*) requires an
 `X-API-Key` header resolved against the keystore — either the
 `api_keys` setting or a hot-reloadable JSON file (`api_keys_file`,
 ADR [0037](decisions/0037-redis-rate-limiter-and-keystore-reload.md)).

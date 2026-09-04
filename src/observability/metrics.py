@@ -68,6 +68,18 @@ commit in `src.observability.semconv` — all histograms:
 | `gen_ai.execute_tool.duration`        | operation, tool.name, error.type    |
 | `gen_ai.invoke_workflow.duration`     | workflow.name, error.type           |
 
+Conventional and **stable**, added by WO-A10 — the HTTP server family,
+which unlike the GenAI names is pinned by the specification rather than
+by a commit:
+
+| Instrument                     | Kind             | Attributes                                                        |
+|--------------------------------|------------------|-------------------------------------------------------------------|
+| `http.server.request.duration` | histogram (s)    | http.request.method, http.route, http.response.status_code, url.scheme, error.type |
+| `http.server.active_requests`  | up/down counter  | http.request.method, url.scheme                                   |
+
+There is no `http_requests_total`, on purpose: the histogram's `count`
+*is* the request count, which is why the conventions define no counter.
+
 The two LLM error/retry counters arrived with ADR 0051: Anthropic SDK
 retries (429 / 529 / timeouts) were invisible — no app log, the SDK's
 own retry line demoted below threshold, no metric — so a throttled
@@ -150,6 +162,7 @@ from opentelemetry.metrics import (
     Meter,
     ObservableGauge,
     Observation,
+    UpDownCounter,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -171,6 +184,8 @@ __all__ = [
     "metrics_enabled",
     "record_agent_invocation",
     "record_genai_client_call",
+    "record_http_active_request",
+    "record_http_server_request",
     "record_job_terminal",
     "record_llm_retries",
     "record_llm_upstream_error",
@@ -294,6 +309,32 @@ _CALL_COUNT_BUCKETS: tuple[float, ...] = (
     64.0,
 )
 
+# Buckets for `http.server.request.duration`, in seconds. These are the
+# conventions' own advisory boundaries, copied rather than chosen: the
+# HTTP conventions publish a bucket set, every off-the-shelf HTTP
+# dashboard computes its quantiles against it, and picking "better"
+# boundaries here would make this service's p95 incomparable with every
+# other service in a fleet for no gain. They are also right for the
+# shape: an API surface whose fast routes are `/healthz` and a 202
+# submit belongs in the millisecond decades, which is exactly where the
+# resolution is.
+_HTTP_DURATION_BUCKETS: tuple[float, ...] = (
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.075,
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    1.0,
+    2.5,
+    5.0,
+    7.5,
+    10.0,
+)
+
 # Attribute value for a measurement that did not fail. Same literal and
 # same reason as `NO_ERROR`, which it deliberately equals: `error.type`
 # is a conventional attribute name but its "nothing went wrong" value
@@ -345,6 +386,10 @@ class _Instruments:
     genai_agent_tool_calls: Histogram
     genai_tool_duration: Histogram
     genai_workflow_duration: Histogram
+    # The stable HTTP server family (WO-A10). Same bundle for the same
+    # reason: one `None` check disarms the whole surface.
+    http_server_request_duration: Histogram
+    http_server_active_requests: UpDownCounter
 
 
 _provider: MeterProvider | None = None
@@ -506,6 +551,31 @@ def _build_instruments(meter: Meter) -> _Instruments:
             unit=semconv.UNIT_SECOND,
             description="End-to-end duration of one workflow execution.",
             explicit_bucket_boundaries_advisory=list(_GENAI_DURATION_BUCKETS),
+        ),
+        # --- The stable HTTP server family (WO-A10) --------------------
+        #
+        # Two instruments, not three. The conventions define **no**
+        # request counter, and that is not an omission: a histogram
+        # already carries its own `count`, so `rate(count)` is the R of
+        # RED and `rate(count) by status` is the E. Adding a
+        # `http_requests_total` beside it would double the write volume
+        # to answer a question the histogram answers, under a name no
+        # standard dashboard reads. 03-ARCHITECTURE.md §5.3 asks for
+        # "request count by route-template/method/status" and this is
+        # where that count comes from.
+        http_server_request_duration=meter.create_histogram(
+            semconv.METRIC_HTTP_SERVER_REQUEST_DURATION,
+            unit=semconv.UNIT_SECOND,
+            description=(
+                "Duration of one inbound HTTP request, by route "
+                "template, method and response status."
+            ),
+            explicit_bucket_boundaries_advisory=list(_HTTP_DURATION_BUCKETS),
+        ),
+        http_server_active_requests=meter.create_up_down_counter(
+            semconv.METRIC_HTTP_SERVER_ACTIVE_REQUESTS,
+            unit=semconv.UNIT_REQUEST,
+            description="Requests currently in flight on this worker.",
         ),
     )
 
@@ -926,6 +996,86 @@ def record_workflow_invocation(
             semconv.ERROR_TYPE: error_type or NO_ERROR_TYPE,
         },
     )
+
+
+def record_http_active_request(*, method: str, scheme: str, delta: int) -> None:
+    """Move `http.server.active_requests` by `delta` (WO-A10).
+
+    Called twice per request — `+1` before the application is entered
+    and `-1` from the middleware's `finally`, so a request that raises
+    still decrements. The pairing is the whole contract: an UpDownCounter
+    that only ever counts up reads as a permanently saturated worker and
+    is worse than no instrument at all.
+
+    Args:
+        method: Output of `semconv.http_request_method`, never the raw
+            method — this attribute is attacker-controlled on an open
+            port and `_OTHER` is what bounds it.
+        scheme: `http` or `https`.
+        delta: `+1` on entry, `-1` on exit.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    instruments.http_server_active_requests.add(
+        delta,
+        {
+            semconv.HTTP_REQUEST_METHOD: method,
+            semconv.URL_SCHEME: scheme,
+        },
+    )
+
+
+def record_http_server_request(
+    *,
+    method: str,
+    route: str | None,
+    status_code: int,
+    scheme: str,
+    duration_sec: float,
+    error_type: str | None,
+) -> None:
+    """Record one served HTTP request (WO-A10).
+
+    The RED triple for the HTTP surface, out of one instrument: the
+    histogram's `count` is the rate, `count` split by
+    `http.response.status_code` is the error rate, and its buckets are
+    the duration. See `_build_instruments` for why there is no separate
+    counter.
+
+    Args:
+        method: Output of `semconv.http_request_method`.
+        route: The matched route **template** (`/research/{job_id}`), or
+            `None` when nothing matched. Omitted from the attributes in
+            that case rather than filled with the raw path or a
+            placeholder: the conventions mark `http.route` conditionally
+            required precisely so that "no route" is expressible, and a
+            raw path here would put one series per job id into the
+            store, which is the failure the attribute exists to prevent.
+        status_code: The response status. An `int`, because the
+            conventions type it as one and a string would sort `"1000"`
+            before `"200"` in every consumer.
+        scheme: `http` or `https`.
+        duration_sec: Wall clock from the first byte of the request to
+            the last byte of the response, in **seconds**.
+        error_type: The exception class name when the request died
+            before a response, else `None`. `"none"` is recorded for a
+            successful request, and the status code as a string for a
+            5xx — see `_http_error_type` in `src/api/app.py`, which is
+            where that decision is made and explained.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    attributes: dict[str, str | int] = {
+        semconv.HTTP_REQUEST_METHOD: method,
+        semconv.HTTP_RESPONSE_STATUS_CODE: status_code,
+        semconv.URL_SCHEME: scheme,
+        semconv.ERROR_TYPE: error_type or NO_ERROR_TYPE,
+    }
+    if route is not None:
+        attributes[semconv.HTTP_ROUTE] = route
+    instruments.http_server_request_duration.record(duration_sec, attributes)
 
 
 def record_llm_usage(*, model: str, cost_usd: float) -> None:

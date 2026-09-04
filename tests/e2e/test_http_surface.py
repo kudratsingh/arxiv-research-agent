@@ -47,9 +47,11 @@ assertion about one frame.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
+import logging
 import threading
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -57,6 +59,7 @@ import pytest
 import uvicorn
 from httpx import AsyncClient
 
+from src.observability import JsonFormatter
 from src.observability.costs import RunCosts
 
 pytestmark = pytest.mark.e2e
@@ -76,6 +79,37 @@ TERMINAL_TIMEOUT_SEC = 30.0
 #: else, which is the property that makes "runs a real server" and
 #: "runs offline" both true.
 SERVER_HOST = "127.0.0.1"
+
+#: Every key a terminal SSE frame carries, and the reason this is a
+#: module constant rather than two literals in two tests.
+#:
+#: It used to be two literals, and they were **different**. The runner's
+#: live `job_completed` carried `iterations` / `quality_score` /
+#: `llm_calls`; the route's replay — what a client gets when it attaches
+#: after the job ended — carried `status` / `error` / `error_type`
+#: instead. Both tests below passed, and between them they documented a
+#: defect: a browser reading `data.status` off a live frame got a
+#: `KeyError`, and which frame it got depended on whether it happened to
+#: be connected when the job finished.
+#:
+#: WO-A10 reconciled them onto one builder
+#: (`src/api/runner.py::terminal_event_data`) carrying the **union** of
+#: the two sets, and asserting both frames against one constant here is
+#: what makes "they agree" a structural property of this file rather
+#: than something a reader has to notice by comparing two lists.
+TERMINAL_FRAME_KEYS = {
+    "job_id",
+    "status",
+    "elapsed_sec",
+    "error",
+    "error_type",
+    "cost_cap_status",
+    "cost_cap_message",
+    "iterations",
+    "quality_score",
+    "cost_usd",
+    "llm_calls",
+}
 
 
 def _parse_frames(chunk: str) -> list[tuple[str, dict[str, Any]]]:
@@ -181,6 +215,13 @@ async def live_server(
         host=SERVER_HOST,
         port=0,  # the kernel picks a free one; no fixed port to collide on
         log_config=None,  # defer to the repository's JSON logger, as serve.py does
+        # Also as serve.py does (WO-A10). This fixture is only worth
+        # running because it is the shipped wiring; a server started
+        # here with uvicorn's access log still on would be a different
+        # wiring, and the test below — which asserts uvicorn's prose
+        # line is gone and the middleware's structured one is there —
+        # would be asserting the fixture rather than the product.
+        access_log=False,
         lifespan="on",
         timeout_graceful_shutdown=5,
     )
@@ -253,21 +294,18 @@ class TestHttpSurface:
         # both numbers, for the reason `zero_spend_ledger` gives.
         assert usd(terminal["cost_usd"]) == "$0.0000"
         assert terminal["llm_calls"] == 0
-        # Pinned as an exact key set because the *live* `job_completed`
-        # frame and the one the route replays to a late client are built
-        # by different code and do not agree: this one has
-        # `quality_score` and `llm_calls`, the replay (second test) has
-        # `status`, `error` and `error_type` instead. A client reading
-        # `status` off a live frame gets a KeyError, which is why the
-        # two are asserted separately rather than through one helper.
-        assert set(terminal) == {
-            "job_id",
-            "iterations",
-            "quality_score",
-            "cost_usd",
-            "llm_calls",
-            "elapsed_sec",
-        }
+        # Pinned as an exact key set, against the same constant the
+        # replay test below uses. That shared constant is the assertion:
+        # these two frames are built by different call sites and used to
+        # carry different fields (see `TERMINAL_FRAME_KEYS`), so a
+        # regression that re-forks them fails here.
+        assert set(terminal) == TERMINAL_FRAME_KEYS
+        # The fields the live frame gained in that reconciliation. A
+        # client watching the stream can now read the outcome off the
+        # terminal frame without a follow-up `GET`, which is what the
+        # replay could already do.
+        assert terminal["status"] == "succeeded"
+        assert terminal["error"] is None and terminal["error_type"] is None
 
         detail = await client.get(accepted["status_url"])
         assert detail.status_code == 200
@@ -339,10 +377,12 @@ class TestHttpSurface:
         )
         assert [name for name, _ in frames] == ["job_completed"]
         replayed = frames[0][1]
-        # The replay is the route's own snapshot, not the runner's live
-        # frame, so it answers the question a reconnecting client is
-        # actually asking — what happened — with a status and an error
-        # slot rather than with per-run telemetry.
+        # The replay is still the route's own snapshot rather than a
+        # buffered copy of the runner's frame — it is read off the job
+        # row at attach time, which is what makes a reconnect work at
+        # all. What changed in WO-A10 is that it now answers with the
+        # *same field set*: same constant as the live-stream test above.
+        assert set(replayed) == TERMINAL_FRAME_KEYS
         assert replayed["job_id"] == accepted["job_id"]
         assert replayed["status"] == "succeeded"
         assert replayed["error"] is None and replayed["error_type"] is None
@@ -352,3 +392,147 @@ class TestHttpSurface:
         assert body["llm_calls"] == 0
         assert usd(zero_spend_ledger.total_cost_usd) == "$0.0000"
         assert zero_spend_ledger.call_count == 0
+
+
+@contextlib.contextmanager
+def _shipped_log_stream() -> Iterator[list[dict[str, Any]]]:
+    """Capture what the deployed logger would actually write.
+
+    `caplog` keeps `LogRecord`s and formats them afterwards, which is
+    the wrong shape for anything the *context* supplies: `request_id`,
+    `principal_hash`, `trace_id` and `span_id` are read by
+    `JsonFormatter` at format time, and by the time a test inspects
+    caplog the request has ended and the context is unbound. Formatting
+    through a live handler instead means the line is built at emit time,
+    exactly as the root handler builds it in production — so this
+    asserts on the line an operator greps rather than on a record that
+    resembles it.
+    """
+    lines: list[dict[str, Any]] = []
+
+    class _Capture(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            lines.append(json.loads(JsonFormatter().format(record)))
+
+    handler = _Capture()
+    root = logging.getLogger()
+    previous_level = root.level
+    root.addHandler(handler)
+    root.setLevel(logging.INFO)
+    try:
+        yield lines
+    finally:
+        root.removeHandler(handler)
+        root.setLevel(previous_level)
+
+
+class TestTheAccessLineOverARealSocket:
+    """WO-A10, and the claims only a real server can settle.
+
+    `tests/test_api_middleware.py` drives the middleware over
+    `ASGITransport`, which proves what the middleware emits. It cannot
+    prove the *other* half — that uvicorn's own access line is gone.
+    That line is written by uvicorn's protocol implementation on a real
+    connection, so an in-process ASGI transport never produces one
+    whether the setting is right or wrong, and a test there would pass
+    against a broken `serve.py`.
+    """
+
+    async def test_our_structured_line_replaces_uvicorns_prose_one(
+        self,
+        live_server: tuple[AsyncClient, threading.Event],
+    ) -> None:
+        client, gate = live_server
+        gate.set()
+
+        with _shipped_log_stream() as lines:
+            probe = await client.get("/healthz")
+
+        assert probe.status_code == 200
+
+        # Ours: one line, with the facts as fields rather than as a
+        # sentence, and the route *template* rather than the raw path.
+        access = [line for line in lines if line["message"] == "api_request_completed"]
+        assert len(access) == 1, [line["message"] for line in lines]
+        (line,) = access
+        assert line["method"] == "GET"
+        assert line["route"] == "/healthz"
+        assert line["http_status"] == 200
+        assert isinstance(line["elapsed_ms"], float)
+        assert "unregistered_event" not in line
+
+        # Uvicorn's: absent from the JSON stream, which is the claim
+        # `docs/observability.md` recorded as a gap — "access lines land
+        # in the JSON stream as unparsed text".
+        #
+        # Asserted on the stream rather than on `caplog`, because caplog
+        # cannot answer this question. `_pytest/logging.py`'s
+        # `catching_logs.__enter__` deliberately attaches its capture
+        # handler to every **non-propagating** logger, and
+        # `access_log=False` works precisely by making `uvicorn.access`
+        # non-propagating with no handlers — so pytest hands it handlers
+        # back, `Logger.hasHandlers()` reads True again, and uvicorn's
+        # protocol re-enables the line it was told to suppress. Under
+        # pytest the record therefore still exists; what it can no
+        # longer do is reach the root handler that writes the deployed
+        # stream, and that is the production behaviour.
+        assert not [line for line in lines if line["logger"] == "uvicorn.access"]
+        # The mechanism itself, so a future uvicorn that renamed the
+        # setting fails here rather than quietly restoring the line.
+        assert logging.getLogger("uvicorn.access").propagate is False
+
+    async def test_the_client_is_handed_the_id_that_is_on_the_log_line(
+        self,
+        live_server: tuple[AsyncClient, threading.Event],
+    ) -> None:
+        """The join an operator makes during an incident.
+
+        A user reports a failure and quotes the id their browser saw.
+        That id has to appear on the server's record of the same
+        request, or the report is unactionable.
+        """
+        client, gate = live_server
+        gate.set()
+
+        with _shipped_log_stream() as lines:
+            response = await client.get("/healthz")
+
+        request_id = response.headers["X-Request-Id"]
+        assert request_id
+        (line,) = [
+            entry for entry in lines if entry["message"] == "api_request_completed"
+        ]
+        # Carried by the bound *context*, not passed as an extra — which
+        # is what puts it on every other line the request produced too.
+        assert line["request_id"] == request_id
+
+    async def test_a_callers_traceparent_is_adopted_rather_than_replaced(
+        self,
+        live_server: tuple[AsyncClient, threading.Event],
+    ) -> None:
+        """The outer hop ADR 0066 left open, over a real socket.
+
+        ADR 0066 made a job one trace from submission inward. If the
+        edge starts a fresh trace, a caller that already had one — the
+        Next.js proxy, another service — still ends up with two
+        disconnected halves and no way to join them.
+        """
+        client, gate = live_server
+        gate.set()
+        trace_id = "4bf92f3577b34da6a3ce929d0e0e4736"
+
+        with _shipped_log_stream() as lines:
+            await client.get(
+                "/healthz",
+                headers={"traceparent": f"00-{trace_id}-00f067aa0ba902b7-01"},
+            )
+
+        (line,) = [
+            entry for entry in lines if entry["message"] == "api_request_completed"
+        ]
+        # Tracing is off in the shipped defaults, so no span is opened —
+        # but the remote context is still *attached*, which is what puts
+        # the caller's id on the line and what makes
+        # `inject_trace_context()` stamp the caller's trace on the job
+        # row at submit.
+        assert line["trace_id"] == trace_id

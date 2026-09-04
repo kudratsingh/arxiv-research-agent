@@ -107,6 +107,19 @@ class TestTheVocabulariesThisTierAssertsOn:
         metrics_module.record_llm_retries(model="m", retries=1)
         metrics_module.record_llm_upstream_error(model="m", status="500")
         metrics_module.record_rate_limit_rejection(backend="memory")
+        # WO-A10's HTTP RED histogram, driven through the same helper
+        # `ObservabilityMiddleware` calls. It joined `LIVE_INSTRUMENTS`
+        # because the Redis-outage-at-submit scenario now asserts on it:
+        # it is the only instrument in this tier that can see a failure
+        # which never became a job.
+        metrics_module.record_http_server_request(
+            method="GET",
+            route="/healthz",
+            status_code=200,
+            scheme="http",
+            duration_sec=0.001,
+            error_type=None,
+        )
 
         assert triple.instrument_names() >= LIVE_INSTRUMENTS
 

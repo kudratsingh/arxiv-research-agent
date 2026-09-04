@@ -12,16 +12,24 @@ Three moments, three different right answers:
 
 | moment | code | event | metric |
 |---|---|---|---|
-| at submit | `internal_unexpected`, HTTP 500 | `api_request_failed` | `research_jobs_total` **does not move** |
+| at submit | `internal_unexpected`, HTTP 500 | `api_request_failed` | `http.server.request.duration{route="/research", status=500, error.type="ConnectionError"}` |
 | over-cap rejection | `rate_limited`, HTTP 429 | `api_request_rejected` | `rate_limit_rejections_total{backend="redis"}` |
 | mid-job terminal write | the job's own outcome code | `api_job_terminal_persist_retry` ×3 → `api_job_terminal_persist_failed` | `research_jobs_total{status, error_type}` |
 | SSE fan-out | the job's own outcome code | `sse_terminal_publish_failed` → `sse_terminal_publish_gave_up` | `research_jobs_total{status, error_type}` |
 
-The submit row is the one worth reading twice. A Redis outage at
-submit is **invisible to every job metric**, because the request never
-became a job — the only signal is the ERROR log. That is not a bug in
-this test; it is the RED-metrics gap WO-A07 is filling, and writing it
-down here is what stops it from being rediscovered.
+The submit row is the one worth reading twice, and **WO-A10 changed
+it**. When this file was written, a Redis outage at submit moved no
+metric at all: the request never became a job, so no job counter could
+see it, and a fleet whose Redis had died read as *idle* rather than as
+failing. The only signal was the ERROR log.
+
+The metric leg of that row is now the HTTP RED histogram, which counts
+the request the fleet actually refused. `research_jobs_total` still
+does not move, and the assertion saying so is still here — that part
+was never the defect. A submit that never became a job genuinely cannot
+appear in a job counter, and recording one from the route would invent
+a terminal outcome for a job that has no row. What was missing was an
+instrument at the layer the failure actually happened on.
 
 The rate limiter's *outage* behaviour is deliberately not pinned here;
 see `test_resilience_faults.py` and WO-A04.
@@ -133,10 +141,39 @@ class TestRedisIsDownAtSubmit:
         assert getattr(record, "error_type", None) == AppError.code
         assert OUTAGE_TEXT in getattr(record, "error", "")
 
-        # Leg 3 — the metric, and the honest answer is that it did not
-        # move. A submit that never became a job cannot appear in a job
-        # counter, so during a Redis outage the fleet looks *idle*
-        # rather than failing. WO-A07's RED metrics are what close this.
+        # Leg 3 — the metric. WO-A10 gave this leg something to say.
+        # The HTTP RED histogram counts the refused submit against the
+        # route *template*, so a Redis outage shows up as a 500 rate on
+        # `POST /research` instead of as an unexplained absence of job
+        # completions.
+        #
+        # `error.type` is the driver's exception class, not the string
+        # `"500"`, and that is a consequence of where the two layers
+        # sit: ADR 0064's bare-`Exception` handler is dispatched by
+        # Starlette's `ServerErrorMiddleware`, which wraps the whole
+        # stack and therefore sits *outside* `ObservabilityMiddleware`.
+        # The middleware sees the raw exception on its way past and can
+        # name it; the status-code fallback in `_http_error_type` is for
+        # the 5xx that were handled *below* it. So a Redis outage is
+        # distinguishable from a Postgres one in the metric, which is
+        # the whole point of the attribute.
+        triple.assert_triple(
+            code=body["error"]["code"],
+            event="api_request_failed",
+            instrument="http.server.request.duration",
+            attributes={
+                "http.request.method": "POST",
+                "http.route": "/research",
+                "http.response.status_code": 500,
+                "error.type": "ConnectionError",
+            },
+        )
+
+        # And the negative half, which is still true and still worth
+        # pinning: a submit that never became a job cannot move a job
+        # counter. Recording one here would invent a terminal outcome
+        # for a job with no row, and would double-count the day the
+        # route learned to retry.
         triple.assert_not_recorded("research_jobs_total")
 
     async def test_the_request_id_ties_the_body_to_the_log_line(

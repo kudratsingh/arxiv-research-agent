@@ -28,8 +28,9 @@ from typing import Any
 
 import pytest
 from starlette.requests import Request
+from starlette.responses import Response
 
-from src.api.routes import _log_health_transitions, healthz
+from src.api.routes import _log_health_transitions, healthz, readyz
 from src.observability import JsonFormatter, bind_context, reset_context
 
 pytestmark = pytest.mark.unit
@@ -263,6 +264,70 @@ class TestHealthzWiring:
         # Still edges-only: the set created on first use is stored back
         # on the app state, so probe two is silent.
         assert _events(caplog) == [(DEGRADED_EVENT, logging.WARNING)]
+
+
+class TestReadyzSharesTheSameEdges:
+    """WO-A10 added a second prober; there must not be a second latch.
+
+    `/readyz` runs the same dependency probes as `/healthz` — through
+    the same `_probe_dependencies` helper, so the two endpoints cannot
+    come to disagree about whether Redis is up, which would be the worst
+    possible failure of a health split. The latch they share is the
+    other half of that: an orchestrator polling `/readyz` every 5s
+    beside a compose healthcheck polling `/healthz` every 15s would
+    otherwise log ~23k lines a day for one dead dependency, or — with
+    two independent latches — log every outage twice.
+    """
+
+    async def test_readyz_logs_the_edge_once_and_healthz_stays_quiet_after_it(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        store = _PingStore()
+        state = _state(store)
+        with caplog.at_level(logging.INFO):
+            store.healthy = False
+            await readyz(_request(store, state), Response())
+            await healthz(_request(store, state))
+            await readyz(_request(store, state), Response())
+
+        assert _events(caplog) == [(DEGRADED_EVENT, logging.WARNING)]
+        assert caplog.records[-1].dependency == "redis"  # type: ignore[attr-defined]
+
+    async def test_recovery_is_logged_once_across_both_probes(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        store = _PingStore()
+        state = _state(store)
+        with caplog.at_level(logging.INFO):
+            store.healthy = False
+            await healthz(_request(store, state))
+            store.healthy = True
+            await readyz(_request(store, state), Response())
+            await healthz(_request(store, state))
+
+        assert _events(caplog) == [
+            (DEGRADED_EVENT, logging.WARNING),
+            (RECOVERED_EVENT, logging.INFO),
+        ]
+
+    async def test_both_endpoints_report_the_same_dependency_body(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The claim the shared helper exists to make.
+
+        Two probe implementations would eventually answer differently,
+        and an operator reading one while an orchestrator acts on the
+        other is the incident that produces.
+        """
+        store = _PingStore()
+        store.healthy = False
+        state = _state(store)
+        with caplog.at_level(logging.INFO):
+            liveness = await healthz(_request(store, state))
+            readiness = await readyz(_request(store, state), Response())
+
+        assert liveness.dependencies == readiness.dependencies
+        assert liveness.status == readiness.status == "degraded"
 
 
 # ---------------------------------------------------------------------------

@@ -29,7 +29,7 @@ from src.api.jobs import (
     JobStatus,
     drain_events,
 )
-from src.api.runner import run_job
+from src.api.runner import run_job, terminal_event_data
 from src.api.schemas import (
     ConversationCreateRequest,
     ConversationDetail,
@@ -1157,6 +1157,33 @@ def _log_health_transitions(
     known_degraded.intersection_update(dependencies)
 
 
+async def _probe_dependencies(state: dict[str, Any]) -> dict[str, str]:
+    """Ping every backend this deployment actually configures.
+
+    Shared by `/healthz` and `/readyz` so the two can never come to
+    disagree about whether Redis is up — which would be the worst
+    possible failure of a health split, since an operator reads one and
+    an orchestrator reads the other.
+
+    Args:
+        state: The lifespan state, for the job store's Redis client.
+
+    Returns:
+        Dependency name to `"ok"` or `"error: <ExceptionName>"`. A
+        backend the deployment has not configured is absent rather than
+        reported as healthy.
+    """
+    dependencies: dict[str, str] = {}
+    redis_status = await _redis_status(state["store"])
+    if redis_status is not None:
+        dependencies["redis"] = redis_status
+    # Only ping Postgres when the deployment configures it — the
+    # in-memory demo path has no pool to check.
+    if settings.postgres_url:
+        dependencies["postgres"] = await _postgres_status()
+    return dependencies
+
+
 @router.get(
     "/healthz",
     response_model=HealthResponse,
@@ -1181,16 +1208,20 @@ async def healthz(request: Request) -> HealthResponse:
     leaving them out would report free capacity this worker does not
     have; `abandoned_node_threads` breaks them out separately.
     """
+    # WO-A10 kept the always-200 semantics above deliberately, and the
+    # `/readyz` split below is what makes that safe: an orchestrator
+    # that needs to stop routing traffic to a degraded worker now has
+    # somewhere to read that, so this endpoint no longer has to answer
+    # two questions with one status code.
+    #
+    # Stated here rather than in the docstring on purpose: FastAPI
+    # publishes a route's docstring as its OpenAPI `description`, and
+    # `web/contract/openapi.json` is a byte-compared snapshot whose
+    # regeneration also regenerates `web/lib/api/generated/schema.d.ts`
+    # — three `web/` artifacts churned to add a paragraph for a reader
+    # who is looking at this file anyway.
     state = _get_state(request)
-    dependencies: dict[str, str] = {}
-
-    redis_status = await _redis_status(state["store"])
-    if redis_status is not None:
-        dependencies["redis"] = redis_status
-    # Only ping Postgres when the deployment configures it — the
-    # in-memory demo path has no pool to check.
-    if settings.postgres_url:
-        dependencies["postgres"] = await _postgres_status()
+    dependencies = await _probe_dependencies(state)
 
     # ADR 0053: the body already told the caller; the log stream did
     # not. Edges only — see `_log_health_transitions`.
@@ -1201,6 +1232,89 @@ async def healthz(request: Request) -> HealthResponse:
     return HealthResponse(
         status="degraded" if degraded else "ok",
         active_jobs=len(state["tasks"]) + abandoned,
+        abandoned_node_threads=abandoned,
+        max_concurrent_jobs=state["max_concurrent_jobs"],
+        dependencies=dependencies,
+    )
+
+
+@router.get(
+    "/readyz",
+    response_model=HealthResponse,
+    summary="Readiness — 503 when this worker cannot take more traffic.",
+    # Deliberately absent from the OpenAPI document. That document is
+    # the *frontend's* generated contract: `web/contract/openapi.json`
+    # is snapshotted by `tests/test_contract_openapi_snapshot.py`,
+    # regenerated into `web/lib/api/generated/schema.d.ts`, and pinned
+    # again by `web/tests/api.test.ts`. `/readyz` has no browser client
+    # — it is read by an orchestrator — so publishing it would churn
+    # three `web/` artifacts this work order does not own in order to
+    # describe a route no generated client will ever call. It is
+    # documented in `docs/architecture.md` and `docs/observability.md`
+    # instead, which is where an operator looks for it.
+    include_in_schema=False,
+)
+async def readyz(request: Request, response: Response) -> HealthResponse:
+    """Readiness: can this worker usefully take another request?
+
+    The other half of the split ADR 0042 could not make on its own.
+    `/healthz` answers "is this process alive", and must stay 200 while
+    a dependency is down — restarting a worker does not fix a dead
+    Redis, and a liveness probe that 503s on dependency failure turns a
+    backend blip into a rolling-restart storm. That left nothing to
+    answer the *other* question, so an orchestrator had no way to drain
+    a worker whose Redis had gone away: it kept receiving submits that
+    could only 500.
+
+    This answers that one, and returns **503** in exactly two cases:
+
+    - **A required dependency is down.** Same probes, same shared
+      helper, so the two endpoints cannot disagree.
+    - **The job queue is saturated.** Every concurrency permit is
+      taken, so an accepted job would sit in `pending` behind the
+      ceiling. A load balancer that skips this worker sends the request
+      to one that can start it now; one that has no readiness signal
+      spreads the queue evenly across a fleet that is uniformly full.
+
+    Auth-exempt for the same reason `/healthz` is: an orchestrator
+    probe cannot present a key. It reports only counts this worker
+    already publishes in `/healthz`, so the exemption leaks nothing new.
+
+    The body is `HealthResponse`, unchanged — `status` is `ok` or
+    `degraded`, and *why* a 503 was returned is readable from the body
+    without a third status value: `dependencies` names a failed backend,
+    and `active_jobs` against `max_concurrent_jobs` shows saturation.
+
+    Args:
+        request: The live request, for the lifespan state.
+        response: Injected so the status code can be set per outcome
+            while the declared response model stays one shape.
+
+    Returns:
+        The same payload `/healthz` returns, with HTTP 200 when ready
+        and 503 when not.
+    """
+    state = _get_state(request)
+    dependencies = await _probe_dependencies(state)
+
+    # The same latched edge set as `/healthz`, on purpose: whichever
+    # probe observes a dependency going down logs it once, and the
+    # other one stays quiet. Two sets would double every outage line.
+    _log_health_transitions(dependencies, _degraded_dependencies(request))
+
+    degraded = any(v != "ok" for v in dependencies.values())
+    abandoned = abandoned_node_count()
+    active = len(state["tasks"]) + abandoned
+    # `>=`, not `>`: at exactly the ceiling every permit is held, so the
+    # next submit queues. Reporting "ready" at that point is what makes
+    # a queue build up behind a worker that is already full.
+    saturated = active >= state["max_concurrent_jobs"]
+    if degraded or saturated:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+    return HealthResponse(
+        status="degraded" if degraded else "ok",
+        active_jobs=active,
         abandoned_node_threads=abandoned,
         max_concurrent_jobs=state["max_concurrent_jobs"],
         dependencies=dependencies,
@@ -1248,18 +1362,17 @@ def _turn_ready_data(job: Job) -> dict[str, Any]:
 
 
 def _terminal_event_data(job: Job) -> dict[str, Any]:
-    return {
-        "job_id": job.job_id,
-        "status": job.status.value,
-        "elapsed_sec": job.elapsed_sec(),
-        "error": job.error,
-        "error_type": job.error_type,
-        "cost_cap_status": job.cost_cap_status,
-        "cost_cap_message": job.cost_cap_message,
-        "iterations": job.iterations,
-        "quality_score": job.quality_score,
-        "cost_usd": job.cost_usd,
-    }
+    """The replay frame's payload — the runner's builder, not a copy.
+
+    WO-A10. This used to be a second, hand-maintained field list, and
+    it had already drifted from the live frame the runner emits: a
+    client that reconnected after the job ended read `status`, and one
+    that stayed connected read `quality_score`, for the same event name.
+    Delegating means the drift cannot recur — there is one field list,
+    and `src/api/runner.py::terminal_event_data` documents why it is the
+    union of what the two used to carry.
+    """
+    return terminal_event_data(job)
 
 
 def _get_state(request: Request) -> dict[str, Any]:

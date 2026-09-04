@@ -1,12 +1,17 @@
-"""The OpenTelemetry GenAI conventional names, written down exactly once.
+"""The OpenTelemetry conventional names, written down exactly once.
 
-Every `gen_ai.*` string this repository emits is a constant in this
-module and nowhere else. That is not tidiness: these names are the
-whole reason WO-A07 exists. A dashboard, a vendor cost view or an MCP
+Every `gen_ai.*` and `http.*` string this repository emits is a constant
+in this module and nowhere else. That is not tidiness: these names are
+the whole reason WO-A07 exists. A dashboard, a vendor cost view or an MCP
 instrumentation added later reads *the standard's* names, so a single
 character wrong here silently produces telemetry that no off-the-shelf
 consumer parses — and a wrong name that is spelled consistently across
 five modules looks exactly like a right one.
+
+Two families with opposite stability live here, and the split is stated
+at the HTTP block below rather than left for a reader to infer: the
+GenAI names are pre-stable and pinned to a commit, the HTTP ones are
+stable and pinned by the specification.
 
 ## What was pinned, and why it is a commit and not a version
 
@@ -122,6 +127,90 @@ ERROR_TYPE: Final = "error.type"
 
 #: Stable core-semconv attributes for the peer the client talked to.
 SERVER_ADDRESS: Final = "server.address"
+
+# ---------------------------------------------------------------------------
+# HTTP — the stable conventions (WO-A10)
+# ---------------------------------------------------------------------------
+#
+# Everything above this line is `development`-stability GenAI and is
+# expected to churn. The HTTP conventions are the opposite: `http.*` and
+# the `http.server.*` metrics reached **stable** in semconv v1.23.0 and
+# carry the usual stability guarantee, so these names are pinned by the
+# specification itself rather than by the commit above. They live in this
+# module anyway because the reason for the module is "one home for
+# conventional names", not "one home for unstable ones" — a second home
+# is how `http.route` and `http_route` end up in the same repository.
+
+#: The request method. **Must** be a member of `HTTP_METHODS` or the
+#: literal `_OTHER`; see `http_request_method` for why that matters more
+#: here than tidiness.
+HTTP_REQUEST_METHOD: Final = "http.request.method"
+
+#: The method as it arrived, recorded *only* alongside `_OTHER`. The
+#: conventions define it as opt-in for exactly this case, and this
+#: repository never sets it on a metric — see `http_request_method`.
+HTTP_REQUEST_METHOD_ORIGINAL: Final = "http.request.method_original"
+
+#: The matched route **template** (`/research/{job_id}`), never the raw
+#: path. The specification states the cardinality rule outright: a raw
+#: path carries job ids, conversation ids and learner path ids, and one
+#: series per job id is not a metric.
+HTTP_ROUTE: Final = "http.route"
+
+HTTP_RESPONSE_STATUS_CODE: Final = "http.response.status_code"
+
+#: `http` / `https`. Required on both server instruments below.
+URL_SCHEME: Final = "url.scheme"
+
+#: Seconds, per the stable conventions — not milliseconds, which is what
+#: most hand-rolled HTTP middleware records and why a dashboard built
+#: against the standard reads a hand-rolled histogram as microseconds.
+METRIC_HTTP_SERVER_REQUEST_DURATION: Final = "http.server.request.duration"
+
+#: The conventional in-flight instrument: an UpDownCounter, not a gauge,
+#: because concurrent requests are a delta the middleware already knows
+#: (+1 on entry, −1 on exit) rather than a value someone has to sample.
+METRIC_HTTP_SERVER_ACTIVE_REQUESTS: Final = "http.server.active_requests"
+UNIT_REQUEST: Final = "{request}"
+
+#: The methods RFC 9110 / RFC 5789 define, which is the set the
+#: conventions say to pass through verbatim.
+HTTP_METHODS: Final[frozenset[str]] = frozenset(
+    {
+        "CONNECT",
+        "DELETE",
+        "GET",
+        "HEAD",
+        "OPTIONS",
+        "PATCH",
+        "POST",
+        "PUT",
+        "TRACE",
+    }
+)
+
+#: Everything else. The conventions require this substitution, and the
+#: reason is a live cardinality attack rather than neatness: `http.method`
+#: is attacker-controlled on an open port, so a loop sending
+#: `AAAA`…`ZZZZ` would otherwise mint a metric series per request.
+HTTP_METHOD_OTHER: Final = "_OTHER"
+
+
+def http_request_method(method: str) -> str:
+    """Return the conventional `http.request.method` value.
+
+    Args:
+        method: The method off the ASGI scope, in whatever case the
+            client sent it.
+
+    Returns:
+        The method itself when it is one the specification knows, else
+        `_OTHER`. Case-sensitive on purpose: the conventions treat a
+        known method in the wrong case as unknown, because `get` and
+        `GET` are different tokens on the wire and normalizing them
+        would hide a broken client.
+    """
+    return method if method in HTTP_METHODS else HTTP_METHOD_OTHER
 
 # ---------------------------------------------------------------------------
 # `gen_ai.operation.name` enum members this repository uses

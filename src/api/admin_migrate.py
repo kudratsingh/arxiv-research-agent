@@ -80,7 +80,7 @@ from src.api.redis_store import (
     build_redis_client,
 )
 from src.config import settings
-from src.observability import get_logger
+from src.observability import get_logger, hash_principal
 
 log = get_logger(__name__)
 
@@ -461,7 +461,19 @@ async def assign_job_owner(
         changed += 1
     log.info(
         "admin_migrate_jobs_assigned",
-        extra={"owner": owner, "changed": changed, "matched": len(rows)},
+        # WO-A10: the hash, never the `key_id`. This line used to name
+        # the principal in clear, in an indexed store, for the whole
+        # retention window — undoing in the log layer exactly what ADR
+        # 0049 refused to do in the metric layer and ADR 0067 built
+        # `hash_principal` to prevent. The operator ran this command
+        # with `--owner`, so they already know which principal it was;
+        # what the line has to carry is something that *joins* to the
+        # rest of that principal's lines, which is what the hash is.
+        extra={
+            "principal_hash": hash_principal(owner),
+            "changed": changed,
+            "matched": len(rows),
+        },
     )
     return changed
 
@@ -808,7 +820,8 @@ def assign_conversation_owner(
         conn.commit()
     log.info(
         "admin_migrate_conversations_assigned",
-        extra={"owner": owner, "changed": changed},
+        # WO-A10, same reason as `assign_job_owner` above.
+        extra={"principal_hash": hash_principal(owner), "changed": changed},
     )
     return ActionResult(
         store=STORE_CONVERSATIONS,
