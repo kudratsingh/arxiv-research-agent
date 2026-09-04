@@ -259,6 +259,19 @@ and its verdict means nothing. The provenance block records the value,
 so the swap is visible in the data rather than only in somebody's
 memory.
 
+### `src/eval/groundedness.py`
+
+**Landed (WO-A16, ADR
+[0074](decisions/0074-deterministic-groundedness.md)).** Deterministic
+groundedness with **no model call**: cited arXiv identifiers resolved
+against the papers the run actually retrieved, and quoted spans located
+verbatim in the cited paper's text under a normalization that is stated
+and tested rule by rule. Every metric publishes its denominator, and a
+zero denominator is `null` with a reason code rather than a score. Full
+treatment in [Deterministic groundedness (no
+judge)](#deterministic-groundedness-no-judge); it is not yet wired into
+the campaign.
+
 ### `src/eval/runner.py`
 
 **Landed.** Sequential batch runner with per-query error isolation
@@ -516,6 +529,218 @@ harness builds no machinery for it. **Position bias has not** collapsed
 and is worth controlling by swap/AB+BA averaging — but none of these
 judges runs a pairwise comparison, so there is no position to swap
 today. If a pairwise judge is ever added, that control comes with it.
+
+## Deterministic groundedness (no judge)
+
+`src/eval/groundedness.py`. The domain hands this repository a signal
+most systems cannot have: because the corpus is arXiv papers, two of the
+most valuable accuracy checks are **decidable without a model call** —
+does every cited identifier resolve, and does every quoted span appear
+verbatim in the paper's text. ADR
+[0074](decisions/0074-deterministic-groundedness.md) is the decision;
+`03-ARCHITECTURE.md` §4.4 is where it sits in the architecture.
+
+Zero spend, offline, no I/O of any kind. Nothing in the module imports
+`src.llm`, `requests` or `socket`, and
+`tests/test_groundedness.py::TestNoJudgeNoNetwork` asserts that
+structurally rather than trusting the harness to catch it.
+
+### Identifiers resolve against the run's own corpus
+
+**Not against arxiv.org.** The harness blocks non-loopback sockets, but
+the design reason is the stronger one: a citation to a real paper *the
+run never fetched* is still a fabricated citation, and that is the
+interesting failure. The oracle is `state["papers"]`.
+
+Three outcomes, kept distinct because they have different owners:
+
+| reason | meaning |
+|---|---|
+| `citation_resolved` | well-formed, and this run retrieved it |
+| `citation_not_retrieved` | well-formed, and this run never fetched it |
+| `citation_malformed` | not a well-formed arXiv identifier |
+
+Both surfaces are checked: identifiers in the report body (`arXiv:…` or
+an `arxiv.org` URL — a bare number in prose is deliberately *not*
+extracted) and the identifier each `state["citations"]` entry asserts.
+The second is the one `citation_accuracy` cannot see, because it matches
+`[Author, Year]` tags against the same list that wrote them.
+
+Canonical form is `arxiv:<id>`, matching `learning_benchmark.py`.
+Version suffixes are stripped (a citation to v2 of a paper fetched at v1
+is not a fabrication), old-style ids are case-folded, and Semantic
+Scholar papers keep their `s2:` identity so a citation to one resolves.
+
+### What quote normalization does, and what it does not
+
+Three match levels, and **which one matched is recorded on every quote**:
+
+| level | rule |
+|---|---|
+| `exact` | raw substring, no transformation |
+| `folded` | format chars stripped → NFKC → line-break de-hyphenation → quote/dash folding → whitespace collapse → case-fold |
+| `skeleton` | `folded`, then everything that is not a letter or digit removed |
+
+`folded`, in order, each rule with its own test:
+
+1. Unicode `Cf` format characters and U+00AD soft hyphen removed — PDF
+   extraction emits zero-width spaces, joiners and soft hyphens nobody
+   typed.
+2. NFKC — folds the ligatures a TeX-set PDF extracts as single code
+   points (`ﬁ` U+FB01, `ﬂ`, `ﬀ`), full-width forms, and `…` to `...`.
+3. A hyphen at a line break followed by a **lower-case** letter is
+   joined: `inter-\nnational` → `international`.
+4. Curly quotes, angle quotes and primes fold to ASCII `'` and `"`.
+5. The six dash code points and U+2212 fold to `-`.
+6. Every whitespace run (NBSP, thin space, form feed) collapses to one
+   space.
+7. Case is folded.
+
+**Nothing else.** No stemming, no stopword removal, no abbreviation
+expansion, and no edit-distance or fuzzy matching anywhere. One changed
+word, one changed number or a reordered clause fails at every level, and
+`TestWhatIsNotNormalized` holds that edge — the entire value of a
+verbatim check is that a near miss is a miss.
+
+Rule 3 is knowingly incomplete and says so: it also turns
+`state-\nof-the-art` into `stateof-the-art`, which is wrong. No
+dictionary-free rule can separate a broken word from a compound at a
+line break, so `skeleton` removes hyphens outright and subsumes the
+case. A cheap rule plus a fallback that covers its failure beats a rule
+claiming a distinction it cannot make.
+
+Elided quotations (`"… ... …"`) are split on the ellipsis and their
+fragments matched **in order**, so fragments appearing in the wrong order
+are correctly not found. A fragment under three words is evidence-free
+and the quote is reported undecidable instead of scored.
+
+Quoted spans below `min_quote_words` (6, published on every result) are
+not treated as quotations at all: `the "attention" mechanism` is
+terminology, and checking it against a paper would measure the report's
+punctuation habits. Markdown blockquotes are not treated as quotations
+either — in this repository's reports a `>` block is as often the model's
+own summary as a citation of source text.
+
+### Source completeness gates the denominator
+
+A quote can only be *falsified* against a complete source. Given only an
+abstract, "not found" means "not in the abstract" and is evidence of
+nothing.
+
+- `full` — parsed document text. A miss is a real miss.
+- `partial` — ranked evidence chunks (ADR 0016) or the abstract. A hit
+  still proves the quotation; a miss is `quote_source_incomplete` and
+  leaves the denominator instead of failing.
+
+`source_coverage` is published beside the rate, and every metric carries
+an `excluded` count, so the exclusion rule cannot quietly empty the
+metric. Sources are held as `segments` and never matched across two of
+them: the evidence chunks are non-contiguous, and whitespace collapses at
+`folded` and vanishes at `skeleton`, so no separator survives to keep two
+excerpts apart.
+
+One more verdict falls out of this: when the attributed paper's source is
+`full`, the quote is absent from it, and it *is* present verbatim in
+another paper's `full` source, the outcome is `quote_misattributed` — a
+specific defect no judge names reliably.
+
+### Metrics that cannot report a score they did not earn
+
+`citation_resolution_rate`, `quote_verbatim_rate` and
+`unsupported_claim_count` share one envelope:
+
+```json
+{"name": "...", "value": 0.8, "numerator": 4, "denominator": 5,
+ "excluded": 1, "reason": null}
+```
+
+**`value` is `null` exactly when `denominator` is 0**, with a reason
+code — never a score. This is the defect being fixed: `citation_accuracy`
+returns `1.0` for a report with zero citations, awarding a perfect score
+to the exact failure it exists to catch.
+
+| reason | meaning |
+|---|---|
+| `no_citations` | the report and its citation list assert no identifier |
+| `no_quotes` | the report quotes nothing |
+| `no_checkable_quotes` | it quotes, and no complete source was available |
+| `no_checkable_claims` | nothing at all could be decided |
+
+`no_quotes` and `no_checkable_quotes` are separate because "quoted
+nothing" and "we had no PDF text" are different facts about a run, and
+collapsing them would hide an empty cache behind a clean-looking metric.
+`unsupported_claim_count` obeys the same rule though it is a count: zero
+problems found in zero claims checked is *nothing measured*, not nothing
+wrong.
+
+### The per-claim outcome, and who consumes it
+
+Every claim yields `{claim_id, kind, subject, locator, grounded, reason,
+detail}`, where `grounded` is `true`, `false`, or `null` for undecidable.
+`claim_id` is `<kind>:<sha256(subject)[:16]>` — content-derived, so the
+same claim carries the same id across arms and across runs, and moving a
+sentence does not move the id. `paired_outcomes()` projects a result to
+`{claim_id: bool}`, dropping undecided claims rather than defaulting
+them, which is the shape a paired (McNemar) comparison consumes.
+
+The module deliberately does not decide whether a claim id present in one
+arm and absent from the other is discordant or out of scope; that is a
+statistical judgement and belongs with the paired-comparison code. This
+side's only contract is that the ids are stable.
+
+Results carry a `check` block (`check_version` + a digest of the
+normalization spec) — ADR 0070's rubric-versioning mechanism applied to a
+check that has no prompt — and the caller's `RunProvenance` block under
+the same key every other eval row uses.
+
+### What calibration found
+
+The trap in a check like this is that too strict a matcher measures the
+PDF parser rather than the agent. Four things were measured before the
+constants were fixed:
+
+1. **This repository's own e2e fixture cites a paper the run never
+   retrieved, and today's metric scores it 1.0.**
+   `tests/fixtures/e2e/research_llm_responses.json` cites
+   `arxiv:2311.05232`; under mock mode the retrieved corpus is
+   `search.MOCK_PAPERS`, whose survey paper is `2311.09000`.
+   `measure_citation_accuracy` returns `1.0`;
+   `citation_resolution_rate` returns `0.0` over a denominator of 1 with
+   reason `citation_not_retrieved`.
+2. **No recorded fixture in the repository contains a multi-word quoted
+   span.** Across all 30 JSON fixture files (1,143 strings) there are 17
+   quoted spans, every one a single word from a JSON key listing. So on
+   today's recorded corpus `quote_verbatim_rate` is `null` with reason
+   `no_quotes` — the right answer, and exactly what `citation_accuracy`
+   gets wrong. The quote path is calibrated against
+   `tests/fixtures/groundedness/run.json`, which is hand-authored and
+   says so in its own `_readme`.
+3. **Without normalization the check would measure the extractor.**
+   `fitz.Page.get_text()` returns a hard newline at every rendered line
+   break. In an offline PyMuPDF round-trip probe, three of four
+   quotations that genuinely appear in the source matched only at
+   `folded` or `skeleton`, and **none** matched as a raw substring. A
+   check without `folded` would report a hallucination rate near 100% on
+   true quotations. `exact_quote_count` is therefore reported beside the
+   rate rather than being the rate.
+4. **The six-word floor is doing real work.** Below it, quoted spans are
+   terminology and scare quotes, and including them would put the
+   report's punctuation habits into the denominator.
+
+A fifth result settled a question rather than a constant: PyMuPDF's
+base-14 fonts do not reproduce arXiv's extraction artefacts (non-Latin-1
+glyphs come back as `?`), so no test ships a generated PDF. The
+artefacts are planted in the fixture text directly and listed in its
+`_readme`.
+
+### Not yet wired into the campaign
+
+Nothing calls `measure_groundedness` from `runner.py` yet, and
+`citation_accuracy` is still the metric the gate reads. Both are
+follow-ups with named owners in ADR 0074: replacing `citation_accuracy`
+at its call sites belongs to whoever holds `src/eval/metrics.py`, and
+feeding parsed PDF text plus the paired outcomes into the campaign
+belongs to the work order holding `runner.py` and `stats.py`.
 
 ## Regression gate
 
