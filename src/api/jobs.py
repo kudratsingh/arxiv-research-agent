@@ -95,6 +95,34 @@ and a parked job whose lease has expired exactly as an orphaned
 """
 
 
+def _submission_trace_context() -> dict[str, str]:
+    """The W3C trace context this job is being submitted under (ADR 0066).
+
+    The default for `Job.trace_context`, and the reason a job's spans
+    join the request that asked for it instead of starting N new roots.
+    It is a `default_factory` rather than a line in each submit handler
+    on purpose: there are several places a `Job` is constructed and one
+    of them forgetting would break trace continuity silently, in
+    exactly the way that is hardest to notice — the trace would still
+    look complete, just smaller.
+
+    The import is deferred because this module is deliberately
+    dependency-free: `src.api.jobs` imports nothing from `src/` at
+    module scope, and pulling the OTel SDK in at import time to serve a
+    field default would undo that for every light consumer. The cost is
+    one cached module lookup on the first `Job` in a process.
+
+    Returns:
+        A carrier holding `traceparent` (and `tracestate` when a vendor
+        set one), or an empty dict when nothing is sampled — which is
+        the common case in tests and CLI runs, and which every consumer
+        reads as "no parent".
+    """
+    from src.observability.tracing import inject_trace_context
+
+    return inject_trace_context()
+
+
 @dataclass
 class Job:
     """A single research workflow invocation, tracked over its lifetime.
@@ -167,6 +195,22 @@ class Job:
     # `src/api/routes.py` treat `None`-owner rows as invisible when
     # auth is on so legacy data doesn't leak across principals.
     principal_key_id: str | None = None
+    # ADR 0066: the trace the job was submitted under, as a W3C
+    # carrier. Persisted with the rest of the row — `redis_store`
+    # derives its field list from this dataclass — because the worker
+    # that runs a job is often not the process that accepted it: a
+    # redriven job is picked up by whichever worker swept it (ADR
+    # 0038), so a ContextVar could never have carried this. `run_job`
+    # attaches it before opening the run's `invoke_workflow` span,
+    # which is what makes submit -> node -> model call one trace.
+    #
+    # A row written before this field existed reconstructs with the
+    # factory, which returns an empty carrier in the redriver's own
+    # context — an unparented run rather than one wrongly parented on
+    # the sweep that found it.
+    trace_context: dict[str, str] = field(
+        default_factory=_submission_trace_context
+    )
     event_queue: asyncio.Queue[dict[str, Any]] = field(
         default_factory=lambda: asyncio.Queue(maxsize=1024)
     )

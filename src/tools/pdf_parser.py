@@ -43,6 +43,8 @@ import requests
 
 from src.config import settings
 from src.observability import get_logger
+from src.observability.semconv import TOOL_PDF_PARSE, TOOL_TYPE_EXTENSION
+from src.observability.tracing import traced_tool
 from src.tools.http_session import build_retrying_session
 from src.tools.paper_cache import DEFAULT_CACHE_DIR, PaperCache, get_paper_cache
 
@@ -268,6 +270,7 @@ def _extract_text(pdf_path: Path) -> str:
         return "\n".join(page.get_text() for page in doc)
 
 
+@traced_tool(TOOL_PDF_PARSE, tool_type=TOOL_TYPE_EXTENSION)
 def parse_pdf(
     pdf_url: str,
     cache_dir: Path | str = DEFAULT_CACHE_DIR,

@@ -38,22 +38,77 @@ lifespan that configures/shuts down more than once need it to be.
 
 ## The instruments
 
-| Instrument                       | Kind             | Attributes         |
-|----------------------------------|------------------|--------------------|
-| `research_jobs_total`            | counter          | status, error_type |
-| `research_job_duration_seconds`  | histogram        | status             |
-| `research_active_jobs`           | observable gauge | -                  |
-| `research_abandoned_node_threads`| observable gauge | -                  |
-| `llm_cost_usd_total`             | counter (float)  | model              |
-| `llm_calls_total`                | counter          | model              |
-| `llm_retries_total`              | counter          | model              |
-| `llm_upstream_errors_total`      | counter          | model, status      |
-| `rate_limit_rejections_total`    | counter          | backend            |
+Repository-native, and the ones dashboards have read since ADR 0049:
+
+| Instrument                        | Kind             | Attributes               |
+|-----------------------------------|------------------|--------------------------|
+| `research_jobs_total`             | counter          | status, error_type, kind |
+| `research_job_duration_seconds`   | histogram        | status, kind             |
+| `research_job_queue_wait_seconds` | histogram        | kind                     |
+| `research_active_jobs`            | observable gauge | -                        |
+| `research_abandoned_node_threads` | observable gauge | -                        |
+| `research_queue_depth`            | observable gauge | -                        |
+| `research_queue_saturation_ratio` | observable gauge | -                        |
+| `llm_cost_usd_total`              | counter (float)  | model                    |
+| `llm_calls_total`                 | counter          | model                    |
+| `llm_retries_total`               | counter          | model                    |
+| `llm_upstream_errors_total`       | counter          | model, status            |
+| `rate_limit_rejections_total`     | counter          | backend                  |
+
+Conventional, added by WO-A07 from the pinned GenAI specification
+commit in `src.observability.semconv` — all histograms:
+
+| Instrument                            | Attributes                          |
+|---------------------------------------|-------------------------------------|
+| `gen_ai.client.token.usage`           | operation, provider, request.model, response.model, token.type |
+| `gen_ai.client.operation.duration`    | operation, provider, request.model, response.model, error.type |
+| `gen_ai.invoke_agent.duration`        | agent.name, error.type              |
+| `gen_ai.invoke_agent.inference_calls` | agent.name                          |
+| `gen_ai.invoke_agent.tool_calls`      | agent.name                          |
+| `gen_ai.execute_tool.duration`        | operation, tool.name, error.type    |
+| `gen_ai.invoke_workflow.duration`     | workflow.name, error.type           |
 
 The two LLM error/retry counters arrived with ADR 0051: Anthropic SDK
 retries (429 / 529 / timeouts) were invisible — no app log, the SDK's
 own retry line demoted below threshold, no metric — so a throttled
 fleet was indistinguishable from a slow one.
+
+## Why both tables exist, and for how long
+
+`llm_calls_total` and `gen_ai.client.operation.duration`'s *count* are
+the same measurement under two names, and so are
+`research_job_duration_seconds` and `gen_ai.invoke_workflow.duration`
+for a job. Emitting both **doubles the instrument count on this
+family**, which is a real cost paid on every export: more series in the
+collector, more cardinality in the backend, a larger OTLP payload each
+interval. It is paid deliberately and for one release only.
+
+Dropping a name silently is the failure mode this avoids. A dashboard
+panel, an alert rule and a runbook that name `llm_calls_total` do not
+error when the series stops arriving — they render a flat zero, which
+reads as "the fleet is idle" rather than "the metric was renamed".
+Nothing else in the observability stack fails that quietly. WO-A06's
+fault-injection tier also asserts on these names as they stand on
+`main`, so the aliases are load-bearing for a test suite and not only
+for a dashboard.
+
+**These aliases may be dropped after one release**, once the
+dashboards, alert rules and runbooks WO-A12 writes name the
+conventional instruments and `gen_ai.*` has been observed arriving in
+the collector. `llm_cost_usd_total` is *not* an alias and does not
+expire: the conventions define no cost attribute or metric at all
+(`02-STANDARDS.md` §1.3), so it is the only name that measurement has.
+
+## Queue saturation without a second counter
+
+`research_queue_depth` and `research_queue_saturation_ratio` are
+derived from the *existing* `active_jobs` callable the API lifespan
+already injects, against `settings.api_max_concurrent_jobs`. They are
+computed here rather than instrumented at the semaphore because a
+second counter at the acquire site could disagree with `/healthz`,
+which is the failure ADR 0049 avoided for the first two gauges and
+avoids again here. What they cost in exchange is stated on
+`register_runtime_gauges`: depth is an upper bound, not an exact count.
 
 The two gauges are *observable*: they read the live accounting
 `/healthz` already reports (in-flight job tasks, ADR 0047's abandoned
@@ -106,6 +161,7 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.resources import Resource
 
 from src.config import settings
+from src.observability import semconv
 from src.observability.logging import get_logger
 
 log = get_logger(__name__)
@@ -113,11 +169,15 @@ log = get_logger(__name__)
 __all__ = [
     "configure_metrics",
     "metrics_enabled",
+    "record_agent_invocation",
+    "record_genai_client_call",
     "record_job_terminal",
     "record_llm_retries",
     "record_llm_upstream_error",
     "record_llm_usage",
     "record_rate_limit_rejection",
+    "record_tool_execution",
+    "record_workflow_invocation",
     "register_runtime_gauges",
     "shutdown_metrics",
 ]
@@ -166,6 +226,96 @@ _JOB_DURATION_BUCKETS: tuple[float, ...] = (
     3600.0,
 )
 
+# Buckets for `research_job_queue_wait_seconds`, in seconds. Sub-second
+# boundaries matter here in a way they do not for job duration: on an
+# unsaturated fleet a job waits microseconds for its permit, and the
+# whole value of the metric is telling that apart from "waited four
+# minutes behind the concurrency ceiling". The tail reaches an hour
+# because a deep queue on a small worker genuinely does.
+_QUEUE_WAIT_BUCKETS: tuple[float, ...] = (
+    0.001,
+    0.01,
+    0.1,
+    1.0,
+    5.0,
+    15.0,
+    60.0,
+    300.0,
+    900.0,
+    3600.0,
+)
+
+# Buckets for the conventional GenAI duration histograms, in seconds.
+# The SDK's defaults are sub-second-heavy; a model call is seconds, a
+# graph node is several of them, and a workflow is minutes, so the
+# defaults would put nearly every observation in the overflow bucket
+# and make p95 unreadable — the same reasoning that sized
+# `_JOB_DURATION_BUCKETS`. One set for all four so a dashboard can
+# stack agent, tool and workflow latency on shared boundaries.
+_GENAI_DURATION_BUCKETS: tuple[float, ...] = (
+    0.1,
+    0.5,
+    1.0,
+    2.5,
+    5.0,
+    10.0,
+    30.0,
+    60.0,
+    120.0,
+    300.0,
+    600.0,
+)
+
+# Buckets for `gen_ai.client.token.usage`, in tokens. Spans a short
+# system prompt through the 200k-token context window, which is the
+# range a request can actually occupy.
+_TOKEN_BUCKETS: tuple[float, ...] = (
+    64.0,
+    256.0,
+    1024.0,
+    4096.0,
+    16384.0,
+    65536.0,
+    200000.0,
+)
+
+# Buckets for the two per-agent-invocation call counters. Small
+# integers, because the interesting question is "did this node make one
+# model call or eleven" — an agent that made 40 tool calls in one
+# invocation is a loop, and the top bucket is there to make that
+# visible rather than to resolve it precisely.
+_CALL_COUNT_BUCKETS: tuple[float, ...] = (
+    1.0,
+    2.0,
+    4.0,
+    8.0,
+    16.0,
+    32.0,
+    64.0,
+)
+
+# Attribute value for a measurement that did not fail. Same literal and
+# same reason as `NO_ERROR`, which it deliberately equals: `error.type`
+# is a conventional attribute name but its "nothing went wrong" value
+# is ours to choose, and choosing a second one would make
+# `sum by (error_type)` and `sum by (error.type)` disagree about what
+# success looks like.
+NO_ERROR_TYPE = NO_ERROR
+
+#: Metric attribute naming the job kind (ADR 0057) — `research` or
+#: `session`. Bounded by `JobKind` being a `Literal`, which is what
+#: makes it safe as a metric attribute: it is the axis session SLOs are
+#: cut along, and without it both kinds share one series.
+ATTR_KIND = "kind"
+
+#: `research_jobs_total`'s `status` for a session that hit its cost
+#: ceiling and was closed politely rather than failed (ADR 0062). It is
+#: not a `JobStatus` — the row really is `succeeded`, and the API
+#: contract does not change — but reporting it as a plain success made
+#: budget exhaustion indistinguishable from a clean run in metrics,
+#: which is the whole reason the value exists here.
+STATUS_DEGRADED_CLOSE = "degraded_close"
+
 
 @dataclass(frozen=True)
 class _Instruments:
@@ -179,11 +329,22 @@ class _Instruments:
 
     jobs_total: Counter
     job_duration_seconds: Histogram
+    job_queue_wait_seconds: Histogram
     llm_cost_usd_total: Counter
     llm_calls_total: Counter
     llm_retries_total: Counter
     llm_upstream_errors_total: Counter
     rate_limit_rejections_total: Counter
+    # The conventional GenAI family. Separate fields rather than a
+    # second bundle so `shutdown_metrics` still disarms every
+    # instrument with one assignment.
+    genai_token_usage: Histogram
+    genai_client_operation_duration: Histogram
+    genai_agent_duration: Histogram
+    genai_agent_inference_calls: Histogram
+    genai_agent_tool_calls: Histogram
+    genai_tool_duration: Histogram
+    genai_workflow_duration: Histogram
 
 
 _provider: MeterProvider | None = None
@@ -247,6 +408,16 @@ def _build_instruments(meter: Meter) -> _Instruments:
             ),
             explicit_bucket_boundaries_advisory=list(_JOB_DURATION_BUCKETS),
         ),
+        job_queue_wait_seconds=meter.create_histogram(
+            "research_job_queue_wait_seconds",
+            unit="s",
+            description=(
+                "Time a job spent accepted but not yet started — the "
+                "wait behind `api_max_concurrent_jobs`. The USE 'wait' "
+                "for the job queue."
+            ),
+            explicit_bucket_boundaries_advisory=list(_QUEUE_WAIT_BUCKETS),
+        ),
         llm_cost_usd_total=meter.create_counter(
             "llm_cost_usd_total",
             unit="USD",
@@ -281,6 +452,60 @@ def _build_instruments(meter: Meter) -> _Instruments:
                 "Requests rejected with HTTP 429 by the per-key rate "
                 "limiter, by limiter backend."
             ),
+        ),
+        # --- The conventional GenAI family (ADR 0066) ------------------
+        #
+        # Names, units and instrument kinds are `semconv` constants read
+        # from a pinned specification commit, never literals here: an
+        # instrument named from memory produces telemetry that no
+        # off-the-shelf GenAI dashboard parses, and it fails silently.
+        genai_token_usage=meter.create_histogram(
+            semconv.METRIC_CLIENT_TOKEN_USAGE,
+            unit=semconv.UNIT_TOKEN,
+            description="Input and output tokens used, by token type.",
+            explicit_bucket_boundaries_advisory=list(_TOKEN_BUCKETS),
+        ),
+        genai_client_operation_duration=meter.create_histogram(
+            semconv.METRIC_CLIENT_OPERATION_DURATION,
+            unit=semconv.UNIT_SECOND,
+            description="Duration of one provider-facing GenAI operation.",
+            explicit_bucket_boundaries_advisory=list(_GENAI_DURATION_BUCKETS),
+        ),
+        genai_agent_duration=meter.create_histogram(
+            semconv.METRIC_INVOKE_AGENT_DURATION,
+            unit=semconv.UNIT_SECOND,
+            description="End-to-end duration of one in-process agent invocation.",
+            explicit_bucket_boundaries_advisory=list(_GENAI_DURATION_BUCKETS),
+        ),
+        genai_agent_inference_calls=meter.create_histogram(
+            semconv.METRIC_INVOKE_AGENT_INFERENCE_CALLS,
+            unit=semconv.UNIT_INFERENCE_CALL,
+            description=(
+                "Model calls one agent invocation issued, failed ones "
+                "included."
+            ),
+            explicit_bucket_boundaries_advisory=list(_CALL_COUNT_BUCKETS),
+        ),
+        genai_agent_tool_calls=meter.create_histogram(
+            semconv.METRIC_INVOKE_AGENT_TOOL_CALLS,
+            unit=semconv.UNIT_TOOL_CALL,
+            description=(
+                "Tool calls one agent invocation triggered, failed ones "
+                "included."
+            ),
+            explicit_bucket_boundaries_advisory=list(_CALL_COUNT_BUCKETS),
+        ),
+        genai_tool_duration=meter.create_histogram(
+            semconv.METRIC_EXECUTE_TOOL_DURATION,
+            unit=semconv.UNIT_SECOND,
+            description="Duration of one tool execution.",
+            explicit_bucket_boundaries_advisory=list(_GENAI_DURATION_BUCKETS),
+        ),
+        genai_workflow_duration=meter.create_histogram(
+            semconv.METRIC_INVOKE_WORKFLOW_DURATION,
+            unit=semconv.UNIT_SECOND,
+            description="End-to-end duration of one workflow execution.",
+            explicit_bucket_boundaries_advisory=list(_GENAI_DURATION_BUCKETS),
         ),
     )
 
@@ -346,9 +571,29 @@ def register_runtime_gauges(
 
     A no-op when metrics are disabled, so the lifespan can call it
     unconditionally. Calling it again rebinds the sources rather than
-    registering a second pair of instruments. Callbacks must not raise
+    registering a second set of instruments. Callbacks must not raise
     and must not block: the SDK invokes them on its export thread every
     collection interval.
+
+    ## The two queue gauges, and what they are worth
+
+    WO-A07 added `research_queue_depth` and
+    `research_queue_saturation_ratio` here rather than at the
+    semaphore, derived from the *same* `active_jobs` callable, because
+    the baseline's complaint was that saturation is invisible until the
+    ceiling is hit — and a second counter at the acquire site could
+    disagree with `/healthz`, which is the drift ADR 0049 avoided for
+    the first two gauges.
+
+    The honest limitation, stated rather than papered over:
+    `active_jobs` is queued + running + *abandoned node threads*, so
+    `depth = active - ceiling` counts an abandoned thread (ADR 0047) as
+    though it still occupied a permit. It does not, so depth is an
+    **upper bound** on the number of jobs actually waiting. Abandoned
+    threads are rare, are separately observable on
+    `research_abandoned_node_threads`, and a saturation signal that
+    errs toward "more contended than it is" is the right direction for
+    the error to point.
 
     Args:
         active_jobs: Returns this worker's current job count —
@@ -399,20 +644,87 @@ def register_runtime_gauges(
         )
     )
 
+    def _queue_observer(
+        derive: Callable[[int, int], float],
+    ) -> Callable[[CallbackOptions], Iterable[Observation]]:
+        """Build a callback deriving a queue figure from `active_jobs`.
+
+        The ceiling is read at collection time, not closed over, so a
+        deployment that changes `api_max_concurrent_jobs` and restarts
+        does not need this registration to be re-run to be correct.
+        """
+
+        def _observe(options: CallbackOptions) -> Iterable[Observation]:
+            source = _gauge_sources.get("research_active_jobs")
+            if source is None:
+                return []
+            ceiling = max(1, settings.api_max_concurrent_jobs)
+            return [Observation(derive(source(), ceiling))]
+
+        return _observe
+
+    _gauges.append(
+        _meter.create_observable_gauge(
+            "research_queue_depth",
+            callbacks=[_queue_observer(lambda active, ceiling: max(0, active - ceiling))],
+            unit="1",
+            description=(
+                "Jobs this worker owns that are waiting for a "
+                "concurrency permit rather than running. An upper "
+                "bound — see `register_runtime_gauges`."
+            ),
+        )
+    )
+    _gauges.append(
+        _meter.create_observable_gauge(
+            "research_queue_saturation_ratio",
+            callbacks=[_queue_observer(lambda active, ceiling: active / ceiling)],
+            unit="1",
+            description=(
+                "Owned jobs divided by `api_max_concurrent_jobs`. The "
+                "USE 'utilisation'/'saturation' pair in one series: 1.0 "
+                "means the ceiling is exactly full, above 1.0 means "
+                "work is queueing behind it."
+            ),
+        )
+    )
+
 
 def record_job_terminal(
     *,
     status: str,
     error_type: str | None,
     duration_sec: float | None,
+    kind: str | None = None,
+    cost_cap_status: str = "",
+    queue_wait_sec: float | None = None,
 ) -> None:
     """Record one job reaching a terminal state.
 
     Bumps `research_jobs_total` and, when the job actually started,
-    observes `research_job_duration_seconds`. Called from the runner's
-    single terminal-write choke point so every terminal path — success,
+    observes `research_job_duration_seconds` and
+    `research_job_queue_wait_seconds`. Called from the runner's single
+    terminal-write choke point so every terminal path — success,
     failure, timeout, cost cap, HITL timeout, HITL cancel, shutdown
     cancel — is covered by construction.
+
+    ## Two corrections WO-A07 made here
+
+    **`kind` is now an attribute.** Without it, research jobs and
+    guided-read sessions share one series, so no session SLO can be
+    built and a session regression is invisible inside the research
+    volume. It is safe as an attribute precisely because `JobKind` is a
+    two-member `Literal` (ADR 0057) rather than a free string.
+
+    **A degraded close no longer reports as a plain success.** When a
+    session hits its cost ceiling under
+    `learning_session_cost_cap_behavior=degraded_close` (ADR 0062) the
+    job really does end `succeeded` with no error — the learner gets a
+    polite close, and the API contract says so. But recording that as
+    `status="succeeded", error_type="none"` made budget exhaustion
+    indistinguishable from a clean run in the only signal an operator
+    watches, so the metric's `status` becomes `degraded_close`. It is a
+    metric outcome, not a `JobStatus`; nothing on the wire changes.
 
     Args:
         status: Terminal `JobStatus` value (`succeeded`, `failed`,
@@ -422,19 +734,198 @@ def record_job_terminal(
             attribute shape.
         duration_sec: `Job.elapsed_sec()`. `None` means the job never
             started, in which case there is no duration to observe and
-            recording a zero would drag the histogram's low bucket
-            down with a run that did no work.
+            recording a zero would drag the histogram's low bucket down
+            with a run that did no work.
+        kind: `Job.kind`. `None` from a caller that predates the field
+            is recorded as `"unknown"` rather than omitted, so the
+            series keeps one shape — the same reasoning as `NO_ERROR`.
+        cost_cap_status: `Job.cost_cap_status` (ADR 0062). Only
+            `degraded_close` changes what is recorded.
+        queue_wait_sec: Seconds between acceptance and start. `None`
+            when the job never started.
     """
     instruments = _instruments
     if instruments is None:
         return
+    outcome = (
+        STATUS_DEGRADED_CLOSE
+        if cost_cap_status == STATUS_DEGRADED_CLOSE
+        else status
+    )
+    kind_attr = kind or "unknown"
     instruments.jobs_total.add(
-        1, {"status": status, "error_type": error_type or NO_ERROR}
+        1,
+        {
+            "status": outcome,
+            "error_type": error_type or NO_ERROR,
+            ATTR_KIND: kind_attr,
+        },
     )
     if duration_sec is not None:
         instruments.job_duration_seconds.record(
-            duration_sec, {"status": status}
+            duration_sec, {"status": outcome, ATTR_KIND: kind_attr}
         )
+    if queue_wait_sec is not None:
+        instruments.job_queue_wait_seconds.record(
+            queue_wait_sec, {ATTR_KIND: kind_attr}
+        )
+
+
+def record_genai_client_call(
+    *,
+    request_model: str,
+    response_model: str | None,
+    input_tokens: int | None,
+    output_tokens: int | None,
+    duration_sec: float,
+    error_type: str | None,
+) -> None:
+    """Record one provider-facing model call, conventionally.
+
+    The conventional counterpart to `record_llm_usage`, and deliberately
+    a second function rather than an extension of it. `record_llm_usage`
+    is called from `costs.record_llm_call`, which is the cost choke
+    point and knows nothing about response models, latency or failures;
+    this is called from `src.llm`'s span wrapper, which knows all three
+    because it is holding the span that measured them. Cost therefore
+    stays single-sourced and this adds no second opinion about it —
+    there is no conventional cost metric to have one with
+    (`02-STANDARDS.md` §1.3).
+
+    `gen_ai.client.operation.duration`'s *count* is the conventional
+    reading of "how many model calls" and is what `llm_calls_total`
+    aliases.
+
+    Args:
+        request_model: The model asked for.
+        response_model: The model that answered, when the provider said.
+            Omitted from the attributes when `None` — recording the
+            request model in its place would invent a fact.
+        input_tokens: Non-cached input tokens, or `None` on a failed
+            call where `usage` never existed.
+        output_tokens: Output tokens, or `None` for the same reason.
+        duration_sec: Wall clock for the whole call chain, retries
+            included — the same figure the span measured.
+        error_type: Exception class name when the call failed, else
+            `None`.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    attributes: dict[str, str] = {
+        semconv.GEN_AI_OPERATION_NAME: semconv.OPERATION_CHAT,
+        semconv.GEN_AI_PROVIDER_NAME: semconv.PROVIDER_ANTHROPIC,
+        semconv.GEN_AI_REQUEST_MODEL: request_model,
+    }
+    if response_model:
+        attributes[semconv.GEN_AI_RESPONSE_MODEL] = response_model
+    instruments.genai_client_operation_duration.record(
+        duration_sec,
+        {**attributes, semconv.ERROR_TYPE: error_type or NO_ERROR_TYPE},
+    )
+    if input_tokens is not None:
+        instruments.genai_token_usage.record(
+            input_tokens,
+            {**attributes, semconv.GEN_AI_TOKEN_TYPE: semconv.TOKEN_TYPE_INPUT},
+        )
+    if output_tokens is not None:
+        instruments.genai_token_usage.record(
+            output_tokens,
+            {**attributes, semconv.GEN_AI_TOKEN_TYPE: semconv.TOKEN_TYPE_OUTPUT},
+        )
+
+
+def record_agent_invocation(
+    *,
+    agent_name: str,
+    duration_sec: float,
+    inference_calls: int,
+    tool_calls: int,
+    error_type: str | None,
+) -> None:
+    """Record one graph node's invocation, conventionally.
+
+    Emits all three of the agent-level instruments together because the
+    conventions say the two counters SHOULD be reported alongside the
+    `invoke_agent` span for the same invocation — reporting a duration
+    without the calls that filled it is what makes "this node took 90
+    seconds" unactionable.
+
+    Args:
+        agent_name: The graph node's name. Bounded: node names are
+            literals in `src/graph/`.
+        duration_sec: Wall clock for the node.
+        inference_calls: Model calls the node made, failures included.
+        tool_calls: Tool executions the node triggered, failures
+            included.
+        error_type: Exception class name when the node raised, else
+            `None`.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    identity = {semconv.GEN_AI_AGENT_NAME: agent_name}
+    instruments.genai_agent_duration.record(
+        duration_sec, {**identity, semconv.ERROR_TYPE: error_type or NO_ERROR_TYPE}
+    )
+    instruments.genai_agent_inference_calls.record(inference_calls, identity)
+    instruments.genai_agent_tool_calls.record(tool_calls, identity)
+
+
+def record_tool_execution(
+    *, tool_name: str, duration_sec: float, error_type: str | None
+) -> None:
+    """Record one tool execution, conventionally.
+
+    Args:
+        tool_name: A `semconv.TOOL_*` constant — never caller input,
+            which is what bounds this series.
+        duration_sec: Wall clock for the tool call.
+        error_type: Exception class name when the tool raised, else
+            `None`.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    instruments.genai_tool_duration.record(
+        duration_sec,
+        {
+            semconv.GEN_AI_OPERATION_NAME: semconv.OPERATION_EXECUTE_TOOL,
+            semconv.GEN_AI_TOOL_NAME: tool_name,
+            semconv.ERROR_TYPE: error_type or NO_ERROR_TYPE,
+        },
+    )
+
+
+def record_workflow_invocation(
+    *, workflow_name: str, duration_sec: float, error_type: str | None
+) -> None:
+    """Record one whole run, conventionally.
+
+    The conventional reading of `research_job_duration_seconds`, which
+    it aliases for one release. The two measure slightly different
+    spans of time and that is deliberate: the job histogram measures
+    from acceptance through the terminal write, while this measures the
+    workflow execution the span bounds. A dashboard comparing them sees
+    the queue wait and the terminal persistence, which is a useful
+    difference rather than a discrepancy.
+
+    Args:
+        workflow_name: `semconv.WORKFLOW_RESEARCH` or `WORKFLOW_SESSION`.
+        duration_sec: Wall clock for the workflow span.
+        error_type: Exception class name when the run raised, else
+            `None`.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    instruments.genai_workflow_duration.record(
+        duration_sec,
+        {
+            semconv.GEN_AI_WORKFLOW_NAME: workflow_name,
+            semconv.ERROR_TYPE: error_type or NO_ERROR_TYPE,
+        },
+    )
 
 
 def record_llm_usage(*, model: str, cost_usd: float) -> None:

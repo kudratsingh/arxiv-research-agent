@@ -25,6 +25,8 @@ from src.config import settings
 from src.errors import NoPapersFound
 from src.graph.state import PaperMetadata, ResearchState
 from src.observability import get_logger
+from src.observability.semconv import TOOL_ARXIV_SEARCH, TOOL_TYPE_EXTENSION
+from src.observability.tracing import tool_span
 from src.resilience import interruptible_sleep
 from src.tools.arxiv_search import (
     ArxivUnavailableError,
@@ -208,11 +210,17 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
             # queries it was never going to issue (ADR 0068).
             interruptible_sleep(settings.arxiv_pacing_sec)
         try:
-            results = search_arxiv(
-                sq,
-                max_results=settings.results_per_query,
-                raise_on_unavailable=True,
-            )
+            # The `execute_tool` span is opened here rather than inside
+            # `search_arxiv` only because `src/tools/arxiv_search.py`
+            # belongs to a peer work order this wave; the other three
+            # tools carry the decorator on the function itself. ADR 0066
+            # records the fold-in.
+            with tool_span(TOOL_ARXIV_SEARCH, tool_type=TOOL_TYPE_EXTENSION):
+                results = search_arxiv(
+                    sq,
+                    max_results=settings.results_per_query,
+                    raise_on_unavailable=True,
+                )
         except ArxivUnavailableError:
             # Logged at WARNING inside search_arxiv; keep going — the
             # remaining queries may still succeed and a partial result

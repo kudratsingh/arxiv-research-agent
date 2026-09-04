@@ -1,14 +1,25 @@
-# Observability — the log contract
+# Observability — logs, traces and metrics
 
-Every line this service writes is one JSON object on stderr. This page
-is the contract that object obeys: which fields are always there, which
-`extra=` fields are allowed, what is redacted, and what you have to do
-to add an event or a field.
+Two contracts live on this page.
 
-The design decision behind it is
-[ADR 0067](decisions/0067-correlation-context-and-log-contract.md);
-the original logging core is
+**The log contract** — every line this service writes is one JSON
+object on stderr: which fields are always there, which `extra=` fields
+are allowed, what is redacted, and what you have to do to add an event
+or a field. The decision behind it is
+[ADR 0067](decisions/0067-correlation-context-and-log-contract.md); the
+original logging core is
 [ADR 0012](decisions/0012-observability-core-logging-costs.md).
+
+**The telemetry contract** — [traces](#traces) and
+[metrics](#metrics), which follow the OpenTelemetry GenAI semantic
+conventions rather than names of our own. The decision behind that is
+[ADR 0066](decisions/0066-genai-semantic-conventions.md); the metrics
+layer is [ADR 0049](decisions/0049-otel-metrics.md) and the tracer is
+[ADR 0013](decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md).
+
+The three signals join on the same identifiers: a log line carries
+`trace_id` and `span_id` whenever a span is live, and `run_id` /
+`job_id` are the same values on all three.
 
 ## The envelope
 
@@ -189,6 +200,168 @@ those would delete the ids operators join on.
 URL: it parses where the regex matches, and returns `***` for input it
 cannot parse rather than passing an unproven string through.
 
+## Traces
+
+Off by default (`ENABLE_TRACING`). With no `OTEL_EXPORTER_ENDPOINT`,
+spans print to stderr; set it to an OTLP HTTP endpoint
+(`http://collector:4318`) and they go there instead.
+
+### One job is one trace
+
+This is the property everything else hangs off. A job's spans used to
+be N disconnected roots, because the process that accepts a job is
+frequently not the process that runs it — a redriven job is picked up
+by whichever worker swept it. So the trace context is **injected onto
+the job row** when the `Job` is constructed, and **attached by the
+worker** before it opens the run's span:
+
+```
+POST /research                     (the request's span)
+└── invoke_workflow research       (run_job, after attaching job.trace_context)
+    ├── plan planner
+    │   └── chat claude-sonnet-4-6
+    └── invoke_agent search
+        ├── chat claude-sonnet-4-6
+        └── execute_tool arxiv_search
+```
+
+`Job.trace_context` holds a W3C carrier (`traceparent`, plus
+`tracestate` when a vendor set one). It is empty when nothing was
+sampled, which every consumer reads as "no parent" — that is why CLI
+runs and tests work with no provider installed.
+
+### The spans
+
+| Span name | Kind | Opened by |
+|---|---|---|
+| `invoke_workflow {research\|session}` | INTERNAL | `run_job` |
+| `invoke_agent {node}` | INTERNAL | `traced_node`, per graph node |
+| `plan {node}` | INTERNAL | `traced_node`, for the planner only |
+| `execute_tool {tool}` | INTERNAL | the tool call sites |
+| `chat {model}` | CLIENT | `src.llm.call_llm` |
+
+Attributes, all from `src/observability/semconv.py`:
+
+| Span | Attributes |
+|---|---|
+| `invoke_workflow` | `gen_ai.operation.name`, `gen_ai.workflow.name`, `gen_ai.conversation.id`, `error.type` |
+| `invoke_agent` / `plan` | `gen_ai.operation.name`, `gen_ai.agent.name`, `error.type`, plus `run_id`, `state.iteration`, `result.*_count`, `llm.cost_usd`, `llm.cost_delta_usd`, `llm.call_count`, `llm.call_delta` |
+| `execute_tool` | `gen_ai.operation.name`, `gen_ai.tool.name`, `gen_ai.tool.type`, `error.type` |
+| `chat` | `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.request.max_tokens`, `gen_ai.request.temperature`, `server.address`, `gen_ai.response.id`, `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.usage.cache_read.input_tokens`, `gen_ai.usage.cache_write.input_tokens`, `error.type` |
+
+Three things about that table are worth knowing rather than
+rediscovering:
+
+- **The provider attribute is `gen_ai.provider.name`, not
+  `gen_ai.system`.** The older name was renamed and is the most likely
+  stale string in code written from memory. A test scans `src/` for it.
+- **It is set on the `chat` span only.** The conventions require it on
+  the inference span; the four in-process spans do not take it, and a
+  local PDF parse has no inference provider to name.
+- **`error.type` is the exception class name, never the message.** A
+  message routinely carries the input that caused it.
+
+### Sampling
+
+`TRACE_SAMPLE_RATIO=0.1` samples one trace in ten. Leaving it unset
+installs no sampler at all, so the SDK's own `OTEL_TRACES_SAMPLER` /
+`OTEL_TRACES_SAMPLER_ARG` still apply — if you already know those, they
+keep working. The sampler is always parent-based, so a worker never
+re-decides for a job whose request was already sampled.
+
+An unparseable value logs `tracing_sample_ratio_invalid` and falls
+back; it does not stop the process from starting.
+
+### Content stays off
+
+Spans carry the *shape* of the work, not the text of it. The research
+query is not on a node span, prompts and completions are not on the
+`chat` span, and none of the conventions' opt-in content attributes are
+set. `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true` turns
+capture on for logs **and** spans together — it is one decision, not
+two.
+
+`OTEL_SEMCONV_STABILITY_OPT_IN` has nothing to do with this, despite
+what a lot of blog posts say. It appears nowhere in the GenAI
+conventions.
+
+## Metrics
+
+Off by default (`ENABLE_METRICS`), and — today — installed only by the
+API lifespan, so CLI and eval runs emit nothing. Tracing has no such
+limitation because the tracer configures lazily on the first span.
+
+### Conventional instruments
+
+All histograms, all named from the pinned specification commit:
+
+| Instrument | Unit | Attributes |
+|---|---|---|
+| `gen_ai.client.token.usage` | `{token}` | operation, provider, request/response model, `gen_ai.token.type` |
+| `gen_ai.client.operation.duration` | `s` | the same, plus `error.type` |
+| `gen_ai.invoke_agent.duration` | `s` | `gen_ai.agent.name`, `error.type` |
+| `gen_ai.invoke_agent.inference_calls` | `{inference_call}` | `gen_ai.agent.name` |
+| `gen_ai.invoke_agent.tool_calls` | `{tool_call}` | `gen_ai.agent.name` |
+| `gen_ai.execute_tool.duration` | `s` | operation, `gen_ai.tool.name`, `error.type` |
+| `gen_ai.invoke_workflow.duration` | `s` | `gen_ai.workflow.name`, `error.type` |
+
+The two `invoke_agent` counters answer "how many model calls and tool
+calls did this node make" — the questions an agent system most needs
+and the ones this repository could not answer before. A tool call is
+counted by the tool span itself, so the counter can never disagree with
+the number of `execute_tool` spans under the node.
+
+### Repository instruments
+
+| Instrument | Kind | Attributes |
+|---|---|---|
+| `research_jobs_total` | counter | `status`, `error_type`, `kind` |
+| `research_job_duration_seconds` | histogram | `status`, `kind` |
+| `research_job_queue_wait_seconds` | histogram | `kind` |
+| `research_active_jobs` | gauge | — |
+| `research_abandoned_node_threads` | gauge | — |
+| `research_queue_depth` | gauge | — |
+| `research_queue_saturation_ratio` | gauge | — |
+| `llm_cost_usd_total` | counter | `model` |
+| `llm_calls_total` | counter | `model` |
+| `llm_retries_total` | counter | `model` |
+| `llm_upstream_errors_total` | counter | `model`, `status` |
+| `rate_limit_rejections_total` | counter | `backend` |
+
+`status` on `research_jobs_total` takes one extra value that is not a
+`JobStatus`: **`degraded_close`**, for a session that hit its cost
+ceiling and was closed politely (ADR 0062). The job row really is
+`succeeded` — the API contract does not change — but reporting it as an
+ordinary success made budget exhaustion invisible in the one signal an
+operator watches.
+
+`research_queue_depth` is `active_jobs - api_max_concurrent_jobs`,
+floored at zero, and is an **upper bound**: `active_jobs` includes
+abandoned node threads, which no longer hold permits. A saturation
+signal that errs toward "more contended than it is" errs in the useful
+direction.
+
+### The old names still work, for one release
+
+`llm_calls_total` and `gen_ai.client.operation.duration`'s count are
+the same measurement; so are `research_job_duration_seconds` and
+`gen_ai.invoke_workflow.duration`. Both are emitted, which doubles the
+series on those families — a real cost, paid because a renamed metric
+does not error, it renders a flat zero, and a flat zero reads as "the
+fleet is idle".
+
+Once dashboards and alert rules name the `gen_ai.*` instruments, the
+aliases can go. **`llm_cost_usd_total` is not one of them**: the
+conventions define no cost metric, so that is the only name it has.
+
+### No attribute is unbounded
+
+Everything above attributes by a closed set — a job kind, a terminal
+status, an error *type*, a model id, a graph node name, a tool name.
+Nothing takes a query, a job id, a URL, a paper id or a principal.
+`tests/test_genai_conventions.py` drives a job with a distinctive query
+and asserts none of it reaches a metric attribute.
+
 ## Adding to the contract
 
 1. New event: add the name to `KNOWN_EVENTS`.
@@ -207,10 +380,13 @@ where they come from.
 1. **uvicorn access lines are not JSON.** `serve.py` runs with
    `log_config=None`, so access lines arrive as unparsed text alongside
    the JSON stream. WO-A10 owns the fix; nothing here changes it.
-2. **The content-capture flag is not in `Settings`.** It is read from
-   the environment by `content_capture_enabled()`. WO-A12 folds both
-   names into `Settings`, at which point the env vars stay as the
-   pydantic-settings aliases.
+2. **The content-capture and sampling flags are not in `Settings`.**
+   `content_capture_enabled()` and `trace_sample_ratio()` read
+   `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`,
+   `LOG_CAPTURE_USER_CONTENT` and `TRACE_SAMPLE_RATIO` from the
+   environment, because `src/config.py` belonged to other work orders
+   in both waves. WO-A12 folds all three into `Settings`, at which
+   point the env vars stay as the pydantic-settings aliases.
 3. **The context is defined but not yet bound at the edges.** Nothing in
    `src/api/**` calls `bind_context` yet, so `request_id`,
    `principal_hash` and `job_kind` are absent from live lines until
@@ -225,3 +401,20 @@ where they come from.
    two places — the envelope block in `logging.py` and `CONTEXT_FIELDS`
    / `context_fields()` in `context.py` — rather than literals scattered
    through the formatter, so remapping is an edit rather than a hunt.
+6. **Metrics exist only inside API workers.** `configure_metrics()`
+   has one caller — the API lifespan — so `make run` and `make eval`
+   install no meter provider and every record helper returns on its
+   `None` check. Deliberate for the server-shaped instruments;
+   widening it was out of scope for ADR 0066.
+7. **No `invoke_workflow` span on the CLI or eval paths.** The span is
+   opened by `run_job`, so those entry points produce node spans with
+   no workflow parent.
+8. **The redriver records `kind="unknown"`** when it fails an orphaned
+   job. It has `job.kind` in hand but does not pass it;
+   `src/api/redriver.py` belonged to another work order. A test pins
+   the current value so the fix is visible when it lands.
+9. **The GenAI conventions are pre-stable and will churn.** They have
+   left the core semantic-conventions repository and their new home has
+   no tagged release, so ADR 0066 pins a commit SHA. Every `gen_ai.*`
+   name is a constant in `src/observability/semconv.py` — one file to
+   re-read against a newer commit.

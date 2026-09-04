@@ -22,9 +22,15 @@ Two production knobs configured here regardless of shape:
   every API job before its first node ran. See ADR 0013 (original
   SQLite choice), ADR 0034 (Postgres migration) and ADR 0040
   (async surface).
-- **Tracing** via `traced_node` (ADR 0012 follow-up). When
-  `settings.enable_tracing` is on, every agent execution becomes an
-  OpenTelemetry span with `run_id` / query / iteration attributes.
+- **Tracing** via `traced_node` (ADR 0012 follow-up, ADR 0066). When
+  `settings.enable_tracing` or `settings.enable_metrics` is on, every
+  agent execution becomes an OpenTelemetry span named the way the
+  GenAI conventions name one: `invoke_agent {node}`, or `plan planner`
+  for the planner, since planning is a named node here rather than a
+  phase an instrumentation has to guess at. The node's model and tool
+  calls are children of that span rather than roots of their own, and
+  the whole tree hangs off the `invoke_workflow` span the API runner
+  opens under the submitting request's trace context.
 - **Node execution** — agents are synchronous functions. The sync
   build registers them as-is. The async build registers an async
   wrapper that dispatches each node onto a caller-supplied

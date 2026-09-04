@@ -331,6 +331,8 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "synthesizer_response_unparseable",
         "synthesizer_retrying_malformed_response",
         "tracing_configured",
+        "tracing_sample_ratio_invalid",
+        "tracing_shutdown_failed",
         "unknown_model_pricing_fallback",
         "verifier_llm_failed_fallback",
     }
@@ -516,6 +518,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "revision_target",
         "rule",
         "run_id",
+        "sample_ratio",
         "scan_capped",
         "scanned",
         "scenario_id",
@@ -915,35 +918,15 @@ def reset_run_id(token: Token[RequestContext]) -> None:
     reset_context(token)
 
 
-class _RunIdCompatVar:
-    """`logging._run_id` as it looked before ADR 0067 — a view, not a var.
-
-    There is still exactly one ContextVar; this is a `get`/`set`/`reset`
-    facade over the `run_id` field of the context that replaced it.
-    It exists because `_run_id` had become a de-facto private API:
-    `tests/test_observability.py`'s teardown fixture resets it directly,
-    and that file belongs to no work order this wave. Breaking it to
-    save three lines here would have meant editing a file this change
-    does not own, which is the more expensive mistake.
-
-    Deprecated on arrival. The next change that touches
-    `tests/test_observability.py` should switch the fixture to
-    `context.clear_context()` and delete this class.
-    """
-
-    __slots__ = ()
-
-    def get(self) -> str:
-        return current_context().run_id
-
-    def set(self, value: str) -> Token[RequestContext]:
-        return bind_context(run_id=value)
-
-    def reset(self, token: Token[RequestContext]) -> None:
-        reset_context(token)
-
-
-_run_id: Final = _RunIdCompatVar()
+# `_RunIdCompatVar` / `_run_id` lived here between ADR 0067 and ADR
+# 0066: a get/set/reset facade that made the pre-0067 private name keep
+# working for two test fixtures whose file belonged to no work order at
+# the time. Both fixtures now call `clear_context()`, which is the
+# honest thing for a teardown to do — it resets the *whole* context
+# rather than the one field the old name could see, so a test that
+# bound a `job_id` or a `principal_hash` no longer leaks it into the
+# next one. There is exactly one ContextVar and exactly one name for
+# it again.
 
 
 class JsonFormatter(logging.Formatter):

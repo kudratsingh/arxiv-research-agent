@@ -73,6 +73,7 @@ from src.observability import (
 from src.observability.costs import CostBudgetExceeded
 from src.observability.costs import enforce_cost_cap as _enforce_cost_cap
 from src.observability.metrics import record_job_terminal
+from src.observability.tracing import attached_trace_context, workflow_span
 
 # ADR 0051 moved `CostBudgetExceeded` and the cap helper out of this
 # module and into `observability.costs`, so `src.llm` can raise the same
@@ -789,9 +790,12 @@ async def _handle_session_turn_pause(ctx: PauseContext) -> Command[Any] | None:
             SESSION_TURN_PARKING,
             payload=turn,
             # No turn *content* in the log line: the payload is model
-            # output about a paper the learner is reading, and the
-            # observability rules keep user text out of records
-            # (ADR 0019). The count is what an operator needs.
+            # output about a paper the learner is reading, and the log
+            # contract keeps user text out of records unless capture is
+            # opted into (ADR 0067 — the citation here read ADR 0019,
+            # which is the reader's chunk-request decision and has
+            # nothing to do with redaction). The count is what an
+            # operator needs.
             log_extra={
                 "pause_number": ctx.pause_number,
                 "turn_number": turn.get("turn_number"),
@@ -1062,11 +1066,30 @@ async def _persist_terminal(store: JobStore, job: Job) -> None:
     write and outside the retry loop on purpose: the job reached its
     terminal state whether or not the store accepted the row, and a
     failing store must not also make the fleet look idle.
+
+    ADR 0066 adds three fields to that record, and being the single
+    choke point is exactly why it could: `kind`, so research jobs and
+    guided-read sessions stop sharing one series and a session SLO
+    becomes buildable; `cost_cap_status`, so a degraded close stops
+    reporting as an ordinary success; and the queue wait, which is the
+    only place both `created_at` and `started_at` are in hand at a
+    terminal moment.
     """
+    # Acceptance to start — the USE 'wait' for the job queue, and the
+    # measurement the baseline says is missing. `None` when the job
+    # never started: a job cancelled in `pending` waited, but recording
+    # its wait as its whole lifetime would misreport the queue as
+    # slower than it is.
+    queue_wait_sec = (
+        job.started_at - job.created_at if job.started_at is not None else None
+    )
     record_job_terminal(
         status=job.status.value,
         error_type=job.error_type,
         duration_sec=job.elapsed_sec(),
+        kind=job.kind,
+        cost_cap_status=job.cost_cap_status,
+        queue_wait_sec=queue_wait_sec,
     )
     for attempt in range(1, _TERMINAL_PERSIST_ATTEMPTS + 1):
         try:
@@ -1444,7 +1467,35 @@ async def run_job(
     # would leave every queued row leaseless, and a peer worker's
     # startup sweep reads a leaseless non-terminal row as orphaned —
     # it would fail live, queued work on every rolling restart.
-    async with _job_lease(store, job.job_id, worker_id or WORKER_ID), semaphore:
+    # An `AsyncExitStack` rather than a chained `async with` because
+    # two of the four scopes are synchronous context managers (ADR
+    # 0066's trace-context attach and workflow span) and `async with`
+    # takes only async ones. Entry order is lease, permit, trace, span;
+    # exit is the exact reverse, so the lease still outlives everything
+    # it is there to protect.
+    async with contextlib.AsyncExitStack() as scopes:
+        await scopes.enter_async_context(
+            _job_lease(store, job.job_id, worker_id or WORKER_ID)
+        )
+        await scopes.enter_async_context(semaphore)
+
+        # ADR 0066, and the highest-value line in the work order: adopt
+        # the trace the job was *submitted* under before opening any
+        # span. Without it this worker starts a new root and the API
+        # request, its queued job, its nodes and its model calls are N
+        # disconnected traces — which is why "where did 400 seconds go"
+        # had no answer. The carrier rode here on the job row precisely
+        # because the submitting process is frequently not this one.
+        scopes.enter_context(attached_trace_context(job.trace_context))
+        # Inside the permit, not outside: the conventions define
+        # `invoke_workflow` as the workflow's own execution, and the
+        # wait for a permit is separately reported as
+        # `research_job_queue_wait_seconds`. `job.kind` doubles as
+        # `gen_ai.workflow.name` — one vocabulary, not two (ADR 0057).
+        scopes.enter_context(
+            workflow_span(job.kind, conversation_id=job.conversation_id)
+        )
+
         # ADR 0035: bind the store so `_put_event` /
         # `_put_terminal_event` can reach it for pub/sub fan-out.
         # ContextVar is asyncio-Task-scoped: sets inside a Task

@@ -25,6 +25,12 @@ from typing import Any
 from src.config import settings
 from src.graph.state import PaperMetadata
 from src.observability import get_logger
+from src.observability.semconv import (
+    TOOL_SEMANTIC_SCHOLAR_REFERENCES,
+    TOOL_SEMANTIC_SCHOLAR_SEARCH,
+    TOOL_TYPE_EXTENSION,
+)
+from src.observability.tracing import traced_tool
 from src.tools.http_session import build_retrying_session
 
 log = get_logger(__name__)
@@ -158,6 +164,7 @@ def _get_json(path: str, params: dict[str, Any]) -> Any | None:
         return None
 
 
+@traced_tool(TOOL_SEMANTIC_SCHOLAR_SEARCH, tool_type=TOOL_TYPE_EXTENSION)
 def search_papers(query: str, limit: int = 10) -> list[PaperMetadata]:
     """Search Semantic Scholar for papers matching `query`.
 
@@ -192,6 +199,7 @@ def search_papers(query: str, limit: int = 10) -> list[PaperMetadata]:
     return papers
 
 
+@traced_tool(TOOL_SEMANTIC_SCHOLAR_REFERENCES, tool_type=TOOL_TYPE_EXTENSION)
 def get_references(paper_id: str, limit: int = 5) -> list[PaperMetadata]:
     """One-hop reference-graph traversal for a paper.
 

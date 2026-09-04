@@ -75,9 +75,16 @@ class TestTracedNodeDisabled:
 
 
 class TestTracedNodeEnabled:
-    def test_creates_span_named_after_node(
+    def test_creates_conventionally_named_span(
         self, in_memory_tracer: InMemorySpanExporter
     ) -> None:
+        """`plan {agent}` for the planner, not the bare node name.
+
+        The conventions say `plan` SHOULD only be reported when the
+        instrumentation can reliably tell planning from generic
+        reasoning. Here it can: planning is a named node of the graph.
+        """
+
         def agent(state: dict) -> dict:
             return {"papers": []}
 
@@ -86,7 +93,19 @@ class TestTracedNodeEnabled:
 
         spans = in_memory_tracer.get_finished_spans()
         assert len(spans) == 1
-        assert spans[0].name == "planner"
+        assert spans[0].name == "plan planner"
+        assert spans[0].attributes["gen_ai.operation.name"] == "plan"
+        assert spans[0].attributes["gen_ai.agent.name"] == "planner"
+
+    def test_every_other_node_is_an_invoke_agent_span(
+        self, in_memory_tracer: InMemorySpanExporter
+    ) -> None:
+        traced_node("search", lambda s: {})({"query": "q"})
+
+        span = in_memory_tracer.get_finished_spans()[0]
+        assert span.name == "invoke_agent search"
+        assert span.attributes["gen_ai.operation.name"] == "invoke_agent"
+        assert span.attributes["gen_ai.agent.name"] == "search"
 
     def test_records_state_attributes(
         self, in_memory_tracer: InMemorySpanExporter
@@ -98,8 +117,41 @@ class TestTracedNodeEnabled:
         wrapped({"query": "hallu?", "iteration": 2})
 
         span = in_memory_tracer.get_finished_spans()[0]
-        assert span.attributes["state.query"] == "hallu?"
         assert span.attributes["state.iteration"] == "2"
+
+    def test_the_query_is_not_captured_by_default(
+        self, in_memory_tracer: InMemorySpanExporter
+    ) -> None:
+        """The research query is user content, and content stays off.
+
+        It used to ride on every node span as `state.query`. The GenAI
+        conventions class content capture as opt-in and Phase A does not
+        opt in, so the span carries the shape of the work and not the
+        text of it (ADR 0066).
+        """
+        traced_node("planner", lambda s: {})({"query": "a private query"})
+
+        span = in_memory_tracer.get_finished_spans()[0]
+        assert "state.query" not in span.attributes
+
+    def test_the_query_is_captured_when_capture_is_opted_into(
+        self,
+        in_memory_tracer: InMemorySpanExporter,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """One switch, honoured by logs and spans alike.
+
+        The variable is the only opt-in the conventions define; an
+        operator who has made the content decision once should not have
+        to discover a second switch to make it stick for traces.
+        """
+        monkeypatch.setenv(
+            "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT", "true"
+        )
+        traced_node("planner", lambda s: {})({"query": "hallu?"})
+
+        span = in_memory_tracer.get_finished_spans()[0]
+        assert span.attributes["state.query"] == "hallu?"
 
     def test_records_result_counts(
         self, in_memory_tracer: InMemorySpanExporter

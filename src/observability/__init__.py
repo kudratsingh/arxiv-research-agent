@@ -13,9 +13,19 @@ See ADR 0012 for the logging + cost core, ADR 0013 for tracing,
 ADR 0049 for the OTel metrics layer, ADR 0051 for the spend
 ceiling (`CostBudgetExceeded`, raised from `src.llm.call_llm` as well
 as from the API runner) and the price-coverage check
-(`unpriced_models`), and ADR 0067 for the correlation context
+(`unpriced_models`), ADR 0067 for the correlation context
 (`RequestContext`, `bind_context`, `hash_principal`) and the log
-contract (`KNOWN_EVENTS`, `ALLOWED_EXTRA_KEYS`, `redact_text`).
+contract (`KNOWN_EVENTS`, `ALLOWED_EXTRA_KEYS`, `redact_text`), and
+ADR 0066 for the OpenTelemetry GenAI semantic conventions — the span
+helpers (`workflow_span`, `agent_span`, `tool_span`, `llm_span`), the
+trace-continuity pair (`inject_trace_context`,
+`attached_trace_context`) and the conventional record helpers.
+
+Every `gen_ai.*` name those emit is a constant in
+`src.observability.semconv`, which is deliberately *not* re-exported
+here: a conventional attribute name should be reached for from the
+name table explicitly, not arrived at by autocomplete from a package
+that also exports thirty other things.
 """
 
 from src.observability.context import (
@@ -63,16 +73,30 @@ from src.observability.logging import (
 from src.observability.metrics import (
     configure_metrics,
     metrics_enabled,
+    record_agent_invocation,
+    record_genai_client_call,
     record_job_terminal,
     record_llm_usage,
     record_rate_limit_rejection,
+    record_tool_execution,
+    record_workflow_invocation,
     register_runtime_gauges,
     shutdown_metrics,
 )
 from src.observability.tracing import (
+    agent_span,
+    attached_trace_context,
     configure_tracing,
     get_tracer,
+    inject_trace_context,
+    llm_span,
+    note_inference_call,
+    shutdown_tracing,
+    tool_span,
+    trace_sample_ratio,
     traced_node,
+    traced_tool,
+    workflow_span,
 )
 
 __all__ = [
@@ -121,5 +145,19 @@ __all__ = [
     "shutdown_metrics",
     "start_cost_tracking",
     "traced_node",
+    "agent_span",
+    "attached_trace_context",
+    "inject_trace_context",
+    "llm_span",
+    "note_inference_call",
+    "record_agent_invocation",
+    "record_genai_client_call",
+    "record_tool_execution",
+    "record_workflow_invocation",
+    "shutdown_tracing",
+    "tool_span",
+    "trace_sample_ratio",
+    "traced_tool",
+    "workflow_span",
     "unpriced_models",
 ]

@@ -23,8 +23,8 @@ from src.agents.supervisor import (
 )
 from src.config import Settings
 from src.graph.state import ResearchState
+from src.observability import clear_context
 from src.observability import costs as costs_module
-from src.observability import logging as logging_module
 
 pytestmark = pytest.mark.unit
 
@@ -35,10 +35,10 @@ pytestmark = pytest.mark.unit
 
 @pytest.fixture(autouse=True)
 def _reset_observability_state() -> None:
-    """Ensure `current_costs()` is clean between tests."""
+    """Ensure `current_costs()` and the request context are clean."""
     yield
     costs_module._current_costs.set(None)
-    logging_module._run_id.set("-")
+    clear_context()
 
 
 def _empty_state(**overrides: Any) -> ResearchState:
