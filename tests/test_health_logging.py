@@ -10,10 +10,18 @@ weekend-long outage would bury the timeline in ~17k identical lines.
 So: one WARNING on the way down, one INFO on the way back, naming the
 dependency. These tests pin both halves — the line that must appear
 and the 999 that must not.
+
+ADR 0067 adds the half these tests were missing. They assert on the
+`LogRecord`'s attributes, and a `LogRecord` is not what ships — the
+formatter is, and under the log contract it may now drop a field that
+was never allowlisted or elide one that looks like user content. So
+the last class here runs the health edges through `JsonFormatter` and
+asserts on the line an operator would actually grep.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from types import SimpleNamespace
 from typing import Any
@@ -22,6 +30,7 @@ import pytest
 from starlette.requests import Request
 
 from src.api.routes import _log_health_transitions, healthz
+from src.observability import JsonFormatter, bind_context, reset_context
 
 pytestmark = pytest.mark.unit
 
@@ -254,3 +263,90 @@ class TestHealthzWiring:
         # Still edges-only: the set created on first use is stored back
         # on the app state, so probe two is silent.
         assert _events(caplog) == [(DEGRADED_EVENT, logging.WARNING)]
+
+
+# ---------------------------------------------------------------------------
+# The line that actually ships (ADR 0067)
+# ---------------------------------------------------------------------------
+
+
+class TestTheFormattedHealthLine:
+    """`JsonFormatter` output, not `LogRecord` attributes.
+
+    The health edge is the line on-call greps during an outage, so it
+    is the worst possible place for the log contract to quietly eat a
+    field. These tests are the guard against exactly that.
+    """
+
+    def _lines(self, caplog: pytest.LogCaptureFixture) -> list[dict[str, Any]]:
+        formatter = JsonFormatter()
+        return [
+            json.loads(formatter.format(record))
+            for record in caplog.records
+            if record.getMessage() in {DEGRADED_EVENT, RECOVERED_EVENT}
+        ]
+
+    def test_the_dependency_and_its_status_survive_the_allowlist(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        known: set[str] = set()
+        with caplog.at_level(logging.INFO):
+            _log_health_transitions({"redis": "error: ConnectionError"}, known)
+
+        (line,) = self._lines(caplog)
+        assert line["message"] == DEGRADED_EVENT
+        assert line["dependency"] == "redis"
+        assert line["dependency_status"] == "error: ConnectionError"
+        assert "dropped_extra_keys" not in line
+
+    def test_both_health_events_are_registered_names(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        # An unregistered event is one a dashboard was never told about.
+        known: set[str] = set()
+        with caplog.at_level(logging.INFO):
+            _log_health_transitions({"redis": "error: TimeoutError"}, known)
+            _log_health_transitions({"redis": "ok"}, known)
+
+        assert [line["message"] for line in self._lines(caplog)] == [
+            DEGRADED_EVENT,
+            RECOVERED_EVENT,
+        ]
+        assert not any("unregistered_event" in line for line in self._lines(caplog))
+
+    def test_the_worker_identity_rides_along_when_a_context_is_bound(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        # Which container's Redis died is the first question after
+        # "did Redis die", and it was previously unanswerable from the
+        # line alone.
+        token = bind_context(worker_id="api-7", request_id="req-health-1")
+        try:
+            known: set[str] = set()
+            with caplog.at_level(logging.INFO):
+                _log_health_transitions({"postgres": "error: OperationalError"}, known)
+            (line,) = self._lines(caplog)
+        finally:
+            reset_context(token)
+
+        assert line["worker_id"] == "api-7"
+        assert line["request_id"] == "req-health-1"
+        assert line["service"]
+        assert line["version"]
+
+    def test_a_credential_could_not_survive_even_if_a_probe_leaked_one(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        # The probes report `type(exc).__name__` on purpose (ADR 0042),
+        # so this cannot happen today. It is the second line of defence
+        # that matters: the day someone "improves" the probe to include
+        # the message, the formatter still refuses to index the password.
+        known: set[str] = set()
+        with caplog.at_level(logging.INFO):
+            _log_health_transitions(
+                {"redis": "error: redis://user:S3cr3t@cache:6379/0 refused"}, known
+            )
+
+        (line,) = self._lines(caplog)
+        assert "S3cr3t" not in json.dumps(line)
+        assert line["dependency_status"] == "error: redis://***@cache:6379/0 refused"

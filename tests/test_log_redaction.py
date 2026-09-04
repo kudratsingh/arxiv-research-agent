@@ -6,6 +6,14 @@ connection-string credentials out of the indexed log stream, the
 cross-host timelines are unambiguous and sub-second ordering is
 visible), and the httpx/anthropic logger demotion no longer defeats
 `LOG_LEVEL=DEBUG` + `ANTHROPIC_LOG=debug`.
+
+ADR 0067 widens redaction from that one rule with one call site to five
+rules applied to every string the formatter emits. The reason is what
+actually leaked: not a call site logging a password on purpose, but a
+connection error whose *message* carried the URL, and the traceback
+that repeated it. So the rules run over the message and the formatted
+exception too, and each one has its own test below — a rule with no
+test is a rule nobody will notice regressing.
 """
 
 from __future__ import annotations
@@ -17,7 +25,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.observability import JsonFormatter, redact_url
+from src.observability import JsonFormatter, redact_text, redact_url
 
 pytestmark = pytest.mark.unit
 
@@ -57,6 +65,140 @@ class TestRedactUrl:
         assert secret not in redact_url(
             f"postgresql://user:{secret}@host:5432/db"
         )
+
+
+class TestRedactTextUrlCredentials:
+    """The `redact_url` property, restated for credentials found in prose.
+
+    `redact_url` parses; this one matches. Both must hold the same
+    property — the secret does not appear in the output — because the
+    place a connection string usually shows up is inside a sentence
+    somebody else wrote.
+    """
+
+    def test_a_url_inside_a_sentence_loses_its_userinfo(self) -> None:
+        assert redact_text(
+            "connection to postgresql://arxiv:S3cr3t@db.internal:5432/arxiv refused"
+        ) == "connection to postgresql://***@db.internal:5432/arxiv refused"
+
+    def test_the_password_is_gone_whatever_the_surrounding_text(self) -> None:
+        secret = "Sup3r-S3cret-Pw"
+        assert secret not in redact_text(
+            f"ConnectionError: redis://user:{secret}@cache:6379/0 timed out"
+        )
+
+    def test_a_url_without_credentials_survives_intact(self) -> None:
+        # The host and path are the diagnostic half; deleting them to be
+        # safe would make the rule useless and the logs worse.
+        assert redact_text("GET https://arxiv.org/abs/2401.00001") == (
+            "GET https://arxiv.org/abs/2401.00001"
+        )
+
+
+class TestRedactTextBearerTokens:
+    def test_an_authorization_header_echoed_into_a_log_is_scrubbed(self) -> None:
+        assert redact_text("Authorization: Bearer abc123.def456-ghi789") == (
+            "Authorization: Bearer ***"
+        )
+
+    def test_the_scheme_is_matched_case_insensitively(self) -> None:
+        # Clients send `bearer`, `Bearer` and `BEARER`; a case-sensitive
+        # rule would catch two of three.
+        assert "tok3nvalue" not in redact_text("bearer tok3nvalue")
+        assert "tok3nvalue" not in redact_text("BEARER tok3nvalue")
+
+    def test_the_word_bearer_in_ordinary_prose_is_left_alone(self) -> None:
+        assert redact_text("the bearer of bad news") == "the bearer of bad news"
+
+
+class TestRedactTextApiKeys:
+    def test_an_sk_style_key_is_replaced_by_its_prefix(self) -> None:
+        assert redact_text("using sk-ant-api03-AbCdEf123456ghijkl") == "using sk-***"
+
+    def test_the_key_body_never_survives_anywhere_in_the_output(self) -> None:
+        body = "AbCdEf123456ghijklMnOpQr"
+        assert body not in redact_text(f"auth failed for sk-{body} on retry 2")
+
+    def test_a_short_sk_prefixed_word_is_not_a_key(self) -> None:
+        # `sk-` is not rare enough on its own to redact a three-letter
+        # tail; the length floor is what makes the rule specific.
+        assert redact_text("sk-1") == "sk-1"
+
+
+class TestRedactTextEmailAddresses:
+    def test_the_local_part_goes_and_the_domain_stays(self) -> None:
+        # The domain says which tenant; the local part is the person.
+        assert redact_text("contact a.researcher+arxiv@example.ac.uk") == (
+            "contact ***@example.ac.uk"
+        )
+
+    def test_an_address_inside_a_larger_record_is_still_caught(self) -> None:
+        assert "jane.doe" not in redact_text(
+            "paper metadata: author=Jane Doe <jane.doe@lab.example.org>"
+        )
+
+    def test_an_at_sign_that_is_not_an_address_is_left_alone(self) -> None:
+        assert redact_text("decorator @property on line 12") == (
+            "decorator @property on line 12"
+        )
+
+
+class TestRedactTextBase64Blobs:
+    def test_a_long_encoded_blob_is_replaced_by_its_length(self) -> None:
+        blob = "QWxhZGRpbjpvcGVuIHNlc2FtZQ" * 3
+        redacted = redact_text(f"token={blob}")
+
+        assert blob not in redacted
+        assert redacted == f"token=***[{len(blob)} chars]"
+
+    def test_a_long_lowercase_hex_digest_is_not_a_blob(self) -> None:
+        # A job id is a 32-character hex string and a checkpoint hash is
+        # 64. Redacting those would delete the ids operators join on —
+        # mixed case plus a digit is what separates a secret from a name.
+        digest = "a" * 40
+        assert redact_text(digest) == digest
+
+    def test_a_long_identifier_without_digits_is_not_a_blob(self) -> None:
+        name = "SomeVeryLongCamelCaseIdentifierThatKeepsGoingAndGoing"
+        assert redact_text(name) == name
+
+
+class TestRedactionReachesEveryStringOnTheLine:
+    """Message, `extra` and traceback — the three places the leak lived."""
+
+    def _line(self, msg: str, *, exc: BaseException | None = None, **extra: object) -> str:
+        record = logging.LogRecord(
+            name="src.tools.postgres_pool",
+            level=logging.ERROR,
+            pathname="t.py",
+            lineno=1,
+            msg=msg,
+            args=(),
+            exc_info=(type(exc), exc, exc.__traceback__) if exc else None,
+        )
+        for key, value in extra.items():
+            setattr(record, key, value)
+        return JsonFormatter().format(record)
+
+    def test_a_credential_in_the_message_is_scrubbed(self) -> None:
+        line = self._line("postgres://arxiv:S3cr3t@db:5432/arxiv unreachable")
+        assert "S3cr3t" not in line
+
+    def test_a_credential_in_an_extra_value_is_scrubbed(self) -> None:
+        line = self._line("postgres_pool_opened", url="redis://:R3d1sTok3n@c:6379/0")
+        assert "R3d1sTok3n" not in line
+        assert json.loads(line)["url"] == "redis://***@c:6379/0"
+
+    def test_a_credential_in_the_traceback_is_scrubbed(self) -> None:
+        # This is the one that bit: the call site logged nothing
+        # sensitive, and the exception it re-raised carried the URL.
+        try:
+            raise ConnectionError("could not connect to postgres://u:P4ss@db/x")
+        except ConnectionError as exc:
+            line = self._line("postgres_pool_opened", exc=exc)
+
+        assert "P4ss" not in line
+        assert "postgres://***@db/x" in json.loads(line)["exception"]
 
 
 class TestJsonFormatterTimestamp:
