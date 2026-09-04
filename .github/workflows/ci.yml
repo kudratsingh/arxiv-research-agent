@@ -1,14 +1,26 @@
 name: ci
 
-# Per-PR checks: lint, typecheck, unit + integration tests, and the web
-# tiers (coverage, dependency audit, route budgets, Storybook, browser).
+# Per-PR checks: lint, typecheck, the whole Python suite — every tier,
+# under coverage — and the web tiers (coverage, dependency audit, route
+# budgets, Storybook, browser).
+#
+# NINE JOBS, WHICH IS NINE CHECKS, AND WO-A13 DID NOT CHANGE THAT. Five
+# Python tiers and two coverage floors became gates in that work order
+# and not one of them became a job: they are steps inside `tests`,
+# because a job costs a runner spin-up and a full ML install before its
+# first assertion while these tiers cost seconds. A job of its own is
+# for a gate that can hang, or one whose failure would be misattributed
+# — which is `web-audit`, and the reasoning is written out there.
 #
 # Runs on every PR against `main` and on every push to `main`. The
-# nightly eval (`.github/workflows/eval-nightly.yml`) handles the e2e
-# tier against real LLM calls — this workflow does not consume
-# Anthropic credits. `web-e2e` below brings up the local Compose stack
-# with `ANTHROPIC_API_KEY=local-preview-disabled`, a deliberately invalid
-# sentinel, and no job here is given the repository secret.
+# nightly eval (`.github/workflows/eval-nightly.yml`) is the only
+# workflow in this repository that makes real model calls; this one does
+# not consume Anthropic credits. Two different tiers are called "e2e"
+# here and only one of them could ever cost money: `pytest -m e2e`
+# (inside `tests`) drives whole workflows in mock mode for nothing, and
+# `web-e2e` brings up the local Compose stack with
+# `ANTHROPIC_API_KEY=local-preview-disabled`, a deliberately invalid
+# sentinel. No job here is given the repository secret.
 #
 # Design: docs/decisions/0024-pr-ci-lint-mypy-tests.md; the web tiers are
 # docs/revamp/04-ARCHITECTURE.md §7.5 and docs/revamp/05-MIGRATION.md §3
@@ -116,11 +128,80 @@ jobs:
         run: mypy --strict src/
 
   tests:
-    name: pytest (unit + integration)
+    name: pytest (all tiers + coverage)
+    # THE FIVE TIERS, AND WHY THEY ARE STEPS RATHER THAN JOBS (WO-A13).
+    #
+    # Until this work order the whole Python gate was one line —
+    # `pytest -m "not e2e" -q` — and not one of the five tiers built
+    # during the assurance phase gated as a tier. `property`, `fault` and
+    # `security` are purpose markers *inside* that selection, so they ran
+    # incidentally: a failure was caught, but nothing named the tier and
+    # nothing would notice if one stopped selecting tests. `e2e` was
+    # excluded by the filter outright, so sixteen end-to-end tests ran
+    # nowhere. Coverage was measured by `make test-cov` on somebody's
+    # desk and enforced nowhere — the same asymmetry the web half closed
+    # in WO-24, thresholds there and prose here.
+    #
+    # All of it lands here as steps, and the arithmetic is one-sided.
+    # Measured on the runner rather than estimated — this job's steps on
+    # run 33922969316, against the same job on `main` at run 33919723995:
+    #
+    #   install (unchanged)            82 s   (87 s on main)
+    #   the suite, now instrumented   183 s   (108 s uninstrumented)
+    #   patch coverage                  1 s   (re-reads the XML above)
+    #   e2e tier                       14 s
+    #   safety report + gate            3 s   (two passes)
+    #   the two new uploads             1 s
+    #   ---------------------------------------------------------------
+    #   job end to end                299 s   (214 s on main)
+    #
+    # Eighty-five seconds. A job of its own would buy each of those a
+    # runner spin-up plus this job's 82-second install of the full ML
+    # stack, torch included — minutes for seconds of tests — and would
+    # turn a nine-check PR into a fourteen-check one. The `web dependency
+    # audit` split is what a separate job is actually for: that gate calls
+    # a remote service that can hang, and on a bad day it cancelled four
+    # gates that had nothing to do with it. Nothing in this job touches
+    # the network.
+    #
+    # What the choice costs, stated plainly: steps are sequential, so a
+    # red coverage floor hides the e2e result until the next run. Accepted
+    # — the alternative is paying an install per tier for attribution that
+    # a pytest node id already gives for free.
+    #
+    # And what it does not fix, recorded rather than hidden: `property`,
+    # `fault` and `security` gate because they are inside the selection,
+    # so an emptied tier would still be silent here. Running each one on
+    # its own would cost ~30 s of re-collection to buy an attribution the
+    # node id already carries; the check that actually closes it is a
+    # census beside the tier-marker census in
+    # `tests/test_harness_guards.py`, where it costs nothing per run.
+    # That file belongs to another work order, so this is a gap with an
+    # address rather than a shrug.
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Was 10 when this job ran one uninstrumented pytest invocation and
+    # finished in 214 s. It is 299 s now (numbers above), and the ceiling
+    # also has to cover a cold pip resolve when the lock changes and the
+    # setup-python cache misses. 15 is headroom, not a budget: a job that
+    # dies at its ceiling reports nothing at all, which is the exact
+    # failure `web-audit` was split out to prevent.
+    timeout-minutes: 15
+    env:
+      # Never a real key, in a job that now runs the e2e tier and the
+      # adversarial safety suite as well as the unit and integration
+      # tiers. `tests/conftest.py` denies the Anthropic client constructor
+      # on top of it and the Makefile targets pin the same value at their
+      # own call sites; this is the outermost of the three layers.
+      ANTHROPIC_API_KEY: local-preview-disabled
     steps:
       - uses: actions/checkout@v4
+        with:
+          # diff-cover asks git for the merge base against `origin/main`,
+          # and the default shallow fetch hands it a single commit with no
+          # shared history to find one in. 0 is "all branches and tags" —
+          # a 17 MB pack, a couple of seconds, and the only job in this
+          # file that needs it.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version-file: .python-version
@@ -157,13 +238,180 @@ jobs:
           pg_bin=$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -n1)
           echo "$pg_bin" >> "$GITHUB_PATH"
           "$pg_bin/postgres" --version
-      - name: Run unit + integration tests
-        # Excludes the e2e tier explicitly. Currently all tests are
-        # effectively unit or integration (mocks + fakeredis +
-        # pytest-postgresql, ~10s wall clock); e2e populates as
-        # those tests get authored. The marker filter is the
-        # durable selection knob.
-        run: pytest -m "not e2e" -q
+      - name: Unit + integration tiers under coverage (project + package floors)
+        # `make test-cov`, not a pytest line copied into this file, and the
+        # floors are the entire reason. The project floor lives in
+        # pyproject.toml (`[tool.coverage.report].fail_under`); the four
+        # per-package floors live in the Makefile (COV_API, COV_AGENTS,
+        # COV_SECURITY, COV_EVAL) because coverage.py's `fail_under` is
+        # global and a project number can hold steady while the one package
+        # that matters rots underneath it. A workflow that restated any of
+        # those five numbers would be a second copy of a ratchet, and the
+        # copy that CI enforces would be the one nobody edits.
+        # `VENV_PYTHON=python` is the whole adaptation: the target calls
+        # `$(VENV_PYTHON)`, which is `.venv/bin/python` on a desk and does
+        # not exist on a runner, and a command-line assignment overrides a
+        # makefile one.
+        #
+        # It brings TEST_ENV with it — OMP_NUM_THREADS=1,
+        # TOKENIZERS_PARALLELISM=false, PYTHONHASHSEED=0 — which the bare
+        # `pytest` this step replaced never set. CI has been running the
+        # suite without the parent interpreter's hash seed pinned, so a
+        # dict-ordering-dependent failure here was reproducible only by
+        # luck (ADR 0065).
+        #
+        # SELECTION IS STILL `-m "not e2e"`, deliberately: that is the set
+        # the floors were measured against, as pyproject's own comment
+        # says. The e2e tier runs below and uninstrumented, so sixteen
+        # extra tests cannot quietly lift the project number and
+        # re-baseline a floor as a side effect of finally being run.
+        #
+        # PYTEST_ADDOPTS appends the XML that the patch-coverage step and
+        # WO-A14's evidence pack read; `tee` keeps the target's own
+        # term-missing report and its four per-package lines for the
+        # artifact. `set -o pipefail` because this step's shell is
+        # `bash -e {0}`, where a floor breach piped into `tee` would exit
+        # 0 and pass.
+        #
+        # The runner measures HIGHER than a desk — 92.39% against 91.31%
+        # on the same commit, with 2 tests skipped here against 55 there
+        # — because Postgres is on PATH two steps up and the integration
+        # tests that skip on a laptop run. That is the argument for
+        # leaving the floors where they are rather than ratcheting them
+        # to this number: a floor lifted to the CI measurement is a floor
+        # no developer can meet before pushing.
+        env:
+          PYTEST_ADDOPTS: --cov-report=xml:build/coverage.xml
+        run: |
+          set -o pipefail
+          mkdir -p build
+          make test-cov VENV_PYTHON=python | tee build/coverage-summary.txt
+
+      - name: Patch coverage (the lines this change touched)
+        # The project floor is a ratchet; this is the question a reviewer
+        # actually has. Project coverage improves logarithmically, so a
+        # large untested diff barely moves it — which is why COV_DIFF (90)
+        # is higher than every project floor in the Makefile, and why this
+        # is the coverage gate that earns its keep on a PR.
+        #
+        # It reads the XML the step above already wrote instead of running
+        # pytest again. That is the ONLY difference from `make
+        # test-cov-diff`, which re-runs the suite because on a desk you may
+        # not have a fresh report; branch, floor and behaviour are
+        # otherwise identical on purpose, so the local target and this gate
+        # cannot disagree about the same PR. The floor is read out of the
+        # Makefile for the same reason the torch pin is read out of the
+        # lock above: one definition, and a `test -n` so a rename of the
+        # variable fails loudly instead of silently gating on nothing.
+        #
+        # On a push to `main` the diff against origin/main is empty;
+        # diff-cover reports "no lines with coverage information in this
+        # diff" and exits 0.
+        run: |
+          cov_diff=$(sed -n 's/^COV_DIFF *:= *//p' Makefile)
+          test -n "$cov_diff"
+          python -m diff_cover.diff_cover_tool build/coverage.xml \
+            --compare-branch=origin/main \
+            --fail-under="$cov_diff" \
+            --show-uncovered \
+            --format "html:build/patch-coverage.html"
+
+      - name: Upload Python coverage
+        # `always()`, for the reason the route-budget report uploads on a
+        # breach: the run that broke a floor is the run whose report is
+        # worth reading. The XML is what diff-cover and WO-A14's evidence
+        # pack consume, the summary is the human copy, and the HTML names
+        # which of the PR's own lines are missing — the question a red
+        # patch-coverage step raises and a log line cannot answer.
+        #
+        # 30 days rather than the web tiers' 14: Gate A3 cites these, and
+        # a retention window shorter than a review cycle makes a citation
+        # that resolves to nothing.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage
+          path: |
+            build/coverage.xml
+            build/coverage-summary.txt
+            build/patch-coverage.html
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: E2E tier (whole workflows, zero spend)
+        # RUN PER PR, DELIBERATELY. WO-A15 built this tier and the filter
+        # above still excluded it, so sixteen real end-to-end tests ran
+        # nowhere but on a desk. They cost 5 s measured, in a job that
+        # already has the interpreter, the dependencies and Postgres on
+        # PATH: there is no budget argument for excluding them and no
+        # isolation argument for a job of their own. It is also the only
+        # tier that drives the router's revision branch, the HITL resume
+        # and the SSE frame trajectory end to end — the class of break ADR
+        # 0040 records — which is precisely what a merge should be gated
+        # on.
+        #
+        # `make test-e2e` rather than a pytest line: same one-definition
+        # argument as the coverage step, and the target is where
+        # USE_MOCK_DATA=true and the disabled-key sentinel are pinned.
+        # Zero spend is structural underneath both — `tests/conftest.py`
+        # denies the client constructor and `tests/e2e/conftest.py`
+        # installs its own mock-mode Settings — so the pins are the layer
+        # a reader can check without opening a conftest.
+        run: make test-e2e VENV_PYTHON=python
+
+      # The adversarial safety suite (ADR 0072): the authored 42-case
+      # corpus run against this checkout's own defences, deterministically
+      # and with zero model calls. Two invocations because the CLI either
+      # writes its machine-readable report or gates on it, never both in
+      # one pass, and a pass costs 0.7 s.
+      - name: Adversarial safety report (attack-success rate)
+        # `--write-baseline` is named for its main use — refreshing
+        # tests/fixtures/safety/baseline.json when a case is added — but
+        # what it does is write THIS run's report to a path and skip the
+        # gate. That report is the artifact: attack-success rate with its
+        # denominator, the Wilson interval, the per-ASI-category
+        # breakdown, and the three hard-violation classes at their counts.
+        # Gate A3.7 asks for exactly that, and a measured file beats a
+        # figure somebody retyped into a document.
+        #
+        # Under `build/`, never over the committed baseline. A baseline a
+        # CI run can rewrite is not a baseline — it moves in a PR that
+        # says why, or it does not move.
+        run: python -m src.eval.safety_suite --write-baseline build/safety/safety-report.json
+
+      - name: Adversarial safety gate (binding veto, advisory delta)
+        # No `--enforce`, and that is not a softening. ADR 0072's own
+        # follow-up list says to wire this in advisory first and flip
+        # `--enforce` once the baseline has survived a few campaigns — and
+        # the enforcing form is already binding on this PR by another
+        # route, because `tests/test_safety_suite.py` asserts
+        # `main(["--enforce"]) == 0` and that test ran in the coverage step
+        # above as part of the security tier. A delta regression is
+        # therefore red today, reported as the test failure it is. What
+        # this step adds is the rendered report beside the artifact, in the
+        # log, where a reviewer reads it.
+        #
+        # The safety veto blocks in advisory mode too: a secret
+        # exfiltrated, an unauthorised tool called, or egress to a
+        # non-allowlisted host exits non-zero here whatever the flag says.
+        # Absolute zero is not a statistical claim and no baseline can
+        # soften it.
+        run: |
+          set -o pipefail
+          mkdir -p build/safety
+          python -m src.eval.safety_suite | tee build/safety/safety-gate.txt
+
+      - name: Upload the attack-success rate
+        # `always()`: the run where the gate went red is the run whose ASR
+        # you most need to read. Same 30-day retention as the coverage
+        # artifact, and for the same reason — Gate A3.7 cites it.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safety-attack-success-rate
+          path: build/safety
+          if-no-files-found: warn
+          retention-days: 30
 
       # WO-W11 c3. The learner-simulation benchmark's scripted tier, run
       # as a campaign rather than as a unit test: every scenario driven

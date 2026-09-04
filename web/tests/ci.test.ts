@@ -17,6 +17,13 @@
  *      it hands it. The sentinel is asserted present and the repository secret
  *      asserted absent — from the whole file, not just that job.
  *
+ *   3. **The Python tiers and the check count** (WO-A13). Five tiers and two
+ *      coverage floors gate a merge as *steps inside one job*, which is a
+ *      decision that is invisible in a diff and easy to undo by helpfully
+ *      splitting them out. The assertions below pin the shape: nine jobs, the
+ *      floors read from the Makefile rather than restated here, and each tier
+ *      present by the command that runs it.
+ *
  * WHY TEXT AND NOT A PARSED DOCUMENT. There is no YAML parser in this
  * package's dependencies, and adding one so a test can read a file that
  * changes a few times a year would be the wrong trade (js-yaml exists in
@@ -86,6 +93,116 @@ describe("the cost boundary holds in CI", () => {
     // directory and the base file's hardcoded container names, and removes
     // whatever else is running under them (06-WORK-ORDERS.md §5.4).
     expect(workflow).not.toMatch(/docker compose[^\n]*\bdown\b/);
+  });
+});
+
+describe("the Python tiers are wired (WO-A13)", () => {
+  /**
+   * Everything WO-A13 added lives in one job, so every assertion here reads
+   * that job's own slice rather than the file: a `make test-cov` that
+   * appeared in some other job would satisfy a whole-file `toContain` and
+   * gate nothing on a PR.
+   */
+  const testsJob = (() => {
+    const start = workflow.indexOf("\n  tests:");
+    const end = workflow.indexOf("\n  docker-build:");
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    return workflow.slice(start, end);
+  })();
+
+  it("declares nine jobs, which is the check count the merge gate counts", () => {
+    // The coordinator's merge gate counts checks from JSON and requires every
+    // one of them green. WO-A13 wired five tiers and two coverage floors into
+    // the gate and deliberately added no job: the tiers cost seconds and a job
+    // costs a runner spin-up plus a full ML install. This is where that
+    // decision is written down as a number — a split that anyone makes later
+    // is a deliberate edit here plus a message to the coordinator, not a
+    // silent change to what a green PR means.
+    const jobsBlock = workflow.slice(workflow.indexOf("\njobs:"));
+    const jobIds = jobsBlock.match(/^ {2}[a-z][a-z0-9-]*:$/gm) ?? [];
+    expect(jobIds.map((line) => line.trim())).toEqual([
+      "lint:",
+      "typecheck:",
+      "tests:",
+      "docker-build:",
+      "web-image:",
+      "web:",
+      "web-audit:",
+      "web-storybook:",
+      "web-e2e:",
+    ]);
+  });
+
+  it("gates on coverage through the Makefile target, and uploads the report", () => {
+    // Through `make test-cov`, not a pytest line copied into the workflow.
+    // The project floor is in pyproject.toml and the four per-package floors
+    // are Makefile variables; a workflow that restated any of them would be a
+    // second copy of a ratchet, and CI would enforce the copy nobody edits.
+    expect(testsJob).toContain("make test-cov VENV_PYTHON=python");
+    expect(testsJob).toContain("--cov-report=xml:build/coverage.xml");
+    expect(testsJob).toContain("name: python-coverage");
+    expect(testsJob).toContain("build/coverage.xml");
+  });
+
+  it("gates on patch coverage with the floor read out of the Makefile", () => {
+    // diff-cover judges the lines the branch changed, which is where a
+    // coverage gate earns its keep — project coverage moves logarithmically,
+    // so a large untested diff barely twitches it.
+    expect(testsJob).toContain("diff_cover.diff_cover_tool");
+    expect(testsJob).toContain("--compare-branch=origin/main");
+    expect(testsJob).toContain("COV_DIFF");
+    // A merge base to compare against; the default shallow fetch has none.
+    expect(testsJob).toContain("fetch-depth: 0");
+  });
+
+  it("never restates a coverage floor as a literal", () => {
+    // The whole file, not just this job: the moment a number appears beside
+    // `--fail-under` the Makefile and pyproject stop being the definition,
+    // and the ratchet has two values that can disagree.
+    expect(workflow).not.toMatch(/--fail-under[= ]\s*['"]?\d/);
+  });
+
+  it("runs the e2e tier per PR", () => {
+    // 16 tests, 5 s, in a job that already has the interpreter and the
+    // dependencies. It was excluded by `-m "not e2e"` and ran nowhere until
+    // WO-A13; it is the only tier that drives the router's revision branch,
+    // the HITL resume and the SSE frame trajectory end to end.
+    expect(testsJob).toContain("make test-e2e VENV_PYTHON=python");
+  });
+
+  it("publishes the adversarial suite's attack-success rate as an artifact", () => {
+    // Gate A3.7 asks for the ASR with its denominator, and cites a file
+    // rather than a number somebody retyped. Two invocations because the CLI
+    // either writes its report or gates on it, never both in one pass.
+    expect(testsJob).toContain(
+      "python -m src.eval.safety_suite --write-baseline build/safety/safety-report.json",
+    );
+    expect(testsJob).toContain("python -m src.eval.safety_suite | tee build/safety/safety-gate.txt");
+    expect(testsJob).toContain("name: safety-attack-success-rate");
+    // Under build/, and nowhere near the committed baseline: a baseline a CI
+    // run can rewrite is not a baseline. Comments stripped — the step's own
+    // prose names the file it must not write to.
+    expect(testsJob.replace(/^\s*#.*$/gm, "")).not.toContain(
+      "tests/fixtures/safety/baseline.json",
+    );
+  });
+
+  it("keeps a piped gate from passing on a broken pipe", () => {
+    // Two steps pipe a gate's output into `tee`, and this workflow's default
+    // shell is `bash -e {0}` — without `pipefail` the exit code is tee's, so
+    // a broken coverage floor would report green.
+    const blocks = [...testsJob.matchAll(/\n {8}run: \|\n((?: {10}.*\n)+)/g)].map(
+      (match) => match[1] ?? "",
+    );
+    const piped = blocks.filter((body) => body.includes("| tee "));
+    // Vacuous truth is the failure mode this test is most likely to reach:
+    // a reindented run block matches nothing and the loop below asserts
+    // nothing. Both piped gates are named here so that shows up as a failure.
+    expect(piped).toHaveLength(2);
+    for (const body of piped) {
+      expect(body, `a piped run block with no pipefail:\n${body}`).toContain("set -o pipefail");
+    }
   });
 });
 

@@ -143,8 +143,24 @@ test-all:  ## Every tier
 # and each fails on its own — `make test-cov` reports the first floor
 # that breaks rather than one aggregate number that hides which package
 # rotted.
+#
+# COVERAGE_CORE=ctrace is what makes the line above run at all on this
+# project's pinned Python. coverage defaults to the `sys.monitoring`
+# core from 3.14 (`env.SYSMON_DEFAULT`), that core does not support
+# context switching, and pytest-cov's `--cov-context=test` switches a
+# context per test — so coverage warns `no-sysmon-context` on every
+# switch, and this suite turns warnings into errors. Measured on CI
+# (run 33922073486, before this line existed): 3,208 tests, 6,414
+# errors, zero of them about the code under test. It went unnoticed
+# because a 3.13 desk venv defaults to the C tracer already and sees
+# none of it, which is the second reason to pin it here rather than in
+# the workflow: the target has to be correct on the interpreter
+# `.python-version` names, not only on the one that happens to be
+# installed. `ctrace` supports contexts and is the fast tracer;
+# `pytrace` would also work and is several times slower.
 test-cov:  ## Coverage over src/ with the project and per-package floors
-	$(TEST_ENV) $(ZERO_SPEND) $(VENV_PYTHON) -m pytest -m "not e2e" tests/ \
+	$(TEST_ENV) $(ZERO_SPEND) COVERAGE_CORE=ctrace \
+	$(VENV_PYTHON) -m pytest -m "not e2e" tests/ \
 		--cov=src --cov-context=test --cov-report=term-missing:skip-covered
 	@echo ""
 	@echo "Per-package floors (ratchet up only):"

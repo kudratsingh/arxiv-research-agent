@@ -32,11 +32,13 @@ All targets are documented by `make help`. The ones you'll use daily:
 | Target | What it does |
 |---|---|
 | `make install-dev` | Fresh venv + runtime + dev deps |
-| `make test` | Tests tagged `unit` only — see Troubleshooting; CI's per-PR gate is `pytest -m "not e2e"` |
+| `make test` | Tests tagged `unit` only — see Troubleshooting; not the merge gate |
 | `make test-unit` | Same as `make test` (explicit) |
 | `make test-integration` | Integration tier (external libs, fixtures) |
-| `make test-e2e` | E2E tier (full workflow, cassettes) |
+| `make test-e2e` | E2E tier (whole workflows, mock mode, zero spend) — **gates a PR** |
 | `make test-all` | Every tier — slow, use before merging |
+| `make test-cov` | Coverage over `src/`, project + per-package floors — **gates a PR** |
+| `make test-cov-diff` | Patch coverage for this branch vs `origin/main` — **gates a PR** |
 | `make typecheck` | `mypy src/` |
 | `make run QUERY='...'` | Run the agent on a query |
 | `make eval` | Batch-run the benchmark (`QUERIES=id1,id2` to filter) — spends real Anthropic credits; see [`eval.md`](eval.md) |
@@ -50,6 +52,18 @@ Troubleshooting below for why that exists.
 
 See [`testing.md`](testing.md) for the full test taxonomy and how CI
 selects tests per PR.
+
+**What the `tests` job in CI actually runs**, in order, so that a green
+PR and a green desk mean the same thing: `make test-cov` (unit and
+integration under the project and per-package floors), `diff-cover` at
+the `COV_DIFF` floor, `make test-e2e`, the adversarial safety suite
+(`python -m src.eval.safety_suite`), and the scripted learner
+simulation. CI invokes the Makefile targets as `make <target>
+VENV_PYTHON=python` — the targets call `$(VENV_PYTHON)`, which is
+`.venv/bin/python` here and does not exist on a runner — so the target
+is the single definition of each gate and the workflow restates none of
+the floors. Run the first three before pushing a change to `src/`; the
+last two are seconds and free.
 
 ## Working in `web/`
 
@@ -327,11 +341,11 @@ for the branch-naming and PR conventions. Short version:
 - **arXiv rate limiting** — set `USE_MOCK_DATA=true` to run against
   the built-in mock papers.
 - **`make test` finds only part of the suite** — `make test-unit`
-  filters with `-m unit`, which selects only tests *explicitly* tagged
-  `pytest.mark.unit`; about half the suite is unmarked and gets
-  skipped by that filter. CI's actual gate is `pytest -m "not e2e"`.
-  Use `make test-all` (or `pytest -m "not e2e"` directly) to run what
-  CI runs.
+  filters with `-m unit`, which since WO-A02 selects a real tier
+  (2,826 of 3,277 tests) rather than an arbitrary subset, but a tier is
+  still not the suite. CI's gate is `make test-cov` (which selects
+  `-m "not e2e"`) followed by `make test-e2e`. `make test-all` runs
+  every tier in one pass, without the coverage floors.
 - **Exit 139 / a macOS crash-reporter dialog with no traceback** —
   a native crash in the embedding path. The fix is in-process
   (`torch.set_num_threads(1)` at model load, plus

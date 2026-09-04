@@ -477,8 +477,10 @@ restarts (the compose stack wires this up automatically).
 ## Tests and CI
 
 Every PR and every push to `main` runs **nine parallel jobs**: ruff,
-strict mypy, the whole Python suite (**1,447 tests**, unit + integration
-tiers), a Docker image build with base and production compose-file
+strict mypy, the whole Python suite (**3,277 tests**, every tier, under
+enforced project, per-package and patch coverage floors, publishing the
+adversarial suite's attack-success rate as an artifact), a Docker image
+build with base and production compose-file
 validation, a web image smoke test probing `/` and `/api/healthz`
 through the proxy, the web tier (TypeScript, ESLint, generated-type
 drift, **2,970 Vitest tests across 136 files** with coverage floors, and
