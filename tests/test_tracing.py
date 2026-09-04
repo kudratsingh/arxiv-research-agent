@@ -19,6 +19,8 @@ from src.observability import tracing as tracing_module
 from src.observability.costs import RunCosts, current_costs
 from src.observability.tracing import traced_node
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def in_memory_tracer(monkeypatch: pytest.MonkeyPatch) -> InMemorySpanExporter:

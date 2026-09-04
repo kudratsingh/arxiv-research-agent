@@ -43,6 +43,9 @@ def _mk_paper(
     )
 
 
+# Per-class tiers, matching the one module-level function below that
+# already carried its own marker.
+@pytest.mark.unit
 class TestBuildUserPrompt:
     def test_always_includes_query_title_abstract(self) -> None:
         paper = _mk_paper(title="Hallu Survey", abstract="LLMs hallucinate.")
@@ -66,6 +69,7 @@ class TestBuildUserPrompt:
         assert "abstract only" in prompt
 
 
+@pytest.mark.unit
 class TestGatherContextFallback:
     def test_pdf_fetch_failure_returns_empty(
         self, monkeypatch: pytest.MonkeyPatch
@@ -106,6 +110,7 @@ class TestGatherContextFallback:
         assert result == ""
 
 
+@pytest.mark.unit
 class TestGatherContextFormatting:
     def test_formats_ranked_chunks_with_section_tags(
         self, monkeypatch: pytest.MonkeyPatch
@@ -186,6 +191,7 @@ def _fake_ranked_chunks() -> list[dict[str, Any]]:
     ]
 
 
+@pytest.mark.unit
 class TestNumberedChunkFormatting:
     def test_numbers_start_at_one_and_tag_section(self) -> None:
         formatted = _format_numbered_chunks(_fake_ranked_chunks())  # type: ignore[arg-type]
@@ -193,6 +199,7 @@ class TestNumberedChunkFormatting:
         assert "[2] [results] F1 rose" in formatted
 
 
+@pytest.mark.unit
 class TestEvidencePromptShape:
     def test_evidence_prompt_includes_sub_questions_and_numbered_excerpts(
         self,
@@ -209,6 +216,7 @@ class TestEvidencePromptShape:
         assert "numbered, section-tagged" in prompt
 
 
+@pytest.mark.unit
 class TestParseClaim:
     def _ranked(self) -> list[dict[str, Any]]:
         return _fake_ranked_chunks()
@@ -278,6 +286,7 @@ class TestParseClaim:
         assert _parse_claim("bad", "p1", self._ranked(), set()) is None  # type: ignore[arg-type]
 
 
+@pytest.mark.unit
 class TestAnalyzePaperEvidencePath:
     def _stub_pipeline(
         self,
@@ -419,6 +428,7 @@ class TestAnalyzePaperEvidencePath:
         assert len(claims) == 1
 
 
+@pytest.mark.unit
 class TestReaderAgentEmission:
     def test_flag_off_omits_evidence_key(
         self, monkeypatch: pytest.MonkeyPatch

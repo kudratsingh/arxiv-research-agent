@@ -50,6 +50,10 @@ if _postgres_available:
 # ---------------------------------------------------------------------------
 
 
+# Tier is declared per class in this module (ADR 0065): the Postgres
+# and HTTP sections below are `integration`, so a module-level `unit`
+# would sit on those too.
+@pytest.mark.unit
 class TestTitleFromQuery:
     def test_short_query_stays_intact(self) -> None:
         assert title_from_query("what is X?") == "what is X?"
@@ -64,6 +68,7 @@ class TestTitleFromQuery:
         assert got.endswith("…")
 
 
+@pytest.mark.unit
 class TestNewConversationId:
     def test_returns_16_hex_chars(self) -> None:
         cid = new_conversation_id()
@@ -79,6 +84,7 @@ class TestNewConversationId:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.unit
 class TestInMemoryConversationStore:
     async def test_create_then_get(self) -> None:
         store = InMemoryConversationStore()
@@ -149,6 +155,7 @@ class TestInMemoryConversationStore:
         assert await store.delete("nope") is False
 
 
+@pytest.mark.unit
 class TestUpdateTitle:
     """ADR 0048, closing the ADR 0040 follow-up.
 
@@ -213,6 +220,7 @@ class TestUpdateTitle:
         assert got.principal_key_id == "alice"
 
 
+@pytest.mark.unit
 class TestInMemoryListPagination:
     """ADR 0043: `list` takes limit/offset so the sidebar query is
     bounded no matter how many conversations accumulate."""
@@ -273,6 +281,7 @@ class TestInMemoryListPagination:
         assert all(c.principal_key_id == "alice" for c in got)
 
 
+@pytest.mark.unit
 class TestInMemoryScopedDelete:
     """ADR 0043: ownership rides inside `delete` itself, closing the
     ADR 0036 fetch-then-delete follow-up."""
@@ -567,6 +576,7 @@ class _FakeConnection:
         return None
 
 
+@pytest.mark.unit
 class TestSchemaInitStaysOffTheEventLoop:
     """ADR 0043: `init_schema()` — pool open + DDL, blocking, up to
     10s+ — must run on the `asyncio.to_thread` worker. On the loop it
@@ -600,6 +610,7 @@ class TestSchemaInitStaysOffTheEventLoop:
         assert all(t is not loop_thread for t in calls)
 
 
+@pytest.mark.unit
 class TestAppendFailureIsLogged:
     """ADR 0043: the runner suppresses append errors wholesale, so
     the store logs at ERROR before the exception propagates —
@@ -657,6 +668,7 @@ class TestParityContract:
         assert await s.delete("c") is True
         assert await s.get("c") is None
 
+    @pytest.mark.unit
     async def test_in_memory_satisfies_contract(self) -> None:
         await self._run(InMemoryConversationStore())
 
@@ -713,6 +725,9 @@ async def _client() -> AsyncIterator[AsyncClient]:
         yield client
 
 
+# Drives the real ASGI app through httpx, so `integration` by the tier
+# definition in docs/testing.md.
+@pytest.mark.integration
 class TestConversationEndpoints:
     async def test_create_returns_201_with_defaults(self) -> None:
         async for client in _client():
@@ -799,6 +814,7 @@ class TestConversationEndpoints:
             assert resp.status_code == 404
 
 
+@pytest.mark.integration
 class TestResearchWithConversation:
     async def test_bad_conversation_id_is_404(self) -> None:
         async for client in _client():
@@ -866,6 +882,7 @@ class TestResearchWithConversation:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_first_job_auto_title_persists_through_the_store() -> None:
     """The auto-title must go through `update_title` (ADR 0048).
 

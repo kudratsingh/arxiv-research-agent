@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import time
 
+import pytest
+
 from src.api.jobs import (
     TERMINAL_STATUSES,
     InMemoryJobStore,
@@ -12,6 +14,8 @@ from src.api.jobs import (
     JobStatus,
     drain_events,
 )
+
+pytestmark = pytest.mark.unit
 
 
 class TestJob:

@@ -15,6 +15,8 @@ from src.eval.readme_update import (
     render_block,
 )
 
+pytestmark = pytest.mark.unit
+
 
 def _record(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {

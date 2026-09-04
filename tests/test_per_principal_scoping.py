@@ -29,7 +29,7 @@ from src.api.jobs import InMemoryJobStore
 from src.api.routes import _check_ownership, _principal_key_id
 from src.errors import ConversationNotFound, JobNotFound
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.security]
 
 
 class TestOwnershipHelper:

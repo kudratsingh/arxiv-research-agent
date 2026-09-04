@@ -10,7 +10,7 @@ import pytest
 
 from src.api.sessions import SessionAccepted, SessionDetail, SessionTurnAccepted
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 FIXTURE_ROOT = Path("web/contract/fixtures")
 

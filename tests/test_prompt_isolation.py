@@ -20,6 +20,8 @@ from src.security.prompt_isolation import (
     wrap_untrusted,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.security]
+
 
 class TestWrapUntrusted:
     def test_adds_open_and_close_tags(self) -> None:

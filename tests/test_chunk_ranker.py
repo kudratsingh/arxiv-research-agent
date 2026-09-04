@@ -17,6 +17,8 @@ from src.tools.chunk_ranker import (
 )
 from src.tools.chunker import Chunk
 
+pytestmark = pytest.mark.unit
+
 
 def _mk_chunk(section: str, text: str, idx: int) -> Chunk:
     return Chunk(section=section, text=text, chunk_index=idx)

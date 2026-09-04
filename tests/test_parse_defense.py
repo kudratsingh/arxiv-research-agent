@@ -34,7 +34,7 @@ from src.agents.synthesizer import SynthesizerOutputError, synthesizer_agent
 from src.config import Settings
 from src.graph.state import PaperMetadata
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.fault]
 
 
 def _decode_error() -> json.JSONDecodeError:

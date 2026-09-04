@@ -23,7 +23,7 @@ from src.api.auth import (
     load_keystore_from_file,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.security]
 
 
 def _write_keystore(path: Path, mapping: dict[str, str]) -> None:

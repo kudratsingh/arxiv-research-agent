@@ -35,7 +35,7 @@ from src.api.redis_store import (
 )
 from src.api.redriver import REDRIVE_LOCK_TTL_SEC, JobRedriver, RedriveReport
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.fault]
 
 WORKER_A = "worker-a"
 WORKER_B = "worker-b"

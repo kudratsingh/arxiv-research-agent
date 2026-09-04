@@ -30,7 +30,7 @@ from src.api import create_app
 from src.config import Settings
 from src.content import loader
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "web" / "contract" / "fixtures"

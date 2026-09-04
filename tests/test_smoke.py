@@ -1,10 +1,13 @@
 """Smoke tests for pure functions that don't require API access."""
 
+import pytest
 from langgraph.graph import END
 
 from src.graph.state import PaperMetadata
 from src.graph.workflow import route_after_critique
 from src.tools.arxiv_search import deduplicate_papers
+
+pytestmark = pytest.mark.unit
 
 
 def _mk_paper(paper_id: str, title: str = "T") -> PaperMetadata:

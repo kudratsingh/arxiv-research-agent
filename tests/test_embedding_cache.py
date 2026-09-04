@@ -47,6 +47,8 @@ def _override_settings(monkeypatch: pytest.MonkeyPatch, **overrides: object) -> 
     monkeypatch.setattr(postgres_pool, "settings", fresh)
 
 
+# Per-class tiers: the Postgres section below is `integration`.
+@pytest.mark.unit
 class TestContentHash:
     def test_stable_for_same_input(self) -> None:
         assert content_hash("hello") == content_hash("hello")
@@ -61,6 +63,7 @@ class TestContentHash:
         assert all(c in "0123456789abcdef" for c in h)
 
 
+@pytest.mark.unit
 class TestNoOpEmbeddingCache:
     def test_get_many_always_returns_empty(self) -> None:
         cache = NoOpEmbeddingCache()
@@ -150,6 +153,7 @@ class TestPostgresEmbeddingCache:
             np.testing.assert_array_equal(got[key], vec)
 
 
+@pytest.mark.unit
 class TestFactory:
     def test_defaults_to_noop(
         self, monkeypatch: pytest.MonkeyPatch
@@ -175,6 +179,9 @@ class TestFactory:
         assert first is second
 
 
+# `unit` despite the name: it injects a pre-populated cache and never
+# loads MiniLM, so nothing external is exercised.
+@pytest.mark.unit
 class TestEncodeTextsIntegration:
     """`embeddings.encode_texts` is the cache's real caller. Verify
     the cache-integration path in-process without hitting MiniLM by

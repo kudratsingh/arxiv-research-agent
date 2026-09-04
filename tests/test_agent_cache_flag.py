@@ -36,6 +36,8 @@ from src.agents import (
 )
 from src.config import Settings
 
+pytestmark = pytest.mark.unit
+
 
 def _capture_llm(monkeypatch: pytest.MonkeyPatch, module: Any) -> dict[str, Any]:
     captured: dict[str, Any] = {}

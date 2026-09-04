@@ -20,6 +20,8 @@ from src.agents.reader import (
 from src.config import Settings
 from src.graph.state import PaperMetadata
 
+pytestmark = [pytest.mark.unit, pytest.mark.fault]
+
 
 def _paper(paper_id: str = "p1", title: str = "Paper P1") -> PaperMetadata:
     return PaperMetadata(  # type: ignore[typeddict-item]

@@ -60,6 +60,7 @@ def _patch_settings(monkeypatch: pytest.MonkeyPatch, configured: Settings) -> No
     from src.api import sessions as sessions_module
     from src.content import loader as loader_module
     from src.graph import workflow as workflow_module
+    from src.learning import memory as memory_module
 
     for module in (
         tutor_module,
@@ -70,6 +71,14 @@ def _patch_settings(monkeypatch: pytest.MonkeyPatch, configured: Settings) -> No
         sessions_module,
         loader_module,
         workflow_module,
+        # `progress_update_agent` calls `generate_session_memory`, which
+        # reads its *own* module-level settings. Leaving it off this list
+        # left `use_mock_data` false on the one module that decides
+        # whether the session summary is mocked or asked of Claude, so
+        # this test opened a live TLS connection to the Anthropic API on
+        # every run. Found by WO-A02's spend guard — the exact failure
+        # `tests/test_api_smoke_e2e.py` describes in prose.
+        memory_module,
     ):
         monkeypatch.setattr(module, "settings", configured)
 

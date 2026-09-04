@@ -30,6 +30,8 @@ from src.learning.profile_store import (
 )
 from src.learning.progress_store import new_event
 
+pytestmark = pytest.mark.unit
+
 
 def _settings(tmp_path: Path, **overrides: object) -> Settings:
     values: dict[str, object] = {

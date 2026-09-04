@@ -14,6 +14,8 @@ from src.agents.search import _enrich_with_s2_references, search_agent
 from src.config import Settings
 from src.graph.state import PaperMetadata
 
+pytestmark = pytest.mark.unit
+
 
 def _paper(
     arxiv_id: str = "2311.09000", title: str = "Paper"

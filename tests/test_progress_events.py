@@ -79,7 +79,11 @@ from src.learning.progress_store import (
 from src.tools import postgres_pool
 from src.tools.postgres_pool import SCHEMA_DDL
 
-pytestmark = pytest.mark.unit
+# No module-level tier here on purpose. The Postgres section at the
+# bottom of this file is `integration`, and a module-level `unit`
+# would sit on it as well — giving those tests two tiers and putting a
+# real database server inside `make test`. Tier is declared per class
+# instead (ADR 0065).
 
 FIXTURE = (
     Path(__file__).parent / "fixtures" / "learning" / "progress_events_raw.json"
@@ -148,6 +152,7 @@ def _session(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.unit
 class TestEventKindVocabulary:
     def test_the_full_01_44_vocabulary_is_reserved(self) -> None:
         # The six kinds `01-LEARNING-AGENT.md` §4.4 names, so Phase L
@@ -194,6 +199,7 @@ class TestEventKindVocabulary:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.unit
 class TestEvidenceAtTheWriteBoundary:
     def test_assessment_is_the_kind_that_requires_evidence(self) -> None:
         assert {"assessment"} == KINDS_REQUIRING_EVIDENCE
@@ -290,6 +296,7 @@ class TestEvidenceAtTheWriteBoundary:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.unit
 class TestAppendOnly:
     def test_the_store_surface_is_pinned_and_has_no_mutation_method(
         self,
@@ -479,6 +486,7 @@ computed, so a change in the view's arithmetic has to be restated here
 by a human instead of silently agreeing with itself."""
 
 
+@pytest.mark.unit
 class TestRecomputableViews:
     def test_the_summary_rebuilds_from_the_raw_log(self) -> None:
         # 01 §4.4: everything a surface says is a view over these
@@ -607,6 +615,7 @@ def _view_field_names() -> set[str]:
     return names
 
 
+@pytest.mark.unit
 class TestNoMasteryPercentage:
     """01 §4.1's ban, enforced at the source rather than at the surface.
 
@@ -728,6 +737,7 @@ class TestNoMasteryPercentage:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.unit
 class TestSchemaDdlSection:
     def test_the_section_is_comment_fenced(self) -> None:
         # 05 §5.4: `SCHEMA_DDL` is append-only and each card owns a
@@ -817,6 +827,11 @@ async def learner_client() -> AsyncIterator[
     mp.undo()
 
 
+# Kept `unit` deliberately. It drives the real ASGI app, so the tier
+# definition says `integration` — but eleven other modules marked
+# `unit` do the same, and re-tiering them changes what `make test`
+# runs. That is its own PR; recorded in docs/testing.md as a known gap.
+@pytest.mark.unit
 class TestProgressEndpoint:
     async def test_flag_off_leaves_no_surface(self) -> None:
         # Default settings: the endpoint is registered (so the contract
@@ -968,6 +983,7 @@ CONTRACT_FIXTURE = (
 )
 
 
+@pytest.mark.unit
 class TestContractFixture:
     """`web/contract/fixtures/learn.progress.json` is authored, not recorded.
 

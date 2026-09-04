@@ -19,6 +19,8 @@ from src.learning.engagement import (
 )
 from src.learning.progress_store import ProgressEvent
 
+pytestmark = pytest.mark.unit
+
 FIXTURE = Path(__file__).parent / "fixtures" / "learning" / "engagement_14_day.json"
 
 

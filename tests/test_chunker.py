@@ -1,6 +1,10 @@
 """Unit tests for the section-aware chunker."""
 
+import pytest
+
 from src.tools.chunker import CHARS_PER_TOKEN, chunk_paper
+
+pytestmark = pytest.mark.unit
 
 
 class TestEmptyAndTrivial:

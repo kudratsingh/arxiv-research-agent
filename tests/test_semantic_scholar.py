@@ -20,6 +20,8 @@ from src.tools.semantic_scholar import (
     search_papers,
 )
 
+pytestmark = pytest.mark.unit
+
 
 def _s2_record(**overrides: Any) -> dict[str, Any]:
     """Build a minimal well-formed S2 paper record for mapping tests."""

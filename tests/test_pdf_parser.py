@@ -19,6 +19,8 @@ from src.tools.pdf_parser import (
     parse_pdf,
 )
 
+pytestmark = pytest.mark.unit
+
 
 class TestCacheKey:
     def test_extracts_arxiv_id_from_pdf_url(self) -> None:
@@ -189,6 +191,10 @@ def _fake_getaddrinfo(address: str):  # type: ignore[no-untyped-def]
     return _resolver
 
 
+# The fetchability boundary: scheme upgrade, DNS-based private-range
+# refusal and per-hop redirect revalidation are the SSRF defence, so
+# they are selectable on their own with `pytest -m security`.
+@pytest.mark.security
 class TestUpgradeArxivScheme:
     def test_http_arxiv_upgraded_to_https(self) -> None:
         assert (
@@ -205,6 +211,7 @@ class TestUpgradeArxivScheme:
         )
 
 
+@pytest.mark.security
 class TestIsFetchable:
     def test_arxiv_https_trusted_without_dns(
         self, monkeypatch: pytest.MonkeyPatch
@@ -251,6 +258,7 @@ class TestIsFetchable:
         assert _is_fetchable("https://gone.example/paper.pdf") is False
 
 
+@pytest.mark.security
 class TestDownloadRedirectValidation:
     def _redirect_response(self, location: str) -> MagicMock:
         resp = MagicMock()
