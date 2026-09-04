@@ -10,11 +10,20 @@ Landed:
     *retrieved paper set* is enough to cover each expected topic.
     Complements completeness by isolating retrieval-quality signal
     from report-generation-quality signal (see ADR 0013).
+
+Every judge here is issued against `settings.eval_judge_model`, and every
+judge prompt carries a version constant beside it (ADR 0070). Neither is
+decoration: passing no model let a product-model upgrade silently change
+the grader, and an unversioned prompt let an edit rebaseline a metric
+with nothing in the row to say so. `RESEARCH_RUBRICS` is what a campaign
+records; `tests/test_eval_rubric_versions.py` is what stops the text
+moving under a stale version.
 """
 
 import re
-from typing import Any, TypedDict
+from typing import Any, Final, TypedDict
 
+from src.eval.provenance import Rubric, judge_model
 from src.graph.state import Citation, PaperMetadata
 from src.llm import call_llm_json
 
@@ -148,6 +157,12 @@ def measure_citation_accuracy(
 # Completeness — LLM-as-judge over expected topics.
 # ---------------------------------------------------------------------------
 
+#: Version of the completeness rubric below. Bumping it is the act that
+#: declares "scores from before and after this edit are not comparable";
+#: `tests/test_eval_rubric_versions.py` fails if the prompt text moves
+#: without one (ADR 0070).
+COMPLETENESS_RUBRIC_VERSION: Final[str] = "1.0.0"
+
 COMPLETENESS_SYSTEM_PROMPT = """\
 You are a strict research report evaluator. Given a research briefing and
 a list of topics the briefing was expected to cover, decide for each topic
@@ -170,6 +185,12 @@ Return JSON matching this exact schema, no markdown fencing:
 Include one object per input topic, in the same order. Be strict — err
 toward "not covered" when in doubt.
 """
+
+COMPLETENESS_RUBRIC: Final[Rubric] = Rubric(
+    name="completeness",
+    version=COMPLETENESS_RUBRIC_VERSION,
+    prompt=COMPLETENESS_SYSTEM_PROMPT,
+)
 
 
 class TopicCoverage(TypedDict):
@@ -283,6 +304,7 @@ def measure_completeness(
     parsed = call_llm_json(
         prompt=user_prompt,
         system_prompt=COMPLETENESS_SYSTEM_PROMPT,
+        model_name=judge_model(),
         max_tokens=2048,
     )
     return _aggregate_coverage(parsed, expected_topics)
@@ -291,6 +313,9 @@ def measure_completeness(
 # ---------------------------------------------------------------------------
 # Faithfulness — extract-and-judge each cited claim against its source.
 # ---------------------------------------------------------------------------
+
+#: Version of the faithfulness rubric. See `COMPLETENESS_RUBRIC_VERSION`.
+FAITHFULNESS_RUBRIC_VERSION: Final[str] = "1.0.0"
 
 FAITHFULNESS_SYSTEM_PROMPT = """\
 You are a strict research report faithfulness evaluator. Given a research
@@ -323,6 +348,12 @@ Return JSON matching this exact schema, no markdown fencing:
 Include one object per claim. Be strict — err toward "not supported" when
 the abstract does not clearly back the claim.
 """
+
+FAITHFULNESS_RUBRIC: Final[Rubric] = Rubric(
+    name="faithfulness",
+    version=FAITHFULNESS_RUBRIC_VERSION,
+    prompt=FAITHFULNESS_SYSTEM_PROMPT,
+)
 
 
 class ClaimJudgement(TypedDict):
@@ -546,6 +577,7 @@ def measure_faithfulness(
     parsed = call_llm_json(
         prompt=user_prompt,
         system_prompt=FAITHFULNESS_SYSTEM_PROMPT,
+        model_name=judge_model(),
         max_tokens=8192,
     )
     return _aggregate_claims(parsed, source_index)
@@ -554,6 +586,9 @@ def measure_faithfulness(
 # ---------------------------------------------------------------------------
 # Retrieval recall — is the retrieved paper set enough to cover the topics?
 # ---------------------------------------------------------------------------
+
+#: Version of the retrieval-recall rubric. See `COMPLETENESS_RUBRIC_VERSION`.
+RETRIEVAL_RECALL_RUBRIC_VERSION: Final[str] = "1.0.0"
 
 RETRIEVAL_RECALL_SYSTEM_PROMPT = """\
 You are a strict retrieval-quality evaluator. Given a list of expected
@@ -584,6 +619,22 @@ the list of paper indices you consider strong matches for the topic
 (empty when covered is false). Be strict — err toward "not covered"
 when the paper list doesn't clearly support the topic.
 """
+
+RETRIEVAL_RECALL_RUBRIC: Final[Rubric] = Rubric(
+    name="retrieval_recall",
+    version=RETRIEVAL_RECALL_RUBRIC_VERSION,
+    prompt=RETRIEVAL_RECALL_SYSTEM_PROMPT,
+)
+
+#: Every rubric the research campaign runs, in the order a row records
+#: them. `citation_accuracy` is deliberately absent: it is pure regex and
+#: set membership, so it has no prompt to version — and claiming a rubric
+#: version for a deterministic metric would be provenance theatre.
+RESEARCH_RUBRICS: Final[tuple[Rubric, ...]] = (
+    COMPLETENESS_RUBRIC,
+    FAITHFULNESS_RUBRIC,
+    RETRIEVAL_RECALL_RUBRIC,
+)
 
 
 class TopicRetrieval(TypedDict):
@@ -731,6 +782,7 @@ def measure_retrieval_recall(
     parsed = call_llm_json(
         prompt=user_prompt,
         system_prompt=RETRIEVAL_RECALL_SYSTEM_PROMPT,
+        model_name=judge_model(),
         max_tokens=2048,
     )
     return _aggregate_retrieval(parsed, expected_topics, len(papers))

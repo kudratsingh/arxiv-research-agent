@@ -65,12 +65,24 @@ from typing import Any, NamedTuple
 
 from dotenv import load_dotenv
 
-from src.eval.benchmark_queries import BENCHMARK_QUERIES, BenchmarkQuery
+from src.eval.benchmark_queries import (
+    BENCHMARK_QUERIES,
+    RESEARCH_DATASET_VERSION,
+    BenchmarkQuery,
+)
 from src.eval.metrics import (
+    RESEARCH_RUBRICS,
     measure_citation_accuracy,
     measure_completeness,
     measure_faithfulness,
     measure_retrieval_recall,
+)
+from src.eval.provenance import (
+    PROVENANCE_KEY,
+    RunProvenance,
+    capture,
+    provenance_markdown,
+    seed_campaign,
 )
 from src.graph.state import ResearchState
 from src.graph.workflow import build_workflow
@@ -102,6 +114,29 @@ EXIT_INTERRUPTED = 130  # conventional 128 + SIGINT
 
 # Longest exception text allowed into a summary.md table cell.
 _ERROR_CELL_MAX = 200
+
+#: The tier name the research campaign records in its provenance block.
+#: The research lane has one tier — it always drives the real workflow —
+#: so the field names the *lane* rather than pretending to a
+#: scripted/funded split this campaign does not have. Whether a run was
+#: nonetheless against mock data is a separate provenance field, because
+#: that is the question that decides if the numbers mean anything.
+RESEARCH_TIER = "research"
+
+
+def research_provenance() -> RunProvenance:
+    """Provenance for one research-campaign record.
+
+    A function rather than a module constant: the judge model, the
+    product model and the commit are read when the record is created, so
+    a campaign that outlives a settings change records what actually
+    scored each query (ADR 0070).
+    """
+    return capture(
+        tier=RESEARCH_TIER,
+        dataset_version=RESEARCH_DATASET_VERSION,
+        rubrics=RESEARCH_RUBRICS,
+    )
 
 
 class EvalInterrupted(KeyboardInterrupt):
@@ -279,6 +314,12 @@ def _run_and_score(benchmark_query: BenchmarkQuery) -> dict[str, Any]:
         "metrics": None,
         "metrics_error": None,
         "error": None,
+        # Captured here, at record creation, rather than when the
+        # summary is rendered: `rebuild_summaries` re-derives
+        # `summary.jsonl` from the durable records — possibly days later
+        # on a `--resume` — and a block captured then would describe the
+        # rebuild instead of the run that produced the score (ADR 0070).
+        PROVENANCE_KEY: research_provenance(),
     }
 
     log.info(
@@ -432,6 +473,12 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
     that answers "what did this benchmark query cost me to run".
     Before ADR 0050 the three product fields silently included judge
     spend, so summaries older than that ADR are not comparable on cost.
+
+    `provenance` is copied through from the record rather than captured
+    here, and a record written before ADR 0070 has none — such a row
+    arrives with an empty block and fails the provenance check, which is
+    the correct answer: a row that cannot name its judge, its rubric
+    versions or its commit cannot participate in a comparison.
     """
     metrics = record.get("metrics")
     state = record.get("state") or {}
@@ -465,6 +512,7 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
         ),
         "loop_iterations": state.get("loop_iterations"),
         "stop_reason": state.get("stop_reason"),
+        PROVENANCE_KEY: record.get(PROVENANCE_KEY) or {},
     }
 
 
@@ -573,6 +621,8 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             f"- Mean workflow LLM calls per query: {_mean(successful, 'llm_calls')}",
             f"- Mean judge cost per query: {_mean(successful, 'judge_cost_usd')}",
         ]
+
+    lines += provenance_markdown(lines_summary)
 
     return "\n".join(lines) + "\n"
 
@@ -921,6 +971,13 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_CONFIG
 
     selected = _select_queries(args.queries)
+
+    # Pinned before the first query, so every record's `seed` field
+    # describes the generator state the campaign actually ran under.
+    # It does not make the campaign reproducible — the judges are
+    # sampled and the API takes no seed — and ADR 0070 says so rather
+    # than letting the field imply otherwise.
+    seed_campaign()
 
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     output_dir = args.output_dir or (DEFAULT_OUTPUT_ROOT / run_id)

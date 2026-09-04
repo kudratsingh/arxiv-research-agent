@@ -104,10 +104,19 @@ from src.eval.learning_benchmark import (
 )
 from src.eval.learning_fixtures import FixtureProvenance, PlanSection, SessionPlanFixture
 from src.eval.learning_metrics import (
+    SIMULATION_RUBRICS,
     find_shaming_language,
     find_unlinked_progress_events,
     measure_session_plan_coherence,
     measure_shame_free_copy,
+)
+from src.eval.provenance import (
+    PROVENANCE_KEY,
+    RunProvenance,
+    capture,
+    dataset_fingerprint,
+    provenance_markdown,
+    seed_campaign,
 )
 from src.eval.runner import (
     EXIT_BUDGET_STOP,
@@ -144,6 +153,18 @@ DEFAULT_OUTPUT_ROOT = Path("outputs/eval")
 TIER_SCRIPTED = "scripted"
 TIER_FUNDED = "funded"
 TIERS = (TIER_SCRIPTED, TIER_FUNDED)
+
+#: Name the scenario set is fingerprinted under in every summary row.
+LEARNING_DATASET_NAME = "learning-benchmark"
+
+#: Content-derived version of the scenario set, computed at import so it
+#: cannot drift from `LEARNING_SCENARIOS`. Edit a scenario's script,
+#: persona or structural expectations and the fingerprint moves, which
+#: is what lets a regression diff tell "the benchmark changed" from "the
+#: system changed" (ADR 0070).
+LEARNING_DATASET_VERSION = dataset_fingerprint(
+    LEARNING_DATASET_NAME, LEARNING_SCENARIOS
+)
 
 #: The plan's per-session cost estimate, in USD
 #: (`planning/07-learning-platform/01-LEARNING-AGENT.md` §6.1, "Session
@@ -826,6 +847,20 @@ def run_judges(
 # ---------------------------------------------------------------------------
 
 
+def simulation_provenance(tier: str) -> RunProvenance:
+    """Provenance for one learner-simulation record.
+
+    `tier` is passed through rather than derived, so the block agrees
+    with the row's own `tier` column: a scripted row says `scripted` in
+    both places, and the scripted-tier check can read either (ADR 0070).
+    """
+    return capture(
+        tier=tier,
+        dataset_version=LEARNING_DATASET_VERSION,
+        rubrics=SIMULATION_RUBRICS,
+    )
+
+
 def record_id(scenario_id: str, repeat: int) -> str:
     """Durable record key for one scenario's `repeat`-th run.
 
@@ -905,6 +940,11 @@ def run_scenario(
         "metrics": None,
         "metrics_error": None,
         "error": None,
+        # Captured at record creation, not at summary-render time: the
+        # summaries are rebuilt from these durable records, possibly
+        # after a `--resume` days later, and a block written then would
+        # describe the rebuild rather than the session (ADR 0070).
+        PROVENANCE_KEY: simulation_provenance(tier),
     }
 
     persona = get_persona(scenario["persona_id"])
@@ -1017,6 +1057,11 @@ def summary_line(record: dict[str, Any]) -> dict[str, Any]:
     ride in their own columns, and `total_cost_usd` is the sum: what this
     scenario cost to run. That is ADR 0050's split with the third payer
     this campaign has and the research campaign does not.
+
+    `provenance` is copied through from the record rather than captured
+    here; a record written before ADR 0070 has none, and the row it
+    produces fails the scripted-tier check rather than being silently
+    treated as attributable.
     """
     costs = record.get("costs") or {}
     learner_costs = record.get("learner_costs") or {}
@@ -1058,6 +1103,7 @@ def summary_line(record: dict[str, Any]) -> dict[str, Any]:
         "total_cost_usd": round(
             (session_cost or 0.0) + (learner_cost or 0.0) + (judge_cost or 0.0), 6
         ),
+        PROVENANCE_KEY: record.get(PROVENANCE_KEY) or {},
     }
 
 
@@ -1204,6 +1250,9 @@ def summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
     warning = repeat_warning(max(repeats, 1))
     if warning:
         lines += ["", "## Repeat discipline", "", warning]
+
+    lines += provenance_markdown(rows)
+
     return "\n".join(lines) + "\n"
 
 
@@ -1406,6 +1455,12 @@ def main(argv: list[str] | None = None) -> int:
     selected = _select_scenarios(args.scenarios)
     judges = bool(args.judges or args.tier == TIER_FUNDED)
 
+    # Pinned before the first session so every record's `seed` field
+    # names the generator state the campaign ran under. It buys the
+    # harness's own draws, not reproducibility: the Messages API takes
+    # no sampling seed (ADR 0070).
+    seed_campaign()
+
     run_id = "sim-" + datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     output_dir = args.output_dir or (DEFAULT_OUTPUT_ROOT / run_id)
 
@@ -1518,6 +1573,8 @@ __all__ = [
     "EXIT_BUDGET_STOP",
     "EXIT_INTERRUPTED",
     "EXIT_OK",
+    "LEARNING_DATASET_NAME",
+    "LEARNING_DATASET_VERSION",
     "PLANNED_SESSION_COST_SOURCE",
     "PLANNED_SESSION_COST_USD",
     "REPEATS_FOR_CONFIDENCE",
@@ -1535,6 +1592,7 @@ __all__ = [
     "run_scenario",
     "session_input_payload",
     "simulation_order",
+    "simulation_provenance",
     "summary_line",
     "summary_markdown",
 ]

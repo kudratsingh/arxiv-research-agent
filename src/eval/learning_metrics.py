@@ -5,6 +5,12 @@ return an explicit ``metric=None`` plus ``metrics_error`` when a judge fails or
 returns an invalid shape.  A bad judge response must never become a plausible
 score.  The pure checks and calibration agreement functions make no model or
 network calls.
+
+Every judge here is issued against ``settings.eval_judge_model`` and every
+rubric prompt carries a version constant beside it (ADR 0070), so a session
+score can name the instrument that produced it.  ``LEARNING_RUBRICS`` is the
+full registry the version lock covers; ``SIMULATION_RUBRICS`` is the subset
+the learner-simulation campaign actually runs, and therefore records.
 """
 
 from __future__ import annotations
@@ -13,7 +19,7 @@ import json
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, Final, TypedDict
 
 from src.eval.learning_benchmark import (
     BenchmarkPaper,
@@ -22,6 +28,7 @@ from src.eval.learning_benchmark import (
     get_scenario,
 )
 from src.eval.learning_fixtures import SessionPlanFixture
+from src.eval.provenance import Rubric, judge_model
 from src.llm import call_llm_json
 
 
@@ -98,6 +105,15 @@ class ShameFinding(TypedDict):
     excerpt: str
 
 
+#: Versions of the three rubric prompts below. Bumping one declares
+#: "scores from before and after this edit are not comparable";
+#: `tests/test_eval_rubric_versions.py` fails when a prompt's text moves
+#: without a bump, so the honour system is not what holds this together
+#: (ADR 0070).
+PLAN_RUBRIC_VERSION: Final[str] = "1.0.0"
+EXPLAIN_BACK_RUBRIC_VERSION: Final[str] = "1.0.0"
+SHAME_FREE_COPY_RUBRIC_VERSION: Final[str] = "1.0.0"
+
 PLAN_SYSTEM_PROMPT = """\
 You are a strict evaluator of a guided paper-reading session plan. Score only
 the supplied plan against the supplied learner time budget and paper guidance.
@@ -130,6 +146,39 @@ avoids_deficit_framing, offers_a_next_step (each an object with score 0..1 and
 reason), offending_quotes (a list of verbatim strings, empty when none), and
 summary. Do not add keys.
 """
+
+PLAN_RUBRIC: Final[Rubric] = Rubric(
+    name="session_plan_coherence",
+    version=PLAN_RUBRIC_VERSION,
+    prompt=PLAN_SYSTEM_PROMPT,
+)
+EXPLAIN_BACK_RUBRIC: Final[Rubric] = Rubric(
+    name="explain_back",
+    version=EXPLAIN_BACK_RUBRIC_VERSION,
+    prompt=EXPLAIN_BACK_SYSTEM_PROMPT,
+)
+SHAME_FREE_COPY_RUBRIC: Final[Rubric] = Rubric(
+    name="shame_free_copy",
+    version=SHAME_FREE_COPY_RUBRIC_VERSION,
+    prompt=SHAME_FREE_COPY_SYSTEM_PROMPT,
+)
+
+#: Every rubric this module defines — the set the version lock covers.
+LEARNING_RUBRICS: Final[tuple[Rubric, ...]] = (
+    PLAN_RUBRIC,
+    EXPLAIN_BACK_RUBRIC,
+    SHAME_FREE_COPY_RUBRIC,
+)
+
+#: The rubrics the learner-simulation campaign actually runs. Narrower
+#: than `LEARNING_RUBRICS` on purpose: `explain_back` is scored against
+#: the calibration set rather than inside a campaign, and a row that
+#: claimed a version for a judge it never called would be recording a
+#: fact about the harness as if it were a fact about the run.
+SIMULATION_RUBRICS: Final[tuple[Rubric, ...]] = (
+    PLAN_RUBRIC,
+    SHAME_FREE_COPY_RUBRIC,
+)
 
 # Small, explicit vocabulary from the learning-agent honesty rule.  Matching
 # is case-insensitive and phrase-bounded; callers get findings rather than an
@@ -328,6 +377,7 @@ def measure_session_plan_coherence(plan: SessionPlanFixture) -> MetricEnvelope:
         parsed = call_llm_json(
             prompt=_plan_prompt(plan, scenario, paper),
             system_prompt=PLAN_SYSTEM_PROMPT,
+            model_name=judge_model(),
             max_tokens=1400,
         )
         result = _parse_plan_result(parsed)
@@ -346,6 +396,7 @@ def measure_explain_back(learner_explain_back: str, *, context: str = "") -> Met
                 sort_keys=True,
             ),
             system_prompt=EXPLAIN_BACK_SYSTEM_PROMPT,
+            model_name=judge_model(),
             max_tokens=1400,
         )
         result = _parse_explain_back_result(parsed)
@@ -385,6 +436,7 @@ def measure_shame_free_copy(copy_texts: Sequence[str]) -> MetricEnvelope:
         parsed = call_llm_json(
             prompt=json.dumps({"copy": judged}, sort_keys=True),
             system_prompt=SHAME_FREE_COPY_SYSTEM_PROMPT,
+            model_name=judge_model(),
             max_tokens=1200,
         )
         result = _parse_shame_free_result(parsed, judged)
@@ -526,6 +578,11 @@ def find_shaming_language(texts: Sequence[str]) -> list[ShameFinding]:
 
 __all__ = [
     "CALIBRATION_PATH",
+    "EXPLAIN_BACK_RUBRIC",
+    "LEARNING_RUBRICS",
+    "PLAN_RUBRIC",
+    "SHAME_FREE_COPY_RUBRIC",
+    "SIMULATION_RUBRICS",
     "CalibrationAgreement",
     "MetricEnvelope",
     "ShameFreeCopyResult",

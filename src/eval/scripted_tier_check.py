@@ -1,7 +1,7 @@
 """Assert a scripted learner-simulation campaign was complete and free.
 
 The per-PR CI job runs `src.eval.simulate_learner`'s scripted tier and
-then runs this over the `summary.jsonl` it produced. Two questions, both
+then runs this over the `summary.jsonl` it produced. Three questions, all
 of which a passing exit code answers:
 
   - **Did the whole benchmark run?** Every scenario, no errors. A
@@ -12,6 +12,13 @@ of which a passing exit code answers:
     invalid key; a non-zero column here means either the mock path
     stopped being taken or the accounting stopped being trustworthy,
     and both are worth a red build.
+  - **Can each row say what produced it?** Every row carries a complete
+    provenance block — judge model, product model, rubric versions,
+    commit, dataset fingerprint, tier, seed (ADR 0070). This is not a
+    quality assertion; it is the precondition for one. A row that cannot
+    name its instrument cannot be compared against another run, so the
+    statistics WO-A09 builds on top would be computed over rows nobody
+    can attribute.
 
 It also pins the structural-expectation baseline at campaign level: the
 scripted tier's whole point is that a prompt or graph change which makes
@@ -40,6 +47,7 @@ from pathlib import Path
 from typing import Any
 
 from src.eval.learning_benchmark import LEARNING_SCENARIOS
+from src.eval.provenance import PROVENANCE_KEY, check_provenance
 
 #: Cost columns that must all be zero. `cost_usd` is the session graph's
 #: own spend, the other two are the harness's (ADR 0050's split, one
@@ -156,6 +164,13 @@ def check_rows(
                 "funded; read the run's summary.md for which."
             )
 
+        # Additive to everything above, never a replacement (ADR 0070's
+        # trap: this is the only gate in the repository that has ever
+        # caught anything, so it only ever grows).
+        problems += [
+            f"{label}: {reason}" for reason in check_provenance(row.get(PROVENANCE_KEY))
+        ]
+
     spend = total_spend(rows)
     if round(spend, 4) != 0.0:
         problems.append(f"campaign spent ${spend:.4f}, expected $0.0000")
@@ -204,7 +219,8 @@ def main(argv: list[str] | None = None) -> int:
 
     print(
         f"Scripted tier OK: {len(rows)}/{args.expected_sessions} sessions, "
-        f"${total_spend(rows):.4f} spent, 0 unmet expectations."
+        f"${total_spend(rows):.4f} spent, 0 unmet expectations, "
+        f"{len(rows)} attributable row(s)."
     )
     return 0
 

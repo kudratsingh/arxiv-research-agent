@@ -20,7 +20,8 @@ from typing import Any
 import pytest
 
 from src.eval import runner as runner_module
-from src.eval.benchmark_queries import BENCHMARK_QUERIES
+from src.eval.benchmark_queries import BENCHMARK_QUERIES, RESEARCH_DATASET_VERSION
+from src.eval.provenance import check_provenance
 from src.eval.runner import (
     EXIT_ALL_FAILED,
     EXIT_BUDGET_STOP,
@@ -271,6 +272,7 @@ class TestSummaryLine:
             "state": {"quality_score": 0.75, "iteration": 2},
             "costs": {"total_cost_usd": 0.0421, "call_count": 33},
             "judge_costs": {"total_cost_usd": 0.0079, "call_count": 3},
+            "provenance": {"judge_model": "judge-x"},
         }
         line = _summary_line(record)
         assert line == {
@@ -293,6 +295,7 @@ class TestSummaryLine:
             "total_cost_usd": 0.05,
             "loop_iterations": None,
             "stop_reason": None,
+            "provenance": {"judge_model": "judge-x"},
         }
 
     def test_cost_usd_excludes_judge_spend(self) -> None:
@@ -327,6 +330,52 @@ class TestSummaryLine:
         assert line["error"] == "boom"
         assert line["citation_accuracy"] is None
         assert line["critic_score"] is None
+
+
+class TestResearchProvenance:
+    """ADR 0070: a research row must be able to name what produced it."""
+
+    def test_a_run_record_carries_a_complete_provenance_block(self) -> None:
+        block = runner_module.research_provenance()
+        assert check_provenance(dict(block)) == []
+
+    def test_the_block_names_the_research_lane_and_its_dataset(self) -> None:
+        block = runner_module.research_provenance()
+        assert block["tier"] == runner_module.RESEARCH_TIER
+        assert block["dataset_version"] == RESEARCH_DATASET_VERSION
+
+    def test_the_block_records_every_rubric_the_lane_runs(self) -> None:
+        block = runner_module.research_provenance()
+        assert set(block["rubric_versions"]) == {
+            "completeness",
+            "faithfulness",
+            "retrieval_recall",
+        }
+
+    def test_the_summary_row_copies_the_records_block_rather_than_recapturing(
+        self,
+    ) -> None:
+        # A resumed campaign rebuilds `summary.jsonl` from records that
+        # may be days old; recapturing at render time would describe the
+        # rebuild instead of the run.
+        record = {"query_id": "q1", "provenance": {"judge_model": "recorded-at-run"}}
+        assert _summary_line(record)["provenance"] == {"judge_model": "recorded-at-run"}
+
+    def test_a_record_written_before_adr_0070_yields_an_unusable_block(self) -> None:
+        line = _summary_line({"query_id": "q1"})
+        assert line["provenance"] == {}
+        assert check_provenance(line["provenance"])
+
+    def test_the_summary_markdown_names_the_judge_and_the_commit(self) -> None:
+        record = {
+            "query_id": "q1",
+            "costs": {"total_cost_usd": 0.1, "call_count": 3},
+            "provenance": dict(runner_module.research_provenance()),
+        }
+        markdown = _summary_markdown([record], "run-1")
+        assert "## Provenance" in markdown
+        assert "judge_model" in markdown
+        assert "code_commit" in markdown
 
 
 class TestSummaryMarkdown:

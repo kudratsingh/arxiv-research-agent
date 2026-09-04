@@ -37,6 +37,7 @@ from src.eval.learning_benchmark import (
     get_persona,
     get_scenario,
 )
+from src.eval.provenance import PROVENANCE_KEY, check_provenance
 from src.eval.runner import (
     EXIT_ALL_FAILED,
     EXIT_BUDGET_STOP,
@@ -150,6 +151,20 @@ class TestScriptedTierRunsTheFullSet:
             assert record["learner_costs"]["call_count"] == 0
             assert record["judge_costs"] is None
             assert record["turns_delivered"] >= 2
+
+    def test_every_scenario_record_can_say_what_produced_it(self) -> None:
+        # ADR 0070: the scripted tier is the campaign WO-A09's
+        # statistics will be computed over, and an unattributable row
+        # cannot participate in a comparison. Checked over the whole
+        # set, because one attributable row proves nothing about the
+        # fourteen beside it.
+        for scenario in LEARNING_SCENARIOS:
+            record = sim.run_scenario(
+                scenario, repeat=1, tier=sim.TIER_SCRIPTED, judges=False, learner_model=""
+            )
+            row = sim.summary_line(record)
+            assert check_provenance(row[PROVENANCE_KEY]) == [], scenario["scenario_id"]
+            assert row[PROVENANCE_KEY]["tier"] == row["tier"] == "scripted"
 
     def test_every_scenario_emits_evidence_linked_progress_events(self) -> None:
         for scenario in LEARNING_SCENARIOS:
@@ -1241,3 +1256,57 @@ class TestCampaignShapeIsolation:
         assert (tmp_path / "scenarios").is_dir()
         assert not (tmp_path / "queries").exists()
         assert load_records(tmp_path) == {}
+
+
+class TestSimulationProvenance:
+    """ADR 0070's block, on the learning lane."""
+
+    def test_the_block_carries_the_tier_it_was_told(self) -> None:
+        assert sim.simulation_provenance(sim.TIER_FUNDED)["tier"] == "funded"
+
+    def test_the_block_names_the_learning_dataset(self) -> None:
+        block = sim.simulation_provenance(sim.TIER_SCRIPTED)
+        assert block["dataset_version"] == sim.LEARNING_DATASET_VERSION
+        assert block["dataset_version"].startswith(
+            f"{sim.LEARNING_DATASET_NAME}@{len(LEARNING_SCENARIOS)}:"
+        )
+
+    def test_the_block_records_only_the_rubrics_this_campaign_runs(self) -> None:
+        block = sim.simulation_provenance(sim.TIER_SCRIPTED)
+        assert set(block["rubric_versions"]) == {
+            "session_plan_coherence",
+            "shame_free_copy",
+        }
+
+    def test_the_summary_row_copies_the_records_block(self) -> None:
+        record = _record()
+        record[PROVENANCE_KEY] = {"judge_model": "recorded-at-run"}
+        assert sim.summary_line(record)[PROVENANCE_KEY] == {
+            "judge_model": "recorded-at-run"
+        }
+
+    def test_a_record_written_before_adr_0070_yields_an_unusable_block(self) -> None:
+        record = _record()
+        record.pop(PROVENANCE_KEY, None)
+        row = sim.summary_line(record)
+        assert row[PROVENANCE_KEY] == {}
+        assert check_provenance(row[PROVENANCE_KEY])
+
+    def test_the_markdown_summary_names_the_judge_and_the_commit(self) -> None:
+        record = _record()
+        record[PROVENANCE_KEY] = dict(sim.simulation_provenance(sim.TIER_SCRIPTED))
+        markdown = sim.summary_markdown([record], "sim-1")
+        assert "## Provenance" in markdown
+        assert "judge_model" in markdown
+        assert "dataset_version" in markdown
+
+    def test_a_campaign_that_changed_judges_mid_flight_is_called_out(self) -> None:
+        # `--resume` can re-enter a campaign under different settings;
+        # the summary must not present that as one measurement.
+        first = _record("novice-transformer-baseline.r1")
+        second = _record("novice-transformer-baseline.r2")
+        first[PROVENANCE_KEY] = dict(sim.simulation_provenance(sim.TIER_SCRIPTED))
+        second[PROVENANCE_KEY] = {**first[PROVENANCE_KEY], "judge_model": "judge-other"}
+        markdown = sim.summary_markdown([first, second], "sim-1")
+        assert "MIXED" in markdown
+        assert "not produced by one configuration" in markdown

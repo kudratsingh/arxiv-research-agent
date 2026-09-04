@@ -1,0 +1,41 @@
+{
+  "rubrics": {
+    "completeness": [
+      {
+        "sha256": "f6111064d7e278daba5987ac79448fd5a1ff910f3c3b6b597c8e1bb26d570463",
+        "version": "1.0.0"
+      }
+    ],
+    "explain_back": [
+      {
+        "sha256": "17646ce78b8c284639fc9b02b6be55c0bda5e3ec18c8c6a74cdf5b3bd99d4512",
+        "version": "1.0.0"
+      }
+    ],
+    "faithfulness": [
+      {
+        "sha256": "6bc4187906380ef8d43755cfe2e7ac73d9f2916f30411d29ab26c64ca432334e",
+        "version": "1.0.0"
+      }
+    ],
+    "retrieval_recall": [
+      {
+        "sha256": "97d86762111227f50e0ecd21c5b4c9b1cde4340a3daeaa19a4346e0839856e93",
+        "version": "1.0.0"
+      }
+    ],
+    "session_plan_coherence": [
+      {
+        "sha256": "4e98c0ab3d24ea25b3fbdeb2ae6b829c0706377609f98298e020f68fddaac2db",
+        "version": "1.0.0"
+      }
+    ],
+    "shame_free_copy": [
+      {
+        "sha256": "35f2ab79d01d8c64ba75f06483c13ef69883a7c28a1d6bf0a49005379855abd3",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "schema_version": 1
+}

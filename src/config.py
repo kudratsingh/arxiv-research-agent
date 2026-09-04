@@ -619,6 +619,36 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ Evaluation integrity (Phase A, ADR 0070) ------------------
+    eval_judge_model: str = Field(
+        default="claude-sonnet-4-6",
+        min_length=1,
+        description=(
+            "Model every LLM-as-judge metric is scored with. A model id "
+            "in its own right, NOT a per-agent override: the empty "
+            "string is rejected rather than falling back to "
+            "`anthropic_model`, because that fallback is the defect ADR "
+            "0070 closes — the judges passed no model, so upgrading the "
+            "product model silently changed the grader and the system "
+            "graded itself with a moving ruler. Changing this value "
+            "invalidates every existing baseline: a regression diff "
+            "across a judge swap compares two different instruments."
+        ),
+    )
+    eval_seed: int = Field(
+        default=0,
+        ge=0,
+        description=(
+            "Seed applied to the harness's own random generators at the "
+            "start of a campaign, and recorded on every summary row. It "
+            "pins what this process draws locally; it does NOT make a "
+            "campaign reproducible, because the Messages API exposes no "
+            "sampling seed and the judges are sampled. Recorded so a row "
+            "can say what was pinned rather than implying a determinism "
+            "nobody has. See ADR 0070."
+        ),
+    )
+
     # ------ Supervisor loop (Sprint 2) --------------------------------
     enable_supervisor: bool = Field(
         default=False,

@@ -1,30 +1,77 @@
 """Benchmark queries for the offline eval pipeline.
 
-Ten diverse ML/AI research questions covering a spread of topics
+Twenty diverse ML/AI research questions covering a spread of topics
 (hallucination, alignment, reasoning, efficiency, safety) and shapes
 (broad survey questions, tradeoff questions, comparison questions).
-The eval runner (`src/eval/runner.py`, follow-up PR) will invoke the
-full workflow on each query, then score the resulting report against
-the query's `expected_topics` and the citation-accuracy / faithfulness
-metrics in `src/eval/metrics.py`.
+`src/eval/runner.py` invokes the full workflow on each query, then scores
+the resulting report against the query's `expected_topics` and the
+citation-accuracy / faithfulness metrics in `src/eval/metrics.py`.
 
 These queries are hand-curated, not scraped — the goal is coverage
 across the kinds of research questions the system is expected to
 handle in production, including a couple that stress the retrieval
 pipeline (e.g. multi-hop, cross-domain).
+
+**Dataset provenance (ADR 0070).** Every query names its author, its
+creation date, its licence and its notes, because a benchmark whose
+origin nobody recorded cannot support a claim about the system it
+scores — NIST AI RMF MEASURE 2.1 asks for exactly this, and the
+contamination note on `hallucination-mitigation` is the reason it
+matters here rather than in the abstract: that query is *known* to be
+covered by the built-in mock papers, so retrieval recall on it is scored
+against papers hand-picked to match. That note has to survive every edit
+to this file.
+
+The dataset's version is not a constant somebody has to remember to
+bump. `RESEARCH_DATASET_VERSION` is a fingerprint of the list's own
+contents, so it moves the instant a query, a topic list or a provenance
+field changes, and two campaigns can be joined on it.
 """
 
-from typing import TypedDict
+from typing import Final, TypedDict
+
+from src.eval.provenance import dataset_fingerprint
+
+#: Name this dataset is fingerprinted under, in every summary row.
+DATASET_NAME: Final[str] = "research-benchmark"
+
+#: Who hand-wrote these queries. One person, named rather than
+#: euphemised: "the maintainers" is not a provenance record.
+DATASET_AUTHOR: Final[str] = "Kudrat Singh"
+
+#: SPDX-style licence token for the query text. This repository ships no
+#: `LICENSE` file, so the queries carry no grant — `UNLICENSED` is the
+#: honest value, not a placeholder to be filled in later by whoever
+#: notices. It changes when the repository's licensing is settled, which
+#: is an owner decision recorded as an open item rather than a code one.
+DATASET_LICENSE: Final[str] = "UNLICENSED"
 
 
 class BenchmarkQuery(TypedDict):
-    """A single evaluation query and its expected-coverage targets."""
+    """A single evaluation query, its coverage targets and its origin.
+
+    Attributes:
+        query_id: Stable kebab-case slug; the record's filename.
+        query: The research question, verbatim.
+        domain: Coarse topic bucket, used by `get_queries`.
+        expected_topics: What a complete answer must cover. Also the
+            denominator of `completeness` and `retrieval_recall`, which
+            is why the list length is a scoring decision, not a label.
+        notes: Free text about what the query is *for*, including any
+            known contamination.
+        author: Who wrote the query.
+        created: ISO-8601 date the query entered the benchmark.
+        license: Licence the query text is offered under.
+    """
 
     query_id: str
     query: str
     domain: str
     expected_topics: list[str]
     notes: str
+    author: str
+    created: str
+    license: str
 
 
 BENCHMARK_QUERIES: list[BenchmarkQuery] = [
@@ -40,6 +87,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "post-hoc verification",
         ],
         notes="Well-covered by the built-in mock papers; good smoke query.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="rag-multi-hop",
@@ -52,6 +102,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "self-ask / self-RAG",
         ],
         notes="Tests whether the planner decomposes into method + evaluation sub-questions.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="alignment-beyond-rlhf",
@@ -64,6 +117,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "process supervision",
         ],
         notes="Broad question; report should compare methods and note tradeoffs.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="cot-reasoning-effects",
@@ -76,6 +132,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "faithfulness of intermediate steps",
         ],
         notes="Report should distinguish empirical findings from theoretical claims.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="lora-vs-full-finetune",
@@ -88,6 +147,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "catastrophic forgetting",
         ],
         notes="Direct comparison question; synthesizer should produce a table-like structure.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="vlm-spatial-reasoning",
@@ -100,6 +162,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "known failure modes on relations",
         ],
         notes="Cross-domain; may surface papers outside pure NLP.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="long-context-efficiency",
@@ -112,6 +177,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "sparse and sliding-window attention",
         ],
         notes="Technical; tests whether reader extracts algorithmic detail from methods sections.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="reasoning-benchmarks",
@@ -124,6 +192,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "process-based evaluation",
         ],
         notes="Meta-question about evaluation; synthesizer should address benchmark validity.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="moe-vs-dense",
@@ -136,6 +207,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "routing failure modes",
         ],
         notes="Comparison; report should distinguish training-time vs inference-time tradeoffs.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="coding-agent-safety",
@@ -148,6 +222,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "human-in-the-loop protocols",
         ],
         notes="Newer topic; tests search coverage of recent (2024+) work.",
+        author=DATASET_AUTHOR,
+        created="2026-07-05",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="tool-use-agents",
@@ -161,6 +238,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
         ],
         notes="Overlaps with agents / planning; report should distinguish "
               "single-tool vs multi-tool composition.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="synthetic-data-training",
@@ -173,6 +253,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "collapse and mode failure modes",
         ],
         notes="Meta-topic; expects coverage of both quality wins and pathologies.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="quantization-inference",
@@ -185,6 +268,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "quality degradation on reasoning tasks",
         ],
         notes="Technical; second efficiency query — pairs with long-context-efficiency for coverage.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="in-context-learning-mechanisms",
@@ -197,6 +283,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "scaling and emergence claims",
         ],
         notes="Theoretical; report should note where evidence is mechanistic vs correlational.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="scaling-laws",
@@ -209,6 +298,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "data quality vs quantity tradeoffs",
         ],
         notes="Historical + current; expects comparison of scaling regimes.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="jailbreak-robustness",
@@ -221,6 +313,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "evaluation methodology and reproducibility",
         ],
         notes="Adversarial; second safety query focused on robustness rather than agent-specific risks.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="reasoning-fine-tuning",
@@ -233,6 +328,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "compute allocation between pretraining and post-training",
         ],
         notes="Method-comparison; complements cot-reasoning-effects with post-training angle.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="speculative-decoding",
@@ -245,6 +343,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "practical serving throughput gains",
         ],
         notes="Serving-time optimization; complements quantization + long-context queries.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="interpretability-methods",
@@ -257,6 +358,9 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "known limitations of current methods",
         ],
         notes="Broad interp survey; expects methodology grouping.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
     BenchmarkQuery(
         query_id="agentic-memory-architectures",
@@ -269,8 +373,21 @@ BENCHMARK_QUERIES: list[BenchmarkQuery] = [
             "eval methodology on long-horizon tasks",
         ],
         notes="Second agents query; complements tool-use-agents with a memory-architecture focus.",
+        author=DATASET_AUTHOR,
+        created="2026-07-07",
+        license=DATASET_LICENSE,
     ),
 ]
+
+
+#: Content-derived version of the query set, recorded on every research
+#: summary row. Computed at import rather than declared, so it cannot
+#: drift from the list above: edit a query and the fingerprint moves, and
+#: a regression diff can see that the benchmark changed rather than the
+#: system (ADR 0070). Cheap — one SHA-256 over ~10 KB, once per process.
+RESEARCH_DATASET_VERSION: Final[str] = dataset_fingerprint(
+    DATASET_NAME, BENCHMARK_QUERIES
+)
 
 
 def get_queries(domain: str | None = None) -> list[BenchmarkQuery]:
