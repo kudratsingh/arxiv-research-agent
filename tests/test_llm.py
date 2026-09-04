@@ -331,9 +331,20 @@ class _FakeBlock:
 
 
 class _FakeResponse:
+    """Stands in for the SDK's `Message`.
+
+    `id`, `model` and `stop_reason` are here because ADR 0066 puts them
+    on the `chat` span as `gen_ai.response.{id,model,finish_reasons}`.
+    A double that omits a field the code under test reads is a double
+    that tests a different function than the one that ships.
+    """
+
     def __init__(self, text: str, usage: _FakeUsage) -> None:
         self.content = [_FakeBlock(text)]
         self.usage = usage
+        self.id = "msg_fake"
+        self.model = "claude-sonnet-4-6"
+        self.stop_reason = "end_turn"
 
 
 class _FakeRawResponse:

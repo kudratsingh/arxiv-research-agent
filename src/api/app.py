@@ -89,6 +89,7 @@ from src.observability.metrics import (
     register_runtime_gauges,
     shutdown_metrics,
 )
+from src.observability.tracing import shutdown_tracing
 
 log = get_logger(__name__)
 
@@ -841,6 +842,15 @@ def create_app(
             # a no-op.
             if metrics_enabled():
                 await asyncio.to_thread(shutdown_metrics)
+            # ADR 0066: the same treatment for spans, which had none.
+            # Without this the last `BatchSpanProcessor` window is
+            # dropped on every SIGTERM — exactly the window holding the
+            # cancellations and drains performed just above, which is
+            # what an operator most wants after an unexplained restart.
+            # Thread-hopped and flag-guarded for the same reasons as the
+            # metrics flush.
+            if settings.enable_tracing:
+                await asyncio.to_thread(shutdown_tracing)
             log.info(
                 "api_shutdown",
                 extra={

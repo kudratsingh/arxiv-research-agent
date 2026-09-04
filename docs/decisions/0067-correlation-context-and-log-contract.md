@@ -221,9 +221,14 @@ blocks, not a search through a function.
     static test and are registered by hand. The comment beside them
     says where they come from; a future splat of an unregistered dict
     will be caught at runtime by the drop report, not by CI.
-  - `logging._run_id` survives as a deprecated compatibility view,
-    because `tests/test_observability.py`'s teardown fixture resets it
-    directly and that file belongs to no work order this wave.
+  - `logging._run_id` survived as a deprecated compatibility view,
+    because `tests/test_observability.py`'s teardown fixture reset it
+    directly and that file belonged to no work order that wave.
+    **Removed by ADR 0066**, which owned that test file: both teardown
+    fixtures now call `clear_context()`, which is strictly better for a
+    teardown — it resets the whole context rather than the one field
+    the old name could see. There is one ContextVar and one name for it
+    again.
 
 - **Follow-ups**:
   - **WO-A10** binds the context at the HTTP edge (`request_id`,
@@ -234,10 +239,15 @@ blocks, not a search through a function.
     which leaves access lines as unparsed text alongside the JSON
     stream. Explicitly not fixed here.
   - **WO-A12** moves the content-capture flag and `LOG_PRINCIPAL_SALT`
-    into `Settings`.
+    into `Settings`. ADR 0066 adds `TRACE_SAMPLE_RATIO` to that list,
+    read the same way and for the same reason.
   - **WO-A07** reuses `context_fields()` for span attributes so the log
-    payload and the span cannot drift.
+    payload and the span cannot drift. **Done in ADR 0066**:
+    `tracing._set_correlation_attributes` copies the context onto every
+    node span, minus `service` / `version`, which the tracer's
+    `Resource` already carries. Trace-to-log navigation now works in
+    both directions.
   - `src/api/admin_migrate.py` logs `owner` — a principal identifier —
     verbatim. It should carry `principal_hash` instead.
-  - Delete `logging._run_id` when something next touches
-    `tests/test_observability.py`.
+  - ~~Delete `logging._run_id` when something next touches
+    `tests/test_observability.py`.~~ Done in ADR 0066.

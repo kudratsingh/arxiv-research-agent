@@ -45,6 +45,8 @@ from sentence_transformers import SentenceTransformer
 from src.config import settings
 from src.graph.state import PaperMetadata
 from src.observability import get_logger
+from src.observability.semconv import TOOL_EMBEDDING_RANK, TOOL_TYPE_DATASTORE
+from src.observability.tracing import traced_tool
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -226,6 +228,7 @@ def encode_texts(texts: list[str]) -> np.ndarray:
     return out
 
 
+@traced_tool(TOOL_EMBEDDING_RANK, tool_type=TOOL_TYPE_DATASTORE)
 def rank_papers_by_relevance(
     query: str,
     papers: list[PaperMetadata],

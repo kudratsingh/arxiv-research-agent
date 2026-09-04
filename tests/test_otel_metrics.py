@@ -157,19 +157,24 @@ class TestJobTerminalMetrics:
         self, reader: InMemoryMetricReader
     ) -> None:
         metrics_module.record_job_terminal(
-            status="succeeded", error_type=None, duration_sec=42.5
+            status="succeeded",
+            error_type=None,
+            duration_sec=42.5,
+            kind="research",
         )
 
         counted = _point_for(
             _points(reader, "research_jobs_total"),
             status="succeeded",
             error_type="none",
+            kind="research",
         )
         assert counted.value == 1
 
         timed = _point_for(
             _points(reader, "research_job_duration_seconds"),
             status="succeeded",
+            kind="research",
         )
         assert timed.count == 1
         assert timed.sum == pytest.approx(42.5)
@@ -179,24 +184,40 @@ class TestJobTerminalMetrics:
     ) -> None:
         """The attribute that turns "jobs are failing" into "why"."""
         metrics_module.record_job_terminal(
-            status="failed", error_type="timeout", duration_sec=901.0
+            status="failed",
+            error_type="timeout",
+            duration_sec=901.0,
+            kind="research",
         )
         metrics_module.record_job_terminal(
-            status="failed", error_type="cost_budget_exceeded", duration_sec=3.0
+            status="failed",
+            error_type="cost_budget_exceeded",
+            duration_sec=3.0,
+            kind="research",
         )
 
         points = _points(reader, "research_jobs_total")
-        assert _point_for(points, status="failed", error_type="timeout").value == 1
         assert (
             _point_for(
-                points, status="failed", error_type="cost_budget_exceeded"
+                points, status="failed", error_type="timeout", kind="research"
+            ).value
+            == 1
+        )
+        assert (
+            _point_for(
+                points,
+                status="failed",
+                error_type="cost_budget_exceeded",
+                kind="research",
             ).value
             == 1
         )
         # Both failures share the histogram series — the duration
         # question is "how long do failures take", not "per error type".
         timed = _point_for(
-            _points(reader, "research_job_duration_seconds"), status="failed"
+            _points(reader, "research_job_duration_seconds"),
+            status="failed",
+            kind="research",
         )
         assert timed.count == 2
 
@@ -205,13 +226,17 @@ class TestJobTerminalMetrics:
     ) -> None:
         for _ in range(3):
             metrics_module.record_job_terminal(
-                status="succeeded", error_type=None, duration_sec=1.0
+                status="succeeded",
+                error_type=None,
+                duration_sec=1.0,
+                kind="research",
             )
 
         counted = _point_for(
             _points(reader, "research_jobs_total"),
             status="succeeded",
             error_type="none",
+            kind="research",
         )
         assert counted.value == 3
 
@@ -224,7 +249,10 @@ class TestJobTerminalMetrics:
         fastest bucket and drag p95 down.
         """
         metrics_module.record_job_terminal(
-            status="cancelled", error_type=None, duration_sec=None
+            status="cancelled",
+            error_type=None,
+            duration_sec=None,
+            kind="research",
         )
 
         assert (
@@ -232,10 +260,14 @@ class TestJobTerminalMetrics:
                 _points(reader, "research_jobs_total"),
                 status="cancelled",
                 error_type="none",
+                kind="research",
             ).value
             == 1
         )
         assert _points(reader, "research_job_duration_seconds") == []
+        # A job that never started never waited behind the ceiling
+        # either — there is no queue-wait observation to make.
+        assert _points(reader, "research_job_queue_wait_seconds") == []
 
 
 # ---------------------------------------------------------------------------
@@ -446,8 +478,10 @@ class TestRuntimeGauges:
             active_jobs=lambda: 99, abandoned_node_threads=lambda: 0
         )
 
-        # Exactly the two gauges this module defines, created once.
-        assert len(metrics_module._gauges) == 2
+        # Exactly the four gauges this module defines, created once:
+        # the two ADR-0049 runtime gauges plus the two ADR-0066 queue
+        # gauges derived from the same `active_jobs` source.
+        assert len(metrics_module._gauges) == 4
         points = _points(reader, "research_active_jobs")
         assert len(points) == 1
         assert points[0].value == 99
@@ -573,17 +607,26 @@ class TestRunnerTerminalWiring:
                 _points(reader, "research_jobs_total"),
                 status="succeeded",
                 error_type="none",
+                kind="research",
             ).value
             == 1
         )
         timed = _point_for(
             _points(reader, "research_job_duration_seconds"),
             status="succeeded",
+            kind="research",
         )
         assert timed.count == 1
         # The job really ran, so the observed duration is the job's own
         # elapsed time rather than a placeholder.
         assert timed.sum == pytest.approx(job.elapsed_sec(), abs=0.5)
+        # And it waited to be started, however briefly — the wait is
+        # observed from the job's own timestamps at the same choke
+        # point, so it exists exactly when a start does (ADR 0066).
+        waited = _point_for(
+            _points(reader, "research_job_queue_wait_seconds"), kind="research"
+        )
+        assert waited.count == 1
 
     async def test_failed_job_records_its_error_type(
         self, reader: InMemoryMetricReader, monkeypatch: pytest.MonkeyPatch
@@ -608,6 +651,7 @@ class TestRunnerTerminalWiring:
                 _points(reader, "research_jobs_total"),
                 status="failed",
                 error_type="internal_unexpected",
+                kind="research",
             ).value
             == 1
         )
@@ -643,6 +687,7 @@ class TestRunnerTerminalWiring:
                 _points(reader, "research_jobs_total"),
                 status="failed",
                 error_type="internal_unexpected",
+                kind="research",
             ).value
             == 1
         )
@@ -690,11 +735,19 @@ class TestRedriveReclaimMetric:
 
         assert await JobRedriver(store)._fail_orphan(job) is True
 
+        # `kind="unknown"`, and deliberately asserted rather than
+        # worked around: the redriver has `job.kind` in hand but does
+        # not pass it, because `src/api/redriver.py` belongs to a peer
+        # work order this wave. Pinning the current value here means
+        # the follow-up that threads `kind` through shows up as a
+        # failing assertion rather than as a series that quietly
+        # changes shape (ADR 0066, known gaps).
         assert (
             _point_for(
                 _points(reader, "research_jobs_total"),
                 status="failed",
                 error_type=ORPHANED_ERROR_TYPE,
+                kind="unknown",
             ).value
             == 1
         )

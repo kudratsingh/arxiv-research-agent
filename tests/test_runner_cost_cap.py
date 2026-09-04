@@ -126,8 +126,15 @@ class _SpendingClient:
             cache_read_input_tokens=0,
             cache_creation_input_tokens=0,
         )
+        # `id` / `model` / `stop_reason` are read by ADR 0066's `chat`
+        # span; a double missing them would fail on an observability
+        # attribute rather than on the ceiling this test is about.
         parsed = SimpleNamespace(
-            content=[SimpleNamespace(type="text", text="ok")], usage=usage
+            content=[SimpleNamespace(type="text", text="ok")],
+            usage=usage,
+            id="msg_fake",
+            model="claude-sonnet-4-6",
+            stop_reason="end_turn",
         )
         return SimpleNamespace(retries_taken=0, parse=lambda: parsed)
 

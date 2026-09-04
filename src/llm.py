@@ -23,13 +23,22 @@ eval campaign, API job — funnels its LLM calls through:
   counted.
 - **Bounded call chain.** `max_retries x timeout` is clamped so one
   flaky call cannot eat a whole API job's timeout budget.
+
+ADR 0066 adds the fourth thing this choke point is good for: it is the
+only place a model call can become a **span**. Before it did, the
+largest latency contributor in the system was invisible to tracing —
+this module recorded a call but opened no span, so a node that spent 90
+seconds waiting on Anthropic showed only as a node that spent 90
+seconds. The span is wrapped *around* `record_llm_call` rather than
+replacing any part of it, so cost stays single-sourced in
+`src.observability.costs` and this module still owns none of it.
 """
 
 from __future__ import annotations
 
 import re
 import time
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import anthropic
 
@@ -38,9 +47,67 @@ from src.config import settings
 from src.observability import record_llm_call
 from src.observability.costs import current_costs, effective_cost_cap, enforce_cost_cap
 from src.observability.logging import get_logger
-from src.observability.metrics import record_llm_upstream_error
+from src.observability.metrics import (
+    record_genai_client_call,
+    record_llm_upstream_error,
+)
+from src.observability.semconv import (
+    GEN_AI_RESPONSE_FINISH_REASONS,
+    GEN_AI_RESPONSE_ID,
+    GEN_AI_RESPONSE_MODEL,
+    GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+    GEN_AI_USAGE_CACHE_WRITE_INPUT_TOKENS,
+    GEN_AI_USAGE_INPUT_TOKENS,
+    GEN_AI_USAGE_OUTPUT_TOKENS,
+)
+from src.observability.tracing import llm_span, note_inference_call
 
 log = get_logger(__name__)
+
+#: Sampling temperature every call is issued with. A constant rather
+#: than a literal inside the request body because
+#: `gen_ai.request.temperature` on the span has to report what was
+#: actually sent — a span attribute that can drift from the request it
+#: describes is worse than no attribute at all.
+_TEMPERATURE: Final = 0.3
+
+#: `server.address` when the client cannot be asked for one. The
+#: fallback exists because the client singleton is replaced wholesale
+#: by test doubles that emulate `messages.with_raw_response.create` and
+#: nothing else — an observability attribute must not be able to fail a
+#: test that has no opinion about it. Every real deployment resolves
+#: the host from the SDK client, including one pointed at a proxy.
+_DEFAULT_SERVER_ADDRESS: Final = "api.anthropic.com"
+
+
+def _server_address(client: anthropic.Anthropic) -> str:
+    """The provider host this client talks to, for `server.address`."""
+    host = getattr(getattr(client, "base_url", None), "host", None)
+    return host if isinstance(host, str) and host else _DEFAULT_SERVER_ADDRESS
+
+
+def _describes(source: object, field: str) -> str | None:
+    """Read a field that only *describes* the call, never one it needs.
+
+    The line this draws is the point. `usage.input_tokens` and
+    `content` are read directly and must be there: cost accounting and
+    the returned text depend on them, so a response missing either is
+    genuinely broken and should fail loudly. `id`, `model` and
+    `stop_reason` are read only to put `gen_ai.response.*` on a span —
+    nothing the caller receives depends on them — and an observability
+    read must never be able to fail the call it is observing. An SDK
+    upgrade that renames `stop_reason` should cost one absent span
+    attribute, not every model response in the fleet.
+
+    Args:
+        source: The parsed response.
+        field: Attribute name.
+
+    Returns:
+        The value when it is a non-empty string, else `None`.
+    """
+    value = getattr(source, field, None)
+    return value if isinstance(value, str) and value else None
 
 # Back-compat re-exports so existing callers (`from src.llm import DEFAULT_MODEL`)
 # keep working while we migrate to `settings.anthropic_model` at call sites.
@@ -216,68 +283,165 @@ def call_llm(
     client = _get_client()
     resolved_model = model_name or settings.anthropic_model
 
-    started = time.monotonic()
-    try:
-        # `with_raw_response` rather than a plain `create`: the parsed
-        # `Message` carries no retry information, while the raw
-        # response exposes the SDK's own `retries_taken` and the
-        # `request-id`. That is the whole retry-visibility fix — it
-        # reports what the SDK already did rather than adding a second
-        # retry loop on top of it (ADR 0051).
-        raw = client.messages.with_raw_response.create(
-            model=resolved_model,
-            max_tokens=max_tokens,
-            temperature=0.3,
-            system=_build_system_param(system_prompt, cache_system),
-            messages=[{"role": "user", "content": prompt}],
-        )
-    except anthropic.APIStatusError as exc:
-        # The SDK has already exhausted `max_retries` by the time this
-        # escapes, so every one of those attempts is otherwise
-        # invisible: no usage to record (`usage` exists only on a 2xx
-        # body) and, before ADR 0051, no line and no metric either.
-        _log_upstream_error(
-            resolved_model,
-            status=str(exc.status_code),
-            request_id=exc.request_id,
-            started=started,
-        )
-        raise
-    except anthropic.APIConnectionError as exc:
-        # Includes `APITimeoutError` — a client-side timeout is a
-        # subclass, and the SDK retries it like any connection error.
-        _log_upstream_error(
-            resolved_model,
-            status="connection",
-            request_id=None,
-            started=started,
-            detail=type(exc).__name__,
-        )
-        raise
+    # The span opens here, not around the whole function: everything
+    # above it is a local guard that spends nothing and reaches no
+    # provider, and a `chat` span covering a cancellation check would
+    # report latency the model never took.
+    with llm_span(
+        model=resolved_model,
+        max_tokens=max_tokens,
+        temperature=_TEMPERATURE,
+        server_address=_server_address(client),
+    ) as span:
+        # Counted before the call, so an attempt that raises still
+        # counts against the enclosing agent invocation — the
+        # conventions are explicit that failed inference calls count,
+        # because an agent that burned four attempts did four
+        # inferences whatever came back.
+        note_inference_call()
+        started = time.monotonic()
+        try:
+            # `with_raw_response` rather than a plain `create`: the parsed
+            # `Message` carries no retry information, while the raw
+            # response exposes the SDK's own `retries_taken` and the
+            # `request-id`. That is the whole retry-visibility fix — it
+            # reports what the SDK already did rather than adding a second
+            # retry loop on top of it (ADR 0051).
+            raw = client.messages.with_raw_response.create(
+                model=resolved_model,
+                max_tokens=max_tokens,
+                temperature=_TEMPERATURE,
+                system=_build_system_param(system_prompt, cache_system),
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except anthropic.APIStatusError as exc:
+            # The SDK has already exhausted `max_retries` by the time this
+            # escapes, so every one of those attempts is otherwise
+            # invisible: no usage to record (`usage` exists only on a 2xx
+            # body) and, before ADR 0051, no line and no metric either.
+            _log_upstream_error(
+                resolved_model,
+                status=str(exc.status_code),
+                request_id=exc.request_id,
+                started=started,
+            )
+            _record_failed_call(resolved_model, exc, started)
+            raise
+        except anthropic.APIConnectionError as exc:
+            # Includes `APITimeoutError` — a client-side timeout is a
+            # subclass, and the SDK retries it like any connection error.
+            _log_upstream_error(
+                resolved_model,
+                status="connection",
+                request_id=None,
+                started=started,
+                detail=type(exc).__name__,
+            )
+            _record_failed_call(resolved_model, exc, started)
+            raise
 
-    latency_ms = (time.monotonic() - started) * 1000
-    response = raw.parse()
+        elapsed_sec = time.monotonic() - started
+        latency_ms = elapsed_sec * 1000
+        response = raw.parse()
 
-    # Anthropic's SDK exposes cache-token buckets on `usage`. They're 0
-    # (or absent) when caching wasn't requested or the request missed
-    # the cache. `input_tokens` from the SDK already excludes cached
-    # tokens on a hit — the three buckets are additive.
-    cache_read = int(getattr(response.usage, "cache_read_input_tokens", 0) or 0)
-    cache_write = int(
-        getattr(response.usage, "cache_creation_input_tokens", 0) or 0
+        # Anthropic's SDK exposes cache-token buckets on `usage`. They're 0
+        # (or absent) when caching wasn't requested or the request missed
+        # the cache. `input_tokens` from the SDK already excludes cached
+        # tokens on a hit — the three buckets are additive.
+        cache_read = int(getattr(response.usage, "cache_read_input_tokens", 0) or 0)
+        cache_write = int(
+            getattr(response.usage, "cache_creation_input_tokens", 0) or 0
+        )
+
+        # Conventional response and usage attributes, on the span that
+        # measured the call. Anthropic's two prompt-cache buckets
+        # (ADR 0022) have conventional names of their own, so nothing
+        # here needs a private one.
+        #
+        # The three *descriptive* fields go through `_describes`; the
+        # token counts do not. See `_describes` for why that line is
+        # where it is.
+        response_id = _describes(response, "id")
+        response_model = _describes(response, "model")
+        finish_reason = _describes(response, "stop_reason")
+        if response_id is not None:
+            span.set_attribute(GEN_AI_RESPONSE_ID, response_id)
+        if response_model is not None:
+            span.set_attribute(GEN_AI_RESPONSE_MODEL, response_model)
+        if finish_reason is not None:
+            span.set_attribute(GEN_AI_RESPONSE_FINISH_REASONS, [finish_reason])
+        span.set_attribute(GEN_AI_USAGE_INPUT_TOKENS, response.usage.input_tokens)
+        span.set_attribute(GEN_AI_USAGE_OUTPUT_TOKENS, response.usage.output_tokens)
+        span.set_attribute(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, cache_read)
+        span.set_attribute(GEN_AI_USAGE_CACHE_WRITE_INPUT_TOKENS, cache_write)
+        record_genai_client_call(
+            request_model=resolved_model,
+            response_model=response_model,
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+            duration_sec=elapsed_sec,
+            error_type=None,
+        )
+
+        return _finish_call(
+            response,
+            resolved_model,
+            cache_read=cache_read,
+            cache_write=cache_write,
+            latency_ms=latency_ms,
+            retries=raw.retries_taken,
+        )
+
+
+def _record_failed_call(
+    model: str, exc: BaseException, started: float
+) -> None:
+    """Record the conventional duration histogram for a failed call.
+
+    `usage` exists only on a 2xx body, so a failed call has no tokens
+    to report — but it very much has a duration, and it is the duration
+    an on-call engineer cares most about, because a call that spent
+    eight minutes exhausting retries before failing is a different
+    incident from one that failed instantly.
+    """
+    record_genai_client_call(
+        request_model=model,
+        response_model=None,
+        input_tokens=None,
+        output_tokens=None,
+        duration_sec=time.monotonic() - started,
+        error_type=type(exc).__name__,
     )
 
+
+def _finish_call(
+    response: anthropic.types.Message,
+    model: str,
+    *,
+    cache_read: int,
+    cache_write: int,
+    latency_ms: float,
+    retries: int,
+) -> str:
+    """Record the call's cost and return its text, fences stripped.
+
+    Split out of `call_llm` so the span body above reads as one
+    sequence — issue, observe, account, return — rather than nesting
+    the whole accounting and parsing tail one level deeper inside the
+    `with`.
+    """
     record_llm_call(
-        model=resolved_model,
+        model=model,
         input_tokens=response.usage.input_tokens,
         output_tokens=response.usage.output_tokens,
         cache_read_input_tokens=cache_read,
         cache_creation_input_tokens=cache_write,
         latency_ms=latency_ms,
-        # Read off the typed SDK surface rather than `getattr`, so an
-        # upgrade that removes the field fails mypy here instead of
-        # quietly reporting zero retries forever (ADR 0051).
-        retries=raw.retries_taken,
+        # Read off the typed SDK surface by the caller rather than
+        # `getattr`, so an upgrade that removes the field fails mypy
+        # there instead of quietly reporting zero retries forever
+        # (ADR 0051).
+        retries=retries,
     )
 
     text = "".join(

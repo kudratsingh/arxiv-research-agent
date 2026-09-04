@@ -23,6 +23,7 @@ from src.observability import (
     JsonFormatter,
     RunCosts,
     bind_run_id,
+    clear_context,
     current_costs,
     current_run_id,
     estimate_cost,
@@ -44,11 +45,19 @@ def _reset_context_vars() -> None:
 
     Tests that start cost tracking or bind a run_id in this module
     would otherwise leak state into subsequent tests via the module-
-    level ContextVars. Direct `.set(None)` / `.set("-")` at teardown.
+    level ContextVars.
+
+    `clear_context()` rather than the `logging._run_id` facade this
+    fixture used to poke: that name was a deprecated view over one
+    field of the ADR-0067 context, kept alive only because this file
+    belonged to no work order at the time, and WO-A07 deleted it. The
+    replacement is strictly better as a teardown — it resets the whole
+    context, so a test that bound a `job_id` or a `principal_hash`
+    stops leaking those into the next one too.
     """
     yield
     costs_module._current_costs.set(None)
-    logging_module._run_id.set("-")
+    clear_context()
 
 
 # ---------------------------------------------------------------------------

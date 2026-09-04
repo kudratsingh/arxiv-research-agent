@@ -6,6 +6,15 @@ sync/eval callers and the async API get the same durability, cancellation,
 tracing, and bounded executor behavior as research jobs. The wrapper callable
 itself is session-typed because LangGraph projects node input from annotations
 (ADR 0059).
+
+Sharing `traced_node` means sharing the GenAI conventions for free
+(ADR 0066): every tutor node becomes an `invoke_agent {node}` span
+under this graph's `invoke_workflow session` parent, so a guided-read
+session and a research run are read by the same dashboard rather than
+by two. The session's own node names (`check_in`, `passage`,
+`learner_input_1`…) are the `gen_ai.agent.name` values, and they are
+bounded by being literals below — which is what keeps
+`gen_ai.invoke_agent.*` finite for this graph.
 """
 
 from __future__ import annotations
