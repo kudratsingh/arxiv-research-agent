@@ -23,6 +23,7 @@ import { LEARN, describeSessionStart } from "@/lib/copy/learn";
 import { WEB_ROOT } from "../support/copyGraph";
 
 const SESSIONS_PY = join(WEB_ROOT, "..", "src", "api", "sessions.py");
+const ERRORS_PY = join(WEB_ROOT, "..", "src", "errors.py");
 
 function failure(detail: unknown, kind: ApiFailure["kind"] = "not_found"): ApiFailure {
   return {
@@ -145,15 +146,31 @@ describe("the mapping table covers what the endpoint can raise", () => {
   ];
 
   it("is still the complete list of refusals in src/api/sessions.py", () => {
+    // ADR 0064 replaced `raise HTTPException(..., detail="...")` with
+    // typed `AppError` subclasses, so the derivation follows the raise
+    // sites through `src/errors.py` to their codes instead of reading a
+    // string literal. Same claim, one indirection deeper — and the
+    // indirection is the point: the code IS the `detail`, so the two can
+    // no longer disagree.
     const source = readFileSync(SESSIONS_PY, "utf8");
-    // The module's `*_DETAIL` constants plus the literals raised inline.
+    const errors = readFileSync(ERRORS_PY, "utf8");
+
+    const codeFor = new Map<string, string>();
+    for (const match of errors.matchAll(
+      /^class (\w+)\([^)]*\):\n(?:.|\n)*?^ {4}code = "([a-z_]+)"$/gm
+    )) {
+      codeFor.set(match[1]!, match[2]!);
+    }
+
     const found = new Set<string>();
-    for (const match of source.matchAll(/^[A-Z_]+_DETAIL = "([a-z_]+)"$/gm)) {
-      found.add(match[1]!);
+    for (const match of source.matchAll(/raise (\w+)\(/g)) {
+      const code = codeFor.get(match[1]!);
+      if (code !== undefined) found.add(code);
     }
-    for (const match of source.matchAll(/detail="([a-z_]+)"/g)) {
-      found.add(match[1]!);
-    }
+
+    // The derivation has to actually resolve something, or every
+    // assertion below would pass by finding nothing.
+    expect(codeFor.size).toBeGreaterThan(20);
     // `session_not_found` and `session_not_awaiting_learner` belong to the
     // read and turn routes, not to create; they are not this surface's.
     for (const detail of CREATE_DETAILS) {

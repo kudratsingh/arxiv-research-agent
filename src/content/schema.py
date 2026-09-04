@@ -60,6 +60,7 @@ from pydantic import (
     model_validator,
 )
 
+from src.errors import LearnContentInvalid
 from src.tools.arxiv_search import canonical_paper_key
 
 # --------------------------------------------------------------------------
@@ -207,11 +208,18 @@ _COPYLEFT_LICENSES: Final[frozenset[str]] = frozenset(
 )
 
 
-class ContentValidationError(ValueError):
+class ContentValidationError(LearnContentInvalid, ValueError):
     """A manifest or briefing broke a rule this module enforces.
 
     Carries the rule id so callers (the CLI, the tests, the review
     queue) can group failures without parsing prose.
+
+    ADR 0064 gives it the code `learn_content_invalid` — the 503 the
+    `/learn/*` routes already answer — and keeps the `ValueError`
+    mixin, which is load-bearing twice over: Pydantic only converts a
+    validator's `ValueError` into a `ValidationError` (see
+    `_first_rule_violation` below, which unwraps exactly that), and
+    `_coerce_date` catches `ValueError` from `date.fromisoformat`.
     """
 
     def __init__(self, rule: str, message: str) -> None:

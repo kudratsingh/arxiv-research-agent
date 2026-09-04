@@ -33,9 +33,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
-from fastapi import HTTPException, Request, status
+from fastapi import Request
 
 from src.config import settings
+from src.errors import (
+    ApiAuthMisconfigured,
+    InvalidApiKey,
+    MissingApiKey,
+    RateLimitedError,
+)
 from src.observability import get_logger
 from src.observability.metrics import record_rate_limit_rejection
 
@@ -170,13 +176,23 @@ def _raise_429(
             `redis`, matching `settings.rate_limit_backend`.
 
     Raises:
-        HTTPException: Always; 429 with a `Retry-After` header.
+        RateLimitedError: Always; 429 with a `Retry-After` header.
     """
     record_rate_limit_rejection(backend=backend)
-    raise HTTPException(
-        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        detail={
-            "error": "rate_limited",
+    # ADR 0064: this is one of exactly two places where `detail` is not
+    # the bare code. The object shape predates the taxonomy and the
+    # current web client reads `limit_per_hour` off it to compose "This
+    # key allows N requests an hour" (`web/lib/api/errors.ts`), and
+    # `web/contract/fixtures/error.429.json` records it. The envelope is
+    # added beside it rather than in place of it.
+    raise RateLimitedError(
+        log_detail=f"key_id={key_id} over {limit_per_hour}/hour",
+        public_message=(
+            f"Rate limit reached. Try again in about "
+            f"{max(retry_after_sec, 1)} seconds."
+        ),
+        wire_detail={
+            "error": RateLimitedError.code,
             "key_id": key_id,
             "limit_per_hour": limit_per_hour,
         },
@@ -482,7 +498,7 @@ async def require_principal(request: Request) -> ApiKeyPrincipal | None:
 
     Returns `None` in the auth-off path so tests and local dev keep
     working. Returns an `ApiKeyPrincipal` in the auth-on path;
-    raises `HTTPException(401)` on missing / unknown key.
+    raises `MissingApiKey` / `InvalidApiKey` (both 401) otherwise.
 
     Reads the app-scoped keystore from `request.app.state.api_keys`
     — populated at startup by `create_app`. Missing keystore under
@@ -496,25 +512,22 @@ async def require_principal(request: Request) -> ApiKeyPrincipal | None:
         request.app.state, "api_keys", None
     )
     if not keystore:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="api_auth_misconfigured",
+        raise ApiAuthMisconfigured(
+            log_detail="enable_api_auth is on and app.state.api_keys is empty"
         )
 
     presented = request.headers.get(API_KEY_HEADER)
     if not presented:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="missing_api_key",
-            headers={"WWW-Authenticate": f"ApiKey header={API_KEY_HEADER}"},
+        raise MissingApiKey(
+            headers={"WWW-Authenticate": f"ApiKey header={API_KEY_HEADER}"}
         )
 
     principal = _lookup_principal(presented, keystore)
     if principal is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="invalid_api_key",
-        )
+        # Deliberately does not say *which* key was presented, and
+        # never echoes it: an error body is a log line somebody else
+        # can read.
+        raise InvalidApiKey()
     return principal
 
 

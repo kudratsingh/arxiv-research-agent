@@ -49,8 +49,18 @@ from langgraph.types import Command
 
 from src.api.jobs import JOB_KINDS, Job, JobKind, JobStatus, JobStore
 from src.api.redriver import WORKER_ID
-from src.cancellation import CancelToken, bind_cancel_token, reset_cancel_token
+from src.cancellation import CancelToken, JobCancelledError, bind_cancel_token, reset_cancel_token
 from src.config import settings
+from src.errors import (
+    AppError,
+    BudgetExceededRun,
+    BudgetExceededSession,
+    HitlCancelled,
+    HitlTimeout,
+    JobCancelled,
+    JobTimeout,
+    SessionTurnTimeout,
+)
 from src.graph.state import ResearchState
 from src.observability import (
     bind_effective_cost_cap,
@@ -109,23 +119,56 @@ pre-compiled `workflow` rather than the factory.
 """
 
 
-class HitlTimeoutError(Exception):
+class HitlTimeoutError(HitlTimeout):
     """Job sat in `pending_review` past `api_hitl_timeout_sec`."""
 
 
-class HitlCancelledError(Exception):
+class HitlCancelledError(HitlCancelled):
     """Client sent `action=cancel` from the review endpoint."""
 
 
-class SessionTurnTimeoutError(Exception):
+class SessionTurnTimeoutError(SessionTurnTimeout):
     """A `session` job sat in `awaiting_learner` past its turn timeout.
 
     Deliberately a sibling of `HitlTimeoutError` rather than a subclass
-    of a shared base: `run_job` catches both by name and writes a
-    different `error_type` for each, and `web/tests/copy/errorTypeDrift.test.ts`
-    derives the frontend's error vocabulary by matching `class X(Exception)`
-    in `src/`. A base class would hide both from that check.
+    of it: `run_job` catches both by name and writes a different
+    `error_type` for each. ADR 0064 gives each its own `AppError` code
+    (`session_turn_timeout`, `hitl_timeout`) — which is what
+    `web/tests/copy/errorTypeDrift.test.ts` now derives the frontend's
+    error vocabulary from, instead of from the class names. Sharing a
+    parent is therefore safe now in a way it was not before, as long as
+    the two codes stay distinct; `ERROR_CODES` enforces that.
     """
+
+
+def _as_app_error(exc: BaseException) -> AppError:
+    """Give any exception that ends a job a code from `ERROR_CODES`.
+
+    This is the boundary the whole work order turns on. Before ADR 0064
+    the generic handler wrote `type(exc).__name__` into `job.error_type`
+    and `f"{type(exc).__name__}: {exc}"` into `job.error` — so a psycopg
+    connection failure put its DSN, and an httpx error put its URL, into
+    an API response body and into a metric attribute of unbounded
+    cardinality.
+
+    Two classes are mapped here rather than re-parented, because their
+    modules are outside this work order's file ownership
+    (`src/observability/**` and `src/cancellation.py`): `CostBudgetExceeded`
+    and `JobCancelledError`. Mapping them at the boundary is behaviourally
+    identical for everything downstream — the code, the metric attribute
+    and the job field are the same either way — and ADR 0064 records the
+    seam so a later work order can collapse it.
+
+    Anything else is `internal_unexpected`, which is the honest answer:
+    an exception nobody typed is one nobody predicted.
+    """
+    if isinstance(exc, AppError):
+        return exc
+    if isinstance(exc, CostBudgetExceeded):
+        return BudgetExceededRun(log_detail=str(exc))
+    if isinstance(exc, JobCancelledError):
+        return JobCancelled(log_detail=str(exc))
+    return AppError(log_detail=f"{type(exc).__name__}: {exc}")
 
 
 def _session_cost_cap_copy(cap_usd: float, behavior: str) -> str:
@@ -1582,9 +1625,15 @@ async def run_job(
             # The learner stopped answering. Terminal, and named so the
             # Ledger can tell an abandoned session apart from a broken
             # one (WO-W07/W14) without parsing a message.
+            #
+            # ADR 0064: `job.error` was `str(exc)` — our own text here,
+            # but the field is one field with one contract, and half of
+            # it being a code while the other half is prose is how
+            # clients end up parsing prose. The sentence goes to the log
+            # line below.
             job.status = JobStatus.failed
-            job.error = str(exc)
-            job.error_type = "session_turn_timeout"
+            job.error_type = SessionTurnTimeout.code
+            job.error = job.error_type
             job.completed_at = time.time()
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
@@ -1605,14 +1654,16 @@ async def run_job(
                 extra={
                     "job_id": job.job_id,
                     "session_turn_timeout_sec": settings.session_turn_timeout_sec,
+                    "error_type": job.error_type,
+                    "error": str(exc),
                     **snapshot,
                 },
             )
             return
         except HitlTimeoutError:
             job.status = JobStatus.failed
-            job.error = f"pending_review exceeded {settings.api_hitl_timeout_sec}s"
-            job.error_type = "hitl_timeout"
+            job.error_type = HitlTimeout.code
+            job.error = job.error_type
             job.completed_at = time.time()
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
@@ -1633,6 +1684,8 @@ async def run_job(
                 extra={
                     "job_id": job.job_id,
                     "hitl_timeout_sec": settings.api_hitl_timeout_sec,
+                    "error_type": job.error_type,
+                    "error": f"pending_review exceeded {settings.api_hitl_timeout_sec}s",
                     **snapshot,
                 },
             )
@@ -1668,8 +1721,11 @@ async def run_job(
                     )
                 else:
                     job.status = JobStatus.failed
-                    job.error = job.cost_cap_message
-                    job.error_type = "session_cost_cap_refused"
+                    job.error_type = BudgetExceededSession.code
+                    # `cost_cap_message` is the learner-facing copy and
+                    # keeps its own field (ADR 0062); `error` carries the
+                    # code, like every other terminal path.
+                    job.error = job.error_type
                     job.result = exc.partial_report or None
                     await _persist_terminal(store, job)
                     await _put_terminal_event(
@@ -1698,8 +1754,8 @@ async def run_job(
                 )
                 return
             job.status = JobStatus.failed
-            job.error = str(exc)
-            job.error_type = "cost_budget_exceeded"
+            job.error_type = BudgetExceededRun.code
+            job.error = job.error_type
             job.completed_at = time.time()
             # ADR 0051: keep the draft the run had already paid for.
             # The job is still `failed` — the report is partial and the
@@ -1763,8 +1819,8 @@ async def run_job(
             # stops while we write the outcome.
             cancel_token.cancel("job_timeout")
             job.status = JobStatus.failed
-            job.error = f"Workflow exceeded {timeout}s timeout"
-            job.error_type = "timeout"
+            job.error_type = JobTimeout.code
+            job.error = job.error_type
             job.completed_at = time.time()
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
@@ -1791,6 +1847,8 @@ async def run_job(
                     "job_id": job.job_id,
                     "timeout_sec": timeout,
                     "abandoned_nodes": abandoned,
+                    "error_type": job.error_type,
+                    "error": f"workflow exceeded {timeout}s timeout",
                     **snapshot,
                 },
             )
@@ -1829,9 +1887,19 @@ async def run_job(
             )
             raise
         except Exception as exc:
+            # ADR 0064. This block used to read
+            # `job.error = f"{type(exc).__name__}: {exc}"` and
+            # `job.error_type = type(exc).__name__`, which put a raw
+            # exception message — psycopg DSNs, redis and httpx
+            # hostnames, filesystem paths, unbounded length — into an
+            # API response body, an SSE frame, and a metric attribute.
+            # `_as_app_error` replaces both with one code out of the
+            # closed set; the original text survives in the
+            # `log.exception` below, which is the only place it belongs.
+            app_error = _as_app_error(exc)
             job.status = JobStatus.failed
-            job.error = f"{type(exc).__name__}: {exc}"
-            job.error_type = type(exc).__name__
+            job.error_type = app_error.code
+            job.error = job.error_type
             job.completed_at = time.time()
             snapshot = costs.as_dict()
             job.cost_usd = snapshot.get("total_cost_usd")
@@ -1847,7 +1915,15 @@ async def run_job(
                     "elapsed_sec": job.elapsed_sec(),
                 },
             )
-            log.exception("api_job_failed", extra={"job_id": job.job_id, **snapshot})
+            log.exception(
+                "api_job_failed",
+                extra={
+                    "job_id": job.job_id,
+                    "error_type": app_error.code,
+                    "error": str(app_error),
+                    **snapshot,
+                },
+            )
             return
         else:
             metrics = _extract_final_metrics(final_state)

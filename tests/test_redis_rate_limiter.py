@@ -18,6 +18,7 @@ import fakeredis.aioredis
 import pytest
 
 from src.api.auth import RedisRateLimiter
+from src.errors import RateLimitedError
 
 pytestmark = pytest.mark.integration
 
@@ -45,10 +46,10 @@ class TestRedisRateLimiter:
         rl = RedisRateLimiter(shared_backend, limit_per_hour=3)
         for i in range(3):
             await rl.check_and_record("k", now=100.0 + i)
-        with pytest.raises(Exception) as exc:
+        with pytest.raises(RateLimitedError) as exc:
             await rl.check_and_record("k", now=103.0)
-        assert getattr(exc.value, "status_code", None) == 429
-        headers = getattr(exc.value, "headers", {})
+        assert exc.value.http_status == 429
+        headers = exc.value.headers or {}
         assert "Retry-After" in headers
         assert int(headers["Retry-After"]) > 0
 
@@ -106,6 +107,6 @@ class TestRedisRateLimiter:
         await worker_a.check_and_record("k", now=100.0)
         await worker_b.check_and_record("k", now=101.0)
         # Third submit from either worker should hit the shared cap.
-        with pytest.raises(Exception) as exc:
+        with pytest.raises(RateLimitedError) as exc:
             await worker_a.check_and_record("k", now=102.0)
-        assert getattr(exc.value, "status_code", None) == 429
+        assert exc.value.http_status == 429

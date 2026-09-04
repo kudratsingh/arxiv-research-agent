@@ -62,6 +62,7 @@ from langchain_core.messages import AIMessage
 
 from src.cancellation import JobCancelledError, check_cancelled
 from src.config import settings
+from src.errors import UpstreamPaperRead
 from src.graph.state import (
     EvidenceClaim,
     PaperAnalysis,
@@ -138,14 +139,16 @@ def _record_fallback(paper: PaperMetadata, reason: str) -> None:
         tally.append(reason)
 
 
-class AllPaperAnalysesFailedError(RuntimeError):
+class AllPaperAnalysesFailedError(UpstreamPaperRead):
     """Every paper in the reader fan-out failed to produce an analysis.
 
     A single malformed LLM response degrades that one paper to a
     placeholder (ADR 0041); this error fires only when no paper at all
     yielded a usable analysis — the LLM is effectively down, and
-    proceeding would hand the synthesizer an empty analysis set. The
-    API runner maps the class name straight to the job's `error_type`.
+    proceeding would hand the synthesizer an empty analysis set.
+
+    ADR 0064 re-parents it onto `UpstreamPaperRead`, so the job's
+    `error_type` is the stable `upstream_paper_read`.
     """
 
 

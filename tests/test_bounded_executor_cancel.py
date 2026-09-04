@@ -759,7 +759,8 @@ class TestRunnerDrain:
             executor.shutdown(wait=True)
 
         assert job.status == JobStatus.failed
-        assert job.error == "Workflow exceeded 1s timeout"
+        # ADR 0064: `error` carries the stable code, not a sentence.
+        assert job.error == "timeout"
         assert job.error_type == "timeout"
         stored = await store.get("contract")
         assert stored is not None and stored.status == JobStatus.failed

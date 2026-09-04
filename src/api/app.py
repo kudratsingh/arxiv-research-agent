@@ -24,13 +24,18 @@ import asyncio
 import contextlib
 import inspect
 import random
+import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.api.auth import (
     ApiKeyPrincipal,
@@ -55,6 +60,14 @@ from src.api.runner import SHUTDOWN_DRAIN_SEC, run_job
 from src.api.sessions import router as session_router
 from src.cancellation import abandoned_node_count
 from src.config import settings
+from src.errors import (
+    ERROR_CODES,
+    AppError,
+    InvalidRequestError,
+    error_class_for_code,
+    error_class_for_status,
+    error_envelope,
+)
 from src.graph.session_workflow import (
     build_session_workflow as default_build_session_workflow,
 )
@@ -78,6 +91,210 @@ from src.observability.metrics import (
 )
 
 log = get_logger(__name__)
+
+
+def _request_id(request: Request) -> str:
+    """The correlation id for one failed request.
+
+    There is no request-id infrastructure in this process yet — WO-A10
+    adds the middleware that mints one per request and puts it in the
+    observability context. Until then the id is generated *here*, at the
+    moment of failure, which is enough to tie a client's error body to
+    the ERROR log line beside it and is the whole reason the field
+    exists in the envelope.
+
+    It reads `request.state.request_id` first so that when the
+    middleware lands this function needs no edit: the same id will then
+    already be on the request and every log record for it, and the
+    locally-minted fallback becomes dead code rather than a competing
+    second identity. See ADR 0064 "Seams".
+    """
+    existing = getattr(request.state, "request_id", None)
+    return existing if isinstance(existing, str) and existing else uuid.uuid4().hex
+
+
+def _error_response(
+    request: Request,
+    error: AppError,
+    *,
+    http_status: int | None = None,
+    headers: dict[str, str] | None = None,
+) -> JSONResponse:
+    """One envelope, one place, for all four handlers.
+
+    `http_status` overrides the class's own status, and exists for
+    exactly one caller: the `HTTPException` bridge. A 405 from the
+    router has no class of its own, so it borrows the `invalid_*`
+    family for its *code* — but it must still answer 405, or the
+    bridge would silently rewrite every status the taxonomy has not
+    given a class to.
+
+    The response carries `X-Request-Id` as well as the body field. The
+    Next.js proxy does not forward it today
+    (`web/app/api/[...path]/route.ts`'s response allowlist), but
+    `web/lib/api/errors.ts` already reads the header when it is present,
+    so emitting it costs nothing and closes half the loop early.
+    """
+    request_id = _request_id(request)
+    merged = {"X-Request-Id": request_id}
+    if error.headers is not None:
+        merged.update(error.headers)
+    if headers is not None:
+        merged.update(headers)
+    return JSONResponse(
+        status_code=http_status if http_status is not None else error.http_status,
+        content=error_envelope(
+            code=error.code,
+            message=error.message,
+            retryable=error.retryable,
+            request_id=request_id,
+            detail=error.wire_detail,
+        ),
+        headers=merged,
+    )
+
+
+def _log_boundary_error(
+    request: Request,
+    error: AppError,
+    *,
+    request_id: str,
+    exc_info: bool,
+    http_status: int | None = None,
+) -> None:
+    """Record the failure with the detail the client never sees.
+
+    This is the other half of "stop leaking raw exception text": the
+    text still has to go *somewhere*, and the somewhere is here, with
+    the request id that the client was handed. Client errors (4xx) log
+    at WARNING because a stream of them is a client problem worth
+    seeing but not an incident; 5xx logs at ERROR with `exc_info`,
+    which is the line that did not exist before this work order — an
+    unhandled exception used to produce an untyped Starlette 500 and no
+    log on that path at all.
+    """
+    status_code = http_status if http_status is not None else error.http_status
+    payload = {
+        "request_id": request_id,
+        # `error_type` and `error`, not `error_code`/`error_detail`:
+        # ADR 0067's `extra` allowlist already carries both names, they
+        # are what every other failure line in this codebase uses, and
+        # `error_type` is now literally the code.
+        "error_type": error.code,
+        "http_status": status_code,
+        "method": request.method,
+        # The route *template*, never the raw path: a path carries job
+        # and conversation ids, and this string is a log field that
+        # ends up grouped.
+        "route": getattr(request.scope.get("route"), "path", None),
+        # The human-readable half. Never in the response body.
+        "error": error.log_detail,
+    }
+    if status_code >= 500:
+        log.error("api_request_failed", extra=payload, exc_info=exc_info)
+    else:
+        log.warning("api_request_rejected", extra=payload, exc_info=exc_info)
+
+
+async def _handle_app_error(request: Request, exc: Exception) -> JSONResponse:
+    """`AppError` — the typed path. The code is already decided."""
+    error = exc if isinstance(exc, AppError) else AppError(str(exc))
+    request_id = _request_id(request)
+    request.state.request_id = request_id
+    # `exc_info` only for the 5xx half: a 404 for a job that does not
+    # exist is not worth a traceback, and 20 of them a second would
+    # bury the ones that are.
+    _log_boundary_error(
+        request, error, request_id=request_id, exc_info=error.http_status >= 500
+    )
+    return _error_response(request, error)
+
+
+async def _handle_http_exception(request: Request, exc: Exception) -> JSONResponse:
+    """`HTTPException` — the shapes that predate the taxonomy.
+
+    Every `HTTPException` this repository raises has been converted to
+    an `AppError`, so what reaches here is either FastAPI's own (a 405
+    from the router, say) or one raised by a module this work order
+    does not own (`src/api/learn.py`). Both still get a code: the
+    `detail` string is looked up in `ERROR_CODES` first, and the status
+    supplies the family code when it is not there.
+
+    The `detail` value itself is passed through *verbatim*. That is
+    what makes the envelope additive rather than breaking: the current
+    web client reads structure out of two of these shapes, and the
+    recorded fixtures in `web/contract/fixtures/` hold them.
+    """
+    if not isinstance(exc, StarletteHTTPException):  # pragma: no cover - defensive
+        return await _handle_app_error(request, exc)
+    detail = exc.detail
+    error_class = (
+        error_class_for_code(detail)
+        if isinstance(detail, str) and detail in ERROR_CODES
+        else None
+    ) or error_class_for_status(exc.status_code)
+    error = error_class(
+        log_detail=detail if isinstance(detail, str) else repr(detail),
+        wire_detail=detail,
+    )
+    request_id = _request_id(request)
+    request.state.request_id = request_id
+    _log_boundary_error(
+        request,
+        error,
+        request_id=request_id,
+        exc_info=exc.status_code >= 500,
+        http_status=exc.status_code,
+    )
+    return _error_response(
+        request,
+        error,
+        http_status=exc.status_code,
+        headers=dict(exc.headers or {}),
+    )
+
+
+async def _handle_validation_error(request: Request, exc: Exception) -> JSONResponse:
+    """`RequestValidationError` — FastAPI's 422 array, wrapped not replaced.
+
+    `detail` keeps the `[{loc, msg, type}, ...]` array because the web
+    client turns it into per-field messages
+    (`readFieldIssues` in `web/lib/api/errors.ts`, rendered by the plan
+    editor). Replacing it with a bare code would silently downgrade
+    every form error in the product to "The request was rejected as
+    invalid."
+    """
+    errors: list[Any] = (
+        jsonable_encoder(exc.errors()) if isinstance(exc, RequestValidationError) else []
+    )
+    error = InvalidRequestError(log_detail=f"{len(errors)} field(s) rejected", wire_detail=errors)
+    request_id = _request_id(request)
+    request.state.request_id = request_id
+    _log_boundary_error(request, error, request_id=request_id, exc_info=False)
+    return _error_response(request, error)
+
+
+async def _handle_unexpected(request: Request, exc: Exception) -> JSONResponse:
+    """Bare `Exception` — the handler whose absence was the finding.
+
+    Without it an unhandled exception became an untyped Starlette 500
+    with no structured body and, on that path, no ERROR log anywhere.
+    Now it is `internal_unexpected`, 500, with a traceback in the log
+    and — the point — nothing of `str(exc)` in the response. psycopg,
+    redis and httpx messages embed DSNs, hostnames and filesystem
+    paths; that is exactly the text this handler exists to keep inside
+    the process.
+
+    Starlette's `ServerErrorMiddleware` re-raises after this returns,
+    so the ASGI server still sees the exception and a test client
+    constructed with `raise_app_exceptions=True` still fails loudly.
+    """
+    error = AppError(log_detail=f"{type(exc).__name__}: {exc}")
+    request_id = _request_id(request)
+    request.state.request_id = request_id
+    _log_boundary_error(request, error, request_id=request_id, exc_info=True)
+    return _error_response(request, error)
+
 
 # How often the in-memory retention sweep runs (ADR 0040). Coarse on
 # purpose: retention is measured in hours, so a five-minute cadence
@@ -641,6 +858,21 @@ def create_app(
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    # ADR 0064: four handlers, and between them every exception that can
+    # leave a route now produces the same envelope with a code drawn
+    # from `ERROR_CODES`. Registered here rather than as decorators
+    # because `create_app` is a factory — a decorator would bind to
+    # whichever app object happened to be constructed first.
+    #
+    # Order of registration does not matter (Starlette dispatches on the
+    # most specific registered class), but order of *reading* does:
+    # `Exception` is the one that had to exist. Everything above it is
+    # refinement.
+    app.add_exception_handler(AppError, _handle_app_error)
+    app.add_exception_handler(StarletteHTTPException, _handle_http_exception)
+    app.add_exception_handler(RequestValidationError, _handle_validation_error)
+    app.add_exception_handler(Exception, _handle_unexpected)
 
     # ADR 0033: CORS is opt-in via `settings.api_cors_allow_origins`.
     # Empty (default) => no CORS middleware, so same-origin only.

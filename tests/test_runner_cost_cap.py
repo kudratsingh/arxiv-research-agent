@@ -418,7 +418,9 @@ async def test_run_job_cost_budget_exceeded_fails_the_job(
 
     assert job.status == JobStatus.failed
     assert job.error_type == "cost_budget_exceeded"
-    assert job.error is not None and "exceeded cap" in job.error
+    # ADR 0064: the cap's own sentence ("... exceeded cap ...") is a
+    # log field now; the job record carries the code.
+    assert job.error == "cost_budget_exceeded"
     assert job.completed_at is not None
     # Spend at time of abort is preserved on the record — the bill
     # was incurred even though the run was cut short.
@@ -464,7 +466,7 @@ async def test_run_job_timeout_fails_the_job(
 
     assert job.status == JobStatus.failed
     assert job.error_type == "timeout"
-    assert job.error == "Workflow exceeded 1s timeout"
+    assert job.error == "timeout"
     assert job.completed_at is not None
 
     stored = await store.get("too-slow")

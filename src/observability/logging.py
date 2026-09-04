@@ -166,6 +166,11 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "api_learner_profile_written",
         "api_node_executor_drain_timeout",
         "api_prior_context_failed",
+        # ADR 0064's four exception handlers. `api_request_rejected` is
+        # every 4xx the boundary answers; `api_request_failed` is the
+        # 5xx line that did not exist at all before those handlers did.
+        "api_request_failed",
+        "api_request_rejected",
         "api_session_cost_cap_reached",
         "api_session_submitted",
         "api_session_transcript_unavailable",

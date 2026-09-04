@@ -5,8 +5,12 @@
 //   1. `ApiFailure.kind` — what happened to an HTTP call we made. Twelve
 //      variants, normalized by `lib/api/errors.ts` (04 §3.4).
 //   2. `JobDetail.error_type` — what the backend says happened to a RUN.
-//      Nine values it can produce (03 §8.3), and any future exception
-//      class name after that.
+//      Since ADR 0064 this is a CLOSED set of stable codes
+//      (`JOB_ERROR_TYPES` in `src/errors.py`), not a mix of constants
+//      and Python class names, and the drift test below reads it from
+//      there. The fall-through stays anyway: a backend that has landed
+//      a thirteenth code before this dictionary has must still say
+//      something true.
 //
 // RC-16 governs the second one and is the reason this file exists rather
 // than a `switch` inside a component:
@@ -290,8 +294,8 @@ export function describeFailure(failure: ApiFailure): FailureCopy {
 }
 
 // ---------------------------------------------------------------------------
-// `JobDetail.error_type` — the nine values, and the visible fall-through
-// (criteria 6, 7, 8; 03 §8.3; RC-16).
+// `JobDetail.error_type` — the twelve codes, and the visible
+// fall-through (criteria 6, 7, 8; 03 §8.3; RC-16; ADR 0064).
 // ---------------------------------------------------------------------------
 
 /** A mapped run failure: our sentence, and what to do about it. */
@@ -303,25 +307,31 @@ export interface ErrorTypeCopy {
 /**
  * The `error_type` values this backend can produce, mapped.
  *
- * Four are deliberate constants — `hitl_timeout` (`runner.py:1057`),
- * `cost_budget_exceeded` (`:1085`), `timeout` (`:1150`) and `orphaned`
- * (`redriver.py:507`). Five are class names reaching the generic handler
- * at `runner.py:1219`, which sets `error_type = type(exc).__name__`:
- * `NoPapersFoundError` (`src/agents/search.py:49`),
- * `AllPaperAnalysesFailedError` (`src/agents/reader.py:141`),
- * `SynthesizerOutputError` (`src/agents/synthesizer.py:45`),
- * `ArxivUnavailableError` (`src/tools/arxiv_search.py:41`) and
- * `JobCancelledError` (`src/cancellation.py:65`).
+ * ADR 0064 changed what these keys ARE. They used to be a mix of six
+ * deliberate string constants and five Python class names, because the
+ * runner's generic handler wrote `error_type = type(exc).__name__` —
+ * which meant a class rename in `src/` silently unmapped a sentence
+ * here, and an exception from a dependency put its own class name on a
+ * user's screen. Every key is now a stable `AppError.code` out of the
+ * closed set in `src/errors.py`, and the five class names have become
+ * the five codes that replaced them:
  *
- * `web/tests/copy/errorTypeDrift.test.ts` re-derives the complete list from
- * the Python sources on every run, so a new value cannot arrive silently.
+ *   NoPapersFoundError          -> not_found_papers
+ *   ArxivUnavailableError       -> upstream_arxiv
+ *   AllPaperAnalysesFailedError -> upstream_paper_read
+ *   SynthesizerOutputError      -> upstream_model_output
+ *   JobCancelledError           -> cancelled_job
  *
- * Eight sentences are 03 §8.3's, verbatim. The ninth — `JobCancelledError`
- * — has no row in §8.3's table because §8.3 lists it only as a producible
- * class name; it is mapped here rather than left to fall through, because
- * "The run failed." is the wrong sentence for a run that was stopped on
- * purpose, and the drift test would otherwise pass while the user read
- * something untrue.
+ * `internal_unexpected` is the new twelfth entry and the important one:
+ * it is what *every* untyped failure now becomes, so it is the sentence
+ * a user sees when a database or an upstream library falls over. It
+ * previously reached them as the fall-through plus a raw psycopg
+ * message.
+ *
+ * `web/tests/copy/errorTypeDrift.test.ts` re-derives the complete list
+ * from `src/errors.py`'s `JOB_ERROR_TYPES` on every run, so a new value
+ * still cannot arrive silently. The sentences are unchanged from 03
+ * §8.3 wherever §8.3 wrote one.
  */
 export const ERROR_TYPE_COPY = {
   hitl_timeout: {
@@ -358,25 +368,34 @@ export const ERROR_TYPE_COPY = {
       "The run was interrupted by a server restart and could not be resumed safely.",
     recovery: "Ask again to start a new run.",
   },
-  NoPapersFoundError: {
+  not_found_papers: {
     sentence: "No matching arXiv papers were found for these queries.",
     recovery: "Ask again and edit the arXiv queries at review.",
   },
-  ArxivUnavailableError: {
+  upstream_arxiv: {
     sentence: "arXiv could not be reached.",
     recovery: "Ask again later.",
   },
-  AllPaperAnalysesFailedError: {
+  upstream_paper_read: {
     sentence: "Papers were found but none could be read.",
     recovery: "Ask again and edit the arXiv queries.",
   },
-  SynthesizerOutputError: {
+  upstream_model_output: {
     sentence: "The briefing could not be assembled from what was read.",
     recovery: "Ask again to start a new run.",
   },
-  JobCancelledError: {
+  cancelled_job: {
     sentence: "The run was stopped before it finished.",
     recovery: "Ask again to start a new run.",
+  },
+  internal_unexpected: {
+    // ADR 0064's fall-through, promoted to a mapped value. It says "not
+    // this run's fault" without pretending to know more than the code
+    // does — the raw `error` is still one disclosure away, and it is now
+    // the code itself rather than a driver's message.
+    sentence: "The run stopped because of a fault on the server.",
+    recovery:
+      "Ask again. If it keeps happening, copy the diagnostics into an issue.",
   },
 } as const satisfies Record<string, ErrorTypeCopy>;
 

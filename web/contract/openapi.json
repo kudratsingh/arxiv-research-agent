@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "2114c4788dc0aba3aaf1e6a388cda540ecad8c39",
+    "commit": "65874107bbca0f1c0d9a2c1931e4c1804729afcb",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -199,7 +199,7 @@
     "/research/{job_id}/stream": {
       "get": {
         "summary": "Server-Sent Events stream of workflow events.",
-        "description": "Stream this job's workflow events as Server-Sent Events.\n\nTerminal jobs replay a single frame and close, which is what\nmakes reconnects idempotent. A job parked in `pending_review`\nreplays its `plan_ready` frame first and then keeps streaming\n(ADR 0053). Live jobs are handed to `sse_event_stream`\n(ADR 0038), which owns the read/heartbeat/deadline loop and the\ndrainer's cleanup.\n\nArgs:\n    job_id: Job to stream.\n    request: Incoming request; supplies app state and the\n        disconnect probe.\n    principal: Authenticated caller, or None when auth is off.\n\nReturns:\n    A `text/event-stream` response.\n\nRaises:\n    HTTPException: 404 when the job is unknown or owned by\n        another principal (ADR 0036).",
+        "description": "Stream this job's workflow events as Server-Sent Events.\n\nTerminal jobs replay a single frame and close, which is what\nmakes reconnects idempotent. A job parked in `pending_review`\nreplays its `plan_ready` frame first and then keeps streaming\n(ADR 0053). Live jobs are handed to `sse_event_stream`\n(ADR 0038), which owns the read/heartbeat/deadline loop and the\ndrainer's cleanup.\n\nArgs:\n    job_id: Job to stream.\n    request: Incoming request; supplies app state and the\n        disconnect probe.\n    principal: Authenticated caller, or None when auth is off.\n\nReturns:\n    A `text/event-stream` response.\n\nRaises:\n    JobNotFound: 404 when the job is unknown or owned by\n        another principal (ADR 0036).",
         "operationId": "stream_research_research__job_id__stream_get",
         "parameters": [
           {

@@ -32,7 +32,6 @@ from typing import Any
 
 import pytest
 from asgi_lifespan import LifespanManager
-from fastapi import HTTPException
 from httpx import ASGITransport, AsyncClient
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
@@ -44,6 +43,7 @@ from src.api.jobs import InMemoryJobStore, Job, JobStatus
 from src.api.redriver import ORPHANED_ERROR_TYPE, JobRedriver
 from src.api.runner import run_job
 from src.config import Settings
+from src.errors import ERROR_CODES, RateLimitedError
 from src.observability import costs as costs_module
 from src.observability import metrics as metrics_module
 
@@ -371,9 +371,9 @@ class TestRateLimitRejectionMetric:
         limiter = auth_module.InMemoryRateLimiter(limit_per_hour=1)
         await limiter.check_and_record("tenant-a")
 
-        with pytest.raises(HTTPException) as excinfo:
+        with pytest.raises(RateLimitedError) as excinfo:
             await limiter.check_and_record("tenant-a")
-        assert excinfo.value.status_code == 429
+        assert excinfo.value.http_status == 429
 
         assert (
             _point_for(
@@ -400,7 +400,7 @@ class TestRateLimitRejectionMetric:
         """Both backends go through `_raise_429`; the attribute is what
         tells "Redis limiter is rejecting" from "this worker is"."""
         for backend in ("memory", "redis", "redis"):
-            with pytest.raises(HTTPException):
+            with pytest.raises(RateLimitedError):
                 auth_module._raise_429("k", 5, 60, backend=backend)
 
         points = _points(reader, "rate_limit_rejections_total")
@@ -504,7 +504,7 @@ class TestDisabled:
         costs_module.record_llm_call(
             "claude-opus-5", input_tokens=10, output_tokens=10
         )
-        with pytest.raises(HTTPException):
+        with pytest.raises(RateLimitedError):
             auth_module._raise_429("k", 1, 1, backend="memory")
 
         assert metrics_module._instruments is None
@@ -595,13 +595,19 @@ class TestRunnerTerminalWiring:
 
         await run_job(job, _ExplodingStub(), store, asyncio.Semaphore(1))
         assert job.status is JobStatus.failed
-        assert job.error_type == "RuntimeError"
+        # ADR 0064. This attribute used to be `type(exc).__name__`, so
+        # its value set was "every exception class any dependency can
+        # raise" — unbounded cardinality on a counter. It is now drawn
+        # from the closed `ERROR_CODES`, and this is the fall-through
+        # member of it.
+        assert job.error_type == "internal_unexpected"
+        assert job.error_type in ERROR_CODES
 
         assert (
             _point_for(
                 _points(reader, "research_jobs_total"),
                 status="failed",
-                error_type="RuntimeError",
+                error_type="internal_unexpected",
             ).value
             == 1
         )
@@ -628,11 +634,15 @@ class TestRunnerTerminalWiring:
 
         await run_job(job, _SucceedingStub(), store, asyncio.Semaphore(1))
 
+        # The store failure surfaces as `internal_unexpected`, not as
+        # `ConnectionError`: a redis client's class name is exactly the
+        # kind of value that must never reach a metric attribute or an
+        # API body (ADR 0064).
         assert (
             _point_for(
                 _points(reader, "research_jobs_total"),
                 status="failed",
-                error_type="ConnectionError",
+                error_type="internal_unexpected",
             ).value
             == 1
         )

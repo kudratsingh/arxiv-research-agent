@@ -48,11 +48,13 @@ from src.api.runner import (
     RESEARCH_RUNTIME,
     SESSION_RUNTIME,
     SESSION_TURN_STATE_KEY,
+    HitlTimeoutError,
     SessionTurnTimeoutError,
     run_job,
     runtime_for,
 )
 from src.config import settings
+from src.errors import ERROR_CODES
 
 pytestmark = pytest.mark.integration
 
@@ -343,8 +345,9 @@ class TestSessionParking:
         assert settled.status == JobStatus.failed
         assert settled.is_terminal()
         assert settled.error_type == "session_turn_timeout"
-        # The message names the parking, not the parking's owner.
-        assert settled.error == "awaiting_learner exceeded 1s"
+        # ADR 0064: one field, one contract — `error` is the stable
+        # code, and the sentence that named the parking is a log field.
+        assert settled.error == "session_turn_timeout"
         # ...and the terminal row does not still advertise the turn it
         # was waiting on. A `failed` job carrying an open question would
         # tell the Ledger a session is mid-flight when it is over.
@@ -418,7 +421,13 @@ class TestSessionParking:
         settled = await store.get(job.job_id)
         assert settled is not None
         assert settled.status == JobStatus.failed
-        assert "still interrupted after 2 resumes" in (settled.error or "")
+        # The runner's own invariant `RuntimeError` reaches the generic
+        # handler, so ADR 0064 makes it `internal_unexpected`: the
+        # sentence naming the resume ceiling is in the ERROR log, not on
+        # the wire. What a client can act on is that the job is
+        # terminally failed under a code it can branch on.
+        assert settled.error_type == "internal_unexpected"
+        assert settled.error == "internal_unexpected"
 
 
 # ---------------------------------------------------------------------------
@@ -678,12 +687,18 @@ class TestResearchIsUntouched:
         )
         assert SESSION_RUNTIME.outer_timeout(_session_job(), 600.0) == 900.0
 
-    def test_the_session_timeout_error_is_a_plain_exception(self) -> None:
+    def test_the_session_timeout_error_has_its_own_code(self) -> None:
         """Load-bearing for `web/tests/copy/errorTypeDrift.test.ts`.
 
-        That test derives the frontend's error vocabulary by matching
-        `class X(Exception)` in `src/`. A shared base class between the
-        two parking timeouts would drop both out of the enumeration and
-        silently un-map them.
+        That test used to derive the frontend's error vocabulary by
+        matching `class X(Exception)` in `src/`, which made the *base
+        class* of these two parking timeouts load-bearing: sharing one
+        would have dropped both out of the enumeration and silently
+        un-mapped them. ADR 0064 moved the vocabulary to `ERROR_CODES`,
+        so what has to stay distinct is the code, not the ancestry —
+        and that is enforced at import time by `__init_subclass__`
+        rather than by a regex over a class statement.
         """
-        assert SessionTurnTimeoutError.__bases__ == (Exception,)
+        assert SessionTurnTimeoutError.code == "session_turn_timeout"
+        assert HitlTimeoutError.code == "hitl_timeout"
+        assert {SessionTurnTimeoutError.code, HitlTimeoutError.code} <= ERROR_CODES

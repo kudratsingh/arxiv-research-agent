@@ -654,18 +654,20 @@ describe("criterion 1 — failure keeps the work", () => {
   it("has no branch that suppresses a briefing, whatever the failure", async () => {
     // `ReportView.tsx:13-27` returns before the report for every failed job
     // that carries an `error`. Nine mapped error types and an unmapped one,
-    // all with the same retained body: the body renders every time.
+    // all with the same retained body: the body renders every time. The
+    // five class names became ADR 0064 codes; the property under test is
+    // unchanged.
     for (const errorType of [
       "hitl_timeout",
       "cost_budget_exceeded",
       "timeout",
       "orphaned",
-      "NoPapersFoundError",
-      "ArxivUnavailableError",
-      "AllPaperAnalysesFailedError",
-      "SynthesizerOutputError",
-      "JobCancelledError",
-      "SomeFutureExceptionName",
+      "not_found_papers",
+      "upstream_arxiv",
+      "upstream_paper_read",
+      "upstream_model_output",
+      "cancelled_job",
+      "some_future_code",
     ]) {
       const { container, unmount } = await readBriefing(FAILED_PARTIAL.result, {
         failure: { errorType, error: FAILED_PARTIAL.error },

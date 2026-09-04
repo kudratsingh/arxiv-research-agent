@@ -30,7 +30,17 @@ import {
   rawErrorEvidence,
 } from "@/lib/copy/errors";
 
-/** 03 §8.3's table, transcribed. The mapping is the design, not an impl detail. */
+/**
+ * 03 §8.3's table, transcribed. The mapping is the design, not an impl
+ * detail.
+ *
+ * The SENTENCES are §8.3's, unchanged. Four of the KEYS moved with ADR
+ * 0064, which replaced `error_type = type(exc).__name__` with a stable
+ * `AppError.code`: §8.3 wrote the four rows against the Python class
+ * names the backend produced at the time, and the backend now produces
+ * a code for each. The pairing is what §8.3 decided; the left-hand
+ * column is what the backend says today.
+ */
 const BRIEF_TABLE: Array<[string, string]> = [
   ["hitl_timeout", "The plan was not reviewed in time, so the run stopped."],
   ["cost_budget_exceeded", "The run reached this workspace's cost limit."],
@@ -39,11 +49,15 @@ const BRIEF_TABLE: Array<[string, string]> = [
     "orphaned",
     "The run was interrupted by a server restart and could not be resumed safely.",
   ],
-  ["NoPapersFoundError", "No matching arXiv papers were found for these queries."],
-  ["ArxivUnavailableError", "arXiv could not be reached."],
-  ["AllPaperAnalysesFailedError", "Papers were found but none could be read."],
+  // was NoPapersFoundError
+  ["not_found_papers", "No matching arXiv papers were found for these queries."],
+  // was ArxivUnavailableError
+  ["upstream_arxiv", "arXiv could not be reached."],
+  // was AllPaperAnalysesFailedError
+  ["upstream_paper_read", "Papers were found but none could be read."],
   [
-    "SynthesizerOutputError",
+    // was SynthesizerOutputError
+    "upstream_model_output",
     "The briefing could not be assembled from what was read.",
   ],
 ];
@@ -61,13 +75,14 @@ const BRIEF_TABLE: Array<[string, string]> = [
 const ADDED_SINCE_THE_BRIEF = [
   "session_turn_timeout", // ADR 0057
   "session_cost_cap_refused", // ADR 0062
+  "internal_unexpected", // ADR 0064
 ];
 
 describe("criterion 6 — the mapped values", () => {
   it("maps the brief's nine, plus every value added since, and nothing else", () => {
     const expected = [
       ...BRIEF_TABLE.map(([value]) => value),
-      "JobCancelledError",
+      "cancelled_job",
       ...ADDED_SINCE_THE_BRIEF,
     ].sort();
     expect([...MAPPED_ERROR_TYPES].sort()).toEqual(expected);
@@ -78,12 +93,13 @@ describe("criterion 6 — the mapped values", () => {
     expect(describeErrorType(value).mapped).toBe(true);
   });
 
-  it("maps JobCancelledError too, which §8.3 names but does not tabulate", () => {
-    // §8.3 lists it among the class names `type(exc).__name__` yields, but
-    // gives it no row. Leaving it to the fall-through would print "The run
-    // failed." for a run that was stopped on purpose — true of the job
-    // record's status, wrong about what happened.
-    const described = describeErrorType("JobCancelledError");
+  it("maps cancelled_job too, which §8.3 names but does not tabulate", () => {
+    // §8.3 lists it (as `JobCancelledError`, the class name the backend
+    // produced before ADR 0064) among the values `type(exc).__name__`
+    // yielded, but gives it no row. Leaving it to the fall-through would
+    // print "The run failed." for a run that was stopped on purpose —
+    // true of the job record's status, wrong about what happened.
+    const described = describeErrorType("cancelled_job");
     expect(described.mapped).toBe(true);
     expect(described.sentence).not.toBe(UNMAPPED_ERROR_TYPE_COPY.sentence);
     expect(described.sentence).toMatch(/stopped/);

@@ -42,7 +42,7 @@ import httpx
 import psycopg
 import pytest
 from asgi_lifespan import LifespanManager
-from fastapi import HTTPException, Request
+from fastapi import Request
 from pydantic import ValidationError
 
 from src.api.app import create_app
@@ -54,6 +54,7 @@ from src.api.schemas import (
     ProgressResourceObservation,
     ProgressSchedule,
 )
+from src.errors import LearnerProgressRequiresAuth
 from src.learning.progress_store import (
     ALL_EVENT_KINDS,
     BANNED_SCALAR_TOKENS,
@@ -867,13 +868,16 @@ class TestProgressEndpoint:
             Settings(enable_learner_profile=True, enable_api_auth=True),
         )
         request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace()))
-        with pytest.raises(HTTPException) as exc:
+        with pytest.raises(LearnerProgressRequiresAuth) as exc:
             await routes_module.get_learn_progress(
                 cast(Request, request), principal=None
             )
         mp.undo()
-        assert exc.value.status_code == 503
-        assert exc.value.detail == "learner_progress_requires_auth"
+        assert exc.value.http_status == 503
+        assert exc.value.code == "learner_progress_requires_auth"
+        # 503 that is NOT retryable: the deployment cannot serve this
+        # route at all, so "try again later" would be a lie (ADR 0064).
+        assert exc.value.retryable is False
 
     async def test_a_learner_reads_their_own_folded_ledger(
         self,

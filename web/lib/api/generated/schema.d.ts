@@ -134,7 +134,7 @@ export interface paths {
          *         A `text/event-stream` response.
          *
          *     Raises:
-         *         HTTPException: 404 when the job is unknown or owned by
+         *         JobNotFound: 404 when the job is unknown or owned by
          *             another principal (ADR 0036).
          */
         get: operations["stream_research_research__job_id__stream_get"];
