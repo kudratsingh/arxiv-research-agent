@@ -87,13 +87,14 @@ card). **Nineteen of the twenty planned cards are merged to their no-cost
 boundary**, plus the four coordinator-added cards (W13b, W03b, W17b, W13c);
 the owner-dependent funded/public/pilot criteria on them stay visibly deferred.
 **WO-W20 remains**, and waits on the 14-day pilot observation window
-(W-OD-4/5/6). *(Five more PRs have merged since — #156 on 2026-09-02, the
-evidence pack's own §7 bookkeeping, and the four of the follow-up wave below.
-None is a card, and the card counts above are unchanged.)*
+(W-OD-4/5/6). *(Eight more PRs have merged since — #156 on 2026-09-02 and #161
+on 09-04, this file's own bookkeeping; the four of the follow-up wave below;
+and the two merged PRs of its closing. None is a card, and the card counts
+above are unchanged.)*
 
 Nothing was in flight when this train closed, at `9fa99b8`. The follow-up wave
-below carries `main` to `2001d1b`, and **this file is written against
-`2001d1b`**.
+below and its closing carry `main` to `737caa4`, and **this file is written
+against `737caa4`**.
 
 ### Follow-up wave (2026-09-04)
 
@@ -169,6 +170,138 @@ known gaps (§16, §17); two open three more (§18, §19, §20).**
 
 **The two it did not fix are now `known-gaps.md` §18 and §19**, and both are
 owner decisions rather than engineering ones — see the ledger below.
+
+#### Closing (2026-09-04)
+
+Three more PRs close the wave, after it was recorded as merged
+([#161](https://github.com/kudratsingh/arxiv-research-agent/pull/161),
+`a7dd452`). Two are merged, in this order, by the coordinator under the standing
+delegation, squash; **the third is open at the time of writing, by owner order.**
+**None is a card.** Between them they close **both** gaps the wave opened — §18
+on an owner's ruling, §19 on a work order plus the first runner run since 09-03
+— and one of them changes the gate that merges them.
+
+| PR | Squash SHA | Merged (UTC) | Subject |
+|---|---|---|---|
+| [#163](https://github.com/kudratsingh/arxiv-research-agent/pull/163) | `c93662d` | 08:18:44 | the dependency audit is its own bounded job |
+| [#164](https://github.com/kudratsingh/arxiv-research-agent/pull/164) | `737caa4` | 09:35:18 | the plan editor stops paying for zod at mount |
+| [#162](https://github.com/kudratsingh/arxiv-research-agent/pull/162) | — | **open at the time of writing** | `fonts.ts` states which faces `/` loads, and why |
+
+**Why #162 is still open, and why §18 closes anyway.** Its diff is
+**comment-only**, one file, no export and no value. Eight of its nine checks
+are green; the ninth, `web dependency audit`, is red on the same npm
+advisory-endpoint outage finding (ii) records, and repeated reruns did not
+clear it. **It stays open by owner order** — the owner chose to skip that check
+rather than wait on a data source that was returning nothing. So what closes
+`known-gaps.md` §18 is the **owner's ruling of 2026-09-04**, which is what that
+entry always said would close it; #162 records the ruling in the source, and
+the merge only publishes it.
+
+- **#163 takes the audit out of the `web` job.** The audit gate is a **network
+  call to npm's advisory endpoint** and it ran as a step inside `web` with no
+  bound of its own, so finding (ii)'s outage did not merely make it answer
+  wrong — it made the other four gates report **nothing**. Two main runs:
+  [33847548135](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33847548135)
+  (`337dbe4`) spent **9m37s** in the audit step and was **cancelled at 15
+  minutes** during Vitest;
+  [33847950556](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33847950556)
+  (`2001d1b`) spent **4m52s** and was cancelled during the build. A healthy run
+  spends **1s**. So `web dependency audit` is now its own top-level job —
+  `timeout-minutes: 10`, a **5-minute** step bound on `npm ci` and a
+  **6-minute** one on `npm run audit:gate` — and it owns the `web-npm-audit`
+  artifact. Every `npm ci` in `ci.yml` **and** in `nightly.yml` now carries
+  `NPM_CONFIG_FETCH_TIMEOUT=60000` (npm's own default is **300000** — five
+  minutes *per request*), `NPM_CONFIG_FETCH_RETRIES=2` (npm's default, kept:
+  the defect was the attempt, not the retry) and
+  `NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=20000`. `web/tests/ci.test.ts` pins the
+  shape; `README.md` and `docs/testing.md` now say **nine jobs**. **What the
+  gate asserts is unchanged** — `audit-gate.mjs` and `audit-exceptions.json`
+  are untouched, and there is **no `continue-on-error`**: an audit that could
+  not run is red, not green. Its own PR run was a live test of exactly this,
+  because the registry was still degraded: **`web` 3m26s** (install 22s, four
+  gates clean) beside **`web dependency audit` 3m56s** (install 1m21s, gate
+  2m21s) — under the old shape those were one job with the slow half in front.
+  The gate also **answered correctly** there: ten exceptions, all ten `ok`,
+  including the three the degraded endpoint had called stale. Main's first run
+  with the split,
+  [33852825449](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33852825449)
+  on `c93662d`, is **green in all nine jobs**, with the audit job at **3m47s**
+  (install 56s, gate 2m44s).
+- **#164 closes `known-gaps.md` §19 at the error ceiling.**
+  `PlanEditorFields.tsx` built its Zod schema **at module evaluation**, so all
+  of `zod@4.4.3` ran the instant the lazy plan-review chunk loaded —
+  **314,066 B raw / 73,605 B gzip**, a **232–255 ms long task** — on a state
+  whose whole point is that the run is paused waiting for an interaction. Of
+  the three approaches #164 weighed, (c) landed: the client resolver is now a
+  pure `planResolver` over `planIssues`, **the function the submit path always
+  used**, so the form and `reviewRequestFor` can no longer disagree about what
+  is valid. **Validation is not weakened and that is measured**: the Zod schema
+  moved *verbatim* into `web/tests/plan/schema.test.ts` as a differential
+  oracle asserting the two error trees **deep-equal** over **8 cases** (5
+  before), and `bundle.test.ts` asserts Zod is in no shipped chunk. Chunk
+  **314,066 → 37,113 B raw (−88.2 %)**, **73,605 → 12,839 B gzip**. Local ×20
+  runner-regime probe, medians of 5: `categories:performance` **0.88 → 0.93**,
+  TBT **387 → 296.5 ms**; the residual long tasks are the Next app-router
+  client runtime and React DOM, *"not ours to cut"* in `budgets.json`'s own
+  words. **No budget row moved and no ceiling moved** — the saving is entirely
+  in a lazy chunk, and the only row that would carry it, `total-transferred-js`,
+  is `enforcement: external`. What actually closed §19 is the runner run below.
+- **#162 closes `known-gaps.md` §18 — by ruling, not by code**, which is why
+  an open PR can close it. The owner ruled on 2026-09-04, in their own label
+  **option A** and the third of the three the entry listed: **accept the bytes,
+  correct the false premise in the source.** The premise was that
+  `--font-report` *"has exactly one consumer in the whole product … so it sets
+  no pixel of any route's first paint"*; it was true at WO-02 and stopped being
+  true at **WO-W12 (#138)**, which put `LearnLandingEntry` on `/` carrying
+  `font-report` and `font-mono`. The correction is **comment-only, one file** —
+  no export, no value, no import moved — and it carries #159's measured numbers
+  (`/` font requests **1 / 20,331 B → 3 / 69,621 B**; `total-byte-weight`
+  **205,331 → 262,231 B**), the narrower reason `preload: false` still holds
+  (neither face paints `/`'s LCP element), and the ruling itself: accepted, the
+  bytes are inside every asserted ceiling, and **restyling the landing card
+  away from the learn surface's typography was declined**.
+
+**The merge gate now counts nine.** Finding (i)'s corrected gate — watch the
+run, then require `gh pr checks N --json name,bucket` to return every entry
+`bucket == "pass"`, never `--auto` — was written against **≥8** entries. From
+`c93662d` on it is **nine**: `web dependency audit` is top-level, has no
+`needs:`, and carries no `continue-on-error`, so it is required in exactly the
+sense the other eight are.
+
+**One more lesson, alongside the wave's own two below: inside `web/`, cite a PR
+as `PR NNN` and never `#NNN`** — #162's `#159` / `#138` citations failed the
+`web` job because `web/tests/tokens.test.ts` criterion 1 (*"tokens.css is the
+only file in web/ with a literal colour"*) reads them as three-digit hex, and
+one fix commit on the branch (`b300f75`) rewrote them.
+
+**`nightly.yml` was re-enabled to verify, and is off again.** Pending item 1
+below was answered on 2026-09-04: the owner re-enabled `nightly-lighthouse` for
+verification, it ran **twice** and passed twice, and the owner then ordered it
+off — *"remove the nightly job when done"*, carried out as `gh workflow
+disable` with the file kept.
+
+- [33850155834](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33850155834)
+  on `2001d1b` — **PASS**. #159's `/` fix confirmed on the 2-vCPU runner it was
+  conditioned on.
+- [33859118052](https://github.com/kudratsingh/arxiv-research-agent/actions/runs/33859118052)
+  on `737caa4` — **PASS**, all three profiles, **80 assertions, `lhci autorun`
+  exit 0**. `mobile-412`, `/c/baseline-populated?job=baseline-plan-review`,
+  medians of 3: `categories:performance` **0.96** (0.95, 0.97, 0.96) against
+  ≥ 0.95 — it read **0.92** the day before; `total-blocking-time` **204 ms**
+  (204, 204, 219), inside the **300 ms error** row and still over the ratified
+  **150 ms warn** row, which `web/lighthouserc.json` keeps as a *warning* by
+  the WO-29 follow-up ruling; LCP **1871 ms**; `bf-cache` **1**. On `/`:
+  performance **0.98**, LCP **2264 ms**, TBT **99 ms**, `bf-cache` **1**.
+
+**So §19 is resolved at the error ceiling, and its residual is re-scoped**: the
+150 ms warn row is owned by the Next app-router runtime and React DOM, not by
+product code, and no ceiling moved to close it. **§18 is resolved by owner
+ruling.** Both are struck through and kept in
+[`evidence/gate-w1/known-gaps.md`](evidence/gate-w1/known-gaps.md), now **twenty
+entries, seven resolved**. **§20 is untouched**, and so is the W-OD ledger:
+**the owner has deferred the ledger decisions and WO-W20 to a later date**, and
+no numbering moves for it. **Re-enable `nightly.yml` only on a fresh owner
+instruction.**
 
 ### Two process findings from the wave
 
@@ -370,17 +503,31 @@ W-OD-4 (Rung 1 publication), W-OD-5 (pilots — which must approve concrete
 SR-09 values per erratum (e)) and W-OD-6 (threshold ratification, before any
 pilot starts) all remain open. W-OD-4/5/6 together gate WO-W20.
 
-**Three more await a ruling as of 2026-09-04, from the follow-up wave.** They
-are **not** numbered W-OD-7/8/9: the W-OD series is the plan's, these are
-execution's, and adding to it would rewrite a document that stands as merged.
+**Deferred by the owner, 2026-09-04:** the W-OD ledger decisions above and
+**WO-W20** are put to a later date, so nothing in this list is waiting on the
+coordinator.
 
-1. **Re-enable `nightly.yml` for one verification run.** It has been disabled by
+**Three more awaited a ruling as of 2026-09-04, from the follow-up wave — and
+all three were answered the same day.** They are **not** numbered W-OD-7/8/9:
+the W-OD series is the plan's, these are execution's, and adding to it would
+rewrite a document that stands as merged. **The three are kept below as
+recorded, with their outcomes; the numbering does not move.**
+
+1. **Re-enable `nightly.yml` for one verification run.** — **ANSWERED: run,
+   passed twice, off again.** Re-enabled by owner order on 2026-09-04; runs
+   33850155834 (`2001d1b`) and 33859118052 (`737caa4`) both PASS; disabled
+   again by owner order. Re-enable only on a fresh owner instruction. *As
+   recorded:* It has been disabled by
    owner order since 2026-09-03. #159 fixed the `mobile-412` `/` failure and all
    three profiles pass locally, but nothing has confirmed it **on the 2-vCPU
    runner**, which is the machine the failure was conditioned on. The ask is one
    run, not a re-enable; the standing cost lock is unaffected — the Lighthouse
    lane buys nothing.
-2. **A typography ruling on the landing card's fonts** (`known-gaps.md` §18).
+2. **A typography ruling on the landing card's fonts** (`known-gaps.md` §18). —
+   **ANSWERED: option A, the third of the three below** — the bytes stand and
+   the false premise in `web/app/fonts/fonts.ts` is corrected; restyling the
+   card was declined. Recorded in the source by #162, open at the time of
+   writing. *As recorded:*
    `LearnLandingEntry` puts Literata and IBM Plex Mono on `/`, where the gate-4
    pack measured one face: `total-byte-weight` **205,331 → 262,231 B**. It costs
    no assertion today and no ceiling moved. #159 declined to fix it because the
@@ -389,8 +536,12 @@ execution's, and adding to it would rewrite a document that stands as merged.
    default face; preload the two faces on `/` and correct the now-false premise
    in `web/app/fonts/fonts.ts`; or rule that the card should look like the
    surface it teases and let the bytes stand.
-3. **A remedy for plan-review's runner performance** (`known-gaps.md` §19).
-   `?job=baseline-plan-review` reads `categories:performance` **0.92** against a
+3. **A remedy for plan-review's runner performance** (`known-gaps.md` §19). —
+   **ANSWERED: the third remedy, and it spent nothing.** #164 (`737caa4`)
+   shrank the chunk; the runner then read **0.96** against ≥ 0.95 and TBT
+   **204 ms** against the 300 ms error row. No ceiling moved. What is left is
+   the 150 ms **warn** row, re-scoped to the Next runtime and React DOM. *As
+   recorded:* `?job=baseline-plan-review` reads `categories:performance` **0.92** against a
    **≥0.95** ceiling on the runner, with **no attributable Phase W regression**
    — main-thread work and bootup are both *down* against gate-4. The 277 ms long
    task is the plan editor's lazy chunk, **all of `zod@4.4.3`**, pulled in by
@@ -400,7 +551,11 @@ execution's, and adding to it would rewrite a document that stands as merged.
    another doubling"* — and no ceiling should move to close this.
 
 Items 2 and 3 cost engineering time or money and neither is Gate W1's; item 1 is
-a workflow the owner switched off and only the owner switches back on.
+a workflow the owner switched off and only the owner switches back on. **All
+three are now settled** — item 3 cost engineering time and no money, item 2 cost
+a ruling and a comment, and item 1's workflow is switched off again. **Nothing
+in this list is now waiting on the coordinator**; the W-OD ledger and WO-W20
+wait on the owner, at a date the owner sets.
 
 Standing cost lock (2026-08-30, reaffirmed by continuation): the paid nightly
 eval workflow is disabled, and no funded model run, deployment, public launch,
