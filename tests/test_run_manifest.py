@@ -221,9 +221,14 @@ def arm(arm_id: Literal["A", "B", "C", "D", "E"]) -> PolicySnapshot:
         "D": "supervisor_verified",
         "E": "adaptive_verified",
     }[arm_id]
-    supervisor = arm_id in {"D", "E"}
+    # ADR 0089 redefined arm E structurally: a supervisor is no longer
+    # part of it (ADR 0085's controller refuses to load beside one), and
+    # the listwise selector joined its required capabilities. Both
+    # changes are here, in the fixture that documents the arm matrix by
+    # example.
+    supervisor = arm_id == "D"
     evidence = arm_id in {"B", "C", "D", "E"}
-    verifier = arm_id in {"D", "E"}
+    verifier = arm_id == "D"
     return PolicySnapshot(
         arm_id=arm_id,
         selector=selector,  # type: ignore[arg-type]
@@ -233,7 +238,12 @@ def arm(arm_id: Literal["A", "B", "C", "D", "E"]) -> PolicySnapshot:
             ("fixed_post_synthesis_verifier",)
             if arm_id == "C"
             else (
-                ("adaptive_compute_router", "candidate_branching", "marginal_stop")
+                (
+                    "adaptive_compute_router",
+                    "candidate_branching",
+                    "candidate_lineage_selector",
+                    "marginal_stop",
+                )
                 if arm_id == "E"
                 else ()
             )
@@ -1119,27 +1129,43 @@ def test_every_policy_arm_rejects_structural_impostors() -> None:
             "Arm D",
         ),
         (
+            # Changed by ADR 0089. This case used to withhold the
+            # *verifier* and expect a refusal; arm E no longer requires
+            # one, and what it does require is the evidence store — a
+            # branch tier whose reader emits no claims merges empty
+            # tables.
             {
                 **arm("E").model_dump(mode="python"),
                 "runtime_flags": RuntimeFlags(
-                    enable_supervisor=True,
-                    enable_evidence_store=True,
+                    enable_supervisor=False,
+                    enable_evidence_store=False,
                     enable_verifier=False,
                 ),
             },
-            "Arm E",
+            "Arm E requires the evidence store",
         ),
         (
             {
                 **arm("E").model_dump(mode="python"),
                 "capabilities": PolicyCapabilities(
-                    supervisor=True,
+                    supervisor=False,
                     evidence_store=True,
                     fixed_post_synthesis_verifier=False,
                     adaptive_compute=False,
                 ),
             },
             "adaptive compute",
+        ),
+        (
+            # The refusal CAP-09 closes, and it names both halves.
+            {
+                **arm("E").model_dump(mode="python"),
+                "graph_capabilities": (
+                    "adaptive_compute_router",
+                    "candidate_branching",
+                ),
+            },
+            "marginal_stop, candidate_lineage_selector",
         ),
         (
             {
