@@ -174,6 +174,7 @@ _FLOOR_BAND: Final = 500
 _NUMBER_WORDS: Final[dict[str, int]] = {
     "four": 4,
     "five": 5,
+    "six": 6,
     "eight": 8,
     "nine": 9,
     "eleven": 11,

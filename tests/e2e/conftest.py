@@ -81,16 +81,20 @@ SETTINGS_CONSUMERS: tuple[str, ...] = (
     "src.learning.memory",
 )
 
-#: The four research agents `research_llm_surface` cans, and therefore
-#: the four whose own mock branch it has to turn off (ADR 0080). Not the
-#: five of `src/agents/mock_mode.py`: the verifier is supervisor-only
-#: and no test in this directory drives it, so canning it would install
-#: a patch nothing exercises.
+#: The research agents whose own mock branch `research_llm_surface`
+#: turns off (ADR 0080). The first four are the ones it cans itself.
+#: The verifier is on the list without being canned here, because
+#: `test_verify_repair.py` cans it in its own body and would otherwise
+#: script a judge the mock branch had already answered for — and a
+#: module that reaches the verifier *without* canning it should hit the
+#: harness spend guard loudly rather than be quietly served a mock
+#: verdict.
 CANNED_AGENT_MODULES: tuple[str, ...] = (
     "src.agents.critic",
     "src.agents.planner",
     "src.agents.reader",
     "src.agents.synthesizer",
+    "src.agents.verifier",
 )
 
 #: Overrides every e2e test wants regardless of which graph it drives.
