@@ -1602,13 +1602,20 @@ def main(argv: list[str] | None = None) -> int:
     unmet_expectations = 0
     interrupted = False
     restore_handler = _install_interrupt_handler()
+    # P0-WO05 (ADR 0078): the campaign's contract observer. Returns
+    # `None` unless CONTRACT_SHADOW is on, and `hooks=None` is the whole
+    # of the default path — the seam below executes not one line of hook
+    # code. Imported here rather than at module scope so this module
+    # keeps no top-level import edge into the consumer's package.
+    from src.contracts.shadow_bridge import scripted_research_hooks
+
     try:
         for index, (query, repeat) in enumerate(pending, 1):
             print(
                 f"[{index}/{len(pending)}] "
                 f"{research_record_id(query['query_id'], repeat)}: {query['query']}"
             )
-            record = run_query(query, repeat=repeat)
+            record = run_query(query, repeat=repeat, hooks=scripted_research_hooks())
             attempted += 1
             if record.get("error"):
                 errored += 1

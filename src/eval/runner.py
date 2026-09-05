@@ -57,7 +57,7 @@ import sys
 import time
 import traceback
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from types import FrameType
@@ -65,6 +65,7 @@ from typing import Any, NamedTuple
 
 from dotenv import load_dotenv
 
+from src.config import settings
 from src.eval.benchmark_queries import (
     BENCHMARK_QUERIES,
     RESEARCH_DATASET_VERSION,
@@ -94,6 +95,7 @@ from src.observability import (
     reset_run_id,
     start_cost_tracking,
 )
+from src.observability.costs import bind_llm_call_observer, reset_llm_call_observer
 
 load_dotenv()
 
@@ -168,6 +170,95 @@ class EvalInterrupted(KeyboardInterrupt):
 # ---------------------------------------------------------------------------
 # State + record construction
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Contract shadow (P0-WO05, ADR 0078)
+#
+# Two call sites in `_run_and_score`, both additive and both no-ops when
+# `settings.contract_shadow` is `off` — in which case not one contract
+# module is imported and the campaign's records are byte-identical to a
+# build without the switch.
+# ---------------------------------------------------------------------------
+
+
+def _shadow_bridge() -> Any:
+    """The contract bridge, imported on first use, or `None` when off."""
+    if settings.contract_shadow == "off":
+        return None
+    try:
+        from src.contracts import shadow_bridge
+    except Exception:  # noqa: BLE001 — a diagnostic must not fail a campaign
+        log.warning("contract_shadow_failed", extra={"hook": "import"}, exc_info=True)
+        return None
+    return shadow_bridge
+
+
+@contextlib.contextmanager
+def _eval_shadow(
+    benchmark_query: BenchmarkQuery, run_id: str, app: Any, repeat: int, costs: Any
+) -> Iterator[Any]:
+    """Seal one eval episode and observe the workflow's model calls.
+
+    Scoped to the workflow invocation and not a line further, because
+    that boundary is the one ADR 0050 drew: everything after `invoke`
+    returns is *harness* spend, and a judge call recorded as a workflow
+    model call would put the eval rig's cost inside the product's
+    trajectory.
+    """
+    bridge = _shadow_bridge()
+    if bridge is None:
+        yield None
+        return
+    run = None
+    observer_token = None
+    try:
+        run = bridge.start_eval_episode(
+            config=settings,
+            shape=bridge.policy_shape_for_app(settings, app),
+            runtime_run_id=run_id,
+            benchmark=bridge.benchmark_binding_for(benchmark_query, config=settings),
+            objective=str(benchmark_query["query"]),
+            task_id=f"research-eval:{benchmark_query['query_id']}",
+            repeat=repeat,
+            origin="research_eval",
+            cost_ceiling_usd=float(settings.max_cost_usd),
+        )
+        if run is not None:
+            observer_token = bind_llm_call_observer(
+                lambda call: bridge.observe_model_call(run, call, costs)
+            )
+    except Exception:  # noqa: BLE001 — a diagnostic must not fail a campaign
+        log.warning("contract_shadow_failed", extra={"hook": "open"}, exc_info=True)
+    try:
+        yield run
+    finally:
+        if observer_token is not None:
+            reset_llm_call_observer(observer_token)
+
+
+def _attach_shadow_block(shadow: Any, record: dict[str, Any]) -> None:
+    """Close the episode's trajectory and attach it to the record.
+
+    Additive by construction: the key is written only when a shadow
+    exists, so a `contract_shadow=off` campaign produces the same bytes
+    it always did — which is what the golden test asserts rather than
+    hopes.
+    """
+    if shadow is None:
+        return
+    bridge = _shadow_bridge()
+    if bridge is None:
+        return
+    state = record.get("state") or {}
+    bridge.observe_episode_terminal(
+        shadow,
+        error=record.get("error"),
+        report=str(state.get("draft_report") or ""),
+    )
+    block = bridge.episode_block(shadow)
+    if block is not None:
+        record[bridge.SHADOW_RECORD_KEY] = block
 
 
 def _initial_state(query: str, run_id: str) -> ResearchState:
@@ -431,6 +522,7 @@ def _run_and_score(
     costs = start_cost_tracking()
     start = time.monotonic()
     app: Any = None
+    shadow: Any = None
 
     record: dict[str, Any] = {
         "run_id": run_id,
@@ -471,9 +563,14 @@ def _run_and_score(
             # /research for other programmatic callers. See ADR 0030.
             app = build_workflow(enable_hitl=False)
             config = {"configurable": {"thread_id": run_id}}
-            final_state = app.invoke(
-                _initial_state(benchmark_query["query"], run_id), config=config
-            )
+            # P0-WO05: the manifest is sealed here, after the graph is
+            # compiled and before the first node runs, which is the order
+            # RFC 09 §5.1 requires. `shadow` stays bound after the block
+            # so the terminal hook in `finally` can close it.
+            with _eval_shadow(benchmark_query, run_id, app, repeat, costs) as shadow:
+                final_state = app.invoke(
+                    _initial_state(benchmark_query["query"], run_id), config=config
+                )
         except Exception as exc:
             record["elapsed_sec"] = time.monotonic() - start
             record["costs"] = costs.as_dict()
@@ -551,6 +648,10 @@ def _run_and_score(
             record["elapsed_sec"] = time.monotonic() - start
         raise EvalInterrupted(record) from exc
     finally:
+        # One terminal hook for every exit — the workflow failure, the
+        # missing report, the scored success and the interrupt — because
+        # the record each of them returns is the same object.
+        _attach_shadow_block(shadow, record)
         _close_workflow(app)
         reset_run_id(token)
 

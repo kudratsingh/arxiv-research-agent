@@ -72,6 +72,33 @@ build next, and in what evidence-gated order?**
     governance/calibration prerequisites, Stage-0 qualification, and the
     separately blocked funded baseline.
 
+## P0 implementation status
+
+The RFCs above are planning documents; this table is what has actually
+landed against them. It is the answer to "can I build on that yet?",
+which the work-order document deliberately does not track — a dependency
+graph says what *may* start, not what has merged.
+
+| Work order | Output | Status |
+|---|---|---|
+| P0-WO00 | Shared contract kernel | Landed — [#167](https://github.com/kudratsingh/arxiv-research-agent/pull/167) |
+| P0-WO01 | TaskSpec models and deterministic compilers | Landed — [#193](https://github.com/kudratsingh/arxiv-research-agent/pull/193) |
+| P0-WO02 | Development benchmark registry core | Landed — [#188](https://github.com/kudratsingh/arxiv-research-agent/pull/188) |
+| P0-WO03 | Sealed RunManifest and admission | Landed — [#201](https://github.com/kudratsingh/arxiv-research-agent/pull/201) |
+| P0-WO04 | Trajectory schema and in-memory adapter | Landed — [#203](https://github.com/kudratsingh/arxiv-research-agent/pull/203) |
+| P0-WO05 | Research shadow integration | This PR — see [ADR 0078](../decisions/0078-contract-shadow-for-the-research-path.md) |
+| P0-WO06 | Benchmark migration and parity | In progress |
+| P0-WO07 | Campaign lock, repeats, resume, denominators | Pending |
+| P0-WO08 | Runtime event bridge and artifact adapter | Pending |
+| P0-WO09 | Governance and threat review | Landed — [#205](https://github.com/kudratsingh/arxiv-research-agent/pull/205) |
+| P0-WO10 | Judge-calibration protocol and fixtures | Pending |
+| P0-WO11 | Stage-0 contract qualification | Pending |
+| P0-WO12 | Funded repeated current-policy baseline | Blocked on funding approval (D9) |
+
+Nothing in this table authorizes spend. W12 stays blocked until the
+program gate in [`12-p0-work-orders.md`](12-p0-work-orders.md) §21 is
+green and an exact maximum cost and stop rule are approved.
+
 The four RFCs are the P0 contract set. They are designed together: the
 registry supplies immutable evaluation inputs, a case compiles into a
 `TaskSpec`, a `RunManifest` freezes the episode configuration, and

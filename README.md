@@ -582,12 +582,12 @@ the Compose overlay pins an invalid key, the Playwright config
 overwrites the variable before any test loads, and the submit leg is
 fulfilled in the browser so it never reaches the backend. The gap, and
 it is narrower than this page claimed for months: the Python **`e2e`
-tier is built and gates every pull request** — **twenty-six tests across
-six modules** under `tests/e2e/`, driving the real graphs through the
+tier is built and gates every pull request** — **thirty-four tests across
+seven modules** under `tests/e2e/`, driving the real graphs through the
 real ASGI app in about five seconds, run by `make test-e2e` as a step of
 the `tests` job. What the tier does not have is **recorded cassettes**:
-every one of those tests runs on mock mode — five of the modules with
-canned agent output on top of it, and the sixth on the product's own
+every one of those tests runs on mock mode — six of the modules with
+canned agent output on top of it, and the seventh on the product's own
 keyless mock path (ADR
 [0080](docs/decisions/0080-mock-mode-covers-the-whole-research-graph.md))
 — so nothing in this repository replays a real provider response.

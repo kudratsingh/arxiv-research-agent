@@ -475,6 +475,19 @@ never renumbered.
   `upstream_model_output` instead of returning the empty string every
   caller used to read as content. Default-off and byte-identical, held
   by a golden fixture captured from the unmodified gateway.
+- [0078](0078-contract-shadow-for-the-research-path.md) — Bind the P0
+  contracts to the research path in shadow, default off. `CONTRACT_SHADOW`
+  compiles a `TaskSpec` at research intake and at eval-case selection,
+  seals a `RunManifest` before the first node runs, and records a
+  hash-chained trajectory in memory beside the run — changing no graph
+  input, no job outcome, no cost and no stored schema, and importing no
+  contract module at all while the switch is off. Policy identity is read
+  from the *compiled graph* rather than from the flags, which is what
+  makes `ENABLE_VERIFIER=true` on the fixed pipeline classify as arm A
+  instead of masquerading as arm C, and what leaves arm E unrepresentable
+  until something actually routes compute tiers. A metered provider fails
+  admission closed rather than sealing a manifest that implies permission
+  to spend.
 - [0079](0079-benchmark-registry-migration-and-parity.md) — Register the
   existing benchmarks, prove parity, and change nothing they mean. The
   twenty research queries and fifteen guided-reading scenarios enter

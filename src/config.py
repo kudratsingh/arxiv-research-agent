@@ -1583,6 +1583,24 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ P0 contracts (W05) ------
+    contract_shadow: Literal["off", "shadow"] = Field(
+        default="off",
+        description=(
+            "Bind the P0 TaskSpec / RunManifest / trajectory contracts to the "
+            "research path. 'off' (the default) disables every hook: no "
+            "contract module is imported, no manifest is sealed, and the job, "
+            "eval and SSE records are byte-identical to a build without this "
+            "field. 'shadow' compiles and seals alongside the run and keeps "
+            "the result in memory only — it never changes graph input, graph "
+            "output, job outcome, cost, or any persisted schema. There is "
+            "deliberately no 'enforce' member: refusing a run on a contract "
+            "verdict belongs to P0-WO07 (campaign lock) and P0-WO11 (Stage-0 "
+            "qualification), after the shadow evidence has been reviewed. See "
+            "ADR 0078."
+        ),
+    )
+
     @model_validator(mode="after")
     def _check_session_loop_dependencies(self) -> Settings:
         if self.enable_session_loop and not self.enable_learner_profile:

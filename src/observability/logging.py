@@ -190,6 +190,13 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "arxiv_search_request_failed",
         "assessment_judge_unassessed",
         "content_capture_flag_invalid",
+        # P0-WO05 (ADR 0078). Three names, and only three: the shadow
+        # binding is default-off scaffolding whose whole promise is
+        # that it cannot change a run, so its log surface is "it
+        # sealed", "it declined to" and "it broke and was ignored".
+        "contract_shadow_failed",
+        "contract_shadow_sealed",
+        "contract_shadow_unavailable",
         "conversation_append_failed",
         "conversation_context_retrieved",
         "critic_response_not_an_object",
@@ -263,6 +270,7 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "learning_fixture_recorded",
         "learning_session_node_cost",
         "llm_call",
+        "llm_call_observer_failed",
         "llm_client_configured",
         "llm_retry_budget_clamped",
         "llm_upstream_error",
@@ -383,6 +391,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "address",
         "api_job_timeout_sec",
         "api_keys_configured",
+        "arm_id",
         "attempt",
         "attempted_status",
         "auth_enabled",
@@ -445,6 +454,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "goals",
         "has_plan",
         "hitl_timeout_sec",
+        "hook",
         # WO-A10. `http_status`, `method` and `route` were already being
         # passed by `_log_boundary_error` in `src/api/app.py` and were
         # already being *dropped*: that call site splats a dict built on
@@ -474,6 +484,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "learner_profile_store",
         "llm_calls",
         "loop_iter",
+        "manifest_digest",
         "matched",
         "max_bytes",
         "max_concurrent_jobs",
@@ -524,6 +535,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "pdf_path",
         "pdf_url",
         "per_model",
+        "policy_id",
         "preview",
         "previous_public_turn",
         "previous_status",
@@ -588,6 +600,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "stop_reason",
         "store",
         "stored_status",
+        "task_spec_id",
         "thread_id",
         "threshold",
         "tier",
@@ -599,6 +612,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "total_input_tokens",
         "total_output_tokens",
         "traceback",
+        "trajectory_events",
         "turn_number",
         "turns",
         "turns_delivered",
