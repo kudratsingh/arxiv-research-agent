@@ -105,7 +105,7 @@ def _bounded(annotation: type) -> list[str]:
 
 
 #: `Literal` fields whose *valid* members depend on `anthropic_model`
-#: (CAP-01, ADR 0076). `LLM_EFFORT=xhigh` is a declared member and a
+#: (CAP-01, ADR 0077). `LLM_EFFORT=xhigh` is a declared member and a
 #: load-time refusal on the default model, because `xhigh` arrived with
 #: Opus 4.7 and the shipped default is Sonnet 4.6 — so the
 #: one-field-at-a-time sweep below cannot judge them, for the same

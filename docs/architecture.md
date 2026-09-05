@@ -723,11 +723,11 @@ pinned without a build by `tests/test_container_contract.py`).
 ## Request profiles
 
 *Additive section, CAP-01 / ADR
-[0076](decisions/0076-model-aware-request-profiles.md).*
+[0077](decisions/0077-model-aware-request-profiles.md).*
 
 `src/llm.py` has always been the choke point for spend, retries,
 cancellation and the `chat` span. It is now also the choke point for
-the **request body**, because until ADR 0076 there was only one body:
+the **request body**, because until ADR 0077 there was only one body:
 `temperature=0.3` went out on every call to every model. Opus 4.7 and
 later, Opus 5, Sonnet 5 and the Fable/Mythos tier answer a request
 carrying sampling parameters with an HTTP 400 — so a one-variable
@@ -771,7 +771,7 @@ model does not support them; `enable_structured_outputs` and
 answer: an unsupported `thinking` or `effort` is a 400 on every call
 for the whole deployment, so a config that cannot make one successful
 request should not start, while the other two degrade to exactly the
-pre-ADR-0076 behaviour.
+pre-ADR-0077 behaviour.
 
 **Structured outputs** send a pydantic schema as
 `output_config.format`, built with the SDK's own

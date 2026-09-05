@@ -320,7 +320,7 @@ another — `enable_learner_profile` needs `enable_api_auth`,
 `enable_learn_content` stands alone; and one changes the *shape* of a
 model request rather than the workflow around it
 (`enable_structured_outputs`, off, ADR
-[0076](docs/decisions/0076-model-aware-request-profiles.md) — the four
+[0077](docs/decisions/0077-model-aware-request-profiles.md) — the four
 structured agents ask the model for schema-valid JSON instead of
 parsing free text, on models that support it).
 

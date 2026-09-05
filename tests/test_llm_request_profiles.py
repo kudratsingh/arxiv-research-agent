@@ -1,4 +1,4 @@
-"""What the gateway actually sends, per model and per flag (ADR 0076).
+"""What the gateway actually sends, per model and per flag (ADR 0077).
 
 `tests/test_llm_request_golden.py` pins the one body that must never
 move. This module is the other half: what changes when a setting is
@@ -17,7 +17,7 @@ could have today:
 | an unrecognised id | **not** sent | **not** sent | **not** sent |
 
 The middle row is the bug this work order exists for: `temperature` on
-Opus 5 is an HTTP 400 on every call, and before ADR 0076 it was sent
+Opus 5 is an HTTP 400 on every call, and before ADR 0077 it was sent
 unconditionally.
 
 Everything here runs against a fake client through the harness. No
@@ -363,7 +363,7 @@ class TestThinkingBlocksInTheResponse:
     ) -> None:
         """The failure that used to look like a successful empty answer.
 
-        Before ADR 0076 this returned `""`, and every caller treated
+        Before ADR 0077 this returned `""`, and every caller treated
         the silence as content: the planner fell back to the raw query,
         the critic approved with a zero score, and the run finished
         `succeeded` having been told nothing.
@@ -601,7 +601,7 @@ class TestTheSpanStillDescribesTheRequest:
         (`src/observability/tracing.py:642`) and sets it unconditionally
         (`:676`), and that package is fenced — so on Opus 5 the span
         still carries the configured-but-unsent value. Recorded as
-        follow-up 1 in ADR 0076; when the signature takes `float |
+        follow-up 1 in ADR 0077; when the signature takes `float |
         None`, this test grows an `is None` case.
         """
         seen: list[float] = []

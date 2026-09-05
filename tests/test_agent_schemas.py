@@ -1,4 +1,4 @@
-"""The schemas are transcriptions of the prompts, not designs (ADR 0076).
+"""The schemas are transcriptions of the prompts, not designs (ADR 0077).
 
 `src/agents/schemas.py` exists to tell the provider what to generate.
 It only helps if it asks for what the prompt already asks for: a schema

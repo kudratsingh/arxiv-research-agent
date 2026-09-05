@@ -1,4 +1,4 @@
-"""The JSON each structured agent already asks for, written down (ADR 0076).
+"""The JSON each structured agent already asks for, written down (ADR 0077).
 
 Four agents — planner, critic, supervisor, verifier — end their system
 prompt with a literal JSON object and then validate what comes back by

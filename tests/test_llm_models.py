@@ -9,7 +9,7 @@ three ways a table like this rots:
   silently, while the operator believes their `LLM_EFFORT` took effect.
   It is also the reason no WARNING is missed here: with the two tables
   coupled, `unknown_model_pricing_fallback` fires for exactly the
-  population an unknown-capability warning would have (ADR 0076
+  population an unknown-capability warning would have (ADR 0077
   follow-up 2).
 - **A row loses its provenance.** A capability with no cited source is
   a capability nobody can re-check when the provider changes.
@@ -42,7 +42,7 @@ class TestTheTableCoversWhatTheRepositoryPricesA:
     """Coupling to the price table, in both directions."""
 
     def test_every_priced_model_has_a_capability_row(self) -> None:
-        """The load-bearing one, and ADR 0076's substitute for a warning.
+        """The load-bearing one, and ADR 0077's substitute for a warning.
 
         `unpriced_models` warns once per process for an id with no
         price row. With this holding, an id that reaches the
@@ -216,7 +216,7 @@ class TestUndescribedModels:
     def test_a_family_match_counts_as_described(self) -> None:
         """It is a real row with a cited guess, not the fallback.
 
-        The distinction matters for the ADR 0076 follow-up: an
+        The distinction matters for the ADR 0077 follow-up: an
         undescribed id is one an operator has to add a row for, and a
         family member already has one.
         """

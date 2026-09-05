@@ -39,7 +39,7 @@ seconds. The span is wrapped *around* `record_llm_call` rather than
 replacing any part of it, so cost stays single-sourced in
 `src.observability.costs` and this module still owns none of it.
 
-ADR 0076 makes the request itself model-aware, and for the same reason
+ADR 0077 makes the request itself model-aware, and for the same reason
 everything else here is centralised: this is the one place a request
 body is built. Before it, `temperature=0.3` went out on every call to
 every model — correct for `claude-sonnet-4-6`, an HTTP 400 on every
@@ -306,7 +306,7 @@ def resolve_profile(model: str, agent: str = "") -> RequestProfile:
     but unsupported resolves to off here rather than failing at the
     provider — and for thinking and effort it cannot even get this far,
     because `Settings._check_request_profile_is_supported` refuses that
-    combination at load (ADR 0076). The redundancy is deliberate: this
+    combination at load (ADR 0077). The redundancy is deliberate: this
     function is also reached with a `model_name` a caller passed
     directly, which no settings validation has ever seen.
 
@@ -415,7 +415,7 @@ def call_llm(
             above it is billed at 10% on subsequent hits within 5
             minutes. Default False preserves Sprint 1 baseline.
         agent: Which agent is calling, for its `<agent>_effort`
-            override (ADR 0076). Empty — the default, and what every
+            override (ADR 0077). Empty — the default, and what every
             caller passes today — takes the deployment-wide
             `llm_effort`.
         schema: Constrain the model's output to this pydantic model,
@@ -445,7 +445,7 @@ def call_llm(
             The `anthropic` exception is chained as `__cause__`.
         UpstreamModelOutput: When the response carries no `text` block
             at all — a thinking-only answer, or an empty body. Before
-            ADR 0076 that returned `""` and every caller treated the
+            ADR 0077 that returned `""` and every caller treated the
             silence as content.
     """
     # Before `_get_client`, not after: a cancelled job must not even
@@ -480,7 +480,7 @@ def call_llm(
         # orders. So the attribute is truthful on every model that
         # accepts sampling — which is every model this deployment can
         # reach today — and reports the configured-but-unsent value on
-        # one that does not. Recorded in ADR 0076's follow-ups; the fix
+        # one that does not. Recorded in ADR 0077's follow-ups; the fix
         # is `float | None` in that signature and a guarded
         # `set_attribute`, and this line becomes
         # `temperature=profile.temperature`.
@@ -682,7 +682,7 @@ def _finish_call(
 def _text_of(response: anthropic.types.Message) -> str:
     """Join the response's `text` blocks, and refuse a response with none.
 
-    Two behaviours, and the second is the one ADR 0076 adds.
+    Two behaviours, and the second is the one ADR 0077 adds.
 
     **Thinking blocks are skipped, never logged.** With adaptive
     thinking on, the first content block is a `thinking` block, so a
@@ -775,7 +775,7 @@ def call_llm_json(
     schema goes out as `output_config.format` and the answer is
     validated against it. Otherwise — including for every caller that
     passes no schema — the free-text path runs exactly as it did
-    before ADR 0076: `json.loads`, then a `strict=False` retry for
+    before ADR 0077: `json.loads`, then a `strict=False` retry for
     unescaped control characters, handling markdown fences on the way
     in through `call_llm`.
 

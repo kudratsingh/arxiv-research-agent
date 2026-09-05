@@ -1,4 +1,4 @@
-"""What each Claude model will accept in a request (ADR 0076).
+"""What each Claude model will accept in a request (ADR 0077).
 
 The gateway used to send one request shape to every model: `temperature`
 on every call, no `thinking`, no `effort`, no structured outputs. That

@@ -1,4 +1,4 @@
-# 0076. Make the LLM gateway's request model-aware
+# 0077. Make the LLM gateway's request model-aware
 
 - **Status**: accepted
 - **Date**: 2026-09-05
@@ -125,7 +125,7 @@ The line between them is whether there is a good runtime answer.
 Thinking and effort have none — the call fails, on every node, for the
 whole deployment, so a config that cannot make one successful request
 should not start. Sampling and structured outputs both degrade to
-exactly the pre-ADR-0076 behaviour. Refusing to boot over a feature
+exactly the pre-ADR-0077 behaviour. Refusing to boot over a feature
 that has a working fallback would make the strict check
 indistinguishable from a strictness preference.
 

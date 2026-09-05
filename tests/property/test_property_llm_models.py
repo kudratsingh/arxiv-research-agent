@@ -2,7 +2,7 @@
 
 `src/observability/costs.resolved_model_ids` derives the set of ids a
 `Settings` can bill against — the base model plus every non-empty
-`<agent>_model` override. ADR 0076 adds a second question about the
+`<agent>_model` override. ADR 0077 adds a second question about the
 same set: is each of those ids *described*, or does it fall through to
 the conservative row where every opt-in request feature is silently
 off?

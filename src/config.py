@@ -1737,7 +1737,7 @@ class Settings(BaseSettings):
 
     # ------ Agent capability (CAP-01) ---------------------------------
     #
-    # Model-aware request profiles (ADR 0076). Every field here defaults
+    # Model-aware request profiles (ADR 0077). Every field here defaults
     # to what the gateway already did, so a deployment that sets none of
     # them sends the byte-identical request body
     # `tests/test_llm_request_golden.py` pins.
@@ -1761,7 +1761,7 @@ class Settings(BaseSettings):
             "on every call rather than a degraded one. Turning it on "
             "changes the judges' requests too — they share this gateway "
             "— which re-baselines every eval metric under ADR 0070. "
-            "See ADR 0076."
+            "See ADR 0077."
         ),
     )
     llm_effort: Literal["", "low", "medium", "high", "xhigh", "max"] = Field(
@@ -1772,7 +1772,7 @@ class Settings(BaseSettings):
             "`high`. Set it to trade thoroughness against token spend "
             "inside one model. Refused at load when a routed model's "
             "row does not list the level — Haiku 4.5 rejects effort "
-            "outright and Sonnet 4.6 has no `xhigh`. See ADR 0076."
+            "outright and Sonnet 4.6 has no `xhigh`. See ADR 0077."
         ),
     )
 
@@ -1873,7 +1873,7 @@ class Settings(BaseSettings):
             "Unlike thinking and effort this is *not* refused at load on "
             "an unsupporting model, because it has a working fallback "
             "and they do not. Default off preserves the Sprint 1 "
-            "baseline. See ADR 0076."
+            "baseline. See ADR 0077."
         ),
     )
     llm_temperature: float = Field(
@@ -1883,7 +1883,7 @@ class Settings(BaseSettings):
         description=(
             "Sampling temperature, sent only to models whose capability "
             "row accepts sampling parameters. 0.3 is the constant the "
-            "gateway hard-coded before ADR 0076, so the default changes "
+            "gateway hard-coded before ADR 0077, so the default changes "
             "nothing. On a model that rejects sampling (Opus 4.7+, Opus "
             "5, Sonnet 5, Fable/Mythos) it is silently not sent — which "
             "is the fix, not a regression: sending it there is an HTTP "
@@ -1957,7 +1957,7 @@ class Settings(BaseSettings):
         `enable_structured_outputs` and `llm_temperature` are
         deliberately *not* checked. Both degrade: an unsupported model
         does not receive them and the call runs exactly as it did before
-        ADR 0076. Refusing to boot over a feature that has a working
+        ADR 0077. Refusing to boot over a feature that has a working
         fallback would make this check indistinguishable from a
         strictness preference.
 
@@ -1980,7 +1980,7 @@ class Settings(BaseSettings):
                         f"routed model {model!r}, which answers a request "
                         "carrying `thinking` with an HTTP 400. Set "
                         "LLM_THINKING=off, or route that agent to a model "
-                        "with adaptive thinking. See ADR 0076."
+                        "with adaptive thinking. See ADR 0077."
                     )
 
         for agent in ("", *EFFORT_AGENTS):
@@ -2009,7 +2009,7 @@ class Settings(BaseSettings):
                     f"{field}={level!r} is not supported by the routed "
                     f"model {model!r}, which accepts: {accepted}. "
                     f"{remedy}, or pick a level the model lists. See ADR "
-                    "0076."
+                    "0077."
                 )
         return self
 

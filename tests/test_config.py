@@ -878,7 +878,7 @@ def test_lease_refresh_must_leave_margin_under_the_ttl() -> None:
 
 
 class TestTheRequestProfileIsRefusedWhenTheModelWouldRefuseIt:
-    """CAP-01 / ADR 0076 — a config that cannot make one call must not boot.
+    """CAP-01 / ADR 0077 — a config that cannot make one call must not boot.
 
     `llm_thinking` and an effort level are checked at settings load
     because there is no good runtime answer to either: a model with no
@@ -977,7 +977,7 @@ class TestTheRequestProfileIsRefusedWhenTheModelWouldRefuseIt:
             )
 
     def test_structured_outputs_are_not_refused_on_an_unsupporting_model(self) -> None:
-        """It degrades to the pre-ADR-0076 parse path, so it boots.
+        """It degrades to the pre-ADR-0077 parse path, so it boots.
 
         Refusing to start over a feature that has a working fallback
         would make the strict check above indistinguishable from a
