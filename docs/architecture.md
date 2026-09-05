@@ -719,3 +719,79 @@ pinned without a build by `tests/test_container_contract.py`).
   isolation, a `--max-budget-usd` ceiling, and honest exit codes
   (ADR [0050](decisions/0050-eval-runner-hardening.md)); strategy in
   [`docs/eval.md`](eval.md).
+
+## Request profiles
+
+*Additive section, CAP-01 / ADR
+[0076](decisions/0076-model-aware-request-profiles.md).*
+
+`src/llm.py` has always been the choke point for spend, retries,
+cancellation and the `chat` span. It is now also the choke point for
+the **request body**, because until ADR 0076 there was only one body:
+`temperature=0.3` went out on every call to every model. Opus 4.7 and
+later, Opus 5, Sonnet 5 and the Fable/Mythos tier answer a request
+carrying sampling parameters with an HTTP 400 — so a one-variable
+change to `ANTHROPIC_MODEL`, of exactly the kind ADR
+[0021](decisions/0021-cost-aware-model-routing.md) invites and
+`src/observability/costs.py` already prices, failed every call on every
+node.
+
+Three pieces, and the split is the design:
+
+| Piece | Where | Answers |
+|---|---|---|
+| Capability table | `src/llm_models.py` | *What will this model accept?* |
+| `Settings` fields | `src/config.py`, `# ------ Agent capability (CAP-01)` | *What does the operator want sent?* |
+| `RequestProfile` | `src/llm.py` | The conjunction, per call, frozen |
+
+`src/llm_models.py` is pure — no imports from `src/`, no logging, no
+I/O — and it is the only module outside the config defaults that names
+a Claude model id. A row records `sampling_params`,
+`adaptive_thinking`, `effort_levels`, `structured_outputs` and the
+source of the claim; every id the price table knows has one, which
+`tests/test_llm_models.py` and `tests/property/test_property_llm_models.py`
+hold in both directions. An id with no row of its own resolves to its
+base model (a dated snapshot or point release), then to a family row,
+then to a conservative row — and **every fallback guesses downward**,
+because guessing low costs a feature on a call that still works and
+guessing high costs a 400 on every call.
+
+A feature is sent only when it is enabled **and** supported:
+
+| Model | `temperature` | `thinking` | `output_config.effort` |
+|---|---|---|---|
+| `claude-sonnet-4-6` (default) | ✅ | ✅ | ✅ (no `xhigh`) |
+| `claude-opus-5`, `claude-sonnet-5`, Opus 4.7+ | ❌ 400 | ✅ | ✅ |
+| `claude-haiku-4-5` | ✅ | ❌ | ❌ |
+| an unrecognised id | ❌ | ❌ | ❌ |
+
+**Thinking and effort are refused at settings load** when a routed
+model does not support them; `enable_structured_outputs` and
+`llm_temperature` are not. The line is whether there is a good runtime
+answer: an unsupported `thinking` or `effort` is a 400 on every call
+for the whole deployment, so a config that cannot make one successful
+request should not start, while the other two degrade to exactly the
+pre-ADR-0076 behaviour.
+
+**Structured outputs** send a pydantic schema as
+`output_config.format`, built with the SDK's own
+`anthropic.transform_schema`, for the planner, critic, supervisor and
+verifier (`src/agents/schemas.py` — transcriptions of the prompts, with
+their own docstrings stripped so no prompt text ships through the
+schema). The SDK's `messages.parse` helper is deliberately **not** used:
+`with_raw_response` wraps only `create`, and `raw.retries_taken` is ADR
+0051's retry-visibility fix. The agents' hand-written coercions (ADR
+[0041](decisions/0041-retrieval-and-degradation-honesty.md)) stay, because
+the flag is off by default and off on every unsupporting model.
+
+**Response parsing skips `thinking` blocks** and never logs them. A
+response carrying no `text` block at all now raises
+`upstream_model_output` instead of returning `""` — which every caller
+used to treat as a legitimate answer, so a run could finish `succeeded`
+having been told nothing.
+
+With every setting at its default the request body is byte-identical to
+what shipped before, and `tests/test_llm_request_golden.py` holds it
+against a fixture captured from the unmodified gateway. What is *not*
+established without a live call is that the provider accepts each of
+these shapes; that is CAP-06's funded smoke.

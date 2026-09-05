@@ -177,8 +177,10 @@ _NUMBER_WORDS: Final[dict[str, int]] = {
     "eight": 8,
     "nine": 9,
     "eleven": 11,
+    "twelve": 12,
     "sixteen": 16,
     "nineteen": 19,
+    "twenty": 20,
     "twenty-one": 21,
     "twenty-two": 22,
 }
