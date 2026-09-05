@@ -210,8 +210,17 @@ class TestTheRunnerHooks:
         run = bridge.shadow_run(job.job_id)
         assert run is not None
         events = run.events()
-        assert events[-1].event_type == "run.failed"
-        assert events[-1].payload["failure_class"] == "internal_unexpected"
+        # P0-WO11 wires W08's reconciliation and chain close onto this
+        # path, so the terminal run event is no longer the last row: the
+        # one thing W04's registry lets follow a terminal — the
+        # `budget.reconciled` that cannot be computed until the run is
+        # over — now does. The claim being made is unchanged, so it is
+        # asserted as "the trajectory closed as a failure and exactly one
+        # declared settlement event followed" rather than by position.
+        assert events[-2].event_type == "run.failed"
+        assert events[-2].payload["failure_class"] == "internal_unexpected"
+        assert events[-1].event_type == "budget.reconciled"
+        assert [event.event_type for event in events].count("run.failed") == 1
         assert run.node_trajectory() == ("planner",)
 
     async def test_a_broken_bridge_cannot_fail_the_job(
