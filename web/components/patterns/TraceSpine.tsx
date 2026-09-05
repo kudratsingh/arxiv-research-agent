@@ -82,6 +82,7 @@ import { SPINE, segmentLabel } from "@/lib/copy/spine";
 import {
   SEGMENT_WORD,
   describeSpine,
+  socketExpected,
   type SegmentStatus,
   type SpineInputs,
 } from "@/lib/spine/state";
@@ -270,15 +271,49 @@ export function TraceSpine({
               {model.detail}
             </span>
           )}
-          {model.live ? (
+          {model.live || socketExpected(model.id) ? (
             /* `ew-spine-live` is not decoration: it takes the badge OUT of
                this line's baseline alignment. The badge's baseline is
                synthesised from a 16px mark rather than from text, so
                aligning it grew the line from 20px to 23px and moved the
                reading column by 3px every time the socket opened — which is
                criterion 7's "a checkpoint arriving must never move the
-               reading column". `spine.css` rule 4 has the measurement. */
-            <StatusBadge severity="live" ambient className="ew-spine-live">
+               reading column". `spine.css` rule 4 has the measurement.
+
+               WO-S2c ADDS THE SECOND HALF OF THE SAME CLAIM, AND IT IS THE
+               HALF THAT ONLY EXISTS ON A PHONE. Rule 4 stops the badge
+               growing the line it JOINS. At 412 CSS px it joins nothing: the
+               announcement already takes both lines the row wraps to, so the
+               badge arrives on a THIRD line and the row goes 40px to 64px —
+               24px of reading column, 0.01147 on a cold load of the review
+               pause and the same again, upwards, every time a socket drops
+               mid-run. So in the states where a socket is expected the badge's
+               box is RESERVED rather than left to arrive: same component, same
+               word, same classes, `visibility: hidden` until the connection is
+               actually open. Identical markup is the only reservation that can
+               be exact, because the box that decides where the row wraps is
+               the badge's own width (`e2e/mount-reservation.spec.ts` asserts
+               the two heights are equal, not merely ordered).
+
+               `ambient` FOLLOWS `live` AND NOT THE SLOT. The pulse is the
+               ambient receiving indicator (criterion 8) and it may run only
+               while a socket is open; `visibility: hidden` would have hidden
+               it, which is not the same as not running it. It costs nothing
+               here: `.ew-pulse` animates opacity alone, so the reserved box
+               and the live one are the same size either way.
+
+               `visibility: hidden` AND NOT `aria-hidden`. A visibility-hidden
+               subtree is out of the accessibility tree by the same rule that
+               keeps it out of the paint, so the reserved badge is one
+               declaration rather than a declaration plus an attribute that
+               could disagree with it. */
+            <StatusBadge
+              severity="live"
+              ambient={model.live}
+              className={
+                model.live ? "ew-spine-live" : "ew-spine-live ew-spine-live--reserved"
+              }
+            >
               {SEGMENT_WORD.live}
             </StatusBadge>
           ) : null}

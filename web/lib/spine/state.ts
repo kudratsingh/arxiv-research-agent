@@ -350,6 +350,47 @@ const STREAMING: ReadonlySet<SpineStateId> = new Set<SpineStateId>([
 ]);
 
 /**
+ * The five states in which a SOCKET is expected, so the `Live` badge can
+ * still arrive (WO-S2c).
+ *
+ * NOT THE SAME QUESTION AS `STREAMING`, AND THE DIFFERENCE IS THE REVIEW
+ * PAUSE. `STREAMING` asks "are frames still expected?", which is what decides
+ * whether an age is meaningful; this asks "is a connection expected to be
+ * open?", which is what decides whether `live` can still flip. At
+ * `awaiting_review` the answer to the first is no — the run is stopped and
+ * spending nothing until the reader answers — and the answer to the second is
+ * yes: the stream is open the whole time the pause lasts. The two sets differ
+ * by exactly that one id, and writing them as one would put a `Live` badge on
+ * a settled run or take the age off a paused one.
+ *
+ * WHAT IT IS FOR. `TraceSpine` reserves the badge's box in these states
+ * instead of leaving a hole that the socket fills later. The badge is a flex
+ * item on a wrapping line, and at 412 CSS px the announcement takes both
+ * lines it has, so a badge arriving does not join the line — it ADDS one, and
+ * the announcement row grows from 40px to 64px. That is 24px of the reading
+ * column below it, charged at 0.01147 against 04 §8.2's 0.02 on a cold load of
+ * the review pause, and charged again in the other direction every time a
+ * socket drops on a phone mid-run. WO-W13c took the badge out of this line's
+ * BASELINE for the same reason at desktop width (`spine.css` rule 4); this
+ * takes it out of the line's HEIGHT at every width.
+ */
+const SOCKET_EXPECTED: ReadonlySet<SpineStateId> = new Set<SpineStateId>([
+  ...STREAMING,
+  "awaiting_review",
+]);
+
+/**
+ * Can this state still gain a `Live` badge? See `SOCKET_EXPECTED`.
+ *
+ * Exported rather than folded into `SpineModel` because it is a question
+ * about the RESERVATION and not about the run: the model says what is true,
+ * and this says what the surface must hold room for.
+ */
+export function socketExpected(id: SpineStateId): boolean {
+  return SOCKET_EXPECTED.has(id);
+}
+
+/**
  * The material sentence, and only the material sentence.
  *
  * 03 §5.7: the live region announces "awaiting review, reconnecting,

@@ -38,7 +38,7 @@ import {
   uninstallFakeEventSource,
 } from "../support/FakeEventSource";
 import { loadFixture, server, setupMswServer } from "../support/msw";
-import { render, screen, waitFor } from "../support/render";
+import { render, screen, waitFor, within } from "../support/render";
 
 const markdown = vi.hoisted(() => ({ imports: 0, parses: 0 }));
 
@@ -254,7 +254,18 @@ describe("criterion 3 — the run panel and the history cannot disagree", () => 
     });
 
     // The timeline marks exactly the run the panel names, and it marks one.
-    const live = screen.getAllByText("Live");
+    //
+    // SCOPED TO THE TIMELINE, WHICH IS THE CLAIM RATHER THAN A NARROWING OF
+    // IT. The spine on the run panel above carries a `Live` badge of its own,
+    // so a document-wide text query answered this question only for as long as
+    // that badge happened to be absent — which in jsdom it always was, because
+    // nothing here opens a socket. WO-S2c reserves the badge's box in the
+    // states where one is expected (`ew-spine-live--reserved`, hidden until
+    // the connection opens), so the word is in the document whenever a run is
+    // attached and the query now has to say which surface it is asking about.
+    // A real browser with a real stream had two matches all along.
+    const timeline = document.querySelector(".ew-thread__timeline") as HTMLElement;
+    const live = within(timeline).getAllByText("Live");
     expect(live).toHaveLength(1);
     expect(panel.getAttribute("data-run-job")).toBe(FIRST_JOB.job_id);
     expect(turnButtons()[0]).toHaveTextContent("Live");

@@ -187,6 +187,43 @@
 }
 
 /* -------------------------------------------------------------------------
+ * 4b. THE BADGE DOES NOT GROW THE LINE IT CANNOT JOIN EITHER (WO-S2c).
+ *
+ * Rule 4 is about the line the badge lands ON. This is about the line it
+ * lands BESIDE, and it exists because 04 §8.3's narrow width is where the
+ * status line runs out of room: at 412 CSS px the announcement takes both
+ * lines the row wraps to, so a badge arriving cannot join either of them —
+ * it wraps onto a third and the row goes from 40px to 64px. Measured on the
+ * seeded stack at 412x915, cold-loading the review pause: 0.01147 against 04
+ * §8.2's 0.02, `section.flex` [y 506, h 409] -> [y 530, h 385] with a 32px
+ * sibling above it moving the same 24px. The same 24px is charged in the
+ * other direction every time a socket drops on a phone mid-run, which rule 4
+ * was written to prevent at desktop width and cannot reach here — its fix is
+ * an alignment, and no alignment can stop a wrap.
+ *
+ * SO THE BOX IS RESERVED, AND THE RESERVATION IS THE BADGE ITSELF. Where a
+ * socket is expected (`lib/spine/state.ts`'s `SOCKET_EXPECTED` — the four
+ * streaming states plus the review pause, whose stream is open for the whole
+ * pause), `TraceSpine` renders the real `StatusBadge` with the real word and
+ * the real classes and hides it until the connection opens. Identical markup
+ * is the only reservation that can be EXACT: the box that decides where the
+ * row wraps is the badge's own width, so anything narrower under-reserves at
+ * some width and anything wider over-reserves at another — and over-reserving
+ * is the same defect with the sign flipped.
+ *
+ * `visibility` AND NOT `opacity`, `display` OR A ZERO SIZE. `visibility:
+ * hidden` is the one value that keeps a box in layout and takes it out of BOTH
+ * the paint and the accessibility tree, which is exactly the pair of
+ * properties a placeholder needs: `opacity: 0` would leave a badge a screen
+ * reader announces, and anything that removes the box removes the
+ * reservation. Nothing is pinned in pixels here for the reason rule 4 gives —
+ * the line must still be free to wrap at 320px.
+ * ---------------------------------------------------------------------- */
+.ew-spine-live--reserved {
+  visibility: hidden;
+}
+
+/* -------------------------------------------------------------------------
  * Reduced motion (03 §3.7, §5.6)
  *
  * app/tokens.css has already collapsed --duration-fast to 1ms by the time

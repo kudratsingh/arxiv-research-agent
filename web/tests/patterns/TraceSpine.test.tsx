@@ -54,6 +54,7 @@ import {
   SEGMENT_WORD,
   SPINE_STATES,
   describeSpine,
+  socketExpected,
   type SegmentStatus,
   type SpineInputs,
   type SpineStateId,
@@ -651,7 +652,12 @@ describe("criterion 7 — an arriving checkpoint never moves the reading column"
       const inputs = EVERY_STATE[id];
       const { view, root } = spine(inputs);
       const badge = root.querySelector(".ew-spine-live") as HTMLElement | null;
-      if (inputs.observation.connection !== "open") {
+      const open = inputs.observation.connection === "open";
+      // WO-S2c: a badge is on the line whenever one is LIVE or one is still
+      // EXPECTED. The states that can never gain a socket carry none at all,
+      // which is what keeps a settled run from reserving a line for a badge
+      // that is not coming.
+      if (!open && !socketExpected(id)) {
         expect(badge, id).toBeNull();
       } else {
         expect(badge, id).not.toBeNull();
@@ -663,6 +669,74 @@ describe("criterion 7 — an arriving checkpoint never moves the reading column"
       view.unmount();
     }
     style.remove();
+  });
+
+  /**
+   * WO-S2c — the other half of rule 4, and the half that only exists on a
+   * phone.
+   *
+   * Rule 4 stops the badge growing the line it JOINS. At 04 §8.3's 412px
+   * audit width it joins nothing: the announcement already takes both lines
+   * the row wraps to, so a badge arriving wraps onto a THIRD and the row goes
+   * 40px to 64px — 24px of reading column, measured at 0.01147 on a cold load
+   * of the review pause and charged again, upwards, whenever a socket drops
+   * mid-run. No alignment can stop a wrap, so the box is reserved instead.
+   *
+   * jsdom has no layout, so the 24px is `e2e/mount-reservation.spec.ts`'s to
+   * measure. What is assertable here is every property that makes the
+   * reservation EXACT and silent: it is the same component with the same word
+   * and the same classes, it is hidden by `visibility` (which is the one value
+   * that keeps the box and drops both the paint and the accessibility tree),
+   * and it does not pulse — criterion 8's ambient indicator may run only while
+   * a socket is actually open.
+   */
+  it("reserves the Live badge's box wherever a socket is still expected", () => {
+    expect(ruleBody(SPINE_CSS, ".ew-spine-live--reserved")).toMatch(
+      /visibility:\s*hidden/,
+    );
+
+    for (const id of SPINE_STATES) {
+      const inputs = EVERY_STATE[id];
+      const { view, root } = spine(inputs);
+      const badge = root.querySelector(".ew-spine-live") as HTMLElement | null;
+      const reserved = badge?.classList.contains("ew-spine-live--reserved") ?? false;
+      const open = inputs.observation.connection === "open";
+
+      expect(reserved, id).toBe(!open && socketExpected(id));
+      if (reserved) {
+        // The reservation is the badge itself, word for word: the box that
+        // decides where the row wraps is the badge's own width, so anything
+        // narrower under-reserves and anything wider over-reserves.
+        expect(badge?.textContent, id).toBe(RUN_STATUS_WORD.live);
+        expect(badge?.querySelector("svg"), id).not.toBeNull();
+        // Silent while it holds the place: no pulse, and nothing in the
+        // accessibility tree, which is `visibility: hidden`'s own doing.
+        expect(badge?.querySelector(".ew-pulse"), id).toBeNull();
+      }
+      view.unmount();
+    }
+  });
+
+  /**
+   * The set itself, stated once so a later edit cannot quietly reserve a line
+   * on a run that has ended.
+   *
+   * `SOCKET_EXPECTED` is NOT `STREAMING`: the review pause expects no frames
+   * — the run is stopped and spending nothing until the reader answers — and
+   * keeps its socket open the whole time it lasts. The two differ by exactly
+   * that one id.
+   */
+  it("expects a socket in the five non-terminal states and nowhere else", () => {
+    const expected = [
+      "awaiting_review",
+      "running_observed",
+      "rejoined",
+      "reconnecting",
+      "recycled",
+    ];
+    expect(SPINE_STATES.filter((id) => socketExpected(id)).sort()).toEqual(
+      [...expected].sort(),
+    );
   });
 
   it("DEFERRED TO WO-21: the CLS number itself", () => {
