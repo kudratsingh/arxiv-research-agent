@@ -47,6 +47,7 @@ pytestmark = pytest.mark.unit
 def _line(
     query_id: str,
     *,
+    citation_resolution_rate: float | None = None,
     citation_accuracy: float | None = None,
     completeness: float | None = None,
     faithfulness: float | None = None,
@@ -56,8 +57,15 @@ def _line(
     cost_usd: float | None = None,
     error: str | None = None,
 ) -> dict[str, Any]:
+    """One research summary row.
+
+    `citation_resolution_rate` is the gated citation metric since ADR
+    0074; `citation_accuracy` rides beside it as a diagnostic, which is
+    why it is a separate argument rather than the same one renamed.
+    """
     return {
         "query_id": query_id,
+        "citation_resolution_rate": citation_resolution_rate,
         "citation_accuracy": citation_accuracy,
         "completeness": completeness,
         "faithfulness": faithfulness,
@@ -76,12 +84,12 @@ class TestLoadSummary:
     def test_reads_jsonl_indexed_by_query_id(self, tmp_path: Path) -> None:
         path = tmp_path / "summary.jsonl"
         path.write_text(
-            json.dumps({"query_id": "q1", "citation_accuracy": 0.9}) + "\n"
-            + json.dumps({"query_id": "q2", "citation_accuracy": 0.7}) + "\n"
+            json.dumps({"query_id": "q1", "citation_resolution_rate": 0.9}) + "\n"
+            + json.dumps({"query_id": "q2", "citation_resolution_rate": 0.7}) + "\n"
         )
         result = load_summary(path)
         assert set(result) == {"q1", "q2"}
-        assert result["q1"]["citation_accuracy"] == 0.9
+        assert result["q1"]["citation_resolution_rate"] == 0.9
 
     def test_skips_blank_lines(self, tmp_path: Path) -> None:
         path = tmp_path / "summary.jsonl"
@@ -100,15 +108,15 @@ class TestLoadSummary:
 
     def test_missing_query_id_raises(self, tmp_path: Path) -> None:
         path = tmp_path / "summary.jsonl"
-        path.write_text(json.dumps({"citation_accuracy": 0.9}) + "\n")
+        path.write_text(json.dumps({"citation_resolution_rate": 0.9}) + "\n")
         with pytest.raises(ValueError, match="query_id"):
             load_summary(path)
 
 
 class TestDiffSummariesClassification:
     def test_unchanged_when_scores_within_threshold(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.80, completeness=0.75, faithfulness=0.70)}
-        current = {"q1": _line("q1", citation_accuracy=0.82, completeness=0.73, faithfulness=0.72)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.80, completeness=0.75, faithfulness=0.70)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.82, completeness=0.73, faithfulness=0.72)}
         report = diff_summaries(baseline, current, threshold=0.1)
         assert report["diffs"][0]["status"] == "unchanged"
         assert report["has_regressions"] is False
@@ -117,15 +125,15 @@ class TestDiffSummariesClassification:
         # `faithfulness` has no declared quantum, so it is judged on the
         # flat epsilon. `completeness` is the quantised case and has its
         # own tests below.
-        baseline = {"q1": _line("q1", citation_accuracy=0.9, completeness=0.8, faithfulness=0.8)}
-        current = {"q1": _line("q1", citation_accuracy=0.9, completeness=0.8, faithfulness=0.5)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.9, completeness=0.8, faithfulness=0.8)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.9, completeness=0.8, faithfulness=0.5)}
         report = diff_summaries(baseline, current, threshold=0.1)
         assert report["diffs"][0]["status"] == "regressed"
         assert report["has_regressions"] is True
 
     def test_improvement_when_metric_rises_beyond_threshold(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.5, completeness=0.5, faithfulness=0.5)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, completeness=0.5, faithfulness=0.5)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.5, completeness=0.5, faithfulness=0.5)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, completeness=0.5, faithfulness=0.5)}
         report = diff_summaries(baseline, current, threshold=0.1)
         assert report["diffs"][0]["status"] == "improved"
         assert report["has_regressions"] is False
@@ -135,36 +143,36 @@ class TestDiffSummariesClassification:
     # relative fraction), never by `--threshold` (ADR 0044).
     def test_cost_rising_beyond_band_is_regression(self) -> None:
         # +$0.40 on $0.10: clears the $0.10 floor and the 25% band.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.50)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.10)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.50)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
         assert report["has_regressions"] is True
 
     def test_cost_dropping_beyond_band_is_improvement(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.50)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.50)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.10)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "improved"
         assert report["has_regressions"] is False
 
     def test_iteration_runaway_is_regression(self) -> None:
         # loop-induced iteration runaway must show up as a regression.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, iterations=1)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, iterations=5)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, iterations=1)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, iterations=5)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
 
     def test_llm_call_runaway_is_regression(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=30)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=90)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=30)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=90)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
 
     def test_cost_below_absolute_floor_is_unchanged(self) -> None:
         # +$0.05 is under the $0.10 floor even though it's +50% relative.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.10)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.15)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.10)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.15)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "unchanged"
 
@@ -181,9 +189,9 @@ class TestTruncatedBatch:
 
     def _full(self) -> dict[str, dict[str, Any]]:
         return {
-            "q1": _line("q1", citation_accuracy=0.8),
-            "q2": _line("q2", citation_accuracy=0.8),
-            "q3": _line("q3", citation_accuracy=0.8),
+            "q1": _line("q1", citation_resolution_rate=0.8),
+            "q2": _line("q2", citation_resolution_rate=0.8),
+            "q3": _line("q3", citation_resolution_rate=0.8),
         }
 
     def test_missing_query_classified_as_removed(self) -> None:
@@ -203,7 +211,7 @@ class TestTruncatedBatch:
         self,
     ) -> None:
         baseline = self._full()
-        current = {"q1": _line("q1", citation_accuracy=1.0)}
+        current = {"q1": _line("q1", citation_resolution_rate=1.0)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "improved"
         assert report["has_regressions"] is True
@@ -217,15 +225,15 @@ class TestTruncatedBatch:
 
     def test_allow_removed_does_not_excuse_a_real_regression(self) -> None:
         baseline = self._full()
-        current = {"q1": _line("q1", citation_accuracy=0.2)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.2)}
         report = diff_summaries(baseline, current, allow_removed=True)
         assert report["has_regressions"] is True
 
     def test_new_query_is_not_a_regression(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.8)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8)}
         current = {
             "q1": baseline["q1"],
-            "q2": _line("q2", citation_accuracy=0.8),
+            "q2": _line("q2", citation_resolution_rate=0.8),
         }
         report = diff_summaries(baseline, current)
         assert report["has_regressions"] is False
@@ -266,10 +274,10 @@ class TestUnscoredMetrics:
         current: dict[str, dict[str, Any]] = {}
         for i in range(total):
             qid = f"q{i:02d}"
-            baseline[qid] = _line(qid, citation_accuracy=0.8, faithfulness=0.95)
+            baseline[qid] = _line(qid, citation_resolution_rate=0.8, faithfulness=0.95)
             current[qid] = _line(
                 qid,
-                citation_accuracy=0.8,
+                citation_resolution_rate=0.8,
                 faithfulness=None if i < unscored else 0.95,
             )
         return baseline, current
@@ -278,7 +286,7 @@ class TestUnscoredMetrics:
         baseline, current = self._pair(unscored=18)
         report = diff_summaries(baseline, current)
         assert report["unscored"]["faithfulness"] == 18
-        assert report["unscored"]["citation_accuracy"] == 0
+        assert report["unscored"]["citation_resolution_rate"] == 0
 
     def test_absent_field_on_both_sides_is_not_lost_signal(self) -> None:
         # `llm_calls` is None in both runs here — a summary that never
@@ -288,10 +296,10 @@ class TestUnscoredMetrics:
         assert report["unscored"]["llm_calls"] == 0
 
     def test_a_new_metric_the_baseline_never_had_is_not_lost_signal(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=None)}
-        current = {"q1": _line("q1", citation_accuracy=0.8)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=None)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8)}
         report = diff_summaries(baseline, current)
-        assert report["unscored"]["citation_accuracy"] == 0
+        assert report["unscored"]["citation_resolution_rate"] == 0
 
     def test_unscored_queries_still_read_unchanged_and_stay_green(self) -> None:
         baseline, current = self._pair(unscored=18)
@@ -311,7 +319,7 @@ class TestUnscoredMetrics:
         # The faithfulness mean is over two queries inside a section
         # headed "over the 20 of 20 baseline queries".
         assert "| faithfulness | 0.950 | 0.950 | +0.000 | 2 / 20 |" in md
-        assert "| citation_accuracy | 0.800 | 0.800 | +0.000 | 20 / 20 |" in md
+        assert "| citation_resolution_rate | 0.800 | 0.800 | +0.000 | 20 / 20 |" in md
 
     def test_clean_run_says_nothing_about_unscored_metrics(self) -> None:
         baseline, current = self._pair(unscored=0)
@@ -331,23 +339,23 @@ class TestResourceBands:
     def test_one_extra_llm_call_is_not_regression(self) -> None:
         # The audit's canonical false alarm: arXiv returns one more
         # rankable paper, the reader makes one more call.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=42)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=43)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=42)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=43)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "unchanged"
         assert report["has_regressions"] is False
 
     def test_one_extra_critic_revision_is_not_regression(self) -> None:
         # iterations 1 -> 2 is ordinary critic nondeterminism.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, iterations=1)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, iterations=2)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, iterations=1)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, iterations=2)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "unchanged"
 
     def test_two_extra_iterations_regress(self) -> None:
         # +2 clears the floor of 1 and is +200% relative.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, iterations=1)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, iterations=3)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, iterations=1)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, iterations=3)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
 
@@ -356,49 +364,49 @@ class TestResourceBands:
     ) -> None:
         # +6 calls clears the floor of 4 but is only +6% on a baseline
         # of 100 — the relative leg absorbs drift on large baselines.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=100)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=106)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=100)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=106)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "unchanged"
 
     def test_llm_calls_clearing_both_legs_regress(self) -> None:
         # +5 on 12: over the floor of 4 and +42% relative.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=12)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=17)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=12)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=17)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
 
     def test_llm_calls_dropping_beyond_band_is_improvement(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=17)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=12)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=17)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=12)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "improved"
 
     def test_cost_over_floor_but_proportionally_small_is_unchanged(self) -> None:
         # +$0.15 on a $1.00 baseline clears the floor but is only +15%.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=1.00)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=1.15)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=1.00)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=1.15)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "unchanged"
 
     def test_cost_clearing_both_legs_regresses(self) -> None:
         # +$0.14 on $0.31: over the $0.10 floor and +45% relative.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.31)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.45)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.31)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.45)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
 
     def test_zero_baseline_falls_back_to_absolute_floor(self) -> None:
         # No meaningful denominator — the floor alone decides.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.0)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, cost_usd=0.50)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.0)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, cost_usd=0.50)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "regressed"
 
     def test_score_threshold_does_not_gate_resource_metrics(self) -> None:
         # A permissive --threshold must not mute a genuine call runaway.
-        baseline = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=12)}
-        current = {"q1": _line("q1", citation_accuracy=0.8, llm_calls=30)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=12)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8, llm_calls=30)}
         report = diff_summaries(baseline, current, threshold=5.0)
         assert report["diffs"][0]["status"] == "regressed"
 
@@ -416,19 +424,19 @@ class TestResourceBands:
 
     def test_new_query_in_current(self) -> None:
         baseline: dict[str, dict[str, Any]] = {}
-        current = {"q1": _line("q1", citation_accuracy=0.9)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.9)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "new"
         assert report["has_regressions"] is False
 
     def test_removed_query_in_baseline(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.9)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.9)}
         current: dict[str, dict[str, Any]] = {}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "removed"
 
     def test_errored_status_when_current_has_new_error(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.9)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.9)}
         current = {"q1": _line("q1", error="RuntimeError: bad")}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "errored"
@@ -436,7 +444,7 @@ class TestResourceBands:
 
     def test_recovered_status_when_baseline_had_error(self) -> None:
         baseline = {"q1": _line("q1", error="prior error")}
-        current = {"q1": _line("q1", citation_accuracy=0.9)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.9)}
         report = diff_summaries(baseline, current)
         assert report["diffs"][0]["status"] == "recovered"
         assert report["has_regressions"] is False
@@ -447,7 +455,7 @@ class TestDiffSummariesDeltas:
         baseline = {
             "q1": _line(
                 "q1",
-                citation_accuracy=0.8,
+                citation_resolution_rate=0.8,
                 completeness=0.6,
                 faithfulness=0.7,
                 critic_score=0.75,
@@ -456,7 +464,7 @@ class TestDiffSummariesDeltas:
         current = {
             "q1": _line(
                 "q1",
-                citation_accuracy=0.9,
+                citation_resolution_rate=0.9,
                 completeness=0.5,
                 faithfulness=0.7,
                 critic_score=0.80,
@@ -464,22 +472,22 @@ class TestDiffSummariesDeltas:
         }
         report = diff_summaries(baseline, current, threshold=0.05)
         deltas = report["diffs"][0]["deltas"]
-        assert deltas["citation_accuracy"] == pytest.approx(0.1)
+        assert deltas["citation_resolution_rate"] == pytest.approx(0.1)
         assert deltas["completeness"] == pytest.approx(-0.1)
         assert deltas["faithfulness"] == pytest.approx(0.0)
         assert deltas["critic_score"] == pytest.approx(0.05)
 
     def test_delta_is_none_when_either_side_missing(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=None, completeness=0.5)}
-        current = {"q1": _line("q1", citation_accuracy=0.9, completeness=0.5)}
+        baseline = {"q1": _line("q1", citation_resolution_rate=None, completeness=0.5)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.9, completeness=0.5)}
         report = diff_summaries(baseline, current)
-        assert report["diffs"][0]["deltas"]["citation_accuracy"] is None
+        assert report["diffs"][0]["deltas"]["citation_resolution_rate"] is None
         assert report["diffs"][0]["deltas"]["completeness"] == pytest.approx(0.0)
 
     def test_query_ids_sorted_in_output(self) -> None:
         baseline = {
-            "z-query": _line("z-query", citation_accuracy=0.5),
-            "a-query": _line("a-query", citation_accuracy=0.5),
+            "z-query": _line("z-query", citation_resolution_rate=0.5),
+            "a-query": _line("a-query", citation_resolution_rate=0.5),
         }
         current = baseline
         report = diff_summaries(baseline, current)
@@ -489,19 +497,19 @@ class TestDiffSummariesDeltas:
 class TestAggregate:
     def test_aggregate_over_queries_present_in_both(self) -> None:
         baseline = {
-            "shared": _line("shared", citation_accuracy=0.8, completeness=0.6, faithfulness=0.7),
-            "baseline-only": _line("baseline-only", citation_accuracy=0.99),
+            "shared": _line("shared", citation_resolution_rate=0.8, completeness=0.6, faithfulness=0.7),
+            "baseline-only": _line("baseline-only", citation_resolution_rate=0.99),
         }
         current = {
-            "shared": _line("shared", citation_accuracy=0.9, completeness=0.5, faithfulness=0.8),
-            "current-only": _line("current-only", citation_accuracy=0.01),
+            "shared": _line("shared", citation_resolution_rate=0.9, completeness=0.5, faithfulness=0.8),
+            "current-only": _line("current-only", citation_resolution_rate=0.01),
         }
         report = diff_summaries(baseline, current, threshold=0.5)  # avoid regression trip
 
         # Aggregates should only include the shared query.
-        assert report["aggregate_baseline"]["citation_accuracy"] == pytest.approx(0.8)
-        assert report["aggregate_current"]["citation_accuracy"] == pytest.approx(0.9)
-        assert report["aggregate_deltas"]["citation_accuracy"] == pytest.approx(0.1)
+        assert report["aggregate_baseline"]["citation_resolution_rate"] == pytest.approx(0.8)
+        assert report["aggregate_current"]["citation_resolution_rate"] == pytest.approx(0.9)
+        assert report["aggregate_deltas"]["citation_resolution_rate"] == pytest.approx(0.1)
 
     def test_aggregate_is_none_when_no_shared_scores(self) -> None:
         baseline: dict[str, dict[str, Any]] = {"only-in-baseline": _line("only-in-baseline")}
@@ -521,7 +529,7 @@ class TestFormatReport:
             allow_removed=allow_removed,
             lane=RESEARCH_LANE,
             unscored=dict.fromkeys(
-                ("citation_accuracy", "completeness", "faithfulness"), 0
+                ("citation_resolution_rate", "completeness", "faithfulness"), 0
             ),
             diffs=[
                 QueryDiff(
@@ -530,7 +538,7 @@ class TestFormatReport:
                     baseline_error=None,
                     current_error=None,
                     deltas={
-                        "citation_accuracy": -0.2 if has_regressions else 0.01,
+                        "citation_resolution_rate": -0.2 if has_regressions else 0.01,
                         "completeness": 0.0,
                         "faithfulness": 0.0,
                         "critic_score": 0.0,
@@ -540,19 +548,19 @@ class TestFormatReport:
             has_regressions=has_regressions,
             threshold=0.10,
             aggregate_baseline={
-                "citation_accuracy": 0.8,
+                "citation_resolution_rate": 0.8,
                 "completeness": 0.7,
                 "faithfulness": 0.6,
                 "critic_score": 0.75,
             },
             aggregate_current={
-                "citation_accuracy": 0.6 if has_regressions else 0.81,
+                "citation_resolution_rate": 0.6 if has_regressions else 0.81,
                 "completeness": 0.7,
                 "faithfulness": 0.6,
                 "critic_score": 0.75,
             },
             aggregate_deltas={
-                "citation_accuracy": -0.2 if has_regressions else 0.01,
+                "citation_resolution_rate": -0.2 if has_regressions else 0.01,
                 "completeness": 0.0,
                 "faithfulness": 0.0,
                 "critic_score": 0.0,
@@ -623,7 +631,7 @@ class TestCLI:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         current = tmp_path / "current.jsonl"
-        self._write(current, [_line("q1", citation_accuracy=0.9, completeness=0.8, faithfulness=0.7)])
+        self._write(current, [_line("q1", citation_resolution_rate=0.9, completeness=0.8, faithfulness=0.7)])
         exit_code = main([str(tmp_path / "missing.jsonl"), str(current)])
         assert exit_code == 0
         assert "Eval regression diff" in capsys.readouterr().out
@@ -633,8 +641,8 @@ class TestCLI:
     ) -> None:
         baseline = tmp_path / "baseline.jsonl"
         current = tmp_path / "current.jsonl"
-        self._write(baseline, [_line("q1", citation_accuracy=0.9)])
-        self._write(current, [_line("q1", citation_accuracy=0.5)])
+        self._write(baseline, [_line("q1", citation_resolution_rate=0.9)])
+        self._write(current, [_line("q1", citation_resolution_rate=0.5)])
         assert main([str(baseline), str(current), "--threshold", "0.1"]) == 1
 
     def test_truncated_current_run_exits_1(self, tmp_path: Path) -> None:
@@ -645,11 +653,11 @@ class TestCLI:
         self._write(
             baseline,
             [
-                _line("q1", citation_accuracy=0.9),
-                _line("q2", citation_accuracy=0.9),
+                _line("q1", citation_resolution_rate=0.9),
+                _line("q2", citation_resolution_rate=0.9),
             ],
         )
-        self._write(current, [_line("q1", citation_accuracy=0.9)])
+        self._write(current, [_line("q1", citation_resolution_rate=0.9)])
         assert main([str(baseline), str(current)]) == 1
 
     def test_allow_removed_flag_exits_0(self, tmp_path: Path) -> None:
@@ -658,19 +666,19 @@ class TestCLI:
         self._write(
             baseline,
             [
-                _line("q1", citation_accuracy=0.9),
-                _line("q2", citation_accuracy=0.9),
+                _line("q1", citation_resolution_rate=0.9),
+                _line("q2", citation_resolution_rate=0.9),
             ],
         )
-        self._write(current, [_line("q1", citation_accuracy=0.9)])
+        self._write(current, [_line("q1", citation_resolution_rate=0.9)])
         assert main([str(baseline), str(current), "--allow-removed"]) == 0
 
     def test_output_file_written(self, tmp_path: Path) -> None:
         baseline = tmp_path / "baseline.jsonl"
         current = tmp_path / "current.jsonl"
         output = tmp_path / "report.md"
-        self._write(baseline, [_line("q1", citation_accuracy=0.9)])
-        self._write(current, [_line("q1", citation_accuracy=0.9)])
+        self._write(baseline, [_line("q1", citation_resolution_rate=0.9)])
+        self._write(current, [_line("q1", citation_resolution_rate=0.9)])
         main([str(baseline), str(current), "--output", str(output)])
         assert output.is_file()
         assert "Eval regression diff" in output.read_text()
@@ -688,15 +696,15 @@ class TestReturnedTypes:
 
 class TestThresholdBoundary:
     def test_drop_exactly_at_threshold_is_not_regression(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.9)}
-        current = {"q1": _line("q1", citation_accuracy=0.8)}  # drop of 0.10
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.9)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8)}  # drop of 0.10
         # Threshold 0.10 means drop MORE THAN 0.10 counts; equal is ok.
         report = diff_summaries(baseline, current, threshold=0.10)
         assert report["diffs"][0]["status"] == "unchanged"
 
     def test_drop_just_over_threshold_regresses(self) -> None:
-        baseline = {"q1": _line("q1", citation_accuracy=0.9)}
-        current = {"q1": _line("q1", citation_accuracy=0.79)}  # drop of 0.11
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.9)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.79)}  # drop of 0.11
         report = diff_summaries(baseline, current, threshold=0.10)
         assert report["diffs"][0]["status"] == "regressed"
 
@@ -791,7 +799,7 @@ class TestLearningLaneLoading:
         # to the learning lane fails loudly rather than producing an
         # empty diff that reads green.
         path = tmp_path / "summary.jsonl"
-        path.write_text(json.dumps(_line("q1", citation_accuracy=0.9)))
+        path.write_text(json.dumps(_line("q1", citation_resolution_rate=0.9)))
         with pytest.raises(ValueError, match="record_id"):
             load_summary(path, lane=LEARNING_LANE)
 
@@ -1034,9 +1042,14 @@ class TestLaneIsolation:
         assert RESEARCH_LANE.metric_fields is METRIC_FIELDS
         assert RESEARCH_LANE.resource_thresholds is RESOURCE_THRESHOLDS
         assert RESEARCH_LANE.directions is METRIC_DIRECTIONS
-        # ADR 0071 demoted `critic_score` to a diagnostic; the lane's
-        # informational set is where a demoted metric lands.
-        assert RESEARCH_LANE.informational_fields == ("critic_score",)
+        # ADR 0071 demoted `critic_score` to a diagnostic and ADR 0074
+        # demoted `citation_accuracy`; the lane's informational set is
+        # where a demoted metric lands. Neither was deleted — ADR 0070
+        # forbids removing a row field, and both are still printed.
+        assert RESEARCH_LANE.informational_fields == (
+            "citation_accuracy",
+            "critic_score",
+        )
         assert RESEARCH_LANE.cost_reference is None
 
     def test_a_learning_field_never_enters_the_research_field_set(self) -> None:
@@ -1048,8 +1061,8 @@ class TestLaneIsolation:
     def test_cli_defaults_to_the_research_lane(self, tmp_path: Path) -> None:
         baseline = tmp_path / "b.jsonl"
         current = tmp_path / "c.jsonl"
-        baseline.write_text(json.dumps(_line("q1", citation_accuracy=0.9)))
-        current.write_text(json.dumps(_line("q1", citation_accuracy=0.9)))
+        baseline.write_text(json.dumps(_line("q1", citation_resolution_rate=0.9)))
+        current.write_text(json.dumps(_line("q1", citation_resolution_rate=0.9)))
         output = tmp_path / "diff.md"
         assert main([str(baseline), str(current), "--output", str(output)]) == 0
         assert output.read_text().startswith("# Eval regression diff")
@@ -1202,7 +1215,13 @@ class TestRepeatAggregation:
         # rows must produce no regression and an interval of zero width:
         # nothing moved, and no resample can move it.
         rows = _rows(
-            *(_repeat(qid, r, faithfulness=0.8, completeness=0.75)
+            *(_repeat(
+                qid,
+                r,
+                faithfulness=0.8,
+                completeness=0.75,
+                citation_resolution_rate=1.0,
+            )
               for qid in ("q1", "q2", "q3")
               for r in (1, 2, 3))
         )
@@ -1210,7 +1229,7 @@ class TestRepeatAggregation:
         report = diff_summaries(dict(aggregated), dict(aggregated))
         assert report["has_regressions"] is False
         assert report["repeats"] == 3
-        interval = report["statistics"]["faithfulness"].bootstrap.interval
+        interval = report["statistics"]["citation_resolution_rate"].bootstrap.interval
         assert interval.width == pytest.approx(0.0)
         assert report["decision"].verdict == "HOLD"
 
@@ -1407,17 +1426,175 @@ class TestComparability:
         assert main([str(baseline), str(current)]) == EXIT_INCOMPARABLE
 
 
+class TestTheCitationMetricSwapRebaselines:
+    """ADR 0074's cost, landed rather than hidden.
+
+    Replacing `citation_accuracy` with `citation_resolution_rate`
+    invalidates every baseline scored with the old one — the two are
+    different measurements of different things, and a delta across the
+    swap is a measurement of the swap. The mechanism that says so is
+    ADR 0070's: the deterministic check versions itself into
+    `provenance.rubric_versions`, which is a comparability field, so a
+    pre-swap row and a post-swap row are refused rather than diffed.
+    """
+
+    @staticmethod
+    def _post_swap() -> dict[str, str]:
+        from src.eval.metrics import RESEARCH_RUBRICS
+        from src.eval.provenance import rubric_versions
+
+        return rubric_versions(RESEARCH_RUBRICS)
+
+    @classmethod
+    def _pre_swap(cls) -> dict[str, str]:
+        versions = cls._post_swap()
+        # What a row written before this work order carried: the three
+        # judges, and no entry for the deterministic check.
+        del versions["groundedness"]
+        return versions
+
+    def test_the_live_registry_names_the_deterministic_check(self) -> None:
+        assert "groundedness" in self._post_swap()
+
+    def test_a_pre_swap_row_is_not_comparable_to_a_post_swap_one(self) -> None:
+        baseline = {
+            "q1": _provenanced(
+                _line("q1", citation_accuracy=0.9), rubric_versions=self._pre_swap()
+            )
+        }
+        current = {
+            "q1": _provenanced(
+                _line("q1", citation_resolution_rate=0.5),
+                rubric_versions=self._post_swap(),
+            )
+        }
+        verdict = check_comparability(baseline, current)
+        assert verdict.comparable is False
+        assert any("rubric_versions" in conflict for conflict in verdict.conflicts)
+
+    def test_the_cli_exits_three_across_the_swap_rather_than_diffing(
+        self, tmp_path: Path
+    ) -> None:
+        # The whole point: without this, the differ would read the old
+        # campaign's missing `citation_resolution_rate` as "unscored"
+        # and publish a green diff over a metric change.
+        baseline = tmp_path / "b.jsonl"
+        current = tmp_path / "c.jsonl"
+        baseline.write_text(
+            json.dumps(
+                _provenanced(
+                    _line("q1", citation_accuracy=1.0),
+                    rubric_versions=self._pre_swap(),
+                )
+            )
+        )
+        current.write_text(
+            json.dumps(
+                _provenanced(
+                    _line("q1", citation_resolution_rate=0.0),
+                    rubric_versions=self._post_swap(),
+                )
+            )
+        )
+        assert main([str(baseline), str(current)]) == EXIT_INCOMPARABLE
+
+    def test_two_post_swap_runs_still_compare(self) -> None:
+        rows = {
+            "q1": _provenanced(
+                _line("q1", citation_resolution_rate=0.5),
+                rubric_versions=self._post_swap(),
+            )
+        }
+        assert check_comparability(dict(rows), dict(rows)).comparable is True
+
+
+class TestCitationAccuracyIsNowADiagnostic:
+    def test_a_citation_accuracy_collapse_alone_does_not_fail_the_gate(self) -> None:
+        # It returns 1.0 for a report with zero citations and resolves
+        # `[Author, Year]` tags against the list the synthesizer itself
+        # wrote. A metric that cannot fail on a fabrication must not be
+        # able to fail a build either (ADR 0074).
+        baseline = {"q1": _line("q1", citation_accuracy=1.0, faithfulness=0.8)}
+        current = {"q1": _line("q1", citation_accuracy=0.0, faithfulness=0.8)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "unchanged"
+        assert report["has_regressions"] is False
+
+    def test_it_is_still_diffed_and_still_printed(self) -> None:
+        # ADR 0070 forbids removing a row field, and the published
+        # README block still averages it.
+        baseline = {"q1": _line("q1", citation_accuracy=1.0, faithfulness=0.8)}
+        current = {"q1": _line("q1", citation_accuracy=0.0, faithfulness=0.8)}
+        report = diff_summaries(baseline, current)
+        assert report["aggregate_deltas"]["citation_accuracy"] == pytest.approx(-1.0)
+        assert "citation_accuracy *(not gated)*" in format_report(report)
+
+    def test_the_gated_citation_field_is_the_deterministic_one(self) -> None:
+        assert "citation_accuracy" not in METRIC_FIELDS
+        assert "citation_resolution_rate" in METRIC_FIELDS
+        assert "citation_accuracy" in RESEARCH_LANE.tabulated_fields
+
+    def test_the_gate_gets_a_band_from_the_flat_threshold_not_a_quantum(self) -> None:
+        # Its quantum is `1 / denominator`, and the denominator is the
+        # report's own citation count — 1 on this repository's e2e
+        # fixture. Declaring that as the quantum would hand the metric a
+        # band of 1.5 and a gate that can never fire.
+        assert "citation_resolution_rate" not in SCORE_QUANTA
+        assert score_epsilon("citation_resolution_rate", 0.10) == pytest.approx(0.10)
+        assert score_epsilon(
+            "citation_resolution_rate", DEFAULT_THRESHOLD
+        ) == pytest.approx(DEFAULT_THRESHOLD)
+
+    def test_one_unresolved_citation_of_five_clears_that_band(self) -> None:
+        # What 0.10 means for this metric, asserted rather than assumed:
+        # a single fabricated citation on a report citing five moves the
+        # score 0.20 and fires.
+        baseline = {"q1": _line("q1", citation_resolution_rate=1.0)}
+        current = {"q1": _line("q1", citation_resolution_rate=0.8)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "regressed"
+
+    def test_one_unresolved_citation_in_one_of_three_repeats_does_not(self) -> None:
+        # And the other end of the same rule: aggregated over three
+        # repeats, one unresolved citation of fifteen is 0.067, which
+        # the band absorbs.
+        baseline = {"q1": _line("q1", citation_resolution_rate=1.0)}
+        current = {"q1": _line("q1", citation_resolution_rate=1.0 - 1 / 15)}
+        report = diff_summaries(baseline, current)
+        assert report["diffs"][0]["status"] == "unchanged"
+
+
 class TestStatisticsAndDecision:
     def test_an_unchanged_small_campaign_holds_rather_than_promoting(self) -> None:
-        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(20)}
+        rows = {
+            f"q{i}": _line(f"q{i}", faithfulness=0.8, citation_resolution_rate=1.0)
+            for i in range(20)
+        }
         report = diff_summaries(dict(rows), dict(rows))
         assert report["decision"].verdict == "HOLD"
         assert "cannot detect" in report["decision"].reasons[0]
 
     def test_a_large_enough_clean_comparison_promotes(self) -> None:
-        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(200)}
+        rows = {
+            f"q{i}": _line(f"q{i}", faithfulness=0.8, citation_resolution_rate=1.0)
+            for i in range(200)
+        }
         report = diff_summaries(dict(rows), dict(rows))
         assert report["decision"].verdict == "PROMOTE"
+
+    def test_a_campaign_that_never_scored_the_primary_metric_reaches_no_verdict(
+        self,
+    ) -> None:
+        # ADR 0074 made the research lane's primary a metric that can
+        # honestly report nothing: a campaign whose reports cited no
+        # identifiers has no `citation_resolution_rate` anywhere.
+        # Promoting on the strength of the secondary metrics would be
+        # answering a question nobody asked.
+        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(200)}
+        report = diff_summaries(dict(rows), dict(rows))
+        assert report["decision"].verdict == "HOLD"
+        assert "citation_resolution_rate" in report["decision"].reasons[0]
+        assert "never measured" in report["decision"].reasons[0]
 
     def test_a_regression_rolls_back_and_names_the_query(self) -> None:
         baseline = {"q1": _line("q1", faithfulness=0.9)}
@@ -1437,34 +1614,40 @@ class TestStatisticsAndDecision:
         # so nothing gates, but no resample can put zero in the interval.
         # Promoting on that would be the gate saying "fine" about a
         # movement it can see.
-        baseline = {f"q{i}": _line(f"q{i}", faithfulness=0.80) for i in range(200)}
-        current = {f"q{i}": _line(f"q{i}", faithfulness=0.75) for i in range(200)}
+        baseline = {
+            f"q{i}": _line(f"q{i}", faithfulness=0.8, citation_resolution_rate=0.80)
+            for i in range(200)
+        }
+        current = {
+            f"q{i}": _line(f"q{i}", faithfulness=0.8, citation_resolution_rate=0.75)
+            for i in range(200)
+        }
         report = diff_summaries(baseline, current)
         assert report["has_regressions"] is False
         assert report["decision"].verdict == "HOLD"
         assert "excludes zero" in report["decision"].reasons[0]
 
     def test_the_primary_metric_always_gets_an_interval(self) -> None:
-        rows = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.9)}
+        rows = {"q1": _line("q1", faithfulness=0.8, citation_resolution_rate=0.9)}
         report = diff_summaries(dict(rows), dict(rows))
-        assert set(report["statistics"]) == {"faithfulness"}
-        assert report["statistics"]["faithfulness"].primary is True
+        assert set(report["statistics"]) == {"citation_resolution_rate"}
+        assert report["statistics"]["citation_resolution_rate"].primary is True
 
     def test_a_metric_that_moved_down_gets_a_diagnostic_interval(self) -> None:
-        baseline = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.9)}
-        current = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.85)}
+        baseline = {"q1": _line("q1", faithfulness=0.85, citation_resolution_rate=0.9)}
+        current = {"q1": _line("q1", faithfulness=0.80, citation_resolution_rate=0.9)}
         report = diff_summaries(baseline, current)
-        assert set(report["statistics"]) == {"faithfulness", "citation_accuracy"}
-        assert report["statistics"]["citation_accuracy"].primary is False
+        assert set(report["statistics"]) == {"citation_resolution_rate", "faithfulness"}
+        assert report["statistics"]["faithfulness"].primary is False
 
     def test_a_metric_that_improved_gets_no_interval(self) -> None:
         # Twenty simultaneous per-metric tests on twenty queries
         # manufacture false alarms by arithmetic, so slices are only
         # analysed where a reader is about to ask "is that real?".
-        baseline = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.5)}
-        current = {"q1": _line("q1", faithfulness=0.8, citation_accuracy=0.9)}
+        baseline = {"q1": _line("q1", faithfulness=0.5, citation_resolution_rate=0.9)}
+        current = {"q1": _line("q1", faithfulness=0.8, citation_resolution_rate=0.9)}
         report = diff_summaries(baseline, current)
-        assert "citation_accuracy" not in report["statistics"]
+        assert "faithfulness" not in report["statistics"]
 
     def test_mcnemar_appears_for_a_binary_metric_and_not_a_ratio(self) -> None:
         binary = {
@@ -1481,21 +1664,31 @@ class TestStatisticsAndDecision:
         assert test.candidate_only == 3
         assert test.baseline_only == 0
 
-        ratio = {"q1": _line("q1", faithfulness=0.83)}
-        assert diff_summaries(ratio, ratio)["statistics"]["faithfulness"].mcnemar is None
+        ratio = {"q1": _line("q1", citation_resolution_rate=0.83)}
+        stats = diff_summaries(ratio, ratio)["statistics"]
+        assert stats["citation_resolution_rate"].mcnemar is None
 
     def test_the_seed_makes_the_interval_reproducible(self) -> None:
-        baseline = {f"q{i}": _line(f"q{i}", faithfulness=0.5 + i / 40) for i in range(10)}
-        current = {f"q{i}": _line(f"q{i}", faithfulness=0.6 + i / 40) for i in range(10)}
+        baseline = {
+            f"q{i}": _line(f"q{i}", citation_resolution_rate=0.5 + i / 40)
+            for i in range(10)
+        }
+        current = {
+            f"q{i}": _line(f"q{i}", citation_resolution_rate=0.6 + i / 40)
+            for i in range(10)
+        }
         first = diff_summaries(baseline, current, seed=42)
         second = diff_summaries(baseline, current, seed=42)
         assert (
-            first["statistics"]["faithfulness"].bootstrap.interval
-            == second["statistics"]["faithfulness"].bootstrap.interval
+            first["statistics"]["citation_resolution_rate"].bootstrap.interval
+            == second["statistics"]["citation_resolution_rate"].bootstrap.interval
         )
 
     def test_the_report_carries_the_decision_power_and_caveat(self) -> None:
-        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(20)}
+        rows = {
+            f"q{i}": _line(f"q{i}", faithfulness=0.8, citation_resolution_rate=1.0)
+            for i in range(20)
+        }
         md = format_report(diff_summaries(dict(rows), dict(rows)))
         assert "## Decision" in md
         assert "### HOLD" in md
@@ -1505,7 +1698,10 @@ class TestStatisticsAndDecision:
         assert "approximate at n=20" in md
 
     def test_the_report_states_the_rule_of_three_on_a_clean_sweep(self) -> None:
-        rows = {f"q{i}": _line(f"q{i}", faithfulness=0.8) for i in range(20)}
+        rows = {
+            f"q{i}": _line(f"q{i}", faithfulness=0.8, citation_resolution_rate=1.0)
+            for i in range(20)
+        }
         md = format_report(diff_summaries(dict(rows), dict(rows)))
         assert "Zero failures in 20 runs" in md
         assert "15.0%" in md

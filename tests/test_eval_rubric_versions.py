@@ -131,14 +131,50 @@ class TestTheMechanismActuallyFires:
 
 
 class TestTheCampaignSubsetsAreHonest:
-    def test_the_research_campaign_records_only_prompted_metrics(self) -> None:
-        # `citation_accuracy` is pure regex; a rubric version for it
-        # would be provenance theatre.
+    def test_the_research_campaign_records_every_versioned_instrument(self) -> None:
+        # Three judges and one deterministic check. The rule is "a
+        # metric is in the registry iff it publishes a versioned
+        # definition", not "iff it calls a model" — ADR 0074's check has
+        # a version constant and a spec digest precisely so a change to
+        # it can be seen from a row.
         assert {r.name for r in RESEARCH_RUBRICS} == {
             "completeness",
             "faithfulness",
+            "groundedness",
             "retrieval_recall",
         }
+
+    def test_citation_accuracy_is_still_absent_because_it_versions_nothing(
+        self,
+    ) -> None:
+        # The one this test used to be about. It publishes no spec text
+        # and no version constant, so there is nothing a lock could hold
+        # it to — and it no longer gates anything (ADR 0074).
+        assert "citation_accuracy" not in {r.name for r in RESEARCH_RUBRICS}
+
+    def test_the_groundedness_entry_names_the_live_check(self) -> None:
+        # The lock is worthless if the registered text drifts from the
+        # module's own. Both sides are asserted here so a spec edit
+        # cannot pass by updating only `tests/test_groundedness.py`.
+        from src.eval.groundedness import (
+            GROUNDEDNESS_CHECK_VERSION,
+            NORMALIZATION_SPEC,
+            spec_digest,
+        )
+
+        entry = next(r for r in RESEARCH_RUBRICS if r.name == "groundedness")
+        assert entry.version == GROUNDEDNESS_CHECK_VERSION
+        assert entry.prompt == NORMALIZATION_SPEC
+        assert entry.digest == spec_digest()
+
+    def test_a_campaign_row_records_the_deterministic_checks_version(self) -> None:
+        # The mechanism that makes the citation-metric swap refuse an
+        # old baseline instead of diffing across it: the version reaches
+        # `provenance.rubric_versions`, which `regression_diff` reads as
+        # a comparability field.
+        from src.eval.provenance import rubric_versions
+
+        assert "groundedness" in rubric_versions(RESEARCH_RUBRICS)
 
     def test_the_simulation_subset_is_narrower_than_the_registry(self) -> None:
         from src.eval.learning_metrics import SIMULATION_RUBRICS

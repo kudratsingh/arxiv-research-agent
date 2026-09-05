@@ -23,9 +23,12 @@ McNemar comparison needs (`03-ARCHITECTURE.md` §4.2, §4.4).
 `metrics.measure_citation_accuracy` returns `1.0` for a report with zero
 citations: it awards a perfect score to the exact failure it exists to
 catch. Every metric here reports its **denominator**, and an empty
-denominator is `None` with a reason code — never a score. Replacing
-`citation_accuracy` at its call sites is a follow-up with a named owner;
-see ADR 0074.
+denominator is `None` with a reason code — never a score. The
+replacement has landed: `metrics.measure_citation_resolution` adapts the
+identifier check for the campaign, and `citation_resolution_rate` is what
+the research gate reads. `citation_accuracy` survives as a diagnostic
+only, for the reasons its own docstring gives. The quote path is still
+waiting on a caller that passes `full_texts` (ADR 0074).
 
 **No network, ever.** Nothing in this module performs I/O. Sources are
 passed in by the caller. `tests/conftest.py` would block a socket anyway;

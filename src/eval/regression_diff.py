@@ -83,6 +83,13 @@ exits 3 rather than reporting a movement that is really a
 reconfiguration. A run that carries no block at all is unknown rather
 than incomparable: it is compared, with a warning.
 
+That machinery is what carries the citation-metric swap. The research
+lane gates on `citation_resolution_rate` (ADR 0074) rather than
+`citation_accuracy`, which returned 1.0 for a report with zero
+citations; a row scored before the swap and one scored after disagree on
+`provenance.rubric_versions`, so this module refuses them as
+incomparable instead of diffing a metric against a different metric.
+
 Usage:
     python -m src.eval.regression_diff baseline.jsonl current.jsonl
     python -m src.eval.regression_diff baseline.jsonl current.jsonl --threshold 0.05
@@ -149,6 +156,22 @@ EXIT_INCOMPARABLE = 3
 # most. When a query's topic list changes, this constant is what has to
 # move, and `tests/test_regression_diff.py` pins it against the
 # dataset.
+# `citation_resolution_rate` is deliberately **not** here, and the
+# reasoning is the same one the learning lane already applies to its
+# observed rates (`LEARNING_LANE.score_quanta`, empty for the same
+# cause). Its quantum is `1 / denominator`, and unlike `completeness`
+# that denominator is not declared by the dataset — it is the number of
+# identifiers the report itself cited, which the run chooses. It is 1 on
+# this repository's own e2e fixture, and a declared quantum has to
+# survive the coarsest case it will meet, so declaring one would mean
+# declaring 1.0 and handing the metric a band of 1.5: a gate that can
+# never fire.
+#
+# The widening rule also has no purchase here. `score_epsilon`'s wider
+# band exists to absorb *judge* noise (ADR 0044, revisiting ADR 0010),
+# and this check has no judge: given a report and a corpus it returns
+# the same number forever. What is left to filter is product variance,
+# which the flat `--threshold` floor already does — see `score_epsilon`.
 SCORE_QUANTA: dict[str, float] = {
     "completeness": 0.25,
     "retrieval_recall": 0.25,
@@ -218,8 +241,19 @@ DEFAULT_SEED: Final[int] = 0
 # `0.0`, which arrives at this module as a full-scale quality collapse
 # indistinguishable from a real one. It is still diffed and still
 # printed — as a diagnostic.
+# `citation_accuracy` was removed from this list by ADR 0074 and moved
+# to `RESEARCH_INFORMATIONAL_FIELDS`, replaced by
+# `citation_resolution_rate`. It is not that the old metric was
+# imprecise — it is inverted: it returns 1.0 for a report with zero
+# citations, and it resolves `[Author, Year]` tags against the citation
+# list the synthesizer itself wrote, so a fabricated entry validates
+# itself. On this repository's e2e fixture, where the report cites
+# `arxiv:2311.05232` and the retrieved corpus holds `2311.09000`, it
+# scores 1.0; `citation_resolution_rate` scores 0.0 over a denominator
+# of 1. The field stays on the row and stays in the report — ADR 0070
+# forbids removing one — but it no longer decides anything.
 METRIC_FIELDS: tuple[str, ...] = (
-    "citation_accuracy",
+    "citation_resolution_rate",
     "completeness",
     "faithfulness",
     "retrieval_recall",
@@ -228,9 +262,12 @@ METRIC_FIELDS: tuple[str, ...] = (
     "cost_usd",
 )
 
-# Research-lane fields that are tabulated but never gate. See the note
-# on `critic_score` above.
-RESEARCH_INFORMATIONAL_FIELDS: tuple[str, ...] = ("critic_score",)
+# Research-lane fields that are tabulated but never gate. See the notes
+# on `critic_score` and `citation_accuracy` above.
+RESEARCH_INFORMATIONAL_FIELDS: tuple[str, ...] = (
+    "citation_accuracy",
+    "critic_score",
+)
 
 # Per-metric bands for the count / dollar metrics: (absolute_floor,
 # relative_fraction). A move counts as significant only when it
@@ -262,6 +299,7 @@ RESOURCE_THRESHOLDS: dict[str, tuple[float, float]] = {
 # better as they fall. Anything not listed defaults to "higher_better"
 # so we don't silently mistreat a new field.
 METRIC_DIRECTIONS: dict[str, str] = {
+    "citation_resolution_rate": "higher_better",
     "citation_accuracy": "higher_better",
     "completeness": "higher_better",
     "faithfulness": "higher_better",
@@ -385,6 +423,7 @@ RESEARCH_LANE = MetricLane(
     resource_thresholds=RESOURCE_THRESHOLDS,
     directions=METRIC_DIRECTIONS,
     columns=(
+        ("Cit.Res. Δ", "citation_resolution_rate"),
         ("Cit.Acc. Δ", "citation_accuracy"),
         ("Complete. Δ", "completeness"),
         ("Faithful. Δ", "faithfulness"),
@@ -401,15 +440,29 @@ RESEARCH_LANE = MetricLane(
     # without the differ having to parse an id.
     task_field="query_id",
     score_quanta=SCORE_QUANTA,
-    # Predeclared: `faithfulness` is the claim the product actually
-    # makes — that what the report says is supported by what it cites —
-    # and it is the only research metric whose denominator (claims) is
-    # large enough for a 0.10 band to be a noise filter rather than a
-    # rounding error. `citation_accuracy` is the obvious alternative and
-    # is the better long-run choice once WO-A16's deterministic
-    # groundedness replaces the judged version; ADR 0071 records that
-    # hand-off rather than pre-empting it.
-    primary_metric="faithfulness",
+    # Predeclared, and this is the hand-off ADR 0071 wrote down rather
+    # than pre-empting: `faithfulness` held the slot while the only
+    # citation signal was the judged one, and the citation metric was
+    # named as "the better long-run choice once WO-A16's deterministic
+    # groundedness replaces the judged version". That happened here, so
+    # the slot moves.
+    #
+    # Why it is better: the primary metric is the one whose interval is
+    # always computed and whose movement can HOLD a promotion, so it
+    # should be the least arguable number in the report.
+    # `citation_resolution_rate` is deterministic, costs nothing, does
+    # not drift when a model is upgraded, and yields a per-claim binary
+    # outcome McNemar can pair on. `faithfulness` is a judge whose
+    # agreement with a human has never been measured in this repository
+    # — it still gates, and still gets a diagnostic interval whenever it
+    # moves adversely.
+    #
+    # What it costs: a run that cited nothing scores `None` rather than
+    # a number, so it leaves the primary's paired sample instead of
+    # contributing a 1.0 to it. `_decide` refuses to reach a verdict
+    # when that empties the sample entirely, rather than passing a
+    # campaign nobody measured.
+    primary_metric="citation_resolution_rate",
 )
 
 # The guided-read campaign's fields, from
@@ -877,6 +930,16 @@ def score_epsilon(
     instead — one step passes, two fire — floored at `threshold` so a
     fine-grained metric never gets a *narrower* band than the judge
     noise estimate.
+
+    A metric with no declared quantum gets the flat `threshold`, and for
+    the deterministic ones that is a floor rather than a noise estimate:
+    `citation_resolution_rate` has no judge to be noisy, so what 0.10
+    filters is the product's own run-to-run variation. On a typical
+    report citing three to five identifiers one unresolved citation
+    moves the score 0.20-0.33 and fires; a task aggregated over three
+    repeats needs two of fifteen to go unresolved (0.133) before it
+    clears, and one (0.067) does not. See the note above `SCORE_QUANTA`
+    for why declaring a quantum for it would make it ungatable.
 
     Args:
         field: Metric name.
@@ -1607,6 +1670,24 @@ def decide(report: RegressionReport) -> Decision:
         )
 
     primary = report["statistics"].get(lane.primary_metric)
+    if lane.primary_metric and primary is None:
+        # The predeclared subject of the comparison was never scored on
+        # a single paired task. Reachable since ADR 0074 made the
+        # research lane's primary a metric that can honestly report
+        # nothing: a campaign whose reports cited no identifiers has no
+        # `citation_resolution_rate` anywhere. Promoting on the strength
+        # of the secondary metrics would be answering a question nobody
+        # asked, so the verdict is HOLD and the report says which metric
+        # went unmeasured.
+        return Decision(
+            verdict="HOLD",
+            reasons=(
+                f"No {lane.unit_singular} carries a `{lane.primary_metric}` "
+                "score in both runs, so the comparison's predeclared primary "
+                "metric was never measured. Nothing below is evidence about "
+                "it.",
+            ),
+        )
     if primary is not None and primary.bootstrap is not None:
         interval = primary.bootstrap.interval
         direction = lane.directions.get(lane.primary_metric, "higher_better")

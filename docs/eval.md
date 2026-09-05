@@ -202,14 +202,33 @@ below.
 
 ### `src/eval/metrics.py`
 
-Four metrics, each of which landed as its own PR so the design and
+Five metrics, each of which landed as its own PR so the design and
 prompts got scrutinized independently:
 
-- **Citation accuracy**. Pure regex + set
-  membership over `(first-author-lastname, 4-digit-year)`. Handles
+- **Citation resolution** *(the gated citation metric)*. Deterministic,
+  no judge, no network. `measure_citation_resolution` resolves every
+  cited arXiv identifier against the papers **this run retrieved**, over
+  two surfaces: identifiers in the report body and the identifier each
+  `state["citations"]` entry asserts. Returns
+  `{score, total_citations, resolved, excluded, reason, unresolved,
+  check_version, spec_digest}`, and **`score` is `None` exactly when
+  `total_citations` is 0**, with reason `no_citations`. A thin adapter
+  over `src/eval/groundedness.py`; the check itself is documented under
+  [Deterministic groundedness](#deterministic-groundedness-no-judge)
+  below (ADR 0074).
+- **Citation accuracy** *(diagnostic, no longer gated)*. Pure regex +
+  set membership over `(first-author-lastname, 4-digit-year)`. Handles
   `[Smith, 2023]`, `[Smith et al., 2023]`, `[Smith and Jones, 2023]`,
   year suffixes (`2023a`), and deduplicates repeated citations.
   Returns `{score, total_citations, resolved, unresolved}`.
+  **It is kept deliberately broken.** A report with no inline citations
+  scores 1.0, and the `[Author, Year]` tags are checked against the same
+  citation list the synthesizer wrote, so a fabricated entry validates
+  itself. It survives because ADR 0070 forbids removing a row field,
+  because the published README block still averages it, and because it
+  is the historical series — not because it is still trusted. Fixing it
+  in place would silently move every number this repository has
+  published under that name.
 - **Completeness**. Single batched LLM-as-judge
   call — the judge sees the whole report plus the full topic list and
   returns per-topic `covered` decisions with short reasons. Strict
@@ -269,8 +288,10 @@ verbatim in the cited paper's text under a normalization that is stated
 and tested rule by rule. Every metric publishes its denominator, and a
 zero denominator is `null` with a reason code rather than a score. Full
 treatment in [Deterministic groundedness (no
-judge)](#deterministic-groundedness-no-judge); it is not yet wired into
-the campaign.
+judge)](#deterministic-groundedness-no-judge). Its identifier check is
+wired into the campaign as `citation_resolution_rate` and gates the
+research lane; the quote path waits on a caller that has parsed PDF
+text.
 
 ### `src/eval/runner.py`
 
@@ -309,7 +330,7 @@ collapses the duplicate lines a resumed run appends.
 
 ### Isolation, crash-safety and interrupts
 
-- **A judge failure costs one metric, not the batch.** Each of the four
+- **A judge failure costs one metric, not the batch.** Each of the five
   metrics is scored inside its own guard. A judge that times out, 429s
   past its retries or truncates into invalid JSON leaves that metric as
   `null`, records the reason in `metrics_error`, and keeps the run's
@@ -516,9 +537,28 @@ entry in place instead of appending. That is the limit of any
 checked-in baseline — it defends against forgetting, not against intent
 — and the overwrite reads as an overwrite in the diff.
 
-`citation_accuracy` has no rubric and gets no version: it is regex and
-set membership. A version constant on a deterministic metric would be
-provenance theatre.
+**The lock is not only for judges.** `RESEARCH_RUBRICS` carries four
+entries: three judge prompts and the deterministic groundedness check,
+registered as `groundedness` at `GROUNDEDNESS_CHECK_VERSION` with
+`NORMALIZATION_SPEC` in the text slot. The rule is *a metric is in the
+registry iff it publishes a versioned definition*, not *iff it calls a
+model*: what the lock defends is the text whose edit makes two scores
+incomparable, and a deterministic check has one. The earlier reading —
+that versioning a metric with no judge would be provenance theatre —
+confused "has no judge" with "has no definition"; ADR 0074 asked for the
+correction and this is it.
+
+That entry is also load-bearing rather than decorative. It is what makes
+a campaign scored before `citation_resolution_rate` replaced
+`citation_accuracy` refuse to be compared against one scored after: the
+two rows disagree on `provenance.rubric_versions`, which is a
+comparability field, so `regression_diff` exits **3** instead of
+publishing a delta across a metric change. See [Rebaselining: what the
+citation swap costs](#rebaselining-what-the-citation-swap-costs).
+
+`citation_accuracy` is still absent from the lock, and now for the
+stated reason rather than the old one: it publishes neither a spec text
+nor a version constant, so there is nothing a lock could hold it to.
 
 ### Judge–human calibration remains unmeasured
 
@@ -751,14 +791,73 @@ glyphs come back as `?`), so no test ships a generated PDF. The
 artefacts are planted in the fixture text directly and listed in its
 `_readme`.
 
-### Not yet wired into the campaign
+### Wired into the campaign — the identifier half
 
-Nothing calls `measure_groundedness` from `runner.py` yet, and
-`citation_accuracy` is still the metric the gate reads. Both are
-follow-ups with named owners in ADR 0074: replacing `citation_accuracy`
-at its call sites belongs to whoever holds `src/eval/metrics.py`, and
-feeding parsed PDF text plus the paired outcomes into the campaign
-belongs to the work order holding `runner.py` and `stats.py`.
+`runner.py` scores every query with `measure_citation_resolution`, a
+thin adapter in `src/eval/metrics.py` over `measure_groundedness`. Three
+fields reach `summary.jsonl`, added beside the old ones rather than
+replacing them because ADR 0070 forbids removing a row field:
+
+| Field | Meaning |
+|---|---|
+| `citation_resolution_rate` | resolved / checked, or `null` |
+| `citations_checked` | the denominator, always published |
+| `citation_resolution_reason` | why the rate is `null` (`no_citations`) |
+
+`RESEARCH_LANE` gates on `citation_resolution_rate` and has demoted
+`citation_accuracy` to an informational field, printed and marked
+*(not gated)* exactly as `critic_score` is. The lane's **primary
+metric** moved with it — see [The gate ends in a
+decision](#the-gate-ends-in-a-decision).
+
+Two halves of the check remain unwired, both ADR 0074 follow-ups:
+
+- **The quote path.** Until a caller passes `full_texts`,
+  `quote_verbatim_rate` is `null` with reason `no_checkable_quotes` on
+  every live run, so it is not published on the row: a permanently-null
+  column is noise, not a measurement. Tracked as
+  `feat/faithfulness-fulltext-source`.
+- **The per-claim paired outcomes.** `paired_outcomes()` is the shape
+  `src/eval/stats.py`'s McNemar path wants, and nothing hands it one
+  yet.
+
+One smaller gap sits with `src/observability/logging.py`: the per-query
+`eval_query_completed` log line still carries `citation_accuracy` only,
+because a new `extra=` key has to be registered in `ALLOWED_EXTRA_KEYS`
+and that file belongs elsewhere. The stdout run line, the markdown
+summary and `summary.jsonl` all carry the new metric.
+
+### Rebaselining: what the citation swap costs
+
+**A campaign scored before this swap cannot be compared to one scored
+after it.** Not "should not" — the differ refuses. The two metrics
+measure different things over different denominators, and a delta across
+them would be a measurement of the swap.
+
+The mechanism is ADR 0070's, used for exactly what it was built for. The
+deterministic check versions itself into `provenance.rubric_versions`,
+which is one of `COMPARABILITY_FIELDS`, so:
+
+| | `provenance.rubric_versions` |
+|---|---|
+| pre-swap row | `completeness`, `faithfulness`, `retrieval_recall` |
+| post-swap row | the same three **plus `groundedness@1.0.0`** |
+
+`check_comparability` sees the field move, `_decide` returns HOLD with
+the conflict named, and the CLI exits **3** — "the two runs are not
+comparable; no verdict was reached". A green diff across the swap is not
+reachable.
+
+**The practical blast radius is small, and this is checked rather than
+asserted**: no eval campaign summary is committed to this repository.
+`git ls-files '*.jsonl'` returns only the SSE contract fixtures under
+`web/contract/`; the `docs/revamp/baseline/` tree is frontend axe and
+Lighthouse output; and `README.md`'s
+`<!-- eval-nightly:start -->` block has never been filled, because the
+nightly is disabled and no campaign has ever run green. The rebaseline
+therefore costs nothing already published — it costs any campaign a
+reader runs locally against an older summary, which is the case the
+exit-3 path exists for.
 
 ## Regression gate
 
@@ -796,10 +895,11 @@ global threshold; the score-metric rule below is ADR
 
 | Metric class | Metrics | Regression rule |
 |---|---|---|
-| Score, fine-grained | `citation_accuracy`, `faithfulness` | absolute drop > `--threshold` (default 0.10) |
+| Score, deterministic | `citation_resolution_rate` | absolute drop > `--threshold` (default 0.10) |
+| Score, judged | `faithfulness` | absolute drop > `--threshold` (default 0.10) |
 | Score, quantised | `completeness`, `retrieval_recall` | absolute drop > `1.5 x` the metric's quantum — **0.375**, so one flipped topic decision passes and two fire |
 | Resource (counts / dollars) | `iterations`, `llm_calls`, `cost_usd` | rise > per-metric absolute floor **and** > per-metric relative band (`RESOURCE_THRESHOLDS`) |
-| Diagnostic (never gates) | `critic_score` | tabulated, marked *(not gated)* |
+| Diagnostic (never gates) | `citation_accuracy`, `critic_score` | tabulated, marked *(not gated)* |
 
 Both gating classes are direction-aware: a score rising or a cost
 falling past the same bounds is an *improvement*, never a regression.
@@ -817,6 +917,45 @@ a guaranteed red. `score_epsilon()` derives the band from the declared
 quantum (`SCORE_QUANTA`) instead, floored at `--threshold` so a
 fine-grained metric never gets a *narrower* band than the judge-noise
 estimate.
+
+**Why `citation_resolution_rate` does *not* get one, though it is the
+coarsest metric of all.** Its quantum is `1 / denominator`, and unlike
+`completeness` that denominator is not declared by the dataset — it is
+the number of identifiers the report itself cited, which the run
+chooses. It is **1** on this repository's own e2e fixture. A declared
+quantum has to survive the coarsest case it will meet, so declaring one
+would mean declaring 1.0 and handing the metric a band of 1.5: a gate
+that can never fire. That is the same trap the learning lane's
+`score_quanta={}` already names for its observed per-session booleans.
+
+The widening rule also has nothing to widen for. `score_epsilon`'s wider
+band exists to absorb *judge* noise (ADR 0044, revisiting ADR 0010's
+estimate), and this check has no judge — given a report and a corpus it
+returns the same number forever. So it takes the flat `--threshold`, now
+read as a floor on *product* variance rather than as a judge-noise
+estimate. What 0.10 buys, stated rather than inherited:
+
+| Situation | Move | Fires? |
+|---|---|---|
+| one unresolved citation on a report citing 5 | 0.200 | yes |
+| one unresolved citation on a report citing 10 | 0.100 | no (not *greater* than the band) |
+| one of 15 across a 3-repeat task | 0.067 | no |
+| two of 15 across a 3-repeat task | 0.133 | yes |
+
+Both rows of that table are asserted in
+`tests/test_regression_diff.py::TestCitationAccuracyIsNowADiagnostic`,
+so the band cannot drift from the sentence describing it.
+
+**Why `citation_accuracy` no longer gates.** It is not imprecise, it is
+inverted: it returns 1.0 for a report with zero citations, and it
+resolves `[Author, Year]` tags against the citation list the synthesizer
+itself wrote, so an invented entry validates itself. On this
+repository's e2e fixture — report cites `arxiv:2311.05232`, retrieved
+corpus holds `2311.09000` — it scores **1.0** while
+`citation_resolution_rate` scores **0.0** over a denominator of 1,
+reason `citation_not_retrieved`. A metric that cannot fail on a
+fabrication must not be able to fail a build. It stays on the row and in
+the report because ADR 0070 forbids removing a row field (ADR 0074).
 
 **Why `critic_score` no longer gates.** It is produced by
 `src/agents/critic.py` — a component of the workflow under test — so
@@ -1037,6 +1176,27 @@ narrow).
 `HOLD` also covers a sub-band move whose interval excludes zero: below
 the gate's band, but not explained by sampling.
 
+**The research lane's primary metric is `citation_resolution_rate`**
+since ADR 0074. The primary is the metric predeclared as the
+comparison's subject: its interval is always computed, and its movement
+can HOLD a promotion. ADR 0071 held the slot with `faithfulness` and
+wrote the hand-off down rather than pre-empting it — *the citation
+metric is the better long-run choice once the deterministic version
+replaces the judged one* — and that is what happened here. The primary
+should be the least arguable number in the report:
+`citation_resolution_rate` costs nothing, does not drift when a model is
+upgraded, cannot be argued with, and yields a per-claim binary outcome
+McNemar can pair on, whereas `faithfulness` is a judge whose agreement
+with a human has never been measured in this repository.
+`faithfulness` still gates, and still gets a diagnostic interval
+whenever it moves adversely.
+
+That change has a cost, and it is handled rather than absorbed: a run
+that cited nothing scores `null` and therefore leaves the primary's
+paired sample instead of contributing a free 1.0 to it. When that empties
+the sample entirely, the gate returns HOLD naming the metric that went
+unmeasured, rather than promoting on the strength of the secondary ones.
+
 **At today's N the answer is `HOLD`, and the report prints the
 arithmetic** — 20 paired queries against the 155 an 80%-powered
 5-point test needs. That is the honest version of the flat ±0.10 band
@@ -1060,27 +1220,27 @@ evidence.
   variance. The first 3-repeat baseline is what turns them into
   measurements.
 - **Slices are diagnostic.** Only the lane's predeclared primary metric
-  (`faithfulness` on the research lane, `shame_free` on the learning
-  one) always gets an interval; the others get one when they moved
-  adversely, and carry no multiplicity correction. Simultaneous
+  (`citation_resolution_rate` on the research lane, `shame_free` on the
+  learning one) always gets an interval; the others get one when they
+  moved adversely, and carry no multiplicity correction. Simultaneous
   per-metric tests on 20 queries produce false alarms by arithmetic.
 - **Slow drift below the bands still accumulates silently.** ADR 0010's
   gradual-drift blind spot is unchanged — each nightly rebaselines on
   the previous night.
-- **The gate's only citation signal is still the dishonest one.** The
-  research lane reads `citation_accuracy` from the summary row, which
-  `src/eval/metrics.py` produces — and it returns 1.0 for a report with
-  zero citations, and scores **1.0** on this repository's own e2e
-  fixture, where the report cites `arxiv:2311.05232` and the retrieved
-  corpus contains `2311.09000`. ADR
-  [0074](decisions/0074-deterministic-groundedness.md)'s
-  `citation_resolution_rate` scores that same fixture **0.0**, correctly.
-  The gate cannot read it yet: ADR 0074 shipped
-  `src/eval/groundedness.py` as a library and deliberately did not wire
-  it into `runner.py`'s summary row, because `metrics.py` belongs to
-  another work order. Wiring it invalidates every existing baseline and
-  must land with a version note; when it does, this gate needs no change
-  beyond moving `RESEARCH_LANE.primary_metric`.
+- **The honest citation metric is only as wide as the citation list.**
+  `citation_resolution_rate` catches a citation to a paper the run never
+  retrieved and an identifier that is not well-formed. It is blind to a
+  fabricated *claim* about a paper the run did fetch — that is
+  `faithfulness`'s job, and paraphrase is invisible to both the
+  deterministic check and, per ADR 0007, to a judge reading abstracts
+  only. Its denominator is also small: on a report citing four papers,
+  four decisions is the whole measurement.
+- **The quote half of the check still reports nothing on a live run.**
+  `quote_verbatim_rate` needs parsed PDF text, and no caller passes
+  `full_texts` yet — the ADR 0074 follow-up tracked as
+  `feat/faithfulness-fulltext-source`. Until then a report that
+  fabricates a quotation is invisible to the campaign, and the metric
+  honestly says `no_checkable_quotes` rather than scoring it.
 
 ## Guided-read learning metrics (Phase W)
 
@@ -1480,12 +1640,21 @@ publishes (ADR 0050):
   harness is not part of the product.
 - **Runs whose report contained no citations are excluded from the
   citation-accuracy mean.** `measure_citation_accuracy` short-circuits
-  a report with zero `[Author, Year]` tags to 1.0 — its own docstring
-  says the metric doesn't apply — and averaging those in would inflate
-  the published figure exactly when the agent cited least. The block
-  states the exclusion and its denominator under the table. Other
-  metrics keep the full denominator; a report with no citations still
-  has real completeness and recall.
+  a report with zero `[Author, Year]` tags to 1.0, and averaging those
+  in would inflate the published figure exactly when the agent cited
+  least. The block states the exclusion and its denominator under the
+  table. Other metrics keep the full denominator; a report with no
+  citations still has real completeness and recall.
+
+  **This is the compensating exclusion ADR 0074 wants deleted**, and it
+  is still here. The README block averages `citation_accuracy` — the
+  metric that scores 1.0 on a fabricated citation — rather than
+  `citation_resolution_rate`, which needs no compensation because it
+  reports `null` with a reason instead of a free 1.0. Switching the
+  published table is a follow-up owned by whoever holds
+  `src/eval/readme_update.py`; it is not in this file's gift, and the
+  block has never been published anyway (the nightly is disabled and no
+  campaign has run green).
 - **Every published mean states how many runs it covers.** A judge
   failure leaves its metric `null`, and the mean silently skips nulls —
   so any metric averaged over fewer runs than the `Queries` count is
@@ -1554,10 +1723,29 @@ block (`tests/test_readme_update.py`).
   `peter-evans/create-pull-request@v7`; the measurement path does not.
   **Never green yet** — see
   [Status: no green campaign yet](#status-no-green-campaign-yet).
+- ~~Replace `citation_accuracy` at its call sites~~ — landed. The
+  research gate reads `citation_resolution_rate`; the old metric is a
+  diagnostic on the row. The swap rebaselines, and
+  `provenance.rubric_versions` is what says so — see
+  [Rebaselining](#rebaselining-what-the-citation-swap-costs).
 - `feat/faithfulness-fulltext-source` — use cached full text
   (`.cache/pdfs/<id>.txt`) as faithfulness source when available,
   falling back to abstract. Underestimation of Phase-2 faithfulness
-  today is documented in ADR 0007.
+  today is documented in ADR 0007. The same follow-up unblocks ADR
+  0074's `quote_verbatim_rate`, which reports `no_checkable_quotes` on
+  every live run until a caller passes `full_texts`.
+- Wire `groundedness.paired_outcomes()` into the paired comparison.
+  `src/eval/stats.py`'s `pair_binary_outcomes` already decides how an
+  unmatched claim is treated; nothing hands it a groundedness result
+  yet.
+- Publish `citation_resolution_rate` in the README block instead of
+  `citation_accuracy`, and drop the compensating zero-citation exclusion
+  with it (`src/eval/readme_update.py`). See [The published README
+  block](#the-published-readme-block).
+- Register `citation_resolution_rate` as an allowed log field
+  (`ALLOWED_EXTRA_KEYS` in `src/observability/logging.py`) so the
+  per-query `eval_query_completed` line carries the gated metric rather
+  than only the diagnostic one.
 - Hand-labeled calibration set (~20-30 (report, topic) pairs and
   (claim, source) pairs) once real eval runs give us data to calibrate
   against. Alignment with human judgment is currently unmeasured — see
