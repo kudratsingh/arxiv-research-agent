@@ -1,4 +1,4 @@
-.PHONY: help venv install install-dev clean clean-all test test-unit test-integration test-e2e test-all test-cov test-cov-diff test-security test-property test-fault typecheck run eval simulate-learner record-learning-fixtures admin-migrate
+.PHONY: help venv install install-dev clean clean-all test test-unit test-integration test-e2e test-all test-cov test-cov-diff test-security test-property test-fault typecheck run eval simulate-learner simulate-research research-scripted-baseline record-learning-fixtures admin-migrate
 
 # ---- Configuration ---------------------------------------------------------
 
@@ -85,6 +85,8 @@ help:  ## Show this help
 	@echo "  make run QUERY='...'   Run the agent on QUERY"
 	@echo "  make eval              Run full benchmark eval (QUERIES=id1,id2 to filter)"
 	@echo "  make simulate-learner  Scripted learner-simulation benchmark (free, mock mode)"
+	@echo "  make simulate-research Scripted research campaign (free, mock mode)"
+	@echo "  make research-scripted-baseline  Regenerate the committed scripted baseline (free)"
 	@echo "  make record-learning-fixtures  Re-record the mock-session fixtures (free)"
 	@echo "  make admin-migrate     Report/repair legacy NULL-owner rows (ARGS='...')"
 	@echo "  make clean             Remove venv, caches, build artifacts"
@@ -236,6 +238,40 @@ simulate-learner:  ## Replay learning scenarios against the session graph (free)
 # tutor copy: the recordings are baselines, and
 # tests/test_record_learning_fixtures.py fails when they stop matching
 # what the graph produces. Same zero-spend pinning as the target above.
+# The research lane's free per-PR tier (ADR 0075). Mock mode and the
+# disabled-key sentinel are pinned here rather than left to the caller's
+# .env for the same reason `simulate-learner` pins them: the target
+# advertises zero spend, and `simulate_research` refuses to start if the
+# environment contradicts that. There is no funded counterpart on this
+# module — the funded research campaign is `make eval`.
+simulate-research:  ## Replay the research benchmark against the graph (free)
+	USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+	$(VENV_PYTHON) -m src.eval.simulate_research \
+		$(if $(QUERIES),--queries $(QUERIES),) $(ARGS)
+
+# Regenerate `tests/fixtures/eval/research-scripted/baseline.jsonl`, the
+# committed baseline `regression_diff --lane research-scripted` pairs a
+# pull request against. Run it whenever the campaign legitimately moves
+# — a benchmark query edited, the scripted responses changed, a real
+# product change reviewed and accepted — and commit the result in the
+# same change. A stale baseline does not pass silently: the script and
+# the dataset are both content-derived into `provenance.dataset_version`,
+# so the differ exits 3 rather than reporting a reconfiguration as a
+# regression, and `tests/test_simulate_research.py` fails first.
+#
+# The check runs *before* the copy on purpose: a baseline is a claim
+# about the world, and a campaign that errored has no business becoming
+# one.
+research-scripted-baseline:  ## Regenerate the committed scripted-research baseline (free)
+	rm -rf outputs/eval/research-scripted-baseline
+	USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+	$(VENV_PYTHON) -m src.eval.simulate_research \
+		--output-dir outputs/eval/research-scripted-baseline
+	$(VENV_PYTHON) -m src.eval.scripted_tier_check --lane research \
+		outputs/eval/research-scripted-baseline/summary.jsonl
+	cp outputs/eval/research-scripted-baseline/summary.jsonl \
+		tests/fixtures/eval/research-scripted/baseline.jsonl
+
 record-learning-fixtures:  ## Re-record the mock-session transcript fixtures (free)
 	USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
 	ENABLE_CHECKPOINTING=true \

@@ -200,6 +200,20 @@ the campaign discipline of `runner.py` reached through
 [Learner-simulation benchmark](#the-learner-simulation-benchmark-phase-w)
 below.
 
+### `src/eval/simulate_research.py`
+
+The scripted research tier (Phase C, WO-C1, ADR
+[0075](decisions/0075-scripted-research-tier-and-paired-claims.md)). The
+research lane's counterpart of the module above and its **first per-PR
+gate**: it replays every benchmark query through the real compiled
+research graph with a scripted model surface, for `$0.0000` and about
+five seconds, and emits ADR 0074's per-claim `paired_outcomes` so the
+regression gate can compare two campaigns claim by claim rather than
+mean by mean. One tier, no funded path — the funded research campaign is
+`runner.py`. Full treatment, including what the tier cannot measure, in
+[The research lane's scripted
+tier](#the-research-lanes-scripted-tier) below.
+
 ### `src/eval/metrics.py`
 
 Five metrics, each of which landed as its own PR so the design and
@@ -1148,6 +1162,20 @@ computed over the matched pairs alone.
   case that matters most: a candidate that stops making a claim it used
   to get right is a movement worth seeing, not a smaller denominator.
 
+Since WO-C1 there **is** a caller. `regression_diff.compare_claims`
+reads the `paired_outcomes` field off both runs' summary rows, keys each
+claim `<task_id>/<claim_id>` (the id digests the cited identifier alone,
+so on a fixed corpus an un-namespaced union would collapse a 100-claim
+campaign into 5), and runs `stats.mcnemar` over the matched pairs. The
+report prints both arms' grounded rates with Wilson intervals, the
+matched and unmatched counts, the b/c/concordant cells, and what
+`mcnemar_required_pairs` says the comparison would need — see [The
+research lane's scripted tier](#the-research-lanes-scripted-tier) for
+the denominators that campaign actually produces. Across repeats a claim
+survives only if every repeat that decided it agreed; one that flipped
+is dropped and counted, on the same rule as an undecidable or unmatched
+claim.
+
 So a caller reports `n=14 comparable, 6 unmatched` rather than a p-value
 over 14 that never mentions the 20. That is the same shape ADR 0074
 chose for its own undecidable quotes — `grounded=None` with a visible
@@ -1175,6 +1203,30 @@ narrow).
 
 `HOLD` also covers a sub-band move whose interval excludes zero: below
 the gate's band, but not explained by sampling.
+
+**A deterministic lane decides differently, and WO-C1 says why in the
+lane rather than in a comment.** `MetricLane.deterministic` is set on
+`research-scripted` and on nothing else, and it changes two rules:
+
+- **An unchanged deterministic campaign PROMOTEs.** The
+  underpowered-`HOLD` rule is about *sampling noise*, and that lane has
+  none — no model is sampled, retrieval is a fixed corpus, the seed is
+  pinned, two consecutive campaigns are byte-identical. Telling a reader
+  that twenty queries "could not have found a regression" would be
+  false. What that lane genuinely cannot measure is report *quality*,
+  and that limit is the tier's rather than the sample's, so the verdict
+  says so instead.
+- **One adverse discordant claim is a ROLLBACK.** There is no sampling
+  distribution for a p-value to be computed against, so requiring
+  significance would mean waiting for five more claims to break before
+  saying the first one did. The p-value is still printed, labelled
+  descriptive rather than inferential. On a sampled lane the usual rule
+  stands: significant at α = 0.05, in the adverse direction.
+
+That second rule is not decoration. A claim losing its grounding moves
+`citation_resolution_rate` by `1 / denominator`, which on the scripted
+campaign is **exactly 0.10** — the flat epsilon, which a move has to
+*exceed*. Every per-metric band stays green and only the pairing fires.
 
 **The research lane's primary metric is `citation_resolution_rate`**
 since ADR 0074. The primary is the metric predeclared as the
@@ -1507,6 +1559,186 @@ already asserted changed. The run directory uploads as the
 step still leaves the evidence of *which* session regressed — and so
 Gate W1's evidence pack has something to cite.
 
+## The research lane's scripted tier
+
+The research lane's counterpart of the section above, added by WO-C1
+(ADR [0075](decisions/0075-scripted-research-tier-and-paired-claims.md)),
+and the lane's **first gate that runs on a pull request at all**. Until
+it landed, the campaign that produces this repository's headline numbers
+was checked per PR by nothing: `src/eval/runner.py` costs money and its
+first funded run is gated on W-OD-1.
+
+```bash
+make simulate-research
+# or, explicitly:
+USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \
+  python -m src.eval.simulate_research --output-dir outputs/eval/ci-research-scripted
+python -m src.eval.scripted_tier_check --lane research \
+  outputs/eval/ci-research-scripted/summary.jsonl
+python -m src.eval.regression_diff --lane research-scripted \
+  tests/fixtures/eval/research-scripted/baseline.jsonl \
+  outputs/eval/ci-research-scripted/summary.jsonl
+```
+
+Twenty queries, **about five seconds** of wall clock end to end
+(3.3s of it interpreter start-up), **$0.0000**, and no network.
+
+### Mock mode is not an LLM stub — which is the whole design
+
+`USE_MOCK_DATA` swaps arXiv search for five fixture papers
+(`src/agents/search.py`) and gives the tutor and the assessment judge
+deterministic branches. It does **not** touch `src/llm.py`, and the
+research graph's planner, reader, synthesizer and critic call
+`call_llm_json` under it exactly as they do in production
+(`tests/e2e/conftest.py` has said so since WO-A15).
+
+So the session graph runs free on mock mode alone — which is all
+`simulate_learner`'s scripted tier needs — and the research graph does
+not. `simulate_research` supplies the words the **model** would have
+said, where `simulate_learner` supplies the words the **learner** would
+have said, by installing a scripted surface over the four agents' own
+`call_llm_json` names for the duration of one query.
+
+**The honest cost of that, stated plainly: the report text in a scripted
+record is the harness's.** This tier measures the pipeline that
+assembled the report and the identifiers it cites — never report
+quality. It cannot catch a prompt change that makes reports worse, and a
+number from it must never be quoted as a quality figure. The learning
+lane's scripted tier has no such limitation, because the product's own
+mock branch writes the copy it scores.
+
+### What it does catch
+
+| Expectation | The defect it names |
+|---|---|
+| trajectory is `planner → search → reader → synthesizer → critic` | a skipped node, a looped synthesizer, a revision routed where the router cannot dispatch — all of which still produce a non-empty report |
+| `search` put papers on the state | mock retrieval silently returning nothing |
+| one analysis per paper | the reader fan-out dropping one |
+| the report is non-blank | a synthesizer that produced nothing |
+| citations survived `_parse_citations` | a report that looks fine and cites nothing |
+| every citation carries a title | the per-entry drop that shrinks the claim set silently |
+| exactly one critic pass, no outstanding revision | a routing bug in the revision loop |
+
+The driver reads the node sequence off `app.stream(...)` rather than
+reconstructing it after `invoke`, for the reason
+`tests/e2e/test_research_workflow.py` gives: "the report is non-empty"
+is not a trajectory assertion.
+
+**The scripted synthesizer cites the run's own corpus.** The driver
+hands the surface the `search` node's output off the same stream before
+the synthesizer runs, so the identifiers in a scripted report are the
+papers *this run* retrieved. A search that returns four papers, a reader
+that drops one, or a citation entry the parser rejects all move the
+claim set the tier measures. A fixed citation list would have reported
+five perfectly-grounded claims for a run that retrieved nothing.
+
+### Zero spend, in four layers
+
+1. **There is no second tier.** `simulate_learner` has a `--tier` flag
+   with a funded setting to fall into; this module has neither. The
+   funded research campaign is `runner.py`, a different CLI.
+2. **It refuses to start when `USE_MOCK_DATA` is false.** Here the
+   refusal also buys *offline*: no model call could happen anyway, but
+   live search would leave the machine.
+3. **A tripwire on `src.llm.call_llm`.** The four agent patches are an
+   enumeration and enumerations go stale; anything they miss raises
+   `ScriptedSurfaceBreach` rather than reaching Anthropic.
+4. **Every row is asserted zero** — `cost_usd`, `judge_cost_usd`,
+   `total_cost_usd`, `llm_calls`, `judge_llm_calls`.
+
+`parse_pdf` is stubbed to `""` so the reader takes ADR 0004's
+abstract-only path: the mock corpus has no local full text, and a per-PR
+gate that fetches five PDFs from arxiv.org is neither free nor reliable.
+`quote_verbatim_rate` is therefore `null` with reason `no_quotes` on
+every record, which is the true answer and is published as such.
+
+`scripted_tier_check --lane research` adds one assertion the learning
+lane has no analogue for: **`scripted_llm_calls` must be positive while
+`llm_calls` is zero.** Nothing that never ran ever spends, so a campaign
+short-circuited to twenty empty records passes every cost check ever
+written. The pair separates "free" from "absent".
+
+### What the mock corpus does to the denominators
+
+`search.MOCK_PAPERS` is five papers, and the *same* five for every
+query: `rank_papers_by_relevance` short-circuits at
+`len(papers) <= top_k` and `max_papers` is 10, so no ranking model
+loads and no ordering varies. A clean campaign therefore carries:
+
+| Quantity | Per query | Per campaign |
+|---|---:|---:|
+| papers retrieved / analysed / cited | 5 / 5 / 5 | 100 / 100 / 100 |
+| `citations_checked` (one per identifier **per surface** — report body and citation list) | 10 | 200 |
+| `claims_decided` (one per identifier **identity**) | 5 | 100 |
+| quote claims | 0 | 0 |
+| scripted model responses (`scripted_llm_calls`) | 8 | 160 |
+
+Two of those numbers are the same measurement counted differently and
+both are published, because a reader must not have to infer one from the
+other: `citation_resolution_rate`'s denominator counts a cited
+identifier once per surface, and `claims_decided` counts it once per
+identity (the claim id digests the identifier, not the surface).
+
+Two consequences worth stating rather than leaving to be discovered.
+**The campaign is deterministic** — two runs produce byte-identical rows
+apart from timings and the provenance timestamp — so `--repeats` buys no
+precision here and exists only to check that determinism. And **the
+claim ids repeat across queries**, because a claim id digests the
+canonical identifier alone; the paired comparison therefore namespaces
+each claim by its query, or the campaign would collapse from 100 claims
+to 5.
+
+### The committed baseline, and how a stale one is caught
+
+`tests/fixtures/eval/research-scripted/baseline.jsonl` is the baseline a
+pull request is diffed against. Regenerate it with:
+
+```bash
+make research-scripted-baseline
+```
+
+which runs a fresh campaign, asserts it with `scripted_tier_check`
+*before* copying it into place — a campaign that errored has no business
+becoming a baseline — and writes the fixture. Run it whenever the
+campaign legitimately moves (a benchmark query edited, the scripted
+responses changed, a reviewed product change) and commit the result in
+the same change.
+
+A committed baseline is a claim about the world, and an unchecked one is
+worse than none: it goes on passing after the thing it describes has
+moved. Three mechanisms fire, in order:
+
+1. **The script versions itself.** `script_digest()` is a SHA-256 over
+   the scripted responders' own source, folded together with
+   `RESEARCH_DATASET_VERSION` into
+   `provenance.dataset_version` — e.g.
+   `research-benchmark@20:<digest>+script:<digest>`. Both halves are
+   *derived*, not declared, for the reason `dataset_fingerprint` already
+   gives: a hand-maintained version is a constant somebody forgets to
+   bump. It is deliberately conservative — a whitespace-only edit to a
+   responder bumps it — because rebaselining costs seconds and a
+   silently stale baseline costs a wrong verdict.
+2. **A unit test fails first.**
+   `tests/test_simulate_research.py::test_it_is_not_stale` compares the
+   committed rows' `dataset_version` against the one the checkout
+   computes and names the regeneration command in the failure.
+3. **The differ refuses second.** `dataset_version` is one of
+   `COMPARABILITY_FIELDS`, so a stale baseline meeting a current
+   campaign exits **3** — "not comparable; no verdict was reached" —
+   rather than reporting a reconfiguration as a regression.
+
+The same machinery keeps the scripted lane and the funded lane apart
+three times over: `tier` is `research-scripted` rather than `research`,
+`mock_mode` is `true` rather than `false`, and `rubric_versions` carries
+only the deterministic groundedness check rather than four rubrics. A
+canned report can never be diffed against a real one.
+
+### CI is deliberately not wired here
+
+WO-C1 lands the tier, the check's research lane, the differ's lane and
+the Makefile targets. The workflow step is a follow-up; see the PR for
+the step it recommends and what it costs in wall clock.
+
 ## The nightly workflow
 
 [`.github/workflows/eval-nightly.yml`](../.github/workflows/eval-nightly.yml)
@@ -1702,9 +1934,13 @@ metric-scoring pure logic (`tests/test_metrics_*.py`,
 `tests/test_learning_metrics.py` — LLM-as-judge callers are unit-tested
 against stubbed responses), the runner's isolation / resume / exit
 codes (`tests/test_eval_runner.py`), the simulator
-(`tests/test_simulate_learner.py`), both regression lanes
-(`tests/test_regression_diff.py`), the per-PR scripted-tier assertion
-(`tests/test_scripted_tier_check.py`), the fixture validator
+(`tests/test_simulate_learner.py`), the scripted research tier and its
+committed baseline (`tests/test_simulate_research.py`,
+`tests/test_simulate_research_campaign.py` — the second drives the real
+compiled graph as a campaign and is where the research lane's zero-spend
+proof lives), all three regression lanes and the per-claim paired
+comparison (`tests/test_regression_diff.py`), both per-PR scripted-tier
+assertions (`tests/test_scripted_tier_check.py`), the fixture validator
 (`tests/test_learning_fixtures.py`), the recorded fixtures' determinism
 and freshness (`tests/test_record_learning_fixtures.py`), and the README
 block (`tests/test_readme_update.py`).
@@ -1749,10 +1985,22 @@ block (`tests/test_readme_update.py`).
   today is documented in ADR 0007. The same follow-up unblocks ADR
   0074's `quote_verbatim_rate`, which reports `no_checkable_quotes` on
   every live run until a caller passes `full_texts`.
-- Wire `groundedness.paired_outcomes()` into the paired comparison.
-  `src/eval/stats.py`'s `pair_binary_outcomes` already decides how an
-  unmatched claim is treated; nothing hands it a groundedness result
-  yet.
+- ~~Wire `groundedness.paired_outcomes()` into the paired comparison~~ —
+  landed (WO-C1, ADR
+  [0075](decisions/0075-scripted-research-tier-and-paired-claims.md)).
+  Both research lanes publish `paired_outcomes` on every summary row and
+  `regression_diff.compare_claims` runs McNemar over them; see [An
+  unmatched claim is counted, not
+  scored](#an-unmatched-claim-is-counted-not-scored).
+- Wire the scripted research tier into `ci.yml` beside the learning
+  lane's step — the campaign, `scripted_tier_check --lane research`, and
+  the differ against the committed baseline. WO-C1 deliberately stopped
+  at the Makefile targets; the workflow file belongs to another work
+  order.
+- Give the four research agents a `use_mock_data` branch, the way
+  `tutor.py` and `assessment.py` have one, and delete
+  `simulate_research`'s scripted surface. It is the cleaner shape and
+  the tier would keep everything else.
 - Publish `citation_resolution_rate` in the README block instead of
   `citation_accuracy`, and drop the compensating zero-citation exclusion
   with it (`src/eval/readme_update.py`). See [The published README

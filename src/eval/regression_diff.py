@@ -40,12 +40,29 @@ split into separate fields, so the resource bands below now gate the
 product rather than the harness. Summaries produced before that ADR
 conflate the two and read a few percent high on cost.
 
-**Two lanes** (WO-W11). The research campaign
-(`src/eval/runner.py`) and the guided-read campaign
-(`src/eval/simulate_learner.py`) write different fields into different
+**Three lanes** (WO-W11, WO-C1). The research campaign
+(`src/eval/runner.py`), the guided-read campaign
+(`src/eval/simulate_learner.py`) and the scripted research campaign
+(`src/eval/simulate_research.py`) write different fields into different
 `summary.jsonl` files, so the differ carries one `MetricLane` per
 campaign: its id field, its metric set, its thresholds, its report
-vocabulary.
+vocabulary. The third lane also carries `deterministic=True`, which is
+not a convenience flag: a campaign that is a fixed function of the code
+under test may PROMOTE on an unchanged comparison rather than being told
+it was underpowered, and one adverse claim in it is a regression rather
+than a draw.
+
+**The paired path, on real data** (WO-C1). `src/eval/stats.py` has
+carried `mcnemar`, `pair_binary_outcomes` and `mcnemar_required_pairs`
+since ADR 0071, and `src/eval/groundedness.py` has carried
+`paired_outcomes` since ADR 0074, and until now nothing joined them:
+every comparison here was over aggregate *means*. `compare_claims` below
+pairs the two runs' **per-claim** groundedness verdicts on a
+content-derived id and runs McNemar on them. That is worth the wiring
+because it sees what a mean cannot — a claim that stopped being
+grounded moves `citation_resolution_rate` by `1 / denominator`, which on
+this repository's own scripted campaign is exactly the flat 0.10 epsilon
+the band requires a move to *exceed*.
 
 **Statistics, and a three-state decision** (ADR 0071, superseding ADR
 0044's bands). Four things changed:
@@ -119,9 +136,11 @@ from src.eval.stats import (
     BootstrapResult,
     Interval,
     McNemarResult,
+    PairedBinaryOutcomes,
     PairedSample,
     mcnemar,
     mcnemar_required_pairs,
+    pair_binary_outcomes,
     paired_bootstrap_delta,
     pass_hat_k,
     power_statement,
@@ -215,6 +234,21 @@ REPEAT_VALUES_KEY: Final[str] = "_repeat_values"
 REPEAT_COUNT_KEY: Final[str] = "_repeats"
 ERRORED_REPEATS_KEY: Final[str] = "_errored_repeats"
 PROVENANCE_BLOCKS_KEY: Final[str] = "_provenance_blocks"
+CLAIM_OUTCOMES_AGG_KEY: Final[str] = "_claim_outcomes"
+CLAIM_FLIPS_KEY: Final[str] = "_claim_flips"
+
+# Where a row carries its per-claim groundedness verdicts —
+# `{claim_id: grounded}`, exactly what
+# `src/eval/groundedness.paired_outcomes` returns. A row without the key
+# predates WO-C1 and simply contributes no claims, which is the correct
+# degradation: absent is not empty.
+CLAIM_OUTCOMES_KEY: Final[str] = "paired_outcomes"
+
+# Two-sided significance the per-claim McNemar test is read at on a
+# sampled lane. Not applied on a deterministic lane, where a p-value
+# assumes a sampling distribution that does not exist — see
+# `_claim_verdict`.
+CLAIM_ALPHA: Final[float] = 0.05
 
 # The effect the power statement is written about: a 5-point move
 # against an 80% baseline. Not a threshold anything is gated on — it is
@@ -267,6 +301,13 @@ METRIC_FIELDS: tuple[str, ...] = (
 RESEARCH_INFORMATIONAL_FIELDS: tuple[str, ...] = (
     "citation_accuracy",
     "critic_score",
+    # How many per-claim groundedness verdicts the run decided — the
+    # denominator `compare_claims` pairs over (WO-C1). Tabulated, never
+    # gated: on the funded lane retrieval is live, so a night that
+    # returned four papers instead of five moved this legitimately, and
+    # a zero-tolerance band on it would fire on arXiv rather than on the
+    # product. The scripted lane, which is deterministic, does gate it.
+    "claims_decided",
 )
 
 # Per-metric bands for the count / dollar metrics: (absolute_floor,
@@ -384,6 +425,17 @@ class MetricLane(NamedTuple):
             metric's is diagnostic, because twenty per-metric tests on
             twenty queries manufacture false alarms by arithmetic
             (`02-STANDARDS.md` §2.3).
+        deterministic: True when the campaign is a fixed function of the
+            code under test — no model sampling, no live retrieval, a
+            pinned seed. It changes two things and both are honesty
+            rather than convenience. A deterministic campaign that moved
+            nothing **may promote**: there is no sampling noise for the
+            comparison to be underpowered against, so telling a reader
+            "this comparison could not have found a regression" would be
+            false. And any adverse discordant claim is a regression at
+            once, because it cannot be a draw — which is also why the
+            p-values printed for such a lane are labelled as
+            non-inferential rather than read as evidence.
     """
 
     name: str
@@ -400,6 +452,7 @@ class MetricLane(NamedTuple):
     task_field: str = ""
     score_quanta: dict[str, float] = {}  # noqa: RUF012 — frozen by NamedTuple
     primary_metric: str = ""
+    deterministic: bool = False
 
     @property
     def tabulated_fields(self) -> tuple[str, ...]:
@@ -424,6 +477,7 @@ RESEARCH_LANE = MetricLane(
     directions=METRIC_DIRECTIONS,
     columns=(
         ("Cit.Res. Δ", "citation_resolution_rate"),
+        ("Claims Δ", "claims_decided"),
         ("Cit.Acc. Δ", "citation_accuracy"),
         ("Complete. Δ", "completeness"),
         ("Faithful. Δ", "faithfulness"),
@@ -611,10 +665,124 @@ LEARNING_LANE = MetricLane(
     ),
 )
 
+# The scripted research tier's fields, from
+# `simulate_research.summary_line`. It is the research lane's free
+# per-PR twin and its vocabulary is deliberately the research lane's
+# wherever a field means the same thing — but it is a separate lane
+# rather than a flag on `RESEARCH_LANE`, for two reasons that both
+# reduce to "these campaigns do not measure the same thing":
+#
+#   - The scripted tier runs **no judge**. `completeness`,
+#     `faithfulness` and `retrieval_recall` are three paid LLM-as-judge
+#     calls and this tier makes none, so listing them would put three
+#     permanently-null columns on every report — the defect ADR 0074
+#     named when it refused to publish `quote_verbatim_rate`.
+#   - Every band here is **zero tolerance**, which would be wrong on the
+#     funded lane and is the only honest setting on this one. A judged,
+#     live-retrieval campaign has run-to-run variance to absorb; this
+#     one is a fixed function of the code, so a metric that moved by any
+#     amount moved because the product did.
+SCRIPTED_RESEARCH_METRIC_FIELDS: tuple[str, ...] = (
+    "citation_resolution_rate",
+    # The count of per-claim outcomes the run decided — the denominator
+    # the paired comparison below is computed over. Gated because a
+    # shrinking denominator is the way a groundedness rate stays green
+    # while the signal drains out of it: a report that stops citing
+    # anything scores `None`, and a report that cites four papers
+    # instead of five still scores 1.0.
+    "claims_decided",
+    # WO-W08's idea, applied to the research pipeline: the count of
+    # structural expectations one run stopped meeting. The trajectory,
+    # the reader fan-out, the citation parser, the iteration count.
+    "expectation_failures",
+    "iterations",
+    "llm_calls",
+    "cost_usd",
+)
+
+SCRIPTED_RESEARCH_INFORMATIONAL_FIELDS: tuple[str, ...] = (
+    # ADR 0074 demoted this one on the funded lane; it is demoted here
+    # for the same reason and kept for the same reason.
+    "citation_accuracy",
+    # The denominator of `citation_resolution_rate`, which counts a
+    # cited identifier once per *surface* (report body, citation list)
+    # while `claims_decided` counts it once per identity. Both are true
+    # and they are different numbers; publishing both is what stops a
+    # reader inferring one from the other.
+    "citations_checked",
+    "unsupported_claims",
+    "papers",
+    "analyses",
+    "citations",
+    # What the funded lane would have paid for on the same trajectory,
+    # and — read the other way — proof the graph ran at all.
+    "scripted_llm_calls",
+    "judge_cost_usd",
+    "total_cost_usd",
+)
+
+#: Zero tolerance on every band. `(0.0, 0.0)` means a move of any size
+#: fires and a move of zero does not; see the lane's note above for why
+#: that is the honest setting for a deterministic campaign rather than a
+#: strict one.
+SCRIPTED_RESEARCH_THRESHOLDS: dict[str, tuple[float, float]] = {
+    "claims_decided": (0.0, 0.0),
+    "expectation_failures": (0.0, 0.0),
+    "iterations": (0.0, 0.0),
+    "llm_calls": (0.0, 0.0),
+    "cost_usd": (0.0, 0.0),
+}
+
+SCRIPTED_RESEARCH_DIRECTIONS: dict[str, str] = {
+    "citation_resolution_rate": "higher_better",
+    "citation_accuracy": "higher_better",
+    "claims_decided": "higher_better",
+    "citations_checked": "higher_better",
+    "papers": "higher_better",
+    "analyses": "higher_better",
+    "citations": "higher_better",
+    "expectation_failures": "lower_better",
+    "unsupported_claims": "lower_better",
+    "iterations": "lower_better",
+    "llm_calls": "lower_better",
+    "cost_usd": "lower_better",
+}
+
+SCRIPTED_RESEARCH_LANE = MetricLane(
+    name="research-scripted",
+    id_field="query_id",
+    unit_singular="query",
+    unit_plural="queries",
+    title="Scripted research regression diff",
+    metric_fields=SCRIPTED_RESEARCH_METRIC_FIELDS,
+    informational_fields=SCRIPTED_RESEARCH_INFORMATIONAL_FIELDS,
+    resource_thresholds=SCRIPTED_RESEARCH_THRESHOLDS,
+    directions=SCRIPTED_RESEARCH_DIRECTIONS,
+    columns=(
+        ("Cit.Res. Δ", "citation_resolution_rate"),
+        ("Claims Δ", "claims_decided"),
+        ("Unmet Δ", "expectation_failures"),
+        ("Papers Δ", "papers"),
+        ("Cites Δ", "citations"),
+        ("Iter Δ", "iterations"),
+        ("Calls Δ", "llm_calls"),
+        ("$ Δ", "cost_usd"),
+    ),
+    cost_reference=None,
+    task_field="query_id",
+    # Empty for the same reason `RESEARCH_LANE`'s is: the one metric
+    # that could claim a quantum is `citation_resolution_rate`, whose
+    # denominator the run chooses rather than the dataset declaring it.
+    score_quanta={},
+    primary_metric="citation_resolution_rate",
+    deterministic=True,
+)
+
 #: Selectable lanes, by `--lane` name.
 LANES: dict[str, MetricLane] = {
     RESEARCH_LANE.name: RESEARCH_LANE,
     LEARNING_LANE.name: LEARNING_LANE,
+    SCRIPTED_RESEARCH_LANE.name: SCRIPTED_RESEARCH_LANE,
 }
 
 
@@ -704,6 +872,63 @@ class Reliability(NamedTuple):
         return self.successes / self.tasks if self.tasks else 0.0
 
 
+class ClaimComparison(NamedTuple):
+    """The two runs' per-claim groundedness outcomes, paired.
+
+    The estimator this repository built `src/eval/stats.py` for and then
+    had no caller for: `groundedness.paired_outcomes` yields
+    `{claim_id: grounded}` with content-derived ids that are stable
+    across arms, `stats.pair_binary_outcomes` matches two of those into
+    McNemar pairs, and `stats.mcnemar` tests them. Everything between
+    those three was missing, and this is it.
+
+    **The unit is `<task_id>/<claim_id>`, not `claim_id`.** A claim id
+    digests the cited identifier and nothing else, so the same paper
+    cited under two different benchmark queries carries the same id —
+    and on the scripted tier, where the corpus is five fixed papers, an
+    un-namespaced campaign-wide union would collapse 100 claims into 5.
+    Qualifying by task also makes the pair the right thing: the same
+    query's assertion about the same paper, scored under two arms.
+
+    Attributes:
+        outcomes: Matched pairs and both unmatched id lists.
+        test: McNemar over the matched pairs, or `None` when nothing
+            matched.
+        baseline_grounded / baseline_total: The baseline arm's grounded
+            claims and its denominator, over the matched set.
+        candidate_grounded / candidate_total: The same for the candidate.
+        baseline_interval / candidate_interval: Wilson intervals for
+            those two rates.
+        flips: Claims dropped because a task's repeats disagreed about
+            them. Reported rather than resolved — a claim two runs of
+            the same arm scored differently is not evidence about the
+            other arm.
+        deterministic: Copied off the lane, because it decides how the
+            p-value may be read.
+    """
+
+    outcomes: PairedBinaryOutcomes
+    test: McNemarResult | None
+    baseline_grounded: int
+    baseline_total: int
+    candidate_grounded: int
+    candidate_total: int
+    baseline_interval: Interval
+    candidate_interval: Interval
+    flips: int
+    deterministic: bool
+
+    @property
+    def adverse(self) -> int:
+        """Claims the baseline grounded and the candidate did not."""
+        return 0 if self.test is None else self.test.baseline_only
+
+    @property
+    def recovered(self) -> int:
+        """Claims the candidate grounded and the baseline did not."""
+        return 0 if self.test is None else self.test.candidate_only
+
+
 class Decision(NamedTuple):
     """The gate's three-state verdict.
 
@@ -739,6 +964,12 @@ class RegressionReport(TypedDict):
     decision: Decision
     paired_tasks: int
     repeats: int
+    # Read with `.get()` everywhere below: a caller that assembled a
+    # report by hand before WO-C1 added this key still formats and still
+    # decides, and a campaign whose rows carry no `paired_outcomes` puts
+    # `None` here rather than an empty comparison — absent is not
+    # "compared and found nothing".
+    claims: ClaimComparison | None
 
 
 # ---------------------------------------------------------------------------
@@ -807,6 +1038,55 @@ def _group_key(row: Mapping[str, Any], lane: MetricLane) -> str:
     return str(row[lane.id_field])
 
 
+def _row_claims(row: Mapping[str, Any]) -> dict[str, bool]:
+    """One row's `{claim_id: grounded}` map, defensively.
+
+    Anything that is not a `{str: bool}` entry is dropped rather than
+    coerced: a claim whose verdict arrives as a string or a number is a
+    row this differ cannot read, and guessing at it would put an
+    invented outcome into a McNemar cell.
+    """
+    raw = row.get(CLAIM_OUTCOMES_KEY)
+    if not isinstance(raw, dict):
+        return {}
+    return {
+        key: value
+        for key, value in raw.items()
+        if isinstance(key, str) and key and isinstance(value, bool)
+    }
+
+
+def _merge_claim_outcomes(
+    group: Sequence[Mapping[str, Any]],
+) -> tuple[dict[str, bool], int]:
+    """Fold one task's repeats into a single claim map, by unanimity.
+
+    A claim is kept only when every repeat that decided it agreed. A
+    claim whose repeats disagreed is **dropped and counted**, on the
+    same rule `groundedness.paired_outcomes` applies to an undecidable
+    claim and `stats.pair_binary_outcomes` applies to an unmatched one:
+    a verdict the arm could not reproduce against itself is not evidence
+    about the other arm, and a majority vote would manufacture one.
+
+    On a deterministic campaign the flip count is expected to be zero,
+    and a non-zero one is itself a finding — which is the only thing
+    repeats buy in a tier whose model is a script.
+
+    Returns:
+        `(claims, flips)`.
+    """
+    seen: dict[str, set[bool]] = {}
+    for row in group:
+        for claim_id, grounded in _row_claims(row).items():
+            seen.setdefault(claim_id, set()).add(grounded)
+    claims = {
+        claim_id: next(iter(values))
+        for claim_id, values in seen.items()
+        if len(values) == 1
+    }
+    return claims, len(seen) - len(claims)
+
+
 def aggregate_repeats(
     rows: Sequence[Mapping[str, Any]], *, lane: MetricLane = RESEARCH_LANE
 ) -> dict[str, dict[str, Any]]:
@@ -862,6 +1142,9 @@ def aggregate_repeats(
         merged[REPEAT_VALUES_KEY] = values
         merged[REPEAT_COUNT_KEY] = len(group)
         merged[ERRORED_REPEATS_KEY] = len(errors)
+        claims, flips = _merge_claim_outcomes(group)
+        merged[CLAIM_OUTCOMES_AGG_KEY] = claims
+        merged[CLAIM_FLIPS_KEY] = flips
         # Every repeat's block, not the first one's: `--resume` can
         # re-enter a campaign under a different judge model, and a task
         # whose three repeats were graded by two instruments must not
@@ -1180,6 +1463,7 @@ def diff_summaries(
             (_repeat_count(row) for row in current.values()),
             default=1,
         ),
+        claims=compare_claims(baseline, current, lane=lane),
     )
     report["decision"] = decide(report)
     return report
@@ -1509,6 +1793,138 @@ def compute_statistics(
     return result
 
 
+def claim_outcomes(
+    rows: Mapping[str, Mapping[str, Any]],
+) -> tuple[dict[str, bool], int]:
+    """A campaign's per-claim outcomes, keyed `<task_id>/<claim_id>`.
+
+    The namespacing is the load-bearing part and `ClaimComparison`'s
+    docstring says why: a `claim_id` digests the cited identifier alone,
+    so without the task prefix a campaign over a fixed corpus collapses
+    to as many claims as the corpus has papers.
+
+    Reads the aggregated map `aggregate_repeats` stores when it has one,
+    and falls back to the row's own `paired_outcomes` so a mapping a
+    caller assembled by hand — every test's, and any code holding rows
+    it built itself — is still compared.
+
+    Args:
+        rows: Aggregated rows for one campaign.
+
+    Returns:
+        `(outcomes, flips)` where `flips` totals the claims dropped
+        because a task's repeats disagreed.
+    """
+    outcomes: dict[str, bool] = {}
+    flips = 0
+    for task_id, row in rows.items():
+        stored = row.get(CLAIM_OUTCOMES_AGG_KEY)
+        claims = (
+            {k: v for k, v in stored.items() if isinstance(k, str) and isinstance(v, bool)}
+            if isinstance(stored, dict)
+            else _row_claims(row)
+        )
+        count = row.get(CLAIM_FLIPS_KEY)
+        flips += count if isinstance(count, int) else 0
+        for claim_id, grounded in claims.items():
+            outcomes[f"{task_id}/{claim_id}"] = grounded
+    return outcomes, flips
+
+
+def compare_claims(
+    baseline: Mapping[str, Mapping[str, Any]],
+    current: Mapping[str, Mapping[str, Any]],
+    *,
+    lane: MetricLane = RESEARCH_LANE,
+) -> ClaimComparison | None:
+    """Pair the two runs' per-claim outcomes and test them.
+
+    `None` when neither run carries any claim, which is what a campaign
+    written before WO-C1 looks like — and is a different statement from
+    "the two runs agreed on every claim", which comes back as a
+    comparison whose discordant cells are empty.
+
+    Args:
+        baseline: Aggregated baseline rows.
+        current: Aggregated current rows.
+        lane: Which campaign wrote them; read for `deterministic` only.
+
+    Returns:
+        The comparison, or `None`.
+    """
+    baseline_claims, baseline_flips = claim_outcomes(baseline)
+    current_claims, current_flips = claim_outcomes(current)
+    if not baseline_claims and not current_claims:
+        return None
+
+    paired = pair_binary_outcomes(baseline_claims, current_claims)
+    baseline_grounded = sum(1 for base, _ in paired.pairs if base)
+    candidate_grounded = sum(1 for _, cand in paired.pairs if cand)
+    matched = paired.matched
+    return ClaimComparison(
+        outcomes=paired,
+        test=mcnemar(paired.pairs) if paired.pairs else None,
+        baseline_grounded=baseline_grounded,
+        baseline_total=matched,
+        candidate_grounded=candidate_grounded,
+        candidate_total=matched,
+        baseline_interval=wilson_interval(baseline_grounded, matched)
+        if matched
+        else Interval(0.0, 1.0),
+        candidate_interval=wilson_interval(candidate_grounded, matched)
+        if matched
+        else Interval(0.0, 1.0),
+        flips=baseline_flips + current_flips,
+        deterministic=lane.deterministic,
+    )
+
+
+def _claim_verdict(claims: ClaimComparison | None) -> str | None:
+    """The reason a per-claim comparison forces a ROLLBACK, or `None`.
+
+    Two rules, and the split is the whole reason `MetricLane` carries a
+    `deterministic` flag.
+
+    On a **deterministic** lane a single adverse discordant claim is a
+    regression outright. There is no sampling distribution for a
+    p-value to be computed against: the campaign is a fixed function of
+    the code, so a claim that was grounded and is no longer did not stop
+    being grounded by chance. Requiring significance there would mean
+    waiting for five more claims to break before saying the first one
+    did.
+
+    On a **sampled** lane — the funded research campaign, where the
+    model is sampled and retrieval is live — the same single flip is
+    ordinary noise, so the rule is the usual one: significant at
+    `CLAIM_ALPHA`, and in the adverse direction.
+
+    The asymmetry with `recovered` is deliberate in both cases: this
+    function fires on losses only. A candidate that grounds claims the
+    baseline did not is an improvement, and it is reported as one.
+    """
+    if claims is None or claims.test is None:
+        return None
+    test = claims.test
+    if test.baseline_only <= test.candidate_only:
+        return None
+    if claims.deterministic:
+        return (
+            f"{test.baseline_only} claim(s) the baseline grounded are no "
+            f"longer grounded ({test.candidate_only} moved the other way, "
+            f"{test.concordant} unchanged). This lane is deterministic — the "
+            "campaign is a fixed function of the code under test — so a "
+            "claim that changed verdict changed because the product did."
+        )
+    if test.p_value < CLAIM_ALPHA:
+        return (
+            f"per-claim groundedness moved adversely: {test.baseline_only} "
+            f"lost against {test.candidate_only} gained over "
+            f"{test.pairs} paired claim(s), McNemar p={test.p_value:.4f} "
+            f"({test.method}), below alpha={CLAIM_ALPHA}."
+        )
+    return None
+
+
 def _repeat_count(row: Mapping[str, Any]) -> int:
     """How many records were folded into this task's row."""
     count = row.get(REPEAT_COUNT_KEY)
@@ -1658,6 +2074,19 @@ def decide(report: RegressionReport) -> Decision:
         ]
         return Decision(verdict="ROLLBACK", reasons=tuple(reasons))
 
+    # The per-claim comparison, checked before the aggregate statistics
+    # and after the per-metric bands. It sits here because it catches
+    # what the bands cannot: a claim flipping moves
+    # `citation_resolution_rate` by `1 / denominator`, which on this
+    # repository's own scripted campaign is exactly 0.10 — the flat
+    # epsilon, which the band requires a move to *exceed*. Pairing at
+    # the claim rather than the query is what makes that visible, and it
+    # is the sample-size argument `stats.py` was written around, made on
+    # real data rather than in a docstring.
+    claim_reason = _claim_verdict(report.get("claims"))
+    if claim_reason:
+        return Decision(verdict="ROLLBACK", reasons=(claim_reason,))
+
     paired = report["paired_tasks"]
     if paired == 0:
         return Decision(
@@ -1708,6 +2137,28 @@ def decide(report: RegressionReport) -> Decision:
     required = mcnemar_required_pairs(
         delta=GATE_EFFECT_SIZE, discordance=GATE_EFFECT_SIZE, power=0.8
     )
+    if lane.deterministic:
+        # The sample-size rule below is about sampling noise, and this
+        # lane has none: no model is sampled, retrieval is a fixed
+        # corpus, the seed is pinned. Telling a reader that 20 queries
+        # "could not have found a regression" would be false here — the
+        # campaign is a fixed function of the code, so an unchanged
+        # campaign is exact evidence that the pipeline it exercises did
+        # not change. What it is *not* evidence about is report quality,
+        # because the report's words are the harness's; that limit is
+        # the tier's, not the sample's, and it belongs in the sentence.
+        return Decision(
+            verdict="PROMOTE",
+            reasons=(
+                f"No metric cleared its band and no claim changed verdict "
+                f"across {paired} paired {lane.unit_plural}. This lane is "
+                "deterministic, so that is exact rather than underpowered: "
+                "the campaign is a fixed function of the code under test. It "
+                "is evidence about the pipeline and the identifiers it "
+                "cites — not about report quality, which no free tier can "
+                "measure.",
+            ),
+        )
     if paired < required:
         return Decision(
             verdict="HOLD",
@@ -1939,7 +2390,136 @@ def _decision_section(report: RegressionReport) -> list[str]:
     ]
     lines += _comparability_section(report)
     lines += _statistics_section(report)
+    lines += _claims_section(report)
     lines += _reliability_section(report)
+    return lines
+
+
+def _claims_section(report: RegressionReport) -> list[str]:
+    """The per-claim paired comparison — the McNemar path, on real data.
+
+    Rendered whenever the two runs carry per-claim outcomes at all, on
+    any lane. It is the section that answers "did this change ground
+    fewer claims", which no aggregate rate can: a rate holds steady
+    while its denominator drains, and a rate moves for a report that
+    simply cited less.
+    """
+    claims = report.get("claims")
+    if claims is None:
+        return []
+    lane = report["lane"]
+    outcomes = claims.outcomes
+    matched = outcomes.matched
+    lines = [
+        "",
+        "### Per-claim groundedness (paired)",
+        "",
+        "Each item is one `<"
+        f"{lane.unit_singular}>/<claim>` — a deterministic, per-claim "
+        "verdict from `src/eval/groundedness.py`, paired across the two "
+        "runs on a content-derived id that is stable across arms. Claims "
+        "are namespaced by "
+        f"{lane.unit_singular} because the id digests the cited identifier "
+        "alone, so the same paper cited under two "
+        f"{lane.unit_plural} would otherwise be one claim.",
+        "",
+        "| | Grounded | Rate | 95% Wilson |",
+        "|---|---:|---:|---:|",
+    ]
+    for label, grounded, total, interval in (
+        (
+            "baseline",
+            claims.baseline_grounded,
+            claims.baseline_total,
+            claims.baseline_interval,
+        ),
+        (
+            "current",
+            claims.candidate_grounded,
+            claims.candidate_total,
+            claims.candidate_interval,
+        ),
+    ):
+        rate = f"{grounded / total:.3f}" if total else "-"
+        lines.append(
+            f"| {label} | {grounded} / {total} | {rate} "
+            f"| [{interval.low:.3f}, {interval.high:.3f}] |"
+        )
+
+    lines += [
+        "",
+        f"- **Matched**: {matched} claim(s) both runs decided — the test's "
+        "denominator.",
+        f"- **Unmatched**: {len(outcomes.unmatched_baseline)} only the "
+        f"baseline decided, {len(outcomes.unmatched_candidate)} only the "
+        "current run did. Counted and excluded, never scored: a candidate "
+        "that stops asserting something has not failed to support it, and a "
+        "claim only one arm made is not evidence about the other.",
+    ]
+    if claims.flips:
+        lines.append(
+            f"- **Irreproducible**: {claims.flips} claim(s) dropped because "
+            "one arm's own repeats disagreed about them."
+        )
+
+    if claims.test is None:
+        lines += [
+            "",
+            "No claim appears in both runs, so no test was computed. The "
+            "usual cause is a first run with no baseline, or two campaigns "
+            f"that shared no {lane.unit_singular}.",
+        ]
+        return lines
+
+    test = claims.test
+    lines += [
+        "",
+        f"**McNemar**: b={test.baseline_only} lost, c={test.candidate_only} "
+        f"gained, {test.concordant} unchanged; "
+        f"chi2={test.statistic:.3f}, p={test.p_value:.4f} ({test.method}).",
+    ]
+    if claims.deterministic:
+        lines.append(
+            "**Read the p-value as a description, not as inference.** This "
+            "lane is deterministic, so the sampling distribution McNemar "
+            "assumes does not exist here: a discordant claim did not arise "
+            "by chance, and the gate treats a single adverse one as a "
+            "regression rather than waiting for significance. The counts to "
+            "the left of it are the finding."
+        )
+    else:
+        lines.append(
+            f"Read at alpha={CLAIM_ALPHA}: a significant adverse move is a "
+            "ROLLBACK, a significant favourable one is an improvement, and "
+            "anything else is undecided at this sample size."
+        )
+
+    needed = mcnemar_required_pairs(
+        delta=GATE_EFFECT_SIZE, discordance=GATE_EFFECT_SIZE, power=0.5
+    )
+    powered = mcnemar_required_pairs(
+        delta=GATE_EFFECT_SIZE, discordance=GATE_EFFECT_SIZE, power=0.8
+    )
+    lines += [
+        "",
+        f"**What {matched} pairs can carry.** Detecting a "
+        f"{GATE_EFFECT_SIZE:.0%} move in the grounded rate needs about "
+        f"**{needed}** paired claims to reach significance at all and "
+        f"**{powered}** at 80% power (`stats.mcnemar_required_pairs`). This "
+        f"comparison carries **{matched}**"
+        + (
+            ", which clears the first bar and not the second."
+            if needed <= matched < powered
+            else (
+                ", which clears both."
+                if matched >= powered
+                else ", which clears neither."
+            )
+        ),
+    ]
+    caveat = small_sample_caveat(matched)
+    if caveat and not claims.deterministic:
+        lines += ["", caveat]
     return lines
 
 
@@ -2046,6 +2626,23 @@ def _statistics_section(report: RegressionReport) -> list[str]:
             paired, delta=GATE_EFFECT_SIZE, baseline_rate=GATE_BASELINE_RATE
         ),
     ]
+    if lane.deterministic:
+        # Without this the report contradicts itself: the paragraph
+        # above ends "cannot separate a move that size from noise" and
+        # the decision below promotes. Both are right, and the reason
+        # they are is worth a sentence rather than a reader's afternoon.
+        lines += [
+            "",
+            "**That paragraph is about a sampled campaign, and this lane is "
+            "not one.** Every number here is a fixed function of the code "
+            "under test — no model is sampled, retrieval is a fixed corpus, "
+            "the seed is pinned — so there is no noise for the sample size "
+            "to be inadequate against, and the figures above describe what "
+            "the *funded* lane would need rather than what this one lacks. "
+            "What this lane genuinely cannot measure is report quality: its "
+            "report text is the harness's own.",
+        ]
+        return lines
     caveat = small_sample_caveat(paired)
     if caveat:
         lines += ["", caveat]
@@ -2125,7 +2722,10 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
             "Which campaign wrote these summaries. 'research' (default) "
             "reads src/eval/runner.py's fields, keyed by query_id; "
             "'learning' reads src/eval/simulate_learner.py's, keyed by "
-            "record_id."
+            "record_id; 'research-scripted' reads "
+            "src/eval/simulate_research.py's, which carry no judged metric "
+            "and are gated at zero tolerance because that campaign is "
+            "deterministic."
         ),
     )
     parser.add_argument(

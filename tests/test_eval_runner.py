@@ -33,6 +33,7 @@ from src.eval.runner import (
     EvalInterrupted,
     _benchmark_order,
     _check_output_dir,
+    _claim_outcomes,
     _compute_metrics,
     _cost_delta,
     _exit_code,
@@ -313,8 +314,32 @@ class TestSummaryLine:
             "total_cost_usd": 0.05,
             "loop_iterations": None,
             "stop_reason": None,
+            # WO-C1: the per-claim outcomes `regression_diff` pairs on.
+            # `None` here rather than `{}` because this record carries no
+            # `groundedness` block at all — "not computed" and "computed
+            # and empty" are different facts about a run, and a row that
+            # collapsed them would put an empty McNemar arm beside a
+            # populated one.
+            "paired_outcomes": None,
+            "claims_decided": None,
             "provenance": {"judge_model": "judge-x"},
         }
+
+    def test_the_claim_outcomes_ride_on_the_row_when_the_record_carries_them(
+        self,
+    ) -> None:
+        """A record with a groundedness block publishes it and its count."""
+        line = _summary_line(
+            {
+                "query_id": "q1",
+                "groundedness": {"citation:aaaa": True, "citation:bbbb": False},
+            }
+        )
+        assert line["paired_outcomes"] == {
+            "citation:aaaa": True,
+            "citation:bbbb": False,
+        }
+        assert line["claims_decided"] == 2
 
     def test_cost_usd_excludes_judge_spend(self) -> None:
         # Mutation check for ADR 0050's accounting split: before it,
@@ -1655,3 +1680,49 @@ class TestRepeats:
 def main_with(argv: list[str], output_dir: Path) -> int:
     """`main()` with `--output-dir` appended — a readability shim."""
     return runner_module.main([*argv, "--output-dir", str(output_dir)])
+
+
+class TestClaimOutcomes:
+    """`runner._claim_outcomes` — WO-C1's addition to the funded lane.
+
+    The deterministic groundedness check is run a second time here
+    rather than read off `_compute_metrics`, because that path projects
+    the result down to a rate and drops the claim list. The second call
+    costs microseconds, makes no network or model call, and leaves every
+    published *score* byte-identical — which matters, since changing one
+    would rebaseline every campaign ever run.
+    """
+
+    def test_it_projects_the_decided_claims(self) -> None:
+        state: Any = {
+            "draft_report": "A briefing citing arXiv:2311.09000.",
+            "papers": [
+                {
+                    "id": "http://arxiv.org/abs/2311.09000",
+                    "title": "A Survey",
+                    "authors": ["Ziwei Ji"],
+                    "abstract": "x",
+                    "url": "http://arxiv.org/abs/2311.09000",
+                    "pdf_url": "",
+                }
+            ],
+            "citations": [],
+        }
+        outcomes = _claim_outcomes(state)
+        assert outcomes == {
+            claim_id: True for claim_id in (outcomes or {})
+        }
+        assert len(outcomes or {}) == 1
+
+    def test_a_scorer_failure_reports_none_rather_than_an_empty_map(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """"Not computed" and "computed and empty" are different facts,
+        and a paired comparison must not read the first as the second."""
+        import src.eval.runner as runner_module
+
+        def _boom(*_a: Any, **_k: Any) -> Any:
+            raise ValueError("scorer broke")
+
+        monkeypatch.setattr(runner_module, "measure_groundedness", _boom)
+        assert _claim_outcomes({}) is None  # type: ignore[arg-type]
