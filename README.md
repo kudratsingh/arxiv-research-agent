@@ -226,11 +226,13 @@ Waiting for your review badge, the line saying the run is paused and not
 spending, and the Sub-questions and arXiv queries
 columns](docs/images/workbench-plan-review.png)
 
-The plan editor is taller than the row it lives in — that row is a fixed
-`14rem` box, deliberately, so the spine's own reflow cannot shift the
-briefing below it (`web/components/features/workspace.css` records the
-0.038 CLS that rule removes). The picture above is therefore the top of
-a panel you scroll, not the whole of it.
+The row the editor lives in is a fixed `14rem` box **while a run is
+live** — deliberately, so arriving events cannot shift the briefing below
+it (`web/components/features/workspace.css` records the 0.038 CLS that
+rule removes). At the review pause nothing is arriving, so that bound
+bought no stability and only hid the control that resumes the run: the
+row is uncapped there and the shell becomes a document that scrolls. The
+picture above is therefore the whole editor, not the top of a panel.
 
 **Read the briefing.** The report reader renders the markdown with a
 section rail for navigation and a metrics strip carrying the run's
