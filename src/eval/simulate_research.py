@@ -77,7 +77,11 @@ alone would be a hope:
      itself, so any path this module did not anticipate — a new node, a
      judge, a supervisor branch — raises `ScriptedSurfaceBreach` instead
      of reaching Anthropic. A model call cannot happen; it is not that
-     one is unlikely.
+     one is unlikely. `src.llm._get_client` and `anthropic.Anthropic`
+     are on the same tripwire (`_spend_guard`), because the surface now
+     also encloses `EpisodeHooks` code this module did not write, and
+     the first thing code that means to spend does is build its own
+     client rather than go through `call_llm`.
   4. Every row carries `cost_usd`, `judge_cost_usd`, `total_cost_usd`,
      `llm_calls` and `judge_llm_calls`, and
      `src/eval/scripted_tier_check.py --lane research` asserts every one
@@ -105,6 +109,18 @@ claim by its query (`<query_id>/<claim_id>`) — see
 anyway: the same query's assertion about the same paper, scored twice.
 Un-namespaced the campaign would collapse to five distinct claims.
 
+**One extension point, `EpisodeHooks`, default `None`.** Other work
+needs to watch this campaign happen — the research shadow is the first —
+and the alternative to an agreed seam is a second author editing the
+driver, which is how a harness ends up with two sets of hooks that fire
+in almost the same place. `run_query(..., hooks=...)` is that seam and
+the whole of it: an observer sees each episode open, each chunk off the
+graph's own stream, and the finished record, on which it may attach a
+`contracts` block and nothing else. It runs inside the spend guard, so
+it is bound by layer 3 above exactly as a node is. `hooks=None` — the
+CLI's setting — installs nothing and calls nothing. See "The episode
+seam" below, and `docs/eval.md` for who owns which side of it.
+
 Usage:
     USE_MOCK_DATA=true ANTHROPIC_API_KEY=local-preview-disabled \\
         python -m src.eval.simulate_research
@@ -130,10 +146,10 @@ import sys
 import time
 import traceback
 import uuid
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Final, NamedTuple, cast
+from typing import Any, Final, NamedTuple, Protocol, cast
 
 from dotenv import load_dotenv
 
@@ -242,6 +258,19 @@ class ScriptedSurfaceBreach(RuntimeError):
     travels as an ordinary exception: `run_query` captures it on the
     record like any other node failure, the campaign keeps going, and
     the row it lands on names the node that tried to spend money.
+    """
+
+
+class EpisodeHookBreach(RuntimeError):
+    """An `EpisodeHooks` implementation edited a record it may only read.
+
+    `after_episode` is handed the campaign's own record so it can attach
+    a `contracts` block. Everything else on that record is the harness's
+    statement about the run — the trajectory, the costs, the provenance,
+    the `error` field the gate reads — and a hook that rewrites any of
+    it is rewriting the evidence. Raised by `_after_episode` *after* the
+    record has been restored to what the harness wrote, so the row that
+    reaches disk is the harness's own and carries this as its `error`.
     """
 
 
@@ -538,6 +567,64 @@ def _tripwire(*_args: Any, **_kwargs: Any) -> Any:
     )
 
 
+def _client_tripwire(*_args: Any, **_kwargs: Any) -> Any:
+    """Stand in for provider-client construction and refuse to be called.
+
+    `_tripwire` covers the *call*; this covers the *client*, and they are
+    not the same hole. `src.llm.call_llm` is the only path a graph node
+    has, so patching it was enough while the only code inside the surface
+    was the harness's own. `EpisodeHooks` changed that: a hook is code
+    this module did not write, and the first thing code that wants to
+    spend money does is build its own client — `anthropic.Anthropic(...)`
+    straight from the SDK, or `src.llm._get_client()` to reuse the
+    singleton — neither of which goes anywhere near `call_llm`.
+
+    Both names are therefore patched, and both are needed: the SDK
+    constructor covers a hook that imports `anthropic` itself, and
+    `_get_client` covers the case where `src.llm._client` is already
+    built and the constructor is never reached.
+
+    Refusing construction rather than the request is the stronger line
+    to hold. A client with a working key is one `.messages.create` away
+    from a charge, and that call is inside the SDK where no patch of
+    ours is watching.
+    """
+    raise ScriptedSurfaceBreach(
+        "the scripted research tier tried to build a provider client; the "
+        "tier advertises zero spend and constructs no client. Hook code "
+        "runs inside this surface and may observe the campaign, not call "
+        "a model."
+    )
+
+
+@contextlib.contextmanager
+def _spend_guard() -> Iterator[None]:
+    """The zero-spend half of the surface, on its own.
+
+    Split out of `scripted_surface` so it can be wrapped around the
+    `EpisodeHooks` calls that happen outside the graph run —
+    `before_episode` runs before the graph is built and `after_episode`
+    after the state is final, and a guarantee that lapses between
+    episodes is not structural. Nothing is scripted here: a hook has no
+    business receiving a canned planner response, only a locked till.
+    """
+    import anthropic
+
+    import src.llm as llm_module
+
+    guards: tuple[tuple[Any, str, Any], ...] = (
+        (llm_module, "call_llm", _tripwire),
+        (llm_module, "_get_client", _client_tripwire),
+        (anthropic, "Anthropic", _client_tripwire),
+    )
+    with contextlib.ExitStack() as stack:
+        for module, name, replacement in guards:
+            original = getattr(module, name)
+            setattr(module, name, replacement)
+            stack.callback(setattr, module, name, original)
+        yield
+
+
 @contextlib.contextmanager
 def scripted_surface(query: BenchmarkQuery) -> Iterator[ScriptedSurface]:
     """Install the script for one query, and take it down again.
@@ -552,7 +639,6 @@ def scripted_surface(query: BenchmarkQuery) -> Iterator[ScriptedSurface]:
     import src.agents.planner as planner_module
     import src.agents.reader as reader_module
     import src.agents.synthesizer as synthesizer_module
-    import src.llm as llm_module
 
     surface = ScriptedSurface(query)
     patches: tuple[tuple[Any, str, Any], ...] = (
@@ -565,9 +651,9 @@ def scripted_surface(query: BenchmarkQuery) -> Iterator[ScriptedSurface]:
         # from arxiv.org; `tests/e2e/conftest.py` stubs the same call
         # for the same reason.
         (reader_module, "parse_pdf", lambda _url: ""),
-        (llm_module, "call_llm", _tripwire),
     )
     with contextlib.ExitStack() as stack:
+        stack.enter_context(_spend_guard())
         for module, name, replacement in patches:
             original = getattr(module, name)
             setattr(module, name, replacement)
@@ -697,8 +783,179 @@ def _serialize_state(state: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in state.items() if k != "messages"}
 
 
+# ---------------------------------------------------------------------------
+# The episode seam
+#
+# One extension point, defaulting to nothing. It exists so that a second
+# author who needs to observe this campaign — WO-W05's research shadow is
+# the first — does not have to edit the driver to do it. The alternative
+# is two authors editing `run_query` and `drive_query` for two different
+# reasons, which is how a harness acquires a second set of hooks that
+# fire in a slightly different place from the first.
+#
+# The bargain, stated once so neither side has to infer it:
+#
+#   - This module owns the file. A hooks implementation lives in the
+#     consumer's own module and this one never imports it; `EpisodeHooks`
+#     is a `Protocol`, so there is no base class to inherit and no import
+#     edge in either direction.
+#   - A hook observes. `after_episode` may attach `record["contracts"]`
+#     and may change nothing else — enforced below, not requested in a
+#     comment.
+#   - A hook cannot spend. It runs inside `_spend_guard`, so a model call
+#     or a provider client raises `ScriptedSurfaceBreach` and the episode
+#     fails rather than the tier quietly stopping being free.
+#   - `hooks=None` is the whole of today. No guard installed, no snapshot
+#     taken, no call made — the default path does not execute one line of
+#     this section.
+#
+# `docs/eval.md` says the same thing in prose, and says who owns which
+# side of it.
+# ---------------------------------------------------------------------------
+
+
+class EpisodeHooks(Protocol):
+    """What `run_query` will call, if it is given something to call.
+
+    Structural, not nominal: an implementation satisfies this by having
+    the three methods, and mypy checks that at the call site rather than
+    at an inheritance the consumer would otherwise owe us.
+
+    All three are optional in the weak sense that a no-op body is a
+    legitimate implementation, and in no other sense — a hooks object
+    missing one of them fails `--strict` at the point it is passed in,
+    which is where the author can still do something about it.
+    """
+
+    def before_episode(self, query: BenchmarkQuery, repeat: int) -> Any:
+        """Open an episode. Whatever this returns is the episode's `ctx`.
+
+        Called once per record, before the graph is built, and handed
+        back verbatim to the other two. The harness never inspects it —
+        it is the hook's own scratch space, and `None` is a fine value
+        for an implementation that needs none.
+        """
+        ...
+
+    def on_stream_event(self, ctx: Any, mode: str, payload: Mapping[str, Any]) -> None:
+        """Observe one chunk off the graph's own stream.
+
+        `mode` is LangGraph's stream mode — `"updates"` (a mapping of
+        node name to the update it produced) or `"values"` (the whole
+        state after that step). The payload is the driver's, live and
+        unshared: mutating it changes what the graph and the scripted
+        synthesizer see next. Don't.
+        """
+        ...
+
+    def after_episode(
+        self, ctx: Any, record: dict[str, Any], final_state: Mapping[str, Any]
+    ) -> None:
+        """Close an episode, with the finished record in hand.
+
+        The one place a hook may write. `record["contracts"]` is the one
+        key it may write to, it must be a mapping, and the rest of the
+        record is read-only — see `_after_episode` for what "read-only"
+        is and is not able to mean here.
+        """
+        ...
+
+
+#: The only key `after_episode` may add to a record. Named rather than
+#: inlined because it is the seam's entire write surface, and a reader
+#: asking "what can a hook change?" should find one answer in one place.
+HOOK_WRITABLE_KEY: Final[str] = "contracts"
+
+
+def _before_episode(
+    hooks: EpisodeHooks | None, query: BenchmarkQuery, repeat: int
+) -> Any:
+    """Open the episode on the hook, under the spend guard. `None` if no hook."""
+    if hooks is None:
+        return None
+    with _spend_guard():
+        return hooks.before_episode(query, repeat)
+
+
+def _after_episode(
+    hooks: EpisodeHooks | None,
+    ctx: Any,
+    record: dict[str, Any],
+    final_state: Mapping[str, Any],
+) -> None:
+    """Close the episode on the hook, and hold it to `contracts` only.
+
+    **How the restriction is enforced, and what that buys.** A shallow
+    copy of the record is taken before the call and compared after, key
+    by key, by *identity*. That catches, exactly:
+
+      - any key added other than `contracts`;
+      - any key removed, `contracts` included;
+      - any key rebound — `record["error"] = None`, `record["costs"] =
+        {...}` — even to a value that compares equal to the old one,
+        which is why identity rather than `==`.
+
+    **What it does not catch**, stated because a guarantee whose edges
+    are unwritten gets read as covering everything: a mutation *inside*
+    a value the record already holds. `record["costs"]["call_count"] =
+    0`, `record["trajectory"].append("critic")` and
+    `record["outcomes"]["expectation_failures"].clear()` all leave the
+    top-level keys bound to the very same objects, so the comparison
+    sees nothing and the restore below cannot undo them either. Closing
+    that would mean deep-copying every record — the serialized graph
+    state included — around a call that is a no-op in the default
+    configuration, to defend against a hook that is in-tree, reviewed,
+    and could equally well have edited this file.
+
+    So the honest summary is: this stops a hook from *rewriting the
+    record*, and it does not stop one determined to *corrupt* it. The
+    guarantee that does not depend on the hook's cooperation is the
+    other one — `_spend_guard` — because that one is about money.
+
+    On a breach the record is restored to the snapshot (dropping
+    `contracts` with everything else: the episode failed, so its
+    contracts block is not evidence of anything) and `EpisodeHookBreach`
+    is raised for `run_query` to record as the row's `error`.
+    """
+    if hooks is None:
+        return
+    before = dict(record)
+    with _spend_guard():
+        hooks.after_episode(ctx, record, final_state)
+
+    added = record.keys() - before.keys() - {HOOK_WRITABLE_KEY}
+    removed = before.keys() - record.keys()
+    rebound = {
+        key
+        for key in (before.keys() & record.keys()) - {HOOK_WRITABLE_KEY}
+        if record[key] is not before[key]
+    }
+    strays = sorted(added | removed | rebound)
+    block = record.get(HOOK_WRITABLE_KEY)
+    ill_typed = HOOK_WRITABLE_KEY in record and not isinstance(block, Mapping)
+
+    if strays or ill_typed:
+        record.clear()
+        record.update(before)
+        detail = (
+            f"touched {', '.join(repr(key) for key in strays)}"
+            if strays
+            else f"set {HOOK_WRITABLE_KEY!r} to a {type(block).__name__}, not a mapping"
+        )
+        raise EpisodeHookBreach(
+            f"after_episode {detail}; a hook may add "
+            f"record[{HOOK_WRITABLE_KEY!r}] as a mapping and change nothing "
+            "else. The record has been restored to what the harness wrote."
+        )
+
+
 def drive_query(
-    query: BenchmarkQuery, run_id: str, surface: ScriptedSurface
+    query: BenchmarkQuery,
+    run_id: str,
+    surface: ScriptedSurface,
+    *,
+    hooks: EpisodeHooks | None = None,
+    ctx: Any = None,
 ) -> tuple[list[str], dict[str, Any]]:
     """Run the compiled graph to completion, recording its trajectory.
 
@@ -708,6 +965,24 @@ def drive_query(
     And the loop is where the scripted synthesizer learns which papers
     the graph retrieved, which is what keeps its citations the product's
     rather than the fixture's.
+
+    It is also the only place an observer can see the run happen rather
+    than read about it afterwards, which is why `on_stream_event` fires
+    here. A hook is handed each chunk before this driver has touched it,
+    and it is not given a copy: see `EpisodeHooks.on_stream_event`.
+
+    Args:
+        query: The benchmark query to drive.
+        run_id: This episode's run id, used as the graph's thread id.
+        surface: The installed script, told which papers search found.
+        hooks: Optional observer. `None` is the default and makes this
+            function byte-for-byte the one that ran before the seam
+            existed — the loop below tests it once per chunk and does
+            nothing.
+        ctx: Whatever `before_episode` returned, passed straight back.
+
+    Returns:
+        The nodes the graph reported, in order, and its final state.
     """
     visited: list[str] = []
     final: dict[str, Any] = {}
@@ -720,6 +995,8 @@ def drive_query(
             config=config,
             stream_mode=["updates", "values"],
         ):
+            if hooks is not None and isinstance(payload, Mapping):
+                hooks.on_stream_event(ctx, str(mode), payload)
             if mode == "values":
                 final = dict(payload)
                 continue
@@ -764,12 +1041,19 @@ def score_groundedness(state: dict[str, Any]) -> GroundednessResult:
     )
 
 
-def run_query(query: BenchmarkQuery, *, repeat: int = 1) -> dict[str, Any]:
+def run_query(
+    query: BenchmarkQuery, *, repeat: int = 1, hooks: EpisodeHooks | None = None
+) -> dict[str, Any]:
     """Drive and score one benchmark query. Never raises for a failure.
 
     Errors are captured on the record so the campaign keeps making
     progress (ADR 0008). `EvalInterrupted` is the one exception that
-    leaves, carrying the partial record.
+    leaves, carrying the partial record. A hook that raises — including
+    one the spend guard or the record contract stopped — is an error like
+    any other: it lands on `record["error"]`, the campaign continues, and
+    `scripted_tier_check` refuses the campaign because a row errored.
+    That is deliberate. An observer must not be able to fail an episode
+    silently, and it must not be able to abort a campaign either.
 
     Args:
         query: The benchmark query to run.
@@ -777,6 +1061,10 @@ def run_query(query: BenchmarkQuery, *, repeat: int = 1) -> dict[str, Any]:
             tier is deterministic — and the CLI says so rather than
             refusing, because a repeated run is a legitimate way to
             *check* that it is.
+        hooks: Optional episode observer (see `EpisodeHooks`). `None`,
+            the default, is exactly the behaviour this function had
+            before the seam existed: nothing is installed and nothing is
+            called.
 
     Returns:
         The full per-query record.
@@ -832,8 +1120,11 @@ def run_query(query: BenchmarkQuery, *, repeat: int = 1) -> dict[str, Any]:
     )
     try:
         try:
+            ctx = _before_episode(hooks, query, repeat)
             with scripted_surface(query) as surface:
-                trajectory, final_state = drive_query(query, run_id, surface)
+                trajectory, final_state = drive_query(
+                    query, run_id, surface, hooks=hooks, ctx=ctx
+                )
         except Exception as exc:
             record["elapsed_sec"] = time.monotonic() - start
             record["costs"] = costs.as_dict()
@@ -883,6 +1174,27 @@ def run_query(query: BenchmarkQuery, *, repeat: int = 1) -> dict[str, Any]:
         # written rather than omitted: `scripted_tier_check` asserts on
         # its presence, and an absent column reads as "not measured".
         record["judge_costs"] = {"total_cost_usd": 0.0, "call_count": 0}
+
+        # Last, with the record finished: the block a hook may attach
+        # describes a completed episode, and a hook that fails one has
+        # not cost the campaign anything already measured. Caught rather
+        # than allowed to leave, for the same reason the drive path
+        # catches — an observer may fail its own episode and may not
+        # abort the campaign (ADR 0008). The row carries the failure, so
+        # the gate refuses the campaign and nothing failed quietly.
+        try:
+            _after_episode(hooks, ctx, record, final_state)
+        except Exception as exc:
+            record["error"] = f"{type(exc).__name__}: {exc}"
+            record["traceback"] = traceback.format_exc()
+            log.exception(
+                "eval_query_failed",
+                extra={
+                    "query_id": query["query_id"],
+                    "tier": RESEARCH_SCRIPTED_TIER,
+                },
+            )
+            return record
 
         log.info(
             "eval_query_completed",
@@ -1313,8 +1625,11 @@ __all__ = [
     "BASELINE_PATH",
     "BASELINE_REGEN_COMMAND",
     "FIXED_PIPELINE",
+    "HOOK_WRITABLE_KEY",
     "RESEARCH_SCRIPTED_TIER",
     "SCRIPTED_RESEARCH_CAMPAIGN",
+    "EpisodeHookBreach",
+    "EpisodeHooks",
     "ScriptedOutcomes",
     "ScriptedSurface",
     "ScriptedSurfaceBreach",

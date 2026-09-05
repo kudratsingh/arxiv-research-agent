@@ -29,7 +29,10 @@ does that, and it is where the zero-spend proof lives.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import inspect
 import json
+from collections.abc import Callable, Iterator, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -377,6 +380,42 @@ class TestTheSurface:
             pytest.raises(sim.ScriptedSurfaceBreach, match="zero spend"),
         ):
             llm_module.call_llm(prompt="anything")
+
+    def test_the_tripwire_refuses_a_provider_client_too(self) -> None:
+        """The half of layer three that `call_llm` alone did not cover.
+
+        Before the episode seam existed, the only code inside this
+        surface was this module's own and `src.llm.call_llm` was the
+        only door it could reach a model through. `EpisodeHooks` put
+        code somebody else wrote inside it, and such code does not have
+        to knock on that door: on `origin/main` both constructions below
+        returned a live `anthropic.Anthropic` under a fully installed
+        surface, and only the third call was refused.
+
+        A built client is not yet a charge. It is one `messages.create`
+        away from one, inside the SDK where nothing of ours is watching,
+        which is why the line is drawn at construction.
+        """
+        import anthropic
+
+        import src.llm as llm_module
+
+        with sim.scripted_surface(_query()):
+            with pytest.raises(sim.ScriptedSurfaceBreach, match="provider client"):
+                llm_module._get_client()
+            with pytest.raises(sim.ScriptedSurfaceBreach, match="provider client"):
+                anthropic.Anthropic(api_key="local-preview-disabled")
+
+    def test_the_spend_guard_hands_the_sdk_back(self) -> None:
+        """A guard that leaked would break every other test in the suite."""
+        import anthropic
+
+        import src.llm as llm_module
+
+        before = (anthropic.Anthropic, llm_module._get_client, llm_module.call_llm)
+        with sim.scripted_surface(_query()):
+            assert anthropic.Anthropic is sim._client_tripwire
+        assert (anthropic.Anthropic, llm_module._get_client, llm_module.call_llm) == before
 
     def test_it_counts_what_the_graph_asked_for(self) -> None:
         with sim.scripted_surface(_query()) as surface:
@@ -942,3 +981,267 @@ class TestCampaignCLI:
         assert "Interrupted" in capsys.readouterr().out
         # The partial record is on disk, which is the whole point.
         assert (output_dir / "summary.jsonl").read_text().strip()
+
+
+# ---------------------------------------------------------------------------
+# The episode seam (WO-D0)
+# ---------------------------------------------------------------------------
+
+
+def _record(**overrides: Any) -> dict[str, Any]:
+    """A finished record, in the shape `after_episode` receives one."""
+    return {
+        "record_id": "q0.r1",
+        "query_id": "q0",
+        "error": None,
+        "trajectory": list(sim.FIXED_PIPELINE),
+        "costs": {"total_cost_usd": 0.0, "call_count": 0},
+        "outcomes": {"expectation_failures": []},
+        **overrides,
+    }
+
+
+class _Hook:
+    """A hooks implementation whose `after_episode` body is supplied.
+
+    Written as a plain class rather than a `Mock` so it satisfies
+    `EpisodeHooks` structurally — which is the thing under test as much
+    as any assertion here is.
+    """
+
+    def __init__(self, body: Callable[[dict[str, Any]], None] | None = None) -> None:
+        self.body = body
+        self.seen: list[tuple[str, Any]] = []
+
+    def before_episode(self, query: BenchmarkQuery, repeat: int) -> Any:
+        self.seen.append(("before", (query["query_id"], repeat)))
+        return {"query_id": query["query_id"]}
+
+    def on_stream_event(self, ctx: Any, mode: str, payload: Mapping[str, Any]) -> None:
+        self.seen.append(("stream", (ctx, mode, dict(payload))))
+
+    def after_episode(
+        self, ctx: Any, record: dict[str, Any], final_state: Mapping[str, Any]
+    ) -> None:
+        self.seen.append(("after", (ctx, dict(final_state))))
+        if self.body is not None:
+            self.body(record)
+
+
+class TestTheDefaultIsNothing:
+    """`hooks=None` is the CLI's setting and must be the old behaviour."""
+
+    def test_the_parameter_is_keyword_only_and_defaults_to_none(self) -> None:
+        signature = inspect.signature(sim.run_query)
+        hooks = signature.parameters["hooks"]
+        assert hooks.kind is inspect.Parameter.KEYWORD_ONLY
+        assert hooks.default is None
+
+    def test_no_hook_means_no_call_and_no_snapshot(self) -> None:
+        record = _record()
+        identity = {key: id(value) for key, value in record.items()}
+        sim._after_episode(None, None, record, {})
+        assert {key: id(value) for key, value in record.items()} == identity
+
+    def test_no_hook_means_no_context(self) -> None:
+        assert sim._before_episode(None, _query(), 1) is None
+
+
+class TestTheContextTravels:
+    """`before_episode` -> `on_stream_event` -> `after_episode`, unmodified."""
+
+    def _drive(
+        self, monkeypatch: pytest.MonkeyPatch, chunks: list[Any]
+    ) -> tuple[_Hook, Any]:
+        class _App:
+            def stream(self, *_args: Any, **_kwargs: Any) -> Iterator[Any]:
+                yield from chunks
+
+        monkeypatch.setattr(sim, "build_workflow", lambda **_kwargs: _App())
+        monkeypatch.setattr(sim, "_close_workflow", lambda _app: None)
+        hook = _Hook()
+        ctx = sim._before_episode(hook, _query(), 1)
+        sim.drive_query(
+            _query(), "run-1", sim.ScriptedSurface(_query()), hooks=hook, ctx=ctx
+        )
+        return hook, ctx
+
+    def test_every_chunk_reaches_the_hook_with_its_mode(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        hook, ctx = self._drive(
+            monkeypatch,
+            [
+                ("updates", {"planner": {"plan": ["a"]}}),
+                ("values", {"papers": []}),
+            ],
+        )
+        streamed = [entry for kind, entry in hook.seen if kind == "stream"]
+        assert [mode for _ctx, mode, _payload in streamed] == ["updates", "values"]
+        assert streamed[0][2] == {"planner": {"plan": ["a"]}}
+        # The object `before_episode` returned, not a copy of it: `ctx`
+        # is the hook's own scratch space and the harness only carries it.
+        assert all(seen_ctx is ctx for seen_ctx, _mode, _payload in streamed)
+
+    def test_a_non_mapping_chunk_is_not_offered(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The protocol promises a `Mapping`, so it is not handed anything else."""
+        hook, _ctx = self._drive(monkeypatch, [("updates", "not a mapping")])
+        assert [kind for kind, _ in hook.seen] == ["before"]
+
+    def test_the_driver_still_reads_the_stream_with_no_hook(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        class _App:
+            def stream(self, *_args: Any, **_kwargs: Any) -> Iterator[Any]:
+                yield "updates", {"planner": {}}
+                yield "values", {"draft_report": "r"}
+
+        monkeypatch.setattr(sim, "build_workflow", lambda **_kwargs: _App())
+        monkeypatch.setattr(sim, "_close_workflow", lambda _app: None)
+        trajectory, final = sim.drive_query(_query(), "run-1", sim.ScriptedSurface(_query()))
+        assert trajectory == ["planner"]
+        assert final == {"draft_report": "r"}
+
+
+class TestARecordIsNotAHooksToWrite:
+    """What `after_episode` may change, and how that is enforced."""
+
+    def test_a_contracts_block_is_accepted(self) -> None:
+        record = _record()
+
+        def _attach(row: dict[str, Any]) -> None:
+            row["contracts"] = {"shadow": "ok"}
+
+        sim._after_episode(_Hook(_attach), None, record, {})
+        assert record["contracts"] == {"shadow": "ok"}
+        assert record["error"] is None
+
+    @pytest.mark.parametrize(
+        ("name", "mutate"),
+        [
+            ("a rewritten field", lambda row: row.__setitem__("error", "not really")),
+            ("a deleted field", lambda row: row.pop("costs")),
+            ("a second new key", lambda row: row.__setitem__("shadow", {})),
+            (
+                "a rebound field that still compares equal",
+                lambda row: row.__setitem__("trajectory", list(row["trajectory"])),
+            ),
+        ],
+    )
+    def test_anything_but_contracts_is_a_breach(
+        self, name: str, mutate: Callable[[dict[str, Any]], None]
+    ) -> None:
+        """Identity, not equality — the last case is why.
+
+        A hook that rebinds `trajectory` to a fresh list holding the
+        same strings passes `==` and has still replaced the harness's
+        object with its own.
+        """
+        record = _record()
+        before = dict(record)
+        with pytest.raises(sim.EpisodeHookBreach):
+            sim._after_episode(_Hook(mutate), None, record, {})
+        assert record == before, f"{name}: the record was not restored"
+
+    def test_a_breach_drops_the_contracts_block_with_everything_else(self) -> None:
+        """A failed episode's contracts block is not evidence of anything."""
+
+        def _both(row: dict[str, Any]) -> None:
+            row["contracts"] = {"shadow": "ok"}
+            row["error"] = None
+
+        record = _record(error="a real failure")
+        with pytest.raises(sim.EpisodeHookBreach, match="'error'"):
+            sim._after_episode(_Hook(_both), None, record, {})
+        assert "contracts" not in record
+        assert record["error"] == "a real failure"
+
+    def test_a_contracts_block_that_is_not_a_mapping_is_refused(self) -> None:
+        record = _record()
+        with pytest.raises(sim.EpisodeHookBreach, match="not a mapping"):
+            sim._after_episode(
+                _Hook(lambda row: row.__setitem__("contracts", ["not", "a", "block"])),
+                None,
+                record,
+                {},
+            )
+        assert "contracts" not in record
+
+    def test_the_breach_names_the_keys_it_caught(self) -> None:
+        def _spray(row: dict[str, Any]) -> None:
+            row["error"] = "x"
+            row.pop("costs")
+
+        with pytest.raises(sim.EpisodeHookBreach) as caught:
+            sim._after_episode(_Hook(_spray), None, _record(), {})
+        assert "'costs'" in str(caught.value)
+        assert "'error'" in str(caught.value)
+
+    def test_a_mutation_inside_a_value_is_not_caught(self) -> None:
+        """The stated limit of a shallow comparison, asserted as one.
+
+        A guarantee whose edge is only described in a docstring gets
+        read as covering everything. This is the edge: the top-level
+        keys are still bound to the very same objects, so neither the
+        comparison nor the restore sees anything, and `_after_episode`
+        returns cleanly. `_spend_guard` is the guarantee that does not
+        depend on the hook behaving, because that one is about money.
+        """
+        record = _record()
+        sim._after_episode(
+            _Hook(lambda row: row["costs"].__setitem__("total_cost_usd", 9.99)),
+            None,
+            record,
+            {},
+        )
+        assert record["costs"]["total_cost_usd"] == 9.99
+
+    def test_the_writable_key_is_named_once(self) -> None:
+        assert sim.HOOK_WRITABLE_KEY == "contracts"
+
+
+class TestAHookCannotSpend:
+    """`_spend_guard` wraps the two hook calls that fall outside the graph."""
+
+    class _Spender:
+        def __init__(self, phase: str) -> None:
+            self.phase = phase
+
+        def _build(self) -> None:
+            import src.llm as llm_module
+
+            llm_module._get_client()
+
+        def before_episode(self, query: BenchmarkQuery, repeat: int) -> Any:
+            if self.phase == "before":
+                self._build()
+            return None
+
+        def on_stream_event(
+            self, ctx: Any, mode: str, payload: Mapping[str, Any]
+        ) -> None:
+            return None
+
+        def after_episode(
+            self, ctx: Any, record: dict[str, Any], final_state: Mapping[str, Any]
+        ) -> None:
+            if self.phase == "after":
+                self._build()
+
+    def test_before_episode_runs_under_the_guard(self) -> None:
+        with pytest.raises(sim.ScriptedSurfaceBreach, match="provider client"):
+            sim._before_episode(self._Spender("before"), _query(), 1)
+
+    def test_after_episode_runs_under_the_guard(self) -> None:
+        with pytest.raises(sim.ScriptedSurfaceBreach, match="provider client"):
+            sim._after_episode(self._Spender("after"), None, _record(), {})
+
+    def test_the_guard_is_up_for_the_hook_and_down_afterwards(self) -> None:
+        import anthropic
+
+        real = anthropic.Anthropic
+        with contextlib.suppress(sim.ScriptedSurfaceBreach):
+            sim._before_episode(self._Spender("before"), _query(), 1)
+        assert anthropic.Anthropic is real

@@ -1692,9 +1692,14 @@ five perfectly-grounded claims for a run that retrieved nothing.
 2. **It refuses to start when `USE_MOCK_DATA` is false.** Here the
    refusal also buys *offline*: no model call could happen anyway, but
    live search would leave the machine.
-3. **A tripwire on `src.llm.call_llm`.** The four agent patches are an
-   enumeration and enumerations go stale; anything they miss raises
-   `ScriptedSurfaceBreach` rather than reaching Anthropic.
+3. **A tripwire on `src.llm.call_llm`, `src.llm._get_client` and
+   `anthropic.Anthropic`.** The four agent patches are an enumeration
+   and enumerations go stale; anything they miss raises
+   `ScriptedSurfaceBreach` rather than reaching Anthropic. The two
+   client constructors joined the list in WO-D0, when the surface began
+   to enclose hook code this module did not write: `call_llm` is the
+   only door a *graph node* has, and code somebody else wrote does not
+   have to use it. See [the episode seam](#the-episode-seam-and-who-owns-which-side).
 4. **Every row is asserted zero** — `cost_usd`, `judge_cost_usd`,
    `total_cost_usd`, `llm_calls`, `judge_llm_calls`.
 
@@ -1784,6 +1789,89 @@ three times over: `tier` is `research-scripted` rather than `research`,
 `mock_mode` is `true` rather than `false`, and `rubric_versions` carries
 only the deterministic groundedness check rather than four rubrics. A
 canned report can never be diffed against a real one.
+
+### The episode seam, and who owns which side
+
+`src/eval/simulate_research.py` has one extension point, `EpisodeHooks`,
+and it defaults to `None`. It exists because other work needs to watch
+this campaign happen — the research shadow (WO-W05) is the first — and
+the alternative to an agreed seam is a second author editing the driver,
+which is how a harness ends up with two sets of hooks firing in almost
+the same place.
+
+```python
+class EpisodeHooks(Protocol):
+    def before_episode(self, query: BenchmarkQuery, repeat: int) -> Any: ...
+    def on_stream_event(self, ctx: Any, mode: str, payload: Mapping[str, Any]) -> None: ...
+    def after_episode(self, ctx: Any, record: dict[str, Any], final_state: Mapping[str, Any]) -> None: ...
+```
+
+`run_query(query, *, repeat=1, hooks=None)` calls the three in order,
+once per record, passing `before_episode`'s return value back as `ctx`
+to the other two. `on_stream_event` fires from `drive_query` for each
+chunk off the graph's own stream — `mode` is LangGraph's `"updates"` or
+`"values"` — so an observer sees the run happen rather than reading
+about it afterwards. It is not handed a copy: mutating a payload changes
+what the graph and the scripted synthesizer see next.
+
+**Ownership.** This repository's assurance side owns the file. A hooks
+implementation lives in its consumer's own module, and `simulate_research`
+never imports it: `EpisodeHooks` is a `Protocol`, so there is no base
+class to inherit and no import edge in either direction. W05's only edit
+inside `simulate_research.py` is passing `hooks=` at the CLI call site in
+`main`, reviewed by the file's owner. Everything else — the guard, the
+record contract, the summary projection — is this side's to change.
+
+**What a hook may write.** `after_episode` may add `record["contracts"]`,
+which must be a mapping, and may change nothing else. That is enforced,
+not requested: a shallow copy of the record is taken before the call and
+compared afterwards *by identity*, key by key.
+
+| Caught | Not caught |
+|---|---|
+| any key added other than `contracts` | a mutation *inside* a value the record already holds — `record["costs"]["call_count"] = 1`, `record["trajectory"].append(...)`, `record["outcomes"]["expectation_failures"].clear()` |
+| any key removed, `contracts` included | |
+| any key rebound, *including to an equal value* — `record["trajectory"] = list(record["trajectory"])` fails, which is why identity and not `==` | |
+| a `contracts` value that is not a mapping | |
+
+The uncaught column is the price of a shallow copy, and it is a
+deliberate price: closing it means deep-copying every record — the
+serialized graph state included — around a call that is a no-op in the
+shipped configuration, to defend against a hook that is in-tree,
+reviewed, and could equally well have edited the driver. So the honest
+summary is that this stops a hook from *rewriting* the record and does
+not stop one determined to *corrupt* it.
+
+On a breach the record is restored to what the harness wrote — dropping
+the `contracts` block along with everything else, because a failed
+episode's contracts block is not evidence of anything — and
+`EpisodeHookBreach` lands on `record["error"]`.
+
+**What a hook cannot do is spend.** The three calls run inside
+`_spend_guard`, which is the zero-spend half of the scripted surface
+split out for exactly this: `before_episode` runs before the graph is
+built and `after_episode` after the state is final, and a guarantee that
+lapses between episodes is not structural. Layer 3 above lists what the
+guard refuses. Client *construction* is refused rather than the request,
+because a built client with a working key is one `messages.create` away
+from a charge, inside the SDK where no patch of ours is watching.
+
+**Failure is an errored row, never an exception.** A hook that raises —
+its own bug, a spend breach, a record breach — is captured on
+`record["error"]` exactly like a node failure (ADR 0008), the campaign
+finishes, and `scripted_tier_check --lane research` then refuses the
+campaign because a row errored. An observer must not be able to abort a
+campaign, and must not be able to fail one quietly either.
+
+**What is not in the seam.** `summary_line` does not project
+`record["contracts"]` into `summary.jsonl`; the block lands on the
+durable per-record JSON only. If the shadow needs it in the summary row
+— and therefore in the regression differ's vocabulary — that is a change
+to `summary_line`, which is this file's owner to make, not the caller's.
+
+No ADR: this is a seam, not a decision. WO-D0 built it, defaulting to
+nothing, so that W05 could start against an agreed shape rather than
+negotiate one inside a merge conflict.
 
 ### CI is deliberately not wired here
 
