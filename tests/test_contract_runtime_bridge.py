@@ -992,6 +992,379 @@ class TestTheTemperatureAttribute:
 
 
 # ---------------------------------------------------------------------------
+# The rest of the taxonomy
+# ---------------------------------------------------------------------------
+
+
+class TestTheRestOfTheTaxonomy:
+    """Every RFC 10 §8 type the two episodes above do not happen to use.
+
+    Not padding: each of these exists because some arm, some failure or
+    some policy the program has already designed needs it, and a
+    vocabulary that is only exercised on the happy path is a vocabulary
+    whose first real use discovers it does not validate.
+    """
+
+    def test_a_plan_and_a_routing_decision_record_without_their_reasoning(
+        self, tmp_path: Path
+    ) -> None:
+        bridge = research_bridge(tmp_path)
+        plan = bridge.store_artifact(
+            b'{"objectives": 3}', role=ArtifactRole.PLAN, media_type="application/json",
+            schema_ref="plan/1.0.0",
+        )
+        assert plan is not None
+        bridge.plan_created(plan, objectives=3, actions=5, kind="fixed_pipeline")
+        bridge.policy_decision(
+            key="route-1",
+            decision_kind="next_node",
+            eligible=["search", "critic"],
+            chosen="search",
+            reason_codes=["completed"],
+        )
+        decision = next(
+            event for event in bridge.events() if event.event_type == "policy.decision"
+        )
+        assert decision.payload["chosen_action"] == "search"
+        assert set(decision.payload) == {
+            "decision_kind",
+            "eligible_actions",
+            "chosen_action",
+            "reason_codes",
+            "feature_snapshot_ref",
+        }
+
+    def test_a_failed_tool_call_records_its_class_and_not_its_error(
+        self, tmp_path: Path
+    ) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.tool_failed(
+            call_id="t9",
+            tool_id="arxiv_search",
+            tool_version="1.0.0",
+            error_class="upstream_arxiv",
+            retryable=True,
+            provider_status_class="5xx",
+        )
+        failed = next(
+            event for event in bridge.events() if event.event_type == "tool.failed"
+        )
+        assert failed.payload["error_class"] == "upstream_arxiv"
+        assert "upstream_arxiv" in failed.reason_codes
+
+    def test_a_rejected_source_does_not_disappear(self, tmp_path: Path) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.source_discovered(
+            source_id="src9",
+            source_kind="preprint",
+            locator_hash="sha256:" + "f" * 64,
+            published_at=None,
+            accessed_at=rb.utc_timestamp(),
+            accepted=False,
+            codes=["out_of_scope"],
+        )
+        types = [event.event_type for event in bridge.events()]
+        assert "source.discovered" in types
+        assert "source.rejected" in types
+
+    def test_a_claim_links_to_its_evidence_and_its_coverage_is_assessed(
+        self, tmp_path: Path
+    ) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.record_candidate("# Briefing")
+        candidate = bridge._candidate_id
+        assert candidate is not None
+        claim = bridge.store_artifact(
+            b'{"claims": []}',
+            role=ArtifactRole.CLAIM_SET,
+            media_type="application/json",
+            schema_ref="claim-set/1.0.0",
+        )
+        assert claim is not None
+        bridge.claim_created(
+            claim_id="claim1",
+            candidate_id=candidate,
+            artifact=claim,
+            claim_kind="citation",
+            location="section:2",
+        )
+        bridge.claim_evidence_linked(
+            claim_id="claim1",
+            evidence_id="ev1",
+            relationship="supports",
+            method="span_match",
+        )
+        bridge.coverage_assessed(
+            task_items=["item1", "item2"],
+            covered=["item1"],
+            missing=["item2"],
+            method="deterministic",
+        )
+        types = [event.event_type for event in bridge.events()]
+        assert "claim.created" in types
+        assert "claim.evidence_linked" in types
+        assert "evidence.coverage_assessed" in types
+
+    def test_a_malformed_verdict_is_not_a_pass(self, tmp_path: Path) -> None:
+        """RFC 10 §8.5: `verification.malformed` cannot project as a pass."""
+        bridge = research_bridge(tmp_path)
+        bridge.record_candidate("# Briefing")
+        candidate = bridge._candidate_id
+        assert candidate is not None
+        bridge.verification_malformed(
+            check_id="c9",
+            candidate_id=candidate,
+            error_class="upstream_model_output",
+            fallback_action="treat_as_unverified",
+        )
+        malformed = next(
+            event
+            for event in bridge.events()
+            if event.event_type == "verification.malformed"
+        )
+        assert malformed.status.value == "failed"
+        assert not [
+            event for event in bridge.events()
+            if event.event_type == "verification.completed"
+        ]
+
+    def test_a_failed_repair_leaves_its_subject_readable(self, tmp_path: Path) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.record_candidate("# Briefing")
+        candidate = bridge._candidate_id
+        assert candidate is not None
+        assert (
+            bridge.repair(
+                repair_id="r9",
+                repair_kind="retrieve_missing_evidence",
+                subject_candidate_id=candidate,
+                succeeded=False,
+                error_class="upstream_arxiv",
+            )
+            is None
+        )
+        bridge.repair_exhausted(
+            subject_candidate_id=candidate,
+            attempted=["r9"],
+            reason="repair_budget_spent",
+        )
+        types = [event.event_type for event in bridge.events()]
+        assert "repair.failed" in types
+        assert "repair.exhausted" in types
+        assert not [t for t in types if t == "candidate.revised"]
+
+    def test_a_selection_over_several_candidates_records_the_eligible_set(
+        self, tmp_path: Path
+    ) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.record_candidate("# Briefing")
+        original = bridge._candidate_id
+        assert original is not None
+        revised_artifact = bridge.store_artifact(
+            b"# Briefing v2", role=ArtifactRole.CANDIDATE_REPORT
+        )
+        assert revised_artifact is not None
+        child = bridge.candidate_revised(
+            parent_candidate_id=original,
+            artifact=revised_artifact,
+            change_scope="section",
+            key="rev1",
+        )
+        score = bridge.store_artifact(
+            b'{"score": 0.9}',
+            role=ArtifactRole.RUNTIME_SCORE_RECORD,
+            media_type="application/json",
+            schema_ref="runtime-score/1.0.0",
+        )
+        assert score is not None
+        bridge.candidate_selected(
+            eligible=[original, child],
+            selected=child,
+            selector_kind="deterministic",
+            selection_artifact=score,
+        )
+        selected = next(
+            event
+            for event in bridge.events()
+            if event.event_type == "candidate.selected"
+        )
+        assert selected.payload["selected_candidate_id"] == child
+        assert original in selected.payload["eligible_candidate_ids"]
+
+    def test_a_reservation_is_taken_and_released(self, tmp_path: Path) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.budget_reserved(
+            reservation_id="res1",
+            action_id="model_request",
+            maximum_cost="0.010000",
+            ttl_seconds=60,
+        )
+        bridge.budget_reservation_released(
+            reservation_id="res1", actual_cost="0.004000", reason="settled"
+        )
+        types = [event.event_type for event in bridge.events()]
+        assert "budget.reserved" in types
+        assert "budget.reservation_released" in types
+
+    def test_a_refused_checkpoint_is_typed_rather_than_silent(
+        self, tmp_path: Path
+    ) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.checkpoint_saved(checkpoint_id="c1", graph_position="reader")
+        bridge.checkpoint_invalid(
+            checkpoint_id="c1",
+            failure_codes=["schema_drift"],
+            fallback="restart_from_scratch",
+        )
+        invalid = next(
+            event
+            for event in bridge.events()
+            if event.event_type == "checkpoint.invalid"
+        )
+        assert invalid.status.value == "rejected"
+
+    def test_a_review_can_time_out_or_be_cancelled(self, tmp_path: Path) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.checkpoint_and_review_requested(
+            pause_number=1, pending=["planner"], deadline_seconds=60
+        )
+        bridge.review_timed_out(pause_number=1, policy="hitl_timeout")
+        bridge.checkpoint_and_review_requested(
+            pause_number=2, pending=["planner"], deadline_seconds=60
+        )
+        bridge.review_cancelled(pause_number=2, reason="user_requested")
+        types = [event.event_type for event in bridge.events()]
+        assert "hitl.timed_out" in types
+        assert "hitl.cancelled" in types
+
+    def test_a_non_terminal_failure_is_recorded_with_a_bounded_message(
+        self, tmp_path: Path
+    ) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.failure_recorded(
+            failure_id="f1",
+            failure_class="upstream_paper_read",
+            stage="reader",
+            retryable=True,
+            safe_message="x" * 500,
+        )
+        failure = next(
+            event for event in bridge.events() if event.event_type == "failure.recorded"
+        )
+        assert len(str(failure.payload["safe_message"])) == 200
+
+    def test_an_approval_free_run_still_reconstructs_every_kind_it_recorded(
+        self, tmp_path: Path
+    ) -> None:
+        """One pass over everything above, through the file."""
+        bridge = research_bridge(tmp_path)
+        bridge.tool_failed(
+            call_id="t9",
+            tool_id="arxiv_search",
+            tool_version="1.0.0",
+            error_class="upstream_arxiv",
+            retryable=True,
+            provider_status_class="5xx",
+        )
+        bridge.node_step("planner", step=1)
+        bridge.record_candidate("# Briefing")
+        candidate = bridge._candidate_id
+        artifact = bridge._final_artifact
+        assert candidate is not None and artifact is not None
+        bridge.finalize(
+            candidate_id=candidate, artifact=artifact, selection_basis="single"
+        )
+        bridge.close()
+        reconstruction = rb.reconstruct_episode(bridge.durable_jsonl(), lane="research")
+        assert "tool.failed:t9" in reconstruction.decisions
+        assert reconstruction.terminal_event_type == "run.completed"
+
+
+class TestTheContainedFacade:
+    def test_a_broken_bridge_degrades_itself_rather_than_raising(
+        self, tmp_path: Path
+    ) -> None:
+        bridge = research_bridge(tmp_path)
+
+        def explode(_cost: float) -> None:
+            raise RuntimeError("down")
+
+        bridge.reconcile = explode  # type: ignore[method-assign, assignment]
+        assert rb.observe_reconciliation(bridge, 0.0) is None
+        assert bridge.degraded is True
+
+    def test_a_missing_bridge_is_a_no_op_on_every_facade(self) -> None:
+        assert rb.observe_reconciliation(None, 0.0) is None
+        assert rb.observe_close(None) is None
+
+    def test_a_degraded_bridge_stops_reconciling(self, tmp_path: Path) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.degraded = True
+        assert rb.observe_reconciliation(bridge, 0.0) is None
+
+    def test_the_close_facade_verifies_the_chain(self, tmp_path: Path) -> None:
+        bridge = research_bridge(tmp_path)
+        bridge.node_step("planner", step=1)
+        rb.observe_close(bridge)
+        sink = bridge.durable_store.sink
+        assert isinstance(sink, rb.JsonlTrajectorySink)
+        assert sink.head(bridge.run_id) is not None
+
+
+class TestTheRunnerEntryPoint:
+    def test_a_session_job_gets_no_research_trajectory(self, tmp_path: Path) -> None:
+        job = Job(job_id="s1", query="q", kind="session")
+        assert (
+            rb.start_research_job(job, _AppStub(), config=config(), cost_ceiling_usd=1.0)
+            is None
+        )
+
+    def test_the_switch_off_opens_nothing(self, tmp_path: Path) -> None:
+        job = Job(job_id="j1", query="q", hitl_bypass=True)
+        assert (
+            rb.start_research_job(
+                job,
+                _AppStub(),
+                config=config(contract_shadow="off"),
+                cost_ceiling_usd=1.0,
+            )
+            is None
+        )
+
+    def test_an_api_job_opens_a_bridge_that_writes_no_file(
+        self, tmp_path: Path
+    ) -> None:
+        """The D8 gate on the one path a real user reaches."""
+        job = Job(job_id="j1", query="why do LLMs hallucinate?", hitl_bypass=True)
+        bridge = rb.start_research_job(
+            job,
+            _AppStub(),
+            config=config(contract_event_sink_root=str(tmp_path / "sink")),
+            cost_ceiling_usd=1.0,
+        )
+        assert bridge is not None
+        assert bridge.durable_store.sink is None
+        assert bridge.artifacts is None
+        assert not (tmp_path / "sink").exists()
+        assert bridge.events()[0].event_type == "run.admitted"
+
+    def test_the_opened_run_is_reachable_through_the_shared_registry(
+        self, tmp_path: Path
+    ) -> None:
+        job = Job(job_id="j-registry", query="q", hitl_bypass=True)
+        bridge = rb.start_research_job(
+            job, _AppStub(), config=config(), cost_ceiling_usd=1.0
+        )
+        assert bridge is not None
+        try:
+            assert rb.shadow_run("j-registry") is bridge
+        finally:
+            from src.contracts.shadow_bridge import reset_registry
+
+            reset_registry()
+
+
+# ---------------------------------------------------------------------------
 # The sink itself
 # ---------------------------------------------------------------------------
 
