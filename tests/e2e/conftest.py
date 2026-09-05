@@ -6,17 +6,26 @@ produces and costs exactly nothing.
 
 Three things are worth reading before writing a test in this directory.
 
-**Mock mode is not an LLM stub.** `USE_MOCK_DATA` swaps the arXiv search
-for five fixture papers (`src/agents/search.py`) and makes the tutor and
-the assessment judge deterministic (`src/agents/tutor.py`,
-`src/agents/assessment.py`). It does *not* touch `src/llm.py`, and the
-research graph's planner, reader, synthesizer and critic call
-`call_llm_json` under it exactly as they do in production. So the
-session graph runs free on mock mode alone — which is what
-`src/eval/simulate_learner.py` relies on — while the research graph
-needs its four agents canned as well. `research_llm_surface` does that,
-and `docs/testing.md` says so in the tier's section rather than leaving
-the asymmetry to be rediscovered.
+**Mock mode covers both graphs, and it is still not an LLM stub.**
+`USE_MOCK_DATA` swaps the arXiv search for five fixture papers
+(`src/agents/search.py`), makes the tutor and the assessment judge
+deterministic (`src/agents/tutor.py`, `src/agents/assessment.py`), and
+since ADR 0080 gives the five research agents a deterministic branch of
+their own (`src/agents/mock_mode.py`). It still does *not* touch
+`src/llm.py`: what changed is that planner, reader, synthesizer, critic
+and verifier now return before reaching it rather than calling through
+it, so the research graph runs free on mock mode alone the way the
+session graph always has.
+
+That is why `research_llm_surface` does two things rather than one. A
+canned surface exists to supply *the words a model would have said*, and
+the agents' own mock branch would pre-empt it — the branch is checked
+before the call, so a patched `call_llm_json` would simply never run.
+So the fixture turns the branch off on the four modules it cans, by
+rebinding their `settings` to a `use_mock_data=False` copy, and leaves
+`src.agents.search.settings` on `True` so retrieval still serves the
+fixture corpus. Tests that want the *product's* mock path instead —
+`test_mock_mode_keyless.py` — must not use this fixture.
 
 **Settings are read per module, not per process.** `src/config.py`
 builds one `settings` singleton and every module binds its own name to
@@ -35,6 +44,7 @@ mechanism is `install_settings` below.
 
 from __future__ import annotations
 
+import importlib
 import json
 from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
@@ -69,6 +79,22 @@ SETTINGS_CONSUMERS: tuple[str, ...] = (
     "src.api.runner",
     "src.graph.workflow",
     "src.learning.memory",
+)
+
+#: The research agents whose own mock branch `research_llm_surface`
+#: turns off (ADR 0080). The first four are the ones it cans itself.
+#: The verifier is on the list without being canned here, because
+#: `test_verify_repair.py` cans it in its own body and would otherwise
+#: script a judge the mock branch had already answered for — and a
+#: module that reaches the verifier *without* canning it should hit the
+#: harness spend guard loudly rather than be quietly served a mock
+#: verdict.
+CANNED_AGENT_MODULES: tuple[str, ...] = (
+    "src.agents.critic",
+    "src.agents.planner",
+    "src.agents.reader",
+    "src.agents.synthesizer",
+    "src.agents.verifier",
 )
 
 #: Overrides every e2e test wants regardless of which graph it drives.
@@ -132,6 +158,13 @@ def research_llm_surface(
     is never reached, which is why the accumulator can be asserted at
     exactly zero rather than approximately.
 
+    Since ADR 0080 the fixture also turns the *agents'* own mock branch
+    off on those four modules, because that branch returns before the
+    call and would make every patch above dead code. `search` keeps
+    `use_mock_data=True` so retrieval still serves the fixture corpus —
+    the two halves of the setting are separable precisely because
+    `settings` is bound per module.
+
     `critic` takes a *sequence* of responses so a test can script the
     revision loop: the Nth critic pass gets the Nth entry, and the last
     entry repeats once the script runs out. That is what lets one test
@@ -141,6 +174,13 @@ def research_llm_surface(
 
     def _install(*, critic: Sequence[dict[str, Any]] | None = None) -> None:
         critic_script = list(critic or [responses["critic_approves"]])
+
+        for module in CANNED_AGENT_MODULES:
+            bound: Settings = importlib.import_module(module).settings
+            monkeypatch.setattr(
+                f"{module}.settings",
+                bound.model_copy(update={"use_mock_data": False}),
+            )
 
         def _fixed(payload: dict[str, Any]) -> Callable[..., dict[str, Any]]:
             def _call(*_args: Any, **_kwargs: Any) -> dict[str, Any]:

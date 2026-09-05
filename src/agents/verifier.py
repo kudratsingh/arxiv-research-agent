@@ -36,6 +36,14 @@ Design invariants:
   `abstain`, never `fail`. The supervisor's fields are unchanged; what
   changes is that the fixed policy will not spend its one repair on a
   diagnosis nobody made.
+- **Mock mode makes no judgement** (ADR 0080) — under
+  `settings.use_mock_data` both entry points report `verified=True`,
+  no unsupported claims and no missing evidence, and construct no model
+  client. The verdict that travels with it is `abstain`, not `pass`:
+  nothing judged this report, and a `pass` would tell the fixed policy
+  a faithfulness check succeeded. `abstain` is what the policy already
+  does with an unjudged report, so a keyless run reaches the critic
+  without spending its one repair.
 """
 
 import json
@@ -44,6 +52,7 @@ from typing import Any, Final, Literal
 
 from langchain_core.messages import AIMessage
 
+from src.agents.mock_mode import MOCK_VERIFICATION_SUMMARY
 from src.agents.schemas import VerifierOutput
 from src.cancellation import JobCancelledError
 from src.config import settings
@@ -80,6 +89,11 @@ VERDICT_REASONS: Final[frozenset[str]] = frozenset(
         "no_citations",
         "upstream_model",
         "upstream_model_output",
+        # ADR 0080. Mock mode makes no judgement at all, which is a
+        # different fact from a judge that was asked and could not
+        # answer — and the only one of the five a reader can act on by
+        # changing a setting rather than by investigating an incident.
+        "mock_mode",
     }
 )
 """Every reason code a verdict can carry, published by ADR 0076.
@@ -351,6 +365,36 @@ def _fallback_outcome(reason: str, detail: str) -> VerificationOutcome:
     )
 
 
+def _mock_outcome() -> VerificationOutcome:
+    """Mock mode's verification: `verified=True`, and nothing judged it.
+
+    ADR 0080. The state fields are the ones every consumer of ADR 0015's
+    contract reads for "no follow-up needed", because a mock briefing
+    restates the fixture corpus and cites the papers the run retrieved —
+    there is nothing for a faithfulness judge to fail it on, and
+    `verified=False` would park a keyless demo in a recovery loop.
+
+    The *verdict* is `abstain` rather than `pass`, and the difference is
+    the whole reason this lives beside the two helpers above rather than
+    reusing either. `pass` would tell `src/policies/repair.py` that a
+    faithfulness check succeeded; `abstain` says no check happened,
+    which is true and which that module already knows how to route
+    (verdict != "fail" -> no repair). This is the fifth abstain reason
+    code, extending the four ADR 0076 published.
+    """
+    return VerificationOutcome(
+        verdict="abstain",
+        reason="mock_mode",
+        summary=MOCK_VERIFICATION_SUMMARY,
+        fields={
+            "verified": True,
+            "unsupported_claims": [],
+            "missing_evidence": [],
+            "verifier_recommendation": "",
+        },
+    )
+
+
 def _failure_reason(unsupported: list[str], missing: list[str]) -> str:
     """Which of the fail codes this verdict earned."""
     if unsupported and missing:
@@ -378,6 +422,9 @@ def run_verification(state: ResearchState) -> VerificationOutcome:
         The outcome. Exactly one LLM call, except on the two
         short-circuits, which make none.
     """
+    if settings.use_mock_data:
+        return _mock_outcome()
+
     report = state.get("draft_report", "")
     if not report.strip():
         return _abstained("no_draft", "no draft to verify")

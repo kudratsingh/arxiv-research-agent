@@ -138,16 +138,23 @@ def arm_c_graph(monkeypatch: pytest.MonkeyPatch) -> Settings:
         enable_tracing=False,
         enable_semantic_scholar=False,
     )
+    monkeypatch.setattr(search_module, "settings", patched)
+    monkeypatch.setattr(workflow_module, "settings", patched)
+    # The five agents get the same settings with mock mode *off* (ADR
+    # 0080). Their own mock branch returns before `call_llm_json`, so
+    # without this every patch below would be dead code and these tests
+    # would drive the fixture instead of the policy. `search` keeps
+    # `use_mock_data=True` because the corpus is still the fixture one —
+    # `settings` is bound per module, so the two halves separate.
+    mock_off = patched.model_copy(update={"use_mock_data": False})
     for module in (
         planner_module,
-        search_module,
         reader_module,
         synthesizer_module,
         verifier_module,
         critic_module,
-        workflow_module,
     ):
-        monkeypatch.setattr(module, "settings", patched)
+        monkeypatch.setattr(module, "settings", mock_off)
 
     monkeypatch.setattr(planner_module, "call_llm_json", _canned(PLANNER_RESPONSE))
     monkeypatch.setattr(reader_module, "call_llm_json", _canned(READER_RESPONSE))

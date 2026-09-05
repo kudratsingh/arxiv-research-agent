@@ -57,6 +57,13 @@ summary carrying `n_abstract_only`; a run where most papers were read
 from their abstracts scores lower on completeness and faithfulness
 for a reason that has nothing to do with the prompts, and that was
 previously invisible in the log stream.
+
+Mock mode (ADR 0080): under `settings.use_mock_data` each paper's
+analysis — and, when the evidence store is on, its claims — is built by
+`src.agents.mock_mode` from the paper's own abstract. The branch sits
+ahead of `_gather_ranked_chunks`, so mock mode fetches no PDF either:
+the keyless path has to be offline as well as free, and this node is
+the only one that would otherwise leave the machine.
 """
 
 from __future__ import annotations
@@ -67,6 +74,7 @@ from typing import Any, TypedDict
 
 from langchain_core.messages import AIMessage
 
+from src.agents import mock_mode
 from src.cancellation import JobCancelledError, check_cancelled
 from src.config import settings
 from src.errors import UpstreamModel, UpstreamPaperRead
@@ -608,7 +616,26 @@ def _analyze_paper(
     `preferred_sections` (ADR 0019) is passed to the ranker so a
     supervisor-driven re-read can promote chunks from the sections the
     previous read flagged as under-covered.
+
+    Mock mode short-circuits ahead of the PDF fetch (ADR 0080). The
+    recovery signal it returns is the default `analysis_complete=True`
+    rather than the abstract-only "full text unavailable" the live path
+    forces: under mock mode there is no full text to recover, so a
+    request for more sections would ask the supervisor to spend a round
+    on something no configuration can supply.
     """
+    if settings.use_mock_data:
+        mock_evidence = (
+            mock_mode.mock_claims(
+                paper,
+                sub_questions=subquestions,
+                max_claims=settings.reader_max_claims_per_paper,
+            )
+            if settings.enable_evidence_store
+            else []
+        )
+        return mock_mode.mock_analysis(paper), mock_evidence, _default_signal()
+
     ranked = _gather_ranked_chunks(paper, subquestions, preferred_sections)
     evidence_on = settings.enable_evidence_store and bool(ranked)
     recovery_on = settings.enable_reader_recovery

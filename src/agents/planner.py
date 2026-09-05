@@ -5,6 +5,10 @@ to the user's raw query as the single sub-question and search query,
 logged at WARNING — the pipeline still runs an honest (if shallower)
 search rather than failing the job over a formatting hiccup at its
 cheapest stage.
+
+Mock mode (ADR 0080): under `settings.use_mock_data` the plan is built
+by `src.agents.mock_mode` from the query text and no model client is
+constructed.
 """
 
 from __future__ import annotations
@@ -14,6 +18,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage
 
+from src.agents import mock_mode
 from src.agents.schemas import PlannerOutput
 from src.config import settings
 from src.graph.state import ResearchState
@@ -126,6 +131,23 @@ def planner_agent(state: ResearchState) -> dict[str, Any]:
     Returns:
         Partial state update with sub_questions, search_queries, and a message.
     """
+    if settings.use_mock_data:
+        # Before the prompt is even built, for the reason the search
+        # agent checks the same setting first: mock mode is a different
+        # source of truth, not a different way of asking the model.
+        mock_sub_questions, mock_search_queries = mock_mode.mock_plan(state["query"])
+        return {
+            "sub_questions": mock_sub_questions,
+            "search_queries": mock_search_queries,
+            "messages": [
+                AIMessage(
+                    content=f"Planned {len(mock_sub_questions)} sub-questions and "
+                    f"{len(mock_search_queries)} search queries (mock data).",
+                    name="planner",
+                )
+            ],
+        }
+
     user_prompt = _build_user_prompt(state)
     system_prompt = _build_system_prompt(state)
 

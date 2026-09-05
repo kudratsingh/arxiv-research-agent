@@ -122,6 +122,13 @@ END never reads as an approved report.
 
 Settings that drive the critic (see `src/config.py`):
 
+- `use_mock_data: bool = False` — **Mock mode** (ADR
+  [0080](../decisions/0080-mock-mode-covers-the-whole-research-graph.md)):
+  approves at a fixed constant with `revision_needed=False` and no
+  model call. **The score is not a quality measurement** — nothing
+  judged the report — and the critique text says so wherever the score
+  is displayed. The branch never asks for a revision, so the iteration
+  ceiling below has nothing to clear.
 - `max_iterations: int = 3` — hard cap on critic-driven revision
   loops.
 - `critic_model: str = ""` — per-agent model override (ADR 0021).

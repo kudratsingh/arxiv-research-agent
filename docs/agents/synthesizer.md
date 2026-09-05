@@ -120,6 +120,16 @@ prompt do the work.
 
 Settings that drive the synthesizer (see `src/config.py`):
 
+- `use_mock_data: bool = False` — **Mock mode** (ADR
+  [0080](../decisions/0080-mock-mode-covers-the-whole-research-graph.md)):
+  the briefing is assembled by `src.agents.mock_mode` from the state's
+  own papers, analyses and evidence, with no model call. Its first line
+  is exactly `Mock mode: fixture papers, no model call.`, because a
+  report outlives the log line that described the run that made it.
+  Sections follow the plan; inline `arXiv:<id>` references and the
+  citation entries both name the papers on the state, so ADR 0074's
+  check scores a mock briefing by the same oracle it scores a real one.
+  Both prompt paths have a mock counterpart and they cite identically.
 - `enable_evidence_store: bool = False` — same flag that gates the
   reader's claim emission and the verifier's chunks dossier. Turning
   it on switches all three agents together (ADR 0017).

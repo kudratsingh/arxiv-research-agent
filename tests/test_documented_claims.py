@@ -174,6 +174,7 @@ _FLOOR_BAND: Final = 500
 _NUMBER_WORDS: Final[dict[str, int]] = {
     "four": 4,
     "five": 5,
+    "six": 6,
     "eight": 8,
     "nine": 9,
     "eleven": 11,
@@ -183,6 +184,7 @@ _NUMBER_WORDS: Final[dict[str, int]] = {
     "twenty": 20,
     "twenty-one": 21,
     "twenty-two": 22,
+    "twenty-six": 26,
 }
 
 #: The words `README.md` uses for the three standalone storage backends,

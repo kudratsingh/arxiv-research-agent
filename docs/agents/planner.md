@@ -102,6 +102,13 @@ failed the whole job.)
 
 Settings that drive the planner (see `src/config.py`):
 
+- `use_mock_data: bool = False` — **Mock mode** (ADR
+  [0080](../decisions/0080-mock-mode-covers-the-whole-research-graph.md)):
+  the plan is ADR 0041's fallback shape — the raw query as the single
+  sub-question and search query — built by `src.agents.mock_mode` before
+  the prompt is assembled, so no model client is constructed. Mock mode
+  invents no decomposition, because a guess about the topic dressed as
+  an analysis of it is worse than a visibly shallow plan.
 - `planner_model: str = ""` — per-agent model override (ADR 0021).
   Empty falls back to `anthropic_model`.
 - `enable_prompt_caching: bool = False` — marks the system prompt for

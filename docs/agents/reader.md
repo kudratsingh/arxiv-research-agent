@@ -162,6 +162,19 @@ Rationale for the fallback signal: see ADR
 
 Settings that drive the reader (see `src/config.py`, ADR 0011):
 
+- `use_mock_data: bool = False` — **Mock mode** (ADR
+  [0080](../decisions/0080-mock-mode-covers-the-whole-research-graph.md)):
+  each paper's analysis is built from its own abstract by
+  `src.agents.mock_mode`, with `key_findings` as verbatim abstract
+  sentences; with the evidence store on, each claim's `claim` and
+  `source_text` are the same verbatim abstract span, so what the
+  verifier judges against is findable in the paper. The branch sits
+  ahead of `_gather_ranked_chunks`, so no PDF is fetched either — the
+  keyless path is offline as well as free, and this is the only node
+  that would otherwise leave the machine. The recovery signal stays at
+  its `analysis_complete=True` default: there is no full text to
+  recover under mock mode, so asking for more sections would spend a
+  supervisor round on something no configuration can supply.
 - `reader_max_workers: int = 5` — parallel papers in the thread pool.
 - `reader_max_chunks_per_paper: int = 5` — top-K ranked chunks passed
   to the LLM. Bounds per-paper prompt at ~5 × `chunker_max_tokens`
