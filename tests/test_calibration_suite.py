@@ -26,6 +26,7 @@ from src.calibration.suite import (
     GRADER_PROFILE_ID,
     LABEL_SET_ID,
     SUITE_ID,
+    TASK_SET_ID,
     BlindingPlanContent,
     CalibrationContentEnvelope,
     CalibrationContentStore,
@@ -84,23 +85,28 @@ class TestTheCheckedInTreeIsWhatTheFixturesBuild:
         assert tree_mismatches() == ()
 
     def test_the_writer_regenerates_a_byte_identical_tree(self, tmp_path: Path) -> None:
-        root = tmp_path / "eval_registry_calibration"
+        """Changed by ADR 0089, and the change is the whole migration.
+
+        This used to compare the writer's output against *every* file
+        under the root, which was a fair claim while the root held this
+        suite alone. It now holds W06's two benchmarks as well, so the
+        claim is stated over the files this suite builds: each one is on
+        disk at its own locator with the same bytes. That the root
+        carries nothing extra is `build_parity_report`'s claim, over the
+        union of every module that builds a registry object.
+        """
+        root = tmp_path / "calibration-only"
         write_tree(build_bundle(), root)
 
         written = sorted(path.relative_to(root) for path in root.rglob("*.json"))
-        committed = sorted(
-            path.relative_to(CALIBRATION_REGISTRY_ROOT)
-            for path in CALIBRATION_REGISTRY_ROOT.rglob("*.json")
-        )
-
-        assert written == committed
+        assert len(written) == 120
         for relative in written:
-            assert (root / relative).read_bytes() == (
-                CALIBRATION_REGISTRY_ROOT / relative
-            ).read_bytes()
+            committed = CALIBRATION_REGISTRY_ROOT / relative
+            assert committed.is_file(), f"{relative} did not survive the move"
+            assert (root / relative).read_bytes() == committed.read_bytes()
 
     def test_an_edited_object_is_reported_rather_than_raised(self, tmp_path: Path) -> None:
-        root = tmp_path / "eval_registry_calibration"
+        root = tmp_path / "calibration-only"
         write_tree(build_bundle(), root)
         target = root / "content" / "calibration_item" / "polish-scaling-emergent" / "1.0.0.json"
         payload = json.loads(target.read_text(encoding="utf-8"))
@@ -111,15 +117,26 @@ class TestTheCheckedInTreeIsWhatTheFixturesBuild:
 
         assert any("polish-scaling-emergent" in line for line in mismatches)
 
-    def test_an_extra_file_is_reported(self, tmp_path: Path) -> None:
-        root = tmp_path / "eval_registry_calibration"
+    def test_an_extra_file_is_reported_only_when_the_root_is_exclusive(
+        self, tmp_path: Path
+    ) -> None:
+        """Changed by ADR 0089: the assertion gained a precondition.
+
+        A file this suite does not build is no longer, by itself, a
+        fault: since the merge, 137 of them are W06's benchmarks. The
+        check survives as an opt-in for a root that really does hold one
+        suite, and the union claim moved to W06's parity report.
+        """
+        root = tmp_path / "calibration-only"
         write_tree(build_bundle(), root)
         extra = root / "task_case" / "invented" / "1.0.0.json"
         extra.parent.mkdir(parents=True)
         extra.write_text("{}", encoding="utf-8")
 
+        assert tree_mismatches(root) == ()
         assert any(
-            "the fixtures do not build" in line for line in tree_mismatches(root)
+            "the fixtures do not build" in line
+            for line in tree_mismatches(root, exclusive=True)
         )
 
     def test_a_missing_tree_is_reported_rather_than_crashing(self, tmp_path: Path) -> None:
@@ -138,14 +155,36 @@ class TestTheCheckedInTreeIsWhatTheFixturesBuild:
             assert content.integrity.payload_digest == sha256_digest(content.payload)
 
     def test_a_mislocated_object_is_refused(self, tmp_path: Path) -> None:
-        root = tmp_path / "eval_registry_calibration"
+        """Changed by ADR 0089: the copy became a move.
+
+        `read_tree` reads the locators this suite builds rather than
+        walking the root, so a *copy* filed somewhere else is now simply
+        a file nobody points at. Moving the object is the fault that
+        matters — the locator a reference resolves to now holds an
+        object whose identity says it lives elsewhere.
+        """
+        root = tmp_path / "calibration-only"
         write_tree(build_bundle(), root)
         source = root / "retention_policy" / "calibration-repository-history" / "1.0.0.json"
-        moved = root / "retention_policy" / "somewhere-else" / "1.0.0.json"
-        moved.parent.mkdir(parents=True)
-        moved.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        other = root / "retention_policy" / "somewhere-else" / "1.0.0.json"
+        other.parent.mkdir(parents=True)
+        other.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        assert read_tree(root)
 
+        source.write_text(
+            (root / "task_set" / TASK_SET_ID / "1.0.0.json").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
         with pytest.raises(RegistryResolutionError, match="mislocated"):
+            read_tree(root)
+
+    def test_a_missing_object_is_refused(self, tmp_path: Path) -> None:
+        """The half `read_tree` gained: a locator with nothing at it."""
+        root = tmp_path / "calibration-only"
+        write_tree(build_bundle(), root)
+        (root / "retention_policy" / "calibration-repository-history" / "1.0.0.json").unlink()
+
+        with pytest.raises(RegistryResolutionError, match="unavailable"):
             read_tree(root)
 
     def test_every_object_passes_the_registry_safety_scan(self) -> None:
@@ -458,28 +497,53 @@ class TestTheGovernanceRecords:
         }
 
 
-class TestW06sTreeIsUntouched:
-    def test_the_calibration_tree_is_a_sibling_of_the_benchmark_tree(self) -> None:
+class TestThereIsOneRegistryRoot:
+    """Inverted by ADR 0089. This class was `TestW06sTreeIsUntouched`.
+
+    Its four tests asserted the separation W10 was forced into: a
+    sibling root, no calibration object in W06's tree, no benchmark
+    object in this one. The separation was never about the objects —
+    W06's `ContentKind` was closed and its parity called anything it did
+    not build unregistered — and with both fixed, two roots is one root
+    too many. What the class asserts now is that the merge actually
+    happened and that the two suites still do not touch each other.
+    """
+
+    def test_the_calibration_tree_is_the_benchmark_tree(self) -> None:
         from src.contracts.benchmark_adapters import REGISTRY_ROOT
 
-        assert CALIBRATION_REGISTRY_ROOT != REGISTRY_ROOT
-        assert not CALIBRATION_REGISTRY_ROOT.is_relative_to(REGISTRY_ROOT)
-        assert CALIBRATION_REGISTRY_ROOT.parent == REGISTRY_ROOT.parent
+        assert CALIBRATION_REGISTRY_ROOT == REGISTRY_ROOT
+        assert not (REGISTRY_ROOT.parent / "eval_registry_calibration").exists()
 
-    def test_w06s_tree_carries_no_calibration_object(self) -> None:
+    def test_the_one_tree_carries_every_calibration_object(self) -> None:
         from src.contracts.benchmark_adapters import REGISTRY_ROOT
 
         names = {path.parent.name for path in REGISTRY_ROOT.rglob("*.json")}
 
-        assert SUITE_ID not in names
-        assert LABEL_SET_ID not in names
+        assert SUITE_ID in names
+        assert LABEL_SET_ID in names
+        # And W06's, which is the point of there being one root.
+        assert "research-policy-v1" in names
+        assert "guided-learning-v1" in names
 
-    def test_the_calibration_tree_carries_no_benchmark_object(self) -> None:
-        objects, _ = read_tree()
-        ids = {envelope.object_ref().id for envelope in objects}
+    def test_the_two_suites_still_share_no_object(self) -> None:
+        """One root, and still two suites: no id belongs to both."""
+        from src.contracts.benchmark_adapters import build_registry
 
-        assert "research-policy-v1" not in ids
-        assert "guided-learning-v1" not in ids
+        calibration_objects, _ = read_tree()
+        calibration_ids = {
+            envelope.object_ref().id for envelope in calibration_objects
+        }
+        benchmark_ids = {
+            envelope.object_ref().id for envelope in build_registry().objects
+        }
+
+        assert "research-policy-v1" not in calibration_ids
+        assert "guided-learning-v1" not in calibration_ids
+        assert SUITE_ID not in benchmark_ids
+        # The one object both suites would have wanted to share, and do
+        # not: each declares its own retention policy.
+        assert calibration_ids & benchmark_ids == set()
 
     def test_the_layout_is_the_same_one_w02s_resolver_reads(self) -> None:
         """`<kind>/<id>/<revision>.json`, content under `content/` — the
@@ -580,7 +644,7 @@ class TestTheRemainingSuiteRefusals:
 
     def test_an_invalid_content_file_is_reported_as_such(self, tmp_path: Path) -> None:
 
-        root = tmp_path / "eval_registry_calibration"
+        root = tmp_path / "calibration-only"
         write_tree(build_bundle(), root)
         _, contents = read_tree()
         target = next(
@@ -667,7 +731,7 @@ class TestTheRemainingSuiteRefusals:
     def test_an_unparseable_registry_file_is_reported_by_read_tree(
         self, tmp_path: Path
     ) -> None:
-        root = tmp_path / "eval_registry_calibration"
+        root = tmp_path / "calibration-only"
         write_tree(build_bundle(), root)
         (root / "retention_policy" / "calibration-repository-history" / "1.0.0.json").write_text(
             "{}", encoding="utf-8"
@@ -677,7 +741,7 @@ class TestTheRemainingSuiteRefusals:
             read_tree(root)
 
     def test_a_missing_file_is_reported_as_a_mismatch(self, tmp_path: Path) -> None:
-        root = tmp_path / "eval_registry_calibration"
+        root = tmp_path / "calibration-only"
         write_tree(build_bundle(), root)
         (root / "retention_policy" / "calibration-repository-history" / "1.0.0.json").unlink()
 

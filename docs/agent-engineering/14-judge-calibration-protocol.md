@@ -947,3 +947,28 @@ python -m src.calibration.suite parity
 The parity command proves the checked-in `eval_registry_calibration/`
 tree is exactly what the fixtures build. It writes nothing, calls
 nothing, and costs nothing.
+
+## 16. Amendment — the separate root is gone (2026-09-05)
+
+Appended rather than edited in place. Implemented by
+[ADR 0089](../decisions/0089-non-arm-policy-snapshots-and-one-registry-root.md)
+and recorded as an amendment in
+[`11-benchmark-data-registry-rfc.md`](11-benchmark-data-registry-rfc.md)
+§23.
+
+**§8's "Why a separate registry root" no longer describes the tree, and
+`eval_registry_calibration/` no longer exists.** That section's reasoning
+was correct and its two premises have both been removed at the source:
+W06's `ContentKind`/`ContentPayload` were widened to carry this suite's
+eight content kinds, and its "the checked-in tree is exactly what the
+modules build" property is now stated over the union of every module that
+builds a registry object. This suite's 120 objects moved into
+`eval_registry/` byte for byte, digests and locators unchanged, and no
+object of either suite was renamed or re-sealed.
+
+Read §8's table row and §15's parity paragraph with `eval_registry/`
+substituted for `eval_registry_calibration/`. Both commands are
+unchanged: `python -m src.calibration.suite parity` still proves this
+suite's objects are exactly what the fixtures build, and
+`python -m src.contracts.registry parity` proves the whole tree is
+exactly what every module builds.
