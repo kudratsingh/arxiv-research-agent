@@ -64,10 +64,14 @@ index instead:
    against the workflow and it is not in the tree at all, while the
    workflow file still carries a `cron:` that does not fire. WO-B2 made
    both nightly files say that about themselves in prose, which is what
-   `TestTheNightlyEvalState` reads: the three documents that describe the
-   nightly — `README.md`, `docs/eval.md` and the workflow — are held to
-   one story, so re-enabling the workflow and updating only one of them
-   goes red. That is an agreement between documents and not a probe of
+   `TestTheNightlyEvalState` reads: the four artifacts that describe the
+   nightly — `README.md`, `docs/eval.md`, `docs/architecture.md` and the
+   workflow — are held to one story, so re-enabling the workflow and
+   updating only one of them goes red. `docs/architecture.md` joined
+   that set in WO-D2 and was the last claim in the index still marked
+   **False**; the index had recorded that its test was "already
+   written", and it was not — no test in this repository read that
+   document's nightly sentence at all. That is an agreement between documents and not a probe of
    GitHub; nothing here can tell you the workflow is really off, and the
    54 failed runs live in Actions history where no test reaches them.
 3. **Whether a feature has a flag at all.** `TestTheFlagSet` enumerates
@@ -117,6 +121,12 @@ put the README's nightly paragraph back to "the workflow is wired" while
 `docs/eval.md` says disabled, drop the seed script's
 Postgres-and-Redis-only property, or re-seed `web/vitest.config.mts`'s
 coverage thresholds without recording the measurement they came from.
+WO-D2 adds three: restore `docs/architecture.md`'s unqualified "run
+nightly in CI with regression diffing", put `docs/demo.md`'s two links
+back to `eval.md#status-no-green-campaign-yet` (an anchor no heading has
+minted since the section was renamed, and one GitHub resolves by
+silently dropping the reader at the top of the page), or render an image
+in `README.md` that `web/e2e/readme.spec.ts` does not capture.
 """
 
 from __future__ import annotations
@@ -148,6 +158,7 @@ _VITEST_CONFIG: Final = _ROOT / "web" / "vitest.config.mts"
 _DECISIONS: Final = _ROOT / "docs" / "decisions"
 _E2E_DIR: Final = _ROOT / "tests" / "e2e"
 _SEED_SCRIPT: Final = _ROOT / "web" / "e2e" / "fixtures" / "seed.sh"
+_README_SHOTS: Final = _ROOT / "web" / "e2e" / "readme.spec.ts"
 _COMPOSE_E2E: Final = _ROOT / "web" / "e2e" / "support" / "compose.e2e.yml"
 
 #: How far the README's Python floor is allowed to lag the collected
@@ -1002,17 +1013,31 @@ class TestTheStandaloneDefaults:
 
 
 class TestTheScreenshotMechanism:
-    """The mechanism, which is real, and not the PNGs, which are not bound.
+    """The mechanism, and — since WO-D2 — the images themselves.
 
-    Deliberately narrower than the claim was. Capturing the committed
-    images as Playwright snapshots would make a regeneration a reviewable
-    diff and is the only thing that would bind a PNG to a run — it is
-    also a browser-tier change out of all proportion to the sentence, and
-    out of this work order's surface. So the README now claims the
-    mechanism and says plainly that the images themselves are unbound,
-    and this is the mechanism read back: the seed script writes behind
-    the API, and the stack it writes into is pinned to a key that cannot
-    buy anything.
+    WO-C2 checked the mechanism and said plainly what it could not
+    check: nothing bound a committed PNG to a run, so a hand-edited
+    screenshot passed everything here. It judged the fix — capturing the
+    images as Playwright snapshots — disproportionate. The owner asked
+    for it anyway, so `web/e2e/readme.spec.ts` now captures all five
+    through the same harness `visual.spec.ts` uses, with the snapshot
+    path pointing at `docs/images/` so the baseline IS the file the
+    README renders.
+
+    **What this class can hold of that, and what it cannot.** The
+    comparison itself is a browser-tier gate that runs on darwin only:
+    a snapshot has to live where the README references it, that path has
+    no room for the `{platform}` segment `visual.spec.ts` relies on, and
+    Linux rasterises the same font differently — so the Linux `web-e2e`
+    job skips it, exactly as it skips the visual sweep. That is stated
+    in the spec, in the README and in the index rather than implied
+    away.
+
+    What runs in CI is below: the seed script still writes behind the
+    API, the stack is still pinned to a key that cannot buy anything,
+    and every image the README renders is now required to be one the
+    spec captures — so adding a screenshot to the README without a
+    capture for it goes red on Linux like everywhere else.
     """
 
     def test_the_seed_script_writes_behind_the_api(self) -> None:
@@ -1055,9 +1080,47 @@ class TestTheScreenshotMechanism:
         assert referenced, "README.md references no screenshots at all"
         missing = [path for path in referenced if not (_ROOT / path).is_file()]
         assert not missing, (
-            f"README.md renders images that are not in the tree: {missing}. "
-            "Nothing binds these files to a run, so their existence is the "
-            "only thing about them a test can hold."
+            f"README.md renders images that are not in the tree: {missing}"
+        )
+
+    def test_every_screenshot_the_readme_shows_is_captured_by_the_spec(self) -> None:
+        """The half of R14's binding that runs on every platform.
+
+        The snapshot comparison is darwin-only for a reason the spec
+        explains, which would leave a Linux CI run with no opinion at
+        all about these files. This is the opinion it can have: the set
+        of images `README.md` renders and the set `readme.spec.ts`
+        captures are the same set. Add a screenshot to the README by
+        hand and it fails; delete a shot from the table and leave the
+        README rendering it and it fails.
+
+        Read out of the spec's `file:` entries rather than out of a list
+        kept here, for the reason every check in this module is written
+        that way — a second copy of the inventory is a second thing to
+        forget.
+        """
+        spec = _README_SHOTS.read_text(encoding="utf-8")
+        captured = {f"docs/images/{name}.png" for name in re.findall(r'file: "([\w.-]+)"', spec)}
+        assert captured, (
+            f"{_README_SHOTS.relative_to(_ROOT)} declares no `file:` entries, so "
+            "this check has nothing to compare against. If the capture suite "
+            "has been rewritten, this pattern moves with it rather than being "
+            "left matching nothing."
+        )
+        rendered = set(re.findall(r"(docs/images/[\w.-]+\.png)", _readme()))
+        uncaptured = sorted(rendered - captured)
+        orphaned = sorted(captured - rendered)
+        assert not uncaptured, (
+            f"README.md renders these images and {_README_SHOTS.name} does not "
+            f"capture them: {uncaptured}. An image nothing captures is back to "
+            "being an asset no run produced — which is the whole of what R14 "
+            "was Partial for. Add a row to that file's `SHOTS` table and "
+            "regenerate with `npm run e2e:readme:update` on macOS."
+        )
+        assert not orphaned, (
+            f"{_README_SHOTS.name} captures images README.md no longer "
+            f"renders: {orphaned}. Either the README dropped a screenshot and "
+            "the table did not, or a file was renamed in one place only."
         )
 
 
@@ -1240,6 +1303,57 @@ class TestTheNightlyEvalState:
             "own header change together."
         )
 
+    def test_the_architecture_doc_tells_the_same_story(self) -> None:
+        """A25, and a correction to the index's account of why it survived.
+
+        `docs/architecture.md`'s Evaluation bullet said the eval metrics
+        "run nightly in CI with regression diffing" — flat, present
+        tense, no qualifier — while `README.md`, `docs/eval.md` and both
+        workflow files said the workflow was disabled. That is claim
+        A25, the last one the index carried as **False**.
+
+        The index's row said correcting it was "a one-line edit with the
+        test already written". The edit was one line; the test was not
+        written. This class held three artifacts and stopped there —
+        `README.md`, `docs/eval.md` and the two workflow files — and
+        nothing in the repository read `docs/architecture.md`'s nightly
+        sentence at all, which is why the claim could sit false through
+        WO-B1 and WO-C2 without a single test going red. A sentence no
+        test reads is not "waiting on an edit"; it is unenforced. This
+        is the fourth artifact joining the one story.
+
+        Two assertions, because the sentence can rot in two directions.
+        The qualifier can be deleted on the way back to the present
+        tense, and the disabled state can be dropped while the qualifier
+        stays — a document that says "designed to run nightly" and never
+        says it does not is still letting a reader assume it does.
+        """
+        text = _architecture()
+        window = 60
+        unqualified = [
+            text[max(0, match.start() - window) : match.end()]
+            for match in re.finditer(r"runs? nightly in CI", text)
+            if "designed to " not in text[max(0, match.start() - window) : match.start()]
+        ]
+        assert not unqualified, (
+            "docs/architecture.md claims the eval runs nightly in CI without "
+            f"saying it is designed to and does not: {unqualified}. The "
+            "workflow is disabled at the repository, README.md and "
+            "docs/eval.md both say so, and this document saying otherwise "
+            "was the assurance index's claim A25 — false on main for the "
+            "whole of Phase B and Phase C because no test read this file's "
+            "nightly sentence."
+        )
+        assert "disabled at the repository** (`disabled_manually`)" in text, (
+            "docs/architecture.md no longer records that the nightly eval "
+            "workflow is disabled at the repository. The qualifier alone is "
+            "not enough: 'designed to run nightly' with no statement of what "
+            "actually happens leaves a reader to assume the schedule fires. "
+            "If the workflow has been enabled, this document, README.md, "
+            "docs/eval.md and the workflow file's own header change in one "
+            "commit — that is what this class is for."
+        )
+
     def test_both_nightly_workflows_say_they_are_disabled(self) -> None:
         """Both, because the standing constraint is about both.
 
@@ -1282,3 +1396,125 @@ class TestTheNightlyEvalState:
                 "disabled at the repository, which the checkout cannot show, "
                 "and that gap is exactly why the file has to say it in prose."
             )
+
+
+# ---------------------------------------------------------------------------
+# The citations themselves — a link that lands on nothing
+# ---------------------------------------------------------------------------
+
+
+def _heading_slugs(path: pathlib.Path) -> set[str]:
+    """Every anchor GitHub will mint for one Markdown file's headings.
+
+    GitHub's algorithm, and not an approximation of it: lower-case, drop
+    everything that is not a word character, a space or a hyphen, then
+    replace each remaining space with a hyphen **individually**. The last
+    step is the one an approximation gets wrong — collapsing runs of
+    whitespace first turns `S7 — The deployment gate` into
+    `s7-the-deployment-gate`, where GitHub mints `s7--the-deployment-gate`
+    because the em dash leaves two spaces behind. Two real anchors in
+    `docs/architecture.md` are of exactly that shape, so a collapsing
+    version of this function reports them as broken and this check would
+    have arrived with two false failures.
+
+    Fenced code is skipped: a `# comment` inside a shell block is not a
+    heading, and several of these documents open with one.
+    """
+    slugs: set[str] = set()
+    in_fence = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        heading = re.match(r"^#{1,6}\s+(.*)$", line)
+        if heading is None:
+            continue
+        text = heading.group(1).strip().replace("`", "")
+        text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+        text = re.sub(r"[^\w\s-]", "", text.lower())
+        slugs.add(text.replace(" ", "-"))
+    return slugs
+
+
+class TestTheCrossDocumentAnchors:
+    """A citation that lands on nothing, which is the index's own subject.
+
+    `docs/assurance/README.md` says of its `file:line` column that "a
+    citation that points at the wrong line is the same species of rot the
+    rest of this page is about". A section link is that species exactly,
+    and it had already happened: `docs/eval.md` renamed its status
+    heading to *Status: disabled, and no green campaign yet*, WO-C2
+    updated the two links inside `docs/eval.md` itself, and the two in
+    `docs/demo.md` were left pointing at `#status-no-green-campaign-yet`
+    — an anchor no document has minted since the rename. GitHub does not
+    error on a dead anchor. It silently drops the reader at the top of
+    the page, so the failure is invisible to everybody except the reader,
+    who cannot tell a broken link from a badly written section.
+
+    `tests/test_assurance_docs.py` already holds the assurance pack's
+    *paths* to resolving. This is the other half of a link, over the
+    top-level documents that carry claims: the file has to exist **and**
+    the fragment has to name a heading in it.
+
+    Deliberately not repository-wide. `docs/revamp/` and
+    `planning/` are campaign archives — they cite headings in documents
+    that have since been rewritten, on purpose, because an archive that
+    is edited to keep up with the tree stops being an archive. The
+    documents here are the live ones a reader is pointed at.
+    """
+
+    def _links(self) -> list[tuple[pathlib.Path, str, str]]:
+        """Every `](target#anchor)` in the live documents.
+
+        `target` is empty for a link into the citing document itself,
+        which is why the resolution below is written against
+        `path.parent / target` rather than against `target` alone.
+        """
+        paths = [_ROOT / "README.md", *sorted((_ROOT / "docs").glob("*.md"))]
+        links = []
+        for path in paths:
+            for match in re.finditer(
+                r"\]\(([^)\s]*?)#([\w-]+)\)", path.read_text(encoding="utf-8")
+            ):
+                links.append((path, match.group(1), match.group(2)))
+        return links
+
+    def test_the_documents_link_to_each_other_at_all(self) -> None:
+        """The guard on the two checks below, which are vacuous with no links."""
+        links = self._links()
+        assert len(links) > 20, (
+            f"only {len(links)} section links found across README.md and "
+            "docs/*.md. The checks below assert that every one of them "
+            "resolves, so a pattern that has stopped matching would make them "
+            "pass over nothing."
+        )
+
+    def test_every_section_link_names_a_file_that_exists(self) -> None:
+        missing = sorted(
+            {
+                f"{path.relative_to(_ROOT)} -> {target}#{anchor}"
+                for path, target, anchor in self._links()
+                if target and not (path.parent / target).resolve().is_file()
+            }
+        )
+        assert not missing, f"section links whose file is not in the tree: {missing}"
+
+    def test_every_section_link_lands_on_a_heading(self) -> None:
+        dead = sorted(
+            {
+                f"{path.relative_to(_ROOT)} -> {target or path.name}#{anchor}"
+                for path, target, anchor in self._links()
+                if (path.parent / target).resolve().is_file()
+                if anchor not in _heading_slugs((path.parent / target).resolve())
+            }
+        )
+        assert not dead, (
+            f"these section links point at anchors no heading mints: {dead}. "
+            "GitHub does not error on a dead fragment — it drops the reader at "
+            "the top of the page — so this rot is invisible to everyone except "
+            "the reader. Rename the heading back, or fix the link; if the "
+            "section genuinely went away, the sentence that cites it needs to "
+            "change too."
+        )

@@ -28,6 +28,8 @@
     "e2e:stack:down": "bash ./e2e/support/stack.sh down",
     "e2e:visual": "playwright test e2e/visual.spec.ts --project=chromium",
     "e2e:visual:update": "playwright test e2e/visual.spec.ts --project=chromium --update-snapshots",
+    "e2e:readme": "playwright test e2e/readme.spec.ts --project=readme",
+    "e2e:readme:update": "playwright test e2e/readme.spec.ts --project=readme --update-snapshots",
     "e2e:pilot:stack:up": "E2E_PILOT=1 bash ./e2e/support/stack.sh up",
     "e2e:pilot:stack:seed": "E2E_PILOT=1 bash ./e2e/support/stack.sh seed",
     "e2e:pilot:stack:down": "E2E_PILOT=1 bash ./e2e/support/stack.sh down",

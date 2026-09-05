@@ -32,10 +32,12 @@ not. Stated up front rather than left to inference:
 | [HTTP + SSE samples](#the-same-run-over-the-http-api) | **Recorded off the wire** from the seeded local Compose stack with `ANTHROPIC_API_KEY=local-preview-disabled`, and committed under [`web/contract/`](../web/contract/). Each fixture carries its own `x-recording` header saying whether the bytes were observed or transcribed | Field names, framing, ordering, status codes. |
 
 No number on this page is a benchmark result. **No eval campaign has
-ever completed** — the nightly workflow has failed on a missing
-`ANTHROPIC_API_KEY` secret every night since it landed, so there is no
-`summary.jsonl` in CI and the README's results block still reads
-`(pending)`. See [`docs/eval.md`](eval.md#status-no-green-campaign-yet).
+ever completed** — every run the nightly workflow had failed on a
+missing `ANTHROPIC_API_KEY` secret (54 of 54, 2026-07-07 to
+2026-08-29) and the workflow is now disabled at the repository, so
+there is no `summary.jsonl` in CI and the README's results block still
+reads `(pending)`. See
+[`docs/eval.md`](eval.md#status-disabled-and-no-green-campaign-yet).
 
 ## Query
 
@@ -652,9 +654,10 @@ does on a deliberate `--queries` dispatch. See ADRs
 [0010](decisions/0010-nightly-eval-ci.md) and
 [0044](decisions/0044-eval-cost-accuracy-and-regression-thresholds.md).
 
-None of this has run yet against real data — the workflow has never
-got past its `ANTHROPIC_API_KEY` preflight. See
-[`docs/eval.md`](eval.md#status-no-green-campaign-yet).
+None of this has run yet against real data — the workflow never got
+past its `ANTHROPIC_API_KEY` preflight and is now disabled at the
+repository. See
+[`docs/eval.md`](eval.md#status-disabled-and-no-green-campaign-yet).
 
 ## Reproducing this demo
 

@@ -99,6 +99,19 @@ const MOBILE_ONLY = /@device/;
  * `docs/revamp/evidence/gate-4/residual-risks.md` rather than left implicit.
  */
 const CHROMIUM_ONLY = /@slice|@export|@axe|@cls|@csp|@a11y|@visual/;
+/**
+ * `@readme` (WO-D2) is not in `CHROMIUM_ONLY` because it is not a tag the
+ * chromium project runs — it is the whole of a project of its own.
+ *
+ * The README's screenshots are `toHaveScreenshot` baselines whose snapshot
+ * path has to BE the file `README.md` renders, which means `docs/images/` and
+ * not `e2e/__screenshots__/{platform}/`. `snapshotPathTemplate` is a project
+ * setting, so the only way to give one spec a different one is to give it a
+ * project. Every other project therefore has to be kept OFF these tests, or
+ * the same five renders would also be written under the default template as
+ * an orphan set nothing reads.
+ */
+const README_ONLY = /@readme/;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -200,7 +213,35 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      grepInvert: MOBILE_ONLY,
+      grepInvert: new RegExp(`${MOBILE_ONLY.source}|${README_ONLY.source}`),
+    },
+    {
+      /**
+       * WO-D2 — the README's five screenshots, and the one project whose
+       * committed bytes live outside `e2e/`.
+       *
+       * `snapshotPathTemplate` points at `docs/images/` so the baseline IS
+       * the asset the README renders: regenerating an image is then a diff
+       * against the committed picture rather than a new opaque file.
+       *
+       * THE PLATFORM SEGMENT IS ABSENT AND THAT IS A LIMIT, NOT AN
+       * OVERSIGHT. `README.md` references one path per image and GitHub
+       * renders that path, so there is nowhere to put `{platform}`. The
+       * committed bytes are darwin's; `readme.spec.ts` skips on any other
+       * platform rather than failing on font rasterisation, which means the
+       * Linux `web-e2e` job does not run this gate. The spec's header says
+       * so in as many words, and `tests/test_documented_claims.py` holds the
+       * half that does run in CI — that every image the README renders is
+       * named by the spec's table.
+       *
+       * No viewport here: the five renders do not share one geometry and
+       * each sets its own, including `deviceScaleFactor`, which is a context
+       * option `setViewportSize` cannot reach.
+       */
+      name: "readme",
+      use: { ...devices["Desktop Chrome"] },
+      grep: README_ONLY,
+      snapshotPathTemplate: "{testDir}/../../docs/images/{arg}{ext}",
     },
     {
       name: "firefox",
@@ -208,12 +249,16 @@ export default defineConfig({
       // The slice and the export downloads are pinned to chromium by
       // criteria 6 and 7; running them three times would add wall clock and
       // no evidence.
-      grepInvert: new RegExp(`${MOBILE_ONLY.source}|${CHROMIUM_ONLY.source}`),
+      grepInvert: new RegExp(
+        `${MOBILE_ONLY.source}|${CHROMIUM_ONLY.source}|${README_ONLY.source}`,
+      ),
     },
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
-      grepInvert: new RegExp(`${MOBILE_ONLY.source}|${CHROMIUM_ONLY.source}`),
+      grepInvert: new RegExp(
+        `${MOBILE_ONLY.source}|${CHROMIUM_ONLY.source}|${README_ONLY.source}`,
+      ),
     },
     {
       // 412 × 915 — the exact width 04 §8.3 audits, and the width the

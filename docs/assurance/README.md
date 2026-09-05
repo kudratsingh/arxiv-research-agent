@@ -4,12 +4,13 @@ The index. Open this, and every claim this repository makes about reliability,
 safety, accuracy and compliance leads to the artifact that enforces it — or to a
 plain statement that nothing does.
 
-**Reviewed at `ed71098`; claim rows revised by WO-B1 and again by WO-C2.**
+**Reviewed at `ed71098`; claim rows revised by WO-B1, WO-C2 and WO-D2.**
 Every path cited on this page and in
 [`framework-mapping.md`](framework-mapping.md) resolves, and
 `tests/test_assurance_docs.py` fails when one stops resolving. A crosswalk full
 of dead links is worse than no crosswalk. The `file:line` column was recomputed
-against the tree WO-B1 left behind, and recomputed again for WO-C2: correcting
+against the tree WO-B1 left behind, and recomputed again for WO-C2 and WO-D2:
+correcting
 a false sentence moves the line numbers of every claim below it, and a citation
 that points at the wrong line is the same species of rot the rest of this page
 is about.
@@ -34,13 +35,12 @@ If you have five minutes and want to know whether to trust this system:
 2. [`system-card.md`](system-card.md) §5.3 — **judge–human calibration is
    unmeasured.** Every judged score has no known relationship to human
    judgement.
-3. [The one claim that is still false](#the-one-claim-that-is-still-false),
-   below, and the note saying what is left to do about it. Eleven claims were
-   unenforced when this page was written and five of those were false; after
-   WO-B1 and WO-C2 the count is zero unenforced and one false — which is
-   **not** a clean bill of health, and the paragraph under the status table
-   says why: twenty-one claims are Partial, each with its gap named in its own
-   row.
+3. [The claim that was still false](#the-claim-that-was-still-false), below.
+   Eleven claims were unenforced when this page was written and five of those
+   were false; after WO-B1, WO-C2 and WO-D2 the count is zero unenforced and
+   zero false — which is **not** a clean bill of health, and the paragraph
+   under the status table says why: twenty-one claims are Partial, each with
+   its gap named in its own row.
 4. [`framework-mapping.md`](framework-mapping.md) §6 — the ten things that
    cannot be measured here, each with the constraint that makes it so.
 
@@ -53,10 +53,10 @@ If you have five minutes and want to know whether to trust this system:
 
 | Status | Count | Means |
 |---|---|---|
-| **Enforced** | 48 | A named test, gate or validator goes red. |
+| **Enforced** | 49 | A named test, gate or validator goes red. |
 | **Partial** | 21 | Something goes red, but narrower than the claim. The gap is named. |
 | **Not enforced** | 0 | Nothing goes red. |
-| **False** | 1 | The claim is untrue on this tree. Also unenforced, by definition. |
+| **False** | 0 | The claim is untrue on this tree. Also unenforced, by definition. |
 
 The last two rows are the valuable part of this document. A claim nothing
 enforces is a claim that will drift, and five already had when this page was
@@ -67,16 +67,16 @@ it means every claim now has *something* behind it, and twenty-one of them
 have less behind them than the sentence says. The gap did not disappear when
 a row moved from "Not enforced" to "Partial" — it moved into that row's
 right-hand column, where it is named. Three of the four rows WO-C2 moved
-carry a residue that no test in this repository can reach: the screenshots
-are not bound to a run (R14), the nightly's real state lives in GitHub's
-settings rather than the tree (R28), and no reflection over `Settings` can
-see a feature that shipped with no flag at all (R15).
+carry a residue that no test in this repository can reach: the nightly's
+real state lives in GitHub's settings rather than the tree (R28), no
+reflection over `Settings` can see a feature that shipped with no flag at
+all (R15), and the screenshots (R14) — which WO-D2 turned into Playwright
+snapshots — are compared by a gate that runs on macOS and skips in CI.
 
 **Revised by WO-B1**, which added
 [`tests/test_documented_claims.py`](../../tests/test_documented_claims.py).
 Four of the five false claims were corrected and are now read back out of the
-prose by a test; the fifth (**A25**) is still false, for the reason its row
-gives. Row by row: R22 False → Partial, R25 False → **Enforced**, A09 False →
+prose by a test; the fifth (**A25**) stayed false until WO-D2. Row by row: R22 False → Partial, R25 False → **Enforced**, A09 False →
 **Enforced**, A24 False → **Enforced**, R16 Not enforced → Partial, R33 Not
 enforced → Partial. Nothing was reclassified without a test to point at, and
 no claim was weakened to make a test pass — where a claim could not be
@@ -84,22 +84,37 @@ mechanised the claim stayed and the gap is below.
 
 **Revised again by WO-C2**, which took the four remaining unenforced rows:
 R11 Not enforced → **Enforced**, R14 Not enforced → Partial, R15 Not enforced
-→ Partial, R28 Not enforced → Partial. One sentence was rewritten rather than
+→ Partial, R28 Not enforced → Partial. A25 stayed False, and WO-D2 closed it:
+False → **Enforced**. One sentence was rewritten rather than
 mechanised — R11's "byte-identical", which no artifact in this repository
 could ever have supported — and the row says so where a reader will see it.
 
-### The one claim that is still false
+**Revised again by WO-D2**, which took the last false claim and the residue of
+one Partial row: A25 False → **Enforced**, R14 Partial → Partial *with the
+images bound*. It also corrected two stale `docs/demo.md` anchors and re-seeded
+the Vitest count of record, and both of those are now held by a test rather
+than fixed once.
 
-It was eleven claims that nothing enforced, then five, and now one — which is
-false rather than merely unenforced. The ten that left the list are recorded
-underneath, because *how* a claim became enforceable is the part worth
-copying.
+**One correction to this page's own account of itself.** A25's row below said
+its test was "already written". It was not. `TestTheNightlyEvalState` held
+`README.md`, `docs/eval.md` and the two workflow files, and **no test in this
+repository read `docs/architecture.md`'s nightly sentence at all** — which is
+precisely why the claim could sit false through two work orders without going
+red. A sentence no test reads is not waiting on an edit; it is unenforced, and
+this page had recorded the opposite. WO-D2 wrote the missing test and made the
+edit in the same commit.
 
-| Claim | Where | Why it matters |
+### The claim that was still false
+
+It was eleven claims that nothing enforced, then five, then one — and now
+none. The eleven that left the list are recorded underneath, because *how* a
+claim became enforceable is the part worth copying.
+
+| Claim | What it says now | What goes red |
 |---|---|---|
-| **A25** — eval "run nightly in CI with regression diffing" | `docs/architecture.md:671` | **False, and the last one standing.** `eval-nightly.yml` is disabled (`disabled_manually`) and stays that way pending the funding decision. The reason WO-B1 gave for leaving it — that the reconciliation of `README.md`, `docs/eval.md` and the workflow had not happened, so there was no honest state to point the sentence at — is now spent: WO-B2 made both workflows state their own state, and WO-C2 made the two documents agree with them under `TestTheNightlyEvalState`. What is left is that this sentence lives in `docs/architecture.md`, which is not WO-C2's surface. The honest wording — *designed to run nightly; disabled pending the funding decision* — is a one-line edit whose test is already written. |
+| **A25** — the nightly eval, in `docs/architecture.md` | "**designed to run nightly in CI** with regression diffing… **It does not run:** the nightly eval workflow is **disabled at the repository** (`disabled_manually`) and stays that way pending the owner's funding decision, so `eval-nightly.yml` keeps a `cron:` that GitHub ignores and says so beside it." The document that had been the odd one out now tells the same story as the other three, and links the long form in `docs/eval.md`. | `TestTheNightlyEvalState::test_the_architecture_doc_tells_the_same_story` — two assertions, because the sentence can rot in two directions: no unqualified "runs nightly in CI" anywhere in the document, and the disabled state stated rather than merely implied by the qualifier. Restoring origin/main's wording fails the first; deleting the disabled clause while keeping "designed to" fails the second. |
 
-### The ten that left the list, and what closed each
+### The eleven that left the list, and what closed each
 
 | Claim | What it says now | What goes red |
 |---|---|---|
@@ -110,8 +125,8 @@ copying.
 | **A24** — the instrument count | "**twenty-one** OTel instruments", with the families enumerated. | `TestTheInstrumentCount` compares the sentence against `tests/test_operability_docs.py`'s AST scan of `src/`. One scan, two readers: the claims file has no second implementation to be subtly wrong about. |
 | **R16** — every decision has an ADR | Unchanged. The claim was always true; nothing read it. | `TestTheAdrIndex` requires the index and `docs/decisions/` to be the same set, and every ADR linked from `README.md` or `docs/architecture.md` to exist. **Still Partial:** "non-trivial" is a judgement and no test will hold it. |
 | **R11** — the standalone defaults | The three backends, unchanged, plus what they buy: "a checkout with neither Redis nor Postgres runs the **Sprint 1 storage path** unchanged". **"So Sprint 1 behavior stays byte-identical" is gone**, and its absence is explained in the sentence rather than trimmed out of it: no Sprint 1 artifact is kept here to diff against and the outputs are model-generated, so byte-identity was not a claim any test could hold — or, for that matter, a claim that was true. | `TestTheStandaloneDefaults` reads the three backends out of the sentence and re-derives them from `Settings`' declared defaults (not from a live `Settings()`, whose answer an exported `JOB_STORE` would change), and `::test_none_of_the_three_needs_a_service` fails with the reason rather than with a diff. `tests/test_config.py::TestDefaults::test_standalone_storage_defaults` is the config surface's own copy of the same three values, which is where WO-B1's note said they belonged. |
-| **R14** — the screenshots | The mechanism as before, then the part that was implied and is now stated: **nothing binds the committed PNGs to any run**, so a hand-edited screenshot passes every check in the repository. | `TestTheScreenshotMechanism`: `seed.sh` writes through `psql` and `redis-cli` and contains no `POST` and no `/research` outside its own comments (its safety property 4, asserted nowhere until now), the stack is pinned to the sentinel the README sentence names, and every image the README renders exists. **Still Partial**, and deliberately: capturing the PNGs as Playwright snapshots is the only thing that would close it, and it is a browser-tier change out of proportion to the sentence — so the sentence narrowed to what is true instead. |
-| **R15** — every feature behind a flag | The set is now enumerated in the prose: **nineteen** `enable_*` flags, the **eight** workflow-behavior ones in the table (all off, each independently switchable), and the **eleven** others named — including the four that default *on* and the learning ladder, which is explicitly **not** independent, three of its four flags refusing to construct without the one below them. | `TestTheFlagSet` holds the section against `Settings` in both directions, so a flag added to `src/config.py` and to no document goes red. **Still Partial:** the forward direction — a *feature* with no flag at all — adds no field for a reflection test to see, and the README now says that instead of implying the reverse. |
+| **R14** — the screenshots | The mechanism as before, and the part WO-C2 could only state is now done: **each of the five images is a Playwright snapshot**, captured by `web/e2e/readme.spec.ts` and regenerated with `npm run e2e:readme:update`. The README says so, and says the limit in the same breath — **the comparison runs on macOS only**. | `TestTheScreenshotMechanism`: `seed.sh` writes through `psql` and `redis-cli` and issues no `POST` and no `/research`, the stack is pinned to the sentinel the README names, every image the README renders exists, and — new — the set the README renders and the set the spec captures are the same set, so an image added by hand goes red on any platform. **Still Partial, for a different reason than before.** The pixels are compared by a browser gate that cannot carry a `{platform}` segment: a snapshot has to live at the path the README renders, and Linux rasterises the same font differently, so the `web-e2e` job skips it exactly as it skips the visual sweep. What changed is that the PNGs are now *derived* — there is a command that makes them, a table that says what each is a picture of, and a diff when they move — where before nothing produced them at all. |
+| **R15** — every feature behind a flag | The set is now enumerated in the prose: **nineteen** `enable_*` flags, the **eight** workflow-behavior ones in the table (all off, each independently switchable), and the **eleven** others named — including the four that default *on* and the learning ladder, which is explicitly **not** independent, three of its four flags refusing to construct without the one below them. | `TestTheFlagSet` holds the section against `Settings` in both directions, so a flag added to `src/config.py` and to no document goes red. The enumeration is **reflection over `Settings.model_fields`**, not a checked-in list — WO-D2 re-verified that by adding an undocumented `enable_*` field to a throwaway copy of the tree, which turned two of the six checks red naming the new flag. **Still Partial:** the forward direction — a *feature* with no flag at all — adds no field for a reflection test to see, and the README now says that instead of implying the reverse. |
 | **R28** — the nightly eval | "Wired and failing nightly" became "**disabled at the repository** (`disabled_manually`), and every run it did have failed — 54 of 54". The README was the document out of step; `docs/eval.md` and both workflow files already said disabled. | `TestTheNightlyEvalState` holds `README.md`, `docs/eval.md` and both workflow files to one story, and requires a surviving `cron:` to say beside itself that it does not fire — which is the line that would otherwise make a naive test assert the opposite of the truth. **Still Partial:** the state is a GitHub attribute and the run count is Actions history; what is enforced is that the documents agree, never that they are right. |
 
 **The structural reason five of these drifted has been closed.** When this page
@@ -146,8 +161,8 @@ where it moves only by a deliberate act (a coverage re-seed, a closed set).
 | R11 | 179 | Local defaults memory/SQLite/disk — the Sprint 1 *storage path*, with byte-identical output explicitly not claimed | `tests/test_config.py::TestDefaults::test_standalone_storage_defaults` asserts the three shipped values; `tests/test_documented_claims.py::TestTheStandaloneDefaults` reads the same three backends out of the sentence and re-derives them from `Settings`' declared defaults, and `::test_none_of_the_three_needs_a_service` names the regression the sentence exists to prevent. **"Byte-identical" was removed rather than mechanised**: nothing here keeps a Sprint 1 artifact to diff against and the outputs are model-generated, so no test could ever have held it — what replaced it is the configuration claim, which is checkable and checked | Enforced |
 | R12 | 236 | Contrast-checked in both themes by an axe sweep on every PR | `web/e2e/axe-matrix.spec.ts` — "every §4 state is swept at both narrow widths in both themes", pinning 20 states × 2 themes × 2 widths; `color-contrast` is a gated rule with an empty allowlist; `.github/workflows/ci.yml` runs it per PR | Enforced |
 | R13 | 244 | "It works at 390 px" | `web/e2e/reflow.spec.ts` sweeps 320 / 360 / 412 with no horizontal scroll, and device projects run 393 and 412 — **390 itself is tested nowhere.** Bracketed, not measured | Partial |
-| R14 | 256 | Screenshots cost nothing to produce | `tests/test_documented_claims.py::TestTheScreenshotMechanism` — `web/e2e/fixtures/seed.sh` writes through `psql` and `redis-cli` and issues no `POST` and no `/research`, the stack is pinned to the sentinel the sentence itself names (`web/e2e/support/compose.e2e.yml`), and every PNG the README renders is in the tree; `web/tests/ci.test.ts` holds CI's half. **Nothing binds the PNGs to a run** — Playwright snapshots would, and are out of proportion to the sentence; the README now says the images are unbound rather than leaving a reader to assume otherwise | Partial |
-| R15 | 272 | Every post-Sprint-1 feature is behind an independent flag | `tests/test_documented_claims.py::TestTheFlagSet` — the README's flag section and `Settings`' nineteen `enable_*` fields are the same set in *both* directions, the table's eight all default off, each of those eight constructs on its own (which is what "independent" is asserted to mean), and the four flags that default on are the four the prose names. **The forward direction stays unheld**: a *feature* shipped with no flag adds no field, and nothing can enumerate features — the same shape of gap as R16's "non-trivial" | Partial |
+| R14 | 256 | Screenshots cost nothing to produce, and are Playwright snapshots | `tests/test_documented_claims.py::TestTheScreenshotMechanism` — `web/e2e/fixtures/seed.sh` writes through `psql` and `redis-cli` and issues no `POST` and no `/research`, the stack is pinned to the sentinel the sentence itself names (`web/e2e/support/compose.e2e.yml`), every PNG the README renders is in the tree, and the set the README renders equals the set `web/e2e/readme.spec.ts` captures; `web/tests/ci.test.ts` holds CI's half. The PNGs are now **produced by a run** — `npm run e2e:readme:update`, four consecutive verification runs byte-identical. **The pixel comparison is darwin-only**: the snapshot must live at the path the README renders, which leaves no room for the `{platform}` segment, so the Linux `web-e2e` job skips it as it skips the visual sweep | Partial |
+| R15 | 272 | Every post-Sprint-1 feature is behind an independent flag | `tests/test_documented_claims.py::TestTheFlagSet` — the README's flag section and `Settings`' nineteen `enable_*` fields are the same set in *both* directions, the table's eight all default off, each of those eight constructs on its own (which is what "independent" is asserted to mean), and the four flags that default on are the four the prose names. The enumeration is reflection over `Settings.model_fields`, re-verified by WO-D2 against a throwaway tree carrying an extra undocumented flag. **The forward direction stays unheld**: a *feature* shipped with no flag adds no field, and nothing can enumerate features — the same shape of gap as R16's "non-trivial" | Partial |
 | R16 | 320 | Every non-trivial decision has an ADR | `tests/test_documented_claims.py::TestTheAdrIndex::test_the_index_and_the_directory_are_the_same_set` (bijection over the 74 files, both directions); `::test_every_adr_the_two_documents_cite_exists`. **"Non-trivial" is a judgement and stays unheld** — the reverse direction is all a test can carry | Partial |
 | R17 | 356 | Compose publishes app/web to loopback; Redis and Postgres internal | `tests/test_deployment_contract.py::test_local_host_ports_default_to_loopback` (asserts the literal bind string); `::test_production_only_publishes_the_tls_edge` | Enforced |
 | R18 | 411 | `ARXIV_API_KEY` never reaches browser JavaScript | `web/tests/principal.test.ts` — "is the only module that reads ARXIV_API_KEY", walking the tree; `grep NEXT_PUBLIC web/` returns zero hits repo-wide | Enforced |
@@ -209,7 +224,7 @@ where it moves only by a deliberate act (a coverage re-seed, a closed set).
 | A22 | 609 | One retry level per dependency; token bucket; Full Jitter; visible degradation | `tests/test_resilience_transport.py::TestRetriesHappenAtOneLevelOnly::test_a_failing_arxiv_query_costs_exactly_the_configured_attempts` — counts requests at a real socket, so a second retrying level shows 8 or 16 instead of 4; `::TestTheApplicationAddsNoLoopOfItsOwn`; `tests/test_resilience.py::TestTheRetryEnvelopeClamp`, `::TestFullJitter`, `::TestTheSharedBudgetRegistry` | Enforced |
 | A23 | 633 | Torch pinned to one thread at load; explicit device | `tests/test_embedding_device.py::TestNativeThreadPinning::test_torch_threads_are_pinned_at_model_load`; `::TestDeviceSelection::test_default_settings_force_cpu`; `::TestLoadLogging::test_device_is_logged_once_at_model_load` | Enforced |
 | A24 | 651 | "**twenty-one** OTel instruments" | `tests/test_documented_claims.py::TestTheInstrumentCount` against `tests/test_operability_docs.py`'s AST scan of `src/` — one scan, two readers. That scan's own floor (`>= 20`) is what let "nine" drift for three ADRs; the equality here is what closes it | Enforced |
-| A25 | 671 | Eval runs nightly in CI with regression diffing | **False — the workflow is disabled.** The reconciliation this row waited on has happened: `README.md`, `docs/eval.md` and both workflow files now tell one story, held by `tests/test_documented_claims.py::TestTheNightlyEvalState`. This sentence is the piece left over, and only because it lives in `docs/architecture.md`, which WO-C2 does not own. Correcting it is now a one-line edit — *designed to run nightly; disabled pending the funding decision* — with the test already written to hold whatever it says | **False** |
+| A25 | 671 | Eval is **designed to** run nightly in CI with regression diffing, and does not — the workflow is disabled at the repository | `tests/test_documented_claims.py::TestTheNightlyEvalState::test_the_architecture_doc_tells_the_same_story` — no unqualified "runs nightly in CI" survives in this document, and the disabled state is stated rather than left to the qualifier. This was the last **False** row on the page, and it survived WO-B1 and WO-C2 not because the edit was hard but because **no test read this document's nightly sentence**; the row that said its test was "already written" was wrong, and WO-D2 wrote it | Enforced |
 
 ---
 
@@ -255,23 +270,37 @@ claim.
    the document that was out of step — and added
    `TestTheNightlyEvalState`, which holds the README, `docs/eval.md` and both
    workflow files to one story and requires a surviving `cron:` to keep the
-   sentence that explains it. The residue is exactly the part that was never
-   in the tree: enabling the workflow with `gh workflow enable` makes all
-   three documents wrong at once and no test can see it. A25 stays false
-   because its sentence lives in `docs/architecture.md`, outside WO-C2's
-   surface.
+   sentence that explains it. **WO-D2 closed A25 too**, and the reason it was
+   still open is worth recording: correcting the sentence was a one-line
+   edit, but nothing in this repository read `docs/architecture.md`'s nightly
+   sentence, so the row above claiming "the test is already written" was
+   describing a test that did not exist. The story is now told the same way
+   by four artifacts and a fifth test holds the fourth to it. The residue is
+   exactly the part that was never in the tree: enabling the workflow with
+   `gh workflow enable` makes all four documents wrong at once and no test
+   can see it.
 4. **The four claims most likely to be believed were the four with the least
    behind them**: the test counts (R22), the routing cost saving (R33), the
    instrument count (A24), and "runs nightly" (A25). Numbers read as measured
    whether or not anything measured them — and R22 went stale twice during the
    week this page was written, once from a peer's work and once from its own.
-   Three of the four now have a test behind them. The fourth is A25, and the
-   reason it does not is a property of the claim rather than of the effort
-   spent on it: its truth lives in GitHub's own repository settings and not in
-   the tree. The reconciliation that sentence was waiting for has since
-   happened (finding 3), so what remains is a one-line edit in a document
-   WO-C2 does not own. Correcting prose to fit a test that could be written
-   would have been the wrong trade, and still is.
+   **All four now have a test behind them**, A25 last, and none of the four
+   sentences was weakened to get there: A25's says what the workflow is
+   designed to do *and* that it does not run, which is longer than the
+   sentence it replaced rather than shorter. What no test can reach is
+   unchanged — A25's truth lives in GitHub's repository settings and not in
+   the tree — so its row is Enforced on the agreement between four documents
+   and says so.
+5. **A count of record ages even when nothing is wrong.** R22's Vitest figure
+   moves only on a coverage re-seed, which is deliberate, and the band around
+   it is what separates designed lag from abandonment. WO-C2 predicted the
+   gap and WO-D2 measured it: 3,380 across 155 recorded against 3,477 across
+   158 actual, on a `git archive` of origin/main. The record was re-seeded
+   and **the coverage thresholds deliberately were not** — three of the four
+   columns had moved by 0.00-0.05, and the fourth swung 0.19 across three
+   runs of the column `web/vitest.config.mts` already documents as the
+   unstable one. A floor raised to within less than its own noise is a floor
+   that goes red on somebody else's pull request.
 
 Findings 1 and 4 are addressed above. WO-A14 documented them and owned no
 prose; **WO-B1** owned `README.md`, `docs/architecture.md` and the new claims
