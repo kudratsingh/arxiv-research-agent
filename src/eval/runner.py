@@ -294,10 +294,40 @@ def _claim_outcomes(state: ResearchState) -> dict[str, bool] | None:
     byte-identical to what it was — which matters, because changing a
     *score* here would rebaseline every campaign.
 
+    **`evidence` is passed; `full_texts` is not, and that is a
+    decision.** `build_source_index` ranks checkable text parsed PDF >
+    evidence chunks > abstract, and until WO-D1 this call site handed it
+    neither of the first two — so `_check_one_quote` fell through to
+    `quote_source_incomplete` on every quotation the abstract did not
+    happen to contain, and the quote half of ADR 0074 was inert on live
+    runs. `state["evidence"]` is already in memory here, is the verbatim
+    ranked chunk (ADR 0016) the synthesizer wrote the report *from* when
+    the evidence store is on, and costs one list copy to pass. It is
+    empty under the fixed pipeline, where this call stays exactly what
+    it was.
+
+    `full_texts` would have to come from `tools.paper_cache`, which is
+    Postgres-backed in deployment and keyed by
+    `pdf_parser._cache_key(pdf_url)` rather than by paper id. That is a
+    per-paper network read inside a guard whose only failure mode is
+    `None` — so one pool timeout would erase a whole query's paired
+    outcomes rather than degrade them, which is a worse row than the one
+    it set out to improve. `build_source_index`'s no-I/O rule is about
+    the metric module and this is not the metric module, so the read is
+    *placeable* here; it just needs a per-paper guard and a flag, and
+    those belong with whoever owns this file next (ADR 0074 follow-up).
+
+    Note the asymmetry that makes a `partial` source safe to add: a quote
+    *found* in one is grounded, a quote *missed* in one stays undecidable
+    (`_check_one_quote`, branch 6). Only a `full` source can convict.
+
     Returns `None` when the check itself fails, so a row can say "not
     computed" rather than "computed and empty". Never raises: a scorer
     must not cost the campaign the paid workflow output it already has
-    (ADR 0050).
+    (ADR 0050). Nothing added here can raise where the old call could
+    not — `state.get` and `list()` over its value are the same two
+    operations each of the three arguments beside it already performs —
+    and the guard covers it either way.
     """
     try:
         return paired_outcomes(
@@ -305,6 +335,7 @@ def _claim_outcomes(state: ResearchState) -> dict[str, bool] | None:
                 str(state.get("draft_report") or ""),
                 list(state.get("papers") or []),
                 list(state.get("citations") or []),
+                evidence=list(state.get("evidence") or []),
             )
         )
     except Exception:  # noqa: BLE001 — isolation is the point

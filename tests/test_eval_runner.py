@@ -21,6 +21,7 @@ import pytest
 
 from src.eval import runner as runner_module
 from src.eval.benchmark_queries import BENCHMARK_QUERIES, RESEARCH_DATASET_VERSION
+from src.eval.groundedness import measure_groundedness
 from src.eval.provenance import check_provenance
 from src.eval.runner import (
     EXIT_ALL_FAILED,
@@ -1726,3 +1727,180 @@ class TestClaimOutcomes:
 
         monkeypatch.setattr(runner_module, "measure_groundedness", _boom)
         assert _claim_outcomes({}) is None  # type: ignore[arg-type]
+
+
+class TestQuoteSourcesReachTheCheck:
+    """WO-D1 — the quote half of ADR 0074 stops waiting on its caller.
+
+    `build_source_index` ranks checkable text parsed PDF > evidence
+    chunks > abstract. Until this work order the runner passed neither
+    of the first two, so `_check_one_quote` fell through to
+    `quote_source_incomplete` for every quotation the abstract did not
+    happen to contain and `paired_outcomes` carried citation claims
+    only. `state["evidence"]` is already in memory at the call site and
+    is the verbatim ranked chunk the synthesizer wrote *from* (ADR
+    0016), so passing it costs a list copy and no I/O.
+
+    `full_texts` is deliberately still not passed — see
+    `_claim_outcomes`'s docstring, and the last test here, which pins
+    the decision rather than leaving it to be re-litigated by accident.
+    """
+
+    #: A chunk the reader would have ranked out of the paper's PDF. The
+    #: quoted span below is a substring of it and of nothing else in the
+    #: run, so the verdict it produces is unambiguous.
+    CHUNK = (
+        "We differ from prior work in one respect that matters: the "
+        "constraint is applied at every step rather than as a post-hoc "
+        "filter, so the decoder never emits a span it cannot support."
+    )
+
+    def _state(self, *, evidence: bool) -> Any:
+        claim = {
+            "claim": "The constraint is applied per decoding step.",
+            "paper_id": "arxiv:2401.00003",
+            "section": "method",
+            "source_text": self.CHUNK,
+            "relevance_score": 0.91,
+            "supports_question": "how is the constraint applied?",
+        }
+        return {
+            "draft_report": (
+                "# Grounded decoding\n\n"
+                "The constrained beam search paper argues that "
+                '"the constraint is applied at every step rather than '
+                'as a post-hoc filter" [Lind, 2024].\n'
+            ),
+            "papers": [
+                {
+                    "id": "http://arxiv.org/abs/2401.00003",
+                    "title": "Constrained Beam Search Revisited",
+                    "authors": ["Tomas Lind"],
+                    # The abstract does not contain the quoted span. It is
+                    # the only source this call site had before WO-D1.
+                    "abstract": "We revisit constrained beam search.",
+                    "url": "http://arxiv.org/abs/2401.00003",
+                    "pdf_url": "",
+                }
+            ],
+            "citations": [
+                {
+                    "paper_id": "http://arxiv.org/abs/2401.00003",
+                    "title": "Constrained Beam Search Revisited",
+                    "authors": ["Tomas Lind"],
+                    "year": "2024",
+                    "url": "http://arxiv.org/abs/2401.00003",
+                }
+            ],
+            "evidence": [claim] if evidence else [],
+        }
+
+    def test_an_evidence_backed_quote_is_decided_where_it_used_to_be_dropped(
+        self,
+    ) -> None:
+        """The measured before/after this work order exists for.
+
+        Without evidence the quote is `quote_source_incomplete` — `None`,
+        and `paired_outcomes` drops it, so the row's McNemar arm carried
+        citation claims only. With it the same claim id resolves `True`.
+        """
+        without = _claim_outcomes(self._state(evidence=False))
+        with_evidence = _claim_outcomes(self._state(evidence=True))
+        assert without is not None and with_evidence is not None
+
+        added = set(with_evidence) - set(without)
+        assert len(added) == 1
+        claim_id = added.pop()
+        assert claim_id.startswith("quote:")
+        assert with_evidence[claim_id] is True
+
+        # Everything that was already decided is decided identically:
+        # this widens the denominator, it does not move a verdict.
+        assert without == {
+            key: value for key, value in with_evidence.items() if key != claim_id
+        }
+
+    def test_a_missed_quote_stays_undecidable_rather_than_becoming_a_failure(
+        self,
+    ) -> None:
+        """Evidence chunks are `partial`, and only a `full` source convicts.
+
+        The asymmetry is what makes it safe to hand a partial source to
+        the scorer at all: a chunk set is a subset of the document, so a
+        quotation absent from it proves nothing about the paper. Passing
+        evidence can turn `None` into `True`; it can never manufacture a
+        `False` and charge the agent for our missing PDF.
+        """
+        state = self._state(evidence=True)
+        state["draft_report"] = (
+            "# Grounded decoding\n\n"
+            'The paper reports "a forty one percent reduction in '
+            'unsupported claims across every seed" [Lind, 2024].\n'
+        )
+        outcomes = _claim_outcomes(state)
+        assert outcomes is not None
+        assert not any(key.startswith("quote:") for key in outcomes)
+
+    def test_the_fixed_pipeline_row_does_not_move(self) -> None:
+        """`evidence` is empty unless the evidence store is on (ADR 0016).
+
+        A run without it — the fixed pipeline, and every scripted-lane
+        record, which passes no evidence at all — scores exactly what it
+        scored before this change.
+        """
+        state = self._state(evidence=False)
+        del state["evidence"]
+        assert _claim_outcomes(state) == _claim_outcomes(self._state(evidence=False))
+
+    def test_the_gated_citation_score_is_untouched(self) -> None:
+        """Sources feed the quote half only.
+
+        `citation_resolution_rate` is resolved against
+        `build_corpus_index`, which never sees `evidence`. That is what
+        keeps this change off the rebaselining path: the gated metric is
+        byte-identical with and without the new argument.
+        """
+        state = self._state(evidence=True)
+        scored = measure_groundedness(
+            state["draft_report"],
+            state["papers"],
+            state["citations"],
+            evidence=state["evidence"],
+        )
+        bare = measure_groundedness(
+            state["draft_report"], state["papers"], state["citations"]
+        )
+        assert scored["citation_resolution_rate"] == bare["citation_resolution_rate"]
+
+    def test_no_full_texts_are_passed_and_no_cache_is_read(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The Tier-2 decision, pinned.
+
+        Reading `tools.paper_cache` here would put a per-paper network
+        call inside a guard whose only failure mode is `None`, so a
+        single pool timeout would erase a whole query's paired outcomes
+        instead of degrading them. If a later work order adds the read it
+        should arrive with a per-paper guard and a flag, and this test
+        should be the thing that fails first.
+        """
+        import src.eval.runner as runner_module
+        import src.tools.paper_cache as paper_cache_module
+
+        seen: dict[str, Any] = {}
+
+        def _record(*args: Any, **kwargs: Any) -> Any:
+            seen["args"] = args
+            seen["kwargs"] = kwargs
+            return measure_groundedness(*args, **kwargs)
+
+        def _no_cache() -> Any:  # pragma: no cover — asserted unreachable
+            raise AssertionError("the scoring path must not read the paper cache")
+
+        monkeypatch.setattr(runner_module, "measure_groundedness", _record)
+        monkeypatch.setattr(paper_cache_module, "get_paper_cache", _no_cache)
+
+        _claim_outcomes(self._state(evidence=True))
+
+        assert "full_texts" not in seen["kwargs"]
+        assert seen["kwargs"]["evidence"][0]["source_text"] == self.CHUNK

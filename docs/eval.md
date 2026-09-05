@@ -824,16 +824,63 @@ replacing them because ADR 0070 forbids removing a row field:
 metric** moved with it — see [The gate ends in a
 decision](#the-gate-ends-in-a-decision).
 
-Two halves of the check remain unwired, both ADR 0074 follow-ups:
+### The quote half, wired as far as evidence chunks reach
 
-- **The quote path.** Until a caller passes `full_texts`,
-  `quote_verbatim_rate` is `null` with reason `no_checkable_quotes` on
-  every live run, so it is not published on the row: a permanently-null
-  column is noise, not a measurement. Tracked as
-  `feat/faithfulness-fulltext-source`.
-- **The per-claim paired outcomes.** `paired_outcomes()` is the shape
-  `src/eval/stats.py`'s McNemar path wants, and nothing hands it one
-  yet.
+`runner._claim_outcomes` passes `state["evidence"]` to the check (WO-D1).
+That is the second rank in `build_source_index`'s order — parsed PDF >
+evidence chunks > abstract — and it is free: the chunks are already in
+memory at the call site, are the verbatim ranked excerpts of ADR 0016,
+and are the text the synthesizer wrote the report *from* when
+`enable_evidence_store` is on. Before it, the scorer saw abstracts and
+nothing else, so `_check_one_quote` fell through to
+`quote_source_incomplete` for every quotation the abstract did not
+happen to contain, and the row's `paired_outcomes` carried citation
+claims only.
+
+Measured on `tests/fixtures/groundedness/run.json`'s `partial_source`
+report, with one evidence chunk supplied for `arxiv:2401.00003`:
+
+| | before | after |
+|---|---|---|
+| the chunk-covered quote | `null`, `quote_source_incomplete` | `true`, `quote_verbatim` |
+| `quote_verbatim_rate` | `null` / `no_checkable_quotes` | `1.0` over n=1 |
+| claims in `paired_outcomes` | 3 | 4 |
+| `citation_resolution_rate` | `1.0` | `1.0` |
+
+The gated metric does not move, and cannot: identifiers resolve against
+`build_corpus_index`, which never sees a source. So this widens a
+denominator without rebaselining a score.
+
+**What it does not close.** Evidence chunks are `partial`, so the
+asymmetry in `_check_one_quote` still governs: a quote *found* in a
+partial source is grounded, a quote *missed* in one stays undecidable.
+Only a `full` source — parsed PDF text — can return `false`, name
+`quote_misattributed`, or make a fabricated quotation visible. So the
+campaign can now confirm quotations and still cannot falsify them, and
+`quote_verbatim_rate` remains a ceiling rather than a score. Two gaps
+stay open, both ADR 0074 follow-ups:
+
+- **`full_texts`.** Still no caller. The text is in the paper cache
+  (`src/tools/paper_cache.py`), which is Postgres-backed in deployment
+  and keyed by `pdf_parser._cache_key(pdf_url)` rather than by paper id,
+  so the caller must do I/O — `build_source_index` deliberately does
+  none. WO-D1 declined to add that read: `_claim_outcomes`'s guard turns
+  any failure into `None`, so one pool timeout would erase a whole
+  query's paired outcomes instead of degrading them. It wants a
+  per-paper guard and a flag, and it belongs with whoever owns
+  `runner.py` next. Tracked as `feat/faithfulness-fulltext-source`.
+- **The abstract drops out when chunks are present.**
+  `build_source_index` picks one source per paper, best first. A paper
+  with evidence chunks is therefore indexed by its chunks *instead of*
+  its abstract, so a quotation lifted from an abstract of a
+  chunk-bearing paper goes from decided to undecidable. Both are
+  `partial`, so appending the abstract as a further segment would be
+  sound — segments are matched independently and cannot bridge — but it
+  changes a semantics ADR 0074 states and `tests/test_groundedness.py`
+  locks, so it is named here rather than done in passing.
+
+`quote_verbatim_rate` is still not published as a row field; the quote
+claims reach the row through `paired_outcomes` instead.
 
 One smaller gap sits with `src/observability/logging.py`: the per-query
 `eval_query_completed` log line still carries `citation_accuracy` only,
@@ -1287,12 +1334,17 @@ evidence.
   deterministic check and, per ADR 0007, to a judge reading abstracts
   only. Its denominator is also small: on a report citing four papers,
   four decisions is the whole measurement.
-- **The quote half of the check still reports nothing on a live run.**
-  `quote_verbatim_rate` needs parsed PDF text, and no caller passes
-  `full_texts` yet — the ADR 0074 follow-up tracked as
-  `feat/faithfulness-fulltext-source`. Until then a report that
-  fabricates a quotation is invisible to the campaign, and the metric
-  honestly says `no_checkable_quotes` rather than scoring it.
+- **The quote half of the check can confirm a quotation but not
+  falsify one.** Since WO-D1 the runner passes `state["evidence"]`, so a
+  quote the reader's ranked chunks cover is decided and reaches the
+  row's `paired_outcomes`. Chunks are a *subset* of the paper, though,
+  so a miss still proves nothing: only parsed PDF text — `full_texts`,
+  which no caller passes — makes a fabricated quotation visible. A
+  report that invents a quotation from a passage no chunk reached is
+  therefore still invisible to the campaign, and the metric says
+  `no_checkable_quotes` rather than scoring it. The ADR 0074 follow-up
+  is tracked as `feat/faithfulness-fulltext-source`; see [the quote
+  half](#the-quote-half-wired-as-far-as-evidence-chunks-reach).
 
 ## Guided-read learning metrics (Phase W)
 
@@ -1982,9 +2034,24 @@ block (`tests/test_readme_update.py`).
 - `feat/faithfulness-fulltext-source` — use cached full text
   (`.cache/pdfs/<id>.txt`) as faithfulness source when available,
   falling back to abstract. Underestimation of Phase-2 faithfulness
-  today is documented in ADR 0007. The same follow-up unblocks ADR
-  0074's `quote_verbatim_rate`, which reports `no_checkable_quotes` on
-  every live run until a caller passes `full_texts`.
+  today is documented in ADR 0007. The same follow-up is what would let
+  ADR 0074's quote check **falsify** a quotation rather than only
+  confirm one. Half of it is done: WO-D1 passes `state["evidence"]` from
+  `runner.py`, which is the second-ranked source and free, so a quote
+  the reader's chunks cover is decided. The remaining half is the cache
+  read itself, and it is not a one-liner — the cache is keyed by
+  `pdf_parser._cache_key(pdf_url)`, is Postgres-backed in deployment,
+  and sits inside a guard that turns any exception into a `null` row, so
+  it needs a per-paper guard and a flag. See [the quote
+  half](#the-quote-half-wired-as-far-as-evidence-chunks-reach).
+- Index the abstract *alongside* evidence chunks rather than behind
+  them. `build_source_index` picks one source per paper, so a
+  chunk-bearing paper loses its abstract from the index and a quotation
+  taken from that abstract becomes undecidable. Both sources are
+  `partial` and segments are matched independently, so appending would
+  be sound — but it changes a priority ADR 0074 states and
+  `tests/test_groundedness.py` locks, and belongs with that module's
+  owner rather than with a caller.
 - ~~Wire `groundedness.paired_outcomes()` into the paired comparison~~ —
   landed (WO-C1, ADR
   [0075](decisions/0075-scripted-research-tier-and-paired-claims.md)).

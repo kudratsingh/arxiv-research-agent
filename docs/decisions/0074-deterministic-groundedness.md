@@ -295,10 +295,41 @@ each has its own test.
     WO-A09, which owns `src/eval/stats.py` and `regression_diff.py`. The
     shape is `paired_outcomes()`; the open question A09 decides is how to
     treat a claim id present in only one arm.
-  - **Feed parsed PDF text into the check.** Owner: WO-A09 (it holds
-    `src/eval/runner.py`). Until a caller passes `full_texts`, the quote
-    path reports `no_checkable_quotes` on live runs. This is the same
-    follow-up `docs/eval.md` already tracks as
-    `feat/faithfulness-fulltext-source`.
+  - **Feed source text into the check.** Split by WO-D1, which landed
+    the cheap half and declined the expensive one.
+    - ~~Pass the evidence chunks~~ — **landed (WO-D1).**
+      `runner._claim_outcomes` passes `state["evidence"]`, the
+      second-ranked source. It is in memory at the call site, costs no
+      I/O, and is the ADR 0016 text the synthesizer wrote the report
+      from, so a quotation the reader's ranked chunks cover is now
+      decided instead of excluded. Measured on
+      `tests/fixtures/groundedness/run.json`: one quote moves from
+      `null`/`quote_source_incomplete` to `true`/`quote_verbatim`,
+      `quote_verbatim_rate` from `null` to `1.0` over n=1, and
+      `citation_resolution_rate` does not move — sources feed the quote
+      half only, so no score rebaselines.
+    - **Pass `full_texts`.** Still open, and still the only thing that
+      can make the check *falsify* a quotation: evidence chunks are
+      `partial`, so a miss against them is undecidable by design and
+      only a `full` source returns `false` or names
+      `quote_misattributed`. WO-D1 declined it deliberately. The text
+      lives in `src/tools/paper_cache.py`, keyed by
+      `pdf_parser._cache_key(pdf_url)` rather than by paper id and
+      Postgres-backed in deployment, so the caller must perform I/O —
+      and `_claim_outcomes`'s guard collapses any exception to `None`,
+      so an unguarded cache read would let one pool timeout erase a
+      query's whole paired-outcome set rather than degrade it. It wants
+      a per-paper guard and a flag. **Owner: whoever holds
+      `src/eval/runner.py` after Phase W's W07.** Same follow-up
+      `docs/eval.md` tracks as `feat/faithfulness-fulltext-source`.
+    - **Index the abstract alongside the chunks**, instead of behind
+      them. `build_source_index` picks one source per paper, so a
+      chunk-bearing paper drops its abstract and a quotation from that
+      abstract becomes undecidable — a narrow regression WO-D1
+      introduced by passing evidence, and did not fix because the
+      priority is stated in this ADR and locked by
+      `tests/test_groundedness.py`. Both sources are `partial` and
+      segments never bridge, so appending would be sound. Owner: this
+      module's.
   - **Fold the normalization spec into the shared rubric lock**, once a
     work order owns both `metrics.py` and the lock file.
