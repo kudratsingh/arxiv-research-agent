@@ -71,6 +71,11 @@ def _stub_llm(
         max_tokens: int,
         model_name: str | None = None,
         cache_system: bool = False,
+        # CAP-04: and the calling agent's name, so its
+        # `<agent>_effort` override and the run's compute tier
+        # can be resolved. Same reason as `schema` above: a
+        # double that refused it would fail on the call.
+        agent: str = "",
         # CAP-01: the gateway now takes a schema, and the four
         # structured agents pass theirs. A double that refused it
         # would fail on the call rather than on the behaviour.

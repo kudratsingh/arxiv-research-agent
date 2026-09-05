@@ -151,6 +151,7 @@ def critic_agent(state: ResearchState) -> dict[str, Any]:
             model_name=settings.critic_model or None,
             max_tokens=2048,
             cache_system=settings.enable_prompt_caching,
+            agent="critic",
             schema=CriticOutput,
         )
     except json.JSONDecodeError as exc:

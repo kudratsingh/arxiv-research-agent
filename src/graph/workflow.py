@@ -20,6 +20,14 @@ the policy; under its `legacy` default the shape is chosen by
   `ENABLE_EVIDENCE_STORE` / `ENABLE_VERIFIER`, which is the property
   the experiment's arm labelling rests on.
 
+With `settings.compute_controller="deterministic"` (CAP-04, ADR 0085)
+the shape stops being a process-wide constant: `build_workflow` compiles
+the fixed pipeline **and** arm C's verify-and-repair graph over one
+checkpointer and attaches them as `compute_tier_graphs(app)`, and the API
+runner picks one per job from `src.policies.compute.decide_tier`. Off —
+the default — nothing extra is compiled and every caller holds the same
+single graph it always did.
+
 Two production knobs configured here regardless of shape:
 
 - **Checkpointing** — selected by `settings.checkpoint_backend`,
@@ -614,6 +622,75 @@ def _build_graph_shape(wrap: NodeWrapper) -> StateGraph[ResearchState, Any, Any,
     return workflow
 
 
+#: Which shape each compute tier runs, when the controller is on
+#: (CAP-04, ADR 0085). T0 is the shape the deployment would have
+#: compiled anyway — the fixed pipeline, with the evidence store
+#: wherever `enable_evidence_store` puts it — so the T0 entry below is
+#: the *primary* graph itself rather than a second compilation of the
+#: same edges. T1 is arm C's graph, unchanged from ADR 0076: this work
+#: order makes that shape selectable per run and changes nothing about
+#: what it does once selected.
+#:
+#: T2 and T3 are absent by construction. `src/policies/compute.py`
+#: cannot return them, and a mapping that named a tier no builder
+#: implements would be a routing table with a hole in it.
+COMPUTE_TIER_SHAPES: dict[
+    str, Callable[[StateGraph[ResearchState, Any, Any, Any], NodeWrapper], None]
+] = {"T1": _build_fixed_verify_repair}
+
+
+def compute_tier_graphs(app: Any) -> dict[str, Any] | None:
+    """The per-tier graphs attached to a compiled app, or `None`.
+
+    The accessor exists so the runner asks a question rather than
+    reaching for a private attribute, and so "the controller is off" and
+    "this is a test's stub graph" produce the same answer — both mean
+    "run whatever you were handed", which is the only behaviour that
+    keeps a flag-off deployment identical.
+    """
+    graphs = getattr(app, "_compute_tier_graphs", None)
+    if not isinstance(graphs, dict) or not graphs:
+        return None
+    return graphs
+
+
+def _attach_compute_tier_graphs(
+    primary: Any,
+    wrap: NodeWrapper,
+    checkpointer: Any | None,
+    enable_hitl: bool | None,
+) -> None:
+    """Compile the controller's alternate shapes onto `primary`, once.
+
+    A no-op unless `settings.compute_controller` is `deterministic`, so
+    the default path compiles exactly one graph and this function is a
+    string comparison.
+
+    The alternates share `primary`'s checkpointer and therefore its exit
+    stack, which is the whole reason they are compiled *here* rather
+    than by a second `build_workflow` call: ADR 0034 closed a leak of one
+    checkpointer connection per job, and two independently built graphs
+    would reopen it as two per process — under `SqliteSaver`, two writers
+    on one file. One saver, two compiled shapes, one teardown handle on
+    the primary, which `src/api/app.py`'s lifespan already closes.
+
+    The mapping is attached rather than returned so `build_workflow`'s
+    signature and return type do not move. Every existing caller — the
+    CLI, the eval runner, `graph_shape`'s one-off compile, every test
+    that builds a graph — keeps holding a compiled app that behaves
+    exactly as it did, and only a caller that asks
+    `compute_tier_graphs` sees the alternates at all.
+    """
+    if settings.compute_controller != "deterministic":
+        return
+    graphs: dict[str, Any] = {"T0": primary}
+    for tier, build_shape in COMPUTE_TIER_SHAPES.items():
+        workflow = StateGraph(ResearchState)
+        build_shape(workflow, wrap)
+        graphs[tier] = _compile(workflow, checkpointer, enable_hitl)
+    primary._compute_tier_graphs = graphs
+
+
 def _compile(
     workflow: StateGraph[ResearchState, Any, Any, Any],
     checkpointer: Any | None,
@@ -648,13 +725,12 @@ async def _abuild_workflow(
     except BaseException:
         await exit_stack.aclose()
         raise
-    compiled = _compile(
-        _build_graph_shape(_executor_wrapper(node_executor)),
-        checkpointer,
-        enable_hitl,
-    )
+    wrap = _executor_wrapper(node_executor)
+    compiled = _compile(_build_graph_shape(wrap), checkpointer, enable_hitl)
+    _attach_compute_tier_graphs(compiled, wrap, checkpointer, enable_hitl)
     # The lifespan awaits this stack's `aclose()` at shutdown — see
-    # `create_app` in src/api/app.py.
+    # `create_app` in src/api/app.py. One stack for every shape the
+    # controller compiled: they share this checkpointer (CAP-04).
     compiled._checkpointer_aexit_stack = exit_stack
     return compiled
 
@@ -731,6 +807,9 @@ def build_workflow(
     checkpointer = _open_checkpointer(exit_stack)
     compiled = _compile(
         _build_graph_shape(_traced_wrapper), checkpointer, enable_hitl
+    )
+    _attach_compute_tier_graphs(
+        compiled, _traced_wrapper, checkpointer, enable_hitl
     )
 
     # Attach so callers can release the saver via

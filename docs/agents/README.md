@@ -67,3 +67,15 @@ that touch more than one:
 - `learning_session_max_cost_usd` — task-local override for guided-read
   sessions at the same shared LLM choke point; it never changes a research
   job's `max_cost_usd` ceiling (ADR 0062).
+- `llm_effort`, `<agent>_effort` — `output_config.effort`, resolved at
+  the same choke point as `<agent>_model`. Every one of the nine
+  LLM-calling agents names itself at its `call_llm_json` call site,
+  which is what makes these fields live at all; empty — the default —
+  sends no effort field (ADRs 0077 / 0085).
+- `compute_controller`, `tier_effort_overrides` — with the controller
+  on, each research job is allocated tier T0 (the fixed pipeline) or T1
+  (the verify-and-repair graph) by a deterministic rule table over the
+  query, and `tier_effort_overrides` may raise one agent's effort on one
+  tier: `{"T1.verifier": "high"}` is the intended shape. Neither reaches
+  a guided-read session, which drives its own graph. Off by default, and
+  off is byte-identical (ADR 0085).
