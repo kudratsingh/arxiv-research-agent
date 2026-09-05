@@ -67,7 +67,11 @@ from collections.abc import (
 from types import MappingProxyType
 from typing import Any
 
-from src.observability import get_logger
+from src.observability import (
+    DEGRADATION_RUNG_STREAMING_PARTIAL,
+    get_logger,
+    record_degradation_rung,
+)
 
 log = get_logger(__name__)
 
@@ -336,6 +340,18 @@ async def sse_event_stream(
                 log.info(
                     "sse_stream_deadline_reached",
                     extra={"job_id": job_id, "max_duration_sec": max_duration_sec},
+                )
+                # Rung 4 of the degradation ladder: the client keeps
+                # what arrived and is told to reconnect, which is a
+                # partial delivery rather than a failure. Counted here
+                # and *not* at the branch above — a terminal frame
+                # flushed at the deadline is the recovery, not the
+                # degradation, and counting it would inflate the one
+                # number the quality SLI is computed from
+                # (docs/reliability.md §5, ADR 0081).
+                record_degradation_rung(
+                    rung=DEGRADATION_RUNG_STREAMING_PARTIAL,
+                    component="sse_stream",
                 )
                 yield format_sse(
                     STREAM_TIMEOUT_EVENT,

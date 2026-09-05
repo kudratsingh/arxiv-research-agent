@@ -496,6 +496,45 @@
           "legendFormat": "{{backend}}"
         }
       ]
+    },
+    {
+      "type": "row",
+      "title": "Quality — the degradation ladder (docs/reliability.md §5)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 85 },
+      "panels": []
+    },
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "Degradations per job by ladder rung",
+      "description": "The quality SLI, cut the way docs/reliability.md §5 draws it. Every job counted here still reports succeeded, so research_jobs_total and research_job_duration_seconds both look healthy while this rises — the duration histogram looks better than usual, because a degraded path is a faster path. Read as degradations per job rather than as a proportion: one job can take several rungs. Three of the eight rungs are not on this instrument yet (their call sites are in src/agents/), so this is a lower bound on degradation and never an upper one.",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 86 },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (rung) (rate(research_degradations_total[10m])) / scalar(sum(rate(research_jobs_total[10m])))",
+          "legendFormat": "{{rung}}"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "type": "timeseries",
+      "title": "Degradation rate by component",
+      "description": "Which subsystem degraded, at the granularity a runbook is written for. paper_cache and embedding_cache are the two Postgres caches degrading to recompute (ADR 0028, ADR 0041) — neither can fail a job, which is exactly why they need a panel of their own; sse_stream is a stream that ended at its deadline without a terminal frame; rate_limiter is the Redis limiter failing open to its per-worker fallback, where the fleet-wide cap silently becomes N times the configured limit.",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 86 },
+      "fieldConfig": { "defaults": { "unit": "cps", "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (component) (rate(research_degradations_total[10m]))",
+          "legendFormat": "{{component}}"
+        }
+      ]
     }
   ]
 }

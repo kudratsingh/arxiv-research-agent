@@ -203,6 +203,15 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "critic_response_unparseable",
         "critic_revision_target_invalid",
         "critic_score_unparseable",
+        # The degradation counter's own failure mode: a call site named
+        # a `rung` or `component` outside the closed set, so the point
+        # was recorded under `unregistered` rather than minting a new
+        # series (`metrics.record_degradation_rung`, ADR 0081). It
+        # should never be emitted — `tests/test_degradation_ladder.py`
+        # fails the build first — and is registered so that if it ever
+        # is, the line is a recognised event rather than an
+        # unregistered one nobody alerts on.
+        "degradation_rung_unregistered",
         "embedding_cache_get_failed",
         "embedding_cache_put_failed",
         "embedding_cache_selected",
@@ -583,6 +592,10 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "route",
         "rule",
         "run_id",
+        # The rung of the degradation ladder a call site named, carried
+        # only by `degradation_rung_unregistered` — the closed set makes
+        # it bounded, which is why it is safe as a field (ADR 0081).
+        "rung",
         "sample_ratio",
         "scan_capped",
         "scanned",

@@ -29,6 +29,7 @@ import pytest
 from src.cancellation import CancelToken, JobCancelledError, bind_cancel_token, reset_cancel_token
 from src.config import Settings
 from src.errors import UpstreamError
+from src.observability.metrics import DEGRADATION_RUNG_WEAKENED_GUARANTEE
 from src.resilience import (
     DEPENDENCY_ARXIV,
     DEPENDENCY_HTTP,
@@ -430,8 +431,16 @@ class TestDegradationIsVisible:
     """`02-STANDARDS.md` §5.3: every rung emits a distinct marker."""
 
     def test_a_degradation_is_counted_by_component_and_reason(self) -> None:
-        record_degradation(component="rate_limiter", reason="redis_unavailable")
-        record_degradation(component="rate_limiter", reason="redis_unavailable")
+        record_degradation(
+            rung=DEGRADATION_RUNG_WEAKENED_GUARANTEE,
+            component="rate_limiter",
+            reason="redis_unavailable",
+        )
+        record_degradation(
+            rung=DEGRADATION_RUNG_WEAKENED_GUARANTEE,
+            component="rate_limiter",
+            reason="redis_unavailable",
+        )
         assert degradation_counts()[("rate_limiter", "redis_unavailable")] == 2
 
     def test_a_degradation_logs_at_warning_with_its_cause(
@@ -439,19 +448,45 @@ class TestDegradationIsVisible:
     ) -> None:
         with caplog.at_level("WARNING"):
             record_degradation(
-                component="rate_limiter", reason="redis_unavailable", error="ConnectionError"
+                rung=DEGRADATION_RUNG_WEAKENED_GUARANTEE,
+                component="rate_limiter",
+                reason="redis_unavailable",
+                error="ConnectionError",
             )
         record = next(r for r in caplog.records if r.getMessage() == "resilience_degraded")
         assert record.levelname == "WARNING"
         assert record.component == "rate_limiter"  # type: ignore[attr-defined]
         assert record.reason == "redis_unavailable"  # type: ignore[attr-defined]
         assert record.error == "ConnectionError"  # type: ignore[attr-defined]
+        # `reason` is a log field and `rung` is a metric attribute, and
+        # they do not cross. ADR 0081's cardinality argument rests on
+        # that split, so it is asserted rather than assumed.
+        assert not hasattr(record, "rung")
 
     def test_the_snapshot_cannot_be_mutated_through(self) -> None:
-        record_degradation(component="rate_limiter", reason="redis_unavailable")
+        record_degradation(
+            rung=DEGRADATION_RUNG_WEAKENED_GUARANTEE,
+            component="rate_limiter",
+            reason="redis_unavailable",
+        )
         snapshot = dict(degradation_counts())
         snapshot[("rate_limiter", "redis_unavailable")] = 99
         assert degradation_counts()[("rate_limiter", "redis_unavailable")] == 1
+
+    def test_the_rung_is_required_rather_than_defaulted(self) -> None:
+        """A defaulted rung would silently mis-attribute the next caller.
+
+        The default could only be `weakened_guarantee` — the rung of the
+        only caller on this branch — so a second caller degrading down a
+        *different* rung would be counted under this one with no signal
+        at all. That is "degradation makes the dashboard look better
+        while the product gets worse" reintroduced one layer above the
+        place `record_degradation` exists to prevent it (ADR 0081).
+        """
+        with pytest.raises(TypeError):
+            record_degradation(  # type: ignore[call-arg]
+                component="rate_limiter", reason="redis_unavailable"
+            )
 
 
 class TestInterruptibleSleep:

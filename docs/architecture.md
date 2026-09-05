@@ -702,16 +702,18 @@ pinned without a build by `tests/test_container_contract.py`).
   **Traces**: `traced_node` spans per agent behind `enable_tracing`
   (ADR
   [0013](decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)).
-  **Metrics**: **twenty-one** OTel instruments behind `enable_metrics`
-  (ADR [0049](decisions/0049-otel-metrics.md), extended by ADRs 0051
-  and [0066](decisions/0066-genai-semantic-conventions.md)) —
+  **Metrics**: **twenty-two** OTel instruments behind `enable_metrics`
+  (ADR [0049](decisions/0049-otel-metrics.md), extended by ADRs 0051,
+  [0066](decisions/0066-genai-semantic-conventions.md) and
+  [0081](decisions/0081-degradation-counter-and-the-quality-sli.md)) —
   terminal job counts by status + error type, a job-duration
   histogram and a queue-wait histogram, LLM spend, call, retry and
   upstream-error counts by model, rate-limit rejections by backend,
-  four observable gauges (this worker's in-flight jobs, its abandoned
-  node threads, its queue depth and its queue saturation ratio), the
-  seven-instrument conventional `gen_ai.*` family, and the two HTTP
-  server RED instruments. That count is re-derived from `src/` by
+  degradations by ladder rung and component, four observable gauges
+  (this worker's in-flight jobs, its abandoned node threads, its queue
+  depth and its queue saturation ratio), the seven-instrument
+  conventional `gen_ai.*` family, and the two HTTP server RED
+  instruments. That count is re-derived from `src/` by
   `tests/test_operability_docs.py`'s AST scan and checked against this
   sentence by `tests/test_documented_claims.py`; it read "nine" across
   three ADRs' worth of additions, because until then nothing read it

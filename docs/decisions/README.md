@@ -514,6 +514,23 @@ never renumbered.
   byte-identical. **No output here is a quality signal** — the critic's
   score and the verifier's verdict are constants. Closes half of ADR
   0075's own follow-up list.
+- [0081](0081-degradation-counter-and-the-quality-sli.md) — **Count
+  degradations on a closed rung vocabulary, and make the quality SLI
+  computable.** `docs/reliability.md` rests every objective it declares
+  on the SRE Workbook's quality SLI, and six of the eight rungs of its
+  degradation ladder emitted a log line and nothing else, so the anchor
+  metric could not be computed and §3 had no quality row at all.
+  `research_degradations_total{rung,component}` is that instrument, with
+  both attributes drawn from `frozenset` vocabularies — the third closed
+  set here after `ERROR_CODES` (unbounded cardinality) and
+  `KNOWN_EVENTS` (silent rot), enforced by an AST scan of `src/` rather
+  than a fixture. `reason` stays a log field: the metric answers how
+  much and where, the log answers why. Rungs keep their own distinct log
+  events instead of folding onto `resilience_degraded`, which pages at
+  threshold 1. Five of eight rungs are now metered; the three that are
+  not have every call site in another lane's files, and the test names
+  them, their owner, and fails when one is wired — so the SLI is
+  honestly a lower bound and says so on the row.
 
 ## When to write an ADR
 

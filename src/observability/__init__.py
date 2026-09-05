@@ -71,9 +71,13 @@ from src.observability.logging import (
     reset_run_id,
 )
 from src.observability.metrics import (
+    DEGRADATION_RUNG_CACHE_STALE,
+    DEGRADATION_RUNG_STREAMING_PARTIAL,
+    DEGRADATION_RUNG_WEAKENED_GUARANTEE,
     configure_metrics,
     metrics_enabled,
     record_agent_invocation,
+    record_degradation_rung,
     record_genai_client_call,
     record_job_terminal,
     record_llm_usage,
@@ -101,6 +105,9 @@ from src.observability.tracing import (
 
 __all__ = [
     "ALLOWED_EXTRA_KEYS",
+    "DEGRADATION_RUNG_CACHE_STALE",
+    "DEGRADATION_RUNG_STREAMING_PARTIAL",
+    "DEGRADATION_RUNG_WEAKENED_GUARANTEE",
     "JsonFormatter",
     "KNOWN_EVENTS",
     "PRICES_USD_PER_MILLION",
@@ -131,6 +138,7 @@ __all__ = [
     "metrics_enabled",
     "principal_salt_is_ephemeral",
     "propagate_run_context",
+    "record_degradation_rung",
     "record_job_terminal",
     "record_llm_call",
     "reset_context",

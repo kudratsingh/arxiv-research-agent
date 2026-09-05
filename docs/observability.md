@@ -578,6 +578,19 @@ in-flight counter is worth watching separately — an SSE client holds
 | `llm_retries_total` | counter | `model` |
 | `llm_upstream_errors_total` | counter | `model`, `status` |
 | `rate_limit_rejections_total` | counter | `backend` |
+| `research_degradations_total` | counter | `rung`, `component` |
+
+`rung` and `component` on `research_degradations_total` are **closed
+sets** (`DEGRADATION_RUNGS`, `DEGRADATION_COMPONENTS` in
+`src/observability/metrics.py`), enforced by an AST scan of `src/` in
+`tests/test_degradation_ladder.py`. `rung` names a row of
+[`reliability.md` §5](reliability.md#5-the-degradation-ladder)'s ladder
+and is what the quality SLI is computed from; `component` names the
+subsystem that degraded, at the granularity a runbook is written for.
+The `reason` that `resilience.record_degradation` also takes is
+deliberately *not* here — it stays on the `resilience_degraded` log
+line, because the metric answers "how much, at which rung" and the log
+answers "why" (ADR 0081).
 
 `status` on `research_jobs_total` takes one extra value that is not a
 `JobStatus`: **`degraded_close`**, for a session that hit its cost
