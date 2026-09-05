@@ -199,6 +199,14 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "contract_shadow_unavailable",
         "conversation_append_failed",
         "conversation_context_retrieved",
+        # ADR 0080's follow-up, unblocked here. Mock mode's five
+        # per-node branches had no name of their own because this
+        # registry is closed and CAP-07 did not own it; the names are
+        # registered by P0-WO08 (ADR 0083) so the one-line emit at each
+        # branch is now a change to one file instead of two.
+        # `search_mock_data_served` below is the sixth, and was already
+        # registered.
+        "critic_mock_critique_served",
         "critic_response_not_an_object",
         "critic_response_unparseable",
         "critic_revision_target_invalid",
@@ -300,6 +308,7 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "pdf_url_rejected_dns",
         "pdf_url_rejected_non_public",
         "pdf_url_rejected_scheme",
+        "planner_mock_plan_served",
         "planner_plan_fallback_to_query",
         "planner_response_not_an_object",
         "planner_response_unparseable",
@@ -309,8 +318,16 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "query_refiner_kept_current",
         "reader_completed",
         "reader_degraded_to_abstract_only",
+        "reader_mock_analysis_served",
+        "reader_mock_claims_served",
         "reader_paper_abstract_only",
         "reader_paper_analysis_failed",
+        # ADR 0076's follow-up: the repair *table's* chosen action, which
+        # was carried on state and in an SSE node delta but had no event
+        # name of its own. Emitted by the runtime bridge when it records
+        # `repair.requested` (P0-WO08, ADR 0083); CAP-02's own node may
+        # emit it too, and both are the same fact about the same run.
+        "repair_action_selected",
         "resilience_degraded",
         "retry_envelope_clamped",
         "revision_target_undispatchable",
@@ -369,6 +386,7 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "supervisor_provider_outage",
         "synthesizer_citations_dropped",
         "synthesizer_citations_not_a_list",
+        "synthesizer_mock_briefing_served",
         "synthesizer_response_not_an_object",
         "synthesizer_response_unparseable",
         "synthesizer_retry_budget_exhausted",
@@ -376,7 +394,41 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "tracing_configured",
         "tracing_sample_ratio_invalid",
         "tracing_shutdown_failed",
+        # --- P0-WO08's contract event bridge (ADR 0083) --------------
+        #
+        # Two families. `trajectory_*` is the bridge's own operational
+        # surface — one INFO per run open and close, and a WARNING for
+        # each way an accepted event can fail to reach something
+        # downstream of the ledger. `trajectory_event_recorded` is the
+        # optional per-event log projection and is off by default:
+        # RFC 10 §16 says a projection is a convenience, and one INFO
+        # line per canonical event would double a research job's log
+        # volume for no operational question anybody asks.
+        "trajectory_append_conflict",
+        "trajectory_artifact_access_denied",
+        "trajectory_artifact_deduplicated",
+        "trajectory_artifact_promoted",
+        "trajectory_artifact_rejected",
+        "trajectory_chain_broken",
+        "trajectory_chain_verified",
+        "trajectory_cost_reconciled",
+        "trajectory_cost_reconciliation_failed",
+        "trajectory_event_recorded",
+        "trajectory_projection_failed",
+        "trajectory_run_opened",
+        "trajectory_sink_write_failed",
+        # ADR 0077's second follow-up. `unknown_model_pricing_fallback`
+        # below covers the *priced* population; this one covers the
+        # capability table, which is a different question — a model can
+        # be priced and still have no declared sampling/effort profile,
+        # and a request built from a default profile is exactly the case
+        # worth naming.
+        "unknown_model_capability_fallback",
         "unknown_model_pricing_fallback",
+        # ADR 0076's other follow-up: the verifier's verdict as an event
+        # name rather than only a state field. Emitted by the runtime
+        # bridge on `verification.completed`.
+        "verify_verdict_recorded",
         "verifier_llm_failed_fallback",
     }
 )
@@ -401,11 +453,14 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "api_job_timeout_sec",
         "api_keys_configured",
         "arm_id",
+        "artifact_id",
+        "artifact_role",
         "attempt",
         "attempted_status",
         "auth_enabled",
         "available",
         "behavior",
+        "byte_length",
         "bytes",
         "budget_sec",
         "cache_creation_input_tokens",
@@ -425,17 +480,20 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "consecutive",
         "consequence",
         "content_length",
+        "contract_run_id",
         "conversation_id",
         "conversation_store",
         "cost_usd",
         "costs",
         "count",
         "created_at",
+        "data_class",
         "dead_lettered",
         "declared_skills",
         "dependency",
         "dependency_status",
         "detail",
+        "difference",
         "domain",
         "drain_budget_sec",
         "drain_sec",
@@ -450,6 +508,9 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "error",
         "error_type",
         "event",
+        "event_count",
+        "event_seq",
+        "event_type",
         "existed",
         "expectation_failures",
         "expected_status",
@@ -462,6 +523,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "format",
         "goals",
         "has_plan",
+        "head_event_hash",
         "hitl_timeout_sec",
         "hook",
         # WO-A10. `http_status`, `method` and `route` were already being
@@ -488,6 +550,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "key",
         "keystore_source",
         "kind",
+        "lane",
         "latency_ms",
         "learner_profile_enabled",
         "learner_profile_store",
@@ -525,6 +588,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "observed_status",
         "origins",
         "orphaned",
+        "outcome",
         "output_tokens",
         # `owner` is deliberately **absent**, and its removal is the
         # point rather than a tidy-up. `src/api/admin_migrate.py` logged
@@ -573,6 +637,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "redrive_requeued",
         "redrive_scan_capped",
         "redrive_skipped_live",
+        "repair_action",
         "repeat",
         "report_chars",
         "request_id",
@@ -591,6 +656,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         # field gets indexed (WO-A10).
         "route",
         "rule",
+        "run_cost_snapshot",
         "run_id",
         # The rung of the degradation ladder a call site named, carried
         # only by `degradation_rung_unregistered` — the closed set makes
@@ -607,17 +673,20 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "skipped_live",
         "source",
         "spent_usd",
+        "stage",
         "state_turn_number",
         "status",
         "status_code",
         "stop_reason",
         "store",
         "stored_status",
+        "summed_event_cost",
         "task_spec_id",
         "thread_id",
         "threshold",
         "tier",
         "timeout_sec",
+        "tolerance",
         "torch_threads",
         "total_cache_creation_input_tokens",
         "total_cache_read_input_tokens",
@@ -630,6 +699,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "turns",
         "turns_delivered",
         "url",
+        "verdict",
         "worker_id",
         "worst_case_request_sec",
     }

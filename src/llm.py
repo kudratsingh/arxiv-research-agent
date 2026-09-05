@@ -472,23 +472,14 @@ def call_llm(
     with llm_span(
         model=resolved_model,
         max_tokens=max_tokens,
-        # `gen_ai.request.temperature` should be *absent* when no
-        # temperature was sent, and it cannot be: `llm_span` takes a
-        # required `float` (`src/observability/tracing.py:642`) and sets
-        # the attribute unconditionally (`:676`), and
-        # `src/observability/**` is fenced for another lane's work
-        # orders. So the attribute is truthful on every model that
-        # accepts sampling — which is every model this deployment can
-        # reach today — and reports the configured-but-unsent value on
-        # one that does not. Recorded in ADR 0077's follow-ups; the fix
-        # is `float | None` in that signature and a guarded
-        # `set_attribute`, and this line becomes
-        # `temperature=profile.temperature`.
-        temperature=(
-            profile.temperature
-            if profile.temperature is not None
-            else settings.llm_temperature
-        ),
+        # The resolved profile's temperature, or `None` when this model
+        # rejects sampling parameters and the request body carried none.
+        # `llm_span` now takes `float | None` and omits the attribute for
+        # `None`, so `gen_ai.request.temperature` describes the request
+        # that was actually sent rather than the setting that would have
+        # been sent to a different model. ADR 0077's first follow-up,
+        # closed by P0-WO08 (ADR 0083).
+        temperature=profile.temperature,
         server_address=_server_address(client),
     ) as span:
         # Counted before the call, so an attempt that raises still

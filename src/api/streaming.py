@@ -133,6 +133,70 @@ STREAM_CLOSING_EVENT_NAMES: frozenset[str] = TERMINAL_EVENT_NAMES | {
 PAUSE_EVENT_NAMES: frozenset[str] = frozenset({"plan_ready", "turn_ready"})
 
 
+# ---------------------------------------------------------------------------
+# Canonical-event projection (P0-WO08, ADR 0083)
+#
+# RFC 10 §16 pairs each canonical trajectory event with the runtime
+# surface it may be projected onto. This table is that pairing, and it is
+# deliberately a *derivation* rather than an emitter: nothing here writes
+# a frame, no new event name appears on the wire, and the byte-for-byte
+# shape of every frame the web tier consumes is unchanged. Its whole
+# value is that the claim "the SSE stream is a projection of the ledger"
+# becomes checkable — `tests/test_contract_runtime_bridge.py` asserts
+# that the projected name for a terminal event equals the name the runner
+# already emits and that the projected frame is byte-identical to the one
+# `terminal_event_data` builds.
+#
+# Every value is a member of the pinned set in
+# `tests/test_contract_sse_events.py`; a canonical event with no safe
+# projection maps to nothing at all rather than to an invented frame.
+# ---------------------------------------------------------------------------
+
+#: Canonical event type -> the existing SSE frame it projects onto.
+#: `hitl.requested` is absent because its frame depends on the request
+#: kind — see `sse_event_name_for`.
+CANONICAL_EVENT_PROJECTION: Mapping[str, str] = MappingProxyType(
+    {
+        "attempt.started": "job_started",
+        "action.completed": "node_completed",
+        "run.completed": "job_completed",
+        "run.failed": "job_failed",
+        "run.budget_stopped": "job_failed",
+        "run.cancelled": "job_cancelled",
+    }
+)
+
+#: HITL request kind -> the parking frame it projects onto. RFC 10 §8.8:
+#: "The existing `plan_ready` and `turn_ready` SSE frames are projections
+#: of `hitl.requested`, not canonical writes from the client stream."
+HITL_EVENT_PROJECTION: Mapping[str, str] = MappingProxyType(
+    {
+        "plan_review": "plan_ready",
+        "learner_turn": "turn_ready",
+    }
+)
+
+
+def sse_event_name_for(
+    event_type: str, *, request_kind: str | None = None
+) -> str | None:
+    """The SSE frame one canonical trajectory event projects onto.
+
+    Args:
+        event_type: An RFC 10 §8 event type.
+        request_kind: For `hitl.requested`, the pause's kind.
+
+    Returns:
+        An existing SSE event name, or `None` when this canonical event
+        has no client-visible projection — which is the common case and
+        not a gap: the ledger records far more than a browser needs, and
+        a projection nobody asked for would be a new client contract.
+    """
+    if event_type == "hitl.requested":
+        return HITL_EVENT_PROJECTION.get(request_kind or "")
+    return CANONICAL_EVENT_PROJECTION.get(event_type)
+
+
 #: The three line terminators the SSE spec recognises (CR, LF, CRLF),
 #: deleted from an event name before it reaches the wire. A `str`
 #: translation table rather than three `replace` calls so CRLF costs one

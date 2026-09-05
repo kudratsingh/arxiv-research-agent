@@ -185,6 +185,7 @@ _NUMBER_WORDS: Final[dict[str, int]] = {
     "twenty": 20,
     "twenty-one": 21,
     "twenty-two": 22,
+    "twenty-three": 23,
     "twenty-four": 24,
     "twenty-six": 26,
     "thirty": 30,

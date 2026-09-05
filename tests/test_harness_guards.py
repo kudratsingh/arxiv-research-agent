@@ -273,7 +273,9 @@ class TestPurposeMarkerBands:
     #:
     #: THE FLOOR is 80% of the population measured on `c3d63da`
     #: (property 40, fault 158, security 267, contract 84), rounded
-    #: down; the 20% is deliberate slack for a refactor that folds
+    #: down — except `contract`, re-centred on 229 at P0-WO08 when it
+    #: outgrew its ceiling and this check said so; the 20% is
+    #: deliberate slack for a refactor that folds
     #: functions into a `parametrize` or merges two modules without
     #: touching the tier. What it defends is worth checking rather than
     #: taking on the percentage: in every one of the four tiers,
@@ -284,7 +286,7 @@ class TestPurposeMarkerBands:
     #:   property          40  test_property_redaction.py  (10)       30     32
     #:   fault            158  test_job_redriver.py        (40)      118    126
     #:   security         267  test_safety_suite.py       (105)      162    213
-    #:   contract          84  test_operability_docs.py    (23)       61     67
+    #:   contract         229  test_contract_runtime_bridge.py (75)  154    183
     #:
     #: That last row is the ceiling's argument made on this very band
     #: while it was being written: `contract` was 65 when these numbers
@@ -292,9 +294,10 @@ class TestPurposeMarkerBands:
     #: to 81 two commits later. The floor of 52 that had been correct
     #: for 65 no longer caught the loss of the tier's largest module at
     #: 81 — it passed at 58. It has moved twice more since, to 84, while
-    #: this branch was open. Re-centred here each time; the check below
-    #: is what makes the next occurrence loud instead of arithmetic
-    #: nobody redid.
+    #: this branch was open, and again to 229 when P0-WO08 landed two
+    #: contract modules of its own. Re-centred here each time; the check
+    #: below is what makes the next occurrence loud instead of
+    #: arithmetic nobody redid.
     #:
     #: THE CEILING is 2x the population, and it exists because a floor
     #: only ever looks down. `docs/architecture.md` claimed nine OTel
@@ -313,7 +316,7 @@ class TestPurposeMarkerBands:
         "property": (32, 80),
         "fault": (126, 316),
         "security": (213, 534),
-        "contract": (67, 168),
+        "contract": (183, 458),
     }
 
     #: pytest's own discovery prefixes, which the walk below assumes and

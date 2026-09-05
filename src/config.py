@@ -1601,6 +1601,49 @@ class Settings(BaseSettings):
         ),
     )
 
+    # ------ P0 contracts (W08) ------
+    # The runtime event bridge's three switches (ADR 0083). All three are
+    # off or inert by default, and the first is a *gate* rather than a
+    # preference: D8 (P0-WO09) has not ruled on retained user or learner
+    # content, so nothing here may write a real principal's trajectory to
+    # a file. `evaluation_only` permits the durable sink for runs whose
+    # consent scope is evaluation-only, public-source or synthetic; a
+    # `product_operation_only` run is refused the sink by
+    # `src.contracts.runtime_bridge.capture_permitted` whatever this
+    # field says, so the flag cannot be turned into production capture by
+    # configuration alone.
+    contract_event_capture: Literal["off", "evaluation_only"] = Field(
+        default="off",
+        description=(
+            "Whether canonical trajectory events may be written to a durable "
+            "local sink. 'off' (the default) keeps every event in memory, "
+            "exactly as the P0-WO05 shadow did. 'evaluation_only' enables the "
+            "run-scoped JSONL sink for evaluation, public-source and synthetic "
+            "episodes only — a run carrying product_operation_only consent is "
+            "refused the sink regardless, because D8 has not authorized "
+            "production or learner capture. There is deliberately no "
+            "'production' member. See ADR 0083."
+        ),
+    )
+    contract_event_sink_root: str = Field(
+        default="outputs/trajectories",
+        description=(
+            "Root directory for the durable trajectory sink: one directory per "
+            "run beneath 'runs/<run_id>/', holding run_scope.json, "
+            "events.jsonl and head.json. Ignored entirely when "
+            "contract_event_capture is 'off'. See ADR 0083."
+        ),
+    )
+    contract_event_log_projection: bool = Field(
+        default=False,
+        description=(
+            "Emit one 'trajectory_event_recorded' INFO line per canonical "
+            "event. Off by default: the ledger is the record, and one log line "
+            "per event roughly doubles a research job's log volume to answer a "
+            "question the trajectory already answers. See ADR 0083."
+        ),
+    )
+
     @model_validator(mode="after")
     def _check_session_loop_dependencies(self) -> Settings:
         if self.enable_session_loop and not self.enable_learner_profile:

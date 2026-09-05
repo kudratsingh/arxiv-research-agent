@@ -639,7 +639,7 @@ def llm_span(
     *,
     model: str,
     max_tokens: int,
-    temperature: float,
+    temperature: float | None,
     server_address: str,
 ) -> Iterator[trace.Span]:
     """`chat {model}` — the span the largest latency contributor lacked.
@@ -657,7 +657,16 @@ def llm_span(
         model: `gen_ai.request.model` — the model asked for, which is not
             necessarily the one that answered.
         max_tokens: `gen_ai.request.max_tokens`.
-        temperature: `gen_ai.request.temperature`.
+        temperature: `gen_ai.request.temperature`, or `None` when the
+            request carried no temperature at all.  ADR 0077 resolves a
+            per-model request profile and drops sampling parameters for
+            a model that rejects them, and the conventions want the
+            attribute *absent* rather than reporting a value that was
+            never sent — a span that claims `temperature=0.3` on a
+            request which omitted it is a false statement about the
+            request, and false is worse than missing when the attribute
+            exists to explain a model's behaviour.  Closes ADR 0077's
+            first follow-up (P0-WO08, ADR 0083).
         server_address: `server.address` — the provider host, so a trace
             shows which endpoint was slow.
     """
@@ -673,7 +682,8 @@ def llm_span(
         span.set_attribute(semconv.GEN_AI_PROVIDER_NAME, semconv.PROVIDER_ANTHROPIC)
         span.set_attribute(semconv.GEN_AI_REQUEST_MODEL, model)
         span.set_attribute(semconv.GEN_AI_REQUEST_MAX_TOKENS, max_tokens)
-        span.set_attribute(semconv.GEN_AI_REQUEST_TEMPERATURE, temperature)
+        if temperature is not None:
+            span.set_attribute(semconv.GEN_AI_REQUEST_TEMPERATURE, temperature)
         span.set_attribute(semconv.SERVER_ADDRESS, server_address)
         try:
             yield span

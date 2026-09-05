@@ -595,14 +595,15 @@ class TestTheSpanStillDescribesTheRequest:
     ) -> None:
         """`gen_ai.request.temperature` reports what was sent (ADR 0066).
 
-        The half this test cannot make: the attribute should be
-        *absent* on a model that receives no temperature.
-        `llm_span` takes a required `float`
-        (`src/observability/tracing.py:642`) and sets it unconditionally
-        (`:676`), and that package is fenced — so on Opus 5 the span
-        still carries the configured-but-unsent value. Recorded as
-        follow-up 1 in ADR 0077; when the signature takes `float |
-        None`, this test grows an `is None` case.
+        The half this test could not make when it was written — the
+        attribute should be *absent* on a model that receives no
+        temperature — is now made by
+        `tests/test_contract_runtime_bridge.py::TestTheTemperatureAttribute`.
+        P0-WO08 (ADR 0083) closed ADR 0077's first follow-up: `llm_span`
+        takes `float | None` and guards the `set_attribute`, and this
+        gateway hands over `profile.temperature` verbatim. On a model
+        that accepts sampling parameters — which is the one this fake
+        client resolves — the value below is unchanged.
         """
         seen: list[float] = []
 

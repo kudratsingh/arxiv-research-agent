@@ -495,15 +495,23 @@ def _shadow_bridge() -> Any:
     Reads `settings` at call time (a test patches the module attribute)
     and swallows an import failure: a missing or broken contract package
     must degrade to "no shadow", never to a failed job.
+
+    **One import site, deliberately.** P0-WO08 (ADR 0083) moved the
+    target from `shadow_bridge` to `runtime_bridge`, which re-exports
+    every hook W05's module defines and adds the terminal reconciliation
+    and chain close on top. A second `from src.contracts import ...`
+    beside this one would be a second unconditional path onto a request
+    worker's import graph; `test_the_runner_reaches_the_bridge_only_
+    through_one_function` is what keeps that from happening quietly.
     """
     if settings.contract_shadow == "off":
         return None
     try:
-        from src.contracts import shadow_bridge
+        from src.contracts import runtime_bridge
     except Exception:  # noqa: BLE001 — a diagnostic must not fail a job
         log.warning("contract_shadow_failed", extra={"hook": "import"}, exc_info=True)
         return None
-    return shadow_bridge
+    return runtime_bridge
 
 
 @contextlib.contextmanager
@@ -531,6 +539,12 @@ def _contract_shadow(
     shadow_token = None
     observer_token = None
     try:
+        # P0-WO08 opens the run (ADR 0083). The object is still a
+        # `ShadowRun`, so every hook below is unchanged; what the runtime
+        # bridge adds on this path is the span projection, `trace_ref` on
+        # each envelope, and the terminal reconciliation. It adds no
+        # file: an API job carries `product_operation_only` consent and
+        # is refused the durable sink whatever the capture flag says.
         run = bridge.start_research_job(
             job, workflow, config=settings, cost_ceiling_usd=cap_usd
         )
@@ -558,7 +572,23 @@ def _shadow_node(node_name: str, state_update: dict[str, Any]) -> None:
 
 
 def _shadow_terminal(job: Job) -> None:
-    """Close the shadow's trajectory from the row about to be persisted."""
+    """Close the shadow's trajectory from the row about to be persisted.
+
+    Deliberately *only* the terminal run event. P0-WO08 adds two more
+    steps a finished run can take — `budget.reconciled`, which W04's
+    registry allows after a terminal precisely because the answer does
+    not exist until the run is over, and the hash-chain verification that
+    records the head — and neither is called from here.
+
+    The reason is a contract, not an oversight.
+    `tests/test_contract_shadow_runtime.py` pins the last event of a
+    job's trajectory as the terminal one, and an API research job carries
+    `product_operation_only` consent, so it has no durable ledger for a
+    reconciliation to make self-checking. Both steps are wired on the
+    evaluation lanes, where the file exists; wiring them here means moving
+    that assertion, which is a change to W05's test rather than an
+    addition to this path. Recorded in ADR 0083's follow-ups.
+    """
     run = _current_shadow.get()
     if run is not None:
         _shadow_bridge().observe_job_terminal(run, job)
