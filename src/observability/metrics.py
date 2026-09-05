@@ -247,6 +247,8 @@ __all__ = [
     "record_llm_usage",
     "record_rate_limit_rejection",
     "record_tool_execution",
+    "record_trajectory_event",
+    "record_trajectory_fault",
     "record_workflow_invocation",
     "register_runtime_gauges",
     "shutdown_metrics",
@@ -540,6 +542,13 @@ class _Instruments:
     # reason: one `None` check disarms the whole surface.
     http_server_request_duration: Histogram
     http_server_active_requests: UpDownCounter
+    # P0-WO08's contract-event family (ADR 0083). Two counters, not one
+    # per surface: the question an operator asks is "is the ledger
+    # accepting events, and is anything downstream of the accept
+    # failing", and two series answer it without a `event_type`
+    # dimension whose cardinality is the whole RFC 10 taxonomy.
+    trajectory_events_total: Counter
+    trajectory_faults_total: Counter
 
 
 _provider: MeterProvider | None = None
@@ -736,6 +745,26 @@ def _build_instruments(meter: Meter) -> _Instruments:
             semconv.METRIC_HTTP_SERVER_ACTIVE_REQUESTS,
             unit=semconv.UNIT_REQUEST,
             description="Requests currently in flight on this worker.",
+        ),
+        # --- P0-WO08's contract event bridge (ADR 0083) ---------------
+        trajectory_events_total=meter.create_counter(
+            "trajectory_events_total",
+            unit="1",
+            description=(
+                "Canonical trajectory events proposed to the ledger, by "
+                "lane and by whether the append was accepted, rejected "
+                "or answered from the idempotency index."
+            ),
+        ),
+        trajectory_faults_total=meter.create_counter(
+            "trajectory_faults_total",
+            unit="1",
+            description=(
+                "Failures downstream of, or refused before, a trajectory "
+                "append — durable sink writes, projections, artifact "
+                "integrity and scope, and cost reconciliation — by stage "
+                "and canonical error code."
+            ),
         ),
     )
 
@@ -1383,6 +1412,68 @@ def record_degradation_rung(*, rung: str, component: str) -> None:
         )
         component = DEGRADATION_UNREGISTERED
     instruments.degradations_total.add(1, {"rung": rung, "component": component})
+
+
+#: Lanes a trajectory event can be recorded on. Bounded by construction
+#: — a bridge belongs to the research path or the guided-learning path —
+#: which is what makes it safe as a metric attribute.
+TRAJECTORY_LANES: Final[frozenset[str]] = frozenset({"research", "guided_learning"})
+
+#: Outcomes of one proposed append. `deduplicated` is not a failure: it
+#: is the idempotency index answering a retry with the event it already
+#: stored (RFC 10 §11.2), and counting it separately from `accepted` is
+#: how a retry storm becomes visible instead of looking like traffic.
+TRAJECTORY_OUTCOMES: Final[frozenset[str]] = frozenset(
+    {"accepted", "deduplicated", "rejected"}
+)
+
+#: Stages a trajectory fault can be attributed to. Every one of them is
+#: *downstream of, or upstream of*, the ledger accept — never the accept
+#: itself, because an append that fails is a `rejected` event above.
+TRAJECTORY_FAULT_STAGES: Final[frozenset[str]] = frozenset(
+    {
+        "sink_write",
+        "projection",
+        "artifact_integrity",
+        "artifact_access",
+        "cost_reconciliation",
+        "chain_verification",
+    }
+)
+
+
+def record_trajectory_event(*, lane: str, outcome: str) -> None:
+    """Record one proposed canonical trajectory event (ADR 0083).
+
+    Args:
+        lane: `research` or `guided_learning`.
+        outcome: `accepted`, `deduplicated`, or `rejected`.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    instruments.trajectory_events_total.add(1, {"lane": lane, "outcome": outcome})
+
+
+def record_trajectory_fault(*, stage: str, error_type: str) -> None:
+    """Record one failure around the trajectory bridge (ADR 0083).
+
+    Attributed by `error_type` drawn from ADR 0064's closed registry
+    rather than by exception class, for the same reason every other
+    failure metric in this module is: a class name is a refactor away
+    from renaming a series, and the fault tier asserts the code, the log
+    event and this point together.
+
+    Args:
+        stage: A member of `TRAJECTORY_FAULT_STAGES`.
+        error_type: A member of `src.errors.ERROR_CODES`.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    instruments.trajectory_faults_total.add(
+        1, {"stage": stage, "error_type": error_type}
+    )
 
 
 def shutdown_metrics(*, timeout_millis: float = _SHUTDOWN_BUDGET_MS) -> None:

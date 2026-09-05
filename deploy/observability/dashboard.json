@@ -533,6 +533,36 @@
           "refId": "A",
           "expr": "sum by (component) (rate(research_degradations_total[10m]))",
           "legendFormat": "{{component}}"
+
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "type": "row",
+      "title": "Contract trajectory (ADR 0083)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 94 },
+      "panels": []
+    },
+    {
+      "id": 26,
+      "type": "timeseries",
+      "title": "Contract trajectory: accepted events and bridge faults",
+      "description": "P0-WO08's canonical event ledger (ADR 0083). One series is the recording rate by lane and outcome; the other is everything that failed around it - a durable sink write, a projection, an artifact refusal or scope denial, a cost reconciliation. A non-zero fault rate while accepted keeps climbing is the designed behaviour rather than an incident: an accepted event is never withdrawn because something downstream of it broke. The line to act on is a sustained sink_write rate, which means episodes are being recorded and not written down.",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 95 },
+      "fieldConfig": { "defaults": { "unit": "cps", "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (lane, outcome) (rate(trajectory_events_total[10m]))",
+          "legendFormat": "{{lane}} {{outcome}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (stage, error_type) (rate(trajectory_faults_total[10m]))",
+          "legendFormat": "fault {{stage}} {{error_type}}"
         }
       ]
     }
