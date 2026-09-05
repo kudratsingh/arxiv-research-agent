@@ -1,18 +1,28 @@
-"""`python -m src.campaign plan|dry-run|resume|status`.
+"""`python -m src.campaign plan|dry-run|run|resume|status`.
 
-Four verbs, and the split between them is the work order's: **`plan` and
-`dry-run` have no execution side effects.** `dry-run` writes nothing at
-all and enumerates every planned episode with its zero-cost status;
-`plan` materializes the campaign directory — manifest, lock, arm
-configs, task set and the denominator ledger — and still runs nothing.
-`resume` reopens a materialized campaign under the same lock and cap and
-reports what is left; `status` reconciles the ledger against the receipts
-on disk.
+Five verbs, and the split between them is the work order's: **`plan`,
+`dry-run`, `resume` and `status` have no execution side effects, and
+`run` is the only one that does.** `dry-run` writes nothing at all and
+enumerates every planned episode with its zero-cost status; `plan`
+materializes the campaign directory — manifest, lock, arm configs, task
+set and the denominator ledger — and still runs nothing; `resume`
+reopens a materialized campaign under the same lock and cap and reports
+what is left; `status` reconciles the ledger against the receipts on
+disk.
 
-Nothing here compiles a graph or constructs a provider. Arm capability is
-left `unverified` at plan time and proved at seal time by the process
-that actually has a compiled graph, which is the only place the evidence
-exists.
+`run` executes the pending episodes of a campaign that was already
+planned. It is deliberately a *separate* verb from `plan`: the campaign
+directory, the sealed protocol and the denominator ledger all exist
+before the first episode runs, so an operator can read the design and the
+cap before authorizing anything to execute against them. Resume is not a
+sixth verb — `run` always skips episodes that already hold a terminal
+`completion.json`, so running a second time after an interruption *is*
+the resume, under the same lock and the same cap.
+
+The four read-only verbs compile no graph and construct no provider. Arm
+capability is left `unverified` at plan time and proved at seal time by
+the process that actually has a compiled graph, which is the only place
+the evidence exists — and `run` is that process.
 
 Every verb prints JSON on stdout so the output is usable by W11's
 qualification report without a parser for prose.
@@ -69,7 +79,7 @@ def _parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "command", choices=("plan", "dry-run", "resume", "status")
+        "command", choices=("plan", "dry-run", "run", "resume", "status")
     )
     parser.add_argument(
         "--registry-root",
@@ -142,7 +152,27 @@ def _parser() -> argparse.ArgumentParser:
         default="0.000000",
         help="Approved aggregate cap. Default: zero.",
     )
-    parser.add_argument("--campaign-id", default=None, help="For resume and status.")
+    parser.add_argument(
+        "--campaign-id", default=None, help="For run, resume and status."
+    )
+    parser.add_argument(
+        "--sink-root",
+        type=Path,
+        default=None,
+        help=(
+            "Root of the durable trajectory sink for run. Default: the "
+            "deployment's contract_event_sink_root."
+        ),
+    )
+    parser.add_argument(
+        "--max-episodes",
+        type=int,
+        default=None,
+        help=(
+            "Stop run after this many episodes. The remainder stay pending "
+            "and stay in the denominator."
+        ),
+    )
     return parser
 
 
@@ -152,8 +182,24 @@ def _config() -> Settings:
     `model_copy` rather than a fresh `Settings()`: the campaign inherits
     whatever the deployment configured and overrides only what the arm
     table owns, which is applied per arm by `arm_settings`.
+
+    Three values are the campaign's rather than the deployment's.
+    Checkpointing is off because a campaign episode is unattended and a
+    persisted thread would outlive it. The contract shadow and the
+    `evaluation_only` durable sink are on because a campaign episode
+    *is* the lane ADR 0083 built that member for — public benchmark
+    inputs, evaluation-only consent, no user content — and an episode
+    with no durable trajectory could not prove what it did. Neither
+    switch can reach production capture: `capture_permitted` refuses a
+    `product_operation_only` run whatever the flag says.
     """
-    patched = shipped_settings.model_copy(update={"enable_checkpointing": False})
+    patched = shipped_settings.model_copy(
+        update={
+            "enable_checkpointing": False,
+            "contract_shadow": "shadow",
+            "contract_event_capture": "evaluation_only",
+        }
+    )
     assert isinstance(patched, Settings)
     return patched
 
@@ -251,8 +297,44 @@ def _run(args: argparse.Namespace) -> int:
         return EXIT_OK
 
     if args.campaign_id is None:
-        print("Error: --campaign-id is required for resume and status.", file=sys.stderr)
+        print(
+            "Error: --campaign-id is required for run, resume and status.",
+            file=sys.stderr,
+        )
         return EXIT_USAGE
+
+    if args.command == "run":
+        # Imported here, not at module import: `run` is the only verb
+        # that touches the graph, and the four read-only verbs must not
+        # pay for — or be able to reach — `build_workflow`.
+        from src.campaign.execute import run_campaign
+
+        report = run_campaign(
+            config,
+            root=root,
+            campaign_id=args.campaign_id,
+            approval_backend=_backend(args),
+            sink_root=args.sink_root,
+            max_episodes=args.max_episodes,
+        )
+        _emit(
+            {
+                "campaign_id": report.campaign_id,
+                "directory": report.directory,
+                "attempted": report.attempted,
+                "completed": report.completed,
+                "skipped_already_complete": report.skipped_already_complete,
+                "pending_after": report.pending_after,
+                "stop_reason": report.stop_reason,
+                "campaign_cost_usd_max": report.campaign_cost_usd_max,
+                "observed_cost_usd": report.observed_cost_usd,
+                "model_calls": report.model_calls,
+                "elapsed_seconds": round(report.elapsed_seconds, 3),
+                "counts": dict(report.counts),
+                "analysis_denominator": report.summary.denominators.analysis_denominator,
+            }
+        )
+        return EXIT_OK
 
     if args.command == "resume":
         plan, pending = resume_campaign(root, campaign_id=args.campaign_id)
