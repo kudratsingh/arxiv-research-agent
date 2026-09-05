@@ -1,6 +1,6 @@
 """Invariants of settings validation (ADR 0069).
 
-`src/config.py` carries 39 numerically-bounded fields and 11 `Literal`
+`src/config.py` carries 39 numerically-bounded fields and 12 `Literal`
 fields, and every one of them is a promise made to an operator editing
 an environment file: a value outside the declared range dies at
 settings load, before traffic, rather than three hours later as an
@@ -49,12 +49,21 @@ FIELD_EXAMPLES: Final = 20
 #: `_check_chunker_budget_invariant`. This file's sweeps are what found
 #: the missing check: `overlap=500` with `max=100` satisfied both Fields
 #: and drove `_split_by_budget` into one chunk per character.
+#:
+#: `research_policy` joined it with CAP-02: its `fixed_verify_repair`
+#: member is a declared value of the field that a *default* `Settings`
+#: refuses, because arm C is defined by three companion flags as well as
+#: by the selector (ADR 0076). The member-acceptance sweep below assumes
+#: the opposite, so the coupling is asserted where it belongs —
+#: `tests/test_research_policy.py` enumerates the whole 2x2x2 of
+#: companion flags rather than sampling it.
 COUPLED_FIELDS: Final[frozenset[str]] = frozenset(
     {
         "job_lease_ttl_sec",
         "job_lease_refresh_sec",
         "chunker_max_tokens",
         "chunker_overlap_tokens",
+        "research_policy",
     }
 )
 
@@ -95,11 +104,19 @@ def _bounded(annotation: type) -> list[str]:
 
 
 def _literals() -> list[str]:
-    """Names of the fields typed as a `Literal[...]` of strings."""
+    """Names of the fields typed as a `Literal[...]` of strings.
+
+    Coupled fields are excluded here for the same reason `_bounded`
+    excludes them: a member this sweep would assert is accepted can be
+    one a second field legitimately refuses, and the rejection sweep
+    below stays correct either way (an undeclared string is still an
+    undeclared string).
+    """
     return sorted(
         name
         for name, field in Settings.model_fields.items()
         if get_origin(field.annotation) is Literal
+        and name not in COUPLED_FIELDS
     )
 
 

@@ -245,11 +245,40 @@ class TestCheckpointRecovery:
 class TestCanonicalInitialState:
     """One initializer, not three drifting literals."""
 
-    def test_canonical_initializer_covers_every_state_key(self) -> None:
-        """`ResearchState` is total: a missing key is a schema
-        violation, not a default."""
+    def test_canonical_initializer_covers_every_required_state_key(self) -> None:
+        """A missing required key is a schema violation, not a default.
+
+        Read off `__required_keys__` rather than `__annotations__` since
+        CAP-02 (ADR 0076): `ResearchState` now inherits one deliberately
+        optional block, `VerifyRepairState`, whose four keys exist only
+        while the fixed verify-and-repair policy is running and are
+        written by its `verify` node. `__annotations__` merges inherited
+        keys and cannot tell the two apart, so it would demand that this
+        constructor set a key whose absence is the documented default —
+        and, through the drift guard below, demand the same of a
+        constructor this repository's agent-capability lane does not own.
+
+        The claim the original assertion made is unchanged: every key
+        the schema *requires* is set here, once, and the three
+        constructors agree on all of them.
+        """
         state = initial_research_state("q", "run123")
-        assert set(state) == set(ResearchState.__annotations__)
+        assert set(state) == set(ResearchState.__required_keys__)
+
+    def test_the_only_optional_keys_are_the_documented_policy_block(self) -> None:
+        """The exemption above is one named block, not a loophole.
+
+        Without this, "optional" would be a place any future key could
+        be parked to escape the constructor parity the class exists to
+        enforce. Adding a key here is a deliberate act with an ADR
+        attached, and this test is where the cost of it shows up.
+        """
+        assert set(ResearchState.__optional_keys__) == {
+            "verification_verdict",
+            "verification_reason",
+            "repair_count",
+            "repair_action",
+        }
 
     def test_cli_invokes_the_graph_with_the_canonical_state(
         self, monkeypatch: pytest.MonkeyPatch, outputs: Path

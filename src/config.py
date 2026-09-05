@@ -1661,6 +1661,80 @@ class Settings(BaseSettings):
             )
         return self
 
+    # ------ Agent capability (CAP-02) ---------------------------------
+    # One versioned selector for the research policy, as
+    # `docs/agent-engineering/07-first-policy-experiment.md` §4 asks for
+    # ("Do not add these as ad hoc Boolean combinations"). The arms of
+    # that experiment stay expressed the way they already are — A, B and
+    # D are `ENABLE_SUPERVISOR` / `ENABLE_EVIDENCE_STORE` /
+    # `ENABLE_VERIFIER` — and arm C, which no combination of those three
+    # produces, becomes a value of this field. See ADR 0076.
+    research_policy: Literal["legacy", "fixed_verify_repair"] = Field(
+        default="legacy",
+        description=(
+            "Which research graph `build_workflow` compiles. `legacy` "
+            "(default) derives the shape from `enable_supervisor` exactly "
+            "as before. `fixed_verify_repair` compiles the arm-C graph: "
+            "planner -> search -> reader -> synthesizer -> verify, one "
+            "bounded repair on a failed verdict, then re-verification "
+            "before the critic. It requires enable_supervisor=false, "
+            "enable_evidence_store=true and enable_verifier=false; any "
+            "other combination is refused at load. See ADR 0076."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _check_research_policy_requirements(self) -> Settings:
+        """Refuse a `research_policy` its companion flags contradict.
+
+        The point of the refusal is the experiment's, not the graph's.
+        Arm C is defined as the *fixed evidence path plus verification
+        and repair*; a run that called itself `fixed_verify_repair` while
+        the supervisor owned routing, or while the reader emitted no
+        evidence, would be labelled C in the manifest and be something
+        else on the wire. That mislabelling is what
+        `docs/agent-engineering/12-p0-work-orders.md` §11 asks W05 to
+        make impossible, and a load-time refusal is the only place it can
+        be made impossible without a live run to inspect.
+
+        `enable_verifier` is refused rather than ignored for the same
+        reason: it names the *supervisor's* verify action (ADR 0015), so
+        leaving it on would put two different verifiers in one run's
+        configuration with nothing to say which one a result came from.
+
+        Raises:
+            ValueError: When any of the three companion flags carries a
+                value arm C does not permit. The message names every
+                offending flag rather than only the first, so one boot
+                attempt is enough to fix the whole environment file.
+        """
+        if self.research_policy != "fixed_verify_repair":
+            return self
+        problems: list[str] = []
+        if self.enable_supervisor:
+            problems.append(
+                "enable_supervisor must be false (arm C is a fixed policy; "
+                "the supervisor loop is arm D)"
+            )
+        if not self.enable_evidence_store:
+            problems.append(
+                "enable_evidence_store must be true (the verify node judges "
+                "claims against the reader's source chunks)"
+            )
+        if self.enable_verifier:
+            problems.append(
+                "enable_verifier must be false (that flag adds the "
+                "supervisor's verify action, which this policy replaces with "
+                "its own verify node)"
+            )
+        if problems:
+            raise ValueError(
+                "research_policy=fixed_verify_repair requires a specific flag "
+                "combination and got another: " + "; ".join(problems)
+                + ". See ADR 0076."
+            )
+        return self
+
 
 settings = Settings()
 """Module-level singleton. Import this everywhere instead of instantiating."""

@@ -51,6 +51,12 @@ log = get_logger(__name__)
 #: be deleting the recovery rather than bounding it.
 _RETRY_BUDGET_FRACTION: Final = 0.75
 
+#: Claims one repair block may list. A verifier that flags more than ten
+#: unsupported claims has rejected the report rather than found faults in
+#: it, and a prompt that listed all of them would be asking for a rewrite
+#: under the name of a repair (ADR 0076).
+_MAX_REPAIR_CLAIMS: Final = 10
+
 
 def _worst_case_call_sec() -> float:
     """Wall clock one `call_llm_json` can burn before it gives up.
@@ -298,6 +304,49 @@ def _format_evidence_block(state: ResearchState) -> str:
     return "\n".join(lines).rstrip()
 
 
+def _repair_instruction(state: ResearchState) -> str:
+    """The `qualify_or_remove_claims` repair block, or nothing at all.
+
+    ADR 0076's second repair. It is an additional **user**-prompt block
+    and never a change to either system prompt: prompt text is the
+    instrument the first policy experiment measures with, and rewording
+    it re-baselines every faithfulness number that has ever been
+    recorded (ADR 0070). So the repair arrives the way a critique
+    already does — as context for this one call.
+
+    Gated on `repair_action`, which only `src/policies/repair.py` writes
+    and only under `research_policy="fixed_verify_repair"`. Under every
+    other configuration the key is absent from the state and this
+    returns the empty string, which is what keeps the shipped prompt
+    byte-identical.
+
+    Args:
+        state: Current state, after the repair node ran.
+
+    Returns:
+        The block, or `""` when no claim repair is in force.
+    """
+    if state.get("repair_action") != "qualify_or_remove_claims":
+        return ""
+    claims = [
+        claim.strip()
+        for claim in state.get("unsupported_claims", [])
+        if isinstance(claim, str) and claim.strip()
+    ]
+    if not claims:
+        return ""
+    listed = "\n".join(f"  - {claim}" for claim in claims[:_MAX_REPAIR_CLAIMS])
+    return (
+        "\nVerification repair — the runtime verifier could not find "
+        "support for the following claims in the material above:\n"
+        f"{listed}\n"
+        "\nRewrite the briefing so that each of those claims is either "
+        "qualified to exactly what a listed source supports or removed. "
+        "Change nothing else: keep the same structure, the same sections "
+        "and the same citations, and do not introduce new claims."
+    )
+
+
 def _build_user_prompt(state: ResearchState) -> str:
     """Build the user message; shape depends on `_use_evidence_path`.
 
@@ -306,6 +355,11 @@ def _build_user_prompt(state: ResearchState) -> str:
     APPENDS the grounded evidence bank — analyses give the LLM the
     "shape" of each paper (methodology / limitations), while the
     evidence block is what it's allowed to draw factual claims from.
+
+    A third, optional block closes the prompt when the fixed
+    verify-and-repair policy selected a claim repair — last, because it
+    is the instruction for *this* call rather than material to write
+    from.
     """
     parts = [f"Research question: {state['query']}\n"]
 
@@ -324,6 +378,10 @@ def _build_user_prompt(state: ResearchState) -> str:
         parts.append("\nEvidence bank (source-grounded excerpts):")
         parts.append("")
         parts.append(_format_evidence_block(state))
+
+    repair = _repair_instruction(state)
+    if repair:
+        parts.append(repair)
 
     return "\n".join(parts)
 

@@ -1,6 +1,8 @@
 """LangGraph workflow: wires agents together with conditional routing.
 
-Two workflow shapes are supported, chosen by `settings.enable_supervisor`:
+Three workflow shapes are supported. `settings.research_policy` picks
+the policy; under its `legacy` default the shape is chosen by
+`settings.enable_supervisor` exactly as it always was:
 
 - **Fixed pipeline (default)**: planner -> search -> reader ->
   synthesizer -> critic, with one conditional route from the critic
@@ -9,6 +11,14 @@ Two workflow shapes are supported, chosen by `settings.enable_supervisor`:
   -> ... -> stop. The supervisor picks the next action every turn
   from a strict enum; unknown / bad actions fall back to the
   fixed-pipeline order. See ADR 0014.
+- **Fixed verify-and-repair** (`research_policy="fixed_verify_repair"`,
+  ADR 0076): the fixed pipeline with an explicit `verify` node after
+  synthesis, at most one deterministic `repair`, and re-verification
+  before the critic. This is arm C of
+  `docs/agent-engineering/07-first-policy-experiment.md` — a structural
+  policy, unreachable by any combination of `ENABLE_SUPERVISOR` /
+  `ENABLE_EVIDENCE_STORE` / `ENABLE_VERIFIER`, which is the property
+  the experiment's arm labelling rests on.
 
 Two production knobs configured here regardless of shape:
 
@@ -65,11 +75,12 @@ from src.agents.reader import reader_agent
 from src.agents.search import search_agent
 from src.agents.supervisor import route_after_supervisor, supervisor_agent
 from src.agents.synthesizer import synthesizer_agent
-from src.agents.verifier import verifier_agent
+from src.agents.verifier import verifier_agent, verify_node
 from src.cancellation import CancelToken, current_cancel_token
 from src.config import settings
 from src.graph.state import ResearchState
 from src.observability import get_logger, traced_node
+from src.policies.repair import decide_repair, repair_node
 
 log = get_logger(__name__)
 
@@ -109,6 +120,72 @@ def route_after_critique(state: ResearchState) -> str:
         extra={"revision_target": target, "run_id": state.get("run_id")},
     )
     return END
+
+
+def route_after_verification(state: ResearchState) -> str:
+    """Conditional edge out of `verify`: repair once, or move on.
+
+    Three conditions have to hold for a run to spend its repair, and each
+    is a separate claim ADR 0076 makes:
+
+    - the verdict is `fail` — `abstain` is not a fault, and a run that
+      repaired on it would be acting on a diagnosis nobody made;
+    - `repair_count` is 0 — one repair per run, and this is the only
+      place that cap is enforced;
+    - `decide_repair` found an action that changes something. Two of the
+      five repairs approved for arm C are not implemented yet, and
+      entering the repair node to record "nothing to do" would spend the
+      cap on a node that did not repair anything.
+
+    The decision is derived here and again inside the node. Both calls
+    are the same pure function over the same state, so they cannot
+    disagree; deriving it twice is cheaper than a state key that exists
+    only to carry an answer between two adjacent nodes.
+
+    Returns:
+        `"repair"` or `"critic"`.
+    """
+    if state.get("verification_verdict") != "fail":
+        return "critic"
+    if int(state.get("repair_count", 0) or 0) >= 1:
+        return "critic"
+    if decide_repair(state).action == "none":
+        return "critic"
+    return "repair"
+
+
+def route_after_repair(state: ResearchState) -> str:
+    """Conditional edge out of `repair`: the node that carries it out.
+
+    Reads the action the repair node recorded rather than deciding
+    again, so the graph's next node is the one the state says was
+    selected — a router that re-derived it could dispatch somewhere the
+    recorded action does not name.
+
+    The `critic` branch is the total-router fallback, in the same spirit
+    as `route_after_critique`'s `END`: `route_after_verification` never
+    routes an unactionable decision here, so it is unreachable through
+    the graph, but a router with no answer for a value would fail the
+    run rather than finish it.
+
+    Returns:
+        `"search"`, `"synthesizer"` or `"critic"`.
+    """
+    action = state.get("repair_action", "")
+    if action == "retrieve_missing_evidence":
+        return "search"
+    if action == "qualify_or_remove_claims":
+        return "synthesizer"
+    # `revision_target_undispatchable` rather than a repair-specific
+    # event name: it already means "a router was handed a target it
+    # cannot dispatch", which is exactly this, and the closed event
+    # registry lives in `src/observability/logging.py`, which this work
+    # order does not own (see the PR body's follow-up note).
+    log.warning(
+        "revision_target_undispatchable",
+        extra={"revision_target": f"repair:{action}", "run_id": state.get("run_id")},
+    )
+    return "critic"
 
 
 def _open_checkpointer(exit_stack: ExitStack) -> Any | None:
@@ -446,8 +523,80 @@ def _build_supervisor_loop(
         workflow.add_edge(node, "supervisor")
 
 
+def _build_fixed_verify_repair(
+    workflow: StateGraph[ResearchState, Any, Any, Any], wrap: NodeWrapper
+) -> None:
+    """Wire arm C: the fixed pipeline with verification and one repair.
+
+    ```text
+    planner -> search -> reader -> synthesizer -> verify
+    verify  -> repair   (verdict fail, no repair spent, one available)
+    verify  -> critic   (pass | abstain | the repair is spent)
+    repair  -> search | synthesizer   (the node that carries it out)
+    critic  -> route_after_critique   (unchanged)
+    ```
+
+    Two things this shape deliberately is not (ADR 0076):
+
+    - It is not the supervisor loop with fewer actions. Routing is
+      fixed and deterministic and no model chooses the next node, so
+      the arm measures verification and repair rather than routing.
+    - It is not `_build_fixed_pipeline` plus a node. The critic's
+      revision loop is untouched and runs *after* verification, so the
+      two recoveries stay separable in the trajectory — which is what
+      lets an evaluation attribute an improvement to the repair.
+
+    `repair` re-enters the pipeline mid-graph, so the search -> reader
+    -> synthesizer -> verify edges serve both the first pass and the
+    repaired one. That is why a retrieval repair costs three nodes and a
+    claim repair costs one.
+    """
+    workflow.add_node("planner", wrap("planner", planner_agent))
+    workflow.add_node("search", wrap("search", search_agent))
+    workflow.add_node("reader", wrap("reader", reader_agent))
+    workflow.add_node("synthesizer", wrap("synthesizer", synthesizer_agent))
+    workflow.add_node("verify", wrap("verify", verify_node))
+    workflow.add_node("repair", wrap("repair", repair_node))
+    workflow.add_node("critic", wrap("critic", critic_agent))
+
+    workflow.set_entry_point("planner")
+    workflow.add_edge("planner", "search")
+    workflow.add_edge("search", "reader")
+    workflow.add_edge("reader", "synthesizer")
+    workflow.add_edge("synthesizer", "verify")
+
+    workflow.add_conditional_edges(
+        "verify",
+        route_after_verification,
+        {"repair": "repair", "critic": "critic"},
+    )
+    workflow.add_conditional_edges(
+        "repair",
+        route_after_repair,
+        {"search": "search", "synthesizer": "synthesizer", "critic": "critic"},
+    )
+    workflow.add_conditional_edges(
+        "critic",
+        route_after_critique,
+        {
+            "planner": "planner",
+            "search": "search",
+            "synthesizer": "synthesizer",
+            END: END,
+        },
+    )
+
+
 def _build_graph_shape(wrap: NodeWrapper) -> StateGraph[ResearchState, Any, Any, Any]:
     """Wire the node graph — same edges for the sync and async builds.
+
+    Three shapes now, and the selector is asked first: `research_policy`
+    names the policy a run executes, while `enable_supervisor` is one of
+    the flags the `legacy` policy derives its shape from. Settings
+    validation guarantees the two cannot both claim a shape —
+    `fixed_verify_repair` refuses to load with the supervisor on (ADR
+    0076) — so the order here expresses that hierarchy rather than
+    resolving a conflict.
 
     Args:
         wrap: How each agent callable is turned into a graph node. The
@@ -456,7 +605,9 @@ def _build_graph_shape(wrap: NodeWrapper) -> StateGraph[ResearchState, Any, Any,
             executor dispatch).
     """
     workflow = StateGraph(ResearchState)
-    if settings.enable_supervisor:
+    if settings.research_policy == "fixed_verify_repair":
+        _build_fixed_verify_repair(workflow, wrap)
+    elif settings.enable_supervisor:
         _build_supervisor_loop(workflow, wrap)
     else:
         _build_fixed_pipeline(workflow, wrap)
