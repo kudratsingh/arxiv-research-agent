@@ -107,6 +107,17 @@ found no fault, and a policy that repaired on it would spend the run's
 one repair on a diagnosis nobody made. The last two codes are
 `src/errors.py`'s own, reused so the two surfaces join.
 
+**Amended 2026-09-05 (CAP-10, recording CAP-07 / ADR 0080).** The
+`abstain` row has a fifth reason code, `mock_mode`. Under
+`settings.use_mock_data` the verifier constructs no client and
+`run_verification` returns `_mock_outcome()`, which reports
+`verified=True` on the ADR-0015 fields and carries the verdict
+`abstain` — deliberately not `pass`, which would tell this policy that
+a faithfulness check succeeded. `decide_repair` therefore returns
+`RepairDecision("none", "verdict_abstain")` and a keyless run reaches
+the critic without spending its one repair. The four codes above are
+unchanged, and nothing about a run with a credential moves.
+
 The supervisor's `verified` boolean is unchanged, including its
 conservative `verified=False` on an unusable judge response. The verdict
 is the new value; the old field keeps its ADR-0015 meaning.

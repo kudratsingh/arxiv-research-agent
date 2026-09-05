@@ -22,13 +22,16 @@ from src.observability import (
     PRICES_USD_PER_MILLION,
     JsonFormatter,
     RunCosts,
+    bind_effective_cost_cap,
     bind_run_id,
     clear_context,
     current_costs,
     current_run_id,
+    effective_cost_cap,
     estimate_cost,
     propagate_run_context,
     record_llm_call,
+    reset_effective_cost_cap,
     reset_run_id,
     start_cost_tracking,
 )
@@ -57,6 +60,7 @@ def _reset_context_vars() -> None:
     """
     yield
     costs_module._current_costs.set(None)
+    costs_module._effective_cost_cap_usd.set(None)
     clear_context()
 
 
@@ -619,6 +623,64 @@ class TestCrossThreadContextPropagation:
             # Same worker, next submit — must be back to default.
             after = ex.submit(snapshot_worker).result()
             assert after == "-"
+
+    def test_propagate_carries_the_effective_cost_cap(self) -> None:
+        """The fourth ContextVar (ADR 0086's cost-share gap, CAP-10).
+
+        `src/llm.py::_check_cost_budget` spends through
+        `effective_cost_cap(settings.max_cost_usd)`. A fan-out worker
+        that inherited no cap read the default, which is *looser* than
+        any per-job or per-branch value — a learning session's tighter
+        ceiling and an orchestrated branch's share both evaporated at
+        the thread boundary.
+        """
+        token = bind_effective_cost_cap(0.25)
+        try:
+            wrapped = propagate_run_context(lambda: effective_cost_cap(9.99))
+
+            with ThreadPoolExecutor(max_workers=2) as ex:
+                observed = list(ex.map(lambda _: wrapped(), range(3)))
+        finally:
+            reset_effective_cost_cap(token)
+
+        assert observed == [0.25, 0.25, 0.25]
+        assert effective_cost_cap(9.99) == 9.99, "the parent's scope is released"
+
+    def test_a_bare_worker_falls_back_to_the_callers_default_cap(self) -> None:
+        """The control: unwrapped, the cap is the caller's own default."""
+        token = bind_effective_cost_cap(0.25)
+        try:
+            with ThreadPoolExecutor(max_workers=1) as ex:
+                observed = ex.submit(lambda: effective_cost_cap(9.99)).result()
+        finally:
+            reset_effective_cost_cap(token)
+
+        assert observed == 9.99
+
+    def test_a_pooled_thread_keeps_no_cap_after_the_wrapped_call_returns(
+        self,
+    ) -> None:
+        """A thread that ran a $0.25 job must not cap the next one at $0.25."""
+        with ThreadPoolExecutor(max_workers=1) as ex:
+            token = bind_effective_cost_cap(0.25)
+            try:
+                inside = ex.submit(
+                    propagate_run_context(lambda: effective_cost_cap(9.99))
+                ).result()
+            finally:
+                reset_effective_cost_cap(token)
+
+            after = ex.submit(lambda: effective_cost_cap(9.99)).result()
+
+        assert inside == 0.25
+        assert after == 9.99
+
+    def test_an_uncapped_parent_propagates_no_cap(self) -> None:
+        """`None` is a value here: it means "use the caller's default"."""
+        wrapped = propagate_run_context(lambda: effective_cost_cap(9.99))
+
+        with ThreadPoolExecutor(max_workers=1) as ex:
+            assert ex.submit(wrapped).result() == 9.99
 
 
 # ---------------------------------------------------------------------------

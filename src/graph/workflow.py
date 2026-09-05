@@ -886,11 +886,25 @@ def build_workflow(
 ) -> Any:
     """Construct and compile the research agent workflow graph.
 
-    Shape depends on `settings.enable_supervisor`:
-    - Off (default) — fixed pipeline with a single conditional edge on
-      the critic.
-    - On — supervisor loop; every agent hands control back to the
-      supervisor, which picks the next action or stops.
+    Shape depends on `settings.research_policy`, and under its `legacy`
+    default on `settings.enable_supervisor` — the module docstring above
+    gives each shape in full:
+
+    - `legacy` + supervisor off (the default) — fixed pipeline with a
+      single conditional edge on the critic.
+    - `legacy` + supervisor on — supervisor loop; every agent hands
+      control back to the supervisor, which picks the next action or
+      stops.
+    - `fixed_verify_repair` (ADR 0076) — the fixed pipeline with a
+      `verify` node after synthesis, at most one deterministic `repair`,
+      and re-verification before the critic.
+    - `orchestrated_workers` (ADR 0086) — `lead -> workers -> merge`
+      replaces the single `search -> reader` leg, then arm C's tail.
+
+    With `settings.compute_controller="deterministic"` (ADR 0085) the
+    shape stops being a single compiled graph: this function compiles
+    the eligible shapes over one checkpointer and attaches them as
+    `compute_tier_graphs(app)` for the runner to select per job.
 
     When `settings.enable_checkpointing` is on, the compiled graph
     persists state after each node so a run can be resumed by

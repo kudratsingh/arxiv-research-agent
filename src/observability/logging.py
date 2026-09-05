@@ -1597,12 +1597,25 @@ def get_logger(name: str) -> logging.Logger:
 def propagate_run_context(fn: Any) -> Any:
     """Wrap `fn` so it inherits the caller's run context.
 
-    Three ContextVars ride along: the `RequestContext` (ADR 0067 — one
+    Four ContextVars ride along: the `RequestContext` (ADR 0067 — one
     frozen record holding `run_id`, `job_id`, `request_id`, `job_kind`,
     `principal_hash` and `worker_id`, where ADR 0012 carried `run_id`
-    alone), the cost accumulator, and the job's cancel token (ADR 0047 —
+    alone), the cost accumulator, the job's cancel token (ADR 0047 —
     without it, LLM calls made from a fan-out worker cannot see that
-    their job was cancelled and keep spending after the runner gave up).
+    their job was cancelled and keep spending after the runner gave up),
+    and the effective cost cap (ADR 0051's per-job ceiling, and ADR
+    0086's per-branch share).
+
+    The cap is the fourth because leaving it out made the *cap the
+    thread enforced* differ from the cap its parent was spending under:
+    `_check_cost_budget` reads `effective_cost_cap(settings.max_cost_usd)`,
+    so an unbound worker fell back to the process-wide ceiling. For a
+    learning session (a tighter ceiling) or an orchestrated branch (a
+    share of the run's), that fallback was strictly *looser* than the
+    caller's — the run ceiling still held, because the accumulator is
+    shared and every call re-checks it, but a branch could overshoot its
+    own share by one bounded fan-out. Carrying the cap makes the check
+    inside the fan-out the same check as outside it.
 
     Widening the snapshot from one field to the whole context is what
     makes a reader thread's LLM call attributable to the request and
@@ -1634,16 +1647,19 @@ def propagate_run_context(fn: Any) -> Any:
     parent_context = current_context()
     parent_costs = _costs._current_costs.get()
     parent_cancel = _current_cancel_token.get()
+    parent_cost_cap = _costs._effective_cost_cap_usd.get()
 
     def wrapped(*args: Any, **kwargs: Any) -> Any:
         ctx_token = attach_context(parent_context)
         cost_token = _costs._current_costs.set(parent_costs)
         cancel_token = _current_cancel_token.set(parent_cancel)
+        cap_token = _costs._effective_cost_cap_usd.set(parent_cost_cap)
         try:
             return fn(*args, **kwargs)
         finally:
             reset_context(ctx_token)
             _costs._current_costs.reset(cost_token)
             _current_cancel_token.reset(cancel_token)
+            _costs._effective_cost_cap_usd.reset(cap_token)
 
     return wrapped

@@ -22,6 +22,7 @@ something about `arxiv_search` rather than about branch isolation.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import pytest
@@ -41,6 +42,7 @@ from src.graph.state import (
     WorkerBranch,
     initial_research_state,
 )
+from src.observability import propagate_run_context
 from src.observability.costs import (
     CostBudgetExceeded,
     RunCosts,
@@ -482,6 +484,52 @@ class TestTheBudgetIsTheRunsAndTheShareIsTheBranchs:
 
         assert seen == [1.0, 1.0], "0.5 of a $2.00 ceiling, per branch"
         assert effective_cost_cap(999.0) == 999.0, "the scope is released"
+
+    def test_the_share_reaches_the_readers_fan_out_threads(
+        self, cost_ledger: RunCosts
+    ) -> None:
+        """ADR 0086's cost-share known gap, asserted closed (CAP-10).
+
+        A branch's model calls do not all happen on the branch's own
+        thread: the reader fans its papers out across a
+        `ThreadPoolExecutor`, which inherits no `contextvars` state at
+        all. Until `propagate_run_context` carried the effective cap,
+        a worker read `settings.max_cost_usd` — looser than any share —
+        so a branch could overshoot its own containment by one bounded
+        fan-out.
+
+        Driven through the real helper, wrapped the way
+        `src/agents/reader.py` wraps it, with a bare pool alongside as
+        the control: if the assertion below could pass without the
+        propagation, `unwrapped` would read the share too.
+        """
+        state = _state()
+        state["worker_branches"] = orch.plan_branches(state)
+        wrapped: list[float] = []
+        unwrapped: list[float] = []
+
+        def read_cap(_paper: int) -> float:
+            # The exact expression `src/llm.py::_check_cost_budget`
+            # evaluates, against the unpatched process-wide default.
+            return effective_cost_cap(settings.max_cost_usd)
+
+        def execute(_state: ResearchState, _branch: WorkerBranch) -> orch.BranchOutcome:
+            fan_out = propagate_run_context(read_cap)
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                wrapped.extend(executor.map(fan_out, range(2)))
+                unwrapped.extend(executor.map(read_cap, range(2)))
+            return orch.BranchOutcome()
+
+        orch.run_branches(state, execute=execute)
+
+        assert wrapped == [1.0] * 4, (
+            "a fan-out thread checks the branch's share (0.5 of $2.00), not "
+            "the process-wide ceiling"
+        )
+        assert unwrapped == [2.0] * 4, (
+            "the control: without the helper a worker still falls back to "
+            "settings.max_cost_usd, which is what made this a gap"
+        )
 
     def test_a_branch_that_trips_its_share_is_recorded_and_the_run_continues(
         self, cost_ledger: RunCosts

@@ -35,13 +35,28 @@ Three properties every generator holds, and each is tested:
   module manufactured. `src/eval/simulate_research.py`'s scripted
   synthesizer declines quotes for the same reason.
 
-None of the five branches emits a log event of its own. `KNOWN_EVENTS`
-in `src/observability/logging.py` is a closed registry owned by another
-work order, and a mock run is already announced three times without it:
-`search_mock_data_served` fires once per run, every node stamps
-`(mock data)` on the message it appends to state, and the briefing
-opens with `MOCK_BANNER`. Per-node events are a follow-up for whoever
-holds that registry.
+Four of the five branches now announce themselves. `KNOWN_EVENTS` in
+`src/observability/logging.py` was a closed registry owned by another
+work order when ADR 0080 shipped, so the names were registered by
+P0-WO08 (ADR 0083) and the emits landed with P0-WO11; the events are
+not this module's — a generator here is pure and logs nothing — they
+are one line at each agent's branch:
+
+| Agent | Event | When |
+|---|---|---|
+| `src/agents/planner.py` | `planner_mock_plan_served` | once per plan |
+| `src/agents/reader.py` | `reader_mock_analysis_served` | once per paper |
+| `src/agents/reader.py` | `reader_mock_claims_served` | per paper, only with the evidence store on and claims produced |
+| `src/agents/synthesizer.py` | `synthesizer_mock_briefing_served` | once per briefing |
+| `src/agents/critic.py` | `critic_mock_critique_served` | once per critique |
+
+`search_mock_data_served` (ADR 0041) is the sixth and predates all of
+them. The verifier is the one branch with no event of its own: what it
+has instead is a verdict, `abstain` with reason `mock_mode`, which is
+on the state where `src/policies/repair.py` reads it and is a stronger
+record than a log line. The two announcements that never depended on
+the registry still hold: every node stamps `(mock data)` on the message
+it appends to state, and the briefing opens with `MOCK_BANNER`.
 """
 
 from __future__ import annotations
