@@ -1593,6 +1593,18 @@ added the learning lane — but did not enable it, did not dispatch it,
 and did not add a secret. Nothing in this repository has ever run a
 paid learning campaign.
 
+Three artifacts describe that state and for months they described it
+differently: this section said disabled, `README.md` said the workflow
+was wired and failing nightly, and the workflow file carried a `cron:`
+that read like a live schedule. WO-B2 made the workflow file state its
+own disabled state in prose, and
+`tests/test_documented_claims.py::TestTheNightlyEvalState` now holds
+all three to one story — reword any of them and the other two go red.
+What no test can check is the state itself: `disabled_manually` is an
+attribute GitHub stores against the workflow and it never appears in a
+checkout, so **enabling this workflow is an edit to three documents as
+well as a `gh workflow enable`.**
+
 WO-W11's acceptance criterion 4, *the learning lane's first scheduled
 run*, is therefore **deferred behind W-OD-1**, exactly as WO-W09's paid
 calibration run and WO-W10's first funded campaign are. What is merged
@@ -1680,7 +1692,7 @@ block is never committed to `main` by the workflow itself — a human
 merges the PR.
 
 As of this writing that path has never run: see
-[Status: no green campaign yet](#status-no-green-campaign-yet).
+[Status: disabled, and no green campaign yet](#status-disabled-and-no-green-campaign-yet).
 
 ## What "tested" means for eval code itself
 
@@ -1709,7 +1721,10 @@ block (`tests/test_readme_update.py`).
   per-attempt timeout on every Claude call — clamped down at client
   construction when the retry envelope would not fit the job budget
   (ADR 0051; see the campaign run-book above).
-- ~~`feat/eval-ci`~~ — landed. Nightly GitHub Actions workflow at
+- ~~`feat/eval-ci`~~ — landed, and **disabled at the repository since**
+  (`disabled_manually`), so everything in this entry describes what the
+  workflow does when it is run rather than what happens tonight.
+  Nightly GitHub Actions workflow at
   `.github/workflows/eval-nightly.yml` runs the benchmark and diffs
   against the previous nightly, using the built-in `gh` CLI plus
   Actions artifacts to carry the baseline rather than a third-party
@@ -1722,7 +1737,7 @@ block (`tests/test_readme_update.py`).
   The workflow's own README-block step does use
   `peter-evans/create-pull-request@v7`; the measurement path does not.
   **Never green yet** — see
-  [Status: no green campaign yet](#status-no-green-campaign-yet).
+  [Status: disabled, and no green campaign yet](#status-disabled-and-no-green-campaign-yet).
 - ~~Replace `citation_accuracy` at its call sites~~ — landed. The
   research gate reads `citation_resolution_rate`; the old metric is a
   diagnostic on the row. The swap rebaselines, and
