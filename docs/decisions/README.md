@@ -550,6 +550,25 @@ never renumbered.
   verifies — **a live campaign still needs the owner's D9 approval and
   P0-WO12 stays blocked**. Snapshot and live campaigns are refused a
   shared summary.
+- [0083](0083-runtime-event-bridge-and-artifact-adapter.md) — **The
+  trajectory becomes durable and projected, evaluation-only, behind the
+  D8 gate.** ADR 0078 recorded a canonical trajectory beside every
+  research run and threw it away with the worker, which can prove a
+  schema but cannot be evidence. P0-WO08 adds a local content-addressed
+  artifact store (stage, verify, promote; refuses signed URLs, secrets,
+  raw private reasoning and data-class downgrades; dedupes by digest and
+  scopes reads by principal), a runtime bridge covering the whole RFC 10
+  §8 taxonomy over a run-scoped JSONL sink whose write happens inside the
+  sequence lock, a guided-learning bridge that writes **no** learner
+  `ProgressEvent` and has no import edge that could, and safe projections
+  onto the SSE frames, log events and OTel spans that already exist — a
+  derivation, so no new frame reaches the wire. `budget.reconciled`
+  compares the ledger against `RunCosts` and fails closed beyond a
+  documented per-call rounding tolerance. **Capture is gated twice**:
+  `contract_event_capture` has no `production` value, and a run carrying
+  `product_operation_only` consent is refused the sink whatever it is set
+  to, so production and user-content capture stay disabled pending D8.
+  Closes the blocked follow-ups of ADRs 0076, 0077 and 0080.
 
 ## When to write an ADR
 
