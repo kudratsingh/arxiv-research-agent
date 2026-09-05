@@ -574,24 +574,36 @@ def _shadow_node(node_name: str, state_update: dict[str, Any]) -> None:
 def _shadow_terminal(job: Job) -> None:
     """Close the shadow's trajectory from the row about to be persisted.
 
-    Deliberately *only* the terminal run event. P0-WO08 adds two more
-    steps a finished run can take — `budget.reconciled`, which W04's
-    registry allows after a terminal precisely because the answer does
-    not exist until the run is over, and the hash-chain verification that
-    records the head — and neither is called from here.
+    Three steps, in the only order that can be right: the terminal run
+    event, then `budget.reconciled`, then the hash-chain verification
+    that records the head.
 
-    The reason is a contract, not an oversight.
-    `tests/test_contract_shadow_runtime.py` pins the last event of a
-    job's trajectory as the terminal one, and an API research job carries
-    `product_operation_only` consent, so it has no durable ledger for a
-    reconciliation to make self-checking. Both steps are wired on the
-    evaluation lanes, where the file exists; wiring them here means moving
-    that assertion, which is a change to W05's test rather than an
-    addition to this path. Recorded in ADR 0083's follow-ups.
+    P0-WO08 shipped the last two and deliberately did not call them from
+    here, because `tests/test_contract_shadow_runtime.py` pinned the last
+    event of a job's trajectory as the terminal one and moving that
+    assertion is a change to W05's test rather than an addition to this
+    path. P0-WO11 makes that change: `budget.reconciled` may now follow
+    the terminal event, which is exactly what W04's registry allows for
+    this type — "did the ledger and the accumulator agree" is not
+    answerable until the run is over.
+
+    Wiring it here is not cosmetic. Without reconciliation the API job is
+    the one lane whose summed event costs are never checked against
+    `job.cost_usd`, so a bridge that dropped or double-counted a model
+    call left no trace; and without the close, no run on this path ever
+    records a verified head hash. Neither step can change the job: both
+    of W08's wrappers contain their own failures and return `None`, and
+    an API job's `product_operation_only` consent still keeps every byte
+    off disk — the reconciliation and the verification run over the
+    in-memory ledger and report through their own log events.
     """
     run = _current_shadow.get()
-    if run is not None:
-        _shadow_bridge().observe_job_terminal(run, job)
+    if run is None:
+        return
+    bridge = _shadow_bridge()
+    bridge.observe_job_terminal(run, job)
+    bridge.observe_reconciliation(run, float(job.cost_usd or 0.0))
+    bridge.observe_close(run)
 
 
 def _shadow_review_requested(ctx: PauseContext) -> None:

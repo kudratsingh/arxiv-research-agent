@@ -81,6 +81,19 @@ build next, and in what evidence-gated order?**
     set, the blinding and position-bias plan, synthetic adversarial fixtures,
     the calibration metrics and their PROMOTE/HOLD/ROLLBACK gate, and a
     cost/time estimate template. No judging, no labeling campaign, no spend.
+15. [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) —
+    the no-cost evidence package: the dry-run campaign lock over the whole
+    development suite, sealed manifests for A/B/C/D against the graphs this
+    checkout compiles, arm E refused as `capability_missing`, four synthetic
+    episodes with verified hash chains and zero parity mismatches, the
+    integrity, privacy and failure-taxonomy reports, and a bullet-by-bullet
+    verdict on the 12 §21 program gate. Contract qualification, explicitly
+    not policy-quality evidence.
+16. [`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md) — the
+    12 §18 packet, pre-filled and unsigned. Every figure is labelled
+    `ESTIMATE / RE-PRICE BEFORE APPROVAL`, the preconditions that are not met
+    are listed rather than discovered after an approval, and the go/no-go
+    question is left unanswered. **Not an approval request.**
 
 ## P0 implementation status
 
@@ -99,15 +112,20 @@ graph says what *may* start, not what has merged.
 | P0-WO05 | Research shadow integration | Landed — [#215](https://github.com/kudratsingh/arxiv-research-agent/pull/215) |
 | P0-WO06 | Benchmark migration and parity | Landed — [#214](https://github.com/kudratsingh/arxiv-research-agent/pull/214) |
 | P0-WO07 | Campaign lock, repeats, resume, denominators | Landed — [#221](https://github.com/kudratsingh/arxiv-research-agent/pull/221) |
-| P0-WO08 | Runtime event bridge and artifact adapter | This PR — see [ADR 0083](../decisions/0083-runtime-event-bridge-and-artifact-adapter.md) |
+| P0-WO08 | Runtime event bridge and artifact adapter | Landed — [#222](https://github.com/kudratsingh/arxiv-research-agent/pull/222) |
 | P0-WO09 | Governance and threat review | Landed — [#205](https://github.com/kudratsingh/arxiv-research-agent/pull/205) |
-| P0-WO10 | Judge-calibration protocol and fixtures | This PR — see [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md); no ADR, this is a design package |
-| P0-WO11 | Stage-0 contract qualification | Pending |
-| P0-WO12 | Funded repeated current-policy baseline | Blocked on funding approval (D9) |
+| P0-WO10 | Judge-calibration protocol and fixtures | Landed — see [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md); no ADR, this is a design package |
+| P0-WO11 | Stage-0 contract qualification | This PR — see [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md); no ADR, this is a report plus three fixes inside existing ADRs' scope |
+| P0-WO12 | Funded repeated current-policy baseline | Blocked on funding approval (D9), and on the campaign execution loop, which W07 did not build — see [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) §7.2 |
 
 Nothing in this table authorizes spend. W12 stays blocked until the
 program gate in [`12-p0-work-orders.md`](12-p0-work-orders.md) §21 is
-green and an exact maximum cost and stop rule are approved.
+green and an exact maximum cost and stop rule are approved. That gate is
+**not** green today: nine of its ten bullets pass and the tenth — "the
+W12 approval packet names an exact maximum cost and stop rule" — fails by
+construction, because passing it requires an owner to price and approve.
+[`15-stage0-qualification-report.md`](15-stage0-qualification-report.md)
+§10 records the verdict per bullet.
 
 The four RFCs are the P0 contract set. They are designed together: the
 registry supplies immutable evaluation inputs, a case compiles into a
@@ -156,11 +174,11 @@ order is "landed" only when its acceptance criteria are green in CI.
 | P0-WO05 | Research shadow integration | `src/contracts/research_binding.py`, `src/contracts/shadow_bridge.py` | landed |
 | P0-WO06 | Benchmark migration and parity | `eval_registry/`, `src/contracts/benchmark_adapters.py` | landed |
 | P0-WO07 | Campaign lock, repeats, denominators | `src/campaign/` | landed |
-| P0-WO08 | Runtime event bridge | `src/contracts/runtime_bridge.py`, `src/contracts/artifact_store.py` | in flight |
+| P0-WO08 | Runtime event bridge | `src/contracts/runtime_bridge.py`, `src/contracts/artifact_store.py` | landed |
 | P0-WO09 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) | landed |
 | P0-WO10 | Judge-calibration design | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry_calibration/` | landed |
-| P0-WO11 | Stage-0 contract qualification | — | not started |
-| P0-WO12 | Funded repeated baseline | — | approval-gated, blocked on D9 |
+| P0-WO11 | Stage-0 contract qualification | [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md), [`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md), `tests/test_stage0_qualification.py` | in flight |
+| P0-WO12 | Funded repeated baseline | — | approval-gated, blocked on D9 **and on unwritten code** — see below |
 
 The evaluation runners still read their own modules. `eval_registry/` is a
 generated, digest-verified view of `src/eval/benchmark_queries.py` and
@@ -176,6 +194,18 @@ runs an episode, contacts a provider, or authorizes spend — a chargeable
 campaign is refused before a credential is read unless an external approval
 record covers it, and **P0-WO12 remains blocked on D9**
 ([ADR 0082](../decisions/0082-campaign-lock-repeats-and-denominators.md)).
+
+**Nothing in `src/campaign/` executes an episode, and W07 did not build
+that.** The package plans, locks, declares arms, compiles the matrix, opens
+the denominator ledger, seals a campaign manifest and seals one episode's
+`RunManifest` into its directory. There is no loop over `plan.runnable`, no
+code that writes `completion.json`, and `budget_stop_reached` — the
+between-episodes cap enforcement `CampaignBudget.enforcement` advertises —
+has no production caller. It belongs at `src/campaign/planner.py:575` with a
+`run` verb at `src/campaign/cli.py:72`. This is the one remaining code item
+before W12 could be executed even with an approval in hand
+([`15-stage0-qualification-report.md`](15-stage0-qualification-report.md)
+§7.2).
 
 ## Program thesis
 

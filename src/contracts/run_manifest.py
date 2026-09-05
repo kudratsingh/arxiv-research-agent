@@ -1168,6 +1168,25 @@ def resolve_admission(
             plan.episode_budget.infrastructure_cost_usd_max,
         )
     )
+    if chargeable and plan.task_policy.execution_limits.workflow_cost.chargeable_work == (
+        "forbidden"
+    ):
+        # The gap W07 found and could not reach across. `_validate_policy_
+        # narrowing` compares the *effective* policy against the task's, so
+        # it catches a run that widens a forbidden boundary — but it never
+        # asks whether a task that forbids chargeable work is being admitted
+        # onto a chargeable plan at all. It was not: a spec compiled with
+        # `chargeable_work="forbidden"` and a zero ceiling, running on a
+        # metered provider, admitted the moment an approval id was present,
+        # because the approval branch below reads only the *budget*. The
+        # ceiling stayed zero and the decision still came back
+        # `chargeable=True`, which is the fail-open shape of invariant 10:
+        # an approval covering an amount is not authority over a task that
+        # declares no chargeable work may happen for it.
+        raise RunManifestError(
+            "task policy forbids chargeable work; a metered provider or a "
+            "positive budget cannot be admitted against it"
+        )
     record: ApprovalRecord | None = None
     receipt: ApprovalVerificationReceipt | None = None
     if chargeable:

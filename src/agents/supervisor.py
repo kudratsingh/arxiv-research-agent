@@ -17,7 +17,18 @@ Design (ADR 0014):
   the loop is misbehaving.
 - **`stop_reason` is recorded on state** so downstream analysis /
   eval can bucket runs: `quality_reached` / `budget_reached` /
-  `max_iterations_reached` / `supervisor_stop` / `llm_failed`.
+  `max_iterations_reached` / `supervisor_stop` / `llm_failed` /
+  `mock_mode`.
+
+Mock mode (ADR 0080, completed by P0-WO11): under
+`settings.use_mock_data` the router returns `_default_next_action`'s
+fixed-pipeline route without asking a model, after the loop and cost
+short-circuits and before the prompt is built. CAP-07 gave the other
+six nodes a branch of their own and left this one, so a keyless
+supervisor run reached a briefing only through the malformed-judge
+fallback — the same route, recorded as a decision, on a run that had
+constructed a provider client and failed. The branch removes the client
+construction and gives the stop its own bucket; the route is unchanged.
 
 WO-B3 — what the routing call is allowed to swallow, and what it is
 not. `_route_or_fall_back` used to be one bare `except Exception` that
@@ -73,6 +84,16 @@ log = get_logger(__name__)
 #: work is done. Two different facts under one name, and the one that
 #: matters — "the router never answered" — was the invisible half.
 LLM_FAILED_STOP_REASON = "llm_failed"
+
+#: `stop_reason` for a stop under the fixture corpus (ADR 0080).
+#:
+#: Its own bucket, and that is the whole point of adding it. A mock run
+#: that stopped could only have been filed as `llm_failed` — which is
+#: what the pre-P0-WO11 behaviour actually recorded, because the router's
+#: model call failed and the fallback caught it — or as
+#: `supervisor_stop`, which claims a judge decided. Neither is true: no
+#: model was asked, and nothing failed.
+MOCK_MODE_STOP_REASON = "mock_mode"
 
 # Strict action set. Any judge output outside this set falls back to
 # the deterministic pipeline-order routing. `verify` and `refine_query`
@@ -399,6 +420,30 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
         )
         return _emit(
             "stop", "cost budget exhausted", "budget_reached", loop_iter
+        )
+
+    # Mock mode (ADR 0080's remaining gap, closed by P0-WO11). Below the
+    # two hard short-circuits, so a mock run still stops at the loop cap
+    # and at the cost ceiling; above the prompt build, for the reason
+    # every other agent's branch sits where it does — mock mode is a
+    # different source of truth, not a different way of asking the model.
+    #
+    # This is the node CAP-07 did not reach, and its absence was not
+    # cosmetic. Without it a keyless arm-D run got to a briefing only by
+    # way of `except Exception` on a client that could not be
+    # constructed: the route was the fallback's, the trajectory recorded
+    # it as a decision, and the episode could not attest that no provider
+    # was initialised. The route below is `_default_next_action`'s —
+    # byte-for-byte what the fallback already produces — so nothing about
+    # arm D's behaviour moves. Only the reason changes, because nothing
+    # failed here, and only the client construction disappears.
+    if settings.use_mock_data:
+        mock_action = _default_next_action(state)
+        return _emit(
+            mock_action,
+            "mock data: fixture routing, no model call",
+            MOCK_MODE_STOP_REASON if mock_action == "stop" else "",
+            loop_iter,
         )
 
     available = _available_actions()

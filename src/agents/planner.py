@@ -140,6 +140,13 @@ def planner_agent(state: ResearchState) -> dict[str, Any]:
         # agent checks the same setting first: mock mode is a different
         # source of truth, not a different way of asking the model.
         mock_sub_questions, mock_search_queries = mock_mode.mock_plan(state["query"])
+        log.info(
+            "planner_mock_plan_served",
+            extra={
+                "n_sub_questions": len(mock_sub_questions),
+                "n_search_queries": len(mock_search_queries),
+            },
+        )
         return {
             "sub_questions": mock_sub_questions,
             "search_queries": mock_search_queries,
