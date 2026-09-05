@@ -115,6 +115,17 @@ never an option: key ids are short operator-chosen strings and a bare
 digest of one is recoverable from a word list.
 `principal_salt_is_ephemeral()` reports which mode you are in.
 
+The variable is `Settings.log_principal_salt` (WO-C3) — the last of
+ADR 0067's flags to move out of a direct `os.environ` read. Two things
+follow. It is a `SecretStr`, so it renders as `**********` in a repr,
+in `model_dump()` and in `model_dump_json()`: a leaked salt puts the
+key ids back within reach of a word list, so nothing may print it, and
+`src/observability/context.py` takes the raw value exactly once,
+through `get_secret_value()`. And a *blank* value is unset, not a
+salt — `LOG_PRINCIPAL_SALT=` in a Compose file leaves you in the
+per-process mode, which is what `principal_salt_is_ephemeral()` will
+tell you.
+
 ## Event names
 
 `message` is an event name, not a sentence. The names are a closed set,

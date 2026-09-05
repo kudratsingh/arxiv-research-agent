@@ -25,6 +25,7 @@ which is the invariant that matters when someone adds a log line.
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import logging
 import pathlib
@@ -44,6 +45,7 @@ from src.observability.context import (
     clear_context,
     current_context,
     hash_principal,
+    principal_salt_is_ephemeral,
     reset_context,
 )
 from src.observability.logging import (
@@ -179,6 +181,89 @@ class TestCorrelationFieldsOnTheLine:
         assert with_a != with_b
         # Stable within one salt, or grouping by principal is impossible.
         assert with_b == hash_principal("acme-prod")
+
+
+class TestThePrincipalSaltComesFromSettings:
+    """WO-C3. The last environment read, folded in without losing either.
+
+    WO-B4 took the other three flags and left this one, recording two
+    reasons in ADR 0067: the salt is a *secret*, and its "empty means
+    ephemeral" branch is load-bearing. `tests/test_config.py` pins the
+    secret half — no repr, no dump. These are the two behaviours that
+    belong here, where the salt is actually hashed with.
+    """
+
+    def test_a_configured_salt_reaches_the_digest_raw_rather_than_masked(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A `SecretStr` renders as `**********` in every string context.
+
+        Salting with the mask would be self-consistent and useless: the
+        whole fleet would agree on a digest of a value nobody chose, and
+        no test that only compared two hosts would notice. So the
+        resolver has to hand back exactly what was configured, and the
+        digest has to be the digest of *that*.
+        """
+        salt = "fleet-wide-salt"
+        monkeypatch.setattr(
+            context_module, "settings", Settings(log_principal_salt=salt)
+        )
+        resolved, ephemeral = context_module._resolve_salt()
+
+        assert resolved == salt
+        assert ephemeral is False
+
+        monkeypatch.setattr(context_module, "_principal_salt", resolved)
+        assert hash_principal("acme-prod") == (
+            hashlib.sha256(f"{salt}\x00acme-prod".encode())
+            .hexdigest()[: context_module.PRINCIPAL_HASH_CHARS]
+        )
+
+    def test_an_unset_salt_still_invents_one_per_process(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The branch the fold-in was most likely to cost us.
+
+        A required field would refuse to boot every deployment that has
+        not chosen a salt; a default used *as* a salt would give every
+        deployment on earth the same one, which is worse than none
+        because it looks like a salt. The unset field takes neither
+        route — it draws a fresh one.
+        """
+        monkeypatch.setattr(
+            context_module, "settings", Settings(log_principal_salt="")
+        )
+        first, ephemeral = context_module._resolve_salt()
+        second, _ = context_module._resolve_salt()
+
+        assert ephemeral is True
+        # Real entropy, not the empty string wearing a boolean's hat.
+        assert len(first) == 32
+        assert int(first, 16) >= 0
+        assert first != second
+
+    def test_the_ephemeral_report_describes_this_process_honestly(self) -> None:
+        """`principal_salt_is_ephemeral()` is what a runbook checks.
+
+        The suite runs with no salt configured — `tests/conftest.py`
+        scrubs every variable `Settings` answers to, and this field's
+        name became one of them the moment it was added — so the honest
+        answer here is "ephemeral", and the salt in use has to be the
+        32-hex one that was invented to say so.
+        """
+        assert principal_salt_is_ephemeral() is True
+        assert len(context_module._principal_salt) == 32
+
+    def test_a_configured_salt_is_reported_as_stable(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The other direction, from the one resolver both answers come
+        # from, so the operator-facing report cannot drift from the salt
+        # the digests are actually built with.
+        monkeypatch.setattr(
+            context_module, "settings", Settings(log_principal_salt="stable")
+        )
+        assert context_module._resolve_salt() == ("stable", False)
 
 
 class TestTraceCorrelation:
