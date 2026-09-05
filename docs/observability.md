@@ -579,6 +579,8 @@ in-flight counter is worth watching separately — an SSE client holds
 | `llm_upstream_errors_total` | counter | `model`, `status` |
 | `rate_limit_rejections_total` | counter | `backend` |
 | `research_degradations_total` | counter | `rung`, `component` |
+| `trajectory_events_total` | counter | `lane`, `outcome` |
+| `trajectory_faults_total` | counter | `stage`, `error_type` |
 
 `rung` and `component` on `research_degradations_total` are **closed
 sets** (`DEGRADATION_RUNGS`, `DEGRADATION_COMPONENTS` in
@@ -630,6 +632,72 @@ and asserts none of it reaches a metric attribute.
 The HTTP surface is the only one whose attributes come from *outside*
 the process, which is why two of its three rules above are containment
 rules rather than naming ones.
+
+## The contract event bridge (P0-WO08, ADR 0083)
+
+The canonical trajectory (RFC 10) is a **ledger**, not a log, and this
+section is about how it touches the three surfaces this page describes
+without becoming a fourth one.
+
+**The ledger is written first, and a projection can never unwrite it.**
+An accepted event is durable — in memory always, and in a run-scoped
+JSONL file when capture is permitted — before any log line, span
+attribute or SSE comparison happens. Every projection runs inside its own
+containment: it can fail, it is counted and named when it does
+(`trajectory_projection_failed`, with the projection's name in `stage`),
+and the event stays exactly where it was. RFC 10 §16 puts it in one
+sentence: "projection failures do not alter history."
+
+**The three projections.**
+
+| Canonical event | Projection | Where |
+|---|---|---|
+| `attempt.started` | `job_started` SSE | `sse_event_name_for` |
+| `action.completed` | `node_completed` SSE | `sse_event_name_for` |
+| `hitl.requested` (`plan_review` / `learner_turn`) | `plan_ready` / `turn_ready` SSE | `sse_event_name_for` |
+| `run.completed` / `run.failed` / `run.budget_stopped` / `run.cancelled` | the three terminal frames | `sse_event_name_for` |
+| any | `trajectory_event_recorded` log line | `CONTRACT_EVENT_LOG_PROJECTION`, off by default |
+| any | a span event on the active span | always on |
+
+The SSE column is a **derivation, not an emitter**. Nothing in the
+bridge writes a frame, no new event name reaches the wire, and every
+projected name is a member of the set `tests/test_contract_sse_events.py`
+already pins from both sides. The terminal case is asserted
+byte-identical to the frame `terminal_event_data` builds, which is what
+makes "the stream is a projection of the ledger" a checkable claim
+rather than a comforting one.
+
+The log projection is off by default. One INFO per canonical event
+roughly doubles a research job's log volume to answer a question the
+ledger already answers, so it is a debugging switch
+(`CONTRACT_EVENT_LOG_PROJECTION=true`) rather than a default.
+
+The span projection adds a span *event* rather than a span: RFC 10 §16
+allows spans to be sampled without affecting the ledger, so a trace is a
+view of a trajectory and never its record. In the other direction the
+envelope carries `trace_ref` — the active trace and span ids, copied when
+one exists and simply absent when it does not.
+
+**Two metrics, and what each is for.** `trajectory_events_total{lane,
+outcome}` is the recording rate; `outcome` is `accepted`, `deduplicated`
+(an idempotent retry answered from the index, RFC 10 §11.2) or
+`rejected`. `trajectory_faults_total{stage, error_type}` is everything
+that failed around the accept — `sink_write`, `projection`,
+`artifact_integrity`, `artifact_access`, `cost_reconciliation`,
+`chain_verification` — attributed by a member of ADR 0064's closed error
+registry. A non-zero fault rate beside a climbing accepted rate is the
+designed behaviour, not an incident. A sustained `sink_write` rate means
+episodes are being recorded and not written down.
+
+**Capture is gated twice, and neither gate is a preference.**
+`CONTRACT_EVENT_CAPTURE` is `off` by default and its only other value is
+`evaluation_only`; there is no `production` value. Independently, a run
+whose consent scope is `product_operation_only` — which is what a real
+research job and a real learner session carry — is refused the durable
+sink and the artifact store whatever the flag says. Production and
+user-content capture stay disabled pending D8 (P0-WO09), and that
+sentence is enforced by a test over every consent scope rather than by
+this paragraph.
 
 ## Adding to the contract
 

@@ -98,8 +98,8 @@ graph says what *may* start, not what has merged.
 | P0-WO04 | Trajectory schema and in-memory adapter | Landed — [#203](https://github.com/kudratsingh/arxiv-research-agent/pull/203) |
 | P0-WO05 | Research shadow integration | Landed — [#215](https://github.com/kudratsingh/arxiv-research-agent/pull/215) |
 | P0-WO06 | Benchmark migration and parity | Landed — [#214](https://github.com/kudratsingh/arxiv-research-agent/pull/214) |
-| P0-WO07 | Campaign lock, repeats, resume, denominators | This PR — see [ADR 0082](../decisions/0082-campaign-lock-repeats-and-denominators.md) |
-| P0-WO08 | Runtime event bridge and artifact adapter | Pending |
+| P0-WO07 | Campaign lock, repeats, resume, denominators | Landed — [#221](https://github.com/kudratsingh/arxiv-research-agent/pull/221) |
+| P0-WO08 | Runtime event bridge and artifact adapter | This PR — see [ADR 0083](../decisions/0083-runtime-event-bridge-and-artifact-adapter.md) |
 | P0-WO09 | Governance and threat review | Landed — [#205](https://github.com/kudratsingh/arxiv-research-agent/pull/205) |
 | P0-WO10 | Judge-calibration protocol and fixtures | This PR — see [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md); no ADR, this is a design package |
 | P0-WO11 | Stage-0 contract qualification | Pending |
@@ -155,8 +155,8 @@ order is "landed" only when its acceptance criteria are green in CI.
 | P0-WO04 | Trajectory schema and replay | `src/contracts/trajectory.py` | landed |
 | P0-WO05 | Research shadow integration | `src/contracts/research_binding.py`, `src/contracts/shadow_bridge.py` | landed |
 | P0-WO06 | Benchmark migration and parity | `eval_registry/`, `src/contracts/benchmark_adapters.py` | landed |
-| P0-WO07 | Campaign lock, repeats, denominators | `src/campaign/` | this PR |
-| P0-WO08 | Runtime event bridge | — | not started |
+| P0-WO07 | Campaign lock, repeats, denominators | `src/campaign/` | landed |
+| P0-WO08 | Runtime event bridge | `src/contracts/runtime_bridge.py`, `src/contracts/artifact_store.py` | in flight |
 | P0-WO09 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) | landed |
 | P0-WO10 | Judge-calibration design | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry_calibration/` | landed |
 | P0-WO11 | Stage-0 contract qualification | — | not started |
