@@ -33,14 +33,20 @@ The dry-run test installs counting spies on `src.llm._get_client` and
 because "the qualification made no external call" is the deliverable and
 not an ambient property.
 
-**One honest exception, and the report says so in its own words.** Arm
-D's supervisor has no mock branch — CAP-07 (ADR 0080) gave one to the
-planner, reader, synthesizer, critic, search and verifier, and not to the
-router. Left alone under mock mode the supervisor's model call fails and
-the node falls back to fixed pipeline order, so the trajectory would be a
-*degraded* route recorded as a decided one. `_scripted_supervisor` below
-supplies the routing decisions from a fixture instead, which is a canned
-judge and is labelled as one.
+**Nothing here is canned.** Every node the four episodes touch serves a
+fixture from its own branch, including the supervisor, whose branch this
+PR adds: CAP-07 (ADR 0080) reached planner, reader, synthesizer, critic,
+search and verifier and left the router, so before this change a keyless
+arm-D run got to a briefing only by way of `except Exception` on a client
+it had already tried to build. That is why each episode installs a
+counting spy on `src.llm._get_client` rather than trusting the conftest
+guard: five of the six agents on this path would swallow a construction
+failure and still produce a report.
+
+The one limit worth stating, and stated again in the report: arm D's mock
+route is `_default_next_action`'s fixed order, so it never selects
+`verify`. A mock arm-D episode therefore demonstrates the supervisor
+*shape* at zero cost and does not exercise the router's action selection.
 """
 
 from __future__ import annotations
@@ -48,7 +54,7 @@ from __future__ import annotations
 import contextlib
 import re
 import socket
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -166,19 +172,25 @@ SETTINGS_CONSUMERS: tuple[Any, ...] = (
     workflow_module,
 )
 
-#: Arm D's routing decisions, as a fixture. One entry per supervisor
-#: turn; the last repeats if the loop asks again. `verify` is in the list
-#: because arm D is the arm whose verifier is an action the router picks,
-#: and a synthetic arm-D episode that never picked it would not have
-#: exercised the capability its manifest claims.
-SCRIPTED_SUPERVISOR_ROUTE: tuple[str, ...] = (
-    "plan",
+#: Arm D's node route under the fixture corpus. The supervisor's mock
+#: branch returns `_default_next_action`'s fixed-pipeline order, so the
+#: router alternates with the node it chose and the run stops once the
+#: critic has spoken. `verifier` is deliberately absent: the fixed-order
+#: route never selects `verify`, which is a real limit of what a mock
+#: arm-D episode can demonstrate and is stated in the report rather than
+#: papered over with a scripted judge.
+ARM_D_MOCK_ROUTE: tuple[str, ...] = (
+    "supervisor",
+    "planner",
+    "supervisor",
     "search",
-    "read",
-    "synthesize",
-    "verify",
-    "critique",
-    "stop",
+    "supervisor",
+    "reader",
+    "supervisor",
+    "synthesizer",
+    "supervisor",
+    "critic",
+    "supervisor",
 )
 
 
@@ -661,7 +673,16 @@ class TestTheFiveArmIdentities:
 
 
 class TestTheSyntheticEpisodes:
-    pytestmark = pytest.mark.e2e
+    #: `integration`, not `e2e`, and the repository decides that rather
+    #: than this module: `tests/test_documented_claims.py::TestTheE2eTier
+    #: ::test_the_marker_and_the_directory_are_the_same_set` requires
+    #: every `e2e`-marked module to live under `tests/e2e/`, whose count
+    #: README.md pins as an equality. The precedent for a whole-graph
+    #: run in the flat tree is `tests/test_api_smoke_e2e.py` and
+    #: `tests/test_simulate_research_campaign.py`, both `integration`.
+    #: Keeping this tier also puts the qualification inside the coverage
+    #: selection, which `-m "not e2e"` would otherwise exclude.
+    pytestmark = [pytest.mark.integration, pytest.mark.contract]
 
     @pytest.mark.parametrize("arm", RUNNABLE_ARMS)
     def test_each_runnable_identity_runs_end_to_end_and_reconstructs(
@@ -669,19 +690,29 @@ class TestTheSyntheticEpisodes:
     ) -> None:
         """One episode per arm: real graph in, verified ledger out.
 
-        The four claims, in the order the report makes them: the
-        compiled graph really ran and took this arm's node route; the
-        episode sealed a manifest before the ledger opened; the durable
-        JSONL on disk verifies as a hash chain and reconstructs to the
-        decisions and artifacts the run made; and the contract's view of
-        the outcome agrees with the legacy record in every compared
-        field.
+        The five claims, in the order the report makes them: the
+        compiled graph really ran and took this arm's node route; it did
+        so without constructing a provider client; the episode sealed a
+        manifest before the ledger opened; the durable JSONL on disk
+        verifies as a hash chain and reconstructs to the decisions and
+        artifacts the run made; and the contract's view of the outcome
+        agrees with the legacy record in every compared field.
+
+        The client spy is installed *over* the conftest spend guard and
+        keeps the evidence, so the claim is "no client was built" rather
+        than "no exception escaped" — the distinction ADR 0080's own e2e
+        module makes, and the one that matters here, because five of the
+        six agents on this path have `except Exception` fallbacks that
+        would swallow a construction failure and still produce a report.
         """
         cfg = arm_settings(config(), arm)
         _install(monkeypatch, cfg)
+        clients: list[str] = []
+        monkeypatch.setattr(llm_module, "_get_client", lambda: clients.append("client"))
         costs = start_cost_tracking()
 
         visited, final = _drive_graph(cfg, run_id=f"stage0-{arm}")
+        assert clients == [], "the graph constructed a provider client under mock mode"
         assert visited, "the graph produced no node updates"
         assert final["draft_report"], "the graph produced no report"
         if arm in ("A", "B"):
@@ -689,8 +720,10 @@ class TestTheSyntheticEpisodes:
         if arm == "C":
             assert "verify" in visited, "arm C must reach its verification stage"
         if arm == "D":
-            assert visited[0] == "supervisor"
-            assert "verifier" in visited, "arm D's router must reach its verifier"
+            assert visited == list(ARM_D_MOCK_ROUTE)
+            assert final["stop_reason"] == "mock_mode", (
+                "a mock supervisor stop is its own bucket, not llm_failed"
+            )
 
         with compiled_under(cfg) as app:
             shape = sb.policy_shape_for_app(cfg, app)
@@ -1061,34 +1094,6 @@ def _install(monkeypatch: pytest.MonkeyPatch, cfg: Settings) -> None:
     monkeypatch.setattr(
         m_search, "rank_papers_by_relevance", lambda query, papers, top_k: list(papers)[:top_k]
     )
-    if cfg.enable_supervisor:
-        monkeypatch.setattr(m_supervisor, "call_llm_json", _scripted_supervisor())
-
-
-def _scripted_supervisor() -> Callable[..., dict[str, Any]]:
-    """Arm D's routing decisions, from a fixture rather than a model.
-
-    CAP-07 gave every research agent a deterministic mock branch and did
-    not give one to the supervisor, so under mock mode the router's call
-    fails and `_fall_back` routes in fixed pipeline order. That run
-    finishes, but its trajectory would record a *degraded* route as a
-    decided one — which is exactly the misrepresentation this work order
-    exists to prevent. Scripting the judge keeps arm D's episode an
-    honest supervisor route and puts the gap in the report instead.
-    """
-    turns = {"n": 0}
-
-    def _call(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
-        index = min(turns["n"], len(SCRIPTED_SUPERVISOR_ROUTE) - 1)
-        turns["n"] += 1
-        action = SCRIPTED_SUPERVISOR_ROUTE[index]
-        return {
-            "next_action": action,
-            "reason": "stage-0 qualification fixture",
-            "stop_reason": "qualification_complete" if action == "stop" else "",
-        }
-
-    return _call
 
 
 def _drive_graph(cfg: Settings, *, run_id: str) -> tuple[list[str], dict[str, Any]]:
