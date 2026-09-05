@@ -12,7 +12,11 @@ Updated: 2026-09-05
 | 2026-09-05 | CAP-07 promoted from optional wave 2 to authorized wave 1b after the assurance lane's frontend survey found no keyless path to a briefing; starts when CAP-01/CAP-02 PRs are open |
 | 2026-09-05 | Coordination agreed with the assurance lane: `src/config.py` granted to it for one non-additive PR; the scripted research tier runs against CAP branches before merge; CAP-07 accepted as an optional wave-2 hand-over; `src/observability/**` and `src/eval/runner.py` recognised as fenced for Puma's W05–W08 |
 
-## Wave 1
+## Wave 1 — CLOSED 2026-09-05
+
+CAP-01 #212 (ADR 0077), CAP-02 #210 (ADR 0076), CAP-07 #216 (ADR 0080) merged on nine-check green, each tier-checked byte-identical with default settings. P0 (taken over from the Codex session): W04 #203, W09 #205, W06 #214 (ADR 0079), W05 #215 (ADR 0078), W10 #217, W07 #221 (ADR 0082), W08 #222 (ADR 0083) merged; W11 in flight. Owner rulings 2026-09-05: wave 2 authorized; funding packet only after the assurance lane's queue is also empty.
+
+## Wave 1 table
 
 | WO | Branch | Worktree | PR | State |
 |---|---|---|---|---|

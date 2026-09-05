@@ -320,18 +320,117 @@ end to end; the eval and e2e harnesses can delete no scripted surface yet
 (that is the assurance lane's follow-up) but can run the real nodes at zero
 spend; live behaviour is unchanged and proven.
 
-## Wave 2 (not authorized yet)
+## Wave 2 — authorized by the owner 2026-09-05
 
-- **CAP-03** orchestrator-workers for T2: sub-question workers with
-  isolated context and an evidence-table merge; depends on CAP-02's verdict
-  keys and on Puma's W04 event types for candidate lineage.
-- **CAP-04** difficulty features and the deterministic T0/T1 controller;
-  depends on CAP-01 (effort as the T0/T1 lever) and CAP-02.
-- **CAP-05** SDK 1.x upgrade; lockfile change under ADR 0045's corrected
-  procedure; coordinate with both sibling lanes because the lock is shared.
-- **CAP-06** funded live smoke; blocked on the owner's funding decision.
-- **CAP-07** — promoted to wave 1b on 2026-09-05 (see below); no longer
-  optional.
+Order: CAP-08 and CAP-04 run concurrently (disjoint modules; trivial overlap at
+agent call sites, resolved by keeping both sides); CAP-03 starts after both
+merge because it edits the same graph and runner files. Same rules as wave 1:
+default-off, byte-identical golden tests, zero spend, one PR per order, worker
+builds nothing it cannot prove offline.
+
+### CAP-08 — The three agent-side degradation rungs reach the metric
+
+Measured problem: the assurance lane's D5 (ADR 0081) put five of the eight
+degradation rungs on `research_degradations_total{rung,component}`; the three
+that remain log-only — `reduced_tool`, `partial_results`, `model_fallback` —
+have every call site in `src/agents/` (capability lane). `tests/test_degradation_ladder.py`
+declares the set both ways and fails when one is wired, so wiring requires
+correcting the declaration and `docs/reliability.md` §5/§7 in the same PR.
+
+Deliverables: one `record_degradation` call beside the existing log line at
+each site — search partial-arXiv failure, empty-keeping-prior-papers, fixture
+set served, query cap applied (`reduced_tool`); reader abstract-only fallback
+(`partial_results`); supervisor default-action fallback, verifier llm-failed
+fallback, planner plan fallback, synthesizer malformed-response retry
+(`model_fallback`). No new log events. Update the ladder test's declaration,
+`docs/reliability.md` §5 ("On a metric?" column) and §7 item 1 (closed, not
+mostly closed), and the SLI wording that calls the quality SLI a lower bound.
+Tests: a fault-tier triple (error code, log event, metric) per rung, new
+module. No ADR (ADR 0081 owns the instrument).
+
+### CAP-04 — Deterministic compute controller (T0/T1) and per-agent effort
+
+Measured problem: `07-first-policy-experiment.md` arm E and `04-roadmap.md`
+AE-200/AE-203 need difficulty features logged before the compute decision and
+a deterministic tier router. CAP-01 landed per-agent `<agent>_effort` fields
+that no call site passes (ADR 0077 follow-up). CAP-02 landed T1 as
+`research_policy=fixed_verify_repair`, selected process-wide at settings load,
+so a run cannot choose its tier.
+
+Deliverables:
+1. `compute_controller: Literal["off", "deterministic"] = "off"` (additive
+   block `# ------ Agent capability (CAP-04) ------`). Off = today.
+2. A pure module (proposed `src/policies/compute.py`): `extract_features`
+   (pre-run: query token count, entity/comparative/freshness cues, requested
+   depth if the request carries one, `TaskSpec.task_kind` when the shadow
+   binding compiled one; at plan time: sub-question and query counts) and
+   `decide_tier(features) -> ComputeDecision(tier: T0|T1, reasons, features)`
+   with a documented rule table and hard per-tier limits. T2/T3 are not
+   decided here (CAP-03 adds T2).
+3. Per-run policy selection: the runner compiles both graph shapes once at
+   startup (legacy and `fixed_verify_repair`) and selects per job from the
+   decision; `build_workflow`'s existing single-graph path is unchanged when
+   the controller is off. The effective policy id recorded by W05's binding
+   is the chosen graph's (`research_fixed_evidence` or
+   `research_fixed_verify_repair`); arm E stays `capability_missing` until
+   CAP-03 supplies branching and selection.
+4. Per-agent effort wired: every `call_llm_json` call site passes
+   `agent=<name>` so CAP-01's overrides apply; an optional
+   `tier_effort_overrides` map (default empty) lets T1 raise the verifier's
+   effort. Flags off = golden-identical kwargs (extend CAP-01's fixtures).
+5. The decision is recorded: features and tier in the trajectory through the
+   compute-control event type RFC 10 §8.6 registers (via W08's bridge), and
+   in the SSE `node_completed` payload only if no frame shape changes
+   (contract fixtures must stay byte-identical; otherwise omit from SSE).
+6. ADR 0085 "Deterministic compute controller v1". Docs: `docs/architecture.md`
+   additive note, `docs/agents/README.md` cross-cutting flags.
+
+Tests: decision-table unit tests; golden off (graph, kwargs, SSE fixtures);
+per-run selection through both compiled graphs with canned agents (T0 run
+never visits `verify`, T1 run does); effort keyword reaches `call_llm` for all
+nine agents (spy); trajectory carries the decision; manifest policy id equals
+the effective graph; cost/cancel unchanged; scripted research tier check run,
+not edited. Not in scope: any model-based difficulty estimate, T2, prompt text.
+
+### CAP-03 — Orchestrator-workers for the branch tier (T2)
+
+Starts after CAP-04 and CAP-08 merge. Measured problem: parallel candidate
+search is "absent" (`01-current-architecture.md` §6); the reader parallelises
+papers, not trajectories; `02-target-architecture.md` §4 T2 requires diverse
+search branches, candidate outlines, listwise selection and verification.
+
+Deliverables (behind `research_policy=orchestrated_workers`, default-off, and
+`compute_controller` tier T2 when CAP-04's rules name it): a lead node that
+turns the planner's sub-questions into N bounded worker branches (each worker
+= search → reader → evidence table for one sub-question, isolated state, own
+`branch_id`, hard caps on papers, calls and cost per branch, executed on the
+existing bounded executor); an evidence-merge node that unions evidence
+tables with provenance and dedups papers; the existing synthesizer over the
+merged evidence; then CAP-02's `verify` → `repair` → critic. Candidate
+lineage through W04's branch/candidate identifiers and W08's bridge; a
+listwise selector is NOT built here (candidate outlines/selection is a later
+order) — this order delivers diversified retrieval with provenance and the
+lineage the selector will need. Tests: branch isolation (no cross-branch
+state), per-branch caps enforced, deterministic merge order, cancellation
+mid-branch honoured, cost ceiling across branches enforced at the shared
+choke point, golden off, scripted tier unaffected. ADR 0086.
+
+## Wave 2 status
+
+| WO | Branch | State |
+|---|---|---|
+| CAP-08 | `cap/08-degradation-rungs` | assigned 2026-09-05 |
+| CAP-04 | `cap/04-compute-controller` | assigned 2026-09-05 |
+| CAP-03 | — | after CAP-04 and CAP-08 |
+
+## Wave 3 (not authorized)
+
+- **CAP-05** SDK 1.x upgrade (lockfile; coordinate with all lanes).
+- **CAP-06** funded live smoke of CAP-01/02/04 — blocked on the owner.
+- **CAP-09** listwise candidate selection and marginal-stop record (completes
+  arm E on top of CAP-03/CAP-04).
+
+
 
 ## Shared-file arrangements in force
 
