@@ -642,6 +642,24 @@ pinned without a build by `tests/test_container_contract.py`).
   cannot overshoot by its whole spend. The retry envelope is clamped
   so one flaky call chain fits inside 75% of `api_job_timeout_sec`,
   and the SDK's own `retries_taken` is logged and counted per call.
+- **Mock mode** — `USE_MOCK_DATA=true` is a whole-graph offline mode,
+  not only a retrieval switch (ADR
+  [0080](decisions/0080-mock-mode-covers-the-whole-research-graph.md)).
+  `src/agents/search.py` serves the five fixture papers (ADR
+  [0041](decisions/0041-retrieval-and-degradation-honesty.md)) and each
+  of the five research agents takes a deterministic branch —
+  `src/agents/mock_mode.py`, placed before the model call, and in the
+  reader before the PDF fetch — so the compiled graph runs to a
+  briefing with no `ANTHROPIC_API_KEY`, no network and `llm_calls=0`.
+  `src/llm.py` is not involved: with the setting off the live path is
+  byte-identical. Output *shapes* match the live path, so the graph, the
+  SSE frames, the export, the checkpoints and the eval record layout do
+  not change; the briefing's first line is `Mock mode: fixture papers,
+  no model call.` so a mock report cannot be mistaken for a real one.
+  **Nothing it produces is a quality signal** — the critic's score and
+  the verifier's verdict are constants. The supervisor, the query
+  refiner and ADR 0076's verify/repair nodes are not covered yet, so a
+  keyless run needs the default fixed pipeline.
 - **Resilience** — one owning level of retry per dependency, and a
   budget for it (ADR
   [0068](decisions/0068-resilience-policy.md)). Retry amplification is

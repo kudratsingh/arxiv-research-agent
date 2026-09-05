@@ -485,6 +485,22 @@ never renumbered.
   promotion use. Adapters rebuild the runners' exact data shapes from
   registry content and a parity report names any divergence, so the
   runners keep reading their own modules until a later ADR moves them.
+- [0080](0080-mock-mode-covers-the-whole-research-graph.md) — **Mock
+  mode covers the whole research graph.** `USE_MOCK_DATA` swapped arXiv
+  for five fixture papers and left planner, reader, synthesizer, critic
+  and verifier calling the provider, so a stack with no credential
+  answered `POST /research` with a 202 and then a `failed` job
+  (`error_type=upstream_model`, `llm_calls=0`) four seconds later —
+  there was no keyless path to a briefing at all. Each of the five now
+  has a deterministic branch before its model call, generated from the
+  run's own inputs by `src/agents/mock_mode.py`: analyses and evidence
+  claims are verbatim spans of the paper's abstract, citations name the
+  papers actually retrieved, and the briefing opens with the exact line
+  `Mock mode: fixture papers, no model call.` so it can never read as a
+  real one. `src/llm.py` is untouched and the live path is
+  byte-identical. **No output here is a quality signal** — the critic's
+  score and the verifier's verdict are constants. Closes half of ADR
+  0075's own follow-up list.
 
 ## When to write an ADR
 

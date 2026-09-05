@@ -244,6 +244,16 @@ abstracts available)` rather than a blank block.
 
 Settings that drive the verifier (see `src/config.py`):
 
+- `use_mock_data: bool = False` — **Mock mode** (ADR
+  [0080](../decisions/0080-mock-mode-covers-the-whole-research-graph.md)):
+  both entry points report `verified=True` with no unsupported claims
+  and no missing evidence, and construct no model client. That is not a
+  finding: it is how "nobody looked" has to be encoded on a field whose
+  consumers read `True` as "no follow-up needed", and the node's message
+  says so in words. The verdict is `abstain` with reason `mock_mode` —
+  a fifth abstain code, extending the four ADR 0076 published — because
+  `pass` would tell `src/policies/repair.py` a faithfulness check
+  succeeded when none ran.
 - `research_policy: Literal["legacy", "fixed_verify_repair"] =
   "legacy"` — selects the fixed verify-and-repair graph, whose `verify`
   node is the other entry point (ADR 0076). It requires
