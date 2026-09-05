@@ -127,6 +127,31 @@ back to `eval.md#status-no-green-campaign-yet` (an anchor no heading has
 minted since the section was renamed, and one GitHub resolves by
 silently dropping the reader at the top of the page), or render an image
 in `README.md` that `web/e2e/readme.spec.ts` does not capture.
+
+WO-D7 adds three, and they are the first here to guard against a
+*capability* landing rather than a number ageing: put any of the six
+"four shapes" sentences back to `two` and `TestTheGraphShapeCount` names
+the four builders `_build_graph_shape` dispatches; drop `supervisor`
+from the mock-mode enumeration in any of `docs/eval.md`,
+`docs/testing.md` or `docs/architecture.md` and
+`TestMockModeCoverage` fails twice, once for that document and once
+because the three no longer agree; give `src/agents/query_refiner.py` a
+`use_mock_data` branch without touching a word of prose and the same
+class fails, because the set is checked in both directions. That last
+one is the direction ADR 0080 actually broke — six agents gained a
+branch and every document went on describing a world with none — and
+nothing in this repository noticed for a day.
+
+## The blind spot this file still has
+
+`TestTheScreenshotMechanism` checks the image *inventory* and the
+metric names, **not the prose beside a figure**. WO-D6 found a README
+paragraph describing a "fixed 14rem box" that WO-S2 had made false, and
+nothing here could see it: the picture existed, its name resolved, and
+the sentence next to it was wrong. Extending claim extraction to prose
+adjacent to figures is a work order, not a patch. Until it is done, a
+sentence next to an image is unguarded no matter how many checks below
+are green.
 """
 
 from __future__ import annotations
@@ -160,6 +185,11 @@ _E2E_DIR: Final = _ROOT / "tests" / "e2e"
 _SEED_SCRIPT: Final = _ROOT / "web" / "e2e" / "fixtures" / "seed.sh"
 _README_SHOTS: Final = _ROOT / "web" / "e2e" / "readme.spec.ts"
 _COMPOSE_E2E: Final = _ROOT / "web" / "e2e" / "support" / "compose.e2e.yml"
+_TESTING_DOC: Final = _ROOT / "docs" / "testing.md"
+_DOCS_INDEX: Final = _ROOT / "docs" / "README.md"
+_AGENT_PAGES: Final = _ROOT / "docs" / "agents" / "README.md"
+_AGENTS_DIR: Final = _ROOT / "src" / "agents"
+_WORKFLOW: Final = _ROOT / "src" / "graph" / "workflow.py"
 
 #: How far the README's Python floor is allowed to lag the collected
 #: count before it stops counting as a floor. Wide enough that ordinary
@@ -172,6 +202,13 @@ _FLOOR_BAND: Final = 500
 #: silently skips the sentence it cannot parse is the same species of
 #: nothing-is-watching that this whole file exists to end.
 _NUMBER_WORDS: Final[dict[str, int]] = {
+    # `two` and `three` are here for the graph-shape claims and only for
+    # them: those sentences said "two" for three capability work orders,
+    # so the regression this file has to catch is a *smaller* number, and
+    # it should fail with the shape check's own message rather than with
+    # "`_NUMBER_WORDS` does not know that word".
+    "two": 2,
+    "three": 3,
     "four": 4,
     "five": 5,
     "six": 6,
@@ -1529,4 +1566,276 @@ class TestTheCrossDocumentAnchors:
             "the reader. Rename the heading back, or fix the link; if the "
             "section genuinely went away, the sentence that cites it needs to "
             "change too."
+        )
+
+
+# ---------------------------------------------------------------------------
+# WO-D7 — what mock mode covers, and how many shapes the graph has
+# ---------------------------------------------------------------------------
+#
+# Both claims below drifted for the same reason and were caught the same
+# way: by someone reading the code, not by anything failing. CAP-07
+# (ADR 0080) gave the research agents a model-free branch and left three
+# documents saying they had none; CAP-02, CAP-03 and CAP-04 took the
+# graph from two shapes to four and left five documents saying two. The
+# sentences are now enumerations, and the enumerations are re-derived
+# from `src/` here — which is the only reason the next capability wave
+# will find out that it moved them.
+
+#: Modules under `src/agents/` that are not agents. `mock_mode` is the
+#: generator library the branches call, `schemas` the shared models.
+_NOT_AN_AGENT: Final[frozenset[str]] = frozenset({"__init__", "mock_mode", "schemas"})
+
+#: Agents on the guided-read *session* graph rather than the research
+#: graph. Both have had a mock branch since long before ADR 0080, and
+#: the sentences this checks are about the research graph, so counting
+#: them would make the claim and the derivation disagree by two.
+_SESSION_AGENTS: Final[frozenset[str]] = frozenset({"tutor", "assessment"})
+
+#: `if settings.use_mock_data:` — or `elif`, which is how
+#: `assessment.py` spells it. A branch, not a mention: the string
+#: appears in half a dozen docstrings that describe the setting without
+#: taking it.
+_MOCK_BRANCH: Final = re.compile(
+    r"^\s*(?:el)?if settings\.use_mock_data\b", re.MULTILINE
+)
+
+#: A call to the model — what the branch has to get in front of.
+#: `search.py` is why this is derived rather than assumed: it *does*
+#: take a `use_mock_data` branch (it serves `MOCK_PAPERS`) and it makes
+#: no LLM call at all, so "returns before its model call" is not a
+#: sentence about it. The retrieval half of the setting is named
+#: separately, and correctly, in all three documents.
+_MODEL_CALL: Final = re.compile(r"^\s*(?:\w+ = )?call_llm_json\(", re.MULTILINE)
+
+#: How each document spells the agent names, mapped to module stems.
+#: Same rule as `_NUMBER_WORDS`: a name this map does not know is a
+#: failure rather than a silently skipped word.
+_AGENT_WORDS: Final[dict[str, str]] = {
+    "planner": "planner",
+    "search": "search",
+    "reader": "reader",
+    "synthesizer": "synthesizer",
+    "critic": "critic",
+    "verifier": "verifier",
+    "supervisor": "supervisor",
+    "query refiner": "query_refiner",
+}
+
+#: The three documents that carry the enumeration, each of which said
+#: the opposite of it until WO-D7.
+_MOCK_MODE_DOCS: Final[tuple[pathlib.Path, ...]] = (
+    _EVAL_DOC,
+    _TESTING_DOC,
+    _ARCHITECTURE,
+)
+
+
+@lru_cache(maxsize=1)
+def _research_agents_by_mock_branch() -> tuple[frozenset[str], frozenset[str]]:
+    """`(covered, uncovered)` research agents, read off `src/agents/`.
+
+    The claim these documents make is a *set*, so it is checked in both
+    directions: an agent that gains a branch and is not named fails just
+    as loudly as one that is named and has none. That is the direction
+    ADR 0080 broke — six agents gained a branch and three documents went
+    on naming none of them.
+    """
+    covered: set[str] = set()
+    uncovered: set[str] = set()
+    for path in sorted(_AGENTS_DIR.glob("*.py")):
+        if path.stem in _NOT_AN_AGENT or path.stem in _SESSION_AGENTS:
+            continue
+        source = path.read_text(encoding="utf-8")
+        if not _MODEL_CALL.search(source):
+            continue
+        (covered if _MOCK_BRANCH.search(source) else uncovered).add(path.stem)
+    assert covered, (
+        "no model-calling module under src/agents/ takes a "
+        "`settings.use_mock_data` branch. Either mock mode was reverted or "
+        "`_MOCK_BRANCH` / `_MODEL_CALL` stopped matching how these are "
+        "written — and a check that silently finds nothing is the failure "
+        "this file exists to prevent."
+    )
+    assert uncovered, (
+        "every model-calling research agent now has a mock branch, so the "
+        "'the one research agent without one is …' sentence in each document "
+        "has nothing left to name. That is good news and a documentation "
+        "change: rewrite those three sentences and this check together."
+    )
+    return frozenset(covered), frozenset(uncovered)
+
+
+def _named_agents(pattern: str, path: pathlib.Path) -> frozenset[str]:
+    """Pull an agent enumeration out of one sentence and normalise it."""
+    listed = _claim(pattern, _prose(path), str(path.relative_to(_ROOT))).group(1)
+    words = [
+        word.strip().strip("*").strip()
+        for word in re.split(r",|\band\b", listed.replace("**", ""))
+        if word.strip().strip("*").strip()
+    ]
+    stems: set[str] = set()
+    for word in words:
+        stem = _AGENT_WORDS.get(word.lower())
+        assert stem is not None, (
+            f"{path.relative_to(_ROOT)} names {word!r} as a research agent, "
+            "which `_AGENT_WORDS` does not know. Add it there in the same "
+            "commit rather than letting the check pass over a name it cannot "
+            "read."
+        )
+        stems.add(stem)
+    return frozenset(stems)
+
+
+class TestMockModeCoverage:
+    """Which agents run model-free under `USE_MOCK_DATA`, in both directions.
+
+    Before ADR 0080 the answer was "none of the research ones", and
+    `docs/eval.md`, `docs/testing.md` and `docs/architecture.md` each
+    carried a paragraph saying so at length. ADR 0080 falsified all
+    three and its own follow-up list recorded the correction as
+    outstanding for a day — which is how long it took someone to read
+    the code rather than the prose. Nothing failed in between.
+    """
+
+    @pytest.mark.parametrize("path", _MOCK_MODE_DOCS, ids=lambda p: p.name)
+    def test_the_document_names_every_covered_agent(
+        self, path: pathlib.Path
+    ) -> None:
+        covered, _ = _research_agents_by_mock_branch()
+        named = _named_agents(
+            r"deterministic branch before their model call: \*\*([^*]+)\*\*", path
+        )
+        assert named == covered, (
+            f"{path.relative_to(_ROOT)} names {sorted(named)} as the research "
+            f"agents with a model-free branch; `src/agents/` has "
+            f"{sorted(covered)}. Missing from the sentence: "
+            f"{sorted(covered - named)}. Named but with no branch: "
+            f"{sorted(named - covered)}. This is an equality because the "
+            "sentence's claim is that the set is closed — a reader uses it to "
+            "decide whether a keyless run reaches a briefing, and being wrong "
+            "in the second direction costs money."
+        )
+
+    @pytest.mark.parametrize("path", _MOCK_MODE_DOCS, ids=lambda p: p.name)
+    def test_the_document_names_the_exception(self, path: pathlib.Path) -> None:
+        _, uncovered = _research_agents_by_mock_branch()
+        named = _named_agents(
+            r"research agent without one is the \*\*([^*]+)\*\*", path
+        )
+        assert named == uncovered, (
+            f"{path.relative_to(_ROOT)} names {sorted(named)} as the research "
+            f"agent(s) with no mock branch; `src/agents/` has "
+            f"{sorted(uncovered)}. The exception is the load-bearing half of "
+            "this claim: it is what tells a reader which configuration still "
+            "needs a credential."
+        )
+
+    def test_the_three_documents_agree(self) -> None:
+        """One story, told in three places, is one story or it is rot.
+
+        ADR 0080's own consequences note that this paragraph appears in
+        `docs/eval.md`, `docs/testing.md` and the e2e conftest "because
+        a reader who missed it writes a test that spends money". Three
+        copies drift apart one at a time; the checks above would each
+        stay green while two documents disagreed with the third only if
+        the code matched both, which it cannot.
+        """
+        enumerations = {
+            path.name: _named_agents(
+                r"deterministic branch before their model call: \*\*([^*]+)\*\*",
+                path,
+            )
+            for path in _MOCK_MODE_DOCS
+        }
+        assert len(set(enumerations.values())) == 1, (
+            f"the three documents no longer tell one story: {enumerations}"
+        )
+
+
+@lru_cache(maxsize=1)
+def _graph_shapes() -> frozenset[str]:
+    """The shape builders `_build_graph_shape` actually dispatches.
+
+    Read off the AST rather than off `research_policy`'s `Literal`,
+    because the two are not the same count and the *graph* is what the
+    documents draw: `legacy` compiles either the fixed pipeline or the
+    supervisor loop depending on `enable_supervisor`, so three policy
+    values produce four shapes. Counting the `Literal` would have said
+    three and quietly moved every sentence to a wrong number.
+    """
+    tree = ast.parse(_WORKFLOW.read_text(encoding="utf-8"))
+    dispatcher = next(
+        (
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name == "_build_graph_shape"
+        ),
+        None,
+    )
+    assert dispatcher is not None, (
+        "src/graph/workflow.py no longer defines `_build_graph_shape`. Every "
+        "'four shapes' sentence in the documentation counts the builders it "
+        "dispatches, so a rename means re-reading those sentences rather than "
+        "just renaming this."
+    )
+    shapes = frozenset(
+        node.func.id
+        for node in ast.walk(dispatcher)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id.startswith("_build_")
+    )
+    assert shapes, (
+        "`_build_graph_shape` dispatches no `_build_*` builder, so this check "
+        "would pass over nothing."
+    )
+    return shapes
+
+
+#: Every sentence in the documentation that counts the graph's shapes,
+#: with the pattern that reads the number out of it. Five documents said
+#: **two** while four builders existed, for as long as it took three
+#: capability work orders to land.
+_SHAPE_CLAIMS: Final[tuple[tuple[pathlib.Path, str], ...]] = (
+    (_README, r"The workflow — (\w+) shapes"),
+    (_ARCHITECTURE, r"System-level view of [^:]*: the (\w+) workflow shapes"),
+    (_ARCHITECTURE, r"compiles one of \*\*(\w+)\*\* LangGraph graphs"),
+    (_DOCS_INDEX, r"system-level architecture: the (\w+) workflow shapes"),
+    (_AGENT_PAGES, r"Workflow-level wiring — the (\w+) graph shapes"),
+    (_AGENT_PAGES, r"## The (\w+) shapes"),
+)
+
+
+class TestTheGraphShapeCount:
+    """"The graph" is four graphs, and five documents said two.
+
+    `enable_supervisor` selected between two shapes for most of this
+    repository's life, and every overview sentence was written then.
+    ADR 0076 added a third, ADR 0086 a fourth, and ADR 0085 made the
+    choice per-job — and each of those work orders documented *itself*
+    correctly while leaving the sentences one level up saying "two".
+    That is the drift this class ends: the number now comes from the
+    dispatcher.
+    """
+
+    @pytest.mark.parametrize(
+        ("path", "pattern"),
+        _SHAPE_CLAIMS,
+        ids=[f"{p.name}:{i}" for i, (p, _) in enumerate(_SHAPE_CLAIMS)],
+    )
+    def test_the_sentence_counts_the_builders(
+        self, path: pathlib.Path, pattern: str
+    ) -> None:
+        where = str(path.relative_to(_ROOT))
+        claimed = _word_to_int(
+            _claim(pattern, _prose(path), where).group(1), where
+        )
+        shapes = _graph_shapes()
+        assert claimed == len(shapes), (
+            f"{where} says the graph has {claimed} shape(s); "
+            f"`_build_graph_shape` dispatches {len(shapes)}: {sorted(shapes)}. "
+            "An equality because the claim is that the set is closed — this "
+            "sentence is the map a reader uses before opening the module, and "
+            "it read `two` through three capability work orders."
         )

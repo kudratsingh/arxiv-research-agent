@@ -3,8 +3,10 @@
 ## Purpose
 
 Chooses the next action in the research loop when
-`settings.enable_supervisor` is `True`. Under the fixed pipeline (the
-default) this node is never added to the graph. When on, the workflow
+`settings.enable_supervisor` is `True`. It is absent from the other
+three graph shapes: the fixed pipeline never adds it, and
+`fixed_verify_repair` and `orchestrated_workers` both *refuse to load*
+with `enable_supervisor=true`, because those policies own routing. When on, the workflow
 becomes an observe-decide-act loop: the supervisor picks the next node
 from a strict enum, that node runs, control returns here.
 
@@ -238,6 +240,17 @@ Settings that drive the supervisor (see `src/config.py`):
 
 - `enable_supervisor: bool = False` — master flag. Selects the loop
   graph shape in `_build_graph_shape`.
+- `use_mock_data: bool = False` — **Mock mode** (P0-WO11, extending ADR
+  [0080](../decisions/0080-mock-mode-covers-the-whole-research-graph.md)
+  to this node): the router returns `_default_next_action`'s
+  fixed-pipeline route with **no model call**, after the loop and cost
+  short-circuits and before the prompt is built, and a stop carries the
+  `mock_mode` reason rather than borrowing `supervisor_stop`. **Nothing
+  is decided here** — the route is byte-for-byte the one the
+  malformed-judge fallback already produced. What changed is that it is
+  no longer reached *by way of* a provider client that could not be
+  constructed, so a keyless supervisor run stops recording a failure as
+  a decision.
 - `enable_verifier: bool = False` — adds `verify` to the action enum
   and wires the [verifier](verifier.md) node. Independent of
   `enable_supervisor` so the two can be A/B'd separately. See ADR 0015.

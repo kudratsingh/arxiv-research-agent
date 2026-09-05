@@ -4,9 +4,10 @@
 
 Extracts structured findings from each paper's full text (when
 available) or abstract (as fallback), one LLM call per paper, fanned
-out across a thread pool. One of the five agents wired into both the
-fixed pipeline and the supervisor loop, and the most expensive node in
-the graph.
+out across a thread pool. One of the five agents wired into all four
+graph shapes, and the most expensive node in the graph — under
+`orchestrated_workers` it runs *inside* a worker branch, on an isolated
+state, rather than as a graph node of its own (ADR 0086).
 
 Source: `src/agents/reader.py`. Wiring:
 [`docs/architecture.md`](../architecture.md).

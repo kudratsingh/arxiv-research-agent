@@ -5,8 +5,9 @@
 Queries arXiv with the planner's search queries, deduplicates,
 optionally enriches through Semantic Scholar's citation graph, and
 ranks the pool by embedding similarity to the user's question. One of
-the five agents wired into both the fixed pipeline and the supervisor
-loop.
+the five agents wired into all four graph shapes — under
+`orchestrated_workers` it runs *inside* a worker branch, on an isolated
+state, rather than as a graph node of its own (ADR 0086).
 
 This is the only agent that makes **no LLM call** — every step is
 deterministic tool work (HTTP + embeddings), so there is no prompt to

@@ -621,10 +621,17 @@ attribution or provenance field of any kind.
 
 **Origin of the text is not recorded in the repository**, and this record does
 not guess. What the repository *does* assert is narrower and verified: the
-`pdf_url`s are **real and resolve to arxiv.org**. `tests/test_repo_hygiene.py:17-20`
+`pdf_url`s are **real and resolve to arxiv.org**. `tests/test_repo_hygiene.py`
 exists because `docs/demo.md` once claimed a mock-data run made no external
-calls beyond Anthropic — it downloads five real arXiv PDFs on a cold cache,
-roughly 5–10 MB. **Mock mode is not offline.**
+calls beyond Anthropic, and at the time it downloaded five real arXiv PDFs on
+a cold cache, roughly 5–10 MB. **Corrected 2026-09-05 (WO-D7): mock mode is
+offline now.** ADR 0080 put the reader's `use_mock_data` branch ahead of
+`_gather_ranked_chunks`, the only caller of `parse_pdf`, so those URLs are
+still real and are no longer fetched — measured over a full run with a
+tripwire on `reader.parse_pdf` and an outbound-socket guard, neither of which
+fired. The real third-party attribution in `MOCK_PAPERS` is untouched by that
+and is still the finding in §7: it is what the data *is*, not what a run does
+with it.
 
 One observable inconsistency is recorded rather than resolved: the entry at
 arXiv id `2305.13269` pairs that identifier with the author list of the RAG
@@ -700,7 +707,7 @@ Recorded, not fixed — WO-A14 documents; it does not own these files.
 | 4 | **`LearningScenario` has no provenance fields** while `BenchmarkQuery` has three. The asymmetry is invisible from either file alone. | §2 |
 | 5 | **Three fixtures in `tests/fixtures/learning/` are not in its manifest** — `explain_back_calibration.json`, `progress_events_raw.json`, `engagement_14_day.json`. The manifest is the mechanism that says what is governed; an unmanifested fixture is ungoverned by construction. | §3 |
 | 6 | **LLM08 (vector and embedding weaknesses) has no case in the safety corpus.** The code is defined and unused. | §4 |
-| 7 | **Mock mode is not offline.** Five real PDF downloads per cold run. Documented in `docs/demo.md` and pinned by a hygiene test, but it is a network dependency inside a mode whose name implies there is none. | §7 |
+| 7 | ~~**Mock mode is not offline.** Five real PDF downloads per cold run.~~ **CLOSED 2026-09-05 by ADR 0080, recorded by WO-D7.** The reader's mock branch precedes the only caller of `parse_pdf`, so a mock run reaches no host at all — verified under a socket guard and a `parse_pdf` tripwire, and now pinned by `TestDemoDocHonesty::test_the_reader_mock_branch_precedes_the_pdf_fetch` rather than by a sentence. Kept rather than deleted: this row was true for two months and the hygiene test that recorded it went on asserting the *correction* for weeks after it stopped being one. | §7 |
 | 8 | **`counsel_confirmed: false`** on both content packs. The licensing posture is machine-enforced and legally unreviewed. | §5 |
 
 ## Related

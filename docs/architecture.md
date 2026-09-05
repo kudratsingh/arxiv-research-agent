@@ -1,6 +1,6 @@
 # Architecture
 
-System-level view of `arxiv-research-agent`: the two workflow shapes,
+System-level view of `arxiv-research-agent`: the four workflow shapes,
 the HTTP surface layered on top, the browser tier in front of it, and
 the storage matrix that decides where every piece of state lives.
 Everything here is derived from the code on `main`
@@ -57,11 +57,27 @@ incidental, and each is argued in ADR
   defaults everything is in-process; the shared backends are what let a
   second worker exist. See the [storage matrix](#storage-matrix).
 
-## The workflow — two shapes
+## The workflow — four shapes
 
-`src/graph/workflow.py::build_workflow` compiles one of two LangGraph
-graphs over the shared `ResearchState` (`src/graph/state.py`),
-selected by `settings.enable_supervisor`:
+`src/graph/workflow.py::build_workflow` compiles one of **four**
+LangGraph graphs over the shared `ResearchState` (`src/graph/state.py`).
+`settings.research_policy` is asked first; under its `legacy` default
+`settings.enable_supervisor` picks between the two original shapes,
+exactly as it always has. The four have one builder each in
+`_build_graph_shape`, and the sections below take them in that order:
+
+| Shape | Selected by | ADR |
+|---|---|---|
+| Fixed pipeline (default) | `research_policy=legacy`, `enable_supervisor=false` | — |
+| Supervisor loop | `research_policy=legacy`, `enable_supervisor=true` | [0014](decisions/0014-supervisor-loop-behind-flag.md) |
+| Fixed verify-and-repair | `research_policy=fixed_verify_repair` | [0076](decisions/0076-fixed-verify-repair-research-policy.md) |
+| Orchestrator-workers | `research_policy=orchestrated_workers` | [0086](decisions/0086-orchestrator-workers-for-the-branch-tier.md) |
+
+With `compute_controller="deterministic"` the shape stops being a
+process-wide constant and is chosen per job instead — see
+[Choosing between the shapes per run](#choosing-between-the-shapes-per-run-adr-0085).
+
+The first two:
 
 **Fixed pipeline (default)** — the conditional edge is the whole
 shape, so it is drawn as a node rather than as an annotation:
@@ -723,10 +739,13 @@ pinned without a build by `tests/test_container_contract.py`).
   not only a retrieval switch (ADR
   [0080](decisions/0080-mock-mode-covers-the-whole-research-graph.md)).
   `src/agents/search.py` serves the five fixture papers (ADR
-  [0041](decisions/0041-retrieval-and-degradation-honesty.md)) and each
-  of the five research agents takes a deterministic branch —
-  `src/agents/mock_mode.py`, placed before the model call, and in the
-  reader before the PDF fetch — so the compiled graph runs to a
+  [0041](decisions/0041-retrieval-and-degradation-honesty.md)), and six
+  research agents take a deterministic branch before their model call:
+  **planner, reader, synthesizer, critic, verifier and supervisor** —
+  the first five from `src/agents/mock_mode.py` (ADR 0080, and in the
+  reader before the PDF fetch too), the supervisor's its own (P0-WO11).
+  The one research agent without one is the **query refiner**, which the
+  supervisor's mock route never selects. So the compiled graph runs to a
   briefing with no `ANTHROPIC_API_KEY`, no network and `llm_calls=0`.
   `src/llm.py` is not involved: with the setting off the live path is
   byte-identical. Output *shapes* match the live path, so the graph, the
@@ -734,9 +753,15 @@ pinned without a build by `tests/test_container_contract.py`).
   not change; the briefing's first line is `Mock mode: fixture papers,
   no model call.` so a mock report cannot be mistaken for a real one.
   **Nothing it produces is a quality signal** — the critic's score and
-  the verifier's verdict are constants. The supervisor, the query
-  refiner and ADR 0076's verify/repair nodes are not covered yet, so a
-  keyless run needs the default fixed pipeline.
+  the verifier's verdict are constants. Coverage now reaches **all four
+  workflow shapes**, not only the default one: P0-WO11 gave the
+  supervisor a branch that serves `_default_next_action`'s route without
+  a model call, so arm D no longer arrives at a briefing by way of a
+  failed client; the `verify` node is the verifier, which ADR 0080
+  already covered; and `repair` picks from a deterministic table and
+  never called a model to begin with. `lead`, `workers` and `merge` make
+  no model call of their own either — a worker branch runs the same
+  search and reader agents on an isolated state.
 - **Resilience** — one owning level of retry per dependency, and a
   budget for it (ADR
   [0068](decisions/0068-resilience-policy.md)). Retry amplification is

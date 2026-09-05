@@ -75,9 +75,15 @@ Stated as prohibitions, not as caveats.
    thing standing between a bad plan and a full campaign's spend.
 5. **Not a search engine, and not a replacement for arXiv.** It reads a small
    number of papers per run. Coverage is not a design goal and is not measured.
-6. **Not to be run against a live search while claiming offline operation.** Mock
-   mode is a demo fixture, not an offline mode — it still downloads five real
-   PDFs from arxiv.org on a cold cache.
+6. **Not to be quoted as a quality signal when run offline.** Mock mode *is* an
+   offline mode as of ADR 0080 — it reaches no host, constructs no model client
+   and needs no credential — but nothing it produces measures anything. The
+   briefing opens with `Mock mode: fixture papers, no model call.`, the critic's
+   score and the verifier's verdict are constants, and every analysis is a
+   verbatim span of a fixture abstract. It is for demonstrating and testing the
+   pipeline, never for evaluating output. (This item previously read "not an
+   offline mode — it still downloads five real PDFs"; that was true until ADR
+   0080 and was corrected by WO-D7.)
 
 ## 4. Models and routing
 
@@ -257,7 +263,11 @@ The ones a user or reviewer would want to know, not a disclaimers list.
 6. **Reader coverage is shallow by construction.** A small number of papers per
    run, ranked chunks rather than whole papers, and an abstract-only fallback
    when PDF fetch, extract, chunk or rank yields nothing.
-7. **Mock mode is not offline.** Five real arXiv PDF downloads per cold run.
+7. **Mock mode carries no quality signal.** It is offline and keyless as of ADR
+   0080 — no host contacted, no client constructed — but the critic's score and
+   the verifier's verdict are constants and the briefing is derived from fixture
+   abstracts. This item read "mock mode is not offline — five real arXiv PDF
+   downloads per cold run" until WO-D7 measured otherwise.
 8. **The built-in mock papers carry real third-party attribution and no
    provenance field of any kind** — five titles, real author names, real arXiv
    identifiers and live PDF URLs, with no licence or attribution recorded. See

@@ -7,12 +7,15 @@ real durable record layout, the real summary files, and then the same
 
 It is the research lane's counterpart of the zero-spend proof the
 learning lane has had since WO-W10 — and, unlike that one, it has
-something extra to prove. The session graph runs free on mock mode
-alone; the research graph does not, because `USE_MOCK_DATA` never
-touches `src/llm.py` (`tests/e2e/conftest.py` says so at length). So the
-assertions here are not only "it cost nothing" but "it cost nothing
-*and the graph really ran*": the bound cost accumulator proves the
-first, `scripted_llm_calls` proves the second, and neither is worth much
+something extra to prove. **Both** graphs run free on mock mode alone
+since ADR 0080, but this tier deliberately turns the research agents'
+own mock branch *off* on the four modules it scripts, so its committed
+baseline stays byte-identical. That is what makes "nothing was spent"
+compatible with "the harness never got a word in": with the branch on,
+a briefing would appear either way. So the assertions here are not only
+"it cost nothing" but "it cost nothing *and the harness's words are
+what flowed through*": the bound cost accumulator proves the first,
+`scripted_llm_calls` proves the second, and neither is worth much
 without the other. A campaign short-circuited to twenty empty records
 would pass every cost assertion ever written.
 

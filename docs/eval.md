@@ -1635,29 +1635,55 @@ python -m src.eval.regression_diff --lane research-scripted \
 Twenty queries, **about five seconds** of wall clock end to end
 (3.3s of it interpreter start-up), **$0.0000**, and no network.
 
-### Mock mode is not an LLM stub — which is the whole design
+### Mock mode covers the whole graph — and this tier still scripts anyway
 
-`USE_MOCK_DATA` swaps arXiv search for five fixture papers
-(`src/agents/search.py`) and gives the tutor and the assessment judge
-deterministic branches. It does **not** touch `src/llm.py`, and the
-research graph's planner, reader, synthesizer and critic call
-`call_llm_json` under it exactly as they do in production
-(`tests/e2e/conftest.py` has said so since WO-A15).
+This paragraph used to say that mock mode was not an LLM stub, and that
+this was why the tier had to supply the model's words. **The first half
+stopped being true when ADR
+[0080](decisions/0080-mock-mode-covers-the-whole-research-graph.md)
+landed; the second half is still true, for a different reason.** Both
+are written out here because the reason is the part a reader needs.
 
-So the session graph runs free on mock mode alone — which is all
-`simulate_learner`'s scripted tier needs — and the research graph does
-not. `simulate_research` supplies the words the **model** would have
-said, where `simulate_learner` supplies the words the **learner** would
-have said, by installing a scripted surface over the four agents' own
-`call_llm_json` names for the duration of one query.
+`USE_MOCK_DATA` is now a whole-graph offline mode. It swaps arXiv search
+for five fixture papers (`src/agents/search.py`), gives the tutor and
+the assessment judge deterministic branches, and gives six research
+agents a deterministic branch before their model call: **planner,
+reader, synthesizer, critic, verifier and supervisor** — the first five
+from `src/agents/mock_mode.py` (ADR 0080), the supervisor's its own
+(P0-WO11). The one research agent without one is the **query refiner**,
+which the supervisor's mock route never selects. It still does not touch
+`src/llm.py`: what changed is that those agents return before reaching
+it rather than calling through it. So the research graph now runs
+keyless, offline and free the way the session graph always has, under
+every one of the [four workflow shapes](architecture.md#the-workflow--four-shapes).
 
-**The honest cost of that, stated plainly: the report text in a scripted
-record is the harness's.** This tier measures the pipeline that
+**`simulate_research` scripts the words anyway, deliberately, and turns
+the product's own branch off to do it.** `scripted_surface` rebinds
+`settings` to a `use_mock_data=False` copy on the four modules it
+scripts, because the mock branch is checked *before* the call and would
+otherwise pre-empt every patch — leaving `scripted_llm_calls` at zero,
+which is the one assertion separating "free" from "absent". It leaves
+`src.agents.search.settings` on `True`, so retrieval still serves the
+fixture corpus. Settings are bound per module, which is what makes the
+retrieval half and the model half separable at all.
+
+The reason for keeping it that way is a baseline, not a belief: the
+committed record in `tests/fixtures/eval/research-scripted/baseline.jsonl`
+was scored against the harness's words, and swapping in the product's
+mock briefing changes every report in it. **Deleting the scripted
+surface is ADR 0075's own follow-up and is a rebaseline, not a
+refactor** — it is tracked as such and is not something a passing CI run
+would tell you had been done safely.
+
+**The honest cost, unchanged and stated plainly: the report text in a
+scripted record is the harness's.** This tier measures the pipeline that
 assembled the report and the identifiers it cites — never report
 quality. It cannot catch a prompt change that makes reports worse, and a
 number from it must never be quoted as a quality figure. The learning
 lane's scripted tier has no such limitation, because the product's own
-mock branch writes the copy it scores.
+mock branch writes the copy it scores. What ADR 0080 changed is that the
+research lane could now have the same property; what it has not yet
+changed is that this tier does not.
 
 ### What it does catch
 
@@ -2152,10 +2178,14 @@ block (`tests/test_readme_update.py`).
   the differ against the committed baseline. WO-C1 deliberately stopped
   at the Makefile targets; the workflow file belongs to another work
   order.
-- Give the four research agents a `use_mock_data` branch, the way
-  `tutor.py` and `assessment.py` have one, and delete
-  `simulate_research`'s scripted surface. It is the cleaner shape and
-  the tier would keep everything else.
+- ~~Give the four research agents a `use_mock_data` branch, the way
+  `tutor.py` and `assessment.py` have one~~ — **landed as ADR 0080**, on
+  six agents rather than four. What is left of this item is the second
+  half: **delete `simulate_research`'s scripted surface** and rebaseline
+  `tests/fixtures/eval/research-scripted/baseline.jsonl`, whose records
+  were scored against the harness's words. Still the cleaner shape; it
+  is a rebaseline rather than a refactor, so it lands with a
+  `dataset_version` note and not quietly.
 - Publish `citation_resolution_rate` in the README block instead of
   `citation_accuracy`, and drop the compensating zero-citation exclusion
   with it (`src/eval/readme_update.py`). See [The published README

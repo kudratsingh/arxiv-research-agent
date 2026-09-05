@@ -495,9 +495,14 @@ for the branch-naming and PR conventions. Short version:
 - **`command not found: python`** — use `python3`. The Makefile does
   this for you.
 - **`ANTHROPIC_API_KEY not set`** — copy `.env.example` to `.env` and
-  fill in the key. `main.py` loads it via `python-dotenv`.
-- **arXiv rate limiting** — set `USE_MOCK_DATA=true` to run against
-  the built-in mock papers.
+  fill in the key. `main.py` loads it via `python-dotenv`. Or set
+  `USE_MOCK_DATA=true` and skip the key entirely, per the next item.
+- **arXiv rate limiting, or no credential at all** — set
+  `USE_MOCK_DATA=true`. Since ADR 0080 that runs the whole graph
+  offline: the built-in mock papers *and* a deterministic branch in
+  every research agent, so no host is reached, no model client is
+  constructed and no key is needed. Nothing it produces is a quality
+  signal, and the briefing says so on its first line.
 - **`make test` finds only part of the suite** — `make test-unit`
   filters with `-m unit`, which since WO-A02 selects a real tier
   (2,826 of 3,277 tests) rather than an arbitrary subset, but a tier is
