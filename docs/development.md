@@ -130,7 +130,9 @@ token contract, which is the other thing you cannot change casually
 ## OpenTelemetry: traces + metrics
 
 Both signals are off by default and share one exporter endpoint, so
-one collector receives both (ADRs 0013 and 0049). Four env vars:
+one collector receives both (ADRs 0013 and 0049). Six env vars, and
+like every other knob in this repository they are fields on `Settings`
+in `src/config.py` — typed, defaulted and validated at load:
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -138,6 +140,22 @@ one collector receives both (ADRs 0013 and 0049). Four env vars:
 | `ENABLE_METRICS` | `false` | Job / spend / concurrency / rate-limit instruments |
 | `OTEL_EXPORTER_ENDPOINT` | `""` | OTLP **HTTP** base URL, e.g. `http://localhost:4318`. Empty = console exporter |
 | `OTEL_METRIC_EXPORT_INTERVAL_SEC` | `60` | How often metrics are pushed |
+| `TRACE_SAMPLE_RATIO` | unset | Head-sampling ratio in `[0.0, 1.0]`. Unset installs no sampler, leaving `OTEL_TRACES_SAMPLER` to the SDK. Out of range is refused at load, not clamped |
+| `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` | `false` | Let user content stay in logs **and** on spans. `LOG_CAPTURE_USER_CONTENT` is the same setting under its older name |
+
+The last two were read straight from `os.environ` until WO-B4 folded
+them in; the variables did not change. `OTEL_SERVICE_NAME` is a seventh
+and is left out of the table only because it never needs setting.
+
+### The one setting you can change without a restart
+
+`Settings` is a frozen singleton built at import, so every knob above
+takes effect at process start — except content capture, which is
+re-read from the environment on every log line. That is deliberate: it
+is what an operator reaches for mid-incident. A live flip is checked
+against the same true/false grammar pydantic used at load, and a value
+that is neither leaves the configured value standing and warns once.
+See `docs/observability.md` for the exposure trade it makes.
 
 ### Seeing it work without a collector
 

@@ -8,9 +8,17 @@ network, no side effects.
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
-from src.config import Settings
+from src.config import (
+    BOOL_FALSE_TOKENS,
+    BOOL_TRUE_TOKENS,
+    CONTENT_CAPTURE_ENV,
+    CONTENT_CAPTURE_ENV_ALIAS,
+    TRACE_SAMPLE_RATIO_ENV,
+    Settings,
+    parse_bool_flag,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -45,6 +53,18 @@ class TestDefaults:
     def test_logging_defaults(self) -> None:
         s = Settings()
         assert s.log_level == "INFO"
+
+    def test_content_capture_and_sampling_defaults_change_nothing(self) -> None:
+        """WO-B4's whole obligation: the fold-in must be invisible.
+
+        Content capture stays off, which is what the OpenTelemetry
+        GenAI conventions require of an instrumentation, and the
+        sampling ratio stays `None` — "install no sampler", so the
+        SDK's own `OTEL_TRACES_SAMPLER` handling is left alone.
+        """
+        s = Settings()
+        assert s.log_capture_user_content is False
+        assert s.trace_sample_ratio is None
 
 
 class TestEnvLoading:
@@ -196,6 +216,163 @@ class TestExtraKeysIgnored:
         # extra="ignore" in the model_config — random extra env vars shouldn't crash.
         monkeypatch.setenv("SOMETHING_UNRELATED", "value")
         Settings()  # should not raise
+
+
+class TestTheContentCaptureFlagKeepsBothItsNames:
+    """WO-B4. One field, two environment variables, no migration.
+
+    `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` is the name the
+    OpenTelemetry GenAI conventions define; `LOG_CAPTURE_USER_CONTENT`
+    is the repo-local name ADR 0067 shipped. Both were read directly
+    from `os.environ` before this work order. An operator who set either
+    one has to keep getting content capture whatever `Settings` calls
+    the field internally, so the fold-in is an alias rather than a
+    rename.
+    """
+
+    def test_the_conventional_name_still_turns_it_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV, "true")
+        assert Settings().log_capture_user_content is True
+
+    def test_the_repo_local_name_still_turns_it_on(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, "true")
+        assert Settings().log_capture_user_content is True
+
+    def test_the_conventional_name_is_the_one_opentelemetry_defines(self) -> None:
+        # Using any other spelling would let an operator who had already
+        # set the standard variable believe they had opted in.
+        assert CONTENT_CAPTURE_ENV == (
+            "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+        )
+        assert CONTENT_CAPTURE_ENV_ALIAS == "LOG_CAPTURE_USER_CONTENT"
+
+    def test_the_conventional_name_wins_when_the_two_disagree(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Alias order is precedence, and it is a deliberate narrowing.
+
+        While these lived in `logging.py` the rule was "either being
+        truthy enables capture", so this combination turned content on.
+        `AliasChoices` takes the first name that is *present*, so the
+        conventional flag now decides — and the direction of the change
+        is content staying off, which is the safe one.
+        """
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV, "false")
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, "true")
+        assert Settings().log_capture_user_content is False
+
+    def test_the_field_is_still_settable_by_its_own_name(self) -> None:
+        # `populate_by_name` — without it the alias would make every
+        # `Settings(log_capture_user_content=...)` in the suite a
+        # validation error.
+        assert Settings(log_capture_user_content=True).log_capture_user_content is True
+
+    @pytest.mark.parametrize("blank", ["", "   "])
+    def test_a_blank_value_is_off_rather_than_a_boot_failure(
+        self, monkeypatch: pytest.MonkeyPatch, blank: str
+    ) -> None:
+        """`LOG_CAPTURE_USER_CONTENT=` is how Compose spells "unset".
+
+        pydantic's `bool` parser rejects the empty string, so without
+        the before-validator this fold-in would turn a blank line in a
+        `.env` into a process that will not start.
+        """
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, blank)
+        assert Settings().log_capture_user_content is False
+
+    def test_a_value_that_is_neither_true_nor_false_is_refused_at_load(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The point of the fold-in, on the flag where it matters most.
+
+        `LOG_CAPTURE_USER_CONTENT=ture` used to read as off — the right
+        answer by accident, from a resolver that treated everything
+        non-truthy as false. An operator who typo'd while trying to turn
+        capture *on* got silence.
+        """
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, "ture")
+        with pytest.raises(ValidationError) as exc_info:
+            Settings()
+        message = str(exc_info.value)
+        assert "'ture'" in message
+        # pydantic reports the *first* alias whichever one supplied the
+        # value, so without the validator's own message an operator who
+        # typo'd `LOG_CAPTURE_USER_CONTENT` would be told about a
+        # variable they have never set.
+        assert CONTENT_CAPTURE_ENV_ALIAS in message
+
+    def test_the_live_grammar_is_the_grammar_pydantic_uses(self) -> None:
+        """`parse_bool_flag` is re-read live, and must not drift.
+
+        `content_capture_enabled()` re-parses the environment on every
+        call rather than reconstructing frozen `Settings`, so it does
+        not go through pydantic. If a release widened pydantic's
+        boolean grammar, a value that this field accepted at load would
+        stop being honoured on a live flip — silently, and in the
+        direction of leaking content or hiding it. This is the test
+        that would go red first.
+        """
+        adapter = TypeAdapter(bool)
+        for token in BOOL_TRUE_TOKENS:
+            assert parse_bool_flag(token) is True
+            assert adapter.validate_python(token) is True
+        for token in BOOL_FALSE_TOKENS:
+            assert parse_bool_flag(token) is False
+            assert adapter.validate_python(token) is False
+        assert parse_bool_flag("ture") is None
+        with pytest.raises(ValidationError):
+            adapter.validate_python("ture")
+        # Case and surrounding whitespace are the operator's, not a typo.
+        assert parse_bool_flag("  TRUE  ") is True
+        # A blank is "unset", which for a flag that defaults off is off.
+        assert parse_bool_flag("") is False
+
+
+class TestTheSamplingRatioIsAValidatedFloat:
+    """WO-B4. `TRACE_SAMPLE_RATIO` was parsed and clamped by hand."""
+
+    def test_the_environment_variable_still_sets_it(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv(TRACE_SAMPLE_RATIO_ENV, "0.1")
+        assert Settings().trace_sample_ratio == pytest.approx(0.1)
+
+    @pytest.mark.parametrize("value", [0.0, 1.0, 0.5])
+    def test_the_whole_closed_interval_is_accepted(self, value: float) -> None:
+        assert Settings(trace_sample_ratio=value).trace_sample_ratio == value
+
+    @pytest.mark.parametrize("blank", ["", "   "])
+    def test_a_blank_value_means_install_no_sampler(
+        self, monkeypatch: pytest.MonkeyPatch, blank: str
+    ) -> None:
+        monkeypatch.setenv(TRACE_SAMPLE_RATIO_ENV, blank)
+        assert Settings().trace_sample_ratio is None
+
+    @pytest.mark.parametrize("raw", ["9", "10", "-3", "1.0001"])
+    def test_a_ratio_outside_the_unit_interval_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch, raw: str
+    ) -> None:
+        """This used to clamp, and clamping was the hazard.
+
+        `TRACE_SAMPLE_RATIO=10` from somebody who meant 10% became 1.0
+        and sampled every trace in production — the exact shape of the
+        typo ADR 0046 made every other enum-valued knob refuse.
+        """
+        monkeypatch.setenv(TRACE_SAMPLE_RATIO_ENV, raw)
+        with pytest.raises(ValidationError) as exc_info:
+            Settings()
+        assert "trace_sample_ratio" in str(exc_info.value)
+
+    def test_an_unparseable_ratio_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv(TRACE_SAMPLE_RATIO_ENV, "loads")
+        with pytest.raises(ValidationError):
+            Settings()
 
 
 @pytest.mark.unit

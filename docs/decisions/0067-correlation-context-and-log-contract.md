@@ -147,6 +147,28 @@ because `src/config.py` belongs to another work order this wave. WO-A12
 folds both names in, keeping them as the pydantic-settings aliases so
 no deployment has to change.
 
+> **Done in WO-B4** — though not by WO-A12, whose owned-file list did
+> not include `src/config.py`. Both names are now the validation
+> aliases of `Settings.log_capture_user_content` and neither deployment
+> spelling changed. Two things above are superseded:
+>
+> - **"a narrower repo-local alias that scopes the decision to logs
+>   alone" was never true.** `traced_node` calls the same
+>   `content_capture_enabled()`, so `LOG_CAPTURE_USER_CONTENT` has
+>   always turned span content on too. Corrected rather than
+>   implemented: making it genuinely logs-only would change behaviour
+>   for anyone relying on it, which is not a fold-in's business.
+> - **"Either being truthy enables capture" is now first-name-wins.**
+>   `AliasChoices` takes the first name *present* in the environment,
+>   so the conventional flag decides when the two disagree. The
+>   direction of the narrowing is content staying off.
+>
+> Reading it per call survived, deliberately and against the pull of
+> the fold-in: `Settings` is a frozen module-level singleton, and this
+> is the one knob an operator flips mid-incident. The configured value
+> is what the resolver falls back to when the environment names
+> neither variable, so the switch is validated at load *and* live.
+
 ### Field names are constants, in two places
 
 ISO/IEC FDIS 24970 — the AI-system-logging standard — is at stage 50.20
@@ -238,9 +260,16 @@ blocks, not a search through a function.
   - **WO-A10** also owns uvicorn's `log_config=None` (`serve.py:37`),
     which leaves access lines as unparsed text alongside the JSON
     stream. Explicitly not fixed here.
-  - **WO-A12** moves the content-capture flag and `LOG_PRINCIPAL_SALT`
-    into `Settings`. ADR 0066 adds `TRACE_SAMPLE_RATIO` to that list,
-    read the same way and for the same reason.
+  - ~~**WO-A12** moves the content-capture flag and
+    `LOG_PRINCIPAL_SALT` into `Settings`. ADR 0066 adds
+    `TRACE_SAMPLE_RATIO` to that list, read the same way and for the
+    same reason.~~ **WO-B4** did the content-capture flag and
+    `TRACE_SAMPLE_RATIO`; WO-A12 could not, having no ownership of
+    `src/config.py`. `LOG_PRINCIPAL_SALT` (`context.py:230`) is still
+    read from the environment and is still open — it is the last of
+    these, and it wants more thought than an alias, because the salt is
+    a secret and its "empty means ephemeral" branch is load-bearing for
+    tests.
   - **WO-A07** reuses `context_fields()` for span attributes so the log
     payload and the span cannot drift. **Done in ADR 0066**:
     `tracing._set_correlation_attributes` copies the context onto every

@@ -477,14 +477,17 @@ instrument that would close it.
    which is why §3's availability SLI is built on request outcomes
    rather than on probe results.
 
-8. **The sampling and content-capture flags are not in `Settings`.**
-   `TRACE_SAMPLE_RATIO`,
-   `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` and
-   `LOG_CAPTURE_USER_CONTENT` are read from the environment directly.
-   `docs/observability.md` names WO-A12 as the work order that folds
-   them in; WO-A12's owned-file list does not include `src/config.py`,
-   which two other work orders edit in the same phase, so it did not.
-   Recorded here rather than worked around.
+8. ~~**The sampling and content-capture flags are not in
+   `Settings`.**~~ **Closed by WO-B4.** `TRACE_SAMPLE_RATIO` is
+   `Settings.trace_sample_ratio`, a float bounded to `[0.0, 1.0]`; the
+   two content-capture variables are the validation aliases of
+   `Settings.log_capture_user_content`. Both environment variables
+   still work unchanged and both defaults are unchanged. Why it
+   outlived two waves is kept on the page, because it was a planning
+   error rather than a design choice: `docs/observability.md` named
+   WO-A12 as the work order that would fold them in, and WO-A12's
+   owned-file list did not include `src/config.py`, which two other
+   work orders edited in the same phase.
 
 None of these is a reason to withhold the objectives in §3. They are the
 reason those objectives are marked **declared, not earned** — a

@@ -60,21 +60,24 @@ property lets two threads bump one counter concurrently.
 
 ## Sampling
 
-`trace_sample_ratio()` reads `TRACE_SAMPLE_RATIO` from the environment,
-the way `logging.content_capture_enabled()` reads its flag and for the
-same reason: `src/config.py` belongs to another work order this wave.
-WO-A12 folds it into `Settings`, at which point the environment
-variable stays as the pydantic-settings alias (ADR 0066).
+`trace_sample_ratio()` returns `settings.trace_sample_ratio`, a
+validated `float | None` bounded to `[0.0, 1.0]`. `TRACE_SAMPLE_RATIO`
+is still the environment variable that sets it — the field name is that
+name lower-cased — so no deployment changes.
 
 Unset means "install no sampler", which leaves the SDK's own
 `OTEL_TRACES_SAMPLER` / `OTEL_TRACES_SAMPLER_ARG` handling intact: an
 operator who already knows the standard variables keeps them, and one
 who does not gets a single ratio to reason about.
+
+Unlike content capture, the ratio is read *once*, at
+`configure_tracing()`: a `TracerProvider` takes its sampler at
+construction, so there is nothing a live re-read could change and the
+value goes through `Settings` and nowhere else.
 """
 
 from __future__ import annotations
 
-import os
 import threading
 import time
 from collections.abc import Callable, Iterator, Mapping
@@ -105,6 +108,7 @@ from opentelemetry.sdk.trace.sampling import (
     TraceIdRatioBased,
 )
 
+from src.config import TRACE_SAMPLE_RATIO_ENV as _TRACE_SAMPLE_RATIO_ENV
 from src.config import settings
 from src.observability import semconv
 from src.observability.context import (
@@ -148,10 +152,11 @@ _TRACER_NAME = "arxiv-research-agent"
 
 T = TypeVar("T")
 
-#: Head sampling ratio, 0.0-1.0. Read from the environment rather than
-#: `Settings` only because `src/config.py` belongs to another work
-#: order this wave; WO-A12 folds it in (ADR 0066).
-TRACE_SAMPLE_RATIO_ENV: Final = "TRACE_SAMPLE_RATIO"
+#: The environment variable behind `settings.trace_sample_ratio`.
+#: Re-exported from `src/config.py`, which owns the value now, because
+#: this constant has been this module's public name for it since
+#: ADR 0066 and the documentation refers to it.
+TRACE_SAMPLE_RATIO_ENV: Final = _TRACE_SAMPLE_RATIO_ENV
 
 # Budget for the final span flush, in milliseconds. Sized exactly like
 # `metrics._SHUTDOWN_BUDGET_MS` and for the same reason: it is spent at
@@ -173,28 +178,28 @@ def _make_exporter() -> SpanExporter:
 def trace_sample_ratio() -> float | None:
     """The configured head-sampling ratio, or None when unset.
 
-    Read per call rather than cached at import so an operator can change
-    it without editing code and a test can exercise both branches with
-    `monkeypatch.setenv`, exactly as `content_capture_enabled` does.
+    A one-line read of `settings.trace_sample_ratio`, kept as a function
+    because it is this module's public name for the value and because
+    reading `settings` through the module attribute is what lets a test
+    monkeypatch it.
+
+    The bounds moved with the value. This used to parse the environment
+    itself and *clamp*: `TRACE_SAMPLE_RATIO=10` from an operator who
+    meant 10% became 1.0 and sampled everything, and `=loads` warned
+    and fell back. Both are now `ge`/`le` on the field, so either one
+    is a refusal at settings load with pydantic naming the field — the
+    ADR-0046 rule this repository applies to every other knob. It is a
+    reversal of ADR 0066's local exception ("a typo must not be a
+    process that will not boot"), and deliberately: that exception
+    existed only because the value was not in `Settings`, and a
+    sampling ratio silently multiplied by ten is a bill that a refusal
+    at boot is not.
 
     Returns:
-        A ratio clamped to `[0.0, 1.0]`, or `None` when the variable is
-        unset or unparseable. A typo is `None` rather than an exception:
-        a bad value in an operator's environment must not stop a
-        process from starting, and the WARNING names it.
+        A ratio in `[0.0, 1.0]`, or `None` when unset — which means
+        "install no sampler", not "sample nothing".
     """
-    raw = os.environ.get(TRACE_SAMPLE_RATIO_ENV, "").strip()
-    if not raw:
-        return None
-    try:
-        ratio = float(raw)
-    except ValueError:
-        log.warning(
-            "tracing_sample_ratio_invalid",
-            extra={"raw": raw, "rule": TRACE_SAMPLE_RATIO_ENV},
-        )
-        return None
-    return min(1.0, max(0.0, ratio))
+    return settings.trace_sample_ratio
 
 
 def _make_sampler() -> Sampler | None:

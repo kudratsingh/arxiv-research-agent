@@ -32,14 +32,97 @@ Every field that selects one of a closed set of implementations
 is typed `Literal[...]` so a typo'd env var dies at settings load
 with pydantic's "unexpected value" message instead of silently
 selecting a downstream fallback. See ADR 0046.
+
+## One field may answer to more than one environment variable
+
+`log_capture_user_content` carries a `validation_alias`, because the
+OpenTelemetry GenAI conventions define the name of that switch and a
+deployment that already sets the conventional name must keep working
+whatever this class calls the field. `populate_by_name` is on so
+`Settings(log_capture_user_content=True)` still constructs by field
+name — the pattern every test in this repository uses.
+
+Aliases are ordered, and the order is precedence: pydantic takes the
+*first* name that is present in the environment, so setting the
+conventional name to `false` and the repo-local alias to `true` leaves
+capture off. That is a narrowing of the "either name being truthy
+enables it" rule these flags had while they lived in
+`src/observability/logging.py`, and it narrows in the safe direction.
 """
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+#: The OpenTelemetry GenAI conventions' content-capture flag, and the
+#: only opt-in environment variable those conventions define. The spec
+#: says instrumentations "SHOULD NOT capture [message content] by
+#: default, but SHOULD provide an option for users to opt in" — this is
+#: that option, under the name the standard already gave it, so an
+#: operator who has made the content decision once does not have to
+#: discover a second switch to make it stick in a second sink.
+#:
+#: Declared here rather than in `src/observability/logging.py` because
+#: it is now a pydantic alias: the string the field answers to and the
+#: string the resolver re-reads have to be the same string, or a
+#: live flip would silently disagree with the configured value.
+CONTENT_CAPTURE_ENV: Final = "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+
+#: A repo-local second name for the same field. It predates the
+#: conventional one and is kept so no deployment has to change; it is
+#: second in the alias order, so the conventional name wins when both
+#: are set.
+CONTENT_CAPTURE_ENV_ALIAS: Final = "LOG_CAPTURE_USER_CONTENT"
+
+#: The head-sampling ratio's environment variable. Identical to the
+#: upper-cased field name — named as a constant only so
+#: `src/observability/tracing.py` and the tests can refer to it without
+#: repeating the literal.
+TRACE_SAMPLE_RATIO_ENV: Final = "TRACE_SAMPLE_RATIO"
+
+#: The string tokens pydantic itself accepts for a `bool` field, split
+#: by which way they decide. Written out rather than delegated back to
+#: pydantic because `content_capture_enabled()` re-reads the
+#: environment on every call — once per content key per log record —
+#: and has to reach the same verdict this class reached at load.
+#: `tests/test_config.py` pins both sets against pydantic's own
+#: coercion, so a release that widens the grammar shows up as a failing
+#: assertion rather than as a flag that stops working.
+BOOL_TRUE_TOKENS: Final[frozenset[str]] = frozenset({"1", "on", "t", "true", "y", "yes"})
+BOOL_FALSE_TOKENS: Final[frozenset[str]] = frozenset(
+    {"0", "off", "f", "false", "n", "no"}
+)
+
+
+def parse_bool_flag(value: str) -> bool | None:
+    """Read an environment-shaped string as a boolean, or `None`.
+
+    The one grammar behind the content-capture switch, used both by the
+    field validator below and by
+    `src.observability.logging.content_capture_enabled`, which re-reads
+    the same variables live. Two callers, one grammar, so a live flip
+    cannot disagree with the value the process booted with.
+
+    Args:
+        value: The raw environment string.
+
+    Returns:
+        `True` or `False` for anything in the token sets above, `False`
+        for a blank — `LOG_CAPTURE_USER_CONTENT=` is how a Compose file
+        and a `.env` both spell "I am not setting this" — and `None`
+        for a string that is not a boolean at all.
+    """
+    token = value.strip().lower()
+    if not token:
+        return False
+    if token in BOOL_TRUE_TOKENS:
+        return True
+    if token in BOOL_FALSE_TOKENS:
+        return False
+    return None
 
 
 class Settings(BaseSettings):
@@ -55,6 +138,10 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
         frozen=True,
+        # `log_capture_user_content` has a `validation_alias`, which on
+        # its own would make the field *only* settable by alias and
+        # break every `Settings(field_name=...)` call in the suite.
+        populate_by_name=True,
     )
 
     # ------ Anthropic / LLM --------------------------------------------
@@ -143,6 +230,67 @@ class Settings(BaseSettings):
         is a case-sensitive `Literal`.
         """
         return value.upper() if isinstance(value, str) else value
+
+    log_capture_user_content: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            CONTENT_CAPTURE_ENV, CONTENT_CAPTURE_ENV_ALIAS
+        ),
+        description=(
+            "Let user content — research queries, report bodies, paper "
+            "text, learner writing — stay in the log stream and on "
+            "spans instead of being replaced with `[redacted: N "
+            "chars]`. Off by default, which is what the OpenTelemetry "
+            "GenAI conventions require of an instrumentation: content "
+            "capture is opt-in, never a default. Answers to two "
+            "environment variables — the conventional "
+            "`OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` "
+            "first, then the older repo-local "
+            "`LOG_CAPTURE_USER_CONTENT` — so a deployment that already "
+            "set either one keeps working. Both switch logs *and* "
+            "spans: it is one content decision, not two. Turning it on "
+            "also restores the report body to the failed-terminal-write "
+            "line, which is how a lost success used to be recoverable; "
+            "off is the default because the exposure outweighs the "
+            "recovery. Unlike every other field here it may also be "
+            "flipped without a restart — see "
+            "`src.observability.logging.content_capture_enabled`. See "
+            "ADR 0067."
+        ),
+    )
+
+    @field_validator("log_capture_user_content", mode="before")
+    @classmethod
+    def _parse_capture_flag(cls, value: Any) -> Any:
+        """Apply `parse_bool_flag`, and name both variables on a refusal.
+
+        Two jobs pydantic's own `bool` parser does not do here. A blank
+        has to stay "off" rather than becoming a boot failure, because
+        `LOG_CAPTURE_USER_CONTENT=` is how a Compose file spells
+        "unset" and the resolver this field replaces read it that way.
+        And the error has to name the variable the operator actually
+        set: pydantic reports the *first* alias whichever one supplied
+        the value, so a typo in `LOG_CAPTURE_USER_CONTENT` would
+        otherwise arrive as a complaint about
+        `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` — a
+        variable that operator has never heard of.
+
+        Raises:
+            ValueError: When the value is a string that is not a
+                boolean in any spelling pydantic accepts.
+        """
+        if not isinstance(value, str):
+            return value
+        parsed = parse_bool_flag(value)
+        if parsed is None:
+            raise ValueError(
+                f"content capture must be true or false; got {value!r}. "
+                f"Set {CONTENT_CAPTURE_ENV} or {CONTENT_CAPTURE_ENV_ALIAS} "
+                f"to one of {sorted(BOOL_TRUE_TOKENS)} or "
+                f"{sorted(BOOL_FALSE_TOKENS)}, or leave both unset for the "
+                "default (off)."
+            )
+        return parsed
 
     # ------ HTTP retry (arXiv API + PDF downloads) ---------------------
     http_max_retries: int = Field(
@@ -794,6 +942,38 @@ class Settings(BaseSettings):
             "worker that dies takes its last window's counters with it."
         ),
     )
+    trace_sample_ratio: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Head-sampling ratio: 0.1 keeps one trace in ten. `None` — "
+            "the default, and what an unset or empty "
+            "`TRACE_SAMPLE_RATIO` means — installs no sampler at all, "
+            "which leaves the SDK's own `OTEL_TRACES_SAMPLER` / "
+            "`OTEL_TRACES_SAMPLER_ARG` handling intact so an operator "
+            "already using the standard variables is not silently "
+            "overridden by a repository default. Bounded rather than "
+            "clamped (ADR 0046): `TRACE_SAMPLE_RATIO=10` from someone "
+            "who meant 10% used to be quietly rounded to 1.0 and "
+            "sample *everything*, which is a bill. The sampler is "
+            "always parent-based, so a worker never re-decides for a "
+            "job whose submitting request was already sampled. See "
+            "ADR 0066."
+        ),
+    )
+
+    @field_validator("trace_sample_ratio", mode="before")
+    @classmethod
+    def _blank_sample_ratio_is_unset(cls, value: Any) -> Any:
+        """Treat an empty value as "install no sampler".
+
+        Same reason `_parse_capture_flag` reads a blank as off:
+        `float("")` is a `ValidationError`, and `TRACE_SAMPLE_RATIO=` is
+        how a Compose file spells "leave this alone". It has always
+        meant "no sampler", and it still does.
+        """
+        return None if isinstance(value, str) and not value.strip() else value
 
     # ------ Evaluation integrity (Phase A, ADR 0070) ------------------
     eval_judge_model: str = Field(

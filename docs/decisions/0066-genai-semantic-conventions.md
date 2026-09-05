@@ -251,6 +251,18 @@ not silently overridden by a repository default. An unparseable value
 warns and falls back rather than raising: a typo in an environment must
 not be a process that will not boot.
 
+> **Superseded in part by WO-B4.** The ratio is now
+> `Settings.trace_sample_ratio`, a `float | None` bounded to
+> `[0.0, 1.0]`, and `TRACE_SAMPLE_RATIO` is the environment variable
+> that sets it — unchanged for every deployment. The last sentence
+> above is reversed: an unparseable *or out-of-range* value is refused
+> at settings load. That exception existed only because the value was
+> not in `Settings`; once it is, the ADR-0046 house rule applies, and
+> the concrete failure it prevents is `TRACE_SAMPLE_RATIO=10` from an
+> operator who meant 10% being clamped to 1.0 and sampling everything
+> in production without a word. "Unset installs no sampler" is
+> unchanged.
+
 `shutdown_tracing()` mirrors `shutdown_metrics()` and is called from
 the same lifespan teardown, flush-then-shutdown on a 2-second budget,
 failures logged and never raised.
@@ -332,10 +344,13 @@ failures logged and never raised.
    now covers both reclaim outcomes rather than one. The current value
    is pinned by a test so the fix shows up as a failing assertion
    rather than as a series quietly changing shape.
-3. **`TRACE_SAMPLE_RATIO` is not in `Settings`.** Same reason and same
-   fold-in as ADR 0067's content-capture flag: `src/config.py` belongs
-   to another work order this wave. WO-A12 folds it in, keeping the
-   environment variable as the pydantic-settings alias.
+3. ~~**`TRACE_SAMPLE_RATIO` is not in `Settings`.**~~ **Done in
+   WO-B4**, along with ADR 0067's content-capture flag. Not by WO-A12,
+   as this entry predicted: WO-A12's owned-file list did not include
+   `src/config.py`, so the gap outlived two waves for a planning
+   reason. `Settings.trace_sample_ratio` is a bounded float and the
+   environment variable is unchanged; §9 above records what did change,
+   which is that a bad value is now refused rather than clamped.
 4. **No `invoke_workflow` span on the CLI or eval paths.** The span is
    opened by `run_job`, so `make run` and `make eval` produce node
    spans without a workflow parent. Closing it means a span at

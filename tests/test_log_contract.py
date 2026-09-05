@@ -35,6 +35,7 @@ from typing import Any
 import pytest
 from opentelemetry.sdk.trace import TracerProvider
 
+from src.config import Settings
 from src.observability import context as context_module
 from src.observability import logging as logging_module
 from src.observability.context import (
@@ -54,6 +55,7 @@ from src.observability.logging import (
     MAX_EXTRA_VALUE_CHARS,
     USER_CONTENT_KEYS,
     JsonFormatter,
+    content_capture_enabled,
     dropped_extra_key_counts,
     propagate_run_context,
     reset_dropped_extra_key_counts,
@@ -469,6 +471,126 @@ class TestUserContentIsRedactedByDefault:
         live = {name for _, _, name in keys}
         for key in USER_CONTENT_KEYS & live:
             assert key in ALLOWED_EXTRA_KEYS
+
+
+class TestTheSwitchIsConfiguredAndStillFlippable:
+    """WO-B4. The flag is a `Settings` field that survives being one.
+
+    ADR 0067 read this per call on purpose — it is the knob an operator
+    reaches for mid-incident, to see what a parse failure was actually
+    handed. `Settings` is a frozen module-level singleton, so a naive
+    fold-in would have frozen it at import and silently taken that
+    away. These are the tests that would notice.
+    """
+
+    def test_the_configured_value_decides_when_the_environment_is_silent(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The half that did not exist before: capture with no env var.
+
+        This is the fold-in itself. Nothing in the environment names
+        either flag, and content still comes through, because the
+        setting says so.
+        """
+        monkeypatch.delenv(CONTENT_CAPTURE_ENV, raising=False)
+        monkeypatch.delenv(CONTENT_CAPTURE_ENV_ALIAS, raising=False)
+        monkeypatch.setattr(
+            logging_module, "settings", Settings(log_capture_user_content=True)
+        )
+        assert _format(query="how do transformers work")["query"] == (
+            "how do transformers work"
+        )
+
+    def test_the_environment_flips_it_without_a_restart(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """On, then off again, inside one process and one settings object."""
+        monkeypatch.delenv(CONTENT_CAPTURE_ENV, raising=False)
+        monkeypatch.delenv(CONTENT_CAPTURE_ENV_ALIAS, raising=False)
+        assert _format(query="secret")["query"].startswith("[redacted:")
+
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, "true")
+        assert _format(query="secret")["query"] == "secret"
+
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, "false")
+        assert _format(query="secret")["query"].startswith("[redacted:")
+
+    def test_the_environment_can_also_flip_a_configured_yes_back_off(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The override runs in both directions, or "flippable" would
+        # mean "can be turned on and then not off again".
+        monkeypatch.setattr(
+            logging_module, "settings", Settings(log_capture_user_content=True)
+        )
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV, "false")
+        assert _format(query="secret")["query"].startswith("[redacted:")
+
+    def test_the_conventional_name_wins_a_live_disagreement_too(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The resolver has to reproduce `AliasChoices`' precedence, or a
+        # live flip and the value the process booted with could disagree
+        # about the same pair of variables.
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV, "false")
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, "true")
+        assert content_capture_enabled() is False
+        assert Settings().log_capture_user_content is False
+
+    def test_a_live_value_that_is_not_a_boolean_leaves_the_setting_standing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A typo after boot cannot silently disarm a configured yes.
+
+        Pydantic refuses this value at load, so it can only have been
+        exported into a running process. The old resolver read anything
+        non-truthy as off, which meant a typo while turning capture
+        *on* looked exactly like success.
+        """
+        monkeypatch.setattr(
+            logging_module, "settings", Settings(log_capture_user_content=True)
+        )
+        monkeypatch.setattr(logging_module, "_warned_capture_flags", set())
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, "ture")
+        assert content_capture_enabled() is True
+
+    def test_the_warning_for_a_bad_live_value_is_emitted_once(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Once per variable, and with no user-content `extra`.
+
+        The resolver runs once per content key per record, so an
+        unbounded warning would put a line on every field of every
+        line. And a `raw`-shaped `extra` would send the formatter back
+        through `content_capture_enabled()` from inside
+        `content_capture_enabled()` — unbounded recursion, not a log.
+        """
+        monkeypatch.setattr(logging_module, "_warned_capture_flags", set())
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV_ALIAS, "ture")
+        with caplog.at_level(logging.WARNING, logger=logging_module.__name__):
+            for _ in range(5):
+                content_capture_enabled()
+
+        records = [
+            record
+            for record in caplog.records
+            if record.getMessage() == "content_capture_flag_invalid"
+        ]
+        assert len(records) == 1
+        assert records[0].rule == CONTENT_CAPTURE_ENV_ALIAS
+        assert not (USER_CONTENT_KEYS & set(records[0].__dict__))
+        assert "content_capture_flag_invalid" in KNOWN_EVENTS
+
+    def test_formatting_a_record_under_a_bad_live_value_terminates(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The recursion guard, exercised through the path that would
+        # trip it: a content-keyed record formatted while the flag is
+        # garbage, so the formatter asks the resolver, which warns,
+        # which formats a record.
+        monkeypatch.setattr(logging_module, "_warned_capture_flags", set())
+        monkeypatch.setenv(CONTENT_CAPTURE_ENV, "maybe")
+        assert _format(query="secret")["query"].startswith("[redacted:")
 
 
 def _record(msg: str, **extra: Any) -> logging.LogRecord:
