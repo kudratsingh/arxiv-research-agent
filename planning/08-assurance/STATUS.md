@@ -237,15 +237,72 @@ All eight were closed by the follow-up wave (B1–B5, PRs #189–#194).
 | 7 | `citation_accuracy` returned 1.0 for zero citations | WO-A16 | B5 |
 | 8 | ADR 0045's lock procedure | WO-A02 | B2 (defect was larger) |
 
-### Still open after the follow-up wave
+### Still open after wave C
 
 | Item | Why it stays open |
 |---|---|
 | The "eval runs nightly" claim is still unenforced | The workflow files now say honestly that they are disabled at the repository level, so a prose-reading test has become *possible* — but `disabled_manually` remains a GitHub-side attribute absent from the checkout, and nobody has written the test |
 | `README.md`'s R11, R14, R15 claims | Mechanisable, with named homes: R11's three assertions belong in `tests/test_config.py`; R14 wants the screenshots captured as Playwright snapshots; R15 wants a reflection test over `Settings`' `enable_*` fields |
 | `web/vitest.config.mts`'s re-seed note | Prose in a comment, and the only source of truth for the web test count — a re-seed that skips the note leaves the check agreeing with a stale source |
-| The quote path and paired outcomes are built but unwired | `groundedness.paired_outcomes()` exists and `stats.py`'s paired path exists; nothing connects them to a campaign |
-| `LOG_PRINCIPAL_SALT` is not in `Settings` | It is a secret, and its "empty means ephemeral" branch is load-bearing for tests |
+| `redact_text` is a **shape** rule, not a secret rule | Measured: `sk-…` redacts, `gw_live_…` passes untouched. A gateway or proxy credential is not covered by the redaction the log contract rests on |
+| Two more plain-`str` secrets | `api_keys` (inbound keystore) and `semantic_scholar_api_key`. Neither is a one-line retype — `parse_api_keys` splits the raw string and `semantic_scholar.py` builds a header from it |
+| The scripted research tier scripts the model's words | The better fix is a `use_mock_data` branch on the four research agents, which would let the tier delete its scripted surface. Recorded in ADR 0075's alternatives |
+| A25 ("eval runs nightly") is still False | Its blocker is gone and **the test is already written**; the remaining edit is one sentence in `docs/architecture.md`, which WO-C2 did not own |
+| `docs/demo.md` carries a stale `eval.md` anchor, twice | Same fix already applied in `docs/eval.md` |
+| The web test count of record is 97 tests behind reality | Within the new band; closed by the next coverage re-seed, which is not "the note" WO-C2 was licensed to change |
+
+
+## Wave C — CLOSED 2026-09-05
+
+Four work orders, merged as PRs #196–#199. Verified on the composed tree at
+`f7d2d43`: **3556 passed**, 55 skipped; branch coverage **91.95%** (floor 89);
+property 152, fault 163+3, e2e 16, security 314, contract 139; mypy strict and
+ruff clean across 96 source files.
+
+| WO | Closed |
+|---|---|
+| C1 | The research lane gets a **free** gate, and the paired McNemar path runs on it |
+| C2 | The last four unenforced claims; the nightly's three artifacts reconciled |
+| C3 | `LOG_PRINCIPAL_SALT` reaches `Settings` and stays a secret |
+| C4 | The API key becomes a `SecretStr`; three missing Compose forwards |
+
+### The result that justifies the statistics
+
+WO-C1 measured it rather than arguing it: **one lost claim moves
+`citation_resolution_rate` by exactly 0.10 — the flat epsilon a move must
+*exceed*.** Every threshold band stays green and only the pairing fires. The
+aggregate gate would shrug at a real regression; McNemar catches it.
+
+`mcnemar_required_pairs` on the new lane: **77 pairs for significance, 155 at
+80% power, and the campaign carries 100** — clears the first bar, not the
+second. Printed in every report, which is what turns a funding request into a
+costed one.
+
+### The limitation WO-C1 insisted on stating
+
+Mock mode is **not** an LLM stub for the research lane. It swaps arXiv search
+only; `src/llm.py` is untouched and all four research agents call the model as
+in production. So the scripted research tier scripts the *model's* words where
+the learning lane scripts the *learner's*, and the consequence is written into
+the module, the ADR and the docs: **it measures the pipeline around the model,
+never report quality.**
+
+### Three premises this coordinator got wrong
+
+Recorded because the builders corrected them with measurement, not opinion.
+
+- **The API-key exposure is narrow.** All six accessors leaked, but a sweep of
+  `src/`, `tests/`, `scripts/`, `ci/`, `deploy/` and the `Makefile` found
+  nothing that fires it — no call site dumps a whole `Settings`, no debug
+  route, and a `ValidationError` on another field provably does not carry the
+  key. The fix is defence in depth, and the PR says so.
+- **No module compares the key field to the disabled sentinel.** Every
+  comparison is on the environment variable. The single field-level dependency
+  was a truthiness check that survived only because `bool(SecretStr(""))` is
+  `False` via `__len__`.
+- **Three files in the stated blast radius must not change**: they carry
+  `anthropic_api_key` as a canary id and forbidden-artifact regex — the field
+  *name* as data. Editing them would have broken the adversarial suite.
 
 ## Coordination
 
