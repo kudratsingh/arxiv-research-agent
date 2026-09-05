@@ -634,6 +634,25 @@ def scripted_surface(query: BenchmarkQuery) -> Iterator[ScriptedSurface]:
     test session, and the restore has to happen on the exception path
     too — a campaign whose second query ran against a surface the first
     query left behind would be measuring the harness.
+
+    Since ADR 0080 the surface also turns the *agents'* own mock branch
+    off on the four modules it scripts. That branch returns before
+    `call_llm_json` is reached, so without this every patch below would
+    be dead code: the campaign would still run, still cost `$0.0000`
+    and still record its trajectory, but `scripted_llm_calls` would be
+    zero and `scripted_tier_check --lane research` would fail the one
+    assertion that separates "free" from "absent".
+
+    `src.agents.search` is deliberately left on `use_mock_data=True` —
+    the tier needs the fixture corpus, and `settings` is bound per
+    module, so the retrieval half of the setting and the model half are
+    separable. This keeps the tier measuring what ADR 0075 says it
+    measures (the pipeline around the model, with the report's words
+    supplied by the harness) and leaves its committed baseline
+    byte-identical; `script_digest()` covers the responders, not this
+    function, so nothing here moves `dataset_version` either. Replacing
+    the scripted surface with the product's own mock branch is ADR
+    0075's follow-up and is a rebaseline, not a refactor.
     """
     import src.agents.critic as critic_module
     import src.agents.planner as planner_module
@@ -641,6 +660,12 @@ def scripted_surface(query: BenchmarkQuery) -> Iterator[ScriptedSurface]:
     import src.agents.synthesizer as synthesizer_module
 
     surface = ScriptedSurface(query)
+    scripted_modules = (
+        planner_module,
+        reader_module,
+        synthesizer_module,
+        critic_module,
+    )
     patches: tuple[tuple[Any, str, Any], ...] = (
         (planner_module, "call_llm_json", surface.planner),
         (reader_module, "call_llm_json", surface.reader),
@@ -651,6 +676,12 @@ def scripted_surface(query: BenchmarkQuery) -> Iterator[ScriptedSurface]:
         # from arxiv.org; `tests/e2e/conftest.py` stubs the same call
         # for the same reason.
         (reader_module, "parse_pdf", lambda _url: ""),
+        *(
+            (module, "settings", module.settings.model_copy(
+                update={"use_mock_data": False}
+            ))
+            for module in scripted_modules
+        ),
     )
     with contextlib.ExitStack() as stack:
         stack.enter_context(_spend_guard())
