@@ -1,0 +1,1590 @@
+{
+  "schema_version": "1.0.0",
+  "readme": "Twelve worked items with the lineage a real campaign produces: two and three annotators per item, genuine disagreement, and one adjudication under each rule the protocol names including an escalation that resolves to nothing. The confusion table it produces is hand-computed in tests/test_calibration_metrics.py: 4 true passes, 2 false passes, 3 true fails, 1 false fail, 1 judge abstention and 1 unresolved reference. The judge decisions are PREDICTIONS; no judge has been run. Every rationale_ref and guideline_ref in this file is the sha256 of the content carried beside it, and the loader checks that, so editing a rationale without re-deriving its digest fails the load.",
+  "guideline": {
+    "guideline_id": "judge-calibration-annotation-guide",
+    "revision": "1.0.0",
+    "summary": "Claim support: a claim is supported only when the cited source states it or entails it without a further assumption; contradicted when the source states the reverse; not_verifiable when no admissible evidence could settle it; abstain when the annotator cannot decide from the material shown. Rubric coverage: an item is covered when the report satisfies it with admissible evidence, and stating a genuine evidence gap satisfies the gap item. Never reward fluency, length, or confidence. Full guide: docs/agent-engineering/14-judge-calibration-protocol.md."
+  },
+  "rationales": [
+    {
+      "rationale_id": "worked-01",
+      "text": "Both annotators found the claim stated verbatim in the cited abstract; the adjudicator confirmed without changing anything, which is what a unanimous adjudication records."
+    },
+    {
+      "rationale_id": "worked-02",
+      "text": "Two annotators found no entailment; the third read the source's related-work paragraph as the source's own finding. Majority rule applied and the minority decision is preserved above."
+    },
+    {
+      "rationale_id": "worked-03",
+      "text": "Two annotators found the claim entailed by the reported numbers; the third wanted an explicit sentence. Majority rule applied; the disagreement is about how much inference an annotator may do and is a guide follow-up."
+    },
+    {
+      "rationale_id": "worked-04",
+      "text": "The two annotators split between supported and unsupported. Reading both rationales, the adjudicating expert found the cited source states the reverse, which neither annotator had claimed, so the outcome is a third value and this record is why an override may leave the observed decisions."
+    },
+    {
+      "rationale_id": "worked-05",
+      "text": "One annotator called the claim unverifiable, one unsupported. Guide clause 4.2: when a source exists and is silent, the decision is unsupported; not_verifiable is reserved for claims no admissible source could settle."
+    },
+    {
+      "rationale_id": "worked-06",
+      "text": "Three annotators, three decisions, and the adjudicator could not resolve them from the material shown: the source excerpt is ambiguous about which experimental arm the number belongs to. Escalated. The item carries no reference decision and enters no denominator."
+    },
+    {
+      "rationale_id": "worked-07",
+      "text": "Both annotators found the claim stated in the cited abstract."
+    },
+    {
+      "rationale_id": "worked-08",
+      "text": "Both annotators found the claim entailed by a table the abstract summarises."
+    },
+    {
+      "rationale_id": "worked-09",
+      "text": "Both annotators found the claim supported by an explicit sentence."
+    },
+    {
+      "rationale_id": "worked-10",
+      "text": "Both annotators found the cited source silent on the claim's operative quantity."
+    },
+    {
+      "rationale_id": "worked-11",
+      "text": "Both annotators found the source reporting the opposite direction, which is contradicted rather than merely unsupported."
+    },
+    {
+      "rationale_id": "worked-12",
+      "text": "Both annotators found the rubric's evidence-gap item satisfied: the report names the missing measurement rather than substituting an adjacent one."
+    }
+  ],
+  "grader_profile_ref": {
+    "kind": "grader_profile",
+    "id": "judge-under-calibration",
+    "revision": "1.0.0",
+    "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+  },
+  "items": [
+    {
+      "blinded_item_id": "itm-fbc9a03cdb65",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-01.ann-a1f4",
+          "blinded_item_id": "itm-fbc9a03cdb65",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-01",
+            "revision": "1.0.0",
+            "digest": "sha256:2078430d079b72aac3b86f8202b1e8a6dbefe1ab0e7c26ad3257e16bbffe1aa9"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 95
+        },
+        {
+          "label_id": "worked-01.ann-b2c7",
+          "blinded_item_id": "itm-fbc9a03cdb65",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-01",
+            "revision": "1.0.0",
+            "digest": "sha256:2078430d079b72aac3b86f8202b1e8a6dbefe1ab0e7c26ad3257e16bbffe1aa9"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 80
+        }
+      ],
+      "adjudication": {
+        "adjudication_id": "worked-01.adjudication",
+        "blinded_item_id": "itm-fbc9a03cdb65",
+        "label_type": "claim_support",
+        "decisions": [
+          {
+            "label_id": "worked-01.ann-a1f4",
+            "blinded_item_id": "itm-fbc9a03cdb65",
+            "label_type": "claim_support",
+            "decision": "supported",
+            "confidence": "high",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-01",
+              "revision": "1.0.0",
+              "digest": "sha256:2078430d079b72aac3b86f8202b1e8a6dbefe1ab0e7c26ad3257e16bbffe1aa9"
+            },
+            "annotator": {
+              "annotator_id": "ann-a1f4",
+              "kind": "human_expert",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 95
+          },
+          {
+            "label_id": "worked-01.ann-b2c7",
+            "blinded_item_id": "itm-fbc9a03cdb65",
+            "label_type": "claim_support",
+            "decision": "supported",
+            "confidence": "high",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-01",
+              "revision": "1.0.0",
+              "digest": "sha256:2078430d079b72aac3b86f8202b1e8a6dbefe1ab0e7c26ad3257e16bbffe1aa9"
+            },
+            "annotator": {
+              "annotator_id": "ann-b2c7",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 80
+          }
+        ],
+        "adjudicated_decision": "supported",
+        "rule": "unanimous",
+        "adjudicator": {
+          "annotator_id": "ann-d4e2",
+          "kind": "human_expert",
+          "guideline_revision": "1.0.0"
+        },
+        "adjudicated_at": "2026-09-05T00:00:00Z",
+        "rationale_ref": null
+      }
+    },
+    {
+      "blinded_item_id": "itm-bea4f53315ad",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-02.ann-a1f4",
+          "blinded_item_id": "itm-bea4f53315ad",
+          "label_type": "claim_support",
+          "decision": "unsupported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-02",
+            "revision": "1.0.0",
+            "digest": "sha256:da005ad879f11144180ddcb48d35b59eef9a3de57724b92329bfa3732cf2bb12"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 150
+        },
+        {
+          "label_id": "worked-02.ann-b2c7",
+          "blinded_item_id": "itm-bea4f53315ad",
+          "label_type": "claim_support",
+          "decision": "unsupported",
+          "confidence": "medium",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-02",
+            "revision": "1.0.0",
+            "digest": "sha256:da005ad879f11144180ddcb48d35b59eef9a3de57724b92329bfa3732cf2bb12"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 120
+        },
+        {
+          "label_id": "worked-02.ann-c3d9",
+          "blinded_item_id": "itm-bea4f53315ad",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "low",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-02",
+            "revision": "1.0.0",
+            "digest": "sha256:da005ad879f11144180ddcb48d35b59eef9a3de57724b92329bfa3732cf2bb12"
+          },
+          "annotator": {
+            "annotator_id": "ann-c3d9",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 70
+        }
+      ],
+      "adjudication": {
+        "adjudication_id": "worked-02.adjudication",
+        "blinded_item_id": "itm-bea4f53315ad",
+        "label_type": "claim_support",
+        "decisions": [
+          {
+            "label_id": "worked-02.ann-a1f4",
+            "blinded_item_id": "itm-bea4f53315ad",
+            "label_type": "claim_support",
+            "decision": "unsupported",
+            "confidence": "high",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-02",
+              "revision": "1.0.0",
+              "digest": "sha256:da005ad879f11144180ddcb48d35b59eef9a3de57724b92329bfa3732cf2bb12"
+            },
+            "annotator": {
+              "annotator_id": "ann-a1f4",
+              "kind": "human_expert",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 150
+          },
+          {
+            "label_id": "worked-02.ann-b2c7",
+            "blinded_item_id": "itm-bea4f53315ad",
+            "label_type": "claim_support",
+            "decision": "unsupported",
+            "confidence": "medium",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-02",
+              "revision": "1.0.0",
+              "digest": "sha256:da005ad879f11144180ddcb48d35b59eef9a3de57724b92329bfa3732cf2bb12"
+            },
+            "annotator": {
+              "annotator_id": "ann-b2c7",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 120
+          },
+          {
+            "label_id": "worked-02.ann-c3d9",
+            "blinded_item_id": "itm-bea4f53315ad",
+            "label_type": "claim_support",
+            "decision": "supported",
+            "confidence": "low",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-02",
+              "revision": "1.0.0",
+              "digest": "sha256:da005ad879f11144180ddcb48d35b59eef9a3de57724b92329bfa3732cf2bb12"
+            },
+            "annotator": {
+              "annotator_id": "ann-c3d9",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 70
+          }
+        ],
+        "adjudicated_decision": "unsupported",
+        "rule": "majority",
+        "adjudicator": {
+          "annotator_id": "ann-d4e2",
+          "kind": "human_expert",
+          "guideline_revision": "1.0.0"
+        },
+        "adjudicated_at": "2026-09-05T00:00:00Z",
+        "rationale_ref": null
+      }
+    },
+    {
+      "blinded_item_id": "itm-92e4615a42cf",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-03.ann-a1f4",
+          "blinded_item_id": "itm-92e4615a42cf",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-03",
+            "revision": "1.0.0",
+            "digest": "sha256:137e13d57155d89ed35a206a9d41080de8583388f5e68389c7be2d0c6dc4f643"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 110
+        },
+        {
+          "label_id": "worked-03.ann-b2c7",
+          "blinded_item_id": "itm-92e4615a42cf",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "medium",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-03",
+            "revision": "1.0.0",
+            "digest": "sha256:137e13d57155d89ed35a206a9d41080de8583388f5e68389c7be2d0c6dc4f643"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 90
+        },
+        {
+          "label_id": "worked-03.ann-c3d9",
+          "blinded_item_id": "itm-92e4615a42cf",
+          "label_type": "claim_support",
+          "decision": "unsupported",
+          "confidence": "low",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-03",
+            "revision": "1.0.0",
+            "digest": "sha256:137e13d57155d89ed35a206a9d41080de8583388f5e68389c7be2d0c6dc4f643"
+          },
+          "annotator": {
+            "annotator_id": "ann-c3d9",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 60
+        }
+      ],
+      "adjudication": {
+        "adjudication_id": "worked-03.adjudication",
+        "blinded_item_id": "itm-92e4615a42cf",
+        "label_type": "claim_support",
+        "decisions": [
+          {
+            "label_id": "worked-03.ann-a1f4",
+            "blinded_item_id": "itm-92e4615a42cf",
+            "label_type": "claim_support",
+            "decision": "supported",
+            "confidence": "high",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-03",
+              "revision": "1.0.0",
+              "digest": "sha256:137e13d57155d89ed35a206a9d41080de8583388f5e68389c7be2d0c6dc4f643"
+            },
+            "annotator": {
+              "annotator_id": "ann-a1f4",
+              "kind": "human_expert",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 110
+          },
+          {
+            "label_id": "worked-03.ann-b2c7",
+            "blinded_item_id": "itm-92e4615a42cf",
+            "label_type": "claim_support",
+            "decision": "supported",
+            "confidence": "medium",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-03",
+              "revision": "1.0.0",
+              "digest": "sha256:137e13d57155d89ed35a206a9d41080de8583388f5e68389c7be2d0c6dc4f643"
+            },
+            "annotator": {
+              "annotator_id": "ann-b2c7",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 90
+          },
+          {
+            "label_id": "worked-03.ann-c3d9",
+            "blinded_item_id": "itm-92e4615a42cf",
+            "label_type": "claim_support",
+            "decision": "unsupported",
+            "confidence": "low",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-03",
+              "revision": "1.0.0",
+              "digest": "sha256:137e13d57155d89ed35a206a9d41080de8583388f5e68389c7be2d0c6dc4f643"
+            },
+            "annotator": {
+              "annotator_id": "ann-c3d9",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 60
+          }
+        ],
+        "adjudicated_decision": "supported",
+        "rule": "majority",
+        "adjudicator": {
+          "annotator_id": "ann-d4e2",
+          "kind": "human_expert",
+          "guideline_revision": "1.0.0"
+        },
+        "adjudicated_at": "2026-09-05T00:00:00Z",
+        "rationale_ref": null
+      }
+    },
+    {
+      "blinded_item_id": "itm-04e0b395886c",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-04.ann-b2c7",
+          "blinded_item_id": "itm-04e0b395886c",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "low",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-04",
+            "revision": "1.0.0",
+            "digest": "sha256:ca7222457d303009ea2ef34d56412444cf47bf8c36294a7948e2ea2a87015d7e"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 65
+        },
+        {
+          "label_id": "worked-04.ann-c3d9",
+          "blinded_item_id": "itm-04e0b395886c",
+          "label_type": "claim_support",
+          "decision": "unsupported",
+          "confidence": "medium",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-04",
+            "revision": "1.0.0",
+            "digest": "sha256:ca7222457d303009ea2ef34d56412444cf47bf8c36294a7948e2ea2a87015d7e"
+          },
+          "annotator": {
+            "annotator_id": "ann-c3d9",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 130
+        }
+      ],
+      "adjudication": {
+        "adjudication_id": "worked-04.adjudication",
+        "blinded_item_id": "itm-04e0b395886c",
+        "label_type": "claim_support",
+        "decisions": [
+          {
+            "label_id": "worked-04.ann-b2c7",
+            "blinded_item_id": "itm-04e0b395886c",
+            "label_type": "claim_support",
+            "decision": "supported",
+            "confidence": "low",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-04",
+              "revision": "1.0.0",
+              "digest": "sha256:ca7222457d303009ea2ef34d56412444cf47bf8c36294a7948e2ea2a87015d7e"
+            },
+            "annotator": {
+              "annotator_id": "ann-b2c7",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 65
+          },
+          {
+            "label_id": "worked-04.ann-c3d9",
+            "blinded_item_id": "itm-04e0b395886c",
+            "label_type": "claim_support",
+            "decision": "unsupported",
+            "confidence": "medium",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-04",
+              "revision": "1.0.0",
+              "digest": "sha256:ca7222457d303009ea2ef34d56412444cf47bf8c36294a7948e2ea2a87015d7e"
+            },
+            "annotator": {
+              "annotator_id": "ann-c3d9",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 130
+          }
+        ],
+        "adjudicated_decision": "contradicted",
+        "rule": "expert_override",
+        "adjudicator": {
+          "annotator_id": "ann-d4e2",
+          "kind": "human_expert",
+          "guideline_revision": "1.0.0"
+        },
+        "adjudicated_at": "2026-09-05T00:00:00Z",
+        "rationale_ref": {
+          "kind": "calibration_rationale",
+          "id": "worked-04",
+          "revision": "1.0.0",
+          "digest": "sha256:ca7222457d303009ea2ef34d56412444cf47bf8c36294a7948e2ea2a87015d7e"
+        }
+      }
+    },
+    {
+      "blinded_item_id": "itm-7062643e1a98",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-05.ann-b2c7",
+          "blinded_item_id": "itm-7062643e1a98",
+          "label_type": "claim_support",
+          "decision": "not_verifiable",
+          "confidence": "medium",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-05",
+            "revision": "1.0.0",
+            "digest": "sha256:2bea75a880e23cec6ba6ebd10ffc8e0333550cccde2df2dd2d47a8e3f299b39a"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 100
+        },
+        {
+          "label_id": "worked-05.ann-c3d9",
+          "blinded_item_id": "itm-7062643e1a98",
+          "label_type": "claim_support",
+          "decision": "unsupported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-05",
+            "revision": "1.0.0",
+            "digest": "sha256:2bea75a880e23cec6ba6ebd10ffc8e0333550cccde2df2dd2d47a8e3f299b39a"
+          },
+          "annotator": {
+            "annotator_id": "ann-c3d9",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 140
+        }
+      ],
+      "adjudication": {
+        "adjudication_id": "worked-05.adjudication",
+        "blinded_item_id": "itm-7062643e1a98",
+        "label_type": "claim_support",
+        "decisions": [
+          {
+            "label_id": "worked-05.ann-b2c7",
+            "blinded_item_id": "itm-7062643e1a98",
+            "label_type": "claim_support",
+            "decision": "not_verifiable",
+            "confidence": "medium",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-05",
+              "revision": "1.0.0",
+              "digest": "sha256:2bea75a880e23cec6ba6ebd10ffc8e0333550cccde2df2dd2d47a8e3f299b39a"
+            },
+            "annotator": {
+              "annotator_id": "ann-b2c7",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 100
+          },
+          {
+            "label_id": "worked-05.ann-c3d9",
+            "blinded_item_id": "itm-7062643e1a98",
+            "label_type": "claim_support",
+            "decision": "unsupported",
+            "confidence": "high",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-05",
+              "revision": "1.0.0",
+              "digest": "sha256:2bea75a880e23cec6ba6ebd10ffc8e0333550cccde2df2dd2d47a8e3f299b39a"
+            },
+            "annotator": {
+              "annotator_id": "ann-c3d9",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 140
+          }
+        ],
+        "adjudicated_decision": "unsupported",
+        "rule": "guideline_rule",
+        "adjudicator": {
+          "annotator_id": "ann-d4e2",
+          "kind": "human_expert",
+          "guideline_revision": "1.0.0"
+        },
+        "adjudicated_at": "2026-09-05T00:00:00Z",
+        "rationale_ref": {
+          "kind": "calibration_rationale",
+          "id": "worked-05",
+          "revision": "1.0.0",
+          "digest": "sha256:2bea75a880e23cec6ba6ebd10ffc8e0333550cccde2df2dd2d47a8e3f299b39a"
+        }
+      }
+    },
+    {
+      "blinded_item_id": "itm-6740a9c86ed7",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-06.ann-a1f4",
+          "blinded_item_id": "itm-6740a9c86ed7",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "low",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-06",
+            "revision": "1.0.0",
+            "digest": "sha256:2e912990a51b393565e402747c60bbe9a2803f7f4a7b1218ca663b6509ab78cd"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 210
+        },
+        {
+          "label_id": "worked-06.ann-b2c7",
+          "blinded_item_id": "itm-6740a9c86ed7",
+          "label_type": "claim_support",
+          "decision": "unsupported",
+          "confidence": "low",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-06",
+            "revision": "1.0.0",
+            "digest": "sha256:2e912990a51b393565e402747c60bbe9a2803f7f4a7b1218ca663b6509ab78cd"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 195
+        },
+        {
+          "label_id": "worked-06.ann-c3d9",
+          "blinded_item_id": "itm-6740a9c86ed7",
+          "label_type": "claim_support",
+          "decision": "not_verifiable",
+          "confidence": "low",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-06",
+            "revision": "1.0.0",
+            "digest": "sha256:2e912990a51b393565e402747c60bbe9a2803f7f4a7b1218ca663b6509ab78cd"
+          },
+          "annotator": {
+            "annotator_id": "ann-c3d9",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 180
+        }
+      ],
+      "adjudication": {
+        "adjudication_id": "worked-06.adjudication",
+        "blinded_item_id": "itm-6740a9c86ed7",
+        "label_type": "claim_support",
+        "decisions": [
+          {
+            "label_id": "worked-06.ann-a1f4",
+            "blinded_item_id": "itm-6740a9c86ed7",
+            "label_type": "claim_support",
+            "decision": "supported",
+            "confidence": "low",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-06",
+              "revision": "1.0.0",
+              "digest": "sha256:2e912990a51b393565e402747c60bbe9a2803f7f4a7b1218ca663b6509ab78cd"
+            },
+            "annotator": {
+              "annotator_id": "ann-a1f4",
+              "kind": "human_expert",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 210
+          },
+          {
+            "label_id": "worked-06.ann-b2c7",
+            "blinded_item_id": "itm-6740a9c86ed7",
+            "label_type": "claim_support",
+            "decision": "unsupported",
+            "confidence": "low",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-06",
+              "revision": "1.0.0",
+              "digest": "sha256:2e912990a51b393565e402747c60bbe9a2803f7f4a7b1218ca663b6509ab78cd"
+            },
+            "annotator": {
+              "annotator_id": "ann-b2c7",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 195
+          },
+          {
+            "label_id": "worked-06.ann-c3d9",
+            "blinded_item_id": "itm-6740a9c86ed7",
+            "label_type": "claim_support",
+            "decision": "not_verifiable",
+            "confidence": "low",
+            "rationale_ref": {
+              "kind": "calibration_rationale",
+              "id": "worked-06",
+              "revision": "1.0.0",
+              "digest": "sha256:2e912990a51b393565e402747c60bbe9a2803f7f4a7b1218ca663b6509ab78cd"
+            },
+            "annotator": {
+              "annotator_id": "ann-c3d9",
+              "kind": "human_reviewer",
+              "guideline_revision": "1.0.0"
+            },
+            "labeled_at": "2026-09-05T00:00:00Z",
+            "guideline_ref": {
+              "kind": "calibration_guideline",
+              "id": "judge-calibration-annotation-guide",
+              "revision": "1.0.0",
+              "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+            },
+            "time_spent_seconds": 180
+          }
+        ],
+        "adjudicated_decision": null,
+        "rule": "unresolved",
+        "adjudicator": {
+          "annotator_id": "ann-d4e2",
+          "kind": "human_expert",
+          "guideline_revision": "1.0.0"
+        },
+        "adjudicated_at": "2026-09-05T00:00:00Z",
+        "rationale_ref": {
+          "kind": "calibration_rationale",
+          "id": "worked-06",
+          "revision": "1.0.0",
+          "digest": "sha256:2e912990a51b393565e402747c60bbe9a2803f7f4a7b1218ca663b6509ab78cd"
+        }
+      }
+    },
+    {
+      "blinded_item_id": "itm-3ef6cfaf29aa",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-07.ann-a1f4",
+          "blinded_item_id": "itm-3ef6cfaf29aa",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-07",
+            "revision": "1.0.0",
+            "digest": "sha256:f1086f0c01e6b7918ed33817507c3f64e068c16a06b0161ca5fba809c83fcb41"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 85
+        },
+        {
+          "label_id": "worked-07.ann-b2c7",
+          "blinded_item_id": "itm-3ef6cfaf29aa",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-07",
+            "revision": "1.0.0",
+            "digest": "sha256:f1086f0c01e6b7918ed33817507c3f64e068c16a06b0161ca5fba809c83fcb41"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 75
+        }
+      ],
+      "adjudication": null
+    },
+    {
+      "blinded_item_id": "itm-90720b24152c",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-08.ann-a1f4",
+          "blinded_item_id": "itm-90720b24152c",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-08",
+            "revision": "1.0.0",
+            "digest": "sha256:7f167e7f1f032604460531c546c82ebd5fd95cebf283e48cb6ab2a78f6770554"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 70
+        },
+        {
+          "label_id": "worked-08.ann-c3d9",
+          "blinded_item_id": "itm-90720b24152c",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-08",
+            "revision": "1.0.0",
+            "digest": "sha256:7f167e7f1f032604460531c546c82ebd5fd95cebf283e48cb6ab2a78f6770554"
+          },
+          "annotator": {
+            "annotator_id": "ann-c3d9",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 65
+        }
+      ],
+      "adjudication": null
+    },
+    {
+      "blinded_item_id": "itm-7cfd60ecd307",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-09.ann-a1f4",
+          "blinded_item_id": "itm-7cfd60ecd307",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "medium",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-09",
+            "revision": "1.0.0",
+            "digest": "sha256:3b53d8c21c6136184afae32c5f462a3b09926e557238783213429380a6ff39cf"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 105
+        },
+        {
+          "label_id": "worked-09.ann-b2c7",
+          "blinded_item_id": "itm-7cfd60ecd307",
+          "label_type": "claim_support",
+          "decision": "supported",
+          "confidence": "medium",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-09",
+            "revision": "1.0.0",
+            "digest": "sha256:3b53d8c21c6136184afae32c5f462a3b09926e557238783213429380a6ff39cf"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 95
+        }
+      ],
+      "adjudication": null
+    },
+    {
+      "blinded_item_id": "itm-34d31898b9c4",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-10.ann-a1f4",
+          "blinded_item_id": "itm-34d31898b9c4",
+          "label_type": "claim_support",
+          "decision": "unsupported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-10",
+            "revision": "1.0.0",
+            "digest": "sha256:a28144038d6c48b7d514adba3d011336e0b6f14551a40cf2d29b4cf3992fe340"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 90
+        },
+        {
+          "label_id": "worked-10.ann-b2c7",
+          "blinded_item_id": "itm-34d31898b9c4",
+          "label_type": "claim_support",
+          "decision": "unsupported",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-10",
+            "revision": "1.0.0",
+            "digest": "sha256:a28144038d6c48b7d514adba3d011336e0b6f14551a40cf2d29b4cf3992fe340"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 88
+        }
+      ],
+      "adjudication": null
+    },
+    {
+      "blinded_item_id": "itm-64e7503cf8d3",
+      "label_type": "claim_support",
+      "slice_tags": [
+        "evidence-rich"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-11.ann-a1f4",
+          "blinded_item_id": "itm-64e7503cf8d3",
+          "label_type": "claim_support",
+          "decision": "contradicted",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-11",
+            "revision": "1.0.0",
+            "digest": "sha256:427ff905fa6edbe83ed56c1cfec693fd7825706ed9c3b85a18416ce0e54b6436"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 160
+        },
+        {
+          "label_id": "worked-11.ann-c3d9",
+          "blinded_item_id": "itm-64e7503cf8d3",
+          "label_type": "claim_support",
+          "decision": "contradicted",
+          "confidence": "medium",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-11",
+            "revision": "1.0.0",
+            "digest": "sha256:427ff905fa6edbe83ed56c1cfec693fd7825706ed9c3b85a18416ce0e54b6436"
+          },
+          "annotator": {
+            "annotator_id": "ann-c3d9",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 145
+        }
+      ],
+      "adjudication": null
+    },
+    {
+      "blinded_item_id": "itm-7f068d322d32",
+      "label_type": "rubric_coverage",
+      "slice_tags": [
+        "evidence-sparse"
+      ],
+      "labels": [
+        {
+          "label_id": "worked-12.ann-a1f4",
+          "blinded_item_id": "itm-7f068d322d32",
+          "label_type": "rubric_coverage",
+          "decision": "covered",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-12",
+            "revision": "1.0.0",
+            "digest": "sha256:576d3d9ce2b10832cfced14356d3b070b3689bd78eb9db79ae2d994fe60743ee"
+          },
+          "annotator": {
+            "annotator_id": "ann-a1f4",
+            "kind": "human_expert",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 55
+        },
+        {
+          "label_id": "worked-12.ann-b2c7",
+          "blinded_item_id": "itm-7f068d322d32",
+          "label_type": "rubric_coverage",
+          "decision": "covered",
+          "confidence": "high",
+          "rationale_ref": {
+            "kind": "calibration_rationale",
+            "id": "worked-12",
+            "revision": "1.0.0",
+            "digest": "sha256:576d3d9ce2b10832cfced14356d3b070b3689bd78eb9db79ae2d994fe60743ee"
+          },
+          "annotator": {
+            "annotator_id": "ann-b2c7",
+            "kind": "human_reviewer",
+            "guideline_revision": "1.0.0"
+          },
+          "labeled_at": "2026-09-05T00:00:00Z",
+          "guideline_ref": {
+            "kind": "calibration_guideline",
+            "id": "judge-calibration-annotation-guide",
+            "revision": "1.0.0",
+            "digest": "sha256:0838cf300e0fa57827282908f1adff0fd6c953f24c205f141413b99b0cf79e13"
+          },
+          "time_spent_seconds": 50
+        }
+      ],
+      "adjudication": null
+    }
+  ],
+  "judge_verdicts": [
+    {
+      "verdict_id": "worked-01.judge",
+      "blinded_item_id": "itm-fbc9a03cdb65",
+      "label_type": "claim_support",
+      "decision": "supported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-02.judge",
+      "blinded_item_id": "itm-bea4f53315ad",
+      "label_type": "claim_support",
+      "decision": "supported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-03.judge",
+      "blinded_item_id": "itm-92e4615a42cf",
+      "label_type": "claim_support",
+      "decision": "supported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-04.judge",
+      "blinded_item_id": "itm-04e0b395886c",
+      "label_type": "claim_support",
+      "decision": "supported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-05.judge",
+      "blinded_item_id": "itm-7062643e1a98",
+      "label_type": "claim_support",
+      "decision": "unsupported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-06.judge",
+      "blinded_item_id": "itm-6740a9c86ed7",
+      "label_type": "claim_support",
+      "decision": "supported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-07.judge",
+      "blinded_item_id": "itm-3ef6cfaf29aa",
+      "label_type": "claim_support",
+      "decision": "unsupported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-08.judge",
+      "blinded_item_id": "itm-90720b24152c",
+      "label_type": "claim_support",
+      "decision": "supported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-09.judge",
+      "blinded_item_id": "itm-7cfd60ecd307",
+      "label_type": "claim_support",
+      "decision": "abstain",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-10.judge",
+      "blinded_item_id": "itm-34d31898b9c4",
+      "label_type": "claim_support",
+      "decision": "unsupported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-11.judge",
+      "blinded_item_id": "itm-64e7503cf8d3",
+      "label_type": "claim_support",
+      "decision": "unsupported",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    },
+    {
+      "verdict_id": "worked-12.judge",
+      "blinded_item_id": "itm-7f068d322d32",
+      "label_type": "rubric_coverage",
+      "decision": "covered",
+      "grader_profile_ref": {
+        "kind": "grader_profile",
+        "id": "judge-under-calibration",
+        "revision": "1.0.0",
+        "digest": "sha256:18d35b88da5bbf6e62469e60dac99599b79af958f1f66fc3e4993ec48957440a"
+      },
+      "rubric_name": "faithfulness",
+      "rubric_version": "1.0.0",
+      "presentation_order": null,
+      "observed_at": "2026-09-05T00:00:00Z",
+      "basis": "hypothesis"
+    }
+  ]
+}

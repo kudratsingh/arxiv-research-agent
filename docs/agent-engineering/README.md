@@ -71,6 +71,16 @@ build next, and in what evidence-gated order?**
     reviewable implementation slices for the four contracts, their integration,
     governance/calibration prerequisites, Stage-0 qualification, and the
     separately blocked funded baseline.
+13. [`13-governance-threat-review.md`](13-governance-threat-review.md) — the
+    data inventory, processing-purpose and consent matrix, retention and
+    deletion behaviour, principal access model, and threat review the D8
+    ruling turns on.
+14. [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md) —
+    the AE-004 design package: label schemas and adjudication lineage, the
+    annotation guide, the sampling plan and the noise floor of a twenty-query
+    set, the blinding and position-bias plan, synthetic adversarial fixtures,
+    the calibration metrics and their PROMOTE/HOLD/ROLLBACK gate, and a
+    cost/time estimate template. No judging, no labeling campaign, no spend.
 
 ## P0 implementation status
 
@@ -91,7 +101,7 @@ graph says what *may* start, not what has merged.
 | P0-WO07 | Campaign lock, repeats, resume, denominators | Pending |
 | P0-WO08 | Runtime event bridge and artifact adapter | Pending |
 | P0-WO09 | Governance and threat review | Landed — [#205](https://github.com/kudratsingh/arxiv-research-agent/pull/205) |
-| P0-WO10 | Judge-calibration protocol and fixtures | Pending |
+| P0-WO10 | Judge-calibration protocol and fixtures | This PR — see [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md); no ADR, this is a design package |
 | P0-WO11 | Stage-0 contract qualification | Pending |
 | P0-WO12 | Funded repeated current-policy baseline | Blocked on funding approval (D9) |
 
@@ -148,7 +158,7 @@ order is "landed" only when its acceptance criteria are green in CI.
 | P0-WO07 | Campaign lock, repeats, denominators | — | not started |
 | P0-WO08 | Runtime event bridge | — | not started |
 | P0-WO09 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) | landed |
-| P0-WO10 | Judge-calibration design | — | not started |
+| P0-WO10 | Judge-calibration design | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry_calibration/` | landed |
 | P0-WO11 | Stage-0 contract qualification | — | not started |
 | P0-WO12 | Funded repeated baseline | — | approval-gated, blocked on D9 |
 
