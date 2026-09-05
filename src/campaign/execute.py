@@ -897,6 +897,7 @@ def _run_one_episode(
         arm_config, sealed=sealed, plan=plan, sink_root=sink_root
     )
     attempt_id = resumed_attempt_id or str(bridge.attempt_id)
+    closed = False
     try:
         step = _Step()
         run = runner(
@@ -910,9 +911,18 @@ def _run_one_episode(
         _record_terminal(bridge, run)
         bridge.reconcile(Decimal(run.workflow_cost_usd))
         bridge.close()
+        closed = True
     finally:
-        with contextlib.suppress(Exception):
-            bridge.durable_store.close_run(bridge.run_id)
+        # Only on the path that did *not* close. A harness failure — the
+        # scorer raising, the bridge refusing an event — leaves a
+        # trajectory with no terminal event, and its head hash still has
+        # to be written so the partial ledger stays checkable. The flag
+        # is what stops the happy path paying for a second chain
+        # verification and a second `trajectory_chain_verified` line on
+        # every one of 240 episodes.
+        if not closed:
+            with contextlib.suppress(Exception):
+                bridge.durable_store.close_run(bridge.run_id)
 
     record = _write_episode_artifacts(
         target,
