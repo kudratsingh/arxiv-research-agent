@@ -29,6 +29,7 @@ it is raised against, not next to one of its raisers.
 from __future__ import annotations
 
 import threading
+from collections.abc import Callable
 from contextvars import ContextVar, Token
 from dataclasses import dataclass, field
 from typing import Any
@@ -364,6 +365,70 @@ _effective_cost_cap_usd: ContextVar[float | None] = ContextVar(
 )
 
 
+@dataclass(frozen=True)
+class LlmCallObservation:
+    """One completed model call, as `record_llm_call` saw it.
+
+    A frozen value rather than the accumulator itself: an observer is a
+    *reader* of a call that already happened, and handing it the mutable
+    `RunCosts` would invite a bookkeeping second opinion. Everything a
+    downstream recorder needs to describe the call — the billed model,
+    the four token buckets, the priced cost, the retries thrown away —
+    is here, and nothing it does not.
+    """
+
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cache_read_input_tokens: int
+    cache_creation_input_tokens: int
+    cost_usd: float
+    retries: int
+    latency_ms: float | None
+
+
+LlmCallObserver = Callable[[LlmCallObservation], None]
+"""Notified once per completed model call, after the accumulator moved."""
+
+
+_llm_call_observer: ContextVar[LlmCallObserver | None] = ContextVar(
+    "llm_call_observer", default=None
+)
+
+
+def bind_llm_call_observer(observer: LlmCallObserver) -> Token[LlmCallObserver | None]:
+    """Observe every model call made in this context (P0-WO05, ADR 0078).
+
+    A `ContextVar` for the same reason `_current_costs` is one: the
+    reader's per-paper fan-out records from a thread pool, and the API
+    runner copies its context into every node thread, so a job's observer
+    reaches the calls that job made and no others. A process-global
+    callback list would attribute one job's spend to whichever job
+    happened to register last.
+
+    The observer is a pure sink. `record_llm_call` calls it *after* the
+    accumulator and the counters have already moved, absorbs whatever it
+    raises, and never lets it change what was recorded — a broken
+    recorder must not be able to lose a call or fail the run that made
+    it.
+
+    Args:
+        observer: Called with one `LlmCallObservation` per completed
+            call. Must not raise; if it does, the failure is logged once
+            per call and otherwise ignored.
+
+    Returns:
+        The reset token, to be handed to `reset_llm_call_observer` when
+        the run's context ends.
+    """
+    return _llm_call_observer.set(observer)
+
+
+def reset_llm_call_observer(token: Token[LlmCallObserver | None]) -> None:
+    """Restore the previous observer after a run leaves its context."""
+    _llm_call_observer.reset(token)
+
+
 def current_costs() -> RunCosts | None:
     """Return the run's cost accumulator, or `None` when no run is active."""
     return _current_costs.get()
@@ -480,3 +545,23 @@ def record_llm_call(
             cache_read_input_tokens=cache_read_input_tokens,
             cache_creation_input_tokens=cache_creation_input_tokens,
         )
+    observer = _llm_call_observer.get()
+    if observer is not None:
+        try:
+            observer(
+                LlmCallObservation(
+                    model=model,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    cache_read_input_tokens=cache_read_input_tokens,
+                    cache_creation_input_tokens=cache_creation_input_tokens,
+                    cost_usd=cost,
+                    retries=retries,
+                    latency_ms=latency_ms,
+                )
+            )
+        except Exception:
+            # The call is already recorded; an observer is a reader.
+            # Losing its side record must never cost the run the call it
+            # already paid for, so this absorbs and says so once.
+            log.warning("llm_call_observer_failed", extra={"model": model}, exc_info=True)
