@@ -37,13 +37,32 @@ Thresholds are constants below rather than settings: a threshold an
 operator can move is a threshold no evaluation can attribute a result to.
 Moving one is an ADR and a re-baseline (ADR 0085, ADR 0070).
 
+## The branch extension
+
+CAP-03 (ADR 0086) adds the branch tier, and adds it as a *second* table
+rather than as two more rows above. `decide_tier` evaluates `TIER_RULES`
+alone unless the caller raises `max_tier` to `BRANCH_TIER`, which
+`src/api/runner.py` does exactly when `settings.orchestration` is `on`:
+
+| # | Rule | Fires when | Tier | Why |
+|---|---|---|---|---|
+| 9 | `branch_multi_entity_comparison` | a comparison word **and** `entity_count >= 3` | T2 | one ranked corpus cannot serve three compared systems |
+| 10 | `branch_plan_breadth` | `sub_question_count >= 5` | T2 | a plan past the planner's own range is several questions |
+
+Both are escalations, both are evaluated after the table above, and the
+**highest** tier any matching escalation names is the one selected. With
+the ceiling at its default the two rules are not evaluated at all, so a
+deployment that has not enabled the branch tier gets the same tier, the
+same reason codes and the same eligible set it got before this
+work order — which is the property `tests/test_compute_policy.py` pins
+and `tests/test_orchestration_controller.py` re-pins from the other side.
+
 ## The tiers, and what they are allowed to spend
 
-T2 (branching) and T3 are **not** decided here. T2 arrives with CAP-03's
-orchestrator-workers; T3 is reserved and the trajectory contract refuses
-it outright (`src/contracts/trajectory.py`). `MAX_DECIDABLE_TIER` is the
-hard ceiling on this controller's authority, and `decide_tier` cannot
-return anything above it by construction.
+T3 is **not** decided here: it is reserved and the trajectory contract
+refuses it outright (`src/contracts/trajectory.py`).
+`MAX_DECIDABLE_TIER` is the default ceiling, and `decide_tier` cannot
+return anything above the ceiling it was given, by construction.
 
 Each tier declares limits that the *compiled graph* already enforces, so
 the limits are a description of a structural guarantee rather than a
@@ -53,6 +72,7 @@ second budget nobody checks:
 |---|---|---|---|
 | T0 | the fixed pipeline (`research_fixed_evidence` with the evidence store on) | 0 — there is no verify node | 0 |
 | T1 | arm C's verify-and-repair graph (`research_fixed_verify_repair`) | at most 2 | at most 1, capped by `route_after_verification` |
+| T2 | the orchestrator-workers graph (`research_orchestrated_workers`) | at most 2 | at most 1, the same cap on the same router |
 
 ## Features that no request carries yet
 
@@ -62,9 +82,11 @@ has no depth field, `compile_research_intake` compiles exactly one
 research `task_kind`, and the tier has to be chosen before the planner
 runs because it selects the graph. They are parameters rather than
 absences because the rule table has to be complete before a caller
-exists — CAP-03's T2 decision is made *after* planning and reads the
-plan-time counts, and ADR 0085 records the seam so that work order adds a
-row rather than a signature.
+exists. CAP-03 used the seam ADR 0085 left: its first branch rule reads
+only pre-plan cues, because the tier selects the *graph* and therefore
+has to be decided before the planner runs; its second reads
+`sub_question_count` and is there for a caller that decides after
+planning, which is still nobody today.
 """
 
 from __future__ import annotations
@@ -77,20 +99,38 @@ from contextvars import ContextVar, Token
 from dataclasses import dataclass
 from typing import Any, Final, Literal
 
-ComputeTier = Literal["T0", "T1"]
-"""Every tier this controller may select. See `MAX_DECIDABLE_TIER`."""
+ComputeTier = Literal["T0", "T1", "T2"]
+"""Every tier this controller can name. See `MAX_DECIDABLE_TIER`."""
 
 COMPUTE_TIERS: Final[tuple[ComputeTier, ...]] = ("T0", "T1")
-"""The same set as a value, for callers that enumerate rather than type."""
+"""The tiers the **default** table selects from.
+
+Deliberately still two after CAP-03. This tuple is the default table's
+own vocabulary — `TIER_LIMITS` is keyed by it, `TIER_RULES` may only
+name members of it, and `src/config.py` validates
+`tier_effort_overrides` against it — and a deployment that has not
+turned the branch tier on must see the table CAP-04 baselined, in every
+one of those places. T2's vocabulary is the `BRANCH_*` constants below,
+and `ORCHESTRATED_TIERS` is the union for a caller that has enabled it.
+"""
 
 MAX_DECIDABLE_TIER: Final[ComputeTier] = "T1"
-"""The ceiling on this controller's authority.
+"""The default ceiling on this controller's authority.
 
-Not a preference: T2 needs a branch executor that does not exist until
-CAP-03, and T3 is refused by the trajectory contract. A controller that
-could name a tier it cannot execute would put an unrunnable decision in
-the record.
+Not a preference: T3 is refused by the trajectory contract outright, and
+T2 needs both a branch executor *and* an operator who asked for one. A
+controller that could name a tier the process cannot execute would put
+an unrunnable decision in the record, so the ceiling is a parameter of
+`decide_tier` rather than a property of the module — `BRANCH_TIER` is
+reachable only when the caller raises it, which `src/api/runner.py` does
+exactly when `settings.orchestration` is `on` (ADR 0086).
 """
+
+BRANCH_TIER: Final[ComputeTier] = "T2"
+"""The branch tier, selectable only when the caller raises the ceiling."""
+
+ORCHESTRATED_TIERS: Final[tuple[ComputeTier, ...]] = ("T0", "T1", "T2")
+"""Every tier a controller with the branch tier enabled may select."""
 
 RequestedDepth = Literal["quick", "standard", "deep"]
 """What a caller may ask for directly, when a surface carries it."""
@@ -332,25 +372,51 @@ TIER_LIMITS: Final[Mapping[ComputeTier, TierLimits]] = {
     ),
 }
 
+BRANCH_TIER_LIMITS: Final[TierLimits] = TierLimits(
+    policy_id="research_orchestrated_workers", max_verifications=2, max_repairs=1
+)
+"""What T2's graph may spend, in the same structural terms as T0 and T1.
+
+The verification and repair counts are arm C's, unchanged, because T2's
+graph *is* the verify-and-repair stage with a branch tier in front of
+it. What the numbers here deliberately do **not** describe is the branch
+budget: `orchestration_max_branches`, `orchestration_max_papers_per_branch`
+and `orchestration_branch_cost_share` are settings, so a run's branch
+allowance is recorded on the branch records themselves rather than
+asserted by a constant that could disagree with them (ADR 0086).
+"""
+
+ORCHESTRATED_TIER_LIMITS: Final[Mapping[ComputeTier, TierLimits]] = {
+    **TIER_LIMITS,
+    BRANCH_TIER: BRANCH_TIER_LIMITS,
+}
+"""`TIER_LIMITS` plus T2, for a controller that may select the branch tier."""
+
 
 @dataclass(frozen=True)
 class ComputeDecision:
     """The tier a run was allocated, with the reasons and the input.
 
     Attributes:
-        tier: `T0` or `T1`, never higher (`MAX_DECIDABLE_TIER`).
+        tier: `T0` or `T1` under the default ceiling, and `T2` only when
+            the caller raised it (`decide_tier`'s `max_tier`).
         reasons: Every rule that fired, in table order. Never empty —
             a T0 run that matched nothing carries `("default_t0",)`, so
             "no reason" and "the default" stay distinguishable in the
             record.
         features: The snapshot the rules were evaluated over.
         limits: What the selected tier's graph may spend.
+        eligible: The tiers the controller could have chosen, so a
+            decision reads against its own option set rather than
+            against a later, wider one. `("T0", "T1")` unless the
+            caller raised the ceiling.
     """
 
     tier: ComputeTier
     reasons: tuple[str, ...]
     features: ComputeFeatures
     limits: TierLimits
+    eligible: tuple[ComputeTier, ...] = COMPUTE_TIERS
 
 
 @dataclass(frozen=True)
@@ -422,6 +488,55 @@ TIER_RULES: Final[tuple[TierRule, ...]] = (
     ),
 )
 
+#: Named systems above which a comparative question stops being one
+#: question. Two entities is a comparison the fixed path answers from one
+#: ranked corpus; three or more is where the corpus that answers "how
+#: does A compare with B" reliably starves C, which is
+#: `02-target-architecture.md` §4's "evidence-sparse" in the form this
+#: repository can actually detect before planning.
+BRANCH_ENTITY_THRESHOLD: Final[int] = 3
+
+#: Sub-questions above which a *known* plan is broad enough to branch.
+#: One higher than `PLAN_SUB_QUESTION_THRESHOLD`, deliberately: four
+#: sub-questions is the top of the planner's own instructed range and
+#: escalates to verification; five is a plan that outgrew it.
+BRANCH_SUB_QUESTION_THRESHOLD: Final[int] = 5
+
+
+def _branch_plan_breadth(features: ComputeFeatures) -> bool:
+    """Whether a *known* plan is broad enough to branch. Unknown never fires."""
+    sub_questions = features.sub_question_count
+    return sub_questions is not None and sub_questions >= BRANCH_SUB_QUESTION_THRESHOLD
+
+
+BRANCH_TIER_RULES: Final[tuple[TierRule, ...]] = (
+    TierRule(
+        rule_id="branch_multi_entity_comparison",
+        tier=BRANCH_TIER,
+        decisive=False,
+        predicate=lambda f: (
+            f.comparative_cue and f.entity_count >= BRANCH_ENTITY_THRESHOLD
+        ),
+    ),
+    TierRule(
+        rule_id="branch_plan_breadth",
+        tier=BRANCH_TIER,
+        decisive=False,
+        predicate=_branch_plan_breadth,
+    ),
+)
+"""The branch tier's rules, kept out of `TIER_RULES` on purpose.
+
+Two tables rather than one flag inside a single table, because the
+property that matters most about this work order is that a deployment
+with `orchestration=off` evaluates *the same rules in the same order*
+CAP-04 baselined. Filtering a merged table by tier would produce that
+outcome too, right up until someone reorders it; keeping the branch
+rules in their own tuple and appending them only when the ceiling
+permits T2 makes "off is unchanged" true by construction rather than by
+inspection (ADR 0086).
+"""
+
 #: The reason a T0 run carries when no rule fired at all.
 DEFAULT_REASON: Final[str] = "default_t0"
 
@@ -431,22 +546,80 @@ REASON_CODES: Final[tuple[str, ...]] = tuple(
     [rule.rule_id for rule in TIER_RULES] + [DEFAULT_REASON]
 )
 
+#: The branch tier's reason codes, for the same reason its rules are
+#: separate: a consumer that groups a flag-off deployment's decisions
+#: must see the vocabulary that deployment can actually emit.
+BRANCH_REASON_CODES: Final[tuple[str, ...]] = tuple(
+    rule.rule_id for rule in BRANCH_TIER_RULES
+)
 
-def decide_tier(features: ComputeFeatures) -> ComputeDecision:
+#: Every code either table can emit, for a consumer that spans both.
+ALL_REASON_CODES: Final[tuple[str, ...]] = REASON_CODES + BRANCH_REASON_CODES
+
+#: Tier order, so a ceiling can be compared and an escalation can win.
+_TIER_RANK: Final[Mapping[ComputeTier, int]] = {"T0": 0, "T1": 1, "T2": 2}
+
+
+def eligible_tiers(
+    max_tier: ComputeTier = MAX_DECIDABLE_TIER,
+) -> tuple[ComputeTier, ...]:
+    """The tiers a controller with this ceiling could have chosen.
+
+    Recorded on the decision and, through it, in RFC 10 §8.6's
+    `compute.tier_selected` payload — so a decision stays readable
+    against the option set that produced it. The default returns
+    `("T0", "T1")`, which is what a deployment with the branch tier off
+    has always recorded.
+    """
+    return tuple(
+        tier for tier in ORCHESTRATED_TIERS if _TIER_RANK[tier] <= _TIER_RANK[max_tier]
+    )
+
+
+def _rules_for(max_tier: ComputeTier) -> tuple[TierRule, ...]:
+    """The rules a controller with this ceiling evaluates, in table order.
+
+    At the default ceiling this is `TIER_RULES` unchanged and in its
+    original order — the branch rules are all T2, so the filter removes
+    every one of them and nothing else moves.
+    """
+    return tuple(
+        rule
+        for rule in (*TIER_RULES, *BRANCH_TIER_RULES)
+        if _TIER_RANK[rule.tier] <= _TIER_RANK[max_tier]
+    )
+
+
+def decide_tier(
+    features: ComputeFeatures, *, max_tier: ComputeTier = MAX_DECIDABLE_TIER
+) -> ComputeDecision:
     """Allocate a compute tier from the features, by the table above.
 
     Pure and total. The first decisive rule that matches wins outright;
-    otherwise every matching escalation is collected and any one of them
-    selects T1; a run that matched nothing is T0 for `DEFAULT_REASON`.
+    otherwise every matching escalation is collected, the **highest**
+    tier any of them named is selected, and a run that matched nothing
+    is T0 for `DEFAULT_REASON`.
 
     Args:
         features: The snapshot from `extract_features`.
+        max_tier: The caller's ceiling. `MAX_DECIDABLE_TIER` — the
+            default, and what a deployment with `orchestration=off`
+            passes — evaluates exactly the table CAP-04 baselined and
+            can never return `T2`. `BRANCH_TIER` adds the branch rules
+            after it. A ceiling is a parameter rather than a settings
+            read because this module is pure: the same features and the
+            same ceiling produce the same tier on any worker, in any
+            process, which is what lets the decision be re-derived from
+            the trajectory during analysis (ADR 0085, ADR 0086).
 
     Returns:
-        The decision, carrying its reasons, its input and its limits.
+        The decision, carrying its reasons, its input, its limits and
+        the option set it was taken against.
     """
+    eligible = eligible_tiers(max_tier)
     escalations: list[str] = []
-    for rule in TIER_RULES:
+    selected: ComputeTier = "T0"
+    for rule in _rules_for(max_tier):
         if not rule.predicate(features):
             continue
         if rule.decisive:
@@ -454,16 +627,20 @@ def decide_tier(features: ComputeFeatures) -> ComputeDecision:
                 tier=rule.tier,
                 reasons=(rule.rule_id,),
                 features=features,
-                limits=TIER_LIMITS[rule.tier],
+                limits=ORCHESTRATED_TIER_LIMITS[rule.tier],
+                eligible=eligible,
             )
         escalations.append(rule.rule_id)
+        if _TIER_RANK[rule.tier] > _TIER_RANK[selected]:
+            selected = rule.tier
 
-    tier: ComputeTier = "T1" if escalations else "T0"
+    tier: ComputeTier = selected if escalations else "T0"
     return ComputeDecision(
         tier=tier,
         reasons=tuple(escalations) if escalations else (DEFAULT_REASON,),
         features=features,
-        limits=TIER_LIMITS[tier],
+        limits=ORCHESTRATED_TIER_LIMITS[tier],
+        eligible=eligible,
     )
 
 

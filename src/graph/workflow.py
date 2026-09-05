@@ -1,6 +1,6 @@
 """LangGraph workflow: wires agents together with conditional routing.
 
-Three workflow shapes are supported. `settings.research_policy` picks
+Four workflow shapes are supported. `settings.research_policy` picks
 the policy; under its `legacy` default the shape is chosen by
 `settings.enable_supervisor` exactly as it always was:
 
@@ -19,14 +19,24 @@ the policy; under its `legacy` default the shape is chosen by
   policy, unreachable by any combination of `ENABLE_SUPERVISOR` /
   `ENABLE_EVIDENCE_STORE` / `ENABLE_VERIFIER`, which is the property
   the experiment's arm labelling rests on.
+- **Orchestrator-workers** (`research_policy="orchestrated_workers"`,
+  ADR 0086): the branch tier. `planner -> lead -> workers -> merge`
+  replaces the single `search -> reader` leg — each worker researches
+  one sub-question on an isolated state with its own `branch_id`, and
+  the merge unions their evidence tables with provenance — after which
+  the graph is arm C unchanged: synthesizer, `verify`, one `repair`,
+  critic. This is the executable half of tier T2 in
+  `docs/agent-engineering/02-target-architecture.md` §4; the listwise
+  selector that tier also asks for is CAP-09 and is not here.
 
 With `settings.compute_controller="deterministic"` (CAP-04, ADR 0085)
 the shape stops being a process-wide constant: `build_workflow` compiles
 the fixed pipeline **and** arm C's verify-and-repair graph over one
 checkpointer and attaches them as `compute_tier_graphs(app)`, and the API
-runner picks one per job from `src.policies.compute.decide_tier`. Off —
-the default — nothing extra is compiled and every caller holds the same
-single graph it always did.
+runner picks one per job from `src.policies.compute.decide_tier`. With
+`settings.orchestration="on"` as well, the orchestrator-workers graph
+joins them as T2 (ADR 0086). Off — the default — nothing extra is
+compiled and every caller holds the same single graph it always did.
 
 Two production knobs configured here regardless of shape:
 
@@ -595,16 +605,122 @@ def _build_fixed_verify_repair(
     )
 
 
+def route_after_repair_orchestrated(state: ResearchState) -> str:
+    """`route_after_repair`, for a shape whose retrieval is a branch set.
+
+    One difference from the fixed router, and it is the whole reason a
+    second function exists: `retrieve_missing_evidence` goes to `lead`
+    rather than to `search`, because under this policy retrieval *is* a
+    branch. The lead adds one worker branch per named gap and the merge
+    unions its evidence with what the run already had, so the repair
+    extends the evidence base instead of replacing it — which is what
+    routing to a bare `search` node would do, discarding every branch's
+    table to keep one repair's.
+
+    That also removes the need for a `search` node in this graph at all:
+    nothing here searches outside a branch, so nothing here has a
+    top-level search to route to.
+
+    Returns:
+        `"lead"`, `"synthesizer"` or `"critic"`.
+    """
+    action = state.get("repair_action", "")
+    if action == "retrieve_missing_evidence":
+        return "lead"
+    if action == "qualify_or_remove_claims":
+        return "synthesizer"
+    log.warning(
+        "revision_target_undispatchable",
+        extra={"revision_target": f"repair:{action}", "run_id": state.get("run_id")},
+    )
+    return "critic"
+
+
+def _build_orchestrated_workers(
+    workflow: StateGraph[ResearchState, Any, Any, Any], wrap: NodeWrapper
+) -> None:
+    """Wire CAP-03's branch tier in front of arm C's verification stage.
+
+    ```text
+    planner -> lead -> workers -> merge -> synthesizer -> verify
+    verify  -> repair   (verdict fail, no repair spent, one available)
+    verify  -> critic   (pass | abstain | the repair is spent)
+    repair  -> lead | synthesizer | critic
+    critic  -> route_after_critique   (unchanged decision, remapped target)
+    ```
+
+    Three new nodes and no new agent. `lead` bounds the planner's
+    sub-questions into worker branches, `workers` runs each on an
+    isolated state, `merge` unions their evidence tables with
+    provenance; none of the three calls a model, which is why this shape
+    costs the same model calls as the fixed path times the branch fan-out
+    rather than that plus an orchestration overhead (ADR 0086).
+
+    After `merge` the graph *is* arm C: the same synthesizer on the same
+    evidence path, the same `verify` node, the same one-repair cap
+    enforced in the same `route_after_verification`. That is deliberate.
+    The experiment this shape belongs to has to be able to attribute a
+    difference to the branching, and a shape that also changed
+    verification would confound the two.
+
+    The critic's router is reused unchanged and its `search` target is
+    remapped to `lead`: the decision "this run needs more retrieval" is
+    the critic's to make and identical across shapes, while the node
+    that carries it out is this shape's business. A `search` node
+    reachable only from the critic would be a second, un-branched
+    retrieval path with no provenance, which is the thing the merge
+    exists to prevent.
+    """
+    from src.policies.orchestration import lead_node, merge_node, workers_node
+
+    workflow.add_node("planner", wrap("planner", planner_agent))
+    workflow.add_node("lead", wrap("lead", lead_node))
+    workflow.add_node("workers", wrap("workers", workers_node))
+    workflow.add_node("merge", wrap("merge", merge_node))
+    workflow.add_node("synthesizer", wrap("synthesizer", synthesizer_agent))
+    workflow.add_node("verify", wrap("verify", verify_node))
+    workflow.add_node("repair", wrap("repair", repair_node))
+    workflow.add_node("critic", wrap("critic", critic_agent))
+
+    workflow.set_entry_point("planner")
+    workflow.add_edge("planner", "lead")
+    workflow.add_edge("lead", "workers")
+    workflow.add_edge("workers", "merge")
+    workflow.add_edge("merge", "synthesizer")
+    workflow.add_edge("synthesizer", "verify")
+
+    workflow.add_conditional_edges(
+        "verify",
+        route_after_verification,
+        {"repair": "repair", "critic": "critic"},
+    )
+    workflow.add_conditional_edges(
+        "repair",
+        route_after_repair_orchestrated,
+        {"lead": "lead", "synthesizer": "synthesizer", "critic": "critic"},
+    )
+    workflow.add_conditional_edges(
+        "critic",
+        route_after_critique,
+        {
+            "planner": "planner",
+            "search": "lead",
+            "synthesizer": "synthesizer",
+            END: END,
+        },
+    )
+
+
 def _build_graph_shape(wrap: NodeWrapper) -> StateGraph[ResearchState, Any, Any, Any]:
     """Wire the node graph — same edges for the sync and async builds.
 
-    Three shapes now, and the selector is asked first: `research_policy`
+    Four shapes now, and the selector is asked first: `research_policy`
     names the policy a run executes, while `enable_supervisor` is one of
     the flags the `legacy` policy derives its shape from. Settings
-    validation guarantees the two cannot both claim a shape —
-    `fixed_verify_repair` refuses to load with the supervisor on (ADR
-    0076) — so the order here expresses that hierarchy rather than
-    resolving a conflict.
+    validation guarantees the two cannot both claim a shape — neither
+    `fixed_verify_repair` (ADR 0076) nor `orchestrated_workers` (ADR
+    0086) will load with the supervisor on — so the order here expresses
+    that hierarchy rather than resolving a conflict.
 
     Args:
         wrap: How each agent callable is turned into a graph node. The
@@ -613,7 +729,9 @@ def _build_graph_shape(wrap: NodeWrapper) -> StateGraph[ResearchState, Any, Any,
             executor dispatch).
     """
     workflow = StateGraph(ResearchState)
-    if settings.research_policy == "fixed_verify_repair":
+    if settings.research_policy == "orchestrated_workers":
+        _build_orchestrated_workers(workflow, wrap)
+    elif settings.research_policy == "fixed_verify_repair":
         _build_fixed_verify_repair(workflow, wrap)
     elif settings.enable_supervisor:
         _build_supervisor_loop(workflow, wrap)
@@ -637,6 +755,31 @@ def _build_graph_shape(wrap: NodeWrapper) -> StateGraph[ResearchState, Any, Any,
 COMPUTE_TIER_SHAPES: dict[
     str, Callable[[StateGraph[ResearchState, Any, Any, Any], NodeWrapper], None]
 ] = {"T1": _build_fixed_verify_repair}
+
+#: T2's builder, kept out of the mapping above and added only when
+#: `settings.orchestration` is `on` (CAP-03, ADR 0086). A tier whose
+#: graph is compiled but which the controller's ceiling can never select
+#: would be a checkpointer connection and a compile pass spent on a
+#: shape no job can reach, and `compute_tier_graphs(app)` would report a
+#: routing table wider than the router.
+BRANCH_TIER_SHAPE: Callable[
+    [StateGraph[ResearchState, Any, Any, Any], NodeWrapper], None
+] = _build_orchestrated_workers
+
+
+def _compute_tier_shapes() -> dict[
+    str, Callable[[StateGraph[ResearchState, Any, Any, Any], NodeWrapper], None]
+]:
+    """The alternate shapes this configuration compiles, by tier.
+
+    `COMPUTE_TIER_SHAPES` unless the branch tier is enabled, in which
+    case T2 joins it — the same condition `src/api/runner.py` uses to
+    raise `decide_tier`'s ceiling, so the graphs that exist and the
+    tiers that can be chosen are decided by one setting rather than two.
+    """
+    if settings.orchestration != "on":
+        return dict(COMPUTE_TIER_SHAPES)
+    return {**COMPUTE_TIER_SHAPES, "T2": BRANCH_TIER_SHAPE}
 
 
 def compute_tier_graphs(app: Any) -> dict[str, Any] | None:
@@ -684,7 +827,7 @@ def _attach_compute_tier_graphs(
     if settings.compute_controller != "deterministic":
         return
     graphs: dict[str, Any] = {"T0": primary}
-    for tier, build_shape in COMPUTE_TIER_SHAPES.items():
+    for tier, build_shape in _compute_tier_shapes().items():
         workflow = StateGraph(ResearchState)
         build_shape(workflow, wrap)
         graphs[tier] = _compile(workflow, checkpointer, enable_hitl)

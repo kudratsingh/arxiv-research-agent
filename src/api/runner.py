@@ -79,8 +79,10 @@ from src.observability.costs import enforce_cost_cap as _enforce_cost_cap
 from src.observability.metrics import record_job_terminal
 from src.observability.tracing import attached_trace_context, workflow_span
 from src.policies.compute import (
-    COMPUTE_TIERS,
+    BRANCH_TIER,
+    MAX_DECIDABLE_TIER,
     ComputeDecision,
+    ComputeTier,
     bind_compute_tier,
     decide_tier,
     extract_features,
@@ -595,7 +597,7 @@ def _shadow_compute_tier(decision: Any) -> None:
     _shadow_bridge().observe_compute_tier(
         run,
         tier=decision.tier,
-        eligible_tiers=COMPUTE_TIERS,
+        eligible_tiers=decision.eligible,
         reason_codes=decision.reasons,
         feature_snapshot_ref=decision.features.digest(),
         tier_budget_ref=(
@@ -622,7 +624,21 @@ def _compute_decision(job: Job) -> ComputeDecision | None:
         return None
     if getattr(job, "kind", "research") != "research":
         return None
-    return decide_tier(extract_features(job.query))
+    return decide_tier(extract_features(job.query), max_tier=_tier_ceiling())
+
+
+def _tier_ceiling() -> ComputeTier:
+    """How high this deployment lets the controller allocate (CAP-03).
+
+    One setting decides both halves of the branch tier — the ceiling
+    here and the graph `src/graph/workflow.py::_compute_tier_shapes`
+    compiles — so the controller can never name a tier this process has
+    no graph for. With `orchestration` at its `off` default the ceiling
+    is `MAX_DECIDABLE_TIER`, which is what `decide_tier` uses when it is
+    given no ceiling at all: the same rule table, the same reason codes
+    and the same recorded eligible set as before ADR 0086.
+    """
+    return BRANCH_TIER if settings.orchestration == "on" else MAX_DECIDABLE_TIER
 
 
 def _select_tier_workflow(workflow: Any, decision: ComputeDecision | None) -> Any:

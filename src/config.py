@@ -1730,7 +1730,9 @@ class Settings(BaseSettings):
     # D are `ENABLE_SUPERVISOR` / `ENABLE_EVIDENCE_STORE` /
     # `ENABLE_VERIFIER` — and arm C, which no combination of those three
     # produces, becomes a value of this field. See ADR 0076.
-    research_policy: Literal["legacy", "fixed_verify_repair"] = Field(
+    research_policy: Literal[
+        "legacy", "fixed_verify_repair", "orchestrated_workers"
+    ] = Field(
         default="legacy",
         description=(
             "Which research graph `build_workflow` compiles. `legacy` "
@@ -1738,9 +1740,15 @@ class Settings(BaseSettings):
             "as before. `fixed_verify_repair` compiles the arm-C graph: "
             "planner -> search -> reader -> synthesizer -> verify, one "
             "bounded repair on a failed verdict, then re-verification "
-            "before the critic. It requires enable_supervisor=false, "
-            "enable_evidence_store=true and enable_verifier=false; any "
-            "other combination is refused at load. See ADR 0076."
+            "before the critic. `orchestrated_workers` compiles CAP-03's "
+            "branch tier in front of that same verification stage: "
+            "planner -> lead -> workers -> merge -> synthesizer -> "
+            "verify, where each worker researches one sub-question on an "
+            "isolated state and the merge unions their evidence tables "
+            "with provenance. Both non-legacy values require "
+            "enable_supervisor=false, enable_evidence_store=true and "
+            "enable_verifier=false; any other combination is refused at "
+            "load. See ADR 0076 and ADR 0086."
         ),
     )
 
@@ -1793,6 +1801,133 @@ class Settings(BaseSettings):
                 "research_policy=fixed_verify_repair requires a specific flag "
                 "combination and got another: " + "; ".join(problems)
                 + ". See ADR 0076."
+            )
+        return self
+
+    # ------ Agent capability (CAP-03) ---------------------------------
+    #
+    # The branch tier (ADR 0086). Two independent switches, because they
+    # answer two different questions and one deployment may want either:
+    #
+    # - `research_policy="orchestrated_workers"` fixes the shape for the
+    #   whole process, the way `fixed_verify_repair` does. That is how
+    #   an experiment arm is run.
+    # - `orchestration="on"` lets the compute controller *choose* the
+    #   branch tier per run (T2). It requires the controller to be on to
+    #   do anything at all — with `compute_controller="off"` nothing
+    #   reads it — and the controller in turn requires
+    #   `research_policy="legacy"`, so the two switches can never both
+    #   claim the shape.
+    #
+    # The three caps below apply to whichever route selected the shape.
+    # They are settings rather than module constants — unlike the
+    # controller's thresholds — because they are a *budget*, and an
+    # operator with a different cost ceiling needs to move them without
+    # an ADR. What they must not do is move silently, so each branch
+    # record carries the caps it ran under.
+
+    orchestration: Literal["off", "on"] = Field(
+        default="off",
+        description=(
+            "Whether the deterministic compute controller may select the "
+            "branch tier (T2). 'off' (the default) keeps the controller's "
+            "ceiling at T1, so its rule table, its reason codes and its "
+            "recorded eligible-tier set are exactly what they were "
+            "before CAP-03. 'on' adds two T2 rules — a three-way-or-worse "
+            "comparison, and a plan broader than the planner's own range "
+            "— and compiles the orchestrator-workers graph as a third "
+            "per-run shape. Consulted only when "
+            "COMPUTE_CONTROLLER=deterministic; to run the branch tier "
+            "for a whole process instead, set "
+            "RESEARCH_POLICY=orchestrated_workers. See ADR 0086."
+        ),
+    )
+    orchestration_max_branches: int = Field(
+        default=4,
+        ge=1,
+        le=8,
+        description=(
+            "Hard cap on worker branches per run. The lead takes the "
+            "planner's sub-questions in order and stops here, so a plan "
+            "with more sub-questions than this loses the tail rather "
+            "than driving unbounded retrieval. Sized against the "
+            "planner's own instruction, which asks for 2-4 focused "
+            "sub-questions. See ADR 0086."
+        ),
+    )
+    orchestration_max_papers_per_branch: int = Field(
+        default=4,
+        ge=1,
+        le=20,
+        description=(
+            "Hard cap on papers one branch reads, and therefore on the "
+            "model calls it makes: the reader spends exactly one call "
+            "per paper. Applied between search and reader, which is the "
+            "only place it can bind. See ADR 0086."
+        ),
+    )
+    orchestration_branch_cost_share: float = Field(
+        default=0.4,
+        gt=0.0,
+        le=1.0,
+        description=(
+            "Fraction of MAX_COST_USD one branch may add before the "
+            "shared cost choke point stops it. A containment device "
+            "rather than an allocation: the shares deliberately "
+            "over-subscribe the run ceiling, because the ceiling is the "
+            "real bound and shares summing to exactly 1.0 would starve "
+            "later branches whenever an early one finished cheap. A "
+            "branch that trips its share is recorded budget_stopped and "
+            "the run continues with its siblings; a run that trips the "
+            "ceiling itself produces the ordinary budget-stopped "
+            "outcome with a partial report. See ADR 0086."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _check_orchestrated_workers_requirements(self) -> Settings:
+        """Refuse `orchestrated_workers` when its companions contradict it.
+
+        The same three refusals arm C makes (ADR 0076), for the same
+        reason and arrived at from the same direction: this policy owns
+        routing, so the supervisor cannot; its merge feeds the evidence
+        path and its verify node judges claims against source chunks, so
+        the evidence store is required; and `enable_verifier` names the
+        *supervisor's* verify action, which this shape replaces with the
+        node CAP-02 built.
+
+        A separate validator rather than a branch inside arm C's, so
+        that arm C's refusal message stays byte-identical to the one
+        ADR 0076 published and `tests/test_research_policy.py` pins.
+
+        Raises:
+            ValueError: Naming every offending flag, so one boot attempt
+                is enough to fix the whole environment file.
+        """
+        if self.research_policy != "orchestrated_workers":
+            return self
+        problems: list[str] = []
+        if self.enable_supervisor:
+            problems.append(
+                "enable_supervisor must be false (the branch tier routes "
+                "deterministically; the supervisor loop is arm D)"
+            )
+        if not self.enable_evidence_store:
+            problems.append(
+                "enable_evidence_store must be true (the merge node unions "
+                "evidence tables, and there are none without it)"
+            )
+        if self.enable_verifier:
+            problems.append(
+                "enable_verifier must be false (that flag adds the "
+                "supervisor's verify action, which this policy replaces with "
+                "the verify node from ADR 0076)"
+            )
+        if problems:
+            raise ValueError(
+                "research_policy=orchestrated_workers requires a specific "
+                "flag combination and got another: " + "; ".join(problems)
+                + ". See ADR 0086."
             )
         return self
 

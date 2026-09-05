@@ -112,7 +112,118 @@ class VerifyRepairState(TypedDict, total=False):
     repair_action: str
 
 
-class ResearchState(VerifyRepairState):
+class WorkerBranch(TypedDict):
+    """One orchestrator-worker branch: its scope, its caps, its result.
+
+    CAP-03's unit of parallel work (ADR 0086). A branch is one
+    sub-question researched on its own isolated state — its own search,
+    its own reader pass, its own evidence table — so that a fault in one
+    branch cannot reach another and so a later listwise selector
+    (CAP-09) has siblings to compare.
+
+    `branch_id` is the trajectory's `BranchId` (RFC 10 §6.3) and obeys
+    that contract's `^branch_[a-z0-9][a-z0-9_-]{0,63}$` shape, so the
+    identifier the graph carries and the identifier the trajectory
+    records are the same string rather than two conventions that have to
+    be joined afterwards.
+
+    The three bulk fields — `papers`, `paper_analyses`, `evidence` — are
+    the branch's raw output and are **emptied by the merge node** once
+    they have been unioned. Keeping them would double every checkpoint
+    the run writes; the counts, the paper ids and
+    `merged_evidence_provenance` are what a reader of the finished state
+    needs, and the trajectory has already recorded the branch by then.
+
+    Fields:
+      - `branch_id`: `branch_w<NN>` for a planned branch, `branch_r<NN>`
+        for one a retrieval repair added.
+      - `index`: position in the run's branch list; the merge's order.
+      - `sub_question`: the one question this branch researches. It is
+        also the branch state's `query`, which is what makes retrieval
+        diverse rather than N repetitions of one ranking.
+      - `search_queries`: the queries this branch is allowed to run.
+      - `status`: `planned` until the workers node executes it, then
+        `succeeded`, `failed`, `cancelled` or `budget_stopped`.
+      - `reason`: a typed code — `src/errors.py`'s vocabulary for a
+        failure, `""` while planned or on success.
+      - `max_papers`: this branch's hard paper cap, and therefore its
+        model-call cap: the reader makes exactly one call per paper.
+      - `cost_share_usd`: dollars this branch was allowed to add.
+      - `paper_ids`, `analysis_count`, `evidence_count`: what it found.
+      - `llm_calls`, `cost_usd`: what it spent, measured off the run's
+        one cost accumulator rather than a second ledger.
+    """
+
+    branch_id: str
+    index: int
+    sub_question: str
+    search_queries: list[str]
+    status: str
+    reason: str
+    max_papers: int
+    cost_share_usd: float
+    paper_ids: list[str]
+    analysis_count: int
+    evidence_count: int
+    llm_calls: int
+    cost_usd: float
+    papers: list[PaperMetadata]
+    paper_analyses: list[PaperAnalysis]
+    evidence: list[EvidenceClaim]
+
+
+class EvidenceProvenance(TypedDict):
+    """Which branches contributed one paper to the merged evidence.
+
+    The merge deduplicates papers by canonical id (ADR 0041's
+    `canonical_paper_key`), so a paper two branches both retrieved
+    appears once in `papers` and once here, naming both branches. That
+    pairing is the provenance CAP-03 delivers: a claim in the merged
+    evidence can be traced to the branch, the sub-question and the paper
+    it came from.
+
+    Fields:
+      - `paper_id`: the retained paper's id (the first branch's form).
+      - `canonical_id`: the dedup key both branches agreed on.
+      - `branch_ids`: every branch that found it, in branch order.
+      - `sub_questions`: those branches' questions, in the same order.
+      - `claim_count`: merged evidence claims that cite this paper.
+    """
+
+    paper_id: str
+    canonical_id: str
+    branch_ids: list[str]
+    sub_questions: list[str]
+    claim_count: int
+
+
+class OrchestrationState(TypedDict, total=False):
+    """CAP-03's policy keys — optional, for `VerifyRepairState`'s reason.
+
+    `total=False` for exactly the argument that block makes: three
+    initial-state constructors build `ResearchState` as a literal and
+    one of them belongs to another work order, so a *total* key added
+    here would either fail `mypy --strict` on a file this lane must not
+    touch or move the scripted research tier's committed baseline.
+
+    Both keys are written only under
+    `settings.research_policy="orchestrated_workers"` (or the compute
+    controller's T2), and by nothing else. Under every other policy they
+    never appear on the state at all, which is what makes their presence
+    in a checkpoint a positive signal that the branch tier ran.
+
+    Fields:
+      - `worker_branches`: every branch the lead planned, in order,
+        carrying its own outcome after the workers node runs.
+      - `merged_evidence_provenance`: one entry per deduplicated paper
+        in the merged evidence, naming the branches that found it.
+    """
+
+    worker_branches: list[WorkerBranch]
+    merged_evidence_provenance: list[EvidenceProvenance]
+
+
+class ResearchState(VerifyRepairState, OrchestrationState):
     """Full state passed through the LangGraph workflow.
 
     Each agent reads from this state and returns a partial update.
@@ -154,6 +265,12 @@ class ResearchState(VerifyRepairState):
     above and are the one **optional** block in this schema: they are
     written only under `settings.research_policy="fixed_verify_repair"`
     and are absent from the state entirely otherwise. See ADR 0076.
+
+    Orchestration fields are inherited from `OrchestrationState` and are
+    optional for the same reason: they are written only under
+    `settings.research_policy="orchestrated_workers"` (or the compute
+    controller's T2 selection of that shape) and are absent otherwise.
+    See ADR 0086.
     """
 
     run_id: str
