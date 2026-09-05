@@ -482,6 +482,8 @@ separate implementation/rollout decision is approved.
 
 ## 15. P0-WO09 — governance and threat-review package
 
+Review artifact: [`13-governance-threat-review.md`](13-governance-threat-review.md).
+
 ### Objective
 
 Turn D8 and the restricted-evaluation boundary into explicit owner decisions
