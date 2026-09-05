@@ -531,7 +531,6 @@ never renumbered.
   not have every call site in another lane's files, and the test names
   them, their owner, and fails when one is wired — so the SLI is
   honestly a lower bound and says so on the row.
-
 - [0082](0082-campaign-lock-repeats-and-denominators.md) — **Derive the
   campaign id, enumerate the whole matrix, keep every episode in the
   denominator.** A campaign id is now a digest of the frozen protocol,
@@ -569,6 +568,25 @@ never renumbered.
   `product_operation_only` consent is refused the sink whatever it is set
   to, so production and user-content capture stay disabled pending D8.
   Closes the blocked follow-ups of ADRs 0076, 0077 and 0080.
+
+- [0084](0084-redaction-is-a-secret-rule-not-a-shape-rule.md) — **Log
+  redaction is a secret rule, not a shape rule.** ADR 0067's five rules
+  were derived from the shapes this repository happened to emit, not
+  from the shapes a credential takes, and WO-C4 measured the cost:
+  `sk-ant-api03-…` redacted while `gw_live_PROBEprobePROBEprobe00` — a
+  gateway credential buying the same model calls on the same budget —
+  passed through untouched. Four rules are added as *families* rather
+  than vendors: the Stripe-published `<issuer>_live_` / `_test_`
+  convention, a closed registry of issuer prefixes (`ghp_`, `xoxb-`,
+  `AIza`, …), AWS access key ids, and JWTs. Every prefixed rule keeps
+  its issuer prefix and runs ahead of the blob rule, because
+  `***[40 chars]` hides the secret while losing the console to revoke
+  at. `redact_text` becomes `REDACTION_RULES` applied in order, and the
+  property tier parametrises over that tuple — so a rule added without
+  a generator fails. Precision is measured, not asserted: the new rules
+  changed 2 of 1,246,805 tracked repository lines, both of them gateway
+  fixtures. An entropy rule, a `password=` keyword rule, `Basic` and
+  bare `pk_` / `rk_` are argued and rejected on the record.
 
 ## When to write an ADR
 

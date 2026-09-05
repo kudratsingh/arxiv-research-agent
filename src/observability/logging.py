@@ -53,10 +53,10 @@ import os
 import re
 import sys
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextvars import Token
 from datetime import UTC, datetime
-from typing import Any, Final
+from typing import Any, Final, NamedTuple
 from urllib.parse import urlsplit, urlunsplit
 
 from src.config import CONTENT_CAPTURE_ENV as _CONTENT_CAPTURE_ENV
@@ -898,9 +898,105 @@ def content_capture_enabled() -> bool:
 # `pw@host` tail — the secret would still be hidden, but under the wrong
 # rule and with the wrong replacement, which is how a rule ends up
 # looking correct in a test and wrong in production.
+#
+# The same argument is why every *prefixed* credential runs ahead of the
+# blob rule. `ghp_` followed by thirty-six mixed-case characters is also
+# a forty-character base64-ish run, so a blob rule that reached it first
+# would emit `***[40 chars]`: the secret is gone either way, but the
+# line no longer names the issuer an operator has to go and revoke at.
 _URL_USERINFO_RE = re.compile(r"([a-zA-Z][a-zA-Z0-9+.\-]*://)[^\s/@]+@")
 _BEARER_RE = re.compile(r"(?i)\b(bearer)\s+([A-Za-z0-9\-._~+/]+=*)")
 _API_KEY_RE = re.compile(r"\bsk-[A-Za-z0-9_\-]{8,}")
+
+# The environment-scoped key convention: `<issuer>_live_<body>` and
+# `<issuer>_test_<body>`. Stripe published it and gateways, proxies and
+# billing shims copied it, so `gw_live_…`, `sk_live_…`, `pk_test_…` and
+# `rk_live_…` are one shape rather than four issuers. The rule is
+# written over the shape, because the issuer half is the part that keeps
+# changing and the part no list stays ahead of.
+#
+# What makes it safe is the marker sitting immediately before an
+# unbroken run of sixteen alphanumerics. Two deliberate narrowings: the
+# body admits no `_`, so ordinary snake_case (`feature_flag_test_data`)
+# cannot reach the length floor; and the marker is matched
+# case-sensitively, so the *names* of environment variables —
+# `STRIPE_LIVE_SECRET_KEY` and friends, which are legitimate and useful
+# log content — are never mistaken for their values.
+_ENV_SCOPED_KEY_RE = re.compile(
+    r"\b([A-Za-z][A-Za-z0-9_]{0,23}_(?:live|test)_)([A-Za-z0-9]{16,})(?![A-Za-z0-9])"
+)
+
+#: Issuer prefixes that mean "credential" wherever they appear, for the
+#: issuers whose token body is an unbroken run of alphanumerics. A
+#: closed list rather than a heuristic: this rule's precision is carried
+#: entirely by the literal prefix, and every entry is one its issuer
+#: publishes and reserves.
+_VENDOR_TOKEN_PREFIXES: Final[tuple[str, ...]] = (
+    "github_pat_",
+    "ghp_",
+    "gho_",
+    "ghu_",
+    "ghs_",
+    "ghr_",
+    "whsec_",
+    "dop_v1_",
+    "npm_",
+    "hf_",
+    "AIza",
+)
+
+#: The same idea for issuers that separate their own token segments with
+#: `-`. They need the dash inside the body, and that is exactly why they
+#: are a second list: granting the dash to every prefix would widen
+#: `hf_` far enough to swallow `hf_all-MiniLM-L6-v2`, which is a model
+#: name this repository really logs and not a credential at all.
+_DASHED_VENDOR_TOKEN_PREFIXES: Final[tuple[str, ...]] = (
+    "xoxb-",
+    "xoxp-",
+    "xoxa-",
+    "xoxr-",
+    "xoxs-",
+    "xapp-",
+    "glpat-",
+    "pypi-",
+)
+
+
+def _prefix_alternation(prefixes: tuple[str, ...]) -> str:
+    """A regex alternation over literal prefixes, longest first.
+
+    Longest first because `re`'s alternation is ordered and not greedy:
+    with `ghp_` ahead of `github_pat_`, a `github_pat_…` token would
+    match on neither branch and pass through untouched.
+    """
+    return "|".join(re.escape(p) for p in sorted(prefixes, key=len, reverse=True))
+
+
+_VENDOR_TOKEN_RE = re.compile(
+    r"\b(?:"
+    rf"({_prefix_alternation(_VENDOR_TOKEN_PREFIXES)})([A-Za-z0-9]{{16,}})"
+    r"|"
+    rf"({_prefix_alternation(_DASHED_VENDOR_TOKEN_PREFIXES)})"
+    r"([A-Za-z0-9][A-Za-z0-9-]{14,}[A-Za-z0-9])"
+    r")(?![A-Za-z0-9-])"
+)
+
+# An AWS access key id is the one prefixed credential with no separator
+# and no lower case: four fixed letters and exactly sixteen uppercase
+# alphanumerics. Folding it into the rule above would have meant
+# relaxing that rule's body alphabet for every issuer to accommodate
+# one, so it keeps its own exact-width pattern. The *secret* half of an
+# AWS pair is deliberately not matched anywhere; see `redact_text`.
+_AWS_ACCESS_KEY_RE = re.compile(r"\b(AKIA|ASIA|ABIA|ACCA)[0-9A-Z]{16}\b")
+
+# A JWT is a bearer credential that arrives without the word "Bearer" —
+# in a cookie, a query string, a gateway's error body. `eyJ` is base64url
+# for `{"`, so a token opening with it and carrying two more
+# dot-separated base64url segments is a JOSE header and not prose. The
+# third segment may be empty: an `alg: none` token is unsigned, and it
+# is still a credential somebody is presenting.
+_JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]*")
+
 _EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+\-]+@([A-Za-z0-9.\-]+\.[A-Za-z]{2,})\b")
 # The lookbehind excludes only the base64 alphabet, deliberately *not*
 # `=`: `token=QWxh…` is the commonest shape a blob arrives in, and an
@@ -927,6 +1023,61 @@ def _redact_bearer(match: re.Match[str]) -> str:
     return f"{scheme} ***" if looks_like_a_token else match.group(0)
 
 
+def _looks_opaque(body: str) -> bool:
+    """True when `body` reads as an issued credential rather than a name.
+
+    A name is pronounceable and single-case — `documentsnapshot`,
+    `internaltesting`, `hubdownloadcache`. An issued token carries
+    entropy it cannot hide: a digit, or a change of case. Requiring one
+    of the two is the same discriminator `_redact_blob` uses, applied
+    here to a body whose prefix has already narrowed the field — which
+    is why it can be the weaker "or" rather than the blob rule's "and".
+    """
+    return any(c.isdigit() for c in body) or (
+        any(c.islower() for c in body) and any(c.isupper() for c in body)
+    )
+
+
+def _redact_env_scoped_key(match: re.Match[str]) -> str:
+    """Replace the body of a `<issuer>_live_…` / `<issuer>_test_…` key.
+
+    The `_live_` / `_test_` marker plus a sixteen-character unbroken
+    body is a strong anchor, but not a total one: `arxiv_test_snapshot`
+    with a long enough tail spells the same shape and is a fixture
+    name. `_looks_opaque` is what separates them, and it costs no real
+    credential — every issuer's body is high-entropy by construction.
+
+    The issuer and the environment are kept, because "a *live* gateway
+    key leaked" and "a *test* gateway key leaked" are two different
+    incidents and the line has to be able to say which.
+    """
+    prefix, body = match.group(1), match.group(2)
+    if not _looks_opaque(body):
+        return match.group(0)
+    return f"{prefix}***"
+
+
+def _redact_vendor_token(match: re.Match[str]) -> str:
+    """Replace an issuer-prefixed token's body, keeping the prefix.
+
+    The prefix survives on purpose. `ghp_***` tells an operator which
+    credential to revoke and at whose console; `***[40 chars]` tells
+    them a secret leaked and leaves them to guess. The prefix is not
+    the secret — it is published, identical for every token that issuer
+    ever minted, and worth exactly as much to an attacker as the word
+    "GitHub".
+
+    Only the two capture-group pairs differ between the alphanumeric
+    and dash-separated branches, so both are read here and whichever
+    one fired supplies the answer.
+    """
+    prefix = match.group(1) or match.group(3)
+    body = match.group(2) or match.group(4)
+    if not _looks_opaque(body):
+        return match.group(0)
+    return f"{prefix}***"
+
+
 def _redact_blob(match: re.Match[str]) -> str:
     """Replace a run of base64-ish characters, but only a plausible one.
 
@@ -944,6 +1095,43 @@ def _redact_blob(match: re.Match[str]) -> str:
     return f"***[{len(text)} chars]"
 
 
+class RedactionRule(NamedTuple):
+    """One named rule: what it matches, and what it leaves behind.
+
+    Naming the rules is not decoration. The rules used to be five
+    `sub()` calls in a row, which meant the only way to ask "is every
+    rule exercised?" was to read the list and the tests side by side
+    and trust the reader. As a registry the question is a test:
+    `tests/property/test_property_redaction.py` parametrises over these
+    names, so a sixth rule added without a generator fails rather than
+    shipping unproven.
+    """
+
+    #: Stable identifier. Test ids and the docs table use it, so it
+    #: names the rule that fired in a failure report.
+    name: str
+    pattern: re.Pattern[str]
+    #: A template (`\\1***@`) or a callable, exactly as `re.sub` takes.
+    #: The callables are the rules that need a discriminator a regex
+    #: cannot express — "is this a token or an English word".
+    replacement: str | Callable[[re.Match[str]], str]
+
+
+#: The rules, in the order they run. Order is load-bearing; the reasons
+#: are at the top of this section, beside the patterns.
+REDACTION_RULES: Final[tuple[RedactionRule, ...]] = (
+    RedactionRule("url_userinfo", _URL_USERINFO_RE, r"\1***@"),
+    RedactionRule("bearer_token", _BEARER_RE, _redact_bearer),
+    RedactionRule("sk_api_key", _API_KEY_RE, "sk-***"),
+    RedactionRule("environment_scoped_key", _ENV_SCOPED_KEY_RE, _redact_env_scoped_key),
+    RedactionRule("vendor_prefixed_token", _VENDOR_TOKEN_RE, _redact_vendor_token),
+    RedactionRule("aws_access_key_id", _AWS_ACCESS_KEY_RE, r"\1***"),
+    RedactionRule("json_web_token", _JWT_RE, "***[jwt]"),
+    RedactionRule("email_address", _EMAIL_RE, r"***@\1"),
+    RedactionRule("base64_blob", _BLOB_RE, _redact_blob),
+)
+
+
 def redact_text(text: str) -> str:
     """Scrub credentials and personal identifiers out of free text.
 
@@ -953,16 +1141,43 @@ def redact_text(text: str) -> str:
     purpose; it was a connection error whose *message* carried the URL
     (ADR 0042), and a stack trace that repeated it.
 
-    Five rules, each with its own test:
+    `REDACTION_RULES` is the list, in order, each with its own test:
 
-      - URL userinfo (`scheme://user:pw@host` → `scheme://***@host`),
+      - **`url_userinfo`** — `scheme://user:pw@host` → `scheme://***@host`,
         the same property `redact_url` guarantees for a whole-string URL.
-      - `Bearer <token>` in an Authorization header echoed into a log.
-      - `sk-…` API keys, the shape Anthropic and several others use.
-      - Email addresses, local part removed, domain kept — the domain
-        is the diagnostic half and the local part is the personal one.
-      - Long base64-ish blobs, which is what an encoded token or an
-        embedded credential looks like once it has lost its prefix.
+      - **`bearer_token`** — `Bearer <token>`, an Authorization header
+        echoed into a log.
+      - **`sk_api_key`** — `sk-…`, the shape Anthropic and several
+        others use.
+      - **`environment_scoped_key`** — `gw_live_…`, `sk_live_…`,
+        `pk_test_…`: the Stripe-published convention that gateways and
+        proxies adopted. This is the rule ADR 0067 was missing, and the
+        one WO-C4 measured passing a gateway credential through
+        untouched (ADR 0084).
+      - **`vendor_prefixed_token`** — a closed list of issuer prefixes
+        (`ghp_`, `xoxb-`, `AIza`, …) followed by an opaque body.
+      - **`aws_access_key_id`** — `AKIA` + sixteen uppercase.
+      - **`json_web_token`** — `eyJ….….…`, a bearer credential
+        travelling without the word "Bearer".
+      - **`email_address`** — local part removed, domain kept: the
+        domain is the diagnostic half, the local part the personal one.
+      - **`base64_blob`** — what an encoded token looks like once it has
+        lost its prefix.
+
+    Everything before `base64_blob` keeps its issuer prefix in the
+    output. That is the difference between a line an operator can act
+    on and a line that only says something leaked.
+
+    What is deliberately **not** a rule, because each would cost more
+    legitimate content than it saves (ADR 0084 argues these at length):
+    an AWS secret access key or any other unprefixed high-entropy
+    string, which is indistinguishable from a content hash; a
+    `password=` style keyword rule, which fires on prose while real
+    secrets arrive as `extra` values whose key the text rules never
+    see; `Basic <base64>`, whose guard against English cannot be made
+    as tight as `Bearer`'s; and bare `pk_` / `rk_` without the
+    environment marker, which is a primary key at least as often as it
+    is a credential.
 
     Args:
         text: Any string bound for the log payload.
@@ -971,11 +1186,9 @@ def redact_text(text: str) -> str:
         The string with each matched secret replaced by a marker. Text
         containing none of the shapes is returned unchanged.
     """
-    text = _URL_USERINFO_RE.sub(r"\1***@", text)
-    text = _BEARER_RE.sub(_redact_bearer, text)
-    text = _API_KEY_RE.sub("sk-***", text)
-    text = _EMAIL_RE.sub(r"***@\1", text)
-    return _BLOB_RE.sub(_redact_blob, text)
+    for rule in REDACTION_RULES:
+        text = rule.pattern.sub(rule.replacement, text)
+    return text
 
 
 def _truncate(text: str) -> str:
