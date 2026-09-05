@@ -156,20 +156,96 @@ Recorded because a plan that quietly absorbs its own errors teaches nothing:
   keeping the other's tests, which asserted something the winner had no test
   for.
 
+## Follow-up wave — CLOSED 2026-09-05
+
+Five work orders against the open items above, merged as PRs #189–#194.
+Verified on the composed tree at `ea2b269`: **3385 passed**, 55 skipped;
+branch coverage **91.67%** (floor 89); property 152, fault 163+3, e2e 16,
+security 314, contract 117; mypy strict and ruff clean across 95 source files.
+The leftover PR #162 also landed once the npm audit service recovered.
+
+| WO | Closed |
+|---|---|
+| B1 | The five false claims, and `tests/test_documented_claims.py` — prose is now read by tests |
+| B2 | Tier bands, five unbounded network steps, ADR 0045's lock procedure, and two workflows that lied about their own state |
+| B3 | The supervisor's swallowed outage; all ten terminal frames converged |
+| B4 | Three flags folded into `Settings`, with the conventional env name kept working |
+| B5 | The honest citation metric wired at its call sites, with the rebaseline recorded |
+
+### What the wave found that the open items did not say
+
+- **A cancelled job's supervisor kept dispatching nodes.** The bare `except`
+  in `_default_next_action` caught `JobCancelledError` — `call_llm` checks the
+  cancel token before it builds a client — and answered with a route. Strictly
+  worse than the reported defect, and in the same clause.
+- **The redriver's terminal-frame docstring was false in both halves**: it
+  claimed field-for-field sync with a function that had become a one-line
+  delegate, and the copy was three fields short. A reconnecting client got 12
+  keys where a still-subscribed one got 8.
+- **ADR 0045's procedure would have corrupted the lock, silently.**
+  `pip freeze --exclude-editable` emits 147 distributions against the lock's
+  126; the documented step would have written 21 unrelated ones into what CI
+  installs, and `derive_runtime_lock.py --check` would have stayed green
+  because it walks only the project's own graph.
+- **Three unbounded `pip install` steps, not two** — plus the image build and
+  the Compose bring-up. The workflow header's "every network step is bounded"
+  was further from true than the finding said.
+- **`LOG_CAPTURE_USER_CONTENT` had never been "logs only"**, as documented —
+  `traced_node` calls the same resolver, so it has always gated span content
+  too. The doc was corrected rather than the behaviour, since making the doc
+  true would have been a silent behaviour change.
+- **A recursion hazard the obvious fix would have created**: warning from
+  inside `content_capture_enabled()` with a `raw`-shaped `extra` recurses,
+  because the formatter calls that function to decide whether to elide `raw`.
+
+### Two coordinator instructions the builders overrode, correctly
+
+- **A bare floor for the tier census.** I invited it; B2 refused, and proved
+  it on its own branch — `contract` went 65 → 81 → 84 as peers merged
+  underneath, and the floor correct for 65 no longer caught the largest
+  module's loss at 81. A floor only ever looks down. Bands throughout.
+- **Deriving the citation metric's epsilon from its quantum**, per ADR 0071.
+  B5 refused: that metric's quantum is `1/denominator`, and the denominator is
+  the report's own citation count — one, on the e2e fixture — so declaring it
+  gives a band of 1.5 and an ungatable metric. The widening rule exists to
+  absorb *judge* noise, and a deterministic check has none.
+
+### One correction to this document
+
+Phase A's register said the swallowed outage meant "no alert on any series can
+see it." Overstated: `llm_upstream_errors_total` always moved, because
+`src/llm.py` counts the failed call before raising. What no series could see
+was the **consequence** — a run routed by nothing, reporting success. A test
+now asserts that residue explicitly.
+
 ## Open items carried out of Phase A
 
 None of these blocks the gates; each has a named home.
 
 | # | Item | Found by |
 |---|---|---|
-| 1 | `_default_next_action`'s bare `except` swallows a provider outage entirely — worse than the wrong-name defect A17 fixed, because no alert series can see it. Latent while `enable_supervisor` is off | WO-A17 |
-| 2 | An *emptied* tier would still pass: `property`/`fault`/`security` gate by sitting inside the main selection. A marker census beside the tier census closes it | WO-A13 |
-| 3 | The two `pip install` steps carry no step-level timeout, so the workflow's "every network step is bounded" header is not literally true | WO-A13 |
-| 4 | No test reads a prose claim — the structural reason five README/architecture claims are false | WO-A14 |
-| 5 | `TRACE_SAMPLE_RATIO` and the two content-capture flags still read the environment directly rather than `Settings`; the planning docs assigned this to a work order whose ownership excluded `src/config.py` | WO-A12 |
-| 6 | The runner's live `job_failed`/`job_cancelled` frames still carry smaller payloads at eight call sites; `redriver.py` keeps a third copy | WO-A10 |
-| 7 | `citation_accuracy` still returns 1.0 for zero citations at its existing call sites; replacing it invalidates every old baseline and must land with a version note | WO-A16 |
-| 8 | ADR 0045's lock procedure does not survive a shared venv and should be reworded | WO-A02 |
+All eight were closed by the follow-up wave (B1–B5, PRs #189–#194).
+
+| # | Item | Found by | Closed by |
+|---|---|---|---|
+| 1 | `_default_next_action`'s bare `except` swallowed a provider outage | WO-A17 | B3 |
+| 2 | An *emptied* tier would still pass CI | WO-A13 | B2 |
+| 3 | Unbounded `pip install` steps | WO-A13 | B2 (found five, not two) |
+| 4 | No test reads a prose claim | WO-A14 | B1 |
+| 5 | Three flags never reached `Settings` | WO-A12 | B4 |
+| 6 | Terminal frames still disagreed | WO-A10 | B3 (all ten converged) |
+| 7 | `citation_accuracy` returned 1.0 for zero citations | WO-A16 | B5 |
+| 8 | ADR 0045's lock procedure | WO-A02 | B2 (defect was larger) |
+
+### Still open after the follow-up wave
+
+| Item | Why it stays open |
+|---|---|
+| The "eval runs nightly" claim is still unenforced | The workflow files now say honestly that they are disabled at the repository level, so a prose-reading test has become *possible* — but `disabled_manually` remains a GitHub-side attribute absent from the checkout, and nobody has written the test |
+| `README.md`'s R11, R14, R15 claims | Mechanisable, with named homes: R11's three assertions belong in `tests/test_config.py`; R14 wants the screenshots captured as Playwright snapshots; R15 wants a reflection test over `Settings`' `enable_*` fields |
+| `web/vitest.config.mts`'s re-seed note | Prose in a comment, and the only source of truth for the web test count — a re-seed that skips the note leaves the check agreeing with a stale source |
+| The quote path and paired outcomes are built but unwired | `groundedness.paired_outcomes()` exists and `stats.py`'s paired path exists; nothing connects them to a campaign |
+| `LOG_PRINCIPAL_SALT` is not in `Settings` | It is a secret, and its "empty means ephemeral" branch is load-bearing for tests |
 
 ## Coordination
 
