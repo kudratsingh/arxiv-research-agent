@@ -38,19 +38,34 @@ seconds waiting on Anthropic showed only as a node that spent 90
 seconds. The span is wrapped *around* `record_llm_call` rather than
 replacing any part of it, so cost stays single-sourced in
 `src.observability.costs` and this module still owns none of it.
+
+ADR 0077 makes the request itself model-aware, and for the same reason
+everything else here is centralised: this is the one place a request
+body is built. Before it, `temperature=0.3` went out on every call to
+every model — correct for `claude-sonnet-4-6`, an HTTP 400 on every
+call the day the model id moves to Opus 4.7 or later. What may be sent
+now comes from `src.llm_models`' capability table and the operator's
+`Settings`, resolved into a frozen `RequestProfile` per call; a feature
+is sent only when it is *both* enabled and supported. Every one of
+those settings defaults to what this module already did, so a default
+deployment sends the request body `tests/test_llm_request_golden.py`
+pinned before any of this landed.
 """
 
 from __future__ import annotations
 
 import re
 import time
+from dataclasses import dataclass
 from typing import Any, Final, cast
 
 import anthropic
+import pydantic
 
 from src.cancellation import check_cancelled
 from src.config import settings
-from src.errors import UpstreamModel
+from src.errors import UpstreamModel, UpstreamModelOutput
+from src.llm_models import capabilities_for
 from src.observability import record_llm_call
 from src.observability.costs import current_costs, effective_cost_cap, enforce_cost_cap
 from src.observability.logging import get_logger
@@ -70,13 +85,6 @@ from src.observability.semconv import (
 from src.observability.tracing import llm_span, note_inference_call
 
 log = get_logger(__name__)
-
-#: Sampling temperature every call is issued with. A constant rather
-#: than a literal inside the request body because
-#: `gen_ai.request.temperature` on the span has to report what was
-#: actually sent — a span attribute that can drift from the request it
-#: describes is worse than no attribute at all.
-_TEMPERATURE: Final = 0.3
 
 #: `server.address` when the client cannot be asked for one. The
 #: fallback exists because the client singleton is replaced wholesale
@@ -261,12 +269,138 @@ def _build_system_param(
     ]
 
 
+@dataclass(frozen=True, slots=True)
+class RequestProfile:
+    """What one call is allowed to send, after settings meet the model.
+
+    Every field is already the *answer*, not an input to one: `None` and
+    `""` mean "do not send this field at all", so the kwargs builder
+    below is a transcription rather than a second place where the
+    enabled-and-supported logic could drift. Frozen so a profile cannot
+    be edited between being resolved and being sent — the span reports
+    it, and an attribute that can drift from the request it describes is
+    worse than no attribute at all.
+    """
+
+    #: The model id this profile was resolved against.
+    model: str
+    #: `temperature` to send, or `None` to send none.
+    temperature: float | None
+    #: Whether to send `thinking={"type": "adaptive"}`.
+    adaptive_thinking: bool
+    #: `output_config.effort` to send, or `""` to send none.
+    effort: str
+    #: Whether a caller-supplied schema may be sent as
+    #: `output_config.format`. False either because the operator has not
+    #: enabled structured outputs or because this model does not take
+    #: them — the caller cannot tell the two apart, and does not need
+    #: to: both mean "parse the text yourself, as before".
+    structured_outputs: bool
+
+
+def resolve_profile(model: str, agent: str = "") -> RequestProfile:
+    """Resolve what may be sent to `model` on behalf of `agent`.
+
+    The conjunction is the whole point: a feature is sent only when the
+    operator enabled it **and** the capability row allows it. Enabled
+    but unsupported resolves to off here rather than failing at the
+    provider — and for thinking and effort it cannot even get this far,
+    because `Settings._check_request_profile_is_supported` refuses that
+    combination at load (ADR 0077). The redundancy is deliberate: this
+    function is also reached with a `model_name` a caller passed
+    directly, which no settings validation has ever seen.
+
+    Args:
+        model: The resolved model id the request will name.
+        agent: One of `src.config.EFFORT_AGENTS`, selecting that
+            agent's effort override. Empty takes the deployment-wide
+            `llm_effort`.
+
+    Returns:
+        The frozen profile for this call.
+    """
+    caps = capabilities_for(model)
+    effort = settings.effort_for(agent)
+    return RequestProfile(
+        model=model,
+        temperature=settings.llm_temperature if caps.sampling_params else None,
+        adaptive_thinking=(
+            settings.llm_thinking == "adaptive" and caps.adaptive_thinking
+        ),
+        effort=effort if caps.supports_effort(effort) else "",
+        structured_outputs=(
+            settings.enable_structured_outputs and caps.structured_outputs
+        ),
+    )
+
+
+def _build_request_kwargs(
+    *,
+    profile: RequestProfile,
+    prompt: str,
+    system_prompt: str,
+    cache_system: bool,
+    max_tokens: int,
+    schema: type[pydantic.BaseModel] | None,
+) -> dict[str, Any]:
+    """Assemble the body for `messages.create`, and nothing more.
+
+    Optional fields are *absent* rather than `None`: the SDK
+    distinguishes an omitted key from an explicit null, and
+    `"temperature": null` is a different request from no temperature at
+    all. Building a plain dict rather than threading `anthropic.omit`
+    through five call sites also makes the golden fixture a direct
+    reading of the wire body.
+
+    `output_config` carries two unrelated things — `effort` and
+    `format` — so it is built once from whichever of them applies and
+    omitted entirely when neither does.
+    """
+    kwargs: dict[str, Any] = {
+        "model": profile.model,
+        "max_tokens": max_tokens,
+    }
+    if profile.temperature is not None:
+        kwargs["temperature"] = profile.temperature
+    if profile.adaptive_thinking:
+        # `{"type": "adaptive"}` and not the deprecated
+        # `{"type": "enabled", "budget_tokens": N}`: the budget form is
+        # rejected outright by every model whose row says
+        # `adaptive_thinking`, and `display` is left at the API default
+        # so no thinking text is requested that this gateway would then
+        # have to be careful not to log.
+        kwargs["thinking"] = {"type": "adaptive"}
+
+    output_config: dict[str, Any] = {}
+    if profile.effort:
+        output_config["effort"] = profile.effort
+    if schema is not None and profile.structured_outputs:
+        # The SDK's own schema transform, reached through the public
+        # `anthropic.transform_schema` re-export. It is the same
+        # function `client.messages.parse` uses to build this field, so
+        # what goes on the wire is what the SDK would have sent — see
+        # `call_llm_json` for why `parse` itself is not called.
+        output_config["format"] = {
+            "type": "json_schema",
+            "schema": anthropic.transform_schema(schema),
+        }
+    if output_config:
+        kwargs["output_config"] = output_config
+
+    kwargs["system"] = _build_system_param(system_prompt, cache_system)
+    kwargs["messages"] = [{"role": "user", "content": prompt}]
+    return kwargs
+
+
 def call_llm(
     prompt: str,
     system_prompt: str = "",
     model_name: str | None = None,
     max_tokens: int = 4096,
     cache_system: bool = False,
+    *,
+    agent: str = "",
+    schema: type[pydantic.BaseModel] | None = None,
 ) -> str:
     """Call Claude and return the text response.
 
@@ -280,9 +414,21 @@ def call_llm(
             per-model cache minimum silently doesn't cache; content
             above it is billed at 10% on subsequent hits within 5
             minutes. Default False preserves Sprint 1 baseline.
+        agent: Which agent is calling, for its `<agent>_effort`
+            override (ADR 0077). Empty — the default, and what every
+            caller passes today — takes the deployment-wide
+            `llm_effort`.
+        schema: Constrain the model's output to this pydantic model,
+            when `enable_structured_outputs` is on and the resolved
+            model supports it. The returned text is then JSON matching
+            the schema; validating it is `call_llm_json`'s job, not
+            this function's.
 
     Returns:
-        The model's text response, with any markdown code fences stripped.
+        The model's text response, with any markdown code fences
+        stripped. `thinking` blocks are skipped: the text is the
+        concatenation of the `text` blocks only, so enabling thinking
+        does not turn every response into an empty string.
 
     Raises:
         JobCancelledError: When the calling job's cancel token is
@@ -297,6 +443,10 @@ def call_llm(
         UpstreamModel: When the provider refused the call or never
             answered it, after the SDK exhausted its clamped envelope.
             The `anthropic` exception is chained as `__cause__`.
+        UpstreamModelOutput: When the response carries no `text` block
+            at all — a thinking-only answer, or an empty body. Before
+            ADR 0077 that returned `""` and every caller treated the
+            silence as content.
     """
     # Before `_get_client`, not after: a cancelled job must not even
     # construct the client on a cold process. Cancellation outranks the
@@ -305,6 +455,15 @@ def call_llm(
     _check_cost_budget()
     client = _get_client()
     resolved_model = model_name or settings.anthropic_model
+    profile = resolve_profile(resolved_model, agent)
+    request_kwargs = _build_request_kwargs(
+        profile=profile,
+        prompt=prompt,
+        system_prompt=system_prompt,
+        cache_system=cache_system,
+        max_tokens=max_tokens,
+        schema=schema,
+    )
 
     # The span opens here, not around the whole function: everything
     # above it is a local guard that spends nothing and reaches no
@@ -313,7 +472,23 @@ def call_llm(
     with llm_span(
         model=resolved_model,
         max_tokens=max_tokens,
-        temperature=_TEMPERATURE,
+        # `gen_ai.request.temperature` should be *absent* when no
+        # temperature was sent, and it cannot be: `llm_span` takes a
+        # required `float` (`src/observability/tracing.py:642`) and sets
+        # the attribute unconditionally (`:676`), and
+        # `src/observability/**` is fenced for another lane's work
+        # orders. So the attribute is truthful on every model that
+        # accepts sampling — which is every model this deployment can
+        # reach today — and reports the configured-but-unsent value on
+        # one that does not. Recorded in ADR 0077's follow-ups; the fix
+        # is `float | None` in that signature and a guarded
+        # `set_attribute`, and this line becomes
+        # `temperature=profile.temperature`.
+        temperature=(
+            profile.temperature
+            if profile.temperature is not None
+            else settings.llm_temperature
+        ),
         server_address=_server_address(client),
     ) as span:
         # Counted before the call, so an attempt that raises still
@@ -330,13 +505,7 @@ def call_llm(
             # `request-id`. That is the whole retry-visibility fix — it
             # reports what the SDK already did rather than adding a second
             # retry loop on top of it (ADR 0051).
-            raw = client.messages.with_raw_response.create(
-                model=resolved_model,
-                max_tokens=max_tokens,
-                temperature=_TEMPERATURE,
-                system=_build_system_param(system_prompt, cache_system),
-                messages=[{"role": "user", "content": prompt}],
-            )
+            raw = client.messages.with_raw_response.create(**request_kwargs)
         except anthropic.APIStatusError as exc:
             # The SDK has already exhausted `max_retries` by the time this
             # escapes, so every one of those attempts is otherwise
@@ -502,14 +671,52 @@ def _finish_call(
         retries=retries,
     )
 
-    text = "".join(
-        block.text for block in response.content if block.type == "text"
-    )
+    text = _text_of(response)
 
     stripped = re.sub(r"^```(?:json)?\s*\n?", "", text.strip())
     stripped = re.sub(r"\n?```\s*$", "", stripped)
 
     return stripped
+
+
+def _text_of(response: anthropic.types.Message) -> str:
+    """Join the response's `text` blocks, and refuse a response with none.
+
+    Two behaviours, and the second is the one ADR 0077 adds.
+
+    **Thinking blocks are skipped, never logged.** With adaptive
+    thinking on, the first content block is a `thinking` block, so a
+    reader that took `content[0].text` would return the reasoning as
+    the answer — and a reader that took `content[0]` blindly would
+    return nothing at all. Filtering on `type == "text"` is what makes
+    thinking safe to enable. The `thinking` field is never read here
+    and never reaches a log line: it is model reasoning, the
+    conventions class content capture as opt-in, and this gateway has
+    no opt-in.
+
+    **A response with no text block raises.** Before this, a
+    thinking-only answer — the shape a truncated or refused generation
+    produces once thinking is on — returned `""`, and every caller
+    treated the empty string as a legitimate answer: the planner fell
+    back to the raw query, the critic approved with a zero score, and
+    the run finished `succeeded` having been told nothing. That is the
+    failure `UpstreamModelOutput` names, and it costs one branch to say
+    so. Cost is recorded before this point, because the call happened
+    and Anthropic billed it whatever came back.
+
+    Raises:
+        UpstreamModelOutput: When no content block has `type == "text"`.
+    """
+    texts = [block.text for block in response.content if block.type == "text"]
+    if not texts:
+        seen = sorted({block.type for block in response.content})
+        raise UpstreamModelOutput(
+            log_detail=(
+                "model response carried no text block; block types: "
+                f"{seen or ['<none>']}"
+            )
+        )
+    return "".join(texts)
 
 
 def _log_upstream_error(
@@ -556,10 +763,35 @@ def call_llm_json(
     model_name: str | None = None,
     max_tokens: int = 4096,
     cache_system: bool = False,
+    *,
+    agent: str = "",
+    schema: type[pydantic.BaseModel] | None = None,
 ) -> dict[str, Any]:
     """Call Claude and parse the response as JSON.
 
-    Handles markdown fences and unescaped control characters in string values.
+    Two paths, and which one runs is a property of the deployment
+    rather than of the caller. When `enable_structured_outputs` is on,
+    the resolved model's row allows it, and `schema` is given, the
+    schema goes out as `output_config.format` and the answer is
+    validated against it. Otherwise — including for every caller that
+    passes no schema — the free-text path runs exactly as it did
+    before ADR 0077: `json.loads`, then a `strict=False` retry for
+    unescaped control characters, handling markdown fences on the way
+    in through `call_llm`.
+
+    **Why not `client.messages.parse`.** The SDK ships a `parse` helper
+    that does the schema transform and the validation in one call, and
+    it is the documented way to do this. It is not used here because
+    `messages.with_raw_response` wraps only `create` and `count_tokens`
+    (anthropic 0.116.0, `resources/messages/messages.py`), and this
+    gateway reads `retries_taken` off the raw response — that is ADR
+    0051's entire retry-visibility fix. Calling `parse` would mean
+    either losing it or duplicating the span, cost, and
+    exception-mapping block around a second call site. So the schema is
+    transformed with the SDK's own public `anthropic.transform_schema`,
+    sent through `create`, and validated here with the same pydantic
+    model the SDK would have used. What reaches the wire is identical;
+    what reaches `record_llm_call` is not.
 
     Args:
         prompt: The user message.
@@ -568,17 +800,71 @@ def call_llm_json(
         max_tokens: Maximum output tokens.
         cache_system: When True, mark the system prompt for Anthropic's
             ephemeral prompt cache (ADR 0022). See `call_llm`.
+        agent: Which agent is calling, for its `<agent>_effort`
+            override. See `call_llm`.
+        schema: The shape to ask the model for. Ignored — silently, and
+            with no change in behaviour — when structured outputs are
+            off or unsupported.
 
     Returns:
-        Parsed JSON dict.
+        Parsed JSON dict. On the structured path this is the validated
+        model's `model_dump()`, which is a superset of what the
+        free-text path produced: every field the schema requires is
+        present and correctly typed, and the callers' own coercions
+        (ADR 0041) still run on top of it unchanged.
+
+    Raises:
+        UpstreamModelOutput: On the structured path, when the response
+            does not satisfy the schema. The free-text path keeps
+            raising `json.JSONDecodeError`, which every caller already
+            catches (ADR 0041) — changing that would be a behaviour
+            change on the default path.
     """
     import json
 
     raw = call_llm(
-        prompt, system_prompt, model_name, max_tokens, cache_system=cache_system
+        prompt,
+        system_prompt,
+        model_name,
+        max_tokens,
+        cache_system=cache_system,
+        agent=agent,
+        schema=schema,
     )
+
+    if schema is not None and _structured_output_applies(model_name, agent):
+        try:
+            return schema.model_validate_json(raw).model_dump()
+        except pydantic.ValidationError as exc:
+            # The provider answered and the content was unusable, which
+            # is exactly the line `UpstreamModelOutput` draws against
+            # `UpstreamModel` (ADR 0064). `log_detail` carries the
+            # error count and the schema name; the model's own text is
+            # not put in it, because a validation failure is most
+            # likely to happen on output that is long and may quote the
+            # user's content.
+            raise UpstreamModelOutput(
+                log_detail=(
+                    f"structured output failed {schema.__name__} validation "
+                    f"with {exc.error_count()} error(s)"
+                )
+            ) from exc
 
     try:
         return cast(dict[str, Any], json.loads(raw))
     except json.JSONDecodeError:
         return cast(dict[str, Any], json.loads(raw, strict=False))
+
+
+def _structured_output_applies(model_name: str | None, agent: str) -> bool:
+    """Whether the call just issued actually carried a schema.
+
+    Re-resolved rather than returned from `call_llm`, so that
+    `call_llm`'s signature stays "text in, text out" and this module
+    keeps exactly one definition of when a feature is on. The
+    resolution is a dict lookup and two boolean reads; the call it
+    describes took a network round trip.
+    """
+    return resolve_profile(
+        model_name or settings.anthropic_model, agent
+    ).structured_outputs

@@ -875,3 +875,180 @@ def test_lease_refresh_must_leave_margin_under_the_ttl() -> None:
         Settings(job_lease_refresh_sec=60, job_lease_ttl_sec=90)
     with pytest.raises(ValidationError):
         Settings(job_lease_refresh_sec=45, job_lease_ttl_sec=90)
+
+
+class TestTheRequestProfileIsRefusedWhenTheModelWouldRefuseIt:
+    """CAP-01 / ADR 0077 — a config that cannot make one call must not boot.
+
+    `llm_thinking` and an effort level are checked at settings load
+    because there is no good runtime answer to either: a model with no
+    adaptive mode, or one that does not list the level, answers with an
+    HTTP 400 — every call, on every node, for the whole deployment. The
+    two settings that *degrade* (`enable_structured_outputs`,
+    `llm_temperature`) are deliberately not checked, and the last two
+    tests below are what stop that asymmetry from being read as an
+    oversight.
+    """
+
+    def test_the_defaults_boot(self) -> None:
+        config = Settings()
+        assert config.llm_thinking == "off"
+        assert config.llm_effort == ""
+        assert config.llm_temperature == 0.3
+        assert config.enable_structured_outputs is False
+
+    def test_thinking_is_refused_on_a_model_without_an_adaptive_mode(self) -> None:
+        with pytest.raises(ValidationError, match="llm_thinking"):
+            Settings(llm_thinking="adaptive", anthropic_model="claude-haiku-4-5")
+
+    def test_thinking_is_refused_when_one_agent_routes_to_such_a_model(self) -> None:
+        """The routing case, which is the one that actually happens.
+
+        ADR 0021 recommends `READER_MODEL=claude-haiku-4-5` by name. A
+        check that only looked at `anthropic_model` would pass this
+        configuration and then fail every reader call in production.
+        """
+        with pytest.raises(ValidationError, match="claude-haiku-4-5"):
+            Settings(llm_thinking="adaptive", reader_model="claude-haiku-4-5")
+
+    def test_thinking_is_accepted_where_every_routed_model_supports_it(self) -> None:
+        config = Settings(
+            llm_thinking="adaptive",
+            anthropic_model="claude-opus-5",
+            eval_judge_model="claude-sonnet-5",
+        )
+        assert config.llm_thinking == "adaptive"
+
+    def test_an_effort_level_the_default_model_lacks_is_refused(self) -> None:
+        """`xhigh` arrived with Opus 4.7; the shipped default is Sonnet 4.6.
+
+        The case a boolean `effort` capability could not have caught,
+        and the reason `ModelCapabilities` carries a level set.
+        """
+        with pytest.raises(ValidationError, match="xhigh"):
+            Settings(llm_effort="xhigh")
+
+    def test_the_same_level_is_accepted_on_a_model_that_lists_it(self) -> None:
+        config = Settings(
+            llm_effort="xhigh",
+            anthropic_model="claude-opus-5",
+            eval_judge_model="claude-opus-5",
+        )
+        assert config.effort_for() == "xhigh"
+
+    def test_a_global_level_is_refused_on_a_model_that_rejects_effort(self) -> None:
+        with pytest.raises(ValidationError, match="rejects output_config.effort"):
+            Settings(llm_effort="high", reader_model="claude-haiku-4-5")
+
+    def test_off_is_how_one_agent_opts_out_of_a_global_level(self) -> None:
+        """Without it, `LLM_EFFORT` plus ADR 0021's reader recommendation
+        is a configuration with no expression and no fix — an empty
+        override *inherits*, so there would be no way to say "everything
+        at high, except the reader"."""
+        config = Settings(
+            llm_effort="high", reader_model="claude-haiku-4-5", reader_effort="off"
+        )
+        assert config.effort_for("reader") == ""
+        assert config.effort_for("planner") == "high"
+
+    def test_a_per_agent_level_is_judged_against_that_agent_s_model(self) -> None:
+        with pytest.raises(ValidationError, match="planner_effort"):
+            Settings(planner_effort="xhigh", planner_model="claude-sonnet-4-6")
+        assert (
+            Settings(planner_effort="xhigh", planner_model="claude-opus-5").effort_for(
+                "planner"
+            )
+            == "xhigh"
+        )
+
+    def test_the_judge_model_is_checked_like_any_other_routed_id(self) -> None:
+        """`eval_judge_model` receives a global effort like every other call.
+
+        It is a routed id in its own right (ADR 0070), not an
+        `<agent>_model` override, and a deployment that upgraded the
+        base model but not the judge would otherwise 400 only inside the
+        eval harness.
+        """
+        with pytest.raises(ValidationError, match="claude-sonnet-4-6"):
+            Settings(
+                llm_effort="xhigh",
+                anthropic_model="claude-opus-5",
+                # left at its default, which does not list `xhigh`
+            )
+
+    def test_structured_outputs_are_not_refused_on_an_unsupporting_model(self) -> None:
+        """It degrades to the pre-ADR-0077 parse path, so it boots.
+
+        Refusing to start over a feature that has a working fallback
+        would make the strict check above indistinguishable from a
+        strictness preference.
+        """
+        config = Settings(
+            enable_structured_outputs=True, anthropic_model="some-proxy-model"
+        )
+        assert config.enable_structured_outputs is True
+
+    def test_a_temperature_a_model_would_reject_is_not_refused_either(self) -> None:
+        """Opus 5 rejects sampling parameters; the gateway just omits them."""
+        config = Settings(llm_temperature=0.9, anthropic_model="claude-opus-5")
+        assert config.llm_temperature == 0.9
+
+    def test_the_temperature_stays_inside_zero_and_one(self) -> None:
+        with pytest.raises(ValidationError):
+            Settings(llm_temperature=1.5)
+        with pytest.raises(ValidationError):
+            Settings(llm_temperature=-0.1)
+
+
+@pytest.mark.unit
+def test_the_routed_id_derivation_matches_the_billing_one() -> None:
+    """`src/config.py` re-derives `resolved_model_ids` rather than importing.
+
+    It has to: `src.observability` imports `src.config`, so importing it
+    back to validate a field would close a cycle while this module's
+    body is still executing. A second copy of four lines is fine; a
+    second copy that *disagrees* would validate effort against a
+    different model set than the one being billed, so the two are held
+    equal here.
+    """
+    from src.config import _routed_model_ids
+    from src.observability.costs import resolved_model_ids
+
+    for config in (
+        Settings(),
+        Settings(anthropic_model="claude-opus-5", reader_model="claude-haiku-4-5"),
+        Settings(eval_judge_model="claude-sonnet-5", critic_model="claude-opus-4-6"),
+    ):
+        assert _routed_model_ids(config) == resolved_model_ids(config)
+
+
+@pytest.mark.unit
+class TestTheAgentResolvers:
+    """`model_for` and `effort_for` — the two `override or base` rules.
+
+    Small enough to look obviously right and load-bearing enough to be
+    wrong quietly: `_check_request_profile_is_supported` decides which
+    model an agent's effort has to be legal for by asking these, so a
+    resolver that fell back the wrong way would validate the right
+    field against the wrong model.
+    """
+
+    def test_model_for_falls_back_to_the_base_model(self) -> None:
+        config = Settings(anthropic_model="claude-opus-5", planner_model="")
+        assert config.model_for("planner") == "claude-opus-5"
+        assert config.model_for() == "claude-opus-5"
+
+    def test_model_for_honours_an_override(self) -> None:
+        config = Settings(
+            anthropic_model="claude-opus-5", planner_model="claude-haiku-4-5"
+        )
+        assert config.model_for("planner") == "claude-haiku-4-5"
+
+    def test_effort_for_distinguishes_inherit_from_opt_out(self) -> None:
+        """`""` inherits and `"off"` does not — the whole reason both exist."""
+        config = Settings(
+            llm_effort="medium", planner_effort="", critic_effort="off"
+        )
+        assert config.effort_for("planner") == "medium"
+        assert config.effort_for("critic") == ""
+        assert config.effort_for() == "medium"

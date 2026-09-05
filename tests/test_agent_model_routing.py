@@ -51,6 +51,10 @@ def _capture_llm(monkeypatch: pytest.MonkeyPatch, module: Any) -> dict[str, Any]
         max_tokens: int,
         model_name: str | None = None,
         cache_system: bool = False,
+        # CAP-01: the gateway now takes a schema, and the four
+        # structured agents pass theirs. A double that refused it
+        # would fail on the call rather than on the behaviour.
+        schema: type[Any] | None = None,
     ) -> dict[str, Any]:
         captured["model_name"] = model_name
         captured["cache_system"] = cache_system

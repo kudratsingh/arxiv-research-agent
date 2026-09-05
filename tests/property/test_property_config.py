@@ -26,7 +26,8 @@ from hypothesis import strategies as st
 from pydantic import ValidationError
 from pydantic.fields import FieldInfo
 
-from src.config import Settings
+from src.config import EFFORT_AGENTS, Settings
+from src.llm_models import MODEL_CAPABILITIES, ModelCapabilities
 
 pytestmark = [pytest.mark.unit, pytest.mark.property]
 
@@ -103,6 +104,19 @@ def _bounded(annotation: type) -> list[str]:
     )
 
 
+#: `Literal` fields whose *valid* members depend on `anthropic_model`
+#: (CAP-01, ADR 0077). `LLM_EFFORT=xhigh` is a declared member and a
+#: load-time refusal on the default model, because `xhigh` arrived with
+#: Opus 4.7 and the shipped default is Sonnet 4.6 — so the
+#: one-field-at-a-time sweep below cannot judge them, for the same
+#: reason `COUPLED_FIELDS` exists. They keep their *rejection* sweep,
+#: which only ever builds non-members, and gain a paired property that
+#: checks the coupling itself.
+MODEL_COUPLED_LITERALS: Final[frozenset[str]] = frozenset(
+    {"llm_thinking", "llm_effort", *(f"{agent}_effort" for agent in EFFORT_AGENTS)}
+)
+
+
 def _literals() -> list[str]:
     """Names of the fields typed as a `Literal[...]` of strings.
 
@@ -136,6 +150,13 @@ LITERAL_FIELDS: Final = _literals()
 assert BOUNDED_INT_FIELDS, "no bounded int fields found in Settings"
 assert BOUNDED_FLOAT_FIELDS, "no bounded float fields found in Settings"
 assert LITERAL_FIELDS, "no Literal fields found in Settings"
+
+#: The subset the accept-sweep can judge on its own.
+INDEPENDENT_LITERAL_FIELDS: Final = [
+    name for name in LITERAL_FIELDS if name not in MODEL_COUPLED_LITERALS
+]
+assert INDEPENDENT_LITERAL_FIELDS, "no independent Literal fields found"
+assert set(LITERAL_FIELDS) >= MODEL_COUPLED_LITERALS, MODEL_COUPLED_LITERALS
 
 
 def build(name: str, value: Any) -> Settings:
@@ -219,7 +240,7 @@ def test_a_float_field_rejects_every_value_outside_its_range(
         build(name, value)
 
 
-@pytest.mark.parametrize("name", LITERAL_FIELDS)
+@pytest.mark.parametrize("name", INDEPENDENT_LITERAL_FIELDS)
 def test_a_literal_field_accepts_every_member_it_declares(name: str) -> None:
     """Each declared member of a `Literal` field round-trips.
 
@@ -318,3 +339,51 @@ def test_the_chunker_pair_is_accepted_exactly_when_the_overlap_fits(
     else:
         with pytest.raises(ValidationError):
             Settings(chunker_max_tokens=max_tokens, chunker_overlap_tokens=overlap)
+
+
+def _member_is_supported(name: str, member: str, caps: ModelCapabilities) -> bool:
+    """Whether `member` on field `name` is legal for a model with `caps`.
+
+    Deliberately re-derived from the capability row rather than from
+    `Settings`' own validator: a property that asked the validator what
+    it allows and then asserted the validator allows it would pass on
+    any validator.
+    """
+    if member in ("", "off"):
+        return True
+    if name == "llm_thinking":
+        return member != "adaptive" or caps.adaptive_thinking
+    return member in caps.effort_levels
+
+
+@pytest.mark.parametrize("name", sorted(MODEL_COUPLED_LITERALS))
+def test_a_model_coupled_literal_is_accepted_exactly_when_the_model_takes_it(
+    name: str,
+) -> None:
+    """The coupling CAP-01 added, over every (member, model) pair.
+
+    Two failure modes, and this catches both. A validator that refused
+    too much would make a legal `LLM_EFFORT=xhigh` on Opus 5
+    unbootable; one that refused too little would let
+    `LLM_EFFORT=xhigh` reach Sonnet 4.6 and 400 on every call. The
+    exclusivity — accepted *exactly when* the row allows it — is what
+    neither direction alone would say.
+
+    Not a generated property: the member set is finite, the model set
+    is the shipped table, and the cross product is small enough to
+    enumerate. Enumerating it is stronger than sampling it.
+    """
+    for member in members(name):
+        for model, caps in MODEL_CAPABILITIES.items():
+            # `eval_judge_model` moves with the base model because it is
+            # a routed id in its own right (ADR 0070) and a global
+            # `llm_effort` would reach the judges like any other call.
+            # Leaving it at its default would make every case fail on
+            # the judge rather than on the field under test.
+            fixed = {"anthropic_model": model, "eval_judge_model": model}
+            if _member_is_supported(name, member, caps):
+                built = Settings(**fixed, **{name: member})
+                assert getattr(built, name) == member
+            else:
+                with pytest.raises(ValidationError):
+                    Settings(**fixed, **{name: member})

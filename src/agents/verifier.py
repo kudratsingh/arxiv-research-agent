@@ -44,6 +44,7 @@ from typing import Any, Final, Literal
 
 from langchain_core.messages import AIMessage
 
+from src.agents.schemas import VerifierOutput
 from src.cancellation import JobCancelledError
 from src.config import settings
 from src.errors import UpstreamModelOutput
@@ -395,6 +396,7 @@ def run_verification(state: ResearchState) -> VerificationOutcome:
             model_name=settings.verifier_model or None,
             max_tokens=2048,
             cache_system=settings.enable_prompt_caching,
+            schema=VerifierOutput,
         )
     except (JobCancelledError, CostBudgetExceeded):
         # Neither is a judgement, and both are raised by `call_llm`

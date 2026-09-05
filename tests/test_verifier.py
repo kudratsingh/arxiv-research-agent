@@ -71,6 +71,10 @@ def _stub_llm(
         max_tokens: int,
         model_name: str | None = None,
         cache_system: bool = False,
+        # CAP-01: the gateway now takes a schema, and the four
+        # structured agents pass theirs. A double that refused it
+        # would fail on the call rather than on the behaviour.
+        schema: type[Any] | None = None,
     ) -> dict[str, Any]:
         captured["calls"] += 1
         captured["prompt"] = prompt

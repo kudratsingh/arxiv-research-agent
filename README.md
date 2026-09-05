@@ -285,7 +285,7 @@ redesign (brief, tokens, architecture, work orders, gate reviews) is
 
 Every feature added after Sprint 1 is behind an independent flag so
 comparisons against the Sprint 1 baseline stay apples-to-apples.
-`Settings` declares **nineteen `enable_*` flags**, and the **eight** of
+`Settings` declares **twenty `enable_*` flags**, and the **eight** of
 them in the table below are the Sprint 2-3 workflow-behavior set: every
 one of those defaults **off**, and every one can be switched on by
 itself, which is what *independent* is asserted to mean here. (The
@@ -306,18 +306,23 @@ flag.) Full list in `src/config.py`.
 
 The table stops at Sprint 3 because it tracks *workflow-behavior*
 flags — the ones that change what the agents do and so must stay
-independently toggleable for A/B eval runs. The other **eleven**
+independently toggleable for A/B eval runs. The other **twelve**
 `enable_*` flags are named here rather than left implicit, because a
 flag nobody lists is a switch nobody knows to throw. Four are API and
 infrastructure concerns that default **on** (`enable_hitl`,
 `enable_checkpointing`, `enable_job_redriver`, `enable_retry_budget`);
 three default off and change no agent behaviour (`enable_api_auth`,
-`enable_tracing`, `enable_metrics`); and four are the learning
+`enable_tracing`, `enable_metrics`); four are the learning
 platform's ladder, all off and deliberately **not** independent of one
 another — `enable_learner_profile` needs `enable_api_auth`,
 `enable_session_loop` needs `enable_learner_profile`, and
 `enable_assessment_judge` needs `enable_session_loop`, while
-`enable_learn_content` stands alone.
+`enable_learn_content` stands alone; and one changes the *shape* of a
+model request rather than the workflow around it
+(`enable_structured_outputs`, off, ADR
+[0077](docs/decisions/0077-model-aware-request-profiles.md) — the four
+structured agents ask the model for schema-valid JSON instead of
+parsing free text, on models that support it).
 
 `tests/test_documented_claims.py::TestTheFlagSet` holds those two
 paragraphs against `Settings` in both directions, so a flag added to

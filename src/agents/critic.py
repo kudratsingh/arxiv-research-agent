@@ -14,6 +14,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage
 
+from src.agents.schemas import CriticOutput
 from src.config import settings
 from src.graph.state import ResearchState
 from src.llm import call_llm_json
@@ -116,6 +117,7 @@ def critic_agent(state: ResearchState) -> dict[str, Any]:
             model_name=settings.critic_model or None,
             max_tokens=2048,
             cache_system=settings.enable_prompt_caching,
+            schema=CriticOutput,
         )
     except json.JSONDecodeError as exc:
         log.warning(

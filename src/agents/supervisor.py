@@ -50,6 +50,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage
 
+from src.agents.schemas import SupervisorOutput
 from src.cancellation import JobCancelledError
 from src.config import settings
 from src.errors import UpstreamModel
@@ -408,6 +409,7 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
             model_name=settings.supervisor_model or None,
             max_tokens=512,
             cache_system=settings.enable_prompt_caching,
+            schema=SupervisorOutput,
         )
     except (JobCancelledError, CostBudgetExceeded):
         # Control signals, not routing failures. `call_llm` raises both

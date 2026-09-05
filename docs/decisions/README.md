@@ -459,6 +459,22 @@ never renumbered.
   the legacy verifier flag. Abstain is a first-class verdict; the
   repair decision is deterministic. Default settings compile to the
   same graph as before, proven by a golden node/edge listing.
+- [0077](0077-model-aware-request-profiles.md) — Make the LLM gateway's
+  request model-aware. `src/llm_models.py` becomes the one place a model
+  quirk lives — a pure table of what each Claude model accepts, with a
+  cited source and a verification date per row — and `src/llm.py`
+  resolves a frozen `RequestProfile` per call from it, sending
+  `temperature`, `thinking` and `output_config` only where the model
+  takes them. Until this, `temperature=0.3` went to every model, which
+  is an HTTP 400 on Opus 4.7 and later: the gateway broke the day the
+  model id moved, and the shipped default was simply the last generation
+  that still accepted sampling. Thinking and effort are refused at
+  settings load because neither has a runtime answer; temperature and
+  structured outputs are not, because both degrade. `thinking` blocks
+  are skipped in the response and a text-free answer raises ADR 0064's
+  `upstream_model_output` instead of returning the empty string every
+  caller used to read as content. Default-off and byte-identical, held
+  by a golden fixture captured from the unmodified gateway.
 - [0079](0079-benchmark-registry-migration-and-parity.md) — Register the
   existing benchmarks, prove parity, and change nothing they mean. The
   twenty research queries and fifteen guided-reading scenarios enter

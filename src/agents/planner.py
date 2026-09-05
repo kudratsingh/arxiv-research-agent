@@ -14,6 +14,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage
 
+from src.agents.schemas import PlannerOutput
 from src.config import settings
 from src.graph.state import ResearchState
 from src.llm import call_llm_json
@@ -135,6 +136,7 @@ def planner_agent(state: ResearchState) -> dict[str, Any]:
             model_name=settings.planner_model or None,
             max_tokens=1024,
             cache_system=settings.enable_prompt_caching,
+            schema=PlannerOutput,
         )
     except json.JSONDecodeError as exc:
         log.warning(

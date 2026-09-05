@@ -252,6 +252,10 @@ class TestSupervisorLLMPath:
             max_tokens: int,
             model_name: str | None = None,
             cache_system: bool = False,
+            # CAP-01: the gateway now takes a schema, and the four
+            # structured agents pass theirs. A double that refused it
+            # would fail on the call rather than on the behaviour.
+            schema: type[Any] | None = None,
         ) -> dict[str, Any]:
             captured["prompt"] = prompt
             captured["system_prompt"] = system_prompt
@@ -589,6 +593,10 @@ class TestVerifierGating:
             max_tokens: int,
             model_name: str | None = None,
             cache_system: bool = False,
+            # CAP-01: the gateway now takes a schema, and the four
+            # structured agents pass theirs. A double that refused it
+            # would fail on the call rather than on the behaviour.
+            schema: type[Any] | None = None,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "verify", "reason": "check draft", "stop_reason": ""}
@@ -694,6 +702,10 @@ class TestQueryRefinerGating:
             max_tokens: int,
             model_name: str | None = None,
             cache_system: bool = False,
+            # CAP-01: the gateway now takes a schema, and the four
+            # structured agents pass theirs. A double that refused it
+            # would fail on the call rather than on the behaviour.
+            schema: type[Any] | None = None,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "refine_query", "reason": "gap", "stop_reason": ""}
@@ -814,6 +826,10 @@ class TestReaderRecoverySurface:
             max_tokens: int,
             model_name: str | None = None,
             cache_system: bool = False,
+            # CAP-01: the gateway now takes a schema, and the four
+            # structured agents pass theirs. A double that refused it
+            # would fail on the call rather than on the behaviour.
+            schema: type[Any] | None = None,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "read", "reason": "recover", "stop_reason": ""}
@@ -835,6 +851,10 @@ class TestReaderRecoverySurface:
             max_tokens: int,
             model_name: str | None = None,
             cache_system: bool = False,
+            # CAP-01: the gateway now takes a schema, and the four
+            # structured agents pass theirs. A double that refused it
+            # would fail on the call rather than on the behaviour.
+            schema: type[Any] | None = None,
         ) -> dict[str, Any]:
             captured["system_prompt"] = system_prompt
             return {"next_action": "read", "reason": "any", "stop_reason": ""}

@@ -1,0 +1,58 @@
+{
+  "json_with_system": {
+    "max_tokens": 2048,
+    "messages": [
+      {
+        "content": "Plan this research question.",
+        "role": "user"
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "system": "Return JSON only.",
+    "temperature": 0.3
+  },
+  "text_with_cached_system": {
+    "max_tokens": 1024,
+    "messages": [
+      {
+        "content": "Summarise the attention mechanism.",
+        "role": "user"
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "system": [
+      {
+        "cache_control": {
+          "type": "ephemeral"
+        },
+        "text": "You are terse.",
+        "type": "text"
+      }
+    ],
+    "temperature": 0.3
+  },
+  "text_with_system": {
+    "max_tokens": 1024,
+    "messages": [
+      {
+        "content": "Summarise the attention mechanism.",
+        "role": "user"
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "system": "You are terse.",
+    "temperature": 0.3
+  },
+  "text_without_system": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "Summarise the attention mechanism.",
+        "role": "user"
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "system": "<NOT_GIVEN>",
+    "temperature": 0.3
+  }
+}

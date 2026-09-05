@@ -1735,6 +1735,321 @@ class Settings(BaseSettings):
             )
         return self
 
+    # ------ Agent capability (CAP-01) ---------------------------------
+    #
+    # Model-aware request profiles (ADR 0077). Every field here defaults
+    # to what the gateway already did, so a deployment that sets none of
+    # them sends the byte-identical request body
+    # `tests/test_llm_request_golden.py` pins.
+    #
+    # What each one becomes, and when: `llm_thinking` becomes
+    # `thinking={"type": "adaptive"}`, `llm_effort` becomes
+    # `output_config={"effort": ...}`, `llm_temperature` becomes
+    # `temperature`, and `enable_structured_outputs` becomes
+    # `output_config={"format": ...}` — each only when
+    # `src/llm_models.py` says the *resolved* model accepts it.
+
+    llm_thinking: Literal["off", "adaptive"] = Field(
+        default="off",
+        description=(
+            "Adaptive thinking on every model call. `adaptive` sends "
+            "`thinking={'type': 'adaptive'}` and lets the model decide "
+            "how much to think; `off` (the default) sends no thinking "
+            "field, which is what the gateway has always done. Refused "
+            "at load when any routed model's capability row lacks "
+            "adaptive thinking, because that combination is an HTTP 400 "
+            "on every call rather than a degraded one. Turning it on "
+            "changes the judges' requests too — they share this gateway "
+            "— which re-baselines every eval metric under ADR 0070. "
+            "See ADR 0077."
+        ),
+    )
+    llm_effort: Literal["", "low", "medium", "high", "xhigh", "max"] = Field(
+        default="",
+        description=(
+            "Default `output_config.effort` for every call. Empty (the "
+            "default) sends no effort field, which the API reads as "
+            "`high`. Set it to trade thoroughness against token spend "
+            "inside one model. Refused at load when a routed model's "
+            "row does not list the level — Haiku 4.5 rejects effort "
+            "outright and Sonnet 4.6 has no `xhigh`. See ADR 0077."
+        ),
+    )
+
+    # Per-agent effort overrides, mirroring the `<agent>_model` fields
+    # above. Empty inherits `llm_effort`; `off` sends no effort for that
+    # agent, which is the only way to route one agent to a model that
+    # rejects effort (Haiku, which is ADR 0021's reader recommendation)
+    # while the rest of the deployment runs at a global level.
+    planner_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for the planner. Empty inherits llm_effort; "
+            "'off' sends no effort field."
+        ),
+    )
+    reader_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for the reader's per-paper analysis. Empty inherits "
+            "llm_effort; 'off' sends no effort field."
+        ),
+    )
+    synthesizer_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for the synthesizer. Empty inherits llm_effort; "
+            "'off' sends no effort field."
+        ),
+    )
+    critic_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for the critic. Empty inherits llm_effort; "
+            "'off' sends no effort field."
+        ),
+    )
+    verifier_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for the verifier. Empty inherits llm_effort; "
+            "'off' sends no effort field."
+        ),
+    )
+    supervisor_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for the supervisor's routing call. Empty inherits "
+            "llm_effort; 'off' sends no effort field."
+        ),
+    )
+    query_refiner_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for the query refiner. Empty inherits llm_effort; "
+            "'off' sends no effort field."
+        ),
+    )
+    tutor_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for guided-read tutor turns. Empty inherits "
+            "llm_effort; 'off' sends no effort field."
+        ),
+    )
+    assessment_effort: Literal[
+        "", "off", "low", "medium", "high", "xhigh", "max"
+    ] = Field(
+        default="",
+        description=(
+            "Effort for the explain-back assessment judge. Empty "
+            "inherits llm_effort; 'off' sends no effort field."
+        ),
+    )
+
+    enable_structured_outputs: bool = Field(
+        default=False,
+        description=(
+            "Ask the model for JSON that satisfies a schema instead of "
+            "parsing free text with `json.loads`. Applies only where a "
+            "caller passes a schema and the resolved model's row allows "
+            "it; everywhere else the existing parse path runs unchanged. "
+            "Unlike thinking and effort this is *not* refused at load on "
+            "an unsupporting model, because it has a working fallback "
+            "and they do not. Default off preserves the Sprint 1 "
+            "baseline. See ADR 0077."
+        ),
+    )
+    llm_temperature: float = Field(
+        default=0.3,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Sampling temperature, sent only to models whose capability "
+            "row accepts sampling parameters. 0.3 is the constant the "
+            "gateway hard-coded before ADR 0077, so the default changes "
+            "nothing. On a model that rejects sampling (Opus 4.7+, Opus "
+            "5, Sonnet 5, Fable/Mythos) it is silently not sent — which "
+            "is the fix, not a regression: sending it there is an HTTP "
+            "400 on every call."
+        ),
+    )
+
+    def effort_for(self, agent: str = "") -> str:
+        """The effort level to send for `agent`, or `""` to send none.
+
+        Args:
+            agent: One of `EFFORT_AGENTS`, or `""` for a call that
+                carries no agent identity and therefore takes the
+                deployment-wide `llm_effort`.
+
+        Returns:
+            An effort level, or `""` meaning "send no effort field".
+            `"off"` on the per-agent field resolves to `""` — the two
+            spellings differ only in the field, where `""` inherits and
+            `"off"` opts out.
+        """
+        if not agent:
+            return self.llm_effort
+        override: str = getattr(self, f"{agent}_effort")
+        if override == "off":
+            return ""
+        return override or self.llm_effort
+
+    def model_for(self, agent: str = "") -> str:
+        """The model id `agent`'s calls resolve to.
+
+        The `override or base` rule `resolved_model_ids` derives the
+        billable set with, in one place, so the effort validation below
+        and the gateway agree on which model an agent's effort has to be
+        legal for.
+        """
+        if not agent:
+            return self.anthropic_model
+        override: str = getattr(self, f"{agent}_model")
+        return override or self.anthropic_model
+
+    def _models_effort_applies_to(self, agent: str) -> set[str]:
+        """Every model id the effort resolved for `agent` would reach.
+
+        For a named agent that is one model. For the deployment-wide
+        `llm_effort` it is every routed id that does *not* carry an
+        override of its own — including `eval_judge_model`, which is a
+        routed id in its own right (ADR 0070) and would receive the
+        global effort like any other call.
+        """
+        if agent:
+            return {self.model_for(agent)}
+        overridden = {
+            self.model_for(name)
+            for name in EFFORT_AGENTS
+            if getattr(self, f"{name}_effort")
+        }
+        return _routed_model_ids(self) - overridden
+
+    @model_validator(mode="after")
+    def _check_request_profile_is_supported(self) -> Settings:
+        """Refuse a request feature the configured models would 400 on.
+
+        Thinking and effort are checked here, at load, because neither
+        has a good runtime answer: sending `thinking` to a model with no
+        adaptive mode, or an effort level it does not list, fails the
+        call with an HTTP 400 — every call, on every node, for the whole
+        deployment. A configuration that cannot make one successful
+        request should not start.
+
+        `enable_structured_outputs` and `llm_temperature` are
+        deliberately *not* checked. Both degrade: an unsupported model
+        does not receive them and the call runs exactly as it did before
+        ADR 0077. Refusing to boot over a feature that has a working
+        fallback would make this check indistinguishable from a
+        strictness preference.
+
+        `src.llm_models` is imported inside the method rather than at
+        module scope because it logs through `src.observability`, which
+        imports this module — a top-level import would close the cycle
+        while this module's body is still executing.
+
+        Raises:
+            ValueError: Naming the field, the model, and what that model
+                does accept.
+        """
+        from src.llm_models import capabilities_for
+
+        if self.llm_thinking == "adaptive":
+            for model in sorted(_routed_model_ids(self)):
+                if not capabilities_for(model).adaptive_thinking:
+                    raise ValueError(
+                        "llm_thinking='adaptive' is not supported by the "
+                        f"routed model {model!r}, which answers a request "
+                        "carrying `thinking` with an HTTP 400. Set "
+                        "LLM_THINKING=off, or route that agent to a model "
+                        "with adaptive thinking. See ADR 0077."
+                    )
+
+        for agent in ("", *EFFORT_AGENTS):
+            level = self.effort_for(agent)
+            if not level:
+                continue
+            field = f"{agent}_effort" if agent else "llm_effort"
+            for model in sorted(self._models_effort_applies_to(agent)):
+                caps = capabilities_for(model)
+                if caps.supports_effort(level):
+                    continue
+                accepted = (
+                    ", ".join(sorted(caps.effort_levels))
+                    if caps.effort_levels
+                    else "none — this model rejects output_config.effort"
+                )
+                remedy = (
+                    f"Set {field.upper()}=off to exempt that agent"
+                    if agent
+                    else (
+                        "Clear LLM_EFFORT, or set <AGENT>_EFFORT=off for "
+                        "each agent routed to this model"
+                    )
+                )
+                raise ValueError(
+                    f"{field}={level!r} is not supported by the routed "
+                    f"model {model!r}, which accepts: {accepted}. "
+                    f"{remedy}, or pick a level the model lists. See ADR "
+                    "0077."
+                )
+        return self
+
+
+#: The nine agents that carry an effort override, paired with the
+#: `<agent>_model` field whose routing decides which model that effort
+#: has to be valid for. A module constant rather than a class attribute
+#: because pydantic would read an annotated class attribute as a field.
+EFFORT_AGENTS: Final[tuple[str, ...]] = (
+    "planner",
+    "reader",
+    "synthesizer",
+    "critic",
+    "verifier",
+    "supervisor",
+    "query_refiner",
+    "tutor",
+    "assessment",
+)
+
+
+def _routed_model_ids(config: Settings) -> set[str]:
+    """Every model id `config` can route a call to.
+
+    The derivation `src.observability.costs.resolved_model_ids` makes
+    for billing — the base model plus every non-empty `<agent>_model`
+    override — and deliberately a second copy of four lines rather than
+    an import: `src.observability` imports this module, so importing it
+    back here to validate a field would close a cycle at settings-load
+    time. `tests/test_config.py` asserts the two agree.
+    """
+    base = config.anthropic_model
+    ids = {base}
+    for name in type(config).model_fields:
+        if name == "anthropic_model" or not name.endswith("_model"):
+            continue
+        value = getattr(config, name)
+        ids.add(value or base)
+    return ids
+
 
 settings = Settings()
 """Module-level singleton. Import this everywhere instead of instantiating."""
