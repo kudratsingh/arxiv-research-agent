@@ -952,7 +952,14 @@ class TestCampaignCLI:
             sim, "settings", real_settings.model_copy(update={"use_mock_data": True})
         )
 
-        def _interrupt(query: BenchmarkQuery, *, repeat: int = 1) -> dict[str, Any]:
+        # `**_` absorbs the campaign's `hooks=` argument (P0-WO05): the
+        # CLI now hands `run_query` the contract observer — `None`
+        # unless CONTRACT_SHADOW is on — and a stub that pinned the old
+        # signature would fail on the keyword rather than on the
+        # behaviour this test is about.
+        def _interrupt(
+            query: BenchmarkQuery, *, repeat: int = 1, **_: Any
+        ) -> dict[str, Any]:
             raise EvalInterrupted(
                 {
                     "record_id": query["query_id"],
