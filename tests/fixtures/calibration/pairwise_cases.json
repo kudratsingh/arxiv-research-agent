@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "stratum": "adversarial_stress",
+  "readme": "Six pairwise cases, each carrying a predicted verdict in BOTH presentation orders. Both orders is not an option here: a pair sampled into one order gives a preference rate with a position confound inside it and no way to separate them afterwards, so src/calibration/blinding.py's BlindingPlan refuses a pairwise plan that does not swap. docs/eval.md records the state of the evidence these cases are written against: verbosity bias has collapsed below 0.011 across 21 measured judges, and position bias has NOT, which is why this file exists and there is no verbosity-preference file beside it. Every verdict is a PREDICTION; no judge has been run. The predicted readings are deliberately biased toward the first position on three of six pairs, so the fixture exercises a detection, not a clean bill of health — a corpus in which the predicted judge is unbiased could not tell a working position-bias test from one that always returns zero.",
+  "pairwise": [
+    {
+      "case_id": "pair-evidence-density",
+      "slice_tags": ["synthesis-heavy", "ambiguous-comparative", "evidence-rich"],
+      "first_excerpt": "Three retrieved papers measure the effect; two agree on direction and the third reports no effect on a different suite. The disagreement is named and not resolved. Every numeric claim carries the paper it came from.",
+      "second_excerpt": "The effect is well established across the literature and consistently reproduced.",
+      "expected_reference_preference": "first_excerpt",
+      "expected_ab_verdict": "first",
+      "expected_ba_verdict": "first",
+      "verdict_basis": "hypothesis",
+      "why": "The evidence-dense report is genuinely better, and the predicted judge picks the first position in both orders — so it is right under ab for the wrong reason and wrong under ba. This is the signature the metric exists to catch: two readings of 'first' name two different reports."
+    },
+    {
+      "case_id": "pair-citation-density",
+      "slice_tags": ["retrieval-heavy", "straightforward", "evidence-rich"],
+      "first_excerpt": "Four claims, four citations, each identifier resolving to a paper in the retrieved set.",
+      "second_excerpt": "Four claims, one citation, and three assertions carried by the surrounding prose.",
+      "expected_reference_preference": "first_excerpt",
+      "expected_ab_verdict": "first",
+      "expected_ba_verdict": "first",
+      "verdict_basis": "hypothesis",
+      "why": "The second predicted position-preferring pair. Two of the three are needed because a single pair cannot distinguish a position preference from one confident reading."
+    },
+    {
+      "case_id": "pair-hedging",
+      "slice_tags": ["synthesis-heavy", "ambiguous-comparative", "evidence-sparse"],
+      "first_excerpt": "The comparison cannot be made from the retrieved evidence; the missing measurement is named.",
+      "second_excerpt": "On balance the first architecture is preferable, though the evidence is indirect.",
+      "expected_reference_preference": "first_excerpt",
+      "expected_ab_verdict": "first",
+      "expected_ba_verdict": "second",
+      "verdict_basis": "hypothesis",
+      "why": "A consistent pair: both orders name the abstaining report. Predicted consistent because the difference between naming a gap and guessing past it is visible without comparing lengths."
+    },
+    {
+      "case_id": "pair-structure",
+      "slice_tags": ["synthesis-heavy", "straightforward", "evidence-rich", "synthesis-organisation"],
+      "first_excerpt": "One long paragraph covering four sub-questions in the order they were asked, with every claim cited.",
+      "second_excerpt": "Four headed sections, one per sub-question, with every claim cited and a closing summary of what remains open.",
+      "expected_reference_preference": "second_excerpt",
+      "expected_ab_verdict": "second",
+      "expected_ba_verdict": "first",
+      "verdict_basis": "hypothesis",
+      "why": "Consistent, and the pair where the better report is the second one under ab. Without such a pair a first-position-preferring judge and a correct judge produce identical ab readings, and only the swap separates them."
+    },
+    {
+      "case_id": "pair-length-matched",
+      "slice_tags": ["retrieval-heavy", "straightforward", "evidence-rich", "baseline-easy"],
+      "first_excerpt": "Same length as its counterpart, one unsupported claim among five.",
+      "second_excerpt": "Same length as its counterpart, five supported claims.",
+      "expected_reference_preference": "second_excerpt",
+      "expected_ab_verdict": "first",
+      "expected_ba_verdict": "first",
+      "verdict_basis": "hypothesis",
+      "why": "Length-matched so a length preference cannot explain the reading, and predicted position-preferring in both orders. The third of the three biased pairs, which is what puts the predicted first-position share at 8 of 12."
+    },
+    {
+      "case_id": "pair-contradiction-handling",
+      "slice_tags": ["synthesis-heavy", "ambiguous-comparative", "contradiction-present"],
+      "first_excerpt": "Reports the majority finding as settled and does not mention the disagreeing study.",
+      "second_excerpt": "Reports both findings, names the disagreement, and states what would resolve it.",
+      "expected_reference_preference": "second_excerpt",
+      "expected_ab_verdict": "second",
+      "expected_ba_verdict": "second",
+      "verdict_basis": "hypothesis",
+      "why": "The inverse signature: two readings of 'second' also name two different reports, so a second-position preference is detected by the same statistic without a second test. Predicted here so the corpus does not assume bias runs in one direction only."
+    }
+  ]
+}
