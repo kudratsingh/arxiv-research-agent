@@ -114,6 +114,16 @@ gated on `repair_action`, a key nothing outside this policy writes, so
 under every other configuration the prompt is byte-identical to what it
 has always been.
 
+`repair_action` is a durable record rather than a one-shot flag: it is
+what a manifest reads to say which repair a run took, so the verify node
+carries it through instead of clearing it. One consequence is worth
+knowing: if the critic later sends the run back to the synthesizer, the
+repair block is built again — from the *current* `unsupported_claims`,
+which the most recent verification refreshed, so it lists what is
+unsupported now rather than a stale copy. It is one bounded instruction
+either way, and the one-repair cap is enforced on the repair node, not
+on the prompt.
+
 ## Bounds
 
 | Bound | Value | Where |
