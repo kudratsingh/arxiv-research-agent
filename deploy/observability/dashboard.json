@@ -1,22 +1,7 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "The Prometheus that scrapes the collector in deploy/observability/compose.observability.yml",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__requires": [
-    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" },
-    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "" },
-    { "type": "panel", "id": "stat", "name": "Stat", "version": "" }
-  ],
   "title": "arxiv-research-agent — SLIs, RED and USE",
   "uid": "arxiv-research-agent-slo",
-  "description": "Every instrument the repository emits, once. Metric names are the OpenTelemetry names with dots replaced by underscores, which holds only while deploy/observability/otel-collector.yaml keeps add_metric_suffixes false. tests/test_operability_docs.py asserts every name below still has an instrument behind it in src/.",
+  "description": "Every instrument the repository emits, once. Metric names are the OpenTelemetry names with dots replaced by underscores, which holds only while deploy/observability/otel-collector.yaml keeps add_metric_suffixes false. tests/test_operability_docs.py asserts every name below still has an instrument behind it in src/, and that every panel resolves a datasource. This file is in Grafana's provisioning form, not its export-for-sharing form: there is no __inputs block, and the datasource is the ${datasource} template variable rather than a DS_-prefixed input token, which file provisioning does not resolve.",
   "tags": ["arxiv-research-agent", "slo", "red", "use"],
   "editable": true,
   "schemaVersion": 39,
@@ -24,6 +9,24 @@
   "refresh": "1m",
   "time": { "from": "now-6h", "to": "now" },
   "timezone": "utc",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Prometheus",
+        "description": "The Prometheus that scrapes the collector. Provisioned as uid arxiv-prometheus by deploy/observability/grafana/provisioning/datasources/prometheus.yml; in any other Grafana this resolves to the first Prometheus datasource instead, which is what makes the file both provisionable and importable.",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "arxiv-prometheus" },
+        "options": [],
+        "regex": "",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "skipUrlSync": false
+      }
+    ]
+  },
   "panels": [
     {
       "type": "row",
@@ -37,7 +40,7 @@
       "type": "stat",
       "title": "API availability (28d)",
       "description": "Non-5xx over total, health probes excluded. A 4xx is not counted as unavailability: a client sending bad requests is not this service failing. Objective 99.5%, declared not earned.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 7, "w": 8, "x": 0, "y": 1 },
       "fieldConfig": {
         "defaults": {
@@ -68,7 +71,7 @@
       "type": "stat",
       "title": "Job success (28d)",
       "description": "Succeeded over terminal-minus-cancelled. degraded_close is in the denominator and not the numerator: the job row says succeeded, but the learner hit a spend ceiling and counting that as a clean run is how budget exhaustion became invisible. Objective 95%, declared not earned.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 7, "w": 8, "x": 8, "y": 1 },
       "fieldConfig": {
         "defaults": {
@@ -99,7 +102,7 @@
       "type": "stat",
       "title": "Model call error rate (24h)",
       "description": "gen_ai.client.operation.duration counts every provider call, successful or not, and carries error.type — so its count is both the numerator and the denominator. Objective under 2%, declared not earned.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 7, "w": 8, "x": 16, "y": 1 },
       "fieldConfig": {
         "defaults": {
@@ -135,7 +138,7 @@
       "type": "timeseries",
       "title": "Request rate by route",
       "description": "The R of RED. There is no request counter and that is not an omission — a histogram carries its own count, so rate(count) is the rate.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
       "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
       "targets": [
@@ -151,7 +154,7 @@
       "type": "timeseries",
       "title": "5xx rate by route",
       "description": "The E of RED. Route template only — a raw path carries job ids and would be one series per job.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
       "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
       "targets": [
@@ -167,7 +170,7 @@
       "type": "timeseries",
       "title": "Request latency p95 by route — shed requests excluded",
       "description": "429 and 503 are dropped here and counted against quality instead. Leaving them in means shedding harder makes this panel look better while the product gets worse. /research/{job_id}/stream is also dropped: it is an SSE connection held open for the life of a job, so its observations are job durations, not request latencies.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
@@ -183,7 +186,7 @@
       "type": "timeseries",
       "title": "Requests in flight",
       "description": "An UpDownCounter, not a sampled gauge. An SSE client correctly holds this up for the whole run, which is why it is worth watching next to the latency panel rather than inside it.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
@@ -206,7 +209,7 @@
       "type": "timeseries",
       "title": "Terminal jobs by status and error type",
       "description": "status takes one value that is not a JobStatus: degraded_close, for a session closed politely at its cost ceiling (ADR 0062). error_type is ADR 0064's stable code, the same string the API answers with.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
@@ -222,7 +225,7 @@
       "type": "timeseries",
       "title": "Job wall clock p95 by kind — successes only",
       "description": "Cut to succeeded deliberately: a timeout kill lands in the histogram at exactly API_JOB_TIMEOUT_SEC, so including failures makes the p95 converge on the timeout and stop measuring anything.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
@@ -238,7 +241,7 @@
       "type": "timeseries",
       "title": "Queue wait p95 by kind",
       "description": "The USE wait for the job queue: time between acceptance and start, spent behind api_max_concurrent_jobs. Rises before saturation does.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 34 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
@@ -254,7 +257,7 @@
       "type": "timeseries",
       "title": "Workflow duration p95 — the conventional reading",
       "description": "gen_ai.invoke_workflow.duration is the conventional alias of research_job_duration_seconds; both are emitted for one release so a dashboard does not break silently on the rename. They are not identical: the job histogram runs from acceptance through the terminal write, this one bounds the workflow span, and the gap between the two panels is the queue wait plus the terminal persistence.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 34 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
@@ -277,7 +280,7 @@
       "type": "timeseries",
       "title": "Owned jobs and abandoned node threads (per worker)",
       "description": "research_active_jobs is queued plus running plus the node threads this worker gave up waiting on (ADR 0047). Those threads still hold pool slots and can still spend, so they are broken out rather than hidden.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 43 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
@@ -298,7 +301,7 @@
       "type": "timeseries",
       "title": "Queue depth (per worker)",
       "description": "active_jobs minus api_max_concurrent_jobs, floored at zero. An upper bound: abandoned threads are counted as though they still held a permit, so this errs toward more contended than it is — the useful direction for the error to point.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 43 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
@@ -314,7 +317,7 @@
       "type": "timeseries",
       "title": "Queue saturation ratio (per worker)",
       "description": "Owned jobs over api_max_concurrent_jobs. 1.0 means every permit is held and /readyz is already returning 503 for this worker.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 43 },
       "fieldConfig": {
         "defaults": {
@@ -349,7 +352,7 @@
       "type": "timeseries",
       "title": "Spend rate, USD/hour by model",
       "description": "Estimated from token counts and the pinned price table, not billed by the provider. The conventions define no cost metric, so llm_cost_usd_total is the only name this has and it is not an alias for anything.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 52 },
       "fieldConfig": { "defaults": { "unit": "currencyUSD" }, "overrides": [] },
       "targets": [
@@ -365,7 +368,7 @@
       "type": "timeseries",
       "title": "Model calls, retries and upstream errors",
       "description": "llm_calls_total counts calls that returned; llm_retries_total is the SDK's own retries_taken, so retries that eventually succeeded are visible instead of looking like slow calls; llm_upstream_errors_total is what is left when the SDK gives up, labelled by HTTP status or by connection.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 52 },
       "fieldConfig": { "defaults": { "unit": "cps" }, "overrides": [] },
       "targets": [
@@ -391,7 +394,7 @@
       "type": "timeseries",
       "title": "Token rate by type",
       "description": "gen_ai.client.token.usage is a histogram of tokens per call, so its sum over time is the token rate. Anthropic's two prompt-cache buckets ride on the conventional cache_read / cache_write attributes rather than on private names.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 60 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
@@ -407,7 +410,7 @@
       "type": "timeseries",
       "title": "Model call latency p95 by model",
       "description": "Wall clock for the whole call chain, retries included — the same figure the chat span measured. In seconds, per the conventions, not milliseconds.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 60 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
@@ -430,7 +433,7 @@
       "type": "timeseries",
       "title": "Agent invocation duration p95 by node",
       "description": "One in-process agent span per graph node, named by gen_ai.agent.name. The planner reports as plan rather than invoke_agent because planning here is a named node of the graph rather than an inferred phase.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 69 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
@@ -446,7 +449,7 @@
       "type": "timeseries",
       "title": "Model calls and tool calls per agent invocation (p95)",
       "description": "The two per-invocation process counters the conventions already name for an agent system. A tool call is counted by the tool span itself, so this can never disagree with the number of execute_tool spans under the node. A step change here is the shape of a loop that stopped terminating.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 69 },
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "targets": [
@@ -467,7 +470,7 @@
       "type": "timeseries",
       "title": "Tool execution p95 by tool",
       "description": "gen_ai.tool.name is a closed set of five constants, opened with a constant rather than a caller-supplied string, which is what keeps this panel's cardinality finite.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 77 },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
@@ -483,7 +486,7 @@
       "type": "timeseries",
       "title": "Rate-limit refusals by limiter backend",
       "description": "The honest-refusal rung of the degradation ladder, and the sharpest Redis signal on any metric: under RATE_LIMIT_BACKEND=redis a 429 labelled memory can only mean the Redis limiter raised and the fail-open fallback answered, so the per-principal cap has silently become per-worker.",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 77 },
       "fieldConfig": { "defaults": { "unit": "cps" }, "overrides": [] },
       "targets": [

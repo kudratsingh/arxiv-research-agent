@@ -1,0 +1,26 @@
+# The file provider that loads `dashboard.json`.
+#
+# `options.path` is the directory `compose.viewers.yml` mounts the
+# dashboard into. The two have to agree, and
+# `tests/test_operability_docs.py` asserts they do — a provider pointing
+# at an empty directory starts Grafana perfectly happily and provisions
+# nothing, which looks exactly like a Grafana that is working.
+#
+# `allowUiUpdates: false` for the same reason the datasource is not
+# editable: the JSON in this repository is the dashboard, it is checked
+# against `src/` by a test on every PR, and an edit made in the UI would
+# be reverted by the next sweep without telling anybody.
+
+apiVersion: 1
+
+providers:
+  - name: arxiv-research-agent
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

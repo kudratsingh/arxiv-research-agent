@@ -522,6 +522,58 @@ jobs:
             -f docker-compose.yml \
             -f deploy/hetzner/compose.prod.yml \
             config --quiet
+      - name: Validate observability overlays
+        # WO-INF1. The same treatment for the two optional layers in
+        # `deploy/observability/`, checked BOTH as the pair an operator
+        # runs to collect and as the trio they run to look. Neither is
+        # in the default path — `test_the_default_compose_path_does_not
+        # _reference_the_overlay` fails the build if that ever changes —
+        # so nothing else in CI would ever resolve these files, and a
+        # typo in one would surface on somebody's box during an
+        # incident. Resolves and validates only; starts nothing.
+        env:
+          ANTHROPIC_API_KEY: dummy
+        run: |
+          docker compose \
+            -f docker-compose.yml \
+            -f deploy/observability/compose.observability.yml \
+            config --quiet
+          docker compose \
+            -f docker-compose.yml \
+            -f deploy/observability/compose.observability.yml \
+            -f deploy/observability/compose.viewers.yml \
+            config --quiet
+      - name: Check the alert rules parse (promtool)
+        # WO-INF1, and the highest-value line in it. `alerts.yml` has
+        # carried 17 rules since ADR 0073 and nothing had ever PARSED
+        # them: `tests/test_operability_docs.py` reads the file as YAML
+        # and checks the metric names against `src/`, which is a real
+        # gate and is not the same gate — a rule whose `expr` is
+        # unparseable PromQL, whose `for:` is not a duration, or whose
+        # group is malformed passes every test in that file and is
+        # rejected by Prometheus at load, which is to say during the
+        # first incident it was written for.
+        #
+        # Run through the SAME pinned image the overlay evaluates them
+        # with, so the checker and the evaluator cannot drift apart;
+        # `test_ci_checks_the_alert_rules_with_promtool` asserts the two
+        # tags agree.
+        #
+        # Both invocations, because they cover different halves.
+        # `check rules` guarantees the rule file itself is checked.
+        # `check config` follows `rule_files:` out of `prometheus.yml`,
+        # which additionally proves the path the container will actually
+        # load from resolves — but would happily report "0 rule files
+        # found" and succeed if that stanza were ever deleted.
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "${PWD}/deploy/observability:/etc/prometheus:ro" \
+            prom/prometheus:v3.7.3 \
+            check rules /etc/prometheus/alerts.yml
+          docker run --rm --entrypoint promtool \
+            -v "${PWD}/deploy/observability:/etc/prometheus:ro" \
+            prom/prometheus:v3.7.3 \
+            check config /etc/prometheus/prometheus.yml
       - name: Build image
         # Cache the layer graph in the runner's local GHA cache — a
         # rebuild without dep changes lands in ~30s vs. ~4min cold.
@@ -532,8 +584,10 @@ jobs:
         # rule the other bounds use does not apply here: this step's cold path
         # is ~20x its warm one (the job comment above records 13-15 min), so
         # the bound comes off the job's ceiling instead. Twenty-two leaves
-        # three minutes for the checkout, the buildx setup and the two compose
-        # validations, which together measure under 10 s — and unlike every
+        # three minutes for the checkout, the buildx setup, the four compose
+        # validations and the promtool check — the last of which pulls the
+        # pinned Prometheus image, so the pre-build steps now measure in the
+        # tens of seconds rather than under ten — and unlike every
         # other bound in this file it buys no rescued report, because this is
         # the job's last step. What it buys is a failure that names the step
         # rather than a job killed at its ceiling with no line saying why.

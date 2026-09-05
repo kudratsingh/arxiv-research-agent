@@ -1,0 +1,41 @@
+# The one datasource `dashboard.json` needs, provisioned by file.
+#
+# `uid` is fixed and it is the whole point. Grafana's *export for
+# sharing* format carries an `__inputs` block and `${DS_PROMETHEUS}`
+# placeholders, which the import wizard resolves by asking a human — and
+# which **file provisioning does not resolve at all**. A dashboard
+# provisioned in that form renders every panel against a datasource uid
+# that is literally the string `${DS_PROMETHEUS}`: 28 panels, no error
+# banner, no data, forever.
+#
+# So the dashboard names a datasource *variable* whose saved value is
+# the uid below. In this stack it resolves here; in somebody else's
+# Grafana the variable falls back to the first Prometheus datasource,
+# which is what keeps the file importable as well as provisionable.
+#
+# `editable: false` because the file is the source of truth: a change
+# made in the UI would be silently reverted on the next provisioning
+# sweep, and a datasource that reverts under you is worse than one you
+# cannot edit.
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: arxiv-prometheus
+    type: prometheus
+    access: proxy
+    # The compose service name on the overlay's network, not a
+    # published port: Grafana reaches Prometheus over the Docker
+    # network, and 127.0.0.1:9090 inside the container is Grafana.
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      # Matches `scrape_interval` in prometheus.yml. Without it Grafana
+      # picks a `$__interval` off the panel width alone and a 5m rate
+      # window over 15s samples can end up computed from two points.
+      timeInterval: 15s
+      # POST so a long selector (the SLI panels carry several label
+      # matchers) does not hit a URL length limit.
+      httpMethod: POST

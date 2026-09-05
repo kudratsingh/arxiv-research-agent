@@ -430,6 +430,49 @@ in production and said nothing. Refusing is the ADR-0046 rule every
 other knob here follows; the reversal of ADR 0066's local exception is
 deliberate and is recorded in that ADR's gap list.
 
+**When you are trying to look at one specific run, set it to `1.0`.**
+The observability overlay's own default is `0.1`, which means nine
+attempts in ten produce nothing at all and the trace viewer looks broken
+rather than empty. The overlay reads the variable from the host
+(`compose.observability.yml`) precisely so that this is a prefix on one
+command rather than an edit to a file.
+
+### Actually looking at one
+
+The span table above is a claim, and until WO-INF1 there was no way in
+this repository to check it: the collector overlay exported traces to
+`debug: verbosity: basic`, which writes a span count to a log and is not
+a waterfall.
+
+[`deploy/observability/compose.viewers.yml`](../deploy/observability/compose.viewers.yml)
+adds Jaeger — all-in-one, in-memory, loopback only — and
+[its README](../deploy/observability/README.md#seeing-one-job-as-one-trace)
+carries the one command that renders a job as a single tree at zero
+spend. The short version:
+
+```bash
+TRACE_SAMPLE_RATIO=1.0 USE_MOCK_DATA=true \
+ANTHROPIC_API_KEY=local-preview-disabled \
+docker compose -f docker-compose.yml \
+  -f deploy/observability/compose.observability.yml \
+  -f deploy/observability/compose.viewers.yml up -d --wait
+```
+
+Then `POST /research` and open `http://127.0.0.1:16686`. Eight spans,
+one trace, across two processes — which is the "one job is one trace"
+property above, seen rather than asserted.
+
+The honest limit: mock mode (ADR 0080) branches in front of every model
+call, so that trace contains **no `chat` spans** and none of the
+`gen_ai.*` request, usage or cost attributes in the table above. Those
+need a real credential and real money. Dropping `USE_MOCK_DATA` at the
+disabled sentinel does produce a `chat` span for free — but the job
+fails at the planner's first call, so the trace is four spans ending in
+`error.type=UpstreamModel` rather than a graph. So: mock mode shows the
+whole shape and no model calls; the sentinel shows a model call and no
+whole shape. Both prove the trace is continuous across the process
+boundary, and neither is a clean tree of successful model calls.
+
 ### Content stays off
 
 Spans carry the *shape* of the work, not the text of it. The research

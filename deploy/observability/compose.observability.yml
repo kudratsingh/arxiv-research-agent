@@ -26,10 +26,13 @@
 #   http://127.0.0.1:9090/alerts   the rules in alerts.yml, evaluating
 #   http://127.0.0.1:8889/metrics  the collector's Prometheus surface
 #
-# Import `dashboard.json` into a Grafana pointed at the Prometheus. No
-# Grafana service ships here: the dashboard is a file, and a fourth
-# process to render it is another decision this overlay does not make
-# for you.
+# To also RENDER any of it — `dashboard.json` in a Grafana, and traces
+# as a waterfall rather than a line in the collector's log — stack
+# `compose.viewers.yml` on top of this file. That is a third file and
+# not a bigger second one: `test_the_overlay_only_adds_services_and_env`
+# pins this file's additions to exactly `{otel-collector, prometheus}`,
+# and collecting is a thing you leave running while looking at it is
+# not.
 #
 # ## Both ports are loopback-bound
 #
@@ -86,10 +89,17 @@ services:
       # scrape makes every other sample a repeat; pushing more often
       # just discards work.
       OTEL_METRIC_EXPORT_INTERVAL_SEC: "15"
-      # One trace in ten. Metrics are complete regardless — sampling
-      # applies to traces only — so this trades trace coverage for
-      # collector cost and nothing in `alerts.yml` depends on it.
-      TRACE_SAMPLE_RATIO: "0.1"
+      # One trace in ten by default. Metrics are complete regardless —
+      # sampling applies to traces only — so this trades trace coverage
+      # for collector cost and nothing in `alerts.yml` depends on it.
+      #
+      # Parameterised, not pinned, and the same lesson `MAX_COST_USD`
+      # carries in `docker-compose.yml`: a hard-coded value here
+      # silently outranked `TRACE_SAMPLE_RATIO=1.0 docker compose up`,
+      # which is the first thing anyone types when they are trying to
+      # look at ONE run. Nine times in ten they got nothing back and
+      # concluded tracing was broken. Same default, now overridable.
+      TRACE_SAMPLE_RATIO: "${TRACE_SAMPLE_RATIO:-0.1}"
       # Deliberately absent: OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT.
       # Turning it on sends paper text, research queries and learner
       # writing to the collector. `docs/observability.md` has the

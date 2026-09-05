@@ -8,7 +8,7 @@ invisible right up until the incident it was supposed to catch. Nothing
 else in this repository would notice, which is why this file exists and
 why it is the deliverable of WO-A12 rather than the prose it guards.
 
-Four claims are under test, and each of them is a claim about two
+Six claims are under test, and each of them is a claim about two
 artifacts agreeing:
 
   - **Alert rules and dashboard panels name instruments that exist.**
@@ -30,6 +30,20 @@ artifacts agreeing:
   - **The assumptions the names rest on are still true**: the collector
     still pins `add_metric_suffixes: false`, and the default compose
     path still does not reference the overlay.
+  - **A dashboard panel can actually ASK its question** (WO-INF1). The
+    first claim above checks the words in an `expr`; this one checks
+    that the panel resolves a datasource something in
+    `deploy/observability/` provisions. Both are needed, and for two
+    waves only the first existed: `dashboard.json` shipped in Grafana's
+    export-for-sharing format, so a provisioned copy rendered 28 panels
+    against the literal uid `${DS_PROMETHEUS}` while every name in it
+    was correct and this file was green.
+  - **The alert rules are parsed by a parser** (WO-INF1). Nothing here
+    reads PromQL — an `expr` that does not parse, a `for:` that is not
+    a duration, a duplicated group name, all pass every check above and
+    are rejected by Prometheus at load. `promtool` is what parses them,
+    it runs in CI, and the step is asserted here because a deleted
+    workflow step is otherwise invisible.
 
 ## The one transformation between the two vocabularies
 
@@ -55,11 +69,22 @@ as prose and skipped. That is a real hole and a narrow one: it means
 `` `resilence_degraded` `` still fails. Widening it would require
 parsing English.
 
+And it still stops short of *rendering*. `test_every_panel_resolves_a_
+datasource` proves the panel has something to ask; it does not prove
+Grafana draws a line, because that needs a Grafana. The command in
+`deploy/observability/README.md` is how a human closes that last gap,
+and WO-INF1's PR records the run.
+
 Mutation-check: renaming any instrument in
 `src/observability/metrics.py` (or any `METRIC_*` constant in
 `semconv.py`) fails `test_every_alert_metric_exists_in_src`; deleting a
 name from `KNOWN_EVENTS` fails
-`test_every_runbook_log_signal_is_a_known_event`.
+`test_every_runbook_log_signal_is_a_known_event`; restoring
+`dashboard.json` to its pre-WO-INF1 export format fails
+`test_the_dashboard_is_not_in_grafana_export_format` and
+`test_every_panel_resolves_a_datasource` while
+`test_every_dashboard_metric_exists_in_src` stays green, which is the
+whole reason those two exist.
 """
 
 from __future__ import annotations
@@ -82,6 +107,12 @@ _ROOT: Final = pathlib.Path(__file__).resolve().parents[1]
 _SRC: Final = _ROOT / "src"
 _OBS: Final = _ROOT / "deploy" / "observability"
 _RUNBOOKS: Final = _ROOT / "docs" / "runbooks"
+_WORKFLOW: Final = _ROOT / ".github" / "workflows" / "ci.yml"
+
+#: Grafana's file provisioning, which `compose.viewers.yml` mounts.
+_GRAFANA_PROVISIONING: Final = _OBS / "grafana" / "provisioning"
+_GRAFANA_DATASOURCES: Final = _GRAFANA_PROVISIONING / "datasources" / "prometheus.yml"
+_GRAFANA_DASHBOARDS: Final = _GRAFANA_PROVISIONING / "dashboards" / "dashboards.yml"
 
 #: The seven incident runbooks. `pilot.md` is deliberately absent: it
 #: predates this work order, documents a *procedure* rather than an
@@ -164,6 +195,13 @@ _PROMQL_GROUPING = re.compile(
 # The lookbehind is what stops `28d` from yielding the identifier `d`
 # and `0.95` from yielding anything at all.
 _IDENTIFIER = re.compile(r"(?<![0-9A-Za-z_:.])[A-Za-z_][A-Za-z0-9_]*")
+
+#: A Grafana datasource reference that is a dashboard variable rather
+#: than a uid: `${datasource}`. `${DS_PROMETHEUS}` matches this too, and
+#: is caught by the variable it names not being declared — which is
+#: exactly the defect, because an `__inputs` token looks like a variable
+#: and is not one.
+_DATASOURCE_VARIABLE = re.compile(r"^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$")
 
 #: A backticked span in a doc that is a bare telemetry identifier.
 #: Anything else in backticks is prose and is skipped — see the module
@@ -329,14 +367,65 @@ def _log_alarms() -> list[dict[str, Any]]:
     return alarms
 
 
+def _dashboard() -> dict[str, Any]:
+    document: dict[str, Any] = json.loads(
+        (_OBS / "dashboard.json").read_text(encoding="utf-8")
+    )
+    return document
+
+
+def _dashboard_panels() -> list[dict[str, Any]]:
+    """Every panel, including the ones nested inside a collapsed row.
+
+    A collapsed row carries its children in its own `panels` list rather
+    than at the top level, so a flat read of `document["panels"]` stops
+    seeing a panel the moment somebody collapses the row above it —
+    which is a UI gesture, not a decision to stop checking it.
+    """
+    panels: list[dict[str, Any]] = []
+    for panel in _dashboard().get("panels", []):
+        panels.append(panel)
+        panels.extend(panel.get("panels", []))
+    return panels
+
+
 def _dashboard_targets() -> list[tuple[str, str]]:
     """Every `(panel title, expr)` in the dashboard definition."""
-    document = json.loads((_OBS / "dashboard.json").read_text(encoding="utf-8"))
     return [
         (panel["title"], target["expr"])
-        for panel in document["panels"]
+        for panel in _dashboard_panels()
         for target in panel.get("targets", [])
     ]
+
+
+def _dashboard_datasource_variables() -> dict[str, dict[str, Any]]:
+    """The dashboard's `type: datasource` template variables, by name."""
+    listed = _dashboard().get("templating", {}).get("list", [])
+    return {
+        variable["name"]: variable
+        for variable in listed
+        if variable.get("type") == "datasource"
+    }
+
+
+def _provisioned_datasources() -> dict[str, dict[str, Any]]:
+    """The datasources Grafana provisioning declares, by uid."""
+    document = _load_yaml(_GRAFANA_DATASOURCES.relative_to(_OBS).as_posix())
+    return {source["uid"]: source for source in document["datasources"]}
+
+
+def _compose_mounts(compose_file: str, service: str) -> dict[str, str]:
+    """A service's bind mounts in one compose file, as target -> source.
+
+    Short-form only (`source:target[:mode]`), which is the form every
+    file in this directory uses.
+    """
+    definition = _load_yaml(compose_file)["services"][service]
+    mounts: dict[str, str] = {}
+    for entry in definition.get("volumes", []):
+        source, target = entry.split(":")[:2]
+        mounts[target] = source
+    return mounts
 
 
 def _signal_table_rows(runbook: str) -> list[tuple[str, str]]:
@@ -455,6 +544,42 @@ class TestAlertRulesNameRealInstruments:
             f"dashboard panels reference metrics that no longer exist: {missing}"
         )
 
+    def test_the_dashboard_does_not_quietly_lose_a_panel(self) -> None:
+        # Two failures this catches, and neither of them fails anything
+        # else in this file.
+        #
+        # A panel that is DELETED. Every check above iterates the panel
+        # list, and a loop over a shorter list passes; a dashboard with
+        # one panel left would satisfy all of them. WO-INF1 rewrote this
+        # file wholesale (out of Grafana's export format), and a
+        # wholesale rewrite is exactly when a panel added last week
+        # disappears without anybody noticing.
+        #
+        # A walk that STOPS DESCENDING. Collapse a row and its children
+        # move into the row's own `panels` list; if `_dashboard_panels`
+        # ever stopped following that, the checks above would pass over
+        # what was left.
+        #
+        # The floor is today's exact count, not a round number under it:
+        # losing one panel is the failure, so one lost panel has to be
+        # the failure. Growth up to the ceiling is free — a new
+        # instrument arrives with a panel, which is what
+        # `test_every_instrument_is_watched_by_something` requires —
+        # and past it the band gets re-centred deliberately.
+        panels = [panel for panel in _dashboard_panels() if panel.get("targets")]
+        targets = _dashboard_targets()
+        assert 22 <= len(panels) <= 30, (
+            f"{len(panels)} panels carry queries; 22 is the floor. Below "
+            "it a panel has been dropped or the walk has stopped "
+            "descending into collapsed rows, and every check above is "
+            "iterating a shorter list without complaining."
+        )
+        assert 26 <= len(targets) <= 36, (
+            f"{len(targets)} dashboard targets found; 26 is the floor. A "
+            "panel can also lose one of several queries, which leaves "
+            "the panel count intact."
+        )
+
     def test_every_instrument_is_watched_by_something(self) -> None:
         watched: set[str] = set()
         for rule in _alert_rules():
@@ -497,6 +622,145 @@ class TestAlertRulesNameRealInstruments:
         # decision, and there is nobody to route to.
         for rule in _alert_rules():
             assert rule["labels"]["severity"] in {"page", "ticket"}
+
+
+class TestTheDashboardIsProvisionable:
+    """A query naming a real metric is not the same as a working panel.
+
+    The class above checks that every `expr` names an instrument `src/`
+    emits. That is a real check and it was the ONLY one, which meant it
+    could not tell a working dashboard from a dead one: `dashboard.json`
+    shipped in Grafana's *export for sharing* format — an `__inputs`
+    block plus `${DS_PROMETHEUS}` placeholders — and Grafana's file
+    provisioning does not resolve `__inputs`. Every panel's datasource
+    uid was the literal seven-character string `${DS_PROMETHEUS}`. On
+    Grafana 12.3.0 that renders 28 panels, no banner, and one console
+    line per panel: `Datasource ${DS_PROMETHEUS} was not found`.
+
+    Every expression in it was correct. Every metric existed. The
+    dashboard showed nothing, and the test said it was fine.
+
+    So the claim here is the other half: a panel resolves a datasource
+    that something in this repository actually provisions.
+    """
+
+    def test_the_dashboard_is_not_in_grafana_export_format(self) -> None:
+        document = _dashboard()
+        raw = (_OBS / "dashboard.json").read_text(encoding="utf-8")
+        assert "__inputs" not in document, (
+            "`__inputs` is Grafana's export-for-sharing format. The "
+            "import *wizard* resolves it by asking a human which "
+            "datasource to use; file provisioning does not resolve it "
+            "at all, and leaves every panel pointed at a uid that is "
+            "the placeholder string itself."
+        )
+        assert "${DS_" not in raw, (
+            "a `${DS_*}` token is an `__inputs` placeholder. It looks "
+            "like a dashboard variable and is not one: nothing "
+            "substitutes it outside the import wizard."
+        )
+
+    def test_every_panel_resolves_a_datasource(self) -> None:
+        variables = _dashboard_datasource_variables()
+        provisioned = _provisioned_datasources()
+        unresolved: list[str] = []
+
+        for panel in _dashboard_panels():
+            if not panel.get("targets"):
+                continue  # a row, or a text panel: nothing to query
+            title = panel["title"]
+            source = panel.get("datasource")
+            if not isinstance(source, dict) or "uid" not in source:
+                unresolved.append(f"{title!r}: no datasource")
+                continue
+
+            uid = source["uid"]
+            match = _DATASOURCE_VARIABLE.match(uid)
+            if match is None:
+                if uid not in provisioned:
+                    unresolved.append(
+                        f"{title!r}: uid {uid!r} is provisioned nowhere"
+                    )
+                continue
+
+            variable = variables.get(match.group(1))
+            if variable is None:
+                unresolved.append(
+                    f"{title!r}: {uid} names no datasource variable"
+                )
+                continue
+            if variable.get("query") != source.get("type"):
+                unresolved.append(
+                    f"{title!r}: {uid} selects "
+                    f"{variable.get('query')!r} datasources but the panel "
+                    f"declares type {source.get('type')!r}"
+                )
+                continue
+            # The variable's saved value is what a freshly provisioned
+            # Grafana loads the panel against, before anybody touches
+            # the picker. If it names a uid nothing provisions, the
+            # first paint is empty.
+            saved = (variable.get("current") or {}).get("value")
+            if saved not in provisioned:
+                unresolved.append(
+                    f"{title!r}: {uid} defaults to uid {saved!r}, which "
+                    "is provisioned nowhere"
+                )
+
+        assert not unresolved, (
+            "these panels cannot resolve a datasource when the dashboard "
+            f"is provisioned from a file: {unresolved}. A panel that "
+            "cannot resolve one renders empty with no error banner, "
+            "which is indistinguishable from an idle fleet — the same "
+            "failure mode the metric-name checks above exist to catch, "
+            "one layer down."
+        )
+
+    def test_the_provisioned_datasource_points_at_the_overlay(self) -> None:
+        provisioned = _provisioned_datasources()
+        assert len(provisioned) == 1, (
+            "one datasource, so the dashboard variable's fallback (the "
+            f"first Prometheus in the org) is unambiguous: {provisioned}"
+        )
+        (source,) = provisioned.values()
+        assert source["type"] == "prometheus"
+        # The compose service name on the overlay's network. `127.0.0.1`
+        # here would be Grafana's own loopback, and a published host
+        # port would not exist from inside the container.
+        prometheus_port = _load_yaml("compose.observability.yml")["services"][
+            "prometheus"
+        ]["ports"][0]
+        assert prometheus_port.endswith(":9090")
+        assert source["url"] == "http://prometheus:9090"
+
+    def test_the_dashboard_provider_reads_the_mounted_directory(self) -> None:
+        # A provider pointing at an empty directory starts Grafana
+        # perfectly happily and provisions nothing, which looks exactly
+        # like a Grafana that is working until you go looking for the
+        # dashboard. The two ends have to agree, so they are asserted to.
+        provider = _load_yaml(_GRAFANA_DASHBOARDS.relative_to(_OBS).as_posix())
+        (entry,) = provider["providers"]
+        directory = entry["options"]["path"]
+
+        mounts = _compose_mounts("compose.viewers.yml", "grafana")
+        dashboards = {
+            target: source
+            for target, source in mounts.items()
+            if target.startswith(f"{directory}/")
+        }
+        assert dashboards, (
+            f"the provider reads {directory} and `compose.viewers.yml` "
+            f"mounts nothing into it: {sorted(mounts)}"
+        )
+        assert set(dashboards.values()) == {"./deploy/observability/dashboard.json"}
+        assert entry["type"] == "file"
+
+        # And the provisioning tree itself reaches Grafana's own path,
+        # or neither the provider nor the datasource is ever read.
+        assert (
+            mounts["/etc/grafana/provisioning"]
+            == "./deploy/observability/grafana/provisioning"
+        )
 
 
 class TestLogAlarmsNameRealEvents:
@@ -685,3 +949,128 @@ class TestTheOverlayStaysOptional:
         # ...and the reason is written down where somebody editing it will
         # read it, not only here.
         assert "CAPTURE_MESSAGE_CONTENT" in text
+
+
+class TestTheViewersStayASeparateDecision:
+    """Grafana and Jaeger are a third file, and the third file stays small.
+
+    The overlay above is the thing you leave running: it has retention,
+    it evaluates `alerts.yml`, and `:9090/alerts` answers the question
+    that has to be answerable at 3am. Grafana and Jaeger are two more
+    processes whose whole job is drawing pictures for somebody who is
+    currently looking. They could not go in the overlay anyway —
+    `test_the_overlay_only_adds_services_and_env` pins its service set —
+    and that constraint happens to be the right shape.
+    """
+
+    def test_it_only_adds_the_two_viewers(self) -> None:
+        base = yaml.safe_load(
+            (_ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        )
+        overlay = _load_yaml("compose.observability.yml")
+        viewers = _load_yaml("compose.viewers.yml")
+        added = (
+            set(viewers["services"]) - set(base["services"]) - set(overlay["services"])
+        )
+        assert added == {"grafana", "jaeger"}, (
+            "the viewers file has grown a service that is neither a "
+            f"viewer nor an override of something below it: {added}"
+        )
+        # The only default-stack service it touches, and — like the
+        # overlay's own edit to it — additively, environment only.
+        assert set(viewers["services"]) & set(base["services"]) == {"app"}
+        assert set(viewers["services"]["app"]) == {"environment"}
+
+    def test_it_does_not_turn_content_capture_on_either(self) -> None:
+        # The overlay is asserted not to do this three tests up. A
+        # second file that overrides `app`'s environment is a second
+        # place it could happen, and paper text reaching a trace store
+        # with a UI on it is strictly worse than it reaching a log line.
+        env = _load_yaml("compose.viewers.yml")["services"]["app"]["environment"]
+        assert "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT" not in env
+        assert "LOG_CAPTURE_USER_CONTENT" not in env
+
+    def test_the_trace_viewer_keeps_its_ingest_ports_off_the_host(self) -> None:
+        # The UI is published on loopback; the OTLP receivers are not
+        # published at all. A published 4317/4318 is an unauthenticated
+        # write endpoint for anything that can reach the host.
+        published = _load_yaml("compose.viewers.yml")["services"]["jaeger"]["ports"]
+        assert [port.split(":")[-1] for port in published] == ["16686"]
+        for port in published:
+            assert "127.0.0.1" in port
+
+    def test_the_traces_fragment_does_not_restate_the_suffix_setting(self) -> None:
+        # `compose.viewers.yml` hands the collector a SECOND `--config`
+        # rather than replacing the first, precisely so that
+        # `add_metric_suffixes: false` — which every metric name in
+        # `alerts.yml` and `dashboard.json` depends on, and which
+        # `test_collector_disables_metric_suffixes` guards in exactly
+        # one file — cannot acquire a second home to drift in.
+        fragment = _load_yaml("otel-collector-traces.yaml")
+        assert "prometheus" not in fragment["exporters"], (
+            "the traces fragment has grown a Prometheus exporter, which "
+            "means the suffix setting now exists in two files and the "
+            "test that guards it only reads one of them"
+        )
+        # The whole document, not the raw text: the header block
+        # explains the setting at length and should keep being allowed
+        # to. What must not appear is the setting itself.
+        assert "add_metric_suffixes" not in json.dumps(fragment)
+        assert "metrics" not in fragment["service"]["pipelines"], (
+            "the traces fragment restates the metrics pipeline, so the "
+            "merged config no longer inherits it from the base file"
+        )
+        command = _load_yaml("compose.viewers.yml")["services"]["otel-collector"][
+            "command"
+        ]
+        assert command == [
+            "--config=/etc/otelcol/config.yaml",
+            "--config=/etc/otelcol/traces.yaml",
+        ], f"the base config is no longer the first --config: {command}"
+
+
+class TestTheAlertRulesAreSyntaxChecked:
+    """The rules were never parsed by anything until WO-INF1.
+
+    Everything above reads `alerts.yml` as YAML and checks the metric
+    NAMES inside it. None of that parses PromQL, and none of it is what
+    Prometheus does at load: an `expr` that does not parse, a `for:`
+    that is not a duration, a duplicated group name — every one of those
+    passes this file and is rejected by the process that was supposed to
+    evaluate it, at the moment somebody stands the overlay up during an
+    incident.
+
+    `promtool` is the parser, it ships inside the image the overlay
+    already pins, and the CI step that runs it is asserted here because
+    a deleted workflow step is otherwise invisible: the rules would go
+    back to never having been parsed and every test in this file would
+    stay green.
+    """
+
+    def test_ci_checks_the_alert_rules_with_promtool(self) -> None:
+        workflow = _WORKFLOW.read_text(encoding="utf-8")
+        assert "promtool" in workflow, (
+            "no `promtool` in the workflow: nothing parses `alerts.yml` "
+            "before the Prometheus that has to load it does"
+        )
+        assert "check rules /etc/prometheus/alerts.yml" in workflow
+        # `check config` follows `rule_files:` out of prometheus.yml, so
+        # it additionally proves the path the container loads from
+        # resolves — but reports "0 rule files found" and SUCCEEDS if
+        # that stanza is deleted, which is why both invocations are
+        # asserted rather than either alone.
+        assert "check config /etc/prometheus/prometheus.yml" in workflow
+
+    def test_the_checker_is_the_image_that_evaluates_them(self) -> None:
+        # A promtool from a different Prometheus than the one the
+        # overlay runs is a checker that can accept what the evaluator
+        # rejects — the exact class of silent drift this whole file
+        # exists to prevent, one layer up.
+        image = _load_yaml("compose.observability.yml")["services"]["prometheus"][
+            "image"
+        ]
+        workflow = _WORKFLOW.read_text(encoding="utf-8")
+        assert f"{image}\n" in workflow or f"{image} " in workflow, (
+            f"the overlay evaluates the rules with {image}, and the "
+            "workflow checks them with something else"
+        )
