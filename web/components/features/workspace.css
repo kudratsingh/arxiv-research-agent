@@ -77,7 +77,16 @@
    row and the reading column together. At `45vh` this row took all of it, the
    column measured ZERO, and the composer sat on top of the turns where a
    click could not reach them (observed). 14rem leaves the column 100px there
-   and more at every taller viewport. */
+   and more at every taller viewport.
+
+   `attached` AND NOT `review`, WHICH IS THE WO-S2 REPAIR. The selector used
+   to be "a run is on this page"; it is now "a run is on this page AND events
+   are arriving". At the review pause the run is stopped, nothing lands in the
+   spine, and the box bought no CLS — it only hid the editor: measured at 771px
+   of 994px on a 1280x900 desktop and 1,545px of 1,768px at 412x915, with
+   `Approve plan` at y=1007 and y=1785 respectively and no scrollbar anywhere
+   to say so. `ThreadTimeline` writes the third value; the shell's own document
+   mode (`workbench.css`) is what gives the uncapped row somewhere to go. */
 .ew-thread__run[data-run="attached"] {
   height: 14rem;
   overflow-y: auto;
@@ -124,6 +133,65 @@
 .ew-thread__composer {
   padding: var(--space-4) var(--space-6);
   min-width: 0;
+}
+
+/* -------------------------------------------------------------------------
+ * WO-S2 — DOCUMENT MODE, the thread's half.
+ *
+ * `workbench.css` carries the shell's half and the whole argument for why
+ * the frame is abandoned in these two conditions. This block is only what
+ * the THREAD stops doing once the page above it scrolls: it stops being a
+ * fixed-height box, and its two nested scrollers stop being scrollers, so
+ * that the route has exactly one scroll region and it is the document.
+ *
+ * The two conditions are written twice rather than joined, because one is a
+ * media query and one is a state and CSS has no way to say "either of
+ * these". They are adjacent and carry the same declarations on purpose.
+ *
+ * `min-height: 100%` and not `height`: short threads still fill the surface,
+ * so the composer sits on the bottom edge exactly where the loading frame
+ * left it, and only a thread with more than a viewport of content pushes it
+ * down. That is the whole of the CLS-0 promise `.ew-thread--loading` makes,
+ * kept in a document.
+ * ---------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .ew-thread {
+    height: auto;
+    min-height: 100%;
+  }
+
+  /* THE `attached` BOUND IS NOT LIFTED HERE, AND THAT IS A MEASUREMENT.
+     Lifting it below md was written, measured and reverted: with the row
+     free to grow, the ledger gaining its horizontal scrollbar pushes the
+     reading column 20px down, and the three-checkpoint measurement at
+     412x915 went from 0.00004 to 0.01911 — most of 04 §8.2's whole 0.02
+     budget, spent on a row nobody is trying to read. A LIVE run's row
+     therefore stays the bounded box `cls.spec.ts` was written for at every
+     width. What changes below md is that the box now sits in a document
+     instead of in a frame, so everything BELOW it is reachable — and the two
+     surfaces this work order is about are the reading column and the review
+     pause, neither of which is this rule. */
+
+  /* Row 3 stops being the reading PORTHOLE and becomes the reading column:
+     measured at 219px over 1,235px on `baseline-succeeded` at 412x915, with
+     `Briefing` at y=655 and `Export` at y=650 below a porthole ending at
+     y=629, on a page whose own `scrollHeight` was exactly the viewport's. */
+  .ew-thread__timeline {
+    overflow-y: visible;
+    overscroll-behavior: auto;
+    scrollbar-gutter: auto;
+  }
+}
+
+.ew-thread:has(> .ew-thread__run[data-run="review"]) {
+  height: auto;
+  min-height: 100%;
+}
+
+.ew-thread:has(> .ew-thread__run[data-run="review"]) .ew-thread__timeline {
+  overflow-y: visible;
+  overscroll-behavior: auto;
+  scrollbar-gutter: auto;
 }
 
 /* -------------------------------------------------------------------------

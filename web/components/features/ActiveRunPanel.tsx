@@ -151,6 +151,39 @@ export function hasActiveRun(state: JobState): boolean {
   return !(state.jobId === null && state.phase === "idle");
 }
 
+/**
+ * Is the run PAUSED ON THE READER — the review pause, with an editor in the
+ * row (WO-S2)?
+ *
+ * Exported for the same reason `hasActiveRun` is, and it answers a different
+ * question the row above the reading column has to be able to ask. The
+ * bounded-box contract that row carries exists for one thing: a checkpoint
+ * arriving in the spine during a live run must not move the briefing
+ * (criterion 5, `workspace.css`). At the review pause nothing is arriving —
+ * the run is stopped and spending nothing until this reader answers — so the
+ * bound buys no CLS there, and what it costs is the only control that can
+ * restart the run. Measured on `17d2916`: 1,545px of the editor hidden inside
+ * a 224px box at 412px wide, `Approve plan` at y=1785 on a 915px viewport, and
+ * no scrollbar to say so.
+ *
+ * IT IS THE MOUNT CONDITION ITSELF, NOT A COPY OF IT. The panel below derives
+ * its `plan` from this function, so "the editor is in the row" and "the row is
+ * exempt from the bound" are one expression evaluated once. That matters most
+ * for the third disjunct: WO-S3 added `planStatus === "stale"` — the 409,
+ * where `machine.ts` sends the machine back through `attaching` and the phase
+ * alone would take the editor away at exactly the moment the user needs it,
+ * their edits still in it. A row that reported `attached` there would clip the
+ * conflict banner and the approve control back out of reach, which is this
+ * defect returning through the other lane's door.
+ */
+export function isReviewPause(state: JobState): boolean {
+  const reviewing =
+    state.phase === "awaiting_review" ||
+    state.phase === "resolving" ||
+    planStatusOf(state) === "stale";
+  return reviewing && state.plan !== null;
+}
+
 export interface ActiveRunPanelProps {
   /** The thread this run belongs to. Half of the `?job=` href. */
   conversationId: string;
@@ -216,12 +249,15 @@ export function ActiveRunPanel({
    * conflict banner it carries is the only answer to "why did my click do
    * nothing". `planStatusOf` was already computing `stale`; nothing rendered
    * it, because nothing kept the surface mounted long enough to.
+   *
+   * WO-S2 MOVED THE THREE DISJUNCTS INTO `isReviewPause`, unchanged, because
+   * `ThreadTimeline` needs the same answer for the row's geometry: the row
+   * that holds this editor is exempt from the 14rem CLS bound for exactly as
+   * long as this editor is in it. Written twice, the two would drift — and
+   * the state they would drift on is the 409 above, where the drift costs
+   * the user the banner that explains their click.
    */
-  const reviewing =
-    state.phase === "awaiting_review" ||
-    state.phase === "resolving" ||
-    planStatus === "stale";
-  const plan = reviewing ? state.plan : null;
+  const plan = isReviewPause(state) ? state.plan : null;
   const reviewFailure = reviewFailureOf(state);
 
   /**

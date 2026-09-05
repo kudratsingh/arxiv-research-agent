@@ -40,7 +40,10 @@
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 
-import { hasActiveRun } from "@/components/features/ActiveRunPanel";
+import {
+  hasActiveRun,
+  isReviewPause,
+} from "@/components/features/ActiveRunPanel";
 import { QueryComposer } from "@/components/features/QueryComposer";
 import { EmptyState } from "@/components/patterns/EmptyState";
 import { ExportDisclosure } from "@/components/patterns/ExportDisclosure";
@@ -240,19 +243,40 @@ export function ThreadTimeline({
       </header>
 
       {/*
-        `data-run` IS THE CLS CONTRACT, NOT DECORATION (criterion 5). With a
-        run attached this row is a FIXED box that scrolls inside itself, so a
-        checkpoint landing in the spine — or the 3px a scrollbar adds to the
-        ledger when the ticks stop fitting, which is what the browser actually
-        caught — cannot move the reading column below it. With no run it is
-        one sentence and takes one sentence's height, because a 224px empty
-        box on the commonest page on this route is 224px the briefing does not
-        get. `hasActiveRun` is the panel's own predicate so the two cannot
-        disagree about which of those it is.
+        `data-run` IS THE CLS CONTRACT, NOT DECORATION (criterion 5), AND IT
+        HAS THREE VALUES BECAUSE THE ROW HAS THREE JOBS.
+
+        `attached` — a run is live. The row is a FIXED box that scrolls inside
+        itself, so a checkpoint landing in the spine — or the 3px a scrollbar
+        adds to the ledger when the ticks stop fitting, which is what the
+        browser actually caught — cannot move the reading column below it.
+
+        `none` — no run. One sentence, one sentence's height, because a 224px
+        empty box on the commonest page on this route is 224px the briefing
+        does not get.
+
+        `review` — the run is PAUSED ON THIS READER and the plan editor is in
+        the row (WO-S2). The bound is lifted, because the event stream it
+        guards against is stopped: nothing arrives during the pause, so there
+        is no CLS to buy, and the 14rem it costs is the decision the whole
+        pause exists to collect. The survey measured that trade at 1,501px of
+        editor hidden and `Approve plan` at y=1741 on a 915px viewport. The
+        two rules that lift the bound are in `workspace.css`; both key on this
+        attribute, so the geometry and the phase cannot drift apart.
+
+        Both predicates are the panel's own, for the reason `hasActiveRun`
+        already gives: two files asking the question two ways is how the two
+        answers diverge.
       */}
       <div
         className="ew-thread__run"
-        data-run={hasActiveRun(state) ? "attached" : "none"}
+        data-run={
+          isReviewPause(state)
+            ? "review"
+            : hasActiveRun(state)
+              ? "attached"
+              : "none"
+        }
       >
         {runPanel}
       </div>

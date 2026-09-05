@@ -199,6 +199,75 @@
 }
 
 /* -------------------------------------------------------------------------
+ * WO-S2 — DOCUMENT MODE, and why a fixed frame is not always the right shell.
+ *
+ * THE DEFECT, IN ONE SENTENCE. `100dvh` plus `overflow: hidden` twice makes
+ * every route on this shell a fixed frame, and a fixed frame can only ever
+ * offer a nested scroller when its content is taller than the viewport — a
+ * scroller whose scrollbar the platform draws only while it is being used,
+ * inside a page the reader has already learned does not scroll. Two surfaces
+ * were measured out of reach behind exactly that:
+ *
+ *   the plan editor — 771px of 994px hidden inside the 14rem run row at
+ *   1280x900, and 1,545px of 1,768px at 412x915, with `Approve plan` at
+ *   y=1007 and y=1785. The run was paused and spending nothing, and the only
+ *   control that could resume it was off screen with nothing on screen
+ *   saying so.
+ *
+ *   the briefing and its Export — a 219px porthole over 1,235px at 412x915,
+ *   `Briefing` at y=655 and `Export` at y=650 against a porthole ending at
+ *   y=629, and `document.body.scrollHeight` exactly 915: the page itself did
+ *   not scroll, so the journey could not be finished on a phone at all.
+ *
+ * THE REPAIR IS THE CAUSE, NOT THE TWO SYMPTOMS. Where the frame fits it
+ * stays — it is what keeps a checkpoint from moving the reading column
+ * (criterion 5), and the desktop reading experience is unchanged. Where it
+ * demonstrably does not fit, the shell stops being a frame and becomes a
+ * document: `height: auto` with the viewport as a FLOOR rather than a
+ * ceiling, and both clips lifted, so the page scrolls instead of hiding
+ * things behind scrollers nobody can see.
+ *
+ * WHAT "DOES NOT FIT" MEANS, in the two conditions below.
+ *
+ *   1. Below md, always. There is no viewport at these widths in which a
+ *      thread header, a run panel, a briefing and a composer all fit; the
+ *      412px measurements above are the proof, and the composer alone was
+ *      holding 286px of a 915px viewport that the answer already paid for
+ *      never got.
+ *
+ *   2. The review pause, at every width. `:has()` rather than a class on the
+ *      shell, because the shell does not know — and must not have to learn —
+ *      what the route below it is doing; the fact is already on the row
+ *      (`data-run="review"`, `ThreadTimeline`), and this reads it there. The
+ *      pause is the one state where the frame cannot be made to fit at ANY
+ *      width: the editor is 994px on a 1280x900 desktop before the two
+ *      headers and the composer are counted.
+ *
+ * THIS DOES NOT WEAKEN CRITERION 5, which is "incoming events never move the
+ * report column DURING A LIVE RUN". Condition 2 is by definition not a live
+ * run — it is a stopped one waiting on a person. Condition 1 leaves the
+ * `attached` bound in place for as long as the run IS live; what it changes
+ * is that below md the row lives in a document rather than in a porthole.
+ * `e2e/cls.spec.ts` measures both halves, on the desktop project and at the
+ * Pixel 7 profile's own 412px, and both stay green.
+ *
+ * `100vh` before `100dvh` on `min-height` for the same reason the frame
+ * declares that pair on `height`: the first is the fallback for an engine
+ * without `dvh`, and the second wins wherever it parses.
+ * ---------------------------------------------------------------------- */
+.ew-shell:has(.ew-thread__run[data-run="review"]) {
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.ew-shell:has(.ew-thread__run[data-run="review"]) .ew-shell__main,
+.ew-shell:has(.ew-thread__run[data-run="review"]) .ew-shell__surface {
+  height: auto;
+  overflow: visible;
+}
+
+/* -------------------------------------------------------------------------
  * < 768px — drawer mode
  *
  * One column, no rail, and the shell's bottom edge clears the iOS home
@@ -210,6 +279,19 @@
 @media (max-width: 767px) {
   .ew-shell__rail {
     display: none;
+  }
+
+  /* Document mode, condition 1. The argument is in the block above. */
+  .ew-shell {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .ew-shell__main,
+  .ew-shell__surface {
+    height: auto;
+    overflow: visible;
   }
 
   .ew-shell__main {
