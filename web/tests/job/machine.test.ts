@@ -874,3 +874,130 @@ describe("a session run tolerates what a research run tolerates", () => {
     expect(next.frames.at(-1)?.name).toBe("turn_ready");
   });
 });
+
+// ---------------------------------------------------------------------------
+// WO-S3 — a read that succeeds says nothing about the review that failed.
+//
+// `cleared()` runs on every `detail_resolved`, on the sound principle that a
+// call which succeeded supersedes a call which did not. `POST /research/
+// {id}/review` is the exception, and it is the one that matters most: it is
+// the request that commits money, and `GET /research/{id}` answering
+// `pending_review` is proof the decision did NOT take effect — not proof it
+// was never made. Clearing the failure there is what made a rate-limited
+// `Approve plan` erase its own explanation at the next liveness poll.
+// ---------------------------------------------------------------------------
+
+describe("a review failure outlives a read that finds the run still parked", () => {
+  const RATE_LIMITED = {
+    kind: "rate_limited",
+    status: 429,
+    retryAfterSec: 3600,
+    limitPerHour: 1,
+    message: "Rate limit reached.",
+    raw: { detail: { error: "rate_limited", key_id: "web", limit_per_hour: 1 } },
+  } as const;
+
+  function afterRejectedReview(): JobState {
+    return jobReducer(
+      { ...seedFor("awaiting_review"), plan: PENDING_REVIEW.plan ?? null },
+      {
+        type: "review_rejected",
+        failure: RATE_LIMITED,
+        message: "rate_limited",
+        status: 429,
+        at: 1,
+      },
+    );
+  }
+
+  function read(state: JobState, detail: JobDetail, source: "poll" | "attach") {
+    return jobReducer(state, { type: "detail_resolved", detail, source, at: 2 });
+  }
+
+  it("records the failure without moving the phase", () => {
+    const state = afterRejectedReview();
+    // The server never heard the decision, so the run really is still parked
+    // and the working copy is still the thing on screen.
+    expect(state.phase).toBe("awaiting_review");
+    expect(state.failureSource).toBe("review");
+    expect(state.failure).toBe(RATE_LIMITED);
+    expect(state.plan).not.toBeNull();
+  });
+
+  it("survives a poll that finds the run still awaiting review", () => {
+    const state = read(afterRejectedReview(), PENDING_REVIEW, "poll");
+    expect(state.phase).toBe("awaiting_review");
+    expect(state.failureSource).toBe("review");
+    expect(state.failureStatus).toBe(429);
+    expect(state.failure).toBe(RATE_LIMITED);
+  });
+
+  it("survives an attach for the same reason", () => {
+    const state = read(afterRejectedReview(), PENDING_REVIEW, "attach");
+    expect(state.failureSource).toBe("review");
+  });
+
+  it("is cleared the moment the run has actually moved on", () => {
+    const state = read(afterRejectedReview(), RUNNING, "poll");
+    expect(state.phase).toBe("live");
+    expect(state.failure).toBeNull();
+    expect(state.failureSource).toBeNull();
+  });
+
+  it("is cleared by the next decision, which is a new question", () => {
+    const state = jobReducer(afterRejectedReview(), {
+      type: "review_requested",
+      action: "approve",
+      at: 3,
+    });
+    expect(state.failure).toBeNull();
+    expect(state.failureSource).toBeNull();
+    expect(state.review).toEqual({ action: "approve", inFlight: true });
+  });
+
+  it("does NOT preserve a conflict, which the read has just contradicted", () => {
+    // The exception to the exception, and the reason the check is on `kind`
+    // rather than on `failureSource` alone. A 409 is a claim about the RUN'S
+    // STATE — "this is not awaiting review" — and a read answering
+    // `pending_review` contradicts it outright. The read is newer and is the
+    // authority on that question, so the conflict goes and the surface comes
+    // back actionable: `routes.py:261-264`'s answer to a conflict is to
+    // refetch and re-render, not to strand the user behind a banner, and
+    // `e2e/slice.spec.ts` step 3 asserts that same end state in a browser.
+    const conflicted = jobReducer(seedFor("awaiting_review"), {
+      type: "review_conflict",
+      failure: {
+        kind: "conflict",
+        status: 409,
+        state: "running",
+        message: "This action is not available while the job is running.",
+        raw: { detail: "job_not_awaiting_review (status=running)" },
+      },
+      message: "job_not_awaiting_review (status=running)",
+      status: 409,
+      at: 1,
+    });
+    expect(conflicted.failureSource).toBe("review");
+
+    const state = read(conflicted, PENDING_REVIEW, "attach");
+    expect(state.phase).toBe("awaiting_review");
+    expect(state.failure).toBeNull();
+    expect(state.failureSource).toBeNull();
+  });
+
+  it("does not preserve a failure that came from anywhere else", () => {
+    // Only `review` is exempt. A poll or an attach that failed and then
+    // succeeded is superseded by the success, exactly as before.
+    const unreachable = jobReducer(seedFor("awaiting_review"), {
+      type: "detail_unreachable",
+      jobId: "job-1",
+      failure: null,
+      message: "boom",
+      status: null,
+      source: "poll",
+      at: 1,
+    });
+    expect(unreachable.failureSource).toBe("poll");
+    expect(read(unreachable, PENDING_REVIEW, "poll").failureSource).toBeNull();
+  });
+});
