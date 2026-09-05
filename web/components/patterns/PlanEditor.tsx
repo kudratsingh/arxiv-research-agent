@@ -43,9 +43,10 @@ import { Suspense, lazy, useEffect, useId, useRef } from "react";
 import { Button } from "@/components/primitives/Button";
 import { Skeleton } from "@/components/primitives/Skeleton";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
+import { VisuallyHidden } from "@/components/primitives/VisuallyHidden";
 import type { ApiFailure, FieldIssue, Plan, ReviewRequest } from "@/lib/api";
 import { describeErrorType, describeFailure } from "@/lib/copy/errors";
-import { PLAN } from "@/lib/copy/plan";
+import { ADD_ARXIV_QUERY, ADD_SUB_QUESTION, PLAN } from "@/lib/copy/plan";
 import type { PlanDraft } from "@/lib/plan/schema";
 
 import { ALERT_SEVERITIES, StatusBanner } from "./StatusBanner";
@@ -177,6 +178,20 @@ export function PlanEditor({
   // is a working copy that silently fails to reset.
   const planKey = JSON.stringify([plan.sub_questions, plan.search_queries]);
 
+  /**
+   * How many rows the form will open with — the fallback's whole input
+   * (WO-S2b).
+   *
+   * `initialDraft` FIRST, because that is what `PlanEditorFields` opens with:
+   * `draftToValues(initialDraft ?? planToDraft(plan))`. Reading the plan
+   * instead would reserve the server's row count for a restored draft that
+   * has a different one, which is the same shift wearing a different coat.
+   */
+  const fallbackRows: readonly [number, number] = [
+    (initialDraft?.subQuestions ?? plan.sub_questions ?? []).length,
+    (initialDraft?.searchQueries ?? plan.search_queries ?? []).length,
+  ];
+
   // Criterion 5: a 409 refetches and re-renders rather than dead-ending.
   // Once per entry into the state — `GET /research/{id}` is free and
   // read-only (`routes.py:215-232`), but a loop is still a loop.
@@ -297,7 +312,7 @@ export function PlanEditor({
           }
         />
       ) : (
-        <Suspense fallback={<PlanEditorFallback />}>
+        <Suspense fallback={<PlanEditorFallback rows={fallbackRows} />}>
           {/* Keyed by the plan itself: a `plan_ready` frame can legitimately
               repeat with the SAME plan (`routes.py:456-462`), which must not
               throw away a working copy, but a genuinely different plan is a
@@ -317,19 +332,191 @@ export function PlanEditor({
   );
 }
 
+// ---------------------------------------------------------------------------
+// The Suspense fallback (WO-S2b).
+// ---------------------------------------------------------------------------
+
 /**
- * What is on screen while the form's chunk arrives.
+ * The chrome of one column, in the order `PlanEditorFields` renders the two.
  *
- * Reserved height rather than a spinner, at the row count a planner
- * actually emits (2-6, `schemas.py:20-27`), so the surface does not shift
- * when the real fields land — the CLS budget is 0.02 and the baseline
- * measured 0.00 (04 §8.2).
+ * A SECOND COPY OF `PLAN_LIST_SPECS`' COPY, AND THAT IS THE WHOLE POINT OF
+ * THE TABLE. `PLAN_LIST_SPECS` lives in `lib/plan/schema.ts`, which is a
+ * VALUE import away from `react-hook-form`'s types, 460 lines of resolver and
+ * mapping, and — decisively — the module the lazy chunk already pulls. An
+ * eager import of it from here would move the whole module into `/c/[id]`'s
+ * chunk union to read four strings, and that route had 4,126 B of headroom
+ * when this was written. So the strings are taken from the dictionary they
+ * both come from, `lib/copy/plan`, which this file already imports; the
+ * PAIRING (which sentence belongs to which column) is the only thing stated
+ * twice, and `web/tests/plan/fallback.test.tsx` pins it against
+ * `PLAN_LIST_SPECS` field by field so the two cannot drift.
  */
-function PlanEditorFallback() {
+const FALLBACK_COLUMNS = [
+  {
+    key: "subQuestions",
+    label: PLAN.subQuestionsLabel,
+    hint: PLAN.subQuestionsHint,
+    emptyNote: PLAN.noSubQuestions,
+    addLabel: ADD_SUB_QUESTION,
+  },
+  {
+    key: "searchQueries",
+    label: PLAN.arxivQueriesLabel,
+    hint: PLAN.arxivQueriesHint,
+    emptyNote: PLAN.noArxivQueries,
+    addLabel: ADD_ARXIV_QUERY,
+  },
+] as const;
+
+/**
+ * One row's field box, derived rather than guessed.
+ *
+ * `Textarea` renders `rows={2}` of `text-ui-base` inside `p-3` with a 1px
+ * border on each edge, so the box is two line boxes plus two paddings plus
+ * two hairlines — 74px at the current token values, and still right if any
+ * of the three tokens moves. The 2px is the two borders and is the only bare
+ * number here: it is structural, the way `primitives.css`'s 1px clip rect is,
+ * and there is no border-width token to spend instead.
+ */
+const FALLBACK_FIELD_HEIGHT =
+  "calc(2 * var(--text-ui-base-line) + 2 * var(--space-3) + 2px)";
+
+/**
+ * What is on screen while the form's chunk arrives — AT THE HEIGHT THE FORM
+ * IS ABOUT TO TAKE.
+ *
+ * WHY THIS IS NOT A SPINNER AND NOT A FOUR-BAR SKELETON. WO-S2 made the plan
+ * editor reachable by taking the 14rem cap off the run row at the review
+ * pause, and the cap was the thing that had been absorbing this component's
+ * arrival: a cold load at 1280x900 mounted a 200px fallback at t≈203ms and
+ * replaced it with a 586px form at t≈231ms, pushing the 161px of reading
+ * column still visible below it off screen for a cold-load CLS of 0.05113
+ * against 04 §8.2's 0.02. Nothing was slow and nothing was wrong with the
+ * fallback's looks — it was 386px too short.
+ *
+ * SO THE SPACE IS RESERVED FROM THE PLAN, WHICH IS ALREADY IN HAND. The row
+ * count is `plan.sub_questions.length` and `plan.search_queries.length` (or
+ * the restored draft's, which is what `PlanEditorFields` opens with), and
+ * every other box is the form's OWN markup with the form's OWN copy —
+ * the same `fieldset`/`legend`, the same hint paragraph, the same add
+ * control, the same actions row. That is deliberate and it is the only way
+ * to be exact: the hint wraps to two lines at one width and one at another,
+ * and the actions row wraps onto a second line below `md`, so a reservation
+ * computed from token arithmetic would be right at one viewport and wrong at
+ * the next. Only the two things whose height is CONSTANT — the row's
+ * label/field/counter stack and the remove control — are placeholders, and
+ * their heights are token expressions rather than pixel guesses.
+ *
+ * OVER-RESERVING IS THE SAME DEFECT WITH THE SIGN FLIPPED, which is why the
+ * add and action controls are real `Button`s rather than blocks sized by
+ * eye: a `Button`'s width is its label plus `CONTROL_PADDING`, and its
+ * height follows `--ew-target-size`, which `@media (pointer: coarse)` raises
+ * from 40px to 44px. A hardcoded 40px block would under-reserve by 4px per
+ * control on every phone.
+ *
+ * IT IS `aria-hidden`, for the same reason `Skeleton`'s bars are: a
+ * placeholder read aloud is a stutter of nothing, and the real controls
+ * arrive named a frame later. Every `Button` in here carries `disabled`
+ * rather than `aria-disabled`, so nothing inside the hidden subtree is
+ * focusable and `aria-hidden-focus` stays clean — and a `getByRole` query
+ * for `Approve plan` cannot match two elements while the chunk is in flight.
+ */
+function PlanEditorFallback({ rows }: { rows: readonly [number, number] }) {
+  // Zipped rather than indexed inside the map: `rows[index]` on a tuple is
+  // `number | undefined` under `noUncheckedIndexedAccess`, and a `?? 0` there
+  // would be a silent zero-row reservation if the pairing ever slipped.
+  const columns = FALLBACK_COLUMNS.map((column, index) => ({
+    ...column,
+    count: index === 0 ? rows[0] : rows[1],
+  }));
+
   return (
-    <div className="grid gap-6 md:grid-cols-2" data-testid="plan-editor-loading">
-      <Skeleton lines={4} height="var(--size-control-height-lg)" label={PLAN.heading} />
-      <Skeleton lines={4} height="var(--size-control-height-lg)" />
+    <div data-testid="plan-editor-loading" aria-busy="true">
+      <VisuallyHidden>{PLAN.heading}</VisuallyHidden>
+
+      <div aria-hidden="true" className="flex flex-col gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
+          {columns.map((column) => (
+            <fieldset
+              key={column.key}
+              data-fallback-list={column.key}
+              className="flex min-w-0 flex-col gap-3"
+            >
+              {/* `legend` and not a heading, because a `legend` is laid out
+                  OUTSIDE the fieldset's anonymous flex box — it takes its
+                  line height and none of the `gap-3`. Reserving it as a
+                  flex item instead would over-reserve by exactly one gap. */}
+              <legend className="text-ui-sm font-semibold text-ink">
+                {column.label}
+              </legend>
+
+              <p className="text-ui-xs text-ink-muted">{column.hint}</p>
+
+              {column.count === 0 ? (
+                <p className="text-ui-sm text-ink-muted">{column.emptyNote}</p>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {Array.from({ length: column.count }, (_, row) => (
+                    <li key={row} className="flex items-end gap-2">
+                      <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <Skeleton width="12ch" height="var(--text-ui-sm-line)" />
+                        <Skeleton height={FALLBACK_FIELD_HEIGHT} />
+                        <Skeleton
+                          width="6ch"
+                          height="var(--text-ui-xs-line)"
+                          className="self-end"
+                        />
+                      </div>
+                      {/* The remove control. `ew-target--md` rather than a
+                          fixed height so a coarse pointer raises it the same
+                          40→44px the real control is raised. */}
+                      <div className="ew-skeleton ew-target ew-target--md mb-6 shrink-0" />
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="flex flex-col gap-1">
+                <Button
+                  size="md"
+                  variant="secondary"
+                  className="self-start"
+                  disabled
+                >
+                  {column.addLabel}
+                </Button>
+              </div>
+            </fieldset>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <p className="text-ui-xs text-ink-muted">{PLAN.cancelHint}</p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* `PLAN.approve` and never `PLAN.revise`: the form opens with a
+                working copy equal to the plan, so `isEdited` is false on the
+                frame the chunk lands and the label the user sees does not
+                change under them. The two words are different widths, and at
+                412px that difference decides where the row wraps. */}
+            <Button variant="primary" size="md" disabled>
+              {PLAN.approve}
+            </Button>
+            <span className="flex-1" />
+            <span className="text-ui-xs text-ink-muted">
+              {PLAN.cancelConsequence}
+            </span>
+            <Button
+              variant="secondary"
+              size="md"
+              className="border-critical text-critical-text hover:bg-critical-surface"
+              disabled
+            >
+              {PLAN.cancel}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
