@@ -51,7 +51,6 @@ from __future__ import annotations
 
 import contextlib
 import importlib
-import json
 import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -96,7 +95,7 @@ from src.campaign.planner import (
 )
 from src.campaign.summary import CampaignSummary, summarize
 from src.config import Settings
-from src.contracts.kernel import MoneyUsd, Rfc3339Utc, StrictContractModel, sha256_digest
+from src.contracts.kernel import MoneyUsd, Rfc3339Utc, StrictContractModel
 from src.contracts.research_binding import GraphShape, utc_timestamp
 from src.contracts.run_manifest import (
     AttemptReceipt,
@@ -1461,28 +1460,6 @@ def load_episode_records(directory: Path, plan: CampaignPlan) -> tuple[EpisodeRe
     return tuple(records)
 
 
-def episode_digest_manifest(records: Sequence[EpisodeRecord]) -> str:
-    """One digest over every episode's manifest digest, in design order.
-
-    A campaign-level fingerprint an operator can quote: two passes that
-    produced the same episodes agree here, and a pass whose configuration
-    moved under it does not.
-    """
-    material = [
-        {"episode_key": record.episode_key, "manifest_digest": record.manifest_digest}
-        for record in sorted(records, key=lambda item: item.design_index)
-    ]
-    return sha256_digest(material)
-
-
-def read_json(path: Path) -> Any:
-    """Read one derived campaign artifact back."""
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        raise CampaignError(f"{path.name} is unreadable: {exc}") from exc
-
-
 __all__ = [
     "ARTIFACT_INDEX_PATH",
     "ATTEMPTS_DIRNAME",
@@ -1512,9 +1489,7 @@ __all__ = [
     "bound_settings",
     "compiled_graph",
     "deterministic_scorer",
-    "episode_digest_manifest",
     "execute_campaign",
     "load_episode_records",
-    "read_json",
     "run_campaign",
 ]
