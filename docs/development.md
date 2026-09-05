@@ -282,24 +282,74 @@ To update dependencies:
 # 2. Run the full local gate against the new set:
 make test-all && make typecheck && .venv/bin/ruff check src/ tests/
 
-# 3. Re-freeze, keeping the header comment block intact:
-.venv/bin/pip freeze --exclude-editable | sort -f  # -> replace the
-                                                   # pinned section of
-                                                   # requirements-lock.txt
+# 3. Re-freeze, SCOPED TO THE LOCK, keeping the header comment block
+#    intact. `pip freeze` reports the whole interpreter, which is not
+#    the same set as this project's closure — see "The freeze is wider
+#    than the lock" below.
+mkdir -p build
+sed -n 's/^\([A-Za-z0-9._-]*\)==.*/\1/p' requirements-lock.txt \
+  > build/locked-names.txt
+.venv/bin/pip freeze --exclude-editable | sort -f > build/freeze.txt
 
-# 4. Regenerate and check the production subset:
+#    a) the new pinned section — every name the lock already carries, at
+#       the version now installed:
+grep -if <(sed 's/^/^/;s/$/==/' build/locked-names.txt) build/freeze.txt
+
+#    b) everything else the venv holds. Add only the distributions step 1
+#       actually pulled in — pip names them in its own output — and leave
+#       the rest, which belongs to other work sharing this interpreter:
+grep -ivf <(sed 's/^/^/;s/$/==/' build/locked-names.txt) build/freeze.txt
+
+# 4. Consistency check, also scoped: complaints about distributions the
+#    lock does not name are not this lock's problem.
+.venv/bin/python -m pip check \
+  | grep -if <(sed 's/^/^/;s/$/ /' build/locked-names.txt) \
+  && echo "INCONSISTENT — fix before committing" \
+  || echo "the locked set is consistent"
+
+# 5. Regenerate and check the production subset:
 .venv/bin/python scripts/derive_runtime_lock.py
 .venv/bin/python scripts/derive_runtime_lock.py --check
 
-# 5. Commit pyproject.toml (if ranges moved) + both lock files
+# 6. Commit pyproject.toml (if ranges moved) + both lock files
 #    together, with a line on *why* the set moved.
 ```
+
+**The freeze is wider than the lock, and the difference is silent.**
+Steps 3 and 4 are scoped because this repository's venv is shared with
+other work in the same interpreter, and neither `pip freeze` nor `pip
+check` knows which distributions belong to this project. Measured on
+2026-09-05: the venv held **147** non-editable distributions against
+the lock's **126**, the extra 21 being `google-*`, `groq`, `grpcio`,
+`cryptography`, `feedparser` and their transitive closures. The
+procedure as it stood before — replace the pinned section with a bare
+`pip freeze --exclude-editable` — would have written all 21 into
+`requirements-lock.txt`, which is what CI installs; nothing downstream
+would have caught it, because `derive_runtime_lock.py` walks the
+*project's* dependency graph and would have produced an identical
+runtime subset, so `--check` stays green while the tested set has
+quietly grown a Google-API stack.
+
+For the same reason a bare `pip check` exits 1 here, on four unlocked
+distributions that disagree with the installed protobuf
+(`google-ai-generativelanguage`, `google-api-core`, `proto-plus`,
+`grpcio-status` against `protobuf 7.35.1`). Scoped to the 126 locked
+names, as in step 4, it is clean — verified by WO-A02 and again on
+2026-09-05.
+
+The scoping is a workaround for the venv, not a property of the lock.
+The authoritative consistency check is the one CI already runs in a
+clean environment: `pip install -r requirements-lock.txt` followed by
+`python -m pip check`, in both the `typecheck` and `tests` jobs. Do not
+try to clean the shared venv to make the bare commands work; build a
+throwaway environment if you want the unscoped check locally.
 
 Never hand-edit an individual pin in the lock without running the
 gate — a pin the suite has not seen is a lie about what was tested.
 The lock is frozen on one platform and carries no hashes yet; the
 hashed, cross-platform lock (`uv lock` / `pip-compile
---generate-hashes`) is recorded follow-up in ADR 0045.
+--generate-hashes`) is recorded follow-up in ADR 0045, and it would
+retire the scoping above along with the rest of the freeze step.
 
 The container image installs the generated runtime subset (`pip
 install -r requirements-runtime-lock.txt`, then `pip install --no-deps

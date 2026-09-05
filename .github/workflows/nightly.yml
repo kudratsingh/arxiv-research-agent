@@ -49,9 +49,24 @@ name: nightly-lighthouse
 # called, and `web/scripts/lhci-run.mjs` sets it again in the environment it
 # hands the Lighthouse child process. `web/tests/lighthouserc.test.ts` asserts
 # this file's half of that against its own text.
+#
+# **THIS WORKFLOW IS DISABLED AT THE REPOSITORY.** Its state is
+# `disabled_manually`, which GitHub stores against the workflow rather than in
+# this file, so the `cron:` below reads as a live nightly and is not one —
+# `gh workflow list --all` is the only place the truth appears. Both nightlies
+# in this repository are off under the same standing constraint, and turning
+# either back on is an owner decision plus `gh workflow enable
+# nightly-lighthouse`, not an edit here. Everything below therefore describes
+# what this workflow does *when run*, which today means on
+# `workflow_dispatch` and for the evidence runs the gate packs cite (WO-B2
+# added this paragraph; the file said nothing about its own state before).
 
 on:
   schedule:
+    # THIS CRON DOES NOT FIRE while the workflow is disabled (see above). It
+    # stays in the file so that re-enabling is one `gh` command rather than an
+    # edit that has to reconstruct a time somebody chose for a reason.
+    #
     # 05:10 UTC. Deliberately after `ci.yml`'s 03:20 browser matrix and
     # `eval-nightly.yml`'s 04:00 campaign: all three build Docker images on a
     # fresh runner, and a Lighthouse measurement is the one of the three that

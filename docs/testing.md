@@ -65,16 +65,17 @@ never runs. There are two axes and they answer different questions
   driven through httpx, canned XML for arXiv, a checked-in sample PDF
   for PyMuPDF. Still no live network.
 - `e2e` — a whole workflow end to end at zero spend, asserted on the
-  trajectory it took. 13 tests, in `tests/e2e/` (see "The e2e tier"
-  below). Excluded from the merge gate's selection, so a change here
-  does not move what CI runs.
+  trajectory it took. 16 tests, in `tests/e2e/` (see "The e2e tier"
+  below). Excluded from the merge gate's first selection, so a change
+  here does not move what CI measures coverage over; it runs as its own
+  step in the same job (WO-A13).
 
 **Purpose — what a test protects. Zero or more, orthogonal to the tier.**
 
 - `security` — asserts a boundary: tenancy scoping, prompt injection,
   SSRF, auth, rate limiting, redaction.
 - `property` — hypothesis-driven; asserts an invariant over generated
-  input. **Zero members today**; the tier is WO-A05.
+  input. Built by WO-A05, in `tests/property/`.
 - `fault` — asserts behaviour when a dependency fails.
 - `contract` — pins a wire shape: OpenAPI snapshot, SSE event names,
   fixture parity, container and deployment contracts.
@@ -86,13 +87,28 @@ The purpose axis is what makes a boundary runnable on its own. Before
 it existed, "run the tenancy and injection tests" had no expression;
 now it is `make test-security`.
 
-**State of the suite** (measured, `pytest --collect-only`): **2,269
-tests collected** from **2,093 `def test_` functions** across **107
-modules** — the gap is parametrization. By tier: 1,929 `unit` + 327
-`integration` + 13 `e2e` = 2,269, which is the whole suite, because the
-tier axis is a partition and a test module with no tier fails
-`tests/test_harness_guards.py`. By purpose: 157 `security`, 86 `fault`,
-40 `contract`, 1 `network`, 0 `property`.
+**State of the suite** (measured on `c3d63da` with WO-B2 applied,
+`pytest --collect-only`): **3,456 tests collected** from **2,977 `def
+test_` functions** across **139 modules** — the gap is parametrization.
+By tier: 3,005 `unit` + 435 `integration` + 16 `e2e` = 3,456, which is
+the whole suite, because the tier axis is a partition and a test module
+with no tier fails `tests/test_harness_guards.py`. By purpose: 314
+`security`, 166 `fault`, 152 `property`, 117 `contract`, 1 `network`.
+
+The four purpose counts have a **band** around them since WO-B2, in
+`tests/test_harness_guards.py`. Nothing else notices a tier going
+empty: purpose markers gate a merge only by sitting inside the `-m
+"not e2e"` selection, so a renamed marker or a deleted `pytestmark`
+takes the tier out of CI without taking a single test red. The bands
+are stated over test *functions* rather than collected items — 40
+`property` functions expand to the 152 collected above — with the
+**floor** at 80% of the measured population, set so that dropping the
+tier's largest single module lands below it, and the **ceiling** at
+twice it. The ceiling is there because a floor only ever looks down: a
+tier that doubles leaves its floor reading as 80% of the tier in the
+comment and 40% of it in fact. Growing past the ceiling is not a
+failure of the tier — it is the change that grew it being asked to
+re-centre the band.
 
 > Earlier versions of this page reported 1,426 collected with "roughly
 > half the suite carrying no marker at all". Both halves of that are now
@@ -133,7 +149,10 @@ jobs on every PR and every push to `main`:
      definition (`pyproject.toml` for the project number, `COV_API` /
      `COV_AGENTS` / `COV_SECURITY` / `COV_EVAL` for the packages).
      `property`, `fault` and `security` are purpose markers *inside*
-     this selection, so all three run here
+     this selection, so all three run here — and, since WO-B2, a band
+     on each one's membership runs with them, because "inside the
+     selection" is not the same as "gated" for a tier that has gone
+     empty
    - **patch coverage** — `diff-cover` against `origin/main` at the
      `COV_DIFF` floor, reading the XML the step above wrote rather than
      running the suite a second time
@@ -602,8 +621,8 @@ lines are missing) with 30-day retention, because Gate A3 cites them.
 A run against `main` has an empty diff and diff-cover passes it — the
 patch floor is a claim about a change, and a push to `main` is not one.
 
-**Two integrity checks, because coverage gates get gamed.** Both live
-in `tests/test_harness_guards.py`:
+**Three integrity checks, because gates get gamed.** All three live in
+`tests/test_harness_guards.py`:
 
 1. Exclusions are configured centrally in
    `[tool.coverage.report].exclude_also`, each with a written reason,
@@ -618,6 +637,19 @@ in `tests/test_harness_guards.py`:
    `coverage html --show-contexts` answers "who covers this?" — the
    question that exposes code executed by a test that asserts nothing
    about it.
+3. Each purpose marker carries a band on its membership (WO-B2). A
+   tier that stops selecting tests is the one regression a suite cannot
+   report on its own, because the tests that would have gone red were
+   never collected: emptying `property` entirely on `de54129` left
+   `pytest -m "not e2e"` at **3,352 passed, 55 skipped** — green, with
+   152 tests silently gone — while `pytest -m property` exited 5 with
+   nothing to run. The bands read the source
+   rather than the session's collection, so they hold under a filtered
+   run as well as under the gate's. The same treatment was applied in
+   the same PR to `tests/test_operability_docs.py`'s instrument count,
+   which was a bare `>= 20` — and it is why `docs/architecture.md`
+   could go on claiming nine OTel instruments while the real set grew
+   to twenty-one with every test green.
 
 **`make test-cov` pins `COVERAGE_CORE=ctrace`**, and it has to. From
 Python 3.14 — the version `.python-version` pins — coverage defaults to
@@ -630,7 +662,8 @@ the code under test. A 3.13 desk venv never saw it, because below 3.14
 the C tracer is already the default.
 
 The real counter-pressure to coverage theatre is the `property` and
-`fault` tiers, not a higher percentage.
+`fault` tiers, not a higher percentage — which is why they have bands
+of their own rather than being trusted to stay populated.
 
 ## Flake policy
 

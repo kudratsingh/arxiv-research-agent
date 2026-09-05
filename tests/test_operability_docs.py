@@ -390,14 +390,29 @@ class TestTheInstrumentScan:
         )
 
     def test_the_scan_finds_the_families_it_is_supposed_to(self) -> None:
-        # A sanity floor, not a fixture of the whole set: if the AST walk
+        # A sanity band, not a fixture of the whole set: if the AST walk
         # silently stopped matching (a refactor to a helper, a rename of
         # the `meter` variable) every other test in this file would pass
         # vacuously, because an empty instrument set watches nothing.
         assert "research_jobs_total" in INSTRUMENTS
         assert semconv.METRIC_CLIENT_TOKEN_USAGE in INSTRUMENTS
         assert semconv.METRIC_HTTP_SERVER_REQUEST_DURATION in INSTRUMENTS
-        assert len(INSTRUMENTS) >= 20
+        # 21 today, and this was a bare `>= 20`. A floor only ever looks
+        # down: `docs/architecture.md` claimed NINE instruments while this
+        # set grew from nine to twenty-one, and this assertion — the one
+        # place in the repository carrying the count as a number — stayed
+        # green through all twelve of those additions. The upper edge is
+        # what a floor cannot do. Five of headroom is more than any single
+        # PR here has added and well under the twelve that made up the
+        # drift, so ordinary growth passes and a wave has to come back to
+        # this line, which is where the number prose quotes gets re-read.
+        assert 20 <= len(INSTRUMENTS) <= 26, (
+            f"{len(INSTRUMENTS)} instruments declared in src/. Below 20 the "
+            "scan has probably stopped matching and every check in this file "
+            "is passing vacuously. Above 26 the set has grown by a wave: "
+            "re-centre this band and re-read the count wherever prose states "
+            "it, which is the drift this upper edge exists to interrupt."
+        )
 
     def test_the_prometheus_translation_is_the_documented_one(self) -> None:
         assert _prometheus_name("gen_ai.client.token.usage") == (
