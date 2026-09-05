@@ -27,8 +27,13 @@ denominator is `None` with a reason code — never a score. The
 replacement has landed: `metrics.measure_citation_resolution` adapts the
 identifier check for the campaign, and `citation_resolution_rate` is what
 the research gate reads. `citation_accuracy` survives as a diagnostic
-only, for the reasons its own docstring gives. The quote path is still
-waiting on a caller that passes `full_texts` (ADR 0074).
+only, for the reasons its own docstring gives. The quote path now has a
+caller: `runner._claim_outcomes` passes `state["evidence"]`, so a
+quotation the reader's ranked chunks cover is decided rather than
+excluded (WO-D1). Nothing passes `full_texts` yet, so a quotation from a
+part of the paper no chunk reached stays undecidable — evidence chunks
+are `partial`, and a `partial` source can confirm a quote but never
+falsify one (ADR 0074).
 
 **No network, ever.** Nothing in this module performs I/O. Sources are
 passed in by the caller. `tests/conftest.py` would block a socket anyway;
