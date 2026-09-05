@@ -18,18 +18,56 @@ Design (ADR 0014):
 - **`stop_reason` is recorded on state** so downstream analysis /
   eval can bucket runs: `quality_reached` / `budget_reached` /
   `max_iterations_reached` / `supervisor_stop` / `llm_failed`.
+
+WO-B3 — what the routing call is allowed to swallow, and what it is
+not. `_route_or_fall_back` used to be one bare `except Exception` that
+logged a WARNING and returned the fixed-pipeline route. Three separate
+failures went through it and only one of them belonged there:
+
+- **A provider outage.** `call_llm_json` raises `errors.UpstreamModel`
+  when the SDK exhausted its envelope. The run then continued on a
+  route no model chose, `job.error_type` stayed empty, and the job
+  ended `succeeded` — so `research_jobs_total{error_type}`, the series
+  an on-call engineer reads first, could not see the incident at all.
+  Now: still tolerated, still reported. `supervisor_provider_outage` is
+  an ERROR carrying `error_type=upstream_model`, and a fallback that
+  chooses to stop buckets as `llm_failed` rather than borrowing
+  `supervisor_stop` — a run the supervisor never got to decide must not
+  read as one it decided to end.
+- **Cancellation and the cost ceiling.** `call_llm` checks both
+  *before* it reaches the provider (ADR 0047, ADR 0051), so both
+  arrived here as exceptions and both were absorbed into a fallback
+  route. A cancelled job kept routing and a capped job kept spending.
+  Neither is a routing failure; both now propagate, which is the
+  containment rule `reader.py` and `assessment.py` already follow.
+- **A malformed judge.** Unparseable JSON, a wrong-typed field, an
+  empty body. This is the one the fallback was written for (ADR 0014)
+  and it keeps its WARNING and its fallback — with `error_type` on the
+  line, so the log can be filtered by cause rather than read by eye.
 """
 
 from typing import Any
 
 from langchain_core.messages import AIMessage
 
+from src.cancellation import JobCancelledError
 from src.config import settings
+from src.errors import UpstreamModel
 from src.graph.state import ResearchState
 from src.llm import call_llm_json
 from src.observability import current_costs, get_logger
+from src.observability.costs import CostBudgetExceeded
 
 log = get_logger(__name__)
+
+#: `stop_reason` for a stop the supervisor did not choose.
+#:
+#: The module docstring has advertised this bucket since ADR 0014 and
+#: nothing emitted it: a fallback that landed on `stop` wrote
+#: `supervisor_stop`, the same value a judge writes when it decides the
+#: work is done. Two different facts under one name, and the one that
+#: matters — "the router never answered" — was the invisible half.
+LLM_FAILED_STOP_REASON = "llm_failed"
 
 # Strict action set. Any judge output outside this set falls back to
 # the deterministic pipeline-order routing. `verify` and `refine_query`
@@ -255,6 +293,40 @@ def _emit(
     }
 
 
+def _fall_back(state: ResearchState, reason: str, loop_iter: int) -> dict[str, Any]:
+    """Route by the fixed pipeline, saying so in the `stop_reason`.
+
+    Every caller reaches here because the routing call did not produce
+    a usable action — it raised, or it answered with something outside
+    the available enum. The route returned is still the deterministic
+    one (ADR 0014: refusing to route is worse than routing badly), but
+    a fallback that lands on `stop` now buckets as `llm_failed` rather
+    than `supervisor_stop`.
+
+    That distinction is the run-level half of WO-B3. `stop_reason` is
+    what `src/eval/runner.py` buckets runs by, and it is the only place
+    the *run* records why it ended. A run whose supervisor never
+    answered used to be filed under the same name as one whose
+    supervisor decided the work was done, which makes "the provider was
+    down for this campaign" unrecoverable after the fact.
+
+    Args:
+        state: The state to route from.
+        reason: The decision sentence recorded on the `AIMessage`.
+        loop_iter: The already-incremented loop counter.
+
+    Returns:
+        The partial-state update, as `_emit` builds it.
+    """
+    action = _default_next_action(state)
+    return _emit(
+        action,
+        reason,
+        LLM_FAILED_STOP_REASON if action == "stop" else "",
+        loop_iter,
+    )
+
+
 def _clean_string(value: Any) -> str:
     """Coerce a judge-returned field to a stripped string, safely."""
     if isinstance(value, str):
@@ -273,6 +345,15 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
     Returns:
         Partial state update with `next_action`, `stop_reason`,
         `loop_iterations`, and an `AIMessage` recording the decision.
+
+    Raises:
+        JobCancelledError: When the job was cancelled while the routing
+            call was being made. Deliberately not absorbed into a
+            fallback route (ADR 0047) — the run is over.
+        CostBudgetExceeded: When the run crossed its ceiling on the
+            routing call itself (ADR 0051). Same reasoning: the runner
+            owns the terminal state, and a router that swallowed it
+            would let the loop keep spending past the cap.
     """
     loop_iter = state.get("loop_iterations", 0) + 1
 
@@ -328,18 +409,70 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
             max_tokens=512,
             cache_system=settings.enable_prompt_caching,
         )
-    except Exception as exc:  # noqa: BLE001 — recoverable, log + fallback
-        log.warning(
-            "supervisor_llm_failed_fallback_to_default",
-            extra={"error": str(exc)},
-        )
-        fallback = _default_next_action(state)
-        return _emit(
-            fallback,
-            f"supervisor LLM failed ({type(exc).__name__}); used default",
-            "" if fallback != "stop" else "supervisor_stop",
+    except (JobCancelledError, CostBudgetExceeded):
+        # Control signals, not routing failures. `call_llm` raises both
+        # before it constructs a client, so neither says anything about
+        # the provider or about the judge — and absorbing either into a
+        # fallback route is how a cancelled job keeps routing and a
+        # capped job keeps spending. Same containment rule as
+        # `reader.py`'s fan-out and `assessment.py`'s judge; the runner
+        # owns the terminal state for both.
+        raise
+    except UpstreamModel as exc:
+        # The provider outage. Tolerated — the loop still gets a route,
+        # because a supervisor that refuses to route strands a run that
+        # the fixed pipeline could have finished — but no longer
+        # silent. ERROR rather than WARNING: every other branch here is
+        # the judge misbehaving, which is a run-local event, while this
+        # one is an outage that is happening to every concurrent run at
+        # once and is the thing worth waking someone for.
+        #
+        # `error_type` carries the *code*, not the class name, so this
+        # line joins up with `llm_upstream_errors_total` (already moved
+        # by `src/llm.py` on the same failure) and with the
+        # `research_jobs_total{error_type}` value the same outage would
+        # have produced in any other node.
+        update = _fall_back(
+            state,
+            f"model provider unreachable ({UpstreamModel.code}); used default",
             loop_iter,
         )
+        log.error(
+            "supervisor_provider_outage",
+            extra={
+                "error_type": UpstreamModel.code,
+                "error": str(exc),
+                "fallback": update["next_action"],
+                "stop_reason": update["stop_reason"],
+                "loop_iter": loop_iter,
+            },
+        )
+        return update
+    except Exception as exc:  # noqa: BLE001 — recoverable, log + fallback
+        # The malformed judge ADR 0014 wrote the fallback for: a
+        # truncated body, a wrong-typed field, JSON that will not
+        # parse. Deliberately still broad — narrowing it to a tuple
+        # would turn an unanticipated bug into a failed run without
+        # making anything more visible, and visibility, not tolerance,
+        # was the defect. `error_type` is the exception class because
+        # there is no taxonomy code for "the judge answered badly"; it
+        # is on the line so the log can be filtered by cause.
+        update = _fall_back(
+            state,
+            f"supervisor LLM failed ({type(exc).__name__}); used default",
+            loop_iter,
+        )
+        log.warning(
+            "supervisor_llm_failed_fallback_to_default",
+            extra={
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+                "fallback": update["next_action"],
+                "stop_reason": update["stop_reason"],
+                "loop_iter": loop_iter,
+            },
+        )
+        return update
 
     action = _clean_string(parsed.get("next_action"))
     reason = _clean_string(parsed.get("reason"))
@@ -354,11 +487,9 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
                 "parsed_keys": list(parsed.keys()),
             },
         )
-        fallback = _default_next_action(state)
-        return _emit(
-            fallback,
+        return _fall_back(
+            state,
             f"invalid action '{action}'; fell back to default",
-            "" if fallback != "stop" else "supervisor_stop",
             loop_iter,
         )
 

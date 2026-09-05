@@ -182,11 +182,35 @@ class RedriveReport:
 def _terminal_event_data(job: Job) -> dict[str, Any]:
     """Terminal SSE frame payload for a reclaimed job.
 
-    Kept field-for-field in sync with `_terminal_event_data` in
-    `src/api/routes.py`: a client that reconnects to a reclaimed job
-    gets the replayed frame from that function, and a client still
-    subscribed gets this one. They have to be the same shape or the
-    two paths disagree about what a terminal frame looks like.
+    A one-line delegate to `src.api.runner.terminal_event_data`, which
+    is the single builder every terminal frame in the process now goes
+    through (WO-B3).
+
+    It used to be a hand-maintained copy, and its docstring said it was
+    "kept field-for-field in sync with `_terminal_event_data` in
+    `src/api/routes.py`". Both halves of that sentence had stopped being
+    true. `routes.py`'s function had itself become a one-line delegate
+    when WO-A10 moved the builder here, so the named authority was a
+    forwarder; and the copy was three fields short of it —
+    `cost_cap_status`, `cost_cap_message` and `llm_calls` were missing.
+    So a client that reconnected to a reclaimed job got a twelve-key
+    frame and one that was still subscribed got an eight-key one, for
+    the same event on the same job. That is the WO-A10 defect exactly,
+    surviving in the one path A10 did not read.
+
+    **Why the import is inside the function.** `src/api/runner.py`
+    imports `WORKER_ID` from this module at line 51, so a module-level
+    import back would be a cycle. Three ways out were available:
+    module-level import in the other direction (would have meant moving
+    `WORKER_ID`, a symbol this module owns and the redrive protocol is
+    named for), moving `terminal_event_data` to `src/api/jobs.py` beside
+    the `Job` it reads (the architecturally cleanest, and it is where
+    this belongs once somebody owns that file — it would have to move
+    `routes.py`'s import and the two contract tests that name
+    `runner.py` as the builder's home), or a deferred import. The
+    deferred import is the one that converges the shapes today without
+    touching a file this work order does not own, and Python caches the
+    module after the first sweep.
 
     Args:
         job: The reclaimed job, already mutated into its failed state.
@@ -194,16 +218,9 @@ def _terminal_event_data(job: Job) -> dict[str, Any]:
     Returns:
         The `data` object for the `job_failed` event.
     """
-    return {
-        "job_id": job.job_id,
-        "status": job.status.value,
-        "elapsed_sec": job.elapsed_sec(),
-        "error": job.error,
-        "error_type": job.error_type,
-        "iterations": job.iterations,
-        "quality_score": job.quality_score,
-        "cost_usd": job.cost_usd,
-    }
+    from src.api.runner import terminal_event_data
+
+    return terminal_event_data(job)
 
 
 class JobRedriver:

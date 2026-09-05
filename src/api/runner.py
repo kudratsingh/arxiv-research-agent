@@ -381,8 +381,8 @@ def _initial_state(query: str, run_id: str, *, prior_context: str = "") -> Resea
     }
 
 
-def terminal_event_data(job: Job) -> dict[str, Any]:
-    """The one payload shape a terminal SSE frame has (WO-A10).
+def terminal_event_data(job: Job, *, reason: str | None = None) -> dict[str, Any]:
+    """The one payload shape a terminal SSE frame has (WO-A10, WO-B3).
 
     Before this there were two, and they disagreed. The runner's *live*
     `job_completed` carried `iterations` / `quality_score` /
@@ -400,16 +400,42 @@ def terminal_event_data(job: Job) -> dict[str, Any]:
     bearing for somebody — dropping `quality_score` would blind the
     live stream and dropping `status` would blind the reconnect — and
     because a frame is one small JSON object emitted once per job, so
-    the cost of carrying eleven fields instead of six is nothing set
+    the cost of carrying twelve fields instead of six is nothing set
     against a client that has to branch on which shape it got.
 
     It lives in this module rather than in `routes.py` because
     `routes.py` already imports `run_job` from here; the reverse import
     would be a cycle.
 
+    **WO-B3 finished the job A10 started.** A10 converged the two
+    `job_completed` frames and left the others: eight `_put_terminal_event`
+    calls in `run_job` still hand-built four- to eight-key payloads, and
+    `src/api/redriver.py` kept a third copy whose docstring claimed a
+    field-for-field sync it no longer had (it was three fields short and
+    named a function that had since become a one-line delegate). All of
+    them now call this. `web/lib/job/types.ts` had documented the
+    surviving drift as "one event name has three shapes" and defends
+    against it by never reading a value out of a terminal frame at all;
+    that defence is now belt to this braces rather than the only thing
+    standing between a client and a `KeyError`.
+
+    `reason` is the one field the eight sites carried that this builder
+    did not: the live `job_cancelled` for a reviewer cancellation said
+    `reason="hitl_cancelled"`. Keeping it as an extra key on that one
+    frame would have re-created the exact bug — a client reading
+    `data.reason` off a *replayed* cancellation would `KeyError` — so it
+    joins the union like every other field, `None` where it does not
+    apply. Its value cannot be recovered on the replay path, because no
+    column on the job row carries it; that is a gap in the *value*, which
+    a client reading a nullable key survives, and not a gap in the
+    *shape*, which is what threw.
+
     Args:
         job: A job in a terminal state, with its cost snapshot already
             written onto the row.
+        reason: Why a cancellation happened, for the two paths that know
+            (`hitl_cancelled`, `shutdown`). `None` everywhere else,
+            including on every replay.
 
     Returns:
         The `data` object for `job_completed` / `job_failed` /
@@ -429,6 +455,7 @@ def terminal_event_data(job: Job) -> dict[str, Any]:
         "quality_score": job.quality_score,
         "cost_usd": job.cost_usd,
         "llm_calls": job.llm_calls,
+        "reason": reason,
     }
 
 
@@ -1759,16 +1786,7 @@ async def run_job(
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
             await _persist_terminal(store, job)
-            await _put_terminal_event(
-                job,
-                "job_failed",
-                {
-                    "job_id": job.job_id,
-                    "error": job.error,
-                    "error_type": job.error_type,
-                    "elapsed_sec": job.elapsed_sec(),
-                },
-            )
+            await _put_terminal_event(job, "job_failed", terminal_event_data(job))
             log.warning(
                 "api_job_session_turn_timeout",
                 extra={
@@ -1789,16 +1807,7 @@ async def run_job(
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
             await _persist_terminal(store, job)
-            await _put_terminal_event(
-                job,
-                "job_failed",
-                {
-                    "job_id": job.job_id,
-                    "error": job.error,
-                    "error_type": job.error_type,
-                    "elapsed_sec": job.elapsed_sec(),
-                },
-            )
+            await _put_terminal_event(job, "job_failed", terminal_event_data(job))
             log.warning(
                 "api_job_hitl_timeout",
                 extra={
@@ -1843,18 +1852,7 @@ async def run_job(
                     job.result = exc.partial_report or None
                     await _persist_terminal(store, job)
                     await _put_terminal_event(
-                        job,
-                        "job_failed",
-                        {
-                            "job_id": job.job_id,
-                            "error": job.error,
-                            "error_type": job.error_type,
-                            "cost_usd": job.cost_usd,
-                            "llm_calls": job.llm_calls,
-                            "elapsed_sec": job.elapsed_sec(),
-                            "cost_cap_status": job.cost_cap_status,
-                            "cost_cap_message": job.cost_cap_message,
-                        },
+                        job, "job_failed", terminal_event_data(job)
                     )
                 log.warning(
                     "api_session_cost_cap_reached",
@@ -1882,16 +1880,7 @@ async def run_job(
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
             await _persist_terminal(store, job)
-            await _put_terminal_event(
-                job,
-                "job_failed",
-                {
-                    "job_id": job.job_id,
-                    "error": job.error,
-                    "error_type": job.error_type,
-                    "elapsed_sec": job.elapsed_sec(),
-                },
-            )
+            await _put_terminal_event(job, "job_failed", terminal_event_data(job))
             log.warning(
                 "api_job_cost_budget_exceeded",
                 extra={
@@ -1915,11 +1904,7 @@ async def run_job(
             await _put_terminal_event(
                 job,
                 "job_cancelled",
-                {
-                    "job_id": job.job_id,
-                    "elapsed_sec": job.elapsed_sec(),
-                    "reason": "hitl_cancelled",
-                },
+                terminal_event_data(job, reason="hitl_cancelled"),
             )
             log.info(
                 "api_job_hitl_cancelled",
@@ -1940,16 +1925,7 @@ async def run_job(
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
             await _persist_terminal(store, job)
-            await _put_terminal_event(
-                job,
-                "job_failed",
-                {
-                    "job_id": job.job_id,
-                    "error": job.error,
-                    "error_type": job.error_type,
-                    "elapsed_sec": job.elapsed_sec(),
-                },
-            )
+            await _put_terminal_event(job, "job_failed", terminal_event_data(job))
             # Client is already released by the terminal frame above;
             # the semaphore permit is not. It stays held until the node
             # thread returns (or the drain budget expires), so the
@@ -1980,10 +1956,12 @@ async def run_job(
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
             await _persist_terminal(store, job)
+            # The reason the reviewer path already carried, now on this
+            # one too: `cancelled` is the only terminal status the
+            # runner writes with no `error_type`, so without it a
+            # shutdown and a reviewer cancellation are the same frame.
             await _put_terminal_event(
-                job,
-                "job_cancelled",
-                {"job_id": job.job_id, "elapsed_sec": job.elapsed_sec()},
+                job, "job_cancelled", terminal_event_data(job, reason="shutdown")
             )
             abandoned = await _drain_node_threads(
                 cancel_token,
@@ -2019,16 +1997,7 @@ async def run_job(
             job.cost_usd = snapshot.get("total_cost_usd")
             job.llm_calls = snapshot.get("call_count")
             await _persist_terminal(store, job)
-            await _put_terminal_event(
-                job,
-                "job_failed",
-                {
-                    "job_id": job.job_id,
-                    "error": job.error,
-                    "error_type": job.error_type,
-                    "elapsed_sec": job.elapsed_sec(),
-                },
-            )
+            await _put_terminal_event(job, "job_failed", terminal_event_data(job))
             log.exception(
                 "api_job_failed",
                 extra={

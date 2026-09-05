@@ -34,6 +34,7 @@ from src.errors import (
     BudgetExceededRun,
     JobCancelled,
     JobOrphaned,
+    UpstreamModel,
     UpstreamPaperRead,
 )
 from src.observability import metrics as metrics_module
@@ -63,6 +64,12 @@ ASSERTED_EVENTS: frozenset[str] = frozenset(
         "sse_publish_failed",
         "sse_terminal_publish_failed",
         "sse_terminal_publish_gave_up",
+        # WO-B3's pair. Both are the supervisor's routing call failing;
+        # they are two names because the two failures have different
+        # audiences, and `test_supervisor_routing_faults.py` asserts
+        # that each fault reaches exactly one of them.
+        "supervisor_llm_failed_fallback_to_default",
+        "supervisor_provider_outage",
     }
 )
 
@@ -73,6 +80,11 @@ ASSERTED_JOB_CODES: frozenset[str] = frozenset(
         BudgetExceededRun.code,
         JobCancelled.code,
         JobOrphaned.code,
+        # WO-B3. Named by `test_model_provider_faults.py` since A17 and
+        # by `test_supervisor_routing_faults.py` now; it was missing
+        # from this census, which is the census being wrong rather than
+        # the code being new.
+        UpstreamModel.code,
         UpstreamPaperRead.code,
     }
 )

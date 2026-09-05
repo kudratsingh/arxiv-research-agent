@@ -768,7 +768,11 @@ class TestRunnerDrain:
         frames = _drain_queue(job)
         assert [f["event"] for f in frames] == ["job_started", "job_failed"]
         terminal = frames[-1]["data"]
-        assert set(terminal) == {"job_id", "error", "error_type", "elapsed_sec"}
+        # WO-B3: the frame's shape is pinned once, in
+        # `tests/test_contract_sse_events.py`. What this test is about
+        # is that the drain did not change the outcome the frame
+        # reports.
+        assert terminal["status"] == "failed"
         assert terminal["error_type"] == "timeout"
 
 
