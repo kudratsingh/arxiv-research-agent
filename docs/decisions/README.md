@@ -515,6 +515,25 @@ never renumbered.
   score and the verifier's verdict are constants. Closes half of ADR
   0075's own follow-up list.
 
+- [0082](0082-campaign-lock-repeats-and-denominators.md) — **Derive the
+  campaign id, enumerate the whole matrix, keep every episode in the
+  denominator.** A campaign id is now a digest of the frozen protocol,
+  the registry lock and the lineage edge, so re-planning an unchanged
+  design resumes and raising a cap by a cent *cannot* — it is a
+  different campaign, and `resume` says so and names lineage as the
+  remedy. The design matrix is enumerated over all five arms including
+  the ones this checkout cannot run (arm E is `capability_missing` and
+  its slots are excluded-with-reason, so 20 x 3 x 5 reports as 300
+  expected / 240 planned / 60 excluded), arm order is interleaved per
+  block from a seed the manifest records, and the denominator ledger is
+  written before the first episode so a failure, timeout, cancellation,
+  budget stop or null metric can never leave it. A local approval-record
+  backend satisfies W03's admission so a metered provider can be
+  admitted in a test, with credentials read only after the record
+  verifies — **a live campaign still needs the owner's D9 approval and
+  P0-WO12 stays blocked**. Snapshot and live campaigns are refused a
+  shared summary.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.
