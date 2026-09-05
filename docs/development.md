@@ -400,6 +400,26 @@ would have caught it, because `derive_runtime_lock.py` walks the
 runtime subset, so `--check` stays green while the tested set has
 quietly grown a Google-API stack.
 
+Those two counts are a dated reading of the shared venv, not a running
+total: the lock has held **129** pins since CAP-05 raised the model SDK
+to `anthropic` 1.x, which brought `httpx2`, `httpcore2` and
+`truststore` in with it (ADR 0090). The shared venv was not
+re-measured for that change and is still on the 0.x set.
+
+**A throwaway venv is the way to check a dependency bump.** CAP-05 built
+one — `python3 -m venv`, `pip install -r requirements-lock.txt`, then
+`pip install -e . --no-deps` — and it made the whole scoping dance
+unnecessary: the freeze held 129 distributions against the lock's 129,
+so step 3b listed exactly the three the upgrade pulled in and nothing
+else, and the bare `pip check` in step 4 exited 0 without being scoped
+to anything. It also makes the two environment-artifact tests
+(`tests/test_api_lazy_imports.py`,
+`tests/test_container_contract.py::test_runtime_lock_is_an_exact_generated_subset`)
+mean what they claim, because the environment really is the lock. Note
+that `pip install -e .` bakes the *ranges* into the editable
+distribution's metadata, so `pip check` keeps reporting the old range
+until you reinstall it after editing `pyproject.toml`.
+
 For the same reason a bare `pip check` exits 1 here, on four unlocked
 distributions that disagree with the installed protobuf
 (`google-ai-generativelanguage`, `google-api-core`, `proto-plus`,
