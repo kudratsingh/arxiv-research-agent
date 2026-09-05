@@ -11,10 +11,10 @@ The query below is `hallucination-mitigation` from
 [`src/eval/benchmark_queries.py`](../src/eval/benchmark_queries.py) —
 the canonical smoke query for the benchmark. It's well-covered by the
 built-in mock paper set (`src/agents/search.py::MOCK_PAPERS`), so
-this example can be reproduced with `USE_MOCK_DATA=true` and no live
-arXiv *search*. It is not a network-free run: see
+this example can be reproduced with `USE_MOCK_DATA=true`. Since ADR
+0080 that **is** a network-free run, and a keyless one — see
 [What `USE_MOCK_DATA=true` does and does not skip](#what-use_mock_datatrue-does-and-does-not-skip)
-below. Live-arXiv runs produce reports of the same shape against
+below, which used to say the opposite. Live-arXiv runs produce reports of the same shape against
 fresher papers; the metrics on those runs live under
 `outputs/eval/<run_id>/` and roll up into the nightly regression
 diff.
@@ -27,7 +27,7 @@ not. Stated up front rather than left to inference:
 
 | Block | Where it came from | Trust it for |
 |---|---|---|
-| [Report body](#report-body) + [citation list](#citation-list) | Captured from a `USE_MOCK_DATA=true` run when this page was written (2026-07-09, `0911ef0`) and **not re-captured since**; the retrieval and degradation paths have changed under it (ADRs 0041, 0052) | Shape, structure, citation style. The five citations still match `MOCK_PAPERS` exactly — that is checked. The prose is representative, not current. |
+| [Report body](#report-body) + [citation list](#citation-list) | Captured from a `USE_MOCK_DATA=true` run when this page was written (2026-07-09, `0911ef0`) and **not re-captured since**; the retrieval and degradation paths have changed under it (ADRs 0041, 0052), and ADR 0080 changed what the mode itself produces — that run still called the model, so this prose is model-written and **the same command today returns model-free text instead** | Shape, structure, citation style. The five citations still match `MOCK_PAPERS` exactly — that is checked. The prose is representative, not current, and not reproducible. |
 | [`summary.jsonl` line](#summaryjsonl-line) | **Hand-written.** The field names, order and types are verified against `src/eval/runner.py::_summary_line`; the *values* are illustrative | The schema. Not the numbers. |
 | [HTTP + SSE samples](#the-same-run-over-the-http-api) | **Recorded off the wire** from the seeded local Compose stack with `ANTHROPIC_API_KEY=local-preview-disabled`, and committed under [`web/contract/`](../web/contract/). Each fixture carries its own `x-recording` header saying whether the bytes were observed or transcribed | Field names, framing, ordering, status codes. |
 
@@ -54,8 +54,8 @@ verification`. Full record:
 
 ## Invocation — the CLI
 
-Built-in mock papers, no live arXiv search (but see the note below —
-the reader still fetches the five mock papers' PDFs on a cold cache):
+Built-in mock papers, no live arXiv search, no PDF fetch and no model
+call — see [the note below](#what-use_mock_datatrue-does-and-does-not-skip):
 
 ```bash
 USE_MOCK_DATA=true python -m src.main \
@@ -76,51 +76,67 @@ python -m src.main \
 
 ### What `USE_MOCK_DATA=true` does and does not skip
 
-This page used to call the mock-data run "offline, no external API
-calls beyond Anthropic". That was wrong, and ADR 0052 corrects it.
-`USE_MOCK_DATA=true` replaces the *search* step only: the planner's
-queries never reach arXiv's Atom feed, and `MOCK_PAPERS` is returned
-instead. But every entry in `MOCK_PAPERS` carries a real `pdf_url` on
-`arxiv.org` (`src/agents/search.py`), and the reader's job is to read
-full text — so the fan-out calls `parse_pdf` on all five, and on a
-cold cache that is **five real PDF downloads from arxiv.org**,
-roughly 5–10 MB.
+**This section has been wrong in both directions, and the history is
+worth one paragraph because it is the reason it is now measured rather
+than reasoned about.** It first said the mock run was "offline, no
+external API calls beyond Anthropic", which ADR 0052 corrected: back
+then `USE_MOCK_DATA=true` replaced the *search* step only, every entry
+in `MOCK_PAPERS` carried a real `pdf_url` on `arxiv.org`, the reader
+called `parse_pdf` on all five, and a cold run really did pull roughly
+5–10 MB from `arxiv.org`. ADR
+[0080](decisions/0080-mock-mode-covers-the-whole-research-graph.md) then
+made the *first* description true and left the correction behind.
 
-A cold mock-data run therefore talks to exactly two external hosts:
+**What a mock-data run does today: nothing leaves the machine.**
+Measured with tripwires rather than read off the code — an outbound
+`socket.connect` guard, `anthropic.Anthropic`, `src.llm._get_client`,
+`src.llm.call_llm` and `reader.parse_pdf` all replaced with functions
+that raise. A full run on the query above, with the evidence store on,
+produced five papers, five analyses, 19 evidence claims and a 4.9 KB
+briefing, and **hit none of them**.
 
-| Host | When | Skippable |
+| Host | When | Under `USE_MOCK_DATA=true` |
 | --- | --- | --- |
-| `api.anthropic.com` | Every node that calls the LLM | No — the workflow is the LLM |
-| `arxiv.org` (`/pdf/...` ×5) | Reader fan-out, cold cache only | Yes — warm the cache once (below) |
-| `export.arxiv.org` (search) | Live search | Yes — that is what `USE_MOCK_DATA` skips |
+| `export.arxiv.org` (search) | Live search | **Not contacted** — `MOCK_PAPERS` is served instead (ADR 0041) |
+| `arxiv.org` (`/pdf/...` ×5) | Reader fan-out, cold cache | **Not contacted** — the reader's mock branch returns *before* `_gather_ranked_chunks`, which is the only caller of `parse_pdf` |
+| `api.anthropic.com` | Every node that calls the LLM | **Not contacted** — six agents return from a deterministic branch ahead of the call, and no client is constructed at all (ADR 0080) |
 
-**The genuinely network-free-except-Anthropic run is the second one.**
-`parse_pdf` caches extracted text through the `PaperCache`
-(`.cache/pdfs/<key>.txt` on the default disk backend, ADR 0028), keyed
-by arXiv ID, and the mock set is fixed — so once a first run has
-populated it, every later `USE_MOCK_DATA=true` run on this query hits
-the cache and issues no arXiv request at all:
+So the cold run and the warm run are the same run, and no credential is
+needed for either. `parse_pdf`'s `PaperCache` (`.cache/pdfs/<key>.txt`
+on the default disk backend, ADR 0028) still exists and still matters
+for **live** runs; it is simply not on the mock path.
 
 ```bash
-# 1. Warm run: 5 PDF downloads from arxiv.org + Anthropic.
-USE_MOCK_DATA=true python -m src.main "…"
-
-# 2. Every run after this one: Anthropic only. The five extracted
-#    texts come from .cache/pdfs/. `make clean` removes that cache
-#    (it is re-derivable); `make clean-all` also removes the graph
-#    checkpoints.
+# Every run, cold or warm: no arxiv.org, no api.anthropic.com,
+# no ANTHROPIC_API_KEY, $0.0000.
 USE_MOCK_DATA=true python -m src.main "…"
 ```
 
-There is deliberately **no `--no-pdf` switch**, and none of the
-existing knobs is a usable substitute: `READER_MAX_CHUNKS_PER_PAPER`
-is bounded `ge=1` and `PDF_MAX_BYTES` is bounded `ge=1MB`, so neither
-can be turned down to "skip the fetch", and the second would abort
-mid-download after the request had already gone out. If the reader
-gets no full text it degrades to the abstract — that path is real and
-now logs a `reader_paper_abstract_only` line per paper plus a
-run-level summary (ADR 0052) — but the only supported way to reach it
-without a network call is the warm cache above.
+There is still deliberately **no `--no-pdf` switch** for the *live*
+path, and none of the existing knobs is a usable substitute:
+`READER_MAX_CHUNKS_PER_PAPER` is bounded `ge=1` and `PDF_MAX_BYTES` is
+bounded `ge=1MB`, so neither can be turned down to "skip the fetch", and
+the second would abort mid-download after the request had already gone
+out. If the reader gets no full text it degrades to the abstract — that
+path is real and logs a `reader_paper_abstract_only` line per paper plus
+a run-level summary (ADR 0052). What changed is that mock mode is no
+longer the thing you reach for to avoid the fetch; it never performs it.
+
+**What it costs you, and it is not nothing.** No output of a mock run is
+a quality signal: the briefing opens with `Mock mode: fixture papers, no
+model call.`, the critic's score and the verifier's verdict are
+constants, and every analysis is a verbatim span of the paper's own
+abstract rather than anything a model wrote.
+
+**So the command above no longer reproduces the report body below.**
+That report was captured from a mock-data run on 2026-07-09 (`0911ef0`),
+*before* ADR 0080 — when `USE_MOCK_DATA` swapped the corpus but the
+planner, reader, synthesizer and critic still called the model, so the
+prose in it is model-written. Running the same command today returns a
+briefing of the same **shape** with derived, model-free text. Trust the
+block below for structure and citation style, which is exactly what
+[Provenance](#provenance-of-everything-on-this-page) already says and
+what the citation check enforces.
 
 ## Report body
 

@@ -237,19 +237,50 @@ All eight were closed by the follow-up wave (B1–B5, PRs #189–#194).
 | 7 | `citation_accuracy` returned 1.0 for zero citations | WO-A16 | B5 |
 | 8 | ADR 0045's lock procedure | WO-A02 | B2 (defect was larger) |
 
-### Still open after wave C
+### Still open after wave C — RECONCILED 2026-09-05 (WO-D7)
 
-| Item | Why it stays open |
-|---|---|
-| The "eval runs nightly" claim is still unenforced | The workflow files now say honestly that they are disabled at the repository level, so a prose-reading test has become *possible* — but `disabled_manually` remains a GitHub-side attribute absent from the checkout, and nobody has written the test |
-| `README.md`'s R11, R14, R15 claims | Mechanisable, with named homes: R11's three assertions belong in `tests/test_config.py`; R14 wants the screenshots captured as Playwright snapshots; R15 wants a reflection test over `Settings`' `enable_*` fields |
-| `web/vitest.config.mts`'s re-seed note | Prose in a comment, and the only source of truth for the web test count — a re-seed that skips the note leaves the check agreeing with a stale source |
-| `redact_text` is a **shape** rule, not a secret rule | Measured: `sk-…` redacts, `gw_live_…` passes untouched. A gateway or proxy credential is not covered by the redaction the log contract rests on |
-| Two more plain-`str` secrets | `api_keys` (inbound keystore) and `semantic_scholar_api_key`. Neither is a one-line retype — `parse_api_keys` splits the raw string and `semantic_scholar.py` builds a header from it |
-| The scripted research tier scripts the model's words | The better fix is a `use_mock_data` branch on the four research agents, which would let the tier delete its scripted surface. Recorded in ADR 0075's alternatives |
-| A25 ("eval runs nightly") is still False | Its blocker is gone and **the test is already written**; the remaining edit is one sentence in `docs/architecture.md`, which WO-C2 did not own |
-| `docs/demo.md` carries a stale `eval.md` anchor, twice | Same fix already applied in `docs/eval.md` |
-| The web test count of record is 97 tests behind reality | Within the new band; closed by the next coverage re-seed, which is not "the note" WO-C2 was licensed to change |
+**Eight of the nine rows below were closed while this table went on
+saying they were open, and one of them was already closed on the day it
+was written.** Nothing reads this table. It is prose in a register that
+no test parses, so it drifts exactly the way the claims in `README.md`
+and `docs/architecture.md` drifted before WO-B1 and WO-D2 put tests
+behind them — the same class of defect this campaign exists to catch,
+one level up, in the campaign's own bookkeeping. The rows are kept and
+marked rather than deleted: a register that quietly drops finished items
+teaches nothing and cannot be audited.
+
+| Item as written after wave C | State | Closed by | What genuinely remains |
+|---|---|---|---|
+| The "eval runs nightly" claim is still unenforced — "nobody has written the test" | **Closed** | **D2** (`f23d3cc`) | `TestTheNightlyEvalState::test_the_architecture_doc_tells_the_same_story` holds four artifacts to one story. The residual is *permanent, not pending*: `disabled_manually` is a GitHub-side attribute absent from the checkout, so this is an agreement between documents and never a probe of GitHub. Written into the test's own docstring |
+| `README.md`'s R11, R14, R15 claims | **Closed as far as each can be** | **D2** | R11 → **Enforced** (`TestTheStandaloneDefaults`; "byte-identical" was *removed* rather than mechanised, because no artifact exists to diff against). R14 and R15 stay **Partial** for structural reasons, not for want of work: R14's pixel comparison is darwin-only because a snapshot must live at the path the README renders, leaving no room for a `{platform}` segment; R15's forward direction — a feature with no flag — adds no field for a reflection test to see |
+| `web/vitest.config.mts`'s re-seed note | **Closed — and it was already closed when this row was written** | **C2** (`815390b`), re-seeded by **D2** | C2 pinned the note to the thresholds it claims to have measured and banded its file count against the files on disk, which is exactly the failure mode the row describes. The row survived the wave that closed it. Residual: it remains an agreement between two documents, because a Python tier cannot run the web suite |
+| `redact_text` is a **shape** rule, not a secret rule | **Closed** | **D4** | — |
+| Two more plain-`str` secrets | **Closed** | **D3** | — |
+| The scripted research tier scripts the model's words | **Half closed — the row's premise is now inverted** | **CAP-07 / ADR 0080** for the capability | The row said "the better fix is a `use_mock_data` branch on the four research agents". **That branch now exists**, on six agents rather than four (planner, reader, synthesizer, critic, verifier, supervisor), and `simulate_research` turns it back *off* on the four it scripts. What is open is no longer the branch but the **deletion of the scripted surface plus a rebaseline** of `tests/fixtures/eval/research-scripted/baseline.jsonl` — ADR 0075's own follow-up, and a rebaseline rather than a refactor. WO-D7 corrected the three documents that still described the old world |
+| A25 ("eval runs nightly") is still False | **Closed** | **D2** | The row's own account of itself was wrong: it said "the test is already written", and no test in this repository read that document's nightly sentence at all. D2 wrote it. This row and the first row of this table described the same claim and contradicted each other, which is the clearest single piece of evidence that nothing read this table |
+| `docs/demo.md` carries a stale `eval.md` anchor, twice | **Closed** | **D2** | — |
+| The web test count of record is 97 tests behind reality | **Closed** | **D2** | Re-seeded to 3,477 tests across 158 files in both `web/vitest.config.mts` and `README.md` |
+
+**Not in this table, and it should have been.** WO-D1 closed the quote
+path's first tier — `runner._claim_outcomes` now passes
+`state["evidence"]`, so a quotation the reader's ranked chunks cover is
+decided rather than excluded. It deliberately declined the second:
+passing `full_texts` is the only thing that can make the check
+*falsify* a quotation, and it needs I/O behind a guard that currently
+collapses any exception to `None`. That residual is tracked where it
+belongs — ADR
+[0074](../../docs/decisions/0074-deterministic-groundedness.md)'s
+follow-up list, split by D1 into what landed and what did not, with a
+named owner — and is recorded here only so this register does not
+imply it is untracked.
+
+**The lesson, and it is not "update the table more often."** This
+register carried nine rows; one was stale on the day it was written and
+two of them contradicted each other about the same claim. Both are
+failure modes of an unread document, and the campaign already knows the
+fix, because it is the fix it applied to `README.md`: a claim nothing
+reads is a claim that drifts. The bookkeeping was exempt from its own
+finding.
 
 
 ## Wave C — CLOSED 2026-09-05
@@ -280,12 +311,24 @@ costed one.
 
 ### The limitation WO-C1 insisted on stating
 
-Mock mode is **not** an LLM stub for the research lane. It swaps arXiv search
-only; `src/llm.py` is untouched and all four research agents call the model as
-in production. So the scripted research tier scripts the *model's* words where
-the learning lane scripts the *learner's*, and the consequence is written into
-the module, the ADR and the docs: **it measures the pipeline around the model,
-never report quality.**
+As recorded at the time: mock mode is **not** an LLM stub for the research
+lane. It swaps arXiv search only; `src/llm.py` is untouched and all four
+research agents call the model as in production. So the scripted research tier
+scripts the *model's* words where the learning lane scripts the *learner's*,
+and the consequence is written into the module, the ADR and the docs: **it
+measures the pipeline around the model, never report quality.**
+
+> **Superseded in its premise, 2026-09-05 (WO-D7).** The first two sentences
+> stopped being true when CAP-07 landed (ADR 0080): planner, reader,
+> synthesizer, critic and verifier now return from a deterministic branch
+> before the model call, and P0-WO11 added the supervisor's, so the research
+> graph runs keyless under all four shapes. **The conclusion still holds, for a
+> different reason** — `scripted_surface` rebinds `settings` to a
+> `use_mock_data=False` copy on the four modules it scripts, deliberately, to
+> keep the committed baseline byte-identical. The tier still measures the
+> pipeline around the model and never report quality. Kept rather than
+> rewritten because it is what wave C actually found; corrected here because
+> this paragraph is stated in the present tense and was being read as current.
 
 ### Three premises this coordinator got wrong
 

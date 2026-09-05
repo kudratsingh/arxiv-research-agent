@@ -6,23 +6,30 @@ Failure modes · Flags · Testing · Related** — with agent-specific
 sections (evidence path, recovery path, dedup, iteration cap …)
 inserted wherever they read best.
 
-These pages describe `main` as it is. Workflow-level wiring — the two
+These pages describe `main` as it is. Workflow-level wiring — the four
 graph shapes, checkpointing, the API layer — lives in
 [`docs/architecture.md`](../architecture.md).
 
 | Agent | Runs under | Gated by | Page |
 |---|---|---|---|
-| Planner | both shapes | always on | [planner.md](planner.md) |
-| Search | both shapes | always on | [search.md](search.md) |
-| Reader | both shapes | always on | [reader.md](reader.md) |
-| Synthesizer | both shapes | always on | [synthesizer.md](synthesizer.md) |
-| Critic | both shapes | always on | [critic.md](critic.md) |
+| Planner | all four shapes | always on | [planner.md](planner.md) |
+| Search | all four; inside a worker branch under `orchestrated_workers` | always on | [search.md](search.md) |
+| Reader | all four; inside a worker branch under `orchestrated_workers` | always on | [reader.md](reader.md) |
+| Synthesizer | all four shapes | always on | [synthesizer.md](synthesizer.md) |
+| Critic | all four shapes | always on | [critic.md](critic.md) |
 | Supervisor | supervisor loop | `enable_supervisor` | [supervisor.md](supervisor.md) |
-| Verifier | supervisor loop | `enable_verifier` | [verifier.md](verifier.md) |
+| Verifier | supervisor loop as an *action*; `fixed_verify_repair` and `orchestrated_workers` as the `verify` **node** | `enable_verifier` for the action; the policy for the node | [verifier.md](verifier.md) |
 | Query refiner | supervisor loop | `enable_query_refiner` | [query_refiner.md](query_refiner.md) |
 | Tutor | guided-read session graph | `enable_session_loop` | [tutor.md](tutor.md) |
 
-## The two shapes
+`repair` is a node without an agent page: it makes no model call and
+picks from a deterministic table — see [repair.md](repair.md). So are
+`lead`, `workers` and `merge`, the branch tier's three (ADR 0086).
+
+## The four shapes
+
+The two below are the two `enable_supervisor` selects, and they are what
+`research_policy="legacy"` — the default — compiles:
 
 ```mermaid
 flowchart LR
@@ -43,9 +50,29 @@ flowchart LR
 In the fixed pipeline the critic's `revision_target` drives the only
 conditional edge, and it can point at `planner`, `search`, or
 `synthesizer`. In the supervisor loop every action node edges straight
-back to the supervisor, which picks the next action or stops. The
-verifier and query refiner exist only in the loop, and only when their
-own flags are on.
+back to the supervisor, which picks the next action or stops. The query
+refiner exists only in the loop, and only when its flag is on.
+
+The other two are selected by `research_policy` rather than by a flag,
+and both put the verifier on the graph as a node:
+
+- **`fixed_verify_repair`** (ADR
+  [0076](../decisions/0076-fixed-verify-repair-research-policy.md)) —
+  `planner → search → reader → synthesizer → verify`, at most one
+  deterministic `repair` on a failed verdict, then re-verification
+  before the critic.
+- **`orchestrated_workers`** (ADR
+  [0086](../decisions/0086-orchestrator-workers-for-the-branch-tier.md))
+  — `planner → lead → workers → merge` replaces the single
+  `search → reader` leg, each worker researching one sub-question on an
+  isolated state; after the merge the graph *is* the shape above.
+
+Both refuse to load unless `enable_supervisor=false`,
+`enable_evidence_store=true` and `enable_verifier=false`. Drawn edge by
+edge in
+[`docs/architecture.md`](../architecture.md#the-workflow--four-shapes),
+which is also where `compute_controller` — the switch that picks a shape
+per *job* rather than per process — is described.
 
 ## Cross-cutting flags
 

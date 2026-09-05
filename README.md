@@ -25,18 +25,33 @@ Under the fixed pipeline (Sprint 1 shape) it's a five-agent DAG with one
 conditional edge on the critic. Behind opt-in flags it becomes an
 agentic supervisor loop with runtime faithfulness verification,
 evidence-grounded synthesis, and search-layer / read-layer recovery
-actions. Every stateful concern has a pluggable Redis/Postgres backend
+actions — and behind `RESEARCH_POLICY` two further graph shapes, one
+adding an explicit verify-and-repair stage and one fanning each
+sub-question out to its own worker branch, either of which
+`COMPUTE_CONTROLLER` can select per job. Every stateful concern has a pluggable Redis/Postgres backend
 (jobs, checkpoints, conversations, caches, rate limits), workers hold
 leases with a redriver for crash recovery, and everything emits
 structured JSON logs plus OpenTelemetry traces and metrics.
 
 ## Architecture
 
-### The workflow — two shapes
+### The workflow — four shapes, two of them drawn here
 
 The comparison is the point: the same agents, rewired from a fixed graph
 into an observe-decide-act loop, so a Sprint 1 baseline and a supervisor
 run stay directly comparable.
+
+The two below are what `RESEARCH_POLICY=legacy` — the default —
+compiles, selected by `ENABLE_SUPERVISOR`. Two more are selected by
+`RESEARCH_POLICY` itself: `fixed_verify_repair` adds an explicit
+`verify` node and one bounded deterministic `repair` (ADR 0076), and
+`orchestrated_workers` replaces the single `search → reader` leg with
+`lead → workers → merge` so each sub-question is researched on its own
+branch (ADR 0086). Both are off by default and both are drawn edge by
+edge in
+[`docs/architecture.md`](docs/architecture.md#the-workflow--four-shapes),
+along with `COMPUTE_CONTROLLER`, which picks a shape per job rather than
+per process.
 
 **Fixed pipeline — Sprint 1 baseline (default)**
 
@@ -405,8 +420,12 @@ python -m src.main "What are the latest approaches to reducing hallucination in 
 The final markdown report is printed to stdout and saved to
 `outputs/report_<timestamp>.md`.
 
-If arXiv is rate-limiting or unavailable, force the built-in mock papers
-instead of a live search with `USE_MOCK_DATA=true`. To run the agentic
+`USE_MOCK_DATA=true` runs the whole graph offline: built-in mock papers
+instead of a live search, and a deterministic branch in every research
+agent, so it needs **no `ANTHROPIC_API_KEY`, reaches no host and costs
+`$0.0000`** (ADR 0080). Use it if arXiv is rate-limiting, or to see a
+briefing before configuring anything. Nothing it produces is a quality
+signal — the briefing says so on its first line. To run the agentic
 shape:
 
 ```bash

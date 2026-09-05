@@ -834,21 +834,48 @@ needs somewhere to belong.
 
 ### What "mock mode" does and does not cover
 
-Worth stating plainly, because the asymmetry is easy to get wrong and
-costs money when you do. `USE_MOCK_DATA` swaps the arXiv search for
-five fixture papers (`src/agents/search.py`) and makes the tutor and
-the assessment judge deterministic (`src/agents/tutor.py`,
-`src/agents/assessment.py`). It does **not** touch `src/llm.py`. So:
+Worth stating plainly, because getting it wrong costs money. This
+section used to describe an *asymmetry* — the session graph free under
+mock mode, the research graph not — and that asymmetry is gone. What
+replaced it is a distinction that matters more, because it is the one a
+test author now gets wrong.
 
-- the **session graph** runs free on mock mode alone — no Anthropic
-  client is constructed anywhere on its path, which is why
-  `simulate_learner` can drive fifteen sessions in CI;
-- the **research graph** does not. Its planner, reader, synthesizer and
-  critic call `call_llm_json` under mock mode exactly as they do in
-  production, so the tier cans those four per module, the way
-  `tests/test_api_smoke_e2e.py` does. `call_llm_json` is imported into
-  each agent's own namespace; patching `src.llm.call_llm_json` does
-  nothing.
+`USE_MOCK_DATA` swaps the arXiv search for five fixture papers
+(`src/agents/search.py`), makes the tutor and the assessment judge
+deterministic (`src/agents/tutor.py`, `src/agents/assessment.py`), and
+gives six research agents a deterministic branch before their model
+call: **planner, reader, synthesizer, critic, verifier and
+supervisor** — the first five from `src/agents/mock_mode.py` (ADR 0080),
+the supervisor's its own (P0-WO11). The one research agent without one
+is the **query refiner**, which the supervisor's mock route never
+selects. It still does **not** touch `src/llm.py` — what changed is that
+those agents return *before* reaching it. So:
+
+- **both graphs** now run free on mock mode alone. No Anthropic client
+  is constructed anywhere on either path, under any of the
+  [four workflow shapes](architecture.md#the-workflow--four-shapes) —
+  which is what `tests/e2e/test_mock_mode_keyless.py` exists to prove,
+  with two assertions rather than one: `zero_spend_ledger` proves
+  nothing was *billed*, `no_client_constructed` proves nothing was even
+  *built*. A zero-cost ledger is consistent with a client that was
+  constructed and then failed, which was exactly the pre-ADR-0080
+  failure.
+- **a canned agent surface is now something you opt into, not something
+  mock mode forces on you.** `research_llm_surface` in
+  `tests/e2e/conftest.py` exists to supply *the words a model would have
+  said*, and the agents' own branch would pre-empt it — the branch is
+  checked before the call, so a patched `call_llm_json` would simply
+  never run. The fixture therefore does two things: it cans the four
+  agents, **and** it rebinds their `settings` to a `use_mock_data=False`
+  copy so its patches are reachable, leaving `src.agents.search.settings`
+  on `True` so retrieval still serves the fixture corpus.
+
+Two consequences for anyone writing in this directory. A test that wants
+the **product's** mock path must not use `research_llm_surface` — using
+it makes the test a test of the fixture; that is the rule
+`test_mock_mode_keyless.py` is built on. And `call_llm_json` is imported
+into each agent's own namespace, so patching `src.llm.call_llm_json`
+still does nothing.
 
 ### Zero spend, asserted rather than assumed
 

@@ -4,8 +4,8 @@
 
 Turns paper analyses (and, when available, source-grounded evidence)
 into a structured markdown research briefing with an inline citation
-list. One of the five agents wired into both the fixed pipeline and
-the supervisor loop. The draft report **is** the product, which is why
+list. One of the five agents wired into all four graph shapes. The
+draft report **is** the product, which is why
 this is the one agent with no honest degraded output.
 
 Source: `src/agents/synthesizer.py`. Wiring:
@@ -24,7 +24,7 @@ flowchart LR
   CALL -->|"retry also unusable"| ERR["SynthesizerOutputError<br/>job fails with that error_type"]
   CALL -->|"retry would overrun the job budget"| ERR
   OUT --> CRITIC["critic agent"]
-  OUT --> VER["verifier agent<br/>(supervisor loop only)"]
+  OUT --> VER["verifier agent<br/>action in the supervisor loop;<br/>the verify node under<br/>fixed_verify_repair / orchestrated_workers"]
 ```
 
 ## Inputs
@@ -182,12 +182,14 @@ Settings that drive the synthesizer (see `src/config.py`):
 
 ## Related
 
-- **Hands off to** — [critic](critic.md) in the fixed pipeline; in the
-  supervisor loop, control returns to the
-  [supervisor](supervisor.md), which typically picks `verify` (see
-  [verifier](verifier.md)) or `critique` next. Re-entered from the
-  critic's `revision_target: "synthesizer"` and from the verifier's
-  `revise_report` recommendation.
+- **Hands off to** — [critic](critic.md) in the fixed pipeline; the
+  `verify` node (see [verifier](verifier.md)) under
+  `fixed_verify_repair` and `orchestrated_workers`; and in the
+  supervisor loop, control returns to the [supervisor](supervisor.md),
+  which typically picks `verify` or `critique` next. Re-entered from the
+  critic's `revision_target: "synthesizer"`, from the verifier's
+  `revise_report` recommendation, and from a `qualify_or_remove_claims`
+  [repair](repair.md).
 - **ADRs** — [0016](../decisions/0016-evidence-store-source-text-verifier.md)
   (evidence store),
   [0017](../decisions/0017-synthesizer-evidence-swap.md) (this agent's

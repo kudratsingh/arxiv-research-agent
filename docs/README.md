@@ -8,7 +8,7 @@ more space. This page is the map of what "here" holds.
 ## Layout
 
 - [`architecture.md`](architecture.md) — system-level architecture: the
-  two workflow shapes, the API layer (job model, SSE, HITL,
+  four workflow shapes, the API layer (job model, SSE, HITL,
   auth/scoping), the storage matrix, and the cross-cutting concerns.
   Points at ADRs rather than duplicating them.
 - [`agents/`](agents/) — per-agent design docs (inputs, outputs, prompt

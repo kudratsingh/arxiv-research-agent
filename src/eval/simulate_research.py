@@ -16,25 +16,34 @@ disabled-key sentinel, writes the same durable per-record layout
 `runner.py` writes, and asserts through `src/eval/scripted_tier_check.py`
 that the campaign was complete and cost exactly `$0.0000`.
 
-**The asymmetry that makes this module necessary, stated first because
-it is the thing a reader must not have to rediscover.** Mock mode is not
-an LLM stub. `USE_MOCK_DATA` swaps arXiv search for five fixture papers
-(`src/agents/search.py`) and gives the tutor and the assessment judge
-deterministic branches (`src/agents/tutor.py`, `src/agents/assessment.py`)
-— which is why the *session* graph runs free on mock mode alone and
-`simulate_learner`'s scripted tier needs nothing else. It does **not**
-touch `src/llm.py`, and the research graph's planner, reader,
-synthesizer and critic call `call_llm_json` under it exactly as they do
-in production. `tests/e2e/conftest.py` says the same thing in the same
-words, and cans the four agents itself.
+**Why this module still scripts the model's words, stated first because
+it is the thing a reader must not have to rediscover.** It is no longer
+because mock mode cannot produce them. Until ADR 0080, `USE_MOCK_DATA`
+swapped arXiv search for five fixture papers (`src/agents/search.py`)
+and gave the tutor and the assessment judge deterministic branches
+(`src/agents/tutor.py`, `src/agents/assessment.py`) and nothing else —
+which is why the *session* graph ran free on mock mode alone while the
+research graph's planner, reader, synthesizer and critic called
+`call_llm_json` under it exactly as they do in production. **ADR 0080
+closed that gap** and P0-WO11 closed the supervisor's: every research
+agent but the query refiner now returns from a deterministic branch
+placed *before* its model call (`src/agents/mock_mode.py`), and the
+research graph reaches a briefing keyless under every graph shape.
 
-So the research lane's scripted tier has to supply the words the
-*model* would have said, where the learning lane's supplies the words
-the *learner* would have said. That is the whole difference, and it is
-the honest cost of the tier: **the report text in a scripted record is
-the harness's, so this tier measures the pipeline around the model, not
-the model's own grounding.** What it therefore does and does not catch
-is written out in `docs/eval.md` rather than left implicit.
+This module scripts anyway, and `scripted_surface` turns the product's
+branch back off on the four modules it patches in order to. The reason
+is the committed baseline, not the capability: the record in
+`tests/fixtures/eval/research-scripted/baseline.jsonl` was scored
+against the harness's words, and serving the product's mock briefing
+instead moves every report in it. **Replacing the surface with the
+product's own mock branch is ADR 0075's follow-up and is a rebaseline,
+not a refactor.**
+
+So the honest cost of the tier is unchanged: **the report text in a
+scripted record is the harness's, so this tier measures the pipeline
+around the model, not the model's own grounding.** What it therefore
+does and does not catch is written out in `docs/eval.md` rather than
+left implicit.
 
 What it does catch, all of which are real regressions the repository has
 no other free check for:
@@ -92,8 +101,12 @@ The tier is also **offline**. `parse_pdf` is stubbed to the empty string
 so the reader takes ADR 0004's abstract-only path: the mock corpus has
 no local full text, and a per-PR gate that fetches five PDFs from
 arxiv.org is neither free nor reliable. `quote_verbatim_rate` is
-therefore `null` with reason `no_checkable_quotes` on every record, which
-is the honest answer and is published as such.
+therefore `null` on every record, with reason **`no_quotes`** — measured
+across all twenty, and it is the scripted synthesizer declining to quote
+that decides it, not the missing full text. `no_checkable_quotes` is the
+*other* reason code (`src/eval/groundedness.py`), the one for a report
+that does quote and has no complete source; this tier never reaches it,
+and two other sentences in this module already said so.
 
 **What the mock corpus does to the denominators**, because a rate over
 three citations is not a rate. `search.MOCK_PAPERS` is five papers and
@@ -1381,10 +1394,12 @@ def summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
         f"- Queries with unmet structural expectations: {len(unmet)}",
         "",
         "The report text in every record below is the harness's, not a "
-        "model's: mock mode does not stub `src/llm.py`, so this tier "
-        "scripts the four research agents' responses itself. What is "
-        "measured is the pipeline that assembled the report and the "
-        "identifiers it cites — not the model's grounding. See "
+        "model's: this tier scripts the four research agents' responses "
+        "itself, and turns their own mock branch off to do it, so that "
+        "the committed baseline stays byte-identical (ADR 0075's "
+        "follow-up is to delete the surface, which is a rebaseline). "
+        "What is measured is the pipeline that assembled the report and "
+        "the identifiers it cites — not the model's grounding. See "
         "`docs/eval.md`.",
         "",
         "| Query | Traj. | Papers | Cites | Cit.Res. | n | Claims | Unmet | $ | s |",
