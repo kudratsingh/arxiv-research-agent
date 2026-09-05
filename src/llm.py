@@ -171,14 +171,27 @@ def _get_client() -> anthropic.Anthropic:
     Retry policy and timeout are baked in at construction from
     `settings` (clamped by `_retry_envelope`); call sites don't need to
     know about them.
+
+    This is the one place in `src/` that unwraps
+    `settings.anthropic_api_key`. The field is a `SecretStr` (WO-C4),
+    and the rule `src/config.py` states is followed here literally:
+    `get_secret_value()` once, into a local, straight into the SDK
+    constructor. The unwrapped string is never logged, never
+    interpolated and never put in `payload` below — an `api_key` that
+    reached that dict would be one `log.info` away from the stream.
+    Testing the local rather than the wrapper also keeps the emptiness
+    check honest: `bool(SecretStr(...))` happens to answer correctly
+    today via `__len__`, but that is pydantic's implementation detail
+    and not something a spend guard should rest on.
     """
     global _client
     if _client is None:
-        if not settings.anthropic_api_key:
+        api_key = settings.anthropic_api_key.get_secret_value()
+        if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY not set in .env")
         max_retries, timeout_sec = _retry_envelope()
         _client = anthropic.Anthropic(
-            api_key=settings.anthropic_api_key,
+            api_key=api_key,
             max_retries=max_retries,
             timeout=timeout_sec,
         )

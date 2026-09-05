@@ -101,9 +101,34 @@ services:
       # sets it back to false: nothing real publishes until its
       # briefings are generated and reviewed.
       ENABLE_LEARN_CONTENT: ${ENABLE_LEARN_CONTENT:-true}
+      # Per-run LLM spend ceiling. Enumerated here, not just in the
+      # production overlay, because this list is exhaustive: a variable
+      # absent from it does not reach the container however loudly the
+      # host exported it. Leaving it out meant `MAX_COST_USD=0.25
+      # docker compose up` ran at the shipped $2.00 — a cost guard
+      # silently ignored, which is the worst kind. The default matches
+      # `src/config.py`, so an operator who sets nothing is unaffected.
+      MAX_COST_USD: ${MAX_COST_USD:-2.00}
       API_HOST: 0.0.0.0
       API_PORT: "8000"
-      LOG_LEVEL: INFO
+      # ADR 0067 / WO-C3: the deployment-wide salt for `principal_hash`,
+      # the field every log line carries in place of an API key id. This
+      # list is explicit, so its absence was not neutral — a Compose
+      # deployment took the per-process branch and a principal's lines
+      # could not be joined across `app`, whatever the operator exported.
+      # A *blank* value is unset rather than a salt (`Settings` has a
+      # before-validator that says so), which is exactly what `:-` yields
+      # when the host has not set one: unset here still means the
+      # per-process salt the zero-config demo has always had, and
+      # `principal_salt_is_ephemeral()` still reports which mode you are
+      # in. It is a secret: it never reaches a log line or a settings
+      # dump, and ADR 0067 says why before you choose one.
+      LOG_PRINCIPAL_SALT: ${LOG_PRINCIPAL_SALT:-}
+      # Parameterised rather than pinned: a hard-coded `INFO` here
+      # silently outranked `LOG_LEVEL=DEBUG docker compose up`, which is
+      # the first thing anyone reaches for when debugging this stack.
+      # Same default, now overridable.
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     depends_on:
       redis:
         condition: service_healthy
