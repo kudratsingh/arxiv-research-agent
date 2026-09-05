@@ -1142,3 +1142,56 @@ No work order below is authorized by this RFC.
 
 Each work order should be independently reviewable, rollback-safe, and complete
 its no-cost test slice before any request for funded execution.
+
+## 20. Amendment — learning context kinds (2026-09-05)
+
+Appended rather than edited in place, so the contract's history stays
+readable. Implemented by [ADR 0089](../decisions/0089-non-arm-policy-snapshots-and-one-registry-root.md);
+the sections above describe the shape before this amendment.
+
+### 20.1 `ContextRef.kind` gains the three candidate learning kinds
+
+§6's `ContextRef` enumerated six kinds, and `kind_matches_ref` admitted
+only `supplied_corpus` / `source_snapshot` / `content_entry` /
+`artifact` reference kinds under the corpus role. The guided-learning
+suite registered by [ADR 0079](../decisions/0079-benchmark-registry-migration-and-parity.md)
+gives every case three candidate-visible refs — `learning_scenario_input`,
+`learning_persona` and `learning_paper` — none of which is corpus-shaped,
+so a learning case could not compile with its context refs populated at
+all. The vocabulary is now:
+
+```python
+kind: Literal[
+    "conversation_summary", "supplied_corpus", "content_entry",
+    "learner_profile_snapshot", "prior_session_summary", "prior_artifact",
+    "learning_scenario_input", "learning_persona", "learning_paper",
+]
+```
+
+Each new role admits **exactly** its own registry content kind. There is
+no aliasing and no widening of the corpus role, because `kind` reaches
+the candidate verbatim through the runtime projection: a persona ref
+sitting in a `learning_paper` slot would be a different claim about what
+the candidate was shown.
+
+### 20.2 The evaluator kinds are excluded by enumeration, not by accident
+
+`learning_script`, `learning_expectations` and `learning_fixture` are the
+suite's reference answers and are sealed `ObjectVisibility.EVALUATOR`.
+They are **not** context kinds and must never become ones. The admitted
+set is enumerated by hand for that reason: a rule phrased as "every
+`learning_*` content kind" would hand the candidate the answer key, and
+`LabelRecord.value_ref` points at exactly one of those objects.
+
+### 20.3 The benchmark compiler derives the kind from the ref
+
+§10's `compile_benchmark_case` stamped one blanket `kind="supplied_corpus"`
+and one blanket `purpose` on every candidate ref. It now derives both
+from `ImmutableObjectRef.kind`, which already carries the registry's own
+answer, and falls back to `supplied_corpus` for the research lane's
+corpus and snapshot refs. `purpose` is per-kind because it survives
+`agent_safe_task_projection` and is therefore prompt surface.
+
+The compiler's signature is unchanged and it still accepts no evaluator
+refs. Research cases carry no candidate-visible refs at all, so no
+research behaviour moves.

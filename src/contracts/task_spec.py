@@ -13,7 +13,7 @@ from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Any, Literal, Protocol, TypeAlias
+from typing import Annotated, Any, Final, Literal, Protocol, TypeAlias
 
 from pydantic import Field, StringConstraints, model_validator
 
@@ -329,6 +329,45 @@ class AutonomyPolicy(StrictContractModel):
         return self
 
 
+#: Registry content kinds a *candidate* may be handed as task context,
+#: each mapped to the `ContextRef.kind` naming the role it plays.
+#:
+#: Enumerated by hand rather than derived from `ContentKind`, and that is
+#: the safety property. `learning_script` and `learning_expectations` are
+#: the guided-learning suite's reference answers; a rule that read "every
+#: `learning_*` content kind" would put the answer key into the
+#: candidate's context. Membership here is a per-kind decision that
+#: matches the `ObjectVisibility.CANDIDATE` stamp
+#: `src.contracts.benchmark_adapters` seals each of these objects with.
+BenchmarkContextKind: TypeAlias = Literal[
+    "supplied_corpus",
+    "learning_scenario_input",
+    "learning_persona",
+    "learning_paper",
+]
+
+BENCHMARK_CONTEXT_KINDS: Final[Mapping[str, BenchmarkContextKind]] = {
+    "learning_scenario_input": "learning_scenario_input",
+    "learning_persona": "learning_persona",
+    "learning_paper": "learning_paper",
+}
+
+#: What each candidate-visible benchmark context object is *for*, in the
+#: candidate's own vocabulary. `purpose` survives
+#: `agent_safe_task_projection`, so these strings are prompt surface, and
+#: one blanket sentence for three different objects was a vague claim
+#: made three times.
+_BENCHMARK_CONTEXT_PURPOSES: Final[Mapping[str, str]] = {
+    "learning_scenario_input": "The learner's opening request for this session.",
+    "learning_persona": "Who the learner is, as the benchmark describes them.",
+    "learning_paper": "The paper this guided-reading session is about.",
+}
+
+#: The purpose for a candidate ref whose kind this module has no entry
+#: for — the research lane's corpus and snapshot refs.
+_SUPPLIED_CORPUS_PURPOSE: Final[str] = "Candidate-visible immutable benchmark context."
+
+
 class ContextRef(StrictContractModel):
     object_ref: ImmutableObjectRef
     locator: Annotated[str, StringConstraints(min_length=1, max_length=500)] | None = None
@@ -339,6 +378,9 @@ class ContextRef(StrictContractModel):
         "learner_profile_snapshot",
         "prior_session_summary",
         "prior_artifact",
+        "learning_scenario_input",
+        "learning_persona",
+        "learning_paper",
     ]
     purpose: Annotated[str, StringConstraints(min_length=1, max_length=200)]
 
@@ -356,6 +398,14 @@ class ContextRef(StrictContractModel):
             "learner_profile_snapshot": {"learner_profile_snapshot"},
             "prior_session_summary": {"prior_session_summary"},
             "prior_artifact": {"artifact", "prior_artifact"},
+            # Each learning context kind admits exactly its own registry
+            # content kind, with no aliasing. A persona ref sitting in a
+            # `learning_paper` slot is a different claim about what the
+            # candidate was shown, and `kind` reaches the candidate
+            # verbatim through `agent_safe_task_projection`.
+            "learning_scenario_input": {"learning_scenario_input"},
+            "learning_persona": {"learning_persona"},
+            "learning_paper": {"learning_paper"},
         }[self.kind]
         if self.object_ref.kind not in expected_kinds:
             raise ValueError("context kind is incompatible with its immutable object ref")
@@ -1161,6 +1211,31 @@ def compile_guided_session(
     )
 
 
+def _benchmark_context(ref: ImmutableObjectRef) -> ContextRef:
+    """Name what a candidate-visible benchmark ref *is*, from the ref itself.
+
+    The kind is derived rather than declared because the compiler is
+    handed the registry's own `ImmutableObjectRef`, whose `kind` already
+    says which content object this is. The previous blanket
+    `supplied_corpus` was not merely imprecise: `kind_matches_ref`
+    admits only corpus-shaped object kinds under that name, so a
+    guided-learning case could not compile with its persona and paper
+    refs at all (ADR 0079's recorded follow-up).
+
+    A ref whose kind has no entry keeps the old behaviour — the research
+    lane's corpus and source-snapshot refs are corpus material and
+    `supplied_corpus` is the honest name for them. An unknown kind that
+    is *not* corpus-shaped fails in `kind_matches_ref` rather than
+    silently acquiring a role it was never granted.
+    """
+    role: BenchmarkContextKind = BENCHMARK_CONTEXT_KINDS.get(ref.kind, "supplied_corpus")
+    return ContextRef(
+        object_ref=ref,
+        kind=role,
+        purpose=_BENCHMARK_CONTEXT_PURPOSES.get(role, _SUPPLIED_CORPUS_PURPOSE),
+    )
+
+
 def compile_benchmark_case(
     *,
     task_id: TaskId,
@@ -1198,14 +1273,7 @@ def compile_benchmark_case(
     else:
         deliverables = _research_deliverables(task_kind)
         checks = _research_checks(tuple(item.deliverable_id for item in deliverables))
-    contexts = tuple(
-        ContextRef(
-            object_ref=ref,
-            kind="supplied_corpus",
-            purpose="Candidate-visible immutable benchmark context.",
-        )
-        for ref in candidate_visible_refs
-    )
+    contexts = tuple(_benchmark_context(ref) for ref in candidate_visible_refs)
     return _finalize_task(
         {
             "task_id": task_id,

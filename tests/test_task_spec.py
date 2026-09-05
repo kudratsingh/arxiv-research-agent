@@ -940,3 +940,127 @@ def test_store_refuses_two_specs_for_one_logical_revision() -> None:
     competing = original.model_copy(update={"task_spec_id": "tsp_" + "c" * 20})
     with pytest.raises(TaskSpecError, match="logical task revision"):
         store.put(competing)
+
+
+# ---------------------------------------------------------------------------
+# W01b — the learning context-ref kinds
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "kind",
+    ["learning_scenario_input", "learning_persona", "learning_paper"],
+)
+def test_each_learning_context_kind_accepts_exactly_its_own_object(kind: str) -> None:
+    """One kind, one registry content kind, and nothing else.
+
+    Before W01b, `kind_matches_ref` admitted only
+    supplied_corpus/source_snapshot/content_entry/artifact under
+    `supplied_corpus`, so a guided-learning case's persona and paper refs
+    could not be carried at all (ADR 0079's recorded follow-up, closed by
+    ADR 0089).
+    """
+    accepted = ContextRef(
+        object_ref=ref(kind, "case-a"),
+        kind=kind,  # type: ignore[arg-type]
+        purpose="Candidate-visible learning context.",
+    )
+    assert accepted.kind == kind
+    assert accepted.object_ref.kind == kind
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("kind", "wrong_object_kind"),
+    [
+        ("learning_scenario_input", "learning_persona"),
+        ("learning_persona", "learning_paper"),
+        ("learning_paper", "learning_scenario_input"),
+        # The two that must never be admissible under any learning kind:
+        # they are the suite's reference answers.
+        ("learning_persona", "learning_script"),
+        ("learning_paper", "learning_expectations"),
+        # And the old blanket role no longer swallows learning material.
+        ("supplied_corpus", "learning_persona"),
+    ],
+)
+def test_a_learning_context_refuses_an_object_of_another_kind(
+    kind: str, wrong_object_kind: str
+) -> None:
+    with pytest.raises(ValidationError, match="incompatible"):
+        ContextRef(
+            object_ref=ref(wrong_object_kind, "case-a"),
+            kind=kind,  # type: ignore[arg-type]
+            purpose="Wrong object for this role.",
+        )
+
+
+@pytest.mark.unit
+def test_a_learning_benchmark_case_compiles_with_its_refs_populated() -> None:
+    """The three candidate refs a guided-learning case actually carries.
+
+    Each arrives under the role its own registry kind names rather than
+    one blanket `supplied_corpus`, and each keeps its own purpose string
+    — `purpose` survives `agent_safe_task_projection`, so it is prompt
+    surface rather than bookkeeping.
+    """
+    origin = BenchmarkOrigin(
+        suite_ref=ref("benchmark_suite", "guided-learning-v1", digit="6"),
+        task_set_ref=ref("task_set", "guided-learning-tasks", digit="7"),
+        task_case_ref=ref("task_case", "novice-transformer-baseline", digit="8"),
+    )
+    candidate_refs = (
+        ref("learning_scenario_input", "novice-transformer-baseline", digit="1"),
+        ref("learning_persona", "novice-undergrad", digit="2"),
+        ref("learning_paper", "arxiv-1706-03762", digit="3"),
+    )
+    spec = compile_benchmark_case(
+        task_id="guided-learning-v1:novice-transformer-baseline",
+        task_kind=TaskKind.LEARNING_GUIDED_READING,
+        objective="Guide a novice through the transformer paper.",
+        candidate_visible_refs=candidate_refs,
+        origin=origin,
+        product_surface=ProductSurface.LEARNING_EVAL,
+        requested_policy=policy_bundle(corpus_mode=CorpusMode.CURATED),
+        platform_policy=platform_policy(),
+        compiler_ref=compiler_ref(),
+        compiled_at=NOW,
+    )
+
+    assert [context.kind for context in spec.context_refs] == [
+        "learning_scenario_input",
+        "learning_persona",
+        "learning_paper",
+    ]
+    assert [context.object_ref for context in spec.context_refs] == list(candidate_refs)
+    assert len({context.purpose for context in spec.context_refs}) == 3
+
+    runtime = json.dumps(agent_safe_task_projection(spec), sort_keys=True)
+    for candidate in candidate_refs:
+        assert candidate.digest in runtime
+    assert all("locator" not in context for context in
+               agent_safe_task_projection(spec)["context_refs"])
+
+
+@pytest.mark.unit
+def test_a_research_benchmark_ref_still_compiles_as_supplied_corpus() -> None:
+    """The unchanged half. A corpus ref keeps the role it always had."""
+    spec = compile_benchmark_case(
+        task_id="research-policy-v1:case-a",
+        task_kind=TaskKind.RESEARCH_METHOD_COMPARISON,
+        objective="Compare two methods.",
+        candidate_visible_refs=(ref("source_snapshot", "public-case", digit="1"),),
+        origin=BenchmarkOrigin(
+            suite_ref=ref("benchmark_suite", "research-policy-v1", digit="6"),
+            task_set_ref=ref("task_set", "research-tasks", digit="7"),
+            task_case_ref=ref("task_case", "case-a", digit="8"),
+        ),
+        product_surface=ProductSurface.RESEARCH_EVAL,
+        requested_policy=policy_bundle(corpus_mode=CorpusMode.SNAPSHOT),
+        platform_policy=platform_policy(),
+        compiler_ref=compiler_ref(),
+        compiled_at=NOW,
+    )
+    assert [context.kind for context in spec.context_refs] == ["supplied_corpus"]
+    assert spec.context_refs[0].purpose == "Candidate-visible immutable benchmark context."

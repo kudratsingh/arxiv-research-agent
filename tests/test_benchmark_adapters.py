@@ -72,6 +72,7 @@ from src.contracts.registry import (
     validate_registry_safety,
 )
 from src.contracts.task_spec import (
+    BENCHMARK_CONTEXT_KINDS,
     AutonomyPolicy,
     AutonomyTier,
     BenchmarkOrigin,
@@ -685,11 +686,12 @@ def test_one_case_from_each_lane_compiles_without_evaluator_material(
         task_id=f"{suite_id}:{case.case_id}",
         task_kind=task_kind,
         objective=case.task_input.objective,
-        # Empty on purpose: `ContextRef.kind_matches_ref` admits only
-        # supplied_corpus/source_snapshot/content_entry/artifact reference
-        # kinds, so a registry `learning_persona` ref cannot ride in a
-        # candidate context yet (src/contracts/task_spec.py:346).
-        candidate_visible_refs=(),
+        # The case's own refs, which is what W01b changed. This argument
+        # used to be `()` with a comment saying why: `kind_matches_ref`
+        # admitted only supplied_corpus/source_snapshot/content_entry/
+        # artifact, so a registry `learning_persona` ref could not ride
+        # in a candidate context at all.
+        candidate_visible_refs=case.candidate_visible_refs,
         origin=BenchmarkOrigin(
             suite_ref=suite_ref(REGISTRY_ROOT, suite_id),
             task_set_ref=suite.task_set_ref,
@@ -706,11 +708,26 @@ def test_one_case_from_each_lane_compiles_without_evaluator_material(
     assert spec.benchmark_origin is not None
     assert spec.benchmark_origin.task_case_ref == case_ref
 
+    # Every candidate ref survives compilation, in order, under the role
+    # its own registry kind names rather than one blanket `supplied_corpus`.
+    assert [context.object_ref for context in spec.context_refs] == list(
+        case.candidate_visible_refs
+    )
+    assert [context.kind for context in spec.context_refs] == [
+        BENCHMARK_CONTEXT_KINDS.get(ref.kind, "supplied_corpus")
+        for ref in case.candidate_visible_refs
+    ]
+
     agent_view = canonical_json(agent_safe_task_projection(spec))
     assert "benchmark_origin" not in agent_view
     for evaluator_ref in case.evaluator_refs:
         assert evaluator_ref.digest not in agent_view
     assert case.provenance.review_record not in agent_view
+    # The other half of the same claim, and only now worth asserting:
+    # the candidate refs *are* present, so "no evaluator digest" is a
+    # separation and not an artefact of an empty context list.
+    for candidate_ref in case.candidate_visible_refs:
+        assert candidate_ref.digest in agent_view
 
 
 # ---------------------------------------------------------------------------
