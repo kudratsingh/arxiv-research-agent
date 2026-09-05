@@ -156,6 +156,12 @@ class Job:
     # its persistent field list from this dataclass, so the payload round-
     # trips automatically and old rows default to an empty mapping.
     input_payload: dict[str, Any] = field(default_factory=dict)
+    # P0-WO01: additive shadow binding to the immutable TaskSpec. The wire
+    # value is a JSON-ready TaskSpecRef projection rather than a contracts
+    # import, preserving this module's dependency-free boundary. Legacy rows
+    # omit the field and reconstruct with None; runtime code does not consume
+    # it until the later manifest/admission migration.
+    task_spec_ref: dict[str, Any] | None = None
     created_at: float = field(default_factory=time.time)
     started_at: float | None = None
     completed_at: float | None = None
