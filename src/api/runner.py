@@ -40,7 +40,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import time
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any, Literal, cast
@@ -70,7 +70,11 @@ from src.observability import (
     reset_run_id,
     start_cost_tracking,
 )
-from src.observability.costs import CostBudgetExceeded
+from src.observability.costs import (
+    CostBudgetExceeded,
+    bind_llm_call_observer,
+    reset_llm_call_observer,
+)
 from src.observability.costs import enforce_cost_cap as _enforce_cost_cap
 from src.observability.metrics import record_job_terminal
 from src.observability.tracing import attached_trace_context, workflow_span
@@ -91,6 +95,19 @@ log = get_logger(__name__)
 # `_current_costs` in observability.costs. `run_job` sets it on
 # entry; the helpers read it.
 _current_store: ContextVar[JobStore | None] = ContextVar("current_store", default=None)
+
+# P0-WO05 (ADR 0078): the job's contract shadow, reached the same way
+# and for the same reason as the store above — `_persist_terminal` is
+# the one place every terminal transition passes through, and threading
+# a handle through eight `except` branches to get there would be a
+# change to eight paths instead of one.
+#
+# `Any` rather than `ShadowRun | None` deliberately: the type lives in
+# `src.contracts.shadow_bridge`, and importing it here for an
+# annotation would put a contract module on the request path of a
+# deployment that has the switch off. That is the one property the
+# golden test pins.
+_current_shadow: ContextVar[Any] = ContextVar("current_shadow", default=None)
 
 # The terminal frame is every SSE client's close signal and the store
 # write on a terminal transition is the job's outcome of record — both
@@ -459,6 +476,115 @@ def terminal_event_data(job: Job, *, reason: str | None = None) -> dict[str, Any
     }
 
 
+# ---------------------------------------------------------------------------
+# Contract shadow (P0-WO05, ADR 0078)
+#
+# Five call sites, every one of them additive, every one of them a no-op
+# when `settings.contract_shadow` is `off`, and none of them able to
+# change a job's outcome: the bridge contains its own failures and
+# returns `None` rather than raising. The rule this section is written
+# to keep is that a build with the switch off must not import a contract
+# module at all — so the import is inside `_shadow_bridge`, behind the
+# setting, and never at module scope.
+# ---------------------------------------------------------------------------
+
+
+def _shadow_bridge() -> Any:
+    """The bridge module, imported on first use, or `None` when off.
+
+    Reads `settings` at call time (a test patches the module attribute)
+    and swallows an import failure: a missing or broken contract package
+    must degrade to "no shadow", never to a failed job.
+    """
+    if settings.contract_shadow == "off":
+        return None
+    try:
+        from src.contracts import shadow_bridge
+    except Exception:  # noqa: BLE001 — a diagnostic must not fail a job
+        log.warning("contract_shadow_failed", extra={"hook": "import"}, exc_info=True)
+        return None
+    return shadow_bridge
+
+
+@contextlib.contextmanager
+def _contract_shadow(
+    job: Job, workflow: Any, costs: Any, cap_usd: float
+) -> Iterator[Any]:
+    """Seal this job's manifest and observe its model calls, or do nothing.
+
+    Entered on `run_job`'s scope stack, which puts the seal *before* the
+    first store write and the first node — the order RFC 09 §5.1
+    requires and the reason this is a scope rather than a line inside the
+    containment block.
+
+    The whole body is defensive. A scope that raised on entry would
+    escape `run_job` entirely and wedge the job non-terminal with its SSE
+    clients hanging, which is the exact failure the containment block
+    downstream exists to prevent; so nothing in here may raise, and the
+    `finally` still unbinds whatever was bound.
+    """
+    bridge = _shadow_bridge()
+    if bridge is None:
+        yield None
+        return
+    run = None
+    shadow_token = None
+    observer_token = None
+    try:
+        run = bridge.start_research_job(
+            job, workflow, config=settings, cost_ceiling_usd=cap_usd
+        )
+        if run is not None:
+            shadow_token = _current_shadow.set(run)
+            observer_token = bind_llm_call_observer(
+                lambda call: bridge.observe_model_call(run, call, costs)
+            )
+    except Exception:  # noqa: BLE001 — see the docstring
+        log.warning("contract_shadow_failed", extra={"hook": "open"}, exc_info=True)
+    try:
+        yield run
+    finally:
+        if observer_token is not None:
+            reset_llm_call_observer(observer_token)
+        if shadow_token is not None:
+            _current_shadow.reset(shadow_token)
+
+
+def _shadow_node(node_name: str, state_update: dict[str, Any]) -> None:
+    """Record one node completion on the job's shadow, if it has one."""
+    run = _current_shadow.get()
+    if run is not None:
+        _shadow_bridge().observe_node(run, node_name, state_update)
+
+
+def _shadow_terminal(job: Job) -> None:
+    """Close the shadow's trajectory from the row about to be persisted."""
+    run = _current_shadow.get()
+    if run is not None:
+        _shadow_bridge().observe_job_terminal(run, job)
+
+
+def _shadow_review_requested(ctx: PauseContext) -> None:
+    """Record the checkpoint and the review request the runner parks on."""
+    run = _current_shadow.get()
+    if run is not None:
+        _shadow_bridge().observe_review_requested(
+            run,
+            pause_number=ctx.pause_number,
+            pending=tuple(str(node) for node in getattr(ctx.workflow_state, "next", ()) or ()),
+            deadline_seconds=settings.api_hitl_timeout_sec,
+        )
+
+
+def _shadow_review_answered(ctx: PauseContext, action: str | None) -> None:
+    """Record the reviewer's answer, including a cancellation."""
+    run = _current_shadow.get()
+    if run is not None:
+        _shadow_bridge().observe_review_answered(
+            run, pause_number=ctx.pause_number, action=action
+        )
+
+
 async def _put_event(job: Job, event: str, data: dict[str, Any]) -> None:
     """Emit an event to whichever SSE delivery mechanism is active.
 
@@ -813,6 +939,11 @@ async def _handle_hitl_pause(ctx: PauseContext) -> None:
         "search_queries": list(values.get("search_queries", [])),
     }
     job.plan = plan_values
+    # P0-WO05: the pause is a declared recovery boundary and a human
+    # decision, so the shadow records a checkpoint and a `hitl.requested`
+    # before the runner blocks — and the answer after it unblocks,
+    # including a cancellation.
+    _shadow_review_requested(ctx)
     await _park_until_resumed(
         job,
         ctx.store,
@@ -820,6 +951,7 @@ async def _handle_hitl_pause(ctx: PauseContext) -> None:
         payload=plan_values,
         log_extra=_plan_shape(plan_values),
     )
+    _shadow_review_answered(ctx, job.resume_action)
 
     if job.resume_action == "cancel":
         raise HitlCancelledError("client cancelled during plan review")
@@ -1161,6 +1293,9 @@ async def _persist_terminal(store: JobStore, job: Job) -> None:
     queue_wait_sec = (
         job.started_at - job.created_at if job.started_at is not None else None
     )
+    # P0-WO05: one terminal hook for all eight terminal branches, for
+    # exactly the reason ADR 0049 put the outcome metrics here.
+    _shadow_terminal(job)
     record_job_terminal(
         status=job.status.value,
         error_type=job.error_type,
@@ -1615,6 +1750,11 @@ async def run_job(
             else settings.max_cost_usd
         )
         cost_cap_scope = bind_effective_cost_cap(cap_usd)
+        # P0-WO05: seal this job's manifest before the first store write
+        # and the first node, and observe its model calls for as long as
+        # the job owns this context. A no-op when `contract_shadow` is
+        # off, and unable to change the job's outcome either way.
+        scopes.enter_context(_contract_shadow(job, workflow, costs, cap_usd))
 
         async def on_node(node_name: str, state_update: dict[str, Any]) -> None:
             # Only publish scalar fields — the papers/citations lists
@@ -1630,6 +1770,10 @@ async def run_job(
                 "node_completed",
                 {"node": node_name, "state_delta": slim},
             )
+            # P0-WO05: the same chunk, recorded as an `action.completed`
+            # on the contract trajectory. After the SSE frame, so a
+            # broken bridge cannot delay a client's view of the run.
+            _shadow_node(node_name, state_update)
             # ADR 0033: enforce the per-run cost cap between nodes so
             # the fixed-DAG path (no supervisor) can't overspend on
             # adversarial inputs. Supervisor loop has its own check
