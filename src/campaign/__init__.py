@@ -27,11 +27,17 @@ What it owns, and why each piece exists:
   needs the owner's D9 approval.
 - `episode` — sealing one episode's `RunManifest` with the campaign's
   real lock ref, registry resolution, budgets and approval.
-- `planner` / `cli` — `plan`, `dry-run`, `resume`, `status`.
+- `execute` — the loop that actually runs the planned episodes: seal,
+  open the durable trajectory, drive the policy, score it, write the
+  episode's artifacts with `completion.json` last, and check the
+  campaign cap between episodes. Added by P0-WO07b, which is where
+  `budget_stop_reached` finally acquired a production caller.
+- `planner` / `cli` — `plan`, `dry-run`, `run`, `resume`, `status`.
 - `summary` — the three cost categories and the statistics, delegated to
   `src/eval/stats.py`.
 
-See [ADR 0082](../../docs/decisions/0082-campaign-lock-and-denominators.md).
+See [ADR 0082](../../docs/decisions/0082-campaign-lock-and-denominators.md)
+and [ADR 0088](../../docs/decisions/0088-campaign-execution-loop.md).
 """
 
 from __future__ import annotations

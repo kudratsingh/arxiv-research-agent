@@ -24,10 +24,16 @@ below is marked `ESTIMATE / RE-PRICE BEFORE APPROVAL`. The go/no-go
 question in §9 is **left unanswered on purpose**, and this draft does not
 propose an answer to it.
 
-**Three of the packet's own preconditions are not met today.** They are
-listed in §8, and the largest is that the campaign execution loop does
-not exist: `src/campaign/` plans, locks and seals episodes and has no
-code that runs one. An approval granted today could not be spent.
+**Three of the packet's own preconditions are not met today**, and they
+are listed in §8. The one that used to lead that list — that the campaign
+execution loop did not exist — was closed by P0-WO07b
+([ADR 0088](../decisions/0088-campaign-execution-loop.md)):
+`src/campaign/` now runs the episodes it plans, and the full mock matrix
+executes end to end at `$0.000000`. What remains is an owner's: an
+approval record someone actually created, model ids and prices verified
+at run time, and token counts that have never been measured. An approval
+granted today would be spendable and would still be spending against
+unmeasured numbers.
 
 **Every token count below is an unmeasured assumption.** They describe
 prompts that exist and have never been run against this benchmark. They
@@ -213,7 +219,11 @@ completed episodes are preserved and the reason is published.
   naming its parent. A completed episode is never overwritten (three
   independent layers; report §5.2).
 - **Retention** — episode artifacts land under
-  `outputs/campaign/research-policy-v1/<campaign-id>/` per 07 §10. Every
+  `outputs/campaign/research-policy-v1/<campaign-id>/` per 07 §10, one
+  directory per episode holding its sealed manifest and projection, its
+  trajectory copy and sink reference, its attempt receipts, its record,
+  its scores and its terminal `completion.json`; canonical events go to
+  the durable sink at `outputs/trajectories/runs/<run_id>/`. Every
   event is `training_eligible: false`; consent for this lane is
   `evaluation_only` over a public benchmark, so no D8 decision on
   retained user or learner content is engaged. **A retention *period* has
@@ -226,6 +236,7 @@ completed episodes are preserved and the reason is published.
 | Requirement | Where |
 |---|---|
 | W11 Stage-0 qualification | [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md), and `tests/test_stage0_qualification.py` |
+| W07b execution loop, full mock matrix at zero cost | report §12, and `tests/test_campaign_execution.py` |
 | Dry-run lock, 300/240/60, zero provider init | report §2 |
 | A/B/C/D sealed against real compiled graphs; E non-runnable | report §3 |
 | Four synthetic episodes, verified chains, zero parity mismatches | report §4 |
@@ -242,15 +253,19 @@ completed episodes are preserved and the reason is published.
 An approval granted now could not be executed. Listing this in the packet
 rather than discovering it after an approval is the point of the packet.
 
-1. **The campaign execution loop does not exist.** `src/campaign/` plans,
-   locks, declares arms, compiles the matrix, opens the ledger, seals a
-   campaign manifest and seals one episode's `RunManifest` — and never
-   runs an episode. Nothing writes `completion.json`, so the ledger's
-   reconciliation path has only ever seen receipts a test wrote, and
-   `budget_stop_reached` (`src/campaign/planner.py:645`) — the
-   between-episodes enforcement §3.4 relies on — has no production
-   caller. It belongs at `planner.py:575` with a `run` verb at
-   `cli.py:72`. **This is the one remaining code item.**
+1. ~~**The campaign execution loop does not exist.**~~ **Closed by
+   P0-WO07b.** `src/campaign/execute.py` runs the pending episodes of a
+   planned campaign and `python -m src.campaign run` is its verb.
+   `completion.json` is written by production code, so the ledger's
+   reconciliation path consumes receipts the loop wrote; and
+   `budget_stop_reached` — the between-episodes enforcement §3.4 relies
+   on — has a caller and a test that stops a campaign at its cap. The
+   full `20 x 3 x 5` mock matrix reconciles 240 completed and 60 excluded
+   at `$0.000000` with `llm_calls=0` on every episode
+   ([`15-stage0-qualification-report.md`](15-stage0-qualification-report.md)
+   §12). **What this does not do is make any figure below measured** —
+   §3's token counts are still assumptions and §2's prices are still
+   stale. The remaining preconditions are 2–4.
 2. **The approval backend is a shape, not an authority.**
    `LocalApprovalRecordBackend` reads a JSON file of records and
    delegates verification to W03's `FakeLocalApprovalBackend`. It fails
