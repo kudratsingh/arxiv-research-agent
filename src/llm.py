@@ -201,7 +201,14 @@ def _get_client() -> anthropic.Anthropic:
         _client = anthropic.Anthropic(
             api_key=api_key,
             max_retries=max_retries,
-            timeout=timeout_sec,
+            # The SDK's own `Timeout` (its re-export of `httpx2.Timeout`
+            # on 1.x) rather than the bare float this passed before, so
+            # the one timeout this fleet configures is typed at the
+            # boundary it crosses without importing `httpx2` here. Same
+            # request either way: a float and `Timeout(120.0)` both
+            # normalise to all four of connect/read/write/pool at the
+            # configured value (ADR 0090).
+            timeout=anthropic.Timeout(timeout_sec),
         )
         # Logged once per process, at client construction: the worst
         # case is a number an operator needs when reading a timed-out
@@ -773,8 +780,10 @@ def call_llm_json(
     **Why not `client.messages.parse`.** The SDK ships a `parse` helper
     that does the schema transform and the validation in one call, and
     it is the documented way to do this. It is not used here because
-    `messages.with_raw_response` wraps only `create` and `count_tokens`
-    (anthropic 0.116.0, `resources/messages/messages.py`), and this
+    `messages.with_raw_response` wraps only `create`, `count_tokens`
+    and `batches` — still true on anthropic 1.4.0, re-checked when the
+    SDK major was raised (ADR 0090) precisely because this is the one
+    thing that would have let the transform go away — and this
     gateway reads `retries_taken` off the raw response — that is ADR
     0051's entire retry-visibility fix. Calling `parse` would mean
     either losing it or duplicating the span, cost, and

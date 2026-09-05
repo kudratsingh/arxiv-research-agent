@@ -43,7 +43,11 @@ import asyncio
 from types import SimpleNamespace
 from typing import Any
 
-import httpx
+# `httpx2` is the fork `anthropic` 1.x is built on, so a real SDK error
+# carries an `httpx2.Response`. An old `httpx.Response` is accepted here
+# without complaint, so this import is the only thing keeping the fake
+# honest (ADR 0090). Aliased, so the call sites below read unchanged.
+import httpx2 as httpx
 import pytest
 
 from src import llm as llm_module
@@ -62,10 +66,13 @@ MODEL = "claude-sonnet-4-6"
 def _status_error(status_code: int) -> Exception:
     """A real `anthropic.APIStatusError` for `status_code`.
 
-    Built from a real `httpx.Response` rather than a stand-in, because
+    Built from a real `httpx2.Response` rather than a stand-in, because
     `call_llm` reads `exc.status_code` and `exc.request_id` off the
     SDK's own parsing of it — a hand-rolled double would let those two
-    reads rot without anything failing.
+    reads rot without anything failing. `httpx2` is the fork `anthropic`
+    1.x is built on (ADR 0090); an old `httpx.Response` is accepted here
+    without error, which is why the import is the thing that has to be
+    right rather than an assertion.
     """
     request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
     response = httpx.Response(

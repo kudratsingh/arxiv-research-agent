@@ -21,7 +21,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import httpx
+# `httpx2` is the fork `anthropic` 1.x is built on, so a real SDK error
+# carries an `httpx2.Response`. An old `httpx.Response` is accepted here
+# without complaint, so this import is the only thing keeping the fake
+# honest (ADR 0090). Aliased, so the call sites below read unchanged.
+import httpx2 as httpx
 import pytest
 
 from src import llm as llm_module
@@ -108,7 +112,15 @@ class TestGetClient:
 
         client = llm_module._get_client()
 
-        assert client.kwargs["timeout"] == REQUEST_TIMEOUT_SEC
+        # An `anthropic.Timeout` since ADR 0090, not a bare float. The
+        # comparison is against the SDK's own type so this stays a
+        # statement about the configured seconds rather than about which
+        # HTTP library is underneath: `Timeout(120.0)` sets all four of
+        # connect/read/write/pool to 120, which is exactly what handing
+        # `httpx`/`httpx2` the bare float already did.
+        assert client.kwargs["timeout"] == llm_module.anthropic.Timeout(
+            REQUEST_TIMEOUT_SEC
+        )
 
     def test_passes_api_key_from_settings(
         self, monkeypatch: pytest.MonkeyPatch
@@ -231,7 +243,7 @@ class TestGetClient:
         client = llm_module._get_client()
 
         assert client.kwargs["max_retries"] == 7
-        assert client.kwargs["timeout"] == 45.0
+        assert client.kwargs["timeout"] == llm_module.anthropic.Timeout(45.0)
 
     def test_singleton_reuses_instance(
         self, monkeypatch: pytest.MonkeyPatch

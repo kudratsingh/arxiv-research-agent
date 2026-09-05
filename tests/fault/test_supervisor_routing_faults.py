@@ -41,7 +41,11 @@ import asyncio
 from types import SimpleNamespace
 from typing import Any
 
-import httpx
+# `httpx2` is the fork `anthropic` 1.x is built on, so a real SDK error
+# carries an `httpx2.Response`. An old `httpx.Response` is accepted here
+# without complaint, so this import is the only thing keeping the fake
+# honest (ADR 0090). Aliased, so the call sites below read unchanged.
+import httpx2 as httpx
 import pytest
 
 from src import llm as llm_module
