@@ -1248,6 +1248,13 @@ class TestTheRunVerb:
             "A,E",
             "--repeats",
             "1",
+            # Without this the durable sink lands on the *deployment's*
+            # `contract_event_sink_root`, which is `outputs/trajectories`
+            # in the repository the suite is running inside. A test that
+            # writes outside `tmp_path` is a test two parallel runs can
+            # collide in.
+            "--sink-root",
+            str(tmp_path / "trajectories"),
         ]
         assert main(["plan", *argv]) == EXIT_OK
         planned = json.loads(capsys.readouterr().out)
