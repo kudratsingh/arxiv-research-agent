@@ -554,7 +554,13 @@ class DurableTrajectoryStore(InMemoryTrajectoryStore):
     def append_batch(
         self, events: Sequence[ProposedTrajectoryEvent]
     ) -> tuple[StoredTrajectoryEvent, ...]:
-        stored = super().append_batch(events)
+        # Stamped on the same terms as `append`. Nothing appends a batch
+        # inside a branch scope today, and that is exactly why it is
+        # worth doing: an accepted event is never rewritten, so a batch
+        # that missed the scope would be a permanently mislabelled one.
+        stored = super().append_batch(
+            [_stamped_with_active_branch(event) for event in events]
+        )
         for one in stored:
             self._project(one)
         return stored

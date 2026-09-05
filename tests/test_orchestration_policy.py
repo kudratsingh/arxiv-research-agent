@@ -616,15 +616,37 @@ class TestTheMergeIsDeterministicAndKeepsProvenance:
         assert [b["status"] for b in merged.branches] == ["succeeded", "failed"]
         assert merged.branches[1]["reason"] == "upstream_arxiv"
 
-    def test_the_merge_releases_each_branchs_bulk_output(self) -> None:
-        """Trimming is safe because the merge is incremental."""
-        merged = orch.merge_branches(self._two_branches())
+    def test_the_merge_releases_the_bulk_and_keeps_the_record(self) -> None:
+        """Trimming is safe because the merge is incremental.
+
+        What must survive is what a reader of the finished state needs —
+        the status, the reason, the counts and the paper ids — and what
+        must go is the second copy of every claim, which would otherwise
+        ride in every checkpoint the run writes after this node.
+        """
+        branches = [
+            WorkerBranch(
+                {
+                    **branch,
+                    "paper_ids": [paper["id"] for paper in branch["papers"]],
+                    "evidence_count": len(branch["evidence"]),
+                    "analysis_count": len(branch["paper_analyses"]),
+                }
+            )
+            for branch in self._two_branches()
+        ]
+
+        merged = orch.merge_branches(branches)
 
         assert all(branch["papers"] == [] for branch in merged.branches)
         assert all(branch["evidence"] == [] for branch in merged.branches)
-        assert all(branch["evidence_count"] == 0 for branch in merged.branches), (
-            "counts are written by `run_branches`, not by the merge"
-        )
+        assert all(branch["paper_analyses"] == [] for branch in merged.branches)
+        assert [branch["evidence_count"] for branch in merged.branches] == [2, 2]
+        assert [len(branch["paper_ids"]) for branch in merged.branches] == [2, 1]
+        assert [branch["status"] for branch in merged.branches] == [
+            orch.STATUS_SUCCEEDED,
+            orch.STATUS_SUCCEEDED,
+        ]
 
     def test_re_merging_a_trimmed_branch_onto_its_own_result_adds_nothing(
         self,
