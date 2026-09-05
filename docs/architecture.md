@@ -175,11 +175,19 @@ second graph (ADR
 [0057](decisions/0057-job-kinds-and-awaiting-learner.md)). One driver
 serves both: `runner.py`'s `JobKindRuntime` records the four
 decisions that differ — the graph input, what an interrupt means, how
-many interrupts are plausible, and the wall-clock ceiling — and
-nothing else in `run_job` branches on the kind. That is the point of
-the field: a session inherits the lease, the semaphore, the cancel
-token, the cost accumulator, the terminal persistence and the outcome
-metrics rather than a second driver having to earn them again.
+many interrupts are plausible, and the wall-clock ceiling.
+**Five further branches on `job.kind`** live in `run_job` itself
+rather than in that runtime, and naming them is the honest version of
+a sentence this page used to end with "and nothing else branches on
+the kind": the cost cap (`learning_session_max_cost_usd` against
+`max_cost_usd`), the per-node cost log a session writes, the
+progress-event persistence, the profile write, and what a breached cap
+does. `tests/test_documented_claims.py` counts them in the AST, so a
+sixth is a failing test rather than a stale sentence. Everything else
+is genuinely shared, which is still the point of the field: a session
+inherits the lease, the semaphore, the cancel token, the cost
+accumulator, the terminal persistence and the outcome metrics rather
+than a second driver having to earn them again.
 `JobDetail.kind` reports it, defaulted so the field is additive.
 
 The guided-read graph is a bounded second shape: check-in, opening reflection,
@@ -640,13 +648,20 @@ pinned without a build by `tests/test_container_contract.py`).
   **Traces**: `traced_node` spans per agent behind `enable_tracing`
   (ADR
   [0013](decisions/0013-sprint-1-finish-retry-checkpoint-tracing-recall.md)).
-  **Metrics**: nine OTel instruments behind `enable_metrics` (ADR
-  [0049](decisions/0049-otel-metrics.md), extended by ADR 0051) —
+  **Metrics**: **twenty-one** OTel instruments behind `enable_metrics`
+  (ADR [0049](decisions/0049-otel-metrics.md), extended by ADRs 0051
+  and [0066](decisions/0066-genai-semantic-conventions.md)) —
   terminal job counts by status + error type, a job-duration
-  histogram, LLM spend, call, retry and upstream-error counts by
-  model, rate-limit rejections by backend, and observable
-  gauges for this worker's in-flight jobs and its abandoned node
-  threads. Traces and metrics share one `otel_exporter_endpoint`, so
+  histogram and a queue-wait histogram, LLM spend, call, retry and
+  upstream-error counts by model, rate-limit rejections by backend,
+  four observable gauges (this worker's in-flight jobs, its abandoned
+  node threads, its queue depth and its queue saturation ratio), the
+  seven-instrument conventional `gen_ai.*` family, and the two HTTP
+  server RED instruments. That count is re-derived from `src/` by
+  `tests/test_operability_docs.py`'s AST scan and checked against this
+  sentence by `tests/test_documented_claims.py`; it read "nine" across
+  three ADRs' worth of additions, because until then nothing read it
+  back. Traces and metrics share one `otel_exporter_endpoint`, so
   a single OTLP collector receives both. Every metric is recorded at
   an existing choke point — the runner's terminal write, the cost
   accumulator, the shared 429 helper — and the gauges observe the
