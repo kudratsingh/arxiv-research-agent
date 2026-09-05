@@ -304,20 +304,28 @@ class TestACannedRunThroughTheRealGraph:
 
 
 class TestArmIdentityAgainstTheCompiledGraph:
-    def test_a_b_and_d_compile_to_three_distinct_manifests(
+    def test_every_buildable_arm_compiles_to_its_own_manifest(
         self, install_settings: Callable[..., Any]
     ) -> None:
         """The acceptance criterion, against graphs that were really built.
 
-        `build_workflow` reads `settings.enable_supervisor` and
-        `settings.enable_verifier` at compile time, so each configuration
-        below produces a genuinely different node set — which is what the
-        classification reads.
+        `build_workflow` reads `research_policy`, `enable_supervisor` and
+        `enable_verifier` at compile time, so each configuration below
+        produces a genuinely different node set — which is what the
+        classification reads. Four arms, four node sets, four policy ids,
+        four manifest digests, and no model call anywhere.
         """
         seals = {}
         for arm, overrides in (
             ("A", {}),
             ("B", {"enable_evidence_store": True}),
+            (
+                "C",
+                {
+                    "research_policy": "fixed_verify_repair",
+                    "enable_evidence_store": True,
+                },
+            ),
             (
                 "D",
                 {
@@ -357,13 +365,30 @@ class TestArmIdentityAgainstTheCompiledGraph:
             finally:
                 _closed(app)
 
-        assert [seals[arm].shape.arm_id for arm in "ABD"] == ["A", "B", "D"]
-        assert [seals[arm].shape.policy_id for arm in "ABD"] == [
-            ARM_POLICY_IDS[arm] for arm in "ABD"
+        assert [seals[arm].shape.arm_id for arm in "ABCD"] == ["A", "B", "C", "D"]
+        assert [seals[arm].shape.policy_id for arm in "ABCD"] == [
+            ARM_POLICY_IDS[arm] for arm in "ABCD"
         ]
-        assert len({seals[arm].manifest_digest for arm in "ABD"}) == 3
+        assert len({seals[arm].manifest_digest for arm in "ABCD"}) == 4
         assert "verifier" in seals["D"].shape.graph.nodes
         assert "verifier" not in seals["A"].shape.graph.nodes
+
+        # Arm C is earned by CAP-02's compiled stage, and by nothing else:
+        # its graph carries both halves, and arm A's and B's carry neither.
+        assert {"verify", "repair"} <= set(seals["C"].shape.graph.nodes)
+        assert {"verify", "repair"}.isdisjoint(seals["B"].shape.graph.nodes)
+        assert seals["C"].policy.capabilities.fixed_post_synthesis_verifier is True
+        assert seals["B"].policy.capabilities.fixed_post_synthesis_verifier is False
+        assert arm_capability_gap("C", seals["C"].shape) == ()
+        assert arm_capability_gap("C", seals["B"].shape) == ARM_REQUIRED_CAPABILITIES["C"]
+
+        # Arm E stays out of reach in every one of them: nothing here
+        # routes a compute tier, branches a candidate, or decides a stop.
+        for arm in "ABCD":
+            assert arm_capability_gap("E", seals[arm].shape) == (
+                ARM_REQUIRED_CAPABILITIES["E"]
+            )
+            assert seals[arm].policy.capabilities.adaptive_compute is False
 
     def test_the_verifier_flag_adds_no_node_to_the_fixed_graph(
         self, install_settings: Callable[..., Any]
@@ -390,6 +415,9 @@ class TestArmIdentityAgainstTheCompiledGraph:
         assert shape.graph.nodes == tuple(sorted(FIXED_PIPELINE))
         assert shape.arm_id == "A"
         assert shape.runtime_flags.enable_verifier is False
+        assert shape.declared_research_policy == "legacy"
+        # The whole point: the flag buys none of arm C's capabilities,
+        # because none of them is a flag.
         assert arm_capability_gap("C", shape) == ARM_REQUIRED_CAPABILITIES["C"]
         assert arm_capability_gap("E", shape) == ARM_REQUIRED_CAPABILITIES["E"]
 
