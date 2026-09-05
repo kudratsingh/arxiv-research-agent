@@ -71,17 +71,25 @@ Three, and each is enforced somewhere it cannot be skipped:
 | dollars per branch | `orchestration_branch_cost_share` | `bind_effective_cost_cap` at the shared choke point |
 
 The third has a documented reach, stated here rather than left to be
-discovered: `bind_effective_cost_cap` binds a `ContextVar`, and
-`propagate_run_context` (`src/observability/logging.py`) carries three
-ContextVars into the reader's per-paper fan-out threads — the request
-context, the cost accumulator and the cancel token — of which the
-effective cap is not one. Inside that fan-out the choke point therefore
-falls back to `settings.max_cost_usd`, so **the run ceiling always
-holds** and a branch can overshoot only its own *share*, by at most the
-calls of one bounded fan-out. The branch record carries the spend it
-actually made, so the overshoot is visible rather than assumed. Closing
-it properly means adding the cap to `propagate_run_context`, which lives
-in a fenced module and is recorded as ADR 0086's follow-up.
+discovered: `bind_effective_cost_cap` binds a `ContextVar`, and the
+branch's model calls do not all happen on the branch's own thread — the
+reader fans its papers out across a `ThreadPoolExecutor`, which inherits
+no context at all. `propagate_run_context`
+(`src/observability/logging.py`) is what carries the branch scope across
+that boundary, and since CAP-10 the effective cap is one of the four
+ContextVars it carries, alongside the request context, the cost
+accumulator and the cancel token. A reader thread therefore checks the
+budget against the *branch's* share, the same value its parent checks
+(ADR 0086, amended 2026-09-05).
+
+The run ceiling never depended on that. It holds because the accumulator
+is shared and every call re-checks the total, so a branch that trips the
+ceiling raises the same `CostBudgetExceeded` ADR 0051 already handles.
+What the fan-out used to lose was the *share*: an unbound worker fell
+back to `settings.max_cost_usd`, which is looser than any share, so a
+branch could overshoot its own containment by one bounded fan-out. The
+branch record still carries the spend it actually made, so the figure a
+reader sees is measured either way.
 """
 
 from __future__ import annotations

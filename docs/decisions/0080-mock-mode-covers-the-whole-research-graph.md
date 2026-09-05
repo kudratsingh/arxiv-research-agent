@@ -239,6 +239,28 @@ critic's score least of all.
   `use_mock_data`, so a keyless run with `ENABLE_SUPERVISOR=true` or
   `RESEARCH_POLICY=fixed_verify_repair` still fails. The fixed pipeline
   is the shipped default and the demo path; the rest is a follow-up.
+
+  **Amended 2026-09-05 (CAP-10) — superseded on three of its four
+  counts.** Only the query refiner is still true.
+
+  - *The supervisor* gained the branch in **P0-WO11 (#228)**:
+    `supervisor_agent` returns `_default_next_action`'s route under
+    `use_mock_data`, byte-for-byte what the `except Exception` fallback
+    already produced, and constructs no client. `ENABLE_SUPERVISOR=true`
+    runs keyless.
+  - *`verify`* was never uncovered after this ADR's own change. **CAP-07
+    (#216)** — the PR this ADR shipped in — put `_mock_outcome` in
+    `run_verification`, which both `verifier_agent` and `verify_node`
+    call, so the sentence above was wrong when it was written rather
+    than overtaken later.
+  - *`repair`* makes no model call by construction. **CAP-02 (#210)**
+    built `src/policies/repair.py::decide_repair` as a pure function and
+    `repair_node` as bookkeeping over the state; the nodes it routes to
+    (search, reader, synthesizer) are the ones this ADR mocked.
+  - *The query refiner* still calls `call_llm_json` under mock mode. It
+    is an optional supervisor action (`enable_query_refiner`, default
+    `false`) and reaches no graph at default settings, so no shipped
+    configuration is keyless-broken by it.
 - **Follow-ups.**
   - Delete `simulate_research`'s scripted surface and rebaseline the
     tier (ADR 0075's own follow-up). Owner: the assurance lane.
@@ -250,3 +272,34 @@ critic's score least of all.
   - Extend the branch to the supervisor, the query refiner and ADR
     0076's repair policy, so a keyless run is possible under every
     graph shape rather than only the default one.
+
+  **Amended 2026-09-05 (CAP-10) — three of the four follow-ups are
+  discharged.**
+
+  - *The log events are registered and emitted.* **P0-WO08 (#222)** put
+    the five names in `KNOWN_EVENTS` (ADR 0083) and **P0-WO11 (#228)**
+    added the emits: `planner_mock_plan_served`,
+    `reader_mock_analysis_served`, `reader_mock_claims_served`,
+    `synthesizer_mock_briefing_served`, `critic_mock_critique_served`,
+    beside the pre-existing `search_mock_data_served`. The verifier has
+    a verdict instead — `abstain` with reason `mock_mode` — which is on
+    the state rather than in a log line.
+  - *A keyless run is possible under every graph shape*, at default
+    flags: the legacy fixed pipeline and the supervisor loop (#228),
+    `fixed_verify_repair` (ADR 0076, #210) and `orchestrated_workers`
+    (ADR 0086, **CAP-03 #230**), whose `lead` and `merge` nodes make no
+    model call and whose workers run the mocked search and reader. The
+    query refiner is the one agent still outside the branch; enabling
+    it keyless is what remains of this item.
+
+  - *The `docs/eval.md` and `docs/testing.md` paragraphs are corrected*
+    by the assurance lane's **WO-D7 (#233)**, which rewrote them rather
+    than deleting them (the conclusion survives, the reason changed) and
+    put the enumeration under
+    `tests/test_documented_claims.py::TestMockModeCoverage`, so the next
+    agent to gain or lose a branch fails a test rather than aging a
+    sentence.
+
+  What remains is ADR 0075's own follow-up — delete `simulate_research`'s
+  scripted surface and rebaseline the tier — which is the assurance
+  lane's and is untouched here.

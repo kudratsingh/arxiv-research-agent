@@ -211,6 +211,20 @@ branch run under arm C and make the branching invisible in the record.
   branch can overshoot only its own share, by at most one bounded
   fan-out. Each branch records the spend it actually made. Closing it
   means adding the cap to `propagate_run_context`, in a fenced module.
+
+  **Amended 2026-09-05 (CAP-10) — closed.** The fence over
+  `src/observability/**` lifted when P0-WO05–WO08 merged, and
+  `propagate_run_context` now snapshots and rebinds four ContextVars:
+  the request context, the cost accumulator, the cancel token and
+  `_effective_cost_cap_usd`, under the same try/finally reset. A reader
+  fan-out thread therefore checks the budget against the branch's share
+  — or a learning session's tighter ceiling — rather than falling back
+  to `settings.max_cost_usd`. The signature is unchanged, the run
+  ceiling is enforced exactly as before (it never depended on this: the
+  accumulator is shared and every call re-checks the total), and the
+  `budget_stopped` branch record is unchanged. Proven by
+  `tests/test_orchestration_policy.py::TestTheBudgetIsTheRunsAndTheShareIsTheBranchs`
+  and `tests/test_observability.py::TestCrossThreadContextPropagation`.
 - **Known gap — model calls stay on the main branch.** The branch scope
   is a ContextVar and the reader records from worker threads, so a call
   cannot be stamped with a branch without risking the *wrong* branch.

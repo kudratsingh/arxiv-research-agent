@@ -270,7 +270,15 @@ class Settings(BaseSettings):
     # ------ Search -----------------------------------------------------
     use_mock_data: bool = Field(
         default=False,
-        description="Force built-in mock papers instead of hitting arXiv",
+        description=(
+            "Offline demo mode: built-in fixture papers instead of arXiv, and "
+            "a deterministic model-free branch in every research agent "
+            "(planner, reader, synthesizer, critic, verifier, supervisor), so "
+            "all four graph shapes run with no ANTHROPIC_API_KEY and make no "
+            "model call (ADR 0080). The briefing opens with 'Mock mode: "
+            "fixture papers, no model call.' and carries no quality signal. "
+            "The optional query refiner is the one agent still uncovered."
+        ),
     )
     max_papers: int = Field(default=10, ge=1, le=50, description="Cap on ranked paper count")
     results_per_query: int = Field(

@@ -872,7 +872,7 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
             return _failed_analysis(p), [], signal, False
 
     # One tally object per node invocation, bound inside each worker
-    # thread (ADR 0052). `propagate_run_context` carries exactly three
+    # thread (ADR 0052). `propagate_run_context` carries exactly four
     # ContextVars and knows nothing about this one, and a
     # ThreadPoolExecutor inherits no context at all — so the binding
     # has to happen in the worker, on the same object every worker
@@ -888,10 +888,11 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
         finally:
             _fallback_reasons.reset(token)
 
-    # Propagate the parent's run_id + cost-accumulator ContextVars into
-    # each worker thread — plain ThreadPoolExecutor doesn't inherit
-    # context, so LLM calls from workers would otherwise lose per-run
-    # attribution.
+    # Propagate the parent's request context, cost accumulator, cancel
+    # token and effective cost cap into each worker thread — plain
+    # ThreadPoolExecutor doesn't inherit context, so LLM calls from
+    # workers would otherwise lose per-run attribution and enforce the
+    # process-wide ceiling instead of this job's (ADR 0086).
     analyze = propagate_run_context(_tallied)
     with ThreadPoolExecutor(max_workers=settings.reader_max_workers) as executor:
         results: list[

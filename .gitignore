@@ -8,6 +8,10 @@ outputs/
 .claude/
 .ruff_cache/
 .venv/
+# Throwaway interpreters. A worktree that needs a second set of pins
+# (a lockfile bump, a sibling lane's branch) builds `.venv-<something>`
+# beside the real one; none of them belongs in a commit.
+.venv-*/
 *.egg-info/
 dist/
 build/
