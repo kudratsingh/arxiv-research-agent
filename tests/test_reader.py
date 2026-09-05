@@ -321,6 +321,11 @@ class TestAnalyzePaperEvidencePath:
             max_tokens: int,
             model_name: str | None = None,
             cache_system: bool = False,
+            # CAP-04: and the calling agent's name, so its
+            # `<agent>_effort` override and the run's compute tier
+            # can be resolved. Same reason as `schema` above: a
+            # double that refused it would fail on the call.
+            agent: str = "",
         ) -> dict[str, Any]:
             captured["prompt"] = prompt
             captured["system_prompt"] = system_prompt

@@ -186,6 +186,7 @@ def check_in_agent(state: SessionState) -> dict[str, Any]:
                 model_name=settings.tutor_model or None,
                 max_tokens=900,
                 cache_system=settings.enable_prompt_caching,
+                agent="tutor",
             )
         except (json.JSONDecodeError, TypeError, ValueError) as exc:
             log.warning("session_check_in_unparseable", extra={"error": str(exc)})
@@ -278,6 +279,7 @@ def _tutor_prompts(state: SessionState, reply: str) -> tuple[str, str]:
             model_name=settings.tutor_model or None,
             max_tokens=650,
             cache_system=settings.enable_prompt_caching,
+            agent="tutor",
         )
     except (json.JSONDecodeError, TypeError, ValueError) as exc:
         log.warning("session_tutor_unparseable", extra={"error": str(exc)})

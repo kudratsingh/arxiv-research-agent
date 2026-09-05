@@ -441,6 +441,7 @@ def _call_with_one_retry(user_prompt: str, system_prompt: str) -> dict[str, Any]
                 model_name=settings.synthesizer_model or None,
                 max_tokens=8192,
                 cache_system=settings.enable_prompt_caching,
+                agent="synthesizer",
             )
         except json.JSONDecodeError as exc:
             log.warning(

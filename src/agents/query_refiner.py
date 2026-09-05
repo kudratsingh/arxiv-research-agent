@@ -179,6 +179,7 @@ def query_refiner_agent(state: ResearchState) -> dict[str, Any]:
             model_name=settings.query_refiner_model or None,
             max_tokens=1024,
             cache_system=settings.enable_prompt_caching,
+            agent="query_refiner",
         )
     except Exception as exc:  # noqa: BLE001 — recoverable, log + hold
         return _keep_current(

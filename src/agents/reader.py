@@ -671,6 +671,7 @@ def _analyze_paper(
         model_name=settings.reader_model or None,
         max_tokens=max_tokens,
         cache_system=settings.enable_prompt_caching,
+        agent="reader",
     )
 
     # Missing keys / uncoercible values raise here (KeyError,

@@ -158,6 +158,7 @@ def planner_agent(state: ResearchState) -> dict[str, Any]:
             model_name=settings.planner_model or None,
             max_tokens=1024,
             cache_system=settings.enable_prompt_caching,
+            agent="planner",
             schema=PlannerOutput,
         )
     except json.JSONDecodeError as exc:

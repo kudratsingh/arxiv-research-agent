@@ -443,6 +443,7 @@ def run_verification(state: ResearchState) -> VerificationOutcome:
             model_name=settings.verifier_model or None,
             max_tokens=2048,
             cache_system=settings.enable_prompt_caching,
+            agent="verifier",
             schema=VerifierOutput,
         )
     except (JobCancelledError, CostBudgetExceeded):

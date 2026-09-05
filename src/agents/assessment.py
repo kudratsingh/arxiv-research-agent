@@ -198,6 +198,7 @@ def assessment_judge(state: SessionState) -> dict[str, Any]:
                 model_name=settings.assessment_model or None,
                 max_tokens=1400,
                 cache_system=settings.enable_prompt_caching,
+                agent="assessment",
             )
             result = _parse(raw, reply)
         except (JobCancelledError, CostBudgetExceeded):

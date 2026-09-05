@@ -409,6 +409,7 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
             model_name=settings.supervisor_model or None,
             max_tokens=512,
             cache_system=settings.enable_prompt_caching,
+            agent="supervisor",
             schema=SupervisorOutput,
         )
     except (JobCancelledError, CostBudgetExceeded):
