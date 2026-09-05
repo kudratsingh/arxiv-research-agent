@@ -59,7 +59,9 @@ from datetime import UTC, datetime
 from typing import Any, Final
 from urllib.parse import urlsplit, urlunsplit
 
-from src.config import settings
+from src.config import CONTENT_CAPTURE_ENV as _CONTENT_CAPTURE_ENV
+from src.config import CONTENT_CAPTURE_ENV_ALIAS as _CONTENT_CAPTURE_ENV_ALIAS
+from src.config import parse_bool_flag, settings
 from src.observability.context import (
     CONTEXT_FIELDS,
     FIELD_SERVICE,
@@ -187,6 +189,7 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "arxiv_search_rate_limited",
         "arxiv_search_request_failed",
         "assessment_judge_unassessed",
+        "content_capture_flag_invalid",
         "conversation_append_failed",
         "conversation_context_retrieved",
         "critic_response_not_an_object",
@@ -629,26 +632,20 @@ USER_CONTENT_KEYS: Final[frozenset[str]] = frozenset(
     }
 )
 
-#: The OpenTelemetry GenAI conventions' content-capture flag, and the
-#: only opt-in environment variable those conventions define. The spec
-#: says instrumentations "SHOULD NOT capture [message content] by
-#: default, but SHOULD provide an option for users to opt in" — this is
-#: that option, under the name the standard already gave it, so an
-#: operator who has made the content decision once does not have to
-#: discover a second switch to make it stick in a second sink.
-CONTENT_CAPTURE_ENV: Final = "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"
+# The two names the content-capture switch answers to. Both are now
+# `Settings.log_capture_user_content`'s validation aliases and are
+# declared in `src/config.py`, re-exported here because
+# `CONTENT_CAPTURE_ENV` has been this module's public constant since
+# ADR 0067 and runbooks name it. The conventional name is first, which
+# is the precedence pydantic applies when both are set.
+CONTENT_CAPTURE_ENV: Final = _CONTENT_CAPTURE_ENV
+CONTENT_CAPTURE_ENV_ALIAS: Final = _CONTENT_CAPTURE_ENV_ALIAS
 
-#: A repo-local alias, and the narrower of the two: it turns content on
-#: for *logs* without also turning it on for spans, which is what an
-#: operator debugging a parse failure actually wants. Either variable
-#: being truthy enables capture; neither is the default.
-#:
-#: Read from the environment rather than from `Settings` only because
-#: `src/config.py` belongs to another work order this wave; WO-A12
-#: folds both names in (ADR 0067).
-CONTENT_CAPTURE_ENV_ALIAS: Final = "LOG_CAPTURE_USER_CONTENT"
-
-_TRUTHY: Final[frozenset[str]] = frozenset({"1", "true", "yes", "on"})
+#: Variables already named in a `content_capture_flag_invalid` warning.
+#: The resolver runs once per content key per record, so an unbounded
+#: warning would emit a line for every field of every line — each of
+#: which is itself a line.
+_warned_capture_flags: set[str] = set()
 
 # --- Envelope field names --------------------------------------------------
 #
@@ -711,19 +708,82 @@ _CONTRACT_FIELDS: Final[frozenset[str]] = frozenset(
 _UNBOUND_RUN_ID: Final = "-"
 
 
-def content_capture_enabled() -> bool:
-    """True when user content may stay in the log stream.
+def _warn_capture_flag_once(name: str) -> None:
+    """Name a live flag whose value is neither true nor false — once.
 
-    Either the conventional flag or the log-only alias turns it on;
-    absent both, content is elided. Read per call rather than cached at
-    import so an operator can flip it for a debugging session without a
-    restart, and so a test can exercise both halves with
-    `monkeypatch.setenv`.
+    Deliberately carries no value in `extra`. Every key this module
+    treats as user content (`raw`, `value`, `payload`, ...) sends the
+    formatter through `content_capture_enabled()` to decide whether to
+    elide it — which is where this warning is emitted from, so a
+    content-shaped `extra` here would be unbounded recursion. `rule`
+    names the variable; the operator can read their own environment.
     """
-    return any(
-        os.environ.get(name, "").strip().lower() in _TRUTHY
-        for name in (CONTENT_CAPTURE_ENV, CONTENT_CAPTURE_ENV_ALIAS)
+    if name in _warned_capture_flags:
+        return
+    _warned_capture_flags.add(name)
+    logging.getLogger(__name__).warning(
+        "content_capture_flag_invalid", extra={"rule": name}
     )
+
+
+def _live_capture_override() -> bool | None:
+    """The environment's answer, or None when it does not have one.
+
+    Mirrors what `AliasChoices` does at settings load, deliberately and
+    exactly: the *first* of the two names that is present in the
+    environment decides, whatever the second one says, and it decides
+    through `parse_bool_flag` — the same grammar the field validator
+    uses, so a blank is off here for the same reason it is off there.
+
+    A present-but-unparseable value is not a decision. Pydantic would
+    have refused to boot on it, so it can only have arrived after boot;
+    the configured value is a better answer than a guess, and the
+    warning says which variable to look at.
+    """
+    for name in (CONTENT_CAPTURE_ENV, CONTENT_CAPTURE_ENV_ALIAS):
+        raw = os.environ.get(name)
+        if raw is None:
+            continue
+        parsed = parse_bool_flag(raw)
+        if parsed is None:
+            _warn_capture_flag_once(name)
+        return parsed
+    return None
+
+
+def content_capture_enabled() -> bool:
+    """True when user content may stay in the log stream and on spans.
+
+    `Settings.log_capture_user_content` is the configured answer, and
+    the environment may override it live. Both are read here rather
+    than one being folded into the other, because the two properties
+    are both worth having and neither implies the other:
+
+    - **Validated.** The value a process boots with goes through the
+      settings surface like every other knob: it is a typed field with
+      a default, a description and a documented alias, and a value that
+      is neither true nor false stops the process at load rather than
+      being silently read as "off".
+    - **Flippable.** `Settings` is a frozen module-level singleton, so
+      reading only `settings` would freeze this switch at import — and
+      this is the one knob an operator reaches for *during* an
+      incident, mid-run, to see what a parse failure was actually
+      handed. ADR 0067 read it per call for exactly that reason. So
+      the environment is re-read on every call, under the same
+      precedence and the same boolean grammar pydantic used at load,
+      and it wins when it has an answer.
+
+    The cost of keeping both is one behaviour that has to be said out
+    loud: a live flip is *not* validated by pydantic, because nothing
+    reconstructs `Settings`. It is validated against the same token
+    grammar instead, and a value outside that grammar leaves the
+    configured value standing and warns once under
+    `content_capture_flag_invalid`.
+    """
+    override = _live_capture_override()
+    if override is not None:
+        return override
+    return settings.log_capture_user_content
 
 
 # --- Redaction rules -------------------------------------------------------

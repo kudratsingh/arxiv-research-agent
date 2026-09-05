@@ -48,6 +48,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
+from pydantic import ValidationError
 
 import src.observability.semconv as semconv
 from src.api import runner as runner_module
@@ -995,7 +996,14 @@ class TestCardinality:
 
 
 class TestSamplingConfiguration:
-    """Sampling without knowing the OTel environment variables."""
+    """Sampling without knowing the OTel environment variables.
+
+    WO-B4 moved the ratio into `Settings`, so these read the setting
+    rather than the environment. `TRACE_SAMPLE_RATIO` still sets it —
+    the field name is that variable lower-cased — and
+    `TestTheSamplingRatioIsAValidatedFloat` in `tests/test_config.py`
+    is where that end of it is pinned.
+    """
 
     def test_unset_defers_to_the_sdks_own_variables(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1005,32 +1013,49 @@ class TestSamplingConfiguration:
         An operator already using `OTEL_TRACES_SAMPLER` must not be
         silently overridden by a repository default.
         """
-        monkeypatch.delenv(tracing_module.TRACE_SAMPLE_RATIO_ENV, raising=False)
+        monkeypatch.setattr(tracing_module, "settings", Settings())
         assert tracing_module.trace_sample_ratio() is None
         assert tracing_module._make_sampler() is None
 
-    @pytest.mark.parametrize(
-        ("raw", "expected"),
-        [("0.1", 0.1), ("1", 1.0), ("0", 0.0), ("-3", 0.0), ("9", 1.0)],
-    )
-    def test_the_ratio_is_read_and_clamped(
-        self, monkeypatch: pytest.MonkeyPatch, raw: str, expected: float
+    @pytest.mark.parametrize("ratio", [0.1, 1.0, 0.0])
+    def test_the_ratio_is_read_from_the_settings_surface(
+        self, monkeypatch: pytest.MonkeyPatch, ratio: float
     ) -> None:
-        monkeypatch.setenv(tracing_module.TRACE_SAMPLE_RATIO_ENV, raw)
-        assert tracing_module.trace_sample_ratio() == pytest.approx(expected)
+        monkeypatch.setattr(
+            tracing_module, "settings", Settings(trace_sample_ratio=ratio)
+        )
+        assert tracing_module.trace_sample_ratio() == pytest.approx(ratio)
         assert tracing_module._make_sampler() is not None
 
-    def test_a_typo_does_not_stop_the_process_from_starting(
+    def test_the_environment_variable_is_still_the_way_to_set_it(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A bad value in an operator's environment is a warning.
+        """No deployment changes: `TRACE_SAMPLE_RATIO` is the field's name.
 
-        Raising here would turn a typo into a process that will not
-        boot, which is a worse outcome than tracing falling back to the
-        SDK's own defaults.
+        `deploy/observability/compose.observability.yml` sets it, and
+        moving the value into `Settings` must not have quietly demanded
+        a new variable there.
         """
-        monkeypatch.setenv(tracing_module.TRACE_SAMPLE_RATIO_ENV, "loads")
-        assert tracing_module.trace_sample_ratio() is None
+        monkeypatch.setenv(tracing_module.TRACE_SAMPLE_RATIO_ENV, "0.1")
+        monkeypatch.setattr(tracing_module, "settings", Settings())
+        assert tracing_module.trace_sample_ratio() == pytest.approx(0.1)
+
+    @pytest.mark.parametrize("raw", ["9", "-3", "loads"])
+    def test_a_bad_ratio_is_now_refused_at_load_rather_than_clamped(
+        self, monkeypatch: pytest.MonkeyPatch, raw: str
+    ) -> None:
+        """A deliberate reversal of ADR 0066, recorded in WO-B4.
+
+        This used to clamp `9` to 1.0 and warn on `loads`, so that a
+        typo could not stop a process from booting. That exception
+        existed because the value was not in `Settings`; now that it
+        is, the ADR-0046 house rule applies — and the failure it
+        prevents is real, because `TRACE_SAMPLE_RATIO=10` from somebody
+        who meant 10% used to sample *everything* and say nothing.
+        """
+        monkeypatch.setenv(tracing_module.TRACE_SAMPLE_RATIO_ENV, raw)
+        with pytest.raises(ValidationError):
+            Settings()
 
     def test_the_sampler_is_parent_based_so_a_worker_cannot_re_decide(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1041,7 +1066,9 @@ class TestSamplingConfiguration:
         job whose submitting request was already sampled, tearing apart
         exactly the join this work order exists to build.
         """
-        monkeypatch.setenv(tracing_module.TRACE_SAMPLE_RATIO_ENV, "0.25")
+        monkeypatch.setattr(
+            tracing_module, "settings", Settings(trace_sample_ratio=0.25)
+        )
         sampler = tracing_module._make_sampler()
         assert sampler is not None
         assert "ParentBased" in sampler.get_description()
@@ -1226,9 +1253,12 @@ class TestProviderConstruction:
         monkeypatch.setattr(
             tracing_module,
             "settings",
-            Settings(enable_tracing=True, otel_exporter_endpoint=""),
+            Settings(
+                enable_tracing=True,
+                otel_exporter_endpoint="",
+                trace_sample_ratio=0.5,
+            ),
         )
-        monkeypatch.setenv(tracing_module.TRACE_SAMPLE_RATIO_ENV, "0.5")
 
         tracing_module.configure_tracing()
 

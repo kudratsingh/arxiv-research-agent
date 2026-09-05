@@ -164,17 +164,39 @@ Values under `USER_CONTENT_KEYS` — `query`, `result`, `raw`, `payload`,
 `[redacted: N chars]`. The size survives because "did the model produce
 anything" is answerable without the text.
 
-Opt in with either:
+One setting opts in — `LOG_CAPTURE_USER_CONTENT` in `Settings` — and it
+answers to two environment variables:
 
 - **`OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`** — the flag
-  the OpenTelemetry GenAI conventions define, and the one to set if you
-  also want span content.
-- **`LOG_CAPTURE_USER_CONTENT`** — the narrower repo-local alias: logs
-  only.
+  the OpenTelemetry GenAI conventions define, and the one to prefer.
+- **`LOG_CAPTURE_USER_CONTENT`** — the older repo-local name, kept so
+  no deployment has to change.
 
-Both default to off. The conventions are explicit that instrumentations
+They are the same switch: either one turns content on **for logs and
+for spans together**, because it is one content decision. (An earlier
+version of this page called the second one "logs only". It never was —
+`traced_node` reads the same resolver — and the claim is corrected
+rather than quietly dropped.)
+
+Alias order is precedence, which matters only if you set both and they
+disagree: the conventional name is checked first, so
+`OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=false` with
+`LOG_CAPTURE_USER_CONTENT=true` leaves capture **off**.
+
+The default is off. The conventions are explicit that instrumentations
 "SHOULD NOT capture [message content] by default, but SHOULD provide an
 option for users to opt in".
+
+**This is the one setting you may change without a restart.** Every
+other knob in `Settings` is read from a frozen singleton built at
+import; this one is re-read from the environment on every line, because
+it is what an operator reaches for mid-incident to see what a parse
+failure was actually handed. The value the process booted with is
+validated by pydantic — `LOG_CAPTURE_USER_CONTENT=ture` refuses to
+start, naming the variable you set — and a live flip is checked against
+the same true/false grammar, with a value outside it leaving the
+configured value standing and warning once under
+`content_capture_flag_invalid`.
 
 > **Note:** turning capture on means a failed terminal write logs the
 > whole report body again, which is how a lost success used to be
@@ -387,8 +409,15 @@ installs no sampler at all, so the SDK's own `OTEL_TRACES_SAMPLER` /
 keep working. The sampler is always parent-based, so a worker never
 re-decides for a job whose request was already sampled.
 
-An unparseable value logs `tracing_sample_ratio_invalid` and falls
-back; it does not stop the process from starting.
+It is `Settings.trace_sample_ratio`, a `float | None` bounded to
+`[0.0, 1.0]`, and it is read once at `configure_tracing()` because a
+`TracerProvider` takes its sampler at construction. **A value outside
+that interval, or one that is not a number, now stops the process at
+settings load.** It used to clamp and warn, which meant
+`TRACE_SAMPLE_RATIO=10` from somebody who meant 10% sampled every trace
+in production and said nothing. Refusing is the ADR-0046 rule every
+other knob here follows; the reversal of ADR 0066's local exception is
+deliberate and is recorded in that ADR's gap list.
 
 ### Content stays off
 
@@ -550,14 +579,20 @@ where they come from.
 
 ## Known gaps
 
-1. **The content-capture and sampling flags are not in `Settings`.**
-   `content_capture_enabled()` and `trace_sample_ratio()` read
-   `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT`,
-   `LOG_CAPTURE_USER_CONTENT` and `TRACE_SAMPLE_RATIO` from the
-   environment, because `src/config.py` belonged to other work orders
-   in both waves. WO-A12 folds all three into `Settings`, at which
-   point the env vars stay as the pydantic-settings aliases.
-2. **The `job_failed` and `job_cancelled` SSE frames still have two
+**One closed, and worth saying why it stayed open.** This list used to
+begin with "the content-capture and sampling flags are not in
+`Settings`", and named **WO-A12** as the work order that would fold
+them in. That sentence was wrong on its face: WO-A12's owned-file list
+did not include `src/config.py`, so the fix was assigned to a card that
+could not make it, and the gap outlived two waves for a planning reason
+rather than a design one. **WO-B4** folded all three in —
+`LOG_CAPTURE_USER_CONTENT` as a `Settings` field with the conventional
+variable as its alias, and `TRACE_SAMPLE_RATIO` as a bounded float. The
+environment variables are unchanged; only out-of-range and
+unparseable *values* behave differently, and they now refuse rather
+than clamp.
+
+1. **The `job_failed` and `job_cancelled` SSE frames still have two
    shapes.** WO-A10 reconciled the two `job_completed` frames onto one
    builder (`src/api/runner.py::terminal_event_data`) and the route's
    replay uses it for every terminal frame — but the runner's *live*
@@ -566,31 +601,31 @@ where they come from.
    `job_completed` one. A client reading a live `job_failed` still gets
    `{job_id, error, error_type, elapsed_sec}` where the replay gives it
    eleven fields. Same defect, same fix, one call site at a time.
-3. **`src/api/redriver.py` keeps its own copy of the terminal payload.**
+2. **`src/api/redriver.py` keeps its own copy of the terminal payload.**
    Its `_terminal_event_data` says it is "kept field-for-field in sync"
    with the route's and no longer is; it predates the shared builder and
    belongs to another work order. Merging it is a three-line change
    whenever that file is next opened.
-4. **A schema standard is landing.** ISO/IEC FDIS 24970 (AI system
+3. **A schema standard is landing.** ISO/IEC FDIS 24970 (AI system
    logging) is at stage 50.20 and likely to become the reference for
    exactly the fields above. The field names are therefore constants in
    two places — the envelope block in `logging.py` and `CONTEXT_FIELDS`
    / `context_fields()` in `context.py` — rather than literals scattered
    through the formatter, so remapping is an edit rather than a hunt.
-5. **Metrics exist only inside API workers.** `configure_metrics()`
+4. **Metrics exist only inside API workers.** `configure_metrics()`
    has one caller — the API lifespan — so `make run` and `make eval`
    install no meter provider and every record helper returns on its
    `None` check. Deliberate for the server-shaped instruments;
    widening it was out of scope for ADR 0066.
-6. **No `invoke_workflow` span on the CLI or eval paths.** The span is
+5. **No `invoke_workflow` span on the CLI or eval paths.** The span is
    opened by `run_job`, so those entry points produce node spans with
    no workflow parent.
-7. **The redriver records `kind="unknown"`** on both of its terminal
+6. **The redriver records `kind="unknown"`** on both of its terminal
    outcomes — a failed orphan and, since ADR 0068, a dead-lettered
    job. It has `job.kind` in hand but does not pass it;
    `src/api/redriver.py` belonged to another work order. A test pins
    the current value so the fix is visible when it lands.
-8. **The GenAI conventions are pre-stable and will churn.** They have
+7. **The GenAI conventions are pre-stable and will churn.** They have
    left the core semantic-conventions repository and their new home has
    no tagged release, so ADR 0066 pins a commit SHA. Every `gen_ai.*`
    name is a constant in `src/observability/semconv.py` — one file to

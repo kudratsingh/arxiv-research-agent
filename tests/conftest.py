@@ -137,12 +137,34 @@ if "src.config" in sys.modules:
 
 import src.config as _config_module  # noqa: E402  (must follow the patch above)
 
+
+def _env_names(name: str, field: Any) -> set[str]:
+    """Every environment variable one field answers to.
+
+    `case_sensitive=False` means pydantic matches on the upper-cased
+    field name, which is the usual answer. A field carrying a
+    `validation_alias` answers to its aliases *instead*, and a field
+    that answers to a name this set does not name is a name a
+    developer's shell can still reach into the suite — which is the one
+    thing this block exists to prevent. `log_capture_user_content` is
+    the first such field (WO-B4); deriving the aliases rather than
+    listing them keeps the next one covered for free.
+    """
+    alias = getattr(field, "validation_alias", None)
+    if alias is None:
+        return {name.upper()}
+    choices = getattr(alias, "choices", None)
+    if choices is None:
+        return {str(alias).upper()}
+    return {str(choice).upper() for choice in choices}
+
+
 #: Every environment variable `Settings` reads, derived from the model
 #: rather than listed, so a new field is covered the day it lands.
-#: `case_sensitive=False` means pydantic matches on the upper-cased
-#: field name, which is what gets removed here.
 SETTINGS_ENV_VARS: frozenset[str] = frozenset(
-    name.upper() for name in _config_module.Settings.model_fields
+    env_name
+    for _field_name, _field in _config_module.Settings.model_fields.items()
+    for env_name in _env_names(_field_name, _field)
 )
 
 for _name in SETTINGS_ENV_VARS:
