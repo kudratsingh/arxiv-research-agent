@@ -78,6 +78,14 @@ from src.observability.costs import (
 from src.observability.costs import enforce_cost_cap as _enforce_cost_cap
 from src.observability.metrics import record_job_terminal
 from src.observability.tracing import attached_trace_context, workflow_span
+from src.policies.compute import (
+    COMPUTE_TIERS,
+    ComputeDecision,
+    bind_compute_tier,
+    decide_tier,
+    extract_features,
+    reset_compute_tier,
+)
 
 # ADR 0051 moved `CostBudgetExceeded` and the cap helper out of this
 # module and into `observability.costs`, so `src.llm` can raise the same
@@ -569,6 +577,85 @@ def _shadow_node(node_name: str, state_update: dict[str, Any]) -> None:
     run = _current_shadow.get()
     if run is not None:
         _shadow_bridge().observe_node(run, node_name, state_update)
+
+
+def _shadow_compute_tier(decision: Any) -> None:
+    """Record the compute allocation on the job's shadow (CAP-04).
+
+    Called immediately after the shadow opens and before the first node,
+    which is the order RFC 10 §8.6 asks for — the features have to be in
+    the record *before* the decision they explain, and the decision
+    before the compute it authorised. A `None` decision (the controller
+    is off) records nothing at all, which is what keeps a flag-off run's
+    trajectory byte-identical to the one W08 shipped.
+    """
+    run = _current_shadow.get()
+    if run is None or decision is None:
+        return
+    _shadow_bridge().observe_compute_tier(
+        run,
+        tier=decision.tier,
+        eligible_tiers=COMPUTE_TIERS,
+        reason_codes=decision.reasons,
+        feature_snapshot_ref=decision.features.digest(),
+        tier_budget_ref=(
+            f"tier-budget:{decision.tier}"
+            f":verifications={decision.limits.max_verifications}"
+            f":repairs={decision.limits.max_repairs}"
+        ),
+    )
+
+
+def _compute_decision(job: Job) -> ComputeDecision | None:
+    """The tier this job runs at, or `None` when nothing is deciding.
+
+    `None` for the two cases that mean "run whatever the process was
+    given": the controller is off, and the job is not a research job —
+    a guided session drives its own graph, which has no tiers.
+
+    `extract_features` and `decide_tier` are pure and total, so there is
+    no containment here and no degraded path to log: the decision cannot
+    fail on an input a `Job` can carry, which is the property
+    `tests/test_compute_policy.py` exists to keep true.
+    """
+    if settings.compute_controller != "deterministic":
+        return None
+    if getattr(job, "kind", "research") != "research":
+        return None
+    return decide_tier(extract_features(job.query))
+
+
+def _select_tier_workflow(workflow: Any, decision: ComputeDecision | None) -> Any:
+    """The graph this job runs, given its tier.
+
+    Falls back to the graph the caller handed over whenever there is no
+    decision or no per-tier mapping on it — a test's stub workflow, a
+    session graph, or any build made before the controller was on. That
+    fallback is what lets the selection live *here*, in the one function
+    every job kind and every submission path already passes through,
+    instead of in three `create_task` call sites.
+
+    Selection happens before `_contract_shadow`, and that ordering is the
+    deliverable rather than an implementation detail: W05's binding reads
+    the policy id off the compiled graph it is handed
+    (`read_graph_shape`), so a run that selected T1 seals arm C's
+    `research_fixed_verify_repair` without this module ever naming a
+    policy id.
+
+    The accessor is imported here rather than at module scope for the
+    reason `_shadow_bridge` gives about its own import: this module is
+    reached by `src.api.routes`, and a top-level `src.graph.workflow`
+    would put the whole agent graph on that import path to answer a
+    question only a job in flight asks.
+    """
+    if decision is None:
+        return workflow
+    from src.graph.workflow import compute_tier_graphs
+
+    graphs = compute_tier_graphs(workflow)
+    if graphs is None:
+        return workflow
+    return graphs.get(decision.tier, workflow)
 
 
 def _shadow_terminal(job: Job) -> None:
@@ -1721,6 +1808,17 @@ async def run_job(
     # once, up front. Everything below this line is shared lifecycle.
     runtime = runtime_for(job.kind)
 
+    # CAP-04 (ADR 0085): how much compute this job gets, and therefore
+    # which of the pre-compiled shapes runs it. Resolved before the
+    # lease, the shadow and the first node, because every one of those
+    # reads the graph: `_contract_shadow` classifies the policy from the
+    # compiled shape it is handed, so selecting afterwards would seal a
+    # manifest for a graph the job did not run. `None` with the
+    # controller off, and then `workflow` is the object the caller
+    # passed, untouched.
+    decision = _compute_decision(job)
+    workflow = _select_tier_workflow(workflow, decision)
+
     # ADR 0038: take the lease *before* the semaphore, not after. A
     # job sits in `pending` for as long as the queue behind
     # `api_max_concurrent_jobs` is deep, and this worker already owns
@@ -1780,11 +1878,23 @@ async def run_job(
             else settings.max_cost_usd
         )
         cost_cap_scope = bind_effective_cost_cap(cap_usd)
+        # CAP-04: bind the tier for the length of the job, so
+        # `Settings.effort_for` can raise one agent's effort on an
+        # escalated run without the tier travelling through five
+        # signatures. Same ContextVar shape as the cost cap above, and
+        # `None` — nothing bound at all — when the controller is off.
+        tier_scope = (
+            bind_compute_tier(decision.tier) if decision is not None else None
+        )
         # P0-WO05: seal this job's manifest before the first store write
         # and the first node, and observe its model calls for as long as
         # the job owns this context. A no-op when `contract_shadow` is
         # off, and unable to change the job's outcome either way.
         scopes.enter_context(_contract_shadow(job, workflow, costs, cap_usd))
+        # Immediately after the shadow opens and before any node: the
+        # features and the tier are the first thing the trajectory says
+        # about a run the controller allocated (RFC 10 §8.6).
+        _shadow_compute_tier(decision)
 
         async def on_node(node_name: str, state_update: dict[str, Any]) -> None:
             # Only publish scalar fields — the papers/citations lists
@@ -2244,6 +2354,10 @@ async def run_job(
             # abort the next unrelated LLM call in the same context.
             reset_cancel_token(cancel_scope)
             reset_effective_cost_cap(cost_cap_scope)
+            # CAP-04: and the tier, for the same reason — an inline
+            # caller's next run must not inherit this one's effort.
+            if tier_scope is not None:
+                reset_compute_tier(tier_scope)
 
 
 async def _append_to_conversation(conversation_store: Any, job: Job) -> None:

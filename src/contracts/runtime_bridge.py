@@ -892,6 +892,55 @@ class ResearchRuntimeBridge(ShadowRun):
             actor=self._actor(ActorKind.POLICY, "router"),
         )
 
+    def compute_tier_selected(
+        self,
+        *,
+        tier: str,
+        eligible_tiers: Sequence[str],
+        reason_codes: Sequence[str],
+        feature_snapshot_ref: str,
+        tier_budget_ref: str,
+    ) -> None:
+        """Record how much compute this run was allocated, and why.
+
+        RFC 10 §8.6's `compute.tier_selected`, which the event registry
+        has carried since W05 with nothing in this repository able to
+        emit it — CAP-04's controller is the first policy that allocates
+        compute at all, and ADR 0085 is the decision it implements.
+
+        The payload is closed to five registered fields, which is why
+        the features arrive as a *reference* rather than inline:
+        `feature_snapshot_ref` is the caller's digest over the snapshot
+        the decision was taken on, so two runs that saw the same
+        features carry the same ref and neither carries the query. That
+        is the trade `policy.decision` already makes, and it is what
+        keeps a `product_operation_only` run's trajectory free of
+        retained content while D8 is open (ADR 0083).
+
+        Args:
+            tier: `T0` or `T1`. `T3` is refused by the contract itself.
+            eligible_tiers: What the caller's controller could have
+                chosen, so a decision is readable against its own option
+                set rather than against a later, wider one.
+            reason_codes: The rule ids that fired, in table order.
+            feature_snapshot_ref: Digest over the feature snapshot.
+            tier_budget_ref: What the selected tier authorises, as a
+                stable reference string.
+        """
+        self._append(
+            "compute.tier_selected",
+            f"compute.tier_selected:{tier}",
+            {
+                "tier": tier,
+                "eligible_tiers": list(eligible_tiers),
+                "feature_snapshot_ref": feature_snapshot_ref,
+                "tier_budget_ref": tier_budget_ref,
+                "reason_codes": list(reason_codes),
+            },
+            status=EventStatus.SUCCEEDED,
+            actor=self._actor(ActorKind.POLICY, "compute_controller"),
+        )
+
     # -- tools and sources -------------------------------------------------
 
     def tool_call(
@@ -2943,6 +2992,35 @@ def start_guided_session(
     return bridge
 
 
+def observe_compute_tier(
+    bridge: Any,
+    *,
+    tier: str,
+    eligible_tiers: Sequence[str],
+    reason_codes: Sequence[str],
+    feature_snapshot_ref: str,
+    tier_budget_ref: str,
+) -> None:
+    """Record one compute-tier allocation, or do nothing.
+
+    Primitives rather than a `ComputeDecision` on purpose: the contract
+    package is the capability lane's *consumer* here, and typing this
+    hook against `src.policies.compute` would make every import of the
+    bridge pull in a policy module — a dependency in the direction
+    nothing else in `src/contracts` has.
+    """
+    if bridge is None or getattr(bridge, "degraded", False):
+        return
+    with contained(bridge, "observe_compute_tier"):
+        bridge.compute_tier_selected(
+            tier=tier,
+            eligible_tiers=eligible_tiers,
+            reason_codes=reason_codes,
+            feature_snapshot_ref=feature_snapshot_ref,
+            tier_budget_ref=tier_budget_ref,
+        )
+
+
 def observe_reconciliation(bridge: Any, run_cost_usd: float) -> CostReconciliation | None:
     """Reconcile a finished run's costs, or do nothing."""
     if bridge is None or getattr(bridge, "degraded", False):
@@ -2989,6 +3067,7 @@ __all__ = [
     "episode_block",
     "log_projection",
     "observe_close",
+    "observe_compute_tier",
     "observe_episode_terminal",
     "observe_job_terminal",
     "observe_model_call",
