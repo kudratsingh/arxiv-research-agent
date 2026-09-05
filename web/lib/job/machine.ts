@@ -327,12 +327,45 @@ function adoptDetail(
     };
   }
   if (detail.status === "pending_review") {
-    return {
+    const parked: JobState = {
       ...base,
       phase: "awaiting_review",
       plan: detail.plan ?? state.plan,
       submission: null,
     };
+    // **A read that succeeds says nothing about the review call that
+    // failed** (WO-S3). They are different calls, and `GET /research/{id}`
+    // answering `pending_review` is proof the decision did NOT take
+    // effect — not proof it was never made. Clearing the failure here is
+    // what made a rate-limited `Approve plan` disappear again at the next
+    // liveness poll: twenty seconds of explanation for the one click that
+    // commits money, and then silence.
+    //
+    // THE 409 IS THE EXCEPTION TO THE EXCEPTION, and it is the reason
+    // this is a `kind` check rather than a `failureSource` check. A
+    // conflict is a claim about the RUN'S STATE — "this is not awaiting
+    // review" — and a read that answers `pending_review` contradicts it
+    // outright. The read is newer and it is the authority on that
+    // question, so the conflict goes: `routes.py:261-264`'s answer is to
+    // refetch and re-render, and `e2e/slice.spec.ts` step 3 asserts the
+    // surface comes back ACTIONABLE rather than stranded behind a banner.
+    // Every other kind is a claim about the REQUEST, which the read says
+    // nothing about either way, so it stands.
+    //
+    // Everything that genuinely resolves a preserved failure still clears
+    // it: `review_requested` on the next attempt, a detail whose status
+    // has moved on, `reset`.
+    const carries =
+      state.failureSource === "review" && state.failure?.kind !== "conflict";
+    return carries
+      ? {
+          ...parked,
+          failure: state.failure,
+          failureMessage: state.failureMessage,
+          failureStatus: state.failureStatus,
+          failureSource: "review",
+        }
+      : parked;
   }
   if (detail.status === "awaiting_learner") {
     return {

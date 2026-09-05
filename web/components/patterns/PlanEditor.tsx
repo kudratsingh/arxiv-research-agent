@@ -43,12 +43,12 @@ import { Suspense, lazy, useEffect, useId, useRef } from "react";
 import { Button } from "@/components/primitives/Button";
 import { Skeleton } from "@/components/primitives/Skeleton";
 import { StatusBadge } from "@/components/primitives/StatusBadge";
-import type { FieldIssue, Plan, ReviewRequest } from "@/lib/api";
-import { describeErrorType } from "@/lib/copy/errors";
+import type { ApiFailure, FieldIssue, Plan, ReviewRequest } from "@/lib/api";
+import { describeErrorType, describeFailure } from "@/lib/copy/errors";
 import { PLAN } from "@/lib/copy/plan";
 import type { PlanDraft } from "@/lib/plan/schema";
 
-import { StatusBanner } from "./StatusBanner";
+import { ALERT_SEVERITIES, StatusBanner } from "./StatusBanner";
 
 // ---------------------------------------------------------------------------
 // Props. Every state in 03 §4.6 is reachable by passing props and nothing
@@ -97,6 +97,28 @@ export interface PlanEditorProps {
   issues?: readonly FieldIssue[];
   staleCause?: PlanStaleCause;
   /**
+   * How `POST /research/{job_id}/review` failed, normalized (WO-S3).
+   *
+   * **This is the moment the user commits money, and until this prop existed
+   * a failure at it rendered NOTHING.** The machine records a failed review
+   * without moving its phase — correctly: the server never heard the
+   * decision, so the run really is still `pending_review` — and the only
+   * banner in the composition above was gated on `phase === "submit_failed"`,
+   * a phase a review failure never produces. So a 429, a 500 and a 422 all
+   * looked exactly like a missed click.
+   *
+   * BRANCH ON `kind`, NEVER ON THE SENTENCE. The codes are the stable half
+   * of the envelope (`lib/api/errors.ts`, ADR 0064); the wording is not.
+   * `describeFailure` is the one accessor that turns a kind into the four
+   * strings a banner needs, so a thirteenth variant is a compile error there
+   * rather than a blank banner here.
+   *
+   * THE 409 IS NOT RENDERED FROM HERE. It arrives as `status="stale"`, which
+   * already has its own sentence and its own recovery control below; two
+   * banners for one click would be the same words twice.
+   */
+  failure?: ApiFailure | null;
+  /**
    * Send the decision. Called with `approve`, `revise` (always with a plan)
    * or `cancel`, and never called at all when the client bounds refuse.
    */
@@ -140,6 +162,7 @@ export function PlanEditor({
   initialDraft,
   issues = [],
   staleCause = "resolved_elsewhere",
+  failure = null,
   onReview,
   onRefetch,
   className,
@@ -168,6 +191,25 @@ export function PlanEditor({
     onRefetch?.();
   }, [stale, onRefetch]);
 
+  const reviewFailure = failure ?? null;
+  /**
+   * The review call's own failure, as the four strings a banner renders.
+   *
+   * TWO KINDS ARE DELIBERATELY NOT HERE. The 409 is `stale`, which has its
+   * own sentence and its own recovery control below. And WO-17 criterion 4
+   * stands: a 422 that NAMES FIELDS lands on the rows those fields belong to
+   * and never in a page-level banner — the baseline mapped nothing and
+   * shouted instead. A 422 that names none has no row to land on, and going
+   * silent there is the very defect this prop exists to close, so that one
+   * is stated here.
+   */
+  const failed =
+    reviewFailure === null ||
+    stale ||
+    (reviewFailure.kind === "validation" && reviewFailure.fields.length > 0)
+      ? null
+      : describeFailure(reviewFailure);
+
   const timedOut = staleCause === "hitl_timeout";
   // The `hitl_timeout` sentence is the dictionary's own mapped copy, not a
   // second wording of it: `api_hitl_timeout_sec` firing is exactly the
@@ -189,6 +231,11 @@ export function PlanEditor({
       aria-labelledby={headingId}
       data-surface="plan-editor"
       data-status={status}
+      // The kind, not the sentence — the same discriminator the banner
+      // branches on, so the browser sweep and the axe gate can name the
+      // state they are looking at without reading copy. Present for a
+      // row-mapped 422 too, which renders no banner by design.
+      data-review-failure={reviewFailure === null ? undefined : reviewFailure.kind}
       className={[
         "flex flex-col gap-4 rounded-lg border border-review bg-review-surface p-5",
         className,
@@ -214,6 +261,22 @@ export function PlanEditor({
         <p data-testid="plan-status-line" className="text-ui-sm text-ink-muted">
           {statusLine}
         </p>
+      )}
+
+      {/* WO-S3 — the failed decision, said out loud.
+          `userTriggered` is guarded rather than passed: `role="alert"` is
+          reserved for the two failure severities (03 §7.3) and `StatusBanner`
+          throws otherwise, and a review that 404s or is aborted describes
+          itself as `info`. The guard is the difference between a banner and
+          a thrown render. */}
+      {failed === null ? null : (
+        <StatusBanner
+          severity={failed.severity}
+          word={failed.word}
+          sentence={failed.sentence}
+          recovery={failed.recovery}
+          userTriggered={ALERT_SEVERITIES.includes(failed.severity)}
+        />
       )}
 
       {stale ? (

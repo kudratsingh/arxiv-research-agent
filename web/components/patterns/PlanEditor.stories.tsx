@@ -26,7 +26,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
-import type { Plan } from "@/lib/api";
+import { normalizeFailure, type ApiFailure, type Plan } from "@/lib/api";
 import { PLAN } from "@/lib/copy/plan";
 import { MAX_PLAN_ITEMS, MAX_PLAN_ITEM_LEN } from "@/lib/plan/schema";
 
@@ -334,6 +334,100 @@ export const Validation422: Story = {
     await expect(canvas.getByLabelText("arXiv query 1")).not.toHaveAttribute(
       "aria-invalid",
     );
+  },
+};
+
+// ---------------------------------------------------------------------------
+// WO-S3 — the approval that failed.
+//
+// `POST /research/{job_id}/review` is the request that commits money, and
+// every way it can fail used to render nothing at all: the machine records
+// the failure without moving its phase (correctly — the server never heard
+// the decision) and the composition's only banner was gated on a phase a
+// review failure never produces. These three states are what the surface now
+// says instead, and they are here rather than only in a unit test because
+// each one has to survive the axe gate at five widths, in both themes and in
+// forced colours, sitting on top of a form the user's edits are still in.
+//
+// THE ENVELOPES ARE NORMALIZED, NOT HAND-WRITTEN. Each `ApiFailure` below is
+// produced by `normalizeFailure` from a `Response` carrying the exact body
+// and headers `web/contract/fixtures/error.*.json` recorded, so the story
+// exercises the same parsing the product does — the 429's `Retry-After` and
+// `limit_per_hour`, the 500's opaque detail — rather than a shape somebody
+// typed out to match.
+// ---------------------------------------------------------------------------
+
+/** One failure, as the request layer would really produce it. */
+async function failureOf(
+  status: number,
+  body: unknown,
+  headers: Record<string, string> = { "content-type": "application/json" },
+): Promise<ApiFailure> {
+  return normalizeFailure(new Response(JSON.stringify(body), { status, headers }));
+}
+
+const RATE_LIMITED = await failureOf(
+  429,
+  { detail: { error: "rate_limited", key_id: "web", limit_per_hour: 1 } },
+  { "content-type": "application/json", "retry-after": "3600" },
+);
+
+const SERVER_ERROR = await failureOf(500, { detail: "internal_error" });
+
+const UNREACHABLE = await failureOf(502, { detail: "api_upstream_unavailable" });
+
+/**
+ * The 429 — the one failure with a number in its recovery line.
+ *
+ * The wait comes from `Retry-After` and the ceiling from the body, and
+ * neither is invented when the other is absent (03 §2.2 row 18). The fields
+ * stay below the banner and stay editable: nothing was decided, so nothing
+ * the user typed is thrown away.
+ */
+export const ApproveRateLimited: Story = {
+  args: { failure: RATE_LIMITED },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = await canvas.findByRole("alert");
+    await expect(alert).toHaveTextContent(/rate limit/i);
+    await expect(alert).toHaveTextContent(/1 hour/i);
+    await expect(alert).toHaveTextContent(/1 request an hour/i);
+    // The decision is not lost with the request.
+    await expect(await form(canvas)).toBeEnabled();
+    await expect(canvas.getByLabelText("Sub-question 1")).not.toHaveAttribute(
+      "readonly",
+    );
+  },
+};
+
+/**
+ * The 500 — transient, and the recovery says so without promising a retry.
+ *
+ * Nothing here retries for the user: `approve` resumes billable work, so H6's
+ * rule that a retry is always a deliberate act applies to the recovery line
+ * as much as to the code.
+ */
+export const ApproveServerError: Story = {
+  args: { failure: SERVER_ERROR },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = await canvas.findByRole("alert");
+    await expect(alert).toHaveTextContent(/could not complete this request/i);
+    // RC-16: the backend's own string is never the sentence.
+    await expect(alert.textContent ?? "").not.toContain("internal_error");
+    await expect(canvasElement.querySelector('[data-surface="plan-editor"]'))
+      .toHaveAttribute("data-review-failure", "server_error");
+  },
+};
+
+/** The 502 — a different remedy from the 500, so a different sentence. */
+export const ApproveUnreachable: Story = {
+  args: { failure: UNREACHABLE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = await canvas.findByRole("alert");
+    await expect(alert).toHaveTextContent(/not reachable/i);
+    await expect(alert).toHaveTextContent(/nothing was started/i);
   },
 };
 

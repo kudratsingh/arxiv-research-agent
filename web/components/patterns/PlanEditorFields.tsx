@@ -107,6 +107,7 @@ export default function PlanEditorFields({
   const uid = useId();
   const noteId = `${uid}-note`;
   const cancelHintId = `${uid}-cancel-hint`;
+  const approveHintId = `${uid}-approve-hint`;
 
   const defaultValues = useMemo(
     () => draftToValues(initialDraft ?? planToDraft(plan)),
@@ -304,37 +305,57 @@ export default function PlanEditorFields({
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Criterion 1: ONE primary action. Its label — and the action it
-            sends — are derived from the working copy, so there is never a
-            second control the user has to choose between. */}
-        <Button
-          type="submit"
-          variant="primary"
-          size="md"
-          data-primary="true"
-          busy={inFlight}
-          {...(note === null ? {} : { "aria-describedby": noteId })}
-        >
-          {edited ? PLAN.revise : PLAN.approve}
-        </Button>
+      <div className="flex flex-col gap-3">
+        {/* WO-S3 — THE IRREVERSIBILITY WARNING, BEFORE THE COMMITMENT.
+            `PLAN.cancelHint` was written by WO-17, is asserted by
+            `web/tests/copy/plan-copy.test.ts` against `REVIEW.cancelHint`,
+            and was rendered by NO component: users approved an unstoppable
+            run without ever being told it was unstoppable. It describes the
+            PRIMARY control, not the cancel one, because approving is the act
+            it warns about — the cancel button already carries its own
+            consequence below. */}
+        <p id={approveHintId} className="text-ui-xs text-ink-muted">
+          {PLAN.cancelHint}
+        </p>
 
-        {/* Criterion 2: cancel is at the FAR END, destructive-secondary, and
-            its consequence travels with it rather than being left implied. */}
-        <span className="flex-1" />
-        <span id={cancelHintId} className="text-ui-xs text-ink-muted">
-          {PLAN.cancelConsequence}
-        </span>
-        <Button
-          variant="secondary"
-          size="md"
-          className="border-critical text-critical-text hover:bg-critical-surface"
-          aria-describedby={cancelHintId}
-          disabled={!interactive}
-          onClick={() => onReview(cancelRequest())}
-        >
-          {PLAN.cancel}
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Criterion 1: ONE primary action. Its label — and the action it
+              sends — are derived from the working copy, so there is never a
+              second control the user has to choose between. */}
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            data-primary="true"
+            busy={inFlight}
+            // The refusal is read FIRST when there is one: it is the reason
+            // the control just did nothing, and the standing warning can
+            // wait its turn behind it.
+            aria-describedby={
+              note === null ? approveHintId : `${noteId} ${approveHintId}`
+            }
+          >
+            {edited ? PLAN.revise : PLAN.approve}
+          </Button>
+
+          {/* Criterion 2: cancel is at the FAR END, destructive-secondary,
+              and its consequence travels with it rather than being left
+              implied. */}
+          <span className="flex-1" />
+          <span id={cancelHintId} className="text-ui-xs text-ink-muted">
+            {PLAN.cancelConsequence}
+          </span>
+          <Button
+            variant="secondary"
+            size="md"
+            className="border-critical text-critical-text hover:bg-critical-surface"
+            aria-describedby={cancelHintId}
+            disabled={!interactive}
+            onClick={() => onReview(cancelRequest())}
+          >
+            {PLAN.cancel}
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -21,7 +21,7 @@
  * cannot name different runs.
  *
  * WHAT IT RENDERS, AND WHAT IT DELIBERATELY DOES NOT. The spine, the plan
- * editor at the review pause, one banner for the two states the spine cannot
+ * editor at the review pause, one banner for the states the spine cannot
  * carry on its own, and the diagnostics disclosure. It does NOT render the
  * briefing: 03 §4.7's remedy for the double-render defect is that the current
  * run and the thread history share one source of truth, and that source is
@@ -46,10 +46,14 @@
 import { useCallback, useEffect, useRef } from "react";
 
 import { Diagnostics } from "@/components/patterns/Diagnostics";
-import { PlanEditor, type PlanEditorStatus } from "@/components/patterns/PlanEditor";
-import { StatusBanner } from "@/components/patterns/StatusBanner";
+import {
+  PlanEditor,
+  type PlanEditorStatus,
+  type PlanStaleCause,
+} from "@/components/patterns/PlanEditor";
+import { ALERT_SEVERITIES, StatusBanner } from "@/components/patterns/StatusBanner";
 import { TraceSpine } from "@/components/patterns/TraceSpine";
-import type { ReviewRequest } from "@/lib/api";
+import type { ApiFailure, FieldIssue, ReviewRequest } from "@/lib/api";
 import { describeFailure, rawErrorEvidence } from "@/lib/copy/errors";
 import { THREAD } from "@/lib/copy/threads";
 import {
@@ -83,6 +87,55 @@ export function planStatusOf(state: JobState): PlanEditorStatus {
     return "stale";
   }
   return "editing";
+}
+
+/**
+ * The review call's own failure, or `null` when the last one was something
+ * else (WO-S3).
+ *
+ * **`failureSource` is the question that has an answer; the phase is not.**
+ * `POST /research/{job_id}/review` failing does not move the machine, and it
+ * should not: the server never heard the decision, so the run really is
+ * still parked at `pending_review` and the user's edits are still the thing
+ * on screen. That is why `machine.ts`'s `review_rejected` cell writes
+ * `failure` and leaves `phase` alone — and it is why a banner gated on
+ * `phase === "submit_failed"` rendered NOTHING for a rate limit, a 500 or a
+ * 422 on the one click that commits money. Pressing `Approve plan` and a
+ * missed click looked identical.
+ */
+export function reviewFailureOf(state: JobState): ApiFailure | null {
+  return state.failureSource === "review" ? state.failure : null;
+}
+
+/** A stable empty list, so an unchanged `issues` prop keeps its identity. */
+const NO_ISSUES: readonly FieldIssue[] = [];
+
+/**
+ * The 422's fields, on their way to the editor's rows.
+ *
+ * A validation failure is the one review failure the user can repair in
+ * place, so it reaches the rows that carry it (`PlanEditorFields` criterion
+ * 4) rather than stopping at the banner. Every other kind maps to nothing
+ * here: a rate limit belongs to no field.
+ */
+export function reviewIssuesOf(state: JobState): readonly FieldIssue[] {
+  const failure = reviewFailureOf(state);
+  return failure !== null && failure.kind === "validation"
+    ? failure.fields
+    : NO_ISSUES;
+}
+
+/**
+ * Why the review is over, for the `stale` banner's two wordings.
+ *
+ * Derived from the REFETCHED run and never from the 409's own text:
+ * `job_not_awaiting_review (status=failed)` says the review is over but not
+ * why, and only `error_type` says that.
+ */
+export function staleCauseOf(state: JobState): PlanStaleCause {
+  return state.detail?.error_type === "hitl_timeout"
+    ? "hitl_timeout"
+    : "resolved_elsewhere";
 }
 
 /**
@@ -152,20 +205,48 @@ export function ActiveRunPanel({
     void refresh();
   }, [refresh]);
 
-  const reviewing = state.phase === "awaiting_review" || state.phase === "resolving";
-  const plan = state.plan;
+  const planStatus = planStatusOf(state);
+  /**
+   * THE EDITOR STAYS ON SCREEN THROUGH A FAILED REVIEW (WO-S3).
+   *
+   * Two phases are obvious. The third is `planStatus === "stale"`, the 409:
+   * `machine.ts` sends the machine back through `attaching` to re-read the
+   * run, and reading the phase alone therefore took the editor away at
+   * exactly the moment the user needed it — their edits are in it, and the
+   * conflict banner it carries is the only answer to "why did my click do
+   * nothing". `planStatusOf` was already computing `stale`; nothing rendered
+   * it, because nothing kept the surface mounted long enough to.
+   */
+  const reviewing =
+    state.phase === "awaiting_review" ||
+    state.phase === "resolving" ||
+    planStatus === "stale";
+  const plan = reviewing ? state.plan : null;
+  const reviewFailure = reviewFailureOf(state);
 
   /**
-   * The two states the spine cannot carry on its own.
+   * The failures this panel announces ITSELF.
    *
    * `unavailable` is H8's 404 — the sentence is the dictionary's and the
    * recovery is the composer that is already on screen, named rather than
    * offered as a button that would start a billable run on one click.
-   * A failed submission is the other: it is something the user just did, so
+   * A failed submission is the second: it is something the user just did, so
    * it is announced; everything else that merely became true is not.
+   *
+   * A failed REVIEW is the third, and only when the plan editor is not on
+   * screen to state it — the editor takes `failure` and says it beside the
+   * control that was pressed, and two banners for one click would be the
+   * same words twice. This branch is the backstop for the case where the
+   * plan is gone but the failure is not, so that no failed approval can
+   * render nothing at all.
    */
-  const failed = state.phase === "submit_failed" && state.failure !== null;
-  const described = failed && state.failure !== null ? describeFailure(state.failure) : null;
+  const announced =
+    state.phase === "submit_failed"
+      ? state.failure
+      : plan === null
+        ? reviewFailure
+        : null;
+  const described = announced === null ? null : describeFailure(announced);
 
   /**
    * §4 row B — `/c/[id]` with no `?job=`.
@@ -219,18 +300,26 @@ export function ActiveRunPanel({
           sentence={described.sentence}
           recovery={described.recovery}
           evidence={rawErrorEvidence(null, state.failureMessage)}
-          userTriggered
+          // Guarded rather than passed: `role="alert"` is reserved for the
+          // two failure severities (03 §7.3) and `StatusBanner` throws
+          // otherwise. A cancelled submission and a 404 on a review both
+          // describe themselves as `info`, so an unguarded `userTriggered`
+          // is a thrown render rather than a banner.
+          userTriggered={ALERT_SEVERITIES.includes(described.severity)}
         />
       )}
 
-      {reviewing && plan !== null ? (
+      {plan === null ? null : (
         <PlanEditor
           plan={plan}
-          status={planStatusOf(state)}
+          status={planStatus}
+          failure={reviewFailure}
+          issues={reviewIssuesOf(state)}
+          staleCause={staleCauseOf(state)}
           onReview={onReview}
           onRefetch={onRefetch}
         />
-      ) : null}
+      )}
 
       {/*
         The disclosure is collapsed by default (04 §9.2), so it costs one row

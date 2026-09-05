@@ -18,8 +18,13 @@ import {
   PlanEditor,
   type PlanEditorStatus,
 } from "@/components/patterns/PlanEditor";
-import type { FieldIssue, Plan } from "@/lib/api";
-import { describeErrorType } from "@/lib/copy/errors";
+import {
+  normalizeFailure,
+  type ApiFailure,
+  type FieldIssue,
+  type Plan,
+} from "@/lib/api";
+import { FAILURE_COPY, describeErrorType } from "@/lib/copy/errors";
 import { PLAN } from "@/lib/copy/plan";
 import { MAX_PLAN_ITEMS, MAX_PLAN_ITEM_LEN } from "@/lib/plan/schema";
 
@@ -39,6 +44,7 @@ interface Options {
   issues?: readonly FieldIssue[];
   initialDraft?: { subQuestions: string[]; searchQueries: string[] };
   staleCause?: "resolved_elsewhere" | "hitl_timeout";
+  failure?: ApiFailure | null;
 }
 
 function mount(options: Options = {}) {
@@ -56,6 +62,7 @@ function mount(options: Options = {}) {
         {...(options.staleCause === undefined
           ? {}
           : { staleCause: options.staleCause })}
+        {...(options.failure === undefined ? {} : { failure: options.failure })}
         onReview={onReview}
         onRefetch={onRefetch}
       />
@@ -425,7 +432,13 @@ describe("criterion 7 — an emptied list cannot be saved", () => {
     });
     await typist.click(screen.getByRole("button", { name: "Remove sub-question 1" }));
     await typist.click(await screen.findByRole("button", { name: PLAN.revise }));
-    expect(primary()[0]).toHaveAccessibleDescription(PLAN.emptyPlan);
+    // `stringContaining` rather than an equality, since WO-S3: the control
+    // now also carries `PLAN.cancelHint`, the irreversibility warning that
+    // was written by WO-17 and rendered by nothing. The refusal is still
+    // there, and is still read first — see `PlanEditorFields`.
+    expect(primary()[0]).toHaveAccessibleDescription(
+      expect.stringContaining(PLAN.emptyPlan),
+    );
   });
 });
 
@@ -501,6 +514,200 @@ describe("criterion 5 — a 409 refetches and re-renders", () => {
     mount({ status: "stale" });
     await screen.findByRole("alert");
     expect(screen.queryByLabelText("Sub-question 1")).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WO-S3 — the approval that failed says what failed and what to do.
+//
+// The composition half — the real machine, the real request layer, and the
+// proof that the panel reads `failureSource` at all — is
+// `web/tests/features/approveFailure.test.tsx`. This half is the surface's
+// own contract: one banner per failure KIND, branched on the code and never
+// on a message string, with the fields still mounted underneath it.
+// ---------------------------------------------------------------------------
+
+/** One `ApiFailure`, produced by the real normalizer over a real envelope. */
+async function failureOf(
+  status: number,
+  body: unknown,
+  headers: Record<string, string> = { "content-type": "application/json" },
+): Promise<ApiFailure> {
+  return normalizeFailure(new Response(JSON.stringify(body), { status, headers }));
+}
+
+describe("WO-S3 — a failed review is stated, one code at a time", () => {
+  it("says the workspace is rate limited, with the wait and the ceiling", async () => {
+    const failure = await failureOf(
+      429,
+      { detail: { error: "rate_limited", key_id: "web", limit_per_hour: 1 } },
+      { "content-type": "application/json", "retry-after": "3600" },
+    );
+    await mountLoaded({ failure });
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(FAILURE_COPY.rate_limited.word);
+    expect(alert).toHaveTextContent(FAILURE_COPY.rate_limited.sentence);
+    // Both numbers come off the envelope: the wait from `Retry-After`, the
+    // ceiling from the body. Neither is invented when the other is missing.
+    expect(alert).toHaveTextContent(/about 1 hour/i);
+    expect(alert).toHaveTextContent(/1 request an hour/i);
+  });
+
+  it("says the server could not complete it, without quoting the server", async () => {
+    const failure = await failureOf(500, { detail: "internal_error" });
+    await mountLoaded({ failure });
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(FAILURE_COPY.server_error.sentence);
+    expect(alert).toHaveTextContent(FAILURE_COPY.server_error.recovery);
+    // RC-16: the raw string is never the primary message.
+    expect(alert.textContent ?? "").not.toContain("internal_error");
+  });
+
+  it("tells a 502 and a 503 apart, because the remedies differ", async () => {
+    const unreachable = await failureOf(502, { detail: "api_upstream_unavailable" });
+    const { unmount } = await mountLoaded({ failure: unreachable });
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      FAILURE_COPY.upstream_unavailable.sentence,
+    );
+    unmount();
+
+    const misconfigured = await failureOf(503, { detail: "api_proxy_misconfigured" });
+    await mountLoaded({ failure: misconfigured });
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(FAILURE_COPY.proxy_misconfigured.sentence);
+    expect(alert).toHaveTextContent(FAILURE_COPY.proxy_misconfigured.recovery);
+  });
+
+  it("keeps the fields — and the working copy — under the banner", async () => {
+    const failure = await failureOf(500, { detail: "internal_error" });
+    const typist = user();
+    await mountLoaded({ failure });
+
+    await screen.findByRole("alert");
+    const row = screen.getByLabelText("Sub-question 1");
+    expect(row).not.toHaveAttribute("readonly");
+    await typist.type(row, "!");
+    // Still editable, still submittable: the server never heard the decision,
+    // so nothing about the plan has been decided.
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: PLAN.revise })).toBeEnabled(),
+    );
+  });
+
+  it("carries the kind as data, so a sweep need not read copy", async () => {
+    const failure = await failureOf(500, { detail: "internal_error" });
+    await mountLoaded({ failure });
+    await screen.findByRole("alert");
+    expect(document.querySelector('[data-surface="plan-editor"]')).toHaveAttribute(
+      "data-review-failure",
+      "server_error",
+    );
+  });
+
+  it("does not throw on a severity that may not interrupt", async () => {
+    // `role="alert"` is reserved for `warning` and `critical` (03 §7.3) and
+    // `StatusBanner` throws otherwise. A review that 404s is `info`, so an
+    // unguarded `userTriggered` here would be a thrown render.
+    const failure = await failureOf(404, { detail: "job_not_found" });
+    await mountLoaded({ failure });
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText(FAILURE_COPY.not_found.sentence)).toBeVisible();
+  });
+
+  it("says nothing extra in the stale state, which has its own banner", async () => {
+    const failure = await failureOf(409, {
+      detail: "job_not_awaiting_review (status=running)",
+    });
+    mount({ status: "stale", failure });
+
+    // One banner, not two wordings of one click.
+    const alerts = await screen.findAllByRole("alert");
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0]).toHaveTextContent(PLAN.conflict);
+  });
+
+  it("leaves a field-bearing 422 to the rows (WO-17 criterion 4)", async () => {
+    const failure = await failureOf(422, {
+      detail: [
+        {
+          type: "string_too_long",
+          loc: ["body", "plan", "search_queries", 1],
+          msg: "String should have at most 500 characters",
+        },
+      ],
+    });
+    await mountLoaded({
+      failure,
+      issues: failure.kind === "validation" ? failure.fields : [],
+    });
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("arXiv query 2")).toHaveAttribute(
+        "aria-invalid",
+        "true",
+      ),
+    );
+    // The baseline mapped nothing and shouted; this maps and does not.
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("still speaks for a 422 that names no field at all", async () => {
+    const failure = await failureOf(422, { detail: "revise_requires_plan" });
+    await mountLoaded({ failure });
+    // No row to land on is exactly where the silence used to be.
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      FAILURE_COPY.validation.sentence,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// WO-S3 — the irreversibility warning, before the commitment.
+// ---------------------------------------------------------------------------
+
+describe("WO-S3 — approving is told that it cannot be undone", () => {
+  it("puts the hint on screen", async () => {
+    await mountLoaded();
+    expect(screen.getByText(PLAN.cancelHint)).toBeVisible();
+  });
+
+  it("describes the PRIMARY control, which is the act it warns about", async () => {
+    await mountLoaded();
+    expect(primary()[0]).toHaveAccessibleDescription(
+      expect.stringContaining(PLAN.cancelHint),
+    );
+  });
+
+  it("keeps the cancel control's own consequence separate", async () => {
+    await mountLoaded();
+    // Criterion 2's description is unchanged: the cancel button still says
+    // only what cancelling costs, not what approving costs.
+    expect(screen.getByRole("button", { name: PLAN.cancel })).toHaveAccessibleDescription(
+      PLAN.cancelConsequence,
+    );
+  });
+
+  it("still names the form's own refusal beside the control", async () => {
+    // The hint must not displace the note: an emptied plan is refused
+    // client-side and the reason has to reach the same control.
+    const typist = user();
+    const { onReview } = await mountLoaded({
+      plan: { sub_questions: ["only one"], search_queries: ["only one"] },
+    });
+    await typist.click(screen.getByRole("button", { name: "Remove sub-question 1" }));
+    await typist.click(screen.getByRole("button", { name: PLAN.revise }));
+
+    expect(onReview).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(primary()[0]).toHaveAccessibleDescription(
+        expect.stringContaining(PLAN.emptyPlan),
+      ),
+    );
+    expect(primary()[0]).toHaveAccessibleDescription(
+      expect.stringContaining(PLAN.cancelHint),
+    );
   });
 });
 
