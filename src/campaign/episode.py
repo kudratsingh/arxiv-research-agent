@@ -49,6 +49,7 @@ from src.contracts.kernel import (
 )
 from src.contracts.registry import CampaignLock
 from src.contracts.research_binding import (
+    PolicyShape,
     ResearchBindingError,
     code_snapshot,
     compiler_ref,
@@ -67,6 +68,7 @@ from src.contracts.research_binding import (
 )
 from src.contracts.run_manifest import (
     AdmissionPlan,
+    ApprovalVerificationReceipt,
     BudgetSnapshot,
     CompilationSnapshot,
     DeterminismClass,
@@ -126,14 +128,24 @@ _EXCLUDED_PROJECTION_CLASSES: Final[tuple[_ExcludedClass, ...]] = (
 
 
 class SealedCampaignEpisode(StrictContractModel):
-    """One episode's sealed record, in the order sealing produced it."""
+    """One episode's sealed record, in the order sealing produced it.
+
+    `shape` and `approval_receipt` are carried rather than recomputed,
+    because the execution loop needs both and neither can be re-derived
+    honestly downstream: reclassifying the graph would mean compiling it
+    a second time under a settings binding that has since moved on, and
+    re-verifying the approval would mint a second receipt for one
+    admission. Both are outputs of *this* seal and belong to it.
+    """
 
     episode: PlannedEpisode
     task_spec: TaskSpecV1
     receipt: TaskCompilationReceipt
     manifest: RunManifestV1
     projection: PolicyRuntimeProjection
+    shape: PolicyShape
     policy: PolicySnapshot
+    approval_receipt: ApprovalVerificationReceipt | None = None
     chargeable: bool
 
     @property
@@ -465,7 +477,9 @@ def seal_campaign_episode(
         receipt=receipt,
         manifest=manifest,
         projection=projection,
+        shape=shape,
         policy=policy,
+        approval_receipt=decision.approval_receipt,
         chargeable=decision.chargeable,
     )
 
