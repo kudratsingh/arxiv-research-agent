@@ -43,6 +43,7 @@ import { useCallback, useMemo, useState, type ReactNode } from "react";
 import {
   hasActiveRun,
   isReviewPause,
+  isRunUnread,
 } from "@/components/features/ActiveRunPanel";
 import { QueryComposer } from "@/components/features/QueryComposer";
 import { EmptyState } from "@/components/patterns/EmptyState";
@@ -148,6 +149,46 @@ export function ThreadTimeline({
     [newest, toggled],
   );
 
+  /**
+   * WO-S2c — THE LOADING FRAME IS THE RUN PANEL'S MOUNT RESERVATION.
+   *
+   * `isRunUnread` is the window in which the URL names a run and
+   * `GET /research/{id}` has not answered yet. `ActiveRunPanel.tsx` carries
+   * the measurement; what it means HERE is that the loaded frame would paint
+   * with the row reporting `attached` about a run nobody has read, and would
+   * then be corrected — at 412x915 from a 224px box to the 1,769px review
+   * pause, taking the reading column and the composer off screen with it
+   * (0.55191 against 04 §8.2's 0.02).
+   *
+   * NOTHING NEW IS DESIGNED AND NOTHING NEW IS RESERVED. The frame it holds
+   * is byte-identical to the one the transcript's own wait already uses; what
+   * changes is when it is released. `loading.tsx` names three paths that reach
+   * that frame, and this is the fourth: the transcript is here, and the run it
+   * names is not. The reservation is therefore exact by construction — the row
+   * mounts once, at the height it keeps — which is what
+   * `e2e/mount-reservation.spec.ts` asserts as an equality rather than as a
+   * bound.
+   *
+   * IT IS A MOUNT CONCERN, AND THE LATCH IS WHAT SAYS SO. `attaching` with no
+   * detail is also true a beat after a follow-up submission (`freshRun` clears
+   * the detail and `submit_accepted` moves to `attaching`), and falling back to
+   * a skeleton THERE would throw the whole transcript away every time somebody
+   * asks a second question. So the hold applies only before this thread has
+   * ever been on screen; afterwards the frame stays whatever the machine says
+   * it is. The latch is per `conversationId` because `page.tsx` keys the
+   * provider on it, so every surface under it remounts together.
+   *
+   * SET DURING RENDER, NOT IN AN EFFECT, and that is the recommended shape
+   * rather than a shortcut: React re-runs this component immediately with the
+   * new value and throws the first pass away without committing it, so the
+   * latch costs no extra commit and, crucially, no extra PAINT — which is the
+   * one currency this file is spending. An effect would set it a commit late
+   * (`react-hooks/set-state-in-effect`), and reading a ref during render is
+   * the third spelling and the one `react-hooks/refs` refuses.
+   */
+  const [painted, setPainted] = useState(false);
+  const holdForRun = !painted && isRunUnread(state);
+
   const notFound = query.error instanceof ApiError && query.error.status === 404;
 
   if (notFound) {
@@ -230,6 +271,36 @@ export function ThreadTimeline({
       </div>
     );
   }
+
+  // WO-S2c — THE SAME FRAME AGAIN, HELD ONE BEAT LONGER.
+  //
+  // The transcript is here and the run `?job=` names is not, so the frame
+  // above would be released into a shape that is known to be provisional: the
+  // row reports `attached` about a run nobody has read, and the read then
+  // corrects it. `holdForRun` is the fourth path to `ThreadSkeleton` — the
+  // three `loading.tsx` names, plus this one — and it exists because only the
+  // FIRST of those two transitions is free. Replacing the loading frame
+  // replaces every node in it, and a node that did not exist a frame ago
+  // cannot have moved; the second transition moves nodes that are already on
+  // screen, which is the definition of a layout shift and, at 412x915, is
+  // 0.55191 of a 0.02 budget.
+  //
+  // `painted` is latched HERE rather than beside its declaration, because the
+  // claim it holds is "the loaded frame has been on screen" and this is the
+  // only line that puts it there.
+  if (holdForRun) {
+    return (
+      <div
+        className={["ew-thread", "ew-thread--loading", className]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <ThreadSkeleton />
+        {composer}
+      </div>
+    );
+  }
+  if (!painted) setPainted(true);
 
   return (
     <div className={["ew-thread", className].filter(Boolean).join(" ")}>

@@ -184,6 +184,41 @@ export function isReviewPause(state: JobState): boolean {
   return reviewing && state.plan !== null;
 }
 
+/**
+ * Has the run this page names been READ yet (WO-S2c)?
+ *
+ * `attaching` with no `detail` is the one window in which this panel knows
+ * that there IS a run and nothing else about it: `GET /research/{id}` is in
+ * flight, `state.plan` is `null` because nothing has said otherwise, and both
+ * predicates above therefore answer from an absence. `hasActiveRun` is `true`
+ * (the URL named a job), `isReviewPause` is `false` (no plan yet), and the row
+ * consequently reports `attached` — "a run is on this page AND events are
+ * arriving" — about a run whose status has not been read.
+ *
+ * THAT WINDOW IS A MEASUREMENT, NOT A TIDINESS COMPLAINT. Painting the thread
+ * inside it paints a frame that is known to be provisional, and the correction
+ * is not small: at 412x915 the row goes from the 224px `attached` box to the
+ * 1,769px review pause in one commit, which pushes the reading column and the
+ * composer entirely off screen — `div.ew-thread__timeline` [y 410, h 435] and
+ * `div.ew-thread__composer` [y 845, h 70] both out of view, 0.55191 against
+ * 04 §8.2's 0.02 ceiling. `ThreadTimeline` therefore holds the loading frame
+ * while this is true, so the run panel mounts once, at the height it keeps.
+ *
+ * IT IS EXPORTED FOR THE REASON `hasActiveRun` AND `isReviewPause` ARE. The
+ * row's geometry and the panel's contents have to answer from one predicate or
+ * they drift; this is the third question that row has to be able to ask, and
+ * the answer is the panel's to give.
+ *
+ * `detail === null` AND NOT THE PHASE ALONE. `machine.ts`'s `review_conflict`
+ * cell sends the machine back through `attaching` with the detail it already
+ * read still in hand, and a thread that fell back to a skeleton there would
+ * take the plan editor, the conflict banner and the user's own edits away at
+ * exactly the moment WO-S3 exists to keep them on screen.
+ */
+export function isRunUnread(state: JobState): boolean {
+  return state.phase === "attaching" && state.detail === null;
+}
+
 export interface ActiveRunPanelProps {
   /** The thread this run belongs to. Half of the `?job=` href. */
   conversationId: string;
