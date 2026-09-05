@@ -653,6 +653,12 @@ report them as zero.
 
 ### 7.2 The one remaining code item before W12 can run
 
+> **Closed by P0-WO07b — see the §12 addendum.** This section is left as
+> written, because it is the finding that produced the work order and a
+> report that quietly deleted its own open item would be worth less than
+> one that records how it was closed. Everything below described the tree
+> as of this report's baseline.
+
 **W07 did not build the campaign execution loop, and nothing else has.**
 
 This is stated plainly because it is the single blocking implementation
@@ -688,7 +694,7 @@ settings singleton), and it must write `completion.json`, check
 
 | Prerequisite | State | Owner |
 |---|---|---|
-| Campaign execution loop | **not built** — §7.2 | engineering |
+| Campaign execution loop | **built** — P0-WO07b, §12 addendum. `src/campaign/execute.py` and the `run` verb; the full mock matrix reconciles 240 completed / 60 excluded at `$0.000000`. | engineering |
 | Approval backend record | **no real backend.** `LocalApprovalRecordBackend` reads a JSON file and delegates to W03's `FakeLocalApprovalBackend`. It is a correct *shape*, not an authority. A funded run needs a record an owner actually created. | owner + engineering |
 | Exact model ids and verified prices | `anthropic_model` and `eval_judge_model` are both `claude-sonnet-4-6`; `PRICES_LAST_VERIFIED` is 2026-08-20. Both must be re-pinned and re-verified immediately before the run. | owner |
 | Judge calibration expert time | W10 estimates **48.7 h** across two annotators plus adjudication for the recommended 141-item set; 30 synthetic items exist and calibrate nothing. Blocked on D8.10 and 13 §5's human-label retention decision. | owner |
@@ -837,7 +843,7 @@ puts this qualification inside the coverage selection, which
 
 | # | Gate bullet | Verdict | Evidence |
 |---|---|---|---|
-| 1 | W00–W11 acceptance criteria green or explicitly waived | **PASS with reservation** | W00–W10 landed and green. W11's own criteria are §2–§8 here. The reservation is not a criterion but a scope fact: W07's acceptance did not include an execution loop, so "campaign orchestration" is planned, locked and sealed but never run (§7.2). |
+| 1 | W00–W11 acceptance criteria green or explicitly waived | **PASS with reservation** | W00–W10 landed and green. W11's own criteria are §2–§8 here. The reservation was a scope fact: W07's acceptance did not include an execution loop, so "campaign orchestration" was planned, locked and sealed but never run (§7.2). **P0-WO07b closed it** — the loop exists, the full mock matrix runs, and §12 records the result. |
 | 2 | One research and one guided-learning synthetic episode reconstruct cleanly | **PASS** | Four research episodes, §4; the guided-learning episode is W08's `TestTheSyntheticLearningEpisode`, §4.2. |
 | 3 | Campaign resolution pins every task/data/evaluator input by immutable ref | **PASS** | §2.2. Every ref carries a three-part revision and a `sha256:` digest; `latest` is not expressible; a moved digest refuses the campaign. |
 | 4 | No candidate role can access hidden evaluation material | **PASS** | §6.1–§6.3, over the shipped registry. |
@@ -850,9 +856,10 @@ puts this qualification inside the coverage selection, which
 
 **Gate verdict: not passed.** Nine bullets pass (two with the
 reservations stated in their rows); bullet 10 fails by construction,
-because passing it requires an owner to price and approve. Independently
-of the gate, the campaign execution loop (§7.2) is not built, so W12
-could not be executed today even if its packet were approved.
+because passing it requires an owner to price and approve. The one item
+that sat *outside* the gate — the campaign execution loop — is now built
+(§12), so the remaining blockers are all the owner's: an approval record,
+re-verified prices, and expert labeling time.
 
 12 §21's own instruction for this state: *"If this gate fails, continue
 local schema, fixture, replay, and documentation work. Do not substitute
@@ -874,3 +881,123 @@ a live campaign for missing contract evidence."*
   number in §4 comes from five fixture papers and a deterministic
   briefing.
 - It does not claim arm D's router was exercised. §4.1.
+
+---
+
+## 12. Addendum — the campaign execution loop exists (P0-WO07b)
+
+Added: **2026-09-05**. Work order: P0-WO07b, closing §7.2 of this report.
+ADR: [`0088`](../decisions/0088-campaign-execution-loop.md). Executable
+half: [`tests/test_campaign_execution.py`](../../tests/test_campaign_execution.py).
+
+**Sections 0–11 above are unchanged and were measured before this loop
+existed.** This addendum states what changed and what it does and does
+not license. It does not revise a single figure in §§2–8: the arm
+identities, the four synthetic episodes, the privacy findings and the
+zero-call attestation are all still the measurements this report made.
+
+### 12.1 What was built
+
+`src/campaign/execute.py` and a fifth CLI verb, `run`. Per episode, in
+this order: seal the `RunManifest` into the episode directory → open
+W08's durable trajectory, whose `run.admitted` binds the manifest digest
+→ drive the policy through an injected `EpisodeRunner` → record the
+terminal event → score → write the episode's artifacts → write
+`completion.json` **last** → reconcile the ledger and check the campaign
+cap before the next episode.
+
+The three concrete absences §7.2 listed are closed. There is a loop over
+`CampaignPlan.runnable`; `completion.json` is written by production code,
+so `read_outcomes`, `reconcile` and `summarize` now consume receipts the
+loop wrote rather than receipts a test wrote; and `budget_stop_reached`
+has a caller. §7.2's suggested placement was `planner.py:575`; the loop
+went into its own module instead, because the planner's stated property
+is that it compiles no graph and constructs no provider, and the executor
+must do the first.
+
+### 12.2 The mock full matrix, measured
+
+`python -m src.campaign plan` then `run`, `USE_MOCK_DATA=true`,
+`ANTHROPIC_API_KEY=local-preview-disabled`, one process, sequential:
+
+| Figure | Value |
+|---|---|
+| Expected episodes (`20 x 3 x 5`) | 300 |
+| Planned (arms A–D) | 240 |
+| Excluded (arm E, `arm_capability_missing`) | 60 |
+| Ledger: completed / errored / cancelled / timed_out / budget_stopped / null_metric / not_started | 240 / 0 / 0 / 0 / 0 / 0 / 0 |
+| Accounted vs expected | 300 / 300 |
+| Analysis denominator | 240 |
+| Workflow / judge / harness / total cost | `$0.000000` each |
+| Model calls, summed over 240 episodes | **0** |
+| Wall clock, whole matrix | **18.6 s** |
+| Paired items / required pairs at a 5-point move | 60 / 77 |
+
+Per-episode, over all 240 records: `model_calls` is the single value
+`{0}`, `workflow_cost_usd` and `judge_cost_usd` are both the single value
+`{"0.000000"}`, and every episode's trajectory is durable
+(`trajectory-ref.json` reports `durable: true` with a head hash that
+matches the last event of the JSONL the episode directory holds). Node
+routes come out as three distinct shapes — 120 fixed-pipeline episodes
+(arms A and B), 60 with the `verify` stage (arm C), 60 alternating with
+the supervisor (arm D) — which is §3.1's arm-difference claim observed in
+execution rather than in a compiled shape.
+
+A counting spy installed over `src.llm._get_client` *and* one over
+`socket.socket.connect`, both over the conftest guards, stayed empty for
+the entire pass.
+
+### 12.3 What the loop is now tested on
+
+- **Resume.** A campaign interrupted mid-pass skips every episode holding
+  a terminal receipt, rewrites none of their files, and finishes the
+  rest. An episode whose manifest sealed and whose receipt never landed
+  is *resumed* rather than re-sealed: same run id, same directory, a
+  second attempt receipt beside the first. A manifest that no longer
+  matches the configuration is refused as `manifest_mismatch`.
+- **The cap.** Four episodes at $1.00 against a $3.00 cap stop after
+  three, with the fourth `not_started` and still in the denominator.
+  Resuming under the same cap continues and stops again at it; raising
+  the cap is refused with lineage as the named remedy, and the superseded
+  campaign's ledger is untouched.
+- **Admission.** A metered campaign whose approval id names no record is
+  refused before any credential is read, before any episode is sealed and
+  before the runner is called once. The same campaign runs with the
+  record present. A zero-cost campaign against a metered provider carries
+  a real key and no approval and fails admission at every seal, with a
+  credential probe that raises if it is ever reached — invariant 10 at
+  campaign scale.
+- **Denominators.** Injected errors, cancellations, timeouts and null
+  metrics land in four separate buckets, keep their terminal receipts and
+  trajectories on disk, and stay in the denominator.
+
+### 12.4 What this does *not* change
+
+**Running the matrix is still not policy-quality evidence, and §0's
+disclaimer applies to it unchanged.** Every one of those 240 episodes
+served five fixture papers and a deterministic briefing; all 240 scored a
+supported-claim precision of 1.0 over exactly five claims, which is a
+property of the fixture and not of any arm. Nothing here says arm B beats
+arm A.
+
+Two limits are worth naming rather than leaving to be discovered:
+
+- **The judges did not run, by construction.** Three of the five research
+  metrics are LLM-as-judge calls and this work order spends nothing, so
+  the free scorer runs only ADR 0074's groundedness check and
+  `measure_citation_resolution`, records `judges_run: false` and names the
+  three skipped rubrics in every record. `execute_campaign` refuses to
+  use that scorer for a campaign that budgeted judge model calls, so a
+  funded run cannot silently be scored with less than it declared.
+- **Per-episode operator logging is absent.** Four campaign event names
+  and six extra keys would have to be registered in
+  `src/observability/logging.py`, which is outside this work order's
+  fences; the closed-set log contract (`tests/test_log_contract.py`)
+  correctly refuses them. Progress today is the CLI's JSON, the `status`
+  verb, and the episode directories appearing on disk. A follow-up owning
+  that file should register `campaign_episode_completed`,
+  `campaign_episode_failed` and `campaign_budget_stop`.
+
+§7.3's other prerequisites are unchanged and all belong to the owner: an
+approval record someone actually created, re-verified model ids and
+prices, and W10's expert labeling time. **P0-WO12 remains blocked on D9.**

@@ -658,6 +658,30 @@ never renumbered.
   so provider behaviour on 1.x is unverified until CAP-06's funded
   smoke.
 
+- [0088](0088-campaign-execution-loop.md) —
+  **Run a planned campaign from an injected runner, and write the
+  terminal receipt last.** ADR 0082 built a campaign package that
+  planned, locked, sealed and reconciled — and never ran an episode, so
+  nothing wrote `completion.json` and `budget_stop_reached` had no
+  production caller. `src/campaign/execute.py` adds the loop and a `run`
+  verb: seal the manifest, open W08's durable trajectory whose
+  `run.admitted` binds its digest, drive the policy through an injected
+  `EpisodeRunner`, score it, write the episode's files with the terminal
+  receipt **last**, and check the campaign cap between episodes. The
+  runner, graph probe, scorer and credential probe are injected for the
+  reason the planner already gave — `build_workflow` reads the
+  process-global settings singleton, so only `GraphEpisodeRunner`
+  installs an arm's binding across the modules that bound it. The free
+  scorer runs ADR 0074's groundedness check as the primary outcome and
+  refuses to stand in for a campaign that budgeted judge calls; a report
+  with no checkable claim is a null metric with a reason, not a zero.
+  `completion.json` is the only file resume keys on, so a crash leaves an
+  episode pending, and an interrupted episode re-seals to *compare*
+  digests — equal means a new attempt on the same run id, different means
+  `manifest_mismatch` and a refusal. The full 20 x 3 x 5 matrix runs in
+  ~16s at exactly `$0.000000` with `llm_calls=0` on all 240 episodes,
+  reconciling 240 completed and 60 excluded.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

@@ -112,11 +112,12 @@ graph says what *may* start, not what has merged.
 | P0-WO05 | Research shadow integration | Landed — [#215](https://github.com/kudratsingh/arxiv-research-agent/pull/215) |
 | P0-WO06 | Benchmark migration and parity | Landed — [#214](https://github.com/kudratsingh/arxiv-research-agent/pull/214) |
 | P0-WO07 | Campaign lock, repeats, resume, denominators | Landed — [#221](https://github.com/kudratsingh/arxiv-research-agent/pull/221) |
+| P0-WO07b | Campaign execution loop and the `run` verb | This PR — see [ADR 0088](../decisions/0088-campaign-execution-loop.md) |
 | P0-WO08 | Runtime event bridge and artifact adapter | Landed — [#222](https://github.com/kudratsingh/arxiv-research-agent/pull/222) |
 | P0-WO09 | Governance and threat review | Landed — [#205](https://github.com/kudratsingh/arxiv-research-agent/pull/205) |
 | P0-WO10 | Judge-calibration protocol and fixtures | Landed — see [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md); no ADR, this is a design package |
 | P0-WO11 | Stage-0 contract qualification | This PR — see [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md); no ADR, this is a report plus three fixes inside existing ADRs' scope |
-| P0-WO12 | Funded repeated current-policy baseline | Blocked on funding approval (D9), and on the campaign execution loop, which W07 did not build — see [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) §7.2 |
+| P0-WO12 | Funded repeated current-policy baseline | Blocked on funding approval (D9). The execution-loop blocker is closed by W07b; what remains is an owner's approval record, re-verified prices and expert labeling time — see [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) §7.3 |
 
 Nothing in this table authorizes spend. W12 stays blocked until the
 program gate in [`12-p0-work-orders.md`](12-p0-work-orders.md) §21 is
@@ -195,17 +196,24 @@ campaign is refused before a credential is read unless an external approval
 record covers it, and **P0-WO12 remains blocked on D9**
 ([ADR 0082](../decisions/0082-campaign-lock-repeats-and-denominators.md)).
 
-**Nothing in `src/campaign/` executes an episode, and W07 did not build
-that.** The package plans, locks, declares arms, compiles the matrix, opens
-the denominator ledger, seals a campaign manifest and seals one episode's
-`RunManifest` into its directory. There is no loop over `plan.runnable`, no
-code that writes `completion.json`, and `budget_stop_reached` — the
-between-episodes cap enforcement `CampaignBudget.enforcement` advertises —
-has no production caller. It belongs at `src/campaign/planner.py:575` with a
-`run` verb at `src/campaign/cli.py:72`. This is the one remaining code item
-before W12 could be executed even with an approval in hand
+`run` is the one verb with execution side effects, and P0-WO07b added it.
+It iterates the manifest's interleaved order, seals each episode, opens
+W08's durable trajectory, drives the policy, scores it with free
+deterministic checks, writes the episode's artifacts with `completion.json`
+last, and checks the campaign cap between episodes — which is where
+`budget_stop_reached` finally acquired a production caller. The full
+`20 x 3 x 5` development matrix executes end to end under `USE_MOCK_DATA`
+in about sixteen seconds at exactly `$0.000000`, with `llm_calls=0` on all
+240 runnable episodes and the ledger reconciling 240 completed and 60
+excluded ([ADR 0088](../decisions/0088-campaign-execution-loop.md)).
+
+**Running the matrix is not policy evidence.** It proves the contracts,
+the denominators, the resume rule and the cap stop; it says nothing about
+whether any arm is better, because a mock episode serves fixtures rather
+than reasoning. W12 remains blocked on D9, on an approval record an owner
+actually created, on re-verified prices, and on expert labeling time
 ([`15-stage0-qualification-report.md`](15-stage0-qualification-report.md)
-§7.2).
+§7.3).
 
 ## Program thesis
 
