@@ -68,9 +68,10 @@ Closed by WO-A04, A05, A06, A07, A08, A15. Evidence in [`STATUS.md`](STATUS.md).
 trace showing one id across submit/node/call; a scripted-tier `summary.jsonl`
 row showing the provenance block; the `$0.0000` assertion.
 
-## Gate A3 — Assurance
+## Gate A3 — Assurance — **CLOSED 2026-09-04**
 
-Closes after WO-A09, A10, A11, A12, A13, A14, A16, A17.
+Closed by WO-A09, A10, A11, A12, A13, A14, A16, A17. Evidence in
+[`STATUS.md`](STATUS.md) and [`../../docs/assurance/`](../../docs/assurance/README.md).
 
 | # | Criterion | Enforced by |
 |---|---|---|

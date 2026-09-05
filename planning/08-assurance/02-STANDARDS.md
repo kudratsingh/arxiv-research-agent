@@ -193,10 +193,19 @@ instrument.
 
 ### 2.3 Statistics — the finding that changes the budget
 
-**Pairing is worth an order of magnitude.** To detect a 5-point gain against
-an 80% baseline: roughly **906 items per arm unpaired**, versus roughly **77
-paired** using McNemar at low discordance. Always run the baseline and the
-candidate on the same items.
+**Pairing is worth roughly six-fold.** To detect a 5-point gain against an
+80% baseline: roughly **906 items per arm unpaired**, versus roughly **155
+paired** using McNemar at 80% power. Always run the baseline and the candidate
+on the same items.
+
+> **Corrected during WO-A09.** This page originally quoted **77** against 906,
+> which is not a like-for-like comparison: 77 is the discordant-pairs formula
+> with the power term omitted, and 906 is a full power calculation. Presenting
+> them together overstated the paired advantage by about 2x. The implementer
+> reproduced all three figures and labelled which is which rather than quoting
+> the flattering one. The conclusion — pair the comparison, because at this
+> repository's N it is the difference between a measurable gate and an
+> unmeasurable one — is unchanged and, at 6x, still decisive.
 
 Two further constraints matter at this repository's scale:
 
