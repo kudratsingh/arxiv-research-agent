@@ -79,3 +79,16 @@ that touch more than one:
   tier: `{"T1.verifier": "high"}` is the intended shape. Neither reaches
   a guided-read session, which drives its own graph. Off by default, and
   off is byte-identical (ADR 0085).
+- `orchestration`, `orchestration_max_branches`,
+  `orchestration_max_papers_per_branch`,
+  `orchestration_branch_cost_share` — the branch tier. Under
+  `research_policy=orchestrated_workers` (or tier T2, which
+  `orchestration=on` lets the controller select) the planner's
+  sub-questions become bounded worker branches: each runs the search and
+  reader agents on an isolated state with its own `branch_id`, its own
+  paper cap — which is also its model-call cap, since the reader spends
+  one call per paper — and its own share of `max_cost_usd` bound at the
+  shared choke point, and a merge node unions their evidence tables with
+  provenance before the synthesizer sees them. No new agent and no new
+  prompt: `lead`, `workers` and `merge` make no model call. Off by
+  default (ADR 0086).
