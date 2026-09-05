@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from fastapi import Request
+from pydantic import SecretStr
 
 from src.config import settings
 from src.errors import (
@@ -65,8 +66,8 @@ class ApiKeyPrincipal:
     key_id: str
 
 
-def parse_api_keys(raw: str) -> dict[str, ApiKeyPrincipal]:
-    """Turn the `settings.api_keys` string into a `{secret: principal}` map.
+def parse_api_keys(raw: SecretStr) -> dict[str, ApiKeyPrincipal]:
+    """Turn the `settings.api_keys` secret into a `{secret: principal}` map.
 
     Format: comma-separated `name:secret` pairs. Whitespace around
     each element is stripped. Empty entries are ignored so a trailing
@@ -76,23 +77,55 @@ def parse_api_keys(raw: str) -> dict[str, ApiKeyPrincipal]:
     the name is what `principal_key_id` rows are stamped with under
     ADR 0036, so two secrets sharing a name would silently merge two
     tenants' data.
+
+    Takes a `SecretStr`, not a `str`, since WO-D3. This is the *one*
+    place the inbound keystore is unwrapped, and typing the parameter
+    is what keeps it the one place: the obvious way to write the call
+    site — `parse_api_keys(settings.api_keys.get_secret_value())` —
+    would leave every inbound secret as a local in an app-startup
+    frame, and mypy now refuses it instead of leaving it to review.
+    `get_secret_value()` is called once, and the value it returns
+    never leaves this function.
+
+    The returned map's keys are plain `str` secrets on purpose: it is
+    a process-local dict, `_lookup_principal` reads it as bytes for
+    `hmac.compare_digest`, `load_keystore_from_file` builds the same
+    shape from a JSON file, and `ApiKeyPrincipal` deliberately retains
+    no raw key so a dataclass repr cannot carry one.
+
+    Raises:
+        ValueError: The keystore is malformed. These messages name
+            the entry by *position* and never quote it. An entry with
+            no `:` is by definition a bare secret, and the previous
+            `{entry!r}` put it verbatim into an exception raised
+            during `create_app` — a startup log, a container's stderr,
+            a CI transcript. Position counts every comma-delimited
+            chunk including blank ones, so it matches what an operator
+            can count in the variable itself.
     """
     keys: dict[str, ApiKeyPrincipal] = {}
     seen_names: set[str] = set()
-    for chunk in raw.split(","):
+    for position, chunk in enumerate(raw.get_secret_value().split(","), 1):
         entry = chunk.strip()
         if not entry:
             continue
         if ":" not in entry:
             raise ValueError(
-                f"api_keys entry {entry!r} missing 'name:secret' separator"
+                f"api_keys entry {position} is missing its 'name:secret' "
+                "separator; the value is withheld because an entry with "
+                "no separator is a bare secret"
             )
         name, secret = entry.split(":", 1)
         name = name.strip()
         secret = secret.strip()
-        if not name or not secret:
+        if not name:
             raise ValueError(
-                f"api_keys entry {entry!r} has empty name or secret"
+                f"api_keys entry {position} has an empty principal name"
+            )
+        if not secret:
+            raise ValueError(
+                f"api_keys entry {position} has an empty secret for "
+                f"principal {name!r}"
             )
         if secret in keys:
             raise ValueError(
@@ -115,6 +148,14 @@ def _lookup_principal(
     A plain `keystore.get(presented)` leaks timing information about
     which prefix matched. Compare every configured secret with
     `hmac.compare_digest` and return the first match.
+
+    Both sides are raw `str` and must stay that way. WO-D3 made
+    `settings.api_keys` a `SecretStr` and stopped at `parse_api_keys`
+    on purpose: a `SecretStr` reaching here has no `.encode`, and a
+    `str(SecretStr(...))` reaching here would compare `**********` to
+    the presented header — a comparator that is constant-time,
+    uniform, and wrong. `tests/property/test_property_secret_config.py`
+    pins both directions.
     """
     # Compare bytes, not str: `hmac.compare_digest` raises TypeError
     # on non-ASCII str operands, and Starlette decodes header values

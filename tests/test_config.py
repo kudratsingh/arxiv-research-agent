@@ -635,6 +635,232 @@ class TestThePrincipalSaltIsASecretSetting:
         assert dumped.model_dump()["log_principal_salt"].get_secret_value() == secret
 
 
+class TestTheInboundKeystoreIsASecret:
+    """WO-D3. `api_keys` — the last plain-`str` secret on the way *in*.
+
+    The two conversions before this one protected a single credential
+    each. This field is a whole keystore in one string: every secret
+    the deployment will accept, comma-separated, so the plain `str` it
+    used to be put *all* of them into one repr rather than one.
+
+    It also has a property the other three do not — it is read for its
+    *structure*, not its value. `src/api/auth.py::parse_api_keys`
+    splits it and builds the map every request is authenticated
+    against, so the retype has to prove two things at once: the string
+    is masked everywhere text goes, and the keystore built from it
+    still authenticates the real secret. A conversion that got the
+    first without the second would be a guard that stopped guarding.
+    """
+
+    KEYSTORE = "internal:sk-MUSTNOTAPPEARmustnotappear"
+    SECRET = "sk-MUSTNOTAPPEARmustnotappear"
+
+    def test_the_environment_variable_still_sets_it(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The compatibility requirement in one line. `API_KEYS` is set
+        # by docker-compose.yml, the production overlay, both e2e
+        # overlays and `web/contract/record.sh`; none of them changed.
+        monkeypatch.setenv("API_KEYS", self.KEYSTORE)
+        assert Settings().api_keys.get_secret_value() == self.KEYSTORE
+
+    def test_the_field_is_settable_by_its_own_name(self) -> None:
+        # Nine test modules construct `Settings(api_keys="...")` with a
+        # plain string. pydantic coerces; none of them had to change.
+        built = Settings(api_keys=self.KEYSTORE)
+        assert built.api_keys.get_secret_value() == self.KEYSTORE
+
+    def test_the_default_is_empty(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Auth is off by default and `parse_api_keys` turns an empty
+        # string into an empty map, so importing `src.config` must not
+        # need a keystore.
+        monkeypatch.delenv("API_KEYS", raising=False)
+        assert Settings().api_keys.get_secret_value() == ""
+
+    @pytest.mark.parametrize("blank", ["", "   ", "\n"])
+    def test_a_blank_keystore_is_unset_rather_than_a_keystore(
+        self, monkeypatch: pytest.MonkeyPatch, blank: str
+    ) -> None:
+        """`deploy/pilot/compose.pilot.yml` sets `API_KEYS: ""` on purpose.
+
+        That is how a Compose file spells "the file is the keystore,
+        not the string" (ADR 0037). `parse_api_keys` has always
+        ignored empty entries so the *parse* was never in doubt; the
+        validator is what makes the wrapper agree, so a caller that
+        asks the field rather than the parse gets the same answer.
+        """
+        monkeypatch.setenv("API_KEYS", blank)
+        assert Settings().api_keys.get_secret_value() == ""
+        assert bool(Settings().api_keys) is False
+
+    def test_a_configured_keystore_is_not_stripped(self) -> None:
+        # Only a blank is special, exactly as for the other three
+        # secrets. `parse_api_keys` does its own per-entry stripping;
+        # a second pass here would be a silent second edit of a
+        # credential string.
+        padded = "  internal:sk_a  "
+        assert Settings(api_keys=padded).api_keys.get_secret_value() == padded
+
+    def test_the_keystore_cannot_reach_a_repr(self) -> None:
+        rendered = Settings(api_keys=self.KEYSTORE)
+        assert self.SECRET not in repr(rendered)
+        assert self.SECRET not in str(rendered)
+        assert self.SECRET not in f"{rendered}"
+        assert self.SECRET not in f"{rendered.api_keys}"
+        assert self.SECRET not in repr(rendered.api_keys)
+        assert self.SECRET not in str(rendered.api_keys)
+
+    def test_the_keystore_cannot_reach_a_dump(self) -> None:
+        dumped = Settings(api_keys=self.KEYSTORE)
+        assert self.SECRET not in dumped.model_dump_json()
+        assert self.SECRET not in str(dumped.model_dump())
+        assert self.SECRET not in str(dumped.model_dump(mode="json"))
+        assert dumped.model_dump()["api_keys"].get_secret_value() == self.KEYSTORE
+
+    def test_the_parsed_keystore_still_authenticates_the_real_secret(
+        self,
+    ) -> None:
+        """The half a masking test cannot see, and the reason this is D3.
+
+        `parse_api_keys` is the inbound authentication path. Masking
+        the field and unwrapping it in the wrong place produces a
+        keystore keyed on `**********` — one that masks perfectly and
+        authenticates nobody, or worse, authenticates anyone who sends
+        the mask. Assert against the comparator the request path
+        actually uses rather than against the dict.
+        """
+        from src.api.auth import _lookup_principal, parse_api_keys
+
+        keystore = parse_api_keys(Settings(api_keys=self.KEYSTORE).api_keys)
+        principal = _lookup_principal(self.SECRET, keystore)
+        assert principal is not None
+        assert principal.key_id == "internal"
+        assert _lookup_principal("**********", keystore) is None
+
+    def test_comparing_the_wrapper_to_a_string_is_always_false(self) -> None:
+        # Pinned for the same reason `TestTheApiKeyIsASecret` pins it:
+        # so the next person who writes `settings.api_keys == "..."`
+        # sees why it cannot work and reaches for `get_secret_value()`.
+        wrapped = Settings(api_keys=self.KEYSTORE).api_keys
+        assert wrapped != self.KEYSTORE
+        assert wrapped.get_secret_value() == self.KEYSTORE
+
+
+class TestTheSemanticScholarKeyIsASecret:
+    """WO-D3. The outbound half — a credential this repo *sends*.
+
+    Optional, and free to omit, which is why it sat as a plain `str`
+    for three sprints: an unset key costs nothing but the anonymous
+    rate limit, so nobody had to think about the set case. A set one
+    is a real credential on a real request, and it was printed in full
+    by every `Settings` repr like the other three.
+
+    The truthiness check in `_headers` is the interesting part. `if
+    settings.semantic_scholar_api_key:` kept working across the
+    retype — but only through pydantic's `__len__`, the implementation
+    detail `src/llm.py` already declined to rest a spend guard on.
+    """
+
+    KEY = "s2-MUSTNOTAPPEARmustnotappear"
+
+    def test_the_environment_variable_still_sets_it(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", self.KEY)
+        assert Settings().semantic_scholar_api_key.get_secret_value() == self.KEY
+
+    def test_the_field_is_settable_by_its_own_name(self) -> None:
+        built = Settings(semantic_scholar_api_key=self.KEY)
+        assert built.semantic_scholar_api_key.get_secret_value() == self.KEY
+
+    def test_the_default_is_empty_because_the_key_is_optional(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("SEMANTIC_SCHOLAR_API_KEY", raising=False)
+        assert Settings().semantic_scholar_api_key.get_secret_value() == ""
+
+    @pytest.mark.parametrize("blank", ["", "   ", "\n"])
+    def test_a_blank_key_is_unset_rather_than_a_key(
+        self, monkeypatch: pytest.MonkeyPatch, blank: str
+    ) -> None:
+        """A blank here fails *closed*, and quietly, without the validator.
+
+        `_headers` sends `x-api-key` whenever the key is non-empty, so
+        a whitespace value would put `x-api-key: " "` on every S2
+        request. S2 answers a bad key with 403, `_get_json` swallows a
+        non-2xx as a warning, and the operator's symptom is enrichment
+        that silently returns nothing — rather than the anonymous
+        fallback the unset case is designed to take.
+        """
+        monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", blank)
+        assert Settings().semantic_scholar_api_key.get_secret_value() == ""
+
+    def test_a_configured_key_is_not_stripped(self) -> None:
+        padded = " s2-pad ded\n"
+        built = Settings(semantic_scholar_api_key=padded)
+        assert built.semantic_scholar_api_key.get_secret_value() == padded
+
+    def test_the_key_cannot_reach_a_repr(self) -> None:
+        rendered = Settings(semantic_scholar_api_key=self.KEY)
+        assert self.KEY not in repr(rendered)
+        assert self.KEY not in str(rendered)
+        assert self.KEY not in f"{rendered}"
+        assert self.KEY not in f"{rendered.semantic_scholar_api_key}"
+        assert self.KEY not in repr(rendered.semantic_scholar_api_key)
+        assert self.KEY not in str(rendered.semantic_scholar_api_key)
+
+    def test_the_key_cannot_reach_a_dump(self) -> None:
+        dumped = Settings(semantic_scholar_api_key=self.KEY)
+        assert self.KEY not in dumped.model_dump_json()
+        assert self.KEY not in str(dumped.model_dump())
+        assert self.KEY not in str(dumped.model_dump(mode="json"))
+        assert (
+            dumped.model_dump()["semantic_scholar_api_key"].get_secret_value()
+            == self.KEY
+        )
+
+    def test_masking_does_not_depend_on_the_key_looking_like_a_key(self) -> None:
+        # S2 keys carry no recognisable prefix at all, so the log
+        # layer's `sk-…` shape rule was never going to catch this one.
+        # The wrapper does not care what the value looks like.
+        odd = "MUSTNOTAPPEARmustnotappear0123456789"
+        rendered = Settings(semantic_scholar_api_key=odd)
+        assert odd not in repr(rendered)
+        assert odd not in rendered.model_dump_json()
+
+    def test_the_wrapper_must_not_reach_the_header(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The mask on the wire is the failure this retype could cause.
+
+        `{"x-api-key": settings.semantic_scholar_api_key}` type-checks
+        as `dict[str, str]` nowhere, but `f"{...}"` and `str(...)`
+        both do — and both send `**********` to Semantic Scholar,
+        which 403s, which `_get_json` swallows into a warning. Pin the
+        raw value at the header instead.
+        """
+        from src.tools import semantic_scholar as s2_module
+
+        monkeypatch.setattr(
+            s2_module, "settings", Settings(semantic_scholar_api_key=self.KEY)
+        )
+        assert s2_module._headers() == {"x-api-key": self.KEY}
+
+    def test_no_key_still_means_no_header(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The anonymous fallback, asserted through the unwrapped
+        # emptiness test rather than through `bool(SecretStr(""))`.
+        from src.tools import semantic_scholar as s2_module
+
+        monkeypatch.setattr(
+            s2_module, "settings", Settings(semantic_scholar_api_key="")
+        )
+        assert s2_module._headers() == {}
+
+
 @pytest.mark.unit
 def test_lease_refresh_must_leave_margin_under_the_ttl() -> None:
     """A refresh interval with no margin orphans healthy jobs (ADR 0038).
