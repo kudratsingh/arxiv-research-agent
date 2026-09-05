@@ -247,6 +247,79 @@ Changing verifier or synthesizer prompt text; the supervisor loop; the
 query refiner and reader-recovery flags (held out of the first experiment,
 07 §3); section-scoped rewrite; any eval-harness change.
 
+## Wave 1b — CAP-07, authorized 2026-09-05
+
+### CAP-07 — Mock mode reaches every research agent (the keyless path)
+
+Sequencing: starts when the CAP-01 and CAP-02 pull requests are open, and
+is rebased onto both, because it edits the same agent files. Its own worker,
+its own worktree.
+
+#### Measured problem (assurance lane's frontend survey, 2026-09-05)
+
+- `use_mock_data` is honoured by `src/agents/search.py`, `tutor.py` and
+  `assessment.py` and by nothing else. Planner, reader, synthesizer, critic
+  and verifier call `call_llm_json`, and `src/llm.py` raises when the key is
+  blank. On the seeded stack with no key, `POST /research` returns 202 and
+  four seconds later the job is `failed`, `error_type=upstream_model`,
+  `llm_calls=0`. There is no path to a briefing without a credential, so
+  `docker compose up` cannot demo the product and the scripted research
+  tier has to script the model's words (ADR 0075 §"alternatives").
+- The failure is mislabelled (the provider was never reached; the credential
+  is absent) and `.env.example` ships a non-blank placeholder that passes
+  the not-configured guard. Those two are the assurance lane's S-series
+  work (ruling R3 on the coordination board), not this order.
+
+#### Deliverables
+
+1. Under `settings.use_mock_data`, each of the five research agents returns
+   a deterministic, schema-valid output derived from its inputs, without
+   constructing a model client:
+   - planner: sub-questions and search queries derived from the query text
+     (reuse the existing plan-fallback shape);
+   - reader: one analysis per fixture paper built from its abstract, with
+     evidence claims when the evidence store is on;
+   - synthesizer: a briefing whose citations resolve to the fixture papers
+     and whose sections follow the plan, on both the analyses and the
+     evidence path;
+   - critic: approve at a fixed scripted quality score, no revision;
+   - verifier: `verified=true`, no unsupported claims, no missing evidence.
+   Output shapes are identical to the live path so the graph, SSE frames,
+   export, checkpoints and the eval record layout do not change.
+2. The mock briefing carries a visible first line, "Mock mode: fixture
+   papers, no model call", mirroring the search agent's fixture banner —
+   a mock report must never read as a real one.
+3. `src/llm.py` is not touched; the branch lives in each agent, before the
+   call, guarded by the same setting the search agent reads.
+4. `docs/agents/*.md` for the five agents gain a "Mock mode" line;
+   `docs/eval.md`'s "Mock mode is not an LLM stub" paragraphs are the
+   assurance lane's to update and are listed for it on the board.
+5. ADR: "Mock mode covers the whole research graph".
+
+#### Tests (zero network)
+
+- A new e2e test drives the fixed pipeline under `USE_MOCK_DATA=true` with
+  **no** canned agents and reaches a briefing with citations, `$0.0000`,
+  `llm_calls=0`, through the real graph; the same through the HTTP surface
+  with `ANTHROPIC_API_KEY` blank.
+- The spend guard in `tests/conftest.py` is asserted to never fire on the
+  mock path (no `_get_client` construction).
+- Existing canned-agent e2e tests unchanged and green.
+- The scripted research tier is run, not edited: its node-trajectory and
+  `$0.0000` assertions must still hold. Its content baseline will move,
+  because the words are no longer the harness's; the assurance lane
+  regenerates that baseline in its own follow-up PR (board ruling R2).
+- Golden: with `use_mock_data=false` every agent's request path is
+  byte-identical to before (the CAP-01 golden fixtures cover the gateway;
+  add an agent-level assertion that the mock branch is not entered).
+
+#### Acceptance
+
+`docker compose up` with no key produces a visibly-labelled mock briefing
+end to end; the eval and e2e harnesses can delete no scripted surface yet
+(that is the assurance lane's follow-up) but can run the real nodes at zero
+spend; live behaviour is unchanged and proven.
+
 ## Wave 2 (not authorized yet)
 
 - **CAP-03** orchestrator-workers for T2: sub-question workers with
@@ -257,10 +330,8 @@ query refiner and reader-recovery flags (held out of the first experiment,
 - **CAP-05** SDK 1.x upgrade; lockfile change under ADR 0045's corrected
   procedure; coordinate with both sibling lanes because the lock is shared.
 - **CAP-06** funded live smoke; blocked on the owner's funding decision.
-- **CAP-07** (handed over by the assurance lane, optional) a `use_mock_data`
-  branch on the four research agents so the scripted research tier can
-  delete its scripted surface (ADR 0075 alternatives) and this lane gets a
-  zero-spend end-to-end path through the real nodes.
+- **CAP-07** — promoted to wave 1b on 2026-09-05 (see below); no longer
+  optional.
 
 ## Shared-file arrangements in force
 
