@@ -194,6 +194,78 @@ class TestThePlanBecomesBranches:
         assert repaired[-1]["search_queries"] == ["quantisation error rates"]
         assert len({b["branch_id"] for b in repaired}) == 3
 
+    def test_a_critic_driven_replan_appends_rather_than_renumbering(self) -> None:
+        """The branch set only ever grows, and ids never repeat.
+
+        `route_after_critique` can send a run back for more retrieval,
+        which under this shape re-enters the lead. A pass that renumbered
+        from zero would mint a second `branch_w00` for different work —
+        and RFC 10 §6.4 is explicit that sibling candidates never share
+        an id, so the trajectory would file one branch's evidence under
+        another's.
+        """
+        first = orch.plan_branches(_state())
+        settled = [
+            WorkerBranch({**branch, "status": orch.STATUS_SUCCEEDED})
+            for branch in first
+        ]
+
+        replanned = orch.plan_branches(_state(worker_branches=settled))
+
+        assert [b["branch_id"] for b in replanned] == [
+            "branch_w00",
+            "branch_w01",
+            "branch_w02",
+            "branch_w03",
+        ]
+        assert len({b["branch_id"] for b in replanned}) == 4
+        assert [b["status"] for b in replanned[:2]] == [
+            orch.STATUS_SUCCEEDED,
+            orch.STATUS_SUCCEEDED,
+        ]
+
+    def test_a_spent_repair_does_not_make_the_next_pass_a_repair_pass(
+        self,
+    ) -> None:
+        """`repair_action` outlives the repair; the repair's branch does not.
+
+        Without this the critic asking for retrieval *after* a repair
+        would re-plan against the gap queries the run had already run,
+        rather than against the plan's sub-questions — a re-entry taking
+        its instructions from a decision that was already carried out.
+        """
+        first = orch.plan_branches(_state())
+        after_repair = orch.plan_branches(
+            _state(
+                worker_branches=[
+                    WorkerBranch({**b, "status": orch.STATUS_SUCCEEDED})
+                    for b in first
+                ],
+                repair_action="retrieve_missing_evidence",
+                search_queries=["quantisation error rates"],
+            )
+        )
+        spent = [
+            WorkerBranch({**b, "status": orch.STATUS_SUCCEEDED}) for b in after_repair
+        ]
+
+        replanned = orch.plan_branches(
+            _state(
+                worker_branches=spent,
+                repair_action="retrieve_missing_evidence",
+                search_queries=["quantisation error rates"],
+            )
+        )
+
+        assert [b["branch_id"] for b in replanned[3:]] == [
+            "branch_w03",
+            "branch_w04",
+        ]
+        assert [b["sub_question"] for b in replanned[3:]] == [
+            "mechanisms",
+            "mitigations",
+        ]
+
 
 class TestABranchIsIsolatedFromItsSiblings:
     def test_the_branch_state_is_built_fresh_and_shares_nothing(self) -> None:

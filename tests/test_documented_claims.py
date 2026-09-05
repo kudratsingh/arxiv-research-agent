@@ -191,7 +191,7 @@ _NUMBER_WORDS: Final[dict[str, int]] = {
     "thirty": 30,
     "thirty-four": 34,
     "forty-one": 41,
-    "fifty-two": 52,
+    "fifty-three": 53,
 }
 
 #: The words `README.md` uses for the three standalone storage backends,

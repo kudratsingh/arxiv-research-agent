@@ -247,7 +247,7 @@ def _branch_questions(state: ResearchState) -> list[str]:
 
 
 def _is_repair_pass(state: ResearchState) -> bool:
-    """Whether the lead is being re-entered by a retrieval repair.
+    """Whether the lead is being re-entered *by* a retrieval repair.
 
     CAP-02's repair rewrites `search_queries` to the gaps the verifier
     named and routes back into the pipeline. Under this policy that
@@ -255,9 +255,24 @@ def _is_repair_pass(state: ResearchState) -> bool:
     the merged evidence from the first pass is what the report was built
     on, and a repair that discarded it would be a re-plan wearing a
     repair's name. See ADR 0086 §Decision.
+
+    The third condition is the one worth stating. `repair_action` stays
+    on the state after the repair has run, and the critic can route back
+    here afterwards — so "the action says retrieval repair" is not the
+    same question as "the repair is what sent me here". The repair's own
+    branch settles it: `repair_count` is capped at 1, so once a branch
+    carrying the repair prefix exists the repair is spent, and a later
+    re-entry is the critic asking for retrieval against the plan's
+    sub-questions rather than against gap queries the run already ran.
     """
-    return bool(state.get("worker_branches")) and (
-        str(state.get("repair_action", "") or "") == "retrieve_missing_evidence"
+    branches = list(state.get("worker_branches", []) or [])
+    if not branches:
+        return False
+    if str(state.get("repair_action", "") or "") != "retrieve_missing_evidence":
+        return False
+    return not any(
+        str(branch.get("branch_id", "")).startswith(REPAIR_BRANCH_PREFIX)
+        for branch in branches
     )
 
 
@@ -270,21 +285,26 @@ def plan_branches(state: ResearchState) -> list[WorkerBranch]:
     and what lets an evaluation attribute a result to the branching
     rather than to the scheduler.
 
-    On a repair pass the already-executed branches are kept as they are
-    and the gap queries become *new* branches appended after them, so
-    branch ids stay unique for the life of the run and the merge sees
-    both passes.
+    **The branch set only ever grows.** Every branch the run already has
+    is kept exactly as it is and the new ones are appended after it,
+    numbered from the end. That is not tidiness: the graph can re-enter
+    this node twice — a retrieval repair, and a critic that asked for
+    more retrieval — and a pass that renumbered from zero would mint a
+    second `branch_w00` for different work. RFC 10 §6.4 is explicit that
+    sibling candidates never share an id, and a duplicate branch id
+    would silently file one branch's evidence under another's.
+
+    What a repair pass changes is only *what* the new branches research:
+    the verifier's named gaps rather than the plan's sub-questions.
 
     Args:
         state: The graph state as the planner (or the repair) left it.
 
     Returns:
-        Every branch this run has, planned ones last.
+        Every branch this run has, newly planned ones last.
     """
     repairing = _is_repair_pass(state)
-    existing: list[WorkerBranch] = (
-        list(state.get("worker_branches", []) or []) if repairing else []
-    )
+    existing: list[WorkerBranch] = list(state.get("worker_branches", []) or [])
     if repairing:
         questions = _dedup(_clean(state.get("search_queries", [])))
         prefix = REPAIR_BRANCH_PREFIX

@@ -505,6 +505,85 @@ class TestTheVerificationStageIsArmCUnchanged:
         assert final["draft_report"].strip()
 
 
+    def test_a_critic_asking_for_retrieval_re_enters_the_branch_tier(
+        self,
+        install_settings: Callable[..., Any],
+        research_llm_surface: Callable[..., None],
+        branch_plan: Callable[[], None],
+        verifier_script: Callable[[Sequence[dict[str, Any]]], dict[str, int]],
+    ) -> None:
+        """`route_after_critique`'s `search` target, in a graph with no `search`.
+
+        The critic's decision is unchanged and shared with every other
+        shape — "this run needs more retrieval" — while the node that
+        carries it out is this shape's business. A `search` node
+        reachable only from the critic would be a second, un-branched
+        retrieval path with no provenance, which is what the merge
+        exists to prevent.
+
+        The branch ids are the assertion that matters: the second pass
+        appends rather than renumbering, so no two branches in one run
+        share an id (RFC 10 §6.4).
+        """
+        install_settings(modules=POLICY_SETTINGS_CONSUMERS, **BRANCH_TIER)
+        research_llm_surface(
+            critic=[
+                {
+                    "scores": {
+                        "completeness": 0.4,
+                        "accuracy": 0.8,
+                        "coherence": 0.7,
+                        "depth": 0.4,
+                        "balance": 0.6,
+                    },
+                    "average_score": 0.58,
+                    "critique": "Thin on sources; retrieve more before rewriting.",
+                    "revision_needed": True,
+                    "revision_target": "search",
+                },
+                {
+                    "scores": {
+                        "completeness": 0.9,
+                        "accuracy": 0.9,
+                        "coherence": 0.9,
+                        "depth": 0.8,
+                        "balance": 0.9,
+                    },
+                    "average_score": 0.88,
+                    "critique": "Solid coverage; claims are attributed.",
+                    "revision_needed": False,
+                    "revision_target": "none",
+                },
+            ]
+        )
+        branch_plan()
+        verifier_script([VERIFIER_PASSES])
+
+        app = build_workflow(enable_hitl=False)
+        try:
+            visited, final = _drive(
+                app, initial_research_state("thin", "e2e-branch-replan")
+            )
+        finally:
+            app._checkpointer_exit_stack.close()
+
+        assert visited == [
+            *LEAD_IN,
+            "verify",
+            "critic",
+            "lead",
+            "workers",
+            "merge",
+            "synthesizer",
+            "verify",
+            "critic",
+        ]
+        ids = [b["branch_id"] for b in final["worker_branches"]]
+        assert ids == [f"branch_w0{n}" for n in range(6)]
+        assert len(set(ids)) == 6
+        assert final["repair_count"] == 0, "no repair was spent on a critic re-plan"
+
+
 class TestAFaultInOneBranchStaysThere:
     def test_a_failed_search_costs_one_branch_and_not_the_run(
         self,
