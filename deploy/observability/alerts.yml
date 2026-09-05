@@ -516,17 +516,22 @@ groups:
   # degradation makes the dashboard look better while the product gets
   # worse") had no enforcement in metrics at all.
   #
-  # **Read these two rules as a lower bound, deliberately.** Three rungs
-  # are still not on this counter — their call sites are in
-  # `src/agents/`, another lane's files, and
-  # `tests/test_degradation_ladder.py` names which three and who owns
-  # them. A rule built on a lower-bound numerator can under-fire and
-  # cannot over-fire, which is the right direction for an alert to be
-  # wrong in, but it does mean silence here is not proof of an
-  # undegraded fleet. Rungs 6 and 7 are excluded for the opposite
-  # reason: they have counters of their own (`QueueSaturated`,
+  # **These rules covered five of the eight rungs when they were
+  # written, and cover the whole ladder now.** CAP-08 wired the three
+  # that were left — `reduced_tool`, `partial_results` and
+  # `model_fallback`, whose call sites are all in `src/agents/` — so
+  # the numerator is no longer a lower bound by construction, and the
+  # thresholds below were set against the smaller one. Expect a higher
+  # baseline: the reader's abstract-only fallback is the loudest of the
+  # three and `partial_results` counts once per paper, not once per
+  # job. Re-read the 0.432 against a week of real data before treating
+  # a firing as an incident. Rungs 6 and 7 are still excluded, for the
+  # opposite reason: they have counters of their own (`QueueSaturated`,
   # `RateLimiterFellBackToMemory`, `CostCapStorm`), and counting them
-  # twice would let two numbers disagree about one event.
+  # twice would let two numbers disagree about one event. Silence here
+  # is still not proof of an undegraded fleet — `make eval` and
+  # `make run` install no meter provider at all (`docs/reliability.md`
+  # §7 item 6).
   - name: quality
     rules:
       - alert: QualityBudgetBurnFast

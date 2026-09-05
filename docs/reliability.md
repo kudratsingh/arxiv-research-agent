@@ -257,7 +257,7 @@ measurement behind it is a slogan.
 | **Tool success** | tool executions with `error.type = "none"` | `gen_ai.execute_tool.duration` count, by `gen_ai.tool.name` | **≥ 95%** |
 | **Spend, no cap trips** | jobs not ending at a ceiling / terminal jobs | `research_jobs_total{error_type="cost_budget_exceeded"}` and `{status="degraded_close"}` | cap trips **< 1%** |
 | **Refusal rate** | 429s / accepted requests | `rate_limit_rejections_total`, by limiter backend | **< 1%**, and `backend="memory"` is **0** while configured for Redis |
-| **Quality** | jobs served with no degradation / terminal jobs | `research_degradations_total`, cut by rung and component, against `research_jobs_total` | **≥ 97%** of jobs take no rung of §5, **declared** and partial — see below |
+| **Quality** | jobs served with no degradation / terminal jobs | `research_degradations_total`, cut by rung and component, against `research_jobs_total` | **≥ 97%** of jobs take no rung of §5, **declared** — and since CAP-08 computed over the whole ladder, see below |
 
 ### The quality row is the anchor, and it is the newest
 
@@ -277,12 +277,15 @@ weeks. A true good-events / valid-events form would need a per-job
 degraded flag on the terminal record; that is §7 item 9, and it is a
 change to the job record rather than to this instrument.
 
-**Three of the eight rungs are not in it yet** (§5's rungs 2, 3 and 5;
-their call sites are another lane's files). So the measured number is a
-*lower bound* on degradation and the SLI is optimistic by exactly the
-amount those three rungs fire — which, for the reader's abstract-only
-fallback, is likely not small. Rungs 6 and 7 are in the ladder but on
-their own counters, so a complete query is:
+**All six rungs that belong on this counter are now in it.** Rungs 2, 3
+and 5 spent one wave log-only, because every one of their call sites is
+in `src/agents/` and the work order that built the instrument held no
+fence exception for that directory; CAP-08 wired them. The number is
+therefore no longer a lower bound *by construction*, and the reader's
+abstract-only fallback — the row §5 calls the named failure of this
+document, and the one likeliest to fire often — is in the numerator.
+Rungs 6 and 7 are in the ladder but on their own counters, so a complete
+query is still a sum over three instruments:
 
 ```promql
 sum(rate(research_degradations_total[5m]))
@@ -290,9 +293,19 @@ sum(rate(research_degradations_total[5m]))
   + sum(rate(research_jobs_total{status="degraded_close"}[5m]))
 ```
 
+Two things still keep the measured number below the true one, and they
+are narrower than the gap they replace. A degradation taken under `make
+eval` or `make run` is counted nowhere, because those entry points
+install no meter provider (§7 item 6) — a property of where the code
+runs rather than of which rungs are wired. And the ladder is the set of
+degradations somebody has *named*; a new one is invisible until it gets
+a rung, which is what §5's table and `tests/test_degradation_ladder.py`
+exist to force.
+
 The 97% is **declared, not earned**, on the same terms as every other
-objective in this table and now for one extra reason: an objective
-computed from a lower bound cannot be missed by the amount it is wrong.
+objective in this table — but it is now declared against a numerator
+that counts every rung of the published ladder, which is the difference
+between an objective that could be missed and one that could not.
 
 `03-ARCHITECTURE.md` §5.4 writes that first row as "on `/api/*`". The
 routes are mounted at the root and it is the *web tier* that serves them
@@ -412,28 +425,45 @@ only in the code.
 | Rung | Token | What it does here | Marker | On a metric? | User told? |
 |---|---|---|---|---|---|
 | **1. Cached / stale** | `cache_stale` | Paper text and embeddings served from the Postgres caches | `paper_cache_selected`, `embedding_cache_selected` at startup; `paper_cache_get_failed` / `embedding_cache_get_failed` on failure | **yes** — `research_degradations_total{rung="cache_stale"}`, by `component` | no — **and no age is disclosed** |
-| **2. Reduced tool** | `reduced_tool` | Search proceeds on partial arXiv results, keeps prior papers, or serves the labelled fixture set | `search_partial_arxiv_failure`, `search_empty_keeping_prior_papers`, `search_mock_data_served`, `search_query_cap_applied` | no — the token exists, the call site is `src/agents/search.py` and belongs to the capability lane | only for the fixture path, whose banner says so |
-| **3. Partial with confidence** | `partial_results` | **The reader falls back to abstract-only when full text cannot be read** | `reader_degraded_to_abstract_only`, `reader_paper_abstract_only` | no — `src/agents/reader.py`, capability lane | **no** |
+| **2. Reduced tool** | `reduced_tool` | Search proceeds on partial arXiv results, keeps prior papers, or serves the labelled fixture set | `search_partial_arxiv_failure`, `search_empty_keeping_prior_papers`, `search_mock_data_served`, `search_query_cap_applied` | **yes** — `research_degradations_total{rung="reduced_tool", component="search"}`, once per reduction (CAP-08) | only for the fixture path, whose banner says so |
+| **3. Partial with confidence** | `partial_results` | **The reader falls back to abstract-only when full text cannot be read** | `reader_degraded_to_abstract_only`, `reader_paper_abstract_only` | **yes** — `research_degradations_total{rung="partial_results", component="reader"}`, once **per paper** (CAP-08) | **no** |
 | **4. Streaming partials** | `streaming_partial` | SSE delivers what exists when the stream deadline arrives | `sse_stream_deadline_reached`, `sse_terminal_frame_flushed_at_deadline` | **yes** — `research_degradations_total{rung="streaming_partial"}`, on the deadline only | implicitly, by what arrives |
-| **5. Model fallback** | `model_fallback` | Supervisor, verifier and planner fall back to a default action when the model's output is unusable. **Not a cheaper-model fallback — there is no such path** | `supervisor_llm_failed_fallback_to_default`, `verifier_llm_failed_fallback`, `planner_plan_fallback_to_query`, `synthesizer_retrying_malformed_response` | no — four call sites in `src/agents/`, capability lane | no |
+| **5. Model fallback** | `model_fallback` | Supervisor, verifier and planner fall back to a default action when the model's output is unusable. **Not a cheaper-model fallback — there is no such path** | `supervisor_llm_failed_fallback_to_default`, `verifier_llm_failed_fallback`, `planner_plan_fallback_to_query`, `synthesizer_retrying_malformed_response` | **yes** — `research_degradations_total{rung="model_fallback"}`, by `component` — `planner`, `supervisor`, `verifier`, `synthesizer` (CAP-08) | no |
 | **6. Bounded queue** | `bounded_queue` | Work waits behind `API_MAX_CONCURRENT_JOBS`; `/readyz` returns 503 so an orchestrator can drain | `research_queue_depth`, `research_queue_saturation_ratio`, `research_job_queue_wait_seconds` | **yes**, on its own instruments — deliberately not also on the degradation counter | no, but the wait is real |
 | **6b. Weakened guarantee** | `weakened_guarantee` | The Redis rate limiter fails open to a per-worker fallback, so the fleet-wide cap becomes N × the configured limit | `resilience_degraded` with `component`, `reason` | **yes** — `research_degradations_total{rung="weakened_guarantee"}`, alongside the in-process counter and the log line (ADR 0068, ADR 0081) | no |
 | **7. Honest refusal** | `refusal` | 429 from the rate limiter; 503 from readiness; a cost ceiling refusing or closing politely | `rate_limit_rejections_total`, `research_jobs_total{error_type="cost_budget_exceeded"}`, `{status="degraded_close"}`, `{error_type="session_cost_cap_refused"}` | **yes**, on its own instruments — deliberately not also on the degradation counter | **yes** — this is the one rung that is honest by construction |
 
 ### Read that table's fifth column
 
-**Five rungs out of eight are on a metric**, where two were when this
-page was written. Three new ones arrived with ADR 0081's
-`research_degradations_total`; the other two were always instrumented on
-counters of their own.
+**Every rung on this ladder is on a metric**, where two were when this
+page was written. Six of them are on `research_degradations_total`
+(ADR 0081, then CAP-08); the other two were always instrumented on
+counters of their own, and are excluded from this one deliberately —
+see below.
 
-The three that are still log-only are rungs 2, 3 and 5, and the reason
-is a fence rather than a design: every one of their call sites lives in
-`src/agents/`, which belongs to the capability lane. Their rung tokens
-exist, `tests/test_degradation_ladder.py` records exactly which three
-they are and who owns them, and that test fails the moment one gains an
-emitter without this column being corrected — so the remaining gap is
-one that closes itself rather than one that has to be remembered.
+It got there in two steps, and the second one is the part worth keeping
+on the page. ADR 0081 built the counter and reached five rungs. The
+remaining three — 2, 3 and 5 — stayed log-only for a fence rather than
+for a design: every one of their call sites lives in `src/agents/`,
+which belonged to another lane, and the work order declined to cross
+rather than take them. What made that a deferral instead of a
+disappearance was that
+[`tests/test_degradation_ladder.py`](../tests/test_degradation_ladder.py)
+named all three with their owning file and lane, and asserted the set in
+**both** directions. So when CAP-08 wired the nine call sites, the suite
+went red on the same commit and the failure message said which column of
+this table to correct. The gap closed itself, which is what that
+declaration is for; it is empty now and kept, because it is the shape
+the next unmeasured rung gets declared in.
+
+The rungs are counted at different granularities, and the table says
+which. Rung 3 counts **per paper**, at the same granularity
+`paper_cache` already counts at, because the run-level WARNING fires
+only past `ABSTRACT_ONLY_WARN_THRESHOLD` and a rung counted only when it
+is loud is a lower bound again. Rung 5 counts once per substitution:
+the supervisor's three fallback branches converge on one function and
+are counted there, so three distinct log events describe one event and
+one number counts it.
 
 ### Why rungs 6 and 7 are not on the degradation counter too
 
@@ -455,7 +485,13 @@ analysis was made from abstracts.
 Fixing it means disclosing the degradation in the report itself, which
 is a product change and not this document's. What this document can do
 is refuse to let it be invisible, which is why it is row 3 of a table
-rather than a line in a log nobody reads.
+rather than a line in a log nobody reads — and since CAP-08 it is also
+a number: `research_degradations_total{rung="partial_results",
+component="reader"}`, one per paper. The **User told?** column on that
+row still says **no**, and it is the last one that does for a reason
+this page can act on. Measured and undisclosed is a strictly better
+position than unmeasured and undisclosed, and it is not the finished
+one.
 
 ## 6. The runbooks
 
@@ -486,25 +522,30 @@ cannot measure, with the reason why. These are those, each with the one
 instrument that would close it.
 
 1. ~~**The quality SLI has no instrument for most of the ladder.**~~
-   **Mostly closed by WO-D5 (ADR 0081).**
+   **Closed — by WO-D5 (ADR 0081) and CAP-08 together.**
    `research_degradations_total{rung,component}` exists, is bumped from
    `record_degradation` and from the cache, streaming and rate-limiter
-   rungs directly, and §3 now carries a Quality row computed from it.
-   The attributes are a closed set for the third time in this repository
+   rungs directly, and §3 carries a Quality row computed from it. The
+   attributes are a closed set for the third time in this repository
    (`ERROR_CODES`, `KNOWN_EVENTS`, and now `DEGRADATION_RUNGS`), because
    an open string used as a metric attribute is unbounded cardinality.
+   CAP-08 wired the last three rungs — §5's 2, 3 and 5, nine call sites
+   in `src/agents/` — so the numerator now covers the whole published
+   ladder and the SLI is no longer a lower bound by construction.
 
-   Two things are worth keeping on the page rather than declaring done.
-   The instrument was specified here as `{component,reason}` and shipped
-   as `{rung,component}`: `reason` stays on the log line, because the
-   metric's job is "how much, at which rung" and the log's is "why" —
-   the same split `record_rate_limit_rejection` makes for `key_id`.
-   And **three of the eight rungs are still log-only** — §5's rungs 2, 3
-   and 5, whose only call sites are in `src/agents/`, another lane's
-   files. `tests/test_degradation_ladder.py` names those three and their
-   owner and goes red when one is wired, so this entry shrinks by test
-   failure rather than by somebody remembering. Until then the quality
-   SLI is a **lower bound**, which §3's row says out loud.
+   Two things are worth keeping on the page rather than deleting with
+   the entry. The instrument was specified here as `{component,reason}`
+   and shipped as `{rung,component}`: `reason` stays on the log line,
+   because the metric's job is "how much, at which rung" and the log's
+   is "why" — the same split `record_rate_limit_rejection` makes for
+   `key_id`. And the way the last three rungs closed is the part worth
+   copying: `tests/test_degradation_ladder.py` named them with their
+   owning lane and asserted the set in both directions, so the wiring
+   turned the suite red and the failure said which column of §5 to
+   correct. This entry did not shrink because somebody remembered it.
+   Item 6 below is what still bounds the number: an eval campaign
+   installs no meter provider, so a rung taken under `make eval` is a
+   real degradation counted nowhere.
 
 2. **Cost per job cannot be computed.** `03-ARCHITECTURE.md` §5.4 lists
    "p95 `cost_usd` by kind" as an SLI, and no instrument supports it:
