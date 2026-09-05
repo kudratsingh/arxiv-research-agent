@@ -48,7 +48,7 @@ number moves:
 
 ## Where this test deliberately stops
 
-Three kinds of claim are not mechanisable and are not weakened here to
+Four kinds of claim are not mechanisable and are not weakened here to
 make one pass. Weakening prose until a test can pass it would be a worse
 outcome than the drift this file exists to catch, so the gaps stay in the
 index instead:
@@ -59,17 +59,40 @@ index instead:
    modelled band is computed from) and the presence of the qualifier that
    says the band is modelled. That second check is a tripwire against the
    qualifier being deleted, not a proof of anything.
-2. **The nightly eval's state.** `.github/workflows/eval-nightly.yml` is
-   disabled with `disabled_manually`, which is a GitHub-side attribute of
-   the repository and is not in the tree at all — the file itself still
-   carries a live `cron`. A test reading the file would assert the
-   opposite of the truth. A24/A25 in the index stay unenforced with that
-   reason attached.
-3. **Anything requiring a browser or a paid call.** The Vitest figure is
-   checked against `web/vitest.config.mts`'s own record of it, not against
-   a run: this is a Python tier and running the web suite from it would be
-   both slow and a lie about what was measured. The check is therefore an
-   *agreement between two documents*, and the index says so.
+2. **The nightly eval's state**, as distinct from what the repository
+   *says* about it. `disabled_manually` is an attribute GitHub stores
+   against the workflow and it is not in the tree at all, while the
+   workflow file still carries a `cron:` that does not fire. WO-B2 made
+   both nightly files say that about themselves in prose, which is what
+   `TestTheNightlyEvalState` reads: the three documents that describe the
+   nightly — `README.md`, `docs/eval.md` and the workflow — are held to
+   one story, so re-enabling the workflow and updating only one of them
+   goes red. That is an agreement between documents and not a probe of
+   GitHub; nothing here can tell you the workflow is really off, and the
+   54 failed runs live in Actions history where no test reaches them.
+3. **Whether a feature has a flag at all.** `TestTheFlagSet` enumerates
+   `Settings`' `enable_*` fields and holds the README's flag section
+   against them in both directions, which catches a flag nobody
+   documented. It cannot catch a *feature* nobody flagged, because
+   nothing can enumerate features. R15 stays Partial for that reason.
+4. **Anything requiring a browser, a paid call, or a screenshot.** The
+   Vitest figure is checked against `web/vitest.config.mts`'s own record
+   of it, not against a run: this is a Python tier and running the web
+   suite from it would be both slow and a lie about what was measured.
+   The check is therefore an *agreement between two documents*, with
+   two legs added to keep the source of truth from rotting quietly: the
+   re-seed note is pinned to the coverage thresholds it claims to have
+   measured, so a re-seed that skips the note fails rather than leaving
+   the README agreeing with a stale source, and the note's *file* count
+   is banded against the files actually on disk, because the other way
+   a count of record goes stale is by ageing. On the tree WO-C2 was
+   written against, the record (3,380 tests across 155 files) sits 97
+   tests and 3 files behind a real run (3,477 across 158) — within the
+   band, and a measured illustration of why the tests half of that
+   figure is called an agreement and not a measurement. Likewise
+   `TestTheScreenshotMechanism` checks the mechanism that makes the
+   screenshots free (the seed script, the pinned sentinel) and not the
+   committed PNGs, which nothing in this repository binds to a run.
 
 ## The one expensive test in here
 
@@ -87,7 +110,13 @@ Mutation-check: restore any of the five sentences this module was written
 against — "3,277 tests", "2,970 Vitest tests across 136 files", "the
 `e2e` cassette tier is registered but not built", "nothing else in
 `run_job` branches on the kind", "nine OTel instruments" — and exactly one
-test here goes red for each.
+test here goes red for each. WO-C2 adds five more: restore "so Sprint 1
+behavior stays byte-identical" without the three backends it now names,
+delete the enumeration of the eleven `enable_*` flags outside the table,
+put the README's nightly paragraph back to "the workflow is wired" while
+`docs/eval.md` says disabled, drop the seed script's
+Postgres-and-Redis-only property, or re-seed `web/vitest.config.mts`'s
+coverage thresholds without recording the measurement they came from.
 """
 
 from __future__ import annotations
@@ -112,9 +141,14 @@ _ROOT: Final = pathlib.Path(__file__).resolve().parents[1]
 _README: Final = _ROOT / "README.md"
 _ARCHITECTURE: Final = _ROOT / "docs" / "architecture.md"
 _CI_WORKFLOW: Final = _ROOT / ".github" / "workflows" / "ci.yml"
+_EVAL_NIGHTLY: Final = _ROOT / ".github" / "workflows" / "eval-nightly.yml"
+_LIGHTHOUSE_NIGHTLY: Final = _ROOT / ".github" / "workflows" / "nightly.yml"
+_EVAL_DOC: Final = _ROOT / "docs" / "eval.md"
 _VITEST_CONFIG: Final = _ROOT / "web" / "vitest.config.mts"
 _DECISIONS: Final = _ROOT / "docs" / "decisions"
 _E2E_DIR: Final = _ROOT / "tests" / "e2e"
+_SEED_SCRIPT: Final = _ROOT / "web" / "e2e" / "fixtures" / "seed.sh"
+_COMPOSE_E2E: Final = _ROOT / "web" / "e2e" / "support" / "compose.e2e.yml"
 
 #: How far the README's Python floor is allowed to lag the collected
 #: count before it stops counting as a floor. Wide enough that ordinary
@@ -129,10 +163,39 @@ _FLOOR_BAND: Final = 500
 _NUMBER_WORDS: Final[dict[str, int]] = {
     "four": 4,
     "five": 5,
+    "eight": 8,
     "nine": 9,
+    "eleven": 11,
     "sixteen": 16,
+    "nineteen": 19,
     "twenty-one": 21,
 }
+
+#: The words `README.md` uses for the three standalone storage backends,
+#: mapped to the values `src/config.py` actually ships. Same rule as
+#: `_NUMBER_WORDS`: a word this map does not know is a failure, not a
+#: silently skipped sentence.
+_BACKEND_WORDS: Final[dict[str, str]] = {
+    "in-memory": "memory",
+    "Redis": "redis",
+    "SQLite": "sqlite",
+    "Postgres": "postgres",
+    "disk": "disk",
+}
+
+#: How far the Vitest count of record may fall behind the number of
+#: test files actually in `web/`. The recorded count moves only on a
+#: coverage re-seed, so it is *expected* to lag — the band is what
+#: separates lagging from abandoned, exactly as `_FLOOR_BAND` does for
+#: the Python floor. Roughly a work order's worth of new files.
+_VITEST_FILE_BAND: Final = 15
+
+#: How far a seeded coverage threshold may sit below the measurement its
+#: own re-seed note records. `web/vitest.config.mts` seeds three of its
+#: four columns *at* the measurement and gives `functions` a little
+#: headroom because that column's denominator moves with which stories
+#: run; the widest headroom in the file's history is 0.33 points.
+_THRESHOLD_HEADROOM: Final = 0.5
 
 
 def _prose(path: pathlib.Path) -> str:
@@ -144,8 +207,16 @@ def _prose(path: pathlib.Path) -> str:
     pattern matching — which `_claim` would then report as a missing
     sentence rather than as a stale number. Collapsing whitespace first
     makes the checks depend on the words and not on the wrapping.
+
+    Blockquote markers come off for the same reason. The screenshot
+    note is a hard-wrapped `>` block, so without this every line break
+    inside it would put a `>` in the middle of a sentence, at a column
+    nobody chose.
     """
-    return re.sub(r"\s+", " ", path.read_text(encoding="utf-8"))
+    unquoted = re.sub(
+        r"^\s*> ?", "", path.read_text(encoding="utf-8"), flags=re.MULTILINE
+    )
+    return re.sub(r"\s+", " ", unquoted)
 
 
 def _readme() -> str:
@@ -267,17 +338,171 @@ def _last_vitest_reseed() -> tuple[int, int]:
     Comment prefixes are stripped before matching because the note wraps:
     `3,380` and `tests across 155 files` are on different lines.
     """
-    text = _VITEST_CONFIG.read_text(encoding="utf-8")
-    flattened = " ".join(
-        re.sub(r"^\s*//\s?", "", line) for line in text.splitlines()
-    )
-    notes = re.findall(r"([\d,]+) tests across (\d+) files", flattened)
+    notes = re.findall(r"([\d,]+) tests across (\d+) files", _flattened_vitest_config())
     assert notes, (
         "web/vitest.config.mts records no `N tests across M files` note, so "
         "the README's Vitest figure has no source of truth in the tree"
     )
     tests, files = notes[-1]
     return _digits(tests), int(files)
+
+
+def _flattened_vitest_config() -> str:
+    """The Vitest config with comment prefixes stripped, as one line."""
+    text = _VITEST_CONFIG.read_text(encoding="utf-8")
+    return " ".join(re.sub(r"^\s*//\s?", "", line) for line in text.splitlines())
+
+
+#: `2874/2928 statements, 2002/2128 branches, …` — the covered-over-total
+#: pairs a re-seed note records for the run it measured.
+_MEASURED_COLUMNS: Final = re.compile(
+    r"(\d+)/(\d+) statements, (\d+)/(\d+) branches, "
+    r"(\d+)/(\d+) functions, (\d+)/(\d+) lines"
+)
+
+#: The four numbers the config actually gates on.
+_SEEDED_THRESHOLDS: Final = re.compile(
+    r"thresholds:\s*\{\s*statements:\s*([\d.]+),\s*branches:\s*([\d.]+),\s*"
+    r"functions:\s*([\d.]+),\s*lines:\s*([\d.]+),?\s*\}"
+)
+
+
+def _last_vitest_measurement() -> dict[str, float]:
+    """The percentages the *last* re-seed note says it measured.
+
+    Read from the raw counts the note records rather than from the
+    percentages it also quotes, because the counts are what a re-seeder
+    copies out of `coverage-summary.json` and the percentages are the
+    part they round. Anchored to the last `N tests across M files` note —
+    the same note `_last_vitest_reseed` calls the count of record — so
+    the suite size, the measurement and the seeded thresholds are one
+    fact rather than three that can drift apart.
+    """
+    flattened = _flattened_vitest_config()
+    anchors = list(re.finditer(r"([\d,]+) tests across (\d+) files", flattened))
+    assert anchors, "web/vitest.config.mts records no `N tests across M files` note"
+    measured = _MEASURED_COLUMNS.search(flattened, anchors[-1].end())
+    assert measured is not None, (
+        "the last `N tests across M files` note in web/vitest.config.mts "
+        "records no `covered/total` counts after it, so the coverage "
+        "thresholds below it have nothing to be checked against. A re-seed "
+        "note is the only source of truth for both numbers this repository "
+        "quotes about the web suite; write it in the same shape as the one "
+        "it replaces."
+    )
+    groups = [int(group) for group in measured.groups()]
+    return {
+        column: 100.0 * covered / total
+        for column, (covered, total) in zip(
+            ("statements", "branches", "functions", "lines"),
+            zip(groups[0::2], groups[1::2], strict=True),
+            strict=True,
+        )
+    }
+
+
+def _seeded_vitest_thresholds() -> dict[str, float]:
+    seeded = _SEEDED_THRESHOLDS.search(_VITEST_CONFIG.read_text(encoding="utf-8"))
+    assert seeded is not None, (
+        "web/vitest.config.mts declares no four-column `thresholds:` block"
+    )
+    return {
+        column: float(value)
+        for column, value in zip(
+            ("statements", "branches", "functions", "lines"),
+            seeded.groups(),
+            strict=True,
+        )
+    }
+
+
+# ---------------------------------------------------------------------------
+# `Settings` as the sentences describe it
+# ---------------------------------------------------------------------------
+
+
+def _declared_defaults() -> dict[str, object]:
+    """Every `Settings` field's *declared* default.
+
+    `Settings()` would read the ambient environment, and a developer with
+    `JOB_STORE=redis` exported would then be told the README is wrong
+    about what the repository ships. The field defaults are the shipped
+    values and nothing else can move them.
+    """
+    from src.config import Settings
+
+    return {name: field.default for name, field in Settings.model_fields.items()}
+
+
+def _enable_flags() -> dict[str, bool]:
+    return {
+        name: bool(default)
+        for name, default in _declared_defaults().items()
+        if name.startswith("enable_")
+    }
+
+
+def _flag_section() -> tuple[list[str], list[str]]:
+    """`README.md`'s flag section, split into (table flags, prose flags).
+
+    The table is the workflow-behavior set the section is about; the
+    prose around it is where every other `enable_*` flag has to be
+    named. Splitting on the leading `|` is what lets one check assert
+    that the two together are all of them.
+    """
+    lines = _README.read_text(encoding="utf-8").splitlines()
+    starts = [i for i, line in enumerate(lines) if line.startswith("## What lives behind")]
+    assert starts, "README.md no longer has a `## What lives behind flags` section"
+    start = starts[0]
+    end = next(
+        (i for i, line in enumerate(lines[start + 1 :], start + 1) if line.startswith("## ")),
+        len(lines),
+    )
+    table: list[str] = []
+    prose: list[str] = []
+    for line in lines[start:end]:
+        (table if line.lstrip().startswith("|") else prose).extend(
+            re.findall(r"`(enable_[a-z_]+)`", line)
+        )
+    return table, prose
+
+
+def _vitest_files() -> int:
+    """How many files `vitest run` would collect under `web/`.
+
+    The two globs are mirrored from the two projects rather than
+    guessed: `web/vitest.config.mts`'s `unit` project collects
+    `tests/**/*.test.{ts,tsx}`, and `.storybook/main.ts` hands the
+    `storybook` project `components/**/*.stories.@(ts|tsx)`. Their sum
+    is the "Test Files" line a run prints, which is what the README's
+    `across N files` is about.
+    """
+    web = _ROOT / "web"
+    unit = [
+        path
+        for suffix in ("*.test.ts", "*.test.tsx")
+        for path in web.joinpath("tests").rglob(suffix)
+    ]
+    stories = [
+        path
+        for suffix in ("*.stories.ts", "*.stories.tsx")
+        for path in web.joinpath("components").rglob(suffix)
+    ]
+    return len(unit) + len(stories)
+
+
+def _seed_script_body() -> str:
+    """`seed.sh` with its whole-line comments removed.
+
+    The comments are where the script *describes* `POST /research`
+    ("it never calls" it), so a scan that kept them would find the
+    endpoint in the file that proves it is never called.
+    """
+    return "\n".join(
+        line
+        for line in _SEED_SCRIPT.read_text(encoding="utf-8").splitlines()
+        if not line.lstrip().startswith("#")
+    )
 
 
 def _model_prices() -> dict[str, dict[str, float]]:
@@ -406,6 +631,78 @@ class TestTheVitestCounts:
             f"{recorded[1]}. Re-seeding those thresholds and leaving this "
             "sentence alone is how the previous figure got two re-seeds "
             "behind."
+        )
+
+    def test_the_recorded_file_count_has_not_fallen_behind_the_tree(self) -> None:
+        """The other way that source of truth goes stale: by ageing.
+
+        The check above catches a re-seed that edited the thresholds and
+        skipped the note. This catches the note simply being left where
+        it was while `web/` grew — the count of record moves only on a
+        coverage re-seed, so some lag is by design, and a *band* is what
+        separates lag from abandonment. The tests half of the figure
+        cannot be checked this way (nothing here runs Vitest), but the
+        files half is on disk, so half of the number stops being purely
+        an agreement between two documents.
+        """
+        _, recorded = _last_vitest_reseed()
+        present = _vitest_files()
+        assert recorded <= present, (
+            f"web/vitest.config.mts records a measurement over {recorded} "
+            f"files; `web/` holds {present}. A note claiming more files than "
+            "exist is a note taken on a different tree."
+        )
+        assert present - recorded <= _VITEST_FILE_BAND, (
+            f"the Vitest count of record was measured over {recorded} files "
+            f"and `web/` now holds {present}, which is more than the "
+            f"{_VITEST_FILE_BAND} files this file allows a record to lag by. "
+            "The number the README quotes has stopped describing the suite: "
+            "re-seed the coverage thresholds, write the note with the new "
+            "`N tests across M files`, and update the README sentence. This "
+            "firing is not a defect — it is the occasional nudge the "
+            "equality design pays for the rest of the time."
+        )
+
+    def test_the_reseed_note_is_the_thresholds_it_seeded(self) -> None:
+        """The source of truth has to be able to go stale *visibly*.
+
+        The check above makes the README agree with a comment. A comment
+        is not authoritative on its own: a re-seed that edited the four
+        `thresholds:` numbers and skipped the note would leave the
+        README agreeing with a source that no longer describes the
+        suite, and both checks would stay green.
+
+        This is what binds the note to something executable. Every
+        re-seed in this file's history has recorded the covered/total
+        counts it measured, and the thresholds are seeded *at* those
+        counts or a little under — three columns to the decimal, and
+        `functions` with the headroom its note explains. So a threshold
+        above the measurement its own note records is a note left
+        behind by the numbers it is supposed to justify, and a threshold
+        far below it is a floor nobody re-seeded.
+        """
+        measured = _last_vitest_measurement()
+        seeded = _seeded_vitest_thresholds()
+        stale = []
+        for column, threshold in seeded.items():
+            if threshold > measured[column] + 1e-9:
+                stale.append(
+                    f"{column}: gated at {threshold} but the last re-seed note "
+                    f"measured {measured[column]:.2f}"
+                )
+            elif measured[column] - threshold > _THRESHOLD_HEADROOM:
+                stale.append(
+                    f"{column}: gated at {threshold}, {measured[column] - threshold:.2f} "
+                    f"below the {measured[column]:.2f} the note measured"
+                )
+        assert not stale, (
+            "web/vitest.config.mts's coverage thresholds and its last re-seed "
+            "note disagree:\n  " + "\n  ".join(stale) + "\nThe note is the only "
+            "source of truth for the web suite's size and coverage — the "
+            "README quotes it and nothing runs Vitest from this tier — so a "
+            "re-seed writes both or neither. Record the new counts in the "
+            "same shape as the note above the thresholds, including the "
+            "`N tests across M files` line the README is checked against."
         )
 
 
@@ -623,3 +920,365 @@ class TestTheAdrIndex:
                 if not (_DECISIONS / target).is_file():
                     missing.append(f"{label} -> {target}")
         assert not missing, f"documents link ADRs that do not exist: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# R11 — the standalone storage defaults
+# ---------------------------------------------------------------------------
+
+
+class TestTheStandaloneDefaults:
+    """Three defaults that existed only as Pydantic field values.
+
+    `tests/test_config.py::TestDefaults::test_standalone_storage_defaults`
+    is the other half of this and asserts the same three values as the
+    config surface's own contract. The two are not a duplicate: that one
+    says what the repository ships, this one says the README describes
+    what the repository ships, and it reads the backends out of the
+    sentence so there is no second copy of them here.
+
+    The sentence's other half — that Sprint 1 behaviour stays
+    *byte-identical* — was removed rather than mechanised. Nothing in
+    this repository retains a Sprint 1 artifact to diff against and the
+    outputs are model-generated, so byte-identity was never measurable
+    and the claim could not be made true by any test. What replaced it
+    is the configuration claim, which is checkable and is checked here.
+    """
+
+    def test_the_readme_names_the_three_backends_the_settings_ship(self) -> None:
+        match = _claim(
+            r"defaults to an ([\w-]+) job store, ([\w-]+) checkpoints and a "
+            r"([\w-]+) paper cache",
+            _readme(),
+            "README.md",
+        )
+        defaults = _declared_defaults()
+        wrong = []
+        fields = ("job_store", "checkpoint_backend", "paper_cache")
+        for word, field in zip(match.groups(), fields, strict=True):
+            claimed = _BACKEND_WORDS.get(word)
+            assert claimed is not None, (
+                f"README.md calls the {field} default {word!r}, which "
+                "`_BACKEND_WORDS` does not know. Add it there in the same "
+                "commit rather than letting the check pass over a value it "
+                "cannot read."
+            )
+            if defaults[field] != claimed:
+                wrong.append(f"{field}: README says {claimed!r}, ships {defaults[field]!r}")
+        assert not wrong, (
+            "the standalone storage defaults have moved out from under the "
+            "README:\n  " + "\n  ".join(wrong) + "\nThis sentence is what a "
+            "reader trusts when they run the CLI with no Redis and no "
+            "Postgres, and it went unread by any test until WO-C2."
+        )
+
+    def test_none_of_the_three_needs_a_service(self) -> None:
+        """The point of the sentence, stated as the values it excludes.
+
+        `memory`/`sqlite`/`disk` is not an arbitrary triple: it is the
+        set of options that need no Redis and no Postgres. Naming the
+        service-backed values here is what makes a default flipped to
+        `redis` or `postgres` fail with the reason rather than with a
+        diff.
+        """
+        defaults = _declared_defaults()
+        needs_a_service = sorted(
+            f"{field}={defaults[field]!r}"
+            for field in ("job_store", "checkpoint_backend", "paper_cache")
+            if defaults[field] in {"redis", "postgres"}
+        )
+        assert not needs_a_service, (
+            f"these defaults now require a service the standalone path does "
+            f"not start: {needs_a_service}. The README promises a checkout "
+            "outside Compose runs the Sprint 1 storage path; changing a "
+            "default to a service backend breaks that promise for every "
+            "reader who follows the Python-only quickstart."
+        )
+
+
+# ---------------------------------------------------------------------------
+# R14 — the screenshots cost nothing, and what that can mean
+# ---------------------------------------------------------------------------
+
+
+class TestTheScreenshotMechanism:
+    """The mechanism, which is real, and not the PNGs, which are not bound.
+
+    Deliberately narrower than the claim was. Capturing the committed
+    images as Playwright snapshots would make a regeneration a reviewable
+    diff and is the only thing that would bind a PNG to a run — it is
+    also a browser-tier change out of all proportion to the sentence, and
+    out of this work order's surface. So the README now claims the
+    mechanism and says plainly that the images themselves are unbound,
+    and this is the mechanism read back: the seed script writes behind
+    the API, and the stack it writes into is pinned to a key that cannot
+    buy anything.
+    """
+
+    def test_the_seed_script_writes_behind_the_api(self) -> None:
+        body = _seed_script_body()
+        assert re.search(r"\bpsql\b", body) and re.search(r"\bredis-cli\b", body), (
+            "web/e2e/fixtures/seed.sh no longer writes through psql and "
+            "redis-cli, so the README's 'written directly into Postgres and "
+            "Redis' describes something that is not there any more"
+        )
+        called = sorted(
+            {
+                match.group(0)
+                for match in re.finditer(r"/research\b|-X\s+POST|--request\s+POST", body)
+            }
+        )
+        assert not called, (
+            f"web/e2e/fixtures/seed.sh now issues {called}. Safety property 4 "
+            "in its own header — 'It never calls `POST /research`' — is the "
+            "whole of the README's zero-spend screenshot claim: a fixture "
+            "written *through* the API is a job, and a job is a model call."
+        )
+
+    def test_the_stack_is_pinned_to_the_key_the_readme_names(self) -> None:
+        sentinel = _claim(
+            r"captured from the seeded local Compose stack with "
+            r"`ANTHROPIC_API_KEY=([a-z-]+)`",
+            _readme(),
+            "README.md",
+        ).group(1)
+        compose = _COMPOSE_E2E.read_text(encoding="utf-8")
+        assert re.search(rf"ANTHROPIC_API_KEY:\s*{re.escape(sentinel)}\b", compose), (
+            f"README.md says the screenshots come from a stack pinned to "
+            f"`{sentinel}`; web/e2e/support/compose.e2e.yml pins something "
+            "else. The sentinel is invalid on purpose — it is what makes "
+            "'no model call was made' true rather than merely intended."
+        )
+
+    def test_every_screenshot_the_readme_shows_exists(self) -> None:
+        referenced = sorted(set(re.findall(r"(docs/images/[\w.-]+\.png)", _readme())))
+        assert referenced, "README.md references no screenshots at all"
+        missing = [path for path in referenced if not (_ROOT / path).is_file()]
+        assert not missing, (
+            f"README.md renders images that are not in the tree: {missing}. "
+            "Nothing binds these files to a run, so their existence is the "
+            "only thing about them a test can hold."
+        )
+
+
+# ---------------------------------------------------------------------------
+# R15 — the flag set is enumerated, in both directions
+# ---------------------------------------------------------------------------
+
+
+class TestTheFlagSet:
+    """"Every feature after Sprint 1 is behind an independent flag."
+
+    Three separable assertions live in that sentence and two of them are
+    mechanisable. **Independent** is: each flag in the table can be
+    switched on by itself, which is exactly what an A/B against the
+    Sprint 1 baseline requires. **Behind a flag** is, in the direction a
+    reflection test can see: every `enable_*` field `Settings` declares
+    is accounted for by the README, either as a workflow-behavior row in
+    the table or by name in the prose around it.
+
+    The direction that stays open is the forward one — a *feature*
+    shipped with no flag adds no field, so no reflection over fields can
+    see it. R15 is Partial for that reason and the index says so.
+    """
+
+    def test_the_readme_counts_every_enable_flag(self) -> None:
+        claimed = _word_to_int(
+            _claim(
+                r"declares \*\*(\w+) `enable_\*` flags\*\*", _readme(), "README.md"
+            ).group(1),
+            "README.md",
+        )
+        flags = _enable_flags()
+        assert claimed == len(flags), (
+            f"README.md counts {claimed} `enable_*` flags; `Settings` declares "
+            f"{len(flags)}: {sorted(flags)}. A flag the README does not count "
+            "is a feature a reader cannot find the switch for."
+        )
+
+    def test_the_table_and_the_prose_together_are_every_flag(self) -> None:
+        table, prose = _flag_section()
+        documented = set(table) | set(prose)
+        flags = set(_enable_flags())
+        undocumented = sorted(flags - documented)
+        phantom = sorted(documented - flags)
+        assert not undocumented, (
+            f"these `enable_*` flags are in `Settings` and nowhere in the "
+            f"README's flag section: {undocumented}. This is the check that "
+            "makes the section an enumeration rather than a sample — put a "
+            "new workflow-behavior flag in the table, and anything else in "
+            "the paragraph under it."
+        )
+        assert not phantom, (
+            f"the README's flag section names flags `Settings` does not "
+            f"declare: {phantom}"
+        )
+
+    def test_the_table_is_the_count_it_claims(self) -> None:
+        table, prose = _flag_section()
+        in_table = _word_to_int(
+            _claim(
+                r"the \*\*(\w+)\*\* of them in the table below are the Sprint 2-3 "
+                r"workflow-behavior set",
+                _readme(),
+                "README.md",
+            ).group(1),
+            "README.md",
+        )
+        outside = _word_to_int(
+            _claim(
+                r"The other \*\*(\w+)\*\* `enable_\*` flags", _readme(), "README.md"
+            ).group(1),
+            "README.md",
+        )
+        assert (in_table, outside) == (len(set(table)), len(set(prose))), (
+            f"README.md splits the flags {in_table} in the table and {outside} "
+            f"outside it; the section itself lists {len(set(table))} and "
+            f"{len(set(prose))}."
+        )
+
+    def test_every_flag_in_the_table_defaults_off(self) -> None:
+        table, _ = _flag_section()
+        flags = _enable_flags()
+        on = sorted(flag for flag in set(table) if flags[flag])
+        assert not on, (
+            f"these workflow-behavior flags default on: {on}. The table's "
+            "whole claim is that the shipped default is the Sprint 1 "
+            "pipeline, so a default flipped to `True` makes every comparison "
+            "against that baseline something else."
+        )
+
+    def test_the_flags_that_default_on_are_the_ones_the_readme_names(self) -> None:
+        named = set(
+            re.findall(
+                r"`(enable_[a-z_]+)`",
+                _claim(
+                    r"default \*\*on\*\* \(([^)]*)\)", _readme(), "README.md"
+                ).group(1),
+            )
+        )
+        shipped = {flag for flag, default in _enable_flags().items() if default}
+        assert named == shipped, (
+            f"README.md says {sorted(named)} default on; `Settings` ships "
+            f"{sorted(shipped)} on. A flag that quietly starts defaulting on "
+            "is a feature nobody chose to run."
+        )
+
+    def test_every_flag_in_the_table_can_be_enabled_on_its_own(self) -> None:
+        """What "independent" is asserted to mean, and where it stops.
+
+        The Sprint 2-3 flags are independent in the strong sense — each
+        constructs alone — because ADRs 0015 to 0020 each say so, and an
+        A/B run that had to enable two flags to test one would not be an
+        A/B of that one. The learning ladder is deliberately *not* like
+        this: three of its four flags refuse to construct without the
+        one below them, which is why they are outside the table and why
+        the README says so instead of implying otherwise.
+        """
+        from pydantic import ValidationError
+
+        from src.config import Settings
+
+        table, _ = _flag_section()
+        coupled = []
+        for flag in sorted(set(table)):
+            try:
+                Settings(**{flag: True})  # type: ignore[arg-type]
+            except ValidationError as error:
+                coupled.append(f"{flag}: {str(error).splitlines()[1].strip()}")
+        assert not coupled, (
+            "these workflow-behavior flags cannot be enabled on their own, "
+            "so the README's `independent flag` is no longer true of "
+            "them:\n  " + "\n  ".join(coupled)
+        )
+
+
+# ---------------------------------------------------------------------------
+# R28 — the nightly eval, told the same way by every document that tells it
+# ---------------------------------------------------------------------------
+
+
+class TestTheNightlyEvalState:
+    """Three artifacts, one story — which is all this can be.
+
+    The index's finding 3 was that `README.md` and `docs/eval.md`
+    contradicted each other about the nightly eval and nothing noticed:
+    one said the workflow was wired and failing every night, the other
+    said it was disabled, and the workflow file carried a `cron:` that
+    read like the first and behaved like the second. WO-B2 made both
+    workflow files state their own disabled state in prose, which is the
+    thing that made this checkable at all.
+
+    What this does **not** assert is the state itself. `disabled_manually`
+    lives in GitHub's settings for the repository and never appears in a
+    checkout, so somebody could run `gh workflow enable` and every check
+    here would stay green while all three documents became wrong
+    together. What goes red is divergence: change the workflow file's
+    header on the way to enabling it, or reword either document, and the
+    other two have to move in the same commit.
+    """
+
+    def test_the_readme_says_the_workflow_is_disabled(self) -> None:
+        workflow = _claim(
+            r"nightly eval workflow is disabled at the repository\*\* "
+            r"\(`disabled_manually`\)[^`]*`(\.github/workflows/[\w.-]+)`",
+            _readme(),
+            "README.md",
+        ).group(1)
+        assert (_ROOT / workflow).is_file(), (
+            f"README.md's nightly paragraph names {workflow}, which is not in "
+            "the tree"
+        )
+
+    def test_the_eval_doc_tells_the_same_story(self) -> None:
+        text = _prose(_EVAL_DOC)
+        assert "The workflow is disabled** (`disabled_manually`)" in text, (
+            "docs/eval.md no longer says the nightly eval workflow is "
+            "disabled. It and README.md described the workflow differently "
+            "for long enough to become the assurance index's finding 3; if "
+            "the state has changed, both documents and the workflow file's "
+            "own header change together."
+        )
+
+    def test_both_nightly_workflows_say_they_are_disabled(self) -> None:
+        """Both, because the standing constraint is about both.
+
+        `planning/08-assurance/STATUS.md` carries `nightly-eval` and
+        `nightly-lighthouse` under one line — both disabled, re-enabling
+        either an owner decision. Only the eval one is described in
+        `README.md`, so only that one has a document to contradict; the
+        lighthouse workflow is held to saying what it is so that turning
+        it on cannot be a silent edit.
+        """
+        silent = [
+            str(path.relative_to(_ROOT))
+            for path in (_EVAL_NIGHTLY, _LIGHTHOUSE_NIGHTLY)
+            if "disabled_manually" not in path.read_text(encoding="utf-8")
+        ]
+        assert not silent, (
+            f"these workflow files no longer record that they are disabled at "
+            f"the repository: {silent}. Both nightlies are off under the "
+            "campaign's standing constraint and re-enabling either is an "
+            "owner decision — if one has been enabled, this test, README.md "
+            "and docs/eval.md change in the same commit."
+        )
+
+    def test_the_cron_that_does_not_fire_says_so_beside_itself(self) -> None:
+        """The line that made a naive test assert the opposite of the truth.
+
+        A disabled workflow keeps its schedule in the file and GitHub
+        ignores it, so `cron:` in these two files is a record of a chosen
+        time rather than a statement about tonight. Deleting the
+        paragraph that says so — while re-enabling, most likely — is the
+        edit this catches.
+        """
+        for path in (_EVAL_NIGHTLY, _LIGHTHOUSE_NIGHTLY):
+            text = path.read_text(encoding="utf-8")
+            if "cron:" not in text:
+                continue
+            assert re.search(r"DOES NOT FIRE|does not fire", text), (
+                f"{path.relative_to(_ROOT)} carries a `cron:` and no longer "
+                "says whether it fires. It does not: the workflow is "
+                "disabled at the repository, which the checkout cannot show, "
+                "and that gap is exactly why the file has to say it in prose."
+            )

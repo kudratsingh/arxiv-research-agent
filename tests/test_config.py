@@ -55,6 +55,27 @@ class TestDefaults:
         s = Settings()
         assert s.log_level == "INFO"
 
+    def test_standalone_storage_defaults(self) -> None:
+        """`README.md`'s R11: outside Compose, nothing needs a service.
+
+        These three defaults existed only as Pydantic field values until
+        WO-C2, and no test asserted any of them — which left the
+        sentence a reader trusts before their first `make run` (an
+        in-memory job store, SQLite checkpoints, a disk paper cache)
+        free to drift against the code. Flipping any one of them to its
+        service-backed option would leave every Python-only quickstart
+        failing to reach something the quickstart never says to start.
+
+        `tests/test_documented_claims.py::TestTheStandaloneDefaults` is
+        the other half: it reads the same three backends out of the
+        README sentence and compares them against these fields, so the
+        sentence and the shipped values cannot part company either.
+        """
+        s = Settings()
+        assert s.job_store == "memory"
+        assert s.checkpoint_backend == "sqlite"
+        assert s.paper_cache == "disk"
+
     def test_content_capture_and_sampling_defaults_change_nothing(self) -> None:
         """WO-B4's whole obligation: the fold-in must be invisible.
 

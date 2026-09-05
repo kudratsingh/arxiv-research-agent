@@ -26,10 +26,20 @@ name: nightly-eval
 #
 #     nightly-eval  .github/workflows/eval-nightly.yml  disabled_manually
 #
-# That gap is why nothing in `tests/` asserts this. A test that read
-# this file would have to assert the schedule it can see, and the
-# schedule is the part that lies; the file has to say so in prose
-# first, which is what this paragraph is (WO-B2).
+# That gap is why nothing in `tests/` asserted this. A test that read
+# the schedule would have to assert the part that lies; the file has to
+# say so in prose first, which is what this paragraph is (WO-B2).
+#
+# WO-C2 then made this paragraph load-bearing.
+# `tests/test_documented_claims.py::TestTheNightlyEvalState` reads it,
+# `README.md`'s "Status: disabled, never run green" section and
+# `docs/eval.md`'s "Status: disabled, and no green campaign yet", and
+# goes red when the three stop telling the same story — they disagreed
+# for months and nothing noticed. Deleting the paragraph above on the
+# way past therefore fails the suite instead of quietly leaving two
+# documents describing a workflow that has started running again. What
+# the test still cannot see is the state itself: it holds documents to
+# each other, never to GitHub.
 #
 # It stays disabled until the W-OD-1 funding decision, which is the
 # owner's. Re-enabling takes three things in this order: the owner
@@ -38,12 +48,14 @@ name: nightly-eval
 # and someone runs `gh workflow enable nightly-eval`. The first and the
 # third are outside this repository. Editing this file is not one of
 # the three, and enabling the workflow without the first two puts it
-# straight back to failing every night.
+# straight back to failing every night — but the two documents named
+# above are then wrong, and updating them is part of the same change.
 #
 # Both lanes fail at their `ANTHROPIC_API_KEY` preflight without the
 # secret — visibly, with a titled annotation naming the owner action,
 # which is the honest failure the research lane has had 54 nights
-# running. See docs/eval.md, "Status: no green campaign yet".
+# running. See docs/eval.md, "Status: disabled, and no green campaign
+# yet".
 #
 # Design: docs/decisions/0010-nightly-eval-ci.md
 

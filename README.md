@@ -178,8 +178,15 @@ SSE streaming and HITL resume both work across workers via Redis pub/sub
 a redriver sweep reclaims jobs orphaned by a dead worker instead of
 leaving them `running` forever. The compose stack wires all of this up
 automatically; local dev outside compose defaults to an in-memory job
-store, SQLite checkpoints and a disk paper cache, so Sprint 1 behavior
-stays byte-identical. ADRs
+store, SQLite checkpoints and a disk paper cache, so a checkout with
+neither Redis nor Postgres runs the Sprint 1 storage path unchanged.
+Those three defaults are read back out of this sentence by
+`tests/test_documented_claims.py::TestTheStandaloneDefaults`, and
+asserted as values by
+`tests/test_config.py::TestDefaults::test_standalone_storage_defaults`.
+Byte-identical *output* is not claimed: no Sprint 1 artifact is kept
+anywhere here to diff against and the outputs are model-generated, so
+that half of the earlier wording was never measurable by anything. ADRs
 [0027](docs/decisions/0027-docker-compose-redis-job-store.md),
 [0028](docs/decisions/0028-postgres-paper-cache-and-embedding-cache.md),
 [0032](docs/decisions/0032-conversation-mode.md),
@@ -249,15 +256,27 @@ redesign (brief, tokens, architecture, work orders, gate reviews) is
 > **Screenshots** are captured from the seeded local Compose stack with
 > `ANTHROPIC_API_KEY=local-preview-disabled`. The fixtures are written
 > directly into Postgres and Redis, never through `POST /research`, so
-> no model call was made to produce them. The seeded thread was created
-> outside a live session, which is why its checkpoint spine honestly
-> reports `No longer available` rather than inventing a history.
+> no model call was made to produce them. That mechanism is read back —
+> `tests/test_documented_claims.py::TestTheScreenshotMechanism` holds
+> the seed script to writing behind the API and the stack to the
+> sentinel key, and `web/tests/ci.test.ts` holds CI to handing the e2e
+> stack that same key rather than the repository secret. **What nothing
+> checks is that these particular PNGs came out of that stack**: no
+> test binds a committed image to a run, so a hand-edited screenshot
+> would pass everything above. The seeded thread was created outside a
+> live session, which is why its checkpoint spine honestly reports `No
+> longer available` rather than inventing a history.
 
 ## What lives behind flags
 
 Every feature added after Sprint 1 is behind an independent flag so
-comparisons against the Sprint 1 baseline stay apples-to-apples. Full
-list in `src/config.py`.
+comparisons against the Sprint 1 baseline stay apples-to-apples.
+`Settings` declares **nineteen `enable_*` flags**, and the **eight** of
+them in the table below are the Sprint 2-3 workflow-behavior set: every
+one of those defaults **off**, and every one can be switched on by
+itself, which is what *independent* is asserted to mean here. (The
+ninth row is `<agent>_model`, seven model-routing fields rather than a
+flag.) Full list in `src/config.py`.
 
 | Flag | Sprint | What it enables | ADR |
 |---|---|---|---|
@@ -273,10 +292,26 @@ list in `src/config.py`.
 
 The table stops at Sprint 3 because it tracks *workflow-behavior*
 flags — the ones that change what the agents do and so must stay
-independently toggleable for A/B eval runs. Later settings (HITL,
-metrics, job redriver, storage backends) are API and infrastructure
-concerns; the full settings surface is `src/config.py`. Full design
-log in
+independently toggleable for A/B eval runs. The other **eleven**
+`enable_*` flags are named here rather than left implicit, because a
+flag nobody lists is a switch nobody knows to throw. Four are API and
+infrastructure concerns that default **on** (`enable_hitl`,
+`enable_checkpointing`, `enable_job_redriver`, `enable_retry_budget`);
+three default off and change no agent behaviour (`enable_api_auth`,
+`enable_tracing`, `enable_metrics`); and four are the learning
+platform's ladder, all off and deliberately **not** independent of one
+another — `enable_learner_profile` needs `enable_api_auth`,
+`enable_session_loop` needs `enable_learner_profile`, and
+`enable_assessment_judge` needs `enable_session_loop`, while
+`enable_learn_content` stands alone.
+
+`tests/test_documented_claims.py::TestTheFlagSet` holds those two
+paragraphs against `Settings` in both directions, so a flag added to
+`src/config.py` and to no document goes red. What it cannot see is a
+*feature* shipped with no flag at all — nothing enumerates features —
+so the sentence at the top of this section is enforced in one
+direction only. The full settings surface is `src/config.py`. Full
+design log in
 [`docs/decisions/`](docs/decisions/README.md); the sprint-by-sprint
 roadmap lives in [`planning/03-roadmap.md`](planning/03-roadmap.md).
 
@@ -503,7 +538,11 @@ Python suite grows on most pull requests, so an equality would make
 every one of them edit this paragraph, while the Vitest count of record
 moves only when somebody re-seeds the coverage thresholds in
 `web/vitest.config.mts` — which is where the test reads it from, rather
-than from a browser run this tier has no business starting.
+than from a browser run this tier has no business starting. That makes
+the Vitest figure an agreement between two documents, so two further
+checks keep the source of truth from rotting quietly: the note is
+pinned to the coverage thresholds seeded under it, and its file count
+is banded against the test files actually on disk.
 
 The audit is a job of its own because it is the only web gate whose
 answer comes from a remote service: on 2026-09-04 npm's advisory
@@ -541,14 +580,16 @@ every claim in this README and in `docs/architecture.md`, and the test, gate
 or instrument that fails when it stops being true — plus a **system** card
 (this project trains no model), a data-provenance record on the NIST AI 300-1
 field set, and a framework mapping across NIST, OWASP, ISO 42001 and the EU AI
-Act. Read the short list of claims that **nothing** enforces first — it is
-shorter than it was, because the sentences it named as false have been
-corrected and are now read back by
-[`tests/test_documented_claims.py`](tests/test_documented_claims.py), but it
-is not empty and the residue is the interesting part: a nightly eval two
-documents describe differently, screenshots nothing binds to a run, and
-"every non-trivial decision has an ADR", whose forward half no test will
-ever hold.
+Act. Read the **Partial** rows first, and the one claim that is still false.
+Nothing-enforces is down to zero — every sentence in that table now has
+something behind it, read back out of the prose by
+[`tests/test_documented_claims.py`](tests/test_documented_claims.py) — but
+twenty-one claims have *less* behind them than the sentence says, and each
+of those rows names its own gap. The residue is the interesting part:
+nothing binds the committed screenshots to a run, no test can see a feature
+that shipped with no flag at all, the nightly eval's real state lives in
+GitHub's settings rather than in this tree, and "every non-trivial decision
+has an ADR" has a forward half no test will ever hold.
 
 ## Eval
 
@@ -577,15 +618,27 @@ re-enters a partial run without re-spending, and `--max-budget-usd`
 stops the campaign at a dollar ceiling. Distinct exit codes separate "a
 query failed" from "budget hit" from "interrupted".
 
-### Status: wired, never run green — and no numbers to show
+### Status: disabled, never run green — and no numbers to show
 
-**The nightly eval workflow has failed all 54 of its runs**, from
-2026-07-07 to 2026-08-29, at a missing `ANTHROPIC_API_KEY` repository
-secret. The harness is built and unit-tested, the workflow
-(`.github/workflows/eval-nightly.yml`) is wired, and the README-updating
-step exists — but **no campaign has ever produced a `summary.jsonl`**,
-so the regression gate has never compared two real runs and there are no
+**The nightly eval workflow is disabled at the repository**
+(`disabled_manually`) and stays that way until the owner's funding
+decision; `.github/workflows/eval-nightly.yml` says so in its own
+header, above a `cron:` that GitHub keeps in the file and ignores.
+**Every run it did have failed — 54 of 54**, from 2026-07-07 to
+2026-08-29, at a missing `ANTHROPIC_API_KEY` repository secret. The
+harness is built and unit-tested and the README-updating step exists —
+but **no campaign has ever produced a `summary.jsonl`**, so the
+regression gate has never compared two real runs and there are no
 quality numbers to publish here.
+
+`docs/eval.md` §"Status: disabled, and no green campaign yet" is the
+long form, and
+`tests/test_documented_claims.py::TestTheNightlyEvalState` holds this
+paragraph, that section and the workflow file to one story — the three
+of them disagreed for months and nothing noticed. It cannot check the
+state itself: `disabled_manually` is an attribute GitHub stores against
+the workflow, not a field in the checkout, and the 54 runs live in
+Actions history where no test reaches them.
 
 There is deliberately **no eval badge** in this README: it would be red,
 and a red badge for work that was never funded says the wrong thing.

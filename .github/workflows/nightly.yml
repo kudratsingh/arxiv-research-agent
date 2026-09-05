@@ -60,6 +60,15 @@ name: nightly-lighthouse
 # what this workflow does *when run*, which today means on
 # `workflow_dispatch` and for the evidence runs the gate packs cite (WO-B2
 # added this paragraph; the file said nothing about its own state before).
+#
+# WO-C2 reads this paragraph from
+# `tests/test_documented_claims.py::TestTheNightlyEvalState`, which requires
+# every nightly in this repository to record its own state and requires any
+# file that keeps a `cron:` to say beside it whether that cron fires. Unlike
+# `eval-nightly.yml` this workflow is described by no document outside itself,
+# so this paragraph is the only place the truth is written down — deleting it
+# on the way to `gh workflow enable nightly-lighthouse` fails the suite, which
+# is the point.
 
 on:
   schedule:

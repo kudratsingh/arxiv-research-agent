@@ -350,6 +350,37 @@ export default defineConfig(async () => ({
       // on 5 s interaction timeouts (`CheckpointLedger/Empty`,
       // `Diagnostics/Expanded`, `Field/Dark`, `Textarea/Disabled`). That is
       // load, not coverage, and its numbers were thrown away.
+      //
+      // ---------------------------------------------------------------
+      //
+      // THIS NOTE IS NOW READ BY A TEST (WO-C2).
+      // `tests/test_documented_claims.py::TestTheVitestCounts` treats the
+      // LAST `N tests across M files` note in this file as the source of
+      // truth for two figures nothing else in the repository measures: the
+      // web suite's size, which `README.md` quotes back, and the coverage
+      // the four numbers below are seeded at. It reads the covered/total
+      // counts recorded in that same note and requires every threshold to
+      // sit at, or a little under, what the note says was measured.
+      //
+      // WHAT THAT MEANS FOR THE NEXT RE-SEED. Editing the four numbers
+      // below without writing a note goes red, and that is the whole
+      // point: a comment is not authoritative on its own, and a re-seed
+      // that skipped the note would leave `README.md` agreeing with a
+      // source that no longer described the suite — which is the exact
+      // failure that figure had already had twice. Write the new note in
+      // the shape of the one above (the suite size as `N tests across M
+      // files`, then `covered/total` for statements, branches, functions
+      // and lines), and update the README sentence in the same commit.
+      //
+      // The same test also bands the note's FILE count against the files
+      // actually under `web/tests/` and `web/components/`, because the
+      // other way a count of record goes stale is by ageing: it moves on a
+      // re-seed and not on a merge, so some lag is by design and a lot of
+      // it is abandonment. At the last re-seed the record was 155 files;
+      // WO-C2 measured 158 on the tree it was written against, with a real
+      // run reporting 3,477 tests against the recorded 3,380. That is the
+      // gap this file's convention accepts between re-seeds, and the band
+      // is where it stops being acceptable.
       thresholds: {
         statements: 98.15,
         branches: 94.0,
