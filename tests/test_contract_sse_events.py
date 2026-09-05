@@ -38,13 +38,16 @@ entry that has stopped being true in either direction.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
 import pytest
 
+from src.api import redriver as redriver_module
 from src.api.jobs import Job, JobStatus
 from src.api.routes import _terminal_event_name
+from src.api.runner import terminal_event_data
 from src.api.streaming import (
     PAUSE_EVENT_NAMES,
     STREAM_CLOSING_EVENT_NAMES,
@@ -63,6 +66,41 @@ EVENTS_TS = (ROOT / "web" / "lib" / "api" / "events.ts").read_text(
 )
 MODELS_TS = (ROOT / "web" / "lib" / "api" / "models.ts").read_text(
     encoding="utf-8"
+)
+REDRIVER_SRC = (ROOT / "src" / "api" / "redriver.py").read_text(encoding="utf-8")
+
+#: Every key a terminal SSE frame carries, whichever of the three paths
+#: built it: the runner's live emission, the route's attach-time replay,
+#: and the redriver's publish for a job whose worker died.
+#:
+#: Written out rather than read off `terminal_event_data`, for the same
+#: reason `PINNED_EVENT_NAMES` above is written out: a pin that derives
+#: itself from its subject pins nothing. Adding a field to a terminal
+#: frame is a contract change and should cost one deliberate line here.
+#:
+#: WO-A10 got the two `job_completed` frames onto one builder and left
+#: the rest; WO-B3 finished it. Before that, `run_job` hand-built eight
+#: more payloads (four keys for most failures, eight for a session cost
+#: cap, three for a reviewer cancellation, two for a shutdown) and
+#: `redriver.py` kept a ninth, eight-key copy. Nine hand-written
+#: payloads beside the builder, in six distinct shapes, for three event
+#: names — and the symptom was a client reading a key off whichever one
+#: it happened to receive.
+TERMINAL_FRAME_KEYS = frozenset(
+    {
+        "job_id",
+        "status",
+        "elapsed_sec",
+        "error",
+        "error_type",
+        "cost_cap_status",
+        "cost_cap_message",
+        "iterations",
+        "quality_score",
+        "cost_usd",
+        "llm_calls",
+        "reason",
+    }
 )
 
 #: `TERMINAL_EVENT_NAMES ∪ {job_started, node_completed} ∪ PAUSE_EVENT_NAMES ∪
@@ -193,13 +231,108 @@ def test_there_is_no_node_started() -> None:
     assert "node_started" not in PINNED_EVENT_NAMES
 
 
-def test_attach_replay_reuses_the_runner_terminal_names() -> None:
-    """One name, two payload shapes — but never a name of its own.
+def _terminal_payload_calls(source: str) -> list[ast.expr]:
+    """The payload argument of every `_put_terminal_event` call.
 
-    `routes.py:857-867` replays a terminal outcome under the same event name
-    the runner would have used, with `status` added and `llm_calls` dropped.
-    A separate replay-only name would be a fourth event the client would have
-    to learn, so this pins that it stays three.
+    An AST walk rather than a regex, because the thing being asserted
+    is *what kind of expression* the third argument is — a call to the
+    shared builder, or a dict literal somebody wrote out again — and a
+    regex cannot tell those apart across the line breaks black inserts.
+    """
+    tree = ast.parse(source)
+    payloads: list[ast.expr] = []
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "_put_terminal_event"
+        ):
+            assert len(node.args) == 3, ast.dump(node)
+            payloads.append(node.args[2])
+    return payloads
+
+
+def test_every_terminal_frame_the_runner_emits_comes_from_one_builder() -> None:
+    """The structural half of the convergence, and the load-bearing one.
+
+    Pinning the key set (below) catches a builder that changed shape. It
+    cannot catch the failure that actually happened twice in this
+    repository: somebody adding a terminal path and writing the payload
+    out by hand next to it, which is how there came to be nine shapes
+    for three event names. That is a property of the *expression* at
+    each emit site, so it is asserted as one.
+
+    A new terminal path fails here until it routes through
+    `terminal_event_data`. If a future path genuinely cannot — it has a
+    field no job row carries, say — the answer is to widen the builder
+    (`reason` is the precedent) rather than to add a tenth shape.
+    """
+    payloads = _terminal_payload_calls(RUNNER_SRC)
+    # Guard against a walk that quietly matches nothing.
+    assert len(payloads) == 10, len(payloads)
+    for payload in payloads:
+        assert isinstance(payload, ast.Call), ast.dump(payload)
+        assert isinstance(payload.func, ast.Name), ast.dump(payload)
+        assert payload.func.id == "terminal_event_data", ast.dump(payload)
+
+
+def test_the_terminal_payload_has_exactly_one_shape() -> None:
+    """The three producers, asserted against one literal.
+
+    `terminal_event_data` is the runner's live frame and — through a
+    one-line delegate each — the route's replay and the redriver's
+    publish. Reading all three back proves the delegates are still
+    delegates rather than copies that drifted, which is precisely what
+    `redriver.py`'s did: its docstring claimed a field-for-field sync
+    with a function that had already become a forwarder, while the copy
+    itself was three fields short.
+    """
+    job = _job(JobStatus.failed)
+
+    assert set(terminal_event_data(job)) == TERMINAL_FRAME_KEYS
+    assert set(redriver_module._terminal_event_data(job)) == TERMINAL_FRAME_KEYS
+    # The route's replay, through the same private delegate the stream
+    # endpoint calls.
+    from src.api.routes import _terminal_event_data as replay_data
+
+    assert set(replay_data(job)) == TERMINAL_FRAME_KEYS
+
+    # `reason` is the one key a replay can never fill: no column on the
+    # job row carries it. A nullable key a client can read
+    # unconditionally is the whole point of the union.
+    assert terminal_event_data(job)["reason"] is None
+    assert terminal_event_data(job, reason="shutdown")["reason"] == "shutdown"
+
+
+def test_the_redriver_no_longer_keeps_its_own_copy() -> None:
+    """The claim the old docstring made, now enforced instead of asserted.
+
+    `src/api/runner.py` imports `WORKER_ID` from `redriver`, so the
+    import back has to be deferred into the function body — which is
+    exactly the kind of detail that decays into a re-copied dict the
+    next time somebody tidies the imports. Reading the source keeps the
+    delegation honest without depending on the two dicts happening to
+    match.
+    """
+    assert "from src.api.runner import terminal_event_data" in REDRIVER_SRC
+    # And no second literal: the reclaim path publishes the delegate's
+    # result, never a dict it built itself.
+    assert '"quality_score": job.quality_score' not in REDRIVER_SRC
+
+
+def test_attach_replay_reuses_the_runner_terminal_names() -> None:
+    """One name, one payload shape, and never a name of its own.
+
+    `routes.py` replays a terminal outcome under the same event name the
+    runner would have used. A separate replay-only name would be a
+    fourth event the client would have to learn, so this pins that it
+    stays three.
+
+    The docstring here used to say the replay carried "`status` added
+    and `llm_calls` dropped" — true when it was written, and the exact
+    drift WO-A10 removed. Both frames are `terminal_event_data` now;
+    `test_the_terminal_payload_has_exactly_one_shape` is where that is
+    asserted.
     """
     replayed = {
         _terminal_event_name(_job(status))

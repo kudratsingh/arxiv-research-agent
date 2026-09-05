@@ -7,6 +7,7 @@ so no real Claude calls happen. Also tests the budget/iteration
 short-circuits that skip the LLM entirely.
 """
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -21,10 +22,13 @@ from src.agents.supervisor import (
     route_after_supervisor,
     supervisor_agent,
 )
+from src.cancellation import JobCancelledError
 from src.config import Settings
+from src.errors import UpstreamModel
 from src.graph.state import ResearchState
 from src.observability import clear_context
 from src.observability import costs as costs_module
+from src.observability.costs import CostBudgetExceeded
 
 pytestmark = pytest.mark.unit
 
@@ -313,6 +317,15 @@ class TestSupervisorLLMPath:
     def test_llm_exception_falls_back_to_default(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        """The broad `except` is still broad, deliberately.
+
+        WO-B3 narrowed what the handler *reports*, not what it
+        tolerates: an exception nobody typed — a `RuntimeError` from a
+        missing key, an `AttributeError` from a refactor — still leaves
+        the loop with a route, because turning an unanticipated bug into
+        a failed run makes nothing more visible and costs the user their
+        run. What changed is that the line now says which class it was.
+        """
         def _boom(**_: Any) -> dict[str, Any]:
             raise RuntimeError("api down")
 
@@ -330,6 +343,173 @@ class TestSupervisorLLMPath:
         supervisor_agent(_empty_state(query="hallu?", sub_questions=["a"]))
         assert "query: hallu?" in captured["prompt"]
         assert "sub_questions: 1" in captured["prompt"]
+
+
+# ---------------------------------------------------------------------------
+# What the routing call is not allowed to swallow (WO-B3)
+#
+# The observability half — the code, the event and the metric a provider
+# outage moves — is asserted end to end in
+# `tests/fault/test_supervisor_routing_faults.py`. What is left here is
+# the routing *contract*: which exceptions leave this function, and what
+# `stop_reason` a fallback writes.
+# ---------------------------------------------------------------------------
+
+
+def _finished_state() -> ResearchState:
+    """A state with every pipeline field populated.
+
+    `_default_next_action` returns `stop` from it, which is the only
+    arrangement in which a fallback's `stop_reason` is observable at
+    all — every other fallback writes `""`.
+    """
+    return _empty_state(
+        sub_questions=["a"],
+        papers=[{"id": "p"}],  # type: ignore[list-item]
+        paper_analyses=[{"id": "p"}],  # type: ignore[list-item]
+        draft_report="a report",
+        critique="a critique",
+    )
+
+
+class TestTheFallbackSaysWhoChoseToStop:
+    """`llm_failed` versus `supervisor_stop`.
+
+    The two used to be one word. A run the provider ended, a run whose
+    judge answered with garbage, and a run the judge decided was
+    finished all wrote `supervisor_stop` — and `stop_reason` is the
+    field `src/eval/runner.py` buckets runs by, so an eval campaign run
+    during an outage could not be told apart afterwards from a clean
+    one. The bucket is the one ADR 0014's module docstring has named
+    since the beginning and nothing emitted.
+    """
+
+    def _raise(self, monkeypatch: pytest.MonkeyPatch, exc: Exception) -> None:
+        def _boom(**_: Any) -> dict[str, Any]:
+            raise exc
+
+        monkeypatch.setattr(sup, "call_llm_json", _boom)
+
+    def test_a_provider_outage_that_stops_is_llm_failed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._raise(monkeypatch, UpstreamModel(log_detail="provider down"))
+        result = supervisor_agent(_finished_state())
+        assert result["next_action"] == "stop"
+        assert result["stop_reason"] == "llm_failed"
+
+    def test_a_malformed_judge_that_stops_is_llm_failed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._raise(monkeypatch, ValueError("not json"))
+        result = supervisor_agent(_finished_state())
+        assert result["stop_reason"] == "llm_failed"
+
+    def test_an_invalid_action_that_stops_is_llm_failed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The judge answered; the answer was not an action.
+
+        Same bucket, and for the same reason: the supervisor did not
+        choose to stop, so recording that it did is a lie about the run
+        whichever way the answer failed to arrive.
+        """
+
+        def fake(**_: Any) -> dict[str, Any]:
+            return {"next_action": "hallucinate", "reason": "", "stop_reason": ""}
+
+        monkeypatch.setattr(sup, "call_llm_json", fake)
+        result = supervisor_agent(_finished_state())
+        assert result["next_action"] == "stop"
+        assert result["stop_reason"] == "llm_failed"
+
+    def test_a_judge_that_chose_to_stop_keeps_supervisor_stop(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The distinction the new bucket exists to make, from the other side."""
+
+        def fake(**_: Any) -> dict[str, Any]:
+            return {"next_action": "stop", "reason": "done", "stop_reason": ""}
+
+        monkeypatch.setattr(sup, "call_llm_json", fake)
+        assert supervisor_agent(_finished_state())["stop_reason"] == "supervisor_stop"
+
+    def test_a_fallback_that_does_not_stop_writes_no_reason(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """`stop_reason` stays empty when the loop is still running.
+
+        The prompt's own contract — "MUST be an empty string when
+        `next_action` != stop" — and it has to hold for the routes the
+        supervisor did not choose as much as for the ones it did.
+        """
+        self._raise(monkeypatch, UpstreamModel(log_detail="provider down"))
+        result = supervisor_agent(_empty_state())
+        assert result["next_action"] == "plan"
+        assert result["stop_reason"] == ""
+
+
+class TestTheControlSignalsPropagate:
+    """Cancellation and the cost ceiling are not routing failures.
+
+    Both are raised by `call_llm` before it reaches the provider —
+    `check_cancelled()` first, then `_check_cost_budget()` (ADR 0047,
+    ADR 0051) — so both arrived at the old bare `except` and both were
+    answered with a route. The runner owns the terminal state for
+    either; a router that absorbs one is a router that keeps
+    dispatching nodes for a job that is already over.
+
+    The cancellation case is driven end to end through the real
+    checkpoint in `tests/fault/test_supervisor_routing_faults.py`. The
+    cost case is injected here rather than driven, and the reason is
+    worth writing down: `_check_cost_budget` compares the same
+    accumulator against `effective_cost_cap(settings.max_cost_usd)`,
+    which for a research run is the same number the supervisor's own
+    pre-LLM check uses — so today the pre-check always fires first and
+    the guard is unreachable from this node. It stops being unreachable
+    the moment the effective cap diverges from `max_cost_usd`, which is
+    exactly what ADR 0062's session ceiling already does elsewhere. The
+    re-raise is what keeps that divergence from silently becoming an
+    overspend, so it is asserted at the seam it would arrive through.
+    """
+
+    def _raise(self, monkeypatch: pytest.MonkeyPatch, exc: Exception) -> None:
+        def _boom(**_: Any) -> dict[str, Any]:
+            raise exc
+
+        monkeypatch.setattr(sup, "call_llm_json", _boom)
+
+    def test_a_cancellation_is_re_raised_not_routed_around(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._raise(monkeypatch, JobCancelledError("j", "job_timeout"))
+        with pytest.raises(JobCancelledError):
+            supervisor_agent(_empty_state())
+
+    def test_the_cost_ceiling_is_re_raised_not_routed_around(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._raise(monkeypatch, CostBudgetExceeded(spent_usd=2.5, cap_usd=2.0))
+        with pytest.raises(CostBudgetExceeded):
+            supervisor_agent(_empty_state())
+
+    def test_neither_is_caught_by_the_provider_branch(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Ordering, asserted rather than trusted.
+
+        `except (JobCancelledError, CostBudgetExceeded)` sits above both
+        other handlers. Moving it below `except UpstreamModel` would
+        still pass every test above — neither class is an `UpstreamModel`
+        — but moving it below the broad `except Exception` would silently
+        restore the swallow, and nothing else here would notice.
+        """
+        source = (
+            Path(sup.__file__).read_text(encoding="utf-8").split("try:")[-1]
+        )
+        control = source.index("except (JobCancelledError, CostBudgetExceeded)")
+        assert control < source.index("except UpstreamModel")
+        assert control < source.index("except Exception")
 
 
 # ---------------------------------------------------------------------------

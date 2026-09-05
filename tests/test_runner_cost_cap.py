@@ -445,7 +445,13 @@ async def test_run_job_cost_budget_exceeded_fails_the_job(
         "job_failed",
     ]
     terminal = frames[-1]["data"]
-    assert set(terminal) == {"job_id", "error", "error_type", "elapsed_sec"}
+    # WO-B3: this used to pin a four-key literal of its own. Every
+    # terminal frame is `terminal_event_data`'s twelve keys now, live
+    # and replayed alike, and the shape is pinned once in
+    # `tests/test_contract_sse_events.py` rather than re-listed at each
+    # site — four copies of a payload shape being how the shapes came
+    # to disagree in the first place.
+    assert terminal["status"] == "failed"
     assert terminal["job_id"] == "cost-blown"
     assert terminal["error_type"] == "cost_budget_exceeded"
 
@@ -482,7 +488,13 @@ async def test_run_job_timeout_fails_the_job(
     frames = _drain_queue(job)
     assert [f["event"] for f in frames] == ["job_started", "job_failed"]
     terminal = frames[-1]["data"]
-    assert set(terminal) == {"job_id", "error", "error_type", "elapsed_sec"}
+    # WO-B3: this used to pin a four-key literal of its own. Every
+    # terminal frame is `terminal_event_data`'s twelve keys now, live
+    # and replayed alike, and the shape is pinned once in
+    # `tests/test_contract_sse_events.py` rather than re-listed at each
+    # site — four copies of a payload shape being how the shapes came
+    # to disagree in the first place.
+    assert terminal["status"] == "failed"
     assert terminal["error_type"] == "timeout"
 
 

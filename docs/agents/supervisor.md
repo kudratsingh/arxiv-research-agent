@@ -20,7 +20,11 @@ flowchart LR
   CAPS -->|"yes"| STOP["stop<br/>max_iterations_reached / budget_reached"]
   CAPS -->|"no"| LLM["call_llm_json<br/>action enum filtered by flags"]
   LLM -->|"valid action"| OUT["next_action · stop_reason<br/>loop_iterations + 1"]
-  LLM -->|"raised or invalid action"| DEF["_default_next_action<br/>fixed-pipeline order"]
+  LLM -->|"cancelled · over cap"| RAISE(["re-raise —<br/>the runner ends the job"])
+  LLM -->|"provider outage"| ERR["log ERROR<br/>supervisor_provider_outage"]
+  LLM -->|"malformed judge ·<br/>invalid action"| WARN["log WARNING<br/>supervisor_llm_failed_<br/>fallback_to_default"]
+  ERR --> DEF["_default_next_action<br/>fixed-pipeline order<br/>stop ⇒ llm_failed"]
+  WARN --> DEF
   DEF --> OUT
   STOP --> OUT
   OUT --> R{"route_after_supervisor"}
@@ -61,20 +65,25 @@ Writes to `ResearchState`:
   `route_after_supervisor`.
 - `stop_reason: str` — populated only when `next_action == "stop"`;
   cleared to `""` otherwise. Values the code can emit:
-  `max_iterations_reached`, `budget_reached`, `supervisor_stop`, and
-  whatever the judge returns for a self-chosen stop (the prompt offers
-  `quality_reached` alongside the other three).
+  `max_iterations_reached`, `budget_reached`, `supervisor_stop`,
+  `llm_failed`, and whatever the judge returns for a self-chosen stop
+  (the prompt offers `quality_reached` alongside the other three).
 - `loop_iterations: int` — bumped by 1 on each supervisor call.
 - A `messages` entry (`AIMessage` named `"supervisor"`) recording the
   decision + reason.
 
-> **Drift note.** `supervisor.py`'s module docstring lists `llm_failed`
-> as a fifth `stop_reason` bucket. No code path emits it: on an LLM
-> failure the agent falls back to `_default_next_action` and writes
-> either `""` (non-stop fallback) or `supervisor_stop` (fallback chose
-> stop). Treat `llm_failed` as unimplemented; the LLM failure is
-> visible through the `supervisor_llm_failed_fallback_to_default`
-> WARNING and the decision message instead.
+> **Drift note — closed by WO-B3.** This used to say `llm_failed` was
+> advertised by the module docstring and emitted by nothing, and that
+> a fallback which chose to stop wrote `supervisor_stop` instead. It
+> now writes `llm_failed`, from all three fallback paths (provider
+> outage, malformed judge, invalid action). `supervisor_stop` is
+> reserved for the case it was named for: the judge answered, chose
+> `stop`, and gave no reason of its own.
+>
+> The reason this mattered rather than being a tidy-up: `stop_reason`
+> is what `src/eval/runner.py` buckets runs by, so it is the only place
+> the *run* records why it ended. A run the provider ended and a run
+> the supervisor decided was finished were the same word.
 
 ## Prompt design
 
@@ -125,13 +134,20 @@ supervisor_agent(state):
     try:
         parsed = call_llm_json(prompt=_summarize_state(state),
                                system_prompt=SUPERVISOR_SYSTEM_PROMPT.format(...))
+    except (JobCancelledError, CostBudgetExceeded):
+        raise                                    # control signals, not failures
+    except UpstreamModel:
+        log.error("supervisor_provider_outage",  # error_type=upstream_model
+                  extra={...})
+        return _fall_back(state, ...)            # stop -> llm_failed
     except Exception:
-        return emit(_default_next_action(state), ...)
+        log.warning("supervisor_llm_failed_fallback_to_default", extra={...})
+        return _fall_back(state, ...)            # stop -> llm_failed
 
     # 4. Validate against the *available* set, not VALID_ACTIONS.
     action = parsed.get("next_action", "")
     if action not in available:
-        return emit(_default_next_action(state), ...)
+        return _fall_back(state, ...)            # stop -> llm_failed
 
     # 5. Normalize stop_reason, then return.
     #    stop with no reason -> "supervisor_stop"; non-stop -> ""
@@ -148,10 +164,19 @@ between checkpoints can never route to a node the graph doesn't have.
 
 Runs when:
 
-- the LLM call raises (including a JSON parse failure, which surfaces
-  as an exception from `call_llm_json`)
+- the LLM call raises **and the exception is a routing failure** — a
+  provider outage, or anything the judge did wrong including a JSON
+  parse failure
 - the response's `next_action` is missing or outside
   `_available_actions()`
+
+It does **not** run for `JobCancelledError` or `CostBudgetExceeded`.
+`call_llm` raises both from its pre-call guards (ADR 0047, ADR 0051)
+and both are control signals rather than routing failures: the job is
+already over, and answering with a route means a cancelled job keeps
+dispatching nodes and a capped job keeps spending. Both propagate to
+`run_job`, which owns the terminal state. Same containment rule the
+[reader](reader.md)'s fan-out and the assessment judge already follow.
 
 Rules-based routing that mirrors the fixed pipeline order:
 
@@ -162,15 +187,41 @@ Rules-based routing that mirrors the fixed pipeline order:
    `sub_questions` → `plan`; no `papers` → `search`; no
    `paper_analyses` → `read`; no `draft_report` → `synthesize`; no
    `critique` → `critique`.
-3. Everything populated → `stop` (emitted with
-   `stop_reason="supervisor_stop"`).
+3. Everything populated → `stop`, emitted with
+   `stop_reason="llm_failed"` — the supervisor did not choose this
+   stop, whichever way its answer failed to arrive.
+
+### The failure is tolerated; it is no longer invisible
+
+Tolerating a failed routing call is the right default and is
+unchanged — a supervisor that refuses to route strands a run the fixed
+pipeline could have finished. What WO-B3 changed is that tolerating it
+stopped meaning hiding it:
+
+| | before | after |
+|---|---|---|
+| log event | `supervisor_llm_failed_fallback_to_default`, WARNING, for every cause | `supervisor_provider_outage` (ERROR) for an outage; the WARNING keeps the judge's own failures |
+| error code | none anywhere | `error_type=upstream_model` on the outage line — the same code the same outage produces in any other node |
+| metric | `llm_upstream_errors_total{model,status}` (already moved by `src/llm.py`) | unchanged, and now joined to the code and the event |
+| run record | `stop_reason=supervisor_stop`, indistinguishable from a deliberate stop | `stop_reason=llm_failed` |
+| cancellation / cost cap | absorbed into a route | re-raised |
+
+The run itself still ends `succeeded`, and
+`research_jobs_total{status="succeeded", error_type="none"}` is what
+moves — that is what "tolerated" means, and
+`tests/fault/test_supervisor_routing_faults.py` asserts it explicitly
+so a later reader does not go looking for the outage on the job
+counter.
 
 ## Failure modes
 
 | Failure | Where | Handling |
 |---|---|---|
-| Anthropic 429 after retries | `call_llm_json` (Anthropic SDK layer) | Caught here; falls back to `_default_next_action`. Logged as `supervisor_llm_failed_fallback_to_default`. |
-| Malformed JSON | `call_llm_json` | Same — the raised `JSONDecodeError` is caught by the same broad `except` and the fallback fires. |
+| Anthropic 429 / 5xx / timeout after retries | `call_llm_json` raises `errors.UpstreamModel` | Caught here; falls back to `_default_next_action`. Logged as `supervisor_provider_outage` at **ERROR** with `error_type=upstream_model`; a fallback that stops buckets as `llm_failed`. |
+| Malformed JSON | `call_llm_json` | The raised `JSONDecodeError` reaches the broad `except` and the fallback fires, logged as `supervisor_llm_failed_fallback_to_default` at WARNING with the exception class in `error_type`. |
+| Job cancelled mid-call | `call_llm`'s `check_cancelled()` (ADR 0047) | **Re-raised.** The runner fails the job as `cancelled_job`. Absorbing it would have the router dispatch nodes for a job already given up on. |
+| Cost ceiling crossed mid-call | `call_llm`'s `_check_cost_budget()` (ADR 0051) | **Re-raised.** The runner fails the job as `cost_budget_exceeded`. |
+| Anything else the call raises | the broad `except Exception` | Still broad, deliberately: an unanticipated exception is a bug, and failing the run for it costs the user their run without making the bug more visible. The class name goes on the line. |
 | Response chose a disabled action (`verify` with `enable_verifier=False`, or any future flag-gated action) | Validation against `_available_actions()` | Falls back to `_default_next_action`; logged as `supervisor_invalid_action_fallback` with the received value and the currently-available set. |
 | Response chose an action outside `VALID_ACTIONS` entirely | Same validation | Same fallback path. |
 | Response returns `stop` with no `stop_reason` | Post-validation | Defaults to `supervisor_stop` so downstream analysis has a bucket. |
@@ -214,15 +265,21 @@ All env-overridable per ADR 0011.
 
 ## Testing
 
-- Unit: `tests/test_supervisor.py` — 47 tests across nine classes
-  covering the rules-based fallback (each pipeline stage), the state
-  summarizer, short-circuits (iteration cap + cost cap without LLM
-  calls), the LLM path (valid action, stop-with-default-reason,
-  stop-reason cleared on non-stop, invalid action, missing action, LLM
-  exception, prompt shape), the router (every valid action + unknown
-  fallback to `END`), enum invariants, and flag gating for `verify` (8
-  tests), `refine_query` (8 tests), and the reader-recovery state
-  surface.
+- Unit: `tests/test_supervisor.py` — the rules-based fallback (each
+  pipeline stage), the state summarizer, short-circuits (iteration cap
+  + cost cap without LLM calls), the LLM path (valid action,
+  stop-with-default-reason, stop-reason cleared on non-stop, invalid
+  action, missing action, LLM exception, prompt shape), the router
+  (every valid action + unknown fallback to `END`), enum invariants,
+  flag gating for `verify` and `refine_query`, the reader-recovery
+  state surface, and — WO-B3 — which `stop_reason` each fallback
+  writes and which exceptions leave the function unrouted.
+- Fault: `tests/fault/test_supervisor_routing_faults.py` — the
+  provider outage, the malformed judge and the cancelled job, each
+  driven through `run_job` with a real SDK failure and each asserted on
+  the code, the log event and the metric at once. It is the only file
+  in the suite that turns `enable_supervisor` on, and it checks that
+  the flag still selects the loop shape so the premise cannot rot.
 - Graph shape: `tests/test_workflow_backend_selector.py`,
   `tests/test_workflow_startup_once.py`.
 - E2E: the workflow-level cassette suite is still **planned, not
@@ -242,8 +299,9 @@ All env-overridable per ADR 0011.
   the choke point so the control tokens are scrubbed before they reach
   this prompt; its non-goals defer isolation on the synthesizer and
   verifier prompts, not a supervisor-side wrap.
-- Emit the `llm_failed` stop bucket the module docstring advertises, or
-  drop it from the docstring — see the drift note above.
+- ~~Emit the `llm_failed` stop bucket the module docstring advertises,
+  or drop it from the docstring.~~ Landed — WO-B3; see the drift note
+  above.
 
 ## Related
 

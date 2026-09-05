@@ -339,6 +339,14 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "supervisor_invalid_action_fallback",
         "supervisor_llm_failed_fallback_to_default",
         "supervisor_max_iterations_stop",
+        # WO-B3. The routing call reached the provider and the provider
+        # refused it. ERROR, and a separate name from
+        # `supervisor_llm_failed_fallback_to_default`, because the two
+        # have different audiences: a malformed judge is one run's
+        # problem, an outage is every concurrent run's at once. Carries
+        # `error_type=upstream_model`, the same code the same outage
+        # produces in any other node.
+        "supervisor_provider_outage",
         "synthesizer_citations_dropped",
         "synthesizer_citations_not_a_list",
         "synthesizer_response_not_an_object",

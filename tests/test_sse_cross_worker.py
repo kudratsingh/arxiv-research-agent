@@ -277,6 +277,12 @@ async def test_runner_publishes_terminal_frame_to_other_worker(
     # here, so which shape a client saw depended on whether it happened
     # to be connected when the job finished. `terminal_event_data` in
     # `src/api/runner.py` is now the only place the list exists.
+    #
+    # WO-B3 added `reason`: it was on the live `job_cancelled` for a
+    # reviewer cancellation and nowhere else, so it was the last key
+    # whose presence depended on which frame a client received. This
+    # test asserts the pub/sub path because that is the one a
+    # multi-worker deployment actually uses.
     assert set(terminal) == {
         "job_id",
         "status",
@@ -289,6 +295,7 @@ async def test_runner_publishes_terminal_frame_to_other_worker(
         "quality_score",
         "cost_usd",
         "llm_calls",
+        "reason",
     }
     assert terminal["status"] == "succeeded"
     assert terminal["job_id"] == "job-e2e"

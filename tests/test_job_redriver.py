@@ -266,6 +266,13 @@ async def test_reclaim_publishes_terminal_frame_to_subscriber(
     assert data["job_id"] == "job-streamed"
     assert data["status"] == "failed"
     assert data["error_type"] == "orphaned"
+    # WO-B3: this module kept its own eight-key copy of the terminal
+    # payload, three fields short of the frame every other path sends,
+    # under a docstring claiming a field-for-field sync it no longer
+    # had. These are the three a reconnecting client got and a
+    # still-subscribed one did not; the whole shape is pinned in
+    # `tests/test_contract_sse_events.py`.
+    assert {"cost_cap_status", "cost_cap_message", "llm_calls"} <= set(data)
 
 
 @pytest.mark.asyncio

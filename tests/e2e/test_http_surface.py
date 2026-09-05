@@ -97,6 +97,15 @@ SERVER_HOST = "127.0.0.1"
 #: the two sets, and asserting both frames against one constant here is
 #: what makes "they agree" a structural property of this file rather
 #: than something a reader has to notice by comparing two lists.
+#:
+#: WO-B3 finished the convergence A10 started — the eight `job_failed` /
+#: `job_cancelled` sites and the redriver's third copy — and added
+#: `reason`, which the live reviewer-cancellation frame carried alone.
+#: The set is pinned in two places on purpose: here against a *served*
+#: response over a real socket, and in
+#: `tests/test_contract_sse_events.py` against the builders. This one is
+#: the only one that can fail if the serialization drops a key on the
+#: way out.
 TERMINAL_FRAME_KEYS = {
     "job_id",
     "status",
@@ -109,6 +118,7 @@ TERMINAL_FRAME_KEYS = {
     "quality_score",
     "cost_usd",
     "llm_calls",
+    "reason",
 }
 
 
