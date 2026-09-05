@@ -574,6 +574,35 @@ jobs:
             -v "${PWD}/deploy/observability:/etc/prometheus:ro" \
             prom/prometheus:v3.7.3 \
             check config /etc/prometheus/prometheus.yml
+      - name: Test the alert rules fire on what they claim (promtool)
+        # WO-INF2, and the reason it exists is one work order old.
+        # INF-1's `check rules` above proves a rule PARSES. WO-D5 then
+        # wrote a new rule, `check rules` passed it clean, and
+        # unit-testing its semantics found it firing on a cache blip —
+        # `rate(...[15m])` under `for: 15m`, an alert whose summary said
+        # "sustained" and whose behaviour meant "happened twice". So
+        # parsing is not firing, and this step is what tells the two
+        # apart before an operator does at 3am.
+        #
+        # `deploy/observability/alerts_test.yml` drives a synthetic
+        # metric series past every rule and asserts which alerts fire,
+        # when, and with which labels and annotations. Every rule in
+        # `alerts.yml` has at least one silent case and at least one
+        # firing case, and
+        # `tests/test_operability_docs.py::TestTheAlertRulesAreBehaviourTested`
+        # fails if a new rule arrives without either — so this step
+        # cannot quietly stop covering the file it is here to cover.
+        #
+        # SAME pinned image a third time, on purpose: a promtool that
+        # evaluates differently from the Prometheus the overlay runs
+        # would be a test of something nobody deploys.
+        # `test_ci_checks_the_alert_rules_with_promtool` asserts all
+        # three invocations share the tag.
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "${PWD}/deploy/observability:/etc/prometheus:ro" \
+            prom/prometheus:v3.7.3 \
+            test rules /etc/prometheus/alerts_test.yml
       - name: Build image
         # Cache the layer graph in the runner's local GHA cache — a
         # rebuild without dep changes lands in ~30s vs. ~4min cold.
@@ -585,9 +614,11 @@ jobs:
         # is ~20x its warm one (the job comment above records 13-15 min), so
         # the bound comes off the job's ceiling instead. Twenty-two leaves
         # three minutes for the checkout, the buildx setup, the four compose
-        # validations and the promtool check — the last of which pulls the
-        # pinned Prometheus image, so the pre-build steps now measure in the
-        # tens of seconds rather than under ten — and unlike every
+        # validations and the three promtool invocations — the first of which
+        # pulls the pinned Prometheus image, so the pre-build steps now
+        # measure in the tens of seconds rather than under ten; WO-INF2's
+        # behaviour suite is the third and runs against an image the step
+        # before it already pulled, in about a second — and unlike every
         # other bound in this file it buys no rescued report, because this is
         # the job's last step. What it buys is a failure that names the step
         # rather than a job killed at its ceiling with no line saying why.

@@ -1,0 +1,1192 @@
+# Behaviour tests for `alerts.yml` — WO-INF2.
+#
+# `promtool check rules` (WO-INF1) proves the rules PARSE. It does not
+# prove one of them will not wake somebody at 3am because a cache missed
+# once. This file is the other half, and it exists because that failure
+# was not hypothetical: WO-D5 wrote `CacheTierDegradedSustained` with a
+# `rate(...[15m])` under `for: 15m`, `promtool check rules` passed it
+# clean, and a unit test caught it firing on a cache blip — an alert
+# that says "sustained" and means "happened twice". The window became
+# `[5m]` before it shipped. The fixtures did not ship with it; this is
+# them, re-derived, plus the other seventeen rules.
+#
+# Run it exactly as CI does, through the same pinned image the overlay
+# evaluates the rules with:
+#
+#   docker run --rm --entrypoint promtool \
+#     -v "${PWD}/deploy/observability:/etc/prometheus:ro" \
+#     prom/prometheus:v3.7.3 \
+#     test rules /etc/prometheus/alerts_test.yml
+#
+# ## What every rule gets, and why those four
+#
+#   1. **Silent on a blip.** One scrape of a degradation or an error
+#      does not fire. This is the assertion that pays for the file.
+#   2. **Fires on sustained.** The condition held across the `for:`
+#      window does — otherwise 1 is satisfied by a rule that can never
+#      fire at all, which is the same fleet-looks-healthy failure one
+#      layer up.
+#   3. **Recovers.** It stops firing once the condition clears. A rule
+#      that latches is a rule an operator learns to ignore.
+#   4. **The labels and the annotations are what a runbook expects.**
+#      Every firing assertion below carries the rule's FULL label and
+#      annotation set, transcribed verbatim from `alerts.yml` — because
+#      `promtool` compares `exp_annotations` for equality, an alert that
+#      fires with the wrong `severity` or a `runbook:` naming a file
+#      that has moved is a page nobody can action, and that is a
+#      behaviour like any other.
+#
+# `tests/test_operability_docs.py::TestTheAlertRulesAreBehaviourTested`
+# holds the ratchet in both directions: every rule in `alerts.yml` needs
+# at least one silent assertion AND at least one firing assertion here
+# or a declared, argued exemption, and every `alertname` asserted here
+# has to name a rule that exists. That last one matters more than it
+# looks — an `alert_rule_test` with a misspelt `alertname` and
+# `exp_alerts: []` passes, forever, testing nothing.
+#
+# ## Adding a case
+#
+# Append a block to `tests:`. It is three keys:
+#
+#   - interval: 1m                    # how often the fake series is scraped
+#     name: what the scenario is      # shown on failure; write a sentence
+#     input_series:
+#       - series: 'metric_name{label="value"}'
+#         values: '0+1x30'            # 0,1,2,…,30 — see below
+#     alert_rule_test:
+#       - eval_time: 20m
+#         alertname: TheRule
+#         exp_alerts: []              # silent. For a firing case, paste
+#                                     # the rule's labels + annotations.
+#
+# `values` is promtool's series notation: `a+bxN` is N+1 samples
+# starting at `a` and stepping by `b`; `axN` is `a` repeated N+1 times;
+# a space starts a new segment, and a segment that steps DOWN from the
+# previous one is a counter reset, so keep the last value of one segment
+# as the first of the next when you mean "and then it stopped".
+#
+# ## Two things that will bite you
+#
+# **`rate(...[W])` stays positive for the whole of W after one
+# increment.** So a rule whose `for:` is not longer than its window can
+# fire on a single event. Several rules here sit at `W == for` and are
+# safe by exactly one evaluation interval — `RateLimiterFellBackToMemory`
+# and `SubmitPathFailing` are pinned at that boundary below precisely
+# because "safe by one scrape" is not something to leave to memory.
+#
+# **`increase()` extrapolates to the window edges**, so a threshold
+# written as `> N` is a fuzzy boundary rather than a sharp one and can
+# in principle fire on N events. Whether it does depends on the scrape
+# interval and on where in the window the events land, which is not
+# something to reason about in a comment. `CostCapStorm`'s boundary is
+# pinned below from both sides — three silent, four firing — so it is
+# measured rather than assumed.
+
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  # ===================================================================
+  # slo_burn
+  # ===================================================================
+
+  - interval: 1m
+    name: >-
+      ApiAvailabilityBudgetBurnFast — one 500 in an otherwise healthy
+      hour is not a budget burn
+    input_series:
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="202"}'
+        values: '0+10x90'
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="500"}'
+        values: '0x4 1x86'
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: ApiAvailabilityBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ApiAvailabilityBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: ApiAvailabilityBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ApiAvailabilityBudgetBurnFast — 9% of requests answering 5xx for
+      three quarters of an hour pages, and clears when they stop
+    input_series:
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="202"}'
+        values: '0+10x90'
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="500"}'
+        values: '0+1x45 45x45'
+    alert_rule_test:
+      - eval_time: 45m
+        alertname: ApiAvailabilityBudgetBurnFast
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+              slo: "api_availability"
+            exp_annotations:
+              description: "More than 7.2% of non-probe API requests are answering 5xx over both the last hour and the last five minutes, on at least 200 requests. At this rate the whole 28-day error budget is gone in under two days. A 4xx is not counted: a client sending bad requests is not this service failing."
+              runbook: "docs/runbooks/README.md"
+              signal_events: "api_request_failed api_health_dependency_degraded"
+              summary: "API availability is burning its 28-day budget 14.4x too fast"
+      # The 5m leg is what makes it reset promptly: the 1h leg is still
+      # burning at 55m, and without the short window this would stay
+      # firing for another three quarters of an hour.
+      - eval_time: 55m
+        alertname: ApiAvailabilityBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ApiAvailabilityBudgetBurnFast — half of a two-request-a-minute
+      fleet failing is noise, not a page (the 200-request floor)
+    input_series:
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="202"}'
+        values: '0+1x90'
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="500"}'
+        values: '0+1x90'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: ApiAvailabilityBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ApiAvailabilityBudgetBurnSlow — a ten-minute burst after six hours
+      of clean traffic does not open a ticket
+    input_series:
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="202"}'
+        values: '0+10x480'
+      # Six hours of nothing, then twenty 5xx in ten minutes, then quiet.
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="500"}'
+        values: '0x400 2+2x10 22x69'
+    alert_rule_test:
+      - eval_time: 412m
+        alertname: ApiAvailabilityBudgetBurnSlow
+        exp_alerts: []
+      - eval_time: 430m
+        alertname: ApiAvailabilityBudgetBurnSlow
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ApiAvailabilityBudgetBurnSlow — 4% sustained for six hours is a
+      ticket and not a page
+    input_series:
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="202"}'
+        values: '0+24x480'
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="500"}'
+        values: '0+1x480'
+    alert_rule_test:
+      - eval_time: 400m
+        alertname: ApiAvailabilityBudgetBurnSlow
+        exp_alerts:
+          - exp_labels:
+              severity: "ticket"
+              slo: "api_availability"
+            exp_annotations:
+              description: "5% of the 28-day budget will be gone in six hours at this rate. Not a page; it is the shape of a dependency that is failing some of the time rather than all of it."
+              runbook: "docs/runbooks/README.md"
+              signal_events: "api_request_failed api_health_dependency_degraded"
+              summary: "API availability is burning its 28-day budget 6x too fast"
+      # 4% is well under the fast rule's 7.2%, so the pair discriminates
+      # rather than both firing on everything.
+      - eval_time: 400m
+        alertname: ApiAvailabilityBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      JobSuccessBudgetBurnFast — two failed jobs in an hour of clean
+      ones is not a budget burn
+    input_series:
+      - series: 'research_jobs_total{status="succeeded",error_type="none",kind="research"}'
+        values: '0+1x90'
+      - series: 'research_jobs_total{status="failed",error_type="upstream_model",kind="research"}'
+        values: '0x4 1x86'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: JobSuccessBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: JobSuccessBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      JobSuccessBudgetBurnFast — three quarters of jobs failing pages,
+      and clears when the provider comes back
+    input_series:
+      - series: 'research_jobs_total{status="succeeded",error_type="none",kind="research"}'
+        values: '0+1x90'
+      - series: 'research_jobs_total{status="failed",error_type="upstream_model",kind="research"}'
+        values: '0+3x45 135x45'
+    alert_rule_test:
+      - eval_time: 45m
+        alertname: JobSuccessBudgetBurnFast
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+              slo: "job_success"
+            exp_annotations:
+              description: "Over 72% of terminal jobs are ending in something other than a clean success, on at least 10 jobs in the last hour. The floor is 10 rather than 200 because a job is a minutes-long unit of work, not a request; a fleet serving a five-person pilot will not produce 200 jobs an hour and a rule that waits for them would never fire."
+              runbook: "docs/runbooks/README.md"
+              signal_events: "api_job_failed run_failed api_job_timeout"
+              summary: "Research jobs are failing fast enough to empty the budget in two days"
+      - eval_time: 55m
+        alertname: JobSuccessBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      JobSuccessBudgetBurnFast — a principal cancelling every job they
+      submit is not the service failing
+    input_series:
+      - series: 'research_jobs_total{status="cancelled",error_type="none",kind="research"}'
+        values: '0+5x90'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: JobSuccessBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      JobSuccessBudgetBurnFast — ADR 0062's polite close counts against
+      the budget, which is the whole of docs/reliability.md §4
+    input_series:
+      - series: 'research_jobs_total{status="succeeded",error_type="none",kind="research"}'
+        values: '0+1x90'
+      # `degraded_close` reports a job row of `succeeded` to the learner
+      # and is a failure here. Counting it as a success is exactly how
+      # budget exhaustion became invisible.
+      - series: 'research_jobs_total{status="degraded_close",error_type="none",kind="research"}'
+        values: '0+3x90'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: JobSuccessBudgetBurnFast
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+              slo: "job_success"
+            exp_annotations:
+              description: "Over 72% of terminal jobs are ending in something other than a clean success, on at least 10 jobs in the last hour. The floor is 10 rather than 200 because a job is a minutes-long unit of work, not a request; a fleet serving a five-person pilot will not produce 200 jobs an hour and a rule that waits for them would never fire."
+              runbook: "docs/runbooks/README.md"
+              signal_events: "api_job_failed run_failed api_job_timeout"
+              summary: "Research jobs are failing fast enough to empty the budget in two days"
+
+  # ===================================================================
+  # dependencies
+  # ===================================================================
+
+  - interval: 1m
+    name: >-
+      ModelProviderErrorRateHigh — one failed model call in a busy ten
+      minutes does not page
+    input_series:
+      - series: 'gen_ai_client_operation_duration_count{error_type="none",gen_ai_operation_name="chat"}'
+        values: '0+10x60'
+      - series: 'gen_ai_client_operation_duration_count{error_type="upstream_model",gen_ai_operation_name="chat"}'
+        values: '0x4 1x56'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ModelProviderErrorRateHigh
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: ModelProviderErrorRateHigh
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ModelProviderErrorRateHigh — a fifth of calls failing pages, and
+      clears when the provider comes back
+    input_series:
+      - series: 'gen_ai_client_operation_duration_count{error_type="none",gen_ai_operation_name="chat"}'
+        values: '0+8x60'
+      - series: 'gen_ai_client_operation_duration_count{error_type="upstream_model",gen_ai_operation_name="chat"}'
+        values: '0+2x30 60x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: ModelProviderErrorRateHigh
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "`gen_ai.client.operation.duration` counts every provider call, successful or not, and carries `error.type`. A sustained failure ratio here means the SDK's own retry envelope has been exhausted, not that one call was slow — `llm_retries_total` is where retries that eventually succeeded show up."
+              runbook: "docs/runbooks/model-provider-outage.md"
+              signal_events: "llm_upstream_error llm_retry_budget_clamped"
+              summary: "More than 10% of model calls are failing"
+      - eval_time: 45m
+        alertname: ModelProviderErrorRateHigh
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ModelProviderErrorRateHigh — a quiet fleet whose only two calls
+      both failed is a 100% error rate and still not a page
+    input_series:
+      - series: 'gen_ai_client_operation_duration_count{error_type="none",gen_ai_operation_name="chat"}'
+        values: '0x60'
+      - series: 'gen_ai_client_operation_duration_count{error_type="upstream_model",gen_ai_operation_name="chat"}'
+        values: '0 0 1 2+0x58'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: ModelProviderErrorRateHigh
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: ModelProviderErrorRateHigh
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ModelProviderNoSuccessfulCalls — a worker that has NEVER completed
+      a call, so `llm_calls_total` does not exist at all
+    # THE REGRESSION. Before WO-INF2 this expression was
+    # `... and sum(rate(llm_calls_total[10m])) == 0`, and `sum()` over a
+    # selector that matches nothing is an EMPTY vector rather than zero:
+    # empty == 0 is empty, x and empty is empty, so the rule was silent.
+    # An expired credential on a fresh deploy is precisely the case the
+    # summary names, and it was the one case that could not fire.
+    input_series:
+      - series: 'llm_upstream_errors_total{error_type="upstream_model"}'
+        values: '0+1x40'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: ModelProviderNoSuccessfulCalls
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "`llm_calls_total` is bumped from the cost choke point, which only runs on a call that returned; `llm_upstream_errors_total` is bumped when the SDK gives up. Errors with no successes at all is a total provider outage, an expired credential, or a spend cap on the provider side."
+              runbook: "docs/runbooks/model-provider-outage.md"
+              signal_events: "llm_upstream_error llm_client_configured"
+              summary: "Every model call is failing — no successful call in ten minutes"
+
+  - interval: 1m
+    name: >-
+      ModelProviderNoSuccessfulCalls — a fleet that used to work and
+      stopped pages, and clears when a call finally lands
+    input_series:
+      - series: 'llm_upstream_errors_total{error_type="upstream_model"}'
+        values: '0+1x20 20x30'
+      - series: 'llm_calls_total{gen_ai_request_model="claude-sonnet-4-6"}'
+        values: '100+0x50'
+    alert_rule_test:
+      - eval_time: 18m
+        alertname: ModelProviderNoSuccessfulCalls
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "`llm_calls_total` is bumped from the cost choke point, which only runs on a call that returned; `llm_upstream_errors_total` is bumped when the SDK gives up. Errors with no successes at all is a total provider outage, an expired credential, or a spend cap on the provider side."
+              runbook: "docs/runbooks/model-provider-outage.md"
+              signal_events: "llm_upstream_error llm_client_configured"
+              summary: "Every model call is failing — no successful call in ten minutes"
+      - eval_time: 35m
+        alertname: ModelProviderNoSuccessfulCalls
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ModelProviderNoSuccessfulCalls — errors alongside successes is a
+      bad afternoon, not a total outage
+    input_series:
+      - series: 'llm_upstream_errors_total{error_type="upstream_model"}'
+        values: '0+1x40'
+      - series: 'llm_calls_total{gen_ai_request_model="claude-sonnet-4-6"}'
+        values: '0+5x40'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: ModelProviderNoSuccessfulCalls
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      RateLimiterFellBackToMemory — one 429 from the fallback limiter
+      does not page, and the margin is exactly one evaluation
+    # `rate(...[5m]) > 0` under `for: 5m`. A single increment holds the
+    # rate positive for five minutes minus one scrape, which is four
+    # evaluations where `for` wants five. Safe — by one interval. That
+    # is not a margin to leave undocumented, which is why it is pinned
+    # at 5m, 6m and 7m rather than only somewhere comfortable.
+    input_series:
+      - series: 'rate_limit_rejections_total{backend="memory"}'
+        values: '0 1+0x40'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: RateLimiterFellBackToMemory
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: RateLimiterFellBackToMemory
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: RateLimiterFellBackToMemory
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: RateLimiterFellBackToMemory
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      RateLimiterFellBackToMemory — a Redis outage that keeps the
+      fallback limiter busy pages, and clears when Redis comes back
+    input_series:
+      - series: 'rate_limit_rejections_total{backend="memory"}'
+        values: '0+1x20 20x30'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: RateLimiterFellBackToMemory
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "429s are being issued by the in-process fallback limiter. On a deployment configured for the Redis backend this means Redis is unreachable from at least one worker and the per-principal hourly cap has silently become per-worker."
+              runbook: "docs/runbooks/redis-loss.md"
+              signal_events: "resilience_degraded api_health_dependency_degraded"
+              summary: "The rate limiter is serving a weaker guarantee than it is configured for"
+      - eval_time: 30m
+        alertname: RateLimiterFellBackToMemory
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      RateLimiterFellBackToMemory — a 429 from the Redis backend is the
+      limiter working as configured
+    input_series:
+      - series: 'rate_limit_rejections_total{backend="redis"}'
+        values: '0+5x40'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: RateLimiterFellBackToMemory
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      SubmitPathFailing — a single 500 on POST /research does not page,
+      and the margin is again one evaluation
+    input_series:
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="500"}'
+        values: '0 1+0x40'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: SubmitPathFailing
+        exp_alerts: []
+      - eval_time: 11m
+        alertname: SubmitPathFailing
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: SubmitPathFailing
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: SubmitPathFailing
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      SubmitPathFailing — ten minutes of 5xx at submit pages, and clears
+      when the store comes back
+    input_series:
+      - series: 'http_server_request_duration_count{http_route="/research",http_request_method="POST",http_response_status_code="500"}'
+        values: '0+1x20 20x30'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: SubmitPathFailing
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "Before WO-A07 a Redis outage at submit moved no instrument at all, because the request never became a job and the fleet read as idle rather than as failing. This is the rule that closes that: a failing submit path is a failing store, a failing rate limiter that did not fail open, or a bug at the boundary. The log's `api_health_dependency_degraded` line names the dependency."
+              runbook: "docs/runbooks/redis-loss.md"
+              signal_events: "api_health_dependency_degraded api_request_failed"
+              summary: "POST /research is returning 5xx — the job store is probably down"
+      - eval_time: 35m
+        alertname: SubmitPathFailing
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      SubmitPathFailing — a 5xx on the polling route is not the submit
+      path
+    input_series:
+      - series: 'http_server_request_duration_count{http_route="/research/{job_id}",http_request_method="GET",http_response_status_code="500"}'
+        values: '0+1x40'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: SubmitPathFailing
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      JobsOrphanedByDeadWorkers — one orphan opens a ticket on purpose,
+      and it closes itself half an hour later
+    # `for: 0m` and `> 0`, so one reclaim is enough. The annotation says
+    # "one is a restart"; the rule still opens a ticket for it, and a
+    # ticket is the right cost for "look at this when you are next
+    # around". This is the assertion that keeps that a decision.
+    input_series:
+      - series: 'research_jobs_total{status="failed",error_type="orphaned",kind="research"}'
+        values: '0 1+0x60'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: JobsOrphanedByDeadWorkers
+        exp_alerts:
+          - exp_labels:
+              severity: "ticket"
+            exp_annotations:
+              description: "An `orphaned` terminal means a worker exited without publishing a terminal state and the redriver reclaimed the row. One is a restart. A stream of them is a worker crashing, an OOM kill, or a grace period shorter than the drain."
+              runbook: "docs/runbooks/postgres-loss.md"
+              signal_events: "job_redriver_reclaimed job_redriver_swept api_shutdown"
+              summary: "The redriver is reclaiming jobs whose worker vanished"
+      - eval_time: 45m
+        alertname: JobsOrphanedByDeadWorkers
+        exp_alerts: []
+
+  # ===================================================================
+  # cost
+  # ===================================================================
+
+  - interval: 1m
+    name: >-
+      CostCapStorm — twenty refusals and not one polite close, which is
+      the case that used to be silent
+    # THE REGRESSION. `+` between two instant vectors is a join, and
+    # `sum()` over a selector matching nothing is empty, so until a
+    # deployment had produced at least one `degraded_close` — which
+    # needs a learning session — no number of `cost_budget_exceeded`
+    # refusals could fire this page.
+    input_series:
+      - series: 'research_jobs_total{status="failed",error_type="cost_budget_exceeded",kind="research"}'
+        values: '0+1x40'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: CostCapStorm
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "More than three runs in half an hour ended at a cost cap, either by refusal (`cost_budget_exceeded`) or by ADR 0062's polite close (`degraded_close`). The caps are working; the question is why the work now costs more than they allow — a prompt change, a longer paper set, a retry loop, or a principal doing something expensive on purpose."
+              runbook: "docs/runbooks/cost-cap-storm.md"
+              signal_events: "api_job_cost_budget_exceeded api_session_cost_cap_reached supervisor_cost_budget_stop"
+              summary: "Jobs are hitting their spend ceilings repeatedly"
+
+  - interval: 1m
+    name: >-
+      CostCapStorm — three runs at a cap in half an hour is not a storm,
+      extrapolation notwithstanding
+    # `increase()` extrapolates to the window edges, so "more than
+    # three" is a boundary that could in principle fire on three. It
+    # does not here, at a 15s scrape and a 1m evaluation, and this is
+    # the assertion that says so — the alternative was a comment
+    # asserting it, which is what the rest of this file exists to
+    # replace.
+    input_series:
+      - series: 'research_jobs_total{status="failed",error_type="cost_budget_exceeded",kind="research"}'
+        values: '0 1 2 3+0x40'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: CostCapStorm
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: CostCapStorm
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      CostCapStorm — four is, whichever pair of terminals they arrive
+      as, and it clears half an hour after the last one
+    input_series:
+      - series: 'research_jobs_total{status="failed",error_type="cost_budget_exceeded",kind="research"}'
+        values: '0 1 2+0x60'
+      - series: 'research_jobs_total{status="degraded_close",error_type="none",kind="session"}'
+        values: '0 1 2+0x60'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: CostCapStorm
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "More than three runs in half an hour ended at a cost cap, either by refusal (`cost_budget_exceeded`) or by ADR 0062's polite close (`degraded_close`). The caps are working; the question is why the work now costs more than they allow — a prompt change, a longer paper set, a retry loop, or a principal doing something expensive on purpose."
+              runbook: "docs/runbooks/cost-cap-storm.md"
+              signal_events: "api_job_cost_budget_exceeded api_session_cost_cap_reached supervisor_cost_budget_stop"
+              summary: "Jobs are hitting their spend ceilings repeatedly"
+      - eval_time: 45m
+        alertname: CostCapStorm
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      SpendRateHigh — one job that actually reaches the $2.00 per-run
+      ceiling pages for an hour
+    # Measured, not asserted, and it contradicts what the rule's comment
+    # used to claim. `rate(...[1h]) * 3600` stays at 2.00 for a full
+    # hour after a single increment, so `for: 15m` is satisfied four
+    # times over. The threshold is a spend-policy decision and was left
+    # alone; the comment was corrected and this pins the behaviour so
+    # the next person to move the number sees what they are moving.
+    input_series:
+      - series: 'llm_cost_usd_total{gen_ai_request_model="claude-sonnet-4-6"}'
+        values: '0 2 2+0x90'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: SpendRateHigh
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "`llm_cost_usd_total` is estimated from the token counts and the pinned price table, not billed by the provider, so treat it as the shape of the spend and not the invoice. There is no aggregate cap in this repository (MT-01 F4) — the per-job ceilings bound one job and nothing bounds the sum, which is why this rule is a page and not a ticket."
+              runbook: "docs/runbooks/cost-cap-storm.md"
+              signal_events: "llm_call api_job_cost_budget_exceeded"
+              summary: "Model spend is above 1.00 USD/hour"
+      - eval_time: 70m
+        alertname: SpendRateHigh
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      SpendRateHigh — a run at the cost this repository's runs actually
+      land at does not page
+    input_series:
+      - series: 'llm_cost_usd_total{gen_ai_request_model="claude-sonnet-4-6"}'
+        values: '0 0.3 0.3+0x90'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: SpendRateHigh
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      SpendRateHigh — three dollars an hour, sustained, is the runaway
+      this rule is for
+    input_series:
+      - series: 'llm_cost_usd_total{gen_ai_request_model="claude-sonnet-4-6"}'
+        values: '0+0.05x120'
+    alert_rule_test:
+      # Not before 80m, and that is worth knowing: `rate(...[1h])`
+      # divides by the WINDOW and not by the data, so a fleet that has
+      # only been spending for half an hour reads at half its true
+      # hourly rate. A spend rule is blind for its first window.
+      - eval_time: 80m
+        alertname: SpendRateHigh
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "`llm_cost_usd_total` is estimated from the token counts and the pinned price table, not billed by the provider, so treat it as the shape of the spend and not the invoice. There is no aggregate cap in this repository (MT-01 F4) — the per-job ceilings bound one job and nothing bounds the sum, which is why this rule is a page and not a ticket."
+              runbook: "docs/runbooks/cost-cap-storm.md"
+              signal_events: "llm_call api_job_cost_budget_exceeded"
+              summary: "Model spend is above 1.00 USD/hour"
+
+  # ===================================================================
+  # saturation
+  # ===================================================================
+
+  - interval: 1m
+    name: >-
+      QueueSaturated — a two-minute spike to the concurrency ceiling
+      does not open a ticket
+    input_series:
+      - series: 'research_queue_saturation_ratio{worker="worker-a"}'
+        values: '0.2 0.4 1 1 0.3+0x40'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: QueueSaturated
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: QueueSaturated
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      QueueSaturated — ten minutes at the ceiling does, and it clears
+      when the queue drains
+    input_series:
+      - series: 'research_queue_saturation_ratio{worker="worker-a"}'
+        values: '0.2 1+0x30 0.2+0x30'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: QueueSaturated
+        exp_alerts:
+          - exp_labels:
+              severity: "ticket"
+            exp_annotations:
+              description: "`/readyz` is already returning 503 for this worker, so an orchestrator that reads it will drain. Nothing in the shipped compose stack reads it — the healthcheck polls `/healthz`, which is always 200 by design — so on that deployment this rule is the only thing that will tell you."
+              runbook: "docs/runbooks/queue-saturation.md"
+              signal_events: "api_job_submitted api_node_executor_drain_timeout"
+              summary: "A worker has been at its concurrency ceiling for ten minutes"
+      - eval_time: 40m
+        alertname: QueueSaturated
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      QueueSaturated — `max` and not `avg`: one full worker in a fleet
+      of four is a real queue for whoever landed on it
+    # The average of these four is 0.25 and the rule fires anyway. That
+    # is the aggregator's whole argument, and without this case a change
+    # from `max` to `avg` would pass every other test in this file.
+    input_series:
+      - series: 'research_queue_saturation_ratio{worker="worker-a"}'
+        values: '1+0x40'
+      - series: 'research_queue_saturation_ratio{worker="worker-b"}'
+        values: '0+0x40'
+      - series: 'research_queue_saturation_ratio{worker="worker-c"}'
+        values: '0+0x40'
+      - series: 'research_queue_saturation_ratio{worker="worker-d"}'
+        values: '0+0x40'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: QueueSaturated
+        exp_alerts:
+          - exp_labels:
+              severity: "ticket"
+            exp_annotations:
+              description: "`/readyz` is already returning 503 for this worker, so an orchestrator that reads it will drain. Nothing in the shipped compose stack reads it — the healthcheck polls `/healthz`, which is always 200 by design — so on that deployment this rule is the only thing that will tell you."
+              runbook: "docs/runbooks/queue-saturation.md"
+              signal_events: "api_job_submitted api_node_executor_drain_timeout"
+              summary: "A worker has been at its concurrency ceiling for ten minutes"
+
+  - interval: 1m
+    name: >-
+      QueueWaitP95High — sub-second permit waits, which is what an
+      unsaturated fleet looks like
+    input_series:
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="1"}'
+        values: '0+10x60'
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="15"}'
+        values: '0+10x60'
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="60"}'
+        values: '0+10x60'
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="300"}'
+        values: '0+10x60'
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="+Inf"}'
+        values: '0+10x60'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: QueueWaitP95High
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      QueueWaitP95High — a p95 of nearly five minutes behind the
+      ceiling opens a ticket that names the job kind
+    input_series:
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="1"}'
+        values: '0x60'
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="15"}'
+        values: '0x60'
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="60"}'
+        values: '0x60'
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="300"}'
+        values: '0+10x60'
+      - series: 'research_job_queue_wait_seconds_bucket{kind="research",le="+Inf"}'
+        values: '0+10x60'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: QueueWaitP95High
+        exp_alerts:
+          - exp_labels:
+              kind: "research"
+              severity: "ticket"
+            exp_annotations:
+              description: "The USE 'wait' for the job queue. It rises before saturation does, because a queue that is draining slowly still drains — which makes it the earlier of the two signals and the one worth acting on."
+              runbook: "docs/runbooks/queue-saturation.md"
+              signal_events: "api_job_submitted"
+              summary: "Jobs are waiting more than a minute for a concurrency permit"
+
+  - interval: 1m
+    name: >-
+      AbandonedNodeThreads — a thread given up on and reaped inside five
+      minutes does not open a ticket
+    input_series:
+      - series: 'research_abandoned_node_threads{worker="worker-a"}'
+        values: '0 0 0 1 1 1 1 1 0+0x60'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: AbandonedNodeThreads
+        exp_alerts: []
+      - eval_time: 45m
+        alertname: AbandonedNodeThreads
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      AbandonedNodeThreads — half an hour of carrying one opens a
+      ticket, and only a restart clears it
+    input_series:
+      - series: 'research_abandoned_node_threads{worker="worker-a"}'
+        values: '0 1+0x40 0+0x30'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: AbandonedNodeThreads
+        exp_alerts:
+          - exp_labels:
+              severity: "ticket"
+            exp_annotations:
+              description: "These threads never come back on their own. They hold pool slots and can still issue model calls, so a worker that accumulates them loses capacity and gains spend at the same time. The only containment is to restart the worker."
+              runbook: "docs/runbooks/queue-saturation.md"
+              signal_events: "api_job_node_drain_expired api_node_executor_drain_timeout"
+              summary: "A worker is carrying node threads it gave up waiting for"
+      - eval_time: 50m
+        alertname: AbandonedNodeThreads
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      PoisonJobDeadLettered — one dead-letter pages immediately, and
+      this rule having no `for:` is the decision being pinned
+    input_series:
+      - series: 'research_jobs_total{status="failed",error_type="internal_dead_letter",kind="research"}'
+        values: '0 1+0x90'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: PoisonJobDeadLettered
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+            exp_annotations:
+              description: "The redriver requeued this job `job_redrive_max_attempts` times and each attempt killed the worker that took it. That is the definition of a poison job: it is not the worker that is broken, it is the work. Until it is off the queue it will keep taking workers down."
+              runbook: "docs/runbooks/poison-job.md"
+              signal_events: "job_redriver_dead_lettered job_redriver_requeued job_redriver_reclaimed"
+              summary: "A job was dead-lettered after exhausting its redrive attempts"
+      - eval_time: 70m
+        alertname: PoisonJobDeadLettered
+        exp_alerts: []
+
+  # ===================================================================
+  # latency
+  # ===================================================================
+
+  - interval: 1m
+    name: >-
+      SubmitLatencyP95High — a millisecond-scale submit path does not
+      open a ticket
+    input_series:
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="202",le="0.005"}'
+        values: '0+10x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="202",le="0.5"}'
+        values: '0+10x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="202",le="0.75"}'
+        values: '0+10x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="202",le="+Inf"}'
+        values: '0+10x60'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: SubmitLatencyP95High
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      SubmitLatencyP95High — shedding harder must not make the latency
+      panel look better (docs/reliability.md §5)
+    # Twenty fast 429s for every slow 202. The 429s are excluded, so the
+    # rule fires on the p95 of the requests the service actually served.
+    # The `promql_expr_test` below is the counterfactual: the SAME
+    # expression without the exclusions computes ~5ms on this input, so
+    # a rule that forgot them would report a healthy submit path while
+    # every real request took three quarters of a second.
+    input_series:
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="202",le="0.005"}'
+        values: '0x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="202",le="0.5"}'
+        values: '0x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="202",le="0.75"}'
+        values: '0+10x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="202",le="+Inf"}'
+        values: '0+10x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="429",le="0.005"}'
+        values: '0+200x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="429",le="0.5"}'
+        values: '0+200x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="429",le="0.75"}'
+        values: '0+200x60'
+      - series: 'http_server_request_duration_bucket{http_route="/research",http_request_method="POST",http_response_status_code="429",le="+Inf"}'
+        values: '0+200x60'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: SubmitLatencyP95High
+        exp_alerts:
+          - exp_labels:
+              severity: "ticket"
+              slo: "submit_latency"
+            exp_annotations:
+              description: "Submit is a write to the job store and a return; it does no model work. A p95 above half a second means the store is slow, not that research is slow. Job wall-clock is a different SLI with a different instrument (`research_job_duration_seconds`)."
+              runbook: "docs/runbooks/redis-loss.md"
+              signal_events: "api_request_completed api_health_dependency_degraded"
+              summary: "POST /research p95 is over 500ms"
+    promql_expr_test:
+      - expr: >-
+          histogram_quantile(0.95,
+            sum by (le) (
+              rate(http_server_request_duration_bucket{http_route="/research",http_request_method="POST"}[30m])
+            )
+          )
+          < bool 0.5
+        eval_time: 40m
+        exp_samples:
+          # 1 == "the p95 computed WITHOUT the 429/503 exclusions is
+          # under the 500ms threshold", on the same input where the rule
+          # that has them is firing. Asserted as a boolean rather than
+          # as the float itself so the case survives a change of bucket
+          # arithmetic that does not change the conclusion.
+          - labels: '{}'
+            value: 1
+
+  - interval: 1m
+    name: >-
+      ResearchJobLatencyP95High — a fleet whose jobs are all being
+      killed at the timeout does not open this ticket
+    # A timeout kill lands in the histogram at exactly
+    # `API_JOB_TIMEOUT_SEC`, so without the `status="succeeded"` cut the
+    # p95 would converge on the timeout and the rule would fire on its
+    # own containment. Ten times as many killed jobs as successful ones
+    # here, and the rule is silent.
+    input_series:
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="succeeded",le="300"}'
+        values: '0+1x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="succeeded",le="600"}'
+        values: '0+1x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="succeeded",le="1200"}'
+        values: '0+1x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="succeeded",le="+Inf"}'
+        values: '0+1x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="failed",le="300"}'
+        values: '0x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="failed",le="600"}'
+        values: '0x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="failed",le="1200"}'
+        values: '0+10x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="failed",le="+Inf"}'
+        values: '0+10x240'
+    alert_rule_test:
+      - eval_time: 120m
+        alertname: ResearchJobLatencyP95High
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      ResearchJobLatencyP95High — successful jobs genuinely taking
+      twenty minutes do
+    input_series:
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="succeeded",le="300"}'
+        values: '0x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="succeeded",le="600"}'
+        values: '0x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="succeeded",le="1200"}'
+        values: '0+10x240'
+      - series: 'research_job_duration_seconds_bucket{kind="research",status="succeeded",le="+Inf"}'
+        values: '0+10x240'
+    alert_rule_test:
+      - eval_time: 120m
+        alertname: ResearchJobLatencyP95High
+        exp_alerts:
+          - exp_labels:
+              severity: "ticket"
+              slo: "job_latency"
+            exp_annotations:
+              description: "Cut to `status=\"succeeded\"` deliberately: a timeout kill lands in the histogram at exactly the timeout, so including failures would make the p95 converge on `API_JOB_TIMEOUT_SEC` and stop being a measurement of anything."
+              runbook: "docs/runbooks/model-provider-outage.md"
+              signal_events: "run_completed api_job_timeout"
+              summary: "Successful research jobs have a p95 wall clock over ten minutes"
+
+  - interval: 1m
+    name: >-
+      ToolLatencyP95High — the alert names the tool, so an operator
+      knows which one without reading a log
+    # Two tools, one slow. `sum by (le, gen_ai_tool_name)` is what makes
+    # exactly one alert with a `gen_ai_tool_name` label instead of one
+    # unlabelled alert for the whole tool surface.
+    input_series:
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="arxiv_search",le="30"}'
+        values: '0x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="arxiv_search",le="60"}'
+        values: '0+10x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="arxiv_search",le="+Inf"}'
+        values: '0+10x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="embedding_rank",le="0.1"}'
+        values: '0+50x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="embedding_rank",le="30"}'
+        values: '0+50x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="embedding_rank",le="60"}'
+        values: '0+50x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="embedding_rank",le="+Inf"}'
+        values: '0+50x60'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: ToolLatencyP95High
+        exp_alerts:
+          - exp_labels:
+              gen_ai_tool_name: "arxiv_search"
+              severity: "ticket"
+            exp_annotations:
+              description: "Named by `gen_ai.tool.name`, which is a closed set of five constants — so the label tells you whether it is arXiv, Semantic Scholar, a PDF fetch, a parse, or the embedding ranker without reading a log."
+              runbook: "docs/runbooks/model-provider-outage.md"
+              signal_events: "arxiv_search_request_failed semantic_scholar_request_failed pdf_download_failed"
+              summary: "A tool's p95 execution time is over 30 seconds"
+
+  - interval: 1m
+    name: >-
+      ToolLatencyP95High — tools answering in a tenth of a second do
+      not open a ticket
+    input_series:
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="arxiv_search",le="0.1"}'
+        values: '0+10x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="arxiv_search",le="30"}'
+        values: '0+10x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="arxiv_search",le="60"}'
+        values: '0+10x60'
+      - series: 'gen_ai_execute_tool_duration_bucket{gen_ai_tool_name="arxiv_search",le="+Inf"}'
+        values: '0+10x60'
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: ToolLatencyP95High
+        exp_alerts: []
+
+  # ===================================================================
+  # quality — ADR 0081
+  # ===================================================================
+
+  - interval: 1m
+    name: >-
+      QualityBudgetBurnFast — a healthy fleet with the occasional
+      degradation does not page
+    input_series:
+      - series: 'research_jobs_total{status="succeeded",error_type="none",kind="research"}'
+        values: '0+2x90'
+      - series: 'research_degradations_total{rung="cache_stale",component="paper_cache"}'
+        values: '0x4 1x86'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: QualityBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: QualityBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      QualityBudgetBurnFast — heavy degradation below the twenty-job
+      floor stays silent
+    input_series:
+      - series: 'research_jobs_total{status="succeeded",error_type="none",kind="research"}'
+        values: '0+0.25x90'
+      - series: 'research_degradations_total{rung="cache_stale",component="paper_cache"}'
+        values: '0+1x90'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: QualityBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      QualityBudgetBurnFast — two thirds of a degradation per job pages,
+      and clears when the subsystem recovers
+    input_series:
+      - series: 'research_jobs_total{status="succeeded",error_type="none",kind="research"}'
+        values: '0+3x90'
+      - series: 'research_degradations_total{rung="cache_stale",component="paper_cache"}'
+        values: '0+2x45 90x45'
+    alert_rule_test:
+      - eval_time: 45m
+        alertname: QualityBudgetBurnFast
+        exp_alerts:
+          - exp_labels:
+              severity: "page"
+              slo: "quality"
+            exp_annotations:
+              description: "More than 43% of jobs are taking a rung of the degradation ladder over both the last hour and the last five minutes. Every one of those jobs still reports `succeeded`, so `research_jobs_total` and `research_job_duration_seconds` both look fine — the duration histogram will look *better* than usual, because a degraded path is a faster path. Cut `research_degradations_total` by `rung` to see which rung, then by `component` to see which subsystem. The 20-job floor is the same small-denominator guard the burn rules above carry."
+              runbook: "docs/runbooks/README.md"
+              signal_events: "resilience_degraded embedding_cache_get_failed paper_cache_get_failed"
+              summary: "Jobs are being served degraded fast enough to burn the quality budget 14.4x"
+      - eval_time: 55m
+        alertname: QualityBudgetBurnFast
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      CacheTierDegradedSustained — one cache miss, then quiet
+    input_series:
+      - series: 'research_degradations_total{rung="cache_stale",component="paper_cache"}'
+        values: '0 1+0x40'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: CacheTierDegradedSustained
+        exp_alerts: []
+      - eval_time: 16m
+        alertname: CacheTierDegradedSustained
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: CacheTierDegradedSustained
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      CacheTierDegradedSustained — a cache tier that hiccups twice in
+      three minutes and then recovers, which is the case that decides
+      the rate window
+    # THIS is the discriminating case, and it is worth knowing why the
+    # single-miss test above is not. WO-D5's rule was written as
+    # `rate(...[15m])` under `for: 15m` and its own note says one miss
+    # would have fired it; measured here at a 1m evaluation interval,
+    # one miss under a 15m window comes up 14 minutes short and stays
+    # silent by a single evaluation. TWO misses three minutes apart do
+    # not: the window then carries a positive rate for sixteen minutes
+    # and the alert fires, with a summary that says "for fifteen
+    # minutes" about a cache that hiccuped twice. At `[5m]` the same
+    # input decays in six and never becomes pending for long enough.
+    #
+    # So the margin the shipped rule holds is one evaluation interval on
+    # a one-sample blip and a genuine six minutes on a two-sample one.
+    # Widening the window back gives that away, and this is the test
+    # that says so rather than the comment.
+    input_series:
+      - series: 'research_degradations_total{rung="cache_stale",component="paper_cache"}'
+        values: '0 1 1 2 2+0x40'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: CacheTierDegradedSustained
+        exp_alerts: []
+      - eval_time: 18m
+        alertname: CacheTierDegradedSustained
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: CacheTierDegradedSustained
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      CacheTierDegradedSustained — a cache backend that is actually down
+      opens a ticket naming it, and clears when it returns
+    input_series:
+      - series: 'research_degradations_total{rung="cache_stale",component="paper_cache"}'
+        values: '0+1x30 30+0x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: CacheTierDegradedSustained
+        exp_alerts:
+          - exp_labels:
+              component: "paper_cache"
+              severity: "ticket"
+            exp_annotations:
+              description: "`component` names which one — `paper_cache` (PDF text) or `embedding_cache` (MiniLM vectors). Neither failure can fail a job, by design (ADR 0028's degrade-to-recompute, ADR 0041), which is exactly why this needs its own alert: the fleet is quietly paying full recompute cost on every paper and every embedding while every other signal reads healthy."
+              runbook: "docs/runbooks/postgres-loss.md"
+              signal_events: "paper_cache_get_failed embedding_cache_get_failed"
+              summary: "A cache tier has been failing its reads for fifteen minutes"
+      - eval_time: 40m
+        alertname: CacheTierDegradedSustained
+        exp_alerts: []
+
+  - interval: 1m
+    name: >-
+      CacheTierDegradedSustained — a different rung of the ladder is a
+      different alert
+    input_series:
+      - series: 'research_degradations_total{rung="weakened_guarantee",component="rate_limiter"}'
+        values: '0+1x40'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: CacheTierDegradedSustained
+        exp_alerts: []

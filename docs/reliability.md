@@ -515,6 +515,59 @@ The alert rules that fire them ship as reviewable files under
 **not** wired into the default stack. Standing up a collector costs
 money and is the owner's decision.
 
+### The rules are behaviour-tested, and two of them were wrong
+
+Every rule in
+[`alerts.yml`](../deploy/observability/alerts.yml) is driven past a
+synthetic metric series by `promtool test rules`, in
+[`alerts_test.yml`](../deploy/observability/alerts_test.yml), on every
+PR. Each rule gets four assertions: it stays **silent on a blip**, it
+**fires on the sustained** version of the same condition, it
+**recovers**, and it arrives with the **labels and annotations** an
+operator routes and acts on — a page carrying the wrong `severity`, or
+a `runbook:` naming a file that has moved, is a page nobody can action.
+
+That is not the gate `promtool check rules` is. WO-INF1 added that one
+and it proves a rule *parses*. The distinction was not theoretical when
+it was drawn: WO-D5 wrote a rule, `check rules` passed it clean, and
+unit-testing its semantics found `rate(...[15m])` under `for: 15m`
+opening a ticket whose summary said "sustained" about a cache tier that
+had hiccuped twice. Extending the same exercise to the other seventeen
+rules found **two page rules that could not fire at all**, both for the
+same reason:
+
+- **`CostCapStorm`** added two `sum(increase(...))` terms. A `sum()`
+  over a selector that matches nothing is an **empty vector**, not
+  zero, and anything plus empty is empty — so until a deployment had
+  produced at least one `degraded_close` terminal, which needs ADR
+  0062's polite close, which needs a learning session, **no number of
+  `cost_budget_exceeded` refusals could fire this page.** Twenty
+  refusals in half an hour was silent.
+- **`ModelProviderNoSuccessfulCalls`** required
+  `sum(rate(llm_calls_total[10m])) == 0`, and on a worker that has
+  never completed a single model call that series does not exist, so
+  the comparison was empty and the `and` swallowed the other half. The
+  rule's own summary names "an expired credential"; a fresh deploy with
+  a bad key was the one case it could not catch.
+
+Both now wrap the fragile half in `or vector(0)`, and both cases are
+pinned in the suite. A third finding was a false claim rather than a
+false rule: `SpendRateHigh`'s comment said the $1.00/hour threshold was
+chosen so that a single ordinary run would not fire it, and
+`rate(...[1h]) × 3600` in fact stays at $2.00 for a full hour after one
+job that reaches the `MAX_COST_USD` ceiling — `for: 15m` is satisfied
+four times over. Moving that threshold is a spend-policy decision and
+belongs to the owner, so the comment was corrected instead and the
+behaviour pinned, so the next person to move the number sees what they
+are moving.
+
+The ratchet is
+`tests/test_operability_docs.py::TestTheAlertRulesAreBehaviourTested`: a
+new rule needs a case proving it stays quiet **and** a case proving it
+fires, or a declared entry in `_RULES_WITHOUT_BEHAVIOUR_TESTS` — which
+is empty, and which the same argument as `_UNWATCHED_INSTRUMENTS` says
+should stay that way.
+
 ## 7. What is not measurable today
 
 NIST AI RMF **MS-1.1-009** explicitly sanctions recording a risk you

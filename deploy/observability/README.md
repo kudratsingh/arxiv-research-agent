@@ -10,9 +10,11 @@ a disk that grows without asking; on a single box that is a real running
 cost, and it is the owner's decision rather than this work order's.
 
 They are opt-in, which is not the same as untested. Everything here is
-brought up by a documented command that works, and CI parses the rule
-file with `promtool` and resolves both compose layers on every PR — an
-artifact nobody can run is not "reviewable", it is unfalsifiable.
+brought up by a documented command that works, and on every PR CI parses
+the rule file with `promtool`, **runs the rules against a synthetic
+metric series to check what they actually fire on**, and resolves both
+compose layers — an artifact nobody can run is not "reviewable", it is
+unfalsifiable.
 
 The objectives these rules watch are derived in
 [`docs/reliability.md`](../../docs/reliability.md); the incidents they
@@ -24,6 +26,7 @@ decision is [ADR 0073](../../docs/decisions/0073-slos-and-operational-readiness.
 | File | What it is |
 |---|---|
 | [`alerts.yml`](alerts.yml) | Prometheus rule file. Two SLO burn-rate groups, a `quality` group on the degradation ladder (ADR 0081), and one rule per incident runbook. `promtool check rules` parses it on every PR (`.github/workflows/ci.yml`, the `docker-build` job) — before WO-INF1 nothing ever had. |
+| [`alerts_test.yml`](alerts_test.yml) | **What those rules DO**, as `promtool test rules` unit tests: a synthetic metric series per scenario and an assertion about which alerts fire, when, and with what labels and annotations. Every rule has a silent case and a firing case. Same job, same pinned image; before WO-INF2 nothing checked behaviour, and two page rules could not fire at all. |
 | [`log-alerts.yml`](log-alerts.yml) | Log-event alarms, in a repository-defined schema. **Not** Prometheus rules — these signals emit no metric, and a PromQL rule for a series that does not exist is the failure this directory exists to prevent. |
 | [`dashboard.json`](dashboard.json) | Grafana dashboard, in **provisioning** form. Every instrument the repository emits appears on it exactly once. Loaded automatically by the viewers layer below; importable into any other Grafana unchanged. |
 | [`otel-collector.yaml`](otel-collector.yaml) | Collector config. **Read the header block** — it pins `add_metric_suffixes: false`, which is the assumption every metric name in the two alert files depends on. |
@@ -223,7 +226,11 @@ rather than skipping on a name it cannot resolve — and then checks:
    `grafana/provisioning/` declares, and the dashboard provider reads
    the directory `compose.viewers.yml` mounts the dashboard into;
 9. CI still runs `promtool` over `alerts.yml`, with the same pinned
-   Prometheus image the overlay evaluates them with.
+   Prometheus image the overlay evaluates them with;
+10. every rule in `alerts.yml` has at least one case in `alerts_test.yml`
+    proving it stays quiet **and** at least one proving it fires, every
+    `alertname` asserted there names a rule that exists, and every
+    firing case pins the rule's real labels and annotations.
 
 Check 1 is the one that matters. Alerting rots silently: a renamed
 instrument does not make a rule error, it makes the rule match nothing —
@@ -246,6 +253,66 @@ not sufficient**, twice over.
   parse or a `for:` that is not a duration passes every check in that
   file and is rejected by Prometheus at load — which is to say, during
   the first incident the rule was written for.
+
+Check 10 exists because check 9 turned out to be the same shape of
+half-truth. Parsing is not firing. WO-D5 wrote a rule, `promtool check
+rules` passed it clean, and unit-testing its semantics found
+`rate(...[15m])` under `for: 15m` opening a ticket whose summary said
+"sustained" about a cache tier that hiccuped twice. Running the same
+exercise over the other seventeen rules found **two page rules that
+could not fire at all** — `CostCapStorm` and
+`ModelProviderNoSuccessfulCalls`, both because a `sum()` over a
+selector matching nothing is an empty vector rather than zero, and
+empty propagates through `+` and `==` and swallows the rest of the
+expression. `docs/reliability.md` §6 has the detail.
+
+## Adding a behaviour case
+
+`alerts_test.yml` is promtool's own unit-test format and a case is three
+keys. Copy the nearest existing block and change the series:
+
+```yaml
+  - interval: 1m
+    name: >-
+      TheRule — a sentence saying what the scenario is; it is what
+      prints on failure
+    input_series:
+      - series: 'research_jobs_total{status="failed",error_type="orphaned"}'
+        values: '0 1+0x60'          # one event at t=1m, then flat
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: TheRule
+        exp_alerts: []              # this case asserts SILENCE
+```
+
+`values` is promtool's series notation: `a+bxN` is N+1 samples from `a`
+stepping by `b`, `axN` is `a` repeated N+1 times, and a space starts a
+new segment — a segment that steps down from the previous one reads as
+a counter reset, so repeat the last value when you mean "and then it
+stopped".
+
+For a case that asserts a rule **fires**, `exp_alerts` carries the
+rule's full label and annotation set, because promtool compares
+annotations for equality. Copy them from `alerts.yml`, collapsing each
+folded `>-` block to one line; if you get it wrong,
+`tests/test_operability_docs.py::TestTheAlertRulesAreBehaviourTested::test_every_firing_case_pins_the_labels_and_annotations`
+tells you which rule and which key without needing Docker.
+
+Run it the way CI does:
+
+```bash
+docker run --rm --entrypoint promtool \
+  -v "${PWD}/deploy/observability:/etc/prometheus:ro" \
+  prom/prometheus:v3.7.3 \
+  test rules /etc/prometheus/alerts_test.yml
+```
+
+Two things will bite you, and both are in the file's own header at more
+length. `rate(...[W])` stays positive for the whole of `W` after a
+single increment, so a rule whose `for:` is no longer than its window
+can fire on one event — that is the defect WO-D5 caught. And
+`increase()` extrapolates to the window edges, so a `> N` threshold is a
+fuzzy boundary; pin it from both sides rather than reasoning about it.
 
 ## Every threshold here is declared, not earned
 

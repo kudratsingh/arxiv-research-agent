@@ -232,3 +232,25 @@ the owner's decision.
   in the repository, and each is roughly ten lines in a file this work
   order does not own. Items 3–8 are smaller and are recorded with the
   same specificity.
+
+- **Follow-up, closed by WO-INF1 and WO-INF2. No separate ADR: this is
+  decision 4 growing a second half, not a new choice.** The
+  name-consistency test above is necessary and turned out not to be
+  sufficient, twice, in the same shape. Nothing ever *parsed*
+  `alerts.yml` until WO-INF1 put `promtool check rules` and
+  `check config` in the `docker-build` job; nothing checked what the
+  rules *do* until WO-INF2 added `deploy/observability/alerts_test.yml`
+  and `promtool test rules` to the same job, through the same pinned
+  image. The second gate earned its place on the commit that added it:
+  it found `CostCapStorm` and `ModelProviderNoSuccessfulCalls` — two
+  **page** rules — unable to fire at all, because a `sum()` over a
+  selector that matches nothing is an empty vector rather than zero and
+  empty propagates through `+` and `==`. Both are fixed with
+  `or vector(0)`. The convention is recorded here rather than in an ADR
+  of its own because there was no alternative to trade off —
+  `promtool test rules` is the only thing that evaluates PromQL the way
+  the deployed Prometheus does: **every rule carries a case proving it
+  stays quiet on a blip and a case proving it fires on the sustained
+  condition**, enforced in both directions by
+  `TestTheAlertRulesAreBehaviourTested`. `docs/reliability.md` §6 has
+  the detail and the third finding.

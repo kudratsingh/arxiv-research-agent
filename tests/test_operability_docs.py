@@ -8,7 +8,7 @@ invisible right up until the incident it was supposed to catch. Nothing
 else in this repository would notice, which is why this file exists and
 why it is the deliverable of WO-A12 rather than the prose it guards.
 
-Six claims are under test, and each of them is a claim about two
+Seven claims are under test, and each of them is a claim about two
 artifacts agreeing:
 
   - **Alert rules and dashboard panels name instruments that exist.**
@@ -44,6 +44,14 @@ artifacts agreeing:
     are rejected by Prometheus at load. `promtool` is what parses them,
     it runs in CI, and the step is asserted here because a deleted
     workflow step is otherwise invisible.
+  - **The alert rules do what they say** (WO-INF2). Parsing is not
+    firing. `promtool check rules` passed WO-D5's new rule cleanly and
+    unit-testing its semantics found it opening a "sustained" ticket
+    for a cache that hiccuped twice; the same exercise across the whole
+    file found two page rules that could not fire at all. The behaviour
+    suite is `deploy/observability/alerts_test.yml`, `promtool test
+    rules` runs it in the same job, and the ratchet is that every rule
+    needs a case proving it stays quiet AND a case proving it fires.
 
 ## The one transformation between the two vocabularies
 
@@ -151,6 +159,17 @@ REQUIRED_RUNBOOK_SECTIONS: Final[tuple[str, ...]] = (
 #: with the `quality` group in `alerts.yml` and two panels in
 #: `dashboard.json` instead.
 _UNWATCHED_INSTRUMENTS: Final[frozenset[str]] = frozenset()
+
+#: Alert rules allowed to ship with no case in
+#: `deploy/observability/alerts_test.yml`.
+#:
+#: Empty, and it is the same kind of list as `_UNWATCHED_INSTRUMENTS`
+#: above: an escape hatch whose entries have to be argued for in the PR
+#: that opens one. A rule with no behaviour test is a rule whose only
+#: proof is that it parses, and WO-D5 is the demonstration that parsing
+#: is not enough — the rule it caught parsed cleanly and would have
+#: opened a "sustained" ticket for a cache that hiccuped twice.
+_RULES_WITHOUT_BEHAVIOUR_TESTS: Final[frozenset[str]] = frozenset()
 
 #: Every `Meter` factory. Listed rather than pattern-matched on
 #: `create_*` so that a genuinely new instrument *kind* in a future
@@ -373,6 +392,45 @@ def _alert_rules() -> list[dict[str, Any]]:
 def _log_alarms() -> list[dict[str, Any]]:
     alarms: list[dict[str, Any]] = _load_yaml("log-alerts.yml")["alerts"]
     return alarms
+
+
+def _behaviour_suite() -> dict[str, Any]:
+    """`alerts_test.yml` — promtool's unit-test document for the rules."""
+    document: dict[str, Any] = _load_yaml("alerts_test.yml")
+    return document
+
+
+def _behaviour_assertions() -> list[tuple[str, str, bool]]:
+    """Every case in the suite, as (scenario, alertname, expects a fire).
+
+    `exp_alerts: []` is a case asserting the rule stays quiet, which is
+    the assertion that pays for the file; a non-empty list is a case
+    asserting it fires. Every rule needs both and for opposite reasons —
+    see `test_every_rule_is_proven_silent_and_proven_firing`.
+    """
+    cases: list[tuple[str, str, bool]] = []
+    for test in _behaviour_suite()["tests"]:
+        for case in test.get("alert_rule_test", []):
+            cases.append(
+                (
+                    str(test["name"]),
+                    str(case["alertname"]),
+                    bool(case.get("exp_alerts")),
+                )
+            )
+    return cases
+
+
+def _behaviour_expectations() -> list[tuple[str, str, dict[str, Any]]]:
+    """Every FIRING expectation, as (scenario, alertname, expected alert)."""
+    expectations: list[tuple[str, str, dict[str, Any]]] = []
+    for test in _behaviour_suite()["tests"]:
+        for case in test.get("alert_rule_test", []):
+            for expected in case.get("exp_alerts") or []:
+                expectations.append(
+                    (str(test["name"]), str(case["alertname"]), expected)
+                )
+    return expectations
 
 
 def _dashboard() -> dict[str, Any]:
@@ -1092,3 +1150,164 @@ class TestTheAlertRulesAreSyntaxChecked:
             f"the overlay evaluates the rules with {image}, and the "
             "workflow checks them with something else"
         )
+
+
+class TestTheAlertRulesAreBehaviourTested:
+    """Parsing a rule is not the same as knowing what it will do.
+
+    WO-INF1 put `promtool check rules` in front of a file that had
+    carried 17 rules and had never been parsed, which was real progress
+    and was not enough. WO-D5 then wrote a new rule, `check rules`
+    passed it clean, and unit-testing its semantics found it firing on a
+    cache blip: `rate(...[15m])` under `for: 15m`, an alert whose
+    summary said "sustained" and whose behaviour meant "happened twice".
+    The window became `[5m]` before it shipped.
+
+    So `check rules` proves a rule parses. It does not prove the rule
+    will not wake somebody at 3am for a cache miss, and it does not
+    prove the rule that *should* wake them can fire at all — WO-INF2
+    found two page rules that could not, both of them for the same
+    reason (a `sum()` over a selector matching nothing is an empty
+    vector, and empty propagates through `+` and `==` and swallows the
+    other half of the expression).
+
+    `deploy/observability/alerts_test.yml` is the behaviour suite and
+    `promtool test rules` is what runs it, in the `docker-build` job.
+    This class is the ratchet around it, and every assertion here is
+    about a failure mode the suite itself cannot catch:
+
+      - a workflow step somebody deleted, which would take the whole
+        suite out of CI while every test in this file stayed green;
+      - a suite pointed at some other rule file;
+      - an `alert_rule_test` whose `alertname` is misspelt — with
+        `exp_alerts: []` that passes, forever, asserting nothing about
+        anything;
+      - a rule with no case at all, or with only a silent case (which a
+        rule that can never fire also satisfies), or with only a firing
+        case (which says nothing about the 3am page);
+      - a firing case that does not pin the labels and annotations an
+        operator routes and acts on.
+    """
+
+    def test_ci_runs_the_behaviour_suite(self) -> None:
+        workflow = _WORKFLOW.read_text(encoding="utf-8")
+        assert "test rules /etc/prometheus/alerts_test.yml" in workflow, (
+            "no `promtool test rules` in the workflow: the alert rules "
+            "are parsed but nothing checks what they do"
+        )
+
+    def test_the_behaviour_suite_runs_on_the_image_that_evaluates_the_rules(
+        self,
+    ) -> None:
+        # Third invocation of the same pinned image, and the same
+        # argument as `test_the_checker_is_the_image_that_evaluates_them`
+        # one class up: a promtool whose PromQL evaluation differs from
+        # the Prometheus the overlay runs is a behaviour test of
+        # something nobody deploys.
+        image = _load_yaml("compose.observability.yml")["services"]["prometheus"][
+            "image"
+        ]
+        workflow = _WORKFLOW.read_text(encoding="utf-8")
+        subcommand = "test rules /etc/prometheus/alerts_test.yml"
+        assert subcommand in workflow, "no behaviour-suite step in the workflow"
+        # The tag is the last line of the `docker run` block that ends
+        # in the subcommand, so the invocation is the slice between the
+        # nearest preceding `docker run` and the subcommand itself.
+        invocation = workflow[: workflow.index(subcommand)].rsplit("docker run", 1)[-1]
+        assert image in invocation, (
+            f"the behaviour suite is run with something other than "
+            f"{image}, which is what the overlay evaluates the rules with"
+        )
+
+    def test_the_suite_points_at_the_rule_file_it_claims_to_test(self) -> None:
+        # A suite whose `rule_files` drifted to a copy would be green
+        # about a file nobody deploys.
+        assert _behaviour_suite()["rule_files"] == ["alerts.yml"]
+
+    def test_every_asserted_alertname_names_a_rule_that_exists(self) -> None:
+        # The quiet one. `alert_rule_test` does not care whether its
+        # `alertname` matches a rule: a misspelt name with
+        # `exp_alerts: []` finds no alerts, expects none, and passes.
+        # That is a test which asserts nothing and looks like coverage.
+        declared = {rule["alert"] for rule in _alert_rules()}
+        for scenario, alertname, _ in _behaviour_assertions():
+            assert alertname in declared, (
+                f"`alerts_test.yml` asserts on `{alertname}` in "
+                f"{scenario!r}, and no such rule exists in `alerts.yml`. "
+                "With `exp_alerts: []` that case passes and tests "
+                "nothing."
+            )
+
+    def test_every_rule_is_proven_silent_and_proven_firing(self) -> None:
+        silent: set[str] = set()
+        firing: set[str] = set()
+        for _, alertname, fires in _behaviour_assertions():
+            (firing if fires else silent).add(alertname)
+
+        for rule in _alert_rules():
+            name = rule["alert"]
+            if name in _RULES_WITHOUT_BEHAVIOUR_TESTS:
+                continue
+            assert name in silent, (
+                f"`{name}` has no case in `alerts_test.yml` that expects "
+                "it to stay quiet. Every rule needs one: the false page "
+                "is the failure this suite exists for, and a rule with "
+                "only a firing case says nothing about it."
+            )
+            assert name in firing, (
+                f"`{name}` has no case in `alerts_test.yml` that expects "
+                "it to fire. A rule that can never fire satisfies every "
+                "silent case there is, and reads as a healthy fleet."
+            )
+
+    def test_the_exemption_list_is_argued_and_current(self) -> None:
+        declared = {rule["alert"] for rule in _alert_rules()}
+        covered = {alertname for _, alertname, _ in _behaviour_assertions()}
+        for name in _RULES_WITHOUT_BEHAVIOUR_TESTS:
+            assert name in declared, (
+                f"`{name}` is exempted from behaviour testing and is not "
+                "a rule in `alerts.yml` any more"
+            )
+            assert name not in covered, (
+                f"`{name}` is exempted from behaviour testing and has "
+                "tests. Delete the exemption — a stale escape hatch is "
+                "how the next rule gets one without an argument."
+            )
+
+    def test_every_firing_case_pins_the_labels_and_annotations(self) -> None:
+        """An alert that pages with the wrong `severity` is unactionable.
+
+        `promtool` compares `exp_annotations` for equality, so this is
+        also what makes a `runbook:` annotation part of the behaviour
+        rather than a comment — but `promtool` only runs in the
+        `docker-build` job. Re-checking the transcription here means a
+        rule whose runbook moved fails in the fast tier too, with a
+        message that names the rule.
+        """
+        rules = {rule["alert"]: rule for rule in _alert_rules()}
+        for scenario, alertname, expected in _behaviour_expectations():
+            rule = rules.get(alertname)
+            if rule is None:
+                # A name that matches no rule is
+                # `test_every_asserted_alertname_names_a_rule_that_exists`'s
+                # failure to report, and it says so far better than a
+                # KeyError from here would.
+                continue
+            labels = expected.get("exp_labels") or {}
+            annotations = expected.get("exp_annotations") or {}
+            for key, value in rule.get("labels", {}).items():
+                assert labels.get(key) == value, (
+                    f"{scenario!r} expects `{alertname}` to fire with "
+                    f"{key}={labels.get(key)!r}; `alerts.yml` sets "
+                    f"{key}={value!r}. An operator routes on that label."
+                )
+            declared = {
+                key: " ".join(str(value).split())
+                for key, value in rule.get("annotations", {}).items()
+            }
+            assert annotations == declared, (
+                f"{scenario!r} pins annotations for `{alertname}` that "
+                "are not the ones `alerts.yml` carries. The runbook "
+                "link and the summary are what an operator reads at "
+                "3am; they are behaviour, not decoration."
+            )
