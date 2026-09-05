@@ -5,6 +5,10 @@ pipeline — by the time it runs, the report is already written. A
 malformed judge response therefore never fails the job: scores coerce
 with safe defaults, an unusable response degrades to "approved with a
 zero score" at WARNING, and the finished report is delivered.
+
+Mock mode (ADR 0080): under `settings.use_mock_data` the critic
+approves at a fixed constant and no model client is constructed. That
+constant is not a quality measurement, and the critique text says so.
 """
 
 from __future__ import annotations
@@ -14,6 +18,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage
 
+from src.agents import mock_mode
 from src.agents.schemas import CriticOutput
 from src.config import settings
 from src.graph.state import ResearchState
@@ -108,6 +113,31 @@ def critic_agent(state: ResearchState) -> dict[str, Any]:
     Returns:
         Partial state update with critique, quality_score, revision flags, and a message.
     """
+    if settings.use_mock_data:
+        # The iteration ceiling below is not reproduced here because it
+        # only ever *clears* a revision, and this branch never asks for
+        # one: a mock critic that demanded a revision would loop the
+        # graph over a report no judge read.
+        iteration = state.get("iteration", 0)
+        critique, score = mock_mode.mock_critique()
+        return {
+            "critique": critique,
+            "quality_score": score,
+            "revision_needed": False,
+            "revision_target": "",
+            "iteration": iteration + 1,
+            "messages": [
+                AIMessage(
+                    content=(
+                        f"Quality score: {score:.2f} — approved (mock data; "
+                        f"no quality signal). "
+                        f"(iteration {iteration + 1}/{settings.max_iterations})"
+                    ),
+                    name="critic",
+                )
+            ],
+        }
+
     user_prompt = _build_user_prompt(state)
 
     try:

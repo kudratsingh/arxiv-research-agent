@@ -24,6 +24,16 @@ there is no honest fallback for it. Malformed `citations` entries, by
 contrast, are individually dropped with a WARNING: a report with a
 thinner citation list is still a real report, and the verifier/critic
 flag citation gaps downstream.
+
+Mock mode (ADR 0080): under `settings.use_mock_data` the briefing is
+assembled by `src.agents.mock_mode` from the state's own papers,
+analyses and evidence, and no model client is constructed. Its first
+line is `mock_mode.MOCK_BANNER`, so a mock report can never be read as
+a real one — the report is the artefact that gets exported,
+checkpointed and pasted elsewhere, so the label travels in the document
+rather than only in a log line. Both prompt paths have a mock
+counterpart; the citation surfaces are identical on either, so the two
+score the same.
 """
 
 from __future__ import annotations
@@ -35,6 +45,7 @@ from typing import Any, Final
 
 from langchain_core.messages import AIMessage
 
+from src.agents import mock_mode
 from src.config import settings
 from src.errors import UpstreamModelOutput
 from src.graph.state import Citation, EvidenceClaim, ResearchState
@@ -524,6 +535,30 @@ def synthesizer_agent(state: ResearchState) -> dict[str, Any]:
             (ADR 0041).
     """
     evidence_path = _use_evidence_path(state)
+
+    if settings.use_mock_data:
+        draft_report, citations = mock_mode.mock_briefing(
+            query=state["query"],
+            sub_questions=state.get("sub_questions", []),
+            papers=state.get("papers", []),
+            analyses=state.get("paper_analyses", []),
+            evidence=state.get("evidence", []),
+            evidence_path=evidence_path,
+        )
+        return {
+            "draft_report": draft_report,
+            "citations": citations,
+            "messages": [
+                AIMessage(
+                    content=(
+                        f"Synthesized report with {len(citations)} citations "
+                        f"(mock data; no synthesis was performed)."
+                    ),
+                    name="synthesizer",
+                )
+            ],
+        }
+
     user_prompt = _build_user_prompt(state)
     system_prompt = EVIDENCE_SYSTEM_PROMPT if evidence_path else SYSTEM_PROMPT
 
