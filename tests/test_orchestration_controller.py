@@ -310,21 +310,20 @@ class TestTheShapeIsClassifiedAsItself:
         )
         assert shape.missing_capabilities == arm_capability_gap("E", shape)
 
-    def test_the_branch_shape_cannot_seal_a_manifest_yet(self) -> None:
-        """ADR 0086's principal known gap, asserted rather than assumed.
+    def test_the_branch_shape_seals_a_manifest_as_a_non_arm_policy(self) -> None:
+        """ADR 0086's principal known gap, now closed by ADR 0089.
 
-        `run_manifest.PolicySnapshot.arm_id` is a required `A`-`E` and
-        arm E's validator demands a supervisor, `marginal_stop` and a
-        selection config — none of which this shape honestly has. So a
-        branch run declines the seal exactly as every other non-arm
-        shape does (`start_research_job`: "Declining is the designed
-        outcome"), and its lineage reaches the trajectory only once the
-        manifest can express half an arm. That is CAP-09's companion
-        change and `src/contracts/run_manifest.py` is not this work
-        order's file.
+        This test used to assert the opposite and said why: `arm_id` was
+        a required `A`-`E`, arm E's validator demanded a supervisor and a
+        selection config, and a branch run therefore declined the seal
+        exactly as a `capability_missing` configuration does — losing its
+        lineage from the run record for a reason that was about the
+        contract rather than about the run. It was written so the gap
+        would close loudly, and this is that closure.
 
-        Written as a test so the gap closes loudly: when the manifest
-        grows a non-arm form, this fails and says where to look.
+        The shape now seals as `research_shape`: its own policy id, its
+        own node set, and no arm id at all. `representable` is still
+        False, because "is this one of the five arms?" still answers no.
         """
         cfg = config(
             research_policy="orchestrated_workers", enable_evidence_store=True
@@ -337,6 +336,32 @@ class TestTheShapeIsClassifiedAsItself:
         finally:
             app._checkpointer_exit_stack.close()
 
+        snapshot = policy_snapshot(shape)
+        assert snapshot.policy_kind == "research_shape"
+        assert snapshot.arm_id is None
+        assert snapshot.selector is None
+        assert snapshot.policy_id == ORCHESTRATED_WORKERS_POLICY_ID
+        assert {"lead", "workers", "merge"} <= set(snapshot.shape_nodes)
+        assert snapshot.graph_digest == shape.graph.digest
+        # Still not arm E, and the shape still says exactly what is missing.
+        assert shape.representable is False
+        assert "candidate_lineage_selector" in shape.missing_capabilities
+
+    def test_a_configuration_nobody_designed_still_declines_the_seal(self) -> None:
+        """The refusal ADR 0089 deliberately kept.
+
+        A non-arm *kind* is not a licence to name anything: a shape with
+        no designed policy behind it has no honest id for a manifest to
+        carry, so it refuses exactly as it always did.
+        """
+        cfg = config(enable_supervisor=True, enable_verifier=False)
+        app = compile_with(enable_supervisor=True, enable_verifier=False)
+        try:
+            shape = classify_from_graph_shape(cfg, read_graph_shape(app))
+        finally:
+            app._checkpointer_exit_stack.close()
+
+        assert shape.policy_kind is None
         with pytest.raises(
             ResearchBindingError, match="not a representable arm"
         ):

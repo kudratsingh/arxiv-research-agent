@@ -69,25 +69,25 @@ from src.contracts.kernel import (
 )
 from src.contracts.research_binding import (
     BINDING_VERSION,
-    SHADOW_CAMPAIGN_ID,
     ResearchBindingError,
     SealedEpisode,
     compiler_ref,
     deterministic_run_id,
-    episode_budget,
     money,
     platform_ceiling,
-    provider_snapshot,
     requested_policy,
     retention_policy_ref,
+    seal_episode_manifest,
     utc_timestamp,
 )
 from src.contracts.run_manifest import (
-    AdmissionPlan,
     AdmissionResolution,
-    FakeLocalApprovalBackend,
-    RunManifestError,
-    resolve_admission,
+    PolicyCapabilities,
+    PolicyConfig,
+    PolicySnapshot,
+    RunManifestV1,
+    RuntimeFlags,
+    SessionGraphRef,
 )
 from src.contracts.shadow_bridge import (
     ShadowRun,
@@ -108,9 +108,7 @@ from src.contracts.task_spec import (
     TaskDataPolicy,
     TaskSpecRef,
     TaskSpecV1,
-    build_task_spec_ref,
     compile_guided_session,
-    persist_compiled_task,
 )
 from src.contracts.trajectory import (
     Actor,
@@ -2146,37 +2144,66 @@ def _log_reconciliation(run_id: str, result: CostReconciliation) -> None:
 
 
 class GuidedSessionBinding(StrictContractModel):
-    """What a guided-learning episode is sealed against, in place of a manifest.
+    """What a guided-learning episode is sealed against: a real manifest.
 
-    RFC 09's `RunManifestPayload` requires a `PolicySnapshot`, and that
-    snapshot enumerates exactly the five research arms A–E.  A guided
-    reading session is not one of them and pretending otherwise would put
-    a false arm id on a sealed control-plane object — which is worse than
-    having no manifest, because a false arm id is a claim an experiment
-    would later read as evidence.
+    W08 could not use one.  RFC 09's `RunManifestPayload` required a
+    `PolicySnapshot` whose `arm_id` enumerated exactly the five research
+    arms, a guided reading session is none of them, and putting a false
+    arm id on a sealed control-plane object is worse than having no
+    manifest — a false arm id is a claim an experiment would later read
+    as evidence.  So this class carried the four fields a session could
+    honestly seal, and ADR 0083 recorded the gap.
 
-    So the learning lane seals *this* instead: the compiled TaskSpec's
-    reference, the compilation receipt digest, the real admission
-    resolution (which fails closed on a metered provider exactly as the
-    research lane's does), and the session graph's digest.  Its own
-    digest is what the trajectory's `manifest_digest` carries, and the
-    honest reading of that field for this lane is "the sealed binding
-    this run was admitted under".  Extending RFC 09's policy snapshot to
-    express a non-arm policy is a contract change and belongs to whoever
-    takes that RFC's next revision, not to a bridge.
+    ADR 0089 closes it.  `PolicySnapshot` now has a `guided_session`
+    kind, so the learning lane seals the same `RunManifestV1` the
+    research lane does, and this class becomes a *wrapper* rather than a
+    substitute: one field, and every field it used to carry is a property
+    read back off the manifest.  Nothing is duplicated, so nothing can
+    disagree, and `sha256_digest(binding)` — which the trajectory's
+    `policy_ref` is derived from — moves with the manifest it wraps.
     """
 
     schema_kind: Literal["guided-session-binding"] = "guided-session-binding"
-    schema_version: Literal["1.0.0"] = "1.0.0"
-    task_ref: TaskSpecRef
-    receipt_digest: Digest
-    admission: AdmissionResolution
-    graph_digest: Digest
-    policy_id: Literal["guided_read_session"] = "guided_read_session"
-    policy_version: str
-    environment_class: str
+    schema_version: Literal["2.0.0"] = "2.0.0"
+    manifest: RunManifestV1
     product_lane: Literal["guided_learning"] = "guided_learning"
-    sealed_at: Rfc3339Utc
+
+    @property
+    def task_ref(self) -> TaskSpecRef:
+        return self.manifest.payload.task
+
+    @property
+    def receipt_digest(self) -> Digest:
+        return self.manifest.payload.compilation.receipt_ref.digest
+
+    @property
+    def admission(self) -> AdmissionResolution:
+        return self.manifest.payload.admission_resolution
+
+    @property
+    def graph_digest(self) -> Digest:
+        return self.manifest.payload.policy.graph_digest
+
+    @property
+    def policy_id(self) -> str:
+        """Always `guided_read_session`; read off the snapshot, not asserted."""
+        return self.manifest.payload.policy.policy_id or GUIDED_SESSION_POLICY_ID
+
+    @property
+    def policy_version(self) -> str:
+        return self.manifest.payload.policy.policy_version
+
+    @property
+    def environment_class(self) -> str:
+        return self.manifest.payload.environment.execution_class
+
+    @property
+    def sealed_at(self) -> Rfc3339Utc:
+        return self.manifest.payload.identity.created_at
+
+    @property
+    def manifest_digest(self) -> Digest:
+        return self.manifest.integrity.payload_sha256
 
 
 def _learning_data_policy() -> TaskDataPolicy:
@@ -2253,71 +2280,100 @@ def compile_guided_session_intake(
     )
 
 
+#: What the learning lane's policy is called in a run record. The same
+#: string W08's binding carried, kept because dashboards and ADR 0083's
+#: own text already use it.
+GUIDED_SESSION_POLICY_ID: Final[str] = "guided_read_session"
+
+#: The session graph's logical identity. `graph_digest` pins its
+#: structure; this names the thing pinned, so a structural change and a
+#: lineage change are two different observations rather than one.
+GUIDED_SESSION_GRAPH_ID: Final[str] = "guided_read_session"
+GUIDED_SESSION_GRAPH_VERSION: Final[str] = "1.0.0"
+
+#: What the session graph does, in the same shape of vocabulary the
+#: research lane's `graph_capabilities` uses. Deliberately disjoint from
+#: it: none of the arm capabilities exists in a reading session, and a
+#: session that claimed one would be readable as a research run.
+GUIDED_SESSION_CAPABILITIES: Final[tuple[str, ...]] = (
+    "guided_read_session",
+    "learner_turn_checkpoint",
+    "session_summary",
+)
+
+
+def guided_session_policy_snapshot(
+    graph_digest: str, *, policy_version: str | None = None
+) -> PolicySnapshot:
+    """The learning lane's policy, as a `guided_session` snapshot.
+
+    Every research runtime flag and capability is false, and the
+    manifest's own validator requires that rather than merely accepting
+    it — a session manifest must not be readable as a research run that
+    happened to have its flags off.
+    """
+    return PolicySnapshot(
+        policy_kind="guided_session",
+        policy_id=GUIDED_SESSION_POLICY_ID,
+        session_graph=SessionGraphRef(
+            session_graph_id=GUIDED_SESSION_GRAPH_ID,
+            session_graph_version=GUIDED_SESSION_GRAPH_VERSION,
+        ),
+        policy_version=policy_version or f"{BINDING_VERSION}-learning",
+        graph_digest=graph_digest,
+        graph_capabilities=GUIDED_SESSION_CAPABILITIES,
+        config_schema=f"{GUIDED_SESSION_POLICY_ID}/{BINDING_VERSION}",
+        runtime_flags=RuntimeFlags(
+            enable_supervisor=False,
+            enable_evidence_store=False,
+            enable_verifier=False,
+        ),
+        config=PolicyConfig(),
+        capabilities=PolicyCapabilities(
+            supervisor=False,
+            evidence_store=False,
+            fixed_post_synthesis_verifier=False,
+            adaptive_compute=False,
+        ),
+    )
+
+
 def seal_guided_session(
     config: Settings,
     *,
     spec: TaskSpecV1,
     graph_digest: str,
+    runtime_run_id: str = "guided-session",
     sealed_at: str | None = None,
 ) -> GuidedSessionBinding:
-    """Resolve admission for a session and seal its binding record.
+    """Seal a session's run manifest and wrap it as this lane's binding.
 
     Uses the *same* admission controller as the research lane, which is
     the point: a metered provider with no approval fails closed here too,
     so a guided-learning trajectory cannot come into existence on a
-    configuration that was never authorized to spend.
+    configuration that was never authorized to spend. Since ADR 0089 it
+    uses the same *sealer* as well, so "the same controller" is a fact
+    about one call site rather than two copies of a call.
+
+    `runtime_run_id` has a default so the signature stays backward
+    compatible for callers that only ever had a spec and a graph digest;
+    passing the session's own id is what makes the manifest's
+    `identity.run_id` agree with the trajectory's `RunScope`.
     """
-    moment = sealed_at or utc_timestamp()
-    task_ref = build_task_spec_ref(
-        spec, artifact_locator=f"cas://sha256/{sha256_digest(spec).removeprefix('sha256:')}"
+    sealed = seal_episode_manifest(
+        config,
+        policy=guided_session_policy_snapshot(graph_digest),
+        spec=spec,
+        execution_class="local-eval" if config.use_mock_data else "production",
+        created_by=f"guided-learning/{BINDING_VERSION}",
+        output_root_prefix="outputs/guided-session",
+        runtime_run_id=runtime_run_id,
+        hitl_bypass=False,
+        hitl_bypass_reason=None,
+        sealed_at=sealed_at,
+        admission_lane="guided-learning",
     )
-    receipt = persist_compiled_task(
-        spec, _NullTaskStore(), artifact_locator=task_ref.artifact_locator
-    )
-    from src.contracts.research_binding import _bundle_from_spec  # noqa: PLC0415
-
-    bundle = _bundle_from_spec(spec)
-    provider = provider_snapshot(config)
-    try:
-        decision = resolve_admission(
-            AdmissionPlan(
-                campaign_id=SHADOW_CAMPAIGN_ID,
-                stage="shadow-stage-0",
-                provider=provider.llm.provider,
-                task_policy=bundle,
-                effective_policy=bundle,
-                platform_workflow_cost_usd="0.000000",
-                campaign_workflow_allocation_usd="0.000000",
-                provider_workflow_cost_usd="0.000000",
-                episode_budget=episode_budget(spec),
-                provider_metered=provider.llm.metered,
-            ),
-            verified_at=moment,
-            approval_backend=FakeLocalApprovalBackend(),
-        )
-    except RunManifestError as exc:
-        raise ResearchBindingError(
-            f"guided-learning admission failed closed: {exc.detail}"
-        ) from exc
-    return GuidedSessionBinding(
-        task_ref=task_ref,
-        receipt_digest=sha256_digest(receipt),
-        admission=decision.resolution,
-        graph_digest=graph_digest,
-        policy_version=f"{BINDING_VERSION}-learning",
-        environment_class="local-eval" if config.use_mock_data else "production",
-        sealed_at=moment,
-    )
-
-
-class _NullTaskStore:
-    """A task store that stores nothing, for a lane that persists nothing."""
-
-    def put(self, *_args: Any, **_kwargs: Any) -> None:
-        return None
-
-    def get(self, *_args: Any, **_kwargs: Any) -> None:
-        return None
+    return GuidedSessionBinding(manifest=sealed.manifest)
 
 
 class GuidedLearningBridge:
@@ -3198,7 +3254,9 @@ def start_guided_session(
     sink_root: Path | str | None = None,
 ) -> GuidedLearningBridge:
     """Seal a guided session's binding and open its trajectory."""
-    binding = seal_guided_session(config, spec=spec, graph_digest=graph_digest)
+    binding = seal_guided_session(
+        config, spec=spec, graph_digest=graph_digest, runtime_run_id=runtime_run_id
+    )
     consent = (
         ConsentScope.SYNTHETIC_TEST if synthetic else ConsentScope.PRODUCT_OPERATION_ONLY
     )

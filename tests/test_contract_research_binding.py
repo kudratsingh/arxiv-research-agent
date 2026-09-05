@@ -870,3 +870,254 @@ class TestTheEdgesOfTheBinding:
         )
         assert store.put(spec) is None
         assert store.get(spec.task_spec_id) is None
+
+
+# ---------------------------------------------------------------------------
+# W03b — every lane seals a manifest (ADR 0089)
+# ---------------------------------------------------------------------------
+
+
+def orchestrated_app() -> _AppStub:
+    """CAP-03's branch tier, as a stand-in with its three nodes.
+
+    Structural, like every other stand-in here: what makes a run the
+    branch shape is that `lead`, `workers` and `merge` all exist, and the
+    real compiled graph is asserted in `tests/e2e/test_orchestrated_workers.py`.
+    """
+    nodes = [
+        *FIXED_NODES,
+        "lead",
+        "workers",
+        "merge",
+        "verify",
+        "repair",
+        "__start__",
+        "__end__",
+    ]
+    edges = [
+        *FIXED_EDGES,
+        _Edge("planner", "lead"),
+        _Edge("lead", "workers", conditional=True),
+        _Edge("workers", "merge"),
+        _Edge("merge", "synthesizer"),
+        _Edge("critic", "verify"),
+        _Edge("verify", "repair", conditional=True),
+        _Edge("verify", "__end__", conditional=True),
+        _Edge("repair", "verify"),
+    ]
+    return _AppStub(nodes, edges)
+
+
+#: Golden arm-snapshot digests for A-D against this module's stand-in
+#: graphs. They pin the *policy* snapshot rather than the manifest,
+#: because a manifest digest contains `code_snapshot()` and therefore
+#: moves on every commit; the policy snapshot moves only when the arm
+#: contract does, which is exactly what a golden should notice.
+#:
+#: ADR 0089 moved all four once, and only once: `policy_kind` is a new
+#: field, so every snapshot's canonical JSON gained one key. Nothing
+#: checked in pinned the old values, and A-D's structure, selectors,
+#: flags and capabilities are byte-for-byte what they were.
+GOLDEN_ARM_POLICY_DIGESTS: dict[str, str] = {
+    "A": "sha256:723a852d119615c08175c9ec3a4e2ed7bcfa1b773705974c609c00b83cf172f3",
+    "B": "sha256:29cddeaea416ed8b927f3b9d3126390be91256ab3725742b6eb68c2d3ba9931b",
+    "C": "sha256:9585b0ffe0f677ebec0a0744185911ccafdc9fe263a1293541ec50957658b675",
+    "D": "sha256:8f65a5e564b0ad00f4d6f0dbd9d28d221d7e8242e4661936691a63cb84d34e24",
+}
+
+
+def arm_case(arm_id: str) -> tuple[Settings, _AppStub]:
+    return {
+        "A": (config(), fixed_app()),
+        "B": (config(enable_evidence_store=True), fixed_app()),
+        "C": (
+            config(
+                enable_evidence_store=True, research_policy="fixed_verify_repair"
+            ),
+            verify_repair_app(),
+        ),
+        "D": (
+            config(
+                enable_supervisor=True,
+                enable_evidence_store=True,
+                enable_verifier=True,
+            ),
+            supervisor_app(),
+        ),
+    }[arm_id]
+
+
+class TestEveryDesignedLaneSealsAManifest:
+    """ADR 0089's acceptance, one shape at a time.
+
+    Before it, exactly one of the four shapes below could seal: arms A-D.
+    The branch tier declined because `PolicySnapshot` had no non-arm
+    form, and a guided session sealed a bespoke `GuidedSessionBinding`
+    for the same reason. Both are recorded runs now, and neither has
+    acquired an arm id to get there.
+    """
+
+    @pytest.mark.parametrize("arm_id", ["A", "B", "C", "D"])
+    def test_an_arm_seals_with_its_golden_policy_digest(self, arm_id: str) -> None:
+        cfg, app = arm_case(arm_id)
+        episode = seal(cfg, app)
+
+        assert episode.shape.arm_id == arm_id
+        assert episode.policy.policy_kind == "research_arm"
+        assert episode.policy.policy_id is None
+        assert episode.policy.shape_nodes == ()
+        assert episode.policy.session_graph is None
+        assert sha256_digest(episode.policy) == GOLDEN_ARM_POLICY_DIGESTS[arm_id]
+        assert episode.manifest.payload.policy == episode.policy
+
+    def test_a_branch_run_seals_as_a_research_shape(self) -> None:
+        cfg = config(
+            research_policy="orchestrated_workers", enable_evidence_store=True
+        )
+        episode = seal(cfg, orchestrated_app())
+
+        policy = episode.manifest.payload.policy
+        assert policy.policy_kind == "research_shape"
+        assert policy.arm_id is None
+        assert policy.selector is None
+        assert policy.policy_id == "research_orchestrated_workers"
+        assert {"lead", "merge", "workers"} <= set(policy.shape_nodes)
+        assert tuple(sorted(policy.shape_nodes)) == policy.shape_nodes
+        # Sealed, and still honest about what it is not.
+        assert episode.shape.representable is False
+        assert "candidate_lineage_selector" in episode.shape.missing_capabilities
+
+    def test_a_branch_run_and_an_arm_do_not_share_an_identity(self) -> None:
+        """The reason the seal is worth having at all.
+
+        `derive_replicate_group_id` groups repeats by the policy digest,
+        so a branch run that sealed under an arm's digest would land in
+        that arm's replicate group and be averaged into it.
+        """
+        branch = seal(
+            config(research_policy="orchestrated_workers", enable_evidence_store=True),
+            orchestrated_app(),
+        )
+        arm_c_cfg, arm_c_app = arm_case("C")
+        arm_c = seal(arm_c_cfg, arm_c_app)
+
+        assert sha256_digest(branch.policy) != sha256_digest(arm_c.policy)
+        assert branch.manifest_digest != arm_c.manifest_digest
+        assert (
+            branch.manifest.payload.identity.replicate_group_id
+            != arm_c.manifest.payload.identity.replicate_group_id
+        )
+
+    def test_a_configuration_nobody_designed_still_seals_nothing(self) -> None:
+        shape = classify_policy_shape(
+            config(enable_supervisor=True), supervisor_app(verifier=False)
+        )
+        assert shape.policy_kind is None
+        assert shape.sealable is False
+        with pytest.raises(ResearchBindingError, match="not a representable arm"):
+            policy_snapshot(shape)
+
+
+class TestArmEIsRedefinedStructurally:
+    """ADR 0089's second half: what arm E now is, and what it still lacks."""
+
+    def test_the_controller_earns_the_router_and_arm_e_still_refuses(self) -> None:
+        """CAP-04 closed one of arm E's four gaps; two remain.
+
+        `candidate_branching` is CAP-03's and is earned by nodes;
+        `adaptive_compute_router` is CAP-04's and is earned by the
+        setting, because ADR 0085's controller selects *between* compiled
+        graphs and no stage of the chosen graph can represent it.
+        """
+        cfg = config(
+            research_policy="orchestrated_workers",
+            enable_evidence_store=True,
+            compute_controller="off",
+        )
+        shape = classify_policy_shape(cfg, orchestrated_app())
+        assert "adaptive_compute_router" not in shape.graph_capabilities
+        assert arm_capability_gap("E", shape) == (
+            "adaptive_compute_router",
+            "marginal_stop",
+            "candidate_lineage_selector",
+        )
+
+    def test_the_manifest_names_the_selector_and_the_stop_record(self) -> None:
+        """The refusal a caller reads when it asks for arm E today."""
+        from src.contracts.run_manifest import (
+            PolicyCapabilities,
+            PolicyConfig,
+            PolicySnapshot,
+            RuntimeFlags,
+        )
+
+        def build(capabilities: tuple[str, ...]) -> PolicySnapshot:
+            return PolicySnapshot(
+                policy_kind="research_arm",
+                arm_id="E",
+                selector="adaptive_verified",
+                policy_version="1.0.0-experimental",
+                graph_digest="sha256:" + "5" * 64,
+                graph_capabilities=capabilities,
+                config_schema="adaptive_verified/1.0.0",
+                runtime_flags=RuntimeFlags(
+                    enable_supervisor=False,
+                    enable_evidence_store=True,
+                    enable_verifier=False,
+                ),
+                config=PolicyConfig(
+                    allowed_tiers=("T0", "T1", "T2"),
+                    default_tier="T1",
+                    difficulty_features_version="1.0.0",
+                    max_targeted_repairs=1,
+                    max_branches=3,
+                    selection="listwise",
+                    marginal_stop_policy_version="1.0.0",
+                ),
+                capabilities=PolicyCapabilities(
+                    supervisor=False,
+                    evidence_store=True,
+                    fixed_post_synthesis_verifier=False,
+                    adaptive_compute=True,
+                ),
+            )
+
+        with pytest.raises(ValueError, match="marginal_stop, candidate_lineage_selector"):
+            build(("adaptive_compute_router", "candidate_branching"))
+
+        # A supervisor is no longer required, which is the redefinition:
+        # the same snapshot passes with all four capabilities and none of
+        # the three supervisor flags set.
+        complete = build(
+            (
+                "adaptive_compute_router",
+                "candidate_branching",
+                "candidate_lineage_selector",
+                "marginal_stop",
+            )
+        )
+        assert complete.runtime_flags.enable_supervisor is False
+        assert complete.capabilities.adaptive_compute is True
+
+    def test_the_deterministic_controller_earns_the_router_capability(self) -> None:
+        """A capability with no node, earned by the thing that has it.
+
+        `COMPUTE_CONTROLLER=deterministic` is refused at load beside a
+        supervisor, a verifier or a fixed `research_policy` (ADR 0085), so
+        the setting cannot claim a router for a deployment where two
+        things would be choosing the graph. That refusal is what makes it
+        safe to read the capability from configuration here.
+        """
+        with_controller = classify_policy_shape(
+            config(enable_evidence_store=True, compute_controller="deterministic"),
+            fixed_app(),
+        )
+        without = classify_policy_shape(config(enable_evidence_store=True), fixed_app())
+
+        assert "adaptive_compute_router" in with_controller.graph_capabilities
+        assert "adaptive_compute_router" not in without.graph_capabilities
+        # Both are still arm B: the controller selected this graph, and
+        # the graph it selected is the evidence path.
+        assert with_controller.arm_id == without.arm_id == "B"
+        # And it moves the policy digest, because it is a different run.
+        assert with_controller.policy_digest != without.policy_digest

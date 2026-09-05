@@ -682,6 +682,30 @@ never renumbered.
   ~16s at exactly `$0.000000` with `llm_calls=0` on all 240 episodes,
   reconciling 240 completed and 60 excluded.
 
+- [0089](0089-non-arm-policy-snapshots-and-one-registry-root.md) —
+  **Non-arm policy snapshots, learning context kinds, and one registry
+  root.** Three shipped work orders each recorded the same finding in
+  someone else's file: a contract closed when it was written had started
+  refusing what the repository went on to build. `PolicySnapshot` gains a
+  `policy_kind` discriminator — `research_arm` (A–E, A–D unchanged),
+  `research_shape` (ADR 0086's branch tier and other designed non-arm
+  policies, with their policy id and node set) and `guided_session` (ADR
+  0083's learning graph) — so every run can seal a manifest, while a
+  configuration nobody designed still refuses. Arm E is redefined
+  structurally: the deterministic controller over T0/T1/T2 with branching
+  plus a listwise selector plus a marginal-stop record, with no
+  supervisor, because ADR 0085 refuses to load beside one and the old
+  definition had made the arm unreachable. It stays `capability_missing`
+  and the refusal now names the two capabilities CAP-09 owes.
+  `GuidedSessionBinding` becomes a wrapper over a real manifest rather
+  than a substitute for one. `ContextRef` gains the three
+  candidate-visible learning kinds, enumerated by hand so no
+  `learning_*` pattern can admit the answer key, and the benchmark
+  compiler derives the kind from the ref. And W10's calibration suite
+  moves into `eval_registry/` byte for byte, its content kinds joining a
+  widened `ContentKind`, with "the checked-in tree is exactly what the
+  modules build" restated over the union: 257 objects, 0 mismatches.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

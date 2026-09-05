@@ -37,8 +37,10 @@ from src.contracts.benchmark_adapters import (
     LearningTurnContent,
     LocalContentStore,
     ResearchExpectedTopics,
+    build_full_registry,
     build_parity_report,
     build_registry,
+    calibration_bundle_objects,
     learning_dataset_version,
     load_learning_benchmark,
     load_research_benchmark,
@@ -72,6 +74,7 @@ from src.contracts.registry import (
     validate_registry_safety,
 )
 from src.contracts.task_spec import (
+    BENCHMARK_CONTEXT_KINDS,
     AutonomyPolicy,
     AutonomyTier,
     BenchmarkOrigin,
@@ -181,17 +184,41 @@ def test_every_learning_id_maps_one_to_one_into_the_registry() -> None:
 
 
 def test_the_registry_carries_no_case_the_modules_do_not_declare() -> None:
+    """Changed by ADR 0089: `the modules` became plural.
+
+    The root also holds W10's 30 judge-calibration cases now, and they
+    are declared by `src.calibration.suite` rather than by the two
+    benchmark modules. The claim is unchanged in substance — every case
+    on disk is one some module builds, and no case is invented — so the
+    declared set is read from every builder instead of two of them.
+    """
     bundle = read_registry()
     case_ids = [
         envelope.payload.case_id
         for envelope in bundle.objects
         if isinstance(envelope.payload, TaskCase)
     ]
-    declared = {query["query_id"] for query in BENCHMARK_QUERIES} | {
-        scenario["scenario_id"] for scenario in LEARNING_SCENARIOS
-    }
+    calibration_objects, _ = calibration_bundle_objects()
+    declared = (
+        {query["query_id"] for query in BENCHMARK_QUERIES}
+        | {scenario["scenario_id"] for scenario in LEARNING_SCENARIOS}
+        | {
+            envelope.payload.case_id
+            for envelope in calibration_objects
+            if isinstance(envelope.payload, TaskCase)
+        }
+    )
     assert sorted(case_ids) == sorted(declared)
     assert len(case_ids) == len(set(case_ids))
+    # The two benchmark modules still own exactly their own cases.
+    benchmark_cases = {
+        envelope.payload.case_id
+        for envelope in build_registry().objects
+        if isinstance(envelope.payload, TaskCase)
+    }
+    assert benchmark_cases == {query["query_id"] for query in BENCHMARK_QUERIES} | {
+        scenario["scenario_id"] for scenario in LEARNING_SCENARIOS
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -330,7 +357,14 @@ def test_digests_survive_key_order_and_a_process_restart() -> None:
 
 
 def test_the_checked_in_tree_is_exactly_what_the_modules_build() -> None:
-    built = build_registry()
+    """Changed by ADR 0089: `build_registry` became `build_full_registry`.
+
+    W06's central property, restated over the union it now has to be
+    true of. Two roots became one, so "exactly what the modules build"
+    has to mean every module that builds a registry object or it means
+    nothing about half the files.
+    """
+    built = build_full_registry()
     on_disk = read_registry()
 
     assert on_disk.research_suite_ref == built.research_suite_ref
@@ -341,6 +375,42 @@ def test_the_checked_in_tree_is_exactly_what_the_modules_build() -> None:
     assert {content.object_ref() for content in on_disk.contents} == {
         content.object_ref() for content in built.contents
     }
+    # The union is a union, not a rename: both halves are in it.
+    benchmark_refs = {envelope.object_ref() for envelope in build_registry().objects}
+    calibration_refs = {
+        envelope.object_ref() for envelope in calibration_bundle_objects()[0]
+    }
+    assert benchmark_refs
+    assert calibration_refs
+    assert benchmark_refs & calibration_refs == set()
+
+
+def test_every_moved_calibration_object_resolves_from_the_one_root() -> None:
+    """The migration's own acceptance: same revision, same digest, new root.
+
+    Each object is looked up by the locator its *own* reference derives,
+    which is the only lookup a resolver ever performs, and its digest is
+    compared with the one the calibration module builds. A file that had
+    been rewritten on the way across would fail here even if it parsed.
+    """
+    built_objects, built_contents = calibration_bundle_objects()
+    on_disk = read_registry()
+    by_ref = {envelope.object_ref(): envelope for envelope in on_disk.objects}
+    by_content_ref = {content.object_ref(): content for content in on_disk.contents}
+
+    assert len(built_objects) == 37
+    assert len(built_contents) == 83
+    for envelope in built_objects:
+        ref = envelope.object_ref()
+        assert ref in by_ref, f"{ref.kind}/{ref.id} did not survive the move"
+        assert by_ref[ref].object_ref().digest == ref.digest
+        assert by_ref[ref].object_ref().revision == ref.revision
+    for content in built_contents:
+        ref = content.object_ref()
+        assert ref in by_content_ref, f"content/{ref.kind}/{ref.id} did not survive"
+        assert by_content_ref[ref].integrity.payload_digest == ref.digest
+
+    assert not (REGISTRY_ROOT.parent / "eval_registry_calibration").exists()
 
 
 def test_every_registered_object_passes_the_safety_scan() -> None:
@@ -685,11 +755,12 @@ def test_one_case_from_each_lane_compiles_without_evaluator_material(
         task_id=f"{suite_id}:{case.case_id}",
         task_kind=task_kind,
         objective=case.task_input.objective,
-        # Empty on purpose: `ContextRef.kind_matches_ref` admits only
-        # supplied_corpus/source_snapshot/content_entry/artifact reference
-        # kinds, so a registry `learning_persona` ref cannot ride in a
-        # candidate context yet (src/contracts/task_spec.py:346).
-        candidate_visible_refs=(),
+        # The case's own refs, which is what W01b changed. This argument
+        # used to be `()` with a comment saying why: `kind_matches_ref`
+        # admitted only supplied_corpus/source_snapshot/content_entry/
+        # artifact, so a registry `learning_persona` ref could not ride
+        # in a candidate context at all.
+        candidate_visible_refs=case.candidate_visible_refs,
         origin=BenchmarkOrigin(
             suite_ref=suite_ref(REGISTRY_ROOT, suite_id),
             task_set_ref=suite.task_set_ref,
@@ -706,11 +777,26 @@ def test_one_case_from_each_lane_compiles_without_evaluator_material(
     assert spec.benchmark_origin is not None
     assert spec.benchmark_origin.task_case_ref == case_ref
 
+    # Every candidate ref survives compilation, in order, under the role
+    # its own registry kind names rather than one blanket `supplied_corpus`.
+    assert [context.object_ref for context in spec.context_refs] == list(
+        case.candidate_visible_refs
+    )
+    assert [context.kind for context in spec.context_refs] == [
+        BENCHMARK_CONTEXT_KINDS.get(ref.kind, "supplied_corpus")
+        for ref in case.candidate_visible_refs
+    ]
+
     agent_view = canonical_json(agent_safe_task_projection(spec))
     assert "benchmark_origin" not in agent_view
     for evaluator_ref in case.evaluator_refs:
         assert evaluator_ref.digest not in agent_view
     assert case.provenance.review_record not in agent_view
+    # The other half of the same claim, and only now worth asserting:
+    # the candidate refs *are* present, so "no evaluator digest" is a
+    # separation and not an artefact of an empty context list.
+    for candidate_ref in case.candidate_visible_refs:
+        assert candidate_ref.digest in agent_view
 
 
 # ---------------------------------------------------------------------------
@@ -937,6 +1023,13 @@ def test_a_drifted_grader_lock_is_reported_as_a_score_semantic_mismatch(tmp_path
 
 
 def test_the_writer_regenerates_a_byte_identical_tree(tmp_path: Path) -> None:
+    """Unchanged assertion, wider subject: the writer now writes the union.
+
+    `main` regenerates every module's objects since ADR 0089, so this
+    still compares the whole checked-in tree file for file — including
+    the 120 that moved out of `eval_registry_calibration/`, which is the
+    strongest available proof that they moved byte for byte.
+    """
     root = tmp_path / "eval_registry"
     assert main(["--root", str(root)]) == 0
 
@@ -945,6 +1038,12 @@ def test_the_writer_regenerates_a_byte_identical_tree(tmp_path: Path) -> None:
     assert written == committed
     for relative in written:
         assert (root / relative).read_bytes() == (REGISTRY_ROOT / relative).read_bytes()
+
+    benchmarks_only = tmp_path / "benchmarks-only"
+    assert main(["--root", str(benchmarks_only), "--benchmarks-only"]) == 0
+    partial = {path.relative_to(benchmarks_only) for path in benchmarks_only.rglob("*.json")}
+    assert partial < set(written)
+    assert len(set(written) - partial) == 120
 
 
 def test_the_parity_cli_reports_and_exits_zero(capsys: pytest.CaptureFixture[str]) -> None:

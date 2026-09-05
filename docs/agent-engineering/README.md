@@ -177,13 +177,26 @@ order is "landed" only when its acceptance criteria are green in CI.
 | P0-WO07 | Campaign lock, repeats, denominators | `src/campaign/` | landed |
 | P0-WO08 | Runtime event bridge | `src/contracts/runtime_bridge.py`, `src/contracts/artifact_store.py` | landed |
 | P0-WO09 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) | landed |
-| P0-WO10 | Judge-calibration design | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry_calibration/` | landed |
+| P0-WO10 | Judge-calibration design | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry/` | landed |
 | P0-WO11 | Stage-0 contract qualification | [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md), [`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md), `tests/test_stage0_qualification.py` | in flight |
 | P0-WO12 | Funded repeated baseline | — | approval-gated, blocked on D9 **and on unwritten code** — see below |
 
+**P0 contract follow-ups (2026-09-05, [ADR 0089](../decisions/0089-non-arm-policy-snapshots-and-one-registry-root.md)).**
+Three findings the work orders above recorded rather than fixed are now
+closed. `PolicySnapshot` has a `policy_kind` discriminator, so a branch
+run (`research_shape`) and a guided session (`guided_session`) seal
+manifests instead of declining them, and arm E is redefined as the
+deterministic controller plus a listwise selector plus a marginal-stop
+record — still `capability_missing`, with the refusal naming the two
+capabilities CAP-09 owes. `ContextRef` carries the three candidate-visible
+learning kinds, so a guided-learning case compiles with its refs
+populated. And W10's calibration suite lives under `eval_registry/`:
+`eval_registry_calibration/` is gone, the 120 objects moved byte for
+byte, and parity is stated over the union at 257 objects, 0 mismatches.
+
 The evaluation runners still read their own modules. `eval_registry/` is a
-generated, digest-verified view of `src/eval/benchmark_queries.py` and
-`src/eval/learning_benchmark.py`; `python -m src.contracts.registry parity`
+generated, digest-verified view of `src/eval/benchmark_queries.py`,
+`src/eval/learning_benchmark.py` and `src/calibration/suite.py`; `python -m src.contracts.registry parity`
 proves the two agree, and a later ADR decides which one is authoritative
 ([ADR 0079](../decisions/0079-benchmark-registry-migration-and-parity.md)).
 

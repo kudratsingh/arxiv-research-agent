@@ -20,7 +20,7 @@ from collections.abc import Callable, Iterable, Mapping
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Any, Literal, Protocol, TypeAlias
+from typing import Annotated, Any, Final, Literal, Protocol, TypeAlias
 
 from pydantic import Field, StringConstraints, model_validator
 
@@ -252,15 +252,75 @@ class PolicyConfig(StrictContractModel):
     reverify_repaired_subject: bool = False
 
 
+PolicyKind: TypeAlias = Literal["research_arm", "research_shape", "guided_session"]
+
+#: Arm E's structural definition, in the vocabulary `graph_capabilities`
+#: mints, and in the order a refusal names them (ADR 0089).
+#:
+#: `adaptive_compute_router` and `candidate_branching` are ADR 0085's
+#: deterministic controller and ADR 0086's branch tier — both built.
+#: `marginal_stop` and `candidate_lineage_selector` are CAP-09's and are
+#: built by nothing, which is why arm E is still `capability_missing`
+#: and why the refusal names exactly those two rather than a category.
+ARM_E_CAPABILITIES: Final[tuple[str, ...]] = (
+    "adaptive_compute_router",
+    "candidate_branching",
+    "marginal_stop",
+    "candidate_lineage_selector",
+)
+
+
+class SessionGraphRef(StrictContractModel):
+    """Which learning graph a guided session ran, named and versioned.
+
+    The digest of that graph is `PolicySnapshot.graph_digest`, the same
+    field every research shape uses; this names the thing the digest is
+    of, so two sessions on structurally identical graphs of different
+    lineages are still distinguishable in a run record.
+    """
+
+    session_graph_id: PolicyMember
+    session_graph_version: SemVer
+
+
 class PolicySnapshot(StrictContractModel):
-    arm_id: Literal["A", "B", "C", "D", "E"]
-    selector: Literal[
-        "fixed",
-        "fixed_evidence",
-        "fixed_verify_repair",
-        "supervisor_verified",
-        "adaptive_verified",
-    ]
+    """What policy a run was sealed under — arm, shape, or session graph.
+
+    RFC 09 §7.2 defined this object as an *arm* snapshot and enumerated
+    five of them. That was right for the first policy experiment and
+    wrong for everything else the repository grew: ADR 0086's
+    orchestrator-workers graph is a designed research policy that is not
+    one of the five, and ADR 0083's guided-reading session is not a
+    research policy at all. Both had to be sealed against something, and
+    both ended up sealed against *not* a manifest — a `capability_missing`
+    refusal in one case and a bespoke `GuidedSessionBinding` in the
+    other. A run that cannot seal a manifest is a run the experiment
+    record cannot see.
+
+    `policy_kind` is the discriminator that fixes it, and the honesty
+    rule survives intact: `research_arm` still means one of the five arms
+    with its validator unchanged for A-D, `research_shape` names a
+    designed research policy that is *not* an arm and carries its own id
+    and node set, and `guided_session` names the learning graph. Nothing
+    can now be an arm by accident, and nothing has to pretend to be one
+    in order to be recorded.
+    """
+
+    policy_kind: PolicyKind = "research_arm"
+    arm_id: Literal["A", "B", "C", "D", "E"] | None = None
+    selector: (
+        Literal[
+            "fixed",
+            "fixed_evidence",
+            "fixed_verify_repair",
+            "supervisor_verified",
+            "adaptive_verified",
+        ]
+        | None
+    ) = None
+    policy_id: PolicyMember | None = None
+    shape_nodes: tuple[PolicyMember, ...] = ()
+    session_graph: SessionGraphRef | None = None
     policy_version: SafeLabel
     graph_digest: Digest
     graph_capabilities: tuple[PolicyMember, ...]
@@ -270,7 +330,79 @@ class PolicySnapshot(StrictContractModel):
     capabilities: PolicyCapabilities
 
     @model_validator(mode="after")
-    def validate_arm_structure(self) -> PolicySnapshot:
+    def validate_policy_structure(self) -> PolicySnapshot:
+        if self.policy_kind == "research_arm":
+            return self._validate_arm()
+        if self.arm_id is not None or self.selector is not None:
+            raise ValueError(f"a {self.policy_kind} policy is not an arm and carries no arm id")
+        if self.policy_id is None:
+            raise ValueError(f"a {self.policy_kind} policy must name its policy id")
+        if self.policy_kind == "research_shape":
+            return self._validate_shape()
+        return self._validate_guided_session()
+
+    def _validate_shape(self) -> PolicySnapshot:
+        """A designed research policy that is deliberately not an arm.
+
+        The node set is required and is the whole point: `policy_id`
+        says what a dashboard groups the run under, and `shape_nodes`
+        says what the graph actually was, so a shape cannot drift into
+        meaning a different graph while keeping its name.
+        """
+        if self.session_graph is not None:
+            raise ValueError("a research shape has no session graph")
+        if not self.shape_nodes:
+            raise ValueError("a research shape must record the graph's node set")
+        if len(set(self.shape_nodes)) != len(self.shape_nodes):
+            raise ValueError("shape nodes must be unique")
+        if tuple(sorted(self.shape_nodes)) != self.shape_nodes:
+            raise ValueError("shape nodes must be sorted")
+        return self
+
+    def _validate_guided_session(self) -> PolicySnapshot:
+        """The learning lane, which shares no capability with the research one.
+
+        Every research runtime flag and capability is required to be
+        false rather than merely defaulted, because the alternative is a
+        session manifest that reads as though a research supervisor or
+        evidence store took part in a guided reading session.
+        """
+        if self.session_graph is None:
+            raise ValueError("a guided session must name its session graph")
+        if self.shape_nodes:
+            raise ValueError("a guided session records its graph as a session graph ref")
+        flags = self.runtime_flags
+        if any(
+            (
+                flags.enable_supervisor,
+                flags.enable_evidence_store,
+                flags.enable_verifier,
+                flags.enable_query_refiner,
+                flags.enable_reader_recovery,
+            )
+        ):
+            raise ValueError("a guided session runs no research policy flag")
+        capabilities = self.capabilities
+        if any(
+            (
+                capabilities.supervisor,
+                capabilities.evidence_store,
+                capabilities.fixed_post_synthesis_verifier,
+                capabilities.adaptive_compute,
+            )
+        ):
+            raise ValueError("a guided session claims no research policy capability")
+        if self.config != PolicyConfig():
+            raise ValueError("a guided session carries no research policy configuration")
+        if not self.graph_capabilities:
+            raise ValueError("a guided session must say what its graph does")
+        return self
+
+    def _validate_arm(self) -> PolicySnapshot:
+        if self.arm_id is None:
+            raise ValueError("a research arm must name its arm id")
+        if self.policy_id is not None or self.shape_nodes or self.session_graph is not None:
+            raise ValueError("an arm snapshot carries no shape or session identity")
         expected_selector = {
             "A": "fixed",
             "B": "fixed_evidence",
@@ -299,17 +431,28 @@ class PolicySnapshot(StrictContractModel):
         ):
             raise ValueError("Arm D requires supervisor, evidence, and verifier")
         if self.arm_id == "E":
-            if not (flags.enable_supervisor and flags.enable_evidence_store and flags.enable_verifier):
-                raise ValueError("Arm E requires supervisor, evidence, and verifier")
+            # ADR 0089 redefines arm E structurally. `07-first-policy-experiment.md`
+            # §3 specified it as "supervisor plus adaptive compute" at a
+            # time when adaptive compute did not exist; CAP-04 then built
+            # the controller over the *fixed* shapes and CAP-03 built the
+            # branch tier over them too, and ADR 0085 refuses to load the
+            # controller with a supervisor at all. So a supervisor is no
+            # longer part of arm E, and requiring one would have made the
+            # arm unreachable by construction. What is required is the
+            # evidence store — a branch tier whose reader emits no claims
+            # merges empty tables — and the four capabilities below.
+            if not flags.enable_evidence_store:
+                raise ValueError("Arm E requires the evidence store")
             if not self.capabilities.adaptive_compute:
                 raise ValueError("Arm E must declare adaptive compute")
-            required_graph_capabilities = {
-                "adaptive_compute_router",
-                "candidate_branching",
-                "marginal_stop",
-            }
-            if not required_graph_capabilities <= set(self.graph_capabilities):
-                raise ValueError("Arm E graph lacks adaptive routing capabilities")
+            earned = set(self.graph_capabilities)
+            missing = tuple(item for item in ARM_E_CAPABILITIES if item not in earned)
+            if missing:
+                raise ValueError(
+                    "Arm E graph lacks " + ", ".join(missing) + ": the listwise "
+                    "candidate selector and the marginal-stop record are CAP-09's "
+                    "and nothing in this repository builds them yet"
+                )
             required_tiers = ("T0", "T1", "T2")
             if self.config.allowed_tiers != required_tiers or self.config.default_tier is None:
                 raise ValueError("Arm E requires ordered T0-T2 compute tiers and a default")

@@ -40,12 +40,29 @@ import hashlib
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
+from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Any, Final, Literal, NamedTuple, TypeAlias
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import Field, StringConstraints, ValidationError, model_validator
 
+from src.calibration.suite import (
+    BlindingPlanContent,
+    CalibrationItemContent,
+    ExpectedLabelValue,
+    GuidelineText,
+    JudgeProbeLock,
+    RationaleText,
+    SyntheticGenerationRecord,
+)
+from src.calibration.suite import (
+    DeliverableContract as CalibrationDeliverableContract,
+)
+from src.calibration.suite import (
+    RetentionTerms as CalibrationRetentionTerms,
+)
 from src.contracts.kernel import (
+    CanonicalizationError,
     DataClass,
     Digest,
     ImmutableObjectRef,
@@ -230,6 +247,19 @@ class ContentKind(StrEnum):
     LEARNING_SCRIPT = "learning_script"
     LEARNING_EXPECTATIONS = "learning_expectations"
     LEARNING_FIXTURE_MANIFEST_ENTRY = "learning_fixture_manifest_entry"
+    # W10's judge-calibration suite (ADR 0089). These eight moved here so
+    # the calibration objects could live under `eval_registry/` with W06's
+    # benchmarks instead of a second root: this enum and `ContentPayload`
+    # were closed, and a `ContentEnvelope` that could not name a
+    # `calibration_item` could not read a tree containing one.
+    RETENTION_TERMS = "retention_terms"
+    CALIBRATION_GUIDELINE = "calibration_guideline"
+    CALIBRATION_ITEM = "calibration_item"
+    CALIBRATION_RATIONALE = "calibration_rationale"
+    EXPECTED_LABEL = "expected_label"
+    JUDGE_PROBE_LOCK = "judge_probe_lock"
+    SYNTHETIC_GENERATION = "synthetic_generation"
+    BLINDING_PLAN = "blinding_plan"
 
 
 Confidence: TypeAlias = Annotated[str, StringConstraints(pattern=r"^[01]\.[0-9]{1,6}$")]
@@ -438,6 +468,18 @@ ContentPayload: TypeAlias = (
     | LearningScript
     | LearningExpectationsContent
     | LearningFixtureManifestEntry
+    # W10's payloads, imported rather than redefined: two copies of a
+    # content model is how two trees stop agreeing about what a
+    # `calibration_item` is.
+    | CalibrationRetentionTerms
+    | CalibrationDeliverableContract
+    | GuidelineText
+    | CalibrationItemContent
+    | RationaleText
+    | ExpectedLabelValue
+    | JudgeProbeLock
+    | SyntheticGenerationRecord
+    | BlindingPlanContent
 )
 
 _CONTENT_KIND: dict[type[StrictContractModel], ContentKind] = {
@@ -452,6 +494,48 @@ _CONTENT_KIND: dict[type[StrictContractModel], ContentKind] = {
     LearningScript: ContentKind.LEARNING_SCRIPT,
     LearningExpectationsContent: ContentKind.LEARNING_EXPECTATIONS,
     LearningFixtureManifestEntry: ContentKind.LEARNING_FIXTURE_MANIFEST_ENTRY,
+    CalibrationRetentionTerms: ContentKind.RETENTION_TERMS,
+    CalibrationDeliverableContract: ContentKind.DELIVERABLE_CONTRACT,
+    GuidelineText: ContentKind.CALIBRATION_GUIDELINE,
+    CalibrationItemContent: ContentKind.CALIBRATION_ITEM,
+    RationaleText: ContentKind.CALIBRATION_RATIONALE,
+    ExpectedLabelValue: ContentKind.EXPECTED_LABEL,
+    JudgeProbeLock: ContentKind.JUDGE_PROBE_LOCK,
+    SyntheticGenerationRecord: ContentKind.SYNTHETIC_GENERATION,
+    BlindingPlanContent: ContentKind.BLINDING_PLAN,
+}
+
+#: Which payload model each declared kind parses into, most specific
+#: first. A bare union cannot do this job any more and the reason is
+#: exact: W06's `RetentionTerms` and W10's are field-for-field identical,
+#: so a smart union would resolve a `retention_terms` file to the wrong
+#: class and `verify_kind_and_digest` would then reject a perfectly valid
+#: object for disagreeing with itself. `deliverable_contract` has the
+#: opposite problem — one kind, two genuinely different shapes — so its
+#: entry lists both and the first that validates wins.
+_PAYLOAD_MODELS: Final[Mapping[ContentKind, tuple[type[StrictContractModel], ...]]] = {
+    ContentKind.RETENTION_POLICY: (RetentionTerms,),
+    ContentKind.RETENTION_TERMS: (CalibrationRetentionTerms,),
+    ContentKind.DELIVERABLE_CONTRACT: (
+        DeliverableContract,
+        CalibrationDeliverableContract,
+    ),
+    ContentKind.SOURCE_POLICY: (SourcePolicyDescriptor,),
+    ContentKind.GRADER_LOCK: (GraderLock,),
+    ContentKind.RESEARCH_EXPECTED_TOPICS: (ResearchExpectedTopics,),
+    ContentKind.LEARNING_PERSONA: (LearningPersonaContent,),
+    ContentKind.LEARNING_PAPER: (LearningPaperContent,),
+    ContentKind.LEARNING_SCENARIO_INPUT: (LearningScenarioInput,),
+    ContentKind.LEARNING_SCRIPT: (LearningScript,),
+    ContentKind.LEARNING_EXPECTATIONS: (LearningExpectationsContent,),
+    ContentKind.LEARNING_FIXTURE_MANIFEST_ENTRY: (LearningFixtureManifestEntry,),
+    ContentKind.CALIBRATION_GUIDELINE: (GuidelineText,),
+    ContentKind.CALIBRATION_ITEM: (CalibrationItemContent,),
+    ContentKind.CALIBRATION_RATIONALE: (RationaleText,),
+    ContentKind.EXPECTED_LABEL: (ExpectedLabelValue,),
+    ContentKind.JUDGE_PROBE_LOCK: (JudgeProbeLock,),
+    ContentKind.SYNTHETIC_GENERATION: (SyntheticGenerationRecord,),
+    ContentKind.BLINDING_PLAN: (BlindingPlanContent,),
 }
 
 
@@ -474,6 +558,48 @@ class ContentEnvelope(StrictContractModel):
     created_at: Rfc3339Utc
     payload: ContentPayload
     integrity: ContentIntegrity
+
+    @model_validator(mode="before")
+    @classmethod
+    def payload_follows_its_declared_kind(cls, value: Any) -> Any:
+        """Parse the payload as the model its `schema_kind` names.
+
+        Necessary since ADR 0089 merged W10's content into this
+        vocabulary, and necessary for a precise reason rather than a
+        stylistic one. `ContentPayload` is a smart union, and two of its
+        members — W06's `RetentionTerms` and W10's — are field-for-field
+        identical, so the union cannot tell a `retention_policy` payload
+        from a `retention_terms` one. Left to itself it picks the first
+        that validates, `verify_kind_and_digest` then finds the payload
+        type disagreeing with the declared kind, and a perfectly valid
+        object is rejected for contradicting itself.
+
+        Anything this cannot resolve is passed through untouched, so an
+        unknown kind still fails in the ordinary way rather than here.
+        """
+        if not isinstance(value, Mapping):
+            return value
+        payload = value.get("payload")
+        if not isinstance(payload, Mapping):
+            return value
+        declared = value.get("schema_kind")
+        if not isinstance(declared, str | ContentKind):
+            return value
+        try:
+            models = _PAYLOAD_MODELS[ContentKind(declared)]
+        except ValueError:
+            return value
+        for model in models:
+            try:
+                # Re-parsed as JSON rather than validated as a Python
+                # mapping, because these models are strict and a strict
+                # *Python* validation refuses a list where a tuple is
+                # declared. JSON mode accepts an array for a tuple, which
+                # is exactly the mode the caller was already in.
+                return {**value, "payload": model.model_validate_json(canonical_json(payload))}
+            except (ValidationError, CanonicalizationError):
+                continue
+        return value
 
     @model_validator(mode="after")
     def verify_kind_and_digest(self) -> ContentEnvelope:
@@ -1573,6 +1699,50 @@ def build_registry(fixture_root: Path | None = None) -> RegistryBundle:
     )
 
 
+def calibration_bundle_objects() -> tuple[
+    tuple[RegistryEnvelope, ...], tuple[ContentEnvelope, ...]
+]:
+    """W10's calibration suite, expressed in this module's vocabulary.
+
+    The registry envelopes need no conversion — `src.calibration.suite`
+    already builds `src.contracts.registry.RegistryEnvelope`. The content
+    envelopes are re-validated from their own canonical JSON into
+    `ContentEnvelope`, which is not a formality: it is the proof that
+    ADR 0089's widening is faithful. If any calibration payload did not
+    round-trip through this module's `ContentKind` and `ContentPayload`,
+    this call would raise rather than quietly producing a tree the
+    reader cannot read back.
+    """
+    from src.calibration.suite import build_bundle  # noqa: PLC0415
+
+    bundle = build_bundle()
+    contents = tuple(
+        ContentEnvelope.model_validate_json(canonical_json(item))
+        for item in bundle.contents
+    )
+    return bundle.objects, contents
+
+
+def build_full_registry(fixture_root: Path | None = None) -> RegistryBundle:
+    """Every object the checked-in tree holds, from every module that builds one.
+
+    `eval_registry/` carries two suites' worth of objects since ADR 0089:
+    W06's two benchmarks and W10's judge-calibration probe set, which
+    lived at `eval_registry_calibration/` only because this module's
+    content vocabulary was closed. The "the checked-in tree is exactly
+    what the modules build" property is a property of the *tree*, so it
+    has to be stated over the union or it is not stated at all.
+    """
+    base = build_registry(fixture_root)
+    objects, contents = calibration_bundle_objects()
+    return RegistryBundle(
+        objects=(*base.objects, *objects),
+        contents=(*base.contents, *contents),
+        research_suite_ref=base.research_suite_ref,
+        learning_suite_ref=base.learning_suite_ref,
+    )
+
+
 # --------------------------------------------------------------------------
 # Writing the tree
 # --------------------------------------------------------------------------
@@ -1948,7 +2118,7 @@ _MAX_DIFF_LINES: Final[int] = 6
 class ParityMismatch(StrictContractModel):
     """One named divergence between the live modules and the registry tree."""
 
-    lane: Literal["research", "guided_learning", "shared"]
+    lane: Literal["research", "guided_learning", "calibration", "shared"]
     scope: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     subject: Annotated[str, StringConstraints(min_length=1, max_length=200)]
     detail: Annotated[str, StringConstraints(min_length=1, max_length=2000)]
@@ -2020,9 +2190,25 @@ def _summarize(lines: Sequence[str]) -> str:
     return f"{head}; and {len(lines) - _MAX_DIFF_LINES} more"
 
 
-def _lane_for(object_id: str, research_ids: frozenset[str]) -> Literal["research", "guided_learning", "shared"]:
+#: Ids the judge-calibration suite owns, computed once from the module
+#: that builds them so the lane label cannot drift from the objects.
+#: Only used to *label* a mismatch, never to decide whether one exists.
+@lru_cache(maxsize=1)
+def _calibration_ids() -> frozenset[str]:
+    objects, contents = calibration_bundle_objects()
+    return frozenset(
+        [envelope.object_ref().id for envelope in objects]
+        + [content.object_ref().id for content in contents]
+    )
+
+
+def _lane_for(
+    object_id: str, research_ids: frozenset[str]
+) -> Literal["research", "guided_learning", "calibration", "shared"]:
     if object_id in research_ids:
         return "research"
+    if object_id in _calibration_ids():
+        return "calibration"
     return "shared"
 
 
@@ -2261,7 +2447,7 @@ def build_parity_report(
     """
 
     base = REGISTRY_ROOT if root is None else root
-    expected = build_registry(fixture_root)
+    expected = build_full_registry(fixture_root)
     objects, contents, errors, mislocated = _load_tree(base)
     mismatches: list[ParityMismatch] = [
         ParityMismatch(
@@ -2381,15 +2567,29 @@ def render_parity_report(report: ParityReport) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Rewrite the registry tree from the live modules; makes no network call."""
+    """Rewrite the whole registry tree from the live modules; makes no network call.
+
+    "Whole" is load-bearing since ADR 0089: the root holds W06's two
+    benchmarks and W10's calibration suite, and a regenerator that wrote
+    only its own half would leave the other half's files behind as
+    unexplained residue the first time a locator changed. `--benchmarks-only`
+    writes just this module's objects, for a caller that wants one suite
+    in a scratch directory.
+    """
 
     parser = argparse.ArgumentParser(
         description="Regenerate the checked-in benchmark registry from the eval modules"
     )
     parser.add_argument("--root", type=Path, default=REGISTRY_ROOT)
     parser.add_argument("--fixture-root", type=Path, default=None)
+    parser.add_argument("--benchmarks-only", action="store_true")
     args = parser.parse_args(argv)
-    written = write_registry(build_registry(args.fixture_root), args.root)
+    bundle = (
+        build_registry(args.fixture_root)
+        if args.benchmarks_only
+        else build_full_registry(args.fixture_root)
+    )
+    written = write_registry(bundle, args.root)
     print(f"wrote {len(written)} registry objects under {args.root.name}/")
     return 0
 

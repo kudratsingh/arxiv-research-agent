@@ -429,14 +429,75 @@ class TestTheSyntheticLearningEpisode:
             for artifact in event.artifact_refs:
                 assert artifact.data_class is DataClass.LEARNER_SENSITIVE
 
-    def test_the_binding_replaces_a_manifest_and_says_so(self, tmp_path: Path) -> None:
-        """RFC 09's PolicySnapshot names five research arms; a session is none."""
+    def test_the_binding_wraps_a_real_manifest(self, tmp_path: Path) -> None:
+        """Changed by ADR 0089, and the old name said why it had to change.
+
+        This test was `test_the_binding_replaces_a_manifest_and_says_so`
+        and asserted the lane's substitute for a manifest, because RFC
+        09's `PolicySnapshot` named five research arms and a session is
+        none of them. `policy_kind="guided_session"` removes the reason,
+        so the binding now *wraps* a sealed `RunManifestV1` and every
+        field it used to carry is read back off that manifest.
+        """
         bridge = learning_bridge(tmp_path)
-        assert bridge.binding.product_lane == "guided_learning"
+        binding = bridge.binding
+        assert binding.product_lane == "guided_learning"
         assert bridge.summary()["session_binding_digest"] == bridge._scope.manifest_digest
         admitted = bridge.events()[0]
         assert admitted.event_type == "run.admitted"
         assert admitted.payload["product_lane"] == "guided_learning"
+
+        policy = binding.manifest.payload.policy
+        assert policy.policy_kind == "guided_session"
+        assert policy.arm_id is None
+        assert policy.selector is None
+        assert policy.policy_id == "guided_read_session"
+        assert policy.session_graph is not None
+        assert policy.session_graph.session_graph_id == "guided_read_session"
+        # Not a research run wearing a learning label: every research
+        # flag and capability is false, and the contract requires it.
+        assert policy.runtime_flags.enable_supervisor is False
+        assert policy.runtime_flags.enable_evidence_store is False
+        assert policy.capabilities.adaptive_compute is False
+
+        # The wrapper duplicates nothing: each accessor is the manifest.
+        assert binding.task_ref == binding.manifest.payload.task
+        assert binding.admission == binding.manifest.payload.admission_resolution
+        assert binding.graph_digest == policy.graph_digest
+        assert binding.sealed_at == binding.manifest.payload.identity.created_at
+        assert binding.receipt_digest == (
+            binding.manifest.payload.compilation.receipt_ref.digest
+        )
+        assert binding.manifest.payload.privacy.task_data_class is (
+            DataClass.LEARNER_SENSITIVE
+        )
+        # The session's own id reaches the manifest identity, so the
+        # sealed run and the trajectory scope are the same run.
+        assert binding.manifest.payload.identity.run_id == bridge._scope.run_id
+
+    def test_a_guided_session_policy_refuses_a_research_flag(self) -> None:
+        """The one thing the new kind must never allow.
+
+        A session manifest that carried `enable_supervisor=true` would be
+        indistinguishable, to anything reading run records, from a
+        research run on the supervisor loop.
+        """
+        policy = rb.guided_session_policy_snapshot("sha256:" + "d" * 64)
+        raw = policy.model_dump(mode="python")
+        raw["runtime_flags"] = {
+            **policy.runtime_flags.model_dump(mode="python"),
+            "enable_supervisor": True,
+        }
+        with pytest.raises(ValidationError, match="no research policy flag"):
+            type(policy).model_validate(raw)
+
+        claimed = policy.model_dump(mode="python")
+        claimed["capabilities"] = {
+            **policy.capabilities.model_dump(mode="python"),
+            "adaptive_compute": True,
+        }
+        with pytest.raises(ValidationError, match="no research policy capability"):
+            type(policy).model_validate(claimed)
 
     def test_it_writes_no_learner_progress_event(self, tmp_path: Path) -> None:
         """The single most important negative in this work order.

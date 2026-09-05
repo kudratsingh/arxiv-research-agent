@@ -1321,3 +1321,118 @@ Approved decisions D1–D3 are not reopened here: claim support/evidence
 completeness remains the first target, the constrained scorecard remains the
 decision model, and the fixed graph remains control/fallback until repeated
 evidence supports a later promotion.
+
+## 19. Amendment — non-arm policy snapshots and arm E (2026-09-05)
+
+Appended rather than edited in place, so the contract's history stays
+readable. Implemented by [ADR 0089](../decisions/0089-non-arm-policy-snapshots-and-one-registry-root.md);
+§6 and §7 above describe the shape before this amendment.
+
+### 19.1 `PolicySnapshot` gains a `policy_kind` discriminator
+
+§7.2 defined the snapshot as an *arm* snapshot with a required `arm_id`
+of `A`–`E`. That was right for the first policy experiment and wrong for
+everything the repository grew afterwards. Two designed, running shapes
+could not be sealed:
+
+- **ADR 0086's orchestrator-workers graph.** A real research policy with
+  a lead, workers and a merge. Not one of the five arms, and not arm E
+  either, because arm E is adaptive compute *with* listwise selection.
+  It declined the seal and vanished from the run record, indistinguishable
+  from a configuration nobody designed.
+- **ADR 0083's guided-reading session.** Not a research policy at all. It
+  sealed a bespoke `GuidedSessionBinding` instead of a manifest, and that
+  ADR recorded the substitution as a gap for this RFC's next revision.
+
+The snapshot now discriminates on `policy_kind`:
+
+| `policy_kind` | Identity fields | Meaning |
+|---|---|---|
+| `research_arm` | `arm_id` (`A`–`E`), `selector` | One of the five arms. Validator unchanged for A–D. |
+| `research_shape` | `policy_id`, `shape_nodes` | A designed research policy that is not an arm — `research_orchestrated_workers`, and controller-selected runs that are not one of the five. |
+| `guided_session` | `policy_id`, `session_graph` | The learning graph, named and versioned. |
+
+`shape_nodes` is the compiled graph's node set, sorted and unique.
+`graph_digest` already pins the structure; the node set makes what was
+pinned readable without a second checkout, so a shape id cannot silently
+come to mean a different graph.
+
+Three rules keep the honesty property §7.2 was protecting:
+
+- an arm snapshot carries no `policy_id`, no `shape_nodes` and no
+  `session_graph`, and a non-arm snapshot carries no `arm_id` and no
+  `selector`, so nothing can be an arm and something else at once;
+- a `guided_session` requires every research runtime flag and every
+  research capability to be **false** and its `PolicyConfig` to be empty,
+  so a session manifest cannot be read as a research run with its flags
+  off; and
+- a shape with no designed policy behind it still refuses to seal.
+  `policy_kind` is a discriminator over designed policies, not a licence
+  to name anything.
+
+**Digest impact.** Every arm snapshot's canonical JSON gains one key, so
+A–E's snapshot digests moved once. Nothing checked in pinned the old
+values; A–D's structure, selectors, flags and capabilities are unchanged,
+and `tests/test_contract_research_binding.py` now pins the four new
+values as goldens.
+
+### 19.2 Arm E is redefined structurally
+
+§7.2's table and [`07-first-policy-experiment.md`](07-first-policy-experiment.md)
+§3 both define arm E as "supervisor plus adaptive compute". That was
+written before adaptive compute existed. It now does, and it was not
+built on the supervisor:
+
+- **ADR 0085** (CAP-04) built the deterministic compute controller as a
+  T0/T1 selector over the **fixed** shapes, and refuses to load beside
+  `enable_supervisor=true` — two things choosing the graph is one too
+  many.
+- **ADR 0086** (CAP-03) built the branch tier (T2) over the same fixed
+  substrate, and refuses a supervisor for the same reason.
+
+So the original definition had become self-defeating: requiring a
+supervisor would make arm E unreachable by construction on the only
+implementation of adaptive compute this repository has. Arm E is now:
+
+> a deterministic compute controller selecting among T0/T1/T2 with
+> candidate branching, **and** a listwise candidate selector, **and** a
+> marginal-stop record.
+
+Concretely the validator requires `enable_evidence_store` (a branch tier
+whose reader emits no claims merges empty tables), the `adaptive_compute`
+capability, ordered `T0`–`T2` tiers with a default, the router/branch/
+selection/stop configuration §7.2 already specified, and all four of
+`adaptive_compute_router`, `candidate_branching`, `marginal_stop`,
+`candidate_lineage_selector`. A supervisor is permitted and no longer
+required.
+
+`adaptive_compute_router` becomes *earnable*, and by a setting rather
+than a node: ADR 0085's controller chooses between compiled graphs before
+a run starts, so no stage of the chosen graph can represent it. It is
+still not earnable by a policy *name* — the setting is refused at load
+unless the shapes it selects among are legal.
+
+**Arm E remains `capability_missing`**, and the refusal now names exactly
+what is absent rather than a category:
+
+```
+Arm E graph lacks marginal_stop, candidate_lineage_selector: the listwise
+candidate selector and the marginal-stop record are CAP-09's and nothing
+in this repository builds them yet
+```
+
+**Known follow-up.** `src/campaign/arms.py`'s `ARM_SETTINGS["E"]` still
+copies arm D's row, including `enable_supervisor: True`. That row is
+inert today — `UNRUNNABLE_ARMS` refuses arm E before any snapshot is
+built — but it now describes an arm that no longer exists, and CAP-09's
+companion campaign change should drop the supervisor from it.
+
+### 19.3 Both bridges seal the same manifest
+
+`seal_episode_manifest` takes an already-decided `PolicySnapshot` rather
+than a research policy shape, and the research and guided-learning lanes
+both call it. `GuidedSessionBinding` keeps its name and its `schema_kind`
+and becomes a wrapper: one `manifest` field, with `task_ref`,
+`receipt_digest`, `admission`, `graph_digest`, `policy_id`,
+`policy_version`, `environment_class` and `sealed_at` read back off it as
+properties. Nothing is duplicated, so nothing can disagree.

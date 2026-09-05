@@ -322,6 +322,13 @@ ORCHESTRATED_WORKERS_POLICY_ID: Final[str] = "research_orchestrated_workers"
 #: `marginal_stop` are CAP-09's, and remain in every arm-E gap.
 CANDIDATE_BRANCHING_CAPABILITY: Final[str] = "candidate_branching"
 
+#: The arm-E capability CAP-04 built, earned by a setting rather than a
+#: node (ADR 0085: the controller selects between compiled graphs before
+#: a run starts, so no stage of the selected graph can represent it).
+#: ADR 0089 makes it earnable; before that it was in every arm-E gap
+#: whatever the deployment did, which had stopped being true.
+ADAPTIVE_COMPUTE_ROUTER_CAPABILITY: Final[str] = "adaptive_compute_router"
+
 #: What each arm's capability claim requires of the compiled graph.
 #: `arm_capability_gap` subtracts the graph's own capabilities from these,
 #: so an empty gap means "this graph can run that arm" and a non-empty one
@@ -421,6 +428,14 @@ class PolicyShape(StrictContractModel):
     combination would need. That pairing is the module's central honesty
     rule: a shape either names an arm the graph can actually run, or it
     names what is missing.
+
+    `policy_kind` is a *second*, narrower question, added by ADR 0089:
+    "can this shape seal a manifest at all?". It is `research_arm` for
+    A-D, `research_shape` for a designed non-arm research policy such as
+    ADR 0086's branch tier, and `None` for a combination nobody designed
+    — which still refuses, as it always has. `representable` keeps its
+    original meaning and is deliberately *not* widened: a branch run is
+    sealable and is still not one of the five arms.
     """
 
     arm_id: Literal["A", "B", "C", "D"] | None
@@ -431,6 +446,7 @@ class PolicyShape(StrictContractModel):
     policy_id: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
     policy_version: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     representable: bool
+    policy_kind: Literal["research_arm", "research_shape"] | None = None
     missing_capabilities: tuple[str, ...]
     graph_capabilities: tuple[str, ...]
     declared_research_policy: Annotated[str, StringConstraints(min_length=1, max_length=64)]
@@ -439,9 +455,14 @@ class PolicyShape(StrictContractModel):
     graph: GraphShape
 
     @property
+    def sealable(self) -> bool:
+        """Whether this shape can produce a `PolicySnapshot` at all."""
+        return self.policy_kind is not None
+
+    @property
     def policy_digest(self) -> str:
-        """Digest of the arm snapshot, or of the refusal that replaces it."""
-        if self.representable:
+        """Digest of the policy snapshot, or of the refusal that replaces it."""
+        if self.sealable:
             return sha256_digest(policy_snapshot(self))
         return sha256_digest(
             {
@@ -513,7 +534,11 @@ def classify_from_graph_shape(config: Settings, graph: GraphShape) -> PolicyShap
         enable_reader_recovery=bool(config.enable_reader_recovery),
     )
     declared = str(getattr(config, "research_policy", "") or "legacy")
-    capabilities = graph_capabilities(graph, evidence=evidence)
+    capabilities = graph_capabilities(
+        graph,
+        evidence=evidence,
+        compute_controller=str(getattr(config, "compute_controller", "off") or "off"),
+    )
 
     arm: Literal["A", "B", "C", "D"] | None
     selector: (
@@ -558,6 +583,7 @@ def classify_from_graph_shape(config: Settings, graph: GraphShape) -> PolicyShap
         policy_id=ARM_POLICY_IDS[arm] if arm is not None else CAPABILITY_MISSING_POLICY_ID,
         policy_version=f"{BINDING_VERSION}-shadow",
         representable=arm is not None,
+        policy_kind="research_arm" if arm is not None else None,
         missing_capabilities=missing,
         graph_capabilities=capabilities,
         declared_research_policy=declared,
@@ -593,6 +619,13 @@ def _orchestrated_shape(
     because a branch tier whose reader emits no claims merges empty
     tables — the same refusal arm C makes, arrived at from the other
     side.
+
+    ADR 0089 adds the one thing that was missing: `policy_kind`. The
+    shape is `research_shape` — a designed research policy that is not an
+    arm — so it now seals a manifest under its own name instead of
+    declining one and vanishing from the record. `representable` stays
+    False, because the question it answers has not changed and the answer
+    to it has not either.
     """
     earned = set(capabilities)
     missing = [
@@ -608,6 +641,7 @@ def _orchestrated_shape(
         policy_id=ORCHESTRATED_WORKERS_POLICY_ID,
         policy_version=f"{BINDING_VERSION}-shadow",
         representable=False,
+        policy_kind="research_shape",
         missing_capabilities=tuple(missing),
         graph_capabilities=capabilities,
         declared_research_policy=declared,
@@ -617,14 +651,27 @@ def _orchestrated_shape(
     )
 
 
-def graph_capabilities(graph: GraphShape, *, evidence: bool) -> tuple[str, ...]:
+def graph_capabilities(
+    graph: GraphShape,
+    *,
+    evidence: bool,
+    compute_controller: str = "off",
+) -> tuple[str, ...]:
     """What the compiled graph can actually do, in the arm vocabulary.
 
     Every entry is earned by a node that exists (or, for the evidence
-    store, by the reader behaviour its flag turns on). Nothing here is
-    ever derived from a policy *name*, which is why a `research_policy`
-    that claims verify-and-repair without the stage cannot produce the
-    capability that would let the contract's own arm-C validator pass.
+    store and the compute router, by the behaviour a flag turns on).
+    Nothing here is ever derived from a policy *name*, which is why a
+    `research_policy` that claims verify-and-repair without the stage
+    cannot produce the capability that would let the contract's own arm-C
+    validator pass.
+
+    `compute_controller` is the one capability with no node, and ADR 0085
+    is why: the controller selects *between* compiled graphs before a run
+    begins, so it is a property of the deployment rather than of the
+    shape it picked. It is read as an argument, not from a settings
+    object, so a caller that has only a graph — `src/campaign/arms.py` —
+    keeps the pre-CAP-04 answer without knowing this parameter exists.
     """
     nodes = set(graph.nodes)
     earned: list[str] = ["supervisor_router" if "supervisor" in nodes else "fixed_pipeline"]
@@ -638,11 +685,16 @@ def graph_capabilities(graph: GraphShape, *, evidence: bool) -> tuple[str, ...]:
         ]
     if nodes >= ORCHESTRATION_NODES:
         # The one arm-E capability a *node* can earn (ADR 0086). The
-        # other three cannot be earned here and must not be: a router
-        # that is a setting, a selector that is not built, and a stop
-        # rule that is not built are three gaps an evaluation needs to
-        # keep seeing.
+        # selector and the stop rule cannot be earned here and must not
+        # be: two gaps an evaluation needs to keep seeing.
         earned.append(CANDIDATE_BRANCHING_CAPABILITY)
+    if compute_controller == "deterministic":
+        # ADR 0085's controller, which is what arm E's router turned out
+        # to be. Before CAP-04 nothing in this repository routed a
+        # compute tier, and this capability was unearnable by anything;
+        # it is still unearnable by a *name*, since the setting is
+        # refused at load unless the graph it selects among is legal.
+        earned.append(ADAPTIVE_COMPUTE_ROUTER_CAPABILITY)
     if evidence:
         earned.append("evidence_store")
     return tuple(sorted(earned))
@@ -655,9 +707,9 @@ def arm_capability_gap(arm_id: str, shape: PolicyShape) -> tuple[str, ...]:
     checkout whose fixed graph compiles CAP-02's verify-and-repair stage,
     and stays full on one whose graph does not — including a run with
     `ENABLE_VERIFIER=true`, which adds no node to the fixed pipeline at
-    all. Arm E's gap is never empty here: nothing in this repository
-    routes a compute tier, branches a candidate or decides a marginal
-    stop, and no setting can conjure one.
+    all. Arm E's gap is never empty here: CAP-04 built the router and
+    CAP-03 the branch tier, but nothing selects a candidate listwise or
+    decides a marginal stop, and no setting can conjure either.
     """
     if arm_id in ARM_REQUIRED_CAPABILITIES:
         earned = set(shape.graph_capabilities)
@@ -672,14 +724,30 @@ def arm_capability_gap(arm_id: str, shape: PolicyShape) -> tuple[str, ...]:
 
 
 def policy_snapshot(shape: PolicyShape) -> PolicySnapshot:
-    """Turn a representable shape into the manifest's arm snapshot.
+    """Turn a sealable shape into the manifest's policy snapshot.
+
+    Two shapes seal, and they seal as different kinds of thing. An arm
+    A-D produces a `research_arm` snapshot exactly as it always did. ADR
+    0086's branch tier produces a `research_shape` snapshot carrying its
+    own policy id and its graph's node set — a designed research policy
+    that is not one of the five arms, and now recorded as such instead of
+    declining the seal and disappearing from the run record (ADR 0089).
+
+    Everything else still refuses. A configuration nobody designed has no
+    honest name for a manifest to carry, and inventing one is precisely
+    the mislabelling this module exists to prevent.
 
     The snapshot's `graph_capabilities` are the graph's *earned* ones —
     the same tuple `arm_capability_gap` subtracts from — so the contract's
     own arm-C validator passes exactly when the verify/repair stage is
-    compiled in and fails when it is not. None of the adaptive
-    capabilities can ever appear, because no node earns one.
+    compiled in and fails when it is not.
+
+    Raises:
+        ResearchBindingError: The shape names no policy a manifest can
+            express, and `missing_capabilities` says what is absent.
     """
+    if shape.policy_kind == "research_shape":
+        return _shape_policy_snapshot(shape)
     if shape.arm_id is None or shape.selector is None:
         raise ResearchBindingError(
             "policy shape is not a representable arm: "
@@ -692,6 +760,7 @@ def policy_snapshot(shape: PolicyShape) -> PolicySnapshot:
     )
     capabilities = shape.graph_capabilities
     return PolicySnapshot(
+        policy_kind="research_arm",
         arm_id=shape.arm_id,
         selector=shape.selector,
         policy_version=shape.policy_version,
@@ -706,10 +775,46 @@ def policy_snapshot(shape: PolicyShape) -> PolicySnapshot:
             fixed_post_synthesis_verifier=(
                 "fixed_post_synthesis_verifier" in shape.graph_capabilities
             ),
-            # Never earned: no node in this repository routes compute
-            # tiers, and a capability nothing implements must not be
-            # declarable by configuration.
+            # Arms A-D are not adaptive by construction: none of them
+            # routes a compute tier, and CAP-04's controller refuses to
+            # load beside the flags that make D what it is.
             adaptive_compute=False,
+        ),
+    )
+
+
+def _shape_policy_snapshot(shape: PolicyShape) -> PolicySnapshot:
+    """Seal a designed non-arm research policy under its own name.
+
+    `shape_nodes` is the compiled graph's node set, and it is what stops
+    `research_orchestrated_workers` from quietly becoming the name of a
+    different graph: `graph_digest` already pins the structure, and the
+    node set makes the pinned thing readable without a second checkout.
+
+    `adaptive_compute` is declared from the router capability rather than
+    hardcoded false, because with CAP-04's controller on, a branch run
+    genuinely is routing compute tiers. What it still cannot claim is
+    arm E, and `missing_capabilities` on the shape says why.
+    """
+    return PolicySnapshot(
+        policy_kind="research_shape",
+        policy_id=shape.policy_id,
+        shape_nodes=tuple(sorted(shape.graph.nodes)),
+        policy_version=shape.policy_version,
+        graph_digest=shape.graph.digest,
+        graph_capabilities=shape.graph_capabilities,
+        config_schema=f"{shape.policy_id}/{BINDING_VERSION}",
+        runtime_flags=shape.runtime_flags,
+        config=PolicyConfig(max_targeted_repairs=1, reverify_repaired_subject=True),
+        capabilities=PolicyCapabilities(
+            supervisor=shape.runtime_flags.enable_supervisor,
+            evidence_store=shape.runtime_flags.enable_evidence_store,
+            fixed_post_synthesis_verifier=(
+                "fixed_post_synthesis_verifier" in shape.graph_capabilities
+            ),
+            adaptive_compute=(
+                ADAPTIVE_COMPUTE_ROUTER_CAPABILITY in shape.graph_capabilities
+            ),
         ),
     )
 
@@ -964,7 +1069,7 @@ def code_snapshot() -> CodeSnapshot:
 
 @lru_cache(maxsize=4)
 def environment_snapshot(
-    execution_class: Literal["local-test", "local-eval", "ci", "production"],
+    execution_class: ExecutionClass,
 ) -> EnvironmentSnapshot:
     """Describe the interpreter and platform the run executed on."""
     try:
@@ -1540,11 +1645,15 @@ def episode_budget(spec: TaskSpecV1) -> EpisodeBudget:
 
 EpisodeOrigin = Literal["research_api", "research_eval", "research_scripted"]
 
+ExecutionClass = Literal["local-test", "local-eval", "ci", "production"]
+
 #: Execution class recorded per origin. The API surface reports
 #: `production` unless it is running on the mock corpus, which is the
 #: only honest reading: a run against live arXiv with a real credential
 #: is production whatever process started it.
-_EXECUTION_CLASSES: Final[Mapping[EpisodeOrigin, tuple[str, str]]] = {
+_EXECUTION_CLASSES: Final[
+    Mapping[EpisodeOrigin, tuple[ExecutionClass, ExecutionClass]]
+] = {
     "research_api": ("local-test", "production"),
     "research_eval": ("local-eval", "local-eval"),
     "research_scripted": ("local-eval", "local-eval"),
@@ -1591,6 +1700,15 @@ def deterministic_run_id(runtime_run_id: str) -> str:
     return f"run_{entropy.hex}"
 
 
+class SealedControlPlane(StrictContractModel):
+    """The four objects one seal produces, before any lane wraps them."""
+
+    task_ref: TaskSpecRef
+    receipt: TaskCompilationReceipt
+    manifest: RunManifestV1
+    projection: PolicyRuntimeProjection
+
+
 def seal_research_episode(
     config: Settings,
     *,
@@ -1605,23 +1723,85 @@ def seal_research_episode(
     task_store: Any = None,
     sealed_at: str | None = None,
 ) -> SealedEpisode:
-    """Seal one episode's configuration before its first node runs.
+    """Seal one research episode's configuration before its first node runs.
 
-    The order is RFC 09 §5.1's, and every step of it is load-bearing:
-    compile and persist the task (already done by the caller), classify
-    the policy against the compiled graph, resolve admission — which is
-    where a metered provider or an over-broad effective policy fails
-    closed — build and hash the candidate-safe projection, then hash and
-    seal the control-plane payload. `run.admitted` is appended by the
-    bridge afterwards, carrying the digest this function returns.
+    Classifies the policy against the compiled graph, then hands the
+    snapshot to `seal_episode_manifest`. Since ADR 0089 that snapshot is
+    an arm A-D or ADR 0086's branch shape; everything else still refuses,
+    and the refusal is `policy_snapshot`'s.
 
     Raises:
         ResearchBindingError: The configuration cannot be expressed as a
-            sealed episode — an unrepresentable policy shape, or a
+            sealed episode — a policy shape no manifest can name, or a
             chargeable provider with no approval. Never a partial seal.
     """
-    moment = sealed_at or utc_timestamp()
     policy = policy_snapshot(shape)
+    mock_class, live_class = _EXECUTION_CLASSES[origin]
+    sealed = seal_episode_manifest(
+        config,
+        policy=policy,
+        spec=spec,
+        execution_class=mock_class if config.use_mock_data else live_class,
+        created_by=f"contract-shadow/{BINDING_VERSION}",
+        output_root_prefix="outputs/contract-shadow",
+        runtime_run_id=runtime_run_id,
+        repeat_index=repeat_index,
+        hitl_bypass=hitl_bypass,
+        hitl_bypass_reason=hitl_bypass_reason,
+        benchmark=benchmark,
+        task_store=task_store,
+        sealed_at=sealed_at,
+        admission_lane="shadow",
+    )
+    return SealedEpisode(
+        origin=origin,
+        task_spec=spec,
+        task_ref=sealed.task_ref,
+        receipt=sealed.receipt,
+        manifest=sealed.manifest,
+        projection=sealed.projection,
+        shape=shape,
+        policy=policy,
+    )
+
+
+def seal_episode_manifest(
+    config: Settings,
+    *,
+    policy: PolicySnapshot,
+    spec: TaskSpecV1,
+    execution_class: Literal["local-test", "local-eval", "ci", "production"],
+    created_by: str,
+    output_root_prefix: str,
+    runtime_run_id: str,
+    repeat_index: int = 0,
+    hitl_bypass: bool,
+    hitl_bypass_reason: str | None,
+    benchmark: BenchmarkBinding | None = None,
+    task_store: Any = None,
+    sealed_at: str | None = None,
+    admission_lane: str = "shadow",
+) -> SealedControlPlane:
+    """Seal one episode against an already-decided policy snapshot.
+
+    The order is RFC 09 §5.1's, and every step of it is load-bearing:
+    compile and persist the task (already done by the caller), resolve
+    admission — which is where a metered provider or an over-broad
+    effective policy fails closed — build and hash the candidate-safe
+    projection, then hash and seal the control-plane payload.
+    `run.admitted` is appended by the bridge afterwards, carrying the
+    digest this function returns.
+
+    Lane-agnostic since ADR 0089. It takes a `PolicySnapshot` rather than
+    a `PolicyShape` because the guided-learning lane has no research
+    graph to classify — its policy is a session graph — and duplicating
+    twenty sections of manifest to say so was how W08 ended up sealing a
+    bespoke binding instead of a manifest.
+
+    Raises:
+        ResearchBindingError: Admission failed closed. Never a partial seal.
+    """
+    moment = sealed_at or utc_timestamp()
 
     task_ref = build_task_spec_ref(spec, artifact_locator=_cas_locator(sha256_digest(spec)))
     receipt = persist_compiled_task(
@@ -1652,7 +1832,7 @@ def seal_research_episode(
         )
     except RunManifestError as exc:
         raise ResearchBindingError(
-            f"shadow admission failed closed: {exc.detail}"
+            f"{admission_lane} admission failed closed: {exc.detail}"
         ) from exc
 
     scope = spec.source_scope
@@ -1681,7 +1861,7 @@ def seal_research_episode(
         run_id=run_id,
         repeat_index=repeat_index,
         created_at=moment,
-        created_by=f"contract-shadow/{BINDING_VERSION}",
+        created_by=created_by,
     )
     randomness = RandomnessSnapshot(
         repeat_index=repeat_index,
@@ -1724,8 +1904,6 @@ def seal_research_episode(
     )
     projection_digest = sha256_digest(projection_payload)
 
-    mock_class, live_class = _EXECUTION_CLASSES[origin]
-    execution_class = mock_class if config.use_mock_data else live_class
     receipt_digest = sha256_digest(receipt)
     payload = RunManifestPayload(
         identity=identity,
@@ -1771,7 +1949,7 @@ def seal_research_episode(
         code=code_snapshot(),
         environment=environment_snapshot(execution_class),
         outputs=OutputSnapshot(
-            root=f"outputs/contract-shadow/{run_id}",
+            root=f"{output_root_prefix}/{run_id}",
             artifact_schema_version="1.0.0",
             trajectory_schema_version="1.0.0",
             verification_schema_version="1.0.0",
@@ -1801,15 +1979,11 @@ def seal_research_episode(
     )
     manifest = seal_manifest(payload)
     projection = build_policy_runtime_projection(manifest, spec)
-    return SealedEpisode(
-        origin=origin,
-        task_spec=spec,
+    return SealedControlPlane(
         task_ref=task_ref,
         receipt=receipt,
         manifest=manifest,
         projection=projection,
-        shape=shape,
-        policy=policy,
     )
 
 

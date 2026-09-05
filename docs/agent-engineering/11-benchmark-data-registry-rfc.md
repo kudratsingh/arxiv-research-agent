@@ -803,3 +803,85 @@ AE-003 is complete only when:
 The remaining choices are implementation details except restricted storage,
 split content, human-label governance, and training eligibility. Those change
 the trust boundary and require owner decisions before the relevant work begins.
+
+## 23. Amendment — one registry root (2026-09-05)
+
+Appended rather than edited in place, so the contract's history stays
+readable. Implemented by [ADR 0089](../decisions/0089-non-arm-policy-snapshots-and-one-registry-root.md);
+§§4–7 and §16 above describe the arrangement before this amendment.
+
+### 23.1 Two roots existed, and the reason was a schema, not a suite
+
+[ADR 0079](../decisions/0079-benchmark-registry-migration-and-parity.md)
+registered two benchmarks under `eval_registry/`. W10's judge-calibration
+suite then landed at `eval_registry_calibration/`, and the reason was
+recorded honestly at the time:
+
+- `ContentKind` and `ContentPayload` in
+  `src/contracts/benchmark_adapters.py` were **closed**, so a
+  `calibration_item` could not be filed under `eval_registry/content/`
+  at all; and
+- W06's parity report called any object its own modules did not build an
+  `unregistered_object`, so adding a second suite to that root would have
+  weakened the exact property the migration existed to prove.
+
+Both are properties of one schema module. Neither is a fact about the
+objects, and neither survives contact with a third suite. There is now
+one root.
+
+### 23.2 The content vocabulary is a union, and its members stay separate
+
+`ContentKind` gains eight members — `retention_terms`,
+`calibration_guideline`, `calibration_item`, `calibration_rationale`,
+`expected_label`, `judge_probe_lock`, `synthetic_generation`,
+`blinding_plan` — and `ContentPayload` gains the nine models that go with
+them, **imported from `src/calibration/suite.py` rather than redefined**.
+Two copies of a content model is how two trees stop agreeing about what a
+`calibration_item` is.
+
+Two collisions had to be resolved rather than papered over:
+
+- `retention_terms` and `retention_policy` carry field-for-field
+  identical payloads. A smart union cannot tell them apart, so
+  `ContentEnvelope` now parses its payload as the model its declared
+  `schema_kind` names. Without that, a valid object would be rejected
+  for contradicting itself.
+- `deliverable_contract` is one kind with two genuinely different shapes
+  (a research deliverable list, and a judge's decision vocabulary). Its
+  entry lists both models and the first that validates wins; their ids do
+  not collide.
+
+Neither suite's objects were renamed, re-sealed or re-digested. All 120
+files moved byte for byte, and
+`tests/test_benchmark_adapters.py::test_every_moved_calibration_object_resolves_from_the_one_root`
+looks each one up by the locator its own reference derives and compares
+digests.
+
+### 23.3 The "exactly what the modules build" property is stated over the union
+
+§16's property is a property of the *tree*, so under one root it has to
+be stated over every module that builds a registry object or it says
+nothing about half the files.
+
+- `build_full_registry()` is W06's bundle plus W10's, with the
+  calibration content re-validated into `ContentEnvelope` — which is the
+  widening's proof rather than a formality: a payload that did not
+  round-trip would raise here instead of producing a tree the reader
+  cannot read back.
+- `build_parity_report()` compares the tree against that union.
+  `python -m src.contracts.registry parity` reports 257 objects and 0
+  mismatches.
+- `python -m src.contracts.benchmark_adapters` regenerates the whole
+  tree; `--benchmarks-only` writes just the two benchmarks into a scratch
+  directory.
+- `src.calibration.suite.tree_mismatches` keeps the half it can still
+  own — every object it builds is on disk, at its own locator, byte for
+  byte — and its "no file the modules do not build" half became the
+  opt-in `exclusive=True`, because that claim now belongs to the report
+  that knows every builder. `read_tree` reads the locators the suite
+  builds instead of walking the root, so it still resolves exactly this
+  suite's objects.
+
+A third suite is now an ordinary addition: declare its content kinds,
+add its builder to the union, and the property holds without a fourth
+root.

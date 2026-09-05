@@ -6,22 +6,19 @@ evaluator-only label set carrying the reference decision for each, a
 grader profile pinning the instrument under test, and a contamination
 record saying the material is generated rather than collected.
 
-**It lives in its own root, and that is a finding rather than a
-preference.** W06's tree at ``eval_registry/`` is guarded by three tests
-that make it *exactly* what ``src/contracts/benchmark_adapters.py``
-builds: the file set is compared byte for byte, the task-case ids are
-compared against the two benchmark modules, and the parity report calls
-any other object ``unregistered_object``. Those are the right guarantees
-for a migration whose whole claim is "nothing changed", and they mean a
-second suite cannot be added to that root without weakening them.
-``ContentEnvelope``'s ``ContentKind`` enum is closed as well, so this
-suite's content kinds could not be filed under ``eval_registry/content/``
-without editing W06's schema module. So the calibration suite gets
-:data:`CALIBRATION_REGISTRY_ROOT`, in W06's exact layout
-(``<kind>/<id>/<revision>.json``, content under ``content/``), resolved
-by W02's own :class:`src.contracts.registry.LocalRegistry` — which takes
-a root parameter precisely because more than one tree can exist. Nothing
-about W06's tree changes, and nothing about this one is special-cased.
+**It lives in W06's root, and originally did not.** W10 shipped this
+suite at ``eval_registry_calibration/`` because W06's ``ContentKind``
+enum and ``ContentPayload`` union were closed — a ``calibration_item``
+could not be filed under ``eval_registry/content/`` at all — and because
+W06's parity called any object its own modules did not build an
+``unregistered_object``. Both were properties of the schema module
+rather than facts about the objects, and ADR 0089 fixed them at the
+source: the content vocabulary is widened, and the "the checked-in tree
+is exactly what the modules build" property is now stated over the
+*union* of everything that builds a registry object. The objects moved
+across byte for byte, digests included, and
+:data:`CALIBRATION_REGISTRY_ROOT` is now W06's root under a name this
+module's callers already use.
 
 Everything is built from the checked-in fixtures, so the tree is a
 derived view: ``python -m src.calibration.suite parity`` proves the files
@@ -105,10 +102,10 @@ from src.eval.metrics import RESEARCH_RUBRICS
 #: Repository root, three parents up from ``src/calibration/suite.py``.
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 
-#: The calibration suite's registry root. A sibling of W06's
-#: ``eval_registry/`` rather than a directory inside it — see the module
-#: docstring for why that is a finding and not a style choice.
-CALIBRATION_REGISTRY_ROOT: Final[Path] = REPO_ROOT / "eval_registry_calibration"
+#: The calibration suite's registry root: W06's, since ADR 0089. The name
+#: is kept because it says *whose objects this module resolves*, which is
+#: still a narrower thing than the root itself now holds.
+CALIBRATION_REGISTRY_ROOT: Final[Path] = REPO_ROOT / "eval_registry"
 
 #: Content objects live under one subdirectory of the same root, exactly
 #: as they do in W06's tree, so a registry reference never resolves to
@@ -1140,6 +1137,7 @@ def tree_mismatches(
     *,
     adversarial: Path = ADVERSARIAL_PATH,
     pairwise: Path = PAIRWISE_PATH,
+    exclusive: bool = False,
 ) -> tuple[str, ...]:
     """Name every way the checked-in tree differs from the built bundle.
 
@@ -1151,10 +1149,16 @@ def tree_mismatches(
         root: The tree to check.
         adversarial: The single-item fixture file.
         pairwise: The pairwise fixture file.
+        exclusive: Whether `root` is expected to hold *only* this suite's
+            objects. False since ADR 0089, because the root now also
+            holds W06's two benchmarks; the "no file the modules do not
+            build" half of the property moved to
+            `src.contracts.benchmark_adapters.build_parity_report`, which
+            is the only place that knows every module that builds one.
 
     Returns:
-        One line per mismatch, sorted. Empty when the tree is exactly
-        what the fixtures build.
+        One line per mismatch, sorted. Empty when every object this
+        suite builds is on disk, at its own locator, byte for byte.
     """
     bundle = build_bundle(adversarial=adversarial, pairwise=pairwise)
     expected: dict[str, str] = {}
@@ -1173,37 +1177,63 @@ def tree_mismatches(
     mismatches: list[str] = []
     for relative in sorted(set(expected) - set(found)):
         mismatches.append(f"{relative}: the fixtures build this object; the tree has no file")
-    for relative in sorted(set(found) - set(expected)):
-        mismatches.append(f"{relative}: the tree carries a file the fixtures do not build")
+    if exclusive:
+        for relative in sorted(set(found) - set(expected)):
+            mismatches.append(f"{relative}: the tree carries a file the fixtures do not build")
     for relative in sorted(set(expected) & set(found)):
         if expected[relative] != found[relative]:
             mismatches.append(f"{relative}: on-disk bytes differ from the built object")
     return tuple(mismatches)
 
 
-def read_tree(root: Path = CALIBRATION_REGISTRY_ROOT) -> tuple[
-    tuple[RegistryEnvelope, ...], tuple[CalibrationContentEnvelope, ...]
-]:
-    """Read a checked-in tree back, verifying every digest and locator.
+def read_tree(
+    root: Path = CALIBRATION_REGISTRY_ROOT,
+    *,
+    adversarial: Path = ADVERSARIAL_PATH,
+    pairwise: Path = PAIRWISE_PATH,
+) -> tuple[tuple[RegistryEnvelope, ...], tuple[CalibrationContentEnvelope, ...]]:
+    """Read *this suite's* objects back, verifying every digest and locator.
+
+    Reads the locators this suite builds rather than walking the root,
+    which since ADR 0089 also holds W06's two benchmarks. The selection
+    is the suite's own definition of itself and not a filename
+    convention: an object is this suite's exactly when `build_bundle`
+    produces it, so a file this reader skips is one no calibration
+    reference can point at. Every file it does read is still validated
+    and every locator still has to resolve to the identity inside it.
 
     Args:
         root: The tree.
+        adversarial: The single-item fixture file.
+        pairwise: The pairwise fixture file.
 
     Returns:
         The registry objects and the content objects.
 
     Raises:
-        RegistryResolutionError: A file is invalid or filed at a locator
-            its own identity does not resolve to.
+        RegistryResolutionError: A file is missing, invalid, or filed at
+            a locator its own identity does not resolve to.
     """
+    bundle = build_bundle(adversarial=adversarial, pairwise=pairwise)
     objects: list[RegistryEnvelope] = []
     contents: list[CalibrationContentEnvelope] = []
-    content_root = root / CONTENT_DIRNAME
-    for path in sorted(root.rglob("*.json")):
-        raw = path.read_text(encoding="utf-8")
-        relative = path.relative_to(root).as_posix()
+    wanted = [
+        (locator(envelope.object_ref(), content=False), False)
+        for envelope in bundle.objects
+    ] + [
+        (locator(content.object_ref(), content=True), True)
+        for content in bundle.contents
+    ]
+    for relative, is_content in sorted(wanted):
+        path = root / relative
         try:
-            if path.is_relative_to(content_root):
+            raw = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            raise RegistryResolutionError(
+                f"registry object is unavailable: {relative}"
+            ) from exc
+        try:
+            if is_content:
                 content = CalibrationContentEnvelope.model_validate_json(raw)
                 contents.append(content)
                 expected = locator(content.object_ref(), content=True)
