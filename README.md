@@ -476,14 +476,15 @@ restarts (the compose stack wires this up automatically).
 
 ## Tests and CI
 
-Every PR and every push to `main` runs **nine parallel jobs**: ruff,
-strict mypy, the whole Python suite (**3,277 tests**, every tier, under
-enforced project, per-package and patch coverage floors, publishing the
+Every PR and every push to `main` runs **nine parallel jobs**, with no
+`needs:` edge between any of them: ruff, strict mypy, the whole Python
+suite (**over 3,300 tests**, every tier including `e2e`, under enforced
+project, per-package and patch coverage floors, publishing the
 adversarial suite's attack-success rate as an artifact), a Docker image
 build with base and production compose-file
 validation, a web image smoke test probing `/` and `/api/healthz`
 through the proxy, the web tier (TypeScript, ESLint, generated-type
-drift, **2,970 Vitest tests across 136 files** with coverage floors, and
+drift, **3,380 Vitest tests across 155 files** with coverage floors, and
 a production build with per-route JS budgets), the dependency-audit gate
 in its own bounded job, the Storybook static build with story tests, and
 Playwright + `@axe-core/playwright` against a seeded Compose stack
@@ -491,6 +492,18 @@ pinned to a deliberately invalid API key. The same workflow runs
 nightly with the full browser matrix (firefox, webkit and two device
 profiles) instead of chromium alone — the tiers, what fails each one,
 and the local equivalents are in [`docs/testing.md`](docs/testing.md).
+
+Every number in that paragraph is now read back out of it by
+[`tests/test_documented_claims.py`](tests/test_documented_claims.py) and
+checked against the thing it describes. Both counts that stood here
+before were wrong, and one of them went stale twice in a single week —
+which is what a number nobody reads back does. The Python figure is a
+**floor** and the Vitest figure an **equality**, deliberately: the
+Python suite grows on most pull requests, so an equality would make
+every one of them edit this paragraph, while the Vitest count of record
+moves only when somebody re-seeds the coverage thresholds in
+`web/vitest.config.mts` — which is where the test reads it from, rather
+than from a browser run this tier has no business starting.
 
 The audit is a job of its own because it is the only web gate whose
 answer comes from a remote service: on 2026-09-04 npm's advisory
@@ -509,12 +522,18 @@ good one: **no tier under `web/` ever makes a paid model call**, and
 three independent mechanisms enforce that rather than one convention —
 the Compose overlay pins an invalid key, the Playwright config
 overwrites the variable before any test loads, and the submit leg is
-fulfilled in the browser so it never reaches the backend. The gap: the
-Python **`e2e` cassette tier is registered but not built**. No cassette
-fixtures are checked in, so everything between the single canned
-production-wiring smoke test and a nightly eval that has never run green
-(below) is uncovered — treat cross-node integration changes with extra
-review care.
+fulfilled in the browser so it never reaches the backend. The gap, and
+it is narrower than this page claimed for months: the Python **`e2e`
+tier is built and gates every pull request** — **sixteen tests across
+four modules** under `tests/e2e/`, driving the real graphs through the
+real ASGI app in about five seconds, run by `make test-e2e` as a step of
+the `tests` job. What the tier does not have is **recorded cassettes**:
+every one of those tests runs on mock mode and canned agent output, by
+decision, so nothing in this repository replays a real provider
+response. Provider-shaped drift — a changed error body, a changed
+refusal, a changed tool-call envelope — is uncovered here and by a
+nightly eval that has never run green (below), so treat changes at that
+boundary with extra review care.
 
 **How do you know?** [`docs/assurance/`](docs/assurance/README.md) is the
 index that answers that question. It carries a claim → enforcement table —
@@ -522,9 +541,14 @@ every claim in this README and in `docs/architecture.md`, and the test, gate
 or instrument that fails when it stops being true — plus a **system** card
 (this project trains no model), a data-provenance record on the NIST AI 300-1
 field set, and a framework mapping across NIST, OWASP, ISO 42001 and the EU AI
-Act. Read the short list of claims that **nothing** enforces first: it names
-several sentences on this page, including a stale test count and a routing
-cost-saving figure with no measurement behind it.
+Act. Read the short list of claims that **nothing** enforces first — it is
+shorter than it was, because the sentences it named as false have been
+corrected and are now read back by
+[`tests/test_documented_claims.py`](tests/test_documented_claims.py), but it
+is not empty and the residue is the interesting part: a nightly eval two
+documents describe differently, screenshots nothing binds to a run, and
+"every non-trivial decision has an ADR", whose forward half no test will
+ever hold.
 
 ## Eval
 
@@ -608,7 +632,7 @@ to answer. Every tunable is one env-var away — see `src/config.py`.
 **Cost**
 - Per-run cost tracking with per-model breakdown surfaces in `summary.jsonl` and the API's `JobDetail`, and in the workbench's metrics strip.
 - HITL is the first-order cost control: the run pauses before any search or paper read, so a bad plan costs one planner call rather than a full campaign.
-- Cost-aware routing: per-agent Claude model overrides (ADR [0021](docs/decisions/0021-cost-aware-model-routing.md)) — recommended mapping puts Haiku on the reader / supervisor / query refiner for ~50-60% cost cut with baseline quality preserved.
+- Cost-aware routing: per-agent Claude model overrides (ADR [0021](docs/decisions/0021-cost-aware-model-routing.md)) — the recommended mapping puts Haiku on the reader, supervisor and query refiner. **The saving is modelled, not measured, and the quality half is not measured at all.** The model is arithmetic you can check: `src/observability/costs.py` prices Haiku 4.5 at exactly one third of Sonnet 4.6 per token, input and output alike, so moving a share *s* of a run's token spend onto Haiku cuts the total by two thirds of *s* — **50-60% if those three agents carry 75-90% of it**, which is what ADR 0021 argues from call volume ("Reader alone is 60%+ of a typical run's spend") and never measured. Nothing in this repository has ever priced a run under the routed mapping, and "baseline quality preserved" — the previous wording — has no artifact behind it: ADR 0021 defers that evidence to paired-diff eval runs, and no eval campaign has ever completed (see the eval status above).
 - The nightly regression diff (`src/eval/regression_diff.py`) is written to fail the workflow on cost creep > 25% (ADR [0010](docs/decisions/0010-nightly-eval-ci.md)) — designed and unit-tested, but never exercised against two real runs (see the eval status above).
 
 **Failure handling**
@@ -668,7 +692,7 @@ seeded Playwright tier.
 | MT-01 — real multi-tenancy (per-user accounts, not the current shared workspace) | **PROPOSED only.** The proposal is merged; the decision is reserved for the repository owner |
 | Hetzner deployment | **Planned, blocked.** The overlay and runbook exist; provisioning is a cost decision reserved for the owner |
 | First funded eval campaign, and the results table it would populate | **Planned, blocked** on the same cost decision (see the eval status above) |
-| Python `e2e` cassette tier | **Planned, not built.** The marker is registered and unused |
+| Recorded cassettes for the Python `e2e` tier | **Not built.** The tier itself ships and gates every PR; what is missing is captured real provider responses to replay against — every e2e test runs on mock mode and canned agent output |
 
 The dated per-merge log — and the authoritative list of what's next —
 lives in [`planning/03-roadmap.md`](planning/03-roadmap.md); the
