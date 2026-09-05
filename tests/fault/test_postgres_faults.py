@@ -159,6 +159,28 @@ class TestAnOptionalCacheLosesItsPool:
         assert record.levelno == logging.WARNING
         assert POOL_TEXT in getattr(record, "error", "")
 
+        # The fourth assertion, and the one the triple above cannot
+        # make. `research_jobs_total{succeeded}` is the *right* answer —
+        # the job did succeed — and that is exactly why it could not
+        # tell this run apart from one where the cache was healthy. A
+        # fleet recomputing every embedding looked identical to a fleet
+        # that was fine. `research_degradations_total` is the leg that
+        # sees it (ADR 0081, docs/reliability.md §5 rung 1).
+        degradation = triple.point(
+            "research_degradations_total",
+            rung="cache_stale",
+            component="embedding_cache",
+        )
+        assert degradation.value == 1
+        # And the cache the fault did *not* touch stays at zero, so the
+        # `component` attribute is proven to discriminate rather than
+        # merely to be present.
+        assert not [
+            point
+            for point in triple.points("research_degradations_total")
+            if dict(point.attributes).get("component") == "paper_cache"
+        ]
+
 
 class TestTheConversationAppendLosesItsConnection:
     async def test_a_finished_job_stays_finished_and_the_gap_is_an_error(

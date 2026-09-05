@@ -44,7 +44,11 @@ from sentence_transformers import SentenceTransformer
 
 from src.config import settings
 from src.graph.state import PaperMetadata
-from src.observability import get_logger
+from src.observability import (
+    DEGRADATION_RUNG_CACHE_STALE,
+    get_logger,
+    record_degradation_rung,
+)
 from src.observability.semconv import TOOL_EMBEDDING_RANK, TOOL_TYPE_DATASTORE
 from src.observability.tracing import traced_tool
 
@@ -187,6 +191,14 @@ def encode_texts(texts: list[str]) -> np.ndarray:
         log.warning(
             "embedding_cache_get_failed",
             extra={"n_texts": len(texts), "error": str(exc)},
+        )
+        # Rung 1 of the degradation ladder, and the more expensive of
+        # the two: a full MiniLM recompute per node rather than a
+        # Postgres read. The job still succeeds, which is why the job
+        # counter cannot see this and a degradation counter must
+        # (docs/reliability.md §5, ADR 0081).
+        record_degradation_rung(
+            rung=DEGRADATION_RUNG_CACHE_STALE, component="embedding_cache"
         )
 
     if len(hits) == len(texts):

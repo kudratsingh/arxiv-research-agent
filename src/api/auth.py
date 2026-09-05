@@ -44,7 +44,10 @@ from src.errors import (
     RateLimitedError,
 )
 from src.observability import get_logger
-from src.observability.metrics import record_rate_limit_rejection
+from src.observability.metrics import (
+    DEGRADATION_RUNG_WEAKENED_GUARANTEE,
+    record_rate_limit_rejection,
+)
 from src.resilience import record_degradation
 
 log = get_logger(__name__)
@@ -355,6 +358,7 @@ class RedisRateLimiter:
             # during an incident, and the correct response is the same
             # for all of them.
             record_degradation(
+                rung=DEGRADATION_RUNG_WEAKENED_GUARANTEE,
                 component="rate_limiter",
                 reason="redis_unavailable",
                 error=type(exc).__name__,

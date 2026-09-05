@@ -23,7 +23,7 @@ decision is [ADR 0073](../../docs/decisions/0073-slos-and-operational-readiness.
 
 | File | What it is |
 |---|---|
-| [`alerts.yml`](alerts.yml) | Prometheus rule file. Two SLO burn-rate groups and one rule per incident runbook. `promtool check rules` parses it on every PR (`.github/workflows/ci.yml`, the `docker-build` job) — before WO-INF1 nothing ever had. |
+| [`alerts.yml`](alerts.yml) | Prometheus rule file. Two SLO burn-rate groups, a `quality` group on the degradation ladder (ADR 0081), and one rule per incident runbook. `promtool check rules` parses it on every PR (`.github/workflows/ci.yml`, the `docker-build` job) — before WO-INF1 nothing ever had. |
 | [`log-alerts.yml`](log-alerts.yml) | Log-event alarms, in a repository-defined schema. **Not** Prometheus rules — these signals emit no metric, and a PromQL rule for a series that does not exist is the failure this directory exists to prevent. |
 | [`dashboard.json`](dashboard.json) | Grafana dashboard, in **provisioning** form. Every instrument the repository emits appears on it exactly once. Loaded automatically by the viewers layer below; importable into any other Grafana unchanged. |
 | [`otel-collector.yaml`](otel-collector.yaml) | Collector config. **Read the header block** — it pins `add_metric_suffixes: false`, which is the assumption every metric name in the two alert files depends on. |

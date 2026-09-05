@@ -54,6 +54,34 @@ Repository-native, and the ones dashboards have read since ADR 0049:
 | `llm_retries_total`               | counter          | model                    |
 | `llm_upstream_errors_total`       | counter          | model, status            |
 | `rate_limit_rejections_total`     | counter          | backend                  |
+| `research_degradations_total`     | counter          | rung, component          |
+
+## The degradation counter, and why its attributes are a closed set
+
+`research_degradations_total` is the instrument `docs/reliability.md`
+§7 asked for. The quality SLI that document is built on — the SRE
+Workbook's *proportion of responses served in an undegraded state* — is
+the anchor for every objective in its §3, and until this counter
+existed it could not be computed: six of the eight rungs of the §5
+ladder emitted a log line and nothing else, so "how degraded is the
+fleet right now" was a `jq` over container logs rather than a query.
+
+Its attributes are closed sets (`DEGRADATION_RUNGS`,
+`DEGRADATION_COMPONENTS`), for the third time in this repository and
+for the reasons both earlier times give. `ERROR_CODES` is closed
+because "an open string used as a metric attribute is unbounded
+cardinality" (ADR 0064); `KNOWN_EVENTS` is closed so "a dashboard, an
+alert rule and a runbook can name an event and be told when the code
+stops emitting it under that name" (ADR 0067). Both apply here
+verbatim, and the second is the sharper one: a `rung` value nobody
+emits any more renders a flat zero on a quality panel, which reads
+exactly like an undegraded fleet.
+
+`reason` is deliberately *not* an attribute, even though §7 sketched
+the instrument as `{component,reason}`. It stays on the structured log
+line, for the reason `record_rate_limit_rejection` gives about
+`key_id`: the metric answers "how much, at which rung, in which
+component", and the log answers "why". See ADR 0081.
 
 Conventional, added by WO-A07 from the pinned GenAI specification
 commit in `src.observability.semconv` — all histograms:
@@ -134,16 +162,25 @@ can never disagree with the health endpoint.
 instruments are live in an API worker and nowhere else — `make run`
 and `make eval` set `enable_metrics` in vain, because those processes
 install no provider and every helper below returns on its `None`
-check. That is deliberate, not an oversight: ten of the twenty-one
+check. That is deliberate, not an oversight: eleven of the twenty-two
 instruments describe a *server* (job outcomes, queue depth,
-concurrency, 429s, and the HTTP server family), and a one-shot CLI run
-has no steady state for the four observable gauges among them to
-sample — it would spin an export thread up and tear it down inside one
-export interval. (This sentence read "four of the nine" until WO-B2:
-written at ADR 0049's count and left behind by twelve additions, the
-last surviving copy of a number `docs/architecture.md` also carried.
-The count is banded in `tests/test_operability_docs.py` now, so the
-next wave has to come back to it.) Tracing differs because `get_tracer()` configures
+concurrency, 429s, degradations, and the HTTP server family), and a
+one-shot CLI run has no steady state for the four observable gauges
+among them to sample — it would spin an export thread up and tear it
+down inside one export interval. (This sentence read "four of the nine"
+until WO-B2: written at ADR 0049's count and left behind by twelve
+additions, the last surviving copy of a number `docs/architecture.md`
+also carried. The count is banded in `tests/test_operability_docs.py`
+now, so the next wave has to come back to it — WO-D5 is a wave coming
+back to it.)
+
+It also means **an eval campaign contributes nothing to the quality
+SLI**, which matters more for `research_degradations_total` than for
+the rest: a rung taken under `make eval` is a real degradation of a
+real run and it is counted nowhere. `docs/reliability.md` §7 item 6
+already records that gap for every instrument; it is worth naming again
+here because the degradation counter is the one an eval run is most
+likely to move. Tracing differs because `get_tracer()` configures
 lazily on first span, which is what makes `traced_node` work under
 `make eval`. If the eval runner ever needs the spend counters, the fix
 is one `configure_metrics()` call at its entry point, not a lazy
@@ -155,6 +192,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from typing import Final
 
 from opentelemetry import metrics as otel_metrics
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
@@ -185,9 +223,21 @@ from src.observability.logging import get_logger
 log = get_logger(__name__)
 
 __all__ = [
+    "DEGRADATION_COMPONENTS",
+    "DEGRADATION_RUNGS",
+    "DEGRADATION_RUNG_BOUNDED_QUEUE",
+    "DEGRADATION_RUNG_CACHE_STALE",
+    "DEGRADATION_RUNG_MODEL_FALLBACK",
+    "DEGRADATION_RUNG_PARTIAL_RESULTS",
+    "DEGRADATION_RUNG_REDUCED_TOOL",
+    "DEGRADATION_RUNG_REFUSAL",
+    "DEGRADATION_RUNG_STREAMING_PARTIAL",
+    "DEGRADATION_RUNG_WEAKENED_GUARANTEE",
+    "DEGRADATION_UNREGISTERED",
     "configure_metrics",
     "metrics_enabled",
     "record_agent_invocation",
+    "record_degradation_rung",
     "record_genai_client_call",
     "record_http_active_request",
     "record_http_server_request",
@@ -363,6 +413,100 @@ ATTR_KIND = "kind"
 STATUS_DEGRADED_CLOSE = "degraded_close"
 
 
+# ---------------------------------------------------------------------------
+# The degradation ladder's attribute vocabulary (docs/reliability.md §5)
+# ---------------------------------------------------------------------------
+#
+# One constant per rung of the published ladder, in the ladder's own
+# order — cheapest degradation first. The names are the *rung's*
+# identity, not the call site's: two different caches failing are one
+# rung and two components, which is what makes `sum by (rung)` the §5
+# table drawn as a graph and `sum by (component)` the answer to which
+# subsystem to open a runbook for.
+
+#: Rung 1 — paper text or embeddings could not be served from their
+#: Postgres cache, so the work is recomputed or refetched (ADR 0028's
+#: "degrades to recompute", ADR 0041).
+DEGRADATION_RUNG_CACHE_STALE = "cache_stale"
+
+#: Rung 2 — search proceeds on partial upstream results, keeps prior
+#: papers, or serves the labelled fixture set.
+DEGRADATION_RUNG_REDUCED_TOOL = "reduced_tool"
+
+#: Rung 3 — a result is produced from less evidence than was asked for;
+#: the reader's abstract-only fallback is the named instance.
+DEGRADATION_RUNG_PARTIAL_RESULTS = "partial_results"
+
+#: Rung 4 — a stream ends at its deadline with whatever exists, without
+#: a terminal frame.
+DEGRADATION_RUNG_STREAMING_PARTIAL = "streaming_partial"
+
+#: Rung 5 — a node's model output was unusable and a default action was
+#: substituted. Not a cheaper-model fallback; there is no such path.
+DEGRADATION_RUNG_MODEL_FALLBACK = "model_fallback"
+
+#: Rung 6 — work waits behind `api_max_concurrent_jobs`.
+DEGRADATION_RUNG_BOUNDED_QUEUE = "bounded_queue"
+
+#: Rung 6b — a guarantee is still served but a weaker one than the
+#: configuration claims: the Redis rate limiter failing open to its
+#: per-worker fallback (ADR 0068).
+DEGRADATION_RUNG_WEAKENED_GUARANTEE = "weakened_guarantee"
+
+#: Rung 7 — the honest refusal: a 429, a 503, a cost ceiling declining
+#: or closing politely.
+DEGRADATION_RUNG_REFUSAL = "refusal"
+
+#: The overflow bucket, and the only member of `DEGRADATION_RUNGS` that
+#: is not a rung. A call site naming a rung outside the set records
+#: here instead of minting a new series — so a mistake costs one extra
+#: point rather than unbounded cardinality — and
+#: `tests/test_degradation_ladder.py` forbids any call site in `src/`
+#: from naming it, so the mistake is caught in CI rather than lived
+#: with. `logging.py`'s `FIELD_UNREGISTERED_EVENT` is the same trade:
+#: flag it, do not lose it, and let a static test be the enforcement.
+DEGRADATION_UNREGISTERED = "unregistered"
+
+#: Every rung a metric attribute may carry. Closed for the reasons in
+#: this module's docstring. Three members have no emitter in `src/`
+#: today because their only call sites are in another lane's files;
+#: `tests/test_degradation_ladder.py` names them and their owners, and
+#: goes red when one gains an emitter, which is how the gap closes
+#: itself rather than living in a comment.
+DEGRADATION_RUNGS: Final[frozenset[str]] = frozenset(
+    {
+        DEGRADATION_RUNG_CACHE_STALE,
+        DEGRADATION_RUNG_REDUCED_TOOL,
+        DEGRADATION_RUNG_PARTIAL_RESULTS,
+        DEGRADATION_RUNG_STREAMING_PARTIAL,
+        DEGRADATION_RUNG_MODEL_FALLBACK,
+        DEGRADATION_RUNG_BOUNDED_QUEUE,
+        DEGRADATION_RUNG_WEAKENED_GUARANTEE,
+        DEGRADATION_RUNG_REFUSAL,
+        DEGRADATION_UNREGISTERED,
+    }
+)
+
+#: Every component a metric attribute may carry — the subsystem that
+#: degraded, at the granularity an operator picks a runbook by.
+#:
+#: Unlike `DEGRADATION_RUNGS` this set is *exactly* what `src/` emits,
+#: and the test asserts both directions. A rung may outrun its emitters
+#: because the ladder is published in `docs/reliability.md` and the
+#: document is the authority; a component name is only ever minted by a
+#: call site, so one with no call site is dead vocabulary and a
+#: dashboard filter that will never match.
+DEGRADATION_COMPONENTS: Final[frozenset[str]] = frozenset(
+    {
+        "embedding_cache",
+        "paper_cache",
+        "rate_limiter",
+        "sse_stream",
+        DEGRADATION_UNREGISTERED,
+    }
+)
+
+
 @dataclass(frozen=True)
 class _Instruments:
     """The synchronous instruments, created once per configured provider.
@@ -381,6 +525,7 @@ class _Instruments:
     llm_retries_total: Counter
     llm_upstream_errors_total: Counter
     rate_limit_rejections_total: Counter
+    degradations_total: Counter
     # The conventional GenAI family. Separate fields rather than a
     # second bundle so `shutdown_metrics` still disarms every
     # instrument with one assignment.
@@ -501,6 +646,16 @@ def _build_instruments(meter: Meter) -> _Instruments:
             description=(
                 "Requests rejected with HTTP 429 by the per-key rate "
                 "limiter, by limiter backend."
+            ),
+        ),
+        degradations_total=meter.create_counter(
+            "research_degradations_total",
+            unit="1",
+            description=(
+                "Responses served in a degraded state, by rung of the "
+                "degradation ladder (docs/reliability.md §5) and by the "
+                "component that degraded. The denominator of the "
+                "quality SLI."
             ),
         ),
         # --- The conventional GenAI family (ADR 0066) ------------------
@@ -1173,6 +1328,61 @@ def record_rate_limit_rejection(*, backend: str) -> None:
     if instruments is None:
         return
     instruments.rate_limit_rejections_total.add(1, {"backend": backend})
+
+
+def record_degradation_rung(*, rung: str, component: str) -> None:
+    """Record one response served in a degraded state.
+
+    The measurement behind the quality SLI: `docs/reliability.md` §2
+    defines quality as *the proportion of responses served in an
+    undegraded state*, and this is the numerator's complement. §5's
+    ladder is the `rung` vocabulary and this counter is what turns that
+    table from a list of log events into something §4's burn-rate
+    machinery can be pointed at unchanged.
+
+    Not named `record_degradation`, deliberately.
+    `src.resilience.record_degradation` already owns that name and does
+    a different job — it logs `resilience_degraded` and keeps the
+    in-process counter ADR 0068 shipped. This one only moves the OTel
+    instrument, which is what lets every *other* rung keep its own
+    distinct log event instead of being folded onto
+    `resilience_degraded`. That fold-in would have been the obvious
+    reading of §7, and it is wrong: `deploy/observability/log-alerts.yml`
+    pages at threshold 1 in 15m on `resilience_degraded`, so routing a
+    Postgres cache blip through it would wake somebody for a rung that
+    is working as designed.
+
+    Unknown values are recorded under `DEGRADATION_UNREGISTERED` rather
+    than passed through. A metric attribute is the one place an
+    unregistered string is expensive rather than merely untidy — it
+    mints a series per distinct value, forever — and a helper that
+    raised instead would turn an observability bug into a job failure
+    at a call site whose entire purpose is to survive a failure. The
+    static check in `tests/test_degradation_ladder.py` is the
+    enforcement; this is the containment.
+
+    Args:
+        rung: A member of `DEGRADATION_RUNGS` — which rung of the
+            ladder was taken, not which call site took it.
+        component: A member of `DEGRADATION_COMPONENTS` — the subsystem
+            that degraded, at the granularity a runbook is written for.
+    """
+    instruments = _instruments
+    if instruments is None:
+        return
+    if rung not in DEGRADATION_RUNGS:
+        log.warning(
+            "degradation_rung_unregistered",
+            extra={"rung": rung, "component": component},
+        )
+        rung = DEGRADATION_UNREGISTERED
+    if component not in DEGRADATION_COMPONENTS:
+        log.warning(
+            "degradation_rung_unregistered",
+            extra={"rung": rung, "component": component},
+        )
+        component = DEGRADATION_UNREGISTERED
+    instruments.degradations_total.add(1, {"rung": rung, "component": component})
 
 
 def shutdown_metrics(*, timeout_millis: float = _SHUTDOWN_BUDGET_MS) -> None:

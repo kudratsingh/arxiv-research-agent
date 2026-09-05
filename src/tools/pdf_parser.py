@@ -51,7 +51,11 @@ import fitz
 import requests
 
 from src.config import settings
-from src.observability import get_logger
+from src.observability import (
+    DEGRADATION_RUNG_CACHE_STALE,
+    get_logger,
+    record_degradation_rung,
+)
 from src.observability.semconv import TOOL_PDF_PARSE, TOOL_TYPE_EXTENSION
 from src.observability.tracing import traced_tool
 from src.tools.http_session import build_retrying_session
@@ -327,6 +331,14 @@ def parse_pdf(
         log.warning(
             "paper_cache_get_failed",
             extra={"paper_key": key, "error": str(exc)},
+        )
+        # Rung 1 of the degradation ladder. The job survives — that is
+        # the whole point of the guard above — and it is exactly that
+        # survival which used to make this invisible: nothing failed, so
+        # nothing counted, while every paper on the fleet was being
+        # refetched and re-extracted (docs/reliability.md §5, ADR 0081).
+        record_degradation_rung(
+            rung=DEGRADATION_RUNG_CACHE_STALE, component="paper_cache"
         )
     if cached_text is not None:
         return cached_text

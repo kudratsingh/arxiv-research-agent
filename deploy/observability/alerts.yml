@@ -502,3 +502,104 @@ groups:
             reading a log.
           runbook: docs/runbooks/model-provider-outage.md
           signal_events: arxiv_search_request_failed semantic_scholar_request_failed pdf_download_failed
+
+  # -------------------------------------------------------------------
+  # Quality — the anchor SLI (docs/reliability.md §2, §3, §5; ADR 0081)
+  # -------------------------------------------------------------------
+  #
+  # This group could not exist until `research_degradations_total` did.
+  # Every objective on `docs/reliability.md` rests on the SRE Workbook's
+  # quality SLI — the proportion of responses served in an undegraded
+  # state — and six of the eight rungs of its degradation ladder emitted
+  # a log line and nothing else, so the anchor could not be computed and
+  # §5's rule ("every rung must emit a distinct marker, otherwise
+  # degradation makes the dashboard look better while the product gets
+  # worse") had no enforcement in metrics at all.
+  #
+  # **Read these two rules as a lower bound, deliberately.** Three rungs
+  # are still not on this counter — their call sites are in
+  # `src/agents/`, another lane's files, and
+  # `tests/test_degradation_ladder.py` names which three and who owns
+  # them. A rule built on a lower-bound numerator can under-fire and
+  # cannot over-fire, which is the right direction for an alert to be
+  # wrong in, but it does mean silence here is not proof of an
+  # undegraded fleet. Rungs 6 and 7 are excluded for the opposite
+  # reason: they have counters of their own (`QueueSaturated`,
+  # `RateLimiterFellBackToMemory`, `CostCapStorm`), and counting them
+  # twice would let two numbers disagree about one event.
+  - name: quality
+    rules:
+      - alert: QualityBudgetBurnFast
+        # 14.4 x the 3% budget = a 43.2% degradation ratio. The
+        # denominator is jobs and the numerator is rungs, and one job
+        # can take several — so this is degradations *per job*, not a
+        # proportion, and it can legitimately exceed 1 during an
+        # incident. §3's Quality row says the same thing in prose. The
+        # threshold is set on that reading: at 0.432, if each degraded
+        # job takes one rung, better than two jobs in five are
+        # degrading — which no healthy interval produces.
+        expr: >-
+          (
+            sum(rate(research_degradations_total[1h]))
+            /
+            sum(rate(research_jobs_total[1h]))
+          ) > 0.432
+          and
+          (
+            sum(rate(research_degradations_total[5m]))
+            /
+            sum(rate(research_jobs_total[5m]))
+          ) > 0.432
+          and
+          sum(increase(research_jobs_total[1h])) >= 20
+        for: 5m
+        labels:
+          severity: page
+          slo: quality
+        annotations:
+          summary: "Jobs are being served degraded fast enough to burn the quality budget 14.4x"
+          description: >-
+            More than 43% of jobs are taking a rung of the degradation ladder
+            over both the last hour and the last five minutes. Every one of
+            those jobs still reports `succeeded`, so `research_jobs_total` and
+            `research_job_duration_seconds` both look fine — the duration
+            histogram will look *better* than usual, because a degraded path
+            is a faster path. Cut `research_degradations_total` by `rung` to
+            see which rung, then by `component` to see which subsystem. The
+            20-job floor is the same small-denominator guard the burn rules
+            above carry.
+          runbook: docs/runbooks/README.md
+          signal_events: resilience_degraded embedding_cache_get_failed paper_cache_get_failed
+
+      - alert: CacheTierDegradedSustained
+        # The sharpest rule in this group, and the one an operator will
+        # actually act on. A Postgres cache that is refusing reads makes
+        # *nothing* fail: `parse_pdf` refetches, `encode_texts`
+        # recomputes MiniLM, and the job succeeds. So no error rate
+        # moves, no job counter moves, and the only symptoms are a
+        # slower fleet and a much larger provider bill. Fifteen minutes
+        # of *continuous* cache degradation is a backend that is down,
+        # not a blip.
+        #
+        # The rate window is deliberately shorter than `for`, and it is
+        # the one thing to get right here. A single cache miss keeps
+        # `rate(...[W])` positive for the whole of W, so a 15m window
+        # under a 15m `for` would fire on one blip — the alert would
+        # say "sustained" and mean "happened once". At [5m] a lone
+        # event decays out well before `for` elapses, so only genuinely
+        # continuous failure holds the condition.
+        expr: sum by (component) (rate(research_degradations_total{rung="cache_stale"}[5m])) > 0
+        for: 15m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "A cache tier has been failing its reads for fifteen minutes"
+          description: >-
+            `component` names which one — `paper_cache` (PDF text) or
+            `embedding_cache` (MiniLM vectors). Neither failure can fail a
+            job, by design (ADR 0028's degrade-to-recompute, ADR 0041), which
+            is exactly why this needs its own alert: the fleet is quietly
+            paying full recompute cost on every paper and every embedding
+            while every other signal reads healthy.
+          runbook: docs/runbooks/postgres-loss.md
+          signal_events: paper_cache_get_failed embedding_cache_get_failed

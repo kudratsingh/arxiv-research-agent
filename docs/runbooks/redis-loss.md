@@ -15,7 +15,8 @@ metric signal to name.
 | `rate_limit_rejections_total{backend="memory"}` | metric | **The sharpest one.** Under `RATE_LIMIT_BACKEND=redis` a 429 attributed to the `memory` backend can only mean the Redis limiter raised and the fail-open fallback answered. The per-principal hourly cap has silently become per-*worker*: N workers now allow N × `api_key_hourly_limit`. |
 | `http.server.request.duration` count on `http.route="/research"` with a `5xx` status | metric | Submits are failing. Redis is the first suspect; the log names the actual dependency. |
 | `research_jobs_total{error_type="orphaned"}` | metric | Leases expired while Redis was away and the redriver reclaimed the rows on recovery. Expect a burst *after* the outage, not during it. |
-| `resilience_degraded` with `component="rate_limiter"`, `reason="redis_unavailable"` | log | The degradation itself, at the moment it happens — hours before anybody is actually rejected. |
+| `research_degradations_total{rung="weakened_guarantee", component="rate_limiter"}` | metric | The degradation itself, on a metric rather than only in a log — graphable, and it answers "is it still happening" without a `jq` over container logs. New in ADR 0081; before it, the row below was the whole of the signal. |
+| `resilience_degraded` with `component="rate_limiter"`, `reason="redis_unavailable"` | log | The same degradation, at the moment it happens — hours before anybody is actually rejected. The log is where `reason` and the exception class live; the metric above is where the *rate* lives. |
 | `api_health_dependency_degraded` with `dependency="redis"` | log | The discriminator. One WARNING on the edge, one INFO (`api_health_dependency_recovered`) when it comes back; never the steady state, so a weekend outage does not bury the timeline in 17k identical lines. |
 | `sse_publish_failed`, `sse_terminal_publish_gave_up` | log | A job finished and its client was never told. |
 

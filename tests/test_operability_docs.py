@@ -142,6 +142,14 @@ REQUIRED_RUNBOOK_SECTIONS: Final[tuple[str, ...]] = (
 #: Empty on purpose — an instrument nobody looks at is a line of code,
 #: not observability, and adding a name here should require an argument
 #: in the PR that does it.
+#:
+#: WO-D5 nearly added the first entry and was overruled, correctly: an
+#: instrument that exists specifically to make the quality SLI
+#: computable has to be watched from the commit that creates it, and
+#: this list is for genuine gaps rather than for scheduling work
+#: somebody intends to do anyway. `research_degradations_total` ships
+#: with the `quality` group in `alerts.yml` and two panels in
+#: `dashboard.json` instead.
 _UNWATCHED_INSTRUMENTS: Final[frozenset[str]] = frozenset()
 
 #: Every `Meter` factory. Listed rather than pattern-matched on
@@ -566,16 +574,26 @@ class TestAlertRulesNameRealInstruments:
         # instrument arrives with a panel, which is what
         # `test_every_instrument_is_watched_by_something` requires —
         # and past it the band gets re-centred deliberately.
+        #
+        # Floors raised 22 -> 24 and 26 -> 28 by WO-D5, which added the
+        # two `research_degradations_total` panels. Raising them is not
+        # optional bookkeeping: this floor is *today's exact count* on
+        # purpose, so that losing one panel is a failure. Leaving it at
+        # 22 after adding two would mean both new panels could be
+        # deleted and this test would still pass — which is precisely
+        # the "a panel added last week disappears without anybody
+        # noticing" case the paragraph above says it exists to catch.
+        # The ceilings are untouched; they still carry headroom.
         panels = [panel for panel in _dashboard_panels() if panel.get("targets")]
         targets = _dashboard_targets()
-        assert 22 <= len(panels) <= 30, (
-            f"{len(panels)} panels carry queries; 22 is the floor. Below "
+        assert 24 <= len(panels) <= 30, (
+            f"{len(panels)} panels carry queries; 24 is the floor. Below "
             "it a panel has been dropped or the walk has stopped "
             "descending into collapsed rows, and every check above is "
             "iterating a shorter list without complaining."
         )
-        assert 26 <= len(targets) <= 36, (
-            f"{len(targets)} dashboard targets found; 26 is the floor. A "
+        assert 28 <= len(targets) <= 36, (
+            f"{len(targets)} dashboard targets found; 28 is the floor. A "
             "panel can also lose one of several queries, which leaves "
             "the panel count intact."
         )

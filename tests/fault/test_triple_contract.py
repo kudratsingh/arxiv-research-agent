@@ -61,6 +61,11 @@ ASSERTED_EVENTS: frozenset[str] = frozenset(
         "embedding_cache_get_failed",
         "job_redriver_reclaimed",
         "llm_upstream_error",
+        # The rate limiter falling open to its per-worker fallback.
+        # `test_resilience_faults.py` held a skip open for this since
+        # WO-A06 and it is now asserted, because WO-D5 supplied the
+        # metric leg the skip was waiting on (ADR 0081).
+        "resilience_degraded",
         "sse_publish_failed",
         "sse_terminal_publish_failed",
         "sse_terminal_publish_gave_up",
@@ -119,6 +124,15 @@ class TestTheVocabulariesThisTierAssertsOn:
         metrics_module.record_llm_retries(model="m", retries=1)
         metrics_module.record_llm_upstream_error(model="m", status="500")
         metrics_module.record_rate_limit_rejection(backend="memory")
+        # WO-D5's degradation counter (ADR 0081). It joined
+        # `LIVE_INSTRUMENTS` because it is the only instrument in this
+        # tier that can see a *successful* run which was degraded — the
+        # case `research_jobs_total{status="succeeded"}` reports
+        # correctly and therefore cannot distinguish.
+        metrics_module.record_degradation_rung(
+            rung=metrics_module.DEGRADATION_RUNG_CACHE_STALE,
+            component="paper_cache",
+        )
         # WO-A10's HTTP RED histogram, driven through the same helper
         # `ObservabilityMiddleware` calls. It joined `LIVE_INSTRUMENTS`
         # because the Redis-outage-at-submit scenario now asserts on it:
@@ -199,6 +213,35 @@ class TestTheShapeOfTheJobCounter:
         # already-thin histogram across a dozen series. `kind` is the
         # one split worth paying for — see the docstring.
         assert set(dict(timed[0].attributes)) == {"status", "kind"}
+
+    def test_the_degradation_series_carries_exactly_rung_and_component(
+        self, triple: TripleObserver
+    ) -> None:
+        """The same whole-set pin, for the quality SLI's instrument.
+
+        Kept here beside the job counter's for the reason the class
+        docstring gives: the whole-set claim has to live somewhere or an
+        attribute arriving unannounced goes unnoticed, and one place
+        makes a deliberate change one line to update.
+
+        The set is two, and the absence is the load-bearing half.
+        `record_degradation` takes a `reason` and it does **not** reach
+        this series: `docs/reliability.md` §7 specified the instrument as
+        `{component,reason}` and it shipped as `{rung,component}`,
+        because a reason is a free-ish machine token whose whole value is
+        being specific — which is what makes it right for a log field and
+        wrong for a metric attribute (ADR 0049, ADR 0081). If a `reason`
+        ever appears in this set, the cardinality argument in ADR 0081
+        has been quietly reversed.
+        """
+        metrics_module.record_degradation_rung(
+            rung=metrics_module.DEGRADATION_RUNG_WEAKENED_GUARANTEE,
+            component="rate_limiter",
+        )
+
+        points = triple.points("research_degradations_total")
+        assert len(points) == 1
+        assert set(dict(points[0].attributes)) == {"rung", "component"}
 
     def test_the_no_error_sentinel_is_a_literal_not_an_omission(self) -> None:
         """A missing key would make success a different series shape.

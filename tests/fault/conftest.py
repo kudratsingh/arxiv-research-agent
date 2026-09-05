@@ -63,6 +63,16 @@ LIVE_INSTRUMENTS: frozenset[str] = frozenset(
         "llm_retries_total",
         "llm_upstream_errors_total",
         "rate_limit_rejections_total",
+        # WO-D5's degradation counter (ADR 0081). The one instrument in
+        # this set that measures a *success*: a rung of the ladder is
+        # taken by a job that then goes on to succeed, so
+        # `research_jobs_total` cannot see it by construction. Several
+        # faults below therefore had a third leg that was not weak but
+        # structurally unavailable — the run degraded, the job counter
+        # correctly said `succeeded`, and nothing anywhere counted the
+        # degradation. That is the failure `docs/reliability.md` §5
+        # names, asserted here rather than described.
+        "research_degradations_total",
         # WO-A10's HTTP RED histogram. Stable-conventions naming, and
         # the one instrument in this set that can see a failure which
         # never became a job — which is exactly the gap

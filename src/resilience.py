@@ -67,7 +67,7 @@ from typing import Final
 
 from src.cancellation import check_cancelled
 from src.config import settings
-from src.observability import get_logger
+from src.observability import get_logger, record_degradation_rung
 
 log = get_logger(__name__)
 
@@ -435,7 +435,9 @@ _degradations: Counter[tuple[str, str]] = Counter()
 _degradations_lock: Final[threading.Lock] = threading.Lock()
 
 
-def record_degradation(*, component: str, reason: str, error: str | None = None) -> None:
+def record_degradation(
+    *, rung: str, component: str, reason: str, error: str | None = None
+) -> None:
     """Count and log one rung of the degradation ladder.
 
     `02-STANDARDS.md` §5.3 is blunt about why this exists: every rung
@@ -445,17 +447,33 @@ def record_degradation(*, component: str, reason: str, error: str | None = None)
     guarantee than the one its configuration claims, and the only
     honest way to run it is to make the fallback visible.
 
-    The counter is in-process rather than an OpenTelemetry instrument.
-    `src/observability/metrics.py` builds its instruments as one frozen
-    bundle and belongs to another work order in this wave, so folding
-    this into the OTel export is a named follow-up in ADR 0068 rather
-    than a same-wave edit to a peer's file. The log line lands either
-    way, which is what an operator actually alerts on today.
+    All three markers land here: the in-process counter (which
+    `/healthz` and the tests read), the `resilience_degraded` WARNING,
+    and — since ADR 0081 — the OTel instrument
+    `research_degradations_total`, which is what makes the quality SLI
+    in `docs/reliability.md` §3 computable. ADR 0068 deferred that last
+    one as a named follow-up because `metrics.py` belonged to a peer
+    work order mid-wave; this is that follow-up, taken under a granted
+    fence exception.
+
+    `rung` is required rather than defaulted. A default would have to be
+    `weakened_guarantee`, because that is what the only caller on this
+    branch is, and the next caller down a different rung would then be
+    counted under the wrong one silently — which is precisely the
+    "degradation makes the dashboard look better" failure this function
+    exists to prevent, reintroduced one layer up.
 
     Args:
-        component: What degraded — `rate_limiter`, and nothing else yet.
+        rung: A member of `metrics.DEGRADATION_RUNGS` — which rung of
+            `docs/reliability.md` §5 was taken. Closed set: see that
+            module's docstring for why an open string is not an option
+            for a metric attribute.
+        component: What degraded — a member of
+            `metrics.DEGRADATION_COMPONENTS`.
         reason: Why, as a bounded machine token (`redis_unavailable`),
-            never an exception message.
+            never an exception message. Stays on the log line and does
+            *not* become a metric attribute: the metric answers "how
+            much, where", the log answers "why".
         error: The failing exception's *class name*, when the caller
             has one. Deliberately not `str(exc)`: a client library's
             message embeds the connection URL, which is the leak ADR
@@ -469,6 +487,7 @@ def record_degradation(*, component: str, reason: str, error: str | None = None)
     if error is not None:
         extra["error"] = error
     log.warning("resilience_degraded", extra=extra)
+    record_degradation_rung(rung=rung, component=component)
 
 
 def degradation_counts() -> Mapping[tuple[str, str], int]:

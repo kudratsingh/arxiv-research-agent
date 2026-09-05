@@ -297,6 +297,7 @@ service:
 | `llm_retries_total` | counter | `model` | SDK attempts discarded before a call succeeded (`retries_taken`, ADR 0051) |
 | `llm_upstream_errors_total` | counter | `model`, `status` | calls that failed after the SDK exhausted its retries (`status` is the HTTP code, or `connection`) |
 | `rate_limit_rejections_total` | counter | `backend` | 429s, by limiter backend |
+| `research_degradations_total` | counter | `rung`, `component` | "how much of the traffic is being served degraded, and down which rung" — the quality SLI's instrument (ADR 0081) |
 
 Both gauges are **per worker** — they report the process that emits
 them, so aggregate across workers by summing on the resource's
