@@ -265,19 +265,29 @@ class TestCanonicalInitialState:
         state = initial_research_state("q", "run123")
         assert set(state) == set(ResearchState.__required_keys__)
 
-    def test_the_only_optional_keys_are_the_documented_policy_block(self) -> None:
-        """The exemption above is one named block, not a loophole.
+    def test_the_only_optional_keys_are_the_documented_policy_blocks(self) -> None:
+        """The exemption above is named blocks, not a loophole.
 
         Without this, "optional" would be a place any future key could
         be parked to escape the constructor parity the class exists to
         enforce. Adding a key here is a deliberate act with an ADR
         attached, and this test is where the cost of it shows up.
+
+        Two blocks now, and each was paid for here. `VerifyRepairState`
+        (ADR 0076) is written only by the `verify` and `repair` nodes of
+        the fixed verify-and-repair policy; `OrchestrationState` (ADR
+        0086) only by the `lead`, `workers` and `merge` nodes of the
+        orchestrator-workers policy. Neither appears on a state under
+        the shipped default, which is what makes their presence in a
+        checkpoint a positive signal that a named policy ran.
         """
         assert set(ResearchState.__optional_keys__) == {
             "verification_verdict",
             "verification_reason",
             "repair_count",
             "repair_action",
+            "worker_branches",
+            "merged_evidence_provenance",
         }
 
     def test_cli_invokes_the_graph_with_the_canonical_state(

@@ -612,6 +612,33 @@ never renumbered.
   settings, so an evaluation can attribute a result to them. Off is
   byte-identical; T2 and T3 are out of scope.
 
+- [0086](0086-orchestrator-workers-for-the-branch-tier.md) —
+  **Orchestrator-workers for the branch tier (T2).** Parallel candidate
+  search was "absent" (`01-current-architecture.md` §6): the reader fans
+  out across papers, but every paper it reads came from one search
+  ranked against one query for one trajectory.
+  `research_policy=orchestrated_workers` puts `lead -> workers -> merge`
+  where that single retrieval leg was — each worker researches one
+  sub-question on a state built by `initial_research_state` and touched
+  by nothing else, with its own `branch_id`, its own paper cap and its
+  own share of the cost ceiling bound at the shared `call_llm` choke
+  point — and the merge unions their evidence tables, deduplicating
+  papers on ADR 0041's canonical key and recording which branch and
+  sub-question found each one. Branches run sequentially so the merge
+  order is a function of the plan rather than of scheduling. After the
+  merge the graph is ADR 0076's arm C unchanged, so a difference is
+  attributable to the branching. A failed branch costs a branch; a
+  cancelled job stops; a run with no surviving branch raises the
+  branch's own typed error rather than shipping a sourceless briefing.
+  Every branch and its evidence table reach the trajectory as RFC 10
+  §6.3/§6.4 branch and sibling-candidate events, which is the lineage
+  CAP-09's listwise selector will be measured against — no selector and
+  no marginal-stop rule is built here, and arm E's recorded gap says so.
+  The compute controller gains T2 as a *second* rule table behind
+  `orchestration=on`, so a deployment with it off evaluates the rules,
+  emits the reason codes and records the eligible tiers ADR 0085
+  baselined.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

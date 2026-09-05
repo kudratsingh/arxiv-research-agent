@@ -43,9 +43,11 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import re
 import threading
 import uuid
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -93,13 +95,13 @@ from src.contracts.shadow_bridge import (
     observe_episode_terminal,
     observe_job_terminal,
     observe_model_call,
-    observe_node,
     observe_review_answered,
     observe_review_requested,
     parity_report,
     shadow_enabled,
     shadow_run,
 )
+from src.contracts.shadow_bridge import observe_node as _observe_node_only
 from src.contracts.task_spec import (
     GuidedSessionCompilerInput,
     ProductSurface,
@@ -406,6 +408,64 @@ def verdict_projection(event: StoredTrajectoryEvent) -> None:
 # ---------------------------------------------------------------------------
 
 
+MAIN_BRANCH_ID: Final[str] = "branch_main"
+"""The branch every run starts on — `attempt.started`'s `main_branch_id`."""
+
+#: `src.contracts.trajectory.BranchId`'s shape, checked here so a
+#: malformed branch id in the graph state degrades the lineage instead
+#: of raising inside an append and marking the bridge degraded for the
+#: rest of the run.
+_BRANCH_ID_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"^branch_[a-z0-9][a-z0-9_-]{0,63}$"
+)
+
+#: Which branch the *current context* is appending on (CAP-03, ADR
+#: 0086). RFC 10 §6.3 puts `branch_id` on the envelope, and `_append` —
+#: which lives on `ShadowRun` in a module this lane does not own — always
+#: builds one on `branch_main`. A ContextVar is how a caller says "these
+#: events belong to that branch" without a new parameter on a method
+#: fifteen call sites already pass through.
+#:
+#: A ContextVar rather than an attribute on the bridge, and the
+#: difference is load-bearing: the reader's per-paper fan-out records
+#: model calls from worker threads while the event loop records node
+#: completions, so an attribute would let one thread's branch scope
+#: stamp another thread's model call. Contexts do not leak between
+#: threads, so only the context that opened the scope is affected —
+#: which means model calls stay on `branch_main` and each branch's own
+#: call count rides on its `branch.completed` record instead. That is a
+#: deliberate under-claim: better a model call attributed to the run
+#: than one attributed to the wrong branch.
+_active_branch: ContextVar[str | None] = ContextVar(
+    "trajectory_active_branch", default=None
+)
+
+
+@contextlib.contextmanager
+def branch_scope(branch_id: str) -> Iterator[None]:
+    """Every event this context appends carries `branch_id`."""
+    token = _active_branch.set(branch_id)
+    try:
+        yield
+    finally:
+        _active_branch.reset(token)
+
+
+def _stamped_with_active_branch(
+    event: ProposedTrajectoryEvent,
+) -> ProposedTrajectoryEvent:
+    """Move an event onto the active branch, if a scope is open.
+
+    Only ever moves an event *off* `branch_main`: an event that already
+    names a branch was built by a caller who knew which one, and a scope
+    is not allowed to overrule it.
+    """
+    branch = _active_branch.get()
+    if branch is None or event.branch_id != MAIN_BRANCH_ID:
+        return event
+    return event.model_copy(update={"branch_id": branch})
+
+
 class DurableTrajectoryStore(InMemoryTrajectoryStore):
     """W04's adapter, plus a durable sink and a projection fan-out.
 
@@ -487,14 +547,20 @@ class DurableTrajectoryStore(InMemoryTrajectoryStore):
         return stored
 
     def append(self, event: ProposedTrajectoryEvent) -> StoredTrajectoryEvent:
-        stored = super().append(event)
+        stored = super().append(_stamped_with_active_branch(event))
         self._project(stored)
         return stored
 
     def append_batch(
         self, events: Sequence[ProposedTrajectoryEvent]
     ) -> tuple[StoredTrajectoryEvent, ...]:
-        stored = super().append_batch(events)
+        # Stamped on the same terms as `append`. Nothing appends a batch
+        # inside a branch scope today, and that is exactly why it is
+        # worth doing: an accepted event is never rewritten, so a batch
+        # that missed the scope would be a permanently mislabelled one.
+        stored = super().append_batch(
+            [_stamped_with_active_branch(event) for event in events]
+        )
         for one in stored:
             self._project(one)
         return stored
@@ -1492,6 +1558,170 @@ class ResearchRuntimeBridge(ShadowRun):
             reason_codes=("completed",),
         )
         self._terminal = True
+
+    # -- branches (CAP-03, ADR 0086) ---------------------------------------
+
+    def record_branch(self, branch: Mapping[str, Any]) -> None:
+        """Record one worker branch's lifecycle from its state record.
+
+        Driven from the graph state rather than from a call inside the
+        `workers` node, and that is the whole reason it can exist at
+        all: nothing in `src/graph/` or `src/policies/` may import a
+        contract module (ADR 0078 keeps the shadow off a flag-off
+        deployment's import graph), so the branch record travels out on
+        the node's state update and is read here — the same route
+        `observe_node` already carries every other node update on.
+
+        Idempotent in both halves. `branch.created` fires once per
+        branch id even though the record appears on the `lead`, the
+        `workers` and the `merge` update; the closing event fires once,
+        on the first update that shows the branch settled. That matters
+        beyond tidiness: RFC 10 §6.3 makes a closed branch reject new
+        work, so a second `branch.completed` would be a rejected append
+        rather than a duplicate.
+
+        Args:
+            branch: One `src.graph.state.WorkerBranch`, as a mapping.
+                Read defensively — this is state, and a malformed record
+                must degrade the lineage rather than fail the run.
+        """
+        branch_id = str(branch.get("branch_id", "") or "")
+        if not _BRANCH_ID_PATTERN.match(branch_id):
+            return
+        if self._first_time(f"branch.created:{branch_id}"):
+            self._append(
+                "branch.created",
+                f"branch.created:{branch_id}",
+                {
+                    "new_branch_id": branch_id,
+                    "parent_branch_id": MAIN_BRANCH_ID,
+                    "fork_event_id": None,
+                    "diversity_dimension": str(
+                        branch.get("diversity_dimension", "sub_question")
+                    ),
+                },
+                status=EventStatus.SUCCEEDED,
+                actor=self._actor(ActorKind.POLICY, "orchestration"),
+            )
+        status = str(branch.get("status", "") or "")
+        if status in ("", "planned"):
+            return
+        if not self._first_time(f"branch.closed:{branch_id}"):
+            return
+        with branch_scope(branch_id):
+            self._close_branch(branch_id, branch, status)
+
+    def _close_branch(
+        self, branch_id: str, branch: Mapping[str, Any], status: str
+    ) -> None:
+        """Settle one branch, recording its candidate first if it has one."""
+        candidate_ids: list[str] = []
+        if status == "succeeded":
+            candidate = self.branch_candidate(branch_id, branch)
+            if candidate is not None:
+                candidate_ids.append(candidate)
+        reason = str(branch.get("reason", "") or "") or status
+        if status == "cancelled":
+            self._append(
+                "branch.cancelled",
+                f"branch.cancelled:{branch_id}",
+                {"branch_id": branch_id, "reason_code": reason},
+                status=EventStatus.CANCELLED,
+                actor=self._actor(ActorKind.SYSTEM, "orchestration"),
+            )
+            return
+        if status == "succeeded":
+            self._append(
+                "branch.completed",
+                f"branch.completed:{branch_id}",
+                {
+                    "branch_id": branch_id,
+                    "candidate_ids": candidate_ids,
+                    "stop_reason_code": "completed",
+                },
+                status=EventStatus.SUCCEEDED,
+                actor=self._actor(ActorKind.POLICY, "orchestration"),
+                candidate_id=candidate_ids[0] if candidate_ids else None,
+            )
+            return
+        self._append(
+            "branch.failed",
+            f"branch.failed:{branch_id}",
+            {
+                "branch_id": branch_id,
+                "failure_class": reason,
+                "last_good_candidate_id": None,
+            },
+            status=EventStatus.FAILED,
+            actor=self._actor(ActorKind.POLICY, "orchestration"),
+        )
+
+    def branch_candidate(
+        self, branch_id: str, branch: Mapping[str, Any]
+    ) -> str | None:
+        """Record a branch's evidence table as a sibling candidate.
+
+        This is the lineage CAP-09 will select over. A branch's evidence
+        table is the thing a listwise selector compares — RFC 10 §6.4
+        wants sibling candidates with distinct ids and a shared parent,
+        and a run that recorded only the merged result would leave the
+        selector nothing to choose between after the fact.
+
+        The artifact is the branch's evidence *index* — every claim with
+        its paper, section and the sub-question it answers — and
+        deliberately not the source chunks. Two branches that extracted
+        the same claims therefore share a digest, which is the identity
+        a comparison needs, while the chunks themselves stay in the
+        report artifact rather than being retained twice (ADR 0083's D8
+        question is still open).
+
+        Returns:
+            The candidate id, or `None` when the branch produced no
+            evidence or the store refused the bytes.
+        """
+        claims = branch.get("evidence")
+        if not isinstance(claims, list) or not claims:
+            return None
+        index = {
+            "branch_id": branch_id,
+            "sub_question": str(branch.get("sub_question", "") or ""),
+            "paper_ids": [str(paper) for paper in branch.get("paper_ids", []) or []],
+            "claims": [
+                {
+                    "claim": str(claim.get("claim", "")),
+                    "paper_id": str(claim.get("paper_id", "")),
+                    "section": str(claim.get("section", "")),
+                    "supports_question": str(claim.get("supports_question", "")),
+                }
+                for claim in claims
+                if isinstance(claim, Mapping)
+            ],
+        }
+        body = json.dumps(index, sort_keys=True, separators=(",", ":"))
+        stored = self.store_artifact(
+            body.encode("utf-8"),
+            role=ArtifactRole.CANDIDATE_OUTLINE,
+            media_type="application/json",
+            schema_ref="branch-evidence-index/1.0.0",
+        )
+        if stored is None:
+            return None
+        candidate_id = "cand_" + stored.digest.removeprefix("sha256:")[:24]
+        self._append(
+            "candidate.created",
+            f"candidate.created:{branch_id}",
+            {
+                "candidate_id": candidate_id,
+                "candidate_kind": "branch_evidence_table",
+                "artifact_id": stored.artifact_id,
+                "generation_method": "orchestrated_worker",
+            },
+            status=EventStatus.SUCCEEDED,
+            actor=self._actor(ActorKind.AGENT, "reader"),
+            candidate_id=candidate_id,
+            artifact_refs=(stored,),
+        )
+        return candidate_id
 
     # -- candidates (stub lifecycle) ---------------------------------------
 
@@ -3021,6 +3251,46 @@ def observe_compute_tier(
         )
 
 
+def observe_node(
+    run: ShadowRun | None, node: str, state_update: Mapping[str, Any]
+) -> None:
+    """W05's node hook, plus CAP-03's branch and candidate lineage.
+
+    Shadows the `shadow_bridge` function of the same name — which is
+    still what the eval lane imports — so the runner's one call site
+    reaches both records without a second hook to wire, a second
+    containment block to get right, or a second chance to forget one.
+    The node action is recorded first and unchanged, so a bridge that
+    cannot record lineage still records everything W05 recorded.
+    """
+    _observe_node_only(run, node, state_update)
+    observe_branches(run, state_update)
+
+
+def observe_branches(bridge: Any, state_update: Mapping[str, Any]) -> None:
+    """Record every worker branch this update carries, or do nothing.
+
+    A no-op on three paths that all mean "there is no lineage to
+    record": no bridge, a degraded one, and a `ShadowRun` that predates
+    the branch vocabulary (the eval lane's in-memory shadow), which is
+    why the recorder is looked up rather than called. The update itself
+    is the fourth: every shape but the orchestrated one carries no
+    `worker_branches` key at all, so a flag-off run pays one `.get`.
+    """
+    if bridge is None or getattr(bridge, "degraded", False):
+        return
+    branches = state_update.get("worker_branches")
+    if not isinstance(branches, list) or not branches:
+        return
+    recorder = getattr(bridge, "record_branch", None)
+    if recorder is None:
+        return
+    with contained(bridge, "observe_branches"):
+        for branch in branches:
+            if isinstance(branch, Mapping):
+                recorder(branch)
+
+
 def observe_reconciliation(bridge: Any, run_cost_usd: float) -> CostReconciliation | None:
     """Reconcile a finished run's costs, or do nothing."""
     if bridge is None or getattr(bridge, "degraded", False):
@@ -3046,6 +3316,7 @@ __all__ = [
     "SINK_EVENTS_FILE",
     "SINK_HEAD_FILE",
     "SINK_RUN_DIRECTORY",
+    "MAIN_BRANCH_ID",
     "SINK_SCOPE_FILE",
     "BridgeError",
     "CostReconciliation",
@@ -3058,6 +3329,7 @@ __all__ = [
     "ResearchRuntimeBridge",
     "TrajectorySink",
     "action_attempt_id",
+    "branch_scope",
     "build_projections",
     "build_sink",
     "capture_permitted",
@@ -3066,6 +3338,7 @@ __all__ = [
     "current_trace_ref",
     "episode_block",
     "log_projection",
+    "observe_branches",
     "observe_close",
     "observe_compute_tier",
     "observe_episode_terminal",

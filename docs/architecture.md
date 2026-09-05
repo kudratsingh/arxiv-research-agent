@@ -162,9 +162,58 @@ per-agent `<AGENT>_EFFORT` settings apply, and `tier_effort_overrides`
 can raise one agent's effort on the escalated tier only.
 
 With `COMPUTE_CONTROLLER=off` — the default — one graph is compiled and
-everything above is inert. T2 (branching) and T3 are not decided by this
-controller. See ADR
+everything above is inert. T3 is not decided by this controller; T2
+arrived with the branch tier below. See ADR
 [0085](decisions/0085-deterministic-compute-controller.md).
+
+### A fourth shape: the branch tier (ADR 0086)
+
+`research_policy="orchestrated_workers"` puts three nodes where the
+fixed path's single `search -> reader` leg was, and leaves everything
+after them alone:
+
+```mermaid
+flowchart LR
+    P[planner] --> L[lead] --> W[workers] --> M[merge] --> Y[synthesizer] --> V[verify]
+    V --> RV{"route_after_verification"}
+    RV -->|"pass · abstain · repair spent"| C[critic]
+    RV -->|"fail, one repair left"| RP[repair]
+    RP -->|"retrieve_missing_evidence"| L
+    RP -->|"qualify_or_remove_claims"| Y
+    C --> RT{"route_after_critique"}
+    RT --> E([END])
+```
+
+`lead` turns the planner's sub-questions into at most
+`ORCHESTRATION_MAX_BRANCHES` worker branches, in the plan's own order.
+`workers` runs each branch — search, then reader — on a state built by
+`initial_research_state` and touched by nothing else, so a branch that
+fails contributes nothing and *can* contribute nothing to a sibling.
+Each branch's `query` is its own sub-question, which is where the
+retrieval diversity comes from. `merge` unions the branches' evidence
+tables, deduplicates papers on the canonical key, and records per paper
+which branches found it and which questions they were answering. None of
+the three calls a model, and branches run one after another so the merge
+order is a function of the plan rather than of scheduling.
+
+Three caps bound a run: branches per run, papers per branch — which is
+also the branch's model-call cap, since the reader spends one call per
+paper — and a per-branch share of `MAX_COST_USD` bound at the shared
+`call_llm` choke point. A branch that trips its share is recorded and
+its siblings still run; a run that trips the ceiling produces the
+ordinary budget-stopped outcome with a partial report. A run where no
+branch survived fails with that branch's own typed error rather than
+synthesising from nothing.
+
+Every branch and its evidence table reach the contract trajectory as
+`branch.*` and sibling `candidate.*` events, which is the lineage a
+later listwise selector will be measured against. No selector and no
+marginal-stop rule is built here, so arm E stays incomplete and the run
+record names what is still missing. The shape is also selectable per run
+as compute tier T2 when `ORCHESTRATION=on`; off — the default — the
+controller's rule table, reason codes and compiled graph set are exactly
+ADR 0085's. See ADR
+[0086](decisions/0086-orchestrator-workers-for-the-branch-tier.md).
 
 Regardless of shape, `build_workflow` also wires two production
 knobs:

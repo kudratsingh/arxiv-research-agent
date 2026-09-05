@@ -300,6 +300,28 @@ CAPABILITY_MISSING_POLICY_ID: Final[str] = "research_capability_missing"
 FIXED_VERIFY_NODE: Final[str] = "verify"
 FIXED_REPAIR_NODE: Final[str] = "repair"
 
+#: Nodes CAP-03 adds for the orchestrator-workers policy (ADR 0086).
+#: All three, because any one of them alone is a different graph: a
+#: `lead` with no `workers` plans branches nobody runs, and a `merge`
+#: with no `lead` merges a branch set nobody planned.
+ORCHESTRATION_NODES: Final[frozenset[str]] = frozenset({"lead", "workers", "merge"})
+
+#: What a run is called when it compiles the branch tier. Not an arm:
+#: `07-first-policy-experiment.md` §3 defines arms A-D over the fixed
+#: and supervisor shapes, and arm E over adaptive compute *with*
+#: listwise selection and a marginal-stop rule. This shape is the first
+#: half of arm E — diversified retrieval with candidate lineage — and
+#: labelling it E would claim the selector CAP-09 has still to build. A
+#: named non-arm keeps the honesty rule this module rests on: a shape
+#: either names an arm the graph can run, or it names what is missing.
+ORCHESTRATED_WORKERS_POLICY_ID: Final[str] = "research_orchestrated_workers"
+
+#: The one arm-E capability this shape genuinely earns.
+#: `adaptive_compute_router` is earned by no node (the controller is a
+#: setting, not a stage); `candidate_lineage_selector` and
+#: `marginal_stop` are CAP-09's, and remain in every arm-E gap.
+CANDIDATE_BRANCHING_CAPABILITY: Final[str] = "candidate_branching"
+
 #: What each arm's capability claim requires of the compiled graph.
 #: `arm_capability_gap` subtracts the graph's own capabilities from these,
 #: so an empty gap means "this graph can run that arm" and a non-empty one
@@ -480,6 +502,7 @@ def classify_from_graph_shape(config: Settings, graph: GraphShape) -> PolicyShap
     supervisor = "supervisor" in nodes
     verifier = "verifier" in nodes
     fixed_verify = FIXED_VERIFY_NODE in nodes and FIXED_REPAIR_NODE in nodes
+    orchestrated = nodes >= ORCHESTRATION_NODES
     evidence = bool(config.enable_evidence_store)
 
     flags = RuntimeFlags(
@@ -498,6 +521,13 @@ def classify_from_graph_shape(config: Settings, graph: GraphShape) -> PolicyShap
         | None
     )
     missing: tuple[str, ...] = ()
+    if orchestrated:
+        # Asked first, and asked structurally. The branch tier's graph
+        # also carries `verify` and `repair`, so a classifier that
+        # checked arm C first would label it C and hide the branching
+        # behind a claim the shape does not make. Its policy id is its
+        # own, and what it lacks for arm E is named rather than implied.
+        return _orchestrated_shape(config, graph, flags, declared, capabilities)
     if supervisor and verifier and evidence:
         arm, selector = "D", "supervisor_verified"
     elif not supervisor and not verifier and fixed_verify and evidence:
@@ -537,6 +567,56 @@ def classify_from_graph_shape(config: Settings, graph: GraphShape) -> PolicyShap
     )
 
 
+def _orchestrated_shape(
+    config: Settings,
+    graph: GraphShape,
+    flags: RuntimeFlags,
+    declared: str,
+    capabilities: tuple[str, ...],
+) -> PolicyShape:
+    """Classify CAP-03's branch tier: its own policy id, arm E's gap named.
+
+    Deliberately `representable=False` with a policy id of its own,
+    which looks contradictory until the two fields are read for what
+    they mean. `representable` answers "is this one of the first policy
+    experiment's arms?", and the honest answer is no — the shape is
+    neither the fixed evidence path nor the supervisor loop, and it is
+    not yet arm E because arm E is adaptive compute *with* listwise
+    selection. `policy_id` answers "what shall a dashboard group this
+    run under?", and `research_capability_missing` would be the wrong
+    answer: this is not a configuration nobody designed, it is a
+    designed policy that has shipped half of a designed arm.
+
+    `missing_capabilities` therefore carries arm E's remaining gap, in
+    the constant's own order, so the run record says exactly what CAP-09
+    has left to build. `evidence_store` joins it when the flag is off,
+    because a branch tier whose reader emits no claims merges empty
+    tables — the same refusal arm C makes, arrived at from the other
+    side.
+    """
+    earned = set(capabilities)
+    missing = [
+        capability
+        for capability in ARM_REQUIRED_CAPABILITIES["E"]
+        if capability not in earned
+    ]
+    if not flags.enable_evidence_store:
+        missing.append("evidence_store")
+    return PolicyShape(
+        arm_id=None,
+        selector=None,
+        policy_id=ORCHESTRATED_WORKERS_POLICY_ID,
+        policy_version=f"{BINDING_VERSION}-shadow",
+        representable=False,
+        missing_capabilities=tuple(missing),
+        graph_capabilities=capabilities,
+        declared_research_policy=declared,
+        held_out_factors={name: bool(getattr(config, name)) for name in HELD_OUT_FACTORS},
+        runtime_flags=flags,
+        graph=graph,
+    )
+
+
 def graph_capabilities(graph: GraphShape, *, evidence: bool) -> tuple[str, ...]:
     """What the compiled graph can actually do, in the arm vocabulary.
 
@@ -556,6 +636,13 @@ def graph_capabilities(graph: GraphShape, *, evidence: bool) -> tuple[str, ...]:
             "targeted_repair",
             "reverify_repaired_subject",
         ]
+    if nodes >= ORCHESTRATION_NODES:
+        # The one arm-E capability a *node* can earn (ADR 0086). The
+        # other three cannot be earned here and must not be: a router
+        # that is a setting, a selector that is not built, and a stop
+        # rule that is not built are three gaps an evaluation needs to
+        # keep seeing.
+        earned.append(CANDIDATE_BRANCHING_CAPABILITY)
     if evidence:
         earned.append("evidence_store")
     return tuple(sorted(earned))
