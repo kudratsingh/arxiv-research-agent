@@ -768,3 +768,105 @@ def test_the_policy_shape_model_is_closed_and_immutable() -> None:
     assert isinstance(shape, PolicyShape)
     with pytest.raises(ValueError):
         shape.arm_id = "D"  # type: ignore[misc]
+
+
+class TestTheEdgesOfTheBinding:
+    """The paths a happy run never reaches, and what each one answers."""
+
+    def test_an_unrepresentable_shape_still_has_a_stable_digest(self) -> None:
+        """A refusal is a fact about a run and needs an identity too.
+
+        Without one, two runs that were both `capability_missing` for
+        different reasons would be indistinguishable in a trajectory's
+        `policy_ref`, which is the one field a reader groups by.
+        """
+        broken = classify_policy_shape(
+            config(enable_supervisor=True), supervisor_app(verifier=False)
+        )
+        other = classify_policy_shape(config(enable_verifier=True), supervisor_app())
+        assert broken.representable is False
+        assert broken.policy_digest == classify_policy_shape(
+            config(enable_supervisor=True), supervisor_app(verifier=False)
+        ).policy_digest
+        assert broken.policy_digest != other.policy_digest
+
+    def test_asking_for_an_arm_the_shape_is_not_names_the_mismatch(self) -> None:
+        shape = classify_policy_shape(config(), fixed_app())
+        assert arm_capability_gap("A", shape) == ()
+        assert arm_capability_gap("D", shape) == ("policy_shape_mismatch",)
+
+    def test_semantic_scholar_widens_the_tool_policy_and_the_manifest(self) -> None:
+        """A second retrieval provider is a permission, not a detail."""
+        from src.contracts.research_binding import (
+            SEMANTIC_SCHOLAR_TOOL,
+            agent_tools,
+            source_scope,
+        )
+
+        cfg = config(use_mock_data=False, enable_semantic_scholar=True)
+        assert SEMANTIC_SCHOLAR_TOOL in agent_tools(cfg)
+        assert SEMANTIC_SCHOLAR_TOOL in source_scope(cfg).allowed_providers
+        assert SEMANTIC_SCHOLAR_TOOL not in agent_tools(config())
+
+    def test_a_missing_prompt_constant_refuses_rather_than_hashing_nothing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A prompt bundle that silently skipped a prompt would be a lie.
+
+        The digest's whole job is to say "these are the instructions this
+        run was given", so an unreadable one has to stop the seal rather
+        than shrink the bundle.
+        """
+        from src.contracts import research_binding
+
+        prompt_digests.cache_clear()
+        monkeypatch.setattr(
+            research_binding,
+            "PROMPT_CONSTANTS",
+            (("planner.system", "src.agents.planner", "NO_SUCH_PROMPT"),),
+        )
+        with pytest.raises(ResearchBindingError, match="unavailable"):
+            prompt_digests()
+        prompt_digests.cache_clear()
+
+    def test_a_subtree_with_no_files_hashes_as_absent(self) -> None:
+        """A pruned source tree is a different build, and says so.
+
+        Raising here would refuse to describe a container image that
+        shipped without its sources; hashing an empty dict would make
+        every such image agree with every other. Naming the absence does
+        neither.
+        """
+        from src.contracts.research_binding import _source_digest
+
+        absent = _source_digest("src/no_such_package/*.py")
+        assert absent == _source_digest("src/also_missing/*.py")
+        assert absent != _source_digest("src/graph/*.py")
+
+    def test_an_unreadable_source_file_is_recorded_rather_than_skipped(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from src.contracts.research_binding import _source_digest
+
+        readable = _source_digest("src/graph/*.py")
+
+        def _refuse(self: Path) -> bytes:
+            raise OSError("permission denied")
+
+        monkeypatch.setattr(Path, "read_bytes", _refuse)
+        assert _source_digest("src/graph/*.py") != readable
+
+    def test_the_null_task_store_keeps_nothing_and_says_so(self) -> None:
+        """The receipt is real; the storage is P0-WO08's."""
+        from src.contracts.research_binding import _NullTaskStore
+
+        store = _NullTaskStore()
+        spec = compile_research_intake(
+            config(),
+            task_id="research-api:null-store",
+            query="a question",
+            hitl_plan_review=False,
+            supervisor=False,
+        )
+        assert store.put(spec) is None
+        assert store.get(spec.task_spec_id) is None

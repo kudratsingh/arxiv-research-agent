@@ -593,3 +593,96 @@ def test_the_bridge_never_writes_user_text_into_a_payload() -> None:
     exported = run.export_jsonl()
     assert job.query not in exported
     assert "the report body" not in exported
+
+
+class TestTheEdgesOfTheBridge:
+    def test_a_failure_before_a_run_exists_is_still_logged_once(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A bridge that breaks *opening* must not fail the job either.
+
+        There is no run to degrade yet, so the containment logs and
+        returns `None` — which every caller already treats as "no
+        shadow".
+        """
+        monkeypatch.setattr(
+            bridge,
+            "compile_research_intake",
+            lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("compiler broke")),
+        )
+        with caplog.at_level("WARNING", logger="src.contracts.shadow_bridge"):
+            run = bridge.start_research_job(
+                research_job(), _AppStub(), config=config(), cost_ceiling_usd=2.0
+            )
+        assert run is None
+        warnings = [r for r in caplog.records if r.levelname == "WARNING"]
+        assert [r.getMessage() for r in warnings] == ["contract_shadow_failed"]
+        assert getattr(warnings[0], "hook", None) == "start_research_job"
+
+    def test_a_run_names_the_ids_a_reader_joins_on(self) -> None:
+        run = open_run()
+        assert run.run_id.startswith("run_")
+        assert run.attempt_id.startswith("att_")
+        assert run.arm_id == "A"
+        # Derived, not random: the same job seals to the same identity,
+        # which is what makes a replay comparable.
+        assert bridge.start_research_job(
+            research_job(), _AppStub(), config=config(), cost_ceiling_usd=2.0
+        ).run_id == run.run_id
+
+    def test_policy_shape_reads_an_app_the_caller_already_holds(self) -> None:
+        shape = bridge.policy_shape_for_app(config(), _AppStub())
+        assert shape.arm_id == "A"
+        assert shape.graph.nodes == tuple(sorted(FIXED_PIPELINE))
+
+    def test_an_eval_episode_is_not_opened_while_the_switch_is_off(self) -> None:
+        binding = bridge.benchmark_binding_for(
+            {"query_id": "q", "query": "a question", "domain": "nlp", "expected_topics": []},
+            config=config(),
+        )
+        assert (
+            bridge.start_eval_episode(
+                config=config(contract_shadow="off"),
+                shape=bridge.policy_shape_for_app(config(), _AppStub()),
+                runtime_run_id="eval-1",
+                benchmark=binding,
+                objective="a question",
+                task_id="research-eval:q",
+                repeat=1,
+                origin="research_eval",
+                cost_ceiling_usd=2.0,
+            )
+            is None
+        )
+
+
+@pytest.mark.integration
+class TestTheCachedGraphShape:
+    """The one caller that has to seal before its graph exists.
+
+    The scripted campaign's `before_episode` runs ahead of
+    `build_workflow`, so the bridge compiles a graph once per
+    configuration and reads its shape. Asserted against a really-built
+    graph rather than the stand-in, because the thing under test is that
+    the throwaway compile and the run's own compile agree.
+    """
+
+    def test_the_shape_is_read_once_and_matches_a_real_build(self) -> None:
+        from src.graph import workflow as workflow_module
+        from src.graph.workflow import build_workflow
+
+        cfg = config()
+        workflow_module.settings = cfg
+        try:
+            first = bridge.graph_shape(cfg)
+            assert bridge.graph_shape(cfg) is first, "the second episode pays nothing"
+
+            app = build_workflow(enable_hitl=False)
+            try:
+                assert bridge.read_graph_shape(app) == first
+            finally:
+                stack = getattr(app, "_checkpointer_exit_stack", None)
+                if stack is not None:
+                    stack.close()
+        finally:
+            workflow_module.settings = shipped_settings
