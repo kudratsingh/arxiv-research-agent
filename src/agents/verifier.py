@@ -44,12 +44,14 @@ from typing import Any, Final, Literal
 
 from langchain_core.messages import AIMessage
 
+from src.cancellation import JobCancelledError
 from src.config import settings
 from src.errors import UpstreamModelOutput
 from src.eval.metrics import build_source_index
 from src.graph.state import Citation, EvidenceClaim, PaperMetadata, ResearchState
 from src.llm import call_llm_json
 from src.observability import get_logger
+from src.observability.costs import CostBudgetExceeded
 
 log = get_logger(__name__)
 
@@ -394,6 +396,16 @@ def run_verification(state: ResearchState) -> VerificationOutcome:
             max_tokens=2048,
             cache_system=settings.enable_prompt_caching,
         )
+    except (JobCancelledError, CostBudgetExceeded):
+        # Neither is a judgement, and both are raised by `call_llm`
+        # before it issues anything (ADR 0047 / 0051). Re-raised ahead of
+        # the broad handler below, the same way `src/agents/reader.py`
+        # re-raises them out of its fan-out: swallowing a budget stop
+        # into an abstention would let the run continue past its own
+        # ceiling — under the fixed verify-and-repair policy, straight
+        # into a repair, a second synthesis and a second verification,
+        # which is exactly the spend the ceiling exists to prevent.
+        raise
     except Exception as exc:  # noqa: BLE001 — recoverable, log + fallback
         log.warning(
             "verifier_llm_failed_fallback",
