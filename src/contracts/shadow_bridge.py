@@ -135,7 +135,7 @@ SHADOW_RECORD_KEY: Final[str] = "contract_shadow"
 
 _LOCK: Final[RLock] = RLock()
 _RUNS: Final[OrderedDict[str, ShadowRun]] = OrderedDict()
-_SHAPES: Final[dict[tuple[bool, bool, bool, bool], GraphShape]] = {}
+_SHAPES: Final[dict[tuple[str, bool, bool, bool, bool], GraphShape]] = {}
 
 
 def shadow_enabled(config: Settings | None = None) -> bool:
@@ -957,13 +957,32 @@ def policy_shape_for_app(config: Settings, app: Any) -> PolicyShape:
 def graph_shape(config: Settings) -> GraphShape:
     """The compiled research graph's shape for this configuration.
 
-    Cached on the three flags that change the node set, because one
+    Cached on every input that changes the node set, because one
     caller — the scripted campaign's `before_episode` — has to seal
     *before* its graph exists and would otherwise compile one per
     episode. Everywhere else an app is already in hand and
     `read_graph_shape` is called directly.
+
+    **`research_policy` is part of the key, and has to be.** W05 wrote
+    this cache when `_build_graph_shape` dispatched on
+    `enable_supervisor` alone; CAP-02 (ADR 0076) then made
+    `research_policy` the *first* question that dispatch asks, so a
+    fixed verify-and-repair configuration and a legacy one differ in a
+    dimension the old key could not see. With four flags only, arm B and
+    arm C — identical in `enable_supervisor`, `enable_verifier`,
+    `enable_query_refiner` and `enable_checkpointing` — collided, and the
+    second of the two to ask received the first one's shape from a warm
+    cache. That is the one failure mode a campaign cannot tolerate: a
+    manifest that records arm C against the graph arm B compiled.
+
+    Precondition, unchanged from W05 and stated here because the key now
+    makes it visible: `build_workflow` dispatches on the *module-global*
+    `src.graph.workflow.settings`, so `config` must already be the
+    configuration this process compiles under. The key identifies which
+    configuration was asked for; it cannot make the compiler read it.
     """
     key = (
+        str(getattr(config, "research_policy", "legacy") or "legacy"),
         bool(config.enable_supervisor),
         bool(config.enable_verifier),
         bool(config.enable_query_refiner),
