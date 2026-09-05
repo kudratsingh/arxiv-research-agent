@@ -1,7 +1,14 @@
 """Metrics for the offline eval pipeline. Full strategy in `docs/eval.md`.
 
 Landed:
-  - citation_accuracy — pure regex + set membership, no LLM.
+  - citation_resolution_rate — deterministic, no LLM. Resolves every
+    cited arXiv identifier against the papers the run actually
+    retrieved, and reports `None` with a reason when the report cited
+    nothing (see ADR 0074). **This is the citation metric the gate
+    reads.**
+  - citation_accuracy — pure regex + set membership, no LLM. Kept as a
+    diagnostic only; see `measure_citation_accuracy` for what it gets
+    wrong and why it survives anyway.
   - completeness — batched LLM-as-judge over expected topics on the
     final report (see ADR 0006).
   - faithfulness — extract-and-judge in one call against cited paper
@@ -18,11 +25,24 @@ the grader, and an unversioned prompt let an edit rebaseline a metric
 with nothing in the row to say so. `RESEARCH_RUBRICS` is what a campaign
 records; `tests/test_eval_rubric_versions.py` is what stops the text
 moving under a stale version.
+
+**A metric definition change rebaselines a campaign exactly as a prompt
+edit does**, and ADR 0070's machinery is what records it: the
+deterministic groundedness check rides in `RESEARCH_RUBRICS` under its
+own version, so a row scored before this module read
+`citation_resolution_rate` and a row scored after carry different
+`provenance.rubric_versions`, and `regression_diff` refuses to compare
+them (exit 3) instead of publishing a delta across two instruments.
 """
 
 import re
 from typing import Any, Final, TypedDict
 
+from src.eval.groundedness import (
+    GROUNDEDNESS_CHECK_VERSION,
+    NORMALIZATION_SPEC,
+    measure_groundedness,
+)
 from src.eval.provenance import Rubric, judge_model
 from src.graph.state import Citation, PaperMetadata
 from src.llm import call_llm_json
@@ -94,7 +114,39 @@ def _build_citation_index(citations: list[Citation]) -> set[tuple[str, str]]:
 def measure_citation_accuracy(
     report: str, citations: list[Citation]
 ) -> CitationAccuracyResult:
-    """Score the fraction of inline citations that resolve to the citation list.
+    """Legacy diagnostic: the fraction of `[Author, Year]` tags that resolve.
+
+    **This metric no longer gates anything, and it is kept deliberately
+    broken.** Two defects, both recorded in ADR 0074:
+
+    1. A report with no inline citations scores `1.0` — a perfect mark
+       for the exact failure the metric exists to catch.
+    2. It never looks at an identifier. It matches `[Author, Year]` tags
+       against a `(lastname, year)` index built from the same
+       `state["citations"]` list the synthesizer wrote, so a model that
+       invents a whole citation entry — plausible authors and a
+       fabricated `paper_id` included — still scores `1.0`. This
+       repository's own e2e fixture does exactly that.
+
+    `measure_citation_resolution` below is the honest replacement and is
+    what `regression_diff` gates on. This function survives for three
+    reasons, none of them "it is still right":
+
+    - **The row field may not be removed.** ADR 0070 forbids renaming or
+      removing an existing `summary.jsonl` field, so `citation_accuracy`
+      stays on the row — demoted to `RESEARCH_INFORMATIONAL_FIELDS`,
+      tabulated and marked *(not gated)*.
+    - **The published README block still averages it**
+      (`src/eval/readme_update.py`), with its own compensating exclusion
+      of zero-citation rows. Switching that table is a follow-up owned by
+      whoever holds that module.
+    - **It is the historical series.** Every number this repository has
+      ever published under "citation accuracy" is this function's, and
+      keeping it computable is what lets an old artifact still be read.
+
+    Its behaviour is therefore frozen: fixing the zero-citation `1.0`
+    here would silently change the legacy number, which is the same
+    rebaselining-without-saying-so this work order exists to avoid.
 
     Parses `[Author, Year]` tags from the report body, deduplicates them,
     and checks each against a normalized index of the citation list.
@@ -104,8 +156,8 @@ def measure_citation_accuracy(
     author's last name.
 
     A report with no inline citations returns `score=1.0` with
-    `total_citations=0` — the metric doesn't apply. Callers who want to
-    penalize uncited reports can check `total_citations` separately.
+    `total_citations=0` — see the defect note above. Callers who want the
+    honest answer call `measure_citation_resolution`.
 
     Args:
         report: Synthesized report markdown from the workflow.
@@ -150,6 +202,119 @@ def measure_citation_accuracy(
         total_citations=total,
         resolved=resolved,
         unresolved=unresolved,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Citation resolution — deterministic, no judge (ADR 0074).
+# ---------------------------------------------------------------------------
+
+#: The deterministic groundedness check, registered in the shared rubric
+#: lock as a versioned instrument (ADR 0074's fourth follow-up, which
+#: could not be done until one work order held both `metrics.py` and
+#: `tests/fixtures/eval/rubric_lock.json`).
+#:
+#: `Rubric` was built for judge prompts, and the `prompt` slot here
+#: carries `NORMALIZATION_SPEC` instead — the check's contract, as text.
+#: That is not a misuse of the field so much as the field's actual
+#: contract: what the lock defends is *the text whose edit makes two
+#: scores incomparable*, and a deterministic check has one. The name is
+#: the check's rather than any single metric's because one version
+#: governs all three of its metrics.
+#:
+#: `citation_accuracy` is still deliberately absent from the lock — it
+#: declares no spec text and no version constant, so there is nothing to
+#: lock. The rule is "a metric is in the registry iff it publishes a
+#: versioned definition", not "iff it calls a model".
+GROUNDEDNESS_CHECK: Final[Rubric] = Rubric(
+    name="groundedness",
+    version=GROUNDEDNESS_CHECK_VERSION,
+    prompt=NORMALIZATION_SPEC,
+)
+
+
+class CitationResolutionResult(TypedDict):
+    """Outcome of the citation-resolution metric.
+
+    Shaped like the other four results — `score` first, counts beside it
+    — so `runner._get_score` and `_get_count` read it unchanged. The two
+    fields the other results do not have are the point of the metric:
+
+    Attributes:
+        score: Resolved / checked, or **`None` when nothing was checked**.
+            Never a free `1.0`.
+        total_citations: The denominator, always published. A rate
+            without one is not a measurement.
+        resolved: The numerator.
+        excluded: Cited identifiers that existed but could not be
+            decided. Always 0 today — the citation path has no
+            undecidable outcome — and carried anyway so a later one
+            cannot quietly shrink the denominator unannounced.
+        reason: Why `score` is `None` (`no_citations`), or `None`.
+        unresolved: `"<identifier> [<reason>]"` per failure, for
+            debugging — `citation_not_retrieved` and
+            `citation_malformed` stay distinct because they have
+            different owners.
+        check_version: `GROUNDEDNESS_CHECK_VERSION` that produced this.
+        spec_digest: Digest of the normalization contract, so a row can
+            name its instrument without a lookup.
+    """
+
+    score: float | None
+    total_citations: int
+    resolved: int
+    excluded: int
+    reason: str | None
+    unresolved: list[str]
+    check_version: str
+    spec_digest: str
+
+
+def measure_citation_resolution(
+    report: str, papers: list[PaperMetadata], citations: list[Citation]
+) -> CitationResolutionResult:
+    """Score the fraction of cited identifiers the run actually retrieved.
+
+    The honest citation metric, and the one the regression gate reads.
+    No model call, no network, no cost: it resolves each cited arXiv
+    identifier against `build_corpus_index(papers)` — the papers *this
+    run* fetched — rather than against arxiv.org, because a citation to
+    a real paper the run never read is still a fabricated citation
+    (ADR 0074 §1).
+
+    Two surfaces are checked, deduplicated per `(identifier, surface)`:
+    identifiers in the report body (`arXiv:…` or an `arxiv.org` URL) and
+    the identifier each `state["citations"]` entry asserts. The second is
+    the one `measure_citation_accuracy` cannot see at all.
+
+    **The behaviour that makes this a replacement rather than a second
+    opinion**: a report with no citations scores `None` with reason
+    `no_citations`, not `1.0`.
+
+    Args:
+        report: Synthesized report markdown from the workflow.
+        papers: `state["papers"]` — the only oracle for resolution.
+        citations: The workflow's `Citation` list.
+
+    Returns:
+        `CitationResolutionResult`, whose `score` is `None` exactly when
+        `total_citations` is 0.
+    """
+    result = measure_groundedness(report, papers, citations)
+    metric = result["citation_resolution_rate"]
+    return CitationResolutionResult(
+        score=metric["value"],
+        total_citations=metric["denominator"],
+        resolved=metric["numerator"],
+        excluded=metric["excluded"],
+        reason=metric["reason"],
+        unresolved=[
+            f"{claim['subject']} [{claim['reason']}]"
+            for claim in result["claims"]
+            if claim["kind"] == "citation" and claim["grounded"] is False
+        ],
+        check_version=result["check"]["check_version"],
+        spec_digest=result["check"]["spec_digest"],
     )
 
 
@@ -626,13 +791,25 @@ RETRIEVAL_RECALL_RUBRIC: Final[Rubric] = Rubric(
     prompt=RETRIEVAL_RECALL_SYSTEM_PROMPT,
 )
 
-#: Every rubric the research campaign runs, in the order a row records
-#: them. `citation_accuracy` is deliberately absent: it is pure regex and
-#: set membership, so it has no prompt to version — and claiming a rubric
-#: version for a deterministic metric would be provenance theatre.
+#: Every versioned instrument the research campaign runs, in the order a
+#: row records them. Three judges and one deterministic check.
+#:
+#: `groundedness` is here even though it calls no model, and that is the
+#: correction ADR 0074 asked for: the test that used to assert this set
+#: reasoned "a rubric version for a deterministic metric would be
+#: provenance theatre", which confuses *has no judge* with *has no
+#: definition*. The check publishes a version constant and a spec digest
+#: precisely so a change to it can be seen from a row. Its presence is
+#: also the mechanism by which swapping `citation_accuracy` for
+#: `citation_resolution_rate` refuses to compare against an older
+#: baseline instead of silently diffing across the swap.
+#:
+#: `citation_accuracy` remains absent: it publishes neither, so there is
+#: nothing a lock could hold it to.
 RESEARCH_RUBRICS: Final[tuple[Rubric, ...]] = (
     COMPLETENESS_RUBRIC,
     FAITHFULNESS_RUBRIC,
+    GROUNDEDNESS_CHECK,
     RETRIEVAL_RECALL_RUBRIC,
 )
 

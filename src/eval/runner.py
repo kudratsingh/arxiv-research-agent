@@ -1,7 +1,7 @@
 """Batch eval runner.
 
 Invokes the workflow on each benchmark query, scores the resulting
-report with the four metrics in `src/eval/metrics.py`, and writes a
+report with the five metrics in `src/eval/metrics.py`, and writes a
 layered output artifact:
 
     outputs/eval/<run_id>/
@@ -73,6 +73,7 @@ from src.eval.benchmark_queries import (
 from src.eval.metrics import (
     RESEARCH_RUBRICS,
     measure_citation_accuracy,
+    measure_citation_resolution,
     measure_completeness,
     measure_faithfulness,
     measure_retrieval_recall,
@@ -209,9 +210,9 @@ def _serialize_state(state: ResearchState) -> dict[str, Any]:
 def _compute_metrics(
     state: ResearchState, benchmark_query: BenchmarkQuery
 ) -> tuple[dict[str, Any], str | None]:
-    """Score a completed run with all four metrics. Never raises.
+    """Score a completed run with all five metrics. Never raises.
 
-    Each metric is computed inside its own guard: three of the four are
+    Each metric is computed inside its own guard: three of the five are
     LLM-as-judge calls, and a judge that times out, 429s past its
     retries, or truncates into invalid JSON must not cost us the
     workflow output we already paid for (ADR 0050). A failed metric
@@ -219,10 +220,16 @@ def _compute_metrics(
     that as "no score" — and its message is folded into the second
     return value.
 
+    The two citation metrics are both deterministic and both free.
+    `citation_resolution_rate` is the one the gate reads (ADR 0074);
+    `citation_accuracy` is computed alongside it because ADR 0070
+    forbids dropping a row field and the README block still averages it,
+    not because it is still trusted — see `metrics.py`.
+
     Returns:
         `(metrics, metrics_error)` where `metrics` maps every metric
         name to its result dict or `None`, and `metrics_error` is a
-        `"; "`-joined summary of the failures or `None` when all four
+        `"; "`-joined summary of the failures or `None` when all five
         scored.
     """
     report = state.get("draft_report", "")
@@ -231,6 +238,10 @@ def _compute_metrics(
     topics = benchmark_query["expected_topics"]
 
     scorers: list[tuple[str, Callable[[], dict[str, Any]]]] = [
+        (
+            "citation_resolution_rate",
+            lambda: dict(measure_citation_resolution(report, papers, citations)),
+        ),
         (
             "citation_accuracy",
             lambda: dict(measure_citation_accuracy(report, citations)),
@@ -423,6 +434,10 @@ def _run_and_score(
             # report to a free 1.0, which would publish a run that
             # produced nothing as a perfect one. Record it as the failure
             # it is and skip two wasted judge calls (ADR 0050).
+            # `measure_citation_resolution` would say `no_citations`
+            # rather than 1.0 here, which is the honest answer — but a
+            # run that produced no report is an error, not a score, and
+            # the record still belongs in the errored bucket.
             stop_reason = final_state.get("stop_reason") or "unknown"
             record["error"] = f"NoReportProduced: stop_reason={stop_reason}"
             log.warning(
@@ -519,6 +534,25 @@ def _get_count(metrics: Any, metric_name: str, field: str) -> int | None:
     return None
 
 
+def _get_reason(metrics: Any, metric_name: str) -> str | None:
+    """Safely pull a metric's `reason` string.
+
+    A `None` score is only honest if the row also says *why*. ADR 0074's
+    metrics carry a reason code beside an empty denominator
+    (`no_citations`), and dropping it on the way into `summary.jsonl`
+    would leave a reader unable to tell "nothing was measured" from
+    "the metric failed".
+    """
+    if not isinstance(metrics, dict):
+        return None
+    metric = metrics.get(metric_name)
+    if isinstance(metric, dict):
+        value = metric.get("reason")
+        if isinstance(value, str) and value:
+            return value
+    return None
+
+
 def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
     """Extract the fields that go into `summary.jsonl` / `summary.md`.
 
@@ -539,6 +573,14 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
     on a `--repeats 3` campaign three rows share. That split is what the
     regression differ groups on to aggregate repeats before diffing
     (ADR 0071); at one repeat the two are the same string.
+
+    The citation signal is three fields, added rather than substituted
+    because ADR 0070 forbids removing one: `citation_resolution_rate` is
+    the gated metric, `citations_checked` is its denominator, and
+    `citation_resolution_reason` says why the rate is `None` when it is.
+    A rate published without its denominator is the defect ADR 0074 was
+    written about, so the row carries all three or none of them.
+    `citation_accuracy` stays beside them as a diagnostic.
     """
     metrics = record.get("metrics")
     state = record.get("state") or {}
@@ -554,10 +596,21 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
         "scoring_sec": record.get("scoring_sec"),
         "error": record.get("error"),
         "metrics_error": record.get("metrics_error"),
+        "citation_resolution_rate": _get_score(metrics, "citation_resolution_rate"),
+        "citations_checked": _get_count(
+            metrics, "citation_resolution_rate", "total_citations"
+        ),
+        "citation_resolution_reason": _get_reason(
+            metrics, "citation_resolution_rate"
+        ),
         "citation_accuracy": _get_score(metrics, "citation_accuracy"),
         "completeness": _get_score(metrics, "completeness"),
         "faithfulness": _get_score(metrics, "faithfulness"),
         "retrieval_recall": _get_score(metrics, "retrieval_recall"),
+        # The legacy `[Author, Year]` tag count, still sourced from the
+        # legacy metric so its meaning does not change under a reader of
+        # an older summary. `citations_checked` above is the new metric's
+        # denominator and is the one to read.
         "total_citations": _get_count(
             metrics, "citation_accuracy", "total_citations"
         ),
@@ -623,6 +676,16 @@ def _mean(rows: list[dict[str, Any]], field: str) -> str:
     return f"{sum(values) / len(values):.3f}"
 
 
+def _scored(rows: list[dict[str, Any]], field: str) -> int:
+    """How many rows actually carry a value for `field`.
+
+    Printed beside a mean over a metric that can honestly be `None`: a
+    0.95 over three of twenty runs and a 0.95 over twenty are different
+    claims, and a bare mean cannot tell them apart (ADR 0074).
+    """
+    return sum(1 for row in rows if row.get(field) is not None)
+
+
 def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
     """Human-readable rollup with per-query table and aggregate row."""
     lines_summary = [_summary_line(r) for r in records]
@@ -655,8 +718,8 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
         "",
         "## Per-run results",
         "",
-        "| Run | Cit.Acc. | Complete. | Faithful. | Recall | Critic | Iter | Sec | $ | Calls | Judge $ | Error |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        "| Run | Cit.Res. | Cited | Cit.Acc. | Complete. | Faithful. | Recall | Critic | Iter | Sec | $ | Calls | Judge $ | Error |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for s in lines_summary:
         note = s["error"] or s["metrics_error"]
@@ -665,6 +728,12 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             + " | ".join(
                 [
                     s["record_id"],
+                    # The rate and the denominator it is over, side by
+                    # side: a `-` under Cit.Res. with a 0 beside it is
+                    # "this report cited nothing", which is a finding,
+                    # not a missing measurement.
+                    _fmt(s["citation_resolution_rate"]),
+                    _fmt(s["citations_checked"]),
                     _fmt(s["citation_accuracy"]),
                     _fmt(s["completeness"]),
                     _fmt(s["faithfulness"]),
@@ -687,7 +756,12 @@ def _summary_markdown(records: list[dict[str, Any]], run_id: str) -> str:
             "",
             "## Aggregates (successful runs only)",
             "",
-            f"- Mean citation accuracy: {_mean(successful, 'citation_accuracy')}",
+            f"- Mean citation resolution: "
+            f"{_mean(successful, 'citation_resolution_rate')} "
+            f"({_scored(successful, 'citation_resolution_rate')} of "
+            f"{len(successful)} runs cited anything)",
+            f"- Mean citation accuracy *(not gated)*: "
+            f"{_mean(successful, 'citation_accuracy')}",
             f"- Mean completeness: {_mean(successful, 'completeness')}",
             f"- Mean faithfulness: {_mean(successful, 'faithfulness')}",
             f"- Mean retrieval recall: {_mean(successful, 'retrieval_recall')}",
@@ -1056,7 +1130,13 @@ def _print_result(record: dict[str, Any]) -> None:
     cost = line["cost_usd"]
     judge_cost = line["judge_cost_usd"]
     parts = [
-        f"  cit={_fmt(line['citation_accuracy'])}",
+        # `cres` is the gated citation metric and `n` its denominator.
+        # `cit` is the legacy diagnostic, kept on the line so an operator
+        # watching a campaign can see the two disagree — which is the
+        # whole demonstration in ADR 0074.
+        f"  cres={_fmt(line['citation_resolution_rate'])}",
+        f"n={_fmt(line['citations_checked'])}",
+        f"cit={_fmt(line['citation_accuracy'])}",
         f"comp={_fmt(line['completeness'])}",
         f"faith={_fmt(line['faithfulness'])}",
         f"in {(record.get('elapsed_sec') or 0.0):.1f}s",

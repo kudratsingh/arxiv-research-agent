@@ -264,6 +264,11 @@ class TestSummaryLine:
             "error": None,
             "metrics_error": None,
             "metrics": {
+                "citation_resolution_rate": {
+                    "score": 0.5,
+                    "total_citations": 2,
+                    "reason": None,
+                },
                 "citation_accuracy": {"score": 0.8, "total_citations": 4},
                 "completeness": {"score": 0.6},
                 "faithfulness": {"score": 0.7},
@@ -287,6 +292,13 @@ class TestSummaryLine:
             "scoring_sec": 3.0,
             "error": None,
             "metrics_error": None,
+            # ADR 0074: the gated citation metric, its denominator, and
+            # the reason it would be `None`. Added beside
+            # `citation_accuracy` rather than replacing it, because ADR
+            # 0070 forbids removing a row field.
+            "citation_resolution_rate": 0.5,
+            "citations_checked": 2,
+            "citation_resolution_reason": None,
             "citation_accuracy": 0.8,
             "completeness": 0.6,
             "faithfulness": 0.7,
@@ -338,6 +350,78 @@ class TestSummaryLine:
         assert line["critic_score"] is None
 
 
+class TestTheHonestCitationMetricReachesTheRow:
+    """ADR 0074: a `null` rate is only honest with its reason beside it."""
+
+    def test_a_report_that_cited_nothing_carries_a_reason_not_a_score(self) -> None:
+        record = {
+            "query_id": "q1",
+            "metrics": {
+                "citation_resolution_rate": {
+                    "score": None,
+                    "total_citations": 0,
+                    "reason": "no_citations",
+                },
+                # The legacy metric awards its free 1.0 on the same run.
+                # Both land on the row; only one of them gates.
+                "citation_accuracy": {"score": 1.0, "total_citations": 0},
+            },
+        }
+        line = _summary_line(record)
+        assert line["citation_resolution_rate"] is None
+        assert line["citations_checked"] == 0
+        assert line["citation_resolution_reason"] == "no_citations"
+        assert line["citation_accuracy"] == 1.0
+
+    def test_a_failed_metric_leaves_no_reason_behind(self) -> None:
+        # A judge/scorer exception lands as `None` in the metrics dict.
+        # "The metric could not run" must not be dressed up as a reason
+        # code the check emitted.
+        line = _summary_line({"query_id": "q1", "metrics": {
+            "citation_resolution_rate": None,
+        }})
+        assert line["citation_resolution_rate"] is None
+        assert line["citations_checked"] is None
+        assert line["citation_resolution_reason"] is None
+
+    def test_the_markdown_prints_the_rate_beside_its_denominator(self) -> None:
+        records = [
+            {
+                "query_id": "q1",
+                "costs": {"total_cost_usd": 0.0, "call_count": 0},
+                "metrics": {
+                    "citation_resolution_rate": {
+                        "score": None,
+                        "total_citations": 0,
+                        "reason": "no_citations",
+                    },
+                    "citation_accuracy": {"score": 1.0, "total_citations": 0},
+                },
+            },
+            {
+                "query_id": "q2",
+                "costs": {"total_cost_usd": 0.0, "call_count": 0},
+                "metrics": {
+                    "citation_resolution_rate": {
+                        "score": 0.5,
+                        "total_citations": 4,
+                        "reason": None,
+                    },
+                    "citation_accuracy": {"score": 1.0, "total_citations": 2},
+                },
+            },
+        ]
+        md = runner_module._summary_markdown(records, "run-1")
+        assert "| Run | Cit.Res. | Cited |" in md
+        # A `-` under the rate with a 0 beside it is a finding, not a
+        # missing measurement.
+        assert "| q1 | - | 0 |" in md
+        assert "| q2 | 0.50 | 4 |" in md
+        # And the aggregate says how many runs it actually covered.
+        assert "Mean citation resolution: 0.500 (1 of 2 runs cited anything)" in md
+        assert "Mean citation accuracy *(not gated)*: 1.000" in md
+
+
 class TestResearchProvenance:
     """ADR 0070: a research row must be able to name what produced it."""
 
@@ -355,6 +439,10 @@ class TestResearchProvenance:
         assert set(block["rubric_versions"]) == {
             "completeness",
             "faithfulness",
+            # The deterministic groundedness check versions itself too
+            # (ADR 0074) — it is what makes a pre-swap row and a
+            # post-swap one refuse to be compared.
+            "groundedness",
             "retrieval_recall",
         }
 
@@ -530,7 +618,7 @@ def _stub_metrics(
     faithfulness_raises: BaseException | None = None,
     calls: list[str] | None = None,
 ) -> None:
-    """Replace all four metric functions with cheap deterministic stubs."""
+    """Replace all five metric functions with cheap deterministic stubs."""
 
     def _make(name: str, payload: dict[str, Any]) -> Any:
         def _fn(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
@@ -548,6 +636,23 @@ def _stub_metrics(
         _make(
             "citation_accuracy",
             {"score": 0.9, "total_citations": 2, "resolved": 2, "unresolved": []},
+        ),
+    )
+    monkeypatch.setattr(
+        runner_module,
+        "measure_citation_resolution",
+        _make(
+            "citation_resolution_rate",
+            {
+                "score": 0.5,
+                "total_citations": 2,
+                "resolved": 1,
+                "excluded": 0,
+                "reason": None,
+                "unresolved": ["arxiv:2311.05232 [citation_not_retrieved]"],
+                "check_version": "1.0.0",
+                "spec_digest": "deadbeef",
+            },
         ),
     )
     monkeypatch.setattr(
@@ -584,13 +689,14 @@ def _stub_metrics(
 
 
 class TestComputeMetrics:
-    def test_all_four_scored_and_no_error(
+    def test_all_five_scored_and_no_error(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         _stub_metrics(monkeypatch)
         metrics, error = _compute_metrics(_finished_state(), BENCHMARK_QUERIES[0])
         assert error is None
         assert set(metrics) == {
+            "citation_resolution_rate",
             "citation_accuracy",
             "completeness",
             "faithfulness",

@@ -18,6 +18,12 @@
         "version": "1.0.0"
       }
     ],
+    "groundedness": [
+      {
+        "sha256": "a8abd511c0e11b6d040314fbb3cd2d6850f53a49591982de47d9c5028cebf1f3",
+        "version": "1.0.0"
+      }
+    ],
     "retrieval_recall": [
       {
         "sha256": "97d86762111227f50e0ecd21c5b4c9b1cde4340a3daeaa19a4346e0839856e93",
