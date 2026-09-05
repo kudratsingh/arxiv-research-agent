@@ -97,6 +97,7 @@ from src.contracts.trajectory import (
     ReplayOrigin,
     RunScope,
     StoredTrajectoryEvent,
+    TraceRef,
     TrustClass,
     UsageDelta,
     fold_trajectory,
@@ -210,7 +211,17 @@ class ShadowRun:
         principal_key_id: str,
         cost_ceiling_usd: str,
         clock: Any = None,
+        store: InMemoryTrajectoryStore | None = None,
     ) -> None:
+        """
+        Args:
+            store: The ledger this run appends to. Defaults to a fresh
+                in-memory adapter, which is W05's whole storage story.
+                P0-WO08 passes a durable subclass that writes JSONL and
+                fans projections out after each accept, so the two work
+                orders share one recording path instead of forking the
+                event vocabulary in two places (ADR 0083).
+        """
         self.episode = episode
         self.runtime_run_id = runtime_run_id
         self.degraded = False
@@ -242,7 +253,7 @@ class ShadowRun:
             retention_policy_ref=retention_policy_ref(),
             experiment_arm=episode.shape.arm_id,
         )
-        self.store = InMemoryTrajectoryStore(clock=self._clock)
+        self.store = store if store is not None else InMemoryTrajectoryStore(clock=self._clock)
         self.store.register_run(self._scope)
 
     # -- identity helpers ------------------------------------------------
@@ -305,6 +316,7 @@ class ShadowRun:
             occurred_at=self._clock(),
             actor=actor,
             policy_ref=self._policy_ref,
+            trace_ref=self._trace_ref(),
             candidate_id=candidate_id,
             action_attempt_id=action_attempt_id,
             status=status,
@@ -316,6 +328,17 @@ class ShadowRun:
             replay=_replay_metadata(),
         )
         return self.store.append(event)
+
+    def _trace_ref(self) -> TraceRef | None:
+        """The active OTel span, or `None`.
+
+        `None` here: W05 imports no telemetry, and a shadow that reached
+        into the tracer would put an SDK on the import graph of a
+        deployment that has the switch off. P0-WO08's runtime bridge
+        overrides this to copy the live span (RFC 10 §16), which is the
+        one place the join between a trace and a trajectory is wanted.
+        """
+        return None
 
     def _governance(self) -> DataGovernance:
         """The governance block every event of this run carries.
