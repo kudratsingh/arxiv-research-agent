@@ -62,6 +62,10 @@ from src.graph.state import Citation, EvidenceClaim, PaperMetadata, ResearchStat
 from src.llm import call_llm_json
 from src.observability import get_logger
 from src.observability.costs import CostBudgetExceeded
+from src.observability.metrics import (
+    DEGRADATION_RUNG_MODEL_FALLBACK,
+    record_degradation_rung,
+)
 
 log = get_logger(__name__)
 
@@ -459,6 +463,14 @@ def run_verification(state: ResearchState) -> VerificationOutcome:
         log.warning(
             "verifier_llm_failed_fallback",
             extra={"error": str(exc)},
+        )
+        # Rung 5 of `docs/reliability.md` §5: the judge did not answer
+        # usably and a fallback outcome is substituted. The run
+        # continues and reports `succeeded` with a verification nobody
+        # performed, which is exactly the degradation the quality SLI
+        # was defined to see. ADR 0081.
+        record_degradation_rung(
+            rung=DEGRADATION_RUNG_MODEL_FALLBACK, component="verifier"
         )
         # Two abstention codes, not one: output the parser could not use
         # is a different operational problem from a provider that did not

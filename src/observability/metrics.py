@@ -498,12 +498,27 @@ DEGRADATION_RUNGS: Final[frozenset[str]] = frozenset(
 #: document is the authority; a component name is only ever minted by a
 #: call site, so one with no call site is dead vocabulary and a
 #: dashboard filter that will never match.
+#:
+#: The six agent names are the research graph's nodes, and a node is
+#: the granularity a runbook for §5's rungs 2, 3 and 5 is written at:
+#: "the planner substituted a default plan" and "the synthesizer
+#: retried a malformed response" are different incidents with
+#: different blast radii, while `reason` on the log line stays the
+#: free half that says which flavour. Each agent belongs to exactly
+#: one rung in practice, so ADR 0081's cardinality bound still holds
+#: at one emitted series per call site.
 DEGRADATION_COMPONENTS: Final[frozenset[str]] = frozenset(
     {
         "embedding_cache",
         "paper_cache",
+        "planner",
         "rate_limiter",
+        "reader",
+        "search",
         "sse_stream",
+        "supervisor",
+        "synthesizer",
+        "verifier",
         DEGRADATION_UNREGISTERED,
     }
 )

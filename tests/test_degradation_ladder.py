@@ -44,18 +44,31 @@ vocabulary — a filter that will never match.
 
 `DEGRADATION_RUNGS` is checked forward only, because the ladder is
 published in `docs/reliability.md` §5 and the *document* is the
-authority for what the rungs are. Three of them have no emitter in
-`src/` on this branch, and `_RUNGS_WITHOUT_EMITTERS` pins exactly which
-three with the lane that owns each. That set is asserted in both
-directions too, so wiring `src/agents/reader.py` turns this file red
-until the entry is removed — which is how the gap closes itself instead
-of living in a TODO nobody re-reads.
+authority for what the rungs are. `_RUNGS_WITHOUT_EMITTERS` pins the
+rungs that have no emitter in `src/`, with the lane that owns each, and
+is asserted in **both** directions — so instrumenting one turns this
+file red until its entry is deleted, and deleting an entry without
+instrumenting the rung turns it red too.
+
+**That set is empty as of CAP-08.** It held three rungs for exactly the
+length of one wave: WO-D5 (ADR 0081) put five of the eight rungs on the
+counter and left `reduced_tool`, `partial_results` and `model_fallback`
+alone, because every one of their call sites is in `src/agents/` and
+that lane's fence covered none of them. CAP-08 wired those nine sites,
+and the mechanism worked as designed — the wiring turned this file red,
+and the red was the instruction to correct `docs/reliability.md` §5's
+"On a metric?" column and §7's item 1 in the same change. Keep the set
+and its two directions: it is the shape the next unmeasured rung is
+declared in, and an empty dict is a stronger statement than a deleted
+one — it says every published rung is now counted somewhere.
 
 Mutation-check: adding `rung="anything"` at a call site fails
 `test_every_rung_a_call_site_names_is_registered`; deleting the
 `record_degradation_rung` call in `src/tools/embeddings.py` fails
-`test_every_registered_component_is_actually_emitted`; instrumenting the
-reader fails `test_the_uninstrumented_rungs_are_exactly_the_declared_ones`.
+`test_every_registered_component_is_actually_emitted`; deleting the one
+in `src/agents/reader.py` fails
+`test_the_uninstrumented_rungs_are_exactly_the_declared_ones` *and*
+`test_the_scan_finds_the_call_sites_it_is_supposed_to`.
 """
 
 from __future__ import annotations
@@ -132,29 +145,22 @@ _RUNGS_MEASURED_ELSEWHERE: Final[dict[str, str]] = {
 
 #: Rungs of `docs/reliability.md` §5 that nothing in `src/` emits on
 #: this branch, each with the lane that owns the only file it could be
-#: emitted from. This is a fence boundary, not a design gap: WO-D5 held
-#: a one-PR exception for `src/observability/**` and none at all for
-#: `src/agents/**`, and an honest five-of-eight beats a fence breach.
+#: emitted from.
+#:
+#: **Empty since CAP-08**, and deliberately kept rather than deleted.
+#: It held `reduced_tool`, `partial_results` and `model_fallback` for
+#: one wave — a fence boundary rather than a design gap, since WO-D5
+#: held a one-PR exception for `src/observability/**` and none at all
+#: for `src/agents/**`, and an honest five-of-eight beat a fence
+#: breach. CAP-08 wired all nine of those call sites and this file
+#: went red on the same commit, which is what the declaration is for.
+#: An empty dict now asserts something stronger than the three entries
+#: ever did: every rung the document publishes is counted somewhere.
 #:
 #: Asserted in **both** directions below. Removing a rung from here
 #: without instrumenting it fails; instrumenting one without removing it
 #: from here also fails.
-_RUNGS_WITHOUT_EMITTERS: Final[dict[str, str]] = {
-    DEGRADATION_RUNG_REDUCED_TOOL: (
-        "src/agents/search.py — capability lane (search_partial_arxiv_failure, "
-        "search_empty_keeping_prior_papers, search_mock_data_served, "
-        "search_query_cap_applied)"
-    ),
-    DEGRADATION_RUNG_PARTIAL_RESULTS: (
-        "src/agents/reader.py — capability lane (reader_degraded_to_abstract_only, "
-        "reader_paper_abstract_only). docs/reliability.md §5 calls this row the "
-        "named failure of the whole document, which is why it is written down "
-        "here rather than left to be noticed"
-    ),
-    DEGRADATION_RUNG_MODEL_FALLBACK: (
-        "src/agents/{supervisor,verifier,planner,synthesizer}.py — capability lane"
-    ),
-}
+_RUNGS_WITHOUT_EMITTERS: Final[dict[str, str]] = {}
 
 
 def _constant_value(node: ast.expr) -> str | None:
@@ -258,6 +264,12 @@ class TestTheScanItself:
         # against, and for the same reason.
         files = {where for where, _, _ in RUNGS_EMITTED}
         assert files == {
+            "src/agents/planner.py",
+            "src/agents/reader.py",
+            "src/agents/search.py",
+            "src/agents/supervisor.py",
+            "src/agents/synthesizer.py",
+            "src/agents/verifier.py",
             "src/api/auth.py",
             "src/api/streaming.py",
             "src/tools/embeddings.py",
@@ -392,9 +404,32 @@ class TestTheLadderMatchesTheDocument:
             "docs/reliability.md §5's 'On a metric?' column."
         )
 
+    def test_the_three_agent_side_rungs_are_on_the_counter(self) -> None:
+        # The set check above is symmetric, so it would also pass if the
+        # ladder and the declaration were both wrong in the same
+        # direction. This names CAP-08's three rungs directly, so
+        # un-wiring one is a failure that says which one — and it is
+        # the assertion that stops the *reader*'s rung, the row
+        # `docs/reliability.md` §5 calls its named failure, from
+        # quietly leaving the SLI again.
+        emitted = {value for _, _, value in RUNGS_EMITTED}
+        wired_by_cap_08 = {
+            DEGRADATION_RUNG_REDUCED_TOOL,
+            DEGRADATION_RUNG_PARTIAL_RESULTS,
+            DEGRADATION_RUNG_MODEL_FALLBACK,
+        }
+        assert wired_by_cap_08 <= emitted, (
+            f"these rungs left the counter: {sorted(wired_by_cap_08 - emitted)}. "
+            "They were wired by CAP-08 after a wave log-only; nothing else "
+            "measures them, so dropping one makes the quality SLI a lower "
+            "bound again without any other test noticing."
+        )
+
     def test_each_silent_rung_names_the_lane_that_owns_it(self) -> None:
         # An unmeasured rung is allowed; an unmeasured rung with nobody
-        # named for it is how a gap survives three waves.
+        # named for it is how a gap survives three waves. Vacuous while
+        # `_RUNGS_WITHOUT_EMITTERS` is empty, and kept for that reason:
+        # it is the shape the next unmeasured rung gets declared in.
         for rung, owner in _RUNGS_WITHOUT_EMITTERS.items():
             assert "src/" in owner and "lane" in owner, (
                 f"{rung} declares no owning file and lane: {owner!r}"
