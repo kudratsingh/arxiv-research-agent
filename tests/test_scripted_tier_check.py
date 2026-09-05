@@ -221,3 +221,154 @@ class TestCLI:
         path = tmp_path / "summary.jsonl"
         self._write(path, _clean(len(LEARNING_SCENARIOS)))
         assert check.main([str(path)]) == 0
+
+
+class TestTheResearchLane:
+    """`--lane research`, added beside the learning lane by WO-C1.
+
+    Two things are being asserted here, and the second is the one the
+    work order made a constraint. The research profile catches what a
+    scripted research campaign can get wrong; and adding it changed
+    nothing about the learning profile, which is the only gate in this
+    repository that has ever caught a regression.
+    """
+
+    def _row(self, query_id: str = "q0", **overrides: Any) -> dict[str, Any]:
+        row: dict[str, Any] = {
+            "record_id": query_id,
+            "query_id": query_id,
+            "tier": check.RESEARCH_SCRIPTED_TIER,
+            "error": None,
+            "metrics_error": None,
+            "expectation_failures": 0,
+            "cost_usd": 0.0,
+            "llm_calls": 0,
+            "judge_cost_usd": 0.0,
+            "judge_llm_calls": 0,
+            "total_cost_usd": 0.0,
+            "scripted_llm_calls": 8,
+            PROVENANCE_KEY: _provenance(tier=check.RESEARCH_SCRIPTED_TIER),
+        }
+        row.update(overrides)
+        return row
+
+    def _clean(self, count: int = 3) -> list[dict[str, Any]]:
+        return [self._row(f"q{i}") for i in range(count)]
+
+    def test_a_clean_research_campaign_has_no_problems(self) -> None:
+        problems = check.check_rows(
+            self._clean(3), expected_sessions=3, profile=check.RESEARCH_PROFILE
+        )
+        assert problems == []
+
+    def test_a_learning_tier_string_is_rejected_on_the_research_lane(self) -> None:
+        rows = self._clean(1)
+        rows[0]["tier"] = "scripted"
+        problems = check.check_rows(
+            rows, expected_sessions=1, profile=check.RESEARCH_PROFILE
+        )
+        assert any("research-scripted" in p for p in problems)
+
+    def test_a_campaign_that_never_ran_fails_despite_costing_nothing(self) -> None:
+        """The assertion no cost column can make.
+
+        Twenty records that each ran nothing spend nothing, so every
+        zero in the profile stays green. `scripted_llm_calls` is what
+        separates "free" from "absent".
+        """
+        rows = self._clean(1)
+        rows[0]["scripted_llm_calls"] = 0
+        problems = check.check_rows(
+            rows, expected_sessions=1, profile=check.RESEARCH_PROFILE
+        )
+        assert any("scripted_llm_calls" in p for p in problems)
+
+    def test_a_missing_proof_of_work_column_fails_too(self) -> None:
+        rows = self._clean(1)
+        del rows[0]["scripted_llm_calls"]
+        problems = check.check_rows(
+            rows, expected_sessions=1, profile=check.RESEARCH_PROFILE
+        )
+        assert any("scripted_llm_calls" in p for p in problems)
+
+    def test_spend_on_the_research_lane_still_fails(self) -> None:
+        rows = self._clean(1)
+        rows[0]["cost_usd"] = 0.01
+        rows[0]["total_cost_usd"] = 0.01
+        problems = check.check_rows(
+            rows, expected_sessions=1, profile=check.RESEARCH_PROFILE
+        )
+        assert any("cost_usd" in p for p in problems)
+        assert any("$0.0100" in p for p in problems)
+
+    def test_a_model_call_on_the_research_lane_still_fails(self) -> None:
+        rows = self._clean(1)
+        rows[0]["llm_calls"] = 1
+        problems = check.check_rows(
+            rows, expected_sessions=1, profile=check.RESEARCH_PROFILE
+        )
+        assert any("reached a model" in p for p in problems)
+
+    def test_an_unmet_structural_expectation_still_fails(self) -> None:
+        rows = self._clean(1)
+        rows[0]["expectation_failures"] = 2
+        problems = check.check_rows(
+            rows, expected_sessions=1, profile=check.RESEARCH_PROFILE
+        )
+        assert any("unmet structural expectation" in p for p in problems)
+
+    def test_the_research_lane_does_not_demand_a_learner_cost_column(self) -> None:
+        """A check that asserts an absent column is zero asserts nothing.
+
+        The research tier has no simulated learner, so listing
+        `learner_cost_usd` in its profile would look like a check and be
+        one only by accident.
+        """
+        assert "learner_cost_usd" not in check.RESEARCH_PROFILE.cost_fields
+        assert "learner_llm_calls" not in check.RESEARCH_PROFILE.call_fields
+
+    def test_the_default_lane_is_learning(self, tmp_path: Path) -> None:
+        # The CI step for the learning lane passes no --lane, so the
+        # default has to keep meaning what it always meant.
+        assert check.PROFILES[check._parse_args(["x.jsonl"]).lane] is (
+            check.LEARNING_PROFILE
+        )
+
+    def test_the_learning_profile_still_asserts_what_it_always_did(self) -> None:
+        """The constraint, stated as a test rather than as an intention."""
+        assert check.LEARNING_PROFILE.tier == "scripted"
+        assert check.LEARNING_PROFILE.cost_fields == check.COST_FIELDS
+        assert check.LEARNING_PROFILE.call_fields == check.CALL_FIELDS
+        assert check.LEARNING_PROFILE.expected_records == len(LEARNING_SCENARIOS)
+        # No proof-of-work column: the learning lane has no equivalent,
+        # and inventing one here would be a new assertion smuggled into
+        # a refactor.
+        assert check.LEARNING_PROFILE.proof_of_work_field is None
+
+    def test_the_cli_selects_the_research_profile(
+        self, tmp_path: Path, capsys: Any
+    ) -> None:
+        path = tmp_path / "summary.jsonl"
+        path.write_text(
+            "\n".join(json.dumps(row) for row in self._clean(2)) + "\n",
+            encoding="utf-8",
+        )
+        assert (
+            check.main([str(path), "--lane", "research", "--expected-sessions", "2"])
+            == 0
+        )
+        out = capsys.readouterr().out
+        assert "2/2 queries" in out
+
+    def test_the_research_default_record_count_is_the_benchmark_size(
+        self, tmp_path: Path
+    ) -> None:
+        from src.eval.benchmark_queries import BENCHMARK_QUERIES
+
+        path = tmp_path / "summary.jsonl"
+        path.write_text(
+            "\n".join(json.dumps(row) for row in self._clean(len(BENCHMARK_QUERIES)))
+            + "\n",
+            encoding="utf-8",
+        )
+        assert check.main([str(path), "--lane", "research"]) == 0

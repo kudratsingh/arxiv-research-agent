@@ -27,12 +27,15 @@ from src.eval.regression_diff import (
     RESEARCH_LANE,
     RESOURCE_THRESHOLDS,
     SCORE_QUANTA,
+    SCRIPTED_RESEARCH_LANE,
     Comparability,
     Decision,
     QueryDiff,
     RegressionReport,
     aggregate_repeats,
     check_comparability,
+    claim_outcomes,
+    compare_claims,
     diff_summaries,
     format_report,
     load_rows,
@@ -1046,11 +1049,19 @@ class TestLaneIsolation:
         # demoted `citation_accuracy`; the lane's informational set is
         # where a demoted metric lands. Neither was deleted — ADR 0070
         # forbids removing a row field, and both are still printed.
+        # WO-C1 added `claims_decided` to the informational set rather
+        # than to the gated one: on the funded lane retrieval is live, so
+        # the count of decided claims moves when arXiv does, and a band
+        # on it would gate the corpus rather than the product. The
+        # scripted lane, which is deterministic, does gate it.
         assert RESEARCH_LANE.informational_fields == (
             "citation_accuracy",
             "critic_score",
+            "claims_decided",
         )
         assert RESEARCH_LANE.cost_reference is None
+        # The funded lane is sampled, so it keeps the sample-size rules.
+        assert RESEARCH_LANE.deterministic is False
 
     def test_a_learning_field_never_enters_the_research_field_set(self) -> None:
         # The two summaries share `cost_usd` and `llm_calls` by design;
@@ -1808,3 +1819,343 @@ class TestCliStatuses:
         baseline.write_text(json.dumps(_line("q1", faithfulness=0.8)))
         current.write_text(json.dumps(_line("q1", faithfulness=0.8)))
         assert main([str(baseline), str(current), "--seed", "7"]) == EXIT_OK
+
+
+# ---------------------------------------------------------------------------
+# WO-C1: the per-claim paired comparison, and the scripted research lane
+# ---------------------------------------------------------------------------
+
+
+def _claim_row(
+    query_id: str,
+    claims: dict[str, bool],
+    **overrides: Any,
+) -> dict[str, Any]:
+    """One row carrying per-claim groundedness outcomes."""
+    row: dict[str, Any] = {
+        "query_id": query_id,
+        "record_id": query_id,
+        "citation_resolution_rate": (
+            sum(claims.values()) / len(claims) if claims else None
+        ),
+        "claims_decided": len(claims),
+        "expectation_failures": 0,
+        "iterations": 1,
+        "llm_calls": 0,
+        "cost_usd": 0.0,
+        "paired_outcomes": claims,
+        "error": None,
+    }
+    row.update(overrides)
+    return row
+
+
+class TestClaimOutcomes:
+    def test_claims_are_namespaced_by_task(self) -> None:
+        """The mock corpus's trap, and the reason for the prefix.
+
+        A `claim_id` digests the cited identifier alone, so the same
+        paper cited under two queries carries the same id. Without the
+        task prefix a 20-query campaign over 5 fixed papers would report
+        5 claims rather than 100.
+        """
+        rows = {
+            "q1": _claim_row("q1", {"citation:aaaa": True}),
+            "q2": _claim_row("q2", {"citation:aaaa": True}),
+        }
+        outcomes, flips = claim_outcomes(rows)
+        assert set(outcomes) == {"q1/citation:aaaa", "q2/citation:aaaa"}
+        assert flips == 0
+
+    def test_a_row_with_no_claims_contributes_none(self) -> None:
+        outcomes, _ = claim_outcomes({"q1": _line("q1")})
+        assert outcomes == {}
+
+    def test_a_non_boolean_verdict_is_dropped_rather_than_coerced(self) -> None:
+        # A verdict arriving as a string or a number is a row this
+        # module cannot read; guessing would put an invented outcome
+        # into a McNemar cell.
+        rows = {"q1": _claim_row("q1", {})}
+        rows["q1"]["paired_outcomes"] = {"citation:a": "true", "citation:b": 1, "citation:c": True}
+        outcomes, _ = claim_outcomes(rows)
+        assert set(outcomes) == {"q1/citation:c"}
+
+    def test_repeats_that_agree_keep_the_claim(self) -> None:
+        rows = [
+            _claim_row("q1", {"citation:aaaa": True}, record_id="q1"),
+            _claim_row("q1", {"citation:aaaa": True}, record_id="q1.r2"),
+        ]
+        aggregated = aggregate_repeats(rows)
+        outcomes, flips = claim_outcomes(aggregated)
+        assert outcomes == {"q1/citation:aaaa": True}
+        assert flips == 0
+
+    def test_repeats_that_disagree_drop_the_claim_and_count_it(self) -> None:
+        """A verdict an arm could not reproduce against itself is not
+        evidence about the other arm, and a majority vote would invent
+        one."""
+        rows = [
+            _claim_row("q1", {"citation:aaaa": True}, record_id="q1"),
+            _claim_row("q1", {"citation:aaaa": False}, record_id="q1.r2"),
+        ]
+        aggregated = aggregate_repeats(rows)
+        outcomes, flips = claim_outcomes(aggregated)
+        assert outcomes == {}
+        assert flips == 1
+
+
+class TestCompareClaims:
+    def test_no_claims_anywhere_is_none_not_an_empty_comparison(self) -> None:
+        """"Not computed" and "compared and found nothing" are different
+        facts, and a campaign written before WO-C1 is the first."""
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.9)}
+        assert compare_claims(baseline, baseline) is None
+
+    def test_identical_arms_are_wholly_concordant(self) -> None:
+        rows = {"q1": _claim_row("q1", {"c:a": True, "c:b": False})}
+        comparison = compare_claims(rows, rows)
+        assert comparison is not None
+        assert comparison.outcomes.matched == 2
+        assert comparison.test is not None
+        assert comparison.test.concordant == 2
+        assert comparison.test.p_value == 1.0
+        assert comparison.adverse == 0
+
+    def test_an_unmatched_claim_is_counted_and_excluded(self) -> None:
+        """WO-A16's rule, applied where it was always meant to land: an
+        id one arm never asserted is not evidence about the other."""
+        baseline = {"q1": _claim_row("q1", {"c:a": True, "c:gone": True})}
+        current = {"q1": _claim_row("q1", {"c:a": True, "c:new": False})}
+        comparison = compare_claims(baseline, current)
+        assert comparison is not None
+        assert comparison.outcomes.matched == 1
+        assert comparison.outcomes.unmatched_baseline == ("q1/c:gone",)
+        assert comparison.outcomes.unmatched_candidate == ("q1/c:new",)
+
+    def test_the_wilson_intervals_describe_the_matched_set(self) -> None:
+        baseline = {"q1": _claim_row("q1", {"c:a": True, "c:b": True})}
+        current = {"q1": _claim_row("q1", {"c:a": True, "c:b": False})}
+        comparison = compare_claims(baseline, current)
+        assert comparison is not None
+        assert (comparison.baseline_grounded, comparison.baseline_total) == (2, 2)
+        assert (comparison.candidate_grounded, comparison.candidate_total) == (1, 2)
+        assert comparison.baseline_interval.low < 1.0
+
+
+class TestTheDeterministicLaneGatesOnOneClaim:
+    def _rows(self, claims: dict[str, bool]) -> dict[str, dict[str, Any]]:
+        return {"q1": _claim_row("q1", claims)}
+
+    def test_one_lost_claim_is_a_rollback(self) -> None:
+        lane = SCRIPTED_RESEARCH_LANE
+        baseline = self._rows({f"c:{i}": True for i in range(10)})
+        current = self._rows({f"c:{i}": i != 0 for i in range(10)})
+        report = diff_summaries(baseline, current, lane=lane)
+        # The rate moved by exactly the flat epsilon, which `_significant`
+        # requires a move to *exceed* — so the per-metric bands are
+        # green and only the pairing fires. That gap is the reason the
+        # paired path was wired.
+        assert report["has_regressions"] is False
+        assert report["decision"].verdict == "ROLLBACK"
+        assert "fixed function of the code" in report["decision"].reasons[0]
+
+    def test_a_gained_claim_is_not_a_rollback(self) -> None:
+        lane = SCRIPTED_RESEARCH_LANE
+        baseline = self._rows({f"c:{i}": i != 0 for i in range(10)})
+        current = self._rows({f"c:{i}": True for i in range(10)})
+        report = diff_summaries(baseline, current, lane=lane)
+        assert report["decision"].verdict == "PROMOTE"
+
+    def test_an_unchanged_deterministic_campaign_promotes(self) -> None:
+        """A deterministic lane may promote on 20 items.
+
+        The sample-size rule is about sampling noise and this lane has
+        none, so telling a reader the comparison "could not have found a
+        regression" would be false.
+        """
+        lane = SCRIPTED_RESEARCH_LANE
+        rows = {
+            f"q{i}": _claim_row(f"q{i}", {f"c:{j}": True for j in range(5)})
+            for i in range(20)
+        }
+        report = diff_summaries(rows, rows, lane=lane)
+        assert report["decision"].verdict == "PROMOTE"
+        assert "deterministic" in report["decision"].reasons[0]
+
+    def test_the_sampled_research_lane_still_holds_on_the_same_data(self) -> None:
+        """The other half of the same rule: nothing about the funded
+        lane's caution changed."""
+        rows = {
+            f"q{i}": _claim_row(f"q{i}", {f"c:{j}": True for j in range(5)})
+            for i in range(20)
+        }
+        report = diff_summaries(rows, rows, lane=RESEARCH_LANE)
+        assert report["decision"].verdict == "HOLD"
+
+    def test_a_single_flip_on_the_sampled_lane_is_not_significant(self) -> None:
+        """One discordant pair cannot reach p < 0.05 under the exact
+        binomial test, and the sampled lane waits for significance."""
+        baseline = {"q1": _claim_row("q1", {f"c:{i}": True for i in range(10)})}
+        current = {"q1": _claim_row("q1", {f"c:{i}": i != 0 for i in range(10)})}
+        report = diff_summaries(baseline, current, lane=RESEARCH_LANE)
+        assert report["decision"].verdict != "ROLLBACK"
+
+    def test_a_significant_adverse_move_rolls_back_the_sampled_lane(self) -> None:
+        # Six discordant pairs all in one direction: 2 * (1/2**6) =
+        # 0.031, below alpha. Spread over 100 claims so the aggregate
+        # rate moves only 0.06 and stays inside the flat band —
+        # otherwise the per-metric gate fires first and this test proves
+        # nothing about the pairing.
+        baseline = {"q1": _claim_row("q1", {f"c:{i}": True for i in range(100)})}
+        current = {"q1": _claim_row("q1", {f"c:{i}": i >= 6 for i in range(100)})}
+        report = diff_summaries(baseline, current, lane=RESEARCH_LANE)
+        assert report["has_regressions"] is False
+        assert report["decision"].verdict == "ROLLBACK"
+        assert "McNemar" in report["decision"].reasons[0]
+
+
+class TestClaimsSection:
+    def test_it_reports_the_denominator_and_what_it_can_carry(self) -> None:
+        lane = SCRIPTED_RESEARCH_LANE
+        rows = {
+            f"q{i}": _claim_row(f"q{i}", {f"c:{j}": True for j in range(5)})
+            for i in range(20)
+        }
+        markdown = format_report(diff_summaries(rows, rows, lane=lane))
+        assert "Per-claim groundedness (paired)" in markdown
+        assert "**Matched**: 100 claim(s)" in markdown
+        # The sentence the work order asked for as a deliverable: how
+        # many pairs the lane would need, as a number.
+        assert "**77**" in markdown and "**155**" in markdown
+        assert "carries **100**" in markdown
+        # And the honesty about what a p-value means on a fixed campaign.
+        assert "not as inference" in markdown
+
+    def test_a_report_without_claims_renders_no_section(self) -> None:
+        baseline = {"q1": _line("q1", citation_resolution_rate=0.9)}
+        markdown = format_report(diff_summaries(baseline, baseline))
+        assert "Per-claim groundedness" not in markdown
+
+    def test_a_hand_built_report_without_the_key_still_formats(self) -> None:
+        """`RegressionReport` gained a key; a caller that predates it
+        must not crash the renderer."""
+        report: Any = {
+            "diffs": [],
+            "has_regressions": False,
+            "lane": RESEARCH_LANE,
+            "threshold": DEFAULT_THRESHOLD,
+            "allow_removed": False,
+            "unscored": {},
+            "aggregate_baseline": {},
+            "aggregate_current": {},
+            "aggregate_deltas": {},
+            "comparability": Comparability(True, (), ()),
+            "statistics": {},
+            "reliability": [],
+            "decision": Decision(verdict="HOLD", reasons=("no data",)),
+            "paired_tasks": 0,
+            "repeats": 1,
+        }
+        assert "HOLD" in format_report(report)
+
+
+class TestScriptedResearchLane:
+    def test_it_carries_no_judged_metric(self) -> None:
+        """Three of the funded lane's metrics are paid judges and this
+        campaign runs none; a permanently-null column is noise."""
+        for field in ("completeness", "faithfulness", "retrieval_recall"):
+            assert field not in SCRIPTED_RESEARCH_LANE.tabulated_fields
+
+    def test_every_band_is_zero_tolerance(self) -> None:
+        for field, band in SCRIPTED_RESEARCH_LANE.resource_thresholds.items():
+            assert band == (0.0, 0.0), field
+
+    def test_a_single_lost_claim_denominator_is_a_regression(self) -> None:
+        """A rate that holds while its denominator drains is the way a
+        groundedness number stays green as the signal leaves it."""
+        lane = SCRIPTED_RESEARCH_LANE
+        baseline = {"q1": _claim_row("q1", {f"c:{i}": True for i in range(5)})}
+        current = {"q1": _claim_row("q1", {f"c:{i}": True for i in range(4)})}
+        report = diff_summaries(baseline, current, lane=lane)
+        assert report["has_regressions"] is True
+        assert report["decision"].verdict == "ROLLBACK"
+
+    def test_one_extra_unmet_expectation_is_a_regression(self) -> None:
+        lane = SCRIPTED_RESEARCH_LANE
+        baseline = {"q1": _claim_row("q1", {"c:a": True})}
+        current = {"q1": _claim_row("q1", {"c:a": True}, expectation_failures=1)}
+        report = diff_summaries(baseline, current, lane=lane)
+        assert report["has_regressions"] is True
+
+    def test_it_is_selectable_from_the_cli(self, tmp_path: Path) -> None:
+        baseline = tmp_path / "b.jsonl"
+        current = tmp_path / "c.jsonl"
+        row = _claim_row("q1", {"c:a": True})
+        baseline.write_text(json.dumps(row) + "\n")
+        current.write_text(json.dumps(row) + "\n")
+        assert (
+            main([str(baseline), str(current), "--lane", "research-scripted"])
+            == EXIT_OK
+        )
+
+    def test_a_scripted_summary_and_a_funded_one_are_incomparable(
+        self, tmp_path: Path
+    ) -> None:
+        """The tier strings differ, and `tier` is a comparability field —
+        so a canned report can never be diffed against a real one."""
+        scripted = {
+            "q1": _claim_row(
+                "q1", {"c:a": True}, provenance={"tier": "research-scripted"}
+            )
+        }
+        funded = {"q1": _claim_row("q1", {"c:a": True}, provenance={"tier": "research"})}
+        comparability = check_comparability(scripted, funded)
+        assert comparability.comparable is False
+        assert any("`tier` moved" in c for c in comparability.conflicts)
+
+
+class TestClaimsSectionEdges:
+    def test_a_comparison_with_no_shared_claim_says_so(self) -> None:
+        baseline = {"q1": _claim_row("q1", {"c:only-baseline": True})}
+        current = {"q2": _claim_row("q2", {"c:only-current": True})}
+        markdown = format_report(
+            diff_summaries(baseline, current, lane=SCRIPTED_RESEARCH_LANE)
+        )
+        assert "no test was computed" in markdown
+
+    def test_irreproducible_claims_are_reported(self) -> None:
+        """A flip between an arm's own repeats is a finding, not a
+        rounding error — especially on a lane that claims determinism."""
+        rows = [
+            _claim_row("q1", {"c:a": True}, record_id="q1"),
+            _claim_row("q1", {"c:a": False}, record_id="q1.r2"),
+            _claim_row("q1", {"c:b": True}, record_id="q1.r3"),
+        ]
+        aggregated = aggregate_repeats(rows, lane=SCRIPTED_RESEARCH_LANE)
+        markdown = format_report(
+            diff_summaries(aggregated, aggregated, lane=SCRIPTED_RESEARCH_LANE)
+        )
+        assert "**Irreproducible**: 2 claim(s)" in markdown
+
+    def test_the_sampled_lane_reads_the_p_value_at_alpha(self) -> None:
+        rows = {"q1": _claim_row("q1", {f"c:{i}": True for i in range(5)})}
+        markdown = format_report(diff_summaries(rows, rows, lane=RESEARCH_LANE))
+        assert "Read at alpha=0.05" in markdown
+        # And, below 200 datapoints, the caveat the sampled lane owes.
+        assert "approximate at n=" in markdown
+
+    def test_a_recovered_claim_is_reported_as_a_gain(self) -> None:
+        baseline = {"q1": _claim_row("q1", {"c:a": False})}
+        current = {"q1": _claim_row("q1", {"c:a": True})}
+        report = diff_summaries(baseline, current, lane=SCRIPTED_RESEARCH_LANE)
+        assert report["claims"] is not None
+        assert report["claims"].recovered == 1
+        assert report["claims"].adverse == 0
+
+    def test_the_accessors_are_zero_when_no_test_ran(self) -> None:
+        baseline = {"q1": _claim_row("q1", {"c:only-baseline": True})}
+        current = {"q2": _claim_row("q2", {"c:only-current": True})}
+        report = diff_summaries(baseline, current, lane=SCRIPTED_RESEARCH_LANE)
+        assert report["claims"] is not None
+        assert report["claims"].test is None
+        assert (report["claims"].adverse, report["claims"].recovered) == (0, 0)

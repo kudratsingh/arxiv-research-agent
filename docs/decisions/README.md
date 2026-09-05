@@ -437,6 +437,20 @@ never renumbered.
   and no citations is `None` with a reason code. Produces the per-claim
   binary outcome ADR 0071's paired path needs, at zero spend and with no
   drift when a model is upgraded.
+- [0075](0075-scripted-research-tier-and-paired-claims.md) — Give the
+  research lane a free gate, and run the paired path on it.
+  `src/eval/simulate_research.py` replays the whole research benchmark
+  against the real compiled graph under `USE_MOCK_DATA=true` with a
+  scripted model surface, for `$0.0000` and about five seconds — the
+  research lane's counterpart of the scripted tier the learning lane has
+  had since WO-W10, and the first per-PR gate that lane has ever had.
+  Each record emits ADR 0074's per-claim `paired_outcomes`, and
+  `regression_diff` pairs two campaigns on them with ADR 0071's McNemar
+  path — the caller that apparatus never had. Adds a third, deterministic
+  lane: one adverse claim is a regression, and an unchanged comparison
+  may promote rather than being told it was underpowered, because a
+  fixed function of the code has no sampling noise to be underpowered
+  against.
 
 ## When to write an ADR
 

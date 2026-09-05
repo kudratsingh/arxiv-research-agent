@@ -70,6 +70,7 @@ from src.eval.benchmark_queries import (
     RESEARCH_DATASET_VERSION,
     BenchmarkQuery,
 )
+from src.eval.groundedness import measure_groundedness, paired_outcomes
 from src.eval.metrics import (
     RESEARCH_RUBRICS,
     measure_citation_accuracy,
@@ -276,6 +277,41 @@ def _compute_metrics(
     return metrics, ("; ".join(failures) if failures else None)
 
 
+def _claim_outcomes(state: ResearchState) -> dict[str, bool] | None:
+    """Per-claim groundedness verdicts for one finished run.
+
+    `{claim_id: grounded}` from `groundedness.paired_outcomes` — the
+    shape `src/eval/stats.py`'s McNemar path consumes, and the follow-up
+    ADR 0074 left open when it noted that "nothing hands it one yet".
+    `regression_diff` reads it off the summary row, namespaces each
+    claim by its query and pairs the two arms on it (WO-C1).
+
+    Computed rather than read off `_compute_metrics`: that function's
+    citation entry goes through `measure_citation_resolution`, which
+    projects the result down to a rate and drops the claim list. Calling
+    the deterministic check a second time costs microseconds, no
+    network and no model, and leaves `citation_resolution_rate`
+    byte-identical to what it was — which matters, because changing a
+    *score* here would rebaseline every campaign.
+
+    Returns `None` when the check itself fails, so a row can say "not
+    computed" rather than "computed and empty". Never raises: a scorer
+    must not cost the campaign the paid workflow output it already has
+    (ADR 0050).
+    """
+    try:
+        return paired_outcomes(
+            measure_groundedness(
+                str(state.get("draft_report") or ""),
+                list(state.get("papers") or []),
+                list(state.get("citations") or []),
+            )
+        )
+    except Exception:  # noqa: BLE001 — isolation is the point
+        log.exception("eval_metric_failed", extra={"metric": "groundedness"})
+        return None
+
+
 def _cost_delta(
     after: dict[str, Any], before: dict[str, Any]
 ) -> dict[str, Any]:
@@ -378,6 +414,7 @@ def _run_and_score(
         "judge_costs": None,
         "state": None,
         "metrics": None,
+        "groundedness": None,
         "metrics_error": None,
         "error": None,
         # Captured here, at record creation, rather than when the
@@ -452,6 +489,7 @@ def _run_and_score(
 
         scoring_start = time.monotonic()
         metrics, metrics_error = _compute_metrics(final_state, benchmark_query)
+        record["groundedness"] = _claim_outcomes(final_state)
         record["scoring_sec"] = time.monotonic() - scoring_start
         record["metrics"] = metrics
         record["metrics_error"] = metrics_error
@@ -627,6 +665,18 @@ def _summary_line(record: dict[str, Any]) -> dict[str, Any]:
         ),
         "loop_iterations": state.get("loop_iterations"),
         "stop_reason": state.get("stop_reason"),
+        # `{claim_id: grounded}` for every claim the deterministic check
+        # decided, added by WO-C1 so the funded lane's rows can be
+        # compared per claim rather than only per mean. A record written
+        # before it carries `None`, which `regression_diff` reads as "no
+        # claims" rather than as an empty comparison — additive, so no
+        # existing field moved and no campaign was rebaselined.
+        "paired_outcomes": record.get("groundedness"),
+        "claims_decided": (
+            None
+            if not isinstance(record.get("groundedness"), dict)
+            else len(record["groundedness"])
+        ),
         PROVENANCE_KEY: record.get(PROVENANCE_KEY) or {},
     }
 
