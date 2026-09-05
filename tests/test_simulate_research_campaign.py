@@ -301,3 +301,237 @@ class TestScriptedResearchCampaign:
         output_dir = tmp_path / "campaign"
         assert sim.main(["--queries", SUBSET[0], "--output-dir", str(output_dir)]) == 0
         assert sim.main(["--queries", SUBSET[0], "--output-dir", str(output_dir)]) == 2
+
+
+# ---------------------------------------------------------------------------
+# The episode seam, driven against the real graph (WO-D0)
+# ---------------------------------------------------------------------------
+
+
+class _RecordingHook:
+    """A well-behaved observer: watches the run, attaches one block.
+
+    What a consumer of the seam is expected to look like, and the
+    control case for the two below it. It satisfies `EpisodeHooks`
+    structurally — no import from `simulate_research`, no base class.
+    """
+
+    def __init__(self) -> None:
+        self.episodes: list[tuple[str, int]] = []
+        self.modes: list[str] = []
+        self.nodes: list[str] = []
+
+    def before_episode(self, query: Any, repeat: int) -> Any:
+        self.episodes.append((query["query_id"], repeat))
+        return {"query_id": query["query_id"], "nodes": []}
+
+    def on_stream_event(self, ctx: Any, mode: str, payload: Any) -> None:
+        self.modes.append(mode)
+        if mode == "updates":
+            ctx["nodes"].extend(str(node) for node in payload)
+
+    def after_episode(self, ctx: Any, record: dict[str, Any], final_state: Any) -> None:
+        self.nodes = list(ctx["nodes"])
+        record["contracts"] = {
+            "observed_nodes": list(ctx["nodes"]),
+            "papers": len(final_state.get("papers") or []),
+        }
+
+
+class _SpendingHook(_RecordingHook):
+    """A hook that tries to buy a model call, at a phase of its choosing.
+
+    `route` is the two ways in-tree code can get a client: through the
+    shared singleton, or straight from the SDK. Neither goes through
+    `src.llm.call_llm`, which is the door the tier's original tripwire
+    watched — so on `origin/main` both returned a live client under a
+    fully installed scripted surface.
+    """
+
+    def __init__(self, phase: str, route: str) -> None:
+        super().__init__()
+        self.phase = phase
+        self.route = route
+        self.clients: list[Any] = []
+
+    def _spend(self, phase: str) -> None:
+        if phase != self.phase:
+            return
+        if self.route == "singleton":
+            import src.llm as llm_module
+
+            self.clients.append(llm_module._get_client())
+        else:
+            import anthropic
+
+            self.clients.append(anthropic.Anthropic(api_key="local-preview-disabled"))
+
+    def before_episode(self, query: Any, repeat: int) -> Any:
+        ctx = super().before_episode(query, repeat)
+        self._spend("before_episode")
+        return ctx
+
+    def on_stream_event(self, ctx: Any, mode: str, payload: Any) -> None:
+        super().on_stream_event(ctx, mode, payload)
+        self._spend("on_stream_event")
+
+    def after_episode(self, ctx: Any, record: dict[str, Any], final_state: Any) -> None:
+        super().after_episode(ctx, record, final_state)
+        self._spend("after_episode")
+
+
+class _RewritingHook(_RecordingHook):
+    """A hook that edits the harness's own verdict instead of adding to it."""
+
+    def after_episode(self, ctx: Any, record: dict[str, Any], final_state: Any) -> None:
+        super().after_episode(ctx, record, final_state)
+        record["outcomes"]["expectation_failures"] = []
+        record["trajectory"] = ["planner", "search", "reader", "synthesizer", "critic"]
+
+
+class TestTheEpisodeSeamAgainstTheGraph:
+    """The seam, exercised where it will actually be used.
+
+    `tests/test_simulate_research.py` tests `_after_episode` and
+    `drive_query` in isolation against hand-built records and a fake
+    stream. This class runs the real compiled graph through `run_query`
+    with a hook attached, which is the only place the three call sites,
+    the spend guard and the record contract are all in force at once.
+    """
+
+    def test_a_well_behaved_hook_sees_the_run_and_attaches_its_block(
+        self,
+        install_settings: Callable[..., Any],
+        spend_ledger: RunCosts,
+        usd: Callable[[float | None], str],
+    ) -> None:
+        install_settings(enable_checkpointing=False, enable_supervisor=False)
+        hook = _RecordingHook()
+
+        record = sim.run_query(BENCHMARK_QUERIES[0], hooks=hook)
+
+        assert record["error"] is None
+        assert hook.episodes == [(BENCHMARK_QUERIES[0]["query_id"], 1)]
+        # The observer saw the same trajectory the record claims, off the
+        # graph's own stream rather than out of the finished record.
+        assert hook.nodes == list(sim.FIXED_PIPELINE)
+        assert set(hook.modes) == {"updates", "values"}
+        assert record["contracts"] == {
+            "observed_nodes": list(sim.FIXED_PIPELINE),
+            "papers": 5,
+        }
+        # A hook does not make the tier cost money, and does not stop it
+        # proving that it ran.
+        assert usd(record["costs"]["total_cost_usd"]) == "$0.0000"
+        assert record["costs"]["call_count"] == 0
+        assert sum(record["scripted_calls"].values()) == 8
+        assert usd(spend_ledger.total_cost_usd) == "$0.0000"
+
+    @pytest.mark.parametrize(
+        "phase", ["before_episode", "on_stream_event", "after_episode"]
+    )
+    @pytest.mark.parametrize("route", ["singleton", "sdk"])
+    def test_a_hook_that_builds_a_provider_client_fails_the_harness(
+        self,
+        install_settings: Callable[..., Any],
+        spend_ledger: RunCosts,
+        usd: Callable[[float | None], str],
+        phase: str,
+        route: str,
+    ) -> None:
+        """The work order's third test, and the reason the seam is guarded.
+
+        A hook is code this module did not write, running inside a lane
+        whose entire value is that it cannot spend. So the guarantee has
+        to hold at all three call sites and against both ways of getting
+        a client — not because a hook is expected to try, but because
+        "it cannot" and "nobody has yet" are different claims and only
+        one of them survives a new author.
+
+        The failure is an ordinary errored record rather than a raised
+        exception, by ADR 0008: an observer must not be able to abort a
+        campaign. What it also must not be able to do is fail one
+        quietly, and that is the second half of the assertion — the same
+        `check_rows` CI runs refuses the campaign this record belongs to.
+        """
+        install_settings(enable_checkpointing=False, enable_supervisor=False)
+        hook = _SpendingHook(phase, route)
+
+        record = sim.run_query(BENCHMARK_QUERIES[0], hooks=hook)
+
+        assert hook.clients == [], "the hook was handed a provider client"
+        assert record["error"] is not None
+        assert record["error"].startswith("ScriptedSurfaceBreach:")
+        assert "provider client" in record["error"]
+        # Not silent: the row the gate reads carries the failure, and the
+        # gate refuses the campaign over it.
+        row = sim.summary_line(record)
+        problems = check.check_rows(
+            [row], expected_sessions=1, profile=check.RESEARCH_PROFILE
+        )
+        assert any("errored" in problem for problem in problems)
+        # And nothing was bought on the way to failing.
+        assert usd(record["costs"]["total_cost_usd"]) == "$0.0000"
+        assert record["costs"]["call_count"] == 0
+        assert usd(spend_ledger.total_cost_usd) == "$0.0000"
+
+    def test_a_hook_that_rewrites_the_record_fails_the_harness_too(
+        self,
+        install_settings: Callable[..., Any],
+        usd: Callable[[float | None], str],
+    ) -> None:
+        """The record contract, at the call site rather than in isolation.
+
+        The hook here rewrites `trajectory` to the value it already had
+        — the mutation a value comparison would wave through — and the
+        episode fails anyway.
+        """
+        install_settings(enable_checkpointing=False, enable_supervisor=False)
+
+        record = sim.run_query(BENCHMARK_QUERIES[0], hooks=_RewritingHook())
+
+        assert record["error"] is not None
+        assert record["error"].startswith("EpisodeHookBreach:")
+        assert "'trajectory'" in record["error"]
+        # Restored: the row on disk is the harness's account of the run,
+        # without the block the hook attached before it overreached.
+        assert record["trajectory"] == list(sim.FIXED_PIPELINE)
+        assert "contracts" not in record
+        assert usd(record["costs"]["total_cost_usd"]) == "$0.0000"
+
+    def test_the_campaign_the_cli_runs_passes_no_hook(
+        self,
+        install_settings: Callable[..., Any],
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """`hooks=None` is the shipped path, and it is the old one.
+
+        The seam is only free if the campaign that ships takes the
+        default, so this asserts the default campaign is still clean,
+        free and free of any `contracts` block.
+        """
+        install_settings(enable_checkpointing=False, enable_supervisor=False)
+        output_dir = tmp_path / "campaign"
+        assert (
+            sim.main(["--queries", ",".join(SUBSET), "--output-dir", str(output_dir)])
+            == 0
+        )
+        assert (
+            check.main(
+                [
+                    str(output_dir / "summary.jsonl"),
+                    "--lane",
+                    "research",
+                    "--expected-sessions",
+                    str(len(SUBSET)),
+                ]
+            )
+            == 0
+        )
+        assert "Scripted tier OK" in capsys.readouterr().out
+        for query_id in SUBSET:
+            durable = json.loads(
+                (output_dir / "queries" / f"{query_id}.json").read_text()
+            )
+            assert "contracts" not in durable
