@@ -304,6 +304,77 @@ Recorded because the builders corrected them with measurement, not opinion.
   `anthropic_api_key` as a canary id and forbidden-artifact regex — the field
   *name* as data. Editing them would have broken the adversarial suite.
 
+## Wave D — CLOSED 2026-09-05
+
+Eight work orders plus the frontend series, merged as PRs #204–#223 across a
+repository three agent sessions were writing to simultaneously. Verified on the
+composed tree at `e8aa201`: **4798 passed**, 54 skipped; branch coverage
+**93.59%** (floor 89); property 226, fault 188+2, e2e 34, security 393,
+contract 308; mypy strict and ruff clean across 128 source files.
+
+| WO | Closed |
+|---|---|
+| D0 | `EpisodeHooks` seam — unblocked another lane's W05 |
+| D1 | The quote path stops waiting on a caller |
+| D2 | The last false claim gets a test; screenshots bound to a spec |
+| D3 | The last two plain-string secrets become `SecretStr` |
+| D4 | `redact_text` becomes a secret rule, not a shape rule |
+| D5 | `research_degradations_total` — the quality SLI is computable |
+| INF-1 | The observability overlay becomes usable |
+| S2 / S3 / S2b | The plan editor and briefing reachable; a failed approval speaks; the CLS debt paid |
+
+### What the wave found
+
+- **The zero-spend tripwire did not cover client construction.** Probed rather
+  than assumed: under a fully installed `scripted_surface`, both
+  `src.llm._get_client()` and `anthropic.Anthropic(api_key=...)` returned a
+  **live client** — only `call_llm` was refused, because `call_llm` is the only
+  door a graph *node* has and hook code is not a node.
+- **A malformed inbound API key was printed into startup logs.**
+  `parse_api_keys` raised `f"...entry {entry!r} missing 'name:secret'"` — and an
+  entry with no colon *is* a bare secret. Masking the field closes nothing there.
+- **`redact_text` was a shape rule, not a secret rule** — `sk-` redacted,
+  `gw_live_…` passed untouched.
+- **The quality SLI had nothing behind it.** Six of eight degradation rungs
+  were log-only; `docs/reliability.md` §3 now carries a Quality row.
+- **28 dashboard panels rendered against a dead datasource with no error
+  banner** — an idle-looking fleet. The guarding test could not tell a working
+  dashboard from a blank one.
+- **`TRACE_SAMPLE_RATIO` was hard-coded**, so `TRACE_SAMPLE_RATIO=1.0` was
+  silently ignored.
+- **A plan approval could fail silently at the moment money is committed** —
+  the panel asked `phase === "submit_failed"`, a phase a review failure never
+  produces, and a liveness poll erased the explanation ~20 s later.
+
+### Two premises this coordinator got wrong
+
+- **"Everything exports to nothing."** Three of the four infra items already
+  existed; wiring the collector into the default stack was a request to reverse
+  ADR 0073 §7, enforced by two tests.
+- **The claim index was wrong about its own gap.** It recorded A25 as "a
+  one-line edit whose test is already written." The edit was one line; **the
+  test did not exist** — nothing read that sentence at all, which is why the
+  claim survived two work orders with nothing going red.
+
+### Three things the builders refused to do
+
+- **Tier 2 of D1.** Reading full text from the paper cache would put I/O inside
+  a scorer whose guard collapses any exception to `None` — one pool timeout
+  would erase a whole query's paired outcomes rather than degrade them.
+- **The obvious reading of §7.** Folding every rung onto `record_degradation`
+  would have paged on a cache miss, because `log-alerts.yml` fires at 1-in-15m.
+- **Clicking through push protection.** It blocked on two *synthetic* fixtures;
+  the fix was to assemble them at runtime, because "a repo trained to click
+  through that has disarmed the control that catches a real key."
+
+### One lesson that outlives the wave
+
+**A green syntax check proves parsing, not behaviour.** `promtool` passed a
+rule that would have fired on a single cache miss; only unit-testing the rule's
+semantics caught it. The same shape appeared three times this wave — an alert
+that pages on a blip, a redaction rule that compiles and eats arXiv ids, a
+dashboard test that parses `expr` strings and cannot see a blank panel.
+
 ## Coordination
 
 Two sessions are active on this repository and are aware of each other.
