@@ -476,6 +476,21 @@ class GraphEpisodeRunner:
                 detail="operator interrupt",
             )
         except Exception as exc:  # noqa: BLE001 — an episode failure is data
+            # `log.exception`, so the traceback is on the record even
+            # though it never reaches the manifest (RFC 09 §11.2 keeps
+            # raw tracebacks out of the control plane). The episode
+            # record carries a 500-character detail; this is the only
+            # place the whole stack survives, and one failed episode out
+            # of 240 is otherwise only debuggable by re-running it.
+            log.exception(
+                "campaign_episode_failed",
+                extra={
+                    "case_id": episode.case_id,
+                    "arm_id": episode.arm_id,
+                    "repeat_index": episode.repeat_index,
+                    "error_type": type(exc).__name__,
+                },
+            )
             return self._outcome(
                 CompletionStatus.FAILED,
                 _reason_for(exc),
@@ -767,6 +782,10 @@ def execute_campaign(
             # 16 §5: stop between episodes, publish the partial result
             # with its denominators, and never raise the cap to continue.
             stop_reason = "campaign_cap_reached"
+            log.warning(
+                "campaign_budget_stop",
+                extra={"campaign_id": payload.campaign_id, "cap_usd": cap},
+            )
             break
         if max_episodes is not None and index >= max_episodes:
             stop_reason = "episode_limit_reached"
@@ -876,6 +895,18 @@ def _run_one_episode(
     the terminal marker a resume keys on — a crash between the report and
     the receipt leaves the episode pending, which is the truth.
     """
+    # Emitted before the seal rather than before the run: an episode
+    # that hangs never reaches its `completed` line, and this is the only
+    # line that says which of 240 slots it hung in.
+    log.info(
+        "campaign_episode_started",
+        extra={
+            "campaign_id": plan.campaign_id,
+            "case_id": episode.case_id,
+            "arm_id": episode.arm_id,
+            "repeat_index": episode.repeat_index,
+        },
+    )
     assert_not_overwriting(directory, episode)
     spec = plan.task_spec_for(episode.case_id)
     arm_config = arm_settings(config, episode.arm_id)
@@ -943,6 +974,24 @@ def _run_one_episode(
         workflow_cost_usd=run.workflow_cost_usd,
         judge_cost_usd=scores.judge_cost_usd,
         primary_metric_available=scores.receipt.primary_metric_available,
+    )
+    log.info(
+        "campaign_episode_completed",
+        extra={
+            "campaign_id": plan.campaign_id,
+            "case_id": episode.case_id,
+            "arm_id": episode.arm_id,
+            "repeat_index": episode.repeat_index,
+            "status": run.status.value,
+            # Both, because they answer different questions: `status` is
+            # the terminal receipt's, and `ledger_status` is the
+            # denominator bucket — a succeeded episode whose primary
+            # metric is missing is `succeeded` and `null_metric`.
+            "ledger_status": outcome.ledger_status.value,
+            "call_count": run.model_calls,
+            "workflow_cost_usd": run.workflow_cost_usd,
+            "elapsed_sec": round(run.elapsed_seconds, 3),
+        },
     )
     return ExecutedEpisode(
         episode=episode, record=record, outcome=outcome, directory=target
