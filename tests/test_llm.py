@@ -113,12 +113,51 @@ class TestGetClient:
     def test_passes_api_key_from_settings(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        """The key reaches the SDK *unwrapped*, and as a real `str`.
+
+        `settings.anthropic_api_key` is a `SecretStr` since WO-C4, and
+        `_get_client` is the one place in `src/` that unwraps it. The
+        `isinstance` is the load-bearing half: `SecretStr("k") == "k"`
+        is `False`, so an equality assertion alone would fail on a
+        forgotten `get_secret_value()` — but handing the SDK the
+        wrapper would put the literal string `**********` in the
+        `x-api-key` header, and a test that only compared values would
+        not say which of the two went wrong.
+        """
         _override_settings(monkeypatch, anthropic_api_key="sk-my-test-key")
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
         client = llm_module._get_client()
 
         assert client.kwargs["api_key"] == "sk-my-test-key"
+        assert type(client.kwargs["api_key"]) is str
+
+    def test_the_zero_spend_sentinel_reaches_the_constructor_intact(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        harness_environment: tuple[frozenset[str], dict[str, str]],
+    ) -> None:
+        """Every local and CI path runs on this exact string.
+
+        It is deliberately non-empty (`tests/conftest.py`) so that
+        `_get_client` does *not* take its "not configured" branch: the
+        client constructor is reached, and it is there that the suite's
+        spend guard — and, in a real run, Anthropic's 401 — refuses.
+        A wrapper that arrived at the SDK unopened, or a sentinel the
+        `SecretStr` round trip altered, would move the refusal
+        somewhere else and quietly change what the zero-spend proof
+        proves. Taken from the harness rather than retyped so it cannot
+        drift from the value actually pinned.
+        """
+        _scrubbed, declared = harness_environment
+        sentinel = declared["ANTHROPIC_API_KEY"]
+        _override_settings(monkeypatch, anthropic_api_key=sentinel)
+        monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
+
+        client = llm_module._get_client()
+
+        assert client.kwargs["api_key"] == sentinel
+        assert type(client.kwargs["api_key"]) is str
 
     def test_missing_api_key_raises(
         self, monkeypatch: pytest.MonkeyPatch
@@ -128,6 +167,51 @@ class TestGetClient:
 
         with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
             llm_module._get_client()
+
+    @pytest.mark.parametrize("blank", ["   ", "\n"])
+    def test_a_whitespace_key_is_refused_like_a_missing_one(
+        self, monkeypatch: pytest.MonkeyPatch, blank: str
+    ) -> None:
+        """A `SecretStr` accepts any string, including a blank one.
+
+        `Settings._blank_api_key_is_unset` turns it back into the empty
+        default, so the answer stays this repository's one-line "not
+        set in .env" rather than a 401 from Anthropic. Asserted at this
+        end, not only in `test_config.py`, because it is the client
+        constructor that would otherwise have been reached.
+        """
+        _override_settings(monkeypatch, anthropic_api_key=blank)
+        monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
+        before = len(_FakeAnthropic.instances)
+
+        with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
+            llm_module._get_client()
+
+        assert len(_FakeAnthropic.instances) == before
+
+    def test_the_key_is_absent_from_the_construction_log_line(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """`_get_client` logs its retry envelope; it must not log the key.
+
+        This is the one line in `src/llm.py` that emits at client
+        construction, so it is the closest a live key ever comes to the
+        log stream. `redact_text` would scrub an `sk-` shape on the way
+        out, but that is a shape rule and a gateway credential carries
+        no prefix — so the assertion is that the value never enters the
+        payload at all.
+        """
+        key = "gw_live_MUSTNOTAPPEARmustnotappear"
+        _override_settings(monkeypatch, anthropic_api_key=key)
+        monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
+
+        with caplog.at_level(logging.INFO, logger="src.llm"):
+            llm_module._get_client()
+
+        assert caplog.records
+        for record in caplog.records:
+            assert key not in record.getMessage()
+            assert key not in str(record.__dict__)
 
     def test_settings_override_reaches_client(
         self, monkeypatch: pytest.MonkeyPatch

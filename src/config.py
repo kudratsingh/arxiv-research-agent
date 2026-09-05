@@ -7,7 +7,7 @@ directly:
 
     from src.config import settings
     client = anthropic.Anthropic(
-        api_key=settings.anthropic_api_key,
+        api_key=settings.anthropic_api_key.get_secret_value(),
         max_retries=settings.anthropic_max_retries,
     )
 
@@ -51,24 +51,41 @@ enables it" rule these flags had while they lived in
 
 ## A secret field is a `SecretStr`
 
-`log_principal_salt` is the first field here whose *value* is
-confidential rather than merely operational, and the ordinary
-treatment would have leaked it. `Settings` is constructed in some
-thirty test modules and pydantic's `__repr__` prints every field, so a
-plain `str` would put the fleet-wide log salt into any traceback,
-`-vv` assertion diff or settings dump that ever touched an instance —
-and a leaked salt turns the whole point of `principal_hash` (ADR 0067:
-a key id that never reaches the log stream) back into a dictionary
-attack over a word list.
+Two fields here hold a value that is *confidential* rather than merely
+operational, and the ordinary treatment leaks both.
+`log_principal_salt` (WO-C3) was the first; `anthropic_api_key` — the
+paid credential — is the second (WO-C4), and it had been sitting
+beside the protected salt as a plain `str` since Sprint 1. `Settings`
+is constructed in some thirty test modules and pydantic's `__repr__`
+prints every field, so a plain `str` puts the value into any
+traceback, `-vv` assertion diff or settings dump that ever touched an
+instance. For the salt that turns the whole point of `principal_hash`
+(ADR 0067: a key id that never reaches the log stream) back into a
+dictionary attack over a word list; for the key it is the credential
+itself.
+
+The log layer does redact an `sk-`-shaped string on the way out
+(`redact_text`), but that is a shape rule, not a type rule: it catches
+an Anthropic key and misses a gateway or proxy credential that does
+not carry the prefix, and it only fires on text that reached the
+redacting formatter in the first place. Masking at the type is the
+rule that does not depend on either.
 
 `SecretStr` renders as `**********` in `repr`, `str`, `model_dump()`
 and `model_dump_json()`, and hands over the real value only through
 `get_secret_value()`. The rule for any future secret field is the same
-one `src/observability/context.py` follows: call `get_secret_value()`
-once, at the point of use, and never let the wrapper itself reach a
-string — an f-string of a `SecretStr` interpolates the mask, which
-would salt the entire fleet with `**********` and agree with itself
-everywhere while matching nobody's key id.
+one `src/observability/context.py` and `src/llm.py` follow: call
+`get_secret_value()` once, at the point of use, and never let the
+wrapper itself reach a string — an f-string of a `SecretStr`
+interpolates the mask, which for the salt would salt the entire fleet
+with `**********` and agree with itself everywhere while matching
+nobody's key id, and for the key would authenticate as `**********`.
+
+Two other fields are still plain `str` and still hold secrets:
+`api_keys` (`name:secret` pairs for inbound auth) and
+`semantic_scholar_api_key`. Neither moved here, because both need a
+sweep of their own call sites rather than a one-line type change —
+recorded in ADR 0067's follow-ups.
 """
 
 from __future__ import annotations
@@ -179,7 +196,47 @@ class Settings(BaseSettings):
     )
 
     # ------ Anthropic / LLM --------------------------------------------
-    anthropic_api_key: str = Field(default="", description="Claude API key")
+    anthropic_api_key: SecretStr = Field(
+        default=SecretStr(""),
+        description=(
+            "Claude API key — the paid credential, and a `SecretStr` "
+            "since WO-C4 for the same reason `log_principal_salt` is "
+            "one: pydantic prints every field in a repr, so a plain "
+            "`str` put the live key into any `Settings` repr, dump or "
+            "`-vv` assertion diff. The raw value is read exactly once, "
+            "by `src/llm.py`, through `get_secret_value()`. Empty is "
+            "the default and means 'not configured': `src/llm.py` "
+            "refuses to construct a client rather than calling with a "
+            "blank key. It is *not* how a run is made free — the "
+            "zero-spend sentinel `local-preview-disabled` is "
+            "deliberately non-empty (`tests/conftest.py`), so the key "
+            "stays truthy, the client constructor is still reached, "
+            "and the spend guard fires there instead of being hidden "
+            "behind a 'not configured' error."
+        ),
+    )
+
+    @field_validator("anthropic_api_key", mode="before")
+    @classmethod
+    def _blank_api_key_is_unset(cls, value: Any) -> Any:
+        """Treat a whitespace-only key as unset rather than as a key.
+
+        The same rule `_blank_salt_is_unset` applies below, for the
+        same reason: `SecretStr` accepts any string, so without this an
+        `ANTHROPIC_API_KEY=" "` — a Compose file whose interpolation
+        produced a blank, a shell that quoted an empty variable — would
+        be a *configured* key. It is truthy, so `src/llm.py` would
+        build a live client with it and the operator's answer would be
+        a 401 from Anthropic rather than the one-line "not set in .env"
+        this repository already knows how to say.
+
+        A non-blank value is passed through *unstripped*, exactly as
+        the salt is: the bytes an operator exported are the bytes that
+        authenticate, and quietly trimming a credential is a change of
+        behaviour dressed as hygiene.
+        """
+        return "" if isinstance(value, str) and not value.strip() else value
+
     anthropic_model: str = Field(
         default="claude-sonnet-4-6",
         description="Model ID used by every agent unless overridden per-call",
@@ -342,9 +399,10 @@ class Settings(BaseSettings):
             "blank value means unset, not a salt — `LOG_PRINCIPAL_SALT=` "
             "is how a Compose file spells \"I am not setting this\", and "
             "it takes the per-process branch rather than salting the "
-            "fleet with the empty string. A secret, and the only field "
-            "here that is one: it is a `SecretStr`, so it cannot reach a "
-            "repr or a dump, and the raw value is read exactly once, by "
+            "fleet with the empty string. A secret, and one of the two "
+            "fields here that are (`anthropic_api_key` is the other): "
+            "it is a `SecretStr`, so it cannot reach a repr or a dump, "
+            "and the raw value is read exactly once, by "
             "`src/observability/context.py`, through "
             "`get_secret_value()`."
         ),

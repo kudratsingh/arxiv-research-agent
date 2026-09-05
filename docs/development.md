@@ -25,6 +25,49 @@ cp .env.example .env
 plus dev dependencies (`pytest`, `mypy`). It's idempotent — run it
 again any time deps change.
 
+### Two settings are secrets, and they read differently
+
+Every field in `src/config.py` is a plain typed value except two:
+`anthropic_api_key` (WO-C4) and `log_principal_salt` (WO-C3). Both are
+`pydantic.SecretStr`, so reading either takes one extra call:
+
+```python
+from src.config import settings
+
+client = anthropic.Anthropic(
+    api_key=settings.anthropic_api_key.get_secret_value(),  # not the field
+)
+```
+
+Three things follow, and the second is the one that bites.
+
+1. **They cannot leak into text.** `repr(settings)`, `str(settings)`,
+   an f-string, `model_dump()`, `model_dump(mode="json")` and
+   `model_dump_json()` all render `**********`. pydantic prints every
+   field in a repr, so before this a `print(settings)` in a debugger,
+   or a `-vv` assertion diff on a test that built a `Settings`, put the
+   live credential in the clear. `src/observability/logging.py`'s
+   `redact_text` also scrubs `sk-…` shapes on the way into the log
+   stream, but that is a *shape* rule — it does not fire on a gateway
+   or proxy key, and it only sees text that reached the JSON formatter.
+
+2. **Comparing one to a string is always `False`.**
+   `settings.anthropic_api_key == "local-preview-disabled"` is `False`
+   for the sentinel *and* for a real key, so a guard written that way
+   stops guarding and says nothing. Call `get_secret_value()` first;
+   `tests/test_config.py::TestTheApiKeyIsASecret` pins the trap.
+
+3. **Unwrap once, at the point of use.** Never let the wrapper itself
+   reach a string: an f-string of a `SecretStr` interpolates the mask,
+   which would authenticate as `**********` (the key) or salt the whole
+   fleet with `**********` (the salt). `src/llm.py`'s `_get_client` and
+   `src/observability/context.py`'s `_resolve_salt` are the only two
+   places in `src/` that unwrap either one.
+
+A blank value means *unset* for both — `ANTHROPIC_API_KEY=`, or a
+whitespace-only value, takes the "not configured" branch rather than
+becoming a credential that earns you a 401.
+
 ## Common commands
 
 All targets are documented by `make help`. The ones you'll use daily:

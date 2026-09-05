@@ -275,11 +275,45 @@ blocks, not a search through a function.
     branch survived as a `_resolve_salt()` that both `context.py` and
     its tests call: unset still draws a per-process salt and still
     reports `principal_salt_is_ephemeral()`, and a blank value is unset
-    rather than a fleet-wide salt of `""`. Not fixed alongside it:
+    rather than a fleet-wide salt of `""`. ~~Not fixed alongside it:
     `anthropic_api_key` is still a plain `str` and therefore still
     reachable from a `Settings` repr, and `docker-compose.yml` does not
     forward `LOG_PRINCIPAL_SALT`, so a Compose deployment is ephemeral
-    whatever the operator exports.
+    whatever the operator exports.~~ **Both done in WO-C4**, below.
+  - ~~**WO-C4**: `anthropic_api_key` is a plain `str` beside a
+    protected salt.~~ **Done.** It is a `SecretStr`, masked across
+    `repr`, `str`, an f-string, `model_dump()`,
+    `model_dump(mode="json")` and `model_dump_json()`, with the raw
+    value taken once by `src/llm.py::_get_client` through
+    `get_secret_value()` and a blank-is-unset before-validator matching
+    the salt's. The exposure it closed was **narrow and was measured as
+    narrow**: a sweep of `src/`, `tests/`, `scripts/`, `ci/`, `deploy/`
+    and the `Makefile` found *no* call site that reprs, dumps or prints
+    a whole `Settings` — every f-string interpolates one named scalar
+    field, no route returns configuration, no provenance or manifest
+    writer serialises the model, a `ValidationError` on another field
+    does not carry it, and a default traceback prints no frame locals.
+    What it removes is the standing hazard: a `print(settings)` in a
+    debugger, an ad-hoc dump, a future `-vv` diff. The log layer's
+    `redact_text` was never the answer here — it is a *shape* rule
+    (`sk-…`) that misses a gateway or proxy credential, and it only
+    sees text that already reached the JSON formatter. The sentinel
+    contract survives: `local-preview-disabled` is deliberately
+    non-empty so `_get_client` reaches the constructor and the spend
+    guard fires there, and `bool(SecretStr(...))` keeps that true —
+    though `_get_client` now tests the unwrapped local rather than
+    resting on pydantic's `__len__`. WO-C4 also fixed the Compose
+    enumeration and found two more variables of the same shape missing
+    from it: `MAX_COST_USD` (forwarded by the production overlay, not
+    by the base stack — a cost guard an operator could not tighten) and
+    `LOG_LEVEL` (pinned to `INFO`, silently outranking a host export).
+    All three are pinned in `tests/test_deployment_contract.py`.
+  - Still plain `str`, and still secrets: `api_keys` (the inbound
+    `name:secret` keystore) and `semantic_scholar_api_key`. Neither
+    moved with WO-C4 because neither is a one-line retype —
+    `parse_api_keys` splits and compares the raw string in
+    `src/api/auth.py`, and `semantic_scholar.py` builds a header from
+    it. The same argument applies to both.
   - **WO-A07** reuses `context_fields()` for span attributes so the log
     payload and the span cannot drift. **Done in ADR 0066**:
     `tracing._set_correlation_attributes` copies the context onto every

@@ -95,7 +95,11 @@ class TestEnvLoading:
     ) -> None:
         monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-abc")
         s = Settings()
-        assert s.anthropic_api_key == "sk-abc"
+        # `.get_secret_value()` since WO-C4 made the field a
+        # `SecretStr`. The bare `==` this line used to carry is exactly
+        # the comparison a `SecretStr` silently loses, which is what
+        # `TestTheApiKeyIsASecret` below exists to pin.
+        assert s.anthropic_api_key.get_secret_value() == "sk-abc"
 
     def test_reads_use_mock_data_from_env(
         self, monkeypatch: pytest.MonkeyPatch
@@ -395,6 +399,159 @@ class TestTheSamplingRatioIsAValidatedFloat:
         monkeypatch.setenv(TRACE_SAMPLE_RATIO_ENV, "loads")
         with pytest.raises(ValidationError):
             Settings()
+
+
+class TestTheApiKeyIsASecret:
+    """WO-C4. The paid credential gets the treatment the salt already had.
+
+    WO-C3 made `log_principal_salt` a `SecretStr` and proved the mask
+    against pydantic itself. It recorded, and did not fix, that the
+    field sitting two lines above it — the Anthropic API key — was
+    still a plain `str` and therefore still printed in full by every
+    `Settings` repr. This class is the same proof for the credential,
+    plus the half the salt never needed: the zero-spend sentinel runs
+    through this field on every local and CI path, and a `SecretStr`
+    compared to a `str` is *always* unequal, so a guard written that
+    way stops guarding without saying anything.
+    """
+
+    KEY = "sk-ant-api03-MUSTNOTAPPEARmustnotappear"
+
+    def test_the_environment_variable_still_sets_it(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The compatibility requirement in one line: an operator who
+        # exported this before the retype exports it after.
+        monkeypatch.setenv("ANTHROPIC_API_KEY", self.KEY)
+        assert Settings().anthropic_api_key.get_secret_value() == self.KEY
+
+    def test_the_field_is_settable_by_its_own_name(self) -> None:
+        # ~Thirty test modules construct `Settings(anthropic_api_key=...)`
+        # with a plain string. pydantic coerces; none of them had to change.
+        built = Settings(anthropic_api_key="sk-inline")
+        assert built.anthropic_api_key.get_secret_value() == "sk-inline"
+
+    def test_the_default_is_empty_because_empty_means_not_configured(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Not a required field: importing `src.config` must not need a key.
+
+        The CLI, every test module and every mock-mode run construct
+        `Settings` without one, and `src/llm.py` is the single place
+        that decides an empty key is a refusal.
+
+        The `delenv` is not ceremony: `tests/conftest.py` pins the
+        zero-spend sentinel into the environment for the whole session,
+        so a bare `Settings()` here reads *that*, not the field default.
+        """
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        assert Settings().anthropic_api_key.get_secret_value() == ""
+
+    @pytest.mark.parametrize("blank", ["", "   ", "\n"])
+    def test_a_blank_value_is_unset_rather_than_a_key(
+        self, monkeypatch: pytest.MonkeyPatch, blank: str
+    ) -> None:
+        # `SecretStr` accepts any string, so without the before-validator
+        # a whitespace key would be *configured* and truthy: `src/llm.py`
+        # would build a live client with it and the operator's answer
+        # would be a 401 rather than "not set in .env".
+        monkeypatch.setenv("ANTHROPIC_API_KEY", blank)
+        assert Settings().anthropic_api_key.get_secret_value() == ""
+
+    def test_a_configured_key_is_not_stripped(self) -> None:
+        # Only a blank is special. The bytes an operator exported are
+        # the bytes that authenticate; trimming a credential is a
+        # behaviour change dressed as hygiene.
+        padded = " sk-pad ded\n"
+        built = Settings(anthropic_api_key=padded)
+        assert built.anthropic_api_key.get_secret_value() == padded
+
+    def test_the_key_cannot_reach_a_repr(self) -> None:
+        """The measured defect. Every one of these printed the key before.
+
+        `Settings` is constructed in ~30 test modules and pydantic's
+        `__repr__` prints every field, so the live credential was one
+        `-vv` assertion diff, one `print(settings)` or one deliberate
+        settings dump away from wherever that text goes next.
+        """
+        rendered = Settings(anthropic_api_key=self.KEY)
+        assert self.KEY not in repr(rendered)
+        assert self.KEY not in str(rendered)
+        assert self.KEY not in f"{rendered}"
+        assert self.KEY not in f"{rendered.anthropic_api_key}"
+        assert self.KEY not in repr(rendered.anthropic_api_key)
+        assert self.KEY not in str(rendered.anthropic_api_key)
+
+    def test_the_key_cannot_reach_a_dump(self) -> None:
+        # Both dump shapes plus the stringified dict a debug line would
+        # actually emit. `model_dump()` keeps the wrapper, so even a
+        # caller that never asked for `mode="json"` gets the mask.
+        dumped = Settings(anthropic_api_key=self.KEY)
+        assert self.KEY not in dumped.model_dump_json()
+        assert self.KEY not in str(dumped.model_dump())
+        assert self.KEY not in str(dumped.model_dump(mode="json"))
+        assert dumped.model_dump()["anthropic_api_key"].get_secret_value() == self.KEY
+
+    def test_masking_does_not_depend_on_the_key_looking_like_a_key(self) -> None:
+        """The reason a type beats the `sk-` redaction rule in the log layer.
+
+        `redact_text` scrubs `sk-…` shapes out of anything that reaches
+        the JSON formatter. A gateway, proxy or self-hosted credential
+        carries no such prefix and would pass that rule untouched. The
+        wrapper does not care what the value looks like.
+        """
+        odd = "gw_live_MUSTNOTAPPEARmustnotappear"
+        rendered = Settings(anthropic_api_key=odd)
+        assert odd not in repr(rendered)
+        assert odd not in rendered.model_dump_json()
+
+    # -- the sentinel ---------------------------------------------------
+    #
+    # Every local and CI path in this repository runs with
+    # `ANTHROPIC_API_KEY=local-preview-disabled`. The sentinel is taken
+    # from `harness_environment` rather than retyped, so these cannot
+    # drift from the value the harness actually pins.
+
+    def test_the_zero_spend_sentinel_survives_the_wrapper(
+        self, harness_environment: tuple[frozenset[str], dict[str, str]]
+    ) -> None:
+        _scrubbed, declared = harness_environment
+        sentinel = declared["ANTHROPIC_API_KEY"]
+        built = Settings(anthropic_api_key=sentinel)
+        assert built.anthropic_api_key.get_secret_value() == sentinel
+
+    def test_the_sentinel_stays_truthy_so_the_spend_guard_still_fires(
+        self, harness_environment: tuple[frozenset[str], dict[str, str]]
+    ) -> None:
+        """`tests/conftest.py` chose a *non-empty* sentinel on purpose.
+
+        An empty key sends `src.llm._get_client` down its "not
+        configured" branch and the suite's spend guard — which fires at
+        the client constructor — is never reached, hiding a would-be
+        spend behind a different error. The wrapper must not quietly
+        turn the sentinel falsy.
+        """
+        _scrubbed, declared = harness_environment
+        built = Settings(anthropic_api_key=declared["ANTHROPIC_API_KEY"])
+        assert bool(built.anthropic_api_key) is True
+        assert bool(Settings(anthropic_api_key="").anthropic_api_key) is False
+
+    def test_comparing_the_wrapper_to_a_string_is_always_false(
+        self, harness_environment: tuple[frozenset[str], dict[str, str]]
+    ) -> None:
+        """The failure mode this class exists to make loud.
+
+        A guard written `settings.anthropic_api_key == SENTINEL` is not
+        a guard: it is `False` for the sentinel *and* for a real key,
+        so it stops refusing to spend and reports nothing. Pinned here
+        so the next person who writes that comparison sees why it can't
+        work, and reaches for `get_secret_value()`.
+        """
+        _scrubbed, declared = harness_environment
+        sentinel = declared["ANTHROPIC_API_KEY"]
+        wrapped = Settings(anthropic_api_key=sentinel).anthropic_api_key
+        assert wrapped != sentinel
+        assert wrapped.get_secret_value() == sentinel
 
 
 class TestThePrincipalSaltIsASecretSetting:
