@@ -104,6 +104,33 @@ These are proposed integration contracts, not owner approval of implementation
 or spend. An implementation ADR may refine them only by updating all four RFC
 interfaces together.
 
+## P0 implementation status
+
+The RFCs above are contracts; this table is what exists in the tree. A work
+order is "landed" only when its acceptance criteria are green in CI.
+
+| Work order | Output | Where it lives | State |
+|---|---|---|---|
+| P0-WO00 | Shared contract kernel | `src/contracts/kernel.py` | landed |
+| P0-WO01 | TaskSpec models and compilers | `src/contracts/task_spec.py` | landed |
+| P0-WO02 | Development registry core | `src/contracts/registry.py` | landed |
+| P0-WO03 | Sealed RunManifest and admission | `src/contracts/run_manifest.py` | landed |
+| P0-WO04 | Trajectory schema and replay | `src/contracts/trajectory.py` | landed |
+| P0-WO05 | Research shadow integration | — | in flight |
+| P0-WO06 | Benchmark migration and parity | `eval_registry/`, `src/contracts/benchmark_adapters.py` | landed |
+| P0-WO07 | Campaign lock, repeats, denominators | — | not started |
+| P0-WO08 | Runtime event bridge | — | not started |
+| P0-WO09 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) | landed |
+| P0-WO10 | Judge-calibration design | — | not started |
+| P0-WO11 | Stage-0 contract qualification | — | not started |
+| P0-WO12 | Funded repeated baseline | — | approval-gated, blocked on D9 |
+
+The evaluation runners still read their own modules. `eval_registry/` is a
+generated, digest-verified view of `src/eval/benchmark_queries.py` and
+`src/eval/learning_benchmark.py`; `python -m src.contracts.registry parity`
+proves the two agree, and a later ADR decides which one is authoritative
+([ADR 0079](../decisions/0079-benchmark-registry-migration-and-parity.md)).
+
 ## Program thesis
 
 The next quality jump should not come from adding more named agents. It should

@@ -451,6 +451,16 @@ never renumbered.
   may promote rather than being told it was underpowered, because a
   fixed function of the code has no sampling noise to be underpowered
   against.
+- [0079](0079-benchmark-registry-migration-and-parity.md) — Register the
+  existing benchmarks, prove parity, and change nothing they mean. The
+  twenty research queries and fifteen guided-reading scenarios enter
+  `eval_registry/` as immutable objects at their existing ids and in
+  their existing order; expected topics, learner scripts and grader
+  configuration become an evaluator-only overlay the candidate role
+  cannot resolve; the public suite is mechanically barred from
+  promotion use. Adapters rebuild the runners' exact data shapes from
+  registry content and a parity report names any divergence, so the
+  runners keep reading their own modules until a later ADR moves them.
 
 ## When to write an ADR
 
