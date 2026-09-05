@@ -17,9 +17,9 @@ browser client — the **Evidence Workbench** — so a run is something you
 watch and steer, not a black box you wait on.
 
 ![The Evidence Workbench showing a completed research thread: the thread
-rail on the left, the checkpoint spine across the top, and the briefing
-rendered in the report reader with its section rail and the run's
-metrics strip](docs/images/workbench-briefing.png)
+rail on the left, the checkpoint spine across the top, and the finished
+briefing rendered in the report reader beside its section
+rail](docs/images/workbench-briefing.png)
 
 Under the fixed pipeline (Sprint 1 shape) it's a five-agent DAG with one
 conditional edge on the critic. Behind opt-in flags it becomes an
@@ -221,10 +221,16 @@ and `Report` not yet observed — and the diagnostics disclosure lists the
 raw SSE frames behind that state.
 
 ![The plan review panel: the checkpoint spine showing Question observed
-and Plan waiting for your review, an editable list of three
-sub-questions beside three arXiv queries with character counters, Add
-and remove controls, and Approve plan / Cancel this run actions, above a
-Technical events table of raw SSE frames](docs/images/workbench-plan-review.png)
+and Plan waiting for your review, above the plan editor with its
+Waiting for your review badge, the line saying the run is paused and not
+spending, and the Sub-questions and arXiv queries
+columns](docs/images/workbench-plan-review.png)
+
+The plan editor is taller than the row it lives in — that row is a fixed
+`14rem` box, deliberately, so the spine's own reflow cannot shift the
+briefing below it (`web/components/features/workspace.css` records the
+0.038 CLS that rule removes). The picture above is therefore the top of
+a panel you scroll, not the whole of it.
 
 **Read the briefing.** The report reader renders the markdown with a
 section rail for navigation and a metrics strip carrying the run's
@@ -260,12 +266,20 @@ redesign (brief, tokens, architecture, work orders, gate reviews) is
 > `tests/test_documented_claims.py::TestTheScreenshotMechanism` holds
 > the seed script to writing behind the API and the stack to the
 > sentinel key, and `web/tests/ci.test.ts` holds CI to handing the e2e
-> stack that same key rather than the repository secret. **What nothing
-> checks is that these particular PNGs came out of that stack**: no
-> test binds a committed image to a run, so a hand-edited screenshot
-> would pass everything above. The seeded thread was created outside a
-> live session, which is why its checkpoint spine honestly reports `No
-> longer available` rather than inventing a history.
+> stack that same key rather than the repository secret. **Each of the
+> five images above is a Playwright snapshot**, produced by
+> `web/e2e/readme.spec.ts` and regenerated with `npm run
+> e2e:readme:update`, so a screenshot that changes is a reviewable diff
+> and a hand-edited one fails. **The comparison runs on macOS only**: a
+> snapshot has to live at the path this README renders, that path has no
+> room for the platform segment `web/e2e/__screenshots__/` uses, and
+> Linux rasterises the same font differently — so the `web-e2e` CI job
+> skips this gate rather than failing on the host. It is a local gate
+> over derived images, not a CI gate; what CI does hold is that every
+> image rendered here is one the spec captures. The seeded thread was
+> created outside a live session, which is why its checkpoint spine
+> honestly reports `No longer available` rather than inventing a
+> history.
 
 ## What lives behind flags
 
@@ -519,7 +533,7 @@ adversarial suite's attack-success rate as an artifact), a Docker image
 build with base and production compose-file
 validation, a web image smoke test probing `/` and `/api/healthz`
 through the proxy, the web tier (TypeScript, ESLint, generated-type
-drift, **3,380 Vitest tests across 155 files** with coverage floors, and
+drift, **3,477 Vitest tests across 158 files** with coverage floors, and
 a production build with per-route JS budgets), the dependency-audit gate
 in its own bounded job, the Storybook static build with story tests, and
 Playwright + `@axe-core/playwright` against a seeded Compose stack
@@ -585,11 +599,12 @@ Nothing-enforces is down to zero — every sentence in that table now has
 something behind it, read back out of the prose by
 [`tests/test_documented_claims.py`](tests/test_documented_claims.py) — but
 twenty-one claims have *less* behind them than the sentence says, and each
-of those rows names its own gap. The residue is the interesting part:
-nothing binds the committed screenshots to a run, no test can see a feature
-that shipped with no flag at all, the nightly eval's real state lives in
-GitHub's settings rather than in this tree, and "every non-trivial decision
-has an ADR" has a forward half no test will ever hold.
+of those rows names its own gap. The residue is the interesting part: the
+screenshots are now Playwright snapshots but the gate that compares them
+runs only on macOS, no test can see a feature that shipped with no flag at
+all, the nightly eval's real state lives in GitHub's settings rather than
+in this tree, and "every non-trivial decision has an ADR" has a forward
+half no test will ever hold.
 
 ## Eval
 

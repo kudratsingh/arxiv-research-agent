@@ -670,8 +670,15 @@ pinned without a build by `tests/test_container_contract.py`).
   [`development.md`](development.md#opentelemetry-traces--metrics).
 - **Evaluation** — custom in-repo benchmark + LLM-judge metrics
   (`src/eval/`, ADR [0005](decisions/0005-custom-eval-over-ragas.md))
-  run nightly in CI with regression diffing (ADR
-  [0010](decisions/0010-nightly-eval-ci.md)). The campaign runner is
+  **designed to run nightly in CI** with regression diffing (ADR
+  [0010](decisions/0010-nightly-eval-ci.md)). It does not run: **the
+  nightly eval workflow is disabled at the repository**
+  (`disabled_manually`) and stays that way pending the owner's funding
+  decision, so `.github/workflows/eval-nightly.yml` keeps a `cron:`
+  that GitHub ignores and says so beside it. No campaign has ever
+  produced a `summary.jsonl`; the long form is
+  [`docs/eval.md`](eval.md#status-disabled-and-no-green-campaign-yet).
+  The campaign runner is
   crash-safe: per-query persistence, `--resume`, per-metric judge
   isolation, a `--max-budget-usd` ceiling, and honest exit codes
   (ADR [0050](decisions/0050-eval-runner-hardening.md)); strategy in

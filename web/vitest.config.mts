@@ -381,6 +381,56 @@ export default defineConfig(async () => ({
       // run reporting 3,477 tests against the recorded 3,380. That is the
       // gap this file's convention accepts between re-seeds, and the band
       // is where it stops being acceptable.
+      //
+      // ---------------------------------------------------------------
+      //
+      // WO-D2 RE-SEEDED THE COUNT OF RECORD AND DELIBERATELY LEFT ALL FOUR
+      // THRESHOLDS WHERE THEY WERE, on origin/main at 760efd0.
+      // 3,477 tests across 158 files: 2899/2952 statements, 2017/2142
+      // branches, 1058/1191 functions, 2378/2399 lines.
+      //
+      // THIS IS THE FIRST NOTE IN THIS FILE THAT IS NOT A RE-SEED OF THE
+      // THRESHOLDS, so it says why at length rather than leaving the next
+      // reader to assume somebody forgot.
+      //
+      // WHAT WAS ACTUALLY STALE. The gap the note above predicted had
+      // arrived: the record read 3,380 across 155 while the suite was
+      // 3,477 across 158 — 97 tests and 3 files behind, measured rather
+      // than estimated (`npm test -- --run` on a `git archive` of
+      // origin/main, 158 files, 3468 passed + 9 skipped). That number is
+      // the one `README.md` quotes and the one WO-B1's check reads, so it
+      // is the thing this re-seed exists to correct.
+      //
+      // WHAT WAS NOT STALE: THE COVERAGE. Measured three times on the same
+      // pristine tree, the four columns read
+      // 98.17/94.30/88.83/99.12, 98.17/94.35/88.83/99.12 and
+      // 98.20/94.16/88.83/99.12 — against thresholds of
+      // 98.15/94.0/88.8/99.11. `lines` and `functions` did not move at all,
+      // `statements` moved 0.02-0.05, and only `branches` looks like a
+      // ratchet at +0.16 over the seeded floor.
+      //
+      // AND `branches` IS PRECISELY THE COLUMN THAT MUST NOT BE RATCHETED ON
+      // THIS EVIDENCE. WO-31 and WO-W14 both record its run-to-run variance
+      // — the storybook project's `play` functions do not always walk the
+      // same branch set — and both put the widest swing they had seen at
+      // 0.05. The three runs above swung 0.19 (2017, 2020 and 2021 covered
+      // branches out of the same 2142), nearly four times that. Seeding
+      // near 94.16 would leave a floor with less margin than the column's
+      // own demonstrated noise, on a repository where three sessions are
+      // merging concurrently — which is exactly the "goes red on somebody
+      // else's PR for no reason of theirs" outcome every note above this
+      // one is written to avoid. The counts recorded here are therefore
+      // taken from the LOWEST of the three runs, so the check that the
+      // thresholds sit at or under the measurement is read against the
+      // unluckiest reading rather than the luckiest.
+      //
+      // A ratchet is still owed and is still queued behind the same thing
+      // it has been queued behind since PR 108: `functions` lags the other
+      // three by ten points because a module under `include` loaded by both
+      // projects has its function list concatenated in the merged report,
+      // and de-duplicating those two lists is this config's own problem.
+      // Fixing that is what makes the next re-seed worth the floor it
+      // raises.
       thresholds: {
         statements: 98.15,
         branches: 94.0,
