@@ -13,7 +13,7 @@
 aiosqlite==0.22.1
 annotated-doc==0.0.4
 annotated-types==0.7.0
-anthropic==0.116.0
+anthropic==1.4.0
 anyio==4.14.1
 arxiv==4.0.0
 certifi==2026.6.17
@@ -30,8 +30,10 @@ googleapis-common-protos==1.75.0
 h11==0.16.0
 hf-xet==1.5.1
 httpcore==1.0.9
+httpcore2==2.12.0
 httptools==0.8.0
 httpx==0.28.1
+httpx2==2.12.0
 huggingface_hub==1.22.0
 idna==3.18
 Jinja2==3.1.6
@@ -100,6 +102,7 @@ tokenizers==0.22.2
 torch==2.12.1
 tqdm==4.68.3
 transformers==5.13.0
+truststore==0.10.4
 typer==0.26.8
 typing_extensions==4.16.0
 typing-inspection==0.4.2

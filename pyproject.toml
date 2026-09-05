@@ -12,7 +12,12 @@ requires-python = ">=3.11"
 # ranges stay authoritative for what *could* work, the lock records
 # what *does*.
 dependencies = [
-    "anthropic>=0.39.0,<1.0",
+    # 1.x moved the HTTP layer from `httpx` onto its maintained fork
+    # `httpx2`, removed Text Completions and the deprecated aliases, and
+    # raised the Python floor to 3.10 — all already satisfied here
+    # (ADR 0090). The floor is 1.0 rather than the locked 1.4.0 because
+    # nothing in `src/` uses a post-1.0 addition.
+    "anthropic>=1.0,<2.0",
     # langgraph 0.x predates the 1.x graph/checkpoint API this codebase
     # is written against — the old >=0.2.0 floor advertised versions
     # the code cannot run on.
@@ -59,7 +64,16 @@ dev = [
     "mypy==2.1.0",
     "ruff==0.15.21",
     "types-requests>=2.32.0,<3.0",
+    # Two HTTP clients, for two different jobs (ADR 0090). `httpx` drives
+    # the FastAPI app in-process through `ASGITransport` and never meets
+    # the model SDK. `httpx2` is what `anthropic` 1.x is built on, so the
+    # tests that construct a *real* `anthropic.APIStatusError` /
+    # `APITimeoutError` must build it from an `httpx2.Response` — the SDK
+    # accepts an old `httpx.Response` without complaint, which would let
+    # those fakes drift from what the SDK actually produces. Declared
+    # rather than leaned on transitively because tests import it directly.
     "httpx>=0.27.0,<1.0",
+    "httpx2>=2.0,<3.0",
     "asgi-lifespan>=2.1.0,<3.0",
     "fakeredis>=2.26.0,<3.0",
     "pytest-postgresql>=6.1.0,<9.0",

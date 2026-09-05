@@ -12,10 +12,18 @@
 # transitive deps (e.g. torch's nvidia-* wheels on Linux) resolve at
 # install time; no --require-hashes yet — moving to a hashed,
 # cross-platform lock (uv lock / pip-compile) is recorded follow-up.
+#
+# Provenance note (CAP-05, ADR 0090): the four lines the SDK major move
+# touched — `anthropic` and the `httpx2`/`httpcore2`/`truststore`
+# closure it brought with it — were frozen from a throwaway lock-exact
+# venv on Python 3.13, not the 3.14 development venv the other 125 pins
+# came from. All four are `py3-none-any` wheels with no
+# interpreter-specific resolution, so 3.14 gets the same versions; CI,
+# which installs this file on `.python-version`, is what proves it.
 aiosqlite==0.22.1
 annotated-doc==0.0.4
 annotated-types==0.7.0
-anthropic==0.116.0
+anthropic==1.4.0
 anyio==4.14.1
 arxiv==4.0.0
 asgi-lifespan==2.1.0
@@ -37,8 +45,10 @@ fsspec==2026.6.0
 googleapis-common-protos==1.75.0
 h11==0.16.0
 hf-xet==1.5.1
+httpcore2==2.12.0
 httpcore==1.0.9
 httptools==0.8.0
+httpx2==2.12.0
 httpx==0.28.1
 huggingface_hub==1.22.0
 hypothesis==6.167.1
@@ -125,6 +135,7 @@ tokenizers==0.22.2
 torch==2.12.1
 tqdm==4.68.3
 transformers==5.13.0
+truststore==0.10.4
 typer==0.26.8
 types-defusedxml==0.7.0.20260504
 types-requests==2.33.0.20260518
