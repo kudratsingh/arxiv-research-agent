@@ -25,6 +25,10 @@ from src.config import settings
 from src.errors import NoPapersFound
 from src.graph.state import PaperMetadata, ResearchState
 from src.observability import get_logger
+from src.observability.metrics import (
+    DEGRADATION_RUNG_REDUCED_TOOL,
+    record_degradation_rung,
+)
 from src.observability.semconv import TOOL_ARXIV_SEARCH, TOOL_TYPE_EXTENSION
 from src.observability.tracing import tool_span
 from src.resilience import interruptible_sleep
@@ -176,6 +180,13 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
             "search_mock_data_served",
             extra={"n_papers": len(MOCK_PAPERS)},
         )
+        # Rung 2 of `docs/reliability.md` §5: the run is served from the
+        # labelled fixture set rather than from arXiv. The banner tells
+        # the user, which no other rung here does — and it is still a
+        # reduced tool, so the quality SLI has to see it. ADR 0081.
+        record_degradation_rung(
+            rung=DEGRADATION_RUNG_REDUCED_TOOL, component="search"
+        )
         ranked_mock = rank_papers_by_relevance(
             query, MOCK_PAPERS, top_k=settings.max_papers
         )
@@ -196,6 +207,13 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
                 "requested": len(search_queries),
                 "cap": MAX_SEARCH_QUERIES_PER_RUN,
             },
+        )
+        # Rung 2: the plan asked for more retrieval than the run is
+        # allowed to do, so the tool runs reduced. Counted before the
+        # slice, because after it the evidence that anything was
+        # dropped is gone from the state.
+        record_degradation_rung(
+            rung=DEGRADATION_RUNG_REDUCED_TOOL, component="search"
         )
         search_queries = search_queries[:MAX_SEARCH_QUERIES_PER_RUN]
 
@@ -247,6 +265,13 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
                     "n_queries": len(search_queries),
                 },
             )
+            # Rung 2: the round retrieved nothing and the node serves
+            # the previous round's set instead. The run succeeds on
+            # stale retrieval, which is precisely the shape of
+            # degradation `research_jobs_total` cannot see.
+            record_degradation_rung(
+                rung=DEGRADATION_RUNG_REDUCED_TOOL, component="search"
+            )
             return {
                 "papers": prior_papers,
                 "messages": [
@@ -278,6 +303,12 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
                 "n_queries": len(search_queries),
                 "n_papers": len(unique_papers),
             },
+        )
+        # Rung 2: some queries never reached arXiv, so the paper set is
+        # the partial one — a smaller corpus for every node downstream,
+        # under a job that will still report `succeeded`.
+        record_degradation_rung(
+            rung=DEGRADATION_RUNG_REDUCED_TOOL, component="search"
         )
 
     s2_reference_count = 0

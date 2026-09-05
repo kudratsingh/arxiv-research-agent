@@ -87,6 +87,10 @@ from src.graph.state import (
 from src.llm import call_llm_json
 from src.observability import get_logger, propagate_run_context
 from src.observability.costs import CostBudgetExceeded
+from src.observability.metrics import (
+    DEGRADATION_RUNG_PARTIAL_RESULTS,
+    record_degradation_rung,
+)
 from src.security.prompt_isolation import (
     ISOLATION_SYSTEM_INSTRUCTION,
     sanitize_control_string,
@@ -146,6 +150,19 @@ def _record_fallback(paper: PaperMetadata, reason: str) -> None:
             # string *is* the finding when reason is `no_pdf_url`.
             "pdf_url": paper.get("pdf_url", ""),
         },
+    )
+    # Rung 3 of `docs/reliability.md` §5 — the row that document calls
+    # its named failure: the report ships, the job-success SLI stays
+    # green and `research_job_duration_seconds` *improves*, because
+    # reading an abstract is faster than reading a paper. Counted here
+    # rather than at the run-level WARNING because that WARNING only
+    # fires past `ABSTRACT_ONLY_WARN_THRESHOLD`, and a rung that is
+    # only counted when it is loud is a lower bound again. Per paper,
+    # the same granularity `paper_cache` already counts at. Called
+    # from the fan-out's worker threads; `Counter.add` is safe there.
+    # ADR 0081.
+    record_degradation_rung(
+        rung=DEGRADATION_RUNG_PARTIAL_RESULTS, component="reader"
     )
     tally = _fallback_reasons.get()
     if tally is not None:

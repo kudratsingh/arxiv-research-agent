@@ -508,7 +508,7 @@
       "id": 23,
       "type": "timeseries",
       "title": "Degradations per job by ladder rung",
-      "description": "The quality SLI, cut the way docs/reliability.md §5 draws it. Every job counted here still reports succeeded, so research_jobs_total and research_job_duration_seconds both look healthy while this rises — the duration histogram looks better than usual, because a degraded path is a faster path. Read as degradations per job rather than as a proportion: one job can take several rungs. Three of the eight rungs are not on this instrument yet (their call sites are in src/agents/), so this is a lower bound on degradation and never an upper one.",
+      "description": "The quality SLI, cut the way docs/reliability.md §5 draws it. Every job counted here still reports succeeded, so research_jobs_total and research_job_duration_seconds both look healthy while this rises — the duration histogram looks better than usual, because a degraded path is a faster path. Read as degradations per job rather than as a proportion: one job can take several rungs. Since CAP-08 every rung of the ladder is on this instrument; partial_results counts once per paper rather than once per job, so it dominates the sum on a run with unreadable PDFs. Still never an upper bound: make eval and make run install no meter provider, so a rung taken outside an API worker is counted nowhere.",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 86 },
       "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },

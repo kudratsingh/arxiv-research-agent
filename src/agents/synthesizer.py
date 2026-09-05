@@ -51,6 +51,10 @@ from src.errors import UpstreamModelOutput
 from src.graph.state import Citation, EvidenceClaim, ResearchState
 from src.llm import _retry_envelope, call_llm_json
 from src.observability import get_logger
+from src.observability.metrics import (
+    DEGRADATION_RUNG_MODEL_FALLBACK,
+    record_degradation_rung,
+)
 
 log = get_logger(__name__)
 
@@ -465,6 +469,16 @@ def _call_with_one_retry(user_prompt: str, system_prompt: str) -> dict[str, Any]
             log.warning(
                 "synthesizer_retrying_malformed_response",
                 extra={"attempt": attempt},
+            )
+            # Rung 5 of `docs/reliability.md` §5: the model's output
+            # was unusable and the node substitutes a corrective
+            # second attempt for it. Counted on the retry rather than
+            # on the raise, because the raise ends the run and
+            # `research_jobs_total{error_type}` already sees that; a
+            # rescued retry is the case that succeeds and is invisible.
+            # ADR 0081.
+            record_degradation_rung(
+                rung=DEGRADATION_RUNG_MODEL_FALLBACK, component="synthesizer"
             )
             prompt = f"{user_prompt}\n\n{_RETRY_NUDGE}"
     raise SynthesizerOutputError(

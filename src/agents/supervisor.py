@@ -58,6 +58,10 @@ from src.graph.state import ResearchState
 from src.llm import call_llm_json
 from src.observability import current_costs, get_logger
 from src.observability.costs import CostBudgetExceeded
+from src.observability.metrics import (
+    DEGRADATION_RUNG_MODEL_FALLBACK,
+    record_degradation_rung,
+)
 
 log = get_logger(__name__)
 
@@ -319,6 +323,18 @@ def _fall_back(state: ResearchState, reason: str, loop_iter: int) -> dict[str, A
     Returns:
         The partial-state update, as `_emit` builds it.
     """
+    # Rung 5 of `docs/reliability.md` §5 — the model's output was
+    # unusable and a default action was substituted. Counted here
+    # rather than beside each of the three log lines that reach this
+    # function, precisely because all three converge on this one
+    # substitution: counting a rung at three sites that describe one
+    # event is two numbers that can disagree, which is the reason ADR
+    # 0081 gives for not double-instrumenting anything. The distinct
+    # log events survive unchanged — §5's rule is about markers, and
+    # each caller keeps its own.
+    record_degradation_rung(
+        rung=DEGRADATION_RUNG_MODEL_FALLBACK, component="supervisor"
+    )
     action = _default_next_action(state)
     return _emit(
         action,

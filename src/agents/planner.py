@@ -24,6 +24,10 @@ from src.config import settings
 from src.graph.state import ResearchState
 from src.llm import call_llm_json
 from src.observability import get_logger
+from src.observability.metrics import (
+    DEGRADATION_RUNG_MODEL_FALLBACK,
+    record_degradation_rung,
+)
 from src.security.prompt_isolation import (
     PRIOR_CONTEXT_ISOLATION_INSTRUCTION,
     wrap_untrusted_prior_context,
@@ -186,6 +190,13 @@ def planner_agent(state: ResearchState) -> dict[str, Any]:
                 "n_sub_questions": len(sub_questions),
                 "n_search_queries": len(search_queries),
             },
+        )
+        # Rung 5 of `docs/reliability.md` §5: no usable plan came back,
+        # so the raw query stands in for one. Every node downstream
+        # then works from a plan the planner never produced, under a
+        # run that will report `succeeded`. ADR 0081.
+        record_degradation_rung(
+            rung=DEGRADATION_RUNG_MODEL_FALLBACK, component="planner"
         )
         sub_questions = sub_questions or [state["query"]]
         search_queries = search_queries or [state["query"]]
