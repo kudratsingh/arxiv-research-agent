@@ -1955,6 +1955,13 @@ class Settings(BaseSettings):
     def effort_for(self, agent: str = "") -> str:
         """The effort level to send for `agent`, or `""` to send none.
 
+        Three sources, in falling precedence: the tier override for the
+        run's *active* compute tier (CAP-04, empty unless the compute
+        controller bound one), then the agent's own `<agent>_effort`,
+        then the deployment-wide `llm_effort`. With
+        `tier_effort_overrides` at its `{}` default the first source is
+        never consulted and this is the ADR-0077 function unchanged.
+
         Args:
             agent: One of `EFFORT_AGENTS`, or `""` for a call that
                 carries no agent identity and therefore takes the
@@ -1968,6 +1975,9 @@ class Settings(BaseSettings):
         """
         if not agent:
             return self.llm_effort
+        tier_level = self.tier_effort_for(agent)
+        if tier_level:
+            return tier_level
         override: str = getattr(self, f"{agent}_effort")
         if override == "off":
             return ""
@@ -2073,6 +2083,195 @@ class Settings(BaseSettings):
                     "0077."
                 )
         return self
+
+    # ------ Agent capability (CAP-04) ---------------------------------
+    #
+    # The deterministic compute controller (ADR 0085). Off is today: no
+    # second graph is compiled, no tier is bound, no decision is
+    # recorded, and `effort_for` is the ADR-0077 function unchanged.
+    #
+    # `src/policies/compute.py` holds the features and the rule table;
+    # this pair is only the switch and the per-tier effort map, because a
+    # threshold an operator can move is a threshold no evaluation can
+    # attribute a result to (ADR 0070).
+
+    compute_controller: Literal["off", "deterministic"] = Field(
+        default="off",
+        description=(
+            "Whether each research job picks its own compute tier. 'off' "
+            "(the default) compiles and runs exactly one graph for the "
+            "whole process, as every release before this one did. "
+            "'deterministic' compiles the fixed pipeline and arm C's "
+            "verify-and-repair graph once at startup and selects between "
+            "them per job from `src.policies.compute.decide_tier` — T0 "
+            "runs the fixed pipeline, T1 runs verify-and-repair. It "
+            "requires research_policy=legacy, enable_supervisor=false "
+            "and enable_verifier=false, because each of those three "
+            "already claims the shape the controller is choosing. "
+            "ENABLE_EVIDENCE_STORE is not required and is strongly "
+            "recommended: without it a T1 run's graph classifies as "
+            "research_capability_missing rather than as arm C. See ADR "
+            "0085."
+        ),
+    )
+    tier_effort_overrides: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Per-tier, per-agent `output_config.effort`, keyed "
+            "'<tier>.<agent>' — e.g. {\"T1.verifier\": \"high\"} to make "
+            "the judge think harder on the runs the controller escalated. "
+            "Empty by default, and consulted only while a run has a tier "
+            "bound, so a deployment with the controller off is "
+            "byte-identical whatever this holds. Outranks <AGENT>_EFFORT "
+            "and LLM_EFFORT for that agent on that tier. 'off' is "
+            "deliberately not a member: this map exists to raise effort "
+            "on an escalated run, and <AGENT>_EFFORT=off already turns an "
+            "agent's effort off everywhere. Every level is checked "
+            "against that agent's routed model at load, for the reason "
+            "ADR 0077 gives. See ADR 0085."
+        ),
+    )
+
+    def tier_effort_for(self, agent: str) -> str:
+        """`agent`'s effort on the run's active tier, or `""` for none.
+
+        `""` means "no tier override applies" and never "send no
+        effort" — the two would be indistinguishable, which is why
+        `"off"` is refused as a value at load rather than handled here.
+
+        The import is local and behind the empty-map check for two
+        reasons: `src.config` is imported by `src.policies.compute`'s
+        eventual callers and not the other way round, and this method is
+        on the path of every model call, so a deployment that configured
+        no override pays a dict truth test and nothing else.
+        """
+        if not agent or not self.tier_effort_overrides:
+            return ""
+        from src.policies.compute import active_compute_tier
+
+        tier = active_compute_tier()
+        if tier is None:
+            return ""
+        return self.tier_effort_overrides.get(f"{tier}.{agent}", "")
+
+    @model_validator(mode="after")
+    def _check_compute_controller_requirements(self) -> Settings:
+        """Refuse a controller that has no choice left to make.
+
+        Each of the three refusals is about *who picks the graph*, and
+        two claimants are one too many: `research_policy` fixes the
+        policy for the whole process (ADR 0076), `enable_supervisor`
+        hands routing to a model, and `enable_verifier` puts the
+        supervisor's verify action beside the verify node this
+        controller's T1 graph already has — the same objection ADR 0076
+        raised, arrived at from the other side.
+
+        `enable_evidence_store` is deliberately *not* refused, and the
+        asymmetry is worth stating because arm C does refuse it. There
+        the flag decides whether a manifest may be labelled C; here it
+        decides only how the graph the controller selected classifies,
+        and `src/contracts/research_binding.py` already answers that
+        honestly — a verify graph with no evidence path earns
+        `research_capability_missing`, which is the classifier telling
+        the truth rather than a claim this field would have to refuse.
+
+        Raises:
+            ValueError: Naming every offending flag, so one boot attempt
+                is enough to fix the whole environment file.
+        """
+        if self.compute_controller == "off":
+            return self
+        problems: list[str] = []
+        if self.research_policy != "legacy":
+            problems.append(
+                "research_policy must be legacy (the controller picks the "
+                f"graph per run; {self.research_policy!r} picks it for the "
+                "whole process)"
+            )
+        if self.enable_supervisor:
+            problems.append(
+                "enable_supervisor must be false (the supervisor loop is a "
+                "model-routed shape, and there is no T0/T1 pair inside it)"
+            )
+        if self.enable_verifier:
+            problems.append(
+                "enable_verifier must be false (that flag adds the "
+                "supervisor's verify action, which T1 replaces with its own "
+                "verify node)"
+            )
+        if problems:
+            raise ValueError(
+                "compute_controller=deterministic requires a specific flag "
+                "combination and got another: " + "; ".join(problems)
+                + ". See ADR 0085."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _check_tier_effort_overrides(self) -> Settings:
+        """Refuse a tier override that is misspelled or would HTTP 400.
+
+        Validated whether or not the controller is on, for the same
+        reason `_check_request_profile_is_supported` validates the
+        per-agent fields whatever the model routing is: a map that only
+        fails on the day someone turns the controller on has moved the
+        error away from the change that caused it.
+
+        Raises:
+            ValueError: On an unparseable key, an unknown tier or agent,
+                a level outside the declared set, or a level the agent's
+                routed model does not accept.
+        """
+        if not self.tier_effort_overrides:
+            return self
+
+        from src.llm_models import capabilities_for
+        from src.policies.compute import COMPUTE_TIERS
+
+        for key, level in sorted(self.tier_effort_overrides.items()):
+            tier, _, agent = key.partition(".")
+            if tier not in COMPUTE_TIERS or agent not in EFFORT_AGENTS:
+                raise ValueError(
+                    f"tier_effort_overrides key {key!r} is not "
+                    "'<tier>.<agent>' with a tier in "
+                    f"{list(COMPUTE_TIERS)} and an agent in "
+                    f"{list(EFFORT_AGENTS)}. See ADR 0085."
+                )
+            if level not in TIER_EFFORT_LEVELS:
+                raise ValueError(
+                    f"tier_effort_overrides[{key!r}]={level!r} is not one of "
+                    f"{list(TIER_EFFORT_LEVELS)}. 'off' is not a member: a "
+                    "tier override raises effort, and <AGENT>_EFFORT=off "
+                    "turns it off everywhere. See ADR 0085."
+                )
+            model = self.model_for(agent)
+            caps = capabilities_for(model)
+            if caps.supports_effort(level):
+                continue
+            accepted = (
+                ", ".join(sorted(caps.effort_levels))
+                if caps.effort_levels
+                else "none — this model rejects output_config.effort"
+            )
+            raise ValueError(
+                f"tier_effort_overrides[{key!r}]={level!r} is not supported "
+                f"by the routed model {model!r}, which accepts: {accepted}. "
+                "Pick a level the model lists, or route that agent "
+                "elsewhere. See ADR 0085."
+            )
+        return self
+
+
+#: Effort levels a tier override may name. The five real levels and
+#: nothing else — `""` would be indistinguishable from "no override" and
+#: `"off"` is what `<AGENT>_EFFORT` is for (ADR 0085).
+TIER_EFFORT_LEVELS: Final[tuple[str, ...]] = (
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+)
 
 
 #: The nine agents that carry an effort override, paired with the
