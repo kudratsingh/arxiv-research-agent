@@ -102,6 +102,42 @@ synthesize / critique / stop`, plus `verify` when
 iteration caps short-circuit before the LLM call; malformed judge
 output falls back to rules that mirror the fixed-pipeline order.
 
+### A third shape, chosen by the research policy (ADR 0076)
+
+The two shapes above are the two the `enable_supervisor` flag selects,
+and they are what `research_policy="legacy"` — the default — compiles.
+`research_policy="fixed_verify_repair"` compiles a third, arm C of
+[`docs/agent-engineering/07-first-policy-experiment.md`](agent-engineering/07-first-policy-experiment.md):
+
+```mermaid
+flowchart LR
+    P[planner] --> S[search] --> RD[reader] --> Y[synthesizer] --> V[verify]
+    V --> RV{"route_after_verification"}
+    RV -->|"pass · abstain · repair spent"| C[critic]
+    RV -->|"fail, one repair left"| RP[repair]
+    RP -->|"retrieve_missing_evidence"| S
+    RP -->|"qualify_or_remove_claims"| Y
+    C --> RT{"route_after_critique"}
+    RT --> E([END])
+```
+
+The `verify` node is the existing verifier — same prompt, same judge —
+writing a first-class `pass` / `fail` / `abstain` verdict. The `repair`
+node picks one bounded, named recovery from a deterministic table (no
+model call, see [`docs/agents/repair.md`](agents/repair.md)), the graph
+re-enters at the node that carries it out, and verification always runs
+again before the critic. One repair per run; the critic's revision loop
+and `max_iterations` are unchanged.
+
+The policy is a *selector*, not a fourth flag, and it refuses to load
+unless `enable_supervisor=false`, `enable_evidence_store=true` and
+`enable_verifier=false`. That refusal is what makes the arm labelling
+mechanical: no combination of the three legacy flags produces this
+shape, and `ENABLE_VERIFIER=true` under the fixed pipeline still adds
+nothing at all. See ADR
+[0076](decisions/0076-fixed-verify-repair-research-policy.md) for the
+published selector, node names, verdict codes and decision table.
+
 Regardless of shape, `build_workflow` also wires two production
 knobs:
 

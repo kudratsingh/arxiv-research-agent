@@ -169,6 +169,7 @@ _NUMBER_WORDS: Final[dict[str, int]] = {
     "sixteen": 16,
     "nineteen": 19,
     "twenty-one": 21,
+    "twenty-two": 22,
 }
 
 #: The words `README.md` uses for the three standalone storage backends,
@@ -714,7 +715,7 @@ class TestTheVitestCounts:
 class TestTheE2eTier:
     def test_the_readme_count_is_the_marker_selected_count(self) -> None:
         match = _claim(
-            r"\*\*(\w+) tests across (\w+) modules\*\*", _readme(), "README.md"
+            r"\*\*([\w-]+) tests across (\w+) modules\*\*", _readme(), "README.md"
         )
         claimed_tests = _word_to_int(match.group(1), "README.md")
         _, selected = _collect_tiers()
@@ -727,7 +728,7 @@ class TestTheE2eTier:
 
     def test_the_readme_module_count_is_the_directory(self) -> None:
         match = _claim(
-            r"\*\*(\w+) tests across (\w+) modules\*\*", _readme(), "README.md"
+            r"\*\*([\w-]+) tests across (\w+) modules\*\*", _readme(), "README.md"
         )
         claimed_modules = _word_to_int(match.group(2), "README.md")
         present = sorted(path.name for path in _E2E_DIR.glob("test_*.py"))

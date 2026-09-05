@@ -2,17 +2,28 @@
 
 ## Purpose
 
-Runtime faithfulness check that runs as a supervisor-selected action.
-When `settings.enable_verifier` is `True` the supervisor may pick
-`verify`; the node reads the current draft plus a per-paper source
-dossier — ranked chunks when the evidence store is on and populated,
-abstracts otherwise — judges each cited claim against it, and writes a
-recovery recommendation back to state for the supervisor to act on.
+Runtime faithfulness check. The node reads the current draft plus a
+per-paper source dossier — ranked chunks when the evidence store is on
+and populated, abstracts otherwise — judges each cited claim against it,
+and writes a recovery recommendation back to state.
 
-The verifier is **supervisor-only** — it is never wired into the
-fixed pipeline. `enable_verifier` is independent of `enable_supervisor`
-so the two features can be A/B'd separately against the Sprint 1
-baseline.
+Two entry points reach that one judge (ADR
+[0076](../decisions/0076-fixed-verify-repair-research-policy.md)):
+
+| Entry point | Reachable when | Writes |
+|---|---|---|
+| `verifier_agent` | the supervisor picks `verify`, with `enable_verifier` on | the four fields under [Outputs](#outputs) |
+| `verify_node` | `research_policy="fixed_verify_repair"` | those four, plus a first-class verdict and the two repair keys |
+
+Same prompt, same call, same cost. What the fixed policy's node adds is
+the **verdict** — `pass` / `fail` / `abstain` — which its graph routes on
+and its [repair policy](repair.md) decides from.
+
+Under the legacy fixed pipeline neither is wired in. That is what
+`ENABLE_VERIFIER=true` with `ENABLE_SUPERVISOR=false` has always meant
+and still means: nothing. Arm C is a `research_policy` value rather than
+a flag combination, and `tests/test_research_policy.py` asserts that no
+combination of the three legacy flags produces a `verify` node.
 
 Source: `src/agents/verifier.py`. Wiring:
 [`docs/architecture.md`](../architecture.md).
@@ -70,6 +81,46 @@ Writes to `ResearchState`:
 - A `messages` entry (`AIMessage` named `"verifier"`) summarizing the
   decision.
 
+### The fixed path's verdict (ADR 0076)
+
+`verify_node` writes everything above — unchanged, including the
+conservative `verified=False` on an unusable judge response — and four
+more keys, stamping its message `"verify"` after the node that produced
+it:
+
+- `verification_verdict: "pass" | "fail" | "abstain" | ""`
+- `verification_reason: str` — a stable snake_case code
+- `repair_count: int` — carried through, never reset by a verification
+- `repair_action: str` — carried through
+
+| Verdict | When | Reason codes |
+|---|---|---|
+| `pass` | the judge approved every cited claim | `verified` |
+| `fail` | the judge reported a problem | `unsupported_claims`, `missing_evidence`, `unsupported_and_missing`, `verifier_reported_failure` |
+| `abstain` | nothing was judged | `no_draft`, `no_citations`, `upstream_model`, `upstream_model_output` |
+
+**Abstain is not a polite fail.** Every path that reaches a result
+without a usable judgement — the two pre-LLM short-circuits, a provider
+that did not answer, output the parser could not use — has found no
+fault. The [repair policy](repair.md) must not spend the run's one
+repair on a diagnosis nobody made, and the `verified` boolean alone
+cannot tell those cases apart: `verified=True` with empty lists is
+emitted both by a judge that approved the report and by the
+short-circuit that never asked one.
+
+The last two abstention codes are `src/errors.py`'s own
+(`upstream_model`, `upstream_model_output`), reused so a dashboard can
+join an abstention to the provider failure that caused it.
+
+Two exceptions are **not** verdicts and are re-raised out of the judge
+call rather than caught by the fallback path: `JobCancelledError` and
+`CostBudgetExceeded`. Both are raised by `call_llm` before it issues
+anything (ADRs 0047 / 0051), and swallowing a budget stop into an
+abstention would let the run continue past its own ceiling — under the
+fixed policy, straight into a repair, a second synthesis and a second
+verification. Same treatment, for the same reason,
+`src/agents/reader.py` gives them in its fan-out.
+
 ## Prompt design
 
 **System** (`VERIFIER_SYSTEM_PROMPT`): ADR-0007's calibrated
@@ -117,6 +168,8 @@ verifier_agent(state):
     try:
         parsed = call_llm_json(prompt=_build_user_prompt(state),
                                system_prompt=VERIFIER_SYSTEM_PROMPT)
+    except (JobCancelledError, CostBudgetExceeded):
+        raise                 # not judgements — see Outputs above
     except Exception:
         return fallback_result("LLM call failed")
         # verified=False, recommendation="revise_report"
@@ -178,8 +231,9 @@ abstracts available)` rather than a blank block.
 |---|---|---|
 | Empty draft | Pre-LLM check | `verified=True`, no LLM call, no recommendation. Prevents paying for verification before synthesis. |
 | Draft has no citations | Pre-LLM check | `verified=True`, no LLM call. Critic catches the "no citations" case separately. |
-| Anthropic 429 / other exception | `call_llm_json` | Caught; falls back to `verified=False, recommendation="revise_report"`. Logged as `verifier_llm_failed_fallback`. |
-| Judge output not JSON | `call_llm_json` | Same fallback path — the raised `JSONDecodeError` is caught by the same broad `except`. |
+| Anthropic 429 / other exception | `call_llm_json` | Caught; falls back to `verified=False, recommendation="revise_report"`. Logged as `verifier_llm_failed_fallback`. Verdict `abstain`, reason `upstream_model`. |
+| Judge output not JSON | `call_llm_json` | Same fallback path — the raised `JSONDecodeError` is caught by the same broad `except`. Verdict `abstain`, reason `upstream_model_output`. |
+| Job cancelled, or the cost ceiling tripped | `call_llm_json` | **Re-raised**, ahead of the broad handler. Neither is a judgement, and an abstention here would let a stopped run carry on spending (ADRs 0047 / 0051). |
 | `verified=True` alongside flagged issues | Post-parse invariant | Downgraded to `verified=False`; recommendation kept. `verified` must mean "no follow-up needed". |
 | `verified` truthy but not literal `true` | Post-parse | Treated as `False`. Same idiom the critic uses for `revision_needed`. |
 | `recommended_action` outside the enum | `_clean_recommendation` | Cleared to empty, then re-inferred per step 4 above. |
@@ -190,9 +244,17 @@ abstracts available)` rather than a blank block.
 
 Settings that drive the verifier (see `src/config.py`):
 
-- `enable_verifier: bool = False` — master flag. When off, the
-  verifier node is not added to the graph and the supervisor's action
-  enum excludes `verify`.
+- `research_policy: Literal["legacy", "fixed_verify_repair"] =
+  "legacy"` — selects the fixed verify-and-repair graph, whose `verify`
+  node is the other entry point (ADR 0076). It requires
+  `enable_verifier=false`: that flag names the *supervisor's* verify
+  action, and the two together would put two verifiers in one
+  configuration with nothing to say which a result came from, so the
+  combination is refused at settings load.
+- `enable_verifier: bool = False` — master flag for the supervisor's
+  action. When off, the verifier node is not added to the supervisor
+  graph and its action enum excludes `verify`. It has never had any
+  effect on the fixed pipeline.
 - `enable_evidence_store: bool = False` — selects the chunks dossier
   over abstracts (ADR 0016). Shared with the reader and synthesizer;
   turning it on switches all three together.
@@ -214,6 +276,10 @@ including this one, and the API runner's between-node budget check
   downgraded, recommendations get inferred when the judge omits them),
   and malformed output (LLM exception, unknown recommendation,
   wrong-typed fields).
+- Fixed-path verdict: `tests/e2e/test_verify_repair.py` — the verdict
+  each judge response produces, driven through the compiled graph, and
+  `tests/fault/test_verify_repair_faults.py` for the two exceptions the
+  node re-raises instead of turning into one.
 - Supervisor gating: `tests/test_supervisor.py::TestVerifierGating` —
   8 tests covering the `enable_verifier` flag (`verify` accepted /
   rejected, state summary contents, router behavior with stale
@@ -244,12 +310,16 @@ including this one, and the API runner's between-node budget check
 
 ## Related
 
-- **Hands off to** — the [supervisor](supervisor.md), always. The
-  recommendation maps to a next action there: `read_more` →
-  [reader](reader.md), `search_more` → [search](search.md) or the
-  [query refiner](query_refiner.md), `revise_report` →
-  [synthesizer](synthesizer.md).
-- **ADRs** — [0015](../decisions/0015-verifier-agent-runtime-faithfulness.md)
+- **Hands off to** — under the supervisor loop, the
+  [supervisor](supervisor.md), always: the recommendation maps to a next
+  action there — `read_more` → [reader](reader.md), `search_more` →
+  [search](search.md) or the [query refiner](query_refiner.md),
+  `revise_report` → [synthesizer](synthesizer.md). Under the fixed
+  verify-and-repair policy, the [repair policy](repair.md), which reads
+  the verdict and the two lists rather than the recommendation.
+- **ADRs** — [0076](../decisions/0076-fixed-verify-repair-research-policy.md)
+  (the fixed path's verdict and its repair),
+  [0015](../decisions/0015-verifier-agent-runtime-faithfulness.md)
   (this agent),
   [0007](../decisions/0007-faithfulness-single-call-abstracts.md) (the
   offline judge it promotes),
