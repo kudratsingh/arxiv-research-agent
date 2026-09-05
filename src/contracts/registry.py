@@ -900,6 +900,11 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     validate = subparsers.add_parser("validate", help="validate one registry envelope")
     validate.add_argument("path", type=Path)
+    parity = subparsers.add_parser(
+        "parity",
+        help="compare a registry tree with the live benchmark modules",
+    )
+    parity.add_argument("root", type=Path, nargs="?", default=None)
     for name in ("resolve", "lock"):
         command = subparsers.add_parser(name)
         command.add_argument("root", type=Path)
@@ -930,6 +935,15 @@ def main(argv: list[str] | None = None) -> int:
         validate_registry_safety(envelope)
         print(canonical_json(envelope.object_ref()))
         return 0
+    if args.command == "parity":
+        # Imported here because the adapters import this module: the registry
+        # core stays free of any dependency on the benchmark modules it
+        # registers, and only this one command pays for them.
+        from src.contracts.benchmark_adapters import build_parity_report, render_parity_report
+
+        report = build_parity_report(args.root)
+        print(render_parity_report(report))
+        return 0 if report.ok else 1
     resolver = LocalRegistry(args.root)
     ref = _parse_ref(args)
     intended_use = IntendedUse(args.use)
