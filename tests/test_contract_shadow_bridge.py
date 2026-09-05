@@ -686,3 +686,34 @@ class TestTheCachedGraphShape:
                     stack.close()
         finally:
             workflow_module.settings = shipped_settings
+
+
+def test_concurrent_model_calls_emit_one_budget_warning() -> None:
+    """The reader records from a thread pool; the latch has to hold.
+
+    `budget.threshold_reached` carries a fixed idempotency key, so two
+    workers crossing the line together would append the same key with
+    different spend figures — an `IdempotencyConflict` the containment
+    would absorb by degrading the shadow. The run would lose its
+    trajectory to a race, which is the opposite of what a warning is for.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    run = open_run()
+    costs = RunCosts()
+    costs.record("claude-sonnet-4-6", 1, 1, 1.9)
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(
+            pool.map(
+                lambda _: bridge.observe_model_call(run, model_call(), costs),
+                range(16),
+            )
+        )
+
+    warnings = [
+        event for event in run.events() if event.event_type == "budget.threshold_reached"
+    ]
+    assert len(warnings) == 1
+    assert run.degraded is False
+    assert len(run.model_call_events()) == 16

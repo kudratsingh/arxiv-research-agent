@@ -496,14 +496,26 @@ class ShadowRun:
             self._maybe_warn_budget(costs)
 
     def _maybe_warn_budget(self, costs: RunCosts) -> None:
-        """Emit one `budget.threshold_reached` when spend nears the ceiling."""
+        """Emit one `budget.threshold_reached` when spend nears the ceiling.
+
+        The latch is taken under the lock, and that is not defensive
+        tidiness: the reader records model calls from a thread pool, so
+        two workers can cross the line in the same instant, and the event
+        carries a *fixed* idempotency key. Two appends under one key with
+        different spend figures is an `IdempotencyConflict`, which the
+        containment would absorb by degrading the shadow — a race would
+        quietly cost the run its trajectory rather than duplicate a line.
+        """
         ceiling = Decimal(self.cost_ceiling_usd)
-        if self._budget_warned or ceiling <= 0:
+        if ceiling <= 0:
             return
         spent = Decimal(money(costs.total_cost_usd))
         if spent < ceiling * BUDGET_WARNING_FRACTION:
             return
-        self._budget_warned = True
+        with self._lock:
+            if self._budget_warned:
+                return
+            self._budget_warned = True
         self._append(
             "budget.threshold_reached",
             "budget.threshold_reached",
