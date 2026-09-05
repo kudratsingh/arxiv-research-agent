@@ -37,6 +37,7 @@ that cannot be made to time out on demand would not test it.
 from __future__ import annotations
 
 import json
+import logging
 import socket
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -93,6 +94,11 @@ from src.contracts.registry import (
 )
 from src.contracts.run_manifest import CompletionReceipt, CompletionStatus, RunReason
 from src.contracts.trajectory import import_jsonl, verify_trajectory
+from src.observability.logging import (
+    _STANDARD_LOG_KEYS,
+    ALLOWED_EXTRA_KEYS,
+    KNOWN_EVENTS,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_ROOT = REPO_ROOT / "eval_registry"
@@ -1213,7 +1219,182 @@ class TestEveryOutcomeStaysInTheDenominator:
 
 
 # ---------------------------------------------------------------------------
-# 6. The `run` verb
+# 6. The operator's log surface
+# ---------------------------------------------------------------------------
+
+
+class TestTheOperatorCanFollowAPass:
+    """P0-WO07c. Four events, and each one answers a distinct question.
+
+    A 240-episode pass runs for tens of seconds in one process and the
+    CLI prints nothing until it is over, so the log is the only thing an
+    operator watching a campaign has. These assertions are what stop the
+    four names being registered and then quietly stopping — the failure
+    `KNOWN_EVENTS` exists to catch in the other direction.
+    """
+
+    pytestmark = [pytest.mark.integration, pytest.mark.contract]
+
+    def test_a_pass_emits_a_started_and_a_completed_line_per_episode(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        cfg = config()
+        plan = materialize(
+            tmp_path, cfg, request(cfg, cases=SLICE_CASES, arms=("A", "B"), repeats=1)
+        )
+        with caplog.at_level(logging.INFO, logger="src.campaign.execute"):
+            execute_campaign(
+                cfg,
+                root=tmp_path,
+                plan=plan,
+                graph_probe=arm_graph_probe(cfg),
+                sink_root=tmp_path / "trajectories",
+            )
+
+        started = _events(caplog, "campaign_episode_started")
+        completed = _events(caplog, "campaign_episode_completed")
+        assert len(started) == 4
+        assert len(completed) == 4
+
+        for record in started:
+            assert record.campaign_id == plan.campaign_id
+            assert record.arm_id in {"A", "B"}
+            assert record.case_id in SLICE_CASES
+            assert record.repeat_index == 0
+        for record in completed:
+            assert record.campaign_id == plan.campaign_id
+            assert record.status == "succeeded"
+            assert record.ledger_status == "completed"
+            # The claim the whole work order rests on, on every line.
+            assert record.call_count == 0
+            assert record.workflow_cost_usd == "0.000000"
+            assert isinstance(record.elapsed_sec, float)
+
+        # Every key the four events pass is on the closed allowlist, and
+        # every name is in the closed registry. `tests/test_log_contract.py`
+        # asserts this over the *source*; this asserts it over the lines a
+        # real pass actually emitted.
+        for record in (*started, *completed):
+            assert record.getMessage() in KNOWN_EVENTS
+            assert _extras(record) <= ALLOWED_EXTRA_KEYS
+
+    def test_a_failing_episode_logs_its_error_type_and_its_traceback(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The one place a failed episode's whole stack survives.
+
+        The episode record keeps a bounded 500-character detail and the
+        manifest keeps none at all (RFC 09 §11.2), so a campaign whose
+        graph broke on one slot of 240 is otherwise only debuggable by
+        re-running it.
+        """
+        cfg = config()
+        plan = materialize(
+            tmp_path, cfg, request(cfg, cases=SLICE_CASES[:1], arms=("A",), repeats=1)
+        )
+
+        def _explode(*_args: Any, **_kwargs: Any) -> Any:
+            raise RuntimeError("the graph fell over")
+
+        import src.graph.workflow as workflow_module
+
+        probe = arm_graph_probe(cfg)
+        with (
+            caplog.at_level(logging.ERROR, logger="src.campaign.execute"),
+            pytest.MonkeyPatch.context() as patch,
+        ):
+            # Patched *after* the probe has compiled its shapes: breaking
+            # the builder before that would fail the plan rather than the
+            # episode, which is a different test.
+            probe("A")
+            patch.setattr(workflow_module, "build_workflow", _explode)
+            report = execute_campaign(
+                cfg,
+                root=tmp_path,
+                plan=plan,
+                graph_probe=probe,
+                sink_root=tmp_path / "trajectories",
+            )
+
+        assert report.counts["errored"] == 1
+        failed = _events(caplog, "campaign_episode_failed")
+        assert len(failed) == 1
+        assert failed[0].error_type == "RuntimeError"
+        assert failed[0].case_id == SLICE_CASES[0]
+        assert failed[0].arm_id == "A"
+        assert failed[0].exc_info is not None, "the traceback is the point"
+        assert failed[0].getMessage() in KNOWN_EVENTS
+        assert _extras(failed[0]) <= ALLOWED_EXTRA_KEYS
+
+    def test_the_campaign_cap_stop_is_a_warning_naming_the_cap(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A campaign that stopped short must say so at WARNING.
+
+        07 §9: stopping is an experiment outcome. A pass that quietly
+        ended three episodes early at INFO would look identical to one
+        that finished.
+        """
+        cfg, plan, backend = chargeable(
+            tmp_path, campaign_usd="3.000000", episode_usd="1.000000"
+        )
+        with caplog.at_level(logging.WARNING, logger="src.campaign.execute"):
+            report = execute_campaign(
+                cfg,
+                root=tmp_path,
+                plan=plan,
+                approval_backend=backend,
+                graph_probe=arm_graph_probe(config()),
+                runner=ScriptedRunner(workflow_cost_usd="1.000000"),
+                scorer=available_scorer,
+                credential_probe=lambda: None,
+                sink_root=tmp_path / "trajectories",
+            )
+
+        assert report.stop_reason == "campaign_cap_reached"
+        stopped = _events(caplog, "campaign_budget_stop")
+        assert len(stopped) == 1
+        assert stopped[0].levelno == logging.WARNING
+        assert stopped[0].campaign_id == plan.campaign_id
+        assert stopped[0].cap_usd == "3.000000"
+        assert stopped[0].getMessage() in KNOWN_EVENTS
+        assert _extras(stopped[0]) <= ALLOWED_EXTRA_KEYS
+
+    def test_the_campaign_emits_no_event_the_registry_does_not_know(
+        self, tmp_path: Path, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The closed set, checked against a real pass rather than the AST."""
+        cfg = config()
+        plan = materialize(
+            tmp_path, cfg, request(cfg, cases=SLICE_CASES[:1], arms=("A",), repeats=1)
+        )
+        with caplog.at_level(logging.DEBUG, logger="src.campaign.execute"):
+            execute_campaign(
+                cfg,
+                root=tmp_path,
+                plan=plan,
+                graph_probe=arm_graph_probe(cfg),
+                sink_root=tmp_path / "trajectories",
+            )
+        emitted = {record.getMessage() for record in caplog.records}
+        assert emitted, "the pass logged nothing at all"
+        assert emitted <= KNOWN_EVENTS, f"unregistered: {sorted(emitted - KNOWN_EVENTS)}"
+
+
+def _events(
+    caplog: pytest.LogCaptureFixture, name: str
+) -> list[logging.LogRecord]:
+    """Every captured record for one event name, in emission order."""
+    return [record for record in caplog.records if record.getMessage() == name]
+
+
+def _extras(record: logging.LogRecord) -> set[str]:
+    """The keys a record attached beyond `logging`'s own standard set."""
+    return set(record.__dict__) - _STANDARD_LOG_KEYS
+
+
+# ---------------------------------------------------------------------------
+# 7. The `run` verb
 # ---------------------------------------------------------------------------
 
 
