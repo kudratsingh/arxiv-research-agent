@@ -588,6 +588,30 @@ never renumbered.
   fixtures. An entropy rule, a `password=` keyword rule, `Basic` and
   bare `pk_` / `rk_` are argued and rejected on the record.
 
+- [0085](0085-deterministic-compute-controller.md) — **A deterministic
+  compute controller allocates T0 or T1 per run.** Adaptive test-time
+  compute was "absent" (`01-current-architecture.md` §6), and two
+  mechanisms that existed reached nothing: ADR 0077's nine
+  `<agent>_effort` fields were passed by no call site, and ADR 0076's
+  verify-and-repair graph was selected once at settings load, so a
+  deployment was arm B or arm C for its whole life and a *run* could
+  not choose. `compute_controller=deterministic` compiles both shapes
+  over one checkpointer and picks between them per job from a pure rule
+  table over pre-run features — query length, entity, comparative and
+  freshness cues, with an explicit depth request decisive in both
+  directions. Selection happens before the contract shadow, so the
+  effective policy id is the *selected graph's* and the runner never
+  names one. Every agent call site now passes `agent=<name>`, and
+  `tier_effort_overrides` can raise one agent's effort on the escalated
+  tier through a ContextVar the graph's executor wrapper already copies.
+  The decision reaches the trajectory as RFC 10 §8.6's
+  `compute.tier_selected` — features by digest, because the payload is
+  closed and a `product_operation_only` run may retain no content — and
+  deliberately does **not** reach SSE, where a third key would move a
+  pinned frame shape. Thresholds are module constants rather than
+  settings, so an evaluation can attribute a result to them. Off is
+  byte-identical; T2 and T3 are out of scope.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

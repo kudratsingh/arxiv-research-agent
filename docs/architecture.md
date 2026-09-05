@@ -138,6 +138,34 @@ nothing at all. See ADR
 [0076](decisions/0076-fixed-verify-repair-research-policy.md) for the
 published selector, node names, verdict codes and decision table.
 
+### Choosing between the shapes per run (ADR 0085)
+
+`research_policy` fixes the shape for the whole process, so a deployment
+is arm B or arm C for its life. `compute_controller="deterministic"`
+makes the choice per *job* instead. `build_workflow` then compiles the
+fixed pipeline **and** the verify-and-repair shape over one
+checkpointer and attaches the pair as `compute_tier_graphs(app)`; the
+API runner allocates a tier from
+[`src/policies/compute.py`](../src/policies/compute.py) — a pure rule
+table over pre-run features (query length, entity count, comparative and
+freshness cues, and an explicit depth request where a surface carries
+one) — and runs T0 on the fixed pipeline or T1 on the verify-and-repair
+graph.
+
+Selection happens before the contract shadow seals the episode, so the
+policy id a run records is the graph it actually ran; nothing in the
+runner names one. The allocation reaches the trajectory as
+`compute.tier_selected`, with the features referenced by digest rather
+than inlined, and deliberately does not reach the SSE frames. Every
+agent's `call_llm_json` call also names itself now, so ADR 0077's
+per-agent `<AGENT>_EFFORT` settings apply, and `tier_effort_overrides`
+can raise one agent's effort on the escalated tier only.
+
+With `COMPUTE_CONTROLLER=off` — the default — one graph is compiled and
+everything above is inert. T2 (branching) and T3 are not decided by this
+controller. See ADR
+[0085](decisions/0085-deterministic-compute-controller.md).
+
 Regardless of shape, `build_workflow` also wires two production
 knobs:
 
