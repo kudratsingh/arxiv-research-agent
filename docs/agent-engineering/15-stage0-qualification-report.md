@@ -6,10 +6,17 @@ Date: **2026-09-05**
 
 Work order: [`12-p0-work-orders.md`](12-p0-work-orders.md) §17 (P0-WO11)
 
-Repository baseline: `11f10f3` on `main`, plus the five commits this
-report ships with.
+Repository baseline: `3686800` on `main`, plus the six commits this
+report ships with. Every figure below was measured on
+`11f10f3`+P0-WO11 and re-validated after rebasing onto `3686800`, whose
+two intervening merges (WO-D4's redaction rules, ADR 0084; and the wave-D
+closing record) touch nothing this report measures.
 
 Executable half: [`tests/test_stage0_qualification.py`](../../tests/test_stage0_qualification.py)
+
+The commit the campaign-execution-loop work order (W07b) is waiting on is
+`4d9a2d8` — *"feat(agents): the supervisor serves a fixture route under
+mock mode"* — which is what makes an arm-D episode provider-free (§4.1).
 
 ---
 
