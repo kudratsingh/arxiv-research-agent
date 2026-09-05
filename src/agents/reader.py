@@ -634,6 +634,12 @@ def _analyze_paper(
             if settings.enable_evidence_store
             else []
         )
+        if mock_evidence:
+            log.info(
+                "reader_mock_claims_served",
+                extra={"paper_id": paper.get("id", ""), "n_claims": len(mock_evidence)},
+            )
+        log.info("reader_mock_analysis_served", extra={"paper_id": paper.get("id", "")})
         return mock_mode.mock_analysis(paper), mock_evidence, _default_signal()
 
     ranked = _gather_ranked_chunks(paper, subquestions, preferred_sections)

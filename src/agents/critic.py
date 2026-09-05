@@ -120,6 +120,10 @@ def critic_agent(state: ResearchState) -> dict[str, Any]:
         # graph over a report no judge read.
         iteration = state.get("iteration", 0)
         critique, score = mock_mode.mock_critique()
+        log.info(
+            "critic_mock_critique_served",
+            extra={"quality_score": score, "iterations": iteration + 1},
+        )
         return {
             "critique": critique,
             "quality_score": score,

@@ -545,6 +545,13 @@ def synthesizer_agent(state: ResearchState) -> dict[str, Any]:
             evidence=state.get("evidence", []),
             evidence_path=evidence_path,
         )
+        log.info(
+            "synthesizer_mock_briefing_served",
+            extra={
+                "n_papers": len(state.get("papers", [])),
+                "n_claims": len(state.get("evidence", [])),
+            },
+        )
         return {
             "draft_report": draft_report,
             "citations": citations,
