@@ -96,9 +96,9 @@ graph says what *may* start, not what has merged.
 | P0-WO02 | Development benchmark registry core | Landed — [#188](https://github.com/kudratsingh/arxiv-research-agent/pull/188) |
 | P0-WO03 | Sealed RunManifest and admission | Landed — [#201](https://github.com/kudratsingh/arxiv-research-agent/pull/201) |
 | P0-WO04 | Trajectory schema and in-memory adapter | Landed — [#203](https://github.com/kudratsingh/arxiv-research-agent/pull/203) |
-| P0-WO05 | Research shadow integration | This PR — see [ADR 0078](../decisions/0078-contract-shadow-for-the-research-path.md) |
-| P0-WO06 | Benchmark migration and parity | In progress |
-| P0-WO07 | Campaign lock, repeats, resume, denominators | Pending |
+| P0-WO05 | Research shadow integration | Landed — [#215](https://github.com/kudratsingh/arxiv-research-agent/pull/215) |
+| P0-WO06 | Benchmark migration and parity | Landed — [#214](https://github.com/kudratsingh/arxiv-research-agent/pull/214) |
+| P0-WO07 | Campaign lock, repeats, resume, denominators | This PR — see [ADR 0082](../decisions/0082-campaign-lock-repeats-and-denominators.md) |
 | P0-WO08 | Runtime event bridge and artifact adapter | Pending |
 | P0-WO09 | Governance and threat review | Landed — [#205](https://github.com/kudratsingh/arxiv-research-agent/pull/205) |
 | P0-WO10 | Judge-calibration protocol and fixtures | This PR — see [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md); no ADR, this is a design package |
@@ -153,9 +153,9 @@ order is "landed" only when its acceptance criteria are green in CI.
 | P0-WO02 | Development registry core | `src/contracts/registry.py` | landed |
 | P0-WO03 | Sealed RunManifest and admission | `src/contracts/run_manifest.py` | landed |
 | P0-WO04 | Trajectory schema and replay | `src/contracts/trajectory.py` | landed |
-| P0-WO05 | Research shadow integration | — | in flight |
+| P0-WO05 | Research shadow integration | `src/contracts/research_binding.py`, `src/contracts/shadow_bridge.py` | landed |
 | P0-WO06 | Benchmark migration and parity | `eval_registry/`, `src/contracts/benchmark_adapters.py` | landed |
-| P0-WO07 | Campaign lock, repeats, denominators | — | not started |
+| P0-WO07 | Campaign lock, repeats, denominators | `src/campaign/` | this PR |
 | P0-WO08 | Runtime event bridge | — | not started |
 | P0-WO09 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) | landed |
 | P0-WO10 | Judge-calibration design | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry_calibration/` | landed |
@@ -167,6 +167,15 @@ generated, digest-verified view of `src/eval/benchmark_queries.py` and
 `src/eval/learning_benchmark.py`; `python -m src.contracts.registry parity`
 proves the two agree, and a later ADR decides which one is authoritative
 ([ADR 0079](../decisions/0079-benchmark-registry-migration-and-parity.md)).
+
+Campaign orchestration is `python -m src.campaign plan|dry-run|resume|status`.
+`dry-run` enumerates every planned episode of a registry-locked
+`cases x repeats x arms` matrix at zero cost and writes nothing; `plan`
+materializes the campaign directory including its denominator ledger. Neither
+runs an episode, contacts a provider, or authorizes spend — a chargeable
+campaign is refused before a credential is read unless an external approval
+record covers it, and **P0-WO12 remains blocked on D9**
+([ADR 0082](../decisions/0082-campaign-lock-repeats-and-denominators.md)).
 
 ## Program thesis
 
