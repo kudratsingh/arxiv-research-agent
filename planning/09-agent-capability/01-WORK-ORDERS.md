@@ -431,16 +431,6 @@ choke point, golden off, scripted tier unaffected. ADR 0086.
   arm E on top of CAP-03/CAP-04).
 
 
-- **CAP-03** orchestrator-workers for T2: sub-question workers with
-  isolated context and an evidence-table merge; depends on CAP-02's verdict
-  keys and on Puma's W04 event types for candidate lineage.
-- **CAP-04** difficulty features and the deterministic T0/T1 controller;
-  depends on CAP-01 (effort as the T0/T1 lever) and CAP-02.
-- **CAP-05** SDK 1.x upgrade; lockfile change under ADR 0045's corrected
-  procedure; coordinate with both sibling lanes because the lock is shared.
-- **CAP-06** funded live smoke; blocked on the owner's funding decision.
-- **CAP-07** — promoted to wave 1b on 2026-09-05 (see below); no longer
-  optional.
 
 ## Shared-file arrangements in force
 
