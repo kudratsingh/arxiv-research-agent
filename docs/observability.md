@@ -216,24 +216,61 @@ configured value standing and warning once under
 
 ### Credentials are always scrubbed
 
-Five rules run over every string the formatter emits — the message,
+Nine rules run over every string the formatter emits — the message,
 each `extra` value, and the formatted traceback. The traceback matters
 most: the leak that actually happened was not a call site logging a
 password, it was a connection error whose *message* carried the URL.
 
+They live in `REDACTION_RULES` in `src/observability/logging.py`, in
+the order they run, each with a name. The names are what the property
+tier parametrises over, so a rule added without a generator fails a
+test rather than shipping unproven.
+
 | Rule | Example in | Example out |
 |---|---|---|
-| URL userinfo | `postgres://u:pw@db/x` | `postgres://***@db/x` |
-| Bearer token | `Bearer abc123.def456` | `Bearer ***` |
-| `sk-` API key | `sk-ant-api03-AbC123…` | `sk-***` |
-| Email address | `jane.doe@lab.example.org` | `***@lab.example.org` |
-| Base64-ish blob | 40+ mixed-case chars with a digit | `***[78 chars]` |
+| `url_userinfo` | `postgres://u:pw@db/x` | `postgres://***@db/x` |
+| `bearer_token` | `Bearer abc123.def456` | `Bearer ***` |
+| `sk_api_key` | `sk-ant-api03-AbC123…` | `sk-***` |
+| `environment_scoped_key` | `gw_live_PROBEprobe…` | `gw_live_***` |
+| `vendor_prefixed_token` | `ghp_16CharsAndMore…`, `xoxb-2345…` | `ghp_***`, `xoxb-***` |
+| `aws_access_key_id` | `AKIAIOSFODNN7EXAMPLE` | `AKIA***` |
+| `json_web_token` | `eyJhbGci….eyJzdWIi….dBjftJ…` | `***[jwt]` |
+| `email_address` | `jane.doe@lab.example.org` | `***@lab.example.org` |
+| `base64_blob` | 40+ mixed-case chars with a digit | `***[78 chars]` |
 
-The last two are deliberately conservative. The email rule keeps the
-domain because the domain is the diagnostic half and the local part is
-the personal one. The blob rule requires mixed case *and* a digit, so a
-lowercase hex digest or a long CamelCase identifier survives — deleting
-those would delete the ids operators join on.
+**Order is load-bearing.** URL userinfo runs first so
+`postgres://user:pw@host` cannot be claimed by the email rule on its
+`pw@host` tail, and every prefixed rule runs ahead of the blob rule for
+the same kind of reason: `ghp_` plus thirty-six characters is *also* a
+forty-character base64-ish run, and `***[40 chars]` would hide the
+secret while losing the one thing an operator needs — which console to
+go and revoke at. A secret hidden under the wrong rule looks correct in
+a test and is wrong in production.
+
+**Precision is the constraint, not recall.** Every rule is narrowed so
+that legitimate content survives byte-for-byte, and the narrowings are
+specific:
+
+- The blob rule requires mixed case *and* a digit, so a lowercase hex
+  digest or a long CamelCase identifier survives — deleting those would
+  delete the ids operators join on.
+- `environment_scoped_key` admits no `_` inside the body and matches
+  `_live_` / `_test_` case-sensitively, so `feature_flag_test_data` and
+  the *name* `STRIPE_LIVE_SECRET_KEY` are untouched.
+- `vendor_prefixed_token` runs off a closed list of published issuer
+  prefixes, and only the dash-separated issuers (Slack, GitLab) admit a
+  dash in the body — which is what keeps `hf_all-MiniLM-L6-v2`, a model
+  name, out of its jaws.
+- The email rule keeps the domain, because the domain is the diagnostic
+  half and the local part is the personal one.
+
+Measured: the four rules ADR 0084 added were run over every tracked
+text line in this repository — 1,246,805 lines across 1,725 files — and
+changed two, both of them gateway-credential test fixtures. Two gaps
+are recorded rather than closed badly: short `Basic <base64>`
+credentials, and unprefixed high-entropy secrets such as an AWS
+*secret* access key, which no text rule can tell from a content hash.
+ADR 0084 says why each rule is in and what was deliberately left out.
 
 `redact_url` remains the right call when you know you are holding a
 URL: it parses where the regex matches, and returns `***` for input it
