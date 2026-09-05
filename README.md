@@ -527,7 +527,7 @@ restarts (the compose stack wires this up automatically).
 
 Every PR and every push to `main` runs **nine parallel jobs**, with no
 `needs:` edge between any of them: ruff, strict mypy, the whole Python
-suite (**over 3,300 tests**, every tier including `e2e`, under enforced
+suite (**over 3,700 tests**, every tier including `e2e`, under enforced
 project, per-package and patch coverage floors, publishing the
 adversarial suite's attack-success rate as an artifact), a Docker image
 build with base and production compose-file
@@ -577,8 +577,8 @@ the Compose overlay pins an invalid key, the Playwright config
 overwrites the variable before any test loads, and the submit leg is
 fulfilled in the browser so it never reaches the backend. The gap, and
 it is narrower than this page claimed for months: the Python **`e2e`
-tier is built and gates every pull request** — **sixteen tests across
-four modules** under `tests/e2e/`, driving the real graphs through the
+tier is built and gates every pull request** — **twenty-two tests across
+five modules** under `tests/e2e/`, driving the real graphs through the
 real ASGI app in about five seconds, run by `make test-e2e` as a step of
 the `tests` job. What the tier does not have is **recorded cassettes**:
 every one of those tests runs on mock mode and canned agent output, by

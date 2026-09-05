@@ -1,6 +1,6 @@
 """Shared state schema for the research agent workflow."""
 
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, Any, Literal, TypedDict
 
 from langgraph.graph.message import add_messages
 
@@ -65,7 +65,54 @@ class EvidenceClaim(TypedDict):
     supports_question: str
 
 
-class ResearchState(TypedDict):
+class VerifyRepairState(TypedDict, total=False):
+    """CAP-02's policy keys — optional on purpose (ADR 0076).
+
+    `total=False` is the whole point of this block existing separately.
+    `ResearchState` is otherwise total, and three initial-state
+    constructors build it as a literal: `initial_research_state` below,
+    `src/api/runner.py::_initial_state`, and `src/eval/runner.py::
+    _initial_state`. The eval runner's copy is fenced to another work
+    order, and `src/eval/simulate_research.py` builds the scripted
+    research tier's state from the canonical constructor — so a *total*
+    key added here would either fail `mypy --strict` on a file this lane
+    must not touch, or move the scripted tier's committed baseline,
+    which this lane must not regenerate.
+
+    Optional keys avoid both. Every consumer reads them through `.get()`
+    with a default, which is the same discipline the supervisor and
+    verifier fields already rely on in practice, and the constructors
+    stay byte-identical to each other — the drift guard in
+    `tests/test_cli_run_recovery.py` keeps its full strength rather than
+    being loosened to accommodate a key one of the three cannot set.
+
+    The keys are written by the `verify` and `repair` nodes of the
+    `fixed_verify_repair` policy and by nothing else; under `legacy`
+    they never appear on the state at all, which is what makes their
+    presence in a checkpoint or an SSE frame a positive signal that arm
+    C ran.
+
+    Fields:
+      - `verification_verdict`: `pass` when every cited claim resolved,
+        `fail` when the judge reported a problem, `abstain` when it
+        could not judge (empty draft, no citations, upstream error or
+        unusable output). Never coerced between the three.
+      - `verification_reason`: stable snake_case code for the verdict.
+        Reused from `src/errors.py`'s vocabulary where one fits —
+        `upstream_model`, `upstream_model_output` — and documented in
+        ADR 0076 otherwise.
+      - `repair_count`: repairs attempted, capped at 1 per run.
+      - `repair_action`: the repair the run selected, from
+        `src/policies/repair.py::REPAIR_ACTIONS`.
+    """
+
+    verification_verdict: Literal["pass", "fail", "abstain", ""]
+    verification_reason: str
+    repair_count: int
+    repair_action: str
+
+
+class ResearchState(VerifyRepairState):
     """Full state passed through the LangGraph workflow.
 
     Each agent reads from this state and returns a partial update.
@@ -102,6 +149,11 @@ class ResearchState(TypedDict):
     `reader_analysis_complete` stays at its default (`True`) so any
     default-consuming code sees "nothing to recover from". See ADR
     0019.
+
+    Verify-and-repair fields are inherited from `VerifyRepairState`
+    above and are the one **optional** block in this schema: they are
+    written only under `settings.research_policy="fixed_verify_repair"`
+    and are absent from the state entirely otherwise. See ADR 0076.
     """
 
     run_id: str
@@ -166,6 +218,13 @@ def initial_research_state(
     reading it on a fresh state sees "nothing to recover from"
     (state.py's ADR 0019 note), and every collection starts empty so
     the reducers append rather than merge.
+
+    The `VerifyRepairState` keys are deliberately *not* set here. They
+    are optional (ADR 0076) and a fresh run has not been verified, so
+    setting `verification_verdict=""` would put a value on the state
+    that means the same thing as its absence while making the three
+    constructors — one of which this lane does not own — disagree. The
+    verify node writes all four the first time it runs.
 
     Args:
         query: The natural-language research question.

@@ -5,11 +5,20 @@ same extract-and-judge shape (per-claim decisions against cited paper
 abstracts) but the response also carries a `recommended_action` the
 supervisor can consume to pick a recovery step.
 
-The verifier is a **supervisor-only** node. Under the fixed pipeline it
-is never invoked; under the supervisor loop it is only reachable when
-`settings.enable_verifier` is true. The two flags are independent so
-supervisor and verifier can be A/B'd separately against the Sprint 1
-baseline — see ADR 0015.
+Two entry points, one judge:
+
+- `verifier_agent` — the **supervisor's** `verify` action, reachable
+  only under the supervisor loop with `settings.enable_verifier` true.
+  Unchanged by CAP-02; see ADR 0015.
+- `verify_node` — the verification stage of the fixed verify-and-repair
+  policy (`settings.research_policy="fixed_verify_repair"`, ADR 0076).
+  It calls the same `run_verification` and additionally writes a
+  first-class verdict — `pass` / `fail` / `abstain` — that the graph
+  routes on and `src/policies/repair.py` decides from.
+
+Under the legacy fixed pipeline neither is wired in, which is what
+`ENABLE_VERIFIER=true` with the supervisor off has always meant and
+still means: nothing.
 
 Design invariants:
 - **No new prompt engineering** — ADR-0007's calibrated faithfulness
@@ -21,19 +30,65 @@ Design invariants:
 - **Malformed judge output is recoverable** — parse failures fall back
   to `verified=False, recommended_action="revise_report"` rather than
   raising, so the loop keeps moving.
+- **A judge that did not answer has not found a fault** — every path
+  that reaches a result without a usable judgement (empty draft, no
+  citations, upstream error, unusable output) reports the verdict
+  `abstain`, never `fail`. The supervisor's fields are unchanged; what
+  changes is that the fixed policy will not spend its one repair on a
+  diagnosis nobody made.
 """
 
-from typing import Any
+import json
+from dataclasses import dataclass
+from typing import Any, Final, Literal
 
 from langchain_core.messages import AIMessage
 
+from src.cancellation import JobCancelledError
 from src.config import settings
+from src.errors import UpstreamModelOutput
 from src.eval.metrics import build_source_index
 from src.graph.state import Citation, EvidenceClaim, PaperMetadata, ResearchState
 from src.llm import call_llm_json
 from src.observability import get_logger
+from src.observability.costs import CostBudgetExceeded
 
 log = get_logger(__name__)
+
+Verdict = Literal["pass", "fail", "abstain"]
+"""The verify node's first-class outcomes (ADR 0076).
+
+`abstain` is not a polite `fail`. It is what the verifier's existing
+short-circuit and fallback paths actually mean — no draft, no citations,
+an upstream error, output the parser could not use — and folding it into
+either of the other two would either repair a report nobody found fault
+with or pass one nobody checked.
+"""
+
+VERDICT_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        # pass
+        "verified",
+        # fail
+        "unsupported_claims",
+        "missing_evidence",
+        "unsupported_and_missing",
+        "verifier_reported_failure",
+        # abstain
+        "no_draft",
+        "no_citations",
+        "upstream_model",
+        "upstream_model_output",
+    }
+)
+"""Every reason code a verdict can carry, published by ADR 0076.
+
+Two of them are `src/errors.py`'s own codes, reused rather than
+reinvented: an abstention caused by a failed judge call reports
+`upstream_model`, one caused by output the parser could not use reports
+`upstream_model_output` — the same names those failures carry when they
+reach a job as an error, so a dashboard can join the two surfaces.
+"""
 
 # Recovery actions the verifier can recommend. Values are what the
 # supervisor sees in state; each maps to a next action the supervisor
@@ -227,67 +282,109 @@ def _clean_recommendation(value: Any) -> str:
     return ""
 
 
-def _empty_result(reason: str) -> dict[str, Any]:
-    """Partial-state update for a no-work verification (empty draft, etc.)."""
-    return {
-        "verified": True,
-        "unsupported_claims": [],
-        "missing_evidence": [],
-        "verifier_recommendation": "",
-        "messages": [
-            AIMessage(content=f"verifier -> skipped: {reason}", name="verifier")
-        ],
-    }
+@dataclass(frozen=True, slots=True)
+class VerificationOutcome:
+    """One verification, in the two shapes its two callers need.
 
+    `verifier_agent` (the supervisor's action, ADR 0015) needs only the
+    state fields and its own message; the `verify` node of the
+    fixed verify-and-repair policy (ADR 0076) also needs to know *which*
+    of the three verdicts this was, which the fields alone cannot say —
+    `verified=True` with empty lists is emitted both by a judge that
+    approved the report and by the short-circuit that never asked one.
 
-def _fallback_result(reason: str) -> dict[str, Any]:
-    """Partial-state update when the judge output can't be trusted.
-
-    Conservative default: `verified=False, recommended_action="revise_report"`.
-    That routes the supervisor to another synthesis pass rather than
-    blocking the loop or letting an unverified draft slip through.
+    Attributes:
+        verdict: `pass`, `fail` or `abstain`.
+        reason: A member of `VERDICT_REASONS`.
+        summary: The human sentence, without a node-name prefix.
+        fields: The state fields both callers write.
     """
-    return {
-        "verified": False,
-        "unsupported_claims": [],
-        "missing_evidence": [],
-        "verifier_recommendation": "revise_report",
-        "messages": [
-            AIMessage(
-                content=f"verifier -> fallback (revise_report): {reason}",
-                name="verifier",
-            )
-        ],
-    }
+
+    verdict: Verdict
+    reason: str
+    summary: str
+    fields: dict[str, Any]
 
 
-def verifier_agent(state: ResearchState) -> dict[str, Any]:
-    """Judge the draft report's faithfulness and recommend recovery.
+def _abstained(reason: str, detail: str) -> VerificationOutcome:
+    """No-work verification: empty draft, no citations, unusable judge.
 
-    Reads: `draft_report`, `papers`, `citations`, `sub_questions`,
-    `query`. Writes: `verified`, `unsupported_claims`, `missing_evidence`,
-    `verifier_recommendation`, plus a message.
+    Keeps `verified=True` on the state for the pre-LLM short-circuits
+    because that is what the supervisor path has always read there and
+    ADR 0015's contract still says; the verdict carried alongside is what
+    tells the fixed policy that nothing was actually judged.
+    """
+    return VerificationOutcome(
+        verdict="abstain",
+        reason=reason,
+        summary=f"skipped: {detail}",
+        fields={
+            "verified": True,
+            "unsupported_claims": [],
+            "missing_evidence": [],
+            "verifier_recommendation": "",
+        },
+    )
 
-    Runs a single LLM call. Cost-tracked via `call_llm_json`. Cost/
-    iteration caps are enforced by the supervisor before this node is
-    reached, so no budget check here.
+
+def _fallback_outcome(reason: str, detail: str) -> VerificationOutcome:
+    """The judge output can't be trusted.
+
+    Conservative default for the supervisor path, unchanged:
+    `verified=False, recommended_action="revise_report"` routes it to
+    another synthesis pass rather than blocking the loop or letting an
+    unverified draft slip through. The verdict is `abstain` all the
+    same — a judge that failed to answer has not found a fault, and the
+    fixed policy must not spend its one repair as though it had.
+    """
+    return VerificationOutcome(
+        verdict="abstain",
+        reason=reason,
+        summary=f"fallback (revise_report): {detail}",
+        fields={
+            "verified": False,
+            "unsupported_claims": [],
+            "missing_evidence": [],
+            "verifier_recommendation": "revise_report",
+        },
+    )
+
+
+def _failure_reason(unsupported: list[str], missing: list[str]) -> str:
+    """Which of the fail codes this verdict earned."""
+    if unsupported and missing:
+        return "unsupported_and_missing"
+    if unsupported:
+        return "unsupported_claims"
+    if missing:
+        return "missing_evidence"
+    return "verifier_reported_failure"
+
+
+def run_verification(state: ResearchState) -> VerificationOutcome:
+    """Judge the draft and classify the result into a first-class verdict.
+
+    The whole body of `verifier_agent` as it has always been, plus the
+    verdict classification the fixed policy needs. Split out rather than
+    duplicated so the supervisor's action and the policy's `verify` node
+    cannot drift into judging differently — there is one judge here, and
+    two ways of reporting it.
 
     Args:
-        state: Full `ResearchState`. Must have a populated
-            `draft_report` for the verification to run; empty drafts
-            short-circuit with `verified=True`.
+        state: Full `ResearchState`.
 
     Returns:
-        Partial state update — see field list above.
+        The outcome. Exactly one LLM call, except on the two
+        short-circuits, which make none.
     """
     report = state.get("draft_report", "")
     if not report.strip():
-        return _empty_result("no draft to verify")
+        return _abstained("no_draft", "no draft to verify")
 
     if not state.get("citations"):
         # A report with no citations has nothing verifiable in ADR-0007's
         # frame. Flag it but don't block — the critic will catch it.
-        return _empty_result("draft has no citations")
+        return _abstained("no_citations", "draft has no citations")
 
     user_prompt = _build_user_prompt(state)
 
@@ -299,12 +396,29 @@ def verifier_agent(state: ResearchState) -> dict[str, Any]:
             max_tokens=2048,
             cache_system=settings.enable_prompt_caching,
         )
+    except (JobCancelledError, CostBudgetExceeded):
+        # Neither is a judgement, and both are raised by `call_llm`
+        # before it issues anything (ADR 0047 / 0051). Re-raised ahead of
+        # the broad handler below, the same way `src/agents/reader.py`
+        # re-raises them out of its fan-out: swallowing a budget stop
+        # into an abstention would let the run continue past its own
+        # ceiling — under the fixed verify-and-repair policy, straight
+        # into a repair, a second synthesis and a second verification,
+        # which is exactly the spend the ceiling exists to prevent.
+        raise
     except Exception as exc:  # noqa: BLE001 — recoverable, log + fallback
         log.warning(
             "verifier_llm_failed_fallback",
             extra={"error": str(exc)},
         )
-        return _fallback_result(f"LLM call failed ({type(exc).__name__})")
+        # Two abstention codes, not one: output the parser could not use
+        # is a different operational problem from a provider that did not
+        # answer, and `src/errors.py` already names both.
+        unusable = isinstance(exc, json.JSONDecodeError | UpstreamModelOutput)
+        return _fallback_outcome(
+            "upstream_model_output" if unusable else "upstream_model",
+            f"LLM call failed ({type(exc).__name__})",
+        )
 
     verified_raw = parsed.get("verified")
     verified = verified_raw is True  # anything non-True -> False
@@ -335,12 +449,89 @@ def verifier_agent(state: ResearchState) -> dict[str, Any]:
         f"missing={len(missing)}, action={recommendation or 'none'} — {reason}"
     )
 
+    return VerificationOutcome(
+        verdict="pass" if verified else "fail",
+        reason="verified" if verified else _failure_reason(unsupported, missing),
+        summary=summary,
+        fields={
+            "verified": verified,
+            "unsupported_claims": unsupported,
+            "missing_evidence": missing,
+            "verifier_recommendation": recommendation,
+        },
+    )
+
+
+def verifier_agent(state: ResearchState) -> dict[str, Any]:
+    """Judge the draft report's faithfulness and recommend recovery.
+
+    Reads: `draft_report`, `papers`, `citations`, `sub_questions`,
+    `query`. Writes: `verified`, `unsupported_claims`, `missing_evidence`,
+    `verifier_recommendation`, plus a message.
+
+    Runs a single LLM call. Cost-tracked via `call_llm_json`. Cost/
+    iteration caps are enforced by the supervisor before this node is
+    reached, so no budget check here.
+
+    This is the **supervisor's** verify action (ADR 0015) and its state
+    update is unchanged: the verdict `run_verification` also produces is
+    not written here, because nothing on the supervisor path reads it and
+    adding a key to arm D's state would move a substrate the first
+    experiment freezes.
+
+    Args:
+        state: Full `ResearchState`. Must have a populated
+            `draft_report` for the verification to run; empty drafts
+            short-circuit with `verified=True`.
+
+    Returns:
+        Partial state update — see field list above.
+    """
+    outcome = run_verification(state)
     return {
-        "verified": verified,
-        "unsupported_claims": unsupported,
-        "missing_evidence": missing,
-        "verifier_recommendation": recommendation,
+        **outcome.fields,
         "messages": [
-            AIMessage(content=f"verifier -> {summary}", name="verifier")
+            AIMessage(content=f"verifier -> {outcome.summary}", name="verifier")
+        ],
+    }
+
+
+def verify_node(state: ResearchState) -> dict[str, Any]:
+    """Graph node: the fixed policy's verification stage (ADR 0076).
+
+    Same judge, same prompt, same cost as the supervisor's action. What
+    it adds is the verdict, written to state as a first-class value the
+    router and `src/policies/repair.py` can act on, plus the two repair
+    bookkeeping keys carried through unchanged so all four of the
+    policy's keys are present on the state from the first verification
+    onward. That matters for a state read out of a checkpoint or off an
+    SSE frame: a missing key and a key holding "nothing yet" are
+    indistinguishable to a consumer, and the run manifest reads both.
+
+    `repair_count` is *not* reset here. Re-verification after a repair
+    is exactly the case the one-repair cap has to survive.
+
+    Args:
+        state: Full `ResearchState`.
+
+    Returns:
+        Partial state update: the verifier's own fields, the four policy
+        keys, and one message stamped `verify`.
+    """
+    outcome = run_verification(state)
+    return {
+        **outcome.fields,
+        "verification_verdict": outcome.verdict,
+        "verification_reason": outcome.reason,
+        "repair_count": int(state.get("repair_count", 0) or 0),
+        "repair_action": str(state.get("repair_action", "") or ""),
+        "messages": [
+            AIMessage(
+                content=(
+                    f"verify -> {outcome.verdict} ({outcome.reason}): "
+                    f"{outcome.summary}"
+                ),
+                name="verify",
+            )
         ],
     }
