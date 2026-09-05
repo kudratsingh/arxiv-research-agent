@@ -68,10 +68,18 @@ exporters:
     # metrics.
     resource_to_telemetry_conversion:
       enabled: false
-  # Traces have no backend in this overlay on purpose: a trace store is
-  # a second running cost and a second decision. `debug` proves the
-  # pipeline works and nothing more. Point this at Tempo/Jaeger when
-  # somebody has decided to pay for one.
+  # `debug` proves the trace pipeline carries something and nothing
+  # more: it writes a span count to the collector's log, which is not a
+  # waterfall and cannot show anyone the shape of a job.
+  #
+  # A viewer is a separate decision and it lives in a separate file.
+  # `compose.viewers.yml` runs Jaeger all-in-one on in-memory storage
+  # and hands this collector a second `--config`
+  # (`otel-collector-traces.yaml`) that adds an `otlp/jaeger` exporter
+  # beside this one. Nothing in this file changes when it does — which
+  # is the reason it is a merged fragment rather than a second copy, so
+  # `add_metric_suffixes: false` above still exists in exactly one place
+  # for the test to hold.
   debug:
     verbosity: basic
 

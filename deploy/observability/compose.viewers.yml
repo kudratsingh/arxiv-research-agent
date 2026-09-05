@@ -1,0 +1,146 @@
+# The two things that RENDER what the overlay collects: Grafana and
+# Jaeger. A third file, stacked on top of the second.
+#
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f deploy/observability/compose.observability.yml \
+#     -f deploy/observability/compose.viewers.yml \
+#     up -d
+#
+# ## Why this is not in `compose.observability.yml`
+#
+# Two reasons, and both are load-bearing.
+#
+# 1. **The overlay's service set is pinned.**
+#    `test_the_overlay_only_adds_services_and_env` asserts that
+#    `compose.observability.yml` adds exactly `{otel-collector,
+#    prometheus}` to the default stack. That test is the reason nobody
+#    can quietly grow the "optional" overlay into a second production
+#    stack, and it is not worth weakening to save one `-f`.
+# 2. **Collecting and looking are separate decisions.** A collector plus
+#    a Prometheus is the thing you leave running: it has retention, it
+#    evaluates the rules, and `http://127.0.0.1:9090/alerts` answers the
+#    only question that has to be answerable at 3am. Grafana and Jaeger
+#    are two more processes whose entire job is to draw pictures for
+#    somebody who is currently looking at them. Bringing them up when
+#    you want to look, and not otherwise, is the honest shape.
+#
+# And `docker-compose.yml` still references none of this. ADR 0073 §7
+# stands: the default `docker compose up` gains no collector, no
+# Prometheus, no Grafana and no Jaeger, and
+# `test_the_default_compose_path_does_not_reference_the_overlay` fails
+# the build if it ever does.
+#
+# ## Both ports are loopback-bound, and neither asks for a password
+#
+# Same rule as the overlay's two. Grafana runs with the login form off
+# and anonymous access at `Viewer`, which is not laziness: everything it
+# serves is provisioned from files in this directory, so there is
+# nothing to log in *for* — no dashboard to save, no datasource to edit,
+# no user to invite. A password on a loopback port guarding read-only
+# provisioned content is a credential in a repository buying nothing.
+#
+# What that does mean: **do not publish these on a public interface.**
+# The dashboards carry route templates, model names and spend, and the
+# traces carry job and run ids. If you need them off-box, tunnel:
+#
+#   ssh -N -L 3001:127.0.0.1:3001 -L 16686:127.0.0.1:16686 user@host
+
+services:
+  # Renders `dashboard.json` against the overlay's Prometheus.
+  #
+  # No named volume, deliberately. Everything Grafana serves here comes
+  # from files in this directory on every boot, so its sqlite database
+  # holds nothing that is not regenerated — and a volume would be a
+  # disk that grows without asking, which is the exact cost the overlay
+  # below refuses to impose on the default stack. `down` discards it;
+  # `up` provisions it again in under a second.
+  grafana:
+    image: grafana/grafana:12.3.0
+    container_name: arxiv-research-agent-grafana
+    restart: unless-stopped
+    environment:
+      # No login form, anonymous Viewer. See the header block. The
+      # bundled `admin` account still exists and is simply unreachable
+      # over HTTP with basic auth off, which is why no password for it
+      # appears in this repository.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      # Land on the dashboard rather than on an empty home page with a
+      # "create your first dashboard" call to action, which is what a
+      # provisioned Grafana otherwise shows you.
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/dashboard.json
+      # Nothing here calls home, and a version-check banner on a box
+      # with no outbound path just fails slowly on page load.
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    volumes:
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      # The provider in `provisioning/dashboards/dashboards.yml` reads
+      # this directory. The file lands as `dashboard.json` inside it.
+      - ./deploy/observability/dashboard.json:/var/lib/grafana/dashboards/dashboard.json:ro
+    ports:
+      # 3001, not 3000: the base stack's `web` already owns 3000 and a
+      # port collision here would look like Grafana failing to start.
+      - "${GRAFANA_BIND_ADDRESS:-127.0.0.1}:${GRAFANA_PORT:-3001}:3000"
+    depends_on:
+      - prometheus
+
+  # A trace store and a waterfall. `memory` storage on purpose: this is
+  # a viewer you bring up to read a run you just made, not a durable
+  # trace archive, and an all-in-one with a badger volume is a disk that
+  # grows without asking — the exact cost the overlay's own header block
+  # refuses to impose on the default stack.
+  jaeger:
+    image: jaegertracing/all-in-one:1.71.0
+    container_name: arxiv-research-agent-jaeger
+    restart: unless-stopped
+    environment:
+      SPAN_STORAGE_TYPE: memory
+      # 50k spans, then the oldest are dropped. A single research job
+      # under `TRACE_SAMPLE_RATIO=1.0` is on the order of tens of spans,
+      # so this holds far more history than a debugging session needs
+      # and still cannot grow into the host's memory.
+      MEMORY_MAX_TRACES: "50000"
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      # The UI only. The OTLP receivers (4317/4318) stay on the compose
+      # network — the collector is the only thing that writes here, and
+      # a published ingest port is an unauthenticated write endpoint.
+      - "${JAEGER_UI_BIND_ADDRESS:-127.0.0.1}:${JAEGER_UI_PORT:-16686}:16686"
+
+  # Point the collector's trace pipeline at Jaeger. `--config` is
+  # repeatable and the collector merges the files in order, so the
+  # second one adds an exporter and restates one pipeline's exporter
+  # list; everything else — including `add_metric_suffixes: false`,
+  # which every metric name in this directory depends on — is inherited
+  # from `otel-collector.yaml` and stays in exactly one place.
+  otel-collector:
+    command:
+      - "--config=/etc/otelcol/config.yaml"
+      - "--config=/etc/otelcol/traces.yaml"
+    volumes:
+      - ./deploy/observability/otel-collector-traces.yaml:/etc/otelcol/traces.yaml:ro
+    depends_on:
+      - jaeger
+
+  # One passthrough, and it is here rather than in the overlay because
+  # it is not a telemetry setting: it is what the documented trace
+  # command in `README.md` needs to produce a job that SUCCEEDS.
+  #
+  # `docker-compose.yml`'s `environment:` list is exhaustive — a
+  # variable absent from it does not reach the container however loudly
+  # the host exported it, which is the trap its own `MAX_COST_USD`
+  # comment records — and `USE_MOCK_DATA` is not on it. Without this
+  # line, `USE_MOCK_DATA=true docker compose ... up` runs the paid path,
+  # which at the disabled sentinel means a failed job and a trace whose
+  # `chat` spans all carry `error.type`.
+  #
+  # The default is `Settings.use_mock_data`'s own, so bringing the
+  # viewers up changes nothing about how the app behaves unless you ask.
+  app:
+    environment:
+      USE_MOCK_DATA: "${USE_MOCK_DATA:-false}"

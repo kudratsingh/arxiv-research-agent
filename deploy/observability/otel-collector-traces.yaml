@@ -1,0 +1,50 @@
+# The traces half of the collector config, loaded as a SECOND `--config`
+# on top of `otel-collector.yaml` (see `compose.viewers.yml`).
+#
+# ## Why a second file rather than an edited one
+#
+# The collector merges every `--config` it is given: maps merge key by
+# key, and a list in a later file *replaces* the list it lands on. So
+# this file adds one exporter and restates one pipeline's exporter list,
+# and inherits the receivers, the processors, the whole metrics pipeline
+# and — the one that matters — `add_metric_suffixes: false`, from the
+# base file unchanged.
+#
+# A full second copy of the config would have been the obvious thing and
+# is the wrong thing: `tests/test_operability_docs.py` asserts the
+# suffix setting in `otel-collector.yaml`, and a second complete config
+# is a second place for it to drift *out of the test's sight*. Every
+# metric name in `alerts.yml` and `dashboard.json` depends on that one
+# line. Twelve lines that cannot restate it are safer than a hundred
+# that can.
+#
+# ## What it changes
+#
+# The base file exports traces to `debug: verbosity: basic`, which
+# writes a count of spans to the collector's log. That proves the
+# pipeline carries something; it is not a waterfall, and you cannot read
+# a job's shape out of it. This adds Jaeger alongside it — `debug` stays
+# in the list, so the base file's proof-of-life is not traded away for
+# the viewer.
+
+exporters:
+  otlp/jaeger:
+    # gRPC to the all-in-one's OTLP receiver on the overlay network.
+    endpoint: jaeger:4317
+    tls:
+      # Plaintext on a private Docker network between two containers
+      # that both bind loopback on the host. There is no certificate to
+      # verify and nothing on the wire to intercept; a self-signed pair
+      # here would be ceremony, not security.
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      # Restated in full because a list replaces rather than appends.
+      # Receivers and processors are the base file's; naming them again
+      # is what keeps the merged pipeline identical to it apart from the
+      # exporter.
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug, otlp/jaeger]
