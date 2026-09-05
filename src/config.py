@@ -48,13 +48,40 @@ conventional name to `false` and the repo-local alias to `true` leaves
 capture off. That is a narrowing of the "either name being truthy
 enables it" rule these flags had while they lived in
 `src/observability/logging.py`, and it narrows in the safe direction.
+
+## A secret field is a `SecretStr`
+
+`log_principal_salt` is the first field here whose *value* is
+confidential rather than merely operational, and the ordinary
+treatment would have leaked it. `Settings` is constructed in some
+thirty test modules and pydantic's `__repr__` prints every field, so a
+plain `str` would put the fleet-wide log salt into any traceback,
+`-vv` assertion diff or settings dump that ever touched an instance —
+and a leaked salt turns the whole point of `principal_hash` (ADR 0067:
+a key id that never reaches the log stream) back into a dictionary
+attack over a word list.
+
+`SecretStr` renders as `**********` in `repr`, `str`, `model_dump()`
+and `model_dump_json()`, and hands over the real value only through
+`get_secret_value()`. The rule for any future secret field is the same
+one `src/observability/context.py` follows: call `get_secret_value()`
+once, at the point of use, and never let the wrapper itself reach a
+string — an f-string of a `SecretStr` interpolates the mask, which
+would salt the entire fleet with `**********` and agree with itself
+everywhere while matching nobody's key id.
 """
 
 from __future__ import annotations
 
 from typing import Any, Final, Literal
 
-from pydantic import AliasChoices, Field, field_validator, model_validator
+from pydantic import (
+    AliasChoices,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 #: The OpenTelemetry GenAI conventions' content-capture flag, and the
@@ -82,6 +109,13 @@ CONTENT_CAPTURE_ENV_ALIAS: Final = "LOG_CAPTURE_USER_CONTENT"
 #: `src/observability/tracing.py` and the tests can refer to it without
 #: repeating the literal.
 TRACE_SAMPLE_RATIO_ENV: Final = "TRACE_SAMPLE_RATIO"
+
+#: The principal salt's environment variable. Identical to the
+#: upper-cased field name, like `TRACE_SAMPLE_RATIO` above, and named
+#: for the same reason: `src/observability/context.py` re-exports this
+#: constant and the tests set it, so the variable an operator exports
+#: and the field that reads it are one string and cannot drift.
+PRINCIPAL_SALT_ENV: Final = "LOG_PRINCIPAL_SALT"
 
 #: The string tokens pydantic itself accepts for a `bool` field, split
 #: by which way they decide. Written out rather than delegated back to
@@ -291,6 +325,50 @@ class Settings(BaseSettings):
                 "default (off)."
             )
         return parsed
+
+    log_principal_salt: SecretStr = Field(
+        default=SecretStr(""),
+        description=(
+            "Deployment-wide salt for `principal_hash` — the salted "
+            "digest ADR 0067 puts on every log line in place of the API "
+            "key id itself. Set the same value on every process and a "
+            "principal's lines join across containers and hosts; leave "
+            "it unset (the default) and each process invents its own at "
+            "import, so grouping still works *within* a process and "
+            "`src.observability.principal_salt_is_ephemeral()` reports "
+            "which of the two you have. Unsalted is not one of the "
+            "options: key ids are short operator-chosen strings and a "
+            "bare digest of one is recoverable from a word list. A "
+            "blank value means unset, not a salt — `LOG_PRINCIPAL_SALT=` "
+            "is how a Compose file spells \"I am not setting this\", and "
+            "it takes the per-process branch rather than salting the "
+            "fleet with the empty string. A secret, and the only field "
+            "here that is one: it is a `SecretStr`, so it cannot reach a "
+            "repr or a dump, and the raw value is read exactly once, by "
+            "`src/observability/context.py`, through "
+            "`get_secret_value()`."
+        ),
+    )
+
+    @field_validator("log_principal_salt", mode="before")
+    @classmethod
+    def _blank_salt_is_unset(cls, value: Any) -> Any:
+        """Treat a blank salt as unset rather than as a salt.
+
+        The same rule `_parse_capture_flag` and
+        `_blank_sample_ratio_is_unset` apply, and it matters more here:
+        `SecretStr` accepts any string, so without this a stray
+        `LOG_PRINCIPAL_SALT="   "` would be a configured fleet-wide
+        salt that no other host reproduces, and
+        `principal_salt_is_ephemeral()` would report it as configured
+        while the joins it promises silently failed.
+
+        A non-blank value is passed through *unstripped*: the digest of
+        a configured salt has to stay byte-for-byte what it was before
+        this field existed, or an upgrade would renumber every
+        `principal_hash` in the fleet.
+        """
+        return "" if isinstance(value, str) and not value.strip() else value
 
     # ------ HTTP retry (arXiv API + PDF downloads) ---------------------
     http_max_retries: int = Field(

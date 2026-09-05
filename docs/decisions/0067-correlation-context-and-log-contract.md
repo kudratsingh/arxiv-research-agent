@@ -263,13 +263,23 @@ blocks, not a search through a function.
   - ~~**WO-A12** moves the content-capture flag and
     `LOG_PRINCIPAL_SALT` into `Settings`. ADR 0066 adds
     `TRACE_SAMPLE_RATIO` to that list, read the same way and for the
-    same reason.~~ **WO-B4** did the content-capture flag and
+    same reason.~~ **Done.** **WO-B4** did the content-capture flag and
     `TRACE_SAMPLE_RATIO`; WO-A12 could not, having no ownership of
-    `src/config.py`. `LOG_PRINCIPAL_SALT` (`context.py:230`) is still
-    read from the environment and is still open — it is the last of
-    these, and it wants more thought than an alias, because the salt is
-    a secret and its "empty means ephemeral" branch is load-bearing for
-    tests.
+    `src/config.py`. **WO-C3** did `LOG_PRINCIPAL_SALT`, the last of
+    them, and it did want more than an alias. It is
+    `Settings.log_principal_salt`, typed `SecretStr` rather than `str`
+    because a salt in a repr or a `model_dump()` puts the key ids back
+    within reach of a word list — `context.py` takes the raw value once,
+    via `get_secret_value()`, and an f-string of the wrapper would have
+    salted the fleet with `**********`. The "empty means ephemeral"
+    branch survived as a `_resolve_salt()` that both `context.py` and
+    its tests call: unset still draws a per-process salt and still
+    reports `principal_salt_is_ephemeral()`, and a blank value is unset
+    rather than a fleet-wide salt of `""`. Not fixed alongside it:
+    `anthropic_api_key` is still a plain `str` and therefore still
+    reachable from a `Settings` repr, and `docker-compose.yml` does not
+    forward `LOG_PRINCIPAL_SALT`, so a Compose deployment is ephemeral
+    whatever the operator exports.
   - **WO-A07** reuses `context_fields()` for span attributes so the log
     payload and the span cannot drift. **Done in ADR 0066**:
     `tracing._set_correlation_attributes` copies the context onto every

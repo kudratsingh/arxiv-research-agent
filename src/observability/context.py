@@ -37,7 +37,6 @@ Two field choices are deliberate and load-bearing:
 from __future__ import annotations
 
 import hashlib
-import os
 import secrets
 from contextvars import ContextVar, Token
 from dataclasses import dataclass, replace
@@ -45,6 +44,10 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _distribution_version
 from typing import Final
 
+# Re-exported, not merely used: this module has always been where the
+# salt's variable name is looked up, and `src.config` owns the string
+# now that `Settings.log_principal_salt` answers to it (WO-C3).
+from src.config import PRINCIPAL_SALT_ENV as PRINCIPAL_SALT_ENV
 from src.config import settings
 
 _DISTRIBUTION = "arxiv-research-agent"
@@ -221,21 +224,47 @@ def clear_context() -> Token[RequestContext]:
 # Principal hashing
 # ---------------------------------------------------------------------------
 
-#: Deployment-wide salt. Set it and a principal's lines join across
-#: every process in the fleet; leave it unset and each process invents
-#: its own, so grouping still works *within* a process but not across
-#: one. Unsalted was never an option: key ids are short, operator-chosen
-#: strings, and a bare digest of one is recoverable by hashing a word
-#: list.
-PRINCIPAL_SALT_ENV: Final = "LOG_PRINCIPAL_SALT"
-
 #: 48 bits of digest. Enough that two live principals colliding is a
 #: curiosity rather than an expectation, short enough that the field
 #: stays readable in a terminal.
 PRINCIPAL_HASH_CHARS: Final = 12
 
-_principal_salt: str = os.environ.get(PRINCIPAL_SALT_ENV, "") or secrets.token_hex(16)
-_principal_salt_is_ephemeral: bool = not os.environ.get(PRINCIPAL_SALT_ENV, "")
+
+def _resolve_salt() -> tuple[str, bool]:
+    """Return this process's salt, and whether it invented that salt.
+
+    Configured — `LOG_PRINCIPAL_SALT`, which is
+    `Settings.log_principal_salt` since WO-C3 — and a principal's lines
+    join across every process in the fleet; unset, and each process
+    invents its own, so grouping still works *within* a process but not
+    across one. Unsalted was never an option: key ids are short,
+    operator-chosen strings, and a bare digest of one is recoverable by
+    hashing a word list.
+
+    Read through `settings` rather than `os.environ` so the variable is
+    declared in one typed surface with every other tunable — but the
+    salt is a `SecretStr`, so `get_secret_value()` is the only way the
+    raw value may be taken. An f-string of the wrapper would interpolate
+    `**********` and salt the entire fleet with the mask: consistent
+    with itself, and matching no key id anybody holds.
+
+    A function rather than two module-level expressions because both
+    branches have to stay reachable from a test. The resolution itself
+    still happens exactly once, at import: the ephemeral salt is a
+    property of *this process*, and re-resolving per call would hand out
+    a different salt every time and make `principal_hash` ungroupable.
+
+    Returns:
+        The salt to hash with, and `True` when it was generated here
+        rather than configured.
+    """
+    configured = settings.log_principal_salt.get_secret_value()
+    if configured:
+        return configured, False
+    return secrets.token_hex(16), True
+
+
+_principal_salt, _principal_salt_is_ephemeral = _resolve_salt()
 
 
 def principal_salt_is_ephemeral() -> bool:

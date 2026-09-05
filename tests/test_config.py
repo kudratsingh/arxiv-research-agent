@@ -15,6 +15,7 @@ from src.config import (
     BOOL_TRUE_TOKENS,
     CONTENT_CAPTURE_ENV,
     CONTENT_CAPTURE_ENV_ALIAS,
+    PRINCIPAL_SALT_ENV,
     TRACE_SAMPLE_RATIO_ENV,
     Settings,
     parse_bool_flag,
@@ -373,6 +374,87 @@ class TestTheSamplingRatioIsAValidatedFloat:
         monkeypatch.setenv(TRACE_SAMPLE_RATIO_ENV, "loads")
         with pytest.raises(ValidationError):
             Settings()
+
+
+class TestThePrincipalSaltIsASecretSetting:
+    """WO-C3. The last flag that read `os.environ` directly, folded in.
+
+    WO-B4 took the other three and left this one, for two reasons ADR
+    0067 wrote down: it is a *secret*, and its "empty means ephemeral"
+    branch is load-bearing. Both survive the fold-in or the fold-in was
+    not worth doing — the secret half is pinned here, the ephemeral half
+    in `tests/test_log_contract.py`, where the salt is actually used.
+    """
+
+    def test_the_environment_variable_still_sets_it(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # The whole compatibility requirement in one line: an operator
+        # who exported this before the fold-in exports it after.
+        monkeypatch.setenv(PRINCIPAL_SALT_ENV, "fleet-wide-salt")
+        assert Settings().log_principal_salt.get_secret_value() == "fleet-wide-salt"
+
+    def test_the_variable_is_the_name_that_is_already_deployed(self) -> None:
+        assert PRINCIPAL_SALT_ENV == "LOG_PRINCIPAL_SALT"
+
+    def test_the_field_is_settable_by_its_own_name(self) -> None:
+        assert (
+            Settings(log_principal_salt="inline").log_principal_salt.get_secret_value()
+            == "inline"
+        )
+
+    def test_the_default_is_empty_because_empty_is_what_ephemeral_reads(self) -> None:
+        """Not a required field, and not a shared literal default.
+
+        A required field would make every process that has not chosen a
+        salt refuse to boot; a non-empty default would ship one salt to
+        the whole world, which is worse than no salt at all because it
+        looks like one.
+        """
+        assert Settings().log_principal_salt.get_secret_value() == ""
+
+    @pytest.mark.parametrize("blank", ["", "   "])
+    def test_a_blank_value_is_unset_rather_than_a_salt(
+        self, monkeypatch: pytest.MonkeyPatch, blank: str
+    ) -> None:
+        # `LOG_PRINCIPAL_SALT=` in a Compose file means "not setting
+        # this". Accepting it as a salt would be a fleet whose hashes
+        # agree with each other and with nothing an operator configured.
+        monkeypatch.setenv(PRINCIPAL_SALT_ENV, blank)
+        assert Settings().log_principal_salt.get_secret_value() == ""
+
+    def test_a_configured_salt_is_not_stripped(self) -> None:
+        # Only a *blank* is special. Trimming a real salt would renumber
+        # every `principal_hash` in the fleet on upgrade.
+        salt = " pad ded\n"
+        assert Settings(log_principal_salt=salt).log_principal_salt.get_secret_value() == salt
+
+    def test_the_salt_cannot_reach_a_repr(self) -> None:
+        """`Settings` is built in ~30 test modules and printed by pytest.
+
+        A plain `str` field would put the fleet-wide salt into every
+        `-vv` assertion diff and every traceback that carried a
+        `Settings` — and a leaked salt returns `principal_hash` to a
+        word-list attack, which is the one thing the field exists to
+        prevent.
+        """
+        secret = "salt-that-must-not-appear"
+        rendered = Settings(log_principal_salt=secret)
+        assert secret not in repr(rendered)
+        assert secret not in str(rendered)
+        assert secret not in f"{rendered.log_principal_salt}"
+        assert secret not in repr(rendered.log_principal_salt)
+
+    def test_the_salt_cannot_reach_a_dump(self) -> None:
+        # Both dump shapes, and the stringified dict a debug line would
+        # actually emit. `model_dump()` keeps the wrapper, so even a
+        # caller that never asked for `mode="json"` gets the mask.
+        secret = "salt-that-must-not-appear"
+        dumped = Settings(log_principal_salt=secret)
+        assert secret not in dumped.model_dump_json()
+        assert secret not in str(dumped.model_dump())
+        assert secret not in str(dumped.model_dump(mode="json"))
+        assert dumped.model_dump()["log_principal_salt"].get_secret_value() == secret
 
 
 @pytest.mark.unit
