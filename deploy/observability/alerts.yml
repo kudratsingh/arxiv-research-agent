@@ -212,10 +212,22 @@ groups:
           signal_events: llm_upstream_error llm_retry_budget_clamped
 
       - alert: ModelProviderNoSuccessfulCalls
+        # `or vector(0)` on the second half is load-bearing and was
+        # added by WO-INF2 after a behaviour test caught the rule
+        # failing to fire in the case it names. `sum()` over a selector
+        # that matches nothing returns an EMPTY vector, not zero, and
+        # `empty == 0` is empty, and `x and empty` is empty — so on a
+        # worker that has never completed a single model call, and
+        # therefore never exported `llm_calls_total` at all, this rule
+        # was silent forever. That worker is precisely the expired
+        # credential and the fresh-deploy-with-a-bad-key the summary
+        # below is written for; the only case it fired in was a fleet
+        # that used to work and stopped, which is the easier half.
+        # `deploy/observability/alerts_test.yml` pins both halves.
         expr: >-
           sum(rate(llm_upstream_errors_total[10m])) > 0
           and
-          sum(rate(llm_calls_total[10m])) == 0
+          (sum(rate(llm_calls_total[10m])) or vector(0)) == 0
         for: 10m
         labels:
           severity: page
@@ -296,9 +308,24 @@ groups:
         # `error_type` here is ADR 0064's stable code, the same string
         # the API answers with, so this matcher cannot drift from the
         # error contract without `tests/test_errors.py` failing first.
+        #
+        # Each half is wrapped in `or vector(0)`, added by WO-INF2 after
+        # a behaviour test caught this rule not firing on twenty
+        # refusals in half an hour. `+` between two instant vectors is a
+        # JOIN: a `sum()` whose selector matches nothing is empty, and
+        # anything plus empty is empty. So until a deployment had
+        # produced at least one `degraded_close` — which needs ADR
+        # 0062's polite close, which needs a learning session — the
+        # cost-cap half of this page could not fire no matter how many
+        # jobs were refused, and the rule read as a healthy fleet. The
+        # two halves are deliberately different terminals (a refusal and
+        # a polite close) and either alone is the storm.
         expr: >-
-          sum(increase(research_jobs_total{error_type="cost_budget_exceeded"}[30m]))
-          + sum(increase(research_jobs_total{status="degraded_close"}[30m])) > 3
+          (
+            (sum(increase(research_jobs_total{error_type="cost_budget_exceeded"}[30m])) or vector(0))
+            +
+            (sum(increase(research_jobs_total{status="degraded_close"}[30m])) or vector(0))
+          ) > 3
         for: 0m
         labels:
           severity: page
@@ -323,10 +350,26 @@ groups:
         #     usd_per_hour_ceiling = approved_budget / (24 x observation_days)
         #
         # A $50 budget over the 14-day window is $0.15/hour. The 1.00
-        # below is 6x that, chosen so the rule does not fire on a single
-        # ordinary research run at `MAX_COST_USD=2.00` spread over an
-        # hour — which is to say it is derived from the per-job ceiling,
-        # not from a budget, because a budget is what does not exist.
+        # below is 6x that — derived from the per-job ceiling rather
+        # than from a budget, because a budget is what does not exist.
+        #
+        # WHAT IT ACTUALLY FIRES ON, measured rather than asserted. This
+        # comment used to claim the 1.00 was picked so a single ordinary
+        # run at `MAX_COST_USD=2.00` would not fire it. WO-INF2's
+        # behaviour test showed that is false and
+        # `deploy/observability/alerts_test.yml` now pins the truth:
+        # `rate(...[1h])` stays elevated for a full hour after one
+        # increment, so ONE job that actually reaches the $2.00 per-run
+        # ceiling holds this expression above 1.00 for an hour and
+        # pages — `for: 15m` does not help, because the condition is
+        # true for four times that long. A run at the cost this
+        # repository's runs actually land at does not. The rule is not
+        # lying, $2 spent in an otherwise idle hour genuinely is $2 an
+        # hour; but an operator should know that on a five-person pilot
+        # the first page from here will be one expensive run rather than
+        # a runaway. Moving the number is a decision about spend policy
+        # and belongs to the owner, so WO-INF2 corrected the claim and
+        # left the threshold alone.
         expr: sum(rate(llm_cost_usd_total[1h])) * 3600 > 1.00
         for: 15m
         labels:
