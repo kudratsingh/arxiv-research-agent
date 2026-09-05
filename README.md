@@ -527,7 +527,7 @@ restarts (the compose stack wires this up automatically).
 
 Every PR and every push to `main` runs **nine parallel jobs**, with no
 `needs:` edge between any of them: ruff, strict mypy, the whole Python
-suite (**over 3,300 tests**, every tier including `e2e`, under enforced
+suite (**over 3,800 tests**, every tier including `e2e`, under enforced
 project, per-package and patch coverage floors, publishing the
 adversarial suite's attack-success rate as an artifact), a Docker image
 build with base and production compose-file
