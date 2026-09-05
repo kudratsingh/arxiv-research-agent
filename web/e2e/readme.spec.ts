@@ -114,6 +114,20 @@ const CAPTURE_PLATFORM = "darwin";
  */
 const MAX_DIFF_PIXELS = 200;
 
+/**
+ * The `workbench-plan-review` clip's height, in CSS pixels. See `clip` below.
+ *
+ * Measured, not chosen: it is the plan editor's own bottom edge at this
+ * shot's 1400 x 1376 viewport, identical on three consecutive probes. It has
+ * to be at least that, or the README's alt text stops describing the picture;
+ * and it has to stay below the metrics strip at y = 1491, or the parked run's
+ * `Duration` — computed against `now` — makes the shot impossible to keep
+ * byte-stable. `the plan-review clip contains its subject and excludes the
+ * moving Duration` asserts both bounds in a browser, so a layout change
+ * fails a named test rather than quietly re-cropping the front page.
+ */
+const PLAN_REVIEW_CLIP_HEIGHT = 1068;
+
 interface ReadmeShot {
   /** The committed file, without `.png`. Becomes the snapshot name. */
   file: string;
@@ -151,12 +165,20 @@ interface ReadmeShot {
    * Scrolled into view before the capture, when the subject is not already
    * in frame.
    *
-   * ONE SHOT USES THIS AND TWO DELIBERATELY DO NOT, which is a measurement
-   * rather than a preference. The plan editor scrolls inside
-   * `.ew-thread__run`, a 224 px box, and that scroll is reproducible: three
-   * consecutive verification runs are byte-identical.
+   * NOTHING USES THIS ANY MORE, AND WHAT REMOVED IT IS THE PRODUCT CHANGE
+   * WO-D6 REGENERATES FOR. The plan editor used to scroll inside
+   * `.ew-thread__run`, a 224 px box, and this field was how that shot
+   * reached it. WO-S2 lifted the cap at the review pause: the row now
+   * measures 995 px with `overflow-y: visible`, the editor sits at
+   * y = 326..1068 in a 1376 px viewport, and `scrollIntoViewIfNeeded` on an
+   * element that is already fully in view does nothing at all. A no-op that
+   * *could* start scrolling again if a height moved is a latent source of
+   * exactly the half-pixel re-rasterisation described below, so the field
+   * stays declared — the mechanism is still worth writing down — and no row
+   * sets it.
    *
-   * Scrolling the THREAD TIMELINE is not. The briefing shots first scrolled
+   * Scrolling the THREAD TIMELINE is not reproducible, which is why the
+   * field is kept rather than deleted. The briefing shots first scrolled
    * to the metrics strip, and the second verification run differed by 3,870
    * pixels — every glyph in the scrolled region ghosted against itself,
    * nothing above or below it touched. The scroll offset was not the cause:
@@ -180,24 +202,40 @@ interface ReadmeShot {
   /**
    * Capture this RECTANGLE of the viewport rather than the whole of it.
    *
-   * One shot needs it, and what forced it is a finding rather than a
-   * preference. The plan editor is 714 px tall and the row it lives in,
-   * `.ew-thread__run`, is a **fixed 14 rem box** — `components/features/
-   * workspace.css` says so and says why: a content-sized row moves when the
-   * ledger gains a horizontal scrollbar, which Chromium scored at 0.038 CLS.
-   * The clamp is therefore deliberate product design, it is the same 223 px
-   * at every viewport height measured (900, 1000 and 1376), and the editor
-   * scrolls inside it.
+   * ONE SHOT NEEDS IT, AND WHAT IT IS FOR CHANGED UNDER WO-S2. WO-D2 wrote
+   * this field because the plan editor was 714 px tall inside a **fixed
+   * 14 rem row** it could not escape: the picture PR 110 committed — the
+   * whole editor, unclipped — was of a layout the product no longer had, so
+   * the clip was cut down to the 356 px that genuinely existed, the spine
+   * and the top of the run row.
    *
-   * So the picture PR 110 committed — the whole plan editor, unclipped — is
-   * of a layout this product deliberately no longer has, and no capture can
-   * reproduce it. An element screenshot does not escape it either: Playwright
-   * photographs the element's box out of the rendered page, so the turn list
-   * overlapping it comes too. What is left, and what this clip is, is the
-   * region that genuinely exists: the spine, the review state, and the run
-   * row. It also keeps the parked run's live-updating `Duration` — computed
-   * against `now`, because this fixture has no `completed_at` — out of
-   * frame, which is what makes this shot byte-stable at all.
+   * WO-S2 GAVE THAT LAYOUT BACK, and it did so on purpose: the cap is now
+   * `[data-run="attached"]` — a run that is LIVE — and the review pause is a
+   * third value with no cap, in a shell that becomes a document. So the
+   * reason for a 356 px clip is gone, and keeping it produced a README
+   * illustration whose own alt text had stopped describing it: no badge, no
+   * "paused and not spending" line, no Sub-questions or arXiv queries
+   * columns, just the spine and the editor's top border.
+   *
+   * WHAT THE CLIP IS NOW, MEASURED AT THIS SHOT'S OWN 1400 x 1376 VIEWPORT
+   * AND IDENTICAL ON THREE CONSECUTIVE PROBES:
+   *
+   *   run row   130..1125  (`data-run="review"`, `overflow-y: visible`)
+   *   spine     142..314
+   *   editor    326..1068  <- the clip's height
+   *   timeline  1125..1607
+   *   metrics   1491..1566 <- the parked run's live `Duration`
+   *
+   * A height of 1068 therefore contains the whole of the subject the README
+   * names — the spine at `plan_ready` ABOVE the editor, the badge, the
+   * paused-and-not-spending line, both columns, and the actions row — and
+   * still stops 423 px short of the metrics strip. That last number is the
+   * one that matters for determinism and is why the clip is not simply
+   * dropped: `baseline-plan-review` is a parked run with `completed_at:
+   * null`, so its `Duration` is computed against `now` and no capture
+   * containing it can ever be byte-stable. The clip's two bounds are
+   * therefore "at least the editor's bottom" and "less than the metrics
+   * strip's top", and both are asserted below.
    */
   clip?: { x: number; y: number; width: number; height: number };
   /**
@@ -285,32 +323,31 @@ const SHOTS: readonly ReadmeShot[] = [
       "arXiv queries, both editable before anything is spent",
     state: "plan-review",
     /**
-     * TWO REASONS, AND THE SECOND IS A DETERMINISM BUG THIS CAUGHT.
+     * NO `scrollTo`, AND THAT IS WO-S2's DOING RATHER THAN A SIMPLIFICATION.
      *
-     * The thread body opens scrolled to its latest turn, so the plan editor
-     * — which is the subject — sat above the fold and the first capture was
-     * a picture of the turn list with a sliver of the editor's banner.
+     * WO-D2 scrolled to the editor for two reasons. The first was that the
+     * thread body opened scrolled to its latest turn and the editor — the
+     * subject — was outside the 224 px run row. The second was a determinism
+     * bug that scroll happened to fix: the unscrolled capture contained a
+     * metrics strip reading `Duration 727244.0s`, computed against `now`
+     * because `baseline-plan-review` is parked with `completed_at: null`, so
+     * it could never have been byte-stable.
      *
-     * And what that capture DID contain was a metrics strip reading
-     * `Duration 727244.0s`. `baseline-plan-review` is a parked run with
-     * `completed_at: null`, so its duration is computed against `now` and is
-     * a different number on every run — a snapshot that could never be
-     * byte-stable and would have trained everybody to regenerate on sight.
-     * Scrolling to the editor fixes the picture and takes the moving number
-     * out of frame at the same time; the finished run's duration, in the two
-     * briefing shots, is fixed because that job has a `completed_at`.
+     * WO-S2 answered the first reason by making the editor reachable without
+     * scrolling anything: at the review pause the row is uncapped and the
+     * shell is a document, so the editor lays out at y = 326..1068 and is
+     * fully inside this shot's 1376 px viewport at scroll offset 0.
+     * `scrollIntoViewIfNeeded` on a fully visible element is a no-op, and a
+     * no-op that could silently start scrolling again is a latent flake, so
+     * it is gone. The second reason is now the CLIP's job and nothing else's
+     * — the strip sits at y = 1491, 423 px below the clip's bottom edge.
      */
-    // Inside the run row, which scrolls independently: the row opens on the
-    // spine and the editor is below it, and the row is 224 px whatever the
-    // viewport does. Spine or editor, not both — that is what a fixed 14 rem
-    // box means, and the editor is the subject the README's sentence is
-    // about.
-    scrollTo: '[data-surface="plan-editor"]',
-    clip: { x: 0, y: 0, width: 1400, height: 356 },
+    clip: { x: 0, y: 0, width: 1400, height: PLAN_REVIEW_CLIP_HEIGHT },
     theme: "light",
-    // The height is the viewport the clip is taken out of, not the picture's
-    // — 356 px of a 1376 px page. Kept at the committed image's viewport so
-    // the layout above the clip is the layout that image was taken in.
+    // The height here is the VIEWPORT the clip is taken out of, not the
+    // picture's — 1,068 px of a 1,376 px page. Kept at the committed image's
+    // viewport so the layout above the clip is the layout that image was
+    // taken in.
     viewport: { width: 1400, height: 1376 },
     deviceScaleFactor: 1,
   },
@@ -421,6 +458,93 @@ for (const shot of SHOTS) {
     );
   });
 }
+
+// ---------------------------------------------------------------------------
+// The one geometry constant, asserted rather than trusted
+// ---------------------------------------------------------------------------
+
+/**
+ * WO-D6. The clip's two bounds, measured in the browser on every run.
+ *
+ * A cropped illustration fails in a way no snapshot comparison can see: the
+ * capture is perfectly reproducible, the gate is green, and the picture is
+ * simply of the wrong thing. That is exactly what WO-S2 did to this shot —
+ * it lifted the run row's 14 rem cap at the review pause, the editor stopped
+ * being trapped, and WO-D2's 356 px crop went on cutting at the same place,
+ * leaving a picture of the spine and a border where the README's alt text
+ * promises a badge, two paragraphs and both columns.
+ *
+ * So the crop is no longer just a number in a table. Its lower bound is the
+ * subject (the editor must fit) and its upper bound is determinism (the
+ * parked run's `Duration`, computed against `now`, must not).
+ */
+test.describe("the plan-review clip", () => {
+  const SHOT = SHOTS.find((entry) => entry.file === "workbench-plan-review");
+  if (SHOT === undefined) throw new Error("workbench-plan-review left the table");
+
+  test.use({ viewport: SHOT.viewport, deviceScaleFactor: SHOT.deviceScaleFactor });
+
+  test(
+    "contains its subject and excludes the moving Duration",
+    { tag: "@readme" },
+    async ({ page }) => {
+      const entry = row(SHOT.state);
+      await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+      await page.goto(entry.path, { waitUntil: "domcontentloaded" });
+      await expect(readyLocator(page, entry.ready)).toBeVisible();
+      await settleForCapture(page);
+
+      const geometry = await page.evaluate(() => {
+        const box = (selector: string): number[] | null => {
+          const node = document.querySelector(selector);
+          if (node === null) return null;
+          const rect = node.getBoundingClientRect();
+          return [Math.round(rect.top), Math.round(rect.bottom)];
+        };
+        return {
+          scrollY: window.scrollY,
+          editor: box('[data-surface="plan-editor"]'),
+          metrics: box('[data-metrics="true"]'),
+        };
+      });
+
+      expect(
+        geometry.scrollY,
+        "this shot captures the viewport at rest; a non-zero offset means " +
+          "something scrolled the document and the clip no longer starts " +
+          "where the picture does",
+      ).toBe(0);
+
+      expect(geometry.editor, "no plan editor on the plan-review route").not.toBeNull();
+      // `?? Infinity` rather than a non-null assertion: if the editor is
+      // somehow absent the assertion above has already failed, and an
+      // infinite bottom edge fails this one too instead of passing vacuously.
+      const editorBottom = geometry.editor?.[1] ?? Number.POSITIVE_INFINITY;
+      expect(
+        editorBottom,
+        `the plan editor's bottom edge is below the ${PLAN_REVIEW_CLIP_HEIGHT}px ` +
+          "clip, so docs/images/workbench-plan-review.png no longer contains " +
+          "the columns README.md's alt text says it contains. Raise " +
+          "PLAN_REVIEW_CLIP_HEIGHT to the new bottom edge, regenerate, and " +
+          "check the README's sentence still describes the picture.",
+      ).toBeLessThanOrEqual(PLAN_REVIEW_CLIP_HEIGHT);
+
+      // Not asserted as non-null: `ThreadTimeline` renders the strip only for
+      // an expanded turn whose detail has been fetched, and this route does
+      // not drive that. Absent is the safe case — there is no moving number
+      // to keep out of frame. Present and above the clip is the failure.
+      if (geometry.metrics !== null) {
+        expect(
+          geometry.metrics[0],
+          "the metrics strip carries the parked run's Duration, computed " +
+            "against `now` because baseline-plan-review has no completed_at. " +
+            "Inside the clip it makes this shot impossible to keep " +
+            "byte-stable and trains everybody to regenerate on sight.",
+        ).toBeGreaterThan(PLAN_REVIEW_CLIP_HEIGHT);
+      }
+    },
+  );
+});
 
 // ---------------------------------------------------------------------------
 // The inventory, asserted rather than described

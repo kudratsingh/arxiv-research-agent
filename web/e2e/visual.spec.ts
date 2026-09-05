@@ -137,6 +137,20 @@ const VISUAL_WIDTHS = [412, 1440] as const;
  * cannot swallow the regression the gate exists to catch. It bounds area
  * rather than raising `threshold`, deliberately: a colour change over a whole
  * surface stays red however small the per-pixel delta is.
+ *
+ * WO-D6 RE-MEASURED THIS OVER THREE FORCED REGENERATIONS AND THE BOUND STILL
+ * HOLDS, with one addition worth recording rather than discovering later.
+ * Forty-five of the forty-eight are byte-identical across all three. The
+ * `thread-populated` pair at 1440 behaves exactly as described above —
+ * bimodal, two of the three runs agreeing. The addition is `plan-review` at
+ * 1440, which WO-S2 turned from a 30 px sliver of a clipped card into a
+ * 742 px editor with six textareas: its left field borders carry the same
+ * bimodal seam, 30 raw pixels in light and 39 in dark, at a **maximum
+ * channel delta of 1 and 2**. That is an order of magnitude below the
+ * per-pixel `threshold`, so Playwright counts zero differing pixels and the
+ * comparator never sees it; it is recorded here because a future reader
+ * measuring raw bytes will, and should know it is antialiasing on a new
+ * surface rather than drift.
  */
 const MAX_DIFF_PIXELS = 200;
 
