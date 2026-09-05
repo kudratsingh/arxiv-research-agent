@@ -70,6 +70,43 @@ Verified on the composed tree at `df89abc`:
 | `pytest -m security` | 172 passed, 6.8 s |
 | mypy strict / ruff | clean, 90 source files |
 
+## Gate A3 — CLOSED 2026-09-04
+
+Merged: WO-A16 (`3618c94`), WO-A11 (`e329704`), WO-A10 (`dbebdf7`),
+WO-A09 (`5e87424`), WO-A17 (`9d0a63d`), WO-A12 (`6285388`), WO-A13 (`ed71098`),
+WO-A14 (`ae8bed3`). Verified on the composed tree at `ae8bed3`:
+
+| Signal | Result |
+|---|---|
+| `pytest -m "not e2e"` | 3235 passed, 55 skipped |
+| branch coverage | **91.31%** (floor 89) |
+| `pytest -m property` | 152 passed, 16.5 s |
+| `pytest -m fault` | 157 passed, 3 skipped, 10.2 s |
+| `pytest -m e2e` | 16 passed, 5.7 s |
+| `pytest -m security` | 314 passed, 7.2 s |
+| mypy strict / ruff | clean, 93 source files |
+| CI checks | 9, unchanged — the tiers gate inside the job that already existed |
+
+## The phase in one table
+
+| | 2026-09-04 start (`0caefa2`) | close (`ae8bed3`) |
+|---|---|---|
+| suite | 2042 passed | **3235 passed** |
+| Python coverage | not measured anywhere | **91.31% branch, gated at 89** |
+| property tests | 0 | 152 |
+| fault tests | 0 | 157 |
+| e2e tests | 0 — the marker had no members | 16, gating every PR |
+| security tests | 172, not separately runnable | 314, own gate |
+| FastAPI exception handlers | 0 | 4 |
+| error codes | `type(exc).__name__` | a closed, tested set |
+| correlation fields in a log line | 1 (`run_id`) | run, job, request, kind, principal hash, worker, trace, span |
+| `gen_ai.*` names | 0 | the conventional span, metric and attribute set |
+| OTel instruments | 9 | 21 |
+| attack-success measurement | none | 3/42, Wilson 2.46–19.01%, denominators published |
+| runbooks | 1 (pilot credentials) | 8 |
+| ADRs | 63 | 74 |
+| model spend | — | **$0.00** |
+
 ## Defects the tiers found
 
 Every one of these was found by a tier built in this phase, before that tier
@@ -108,6 +145,31 @@ Recorded because a plan that quietly absorbs its own errors teaches nothing:
 - **Verbosity-bias controls were dropped** as measurably obsolete.
 - **`docs/testing.md`'s flat-layout rule was restated**: a directory may group
   by purpose, never select a tier.
+- **The paired-comparison figure was overstated ~2x.** This plan quoted 77
+  paired against 906 unpaired; those are not at matched power, and the
+  like-for-like paired number at 80% power is 155. Corrected in
+  `02-STANDARDS.md` §2.3. The conclusion holds at 6x.
+- **`gen_ai.provider.name` is required on the inference-client span only**, not
+  on every span — found by reading `spans.yaml` at the pinned SHA.
+- **A duplicate assignment**: `admin_migrate.py` was routed to two work orders
+  at once. The coordinator's error; resolved by taking one implementation and
+  keeping the other's tests, which asserted something the winner had no test
+  for.
+
+## Open items carried out of Phase A
+
+None of these blocks the gates; each has a named home.
+
+| # | Item | Found by |
+|---|---|---|
+| 1 | `_default_next_action`'s bare `except` swallows a provider outage entirely — worse than the wrong-name defect A17 fixed, because no alert series can see it. Latent while `enable_supervisor` is off | WO-A17 |
+| 2 | An *emptied* tier would still pass: `property`/`fault`/`security` gate by sitting inside the main selection. A marker census beside the tier census closes it | WO-A13 |
+| 3 | The two `pip install` steps carry no step-level timeout, so the workflow's "every network step is bounded" header is not literally true | WO-A13 |
+| 4 | No test reads a prose claim — the structural reason five README/architecture claims are false | WO-A14 |
+| 5 | `TRACE_SAMPLE_RATIO` and the two content-capture flags still read the environment directly rather than `Settings`; the planning docs assigned this to a work order whose ownership excluded `src/config.py` | WO-A12 |
+| 6 | The runner's live `job_failed`/`job_cancelled` frames still carry smaller payloads at eight call sites; `redriver.py` keeps a third copy | WO-A10 |
+| 7 | `citation_accuracy` still returns 1.0 for zero citations at its existing call sites; replacing it invalidates every old baseline and must land with a version note | WO-A16 |
+| 8 | ADR 0045's lock procedure does not survive a shared venv and should be reworded | WO-A02 |
 
 ## Coordination
 
