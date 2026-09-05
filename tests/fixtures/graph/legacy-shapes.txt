@@ -1,0 +1,48 @@
+## legacy / default (fixed pipeline)
+nodes: __end__, __start__, critic, planner, reader, search, synthesizer
+edges:
+  __start__ -> planner
+  critic -> __end__ [conditional]
+  critic -> planner [conditional]
+  critic -> search [conditional]
+  critic -> synthesizer [conditional]
+  planner -> search
+  reader -> synthesizer
+  search -> reader
+  synthesizer -> critic
+
+## legacy / supervisor loop
+nodes: __end__, __start__, critic, planner, reader, search, supervisor, synthesizer
+edges:
+  __start__ -> supervisor
+  critic -> supervisor
+  planner -> supervisor
+  reader -> supervisor
+  search -> supervisor
+  supervisor -> __end__ [conditional]
+  supervisor -> critic [conditional]
+  supervisor -> planner [conditional]
+  supervisor -> reader [conditional]
+  supervisor -> search [conditional]
+  supervisor -> synthesizer [conditional]
+  synthesizer -> supervisor
+
+## legacy / supervisor loop + verifier + query refiner
+nodes: __end__, __start__, critic, planner, query_refiner, reader, search, supervisor, synthesizer, verifier
+edges:
+  __start__ -> supervisor
+  critic -> supervisor
+  planner -> supervisor
+  query_refiner -> supervisor
+  reader -> supervisor
+  search -> supervisor
+  supervisor -> __end__ [conditional]
+  supervisor -> critic [conditional]
+  supervisor -> planner [conditional]
+  supervisor -> query_refiner [conditional]
+  supervisor -> reader [conditional]
+  supervisor -> search [conditional]
+  supervisor -> synthesizer [conditional]
+  supervisor -> verifier [conditional]
+  synthesizer -> supervisor
+  verifier -> supervisor
