@@ -1,0 +1,12 @@
++ /private/tmp/claude-501/-Users-kudratsingh-Machine-Learning-Projects-arxiv-research-agent/fbb82e1b-cfe4-4d49-999f-f89e63c7ff69/scratchpad/wo-a14-audit-venv/bin/pip-audit -r requirements-runtime-lock.txt --no-deps --format columns
+WARNING:pip_audit._cli:--no-deps is supported, but users are encouraged to fully hash their pinned dependencies
+WARNING:pip_audit._cli:Consider using a tool like `pip-compile`: https://pip-tools.readthedocs.io/en/latest/#using-hashes
+Found 5 known vulnerabilities in 4 packages
+Name                          Version ID              Fix Versions
+----------------------------- ------- --------------- ------------
+langgraph-checkpoint-postgres 3.1.0   PYSEC-2026-3635 3.1.1
+langgraph-checkpoint-sqlite   3.1.0   PYSEC-2026-3636 3.1.1
+setuptools                    81.0.0  PYSEC-2026-3447 83.0.0
+setuptools                    81.0.0  PYSEC-2026-3447 83.0.0
+torch                         2.12.1  PYSEC-2025-194  2.13.0
+exit=1

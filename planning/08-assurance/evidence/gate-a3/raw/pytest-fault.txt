@@ -1,0 +1,6 @@
++ env OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONHASHSEED=0 ANTHROPIC_API_KEY=local-preview-disabled /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python -m pytest -m 'fault and not e2e' tests/ -q
+.........................s.....ss....................................... [ 45%]
+........................................................................ [ 90%]
+................                                                         [100%]
+157 passed, 3 skipped, 3146 deselected in 10.21s
+exit=0

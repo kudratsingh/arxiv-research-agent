@@ -516,6 +516,16 @@ production-wiring smoke test and a nightly eval that has never run green
 (below) is uncovered — treat cross-node integration changes with extra
 review care.
 
+**How do you know?** [`docs/assurance/`](docs/assurance/README.md) is the
+index that answers that question. It carries a claim → enforcement table —
+every claim in this README and in `docs/architecture.md`, and the test, gate
+or instrument that fails when it stops being true — plus a **system** card
+(this project trains no model), a data-provenance record on the NIST AI 300-1
+field set, and a framework mapping across NIST, OWASP, ISO 42001 and the EU AI
+Act. Read the short list of claims that **nothing** enforces first: it names
+several sentences on this page, including a stale test count and a routing
+cost-saving figure with no measurement behind it.
+
 ## Eval
 
 Twenty benchmark queries covering hallucination, retrieval, alignment,

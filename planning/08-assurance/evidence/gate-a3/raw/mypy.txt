@@ -1,0 +1,3 @@
++ /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python -m mypy --strict src/
+Success: no issues found in 93 source files
+exit=0

@@ -1,0 +1,3 @@
++ /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/ruff check src/ tests/
+All checks passed!
+exit=0

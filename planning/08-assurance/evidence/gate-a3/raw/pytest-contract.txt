@@ -1,0 +1,5 @@
++ env OMP_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONHASHSEED=0 ANTHROPIC_API_KEY=local-preview-disabled /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python -m pytest -m 'contract and not e2e' tests/ -q
+........................................................................ [ 73%]
+..........................                                               [100%]
+98 passed, 3208 deselected in 6.27s
+exit=0

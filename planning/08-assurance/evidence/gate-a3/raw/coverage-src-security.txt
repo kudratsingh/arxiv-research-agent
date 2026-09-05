@@ -1,0 +1,3 @@
++ /Users/kudratsingh/Machine-Learning-Projects/arxiv-research-agent/.venv/bin/python -m coverage report '--include=src/security/*' --fail-under=97 --format=total
+100
+exit=0
