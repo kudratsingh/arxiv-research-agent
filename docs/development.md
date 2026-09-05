@@ -25,11 +25,12 @@ cp .env.example .env
 plus dev dependencies (`pytest`, `mypy`). It's idempotent — run it
 again any time deps change.
 
-### Two settings are secrets, and they read differently
+### Four settings are secrets, and they read differently
 
-Every field in `src/config.py` is a plain typed value except two:
-`anthropic_api_key` (WO-C4) and `log_principal_salt` (WO-C3). Both are
-`pydantic.SecretStr`, so reading either takes one extra call:
+Every field in `src/config.py` is a plain typed value except four:
+`anthropic_api_key` (WO-C4), `log_principal_salt` (WO-C3), and
+`api_keys` and `semantic_scholar_api_key` (WO-D3). All four are
+`pydantic.SecretStr`, so reading one takes an extra call:
 
 ```python
 from src.config import settings
@@ -49,24 +50,49 @@ Three things follow, and the second is the one that bites.
    live credential in the clear. `src/observability/logging.py`'s
    `redact_text` also scrubs `sk-…` shapes on the way into the log
    stream, but that is a *shape* rule — it does not fire on a gateway
-   or proxy key, and it only sees text that reached the JSON formatter.
+   or proxy key, on an S2 key (which carries no prefix at all), or on
+   an operator-chosen inbound key, and it only sees text that reached
+   the JSON formatter.
 
 2. **Comparing one to a string is always `False`.**
    `settings.anthropic_api_key == "local-preview-disabled"` is `False`
    for the sentinel *and* for a real key, so a guard written that way
    stops guarding and says nothing. Call `get_secret_value()` first;
-   `tests/test_config.py::TestTheApiKeyIsASecret` pins the trap.
+   `tests/test_config.py::TestTheApiKeyIsASecret` pins the trap, and
+   `TestTheInboundKeystoreIsASecret` pins it again on the path where
+   it decides who gets in.
 
 3. **Unwrap once, at the point of use.** Never let the wrapper itself
    reach a string: an f-string of a `SecretStr` interpolates the mask,
-   which would authenticate as `**********` (the key) or salt the whole
-   fleet with `**********` (the salt). `src/llm.py`'s `_get_client` and
-   `src/observability/context.py`'s `_resolve_salt` are the only two
-   places in `src/` that unwrap either one.
+   which would authenticate as `**********` (a key), salt the whole
+   fleet with `**********` (the salt), or send `**********` to
+   Semantic Scholar, which answers 403 and leaves enrichment silently
+   empty. There are exactly four unwrap sites in `src/`, one per
+   field: `src/llm.py`'s `_get_client`,
+   `src/observability/context.py`'s `_resolve_salt`,
+   `src/api/auth.py`'s `parse_api_keys` and
+   `src/tools/semantic_scholar.py`'s `_headers`. `parse_api_keys`
+   takes a `SecretStr` parameter rather than a `str` so mypy keeps it
+   that way — unwrapping at its call site in `create_app` would put
+   every inbound secret in a startup frame.
 
-A blank value means *unset* for both — `ANTHROPIC_API_KEY=`, or a
+A blank value means *unset* for all four — `ANTHROPIC_API_KEY=`, or a
 whitespace-only value, takes the "not configured" branch rather than
-becoming a credential that earns you a 401.
+becoming a credential that earns you a 401. For
+`SEMANTIC_SCHOLAR_API_KEY` that branch is the anonymous rate limit;
+for `API_KEYS` it is "the string is not the keystore", which is how
+`deploy/pilot/compose.pilot.yml` says the *file* is.
+
+One rule the type cannot enforce: an error message is an output path
+too. `parse_api_keys` reports a malformed entry by position and never
+quotes it, because an entry with no `name:secret` separator is by
+definition a bare secret and that `ValueError` is raised during
+`create_app`, where it lands in a startup log.
+
+`tests/property/test_property_secret_config.py` generalises all of
+this: it reads the `SecretStr` fields off `Settings.model_fields`, so
+the fifth secret is covered the day it lands rather than the day
+somebody remembers to copy a test class.
 
 ## Common commands
 

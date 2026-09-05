@@ -308,12 +308,54 @@ blocks, not a search through a function.
     by the base stack — a cost guard an operator could not tighten) and
     `LOG_LEVEL` (pinned to `INFO`, silently outranking a host export).
     All three are pinned in `tests/test_deployment_contract.py`.
-  - Still plain `str`, and still secrets: `api_keys` (the inbound
+  - ~~Still plain `str`, and still secrets: `api_keys` (the inbound
     `name:secret` keystore) and `semantic_scholar_api_key`. Neither
     moved with WO-C4 because neither is a one-line retype —
     `parse_api_keys` splits and compares the raw string in
     `src/api/auth.py`, and `semantic_scholar.py` builds a header from
-    it. The same argument applies to both.
+    it. The same argument applies to both.~~ **Done in WO-D3**, and
+    the "not a one-line retype" was right about both. `api_keys` is
+    the densest secret in the file — every key the deployment accepts,
+    in one string — and it is read for its *structure*: masking it
+    without keeping the parse honest would have produced a keystore
+    keyed on `**********`, which masks perfectly and authenticates
+    nobody. So `parse_api_keys` now takes a `SecretStr` parameter
+    rather than a `str`, which makes it the single unwrap site by
+    type: the obvious call site
+    (`parse_api_keys(settings.api_keys.get_secret_value())`) would
+    leave every inbound secret as a local in an app-startup frame, and
+    mypy refuses it. The `{secret: principal}` map it returns keeps
+    plain `str` keys deliberately — `_lookup_principal` reads them as
+    bytes for `hmac.compare_digest`, `load_keystore_from_file` builds
+    the same shape from a JSON file, and `ApiKeyPrincipal` retains no
+    raw key. The credential comparison was **already constant-time**
+    and stayed untouched: `_lookup_principal` runs `compare_digest`
+    over every configured secret without an early return (ADR 0033,
+    ADR 0042). `semantic_scholar_api_key` is the outbound half;
+    `_headers` unwraps once, straight into `x-api-key`, and its
+    `if settings.semantic_scholar_api_key:` moved onto the unwrapped
+    local for the reason WO-C4 gave next door — it was correct only
+    through pydantic's `__len__`.
+  - WO-D3 also found a leak the *type* could not have closed:
+    `parse_api_keys` raised `f"api_keys entry {entry!r} …"` for a
+    malformed entry, and an entry with no `:` separator is by
+    definition a bare secret. That `ValueError` is raised inside
+    `create_app`, so it lands in a startup log, a container's stderr
+    and any CI transcript that captured it. Entries are now reported
+    by position and never quoted. The same sweep cleared
+    `load_keystore_from_file` (its messages carry the path and the
+    principal *name*, both non-secret, and `json.JSONDecodeError`
+    stringifies to a position rather than to document content) and
+    `semantic_scholar._get_json` (it logs `url` and `str(exc)`; the
+    key is a header, and neither carries one).
+  - WO-D3 checked the three files WO-C4 fenced —
+    `src/eval/safety_suite.py`, `src/content/static_publication.py`
+    and `tests/fixtures/safety/corpus.json` — before touching
+    anything. They carry `anthropic_api_key` as a canary id and a
+    forbidden-artifact regex, i.e. the field *name* as adversarial
+    data. Neither `api_keys` nor `semantic_scholar_api_key` appears in
+    any of the three, so none of them needed a change and none was
+    made.
   - **WO-A07** reuses `context_fields()` for span attributes so the log
     payload and the span cannot drift. **Done in ADR 0066**:
     `tracing._set_correlation_attributes` copies the context onto every

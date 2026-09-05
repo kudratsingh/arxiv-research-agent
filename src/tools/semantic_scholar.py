@@ -45,9 +45,28 @@ _PAPER_FIELDS = (
 
 
 def _headers() -> dict[str, str]:
-    """Build the auth header dict — anonymous when no API key is set."""
-    if settings.semantic_scholar_api_key:
-        return {"x-api-key": settings.semantic_scholar_api_key}
+    """Build the auth header dict — anonymous when no API key is set.
+
+    This is the one place in `src/` that unwraps
+    `settings.semantic_scholar_api_key`, which is a `SecretStr` since
+    WO-D3. The rule `src/config.py` states is followed literally, and
+    the way `src/llm.py::_get_client` follows it: `get_secret_value()`
+    once, into a local, straight into the header the request puts on
+    the wire. The local is not logged, not interpolated, and not
+    returned anywhere but the header dict — `_get_json` below logs
+    `url` and `str(exc)` on every failure path, and neither carries a
+    header.
+
+    The emptiness test moved onto that local for the reason WO-C4
+    recorded next door: `if settings.semantic_scholar_api_key:` was
+    correct only through pydantic's `__len__`, an implementation
+    detail, and the fallback it selects here is not cosmetic — with a
+    key the API allows 1 req/sec sustained, without one it is the
+    shared anonymous pool.
+    """
+    api_key = settings.semantic_scholar_api_key.get_secret_value()
+    if api_key:
+        return {"x-api-key": api_key}
     return {}
 
 

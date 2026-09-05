@@ -51,11 +51,12 @@ enables it" rule these flags had while they lived in
 
 ## A secret field is a `SecretStr`
 
-Two fields here hold a value that is *confidential* rather than merely
-operational, and the ordinary treatment leaks both.
+Four fields here hold a value that is *confidential* rather than merely
+operational, and the ordinary treatment leaks every one of them.
 `log_principal_salt` (WO-C3) was the first; `anthropic_api_key` — the
 paid credential — is the second (WO-C4), and it had been sitting
-beside the protected salt as a plain `str` since Sprint 1. `Settings`
+beside the protected salt as a plain `str` since Sprint 1; `api_keys`
+and `semantic_scholar_api_key` are the last two (WO-D3). `Settings`
 is constructed in some thirty test modules and pydantic's `__repr__`
 prints every field, so a plain `str` puts the value into any
 traceback, `-vv` assertion diff or settings dump that ever touched an
@@ -81,11 +82,23 @@ interpolates the mask, which for the salt would salt the entire fleet
 with `**********` and agree with itself everywhere while matching
 nobody's key id, and for the key would authenticate as `**********`.
 
-Two other fields are still plain `str` and still hold secrets:
-`api_keys` (`name:secret` pairs for inbound auth) and
-`semantic_scholar_api_key`. Neither moved here, because both need a
-sweep of their own call sites rather than a one-line type change —
-recorded in ADR 0067's follow-ups.
+The last two moved in WO-D3, and ADR 0067 was right that neither was
+a one-line retype. `api_keys` is the *inbound* keystore: one string
+carrying every secret the deployment accepts, which
+`src/api/auth.py::parse_api_keys` splits into the `{secret:
+principal}` map every request is authenticated against. It unwraps
+once, at the top of the parse, and the entries it refuses no longer
+echo the offending text — an entry with no `:` separator is a bare
+secret, and quoting it into a startup `ValueError` put it wherever
+that error went next. `semantic_scholar_api_key` is an *outbound*
+credential that `src/tools/semantic_scholar.py::_headers` puts on the
+wire; its old `if settings.semantic_scholar_api_key:` was exactly the
+emptiness check `src/llm.py` warns about — correct today, but only
+via pydantic's `__len__` — so it now tests the unwrapped local. The
+keystore *map* keeps plain `str` secrets on purpose: it is a
+process-local dict that `hmac.compare_digest` reads as bytes, it is
+built identically by `load_keystore_from_file` from a JSON file, and
+`ApiKeyPrincipal` deliberately retains no raw key.
 """
 
 from __future__ import annotations
@@ -639,18 +652,47 @@ class Settings(BaseSettings):
             "the workflow at ANTHROPIC_API_KEY's expense. ADR 0033."
         ),
     )
-    api_keys: str = Field(
-        default="",
+    api_keys: SecretStr = Field(
+        default=SecretStr(""),
         description=(
             "Comma-separated `name:key` pairs used when "
             "`enable_api_auth` is on. Example: "
             "`internal:sk_a123,partner:sk_b456`. Names appear in "
             "logs; the raw key is compared with `hmac.compare_digest` "
-            "so lookups run in constant time. This field is read once "
+            "so lookups run in constant time. A `SecretStr` since "
+            "WO-D3, and the highest-value one here: a single string "
+            "holding *every* inbound secret the deployment accepts, "
+            "so a plain `str` put the whole keystore into any "
+            "`Settings` repr, dump or `-vv` assertion diff at once. "
+            "`src/api/auth.py::parse_api_keys` is the only reader and "
+            "takes the raw value once, through `get_secret_value()`. "
+            "This field is read once "
             "at app startup, so rotating through it requires a restart; "
             "set `api_keys_file` for hot reload instead (ADR 0037)."
         ),
     )
+
+    @field_validator("api_keys", mode="before")
+    @classmethod
+    def _blank_api_keys_are_unset(cls, value: Any) -> Any:
+        """Treat a whitespace-only keystore as unset rather than as one.
+
+        The rule `_blank_api_key_is_unset` and `_blank_salt_is_unset`
+        apply, for a reason particular to this field:
+        `deploy/pilot/compose.pilot.yml` sets `API_KEYS: ""`
+        deliberately, to say "the file is the keystore, not the
+        string" (ADR 0037). `parse_api_keys` has always ignored empty
+        entries, so a blank parsed to `{}` before this retype and
+        still does; what the validator adds is that the *wrapper* is
+        falsy for a blank too, so anything that asks the field rather
+        than the parse gets the same answer the parse would give.
+
+        A non-blank value passes through *unstripped*, as the other
+        three secrets do. `parse_api_keys` strips each entry itself,
+        and a second invisible pass over a credential string here
+        would be a behaviour change dressed as hygiene.
+        """
+        return "" if isinstance(value, str) and not value.strip() else value
     api_key_hourly_limit: int = Field(
         default=100,
         ge=1,
@@ -1355,13 +1397,39 @@ class Settings(BaseSettings):
             "Default off preserves Sprint 1 baseline. See ADR 0023."
         ),
     )
-    semantic_scholar_api_key: str = Field(
-        default="",
+    semantic_scholar_api_key: SecretStr = Field(
+        default=SecretStr(""),
         description=(
             "Optional Semantic Scholar API key. Unset = anonymous rate "
-            "limit (~100 req / 5 min per IP); set = 1 req/sec sustained."
+            "limit (~100 req / 5 min per IP); set = 1 req/sec sustained. "
+            "A `SecretStr` since WO-D3, like every other credential "
+            "here: `src/tools/semantic_scholar.py::_headers` is the "
+            "only reader and takes the raw value once, straight into "
+            "the `x-api-key` header, so it reaches the wire and "
+            "nothing else — not a log line, not a span attribute, not "
+            "the `str(exc)` that adapter puts on a failed request."
         ),
     )
+
+    @field_validator("semantic_scholar_api_key", mode="before")
+    @classmethod
+    def _blank_semantic_scholar_key_is_unset(cls, value: Any) -> Any:
+        """Treat a whitespace-only key as unset rather than as a key.
+
+        The same rule as the other three secrets, and here it decides
+        whether enrichment works at all: `_headers` sends the header
+        when the key is set and omits it when it is not, so a stray
+        `SEMANTIC_SCHOLAR_API_KEY=" "` would put `x-api-key: " "` on
+        every S2 request. Semantic Scholar answers a bad key with a
+        403, so the whole enrichment path would fail closed rather
+        than falling back to the anonymous rate limit it is designed
+        to fall back to — and `_get_json` swallows that as a warning,
+        so the operator's symptom is silently empty enrichment.
+
+        A non-blank value passes through *unstripped*: the bytes an
+        operator exported are the bytes that authenticate.
+        """
+        return "" if isinstance(value, str) and not value.strip() else value
     semantic_scholar_seed_count: int = Field(
         default=3,
         ge=0,

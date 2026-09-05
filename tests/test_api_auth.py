@@ -23,6 +23,7 @@ from unittest.mock import MagicMock
 import httpx
 import pytest
 from asgi_lifespan import LifespanManager
+from pydantic import SecretStr
 
 from src.api.app import create_app
 from src.api.auth import (
@@ -69,15 +70,15 @@ async def _booted_app(
 
 class TestParseApiKeys:
     def test_empty_string_yields_empty_map(self) -> None:
-        assert parse_api_keys("") == {}
-        assert parse_api_keys("  ") == {}
+        assert parse_api_keys(SecretStr("")) == {}
+        assert parse_api_keys(SecretStr("  ")) == {}
 
     def test_parses_single_pair(self) -> None:
-        keys = parse_api_keys("internal:sk_a")
+        keys = parse_api_keys(SecretStr("internal:sk_a"))
         assert keys == {"sk_a": ApiKeyPrincipal(key_id="internal")}
 
     def test_parses_multiple_pairs_with_whitespace(self) -> None:
-        keys = parse_api_keys(" internal:sk_a , partner:sk_b ,")
+        keys = parse_api_keys(SecretStr(" internal:sk_a , partner:sk_b ,"))
         assert keys == {
             "sk_a": ApiKeyPrincipal(key_id="internal"),
             "sk_b": ApiKeyPrincipal(key_id="partner"),
@@ -85,24 +86,24 @@ class TestParseApiKeys:
 
     def test_missing_separator_raises(self) -> None:
         with pytest.raises(ValueError, match="separator"):
-            parse_api_keys("just-a-secret")
+            parse_api_keys(SecretStr("just-a-secret"))
 
     def test_empty_name_or_secret_raises(self) -> None:
         with pytest.raises(ValueError, match="empty"):
-            parse_api_keys(":sk_a")
+            parse_api_keys(SecretStr(":sk_a"))
         with pytest.raises(ValueError, match="empty"):
-            parse_api_keys("name:")
+            parse_api_keys(SecretStr("name:"))
 
     def test_duplicate_secret_raises(self) -> None:
         with pytest.raises(ValueError, match="duplicate"):
-            parse_api_keys("internal:sk_a,partner:sk_a")
+            parse_api_keys(SecretStr("internal:sk_a,partner:sk_a"))
 
     def test_duplicate_name_raises(self) -> None:
         # ADR 0042: the name is what rows get stamped with under
         # ADR 0036 ownership — two secrets sharing a name would
         # silently merge two tenants' data.
         with pytest.raises(ValueError, match="duplicate principal name"):
-            parse_api_keys("internal:sk_a,internal:sk_b")
+            parse_api_keys(SecretStr("internal:sk_a,internal:sk_b"))
 
 
 class TestLoadKeystoreDuplicateNames:
