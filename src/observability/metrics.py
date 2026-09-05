@@ -134,11 +134,16 @@ can never disagree with the health endpoint.
 instruments are live in an API worker and nowhere else — `make run`
 and `make eval` set `enable_metrics` in vain, because those processes
 install no provider and every helper below returns on its `None`
-check. That is deliberate, not an oversight: four of the nine
-instruments describe a *server* (job outcomes, concurrency, 429s), and
-a one-shot CLI run has no steady state for the remaining five to
+check. That is deliberate, not an oversight: ten of the twenty-one
+instruments describe a *server* (job outcomes, queue depth,
+concurrency, 429s, and the HTTP server family), and a one-shot CLI run
+has no steady state for the four observable gauges among them to
 sample — it would spin an export thread up and tear it down inside one
-export interval. Tracing differs because `get_tracer()` configures
+export interval. (This sentence read "four of the nine" until WO-B2:
+written at ADR 0049's count and left behind by twelve additions, the
+last surviving copy of a number `docs/architecture.md` also carried.
+The count is banded in `tests/test_operability_docs.py` now, so the
+next wave has to come back to it.) Tracing differs because `get_tracer()` configures
 lazily on first span, which is what makes `traced_node` work under
 `make eval`. If the eval runner ever needs the spend counters, the fix
 is one `configure_metrics()` call at its entry point, not a lazy

@@ -18,17 +18,44 @@ name: nightly-eval
 # nightly funding conversation, and the owner has to be able to fund
 # one without the other.
 #
-# **This workflow is disabled** (`disabled_manually`) and stays that
-# way until the W-OD-1 funding decision. Both lanes fail at their
-# `ANTHROPIC_API_KEY` preflight without it — visibly, with a titled
-# annotation naming the owner action, which is the honest failure the
-# research lane has had 54 nights running. See docs/eval.md,
-# "Status: no green campaign yet".
+# **THIS WORKFLOW IS DISABLED AT THE REPOSITORY, AND THE CHECKOUT
+# CANNOT SHOW YOU THAT.** Its state is `disabled_manually` — an
+# attribute GitHub stores against the workflow, not a field anybody can
+# put in this file — so the `cron:` below reads as a live nightly and
+# is not one. `gh workflow list --all` is the only place the two agree:
+#
+#     nightly-eval  .github/workflows/eval-nightly.yml  disabled_manually
+#
+# That gap is why nothing in `tests/` asserts this. A test that read
+# this file would have to assert the schedule it can see, and the
+# schedule is the part that lies; the file has to say so in prose
+# first, which is what this paragraph is (WO-B2).
+#
+# It stays disabled until the W-OD-1 funding decision, which is the
+# owner's. Re-enabling takes three things in this order: the owner
+# funds the campaign (W-OD-1); the `ANTHROPIC_API_KEY` repository
+# secret is set, without which both lanes fail at the preflight below;
+# and someone runs `gh workflow enable nightly-eval`. The first and the
+# third are outside this repository. Editing this file is not one of
+# the three, and enabling the workflow without the first two puts it
+# straight back to failing every night.
+#
+# Both lanes fail at their `ANTHROPIC_API_KEY` preflight without the
+# secret — visibly, with a titled annotation naming the owner action,
+# which is the honest failure the research lane has had 54 nights
+# running. See docs/eval.md, "Status: no green campaign yet".
 #
 # Design: docs/decisions/0010-nightly-eval-ci.md
 
 on:
   schedule:
+    # THIS CRON DOES NOT FIRE while the workflow is `disabled_manually`
+    # (see the header). GitHub keeps a disabled workflow's schedule in
+    # the file and ignores it, so this line is a record of the time
+    # somebody chose rather than a statement about tonight. It stays for
+    # that reason: re-enabling should be `gh workflow enable`, not an
+    # edit that has to reconstruct a decision from scratch.
+    #
     # 04:00 UTC — outside typical dev hours in both US and EU.
     - cron: "0 4 * * *"
   workflow_dispatch:

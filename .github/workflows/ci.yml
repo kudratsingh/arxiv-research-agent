@@ -28,12 +28,21 @@ name: ci
 #
 # EVERY NETWORK STEP IN THIS FILE IS BOUNDED. Each `npm ci` carries a
 # step-level `timeout-minutes` and npm fetch settings (the reasoning is written
-# out once, on the `web` job's install step); the Playwright browser download
-# and the web image build carry their own. A job-level ceiling is a backstop
-# for the job, not a bound on a step that hangs — on 2026-09-04 an unbounded
-# advisory-endpoint call inside `web` consumed that job's whole 15 minutes and
-# its four real gates were cancelled unreported. `web-audit` exists because of
-# that day.
+# out once, on the `web` job's install step); the Playwright browser download,
+# both image builds, the e2e stack bring-up and all three `pip install` steps
+# carry their own. A job-level ceiling is a backstop for the job, not a bound
+# on a step that hangs — on 2026-09-04 an unbounded advisory-endpoint call
+# inside `web` consumed that job's whole 15 minutes and its four real gates
+# were cancelled unreported. `web-audit` exists because of that day.
+#
+# That sentence was written before it was true, which is the kind of claim
+# WO-A14 exists to stop. Until WO-B2 the three `pip install` steps, the API
+# image build and the e2e `compose up` carried no step bound at all — five
+# network steps under a heading that says there are none. Each is bounded now
+# against its own measurement (run 33936777399, with 33935998295 as a second
+# sample), under one rule: high enough that only a hang reaches it, low enough
+# that the job's remaining steps still get to run and report. Reporting is what
+# the 2026-09-04 incident actually cost, not wall clock.
 
 on:
   pull_request:
@@ -79,6 +88,13 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-lock.txt
       - name: Install lint tooling
+        # 2 s measured (33936777399), 3 s on 33935998295 — two small wheels
+        # against a warm setup-python cache, and a cold miss is still two small
+        # wheels. A multiple of a two-second step is not a bound, so this one
+        # is chosen from the other end: three minutes of a five-minute job
+        # spent not reaching PyPI is unambiguous, and it still leaves `ruff
+        # check` (1 s measured) two minutes to run and report.
+        timeout-minutes: 3
         run: |
           python -m pip install --upgrade pip
           # Install ruff by itself — ruff has no runtime deps, so we
@@ -106,6 +122,14 @@ jobs:
         # records — pyproject stays authoritative for ranges, the lock
         # for what CI actually gates on (ADR 0045). `pip check` fails
         # the job if the lock and pyproject's ranges ever drift apart.
+        #
+        # 82 s measured here (33936777399) and 89 s on 33935998295. Seven
+        # minutes is ~5x that, the same multiple the Playwright download's
+        # bound uses, and it is the tighter of the two jobs that run this
+        # identical command: it has to leave `mypy --strict` (58 s measured)
+        # room inside this job's 10-minute ceiling. `tests` carries the same
+        # number because it is the same install, not because it needs it.
+        timeout-minutes: 7
         run: |
           python -m pip install --upgrade pip
           # Match the production artifact before installing the public
@@ -213,6 +237,13 @@ jobs:
         # records — pyproject stays authoritative for ranges, the lock
         # for what CI actually gates on (ADR 0045). `pip check` fails
         # the job if the lock and pyproject's ranges ever drift apart.
+        #
+        # Same bound as `typecheck`'s copy of this step, and the reasoning is
+        # written out there. 80 s measured here (33936777399), 72 s on
+        # 33935998295; seven minutes leaves eight of this job's fifteen for a
+        # remainder that measures 200 s, which is every gate below getting to
+        # report rather than being cancelled behind a stuck install.
+        timeout-minutes: 7
         run: |
           python -m pip install --upgrade pip
           # Keep the test environment on the same CPU-only Torch artifact
@@ -496,6 +527,17 @@ jobs:
         # rebuild without dep changes lands in ~30s vs. ~4min cold.
         # Loaded into the local daemon so subsequent steps could
         # `docker run` against it if we add a smoke-boot step later.
+        #
+        # 43 s measured (33936777399), 45 s on 33935998295 — both warm. The 5x
+        # rule the other bounds use does not apply here: this step's cold path
+        # is ~20x its warm one (the job comment above records 13-15 min), so
+        # the bound comes off the job's ceiling instead. Twenty-two leaves
+        # three minutes for the checkout, the buildx setup and the two compose
+        # validations, which together measure under 10 s — and unlike every
+        # other bound in this file it buys no rescued report, because this is
+        # the job's last step. What it buys is a failure that names the step
+        # rather than a job killed at its ceiling with no line saying why.
+        timeout-minutes: 22
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -984,6 +1026,16 @@ jobs:
         # web/e2e/support/compose.e2e.yml. `--wait` blocks on the
         # healthchecks the base file declares, so the seed cannot race an
         # unmigrated Postgres or a booting app.
+        #
+        # The third network step in this job and the last one in the file to
+        # get a bound: it pulls base images, builds both application images and
+        # installs the runtime lock inside one of them. 2m36s on the first
+        # green run, recorded in this job's own header above; thirteen minutes
+        # is 5x that, the multiple the Playwright bound uses, and it leaves
+        # seventeen for a remainder that measures ~4 min per PR. `--wait`
+        # blocking on a healthcheck that never goes green is exactly the shape
+        # of hang a job ceiling turns into "the browser tier reported nothing".
+        timeout-minutes: 13
         run: npm run e2e:stack:up
       - name: Seed the fixtures
         # Writes only `baseline-*` rows, directly into Postgres and Redis —
