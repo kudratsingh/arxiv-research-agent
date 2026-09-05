@@ -989,15 +989,62 @@ Two limits are worth naming rather than leaving to be discovered:
   three skipped rubrics in every record. `execute_campaign` refuses to
   use that scorer for a campaign that budgeted judge model calls, so a
   funded run cannot silently be scored with less than it declared.
-- **Per-episode operator logging is absent.** Four campaign event names
-  and six extra keys would have to be registered in
-  `src/observability/logging.py`, which is outside this work order's
-  fences; the closed-set log contract (`tests/test_log_contract.py`)
-  correctly refuses them. Progress today is the CLI's JSON, the `status`
-  verb, and the episode directories appearing on disk. A follow-up owning
-  that file should register `campaign_episode_completed`,
-  `campaign_episode_failed` and `campaign_budget_stop`.
+- ~~**Per-episode operator logging is absent.**~~ **Closed by P0-WO07c.**
+  When W07b landed, the four campaign event names and their extra keys
+  could not be registered — `src/observability/logging.py` was outside
+  that work order's fences and the closed-set log contract
+  (`tests/test_log_contract.py`) correctly refused them, so the log calls
+  were removed rather than smuggled in under an existing event's name.
+  W07c registers them; §12.5 records what a pass now emits.
 
 §7.3's other prerequisites are unchanged and all belong to the owner: an
 approval record someone actually created, re-verified model ids and
 prices, and W10's expert labeling time. **P0-WO12 remains blocked on D9.**
+
+### 12.5 What a pass logs (P0-WO07c)
+
+Added: **2026-09-05**. Work order: P0-WO07c, closing §12.4's second
+limit. No ADR — event registration is additive under
+[ADR 0067](../decisions/0067-correlation-context-and-log-contract.md)
+and [ADR 0088](../decisions/0088-campaign-execution-loop.md).
+
+A 240-episode pass runs for tens of seconds in one process and the CLI
+prints nothing until it is over, so the log is the only thing an
+operator watching a campaign has. Four names, each answering a question
+the others cannot:
+
+| Event | Level | Keys | Why it exists |
+|---|---|---|---|
+| `campaign_episode_started` | INFO | `campaign_id`, `case_id`, `arm_id`, `repeat_index` | Emitted before the seal, not before the run. An episode that hangs never reaches its `completed` line, and this is the only line that names which of 240 slots it hung in. |
+| `campaign_episode_completed` | INFO | the four above, plus `status`, `ledger_status`, `call_count`, `workflow_cost_usd`, `elapsed_sec` | Progress, and the zero-spend claim on every line. `status` and `ledger_status` are both carried because they answer different questions: a succeeded episode whose primary metric is missing is `succeeded` *and* `null_metric`. |
+| `campaign_episode_failed` | ERROR (`log.exception`) | `case_id`, `arm_id`, `repeat_index`, `error_type` | The only place a failed episode's whole stack survives. The episode record keeps a bounded 500-character detail and the manifest keeps none (RFC 09 §11.2), so one broken slot out of 240 was otherwise debuggable only by re-running it. |
+| `campaign_budget_stop` | WARNING | `campaign_id`, `cap_usd` | 07 §9: stopping is an experiment outcome. A pass that quietly ended early at INFO would look identical to one that finished. |
+
+Five keys are new — `campaign_id`, `case_id`, `ledger_status`,
+`repeat_index` and `workflow_cost_usd` — and three deliberately are not:
+
+- `call_count` rather than a new `model_calls`, because that is
+  `RunCosts`' own field name and the allowlist's standing rule is not to
+  invent a synonym beside a registered key;
+- `repeat_index` rather than the registered `repeat`, because the
+  sequential runner's `repeat` is one-based and `RunIdentity`'s
+  `repeat_index` is zero-based — one name over two bases is a dashboard
+  that is off by one and never says so;
+- `case_id` rather than `query_id`, because the twenty cases of
+  `research-policy-v1` only *happen* to be the twenty benchmark queries,
+  and the campaign joins its lines to an immutable registry ref rather
+  than to that coincidence.
+
+There is no `campaign_checkpointer_close_failed`. Releasing a compiled
+graph's checkpointer exit stack is the same failure with the same remedy
+in the same evaluation lane as `src/eval/runner.py:_close_workflow`, so
+the campaign emits `eval_checkpointer_close_failed` and the registry
+gains no synonym.
+
+`tests/test_campaign_execution.py::TestTheOperatorCanFollowAPass` asserts
+all four over a real pass — the names against `KNOWN_EVENTS`, the keys
+against `ALLOWED_EXTRA_KEYS`, and the set of everything a pass emits
+against the registry. That is the direction `tests/test_log_contract.py`
+cannot check: it re-parses the source to catch an *unregistered* name,
+and this catches a registered name the code has quietly stopped
+emitting.

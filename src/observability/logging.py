@@ -189,6 +189,25 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "arxiv_search_rate_limited",
         "arxiv_search_request_failed",
         "assessment_judge_unassessed",
+        # P0-WO07b/c (ADR 0082, ADR 0088). One campaign pass is up to 240
+        # episodes in a single process, so the three lines an operator
+        # needs are the ones `eval_query_*` already established for the
+        # sequential runner — started, completed, failed — plus the
+        # between-episodes cap stop, which is a *campaign* outcome rather
+        # than an episode's (07 §9: "stopping is an experiment outcome").
+        # `started` is not redundant with `completed`: an episode that
+        # hangs never emits the second line, and the first is the only
+        # thing that names which of 240 it hung on.
+        #
+        # There is deliberately no `campaign_checkpointer_close_failed`.
+        # Releasing a compiled graph's checkpointer exit stack is the same
+        # failure with the same remedy in the same evaluation lane as
+        # `src/eval/runner.py:_close_workflow`, so the campaign emits
+        # `eval_checkpointer_close_failed` rather than a synonym.
+        "campaign_budget_stop",
+        "campaign_episode_completed",
+        "campaign_episode_failed",
+        "campaign_episode_started",
         "content_capture_flag_invalid",
         # P0-WO05 (ADR 0078). Three names, and only three: the shadow
         # binding is default-off scaffolding whose whole promise is
@@ -466,9 +485,16 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "cache_creation_input_tokens",
         "cache_read_input_tokens",
         "call_count",
+        "campaign_id",
         "cancelled_jobs",
         "cap",
         "cap_usd",
+        # P0-WO07b. The registry's own word for a benchmark case. Not
+        # `query_id`: the twenty cases of `research-policy-v1` happen to
+        # be the twenty benchmark queries today, and the campaign joins
+        # its lines to an immutable registry ref rather than to that
+        # coincidence.
+        "case_id",
         "cascaded",
         "changed",
         "checkpoint_backend",
@@ -552,6 +578,7 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "kind",
         "lane",
         "latency_ms",
+        "ledger_status",
         "learner_profile_enabled",
         "learner_profile_store",
         "llm_calls",
@@ -639,6 +666,11 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "redrive_skipped_live",
         "repair_action",
         "repeat",
+        # Zero-based, as `RunIdentity` requires, where `repeat` above is
+        # the sequential runner's one-based index. Two names rather than
+        # one because a dashboard that averaged them would be off by one
+        # and would never say so.
+        "repeat_index",
         "report_chars",
         "request_id",
         "requested",
@@ -701,6 +733,10 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "url",
         "verdict",
         "worker_id",
+        # ADR 0050 split product spend from harness spend and
+        # `judge_cost_usd` above is the harness half. This is the other
+        # one; registering only the judge's was the asymmetry.
+        "workflow_cost_usd",
         "worst_case_request_sec",
     }
 )
