@@ -54,7 +54,11 @@ from src.contracts.research_binding import (
     settings_schema_digest,
     settings_snapshot,
 )
-from src.contracts.run_manifest import RunManifestV1, build_policy_runtime_projection
+from src.contracts.run_manifest import (
+    PolicyExecutionSnapshot,
+    RunManifestV1,
+    build_policy_runtime_projection,
+)
 from src.contracts.task_spec import ProductSurface, TaskKind
 
 pytestmark = pytest.mark.unit
@@ -158,6 +162,18 @@ def config(**overrides: Any) -> Settings:
 
 def seal(cfg: Settings, app: _AppStub, *, query: str = "why do LLMs hallucinate?") -> Any:
     shape = classify_policy_shape(cfg, app)
+    execution = None
+    if shape.arm_id == "E":
+        selected = read_graph_shape(fixed_app())
+        execution = PolicyExecutionSnapshot(
+            compute_tier="T0",
+            eligible_tiers=("T0", "T1", "T2"),
+            decision_rule_ids=("default_t0",),
+            feature_snapshot_ref="sha256:" + "a" * 64,
+            tier_budget_ref="tier-budget:T0:verifications=1:repairs=0",
+            graph_digest=selected.digest,
+            shape_nodes=tuple(sorted(selected.nodes)),
+        )
     spec = compile_research_intake(
         cfg,
         task_id="research-api:job-1",
@@ -173,6 +189,7 @@ def seal(cfg: Settings, app: _AppStub, *, query: str = "why do LLMs hallucinate?
         runtime_run_id="job-1",
         hitl_bypass=True,
         hitl_bypass_reason="client-requested-bypass",
+        policy_execution=execution,
     )
 
 

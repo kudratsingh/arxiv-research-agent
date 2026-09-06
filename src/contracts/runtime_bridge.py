@@ -84,6 +84,7 @@ from src.contracts.run_manifest import (
     AdmissionResolution,
     PolicyCapabilities,
     PolicyConfig,
+    PolicyExecutionSnapshot,
     PolicySnapshot,
     RunManifestV1,
     RuntimeFlags,
@@ -3339,6 +3340,8 @@ def start_research_job(
     *,
     config: Settings,
     cost_ceiling_usd: float,
+    deployment_workflow: Any | None = None,
+    compute_decision: Any | None = None,
 ) -> ResearchRuntimeBridge | None:
     """Open a durable research trajectory for one API job, or return `None`.
 
@@ -3368,12 +3371,41 @@ def start_research_job(
         from src.contracts.research_binding import (
             classify_from_graph_shape,
             compile_research_intake,
+            read_deployment_shape,
             read_graph_shape,
             seal_research_episode,
         )
         from src.contracts.shadow_bridge import _principal_id
 
-        shape = classify_from_graph_shape(config, read_graph_shape(workflow))
+        executed_shape = read_graph_shape(workflow)
+        deployment_shape = classify_from_graph_shape(
+            config,
+            read_deployment_shape(
+                deployment_workflow if deployment_workflow is not None else workflow
+            ),
+        )
+        # Only arm E is a deployment-level identity. A controller that
+        # cannot earn E keeps the selected graph's A-D/non-arm identity.
+        shape = (
+            deployment_shape
+            if deployment_shape.arm_id == "E"
+            else classify_from_graph_shape(config, executed_shape)
+        )
+        policy_execution = None
+        if shape.arm_id == "E" and compute_decision is not None:
+            policy_execution = PolicyExecutionSnapshot(
+                compute_tier=compute_decision.tier,
+                eligible_tiers=compute_decision.eligible,
+                decision_rule_ids=compute_decision.reasons,
+                feature_snapshot_ref=compute_decision.features.digest(),
+                tier_budget_ref=(
+                    f"tier-budget:{compute_decision.tier}"
+                    f":verifications={compute_decision.limits.max_verifications}"
+                    f":repairs={compute_decision.limits.max_repairs}"
+                ),
+                graph_digest=executed_shape.digest,
+                shape_nodes=tuple(sorted(executed_shape.nodes)),
+            )
         spec = compile_research_intake(
             config,
             task_id=f"research-api:{job.job_id}",
@@ -3392,6 +3424,7 @@ def start_research_job(
                 hitl_bypass_reason=(
                     "client-requested-bypass" if job.hitl_bypass else None
                 ),
+                policy_execution=policy_execution,
             )
         except ResearchBindingError as exc:
             # The configuration cannot be expressed as a sealed episode.

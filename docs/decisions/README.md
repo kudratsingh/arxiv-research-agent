@@ -760,6 +760,14 @@ never renumbered.
   cost is recorded too: on this suite the router picks T0 twelve times
   and T1 eight, and never T2.
 
+- [0092](0092-deployment-policy-and-selected-execution.md) — **An
+  adaptive run records its deployment policy and selected execution as
+  separate manifest facts.** Arm E remains the deployment identity;
+  `policy_execution` pins the chosen tier, decision rules, budget and
+  selected graph, and `compute.tier_selected` carries the same decision
+  before the first campaign node. A T0 execution under arm E can no
+  longer be filed as arm B, while the A--D policy digests do not move.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.
