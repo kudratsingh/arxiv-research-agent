@@ -4,6 +4,19 @@
 - **Date**: 2026-09-05
 - **Deciders**: agent-capability lane (CAP-03)
 
+> **Amendment, 2026-09-06 (CAP-04b,
+> [ADR 0087](0087-branch-tier-reachability-on-the-benchmark.md)).** The
+> branch rule table this ADR introduced now has four rows rather than
+> two: `branch_paired_comparison` and `branch_open_enumeration` were
+> added after the twenty benchmark queries were measured and neither
+> original rule fired on any of them. `BRANCH_ENTITY_THRESHOLD` and
+> `BRANCH_SUB_QUESTION_THRESHOLD` keep their values; `BRANCH_TIER`,
+> `BRANCH_TIER_LIMITS`, the graph, the caps and the events are all
+> unchanged; and the property this ADR pins — a deployment with
+> `orchestration=off` evaluates ADR 0085's table and emits none of the
+> branch vocabulary — holds for the two new rows exactly as it does for
+> the two original ones. `BRANCH_REASON_CODES` gains two members.
+
 ## Context
 
 `docs/agent-engineering/01-current-architecture.md` §6 records parallel

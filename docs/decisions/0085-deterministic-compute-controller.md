@@ -4,6 +4,27 @@
 - **Date**: 2026-09-05
 - **Deciders**: Agent-capability lane (CAP-04)
 
+> **Amendment, 2026-09-06 (CAP-04b,
+> [ADR 0087](0087-branch-tier-reachability-on-the-benchmark.md)).** The
+> rule table below is CAP-04's and stays as written; the *branch* table
+> ADR 0086 added beside it grew two rules, `branch_paired_comparison` and
+> `branch_open_enumeration`, and `ComputeFeatures` grew the two
+> query-time fields they read. Nothing in this ADR moved: rules 1-8, the
+> four thresholds, `COMPUTE_TIERS`, `TIER_LIMITS`, `REASON_CODES` and
+> `MAX_DECIDABLE_TIER` are unchanged, so a deployment with the branch
+> tier off decides exactly what this ADR baselined.
+>
+> Two claims here are qualified by measurement rather than superseded.
+> The feature table's "`entity_count` — distinct all-caps /
+> internal-capital / digit-bearing tokens" is accurate and is also the
+> reason rule 9 never fires on `research-policy-v1`: it cannot see a
+> lowercase multiword operand, so "LoRA and full fine-tuning" counts one
+> and "mixture-of-experts models compare to dense models" counts none.
+> And "the plan-time counts are the seam CAP-03 needs" turned out not to
+> be reachable: the tier selects the graph, so it is always decided
+> before the planner runs, and no shipped caller passes a count. ADR 0087
+> carries the twenty-query evidence for both.
+
 ## Context
 
 [`02-target-architecture.md`](../agent-engineering/02-target-architecture.md)

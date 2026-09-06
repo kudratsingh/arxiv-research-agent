@@ -43,6 +43,7 @@ from src.policies.compute import (
     REASON_CODES,
     TIER_LIMITS,
     TIER_RULES,
+    _branch_plan_breadth,
     _rules_for,
     decide_tier,
     eligible_tiers,
@@ -141,13 +142,29 @@ class TestTheDefaultTableDidNotMove:
         `src/config.py` validates `tier_effort_overrides` against
         `COMPUTE_TIERS` and `TIER_LIMITS` is keyed by it, so widening
         either would change what a *flag-off* deployment accepts at
-        load. The branch tier's own vocabulary lives beside them.
+        load. The branch tier's own vocabulary lives beside them, and it
+        is the half CAP-04b widened: two rules were added to the branch
+        table (ADR 0087) and none to CAP-04's, so `REASON_CODES` — the
+        vocabulary a flag-off deployment can emit — is unchanged and the
+        two sets stay disjoint.
         """
         assert COMPUTE_TIERS == ("T0", "T1")
         assert set(TIER_LIMITS) == {"T0", "T1"}
+        assert REASON_CODES == (
+            "depth_quick",
+            "depth_deep",
+            "comparative_cue",
+            "freshness_cue",
+            "multi_entity",
+            "long_query",
+            "plan_breadth",
+            "default_t0",
+        )
         assert set(REASON_CODES).isdisjoint(BRANCH_REASON_CODES)
         assert BRANCH_REASON_CODES == (
             "branch_multi_entity_comparison",
+            "branch_paired_comparison",
+            "branch_open_enumeration",
             "branch_plan_breadth",
         )
 
@@ -218,6 +235,112 @@ class TestTheBranchTierIsReachableWhenAskedFor:
 
         assert decide_tier(features, max_tier=BRANCH_TIER).tier == "T2"
         assert decide_tier(features).tier == "T1", "unchanged under the default"
+
+    def test_a_query_only_feature_vector_can_never_reach_that_rule(self) -> None:
+        """Rule 12's known gap, pinned so it stays known (ADR 0087).
+
+        Every shipped caller hands `extract_features` a query and nothing
+        else, because the tier selects the *graph* and so cannot wait for
+        the planner. `sub_question_count` is `None` on all of those
+        paths, `_branch_plan_breadth` treats `None` as unanswered, and
+        the rule therefore fires nowhere — which is why CAP-04b put the
+        breadth signal in a query-time rule instead of tuning this one.
+        """
+        features = extract_features("survey the field")
+
+        assert features.sub_question_count is None
+        assert features.search_query_count is None
+        assert not _branch_plan_breadth(features)
+
+    #: Query -> (paired_comparison, open_enumeration), the two features
+    #: ADR 0087 added. Both negatives are the load-bearing rows: a bare
+    #: coordinating "and" joins two *properties* as readily as two
+    #: systems, and a "how" question's plural noun modifies the one thing
+    #: it asks about rather than naming a set to enumerate.
+    NEW_FEATURES: tuple[tuple[str, bool, bool], ...] = (
+        ("What are the tradeoffs between LoRA and full fine-tuning?", True, False),
+        ("How do MoE models compare to dense models?", True, False),
+        ("Is A better than B, or B versus C?", True, False),
+        ("How do quantization methods trade off cost and quality?", False, False),
+        ("compare RAG and CoVe", False, False),
+        ("What is the relationship between attention and memory?", True, False),
+        ("What approaches exist for reducing hallucination?", False, True),
+        ("Which techniques speed up long-context inference?", False, True),
+        ("How do speculative decoding methods reduce latency?", False, False),
+        ("What role does synthetic data play in training?", False, False),
+        ("What benchmarks capture reasoning ability?", False, False),
+        ("what is attention?", False, False),
+        ("", False, False),
+    )
+
+    @pytest.mark.parametrize(("query", "paired", "enumerative"), NEW_FEATURES)
+    def test_the_two_added_features_read_the_shape_they_claim_to(
+        self, query: str, paired: bool, enumerative: bool
+    ) -> None:
+        features = extract_features(query)
+
+        assert features.paired_comparison is paired
+        assert features.open_enumeration is enumerative
+
+    def test_a_two_operand_comparison_branches_but_a_two_property_one_does_not(
+        self,
+    ) -> None:
+        """Rule 10's whole claim, as the pair that separates it.
+
+        Both queries carry a comparison word. Only one names two operands
+        a corpus has to cover evenly; the other compares two properties
+        of a single method class, which one ranked corpus serves — so it
+        stays the T1 question ADR 0085 made it.
+        """
+        operands = extract_features(
+            "What are the tradeoffs between LoRA and full fine-tuning?"
+        )
+        properties = extract_features(
+            "How do quantization methods trade off cost and quality?"
+        )
+        assert operands.comparative_cue and properties.comparative_cue
+
+        assert decide_tier(operands, max_tier=BRANCH_TIER).tier == "T2"
+        assert decide_tier(properties, max_tier=BRANCH_TIER).tier == "T1"
+        assert decide_tier(operands).tier == "T1", "unchanged under the default"
+
+    def test_a_connective_without_a_comparison_word_does_not_branch(self) -> None:
+        """`between X and Y` binds two operands and compares nothing."""
+        features = extract_features(
+            "What is the relationship between attention and memory?"
+        )
+
+        assert features.paired_comparison is True
+        assert features.comparative_cue is False
+        assert decide_tier(features, max_tier=BRANCH_TIER).tier == "T0"
+
+    def test_an_open_enumeration_branches_and_a_named_family_does_not(self) -> None:
+        """Rule 11's claim: the unnamed set is the one that costs N corpora."""
+        enumerative = extract_features("What approaches exist for reducing drift?")
+        named = extract_features("How do speculative decoding methods cut latency?")
+
+        assert decide_tier(enumerative, max_tier=BRANCH_TIER).tier == "T2"
+        assert decide_tier(named, max_tier=BRANCH_TIER).tier == "T0"
+        assert decide_tier(enumerative).tier == "T0", "unchanged under the default"
+
+    def test_lowering_the_entity_threshold_would_not_have_helped(self) -> None:
+        """The counterfactual ADR 0087 rests on, measured rather than argued.
+
+        ADR 0091 rejected moving `BRANCH_ENTITY_THRESHOLD` on ADR 0070's
+        grounds, and this is the second, independent reason it was right
+        to: `_is_entity_token` cannot see a lowercase multiword operand
+        at all, so "LoRA and full fine-tuning" counts one entity and
+        "mixture-of-experts models compare to dense models" counts zero.
+        A threshold of two would have fired on neither.
+        """
+        for query in (
+            "What are the tradeoffs between LoRA and full fine-tuning?",
+            "How do mixture-of-experts models compare to dense models?",
+        ):
+            features = extract_features(query)
+            assert features.comparative_cue is True
+            assert features.entity_count < 2
+            assert features.paired_comparison is True
 
     def test_the_branch_tier_reports_arm_cs_verification_limits(self) -> None:
         """T2 is the branch tier *plus* arm C, so it spends arm C's budget."""

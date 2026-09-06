@@ -231,6 +231,26 @@ default — the controller's rule table, reason codes and compiled graph
 set are exactly ADR 0085's. See ADR
 [0086](decisions/0086-orchestrator-workers-for-the-branch-tier.md).
 
+**What sends a run to T2 (ADR 0087).** Four branch rules, evaluated only
+under the raised ceiling and only after ADR 0085's table: a comparison
+word beside three or more recognised entities; a comparison word beside a
+connective that binds two operands (`versus`, `compared to`,
+`between … and` — a bare coordinating "and" is excluded, so "trade off
+cost and quality" compares two properties of one method class and stays
+T1); an interrogative followed by a plural *solution-class* noun
+(`approaches`, `methods`, `techniques`, `architectures`, `defenses`…,
+where observation classes such as `benchmarks` and `mechanisms` are
+excluded because one ranked corpus about one object of study carries
+them); and a known plan broader than the planner's own range, which no
+shipped caller can reach because the tier selects the graph and is
+therefore decided before the planner runs. The shared claim is that a
+ranked corpus ranks by one similarity and so cannot cover several
+independent lines of enquiry evenly. On the twenty-query
+`research-policy-v1` suite the router allocates **T0 10 / T1 2 / T2 8**;
+the per-query table and its reasons are pinned in
+`tests/test_listwise_selection.py`. Every threshold in both tables is a
+module constant rather than a setting, for ADR 0070's reason.
+
 ### Selecting between branches, and stopping (ADR 0091)
 
 `CANDIDATE_SELECTION=listwise` compiles a `select` node between

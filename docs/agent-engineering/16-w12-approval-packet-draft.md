@@ -70,6 +70,46 @@ because 12 §18 says the first funded stage estimates variance rather than
 compares policies, and because a two-arm campaign roughly doubles the
 bill for a question a one-arm baseline has to answer first.
 
+### 1.1 Arm E reachability on `research-policy-v1`
+
+Arm E is now implemented too (ADR 0091), and it is **not** in this scope
+either. This note exists so that a later request to add it is priced
+against what it would actually exercise rather than against its name.
+
+Arm E's identity is a router: a deterministic controller allocating each
+query to T0 (the fixed pipeline), T1 (verify-and-repair) or T2 (the
+orchestrator-workers branch graph, with listwise selection and a marginal
+stop). What it exercises therefore depends entirely on how the twenty
+queries route, and that number has moved once already:
+
+| | T0 | T1 | T2 | What a 60-episode arm-E run would exercise |
+|---|---:|---:|---:|---|
+| Before ADR 0087 (as shipped by CAP-09) | 12 | 8 | 0 | branching, selection and the marginal stop: **never** |
+| After ADR 0087 (`main` today) | 10 | 2 | 8 | 30 episodes T0, 6 episodes T1, **24 episodes on the branch graph** |
+
+The eight branched cases are `hallucination-mitigation`,
+`alignment-beyond-rlhf`, `lora-vs-full-finetune`,
+`long-context-efficiency`, `moe-vs-dense`, `jailbreak-robustness`,
+`interpretability-methods` and `agentic-memory-architectures`: two
+two-system comparisons and six open enumerations over a class of
+approaches. Each carries the rule that branched it in its
+`compute.tier_selected` record, and the per-query table with its reasons
+is pinned in `tests/test_listwise_selection.py`.
+
+**Two consequences for pricing, both against arm E and neither hidden.**
+A T2 episode is not one workflow pass: it is up to
+`ORCHESTRATION_MAX_BRANCHES` branches, each with its own search and its
+own reader calls, bounded by `ORCHESTRATION_MAX_PAPERS_PER_BRANCH` and by
+a per-branch share of the episode cap. The 24 branched episodes are
+therefore the expensive fifth of the arm, and §3's per-episode figure —
+computed for arm A's single pass — does not describe them. And arm E's
+own T0-versus-T1 contrast would rest on 30 and 6 episodes respectively,
+which is thin; arms A and C answer that question with 60 each.
+
+The pre-ADR-0087 row is kept deliberately. The honest reading of a funded
+arm-E run approved before 2026-09-06 is that it would have measured
+adaptive compute and never once reached the adaptive part.
+
 ---
 
 ## 2. Provider and model ids — RE-PIN BEFORE APPROVAL

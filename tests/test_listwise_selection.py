@@ -914,22 +914,62 @@ class TestTheSelectionReachesTheTrajectory:
 # ---------------------------------------------------------------------------
 
 
+#: Every `research-policy-v1` case, the tier arm E's router allocates it
+#: and the reasons on the record — written out per query rather than
+#: summed, because the distribution alone cannot say *why* a query
+#: branched and a review of the branch tier's cost has to read the why.
+#:
+#: CAP-09 pinned `T0 12 / T1 8 / T2 0` here: the branch tier existed and
+#: nothing on the suite reached it, so a funded arm-E run would have
+#: measured nothing about branching, selection or the marginal stop.
+#: CAP-04b (ADR 0087) added two query-time features and the two rules
+#: that read them, and the table below is the whole of what changed.
+#: Every row's reasons are `decide_tier`'s own tuple, so a rule that
+#: starts firing somewhere new shows up as a diff here rather than as a
+#: number that moved for an unstated reason.
+SUITE_ROUTING: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+    ("hallucination-mitigation", "T2", ("freshness_cue", "branch_open_enumeration")),
+    ("rag-multi-hop", "T0", ("default_t0",)),
+    ("alignment-beyond-rlhf", "T2", ("multi_entity", "branch_open_enumeration")),
+    ("cot-reasoning-effects", "T0", ("default_t0",)),
+    ("lora-vs-full-finetune", "T2", ("comparative_cue", "branch_paired_comparison")),
+    ("vlm-spatial-reasoning", "T0", ("default_t0",)),
+    ("long-context-efficiency", "T2", ("freshness_cue", "branch_open_enumeration")),
+    ("reasoning-benchmarks", "T0", ("default_t0",)),
+    ("moe-vs-dense", "T2", ("comparative_cue", "branch_paired_comparison")),
+    ("coding-agent-safety", "T0", ("default_t0",)),
+    ("tool-use-agents", "T0", ("default_t0",)),
+    ("synthetic-data-training", "T0", ("default_t0",)),
+    ("quantization-inference", "T1", ("comparative_cue",)),
+    ("in-context-learning-mechanisms", "T0", ("default_t0",)),
+    ("scaling-laws", "T0", ("default_t0",)),
+    ("jailbreak-robustness", "T2", ("freshness_cue", "branch_open_enumeration")),
+    ("reasoning-fine-tuning", "T1", ("multi_entity",)),
+    ("speculative-decoding", "T0", ("default_t0",)),
+    ("interpretability-methods", "T2", ("branch_open_enumeration",)),
+    ("agentic-memory-architectures", "T2", ("branch_open_enumeration",)),
+)
+
+
 class TestTheRouterOnTheShippedSuite:
     pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
     def test_the_tier_each_benchmark_query_routes_to_is_recorded(self) -> None:
-        """Evidence, not a caveat: arm E's router declines T2 on this suite.
+        """Evidence, not a caveat: what arm E's router allocates, per query.
 
         Arm E is adaptive compute, and what "adaptive" buys is decided by
         the difficulty features rather than by the arm's name. On
-        `research-policy-v1`'s twenty queries the branch tier's two rules
-        (a comparison over three or more entities, or a plan broader than
-        the planner's own range) do not fire, so every episode routes to
-        T0 or T1. That is a result the campaign should be able to read
-        off the record rather than a gap in this work order, and it is
-        pinned here so a later change to `TIER_RULES` — which belongs to
-        CAP-04 and to ADR 0070's discipline about movable thresholds —
-        shows up as a change to this number.
+        `research-policy-v1`'s twenty queries the router now allocates
+        **T0 10 / T1 2 / T2 8**: the suite's two named two-way system
+        comparisons branch, six open enumerations over a solution class
+        branch, and the remaining twelve do not. A funded arm-E run on
+        this suite therefore exercises all three tiers, which is the
+        thing a router evaluation needs and the thing CAP-09's
+        `T0 12 / T1 8 / T2 0` could not offer.
+
+        Pinned per query rather than as a distribution, so a later change
+        to either table shows up as a named query changing tier for a
+        named reason (ADR 0087, ADR 0070).
         """
         from collections import Counter
 
@@ -956,20 +996,35 @@ class TestTheRouterOnTheShippedSuite:
         ).payload
         assert isinstance(task_set, TaskSet)
 
-        tiers: Counter[str] = Counter()
+        routed: list[tuple[str, str, tuple[str, ...]]] = []
         for case_ref in task_set.case_refs:
             case = registry.resolve(
                 case_ref,
                 role=RegistryRole.EVALUATOR,
                 intended_use=IntendedUse.DEVELOPMENT,
             ).payload
-            objective = case.task_input.objective
-            tiers[
-                decide_tier(extract_features(objective), max_tier=BRANCH_TIER).tier
-            ] += 1
+            decision = decide_tier(
+                extract_features(case.task_input.objective), max_tier=BRANCH_TIER
+            )
+            routed.append((case_ref.id, decision.tier, decision.reasons))
 
+        assert routed == list(SUITE_ROUTING)
+
+        tiers = Counter(tier for _, tier, _ in routed)
         assert sum(tiers.values()) == 20
-        assert tiers == Counter({"T0": 12, "T1": 8})
+        assert tiers == Counter({"T0": 10, "T2": 8, "T1": 2})
+
+    def test_every_branched_query_names_a_branch_rule_that_fired(self) -> None:
+        """A T2 row without a `branch_*` reason would be an unexplained cost.
+
+        The branch tier is the expensive one, so "which rule bought this"
+        has to be answerable from the record for every episode that pays
+        for it — and, in the other direction, no query may carry a branch
+        reason without landing at T2.
+        """
+        for query_id, tier, reasons in SUITE_ROUTING:
+            branched = [reason for reason in reasons if reason.startswith("branch_")]
+            assert bool(branched) is (tier == "T2"), query_id
 
 
 def test_the_selection_record_is_json_round_trippable() -> None:

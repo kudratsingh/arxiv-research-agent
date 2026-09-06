@@ -638,6 +638,32 @@ never renumbered.
   `orchestration=on`, so a deployment with it off evaluates the rules,
   emits the reason codes and records the eligible tiers ADR 0085
   baselined.
+- [0087](0087-branch-tier-reachability-on-the-benchmark.md) — **The
+  branch tier's rules, measured against the benchmark.** ADR 0091 pinned
+  the honest cost of arm E: on `research-policy-v1`'s twenty queries the
+  router allocated **T0 12 / T1 8 / T2 0**, so a funded arm-E run would
+  have measured adaptive compute without once reaching the branch tier,
+  the selector or the marginal stop. The evidence table came first and it
+  moved the diagnosis: rule 9 fires zero times *and so does
+  `entity_count >= 2`*, because `_is_entity_token` cannot see a lowercase
+  multiword operand — "LoRA and full fine-tuning" counts one entity and
+  "mixture-of-experts models compare to dense models" counts none — so
+  the entity **threshold** was never what stopped T2, and ADR 0091 was
+  right to refuse to move it. Rule 10's `sub_question_count` is `None` on
+  every shipped path and cannot be otherwise, because the tier selects
+  the graph and so is decided before the planner runs. Two rules are
+  therefore *added*, reading two features the extractor did not have:
+  `branch_paired_comparison` (a comparison word plus a connective that
+  binds two operands — `versus`, `compared to`, `between … and`; a bare
+  "and" is excluded, so "trade off cost and quality" stays T1) and
+  `branch_open_enumeration` (an interrogative plus a plural
+  solution-class noun, where observation classes like "benchmarks" and
+  "mechanisms" are excluded because one ranked corpus about one object of
+  study carries them). No threshold moves and `TIER_RULES` is untouched,
+  so a flag-off deployment is byte-identical. The suite becomes **T0 10 /
+  T1 2 / T2 8**, pinned per query with its reasons, and the mock matrix
+  shows the eight branched cases actually executing the
+  orchestrator-workers graph across all three repeats at `$0.000000`.
 - [0090](0090-anthropic-sdk-1x.md) — **Anthropic SDK 1.x.** The
   `anthropic<1.0` cap blocked every later capability order, and
   `02-STANDARDS.md` §6.1 recorded why raising it was a deliberate act:
