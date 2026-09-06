@@ -60,7 +60,7 @@ from types import ModuleType, SimpleNamespace
 from typing import Any, Final, NamedTuple
 
 import pytest
-from hypothesis import assume, given
+from hypothesis import assume, example, given
 from hypothesis import settings as hyp_settings
 from hypothesis import strategies as st
 
@@ -823,7 +823,12 @@ def _assert_hashed(record: logging.LogRecord, owner: str) -> None:
     """
     assert getattr(record, "principal_hash", None) == hash_principal(owner)
     assert not hasattr(record, "owner")
-    assert owner not in str(record.__dict__)
+    # Values only: the record's attribute *names* are LogRecord's own
+    # ("module", "thread", "created", ...) and never carry user data, so
+    # a drawn owner that happens to spell one of them must not fail the
+    # invariant (hypothesis found `owner="module"` in CI, 2026-09-06).
+    assert all(owner not in str(value) for value in record.__dict__.values())
+    assert owner not in record.getMessage()
 
 
 @given(owner=PRINCIPAL_IDS)
@@ -845,6 +850,8 @@ def test_the_job_sweep_logs_a_principal_hash_and_never_the_id(owner: str) -> Non
     _assert_hashed(assigned[0], owner)
 
 
+@example(owner="module")
+@example(owner="thread")
 @given(owner=PRINCIPAL_IDS)
 @hyp_settings(max_examples=40)
 def test_the_conversation_sweep_logs_a_principal_hash_and_never_the_id(
