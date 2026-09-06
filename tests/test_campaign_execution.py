@@ -45,6 +45,7 @@ import socket
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -68,6 +69,8 @@ from src.campaign.execute import (
     EpisodeRecord,
     EpisodeRun,
     EpisodeScores,
+    _record_tier_selection,
+    _tier_workflow,
     aggregate_by_task,
     arm_graph_probe,
     execute_campaign,
@@ -371,6 +374,41 @@ def null_scorer(episode: PlannedEpisode, run: EpisodeRun) -> EpisodeScores:
         primary_score=None,
         detail={"scripted": True},
     )
+
+
+@pytest.mark.unit
+def test_adaptive_tier_seam_refuses_an_unsealed_or_changed_decision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The hook cannot invent a selection after the immutable seal."""
+    app = object()
+    monkeypatch.setattr(
+        "src.graph.workflow.compute_tier_graphs", lambda _app: None
+    )
+    selected, absent = _tier_workflow(
+        config(compute_controller="deterministic"), app, "a quiet query"
+    )
+    assert selected is app
+    assert absent is None
+
+    execution = ScriptedRunner().prepare_episode(
+        config(compute_controller="deterministic"), objective="a quiet query"
+    )
+    assert execution is not None
+    with pytest.raises(CampaignError, match="absent from the sealed manifest"):
+        _record_tier_selection(
+            object(),
+            sealed=SimpleNamespace(policy_execution=None),
+            execution=execution,
+        )
+
+    changed = execution.model_copy(update={"tier_budget_ref": "tier-budget:changed"})
+    with pytest.raises(CampaignError, match="differs from the sealed execution"):
+        _record_tier_selection(
+            object(),
+            sealed=SimpleNamespace(policy_execution=changed),
+            execution=execution,
+        )
 
 
 def read_record(directory: Path, episode: PlannedEpisode) -> EpisodeRecord:
