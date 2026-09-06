@@ -184,13 +184,10 @@ SETTINGS_CONSUMERS: tuple[Any, ...] = (
     workflow_module,
 )
 
-#: Arm D's node route under the fixture corpus. The supervisor's mock
-#: branch returns `_default_next_action`'s fixed-pipeline order, so the
-#: router alternates with the node it chose and the run stops once the
-#: critic has spoken. `verifier` is deliberately absent: the fixed-order
-#: route never selects `verify`, which is a real limit of what a mock
-#: arm-D episode can demonstrate and is stated in the report rather than
-#: papered over with a scripted judge.
+#: Arm D's node route under the fixture corpus. ADR 0093 opts this arm
+#: into the state-aware mock policy: the router alternates with each node,
+#: verifies the first evidence-backed draft exactly once, critiques it,
+#: and stops. The shipped mock-policy default remains fixed-order.
 ARM_D_MOCK_ROUTE: tuple[str, ...] = (
     "supervisor",
     "planner",
@@ -200,6 +197,8 @@ ARM_D_MOCK_ROUTE: tuple[str, ...] = (
     "reader",
     "supervisor",
     "synthesizer",
+    "supervisor",
+    "verifier",
     "supervisor",
     "critic",
     "supervisor",
@@ -724,6 +723,10 @@ class TestTheFiveArmIdentities:
             arm for arm, row in ARM_SETTINGS.items()
             if row.get("compute_controller") == "deterministic"
         } == {"E"}
+        assert {
+            arm for arm, row in ARM_SETTINGS.items()
+            if row.get("mock_supervisor_router") == "state_aware"
+        } == {"D"}
         # The held-out factors and the safety floor are not arm differences.
         assert per_arm["A"].enable_prompt_isolation is True
         assert per_arm["A"].enable_query_refiner is False

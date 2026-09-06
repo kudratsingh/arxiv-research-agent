@@ -768,6 +768,13 @@ never renumbered.
   before the first campaign node. A T0 execution under arm E can no
   longer be filed as arm B, while the A--D policy digests do not move.
 
+- [0093](0093-state-aware-mock-supervisor-routing.md) — **Mock arm D
+  exercises real supervisor action selection without a model.** The
+  default fixture route stays fixed-order and byte-identical; arm D opts
+  into a deterministic state-aware policy that verifies a completed draft
+  with evidence once, then continues through critique, below the existing
+  loop and cost stops.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.
