@@ -593,6 +593,58 @@ class TestTheFullMatrixRunsAtZeroCost:
         assert all("verify" in route for route in routes["C"])
         assert all(route[0] == "supervisor" for route in routes["D"])
 
+    def test_arm_e_routed_and_the_branch_tier_is_the_route_it_took(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        """The router routed, read off the records rather than declared.
+
+        Arm E is the only arm whose graph is chosen per episode, so it is
+        the only arm whose records should show more than one route. Until
+        CAP-04b they showed T0 and T1 and nothing else (ADR 0091's known
+        gap); ADR 0087's two branch rules put eight of the twenty cases on
+        the orchestrator-workers graph, so `workers` and `select` appear
+        for exactly those eight — three repeats each, twenty-four
+        episodes — and for no others.
+
+        Every one of them still cost `$0.000000` and made zero model
+        calls, which the module's cost tests assert over all 300; what
+        this adds is that the zero was paid on the branch graph rather
+        than earned by never reaching it.
+        """
+        branched: dict[str, set[tuple[str, ...]]] = {}
+        for record in load_episode_records(full_matrix.directory, full_matrix.plan):
+            if record.arm_id != "E":
+                continue
+            branched.setdefault(record.case_id, set()).add(tuple(record.node_route))
+
+        assert len(branched) == FULL_SUITE_CASES
+        on_the_branch_tier = {
+            case_id
+            for case_id, seen in branched.items()
+            if all("workers" in route and "select" in route for route in seen)
+        }
+        # Written out rather than re-derived from the router, for the
+        # reason `test_listwise_selection.py::SUITE_ROUTING` gives about
+        # its own table: a derivation would agree with the router however
+        # the router changed. That table carries the per-query reasons.
+        assert on_the_branch_tier == {
+            "agentic-memory-architectures",
+            "alignment-beyond-rlhf",
+            "hallucination-mitigation",
+            "interpretability-methods",
+            "jailbreak-robustness",
+            "long-context-efficiency",
+            "lora-vs-full-finetune",
+            "moe-vs-dense",
+        }
+
+        below_it = set(branched) - on_the_branch_tier
+        assert all(
+            "workers" not in route
+            for case_id in below_it
+            for route in branched[case_id]
+        )
+
     def test_repeats_are_aggregated_by_task_through_the_stats_module(
         self, full_matrix: MatrixRun
     ) -> None:

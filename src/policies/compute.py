@@ -47,15 +47,40 @@ alone unless the caller raises `max_tier` to `BRANCH_TIER`, which
 | # | Rule | Fires when | Tier | Why |
 |---|---|---|---|---|
 | 9 | `branch_multi_entity_comparison` | a comparison word **and** `entity_count >= 3` | T2 | one ranked corpus cannot serve three compared systems |
-| 10 | `branch_plan_breadth` | `sub_question_count >= 5` | T2 | a plan past the planner's own range is several questions |
+| 10 | `branch_paired_comparison` | a comparison word **and** a connective that binds two operands | T2 | a ranked corpus ranks by one similarity, so it cannot cover two named operands evenly |
+| 11 | `branch_open_enumeration` | an interrogative followed by a plural solution-class noun | T2 | an unnamed set of alternatives is a retrieval per member, not one |
+| 12 | `branch_plan_breadth` | `sub_question_count >= 5` | T2 | a plan past the planner's own range is several questions |
 
-Both are escalations, both are evaluated after the table above, and the
-**highest** tier any matching escalation names is the one selected. With
-the ceiling at its default the two rules are not evaluated at all, so a
-deployment that has not enabled the branch tier gets the same tier, the
-same reason codes and the same eligible set it got before this
+All four are escalations, all four are evaluated after the table above,
+and the **highest** tier any matching escalation names is the one
+selected. With the ceiling at its default none of them is evaluated at
+all, so a deployment that has not enabled the branch tier gets the same
+tier, the same reason codes and the same eligible set it got before this
 work order — which is the property `tests/test_compute_policy.py` pins
 and `tests/test_orchestration_controller.py` re-pins from the other side.
+
+Rules 10 and 11 are CAP-04b's (ADR 0087) and they were added rather than
+tuned. On `research-policy-v1`'s twenty queries rule 9 fired **zero**
+times, and so did `entity_count >= 2` beside a comparison word: the
+counterfactual is measured, not assumed, and it says the entity
+*threshold* was never what stopped the branch tier. `_is_entity_token`
+recognises acronyms, internal capitals and digit-bearing tokens and
+nothing else, so it cannot see a lowercase multiword operand: the suite's
+two real comparisons count **one** entity ("LoRA and full fine-tuning")
+and **none** ("mixture-of-experts models compare to dense models"), which
+is below two however low the threshold goes. The defect was the
+measurement, so the fix is two features the extractor did not have, and
+`BRANCH_ENTITY_THRESHOLD` is untouched (ADR 0091 rejected moving it, and
+it was right to).
+
+Rule 12 is unreachable on every path this repository ships, and that is
+recorded here rather than fixed: both call sites
+(`src/api/runner.py::_compute_decision`,
+`src/campaign/execute.py::_tier_app`) call `extract_features` with the
+query alone, so `sub_question_count` is always `None`; the tier selects
+the *graph*, so it cannot wait for the planner; and the planner is
+instructed to "2-4 focused sub-questions", which puts `>= 5` past its
+own range. Rule 11 is the pre-plan reading of the same signal.
 
 ## The tiers, and what they are allowed to spend
 
@@ -87,6 +112,12 @@ only pre-plan cues, because the tier selects the *graph* and therefore
 has to be decided before the planner runs; its second reads
 `sub_question_count` and is there for a caller that decides after
 planning, which is still nobody today.
+
+CAP-04b (ADR 0087) added the two features rules 10 and 11 read —
+`paired_comparison` and `open_enumeration` — to the *available* half of
+that split, on purpose: a rule that only fires on a count nobody passes
+is a rule no evaluation can attribute a result to, which is how rule 12
+came to sit unreachable for two work orders.
 """
 
 from __future__ import annotations
@@ -189,6 +220,61 @@ FRESHNESS_CUES: Final[tuple[str, ...]] = (
     "up to date",
 )
 
+#: Connectives that bind two comparison *operands*, whatever those
+#: operands are spelled like. Deliberately narrower than
+#: `COMPARATIVE_CUES`: a bare coordinating "and" cannot tell two compared
+#: systems from two compared properties of one system — "trade off
+#: inference cost and quality" is one method class and two axes — so
+#: "compare X and Y" is **not** here and "between X and Y" is, because
+#: `between` is what requires the two operands grammatically. Normalised
+#: the way `_normalise` normalises a query.
+PAIRED_COMPARISON_CUES: Final[tuple[str, ...]] = (
+    "compare to",
+    "compare with",
+    "compared to",
+    "compared with",
+    "compares to",
+    "compares with",
+    "versus",
+    "vs",
+)
+
+#: The other half of the paired-comparison feature: `between` and a later
+#: `and`, as a pair rather than as two independent cues.
+PAIRED_COMPARISON_FRAME: Final[tuple[str, str]] = ("between", "and")
+
+#: Heads that ask for members of a set rather than about one named thing.
+#: A "how" question asks how something behaves and its plural nouns
+#: modify that something; a "what/which" question can ask for the set
+#: itself, which is the difference rule 11 keys on.
+ENUMERATIVE_INTERROGATIVES: Final[tuple[str, ...]] = ("what", "which")
+
+#: Plural nouns naming a class whose members are *alternatives to one
+#: another*. Plural on purpose — a singular head asks for one answer —
+#: and restricted to solution classes on purpose: two approaches to the
+#: same goal are different literatures with different vocabulary, so one
+#: similarity ranking over the goal covers them unevenly, which is
+#: exactly ADR 0086's argument for the branch tier. Observation classes
+#: are deliberately absent — "benchmarks", "evaluations", "mechanisms",
+#: "findings", "results" name studies *of one object of study*, and one
+#: ranked corpus about that object carries them.
+SOLUTION_CLASS_NOUNS: Final[frozenset[str]] = frozenset(
+    {
+        "algorithms",
+        "approaches",
+        "architectures",
+        "defences",
+        "defenses",
+        "designs",
+        "frameworks",
+        "methods",
+        "mitigations",
+        "schemes",
+        "strategies",
+        "techniques",
+    }
+)
+
 _NON_ALPHANUMERIC = re.compile(r"[^a-z0-9]+")
 
 #: Punctuation an entity token may be wrapped in and still be one.
@@ -228,6 +314,37 @@ def _is_entity_token(raw: str) -> bool:
     return any(character.isdigit() for character in token)
 
 
+def _has_paired_comparison(normalised: str) -> bool:
+    """Whether the query binds two comparison operands explicitly.
+
+    Two shapes, both read off the normalised string: an infix connective
+    from `PAIRED_COMPARISON_CUES`, which cannot appear without two sides;
+    or the `between ... and` frame, checked as a frame rather than as two
+    cues so "and" alone never counts.
+    """
+    if any(f" {cue} " in normalised for cue in PAIRED_COMPARISON_CUES):
+        return True
+    opener, connector = PAIRED_COMPARISON_FRAME
+    _, separator, remainder = normalised.partition(f" {opener} ")
+    return bool(separator) and f" {connector} " in remainder
+
+
+def _has_open_enumeration(normalised: str) -> bool:
+    """Whether the query asks for an unnamed set of alternatives.
+
+    An enumerative interrogative with a plural solution-class noun
+    somewhere after it. Only the *first* interrogative is considered,
+    and that is exact rather than an approximation: every later
+    interrogative's window is a subset of the first one's, so if no
+    class noun follows the first, none follows any of them.
+    """
+    tokens = normalised.split()
+    for index, token in enumerate(tokens):
+        if token in ENUMERATIVE_INTERROGATIVES:
+            return any(later in SOLUTION_CLASS_NOUNS for later in tokens[index + 1 :])
+    return False
+
+
 @dataclass(frozen=True)
 class ComputeFeatures:
     """What was knowable about a run before its compute was allocated.
@@ -247,6 +364,13 @@ class ComputeFeatures:
         entity_count: Distinct `_is_entity_token` tokens, case-folded.
         comparative_cue: A `COMPARATIVE_CUES` phrase is present.
         freshness_cue: A `FRESHNESS_CUES` phrase is present.
+        paired_comparison: A connective binding two comparison operands
+            is present (ADR 0087). Independent of `comparative_cue`:
+            "the relationship between attention and memory" binds two
+            operands and compares nothing, which is why rule 10 asks
+            for both.
+        open_enumeration: The query asks for an unnamed set of
+            alternatives rather than about one named thing (ADR 0087).
         requested_depth: What the caller asked for, when a surface
             carries it. `None` on every path shipped today.
         task_kind: The sealed `TaskSpec`'s kind, for callers that hold
@@ -260,6 +384,8 @@ class ComputeFeatures:
     entity_count: int
     comparative_cue: bool
     freshness_cue: bool
+    paired_comparison: bool = False
+    open_enumeration: bool = False
     requested_depth: RequestedDepth | None = None
     task_kind: str | None = None
     sub_question_count: int | None = None
@@ -272,6 +398,8 @@ class ComputeFeatures:
             "entity_count": self.entity_count,
             "comparative_cue": self.comparative_cue,
             "freshness_cue": self.freshness_cue,
+            "paired_comparison": self.paired_comparison,
+            "open_enumeration": self.open_enumeration,
             "requested_depth": self.requested_depth,
             "task_kind": self.task_kind,
             "sub_question_count": self.sub_question_count,
@@ -331,6 +459,8 @@ def extract_features(
         entity_count=len(entities),
         comparative_cue=any(f" {cue} " in normalised for cue in COMPARATIVE_CUES),
         freshness_cue=any(f" {cue} " in normalised for cue in FRESHNESS_CUES),
+        paired_comparison=_has_paired_comparison(normalised),
+        open_enumeration=_has_open_enumeration(normalised),
         requested_depth=requested_depth,
         task_kind=task_kind,
         sub_question_count=sub_question_count,
@@ -500,6 +630,11 @@ BRANCH_ENTITY_THRESHOLD: Final[int] = 3
 #: One higher than `PLAN_SUB_QUESTION_THRESHOLD`, deliberately: four
 #: sub-questions is the top of the planner's own instructed range and
 #: escalates to verification; five is a plan that outgrew it.
+#:
+#: Unreachable on every path this repository ships — see the module
+#: docstring's note on rule 12 — and kept rather than deleted for the
+#: reason ADR 0085 carried the plan-time fields at all: the rule has to
+#: exist before the caller that decides after planning does.
 BRANCH_SUB_QUESTION_THRESHOLD: Final[int] = 5
 
 
@@ -519,6 +654,18 @@ BRANCH_TIER_RULES: Final[tuple[TierRule, ...]] = (
         ),
     ),
     TierRule(
+        rule_id="branch_paired_comparison",
+        tier=BRANCH_TIER,
+        decisive=False,
+        predicate=lambda f: f.comparative_cue and f.paired_comparison,
+    ),
+    TierRule(
+        rule_id="branch_open_enumeration",
+        tier=BRANCH_TIER,
+        decisive=False,
+        predicate=lambda f: f.open_enumeration,
+    ),
+    TierRule(
         rule_id="branch_plan_breadth",
         tier=BRANCH_TIER,
         decisive=False,
@@ -526,6 +673,32 @@ BRANCH_TIER_RULES: Final[tuple[TierRule, ...]] = (
     ),
 )
 """The branch tier's rules, kept out of `TIER_RULES` on purpose.
+
+Each rule's purpose, stated so it can be falsified:
+
+- `branch_multi_entity_comparison` (ADR 0085) — three or more named
+  systems beside a comparison word starve one ranked corpus. Falsified
+  if branches on such a query contribute no evidence a single corpus
+  would have missed.
+- `branch_paired_comparison` (ADR 0087) — a ranked corpus ranks by one
+  similarity, so a query that names *two* operands to compare gets
+  whichever operand the literature is richer in. Falsified if the
+  per-operand branches of a two-way comparison return the same papers.
+  It asks for `comparative_cue` **and** the connective because the
+  connective alone is not a comparison ("the relationship between
+  attention and memory"), and because a comparison word alone does not
+  name operands ("trade off inference cost and quality" compares two
+  properties of one method class, and rightly stays T1).
+- `branch_open_enumeration` (ADR 0087) — a query that asks for members
+  of a solution class does not name them, so the plan has to discover
+  them and each one is its own retrieval. This is the pre-plan reading
+  of rule 12's "a plan past the planner's own range is several
+  questions", and it is pre-plan because the tier selects the graph.
+  Falsified if such a query's branches converge on one sub-literature.
+
+Neither new rule moved a threshold. `BRANCH_ENTITY_THRESHOLD` is where
+ADR 0085 put it, and the module docstring records the measured
+counterfactual that says lowering it would not have helped anyway.
 
 Two tables rather than one flag inside a single table, because the
 property that matters most about this work order is that a deployment
