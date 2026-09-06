@@ -18,6 +18,7 @@ from src.agents.supervisor import (
     ACTION_TO_NODE,
     VALID_ACTIONS,
     _default_next_action,
+    _state_aware_mock_next_action,
     _summarize_state,
     route_after_supervisor,
     supervisor_agent,
@@ -159,6 +160,87 @@ class TestDefaultNextAction:
         # since everything downstream is populated).
         assert _default_next_action(state) == "stop"
 
+
+class TestStateAwareMockNextAction:
+    @pytest.fixture(autouse=True)
+    def _enable_state_aware_mock(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(
+            sup,
+            "settings",
+            Settings(
+                use_mock_data=True,
+                enable_verifier=True,
+                mock_supervisor_router="state_aware",
+            ),
+        )
+
+    def test_prerequisites_keep_fixed_order(self) -> None:
+        assert _state_aware_mock_next_action(_empty_state()) == "plan"
+        assert (
+            _state_aware_mock_next_action(_empty_state(sub_questions=["a"]))
+            == "search"
+        )
+
+    def test_completed_draft_with_evidence_is_verified(self) -> None:
+        state = _empty_state(
+            sub_questions=["a"],
+            papers=[{"id": "x"}],  # type: ignore[list-item]
+            paper_analyses=[{"paper_id": "x"}],  # type: ignore[list-item]
+            draft_report="body",
+            evidence=[{"claim_id": "claim-1"}],  # type: ignore[list-item]
+        )
+        assert _state_aware_mock_next_action(state) == "verify"
+        result = supervisor_agent(state)
+        assert result["next_action"] == "verify"
+        assert result["stop_reason"] == ""
+
+    def test_recorded_verdict_continues_to_critique(self) -> None:
+        state = _empty_state(
+            sub_questions=["a"],
+            papers=[{"id": "x"}],  # type: ignore[list-item]
+            paper_analyses=[{"paper_id": "x"}],  # type: ignore[list-item]
+            draft_report="body",
+            evidence=[{"claim_id": "claim-1"}],  # type: ignore[list-item]
+            verified=True,
+        )
+        assert _state_aware_mock_next_action(state) == "critique"
+
+    @pytest.mark.parametrize("limit", ["loop", "cost"])
+    def test_hard_limits_stop_before_state_aware_routing(
+        self, monkeypatch: pytest.MonkeyPatch, limit: str
+    ) -> None:
+        from src.observability import start_cost_tracking
+
+        if limit == "loop":
+            state = _empty_state(loop_iterations=sup.settings.max_loop_iterations)
+            expected = "max_iterations_reached"
+        else:
+            costs = start_cost_tracking()
+            costs.record("claude-sonnet-4-6", 400_000, 0, 3.0)
+            state = _empty_state()
+            expected = "budget_reached"
+        result = supervisor_agent(state)
+        assert result["next_action"] == "stop"
+        assert result["stop_reason"] == expected
+
+    def test_fixed_order_remains_the_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(
+            sup,
+            "settings",
+            Settings(use_mock_data=True, enable_verifier=True),
+        )
+        state = _empty_state(
+            sub_questions=["a"],
+            papers=[{"id": "x"}],  # type: ignore[list-item]
+            paper_analyses=[{"paper_id": "x"}],  # type: ignore[list-item]
+            draft_report="body",
+            evidence=[{"claim_id": "claim-1"}],  # type: ignore[list-item]
+        )
+        result = supervisor_agent(state)
+        assert result["next_action"] == "critique"
+        assert result["messages"][0].content == (
+            "supervisor -> critique: mock data: fixture routing, no model call"
+        )
 
 # ---------------------------------------------------------------------------
 # _summarize_state — prompt input

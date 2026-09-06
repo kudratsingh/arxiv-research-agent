@@ -20,15 +20,14 @@ Design (ADR 0014):
   `max_iterations_reached` / `supervisor_stop` / `llm_failed` /
   `mock_mode`.
 
-Mock mode (ADR 0080, completed by P0-WO11): under
-`settings.use_mock_data` the router returns `_default_next_action`'s
-fixed-pipeline route without asking a model, after the loop and cost
-short-circuits and before the prompt is built. CAP-07 gave the other
-six nodes a branch of their own and left this one, so a keyless
-supervisor run reached a briefing only through the malformed-judge
-fallback — the same route, recorded as a decision, on a run that had
-constructed a provider client and failed. The branch removes the client
-construction and gives the stop its own bucket; the route is unchanged.
+Mock mode (ADR 0080, completed by P0-WO11; extended by ADR 0093): under
+`settings.use_mock_data` the router asks no model. Its default
+`fixed_order` policy returns `_default_next_action`'s byte-identical
+fixture route. The additive `state_aware` policy can exercise enabled
+actions deterministically; it currently verifies a completed draft once
+when evidence exists and no verifier outcome has been recorded. Both
+policies run after the loop and cost short-circuits and before any prompt
+is built.
 
 WO-B3 — what the routing call is allowed to swallow, and what it is
 not. `_route_or_fall_back` used to be one bare `except Exception` that
@@ -299,6 +298,33 @@ def _default_next_action(state: ResearchState) -> str:
     return "stop"
 
 
+def _state_aware_mock_next_action(state: ResearchState) -> str:
+    """Choose a deterministic model-free action from completed state.
+
+    The fixed-order result remains authoritative for prerequisites and
+    critic-directed revisions. At the first point where that route would
+    critique a completed draft, the mock router can instead exercise the
+    real verifier action when the run has evidence and no verifier outcome.
+    The mock verifier records ``verified=True``, so the next decision falls
+    back to critique and this action is selected exactly once.
+    """
+    fixed_action = _default_next_action(state)
+    verifier_outcome_recorded = bool(
+        state.get("verified")
+        or state.get("unsupported_claims")
+        or state.get("missing_evidence")
+        or state.get("verifier_recommendation")
+    )
+    if (
+        fixed_action == "critique"
+        and settings.enable_verifier
+        and state.get("evidence")
+        and not verifier_outcome_recorded
+    ):
+        return "verify"
+    return fixed_action
+
+
 def _emit(
     action: str,
     reason: str,
@@ -435,10 +461,15 @@ def supervisor_agent(state: ResearchState) -> dict[str, Any]:
     # it as a decision, and the episode could not attest that no provider
     # was initialised. The route below is `_default_next_action`'s —
     # byte-for-byte what the fallback already produces — so nothing about
-    # arm D's behaviour moves. Only the reason changes, because nothing
-    # failed here, and only the client construction disappears.
+    # arm D's behaviour moves unless it explicitly opts into ADR 0093's
+    # state-aware policy. Only the reason changes on the default path,
+    # because nothing failed here, and only client construction disappears.
     if settings.use_mock_data:
-        mock_action = _default_next_action(state)
+        mock_action = (
+            _state_aware_mock_next_action(state)
+            if settings.mock_supervisor_router == "state_aware"
+            else _default_next_action(state)
+        )
         return _emit(
             mock_action,
             "mock data: fixture routing, no model call",

@@ -129,6 +129,7 @@ ARM_SETTINGS: Final[Mapping[ArmId, Mapping[str, bool | str]]] = {
         "enable_evidence_store": True,
         "enable_verifier": True,
         "research_policy": "legacy",
+        "mock_supervisor_router": "state_aware",
     },
     "E": {
         "enable_supervisor": False,

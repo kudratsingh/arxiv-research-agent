@@ -34,6 +34,7 @@ class TestDefaults:
     def test_search_defaults(self) -> None:
         s = Settings()
         assert s.use_mock_data is False
+        assert s.mock_supervisor_router == "fixed_order"
         assert s.max_papers == 10
         assert s.results_per_query == 5
 
@@ -108,6 +109,12 @@ class TestEnvLoading:
         s = Settings()
         assert s.use_mock_data is True
 
+    def test_reads_mock_supervisor_router_from_env(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("MOCK_SUPERVISOR_ROUTER", "state_aware")
+        assert Settings().mock_supervisor_router == "state_aware"
+
     def test_bool_coercion_case_insensitive(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -139,6 +146,10 @@ class TestEnvLoading:
 
 
 class TestValidation:
+    def test_unknown_mock_supervisor_router_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            Settings(mock_supervisor_router="creative")  # type: ignore[arg-type]
+
     def test_max_retries_upper_bound(self) -> None:
         with pytest.raises(ValidationError):
             Settings(anthropic_max_retries=100)

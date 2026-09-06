@@ -1199,6 +1199,14 @@ class Settings(BaseSettings):
             "default so behavior stays stable; flip on to run the agentic path."
         ),
     )
+    mock_supervisor_router: Literal["fixed_order", "state_aware"] = Field(
+        default="fixed_order",
+        description=(
+            "Model-free supervisor policy used only when USE_MOCK_DATA is on. "
+            "fixed_order preserves the shipped fixture route; state_aware "
+            "deterministically exercises enabled actions from run state."
+        ),
+    )
     min_quality_score: float = Field(
         default=0.75,
         ge=0.0,

@@ -712,8 +712,9 @@ class TestTheFullMatrixRunsAtZeroCost:
 
         Arm A and B share the fixed pipeline; arm C adds the verify
         stage CAP-02 compiles for it; arm D alternates with the
-        supervisor. A campaign whose arms all took the same route would
-        be four samples of one policy.
+        supervisor and exercises the verifier through ADR 0093's
+        deterministic state-aware mock policy. A campaign whose arms all
+        took the same route would be four samples of one policy.
         """
         routes: dict[str, set[tuple[str, ...]]] = {}
         for record in load_episode_records(full_matrix.directory, full_matrix.plan):
@@ -722,6 +723,7 @@ class TestTheFullMatrixRunsAtZeroCost:
         assert routes["B"] == routes["A"]
         assert all("verify" in route for route in routes["C"])
         assert all(route[0] == "supervisor" for route in routes["D"])
+        assert all(route.count("verifier") == 1 for route in routes["D"])
 
     def test_arm_e_routed_and_the_branch_tier_is_the_route_it_took(
         self, full_matrix: MatrixRun
