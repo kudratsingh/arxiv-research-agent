@@ -160,6 +160,30 @@ test-all:  ## Every tier
 # `.python-version` names, not only on the one that happens to be
 # installed. `ctrace` supports contexts and is the fast tracer;
 # `pytrace` would also work and is several times slower.
+#
+# `--cov-context=test` costs the gate nothing, and this is the
+# measurement rather than the assurance (WO-D8, on 3d0d588). The same
+# suite run with and without it produces the *same* report — 24,285
+# statements, 1,142 missed, 6,564 branches, 642 partial, 93.73% — and a
+# line-by-line diff of the two data files finds 7 lines out of ~24k
+# different, all of them the `patch_digest` branch in
+# `src/contracts/research_binding.py`, which reads the worktree's own
+# git state and so flips on whether the tree is dirty. Not a context
+# effect, and it nets to zero because the two arms are one statement
+# each.
+#
+# The reason this needs saying: contexts genuinely do *not* attribute
+# import-time code to a test. Of the 263 line numbers coverage records
+# for `src/policies/compute.py`, 166 — the module-level constant tables
+# — carry the empty context and nothing else, because the import runs
+# before pytest-cov switches into the first test. They still count,
+# because `coverage report` unions every context unless asked
+# otherwise. Ask otherwise and it shows: `coverage report --contexts=.`
+# (non-empty contexts only) puts compute.py at 45% and the project at
+# 65%, against 100% and 93.73% for the same data unfiltered. That view
+# is a *diagnostic* — it answers "what does no test touch directly?" —
+# and it is not the gate. Reading one of its numbers as a total is
+# where "the coverage totals disagree" comes from.
 test-cov:  ## Coverage over src/ with the project and per-package floors
 	$(TEST_ENV) $(ZERO_SPEND) COVERAGE_CORE=ctrace \
 	$(VENV_PYTHON) -m pytest -m "not e2e" tests/ \

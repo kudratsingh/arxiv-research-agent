@@ -163,6 +163,7 @@ import re
 import subprocess
 import sys
 from functools import lru_cache
+from itertools import pairwise
 from typing import Final
 
 import pytest
@@ -950,9 +951,15 @@ class TestTheAdrIndex:
 
     "Non-trivial" is a judgement and no test will ever hold it. The
     reverse direction is arithmetic and was checked by nothing at all: the
-    index and the directory have to be the same set, and an ADR a document
-    links to has to exist.
+    index and the directory have to be the same set, an ADR a document
+    links to has to exist, and the index has to read in the order its
+    numbers claim.
     """
+
+    #: An index entry: `- [NNNN](NNNN-slug.md) — ...` at the start of a
+    #: line. Anchored, because ADR bodies link sibling ADRs too and a
+    #: floating match would read those as entries.
+    _ENTRY = re.compile(r"(?m)^- \[(\d{4})\]\((\d{4}-[a-z0-9-]+\.md)\)")
 
     def test_the_index_and_the_directory_are_the_same_set(self) -> None:
         on_disk = {path.name for path in _DECISIONS.glob("[0-9][0-9][0-9][0-9]-*.md")}
@@ -966,6 +973,70 @@ class TestTheAdrIndex:
             f"these ADRs exist and the index does not list them: "
             f"{sorted(on_disk - listed)}. An unindexed ADR is a decision "
             "nobody can find, which is the same as not having written it."
+        )
+
+    def test_the_index_reads_in_numeric_order(self) -> None:
+        """The index is a lookup table, so its order is its interface.
+
+        The same-set test above passes on any permutation, and the index
+        drifted for exactly that reason: 0090 sat between 0087 and 0088
+        for three merges, because each of those pull requests appended
+        its own line (the board requires it) and nothing read the
+        sequence back. A reader who scrolls to where 0089 should be and
+        finds 0091 concludes the ADR does not exist, which is the same
+        failure the unindexed-ADR assertion exists to prevent.
+
+        Order and *density* are checked together. Files are numbered
+        `NNNN-slug.md` and never renumbered, so the numbers are issued
+        once and consumed once: a duplicate means two work orders were
+        handed the same number and one ADR is about to be overwritten,
+        and a gap means a number was announced and its document never
+        landed. Both are cheaper to catch here than in the directory.
+        """
+        index = (_DECISIONS / "README.md").read_text(encoding="utf-8")
+        entries = self._ENTRY.findall(index)
+        assert entries, (
+            "no ADR index entries matched — the index's line format has "
+            "moved out from under `_ENTRY` and this test is now checking "
+            "nothing."
+        )
+
+        mislabelled = [
+            f"[{label}] -> {target}" for label, target in entries if not target.startswith(label)
+        ]
+        assert not mislabelled, (
+            f"index entries whose link text and target disagree: "
+            f"{mislabelled}. The number a reader sees is not the ADR they "
+            "would open."
+        )
+
+        numbers = [int(label) for label, _ in entries]
+        out_of_order = [
+            f"{after:04d} follows {before:04d}"
+            for before, after in pairwise(numbers)
+            if after <= before
+        ]
+        assert not out_of_order, (
+            f"the ADR index is not in ascending numeric order: "
+            f"{out_of_order}. The index is how an ADR is found; an entry "
+            "filed out of sequence is one a reader gives up looking for. "
+            "New entries go where the number says, not at the end."
+        )
+
+        duplicates = sorted({n for n in numbers if numbers.count(n) > 1})
+        assert not duplicates, (
+            f"the ADR index lists these numbers more than once: "
+            f"{duplicates}. Numbers are issued once and files are never "
+            "renumbered, so a duplicate is two decisions competing for one "
+            "filename."
+        )
+
+        gaps = [n for n in range(numbers[0], numbers[-1]) if n not in set(numbers)]
+        assert not gaps, (
+            f"the ADR index skips these numbers: {gaps}. A number was "
+            "handed out and its ADR never landed, or it landed and the "
+            "index line was dropped — the same-set test catches the second "
+            "case only while the file is on disk."
         )
 
     def test_every_adr_the_two_documents_cite_exists(self) -> None:

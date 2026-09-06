@@ -16,6 +16,20 @@ outputs/
 dist/
 build/
 
+# Hypothesis's working directory (ADR 0069): the `constants/` and
+# `unicode_data/` caches every profile writes, and — under `explore`
+# only — the example database. `git status` is already clean without
+# this line, because Hypothesis creates the directory containing a
+# `.gitignore` of `*`. The line is here because that generated file
+# says of itself that Hypothesis "will not re-create this .gitignore
+# unless .hypothesis is deleted". Measured: delete that one file and
+# the directory shows up as `?? .hypothesis/` and stays there, because
+# a later property run repopulates the caches without restoring the
+# ignore. An ignore rule the repository owns does not depend on a
+# dependency's housekeeping. The example database is never restored in
+# CI — `tests/property/conftest.py` says why.
+.hypothesis/
+
 # Pilot credentials (WO-W17). The bcrypt file the edge reads and the
 # cleartext keystore FastAPI hot-reloads. Both are generated per
 # deployment by docs/runbooks/pilot.md and neither may ever be committed;

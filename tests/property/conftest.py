@@ -32,8 +32,25 @@ real ceiling is `pyproject.toml`'s 60-second per-test timeout, which
 applies uniformly and reports the test that hung.
 
 Hypothesis's own storage lives in `.hypothesis/`, which it creates
-containing a `.gitignore` of `*`, so nothing here has to be added to
-the repository's ignore rules for `git status` to stay clean.
+containing a `.gitignore` of `*`, so `git status` stays clean without
+the repository doing anything. That is true and it is not sufficient:
+the generated file states that Hypothesis will not re-create it unless
+the whole directory is deleted, so removing that one file — which is
+what somebody does when they go looking at what is in there — leaves
+the directory untracked forever, and nothing reports it. The
+repository's own `.gitignore` therefore carries `.hypothesis/` as
+well, and this paragraph is why that line only looks redundant.
+
+**The example database is never restored in CI, under any profile.**
+Caching it across runs reads like a saving — a falsifying example gets
+replayed first next time — and it is the one change that would undo
+`derandomize`. With a cached database a run's input set is a function
+of the *previous* run's, so a job that turns green says either "the
+fix worked" or "the cache moved" and nothing tells those apart; the
+guarantee at the top of this docstring, that a CI failure reproduces
+byte-for-byte on a laptop from the node id alone, stops holding.
+`explore` is the profile that wants a database, and it is deliberately
+not a gate.
 """
 
 from __future__ import annotations
