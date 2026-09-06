@@ -64,6 +64,28 @@ export const SPINE = {
   ledgerLabel: "Checkpoints observed on this connection",
   /** Shown in place of the ledger when nothing has been observed. */
   ledgerEmpty: `${checkpointCount(0)}.`,
+  /**
+   * What the ledger's labels ARE (WO-S8). Rendered inside the legend.
+   *
+   * The survey's finding was "a researcher does not know what a `reader`
+   * is", and it is right: the ledger prints `reader`, `planner`,
+   * `claim_decomposer` — whatever the frame carried — in mono, with nothing
+   * anywhere on screen saying where those words come from.
+   *
+   * THE ANSWER IS A FRAME, NOT A TRANSLATION, AND THE REFUSAL IS DELIBERATE.
+   * A vocabulary that turned `reader` into "Read the papers" would be a
+   * second authority beside the frame; it would be maintained in this tier
+   * while the graph that emits the labels is edited in another (`src/graph/`
+   * gained verify, repair, lead, workers, merge and a router in a single
+   * campaign wave); and the first label it did not recognise would be either
+   * dropped or, worse, mislabelled. 03 §1.5 and WO-15 criterion 2 already
+   * settle it — the node set is configuration-dependent, and "the ledger
+   * never contains a label that did not arrive in a `node_completed`
+   * payload". An opaque true label beats a familiar false one. So the label
+   * stays verbatim, and this sentence says what kind of thing it is.
+   */
+  ledgerNote:
+    "Each label is the checkpoint the run reported, shown exactly as it arrived.",
   /** The dimensioned dashed void's text equivalent (03 §3.4, §5.8). */
   voidWord: RUN_STATUS_WORD.notObserved,
   /** The sentence under it. 03 §5.3 prints it beneath the spine. */

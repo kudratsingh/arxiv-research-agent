@@ -188,7 +188,7 @@ export interface SpineInputs {
 // ---------------------------------------------------------------------------
 
 export interface SpineSegment {
-  /** "Question" | "Plan" | "Run" | "Report" (03 §5.3). */
+  /** "Question" | "Plan" | "Run" | "Briefing" (03 §5.3). */
   name: string;
   status: SegmentStatus;
   /** 03 §3.4's word. Rendered as text beside the mark, never instead of it. */
@@ -296,11 +296,29 @@ const SEGMENT_TABLE: Record<SpineStateId, SegmentRow> = {
   reconnecting: ["observed", "not-observed", "observed", "not-observed"],
   // "Stream recycled": spine unchanged; only the sentence differs.
   recycled: ["observed", "not-observed", "observed", "not-observed"],
-  // "Succeeded": `… Run ──● Report ■`.
+  // "Succeeded": `… Run ──● Briefing ■`.
   succeeded: ["observed", "not-observed", "observed", "complete"],
-  // "Succeeded, loaded from thread history":
-  // `Question ──? Plan ──? Run ──? Report ■`.
-  historic: ["unavailable", "unavailable", "unavailable", "complete"],
+  // "Succeeded, loaded from thread history."
+  //
+  // WO-S8 CHANGED THIS ROW, AND IT IS THE ONE CELL-LEVEL CLAIM IN THE TABLE
+  // THAT WAS FALSE. It used to be
+  // `["unavailable", "unavailable", "unavailable", "complete"]`, and
+  // `unavailable`'s word is `RUN_STATUS_WORD.expired` — "No longer
+  // available", the same word `expired` uses for a run the server answered
+  // 404 for. So a run that SUCCEEDED, whose briefing is on screen and
+  // exportable, printed "No longer available" three times beside it. That is
+  // the observer's gap rendered as the product's failure: this connection
+  // did not watch the run, which is not the same claim as the run being
+  // gone, and `not-observed` is the word 03 §3.4 already has for it.
+  //
+  // The row is now `succeeded`'s, verbatim — which is the point. `historic`
+  // IS `succeeded`; the two ids differ only in whether this browser saw the
+  // checkpoints, `spineStateId` splits them on exactly that, and the RUN
+  // cell is the one computed cell, so it follows the (necessarily empty)
+  // ledger down to `not-observed` on its own. The whole of the difference
+  // now lives in the sentence, where it is a fact about observation rather
+  // than a mark that reads as data loss.
+  historic: ["observed", "not-observed", "not-observed", "complete"],
   // "Failed, checkpoints seen": ticks then a slashed square.
   failed_observed: ["observed", "not-observed", "observed", "failed"],
   // "Failed, none seen": dashed run then a slashed square.

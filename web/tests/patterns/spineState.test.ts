@@ -137,14 +137,42 @@ describe("the three pairs the ledger alone tells apart", () => {
     // D-010: `job.plan = None` is permanent, and there is no replay
     // backlog — so "produced outside this session" and "finished while we
     // were not watching" are the same claim, and get the same sentence.
+    //
+    // WO-S8 REWROTE THIS ASSERTION, AND THE REWRITE IS THE POINT OF THE
+    // TITLE. It used to require `historic`'s first three segments to be
+    // `unavailable`, whose word is "No longer available" — the same word
+    // `expired` uses for a run the server answered 404 for. A run that
+    // SUCCEEDED, with its briefing on screen, therefore printed "No longer
+    // available" three times beside it: the observer's gap rendered as the
+    // product's failure. "We did not observe this" is `not-observed`; "this
+    // is gone" is `unavailable`, and only `expired` gets to say it.
+    //
+    // So the two rows are now literally identical, and the test says so by
+    // comparing them rather than by restating one: the difference between a
+    // run we watched and a run we did not is the LEDGER, which is what this
+    // test is called, and the Run segment follows it because it is the one
+    // computed cell.
     const history = describeSpine(EVERY_STATE.historic);
+    const watched = describeSpine(EVERY_STATE.succeeded);
     expect(history.ledger).toEqual([]);
+    expect(watched.ledger.length).toBeGreaterThan(0);
     expect(history.segments.map((segment) => segment.status)).toEqual([
-      "unavailable",
-      "unavailable",
-      "unavailable",
+      "observed",
+      "not-observed",
+      "not-observed",
       "complete",
     ]);
+    expect(watched.segments.map((segment) => segment.status)).toEqual([
+      "observed",
+      "not-observed",
+      "observed",
+      "complete",
+    ]);
+    // Nothing on a succeeded run may wear the word an expired one wears.
+    for (const segment of history.segments) {
+      expect(segment.status).not.toBe("unavailable");
+      expect(segment.word).not.toBe(SEGMENT_WORD.unavailable);
+    }
   });
 });
 
@@ -188,7 +216,9 @@ describe("segments", () => {
         "Question",
         "Plan",
         "Run",
-        "Report",
+        // WO-S8: `Report` until this work order, and the last surface in
+        // the product that did not say Briefing.
+        "Briefing",
       ]);
       for (const segment of model.segments) {
         expect(SEGMENT_STATUSES, id).toContain(segment.status);

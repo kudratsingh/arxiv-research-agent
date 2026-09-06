@@ -510,7 +510,7 @@ which is what keeps SSE and file downloads working.
    kept out of the mutation-retry layer — a retried research POST is
    a second paid run.
 2. **Watch, on the trace spine.** The run panel renders a four-segment
-   spine — *Question → Plan → Run → Report* — where each segment
+   spine — *Question → Plan → Run → Briefing* — where each segment
    carries a mark for what the client actually observed:
    `observed`, `live`, `not-observed`, `awaiting-review`, `complete`,
    `failed`, `cancelled`, `unavailable`. `node_completed` frames land
