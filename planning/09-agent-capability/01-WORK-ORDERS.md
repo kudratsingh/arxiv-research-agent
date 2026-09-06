@@ -415,43 +415,72 @@ state), per-branch caps enforced, deterministic merge order, cancellation
 mid-branch honoured, cost ceiling across branches enforced at the shared
 choke point, golden off, scripted tier unaffected. ADR 0086.
 
-## Wave 2 status
+## Wave 2 status — CLOSED 2026-09-05
 
-| WO | Branch | State |
-|---|---|---|
-| CAP-08 | `cap/08-degradation-rungs` | assigned 2026-09-05 |
-| CAP-04 | `cap/04-compute-controller` | assigned 2026-09-05 |
-| CAP-03 | — | after CAP-04 and CAP-08 |
+| WO | Branch | PR | ADR | State |
+|---|---|---|---|---|
+| CAP-08 | `cap/08-degradation-rungs` | #227 (3f22e16) | — | merged |
+| CAP-04 | `cap/04-compute-controller` | #229 (a71e975) | 0085 | merged |
+| CAP-03 | `cap/03-orchestrator-workers` | #230 (c3371fd) | 0086 | merged |
 
-## Wave 3 (not authorized)
+## Wave 3 — authorized 2026-09-05 for every zero-spend item
 
-- **CAP-05** SDK 1.x upgrade (lockfile; coordinate with all lanes).
-- **CAP-06** funded live smoke of CAP-01/02/04 — blocked on the owner.
-- **CAP-09** listwise candidate selection and marginal-stop record (completes
-  arm E on top of CAP-03/CAP-04).
+- **CAP-05** SDK 1.x upgrade — merged #231 (7c20601), ADR 0090. Lockfiles now pin
+  `anthropic==1.4.0`, `httpx2==2.12.0`; a branch that changes a lockfile is verified
+  only against the lock it ships.
+- **CAP-09** listwise candidate selection and marginal-stop record — merged #239
+  (d14e137), ADR 0091. `src/policies/selection.py`; `select` node between
+  `workers` and `merge` when `candidate_selection=listwise`; `marginal_stop=on`
+  inside `run_branches`; defaults off; arm E runnable; `UNRUNNABLE_ARMS` empty.
+  Ruling R8: `ARM_SETTINGS["E"]` is the router (legacy policy + deterministic
+  controller + orchestration + selection + stop) because ADR 0085 refuses a
+  controller beside a shape-fixing `research_policy`.
+- **CAP-06** funded live smoke of CAP-01/02/04/09 — **blocked on the owner**
+  (spend). Checklist in ADR 0090.
 
+## Follow-up work orders defined by the coordinator
 
+### CAP-10 — The branch cost share reaches the reader's threads; docs-truth pass
 
-## Shared-file arrangements in force
+Merged #235 (344e90e), no new ADR (dated amendments to 0076, 0080, 0086).
+`propagate_run_context` (`src/observability/logging.py`) now carries the
+effective cost cap as its fourth ContextVar, closing ADR 0086's known gap;
+share-vs-control test through a real `ThreadPoolExecutor`. Also corrected the
+four stale claims the assurance lane's WO-D7 fence report found in this lane
+(`use_mock_data` description, `build_workflow` docstring, `mock_mode.py` event
+comment, ADR 0080 consequences) and added `.venv-*/` to `.gitignore`.
 
-- `src/config.py` is granted to the assurance lane for one PR (wave D3:
-  `api_keys` and `semantic_scholar_api_key` become `SecretStr`, a
-  non-additive type change). This lane's additions there live in a marked
-  `# ------ Agent capability (CAP-xx)` block; whichever PR merges second
-  rebases.
-- Before CAP-01 or CAP-02 merges, the coordinator sends the PR number to the
-  assurance lane, which runs the scripted research tier against the branch.
-  A default-settings trajectory change found there is a CAP bug.
-- `src/observability/**` and `src/eval/runner.py` are fenced for Puma's
-  W05–W08; this lane does not edit them.
+### CAP-04b — The router reaches the branch tier on the benchmark
 
-## Worker environment
+Merged #241 (03c825b), ADR 0087 (the number the assurance lane released).
+Measured: the binding constraint was `_is_entity_token` (acronyms, internal
+capitals, digits only), not `BRANCH_ENTITY_THRESHOLD`; lowering the threshold
+fires on 0/20. Two query-time rules added, no threshold moved:
+`branch_paired_comparison` and `branch_open_enumeration`. `research-policy-v1`
+tiers T0×12/T1×8/T2×0 → T0×10/T1×2/T2×8; defaults byte-identical; the
+300-episode mock matrix now runs 24 arm-E episodes on the orchestrator-workers
+graph at zero spend. The W12 packet's §1.1 records the before/after table.
 
-Each worktree builds its own interpreter: run `make install-dev` once from
-the worktree root, which creates `<worktree>/.venv`. Never run `pip`,
-`make install*`, or `make clean` against any other directory's venv. The
-shared checkout's `.venv` carries an editable install that points at a
-deleted worktree from an earlier fleet, which is exactly the failure this
-rule prevents. All commands (`ruff`, `mypy`, `pytest`, `python -m src.*`)
-run through `<worktree>/.venv/bin/` from the worktree root with
-`ANTHROPIC_API_KEY=local-preview-disabled` exported.
+## Shared-file arrangements — history
+
+All three arrangements below were honoured and are now discharged: the
+assurance lane's one-PR `src/config.py` grant (SecretStr) merged; the scripted
+research tier cleared CAP-01/CAP-02 before merge (20/20, $0 both times); the
+`src/observability/**` and `src/eval/runner.py` fence for the Codex session's
+W05–W08 lifted when W08 merged (#222). This lane's `src/config.py` additions
+still live in the marked `# ------ Agent capability (CAP-xx)` block.
+
+## Worker environment (rule after CAP-05)
+
+The shared main checkout's `.venv` is provisioned for that checkout's own,
+older tree and is never modified by any session. Every worker gates on a
+lock-exact interpreter: either the shared read-only
+`~/Machine-Learning-Projects/arxiv-venv-lock` (built by the coordinator with
+CI's recipe from `origin/main`'s `requirements-lock.txt`; rebuilt whenever a
+lockfile merges) or a venv inside the worktree built the same way — pinned CPU
+torch from the PyTorch index, `pip install -r requirements-lock.txt`,
+`pip install --no-deps -e .`. `make install-dev` installs pyproject ranges, not
+the lock, and is not a substitute. A branch that changes a lockfile builds its
+own venv. Commands run from the worktree root through that interpreter with
+`ANTHROPIC_API_KEY=local-preview-disabled`; nobody runs `pip` against a venv
+they did not create. CI installs the lock and is the authority.
