@@ -64,9 +64,10 @@ from pydantic_settings import BaseSettings
 #: The invalid key the rest of the repository already uses to mean "no
 #: paid call may succeed" — the Makefile's zero-spend targets, the
 #: Compose overlay and the web e2e config all pin this exact string. It
-#: is deliberately *truthy*: an empty key would send `_get_client` down
-#: its "not configured" branch and hide the spend guard below behind a
-#: different error.
+#: is deliberately *truthy* and is now also a production-code refusal:
+#: `_get_client` rejects this exact value before constructing the SDK.
+#: The test-only guard below remains a second line of defence for any
+#: non-sentinel key that leaks into the process.
 DISABLED_API_KEY = "local-preview-disabled"
 
 #: Values the suite declares for itself. Everything not named here falls

@@ -86,6 +86,11 @@ from src.observability.tracing import llm_span, note_inference_call
 
 log = get_logger(__name__)
 
+#: Repository-wide zero-spend sentinel. Unlike an invalid credential,
+#: this value is an instruction to refuse before the SDK can create a
+#: transport, discover a proxy, or attempt authentication.
+LOCAL_PREVIEW_DISABLED_API_KEY: Final = "local-preview-disabled"
+
 #: `server.address` when the client cannot be asked for one. The
 #: fallback exists because the client singleton is replaced wholesale
 #: by test doubles that emulate `messages.with_raw_response.create` and
@@ -184,7 +189,8 @@ def _get_client() -> anthropic.Anthropic:
     `settings.anthropic_api_key`. The field is a `SecretStr` (WO-C4),
     and the rule `src/config.py` states is followed here literally:
     `get_secret_value()` once, into a local, straight into the SDK
-    constructor. The unwrapped string is never logged, never
+    constructor, unless it is the repository's explicit zero-spend
+    sentinel. The unwrapped string is never logged, never
     interpolated and never put in `payload` below — an `api_key` that
     reached that dict would be one `log.info` away from the stream.
     Testing the local rather than the wrapper also keeps the emptiness
@@ -197,6 +203,12 @@ def _get_client() -> anthropic.Anthropic:
         api_key = settings.anthropic_api_key.get_secret_value()
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY not set in .env")
+        if api_key == LOCAL_PREVIEW_DISABLED_API_KEY:
+            raise RuntimeError(
+                "ANTHROPIC_API_KEY=local-preview-disabled structurally disables "
+                "Anthropic client construction; configure a real key to enable "
+                "model calls"
+            )
         max_retries, timeout_sec = _retry_envelope()
         _client = anthropic.Anthropic(
             api_key=api_key,

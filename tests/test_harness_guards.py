@@ -94,8 +94,7 @@ class TestEnvironmentIsolation:
         assert Settings.model_config["env_file"] == ".env"
 
     def test_the_api_key_is_the_disabled_sentinel(self) -> None:
-        """Truthy, so `_get_client` reaches the spend guard rather than
-        its own "not configured" branch, and useless to a real API."""
+        """Truthy, but structurally refused by `_get_client` before the SDK."""
         import os
 
         assert os.environ["ANTHROPIC_API_KEY"] == "local-preview-disabled"
@@ -188,6 +187,11 @@ class TestSpendGuard:
                 self.kwargs = kwargs
 
         monkeypatch.setattr(llm_module, "_client", None)
+        monkeypatch.setattr(
+            llm_module,
+            "settings",
+            Settings(anthropic_api_key="unit-test-provider-key"),
+        )
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
         assert isinstance(llm_module._get_client(), _FakeAnthropic)
