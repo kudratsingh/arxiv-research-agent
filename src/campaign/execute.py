@@ -102,6 +102,7 @@ from src.contracts.run_manifest import (
     CompletionReceipt,
     CompletionStatus,
     ManifestFileStore,
+    PolicyExecutionSnapshot,
     RunManifestError,
     RunManifestV1,
     RunReason,
@@ -214,6 +215,12 @@ class EpisodeRunner(Protocol):
     own settings could disagree with the graph the manifest recorded.
     """
 
+    def prepare_episode(
+        self, config: Settings, *, objective: str
+    ) -> PolicyExecutionSnapshot | None:
+        """Resolve adaptive execution metadata before the manifest seal."""
+        ...
+
     def __call__(
         self,
         config: Settings,
@@ -222,6 +229,7 @@ class EpisodeRunner(Protocol):
         objective: str,
         run_id: str,
         on_node: Callable[[str], None],
+        on_tier: Callable[[PolicyExecutionSnapshot], None] | None = None,
     ) -> EpisodeRun: ...
 
 
@@ -415,7 +423,9 @@ def arm_graph_probe(config: Settings) -> GraphProbe:
     return probe
 
 
-def _tier_workflow(config: Settings, app: Any, objective: str) -> Any:
+def _tier_workflow(
+    config: Settings, app: Any, objective: str
+) -> tuple[Any, PolicyExecutionSnapshot | None]:
     """The graph this episode runs, when the arm has a compute router.
 
     `app` unchanged for every arm whose `compute_controller` is off,
@@ -439,7 +449,7 @@ def _tier_workflow(config: Settings, app: Any, objective: str) -> Any:
     gets a tier and never fails for want of one.
     """
     if config.compute_controller != "deterministic":
-        return app
+        return app, None
     from src.graph.workflow import compute_tier_graphs
     from src.policies.compute import (
         BRANCH_TIER,
@@ -450,10 +460,27 @@ def _tier_workflow(config: Settings, app: Any, objective: str) -> Any:
 
     graphs = compute_tier_graphs(app)
     if graphs is None:
-        return app
+        return app, None
     ceiling = BRANCH_TIER if config.orchestration == "on" else MAX_DECIDABLE_TIER
     decision = decide_tier(extract_features(objective), max_tier=ceiling)
-    return graphs.get(decision.tier, app)
+    selected = graphs.get(decision.tier, app)
+    from src.contracts.research_binding import read_graph_shape
+
+    shape = read_graph_shape(selected)
+    execution = PolicyExecutionSnapshot(
+        compute_tier=decision.tier,
+        eligible_tiers=decision.eligible,
+        decision_rule_ids=decision.reasons,
+        feature_snapshot_ref=decision.features.digest(),
+        tier_budget_ref=(
+            f"tier-budget:{decision.tier}"
+            f":verifications={decision.limits.max_verifications}"
+            f":repairs={decision.limits.max_repairs}"
+        ),
+        graph_digest=shape.digest,
+        shape_nodes=tuple(sorted(shape.nodes)),
+    )
+    return selected, execution
 
 
 class GraphEpisodeRunner:
@@ -480,6 +507,16 @@ class GraphEpisodeRunner:
         """
         self._cap = Decimal(workflow_cost_usd_max)
 
+    def prepare_episode(
+        self, config: Settings, *, objective: str
+    ) -> PolicyExecutionSnapshot | None:
+        """Resolve an adaptive tier before the immutable manifest seal."""
+        if config.compute_controller != "deterministic":
+            return None
+        with compiled_graph(config) as app, bound_settings(config):
+            _selected, execution = _tier_workflow(config, app, objective)
+        return execution
+
     def __call__(
         self,
         config: Settings,
@@ -488,6 +525,7 @@ class GraphEpisodeRunner:
         objective: str,
         run_id: str,
         on_node: Callable[[str], None],
+        on_tier: Callable[[PolicyExecutionSnapshot], None] | None = None,
     ) -> EpisodeRun:
         from src.graph.state import initial_research_state
         from src.observability.costs import start_cost_tracking
@@ -498,7 +536,10 @@ class GraphEpisodeRunner:
         final: dict[str, Any] = {}
         try:
             with compiled_graph(config) as app, bound_settings(config):
-                stream = _tier_workflow(config, app, objective).stream(
+                workflow, execution = _tier_workflow(config, app, objective)
+                if execution is not None and on_tier is not None:
+                    on_tier(execution)
+                stream = workflow.stream(
                     initial_research_state(objective, run_id),
                     stream_mode=["updates", "values"],
                 )
@@ -958,6 +999,12 @@ def _run_one_episode(
     assert_not_overwriting(directory, episode)
     spec = plan.task_spec_for(episode.case_id)
     arm_config = arm_settings(config, episode.arm_id)
+    prepare_episode = getattr(runner, "prepare_episode", None)
+    policy_execution = (
+        prepare_episode(arm_config, objective=spec.objective)
+        if callable(prepare_episode)
+        else None
+    )
     sealed, resumed_attempt_id = _seal_or_resume(
         config,
         root=root,
@@ -969,6 +1016,7 @@ def _run_one_episode(
         approval_backend=approval_backend,
         credential_probe=credential_probe,
         approval_receipt=approval_receipt,
+        policy_execution=policy_execution,
     )
     target = episode_directory(directory, episode)
 
@@ -979,13 +1027,25 @@ def _run_one_episode(
     closed = False
     try:
         step = _Step()
-        run = runner(
-            arm_config,
-            episode=episode,
-            objective=spec.objective,
-            run_id=sealed.manifest.payload.identity.run_id,
-            on_node=lambda node: bridge.node_step(node, step=step.next()),
-        )
+        if policy_execution is None:
+            run = runner(
+                arm_config,
+                episode=episode,
+                objective=spec.objective,
+                run_id=sealed.manifest.payload.identity.run_id,
+                on_node=lambda node: bridge.node_step(node, step=step.next()),
+            )
+        else:
+            run = runner(
+                arm_config,
+                episode=episode,
+                objective=spec.objective,
+                run_id=sealed.manifest.payload.identity.run_id,
+                on_node=lambda node: bridge.node_step(node, step=step.next()),
+                on_tier=lambda execution: _record_tier_selection(
+                    bridge, sealed=sealed, execution=execution
+                ),
+            )
         scores = scorer(episode, run)
         _record_terminal(bridge, run)
         bridge.reconcile(Decimal(run.workflow_cost_usd))
@@ -1069,6 +1129,7 @@ def _seal_or_resume(
     approval_backend: LocalApprovalRecordBackend,
     credential_probe: Any,
     approval_receipt: Any = None,
+    policy_execution: PolicyExecutionSnapshot | None = None,
 ) -> tuple[SealedCampaignEpisode, str | None]:
     """Seal a fresh episode, or append a new attempt to an interrupted one.
 
@@ -1103,6 +1164,7 @@ def _seal_or_resume(
         approval_backend=approval_backend,
         credential_probe=credential_probe,
         sealed_at=(existing.payload.identity.created_at if existing is not None else None),
+        policy_execution=policy_execution,
     )
     if existing is None:
         try:
@@ -1161,6 +1223,26 @@ def _open_trajectory(
         principal_key_id=f"synthetic:{plan.campaign_id}",
         cost_ceiling_usd=plan.manifest.payload.protocol.episode_budget.workflow_cost_usd_max,
         sink_root=sink_root,
+    )
+
+
+def _record_tier_selection(
+    bridge: Any,
+    *,
+    sealed: SealedCampaignEpisode,
+    execution: PolicyExecutionSnapshot,
+) -> None:
+    """Verify and emit the tier fact sealed before execution began."""
+    if sealed.policy_execution is None:
+        raise CampaignError("runner selected a compute tier absent from the sealed manifest")
+    if execution != sealed.policy_execution:
+        raise CampaignError("runtime compute-tier decision differs from the sealed execution")
+    bridge.compute_tier_selected(
+        tier=execution.compute_tier,
+        eligible_tiers=execution.eligible_tiers,
+        reason_codes=execution.decision_rule_ids,
+        feature_snapshot_ref=execution.feature_snapshot_ref,
+        tier_budget_ref=execution.tier_budget_ref,
     )
 
 

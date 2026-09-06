@@ -82,6 +82,7 @@ from src.campaign.arms import (
 )
 from src.campaign.episode import seal_campaign_episode
 from src.campaign.errors import CampaignError
+from src.campaign.execute import GraphEpisodeRunner
 from src.campaign.planner import (
     CampaignRequest,
     default_campaign_budget,
@@ -678,14 +679,20 @@ class TestTheFiveArmIdentities:
         )
         episodes = [item for item in plan.episodes if item.arm_id == "E"]
         assert episodes and all(item.runnable for item in episodes)
+        task_spec = plan.task_spec_for(episodes[0].case_id)
+        execution = GraphEpisodeRunner().prepare_episode(
+            arm_settings(cfg, "E"), objective=task_spec.objective
+        )
+        assert execution is not None
         sealed = seal_campaign_episode(
             cfg,
             campaign=plan.manifest,
             episode=episodes[0],
-            task_spec=plan.task_spec_for(episodes[0].case_id),
+            task_spec=task_spec,
             graph=deployment_shape_for("E", cfg),
             approval_backend=LocalApprovalRecordBackend(),
             credential_probe=NoCredentialProbe(),
+            policy_execution=execution,
         )
         assert sealed.manifest.payload.policy.arm_id == "E"
         assert sealed.manifest.payload.policy.selector == "adaptive_verified"

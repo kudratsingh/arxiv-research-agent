@@ -469,6 +469,40 @@ class PolicySnapshot(StrictContractModel):
         return self
 
 
+class PolicyExecutionSnapshot(StrictContractModel):
+    """The concrete graph selected inside an adaptive deployment.
+
+    ``PolicySnapshot`` remains the deployment policy: for arm E that is
+    the router and the complete T0--T2 graph set. This companion records
+    the per-run fact the router produced, so a T0 execution cannot erase
+    the arm-E deployment that selected it or be analysed as arm B.
+    """
+
+    compute_tier: Literal["T0", "T1", "T2"]
+    eligible_tiers: tuple[Literal["T0", "T1", "T2"], ...]
+    decision_rule_ids: tuple[PolicyMember, ...]
+    feature_snapshot_ref: Digest
+    tier_budget_ref: SafeLabel
+    graph_digest: Digest
+    shape_nodes: tuple[PolicyMember, ...]
+
+    @model_validator(mode="after")
+    def selected_tier_is_a_declared_execution(self) -> PolicyExecutionSnapshot:
+        if not self.eligible_tiers or self.compute_tier not in self.eligible_tiers:
+            raise ValueError("selected compute tier must be eligible")
+        if len(set(self.eligible_tiers)) != len(self.eligible_tiers):
+            raise ValueError("eligible compute tiers must be unique")
+        if not self.decision_rule_ids:
+            raise ValueError("a compute-tier decision must name at least one rule")
+        if len(set(self.decision_rule_ids)) != len(self.decision_rule_ids):
+            raise ValueError("compute-tier decision rules must be unique")
+        if not self.shape_nodes or tuple(sorted(self.shape_nodes)) != self.shape_nodes:
+            raise ValueError("executed shape nodes must be present and sorted")
+        if len(set(self.shape_nodes)) != len(self.shape_nodes):
+            raise ValueError("executed shape nodes must be unique")
+        return self
+
+
 class RuntimeConfigSnapshot(StrictContractModel):
     settings_schema_digest: Digest
     effective_values: Mapping[str, str | int | bool | None]
@@ -930,6 +964,7 @@ class RunManifestPayload(StrictContractModel):
     campaign_lock_locator: Annotated[str, StringConstraints(min_length=1, max_length=500)]
     registry_resolution: RegistryResolution
     policy: PolicySnapshot
+    policy_execution: PolicyExecutionSnapshot | None = None
     runtime_config: RuntimeConfigSnapshot
     invocation: InvocationSnapshot
     providers: ProviderSnapshot
@@ -974,6 +1009,13 @@ class RunManifestPayload(StrictContractModel):
             raise ValueError("supervisor flag and capability disagree")
         if self.policy.runtime_flags.enable_evidence_store != self.policy.capabilities.evidence_store:
             raise ValueError("evidence flag and capability disagree")
+        if self.policy.arm_id == "E" and self.policy_execution is None:
+            raise ValueError("an arm-E run must record its selected execution")
+        if self.policy_execution is not None:
+            if self.policy.policy_kind != "research_arm" or not self.policy.capabilities.adaptive_compute:
+                raise ValueError("only an adaptive research arm carries a policy execution")
+            if self.policy_execution.compute_tier not in self.policy.config.allowed_tiers:
+                raise ValueError("executed tier is outside the deployment policy")
         validate_manifest_safe_content(self.model_dump(mode="json"))
         return self
 

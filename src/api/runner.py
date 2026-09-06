@@ -526,7 +526,13 @@ def _shadow_bridge() -> Any:
 
 @contextlib.contextmanager
 def _contract_shadow(
-    job: Job, workflow: Any, costs: Any, cap_usd: float
+    job: Job,
+    workflow: Any,
+    costs: Any,
+    cap_usd: float,
+    *,
+    deployment_workflow: Any,
+    compute_decision: ComputeDecision | None,
 ) -> Iterator[Any]:
     """Seal this job's manifest and observe its model calls, or do nothing.
 
@@ -556,7 +562,12 @@ def _contract_shadow(
         # file: an API job carries `product_operation_only` consent and
         # is refused the durable sink whatever the capture flag says.
         run = bridge.start_research_job(
-            job, workflow, config=settings, cost_ceiling_usd=cap_usd
+            job,
+            workflow,
+            config=settings,
+            cost_ceiling_usd=cap_usd,
+            deployment_workflow=deployment_workflow,
+            compute_decision=compute_decision,
         )
         if run is not None:
             shadow_token = _current_shadow.set(run)
@@ -1845,6 +1856,7 @@ async def run_job(
     # controller off, and then `workflow` is the object the caller
     # passed, untouched.
     decision = _compute_decision(job)
+    deployment_workflow = workflow
     workflow = _select_tier_workflow(workflow, decision)
 
     # ADR 0038: take the lease *before* the semaphore, not after. A
@@ -1918,7 +1930,16 @@ async def run_job(
         # and the first node, and observe its model calls for as long as
         # the job owns this context. A no-op when `contract_shadow` is
         # off, and unable to change the job's outcome either way.
-        scopes.enter_context(_contract_shadow(job, workflow, costs, cap_usd))
+        scopes.enter_context(
+            _contract_shadow(
+                job,
+                workflow,
+                costs,
+                cap_usd,
+                deployment_workflow=deployment_workflow,
+                compute_decision=decision,
+            )
+        )
         # Immediately after the shadow opens and before any node: the
         # features and the tier are the first thing the trajectory says
         # about a run the controller allocated (RFC 10 §8.6).

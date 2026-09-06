@@ -75,6 +75,7 @@ from src.contracts.run_manifest import (
     EvaluationBudget,
     EvaluationSnapshot,
     InvocationSnapshot,
+    PolicyExecutionSnapshot,
     PolicyProviderProjection,
     PolicyRuntimeProjection,
     PolicyRuntimeProjectionPayload,
@@ -145,6 +146,7 @@ class SealedCampaignEpisode(StrictContractModel):
     projection: PolicyRuntimeProjection
     shape: PolicyShape
     policy: PolicySnapshot
+    policy_execution: PolicyExecutionSnapshot | None = None
     approval_receipt: ApprovalVerificationReceipt | None = None
     chargeable: bool
 
@@ -258,6 +260,7 @@ def seal_campaign_episode(
     approval_backend: LocalApprovalRecordBackend,
     credential_probe: Any = None,
     lineage: RunLineage | None = None,
+    policy_execution: PolicyExecutionSnapshot | None = None,
     sealed_at: Rfc3339Utc | None = None,
 ) -> SealedCampaignEpisode:
     """Seal one episode's configuration before its first node runs.
@@ -432,6 +435,7 @@ def seal_campaign_episode(
             campaign_lock_locator=f"{payload.output_root}/campaign-lock.json",
             registry_resolution=registry_resolution(payload.lock, episode.case_ref, sources),
             policy=policy,
+            policy_execution=policy_execution,
             runtime_config=runtime_config,
             invocation=invocation,
             providers=provider,
@@ -479,6 +483,7 @@ def seal_campaign_episode(
         projection=projection,
         shape=shape,
         policy=policy,
+        policy_execution=policy_execution,
         approval_receipt=decision.approval_receipt,
         chargeable=decision.chargeable,
     )

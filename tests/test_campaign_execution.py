@@ -45,6 +45,7 @@ import socket
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -68,6 +69,8 @@ from src.campaign.execute import (
     EpisodeRecord,
     EpisodeRun,
     EpisodeScores,
+    _record_tier_selection,
+    _tier_workflow,
     aggregate_by_task,
     arm_graph_probe,
     execute_campaign,
@@ -89,19 +92,26 @@ from src.campaign.planner import (
 from src.config import Settings
 from src.config import settings as shipped_settings
 from src.contracts.benchmark_adapters import suite_ref
+from src.contracts.kernel import sha256_digest
 from src.contracts.registry import (
     IntendedUse,
     LocalRegistry,
     RegistryRole,
     TaskSet,
 )
-from src.contracts.run_manifest import CompletionReceipt, CompletionStatus, RunReason
+from src.contracts.run_manifest import (
+    CompletionReceipt,
+    CompletionStatus,
+    PolicyExecutionSnapshot,
+    RunReason,
+)
 from src.contracts.trajectory import import_jsonl, verify_trajectory
 from src.observability.logging import (
     _STANDARD_LOG_KEYS,
     ALLOWED_EXTRA_KEYS,
     KNOWN_EVENTS,
 )
+from src.policies.compute import BRANCH_TIER, decide_tier, extract_features
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_ROOT = REPO_ROOT / "eval_registry"
@@ -263,6 +273,49 @@ class ScriptedRunner:
         self.per_arm = dict(per_arm or {})
         self.calls: list[str] = []
 
+    def prepare_episode(
+        self, config: Settings, *, objective: str
+    ) -> PolicyExecutionSnapshot | None:
+        if config.compute_controller != "deterministic":
+            return None
+        decision = decide_tier(extract_features(objective), max_tier=BRANCH_TIER)
+        nodes = {
+            "T0": ("critic", "planner", "reader", "search", "synthesizer"),
+            "T1": (
+                "critic",
+                "planner",
+                "reader",
+                "repair",
+                "search",
+                "synthesizer",
+                "verify",
+            ),
+            "T2": (
+                "critic",
+                "lead",
+                "merge",
+                "planner",
+                "repair",
+                "select",
+                "synthesizer",
+                "verify",
+                "workers",
+            ),
+        }[decision.tier]
+        return PolicyExecutionSnapshot(
+            compute_tier=decision.tier,
+            eligible_tiers=decision.eligible,
+            decision_rule_ids=decision.reasons,
+            feature_snapshot_ref=decision.features.digest(),
+            tier_budget_ref=(
+                f"tier-budget:{decision.tier}"
+                f":verifications={decision.limits.max_verifications}"
+                f":repairs={decision.limits.max_repairs}"
+            ),
+            graph_digest=sha256_digest({"nodes": nodes}),
+            shape_nodes=nodes,
+        )
+
     def __call__(
         self,
         config: Settings,
@@ -271,8 +324,12 @@ class ScriptedRunner:
         objective: str,
         run_id: str,
         on_node: Any,
+        on_tier: Any = None,
     ) -> EpisodeRun:
-        del config, objective, run_id
+        execution = self.prepare_episode(config, objective=objective)
+        if execution is not None and on_tier is not None:
+            on_tier(execution)
+        del run_id
         self.calls.append(f"{episode.case_id}/{episode.arm_id}")
         status, reason = self.per_arm.get(episode.arm_id, (self.status, self.reason))
         on_node("planner")
@@ -317,6 +374,41 @@ def null_scorer(episode: PlannedEpisode, run: EpisodeRun) -> EpisodeScores:
         primary_score=None,
         detail={"scripted": True},
     )
+
+
+@pytest.mark.unit
+def test_adaptive_tier_seam_refuses_an_unsealed_or_changed_decision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The hook cannot invent a selection after the immutable seal."""
+    app = object()
+    monkeypatch.setattr(
+        "src.graph.workflow.compute_tier_graphs", lambda _app: None
+    )
+    selected, absent = _tier_workflow(
+        config(compute_controller="deterministic"), app, "a quiet query"
+    )
+    assert selected is app
+    assert absent is None
+
+    execution = ScriptedRunner().prepare_episode(
+        config(compute_controller="deterministic"), objective="a quiet query"
+    )
+    assert execution is not None
+    with pytest.raises(CampaignError, match="absent from the sealed manifest"):
+        _record_tier_selection(
+            object(),
+            sealed=SimpleNamespace(policy_execution=None),
+            execution=execution,
+        )
+
+    changed = execution.model_copy(update={"tier_budget_ref": "tier-budget:changed"})
+    with pytest.raises(CampaignError, match="differs from the sealed execution"):
+        _record_tier_selection(
+            object(),
+            sealed=SimpleNamespace(policy_execution=changed),
+            execution=execution,
+        )
 
 
 def read_record(directory: Path, episode: PlannedEpisode) -> EpisodeRecord:
@@ -475,11 +567,9 @@ class TestTheFullMatrixRunsAtZeroCost:
     ) -> None:
         """RFC 09 §7.2's arm-E snapshot, read off a sealed episode.
 
-        The tiers, the router version, the branch cap, the selection
-        method and the marginal-stop version are *manifest inputs* —
-        which tier a given episode actually selected is a runtime fact
-        RFC 09 keeps out of the snapshot on purpose, so this asserts the
-        inputs and nothing about the routing.
+        The policy is the deployment input; ``policy_execution`` is the
+        per-run selection. Keeping both is what prevents a T0 execution
+        inside arm E from being filed as arm B.
         """
         episode = next(
             item for item in full_matrix.plan.runnable if item.arm_id == "E"
@@ -503,6 +593,46 @@ class TestTheFullMatrixRunsAtZeroCost:
             "candidate_lineage_selector",
             "marginal_stop",
         } <= set(policy["graph_capabilities"])
+        execution = manifest["payload"]["policy_execution"]
+        assert execution["compute_tier"] in {"T0", "T1", "T2"}
+        assert execution["compute_tier"] in execution["eligible_tiers"]
+        assert execution["decision_rule_ids"]
+        assert execution["graph_digest"].startswith("sha256:")
+
+    def test_every_arm_e_episode_seals_and_emits_the_same_tier_decision(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        """All sixty adaptive episodes carry one pre-node tier event."""
+        seen = 0
+        for episode in full_matrix.plan.runnable:
+            if episode.arm_id != "E":
+                continue
+            target = full_matrix.directory / episode.output_path
+            manifest = json.loads(
+                (target / "run-manifest.json").read_text(encoding="utf-8")
+            )
+            execution = manifest["payload"]["policy_execution"]
+            events = import_jsonl(
+                (target / TRAJECTORY_FILENAME).read_text(encoding="utf-8")
+            )
+            selected = [
+                event for event in events if event.event_type == "compute.tier_selected"
+            ]
+            assert len(selected) == 1
+            event = selected[0]
+            assert event.payload["tier"] == execution["compute_tier"]
+            assert event.payload["eligible_tiers"] == execution["eligible_tiers"]
+            assert event.payload["reason_codes"] == execution["decision_rule_ids"]
+            assert event.payload["feature_snapshot_ref"] == execution["feature_snapshot_ref"]
+            assert event.payload["tier_budget_ref"] == execution["tier_budget_ref"]
+            first_node = next(
+                index
+                for index, item in enumerate(events)
+                if item.event_type == "action.started"
+            )
+            assert events.index(event) < first_node
+            seen += 1
+        assert seen == FULL_SUITE_CASES * FULL_SUITE_REPEATS
 
     def test_every_episode_wrote_the_files_rfc_09_requires(
         self, full_matrix: MatrixRun

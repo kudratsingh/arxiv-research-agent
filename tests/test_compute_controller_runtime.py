@@ -50,6 +50,18 @@ VERIFY_REPAIR = (
     "critic",
 )
 
+BRANCH_PIPELINE = (
+    "planner",
+    "lead",
+    "workers",
+    "select",
+    "merge",
+    "synthesizer",
+    "verify",
+    "repair",
+    "critic",
+)
+
 #: A query nothing escalates: short, one entity, no cue.
 QUIET_QUERY = "how do transformers work"
 
@@ -145,6 +157,13 @@ def _tiered(**kwargs: Any) -> tuple[_StubGraph, dict[str, _StubGraph]]:
     graphs = {"T0": t0, "T1": t1}
     t0._compute_tier_graphs = graphs  # type: ignore[attr-defined]
     return t0, graphs
+
+
+def _tiered_arm_e() -> tuple[_StubGraph, dict[str, _StubGraph]]:
+    """All three shapes whose deployment-level union earns arm E."""
+    primary, graphs = _tiered()
+    graphs["T2"] = _StubGraph("T2", BRANCH_PIPELINE)
+    return primary, graphs
 
 
 def _drain(job: Job) -> list[dict[str, Any]]:
@@ -310,6 +329,41 @@ class TestTheTierIsBoundForTheRun:
 
 
 class TestTheTrajectoryCarriesTheDecision:
+    async def test_a_t0_execution_inside_arm_e_keeps_both_identities(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Deployment E selects graph B; the manifest records E and T0."""
+        monkeypatch.setattr(
+            runner_module,
+            "settings",
+            config(
+                compute_controller="deterministic",
+                orchestration="on",
+                candidate_selection="listwise",
+                marginal_stop="on",
+                contract_shadow="shadow",
+            ),
+        )
+        primary, _ = _tiered_arm_e()
+        job = _job(QUIET_QUERY, "cap09-arm-e-t0")
+
+        await _drive(job, primary)
+
+        run = bridge.shadow_run(job.job_id)
+        assert run is not None
+        payload = run.episode.manifest.payload
+        assert payload.policy.policy_kind == "research_arm"
+        assert payload.policy.arm_id == "E"
+        assert payload.policy_execution is not None
+        assert payload.policy_execution.compute_tier == "T0"
+        assert payload.policy_execution.decision_rule_ids == ("default_t0",)
+        assert payload.policy_execution.graph_digest != payload.policy.graph_digest
+        events = [
+            event for event in run.events() if event.event_type == "compute.tier_selected"
+        ]
+        assert len(events) == 1
+        assert events[0].payload["tier"] == "T0"
+
     async def test_the_allocation_is_the_first_policy_event_of_the_run(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

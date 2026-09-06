@@ -40,6 +40,7 @@ from src.contracts.run_manifest import (
     OutputSnapshot,
     PolicyCapabilities,
     PolicyConfig,
+    PolicyExecutionSnapshot,
     PolicyProviderProjection,
     PolicyRuntimeProjectionPayload,
     PolicyRuntimeProjectionRef,
@@ -509,6 +510,19 @@ def manifest_fixture() -> ManifestFixture:
         ),
     )
     return ManifestFixture(task=task, manifest=seal_manifest(payload))
+
+
+def policy_execution_fixture() -> PolicyExecutionSnapshot:
+    """A valid per-run selection for arm-E manifest invariants."""
+    return PolicyExecutionSnapshot(
+        compute_tier="T0",
+        eligible_tiers=("T0", "T1", "T2"),
+        decision_rule_ids=("default_t0",),
+        feature_snapshot_ref=VALID_DIGEST,
+        tier_budget_ref="tier-budget:T0",
+        graph_digest=VALID_DIGEST,
+        shape_nodes=("planner", "reader"),
+    )
 
 
 @pytest.mark.unit
@@ -1078,6 +1092,23 @@ def test_nested_manifest_sections_reject_incoherent_values() -> None:
 
 
 @pytest.mark.unit
+def test_policy_execution_rejects_ambiguous_or_incomplete_selections() -> None:
+    raw = policy_execution_fixture().model_dump(mode="python")
+    cases: tuple[tuple[dict[str, Any], str], ...] = (
+        ({"eligible_tiers": ()}, "selected compute tier must be eligible"),
+        ({"eligible_tiers": ("T0", "T0")}, "eligible compute tiers must be unique"),
+        ({"decision_rule_ids": ()}, "must name at least one rule"),
+        ({"decision_rule_ids": ("default_t0", "default_t0")}, "rules must be unique"),
+        ({"shape_nodes": ()}, "nodes must be present and sorted"),
+        ({"shape_nodes": ("reader", "planner")}, "nodes must be present and sorted"),
+        ({"shape_nodes": ("planner", "planner")}, "nodes must be unique"),
+    )
+    for update, message in cases:
+        with pytest.raises(ValidationError, match=message):
+            PolicyExecutionSnapshot(**{**raw, **update})
+
+
+@pytest.mark.unit
 def test_every_policy_arm_rejects_structural_impostors() -> None:
     cases: tuple[tuple[dict[str, Any], str], ...] = (
         (
@@ -1278,6 +1309,35 @@ def test_manifest_cross_section_consistency_is_fail_closed() -> None:
     for updates, message in cases:
         with pytest.raises(ValidationError, match=message):
             RunManifestPayload(**{**raw, **updates})
+
+
+@pytest.mark.unit
+def test_manifest_binds_execution_only_to_an_allowed_adaptive_arm() -> None:
+    payload = manifest_fixture().manifest.payload
+    raw = payload.model_dump(mode="python")
+    execution = policy_execution_fixture()
+
+    adaptive_a = arm("A").model_copy(
+        update={
+            "capabilities": arm("A").capabilities.model_copy(
+                update={"adaptive_compute": True}
+            )
+        }
+    )
+    cases: tuple[tuple[dict[str, Any], str], ...] = (
+        ({"policy": arm("E")}, "arm-E run must record its selected execution"),
+        (
+            {"policy_execution": execution},
+            "only an adaptive research arm carries a policy execution",
+        ),
+        (
+            {"policy": adaptive_a, "policy_execution": execution},
+            "executed tier is outside the deployment policy",
+        ),
+    )
+    for update, message in cases:
+        with pytest.raises(ValidationError, match=message):
+            RunManifestPayload(**{**raw, **update})
 
 
 @pytest.mark.unit
