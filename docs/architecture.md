@@ -72,6 +72,7 @@ exactly as it always has. The four have one builder each in
 | Supervisor loop | `research_policy=legacy`, `enable_supervisor=true` | [0014](decisions/0014-supervisor-loop-behind-flag.md) |
 | Fixed verify-and-repair | `research_policy=fixed_verify_repair` | [0076](decisions/0076-fixed-verify-repair-research-policy.md) |
 | Orchestrator-workers | `research_policy=orchestrated_workers` | [0086](decisions/0086-orchestrator-workers-for-the-branch-tier.md) |
+| Listwise selection and the marginal stop | `candidate_selection=listwise`, `marginal_stop=on` | [0091](decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md) |
 
 With `compute_controller="deterministic"` the shape stops being a
 process-wide constant and is chosen per job instead — see
@@ -190,7 +191,8 @@ after them alone:
 
 ```mermaid
 flowchart LR
-    P[planner] --> L[lead] --> W[workers] --> M[merge] --> Y[synthesizer] --> V[verify]
+    P[planner] --> L[lead] --> W[workers] --> S[select] --> M[merge] --> Y[synthesizer] --> V[verify]
+    W -.->|"CANDIDATE_SELECTION=off"| M
     V --> RV{"route_after_verification"}
     RV -->|"pass · abstain · repair spent"| C[critic]
     RV -->|"fail, one repair left"| RP[repair]
@@ -222,14 +224,42 @@ branch survived fails with that branch's own typed error rather than
 synthesising from nothing.
 
 Every branch and its evidence table reach the contract trajectory as
-`branch.*` and sibling `candidate.*` events, which is the lineage a
-later listwise selector will be measured against. No selector and no
-marginal-stop rule is built here, so arm E stays incomplete and the run
-record names what is still missing. The shape is also selectable per run
-as compute tier T2 when `ORCHESTRATION=on`; off — the default — the
-controller's rule table, reason codes and compiled graph set are exactly
-ADR 0085's. See ADR
+`branch.*` and sibling `candidate.*` events, which is the lineage the
+listwise selector below is measured against. The shape is also
+selectable per run as compute tier T2 when `ORCHESTRATION=on`; off — the
+default — the controller's rule table, reason codes and compiled graph
+set are exactly ADR 0085's. See ADR
 [0086](decisions/0086-orchestrator-workers-for-the-branch-tier.md).
+
+### Selecting between branches, and stopping (ADR 0091)
+
+`CANDIDATE_SELECTION=listwise` compiles a `select` node between
+`workers` and `merge` — the last point at which a selection can still
+change what the run is built on, since the merge releases each branch's
+bulk output. It ranks every succeeded branch's evidence table in **one**
+call over the whole list (never pairwise: N candidates would cost N²
+calls, and pairwise comparisons need not be transitive), and `merge`
+then unions only the top `SELECTION_MAX_CANDIDATES` of them. The
+top-ranked candidate is always kept, and a rejected branch keeps its
+record and its `candidate.created` event — non-selection never deletes a
+candidate. Under `USE_MOCK_DATA` the ranking is deterministic and costs
+nothing; with a client it goes out as a schema and an answer that does
+not name exactly the eligible set falls back to the deterministic
+ranking rather than being patched into shape.
+
+`MARGINAL_STOP=on` measures each branch as it settles — new
+deduplicated papers plus new evidence claims, over the dollars the next
+branch would be allowed to spend — and stops launching branches once
+that falls below `MARGINAL_STOP_THRESHOLD`. The rule runs *inside*
+`run_branches`' sequential loop, so it prevents the spend rather than
+reporting it, and the branches it never launched are recorded `stopped`
+rather than dropped.
+
+Both default off, and with them off this shape is byte-identical to ADR
+0086's. With both on, over the evidence store and the compute
+controller, the deployment earns all four of arm E's capabilities and
+`src/campaign/arms.py` plans its episodes like any other arm's. See ADR
+[0091](decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md).
 
 Regardless of shape, `build_workflow` also wires two production
 knobs:
@@ -761,7 +791,9 @@ pinned without a build by `tests/test_container_contract.py`).
   already covered; and `repair` picks from a deterministic table and
   never called a model to begin with. `lead`, `workers` and `merge` make
   no model call of their own either — a worker branch runs the same
-  search and reader agents on an isolated state.
+  search and reader agents on an isolated state — and `select` takes the
+  deterministic ranking under mock, which is what lets an arm-E campaign
+  run at exactly zero (ADR 0091).
 - **Resilience** — one owning level of retry per dependency, and a
   budget for it (ADR
   [0068](decisions/0068-resilience-policy.md)). Retry amplification is

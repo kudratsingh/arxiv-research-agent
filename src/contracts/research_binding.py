@@ -284,6 +284,7 @@ ARM_POLICY_IDS: Final[Mapping[str, str]] = {
     "B": "research_fixed_evidence",
     "C": "research_fixed_verify_repair",
     "D": "research_supervisor_verified",
+    "E": "research_adaptive_verified",
 }
 
 #: What a run is called when the live flags describe no arm at all —
@@ -306,21 +307,42 @@ FIXED_REPAIR_NODE: Final[str] = "repair"
 #: with no `lead` merges a branch set nobody planned.
 ORCHESTRATION_NODES: Final[frozenset[str]] = frozenset({"lead", "workers", "merge"})
 
-#: What a run is called when it compiles the branch tier. Not an arm:
-#: `07-first-policy-experiment.md` §3 defines arms A-D over the fixed
-#: and supervisor shapes, and arm E over adaptive compute *with*
-#: listwise selection and a marginal-stop rule. This shape is the first
-#: half of arm E — diversified retrieval with candidate lineage — and
-#: labelling it E would claim the selector CAP-09 has still to build. A
-#: named non-arm keeps the honesty rule this module rests on: a shape
-#: either names an arm the graph can run, or it names what is missing.
+#: The node CAP-09 adds for listwise candidate selection (ADR 0091).
+#: Compiled only when `candidate_selection` is `listwise`, so unlike the
+#: compute router this capability is earned *structurally*: a
+#: `research_policy` that claimed a selector without the stage could not
+#: produce it.
+SELECTION_NODE: Final[str] = "select"
+
+#: What a run is called when it compiles the branch tier but has not
+#: earned arm E. Not an arm: `07-first-policy-experiment.md` §3 defines
+#: arms A-D over the fixed and supervisor shapes, and ADR 0089 defines
+#: arm E as adaptive compute *with* listwise selection and a
+#: marginal-stop rule. A branch tier with no selector is the first half
+#: of that, and labelling it E would claim a capability it has not
+#: built. A named non-arm keeps the honesty rule this module rests on:
+#: a shape either names an arm the graph can run, or it names what is
+#: missing.
 ORCHESTRATED_WORKERS_POLICY_ID: Final[str] = "research_orchestrated_workers"
 
-#: The one arm-E capability this shape genuinely earns.
-#: `adaptive_compute_router` is earned by no node (the controller is a
-#: setting, not a stage); `candidate_lineage_selector` and
-#: `marginal_stop` are CAP-09's, and remain in every arm-E gap.
+#: The arm-E capability the branch nodes earn (ADR 0086).
 CANDIDATE_BRANCHING_CAPABILITY: Final[str] = "candidate_branching"
+
+#: The arm-E capability CAP-09's `select` node earns (ADR 0091). A node
+#: rather than a setting, because a listwise selection *is* a stage: it
+#: reads the branch candidates and decides which of them the merge
+#: unions, which is something a compiled graph can be asked about.
+CANDIDATE_SELECTOR_CAPABILITY: Final[str] = "candidate_lineage_selector"
+
+#: The arm-E capability CAP-09's marginal-stop rule earns (ADR 0091),
+#: and the second one this module reads from a setting rather than a
+#: node — for the same reason `adaptive_compute_router` is: the rule
+#: lives *inside* the workers node's sequential loop, where it can
+#: actually prevent the next branch's spend, and no stage of the graph
+#: can represent a decision taken between two iterations of one node.
+#: It is still not earnable by a policy *name*: `src/config.py` refuses
+#: `marginal_stop="on"` on a deployment that compiles no branch tier.
+MARGINAL_STOP_CAPABILITY: Final[str] = "marginal_stop"
 
 #: The arm-E capability CAP-04 built, earned by a setting rather than a
 #: node (ADR 0085: the controller selects between compiled graphs before
@@ -333,9 +355,9 @@ ADAPTIVE_COMPUTE_ROUTER_CAPABILITY: Final[str] = "adaptive_compute_router"
 #: `arm_capability_gap` subtracts the graph's own capabilities from these,
 #: so an empty gap means "this graph can run that arm" and a non-empty one
 #: names precisely what is absent. Arm C's entry empties out once CAP-02's
-#: verify/repair stage is compiled in; arm E's cannot, because nothing in
-#: this repository routes compute tiers, branches candidates or decides a
-#: marginal stop.
+#: verify/repair stage is compiled in; arm E's empties out on a
+#: deployment that runs the controller with the branch tier, the
+#: selector and the stop rule all enabled (ADR 0091), and on no other.
 ARM_REQUIRED_CAPABILITIES: Final[Mapping[str, tuple[str, ...]]] = {
     "C": (
         "fixed_post_synthesis_verifier",
@@ -420,6 +442,71 @@ def read_graph_shape(app: Any) -> GraphShape:
     )
 
 
+def read_deployment_shape(app: Any) -> GraphShape:
+    """The structure of every graph a *deployment* can run, as one shape.
+
+    Identical to `read_graph_shape` for every deployment that compiles
+    one graph, which is every deployment with the compute controller off
+    — the attribute below does not exist there, so the primary shape is
+    returned unchanged and arms A-D are byte-for-byte where they were.
+
+    With CAP-04's controller on, one process holds several compiled
+    shapes and picks between them per run (ADR 0085). "What can this
+    deployment do?" is then a question about the *set*, not about
+    whichever member happens to be primary: a controller with the branch
+    tier enabled can run branches even though its primary graph has no
+    `lead` node, and a probe that read only the primary would report a
+    capability set no run of that deployment is bounded by. RFC 09 §7.2
+    draws the same line — arm E's allowed tiers and router are manifest
+    inputs while "the tier actually selected" is a runtime fact.
+
+    The union is over nodes, edges and conditional sources, and the
+    digest is over the union, so a deployment that gains or loses a
+    selectable shape gets a different digest rather than the same one
+    with different behaviour behind it.
+
+    Args:
+        app: A compiled LangGraph app, possibly carrying the
+            controller's alternate per-tier graphs.
+
+    Returns:
+        The deployment's structure, as one `GraphShape`.
+    """
+    primary = read_graph_shape(app)
+    # Read as an attribute rather than through `src.graph.workflow`'s
+    # accessor: this module is imported by the contract lane and must
+    # not put the agent graph on its import path to answer a structural
+    # question (the same reason `src/api/runner.py` imports it late).
+    tier_graphs = getattr(app, "_compute_tier_graphs", None)
+    if not isinstance(tier_graphs, dict) or not tier_graphs:
+        return primary
+    nodes = set(primary.nodes)
+    edges = set(primary.edges)
+    conditional = set(primary.conditional_sources)
+    for _tier, tier_app in sorted(tier_graphs.items()):
+        if tier_app is app:
+            continue
+        shape = read_graph_shape(tier_app)
+        nodes |= set(shape.nodes)
+        edges |= set(shape.edges)
+        conditional |= set(shape.conditional_sources)
+    ordered_nodes = tuple(sorted(nodes))
+    ordered_edges = tuple(sorted(edges))
+    ordered_conditional = tuple(sorted(conditional))
+    return GraphShape(
+        nodes=ordered_nodes,
+        conditional_sources=ordered_conditional,
+        edges=ordered_edges,
+        digest=sha256_digest(
+            {
+                "nodes": list(ordered_nodes),
+                "edges": list(ordered_edges),
+                "conditional_sources": list(ordered_conditional),
+            }
+        ),
+    )
+
+
 class PolicyShape(StrictContractModel):
     """How the live configuration and the compiled graph classify.
 
@@ -431,16 +518,27 @@ class PolicyShape(StrictContractModel):
 
     `policy_kind` is a *second*, narrower question, added by ADR 0089:
     "can this shape seal a manifest at all?". It is `research_arm` for
-    A-D, `research_shape` for a designed non-arm research policy such as
-    ADR 0086's branch tier, and `None` for a combination nobody designed
-    — which still refuses, as it always has. `representable` keeps its
-    original meaning and is deliberately *not* widened: a branch run is
-    sealable and is still not one of the five arms.
+    A-E, `research_shape` for a designed non-arm research policy such as
+    a branch tier with no selector, and `None` for a combination nobody
+    designed — which still refuses, as it always has.
+
+    ADR 0091 admits `E`. That is not a widening of the honesty rule but
+    an application of it: arm E is now a structural definition (ADR
+    0089) and a deployment either earns all four of its capabilities or
+    it does not. A branch tier without the selector and the stop rule
+    classifies exactly as it did before — `research_orchestrated_workers`
+    with the gap named.
     """
 
-    arm_id: Literal["A", "B", "C", "D"] | None
+    arm_id: Literal["A", "B", "C", "D", "E"] | None
     selector: (
-        Literal["fixed", "fixed_evidence", "fixed_verify_repair", "supervisor_verified"]
+        Literal[
+            "fixed",
+            "fixed_evidence",
+            "fixed_verify_repair",
+            "supervisor_verified",
+            "adaptive_verified",
+        ]
         | None
     )
     policy_id: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
@@ -453,6 +551,7 @@ class PolicyShape(StrictContractModel):
     held_out_factors: Mapping[str, bool]
     runtime_flags: RuntimeFlags
     graph: GraphShape
+    arm_config: PolicyConfig | None = None
 
     @property
     def sealable(self) -> bool:
@@ -538,6 +637,8 @@ def classify_from_graph_shape(config: Settings, graph: GraphShape) -> PolicyShap
         graph,
         evidence=evidence,
         compute_controller=str(getattr(config, "compute_controller", "off") or "off"),
+        candidate_selection=str(getattr(config, "candidate_selection", "off") or "off"),
+        marginal_stop=str(getattr(config, "marginal_stop", "off") or "off"),
     )
 
     arm: Literal["A", "B", "C", "D"] | None
@@ -623,9 +724,17 @@ def _orchestrated_shape(
     ADR 0089 adds the one thing that was missing: `policy_kind`. The
     shape is `research_shape` — a designed research policy that is not an
     arm — so it now seals a manifest under its own name instead of
-    declining one and vanishing from the record. `representable` stays
-    False, because the question it answers has not changed and the answer
-    to it has not either.
+    declining one and vanishing from the record.
+
+    ADR 0091 adds the other exit. When the gap is *empty* — the
+    controller routes, the branch nodes are compiled, the `select` node
+    is compiled and the marginal-stop rule is on, with the evidence
+    store behind all of it — this is no longer "half of arm E". It is
+    arm E, and it says so: `arm_id="E"`, `selector="adaptive_verified"`,
+    `representable=True`, `policy_kind="research_arm"`. The honesty rule
+    is unchanged and is doing the same work it always did; what changed
+    is that the repository now builds the thing the rule was refusing to
+    claim.
     """
     earned = set(capabilities)
     missing = [
@@ -635,6 +744,24 @@ def _orchestrated_shape(
     ]
     if not flags.enable_evidence_store:
         missing.append("evidence_store")
+    if not missing:
+        return PolicyShape(
+            arm_id="E",
+            selector="adaptive_verified",
+            policy_id=ARM_POLICY_IDS["E"],
+            policy_version=f"{BINDING_VERSION}-shadow",
+            representable=True,
+            policy_kind="research_arm",
+            missing_capabilities=(),
+            graph_capabilities=capabilities,
+            declared_research_policy=declared,
+            held_out_factors={
+                name: bool(getattr(config, name)) for name in HELD_OUT_FACTORS
+            },
+            runtime_flags=flags,
+            graph=graph,
+            arm_config=arm_e_config(config),
+        )
     return PolicyShape(
         arm_id=None,
         selector=None,
@@ -651,27 +778,71 @@ def _orchestrated_shape(
     )
 
 
+#: Version of the difficulty-feature vector `src/policies/compute.py`
+#: extracts, and of the marginal-stop rule `src/policies/orchestration.py`
+#: applies. RFC 09 §7.2 requires both on an arm-E snapshot: the tier a
+#: run selected is a runtime fact, but *which router and which stop rule
+#: produced it* is a manifest input, and a campaign that compared two
+#: arm-E runs across a rule change would otherwise be comparing two
+#: policies under one name. Bumped when either rule's behaviour moves.
+DIFFICULTY_FEATURES_VERSION: Final[str] = "1.0.0"
+MARGINAL_STOP_POLICY_VERSION: Final[str] = "1.0.0"
+
+
+def arm_e_config(config: Settings) -> PolicyConfig:
+    """Arm E's `PolicyConfig`, read off the settings that produced it.
+
+    RFC 09 §7.2 lists exactly what an arm-E snapshot must carry, and the
+    point of reading each value from the live configuration rather than
+    writing a constant is that the manifest then records what the run
+    was actually bounded by. `max_branches` is the cap `plan_branches`
+    slices against; the tiers are the ones a controller with the branch
+    tier enabled may select; the repair pair is arm C's, unchanged,
+    because the branch tier's verification stage *is* arm C's (ADR
+    0086).
+    """
+    return PolicyConfig(
+        allowed_tiers=("T0", "T1", "T2"),
+        default_tier="T0",
+        difficulty_features_version=DIFFICULTY_FEATURES_VERSION,
+        max_targeted_repairs=1,
+        max_branches=int(config.orchestration_max_branches),
+        selection="listwise",
+        marginal_stop_policy_version=MARGINAL_STOP_POLICY_VERSION,
+        reverify_repaired_subject=True,
+    )
+
+
 def graph_capabilities(
     graph: GraphShape,
     *,
     evidence: bool,
     compute_controller: str = "off",
+    candidate_selection: str = "off",
+    marginal_stop: str = "off",
 ) -> tuple[str, ...]:
     """What the compiled graph can actually do, in the arm vocabulary.
 
     Every entry is earned by a node that exists (or, for the evidence
-    store and the compute router, by the behaviour a flag turns on).
-    Nothing here is ever derived from a policy *name*, which is why a
-    `research_policy` that claims verify-and-repair without the stage
-    cannot produce the capability that would let the contract's own arm-C
-    validator pass.
+    store, the compute router and the marginal stop, by the behaviour a
+    flag turns on). Nothing here is ever derived from a policy *name*,
+    which is why a `research_policy` that claims verify-and-repair
+    without the stage cannot produce the capability that would let the
+    contract's own arm-C validator pass.
 
-    `compute_controller` is the one capability with no node, and ADR 0085
-    is why: the controller selects *between* compiled graphs before a run
-    begins, so it is a property of the deployment rather than of the
-    shape it picked. It is read as an argument, not from a settings
+    Three capabilities have no node and each has the same justification:
+    the behaviour they name happens somewhere a graph stage cannot
+    represent. The evidence store is reader behaviour; the compute
+    router selects *between* compiled graphs before a run begins (ADR
+    0085); and the marginal stop is decided between two iterations of
+    one node's own loop (ADR 0091). `candidate_selection` is
+    deliberately *not* among them — the selector is a stage, so it is
+    read off `SELECTION_NODE` and the argument here only records what
+    the deployment asked for.
+
+    Every flag arrives as an argument rather than from a settings
     object, so a caller that has only a graph — `src/campaign/arms.py` —
-    keeps the pre-CAP-04 answer without knowing this parameter exists.
+    keeps the pre-CAP-04 answer without knowing these parameters exist.
     """
     nodes = set(graph.nodes)
     earned: list[str] = ["supervisor_router" if "supervisor" in nodes else "fixed_pipeline"]
@@ -684,10 +855,18 @@ def graph_capabilities(
             "reverify_repaired_subject",
         ]
     if nodes >= ORCHESTRATION_NODES:
-        # The one arm-E capability a *node* can earn (ADR 0086). The
-        # selector and the stop rule cannot be earned here and must not
-        # be: two gaps an evaluation needs to keep seeing.
+        # ADR 0086's branch tier. Structural, and asked of the node set
+        # rather than of `research_policy`, so a claim cannot earn it.
         earned.append(CANDIDATE_BRANCHING_CAPABILITY)
+    if SELECTION_NODE in nodes and candidate_selection == "listwise":
+        # Both, deliberately. The node is the capability; the setting is
+        # what the deployment asked for. A `select` node in a graph
+        # whose configuration does not select would be a stage nothing
+        # reaches, and a setting with no node is the claim this module
+        # exists to refuse.
+        earned.append(CANDIDATE_SELECTOR_CAPABILITY)
+    if marginal_stop == "on":
+        earned.append(MARGINAL_STOP_CAPABILITY)
     if compute_controller == "deterministic":
         # ADR 0085's controller, which is what arm E's router turned out
         # to be. Before CAP-04 nothing in this repository routed a
@@ -707,9 +886,10 @@ def arm_capability_gap(arm_id: str, shape: PolicyShape) -> tuple[str, ...]:
     checkout whose fixed graph compiles CAP-02's verify-and-repair stage,
     and stays full on one whose graph does not — including a run with
     `ENABLE_VERIFIER=true`, which adds no node to the fixed pipeline at
-    all. Arm E's gap is never empty here: CAP-04 built the router and
-    CAP-03 the branch tier, but nothing selects a candidate listwise or
-    decides a marginal stop, and no setting can conjure either.
+    all. Arm E's gap empties out on a deployment that has all four —
+    CAP-04's router, CAP-03's branch nodes, CAP-09's `select` node and
+    its marginal-stop rule (ADR 0091) — and stays non-empty on every
+    other, naming exactly what is absent rather than a category.
     """
     if arm_id in ARM_REQUIRED_CAPABILITIES:
         earned = set(shape.graph_capabilities)
@@ -753,7 +933,7 @@ def policy_snapshot(shape: PolicyShape) -> PolicySnapshot:
             "policy shape is not a representable arm: "
             f"missing {list(shape.missing_capabilities)}"
         )
-    config_block = (
+    config_block = shape.arm_config or (
         PolicyConfig(max_targeted_repairs=1, reverify_repaired_subject=True)
         if shape.arm_id == "C"
         else PolicyConfig()
@@ -775,10 +955,16 @@ def policy_snapshot(shape: PolicyShape) -> PolicySnapshot:
             fixed_post_synthesis_verifier=(
                 "fixed_post_synthesis_verifier" in shape.graph_capabilities
             ),
-            # Arms A-D are not adaptive by construction: none of them
-            # routes a compute tier, and CAP-04's controller refuses to
-            # load beside the flags that make D what it is.
-            adaptive_compute=False,
+            # Arm E declares it; A-D never do. The asymmetry is the
+            # arm definition rather than a shortcut: A-D are *fixed*
+            # policies by construction, and a controller deployment
+            # whose router happened to select arm C's graph for one run
+            # has still run arm C — flipping that snapshot's
+            # `adaptive_compute` on the deployment's behalf would move
+            # arm C's digest for a property of neither the arm nor the
+            # graph. Arm E is the arm whose identity *is* the router,
+            # and it earned the capability structurally to get here.
+            adaptive_compute=shape.arm_id == "E",
         ),
     )
 
@@ -2080,7 +2266,11 @@ class ContractOutcome(StrictContractModel):
     task_full_digest: Digest
     objective: Annotated[str, StringConstraints(max_length=8_000)]
     manifest_digest: Digest
-    arm_id: Literal["A", "B", "C", "D"] | None
+    # `E` since CAP-09 (ADR 0091): this projection carries whatever
+    # `PolicyShape.arm_id` carries, and refusing an arm the classifier can
+    # now produce would make an arm-E run's parity check fail on the shape
+    # of its own answer rather than on a disagreement.
+    arm_id: Literal["A", "B", "C", "D", "E"] | None
     policy_id: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     terminal_event_type: str | None
     llm_calls: Annotated[int, Field(ge=0)]
@@ -2218,8 +2408,10 @@ __all__ = [
     "SealedEpisode",
     "agent_tools",
     "arm_capability_gap",
+    "arm_e_config",
     "FIXED_REPAIR_NODE",
     "FIXED_VERIFY_NODE",
+    "SELECTION_NODE",
     "classify_from_graph_shape",
     "classify_policy_shape",
     "code_snapshot",
@@ -2241,6 +2433,7 @@ __all__ = [
     "prompt_digests",
     "prompt_snapshot",
     "provider_snapshot",
+    "read_deployment_shape",
     "read_graph_shape",
     "requested_policy",
     "retention_policy_ref",

@@ -841,6 +841,12 @@ class ResearchRuntimeBridge(ShadowRun):
         self._attempt_number = 1
         self._reconciled = False
         self._replayed: set[str] = set()
+        #: branch id -> the candidate id `branch_candidate` minted
+        #: for it (CAP-09, ADR 0091). Populated as branches close and
+        #: read when a selection record arrives naming branches: the
+        #: graph cannot derive a candidate id, so this is the one
+        #: place the two vocabularies are joined.
+        self._branch_candidates: dict[str, str] = {}
 
     def _first_time(self, key: str) -> bool:
         """Whether this logical step has not been recorded on this run yet."""
@@ -1618,8 +1624,22 @@ class ResearchRuntimeBridge(ShadowRun):
             candidate = self.branch_candidate(branch_id, branch)
             if candidate is not None:
                 candidate_ids.append(candidate)
+                # Remembered so CAP-09's selector can name candidates by
+                # the ids this bridge already minted. The graph cannot
+                # derive them — a candidate id is the digest of a stored
+                # artifact and `src/policies/` may not import a contract
+                # module (ADR 0078) — so the selection record travels out
+                # naming *branches*, and this map is the one place the two
+                # vocabularies are joined. One derivation, one owner.
+                self._branch_candidates[branch_id] = candidate
         reason = str(branch.get("reason", "") or "") or status
-        if status == "cancelled":
+        if status in ("cancelled", "stopped"):
+            # A branch the marginal-stop rule never launched settles as
+            # cancelled with its own reason code, not as failed: RFC 10
+            # §8.6 gives `branch.cancelled` a `reason_code` and
+            # `branch.failed` a `failure_class`, and nothing failed here
+            # — the run decided the next branch was not worth its cost
+            # (ADR 0091). `compute.stop_decided` carries the arithmetic.
             self._append(
                 "branch.cancelled",
                 f"branch.cancelled:{branch_id}",
@@ -1720,6 +1740,163 @@ class ResearchRuntimeBridge(ShadowRun):
             artifact_refs=(stored,),
         )
         return candidate_id
+
+    # -- listwise selection and the marginal stop (CAP-09, ADR 0091) -------
+
+    def record_selection(self, record: Mapping[str, Any]) -> None:
+        """Record one listwise selection as RFC 10 §6.4 candidate lineage.
+
+        Three kinds of fact, in the order the RFC puts them: a
+        `candidate.scored` per eligible candidate carrying its score
+        artifact, then one `candidate.selected` naming the eligible set,
+        the chosen candidate and the selector. Scores come first because
+        the selection references them — a selection whose scores had not
+        been appended would be a decision with no visible basis.
+
+        The record names *branches*, because a graph node cannot mint a
+        candidate id (it is the digest of an artifact this bridge
+        stored, and `src/policies/` may not import a contract module).
+        `_branch_candidates` joins the two, and a branch with no
+        candidate — one whose evidence table the store refused — is
+        skipped rather than invented.
+
+        `candidate.selected`'s `selected_candidate_id` is the *top-ranked*
+        candidate, which is the shape RFC 10 §8.6 defines. This selector
+        can keep several, and the ones below the top are in the selection
+        artifact rather than the event payload: widening the event would
+        be a change to W04's registry, and the artifact is already the
+        thing the payload points at.
+
+        Idempotent per selection pass, keyed on the eligible set, because
+        the same state update reaches `observe_node` from the `select`
+        node and again from the `merge` node's own update.
+
+        Args:
+            record: One `src.graph.state.SelectionRecord`, as a mapping.
+                Read defensively — this is state, and a malformed record
+                must degrade the lineage rather than fail the run.
+        """
+        rows = record.get("scores")
+        if not isinstance(rows, list) or not rows:
+            return
+        scored: list[tuple[str, str, float, bool]] = []
+        for row in rows:
+            if not isinstance(row, Mapping):
+                continue
+            branch_id = str(row.get("branch_id", "") or "")
+            candidate_id = self._branch_candidates.get(branch_id)
+            if candidate_id is None:
+                continue
+            scored.append(
+                (
+                    candidate_id,
+                    branch_id,
+                    float(row.get("score", 0.0) or 0.0),
+                    bool(row.get("selected", False)),
+                )
+            )
+        if not scored:
+            return
+        kind = str(record.get("selector_kind", "") or "listwise")
+        key = ",".join(candidate for candidate, _b, _s, _k in scored)
+        if not self._first_time(f"candidate.selected:{key}"):
+            return
+
+        for candidate_id, branch_id, score, keeps in scored:
+            artifact = self.store_artifact(
+                json.dumps(
+                    {
+                        "candidate_id": candidate_id,
+                        "branch_id": branch_id,
+                        "score": score,
+                        "selected": keeps,
+                        "selector_kind": kind,
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8"),
+                role=ArtifactRole.RUNTIME_SCORE_RECORD,
+                media_type="application/json",
+                schema_ref="candidate-selection-score/1.0.0",
+            )
+            if artifact is None:
+                continue
+            self._append(
+                "candidate.scored",
+                f"candidate.scored:{candidate_id}",
+                {
+                    "candidate_id": candidate_id,
+                    "score_artifact_id": artifact.artifact_id,
+                    "runtime_scorer_ref": kind,
+                    "score_scope": "branch_evidence_table",
+                },
+                status=EventStatus.SUCCEEDED,
+                actor=self._actor(ActorKind.POLICY, "selector"),
+                candidate_id=candidate_id,
+                artifact_refs=(artifact,),
+            )
+
+        selection_artifact = self.store_artifact(
+            json.dumps(dict(record), sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            ),
+            role=ArtifactRole.RUNTIME_SCORE_RECORD,
+            media_type="application/json",
+            schema_ref="candidate-selection/1.0.0",
+        )
+        if selection_artifact is None:
+            return
+        self.candidate_selected(
+            eligible=[candidate for candidate, _b, _s, _k in scored],
+            selected=scored[0][0],
+            selector_kind=kind,
+            selection_artifact=selection_artifact,
+        )
+
+    def record_marginal_stop(self, record: Mapping[str, Any]) -> None:
+        """Record the marginal-stop decision as RFC 10 §8.6's own event.
+
+        Appended whether or not the rule fired, because `reason_code`
+        distinguishes the two and a record that only existed on the stop
+        would make "measured and continued" indistinguishable from "never
+        measured" (ADR 0091). `considered_action` names what was *not*
+        done, which is what the event is about.
+
+        Idempotent on the decision itself: the record rides on the
+        workers node's update and is still on the state when the merge
+        node's update goes past.
+        """
+        stopped = bool(record.get("stopped", False))
+        gain = float(record.get("marginal_gain", 0.0) or 0.0)
+        cost = float(record.get("incremental_cost_usd", 0.0) or 0.0)
+        trigger = str(record.get("stopped_after_branch_id", "") or "")
+        blocked = str(record.get("stopped_before_branch_id", "") or "")
+        key = f"{stopped}:{trigger}:{blocked}:{gain:.6f}:{cost:.6f}"
+        if not self._first_time(f"compute.stop_decided:{key}"):
+            return
+        self._append(
+            "compute.stop_decided",
+            f"compute.stop_decided:{key}",
+            {
+                "considered_action": "launch_additional_worker_branch",
+                "expected_gain_method": str(
+                    record.get("gain_method", "") or "unspecified"
+                ),
+                # Fixed-format strings rather than floats:
+                # `agent-contract-json/v1` rejects a binary float in a
+                # payload outright, which is the same rule that makes
+                # every money field in this module a string.
+                "marginal_gain": f"{gain:.6f}",
+                "incremental_cost_estimate": f"{cost:.6f}",
+                "reason_code": (
+                    "marginal_gain_below_threshold"
+                    if stopped
+                    else "marginal_gain_above_threshold"
+                ),
+            },
+            status=EventStatus.SUCCEEDED,
+            actor=self._actor(ActorKind.POLICY, "orchestration"),
+        )
 
     # -- candidates (stub lifecycle) ---------------------------------------
 
@@ -3320,9 +3497,14 @@ def observe_node(
     containment block to get right, or a second chance to forget one.
     The node action is recorded first and unchanged, so a bridge that
     cannot record lineage still records everything W05 recorded.
+
+    Branches before selection, always: RFC 10 §6.4 requires a candidate
+    to exist before it can be scored or chosen, and the branch records
+    are what mint the candidates the selection then names (ADR 0091).
     """
     _observe_node_only(run, node, state_update)
     observe_branches(run, state_update)
+    observe_selection(run, state_update)
 
 
 def observe_branches(bridge: Any, state_update: Mapping[str, Any]) -> None:
@@ -3347,6 +3529,33 @@ def observe_branches(bridge: Any, state_update: Mapping[str, Any]) -> None:
         for branch in branches:
             if isinstance(branch, Mapping):
                 recorder(branch)
+
+
+def observe_selection(bridge: Any, state_update: Mapping[str, Any]) -> None:
+    """Record this update's selection and marginal-stop records, or nothing.
+
+    A no-op on the same four paths `observe_branches` is a no-op on, and
+    for the same reasons: no bridge, a degraded one, a bridge that
+    predates the vocabulary, and — the common case — an update that
+    carries neither key at all, which is every update of every shape but
+    the branch tier with CAP-09's settings on. A flag-off run pays two
+    `.get` calls (ADR 0091).
+    """
+    if bridge is None or getattr(bridge, "degraded", False):
+        return
+    selection = state_update.get("candidate_selection")
+    stop = state_update.get("marginal_stop")
+    if not isinstance(selection, Mapping) and not isinstance(stop, Mapping):
+        return
+    with contained(bridge, "observe_selection"):
+        if isinstance(selection, Mapping):
+            recorder = getattr(bridge, "record_selection", None)
+            if recorder is not None:
+                recorder(selection)
+        if isinstance(stop, Mapping):
+            recorder = getattr(bridge, "record_marginal_stop", None)
+            if recorder is not None:
+                recorder(stop)
 
 
 def observe_reconciliation(bridge: Any, run_cost_usd: float) -> CostReconciliation | None:
@@ -3398,6 +3607,7 @@ __all__ = [
     "log_projection",
     "observe_branches",
     "observe_close",
+    "observe_selection",
     "observe_compute_tier",
     "observe_episode_terminal",
     "observe_job_terminal",

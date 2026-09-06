@@ -43,18 +43,15 @@ from src.contracts.trajectory import (
 pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 #: The graph the sealed episode below is classified against. **Arm C's**,
-#: not the branch tier's, and the reason is ADR 0086's principal known
-#: gap: `run_manifest.PolicySnapshot.arm_id` is a required `A`-`E` and
-#: arm E's validator demands a supervisor, `marginal_stop` and a
-#: selection config, so the branch shape — which is honestly none of
-#: those — cannot seal a manifest, and `start_research_job` declines it
-#: the way it declines every other non-arm shape
-#: (`src/contracts/runtime_bridge.py`, "Declining is the designed
-#: outcome"). `tests/test_orchestration_controller.py` asserts that gap
-#: directly. What is under test *here* is the recorder, which is the
-#: same recorder either configuration reaches: it is driven by the branch
-#: records on a node update and knows nothing about which shape sealed
-#: the episode it is writing into.
+#: not the branch tier's, and the reason is now convenience rather than a
+#: gap. When this module was written the branch shape could not seal a
+#: manifest at all (`PolicySnapshot.arm_id` was a required `A`-`E`); ADR
+#: 0089 gave it a `research_shape` form and ADR 0091 gave a full
+#: deployment arm E itself, so either would seal today. Arm C's shape
+#: stays because what is under test *here* is the recorder, and the
+#: recorder is the same one either configuration reaches: it is driven by
+#: the branch records on a node update and knows nothing about which
+#: shape sealed the episode it is writing into.
 SEALABLE_SHAPE = (
     "planner",
     "search",

@@ -120,9 +120,30 @@ Initial tiers:
 Purpose: determine whether selective compute beats a static policy on the
 quality/cost frontier.
 
-**Implementation status:** not present. No current setting estimates difficulty,
-chooses a compute tier, manages sibling candidates, or stops on marginal value.
-Arm E requires those capabilities and no-cost qualification before execution.
+**Implementation status:** ~~not present~~ **built, 2026-09-06.** The four
+capabilities arrived in three work orders: CAP-04 (ADR 0085) estimates
+difficulty and chooses a tier, CAP-03 (ADR 0086) manages sibling
+candidates as worker branches, and CAP-09 (ADR 0091) selects among them
+listwise and stops on marginal value. `UNRUNNABLE_ARMS` is empty and the
+mock full matrix reconciles 300 completed with nothing excluded.
+
+**Amended 2026-09-05 (ADR 0089) — the supervisor left arm E.** The
+heading above still reads "supervisor plus adaptive compute", which was
+written before adaptive compute existed. When it arrived it was not
+built on the supervisor: ADR 0085's controller refuses to load beside
+`enable_supervisor=true`, and so does ADR 0086's branch tier, because
+two things choosing the graph is one too many. Requiring a supervisor
+would therefore have made arm E unreachable by construction on the only
+implementation this repository has. Arm E is now, structurally: a
+deterministic compute controller selecting among T0/T1/T2 with candidate
+branching, **and** a listwise candidate selector, **and** a
+marginal-stop record. A supervisor is permitted and not required.
+
+**Authorization is unchanged.** The table in §12 says "Arm E
+implementation: not authorized", and that is a *spend* decision about
+running the arm in a funded campaign, not a claim about whether the code
+exists — the same way arm C's row read while arm C was already built. It
+remains an owner call.
 
 ## 4. Configuration matrix
 

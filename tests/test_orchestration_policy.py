@@ -826,6 +826,11 @@ class TestTheModuleIsCallableWithoutTheGraph:
             orch.STATUS_FAILED,
             orch.STATUS_CANCELLED,
             orch.STATUS_BUDGET_STOPPED,
+            # CAP-09's marginal stop (ADR 0091). Written by
+            # `run_branches` to every branch the rule never launched;
+            # `TestTheMarginalStopPreventsSpend` in
+            # `tests/test_listwise_selection.py` produces it.
+            orch.STATUS_STOPPED,
         }
         assert set(orch.BRANCH_STATUSES) == produced
         assert len(orch.BRANCH_STATUSES) == len(produced)

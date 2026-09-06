@@ -16,11 +16,15 @@ rest of the package depends on:
   structural classifier, so `ENABLE_VERIFIER=true` on the fixed pipeline
   is still arm A and a `research_policy` that merely *names*
   verify-and-repair without the compiled stage is `capability_missing`.
-- **E is refused, always.** Nothing in this repository routes a compute
-  tier, branches a candidate or decides a marginal stop, and no setting
-  conjures one. Arm E is declared so the campaign's denominator can
-  account for its episodes as excluded-with-reason, and it is never
-  planned as runnable.
+- **E is earned, not refused.** It used to be refused outright, because
+  nothing in this repository routed a compute tier, branched a candidate
+  or decided a marginal stop. CAP-04, CAP-03 and CAP-09 built those in
+  that order, so `UNRUNNABLE_ARMS` is now empty and arm E goes through
+  the same probe as every other arm — a structural answer about this
+  checkout rather than a standing refusal (ADR 0091). What makes the
+  answer honest is that E's row turns on four settings a deployment must
+  actually hold: the controller, the branch tier, the listwise selector
+  and the marginal-stop rule.
 
 The arm *declaration* — not the compiled policy snapshot — is what
 identifies a replicate group, because a group has to be nameable before a
@@ -83,12 +87,24 @@ COMMON_FROZEN_SETTINGS: Final[Mapping[str, bool]] = {
     "enable_hitl": False,
 }
 
-#: The settings that *make* each arm. Arm C is the only one that needs
-#: CAP-02's selector; A, B and D are the three flags 07 §4 already
-#: described. Arm E's row is D's — deliberately, because it documents
-#: that the closest expressible configuration is still not arm E, which
-#: is why `UNRUNNABLE_ARMS` refuses it rather than letting the settings
-#: imply a capability.
+#: The settings that *make* each arm. Arm C needs CAP-02's selector; A,
+#: B and D are the three flags 07 §4 already described.
+#:
+#: Arm E's row is the one that changed with CAP-09 (ADR 0091). It used
+#: to be a copy of D's — a placeholder documenting that the closest
+#: expressible configuration was still not arm E — and it is now the
+#: real thing: the deterministic compute controller (ADR 0085) with the
+#: branch tier available to it as T2 (ADR 0086), the listwise selector
+#: and the marginal-stop rule (ADR 0091), over the evidence store.
+#:
+#: Two entries are worth stating because a reader will expect their
+#: opposites. `research_policy` is **legacy**, not
+#: `orchestrated_workers`: ADR 0085 refuses a controller beside a policy
+#: that fixes the shape for the whole process, because two claimants for
+#: the graph is one too many, and arm E's identity is the *router*.
+#: `enable_supervisor` is **false**: ADR 0089 removed the supervisor
+#: from arm E's definition, since the only implementation of adaptive
+#: compute this repository has refuses to load beside one.
 ARM_SETTINGS: Final[Mapping[ArmId, Mapping[str, bool | str]]] = {
     "A": {
         "enable_supervisor": False,
@@ -115,20 +131,31 @@ ARM_SETTINGS: Final[Mapping[ArmId, Mapping[str, bool | str]]] = {
         "research_policy": "legacy",
     },
     "E": {
-        "enable_supervisor": True,
+        "enable_supervisor": False,
         "enable_evidence_store": True,
-        "enable_verifier": True,
+        "enable_verifier": False,
         "research_policy": "legacy",
+        "compute_controller": "deterministic",
+        "orchestration": "on",
+        "candidate_selection": "listwise",
+        "marginal_stop": "on",
     },
 }
 
 #: Arms no configuration of this repository can run, whatever a graph
 #: looks like. Membership is a *structural* claim about missing
-#: implementation, and `ARM_REQUIRED_CAPABILITIES` is the evidence: no
-#: node in `src/graph/workflow.py` earns any of arm E's four.
-UNRUNNABLE_ARMS: Final[frozenset[str]] = frozenset(
-    arm for arm in ARM_REQUIRED_CAPABILITIES if arm == "E"
-)
+#: implementation, and it is now **empty**: CAP-09 built the last two of
+#: arm E's four capabilities (ADR 0091), so every arm 07 §4 names has an
+#: implementation and every refusal comes from a probed graph rather
+#: than from this constant.
+#:
+#: Kept rather than deleted, and deliberately. It is the mechanism by
+#: which a *future* arm can be declared before it is built — the campaign
+#: denominator needs to account for such an arm's episodes as
+#: excluded-with-reason rather than have them vanish — and deleting the
+#: mechanism the moment its first member left would mean rebuilding it
+#: for the next one.
+UNRUNNABLE_ARMS: Final[frozenset[str]] = frozenset()
 
 ArmStatus: TypeAlias = Literal["available", "unverified", "capability_missing"]
 
@@ -370,24 +397,42 @@ def classify_arm(config: Settings, arm_id: ArmId, graph: GraphShape) -> PolicySh
 def _capability_gap(
     arm_id: ArmId, graph: GraphShape, overrides: Mapping[str, bool | str]
 ) -> tuple[str, ...]:
-    """What `arm_id` needs and this graph does not earn."""
+    """What `arm_id` needs and this graph does not earn.
+
+    The three non-node capabilities are read out of the arm's own
+    overrides rather than out of the process settings, for the reason
+    the whole module exists: the planner runs under settings that are
+    nobody's arm, and asking the live configuration whether *this* arm
+    has a compute router would answer about a different run.
+    """
     from src.contracts.research_binding import graph_capabilities
 
-    earned = set(graph_capabilities(graph, evidence=bool(overrides["enable_evidence_store"])))
+    earned = set(
+        graph_capabilities(
+            graph,
+            evidence=bool(overrides["enable_evidence_store"]),
+            compute_controller=str(overrides.get("compute_controller", "off")),
+            candidate_selection=str(overrides.get("candidate_selection", "off")),
+            marginal_stop=str(overrides.get("marginal_stop", "off")),
+        )
+    )
     required = _REQUIRED_CAPABILITIES[arm_id]
     return tuple(capability for capability in required if capability not in earned)
 
 
 #: What each runnable arm's graph must earn, in the vocabulary
 #: `graph_capabilities` mints. A, B and D are structural facts about the
-#: fixed pipeline and the supervisor loop; C's three come from W05's own
-#: table, so the two modules cannot disagree about what arm C is.
+#: fixed pipeline and the supervisor loop; C's three and E's four come
+#: from W05's own table, so the two modules cannot disagree about what
+#: those arms are. E carries `evidence_store` for arm C's reason arrived
+#: at from the other side: a branch tier whose reader emits no claims
+#: merges empty tables (ADR 0089).
 _REQUIRED_CAPABILITIES: Final[Mapping[ArmId, tuple[str, ...]]] = {
     "A": ("fixed_pipeline",),
     "B": ("fixed_pipeline", "evidence_store"),
     "C": ("fixed_pipeline", "evidence_store", *ARM_REQUIRED_CAPABILITIES["C"]),
     "D": ("supervisor_router", "supervisor_verifier", "evidence_store"),
-    "E": ARM_REQUIRED_CAPABILITIES["E"],
+    "E": ("evidence_store", *ARM_REQUIRED_CAPABILITIES["E"]),
 }
 
 

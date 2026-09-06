@@ -908,7 +908,28 @@ def orchestrated_app() -> _AppStub:
     return _AppStub(nodes, edges)
 
 
-#: Golden arm-snapshot digests for A-D against this module's stand-in
+def adaptive_app() -> _AppStub:
+    """Arm E's deployment, as a stand-in: the branch tier plus `select`.
+
+    Structural for the same reason every other stand-in here is. What
+    makes a deployment arm E (ADR 0091) is that the branch nodes and the
+    selector node both exist and the configuration turns on the compute
+    router and the marginal stop; the real compiled deployment is
+    asserted in `tests/test_listwise_selection.py` against
+    `read_deployment_shape`.
+    """
+    stub = orchestrated_app()
+    graph = stub.get_graph()
+    nodes = [*graph.nodes, "select"]
+    edges = [
+        *graph.edges,
+        _Edge("workers", "select"),
+        _Edge("select", "merge"),
+    ]
+    return _AppStub(nodes, edges)
+
+
+#: Golden arm-snapshot digests for A-E against this module's stand-in
 #: graphs. They pin the *policy* snapshot rather than the manifest,
 #: because a manifest digest contains `code_snapshot()` and therefore
 #: moves on every commit; the policy snapshot moves only when the arm
@@ -918,11 +939,17 @@ def orchestrated_app() -> _AppStub:
 #: field, so every snapshot's canonical JSON gained one key. Nothing
 #: checked in pinned the old values, and A-D's structure, selectors,
 #: flags and capabilities are byte-for-byte what they were.
+#:
+#: CAP-09 (ADR 0091) adds E and moves none of A-D. That is the whole
+#: check this constant exists for: arm E's snapshot is a *new* row, so
+#: if building it had required touching what an arm snapshot is, the
+#: four values above would have moved and this file would say so.
 GOLDEN_ARM_POLICY_DIGESTS: dict[str, str] = {
     "A": "sha256:723a852d119615c08175c9ec3a4e2ed7bcfa1b773705974c609c00b83cf172f3",
     "B": "sha256:29cddeaea416ed8b927f3b9d3126390be91256ab3725742b6eb68c2d3ba9931b",
     "C": "sha256:9585b0ffe0f677ebec0a0744185911ccafdc9fe263a1293541ec50957658b675",
     "D": "sha256:8f65a5e564b0ad00f4d6f0dbd9d28d221d7e8242e4661936691a63cb84d34e24",
+    "E": "sha256:58611393bd681f34e1bf0fed737976e67cb31ac38ad15de3d1ae86f5294d4185",
 }
 
 
@@ -944,6 +971,16 @@ def arm_case(arm_id: str) -> tuple[Settings, _AppStub]:
             ),
             supervisor_app(),
         ),
+        "E": (
+            config(
+                enable_evidence_store=True,
+                compute_controller="deterministic",
+                orchestration="on",
+                candidate_selection="listwise",
+                marginal_stop="on",
+            ),
+            adaptive_app(),
+        ),
     }[arm_id]
 
 
@@ -957,7 +994,7 @@ class TestEveryDesignedLaneSealsAManifest:
     acquired an arm id to get there.
     """
 
-    @pytest.mark.parametrize("arm_id", ["A", "B", "C", "D"])
+    @pytest.mark.parametrize("arm_id", ["A", "B", "C", "D", "E"])
     def test_an_arm_seals_with_its_golden_policy_digest(self, arm_id: str) -> None:
         cfg, app = arm_case(arm_id)
         episode = seal(cfg, app)

@@ -128,6 +128,16 @@ def graph_for(*extra: str) -> GraphShape:
     )
 
 
+#: One stub graph per arm. Arm E's is deliberately **not** an arm-E
+#: graph, and since CAP-09 that is the whole point of it. `UNRUNNABLE_ARMS`
+#: is empty (ADR 0091): no arm is refused categorically any more, so the
+#: only way an arm is excluded is that the probed graph does not earn it
+#: — and this module, which tests the planner's exclusion machinery
+#: rather than the branch tier, keeps a graph that does not. What a real
+#: arm-E deployment compiles, and that it earns the arm, is
+#: `tests/test_listwise_selection.py`'s and
+#: `tests/test_campaign_execution.py`'s to prove against the actual
+#: compiled graph.
 ARM_GRAPHS: dict[ArmId, GraphShape] = {
     "A": graph_for(),
     "B": graph_for(),
@@ -194,9 +204,25 @@ def request(
 
 
 def planned(**kwargs: Any) -> CampaignPlan:
+    """A planned campaign, probed against `ARM_GRAPHS`.
+
+    The probe is passed rather than omitted, and since CAP-09 it has to
+    be. `UNRUNNABLE_ARMS` is empty (ADR 0091), so an unprobed arm is
+    `unverified` and therefore runnable — which would leave this module,
+    whose subject is the *ledger*, with no excluded slot to reconcile.
+    Probing against the stub table keeps arm E excluded for the reason
+    an arm is now ever excluded: the graph in front of the planner does
+    not earn it.
+    """
     cfg = kwargs.pop("cfg", None) or config()
     root = kwargs.get("root")
-    return plan_campaign(cfg, request(cfg=cfg, **kwargs), resolver=registry(root))
+    probe = kwargs.pop("graph_probe", ARM_GRAPHS.__getitem__)
+    return plan_campaign(
+        cfg,
+        request(cfg=cfg, **kwargs),
+        resolver=registry(root),
+        graph_probe=probe,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -341,11 +367,26 @@ class TestTheMatrixEnumeratesTheWholeDesign:
 
 
 class TestArmsAreClaimsUntilAGraphEarnsThem:
-    def test_arm_e_is_capability_missing_and_never_runnable(self) -> None:
+    def test_arm_e_on_a_graph_that_does_not_branch_is_capability_missing(
+        self,
+    ) -> None:
+        """The claim/capability rule, now that arm E is buildable.
+
+        Arm E's settings turn on the compute controller and the
+        marginal-stop rule, so those two capabilities are earned from the
+        row itself. The other two are *nodes* — the branch tier's and the
+        selector's — and this graph has neither, so the declaration is
+        `capability_missing` and names exactly what is absent. Before ADR
+        0091 the whole arm was refused by a constant and the graph was
+        never asked.
+        """
         arm = declare_arm("E", graph=ARM_GRAPHS["E"])
         assert arm.status == "capability_missing"
         assert not arm.runnable
-        assert "adaptive_compute_router" in arm.missing_capabilities
+        assert set(arm.missing_capabilities) == {
+            "candidate_branching",
+            "candidate_lineage_selector",
+        }
 
     def test_arm_c_needs_the_compiled_verify_repair_stage(self) -> None:
         assert declare_arm("C", graph=ARM_GRAPHS["C"]).status == "available"
@@ -1174,9 +1215,12 @@ class TestTheCommandLine:
             == 0
         )
         status = json.loads(capsys.readouterr().out)
+        # Five planned and nothing excluded: this verb probes the *real*
+        # compiled graphs rather than this module's stub table, and since
+        # CAP-09 every one of the five arms earns itself (ADR 0091).
         assert status["expected"] == 5
-        assert status["counts"]["not_started"] == 4
-        assert status["counts"]["excluded"] == 1
+        assert status["counts"]["not_started"] == 5
+        assert status["counts"]["excluded"] == 0
 
         assert (
             campaign_main(
@@ -1191,7 +1235,7 @@ class TestTheCommandLine:
             == 0
         )
         resumed = json.loads(capsys.readouterr().out)
-        assert len(resumed["pending"]) == 4
+        assert len(resumed["pending"]) == 5
 
     def test_a_chargeable_plan_without_approval_records_is_refused(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -1660,11 +1704,21 @@ class TestArmDeclarationsRefuseIncoherence:
         assert arm.runnable
         assert arm.graph_digest is None
 
-    def test_classifying_arm_e_refuses_whatever_the_graph_looks_like(self) -> None:
+    def test_classifying_arm_e_against_another_arms_graph_is_refused(self) -> None:
+        """Refused by the classifier now, not by a standing exclusion.
+
+        `UNRUNNABLE_ARMS` used to answer this before any graph was read
+        (ADR 0091 emptied it), so the refusal came with the word
+        `capability_missing` attached and said nothing about the graph.
+        It now comes from the same place every other arm's does: the
+        compiled shape classifies as something else, and the message
+        names both what ran and what is absent.
+        """
         from src.campaign.arms import classify_arm
 
-        with pytest.raises(CampaignError, match="capability_missing"):
+        with pytest.raises(CampaignError, match="not the declared arm E") as caught:
             classify_arm(config(), "E", ARM_GRAPHS["D"])
+        assert "candidate_branching" in str(caught.value)
 
     def test_arm_settings_that_will_not_load_are_refused(
         self, monkeypatch: pytest.MonkeyPatch

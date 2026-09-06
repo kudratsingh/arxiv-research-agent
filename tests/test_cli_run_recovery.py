@@ -276,10 +276,14 @@ class TestCanonicalInitialState:
         Two blocks now, and each was paid for here. `VerifyRepairState`
         (ADR 0076) is written only by the `verify` and `repair` nodes of
         the fixed verify-and-repair policy; `OrchestrationState` (ADR
-        0086) only by the `lead`, `workers` and `merge` nodes of the
-        orchestrator-workers policy. Neither appears on a state under
-        the shipped default, which is what makes their presence in a
-        checkpoint a positive signal that a named policy ran.
+        0086, extended by ADR 0091) only by the `lead`, `workers`,
+        `select` and `merge` nodes of the orchestrator-workers policy.
+        Neither appears on a state under the shipped default, which is
+        what makes their presence in a checkpoint a positive signal that
+        a named policy ran — and the two CAP-09 keys narrow that signal
+        further: `candidate_selection` appears only where a `select`
+        node was compiled, and `marginal_stop` only where the stop rule
+        was on.
         """
         assert set(ResearchState.__optional_keys__) == {
             "verification_verdict",
@@ -288,6 +292,8 @@ class TestCanonicalInitialState:
             "repair_action",
             "worker_branches",
             "merged_evidence_provenance",
+            "candidate_selection",
+            "marginal_stop",
         }
 
     def test_cli_invokes_the_graph_with_the_canonical_state(

@@ -394,18 +394,66 @@ def arm_graph_probe(config: Settings) -> GraphProbe:
     arm declaration into `available` or `capability_missing`, and it is a
     function rather than a call inside the planner because
     `build_workflow` reads the process-global settings singleton.
+
+    `read_deployment_shape`, not `read_graph_shape`: an arm whose
+    compute controller is on compiles several shapes and picks between
+    them per run (ADR 0085), so what that arm can do is a property of
+    the set rather than of whichever member is primary. For every
+    controller-off arm the two functions return the same object, so
+    A-D's declarations and digests are unchanged (ADR 0091).
     """
-    from src.contracts.research_binding import read_graph_shape
+    from src.contracts.research_binding import read_deployment_shape
 
     cache: dict[ArmId, GraphShape] = {}
 
     def probe(arm_id: ArmId) -> GraphShape:
         if arm_id not in cache:
             with compiled_graph(arm_settings(config, arm_id)) as app:
-                cache[arm_id] = read_graph_shape(app)
+                cache[arm_id] = read_deployment_shape(app)
         return cache[arm_id]
 
     return probe
+
+
+def _tier_workflow(config: Settings, app: Any, objective: str) -> Any:
+    """The graph this episode runs, when the arm has a compute router.
+
+    `app` unchanged for every arm whose `compute_controller` is off,
+    which is A-D: no alternate shapes are compiled there, the accessor
+    returns `None`, and this function is a string comparison and an
+    attribute read. That is what keeps this addition invisible to the
+    arms ADR 0088's loop already ran.
+
+    Arm E is the arm that needs it (ADR 0091). Its identity *is* the
+    router — a deterministic controller selecting among T0, T1 and T2 —
+    and a campaign that sealed an arm-E manifest and then ran whichever
+    graph happened to be primary would be recording a policy the episode
+    did not execute. `src/api/runner.py::_select_tier_workflow` makes
+    the same choice on the API path; this is the campaign lane's copy of
+    that one decision, kept here rather than shared because the API
+    version also binds the tier ContextVar and opens a shadow, neither
+    of which a campaign episode has.
+
+    The decision is made from the objective alone, exactly as the API
+    path makes it: `decide_tier` is pure and total, so an episode always
+    gets a tier and never fails for want of one.
+    """
+    if config.compute_controller != "deterministic":
+        return app
+    from src.graph.workflow import compute_tier_graphs
+    from src.policies.compute import (
+        BRANCH_TIER,
+        MAX_DECIDABLE_TIER,
+        decide_tier,
+        extract_features,
+    )
+
+    graphs = compute_tier_graphs(app)
+    if graphs is None:
+        return app
+    ceiling = BRANCH_TIER if config.orchestration == "on" else MAX_DECIDABLE_TIER
+    decision = decide_tier(extract_features(objective), max_tier=ceiling)
+    return graphs.get(decision.tier, app)
 
 
 class GraphEpisodeRunner:
@@ -450,7 +498,7 @@ class GraphEpisodeRunner:
         final: dict[str, Any] = {}
         try:
             with compiled_graph(config) as app, bound_settings(config):
-                stream = app.stream(
+                stream = _tier_workflow(config, app, objective).stream(
                     initial_research_state(objective, run_id),
                     stream_mode=["updates", "values"],
                 )

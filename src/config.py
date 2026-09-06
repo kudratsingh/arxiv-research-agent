@@ -2404,6 +2404,126 @@ class Settings(BaseSettings):
             )
         return self
 
+    # ------ Agent capability (CAP-09) ---------------------------------
+    #
+    # The listwise candidate selector and the marginal-stop rule (ADR
+    # 0091) — the two capabilities arm E was still missing after CAP-03
+    # built the branch tier and CAP-04 built the router.
+    #
+    # Both default off and both are *only* meaningful where branches
+    # exist, so the validator below refuses either one on a deployment
+    # that compiles no branch tier. That refusal is the same discipline
+    # ADR 0085 and ADR 0086 apply to their own switches: a setting that
+    # names a capability the process cannot exercise is a claim, and a
+    # claim is what `src/contracts/research_binding.py` exists to
+    # refuse.
+
+    candidate_selection: Literal["off", "listwise"] = Field(
+        default="off",
+        description=(
+            "Whether a `select` stage ranks the branch tier's candidates "
+            "before the merge. 'off' (the default) compiles no select "
+            "node and every succeeded branch's evidence is merged, which "
+            "is exactly CAP-03's behaviour. 'listwise' compiles the node "
+            "and ranks all candidates in one pass — one model call over "
+            "the whole list, never pairwise, and no call at all under "
+            "USE_MOCK_DATA, where the ranking is the deterministic one. "
+            "Requires a deployment that has a branch tier: "
+            "RESEARCH_POLICY=orchestrated_workers, or "
+            "COMPUTE_CONTROLLER=deterministic with ORCHESTRATION=on. See "
+            "ADR 0091."
+        ),
+    )
+    selection_max_candidates: int = Field(
+        default=4,
+        ge=1,
+        le=16,
+        description=(
+            "How many ranked candidates survive into the merge. The "
+            "top-ranked one always survives — a selector that could "
+            "reject everything would hand the synthesizer an empty "
+            "evidence table and let a fluent, sourceless briefing ship "
+            "(ADR 0041) — so this is a ceiling on breadth rather than a "
+            "quota. Sized to ORCHESTRATION_MAX_BRANCHES' own default, "
+            "which makes 'select nothing out' the shipped behaviour "
+            "until an operator narrows it. See ADR 0091."
+        ),
+    )
+    marginal_stop: Literal["off", "on"] = Field(
+        default="off",
+        description=(
+            "Whether the branch loop stops launching branches once the "
+            "last one stopped paying for itself. 'off' (the default) "
+            "runs every planned branch, as CAP-03 does. 'on' measures "
+            "each branch's marginal gain — new deduplicated papers plus "
+            "new evidence claims, per dollar of the branch's cost share "
+            "— and stops before the next branch when that falls below "
+            "MARGINAL_STOP_THRESHOLD. The branches never launched are "
+            "recorded 'stopped' rather than dropped. Requires the same "
+            "branch-tier deployment CANDIDATE_SELECTION does. See ADR "
+            "0091."
+        ),
+    )
+    marginal_stop_threshold: float = Field(
+        default=1.0,
+        ge=0.0,
+        description=(
+            "Marginal gain, in new evidence items per dollar of one "
+            "branch's cost share, below which the branch loop stops. A "
+            "setting rather than a module constant for the reason ADR "
+            "0086 gives about the branch caps: it is a budget, and an "
+            "operator with a different cost ceiling needs to move it. "
+            "It cannot move silently — the marginal-stop record carries "
+            "the threshold it was compared against. Consulted only when "
+            "MARGINAL_STOP=on. See ADR 0091."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _check_candidate_selection_requirements(self) -> Settings:
+        """Refuse a selector or a stop rule on a graph with no branches.
+
+        There is exactly one thing to check and it is worth stating in
+        one sentence: both of these settings act on *worker branches*,
+        and a deployment with no branch tier has none. Turning either on
+        there would advertise an arm-E capability
+        (`src/contracts/research_binding.py`) that no run could exercise,
+        which is the mislabelling that module exists to prevent.
+
+        Two deployments have a branch tier and they are the two ADR 0086
+        named: `research_policy="orchestrated_workers"` fixes the shape
+        for the process, and `compute_controller="deterministic"` with
+        `orchestration="on"` lets the controller select it per run as
+        T2. Either is enough; neither is implied by the other.
+
+        Raises:
+            ValueError: Naming both offending settings when both are on,
+                so one boot attempt is enough to fix the environment
+                file.
+        """
+        wanted = [
+            name
+            for name, on in (
+                ("candidate_selection=listwise", self.candidate_selection == "listwise"),
+                ("marginal_stop=on", self.marginal_stop == "on"),
+            )
+            if on
+        ]
+        if not wanted:
+            return self
+        branch_tier = self.research_policy == "orchestrated_workers" or (
+            self.compute_controller == "deterministic" and self.orchestration == "on"
+        )
+        if branch_tier:
+            return self
+        raise ValueError(
+            f"{', '.join(wanted)} requires a deployment that compiles the "
+            "branch tier and this one does not: set "
+            "RESEARCH_POLICY=orchestrated_workers, or "
+            "COMPUTE_CONTROLLER=deterministic with ORCHESTRATION=on. "
+            "See ADR 0091."
+        )
+
 
 #: Effort levels a tier override may name. The five real levels and
 #: nothing else — `""` would be indistinguishable from "no override" and
