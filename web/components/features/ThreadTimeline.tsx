@@ -59,6 +59,7 @@ import { THREAD, THREAD_RAIL, THREAD_ROW, turnCount, turnLabel } from "@/lib/cop
 import { useJobRun } from "@/lib/job/provider";
 import type { JobState } from "@/lib/job/types";
 import { useConversationDetail, useReportRenderer } from "@/lib/queries/conversations";
+import { useJobDetail } from "@/lib/queries/job";
 import {
   selectBriefings,
   type Briefing,
@@ -475,7 +476,7 @@ interface TimelineTurnProps {
   briefing: Briefing;
   expanded: boolean;
   onToggle: () => void;
-  /** `GET /research/{id}`, for the live turn only. The metrics' one source. */
+  /** The machine's `GET /research/{id}`, for the live turn only. */
   detail: JobDetail | null;
 }
 
@@ -484,6 +485,39 @@ function TimelineTurn({ briefing, expanded, onToggle, detail }: TimelineTurnProp
   // is never imported and the body is never parsed.
   const renderer = useReportRenderer(expanded);
   const hasBriefing = briefing.markdown.trim() !== "";
+
+  /**
+   * THE METRICS OF A TURN THIS BROWSER DID NOT WATCH (WO-S8).
+   *
+   * `MetricsStrip` used to render only when `detail !== null`, and `detail`
+   * is the JOB MACHINE's — passed down as `briefing.live ? state.detail :
+   * null`. So the five numbers, the cost among them, existed on screen only
+   * while this tab happened to be the one attached to the run. Reload the
+   * thread, or reach it from the rail without `?job=`, and the price of a
+   * run the user has already paid for was simply gone. That is not a
+   * contract limit: `GET /research/{id}` is free and read-only
+   * (`routes.py:215-232`) and reports all five for as long as the run record
+   * is retained. `ConversationJobSummary` (`schemas.py:207-214`) is the
+   * thing that carries no metrics — four fields and a report body — which is
+   * why the thread read cannot supply them and a per-turn read must.
+   *
+   * IT IS THE EXPANDED TURN'S READ, NOT THE THREAD'S. `enabled` is false for
+   * a collapsed turn, for the same reason `useReportRenderer` returns `null`
+   * for one: a ten-turn thread would otherwise issue ten requests to show
+   * one turn's numbers. And it is false for the LIVE turn, because the
+   * machine is already reading that job and `state.detail` is the fresher of
+   * the two — one authority per run, which is what `selectBriefings` exists
+   * to protect. No poll: `useJobDetail`'s liveness poll (§4.4) belongs to a
+   * run in flight, and a settled turn's numbers do not change.
+   *
+   * A RETIRED RUN CONTRIBUTES NOTHING, WHICH IS THE HONEST OUTCOME. Records
+   * expire (`api_job_retention_sec`) and the read 404s; `data` stays
+   * `undefined`, the strip is not rendered, and the surface says nothing
+   * rather than showing five em dashes that would read as "this run reported
+   * no cost" instead of "this run is no longer on the server".
+   */
+  const retained = useJobDetail(expanded && !briefing.live ? briefing.jobId : null);
+  const metrics = detail ?? retained.data ?? null;
 
   return (
     <>
@@ -516,8 +550,8 @@ function TimelineTurn({ briefing, expanded, onToggle, detail }: TimelineTurnProp
               <ExportDisclosure jobId={briefing.jobId} hasBriefing={hasBriefing} />
             }
             metrics={
-              detail === null ? undefined : (
-                <MetricsStrip metrics={readRunMetrics(detail)} />
+              metrics === null ? undefined : (
+                <MetricsStrip metrics={readRunMetrics(metrics)} />
               )
             }
           />

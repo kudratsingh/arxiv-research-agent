@@ -232,8 +232,8 @@ and arXiv queries are both editable, addable and removable; the run is
 paused and not spending while it waits, and it stops on its own if
 nobody reviews it. Above it the checkpoint spine shows where the run
 actually is — `Question observed`, `Plan waiting for your review`, `Run`
-and `Report` not yet observed — and the diagnostics disclosure lists the
-raw SSE frames behind that state.
+and `Briefing` not yet observed — and the diagnostics disclosure lists
+the raw SSE frames behind that state.
 
 ![The plan review panel: the checkpoint spine showing Question observed
 and Plan waiting for your review, above the plan editor with its
@@ -294,9 +294,11 @@ redesign (brief, tokens, architecture, work orders, gate reviews) is
 > skips this gate rather than failing on the host. It is a local gate
 > over derived images, not a CI gate; what CI does hold is that every
 > image rendered here is one the spec captures. The seeded thread was
-> created outside a live session, which is why its checkpoint spine
-> honestly reports `No longer available` rather than inventing a
-> history.
+> created outside a live session, so its checkpoint spine reports the run
+> as `Complete` and marks the segments this browser never watched `not
+> observed` — it does not invent a history, and it no longer borrows `No
+> longer available`, which is the wording reserved for a run the server
+> can no longer find.
 
 ## What lives behind flags
 

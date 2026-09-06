@@ -80,8 +80,25 @@ export const SPINE_LEGEND = [
   { mark: "dashed-square", meaning: "no longer available" },
 ] as const;
 
-/** The four spine segments (03 §5.3) — status transitions, not node names. */
-export const SPINE_SEGMENTS = ["Question", "Plan", "Run", "Report"] as const;
+/**
+ * The four spine segments (03 §5.3) — status transitions, not node names.
+ *
+ * THE FOURTH ONE IS `Briefing`, AND IT USED TO BE `Report` (WO-S8). That was
+ * the product's only surviving naming split, and it was visible on one
+ * screen: 03 §1.4's landing legend — the shape this spine's own header says
+ * it mirrors — reads `["Question", "Plan you approve", "arXiv run",
+ * "Briefing"]` (`./composer.ts`), the document under the spine is headed
+ * `Briefing` (`REPORT.heading`), the export control, the thread's empty
+ * state and the ledger's `artifact_produced` all say briefing, and the spine
+ * said Report. RC-12's lexicon rule is one user-facing word per noun, and
+ * the word for this noun was already chosen everywhere else.
+ *
+ * It is a segment NAME rather than a status word, so nothing about what the
+ * fourth mark MEANS changes: `SEGMENT_WORD.complete` is still "Complete".
+ * `web/tests/copy/spine-copy.test.ts` pins the segment list to the landing
+ * legend's last entry so the two cannot drift apart again.
+ */
+export const SPINE_SEGMENTS = ["Question", "Plan", "Run", "Briefing"] as const;
 
 // ---------------------------------------------------------------------------
 // The status line, state by state (03 §5.4).
@@ -114,16 +131,43 @@ export const SPINE_SEGMENTS = ["Question", "Plan", "Run", "Report"] as const;
  * SPINE's status line for 03 §5.4's submitting row. `web/tests/copy/spine-copy.test.ts`
  * pins them equal, so a divergence is a decision somebody made rather than
  * a drift nobody noticed.
+ *
+ * ==========================================================================
+ * WO-S8 REWROTE TWO OF THESE, AND BOTH REWRITES ARE THE SAME DISTINCTION.
+ *
+ * **"We did not observe this" and "this did not happen" are different
+ * claims, and these two sentences used to make the second one on the
+ * evidence for the first.**
+ *
+ *  - `historic` is a run whose status is `succeeded`. It WORKED. The old
+ *    sentence — "This briefing was produced outside this session. Its plan
+ *    and checkpoints are not stored." — opened on the observer, closed on an
+ *    absence, and never once said the run finished; a reader who reloaded a
+ *    thread met two sentences about what is missing, above a briefing that
+ *    is right there. It also singled out a fact that is equally true of a
+ *    run this browser DID watch: the plan is erased on resume for every run
+ *    (D-010, `schemas.py:98-124`), so `succeeded` never mentions it either.
+ *    The new sentence leads with the outcome and then says, of the
+ *    checkpoints only, the true observational thing.
+ *
+ *  - `rejoined` is a run that is still going. The old sentence — "Rejoined
+ *    this run. Earlier checkpoints are not replayed." — was two facts about
+ *    this browser's connection and none about the research. The first clause
+ *    now states the run's own condition, which is the thing input 1 actually
+ *    reports; the second clause is unchanged and still carries H2.
+ *    "has not finished" and not "is still going": `rejoined` is reachable at
+ *    `pending` and `awaiting_learner` as well as `running` (`JobStatus`,
+ *    `lib/api/models.ts`), and a queued run is not going anywhere yet.
  */
 export const RUN_STATUS_LINE = {
   submitting: "Generating plan…",
   awaitingReview: "Waiting for your review. The run is paused and not spending.",
-  rejoined: "Rejoined this run. Earlier checkpoints are not replayed.",
+  rejoined: "This run has not finished. Earlier checkpoints are not replayed.",
   reconnecting: "Reconnecting. Checkpoints during the gap are not replayed.",
   recycled: "Connection recycled by the server. The run is still going.",
   cancelled: "Cancelled at plan review. Nothing was searched.",
   historic:
-    "This briefing was produced outside this session. Its plan and checkpoints are not stored.",
+    "Complete. This briefing was produced outside this session, so no checkpoints were observed on this connection.",
   failedWithoutCheckpoints:
     "Failed. No checkpoints were observed on this connection.",
   positionNotReported: "Position after the last checkpoint is not reported.",

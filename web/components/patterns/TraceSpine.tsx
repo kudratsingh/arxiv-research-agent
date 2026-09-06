@@ -331,16 +331,41 @@ export function TraceSpine({
   );
 }
 
-/** 03 §5.3's legend, straight out of WO-12's `SPINE_LEGEND`. */
+/**
+ * 03 §5.3's legend, straight out of WO-12's `SPINE_LEGEND` — plus one
+ * sentence about the ledger's labels (WO-S8).
+ *
+ * WHY THE LABEL NOTE LIVES HERE AND NOT UNDER THE TICKS. The legend is
+ * already the product's answer to "what am I looking at": §5.3 renders it
+ * once per session and puts it behind a disclosure thereafter, so a reader
+ * who meets `reader` in the ledger and wants to know what kind of word that
+ * is has one place to go, and it is this one. Under the ticks it would be a
+ * permanent sentence inside the run row — the row 04 §8.2's CLS budget and
+ * WO-S2/S2b/S2c's reservations are all measured against — repeating itself
+ * on every run, to answer a question a reader asks once.
+ *
+ * It is a `<p>` beside the list rather than a seventh `<li>`, because the
+ * list is six mark/meaning pairs and this is not a mark. `SPINE.ledgerNote`
+ * carries the reasoning for what it says and, more importantly, for what it
+ * refuses to say.
+ */
 function SpineLegend() {
   return (
-    <ul data-spine-part="legend" className="flex flex-wrap gap-x-6 gap-y-2">
-      {SPINE_LEGEND.map((entry) => (
-        <li key={entry.mark} className="flex items-center gap-2 text-ui-xs text-ink-muted">
-          <Mark mark={entry.mark as StatusMarkShape} />
-          {entry.meaning}
-        </li>
-      ))}
-    </ul>
+    <div className="flex flex-col gap-2">
+      <ul data-spine-part="legend" className="flex flex-wrap gap-x-6 gap-y-2">
+        {SPINE_LEGEND.map((entry) => (
+          <li
+            key={entry.mark}
+            className="flex items-center gap-2 text-ui-xs text-ink-muted"
+          >
+            <Mark mark={entry.mark as StatusMarkShape} />
+            {entry.meaning}
+          </li>
+        ))}
+      </ul>
+      <p data-spine-part="legend-note" className="text-ui-xs text-ink-muted">
+        {SPINE.ledgerNote}
+      </p>
+    </div>
   );
 }

@@ -454,7 +454,9 @@ describe("criterion 6 — an <ol> of four in a labelled region, with a nested <o
       "Question",
       "Plan",
       "Run",
-      "Report",
+      // WO-S8: `Report` until this work order. The fourth segment is the
+      // only place in the product that did not say Briefing.
+      "Briefing",
     ]);
     view.unmount();
   });
@@ -975,7 +977,7 @@ describe("the legend and the inert spine", () => {
     expect(root.querySelector(".ew-pulse")).toBeNull();
     // The four names, and the honest absence of everything else.
     expect(root.textContent).toContain("Question");
-    expect(root.textContent).toContain("Report");
+    expect(root.textContent).toContain("Briefing");
     view.unmount();
   });
 

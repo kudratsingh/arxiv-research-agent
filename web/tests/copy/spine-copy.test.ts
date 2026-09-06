@@ -55,7 +55,7 @@ const COMPOSED: Record<string, string[]> = {
   "spine.segmentLabel": [
     spineCopy.segmentLabel("Question", runCopy.RUN_STATUS_WORD.observed),
     spineCopy.segmentLabel("Run", runCopy.RUN_STATUS_WORD.notObserved),
-    spineCopy.segmentLabel("Report", runCopy.RUN_STATUS_WORD.expired),
+    spineCopy.segmentLabel("Briefing", runCopy.RUN_STATUS_WORD.expired),
   ],
   "spine.observationDetail": [
     spineCopy.observationDetail(0),
@@ -150,6 +150,22 @@ describe("03 §5.5's required qualifiers", () => {
   it("'not reported' replaces 'unknown' in both places this module is silent", () => {
     expect(spineCopy.SPINE.voidDescription).toContain(REQUIRED_QUALIFIERS.silence);
     expect(spineCopy.SPINE.notReportedYet).toContain(REQUIRED_QUALIFIERS.silence);
+  });
+
+  it("the fourth segment is the word every other surface already uses", () => {
+    // WO-S8. `SPINE_SEGMENTS` read `[…, "Report"]` while 03 §1.4's landing
+    // legend — the shape `TraceSpine`'s own header says the spine mirrors —
+    // read `[…, "Briefing"]`, and so did the heading of the document the
+    // segment points at. RC-12's lexicon rule is one user-facing word per
+    // noun; this pin is what stops the two drifting apart a second time, and
+    // it lives in the copy gate because it is a claim about the dictionary
+    // rather than about the renderer.
+    expect(traceCopy.SPINE_SEGMENTS.at(-1)).toBe("Briefing");
+    expect(traceCopy.SPINE_SEGMENTS.at(-1)).toBe(composerCopy.LANDING.process.at(-1));
+    expect(traceCopy.SPINE_SEGMENTS).not.toContain("Report");
+    // The segment NAME moved; 03 §3.4's status WORD for the same mark did
+    // not, and the two vocabularies stay separate.
+    expect(runCopy.RUN_STATUS_WORD.succeeded).toBe("Complete");
   });
 
   it("'observed' is how the ledger's own label names checkpoints", () => {
