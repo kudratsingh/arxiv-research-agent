@@ -127,7 +127,13 @@ extend-exclude = [".venv", "outputs", ".cache"]
 # additional rulesets get introduced in follow-up PRs.
 select = ["E", "F", "I", "B", "UP", "SIM"]
 ignore = [
-    "E501",  # line-length handled by formatter; long strings in prompts/tests are OK
+    # No formatter runs here — `ruff format` is deliberately not a gate
+    # (docs/development.md, "Linting is a gate. Formatting is not"), so
+    # this ignore is not a delegation to one. `line-length = 100` is a
+    # convention held by review; `--select E501` reports 271 findings
+    # today, most of them long strings in prompts and tests, where a
+    # wrap costs more than it buys.
+    "E501",
     "B008",  # FastAPI/Pydantic use `Depends()` / `Field()` in defaults
     "SIM108",  # ternary-vs-if is a readability call, not a lint issue
 ]

@@ -134,6 +134,52 @@ is the single definition of each gate and the workflow restates none of
 the floors. Run the first three before pushing a change to `src/`; the
 last two are seconds and free.
 
+### Linting is a gate. Formatting is not, and will not be
+
+The `lint (ruff)` job runs `ruff check .` against the ruleset in
+`pyproject.toml` (`E`, `F`, `I`, `B`, `UP`, `SIM`), and a finding there
+fails the PR. **`ruff format` is not run by CI, is not run by any
+`make` target, and is not going to be.** The ruling, recorded here
+because it is the kind of thing somebody re-proposes every few months:
+
+> Format is explicitly not a gate. A formatter introduced this late
+> into a repository with this much hand-tuned comment layout would
+> churn every blame line to buy nothing a reviewer wants. `ruff check`
+> stays the gate; `ruff format` is available to a developer and is
+> never enforced.
+
+The size of "this late" is measurable, so here it is. `ruff format
+--check .` on ruff 0.15.21 wants to reformat **277 of the 327 tracked
+Python files** — 85% of them — and `ruff format --diff` is **8,208
+lines removed against 4,026 added**. The net is not a tidy-up; it is
+the formatter collapsing hand-wrapped expressions back onto single
+lines wherever they fit inside `line-length = 100`. Those wraps are
+where the reasoning lives in this codebase: the argument lists,
+literal tables and comment blocks are laid out to be read down the
+page, and joining them costs the layout and costs every `git blame`
+line that currently points at the commit that made a decision. Nothing
+a reviewer asked for is on the other side of that trade.
+
+There is no exempt subset. The obvious candidate would be generated
+code, where nobody reads the layout and no blame line means anything —
+but this repository generates YAML, JSON and Markdown, never Python.
+`src/eval/readme_update.py` and `src/campaign/manifest.py` match a
+search for "generated" because they *emit* generated content; both are
+hand-written. If a generated `.py` is ever checked in, formatting that
+one file is a decision worth revisiting on its own.
+
+Run `ruff format` on your own working copy whenever you like — it is a
+useful way to see what a construct looks like flattened. Do not commit
+a reformat of files your change did not otherwise touch.
+
+One consequence to be honest about: `E501` sits in the ignore list
+under a comment that used to say line length was "handled by
+formatter". It is not handled by anything. Line length is a convention
+held by review: `ruff check --select E501 .` reports 271 findings
+today, most of them long strings in prompts and tests. That is the
+price of the ruling, not an oversight in it — turning `E501` on would
+be the megadiff by another route.
+
 ## Working in `web/`
 
 The frontend has its own toolchain (`npm ci` in `web/`, Node

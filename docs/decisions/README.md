@@ -664,26 +664,6 @@ never renumbered.
   T1 2 / T2 8**, pinned per query with its reasons, and the mock matrix
   shows the eight branched cases actually executing the
   orchestrator-workers graph across all three repeats at `$0.000000`.
-- [0090](0090-anthropic-sdk-1x.md) — **Anthropic SDK 1.x.** The
-  `anthropic<1.0` cap blocked every later capability order, and
-  `02-STANDARDS.md` §6.1 recorded why raising it was a deliberate act:
-  1.x runs on `httpx2`, so anything that mocks or instruments HTTP by
-  patching `httpx` silently stops seeing the SDK. Pinned `1.4.0` with
-  the range widened to `>=1.0,<2.0`. The exposure turned out to be
-  nil — the repository has no `respx`, `pytest-httpx`, `vcrpy` or
-  HTTPX instrumentation, because the model is faked at
-  `src.llm._get_client` above the HTTP layer and the network guard sits
-  below it at the socket — so the cost was three test modules aliasing
-  `import httpx2 as httpx` to keep building real SDK errors from real
-  responses. `transform_schema` stays: 1.4.0 still has no
-  `with_raw_response.parse`, so ADR 0077's reasoning and ADR 0051's
-  `retries_taken` both survive. The timeout becomes `anthropic.Timeout`,
-  which normalises identically to the float it replaces. The golden
-  request fixture is byte-identical across the upgrade, which is the
-  evidence that the wire body did not move — but no live call was made,
-  so provider behaviour on 1.x is unverified until CAP-06's funded
-  smoke.
-
 - [0088](0088-campaign-execution-loop.md) —
   **Run a planned campaign from an injected runner, and write the
   terminal receipt last.** ADR 0082 built a campaign package that
@@ -731,6 +711,26 @@ never renumbered.
   moves into `eval_registry/` byte for byte, its content kinds joining a
   widened `ContentKind`, with "the checked-in tree is exactly what the
   modules build" restated over the union: 257 objects, 0 mismatches.
+
+- [0090](0090-anthropic-sdk-1x.md) — **Anthropic SDK 1.x.** The
+  `anthropic<1.0` cap blocked every later capability order, and
+  `02-STANDARDS.md` §6.1 recorded why raising it was a deliberate act:
+  1.x runs on `httpx2`, so anything that mocks or instruments HTTP by
+  patching `httpx` silently stops seeing the SDK. Pinned `1.4.0` with
+  the range widened to `>=1.0,<2.0`. The exposure turned out to be
+  nil — the repository has no `respx`, `pytest-httpx`, `vcrpy` or
+  HTTPX instrumentation, because the model is faked at
+  `src.llm._get_client` above the HTTP layer and the network guard sits
+  below it at the socket — so the cost was three test modules aliasing
+  `import httpx2 as httpx` to keep building real SDK errors from real
+  responses. `transform_schema` stays: 1.4.0 still has no
+  `with_raw_response.parse`, so ADR 0077's reasoning and ADR 0051's
+  `retries_taken` both survive. The timeout becomes `anthropic.Timeout`,
+  which normalises identically to the float it replaces. The golden
+  request fixture is byte-identical across the upgrade, which is the
+  evidence that the wire body did not move — but no live call was made,
+  so provider behaviour on 1.x is unverified until CAP-06's funded
+  smoke.
 
 - [0091](0091-listwise-candidate-selection-and-the-marginal-stop.md) —
   **A listwise `select` stage and a marginal stop inside the branch
