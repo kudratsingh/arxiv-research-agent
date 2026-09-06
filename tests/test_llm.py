@@ -144,32 +144,37 @@ class TestGetClient:
         assert client.kwargs["api_key"] == "sk-my-test-key"
         assert type(client.kwargs["api_key"]) is str
 
-    def test_the_zero_spend_sentinel_reaches_the_constructor_intact(
+    def test_the_zero_spend_sentinel_refuses_before_constructor(
         self,
         monkeypatch: pytest.MonkeyPatch,
         harness_environment: tuple[frozenset[str], dict[str, str]],
     ) -> None:
-        """Every local and CI path runs on this exact string.
-
-        It is deliberately non-empty (`tests/conftest.py`) so that
-        `_get_client` does *not* take its "not configured" branch: the
-        client constructor is reached, and it is there that the suite's
-        spend guard — and, in a real run, Anthropic's 401 — refuses.
-        A wrapper that arrived at the SDK unopened, or a sentinel the
-        `SecretStr` round trip altered, would move the refusal
-        somewhere else and quietly change what the zero-spend proof
-        proves. Taken from the harness rather than retyped so it cannot
-        drift from the value actually pinned.
-        """
+        """The local/CI sentinel is a structural stop, not an invalid key."""
         _scrubbed, declared = harness_environment
         sentinel = declared["ANTHROPIC_API_KEY"]
         _override_settings(monkeypatch, anthropic_api_key=sentinel)
         monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
+        before = len(_FakeAnthropic.instances)
+
+        with pytest.raises(
+            RuntimeError,
+            match="structurally disables Anthropic client construction",
+        ):
+            llm_module._get_client()
+
+        assert len(_FakeAnthropic.instances) == before
+
+    def test_a_non_sentinel_key_still_constructs_the_client(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        key = "unit-test-provider-key"
+        _override_settings(monkeypatch, anthropic_api_key=key)
+        monkeypatch.setattr(llm_module.anthropic, "Anthropic", _FakeAnthropic)
 
         client = llm_module._get_client()
 
-        assert client.kwargs["api_key"] == sentinel
-        assert type(client.kwargs["api_key"]) is str
+        assert isinstance(client, _FakeAnthropic)
+        assert client.kwargs["api_key"] == key
 
     def test_missing_api_key_raises(
         self, monkeypatch: pytest.MonkeyPatch

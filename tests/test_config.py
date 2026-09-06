@@ -537,10 +537,10 @@ class TestTheApiKeyIsASecret:
         """`tests/conftest.py` chose a *non-empty* sentinel on purpose.
 
         An empty key sends `src.llm._get_client` down its "not
-        configured" branch and the suite's spend guard — which fires at
-        the client constructor — is never reached, hiding a would-be
-        spend behind a different error. The wrapper must not quietly
-        turn the sentinel falsy.
+        configured" branch. The non-empty sentinel instead reaches the
+        dedicated structural refusal, while the suite's constructor
+        guard remains a second line of defence. The wrapper must not
+        quietly turn the sentinel falsy.
         """
         _scrubbed, declared = harness_environment
         built = Settings(anthropic_api_key=declared["ANTHROPIC_API_KEY"])
