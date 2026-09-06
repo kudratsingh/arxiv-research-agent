@@ -197,6 +197,103 @@ class EvidenceProvenance(TypedDict):
     claim_count: int
 
 
+class CandidateScore(TypedDict):
+    """One branch candidate's place in a listwise ranking (ADR 0091).
+
+    A *candidate* here is a succeeded branch's evidence table — the
+    object `ResearchRuntimeBridge.branch_candidate` already records as
+    RFC 10 §6.4's sibling `candidate.created`. This row is the score the
+    selector gave it, and every eligible candidate gets one whether it
+    was selected or not: RFC 10 §6.4 is explicit that "rejection or
+    non-selection never deletes a candidate", and a ranking that only
+    listed its winners could not be audited for a selector oracle gap.
+
+    Fields:
+      - `branch_id`: which branch produced this candidate.
+      - `rank`: 0-based position in the ranking; 0 is the best.
+      - `score`: the selector's own number, higher is better.
+      - `selected`: whether it survives into the merge.
+      - `reason`: why, in the selector's words or the deterministic
+        rule's typed code.
+    """
+
+    branch_id: str
+    rank: int
+    score: float
+    selected: bool
+    reason: str
+
+
+class SelectionRecord(TypedDict):
+    """What the listwise selector decided, in full (ADR 0091).
+
+    One record per `select` node visit, replacing the previous one: the
+    node ranks the candidates that are still unmerged, so a repair pass
+    that added branches produces a record about *those* branches. What
+    an earlier pass selected is already in the merged evidence and
+    cannot be un-selected, which is ADR 0086's incremental merge holding
+    the line — a selector that could retract evidence the report was
+    built on would be the "reflect again" recovery
+    `02-target-architecture.md` §5 rejects.
+
+    Fields:
+      - `selector_kind`: `listwise_deterministic` or `listwise_model`.
+      - `eligible_branch_ids`: every candidate the selector saw.
+      - `selected_branch_ids`: the ones that reach the merge, in rank
+        order. Never empty when `eligible_branch_ids` is not.
+      - `rejected_branch_ids`: the rest, kept rather than deleted.
+      - `scores`: one row per eligible candidate, in rank order.
+      - `max_candidates`: the ceiling this pass ran under.
+      - `llm_calls`: model calls the selector itself made — 0 on the
+        deterministic path, 1 on the model path.
+    """
+
+    selector_kind: str
+    eligible_branch_ids: list[str]
+    selected_branch_ids: list[str]
+    rejected_branch_ids: list[str]
+    scores: list[CandidateScore]
+    max_candidates: int
+    llm_calls: int
+
+
+class MarginalStopRecord(TypedDict):
+    """Whether extra branches stopped paying for themselves (ADR 0091).
+
+    Written whenever the rule is on, *including when it did not fire*:
+    "the rule ran and the gain stayed above the threshold" and "the rule
+    never ran" are different facts about a run, and only a record that
+    exists in both cases can tell them apart. RFC 10 §8.6's
+    `compute.stop_decided` carries the same shape onto the trajectory.
+
+    Fields:
+      - `stopped`: whether the loop stopped early.
+      - `stopped_after_branch_id`: the branch whose gain triggered it,
+        or `""`.
+      - `stopped_before_branch_id`: the first branch never launched, or
+        `""`.
+      - `branches_stopped`: how many were never launched.
+      - `marginal_gain`: the gain last measured, in new evidence items
+        per dollar of one branch's cost share.
+      - `threshold`: what it was compared against.
+      - `incremental_cost_usd`: what the branch that was *not* launched
+        would have been allowed to spend — its cost share. RFC 10 §8.6's
+        `incremental_cost_estimate`, and the number that makes the
+        comparison legible rather than a bare ratio.
+      - `gain_method`: how the gain was computed, named so an evaluation
+        can group by it rather than guess.
+    """
+
+    stopped: bool
+    stopped_after_branch_id: str
+    stopped_before_branch_id: str
+    branches_stopped: int
+    marginal_gain: float
+    threshold: float
+    incremental_cost_usd: float
+    gain_method: str
+
+
 class OrchestrationState(TypedDict, total=False):
     """CAP-03's policy keys — optional, for `VerifyRepairState`'s reason.
 
@@ -206,7 +303,7 @@ class OrchestrationState(TypedDict, total=False):
     here would either fail `mypy --strict` on a file this lane must not
     touch or move the scripted research tier's committed baseline.
 
-    Both keys are written only under
+    Every key is written only under
     `settings.research_policy="orchestrated_workers"` (or the compute
     controller's T2), and by nothing else. Under every other policy they
     never appear on the state at all, which is what makes their presence
@@ -217,10 +314,16 @@ class OrchestrationState(TypedDict, total=False):
         carrying its own outcome after the workers node runs.
       - `merged_evidence_provenance`: one entry per deduplicated paper
         in the merged evidence, naming the branches that found it.
+      - `candidate_selection`: what the listwise selector decided, when
+        `settings.candidate_selection` compiled a `select` node.
+      - `marginal_stop`: whether the branch loop stopped early, when
+        `settings.marginal_stop` is on.
     """
 
     worker_branches: list[WorkerBranch]
     merged_evidence_provenance: list[EvidenceProvenance]
+    candidate_selection: SelectionRecord
+    marginal_stop: MarginalStopRecord
 
 
 class ResearchState(VerifyRepairState, OrchestrationState):

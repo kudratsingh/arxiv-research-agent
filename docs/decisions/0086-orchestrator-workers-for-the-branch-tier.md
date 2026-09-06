@@ -236,3 +236,18 @@ branch run under arm C and make the branching invisible in the record.
   be a second `diversity_dimension` value and its own ADR;
   `tier_effort_overrides` does not accept a `T2.` key, because
   `COMPUTE_TIERS` is deliberately unextended.
+
+  **Amended 2026-09-06 (CAP-09, [ADR 0091](0091-listwise-candidate-selection-and-the-marginal-stop.md))
+  — the first follow-up is closed.** A `select` node compiled between
+  `workers` and `merge` ranks the branch candidates listwise and the
+  merge unions only what it selected; a marginal-stop rule inside
+  `run_branches`' own loop stops launching branches once the last one's
+  new evidence stopped paying for its share. Both default off, so this
+  ADR's graph is byte-identical on a deployment that has not asked for
+  them. `candidate_lineage_selector` is earned by the node and
+  `marginal_stop` by the setting (the decision is taken between two
+  iterations of one node, where no stage can represent it), which empties
+  arm E's capability gap and empties `UNRUNNABLE_ARMS` with it. The
+  candidate ids the selector names are the ones `branch_candidate`
+  already minted here — the whole reason this ADR recorded them before a
+  selector existed. The second and third follow-ups are still open.

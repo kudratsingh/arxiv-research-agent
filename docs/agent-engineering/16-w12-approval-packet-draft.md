@@ -242,7 +242,7 @@ completed episodes are preserved and the reason is published.
 | Four synthetic episodes, verified chains, zero parity mismatches | report §4 |
 | Denominator and identity integrity | report §5 |
 | Privacy, leakage, adversarial, ASR gate | report §6 |
-| W10 calibration protocol and fixtures | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry_calibration/` |
+| W10 calibration protocol and fixtures | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry/` (the calibration suite moved there byte for byte, ADR 0089) |
 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) |
 | Zero-external-call attestation | report §8 |
 

@@ -208,6 +208,16 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "campaign_episode_completed",
         "campaign_episode_failed",
         "campaign_episode_started",
+        # CAP-09 (ADR 0091). One name, and one on purpose: ADR 0086
+        # declined log events for branch *outcomes* because those are
+        # on the state, in the node's SSE message and in the
+        # trajectory — a richer record than a log line — and the same
+        # argument covers a selection that worked. What it does not
+        # cover is a selection that fell back: "the model selector was
+        # asked and its answer could not be used" is an operational
+        # fact about a deployment rather than a fact about a run, and
+        # nothing else records it.
+        "candidate_selection_degraded",
         "content_capture_flag_invalid",
         # P0-WO05 (ADR 0078). Three names, and only three: the shadow
         # binding is default-off scaffolding whose whole promise is

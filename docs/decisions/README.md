@@ -706,6 +706,34 @@ never renumbered.
   widened `ContentKind`, with "the checked-in tree is exactly what the
   modules build" restated over the union: 257 objects, 0 mismatches.
 
+- [0091](0091-listwise-candidate-selection-and-the-marginal-stop.md) —
+  **A listwise `select` stage and a marginal stop inside the branch
+  loop, which is what makes arm E runnable.** ADR 0086 shipped the
+  branch tier and named the two capabilities it did not build; ADR 0089
+  narrowed arm E's refusal to exactly those two names. `select` ranks a
+  run's branch candidates — each one a succeeded branch's evidence
+  table, already recorded as RFC 10 §6.4's `candidate.created` — in
+  **one** call over the whole list, and the merge unions only what it
+  selected. Pairwise was refused for O(N²) calls and for a ranking that
+  could depend on comparison order. Under mock the ranking is
+  deterministic and free; with a client it goes out as a schema through
+  `anthropic.transform_schema`, and an answer that does not name exactly
+  the eligible set degrades to the deterministic ranking rather than
+  being repaired into one. The marginal stop lives *inside*
+  `run_branches`' sequential loop, because a stop decided afterwards is
+  a report about dollars already gone; its gain is new deduplicated
+  papers plus new claims per dollar of the next branch's cost share, on
+  the merge's own dedup keys. Branches it never launched are recorded
+  `stopped`, not dropped. No new trajectory event type was needed —
+  `candidate.scored`, `candidate.selected` and `compute.stop_decided`
+  were already in W04's registry. `UNRUNNABLE_ARMS` is empty, arm E's
+  row becomes the real configuration (the controller, not a pinned
+  branch tier — ADR 0085 refuses both at once), and the mock full matrix
+  reconciles 300 completed / 0 excluded at `$0.000000`. Both settings
+  default off and every existing shape is byte-identical. The honest
+  cost is recorded too: on this suite the router picks T0 twelve times
+  and T1 eight, and never T2.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

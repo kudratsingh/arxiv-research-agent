@@ -58,6 +58,14 @@ FIELD_EXAMPLES: Final = 20
 #: the opposite, so the coupling is asserted where it belongs —
 #: `tests/test_research_policy.py` enumerates the whole 2x2x2 of
 #: companion flags rather than sampling it.
+#:
+#: `candidate_selection` and `marginal_stop` joined it with CAP-09 for
+#: the same shape of reason (ADR 0091): both act on *worker branches*,
+#: and a default `Settings` compiles no branch tier, so the non-default
+#: member of each is a declared value the model legitimately refuses on
+#: its own. The coupling is asserted where it belongs, in
+#: `tests/test_listwise_selection.py`, which builds the refused
+#: combination and reads the message.
 COUPLED_FIELDS: Final[frozenset[str]] = frozenset(
     {
         "job_lease_ttl_sec",
@@ -65,6 +73,8 @@ COUPLED_FIELDS: Final[frozenset[str]] = frozenset(
         "chunker_max_tokens",
         "chunker_overlap_tokens",
         "research_policy",
+        "candidate_selection",
+        "marginal_stop",
     }
 )
 

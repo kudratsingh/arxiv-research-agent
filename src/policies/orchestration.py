@@ -9,16 +9,22 @@ module is the first half of that tier (ADR 0086): N bounded workers,
 each researching one sub-question on its own isolated state, and a
 deterministic merge that unions their evidence tables with provenance.
 
-The second half — comparing candidate outlines and *selecting* one — is
-CAP-09 and is deliberately not here. What this module delivers is
-diversified retrieval with provenance, and the branch/candidate lineage
-a selector will need (RFC 10 §6.3–§6.4).
+The selection half of that tier is CAP-09's and lives beside this
+module in `src/policies/selection.py` (ADR 0091), because a listwise
+ranking is a graph *stage* and this file is the branch executor. What
+does live here is CAP-09's other half: the marginal-stop rule, inside
+`run_branches`' own loop, because a stop decided anywhere else would be
+a report about spend that already happened.
 
 ## The shape
 
 ```text
-planner -> lead -> workers -> merge -> synthesizer -> verify -> ...
+planner -> lead -> workers -> [select ->] merge -> synthesizer -> verify
 ```
+
+`select` is CAP-09's and is present only when
+`settings.candidate_selection` is `listwise`; with it off this shape is
+byte-identical to the one ADR 0086 published.
 
 - **lead** turns the plan's sub-questions into at most
   `orchestration_max_branches` branches, in the plan's own order. No
@@ -30,7 +36,8 @@ planner -> lead -> workers -> merge -> synthesizer -> verify -> ...
   and records what it found and what it spent.
 - **merge** unions the evidence tables, deduplicates papers by
   `canonical_paper_key`, and writes one provenance row per retained
-  paper. Also no model call.
+  paper. Also no model call. When a `select` stage ran, it unions only
+  the candidates that stage kept (ADR 0091).
 
 ## Isolation, and what it is worth
 
@@ -94,7 +101,7 @@ reader sees is measured either way.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Collection, Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Final
 
@@ -107,6 +114,7 @@ from src.config import settings
 from src.graph.state import (
     EvidenceClaim,
     EvidenceProvenance,
+    MarginalStopRecord,
     PaperAnalysis,
     PaperMetadata,
     ResearchState,
@@ -139,6 +147,7 @@ STATUS_SUCCEEDED: Final[str] = "succeeded"
 STATUS_FAILED: Final[str] = "failed"
 STATUS_CANCELLED: Final[str] = "cancelled"
 STATUS_BUDGET_STOPPED: Final[str] = "budget_stopped"
+STATUS_STOPPED: Final[str] = "stopped"
 
 BRANCH_STATUSES: Final[tuple[str, ...]] = (
     STATUS_PLANNED,
@@ -146,6 +155,7 @@ BRANCH_STATUSES: Final[tuple[str, ...]] = (
     STATUS_FAILED,
     STATUS_CANCELLED,
     STATUS_BUDGET_STOPPED,
+    STATUS_STOPPED,
 )
 """Every status a branch record can carry, for callers that enumerate."""
 
@@ -164,6 +174,15 @@ REASON_CANCELLED: Final[str] = "cancelled"
 
 #: Reason code for a failure that carries no `src/errors.py` code.
 REASON_UNEXPECTED: Final[str] = "internal_unexpected"
+
+#: Reason code for a branch the marginal-stop rule never launched.
+REASON_MARGINAL_STOP: Final[str] = "marginal_gain_below_threshold"
+
+#: How `branch_marginal_gain` measures a branch's contribution, named on
+#: the record so an evaluation can group by the method rather than
+#: assume one. A second method would be a second value and its own ADR,
+#: exactly as `DIVERSITY_DIMENSION` is.
+MARGINAL_GAIN_METHOD: Final[str] = "new_evidence_items_per_share_dollar"
 
 
 @dataclass(frozen=True)
@@ -458,6 +477,117 @@ def _settled(
     return settled
 
 
+def _contributed(
+    branches: Iterable[WorkerBranch],
+) -> tuple[set[str], set[tuple[str, str, str]]]:
+    """The papers and claims a set of branches has already contributed.
+
+    The same two dedup keys `merge_branches` uses — ADR 0041's
+    `canonical_paper_key` for papers and (paper, section, claim) for
+    claims — because "new" has to mean the same thing to the stop rule
+    as it does to the merge. A rule that counted a paper as new when the
+    merge would deduplicate it away would stop on gains the report never
+    receives.
+    """
+    papers: set[str] = set()
+    claims: set[tuple[str, str, str]] = set()
+    for branch in branches:
+        if branch["status"] != STATUS_SUCCEEDED:
+            continue
+        for paper in branch["papers"]:
+            papers.add(canonical_paper_key(paper["id"]))
+        for claim in branch["evidence"]:
+            claims.add(
+                (
+                    canonical_paper_key(claim["paper_id"]),
+                    claim["section"],
+                    claim["claim"],
+                )
+            )
+    return papers, claims
+
+
+def branch_marginal_gain(
+    preceding: Sequence[WorkerBranch], branch: WorkerBranch
+) -> float:
+    """What one branch added that the run did not already have, per dollar.
+
+    Pure, and defined only in quantities the run already tracks: the
+    deduplicated papers and the evidence claims this branch contributed
+    beyond every succeeded branch before it, divided by the dollars that
+    branch was allowed to spend (`cost_share_usd`, ADR 0086's third
+    cap).
+
+    **The denominator is the share, not the spend.** Two reasons, and
+    the second is the one that matters. A branch's actual spend is zero
+    under `USE_MOCK_DATA` and would make every gain infinite; and the
+    share is what the *next* branch would cost, which is the quantity a
+    stop decision is actually about — "was the last branch worth what
+    the next one will cost". Using the measured spend would compare a
+    gain against a bill that has already been paid.
+
+    Args:
+        preceding: Every branch settled before this one, in order.
+        branch: The branch whose contribution is being measured.
+
+    Returns:
+        New evidence items per share dollar. Never negative.
+    """
+    seen_papers, seen_claims = _contributed(preceding)
+    new_papers = {
+        canonical_paper_key(paper["id"]) for paper in branch["papers"]
+    } - seen_papers
+    new_claims = {
+        (canonical_paper_key(claim["paper_id"]), claim["section"], claim["claim"])
+        for claim in branch["evidence"]
+    } - seen_claims
+    items = len(new_papers) + len(new_claims)
+    share = float(branch["cost_share_usd"])
+    return items / share if share > 0 else float(items)
+
+
+def marginal_stop_record(branches: Sequence[WorkerBranch]) -> MarginalStopRecord:
+    """Read the stop decision back off the settled branch list.
+
+    Recomputed with the same `branch_marginal_gain` the loop decided
+    with, over the same branch records, at a point where the merge has
+    not yet released their bulk output — so it is the loop's own number
+    rather than a second estimate of it. Kept separate from
+    `run_branches` so that function's signature, and every caller and
+    test of it, stays exactly as ADR 0086 left it.
+
+    Returns a record whether or not the rule fired: "measured, and the
+    gain held" is a different fact from "never measured", and only a
+    record that exists in both cases distinguishes them.
+    """
+    stopped = [b for b in branches if b["status"] == STATUS_STOPPED]
+    succeeded = [b for b in branches if b["status"] == STATUS_SUCCEEDED]
+    threshold = float(settings.marginal_stop_threshold)
+    gain = 0.0
+    trigger = ""
+    if succeeded:
+        last = succeeded[-1]
+        preceding = branches[: branches.index(last)]
+        gain = branch_marginal_gain(preceding, last)
+        trigger = last["branch_id"] if stopped else ""
+    # What the branch that was not launched would have been allowed to
+    # spend. Read off a real branch record rather than recomputed from
+    # the settings, so the figure is the one the loop actually bound.
+    next_branch = stopped[0] if stopped else (branches[-1] if branches else None)
+    return MarginalStopRecord(
+        stopped=bool(stopped),
+        stopped_after_branch_id=trigger,
+        stopped_before_branch_id=stopped[0]["branch_id"] if stopped else "",
+        branches_stopped=len(stopped),
+        marginal_gain=round(gain, 6),
+        threshold=threshold,
+        incremental_cost_usd=(
+            float(next_branch["cost_share_usd"]) if next_branch is not None else 0.0
+        ),
+        gain_method=MARGINAL_GAIN_METHOD,
+    )
+
+
 def run_branches(
     state: ResearchState, *, execute: BranchExecutor | None = None
 ) -> list[WorkerBranch]:
@@ -569,11 +699,55 @@ def run_branches(
                 cost_usd=(costs.total_cost_usd - spent_before) if costs else 0.0,
             )
         )
+        if _stop_here(settled):
+            # Inside the loop, before the next branch is started, which
+            # is the only place the rule can actually prevent spend: a
+            # stop decided after the loop would be a report about
+            # dollars already gone. Everything still planned is recorded
+            # `stopped` rather than dropped — RFC 10 §6.3's closure does
+            # not delete a branch, and a run whose record simply ended
+            # would be indistinguishable from one that planned fewer.
+            for pending in branches[position + 1 :]:
+                if pending["status"] != STATUS_PLANNED:
+                    settled.append(pending)
+                    continue
+                settled.append(
+                    _settled(
+                        pending,
+                        status=STATUS_STOPPED,
+                        reason=REASON_MARGINAL_STOP,
+                    )
+                )
+            break
     return settled
 
 
+def _stop_here(settled: Sequence[WorkerBranch]) -> bool:
+    """Whether the branch just settled ends the loop. Off by default.
+
+    Asked of the *settled* list rather than of the outcome, so the rule
+    reads exactly the record `marginal_stop_record` will later report
+    and the two cannot disagree.
+
+    A failed, cancelled or budget-stopped branch never triggers a stop:
+    its gain is zero for reasons that have nothing to do with whether
+    more retrieval would help, and stopping on it would turn one
+    upstream fault into a shortened run.
+    """
+    if settings.marginal_stop != "on" or not settled:
+        return False
+    last = settled[-1]
+    if last["status"] != STATUS_SUCCEEDED:
+        return False
+    gain = branch_marginal_gain(settled[:-1], last)
+    return gain < float(settings.marginal_stop_threshold)
+
+
 def merge_branches(
-    branches: Sequence[WorkerBranch], *, base: MergedEvidence | None = None
+    branches: Sequence[WorkerBranch],
+    *,
+    base: MergedEvidence | None = None,
+    selected: Collection[str] | None = None,
 ) -> MergedEvidence:
     """Union every succeeded branch's table onto the base, deterministically.
 
@@ -608,10 +782,23 @@ def merge_branches(
     sub-questions frequently extract the same sentence and the
     synthesizer should see it once.
 
+    **Selection narrows the union; it never narrows the base.** When
+    `selected` is given (CAP-09's `select` node, ADR 0091), a succeeded
+    branch outside it contributes nothing to this merge — that is what
+    makes a listwise selector a decision rather than a report. What it
+    cannot touch is `base`: evidence an earlier pass already merged is
+    what the report was built on, and a later selection that could
+    retract it would be the same deletion ADR 0086 refused for the
+    repair. A rejected branch also keeps its record, its status and its
+    trajectory candidate; only its evidence stays out of the union.
+
     Args:
         branches: Every branch record, settled.
         base: What the run has already merged, or `None` for a first
             pass.
+        selected: Branch ids the selector kept, or `None` for "every
+            succeeded branch", which is CAP-03's behaviour and the
+            behaviour a deployment with no selector keeps.
 
     Returns:
         The merged tables, the provenance, and the branch records with
@@ -646,6 +833,8 @@ def merge_branches(
 
     for branch in branches:
         if branch["status"] != STATUS_SUCCEEDED:
+            continue
+        if selected is not None and branch["branch_id"] not in selected:
             continue
         for paper in branch["papers"]:
             key = canonical_paper_key(paper["id"])
@@ -755,10 +944,15 @@ def workers_node(state: ResearchState) -> dict[str, Any]:
     summary = (
         f"{len(succeeded)} of {len(branches)} branch(es) succeeded — {detail}."
     )
-    return {
+    update: dict[str, Any] = {
         "worker_branches": branches,
         "messages": [AIMessage(content=summary, name="workers")],
     }
+    if settings.marginal_stop == "on":
+        # Read back before the merge releases the branches' bulk output,
+        # which is the only window in which the gain is recomputable.
+        update["marginal_stop"] = marginal_stop_record(branches)
+    return update
 
 
 def _branch_failure(failed: Sequence[WorkerBranch]) -> Exception:
@@ -790,10 +984,19 @@ def merge_node(state: ResearchState) -> dict[str, Any]:
     as it does under every other policy, which is what keeps the
     downstream agents unchanged by this work order.
 
+    When a `select` stage ran, its record decides which branches this
+    merge unions (ADR 0091). The record is read off the state rather
+    than recomputed, so the evidence the report is built on and the
+    lineage the trajectory records are the same decision.
+
     Returns:
         Partial state update: the merged tables, the provenance, and the
         branch records with their bulk output released.
     """
+    selection = state.get("candidate_selection")
+    selected: Collection[str] | None = None
+    if selection is not None:
+        selected = frozenset(selection["selected_branch_ids"])
     merged = merge_branches(
         list(state.get("worker_branches", []) or []),
         base=MergedEvidence(
@@ -803,6 +1006,7 @@ def merge_node(state: ResearchState) -> dict[str, Any]:
             provenance=list(state.get("merged_evidence_provenance", []) or []),
             branches=[],
         ),
+        selected=selected,
     )
     summary = (
         f"Merged {len(merged.evidence)} evidence claim(s) across "

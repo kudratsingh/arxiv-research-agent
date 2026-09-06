@@ -642,12 +642,17 @@ def _build_orchestrated_workers(
     """Wire CAP-03's branch tier in front of arm C's verification stage.
 
     ```text
-    planner -> lead -> workers -> merge -> synthesizer -> verify
+    planner -> lead -> workers -> [select ->] merge -> synthesizer -> verify
     verify  -> repair   (verdict fail, no repair spent, one available)
     verify  -> critic   (pass | abstain | the repair is spent)
     repair  -> lead | synthesizer | critic
     critic  -> route_after_critique   (unchanged decision, remapped target)
     ```
+
+    `select` is CAP-09's listwise selector (ADR 0091) and is present
+    only when `settings.candidate_selection` is `listwise`; with the
+    setting at its default this shape is byte-identical to the one ADR
+    0086 published.
 
     Three new nodes and no new agent. `lead` bounds the planner's
     sub-questions into worker branches, `workers` runs each on an
@@ -685,7 +690,22 @@ def _build_orchestrated_workers(
     workflow.set_entry_point("planner")
     workflow.add_edge("planner", "lead")
     workflow.add_edge("lead", "workers")
-    workflow.add_edge("workers", "merge")
+    if settings.candidate_selection == "listwise":
+        # CAP-09's `select` stage (ADR 0091), between the workers and
+        # the merge because that is the only place a selection can still
+        # change what the run is built on: after the merge the branch
+        # tables are unioned and their bulk output released. Compiled on
+        # the setting rather than always, so a deployment that asked for
+        # no selector runs CAP-03's graph edge for edge — which is what
+        # keeps `candidate_lineage_selector` a capability a *node* earns
+        # rather than one a name claims.
+        from src.policies.selection import select_node
+
+        workflow.add_node("select", wrap("select", select_node))
+        workflow.add_edge("workers", "select")
+        workflow.add_edge("select", "merge")
+    else:
+        workflow.add_edge("workers", "merge")
     workflow.add_edge("merge", "synthesizer")
     workflow.add_edge("synthesizer", "verify")
 

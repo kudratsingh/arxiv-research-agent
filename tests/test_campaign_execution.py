@@ -8,13 +8,16 @@ measured rather than declared.
 
 Five groups, in the order the work order asks for them.
 
-1. **The full runnable matrix.** 20 queries x 3 repeats x arms A-D = 240
-   episodes end to end under mock mode, with the 60 arm-E slots excluded
-   with their typed reason. The ledger reconciles 240 completed, 60
-   excluded and nothing else; every episode reports `llm_calls=0`; the
-   campaign's total is exactly `$0.000000`; and a counting spy installed
-   over `src.llm._get_client` — *and* one over `socket.socket.connect` —
-   stays empty for the whole pass.
+1. **The full runnable matrix.** 20 queries x 3 repeats x arms A-E = 300
+   episodes end to end under mock mode, with nothing excluded. That last
+   clause is CAP-09's (ADR 0091): until arm E had a listwise selector and
+   a marginal-stop rule it was `capability_missing`, its 60 slots entered
+   the ledger as excluded-with-reason, and this module asserted the
+   exclusion "so the gap closes loudly". It closed. The ledger now
+   reconciles 300 completed, 0 excluded and nothing else; every episode
+   reports `llm_calls=0`; the campaign's total is exactly `$0.000000`;
+   and a counting spy installed over `src.llm._get_client` — *and* one
+   over `socket.socket.connect` — stays empty for the whole pass.
 2. **Resume.** An interrupted campaign skips what finished, never
    rewrites an episode directory, and appends a second attempt to an
    episode whose manifest was sealed and whose receipt was not.
@@ -29,7 +32,7 @@ Five groups, in the order the work order asks for them.
    metrics land in their own ledger buckets and stay in the denominator.
 
 Nothing here is canned. Group 1 drives the real compiled graph for every
-one of the 240 episodes; the fault-injection groups use a scripted runner
+one of the 300 episodes; the fault-injection groups use a scripted runner
 because the property under test is the *loop's* accounting, and a graph
 that cannot be made to time out on demand would not test it.
 """
@@ -109,7 +112,11 @@ SUITE_ID = "research-policy-v1"
 #: with any matrix.
 FULL_SUITE_CASES = 20
 FULL_SUITE_REPEATS = 3
-RUNNABLE_ARMS: tuple[ArmId, ...] = ("A", "B", "C", "D")
+#: Every arm is runnable since CAP-09 (ADR 0091). Kept as its own name
+#: rather than replaced by `ARM_IDS` so that the day an arm is declared
+#: before it is built, the two counts separate again without this module
+#: having to rediscover that it needs them.
+RUNNABLE_ARMS: tuple[ArmId, ...] = ARM_IDS
 EXPECTED_EPISODES = FULL_SUITE_CASES * FULL_SUITE_REPEATS * len(ARM_IDS)
 PLANNED_EPISODES = FULL_SUITE_CASES * FULL_SUITE_REPEATS * len(RUNNABLE_ARMS)
 EXCLUDED_EPISODES = EXPECTED_EPISODES - PLANNED_EPISODES
@@ -408,7 +415,7 @@ class TestTheFullMatrixRunsAtZeroCost:
         """The claim this whole work order exists to make, measured twice.
 
         Once in aggregate — the summary's three cost categories are each
-        exactly zero — and once per episode, because an aggregate of 240
+        exactly zero — and once per episode, because an aggregate of 300
         rounded numbers could hide a small one.
         """
         costs = full_matrix.report.summary.costs
@@ -432,30 +439,77 @@ class TestTheFullMatrixRunsAtZeroCost:
     ) -> None:
         assert full_matrix.tripwire.touched == []
 
-    def test_arm_e_contributed_sixty_excluded_slots_with_a_typed_reason(
+    def test_arm_e_contributed_sixty_run_slots_and_nothing_was_excluded(
         self, full_matrix: MatrixRun
     ) -> None:
+        """The assertion this module used to make, inverted by CAP-09.
+
+        It read `test_arm_e_contributed_sixty_excluded_slots_with_a_typed_reason`
+        and it was right to: nothing in this repository selected a
+        candidate listwise or decided a marginal stop, so arm E's sixty
+        slots could only be excluded-with-reason. ADR 0091 built both,
+        `UNRUNNABLE_ARMS` emptied, and the same sixty slots now run —
+        under the deterministic compute controller with the branch tier
+        available to it as T2, at exactly the same zero cost as every
+        other arm, because the mock selector makes no model call.
+        """
         ledger = json.loads(
             (full_matrix.directory / "campaign-ledger.json").read_text(encoding="utf-8")
         )
-        excluded = [
+        assert [
             entry for entry in ledger["entries"] if entry["status"] == "excluded"
+        ] == []
+
+        arm_e = [
+            episode for episode in full_matrix.plan.runnable if episode.arm_id == "E"
         ]
-        assert len(excluded) == EXCLUDED_EPISODES
-        assert {entry["arm_id"] for entry in excluded} == {"E"}
-        assert {entry["exclusion_reason"] for entry in excluded} == {
-            "arm_capability_missing"
-        }
-        # And no arm-E slot has a directory: an excluded episode is not a
-        # failed one, and nothing ran for it.
-        assert not list(full_matrix.directory.glob("episodes/*/*/arm-E"))
+        assert len(arm_e) == FULL_SUITE_CASES * FULL_SUITE_REPEATS
+        # And every one of them has a directory with a terminal receipt:
+        # a runnable episode is one that ran, not one that was planned.
+        for episode in arm_e:
+            target = full_matrix.directory / episode.output_path
+            assert (target / COMPLETION_FILENAME).is_file()
+
+    def test_arm_e_sealed_a_manifest_naming_the_arm_and_its_bounds(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        """RFC 09 §7.2's arm-E snapshot, read off a sealed episode.
+
+        The tiers, the router version, the branch cap, the selection
+        method and the marginal-stop version are *manifest inputs* —
+        which tier a given episode actually selected is a runtime fact
+        RFC 09 keeps out of the snapshot on purpose, so this asserts the
+        inputs and nothing about the routing.
+        """
+        episode = next(
+            item for item in full_matrix.plan.runnable if item.arm_id == "E"
+        )
+        target = full_matrix.directory / episode.output_path
+        manifest = json.loads(
+            (target / "run-manifest.json").read_text(encoding="utf-8")
+        )
+        policy = manifest["payload"]["policy"]
+        assert policy["policy_kind"] == "research_arm"
+        assert policy["arm_id"] == "E"
+        assert policy["selector"] == "adaptive_verified"
+        assert policy["capabilities"]["adaptive_compute"] is True
+        assert policy["runtime_flags"]["enable_supervisor"] is False
+        assert policy["config"]["allowed_tiers"] == ["T0", "T1", "T2"]
+        assert policy["config"]["selection"] == "listwise"
+        assert policy["config"]["marginal_stop_policy_version"] == "1.0.0"
+        assert {
+            "adaptive_compute_router",
+            "candidate_branching",
+            "candidate_lineage_selector",
+            "marginal_stop",
+        } <= set(policy["graph_capabilities"])
 
     def test_every_episode_wrote_the_files_rfc_09_requires(
         self, full_matrix: MatrixRun
     ) -> None:
         """RFC 09 §5.3's episode layout, checked on a sample of one per arm.
 
-        One per arm rather than all 240: the writer is the same code
+        One per arm rather than all 300: the writer is the same code
         path for every slot, and the arms differ in what the *graph*
         does, which is what the sample is chosen along.
         """
@@ -1109,6 +1163,11 @@ class TestEveryOutcomeStaysInTheDenominator:
                 "B": (CompletionStatus.FAILED, RunReason.PROVIDER_ERROR),
                 "C": (CompletionStatus.CANCELLED, RunReason.OPERATOR_INTERRUPT),
                 "D": (CompletionStatus.FAILED, RunReason.TIMEOUT),
+                # Arm E used to be the excluded slot that kept this
+                # matrix's fifth bucket non-empty. Since CAP-09 it runs
+                # like any other arm (ADR 0091), so it is scripted to the
+                # one terminal outcome the other four do not cover.
+                "E": (CompletionStatus.BUDGET_STOPPED, RunReason.EPISODE_BUDGET_EXHAUSTED),
             }
         )
         report = execute_campaign(
@@ -1126,13 +1185,13 @@ class TestEveryOutcomeStaysInTheDenominator:
             "errored": 1,
             "cancelled": 1,
             "timed_out": 1,
-            "budget_stopped": 0,
+            "budget_stopped": 1,
             "null_metric": 0,
-            "excluded": 1,
+            "excluded": 0,
         }
         assert report.summary.denominators.expected == 5
         assert report.summary.denominators.accounted == 5
-        assert report.summary.denominators.analysis_denominator == 4
+        assert report.summary.denominators.analysis_denominator == 5
         assert report.completed == 1
 
         directory = tmp_path / plan.campaign_id
@@ -1143,6 +1202,7 @@ class TestEveryOutcomeStaysInTheDenominator:
         assert by_arm["B"].ledger_status is LedgerStatus.ERRORED
         assert by_arm["C"].ledger_status is LedgerStatus.CANCELLED
         assert by_arm["D"].ledger_status is LedgerStatus.TIMED_OUT
+        assert by_arm["E"].ledger_status is LedgerStatus.BUDGET_STOPPED
         # Every failure still wrote its terminal receipt and its record:
         # "failed episodes remain in artifacts and denominators".
         for arm in RUNNABLE_ARMS:
@@ -1439,25 +1499,28 @@ class TestTheRunVerb:
         ]
         assert main(["plan", *argv]) == EXIT_OK
         planned = json.loads(capsys.readouterr().out)
-        assert planned["planned_episode_count"] == 1
-        assert planned["excluded_episode_count"] == 1
+        # Two, not one-and-one-excluded: arm E is runnable since CAP-09
+        # (ADR 0091), so the operator's smallest useful campaign now
+        # exercises the adaptive arm beside the fixed one.
+        assert planned["planned_episode_count"] == 2
+        assert planned["excluded_episode_count"] == 0
 
         assert (
             main(["run", "--campaign-id", planned["campaign_id"], *argv]) == EXIT_OK
         )
         ran = json.loads(capsys.readouterr().out)
         assert ran["campaign_id"] == planned["campaign_id"]
-        assert ran["attempted"] == 1
-        assert ran["completed"] == 1
+        assert ran["attempted"] == 2
+        assert ran["completed"] == 2
         assert ran["model_calls"] == 0
         assert ran["observed_cost_usd"] == "0.000000"
         assert ran["stop_reason"] == "completed"
-        assert ran["counts"]["excluded"] == 1
-        assert ran["analysis_denominator"] == 1
+        assert ran["counts"]["excluded"] == 0
+        assert ran["analysis_denominator"] == 2
 
         assert main(["status", "--campaign-id", planned["campaign_id"], *argv]) == EXIT_OK
         status = json.loads(capsys.readouterr().out)
-        assert status["counts"]["completed"] == 1
+        assert status["counts"]["completed"] == 2
         assert status["expected"] == 2
 
     def test_run_without_a_campaign_id_is_a_usage_error(self) -> None:

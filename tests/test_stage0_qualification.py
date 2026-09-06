@@ -105,7 +105,6 @@ from src.contracts.registry import (
     TaskSet,
 )
 from src.contracts.research_binding import (
-    ARM_REQUIRED_CAPABILITIES,
     GraphShape,
     LegacyOutcome,
     compile_research_intake,
@@ -134,9 +133,21 @@ FULL_SUITE_CASES = 20
 FULL_SUITE_REPEATS = 3
 FULL_SUITE_ARMS = 5
 EXPECTED_EPISODES = FULL_SUITE_CASES * FULL_SUITE_REPEATS * FULL_SUITE_ARMS
-RUNNABLE_ARMS: tuple[ArmId, ...] = ("A", "B", "C", "D")
+#: Every arm is runnable since CAP-09 (ADR 0091). The report's 300/240/60
+#: became 300/300/0 with arm E's listwise selector and marginal-stop rule.
+RUNNABLE_ARMS: tuple[ArmId, ...] = ARM_IDS
 PLANNED_EPISODES = FULL_SUITE_CASES * FULL_SUITE_REPEATS * len(RUNNABLE_ARMS)
 EXCLUDED_EPISODES = EXPECTED_EPISODES - PLANNED_EPISODES
+
+#: The arms whose *own compiled graph* is the arm, which is what the
+#: per-arm node-route test below asserts. Arm E is deliberately not one
+#: of them and the omission is the arm's definition rather than a gap:
+#: its identity is a deterministic controller selecting among T0, T1 and
+#: T2 (ADR 0089), so no single compiled graph is arm E and a run that
+#: routed to T0 classifies — correctly — as the graph it ran. What the
+#: *deployment* earns is read by `read_deployment_shape` and proved in
+#: `tests/test_listwise_selection.py` and `tests/test_campaign_execution.py`.
+FIXED_ROUTE_ARMS: tuple[ArmId, ...] = ("A", "B", "C", "D")
 
 #: A two-case slice for everything that is not the full-matrix claim.
 #: The matrix arithmetic is proved once, at full size; repeating it in
@@ -284,9 +295,23 @@ def compiled_under(cfg: Settings) -> Iterator[Any]:
 
 
 def graph_shape_for(arm: ArmId, cfg: Settings) -> GraphShape:
-    """The shape of the graph this checkout compiles for one arm."""
+    """The shape of the *primary* graph this checkout compiles for one arm."""
     with compiled_under(arm_settings(cfg, arm)) as app:
         return read_graph_shape(app)
+
+
+def deployment_shape_for(arm: ArmId, cfg: Settings) -> GraphShape:
+    """Every shape one arm's deployment can select among (ADR 0091).
+
+    The same object as `graph_shape_for` for every arm whose compute
+    controller is off, which is A-D. Arm E's controller is on, so its
+    process holds the T0, T1 and T2 graphs and what the arm can do is a
+    property of the set rather than of whichever is primary.
+    """
+    from src.contracts.research_binding import read_deployment_shape
+
+    with compiled_under(arm_settings(cfg, arm)) as app:
+        return read_deployment_shape(app)
 
 
 @pytest.fixture(autouse=True)
@@ -454,9 +479,17 @@ class TestTheContractDefectsW07Found:
 class TestTheDryRunLocksTheWholeDevelopmentSuite:
     pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
-    def test_the_matrix_is_three_hundred_slots_of_which_sixty_are_excluded(
+    def test_the_matrix_is_three_hundred_slots_of_which_none_are_excluded(
         self,
     ) -> None:
+        """The report's 300/240/60 became 300/300/0 with CAP-09.
+
+        The sixty excluded slots were arm E's, and they were excluded
+        because nothing in this repository selected a candidate listwise
+        or decided a marginal stop. ADR 0091 built both. Nothing else
+        about the matrix moved: the same twenty cases, the same three
+        repeats, the same zero projected cost.
+        """
         cfg = config()
         cases = suite_case_ids()
         assert len(cases) == FULL_SUITE_CASES
@@ -464,14 +497,12 @@ class TestTheDryRunLocksTheWholeDevelopmentSuite:
         report = dry_run(plan)
 
         assert report.expected_episode_count == EXPECTED_EPISODES
-        assert report.planned_episode_count == PLANNED_EPISODES
-        assert report.excluded_episode_count == EXCLUDED_EPISODES
+        assert report.planned_episode_count == PLANNED_EPISODES == 300
+        assert report.excluded_episode_count == EXCLUDED_EPISODES == 0
         assert report.chargeable is False
         assert len(report.episodes) == EXPECTED_EPISODES
         assert {item.projected_cost_usd for item in report.episodes} == {"0.000000"}
-        excluded = [item for item in report.episodes if item.status == "excluded"]
-        assert {item.arm_id for item in excluded} == {"E"}
-        assert {item.exclusion_reason for item in excluded} == {"arm_capability_missing"}
+        assert [item for item in report.episodes if item.status == "excluded"] == []
 
     def test_every_input_is_pinned_by_an_exact_revision_and_digest(self) -> None:
         cfg = config()
@@ -534,7 +565,7 @@ class TestTheFiveArmIdentities:
         )
         case = SLICE_CASES[0]
         sealed = {}
-        for arm in RUNNABLE_ARMS:
+        for arm in FIXED_ROUTE_ARMS:
             episode = next(
                 item
                 for item in plan.runnable
@@ -614,36 +645,50 @@ class TestTheFiveArmIdentities:
         with pytest.raises(CampaignError, match="not the declared arm C"):
             classify_arm(cfg, "C", shape)
 
-    def test_arm_e_is_schema_valid_capability_missing_and_not_runnable(self) -> None:
+    def test_arm_e_is_earned_by_its_deployment_and_by_no_other_graph(self) -> None:
+        """The report's arm-E row, inverted by CAP-09 (ADR 0091).
+
+        Two halves, and both matter. Arm E is now *available* — its own
+        deployment compiles the branch tier, the selector node and the
+        stop rule under a compute controller, and earns all four
+        capabilities. And it is still refused on any other graph, which
+        is the honesty rule the report's original row was protecting:
+        arm D's shape earns two of the four from arm E's settings and
+        neither of the two that are nodes.
+        """
         cfg = config()
+
         declared = declare_arm("E", graph=graph_shape_for("D", cfg))
         assert declared.status == "capability_missing"
         assert declared.runnable is False
-        assert declared.missing_capabilities == ARM_REQUIRED_CAPABILITIES["E"]
         assert set(declared.missing_capabilities) == {
-            "adaptive_compute_router",
             "candidate_branching",
-            "marginal_stop",
             "candidate_lineage_selector",
         }
         # Schema-valid: it round-trips through its own model.
         assert declared.model_validate(declared.model_dump()) == declared
 
+        earned = declare_arm("E", graph=deployment_shape_for("E", cfg))
+        assert earned.status == "available"
+        assert earned.runnable is True
+        assert earned.missing_capabilities == ()
+
         plan = plan_campaign(
             cfg, request(cfg, cases=SLICE_CASES, repeats=1), resolver=registry()
         )
-        excluded = [item for item in plan.episodes if item.arm_id == "E"]
-        assert excluded and all(not item.runnable for item in excluded)
-        with pytest.raises(CampaignError, match="capability_missing"):
-            seal_campaign_episode(
-                cfg,
-                campaign=plan.manifest,
-                episode=excluded[0],
-                task_spec=plan.task_spec_for(excluded[0].case_id),
-                graph=graph_shape_for("D", cfg),
-                approval_backend=LocalApprovalRecordBackend(),
-                credential_probe=NoCredentialProbe(),
-            )
+        episodes = [item for item in plan.episodes if item.arm_id == "E"]
+        assert episodes and all(item.runnable for item in episodes)
+        sealed = seal_campaign_episode(
+            cfg,
+            campaign=plan.manifest,
+            episode=episodes[0],
+            task_spec=plan.task_spec_for(episodes[0].case_id),
+            graph=deployment_shape_for("E", cfg),
+            approval_backend=LocalApprovalRecordBackend(),
+            credential_probe=NoCredentialProbe(),
+        )
+        assert sealed.manifest.payload.policy.arm_id == "E"
+        assert sealed.manifest.payload.policy.selector == "adaptive_verified"
 
     def test_the_common_settings_are_frozen_and_the_differences_are_the_arm_table(
         self,
@@ -656,11 +701,22 @@ class TestTheFiveArmIdentities:
                 f"{name} is a common frozen setting and differs between arms"
             )
         # And every other setting an arm owns is exactly the arm table's.
-        difference_keys = set(ARM_SETTINGS["A"])
+        # The arms no longer declare the *same* keys — arm E turns on four
+        # that no other arm names (ADR 0091) — so the claim is checked in
+        # both directions: what an arm declares it holds, and what only
+        # another arm declares it leaves at the shipped default.
+        difference_keys = {key for row in ARM_SETTINGS.values() for key in row}
         for arm, settings in per_arm.items():
-            assert {
-                key: getattr(settings, key) for key in difference_keys
-            } == dict(ARM_SETTINGS[arm])
+            declared = dict(ARM_SETTINGS[arm])
+            for key in difference_keys:
+                expected = declared.get(key, getattr(shipped_settings, key))
+                assert getattr(settings, key) == expected, f"{arm}.{key}"
+        # Arm E is the only arm that turns the compute controller on, and
+        # that is its identity rather than an incidental difference.
+        assert {
+            arm for arm, row in ARM_SETTINGS.items()
+            if row.get("compute_controller") == "deterministic"
+        } == {"E"}
         # The held-out factors and the safety floor are not arm differences.
         assert per_arm["A"].enable_prompt_isolation is True
         assert per_arm["A"].enable_query_refiner is False
@@ -684,7 +740,7 @@ class TestTheSyntheticEpisodes:
     #: selection, which `-m "not e2e"` would otherwise exclude.
     pytestmark = [pytest.mark.integration, pytest.mark.contract]
 
-    @pytest.mark.parametrize("arm", RUNNABLE_ARMS)
+    @pytest.mark.parametrize("arm", FIXED_ROUTE_ARMS)
     def test_each_runnable_identity_runs_end_to_end_and_reconstructs(
         self, arm: ArmId, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -815,12 +871,23 @@ class TestTheSyntheticEpisodes:
         assert costs.total_cost_usd == 0.0
         assert costs.call_count == 0
 
-    def test_arm_e_has_no_episode_to_run(self) -> None:
-        """The refusal is typed, and it is not a graph that failed."""
+    def test_arm_e_is_refused_on_a_graph_that_does_not_earn_it(self) -> None:
+        """The refusal is typed, and it now names the graph that ran.
+
+        Before CAP-09 this asserted that arm E had no episode at all:
+        `UNRUNNABLE_ARMS` answered before any graph was read, so the
+        message said `capability_missing` and nothing about the shape.
+        ADR 0091 emptied that constant, and the refusal comes from the
+        classifier — which is strictly more informative, because it can
+        say both what ran and what is absent.
+        """
         cfg = config()
-        with pytest.raises(CampaignError, match="capability_missing"):
+        with pytest.raises(CampaignError, match="not the declared arm E") as caught:
             classify_arm(cfg, "E", graph_shape_for("D", cfg))
-        assert declare_arm("E").missing_capabilities == ARM_REQUIRED_CAPABILITIES["E"]
+        assert "candidate_branching" in str(caught.value)
+        # And an unprobed arm E is `unverified` like every other arm: the
+        # capability question is now the graph's to answer.
+        assert declare_arm("E").status == "unverified"
 
 
 # ---------------------------------------------------------------------------
