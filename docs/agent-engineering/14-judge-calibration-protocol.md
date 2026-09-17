@@ -972,3 +972,54 @@ unchanged: `python -m src.calibration.suite parity` still proves this
 suite's objects are exactly what the fixtures build, and
 `python -m src.contracts.registry parity` proves the whole tree is
 exactly what every module builds.
+
+## 17. Amendment — offline labeling packets and ingest (2026-09-17)
+
+The registered synthetic suite can now be rendered as two independent,
+offline expert packets:
+
+```bash
+VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python
+ANTHROPIC_API_KEY=local-preview-disabled USE_MOCK_DATA=true \
+  "$VENV_PYTHON" -m src.calibration packets \
+  --output outputs/calibration-labeling
+```
+
+The generated `expert-a.json` and `expert-b.json` contain the same 30
+registered items under their blinded ids. They carry only the material an
+annotator needs, the decision vocabulary, and blank decision, confidence,
+and rationale fields. They do not carry real case ids, expected decisions,
+authored rationales, or slice assignments. Pairwise material is AB in one
+packet and BA in the other, so presentation order cannot be mistaken for
+report identity. The steward replaces the top-level `annotator_id: null` with
+the expert's pseudonym, the expert fills every item's `response`, and that
+completed packet is the label file consumed by the report command. `outputs/`
+is ignored; completed labels remain operator
+artifacts until the owner approves the label-specific retention and consent
+decision in §14.
+
+The command also writes `synthetic-labels.json`. It contains deterministic
+fixture decisions chosen to exercise one false pass, one false fail, and one
+abstention. It is a dry-run artifact, not an expert label and not calibration
+evidence. Report it with:
+
+```bash
+ANTHROPIC_API_KEY=local-preview-disabled USE_MOCK_DATA=true \
+  "$VENV_PYTHON" -m src.calibration report \
+  --labels outputs/calibration-labeling/synthetic-labels.json \
+  --output outputs/calibration-labeling/synthetic-report.md
+```
+
+Ingest is strict: every registered blinded item must occur exactly once, no
+unknown item is accepted, the label type and vocabulary must match the sealed
+registry, and pairwise labels must record their presentation order. The report
+normalizes BA decisions back to report identity, then publishes exact
+categorical agreement, φ/MCC where the binary margins define it, false-pass,
+false-fail, and abstention counts with denominators for the full set and every
+registered slice. Pairwise decisions contribute to categorical agreement and
+abstention; they do not acquire a fabricated pass/fail projection.
+
+This workflow starts no labeling campaign. It makes the already-approved
+synthetic material ready for offline review and proves the ingest arithmetic.
+The §12 and §14 approval gates still block expert time on real material, live
+judge calls, and any promotion claim.
