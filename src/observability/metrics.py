@@ -162,7 +162,7 @@ can never disagree with the health endpoint.
 instruments are live in an API worker and nowhere else — `make run`
 and `make eval` set `enable_metrics` in vain, because those processes
 install no provider and every helper below returns on its `None`
-check. That is deliberate, not an oversight: eleven of the twenty-two
+check. That is deliberate, not an oversight: eleven of the twenty-four
 instruments describe a *server* (job outcomes, queue depth,
 concurrency, 429s, degradations, and the HTTP server family), and a
 one-shot CLI run has no steady state for the four observable gauges

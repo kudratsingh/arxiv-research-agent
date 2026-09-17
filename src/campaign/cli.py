@@ -117,8 +117,9 @@ def _parser() -> argparse.ArgumentParser:
         "--arms",
         default=",".join(ARM_IDS),
         help=(
-            "Comma-separated arms. Default: all five. Arm E is always "
-            "declared capability_missing and is never planned as runnable."
+            "Comma-separated arms. Default: all five. Arm E is probed like "
+            "every other arm; it runs when this checkout holds its four "
+            "settings and is capability_missing when it does not (ADR 0091)."
         ),
     )
     parser.add_argument("--repeats", type=int, default=3, help="Repeats per condition.")

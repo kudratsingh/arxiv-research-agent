@@ -44,7 +44,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get the current status + result of a job. */
+        /**
+         * Get the current status + result of a job.
+         * @description Read one job's lifecycle snapshot, whatever stage it has reached.
+         *
+         *     A job the caller does not own answers the same 404 as one that never
+         *     existed, so the response never confirms an id (ADR 0036).
+         */
         get: operations["get_research_research__job_id__get"];
         put?: never;
         post?: never;
@@ -153,7 +159,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List conversations, newest first (no job bodies), paginated. */
+        /**
+         * List conversations, newest first (no job bodies), paginated.
+         * @description List the caller's own conversations, newest first.
+         *
+         *     Report bodies stay out of the page: this feeds the sidebar, and the
+         *     window is applied in the store's SQL rather than in Python (ADR 0043).
+         */
         get: operations["list_conversations_conversations_get"];
         put?: never;
         /**
@@ -179,11 +191,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Full conversation thread including every job's report body. */
+        /**
+         * Full conversation thread including every job's report body.
+         * @description Return one conversation thread with every job's report body.
+         *
+         *     Unknown and not-yours are the same 404 here as everywhere else, so a
+         *     caller cannot probe for ids they do not own (ADR 0036).
+         */
         get: operations["get_conversation_conversations__conversation_id__get"];
         put?: never;
         post?: never;
-        /** Delete a conversation + all its jobs. */
+        /**
+         * Delete a conversation + all its jobs.
+         * @description Delete one conversation and every job filed under it — 204, no body.
+         *
+         *     Ownership is part of the delete statement, so the row cannot change
+         *     hands between the check and the destructive call (ADR 0043).
+         */
         delete: operations["delete_conversation_conversations__conversation_id__delete"];
         options?: never;
         head?: never;
@@ -380,7 +404,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Start one checkpointed guided-read session. */
+        /**
+         * Start one checkpointed guided-read session.
+         * @description Start a guided read of one published resource and return 202.
+         *
+         *     A learner profile is a precondition, not a convenience: it seeds the
+         *     tutor's tier-1 memory, so without one the session is refused.
+         */
         post: operations["create_session_learn_sessions_post"];
         delete?: never;
         options?: never;
@@ -395,7 +425,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read one guided session and its currently parked turn. */
+        /**
+         * Read one guided session and its currently parked turn.
+         * @description Read one session, its transcript, and the turn it is parked on.
+         *
+         *     An unreadable checkpoint still answers: the job row alone makes a valid
+         *     response, flagged `transcript_status="unavailable"`.
+         */
         get: operations["get_session_learn_sessions__session_id__get"];
         put?: never;
         post?: never;
@@ -414,7 +450,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Resume a parked guided session with the learner's reply. */
+        /**
+         * Resume a parked guided session with the learner's reply.
+         * @description Hand the learner's reply to a session parked on a turn.
+         *
+         *     The reply is persisted before the runner is woken, so a resume lost in
+         *     transit costs a retry rather than the turn. Any other status is 409.
+         */
         post: operations["submit_turn_learn_sessions__session_id__turn_post"];
         delete?: never;
         options?: never;
@@ -1115,7 +1157,13 @@ export interface components {
             /** Action */
             action: string;
         };
-        /** SessionAccepted */
+        /**
+         * SessionAccepted
+         * @description `POST /learn/sessions` response — 202 Accepted, tutor loop in flight.
+         *
+         *     `stream_url` is the shared SSE transport under `/research`, which the
+         *     session loop reuses rather than duplicating.
+         */
         SessionAccepted: {
             /** Session Id */
             session_id: string;
@@ -1126,7 +1174,13 @@ export interface components {
             /** Stream Url */
             stream_url: string;
         };
-        /** SessionCreateRequest */
+        /**
+         * SessionCreateRequest
+         * @description Body for `POST /learn/sessions` — which resource, and for how long.
+         *
+         *     `available_minutes` is an override; omitted, the session takes the
+         *     learner's daily time budget from their profile.
+         */
         SessionCreateRequest: {
             /** Path Id */
             path_id: string;
@@ -1135,7 +1189,13 @@ export interface components {
             /** Available Minutes */
             available_minutes?: number | null;
         };
-        /** SessionDetail */
+        /**
+         * SessionDetail
+         * @description `GET /learn/sessions/{id}` — the full state of one guided session.
+         *
+         *     Composed from the job row plus the graph checkpoint;
+         *     `transcript_status` says which of the two the client actually got.
+         */
         SessionDetail: {
             /** Session Id */
             session_id: string;
@@ -1194,7 +1254,13 @@ export interface components {
             /** Llm Calls */
             llm_calls: number | null;
         };
-        /** SessionTranscriptEntry */
+        /**
+         * SessionTranscriptEntry
+         * @description One exchanged line of a guided session: who spoke, and what they said.
+         *
+         *     The two roles are the whole cast — there is no system or tool voice on
+         *     the transcript a learner reads back.
+         */
         SessionTranscriptEntry: {
             /**
              * Role
@@ -1204,7 +1270,13 @@ export interface components {
             /** Text */
             text: string;
         };
-        /** SessionTurnAccepted */
+        /**
+         * SessionTurnAccepted
+         * @description `POST /learn/sessions/{id}/turn` response — the reply was taken.
+         *
+         *     Acceptance is not an answer: the tutor's response to the turn arrives
+         *     over the session's stream, never in this body.
+         */
         SessionTurnAccepted: {
             /** Session Id */
             session_id: string;
@@ -1213,7 +1285,13 @@ export interface components {
             /** Accepted */
             accepted: boolean;
         };
-        /** SessionTurnRequest */
+        /**
+         * SessionTurnRequest
+         * @description Body for `POST /learn/sessions/{id}/turn` — the learner's reply.
+         *
+         *     One of the two fields must carry something: an empty message is only
+         *     a valid turn when it is also the request to end the session.
+         */
         SessionTurnRequest: {
             /**
              * Message
