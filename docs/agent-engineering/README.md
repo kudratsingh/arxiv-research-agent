@@ -94,6 +94,14 @@ build next, and in what evidence-gated order?**
     `ESTIMATE / RE-PRICE BEFORE APPROVAL`, the preconditions that are not met
     are listed rather than discovered after an approval, and the go/no-go
     question is left unanswered. **Not an approval request.**
+17. [`17-w11f1-retention-options.md`](17-w11f1-retention-options.md) — the
+    options memo for finding W11-F1: the artifact store's private-reasoning
+    screen refuses any body containing "chain-of-thought", which costs the
+    evidence-path arms their briefing bytes on a benchmark made of
+    LLM-research questions. States what the rule protects, measures the loss
+    (and shows the same rule also refuses a retrieved paper's own abstract
+    under `source_document`), and sets out three options with costs and
+    risks. **Recommends one; the owner decides. No behaviour change.**
 
 ## P0 implementation status
 

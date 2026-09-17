@@ -1043,6 +1043,107 @@ class TestTheCandidateRoleCannotReachEvaluationMaterial:
             "a refused body must not be persisted for debugging"
         )
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "W11-F1 — the artifact store's private-reasoning screen refuses "
+            "an evidence-path briefing because a source abstract it quotes "
+            "verbatim contains 'chain-of-thought prompting'. The loss is "
+            "measured and the options are written up in "
+            "docs/agent-engineering/17-w11f1-retention-options.md; the owner "
+            "decides. This test asserts the behaviour the memo recommends, "
+            "so it XPASSes loudly the day the rule changes and this pin, the "
+            "memo and ADR 0083 are reconciled in one go."
+        ),
+    )
+    def test_w11f1_a_briefing_quoting_a_source_abstract_keeps_its_bytes(
+        self, tmp_path: Path
+    ) -> None:
+        """The measured loss, pinned as the behaviour we do not have.
+
+        The sibling test above pins the *refusal* on a hand-written body.
+        This one pins the **loss**: it builds the briefing the evidence
+        path actually produces, from the shipped fixture corpus at the
+        shipped `reader_max_claims_per_paper` default of 5, and asks for
+        it to be stored.
+
+        What makes it a false positive rather than a judgement call is
+        visible in the body itself. The phrase arrives inside an
+        `Evidence (abstract):` span — text quoted verbatim from a
+        retrieved paper, which the run did not author and which is the
+        opposite of private reasoning. One sentence of one of the five
+        fixture abstracts carries it, and the whole ~4.9 kB document is
+        refused for it.
+
+        The loss is also *asymmetric*, which is why it matters to an
+        experiment rather than only to a log: arm A does not run the
+        evidence path, so its briefing has no quoted abstract, trips
+        nothing and is stored. Arms B, C and D do, and lose their bytes.
+        That is the exact axis `research-policy-v1` compares.
+
+        Today `store.put` raises `ArtifactRefused` and this test xfails.
+        `strict=True` is the point: whoever narrows the rule gets a
+        failing XPASS rather than a silently-still-skipped test.
+        """
+        from src.agents.mock_mode import (
+            mock_analysis,
+            mock_briefing,
+            mock_claims,
+            mock_plan,
+        )
+        from src.agents.search import MOCK_PAPERS
+        from src.contracts.artifact_store import LocalArtifactStore
+        from src.contracts.kernel import DataClass
+        from src.contracts.research_binding import retention_policy_ref
+        from src.contracts.trajectory import TrustClass
+
+        sub_questions, _ = mock_plan(QUERY)
+        papers = list(MOCK_PAPERS)
+        evidence = [
+            claim
+            for paper in papers
+            for claim in mock_claims(
+                paper,
+                sub_questions=sub_questions,
+                max_claims=config().reader_max_claims_per_paper,
+            )
+        ]
+        briefing, _ = mock_briefing(
+            query=QUERY,
+            sub_questions=sub_questions,
+            papers=papers,
+            analyses=[mock_analysis(paper) for paper in papers],
+            evidence=evidence,
+            evidence_path=True,
+        )
+
+        # The input, so an XPASS cannot be caused by the fixture drifting
+        # out from under the finding instead of by the rule being fixed.
+        assert PRIVATE_REASONING_FALSE_POSITIVE.search(briefing), (
+            "the fixture corpus no longer quotes 'chain-of-thought' into "
+            "the briefing; W11-F1 is no longer reproduced by this input"
+        )
+        assert "Evidence (abstract):" in briefing, (
+            "the phrase must arrive as quoted source text for this to be "
+            "the false positive W11-F1 describes"
+        )
+
+        store = LocalArtifactStore(
+            tmp_path / "artifacts", scope_data_class=DataClass.INTERNAL
+        )
+        ref = store.put(
+            briefing.encode("utf-8"),
+            role=ArtifactRole.CANDIDATE_REPORT,
+            media_type="text/markdown",
+            schema_ref="research-report/1.0.0",
+            trust_class=TrustClass.SYSTEM_GENERATED,
+            data_class=DataClass.INTERNAL,
+            retention_policy_ref=retention_policy_ref(),
+            principal_key_id="pk_stage0qualifica",
+        )
+        assert ref is not None
+        assert store.contains(ref.artifact_id)
+
     def test_no_event_a_synthetic_episode_produces_is_training_eligible(
         self, tmp_path: Path
     ) -> None:
