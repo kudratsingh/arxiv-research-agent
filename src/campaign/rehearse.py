@@ -31,15 +31,18 @@ possession is not authorization) and `src.llm`'s client constructor
 (which refuses the sentinel before the SDK can build a transport). Both
 refusals are reported, neither is raised, and no episode runs.
 
-**The two doors do not read the same settings, and the rehearsal says
-so.** The admission probe reads the campaign's `Settings`; the gateway
-reads the process-global singleton, because `src.llm` is not in
-`execute_campaign`'s `SETTINGS_CONSUMERS` and `bound_settings` therefore
-never rebinds it. In a normal deployment both descend from one `.env`
-and the distinction is invisible. A campaign run under a `model_copy`ed
-`Settings` carrying a different credential is the case where it is not,
-and an operator should learn that from a rehearsal rather than from a
-bill.
+**The two doors read the same settings, and the rehearsal shows it
+rather than asserting it.** Both read the campaign's `Settings`: the
+admission probe is handed the object, and the gateway is rebound to it
+by `bound_settings`, which this module enters around the client probe
+exactly as `_run_one_episode` does around an episode. Until W21 that was
+not true — `src.llm` was absent from `execute_campaign`'s
+`SETTINGS_CONSUMERS`, so the gateway read the process-global singleton
+and a campaign carrying a `model_copy`ed `Settings` with a different
+credential was admitted against one key and would have dialled with
+another. In a normal deployment both descend from one `.env` and the
+distinction was invisible, which is exactly why an operator should learn
+it from a rehearsal rather than from a bill.
 
 **A rehearsal never spends and never dials.** It makes no model call, no
 judge call and no network call of any kind; `tests/test_campaign_rehearsal.py`
@@ -264,7 +267,7 @@ def rehearse_campaign(
         )
     )
     steps.append(_credential_step(config))
-    steps.append(_client_step(client_probe))
+    steps.append(_client_step(config, client_probe))
 
     stopped_at = next(
         (step.step for step in steps if step.outcome == "refused"),
@@ -513,8 +516,21 @@ def _credential_step(config: Settings) -> RehearsalStep:
     )
 
 
-def _client_step(client_probe: ClientProbe | None) -> RehearsalStep:
+def _client_step(config: Settings, client_probe: ClientProbe | None) -> RehearsalStep:
     """Attempt provider client construction, and report the refusal.
+
+    Run inside `bound_settings(config)` — the same context
+    `_run_one_episode` puts the policy in — so the door this reports on
+    is the one a funded episode would actually meet. Before W21 that
+    context did not reach `src.llm` and this step read whatever the
+    process happened to be configured with; now it reads the campaign's
+    own `Settings`, and a rehearsal under a `model_copy`ed credential
+    reports on *that* credential.
+
+    `bound_settings` lives in `src.campaign.execute` and is imported
+    here at call time for the reason `_default_client_probe` gives: the
+    read-only verbs must not pay for the gateway's module graph until
+    the walk has reached the gateway.
 
     `except Exception` and not `except BaseException`: under the test
     harness `src.llm._get_client` is replaced by a guard that raises a
@@ -523,13 +539,16 @@ def _client_step(client_probe: ClientProbe | None) -> RehearsalStep:
     fail the test loudly rather than report a tidy refusal, so it is
     allowed through.
     """
+    from src.campaign.execute import bound_settings
+
     probe = client_probe if client_probe is not None else _default_client_probe
     reads = (
-        " (read from the process-global settings, which is what the gateway "
-        "uses: src.llm is not rebound by bound_settings)"
+        " (read from the campaign's own settings, the same object admission "
+        "read: src.llm is rebound by bound_settings)"
     )
     try:
-        probe()
+        with bound_settings(config):
+            probe()
     except Exception as exc:  # noqa: BLE001 — the refusal is the finding
         return RehearsalStep(
             step="provider-client-constructed",

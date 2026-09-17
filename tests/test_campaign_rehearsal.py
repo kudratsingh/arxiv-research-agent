@@ -659,17 +659,15 @@ class TestWhatAnOpenDoorLooksLike:
         self,
         tmp_path: pathlib.Path,
         sentinel_sdk: None,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> RehearsalReport:
-        import src.llm as llm_module
-
         cfg = config(anthropic_api_key="sk-no-account-behind-this")
-        # Both doors, because they do not read the same object: the
-        # admission probe reads the campaign's `Settings` and the gateway
-        # reads the process-global singleton. A deployment with a real key
-        # has one `.env` behind both; a test has to set both or it is
-        # only testing half the boundary.
-        monkeypatch.setattr(llm_module, "settings", cfg)
+        # One object for both doors, as of W21: the admission probe is
+        # handed `cfg`, and `bound_settings` rebinds `src.llm` to it for
+        # the gateway. This fixture used to patch `src.llm.settings` by
+        # hand or it would have tested only half the boundary; the fix
+        # is what makes the hand-patch unnecessary, so its removal is
+        # part of the evidence. Nothing here can dial: the key is a
+        # string with no account behind it and `sentinel_sdk` is a fake.
         campaign_id = materialize(tmp_path, cfg, request_for(cfg))
         return rehearse_campaign(
             cfg,
@@ -694,22 +692,25 @@ class TestWhatAnOpenDoorLooksLike:
     def test_the_gateway_door_says_which_settings_it_read(
         self, report: RehearsalReport
     ) -> None:
-        """The asymmetry is reported, not smoothed over.
+        """Both doors read the campaign's `Settings`, and it is reported.
 
-        `src.llm` is not in `execute_campaign`'s `SETTINGS_CONSUMERS`, so
-        a campaign's own `Settings` never reaches the gateway. Two
-        credentials in one process is the case that makes the admission
-        probe and the client disagree, and the rehearsal names it.
+        W20 found the asymmetry and this test pinned it: `src.llm` was
+        not in `execute_campaign`'s `SETTINGS_CONSUMERS`, so a campaign's
+        own `Settings` never reached the gateway and two credentials in
+        one process made the admission probe and the client disagree.
+        W21 closed it, so the pin is inverted rather than deleted — the
+        consumer list is the thing that must not silently change back.
         """
         from src.campaign.execute import SETTINGS_CONSUMERS
 
-        assert "src.llm" not in SETTINGS_CONSUMERS
+        assert "src.llm" in SETTINGS_CONSUMERS
         detail = next(
             step.detail
             for step in report.steps
             if step.step == "provider-client-constructed"
         )
-        assert "process-global settings" in detail
+        assert "the campaign's own settings" in detail
+        assert "process-global" not in detail
 
     def test_the_named_record_is_reported_against_the_backend(
         self, report: RehearsalReport

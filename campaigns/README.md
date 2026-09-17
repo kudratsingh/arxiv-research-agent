@@ -32,6 +32,7 @@ a README is cheaper than either.
 | File | Scope |
 |---|---|
 | [`w12-arm-a-baseline.plan.json`](w12-arm-a-baseline.plan.json) | 16 §1's funded arm-A baseline: 20 cases × 3 repeats × arm A = 60 episodes, zero caps, no approval |
+| [`w12-arm-a-baseline-live.plan.json`](w12-arm-a-baseline-live.plan.json) | The same 60-episode design over the **live** corpus, published beside it because §1's `snapshot` resolves to `USE_MOCK_DATA=true` and would measure nothing. Zero caps, no approval, and not approved — 16 §8.4 puts the two side by side for the owner to choose between |
 
 Each file carries the campaign id, the sealed protocol and registry-lock
 digests, the arm declarations and their declaration digest, the case set
@@ -49,6 +50,16 @@ ANTHROPIC_API_KEY=local-preview-disabled \
   python -m src.campaign dry-run --suite research-policy-v1 --arms A \
     --repeats 3 --seed 0 --corpus-mode snapshot \
     --artifact campaigns/w12-arm-a-baseline.plan.json
+```
+
+The live variant is the same command with the one argument that
+distinguishes it, which is the whole of the difference between them:
+
+```
+ANTHROPIC_API_KEY=local-preview-disabled \
+  python -m src.campaign dry-run --suite research-policy-v1 --arms A \
+    --repeats 3 --seed 0 --corpus-mode live \
+    --artifact campaigns/w12-arm-a-baseline-live.plan.json
 ```
 
 `tests/test_campaign_plan_artifact.py` re-derives the artifact from

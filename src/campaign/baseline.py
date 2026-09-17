@@ -83,8 +83,20 @@ from src.contracts.run_manifest import CampaignBudget, CampaignId, EpisodeBudget
 #: worse than a directory with a README.
 ARTIFACT_ROOT: Final[str] = "campaigns"
 
-#: The one artifact this repository publishes today: 16 §1's scope.
+#: 16 §1's scope as the packet states it: `corpus_mode=snapshot`.
 W12_BASELINE_ARTIFACT_PATH: Final[str] = f"{ARTIFACT_ROOT}/w12-arm-a-baseline.plan.json"
+
+#: The same design over the live corpus, published beside it rather than
+#: instead of it. W20 found that §1's planned `snapshot` resolves to
+#: `USE_MOCK_DATA=true`, so the funded run that packet describes would
+#: spend nothing and measure nothing — while §5's source-drift clause is
+#: about a *live* corpus, which only this variant plans. Which one the
+#: owner funds is the owner's decision; publishing both is what makes it
+#: a decision rather than an assumption. Neither is approved, both are
+#: zero-cap, and planning either costs nothing.
+W12_BASELINE_LIVE_ARTIFACT_PATH: Final[str] = (
+    f"{ARTIFACT_ROOT}/w12-arm-a-baseline-live.plan.json"
+)
 
 #: 16 §1's table as arguments. Arm A only and three repeats over the
 #: whole development suite, which is 60 episodes; the caps are zero,
@@ -94,6 +106,11 @@ W12_BASELINE_ARMS: Final[tuple[ArmId, ...]] = ("A",)
 W12_BASELINE_REPEATS: Final[int] = 3
 W12_BASELINE_SEED: Final[int] = 0
 W12_BASELINE_CORPUS_MODE: Final[CorpusModeChoice] = "snapshot"
+
+#: The live variant's only difference from the row above. Everything
+#: else — suite, arms, repeats, seed, stage, protocol id — is identical,
+#: which is what makes the two artifacts comparable side by side.
+W12_BASELINE_LIVE_CORPUS_MODE: Final[CorpusModeChoice] = "live"
 W12_BASELINE_STAGE: Final[str] = "stage-0-qualification"
 W12_BASELINE_PROTOCOL_ID: Final[str] = "research-policy-v1-stage-0"
 
@@ -478,6 +495,7 @@ def build_w12_baseline_artifact(
     registry_root: Path,
     resolver: RegistryResolver | None = None,
     output: str = W12_BASELINE_ARTIFACT_PATH,
+    corpus_mode: CorpusModeChoice = W12_BASELINE_CORPUS_MODE,
 ) -> CampaignPlanArtifact:
     """Re-derive 16 §1's baseline artifact from the registry.
 
@@ -491,6 +509,12 @@ def build_w12_baseline_artifact(
         resolver: The registry resolver. Defaults to a `LocalRegistry`
             over `registry_root`.
         output: Path the produced command writes to.
+        corpus_mode: The aggregation boundary to publish. Defaults to
+            §1's `snapshot`; `live` derives the variant published at
+            `W12_BASELINE_LIVE_ARTIFACT_PATH`. A parameter rather than a
+            second function because the two artifacts must be the same
+            design differing in exactly one field, and a copy of this
+            body could stop being that without anyone noticing.
 
     Returns:
         The artifact.
@@ -502,7 +526,9 @@ def build_w12_baseline_artifact(
     from src.campaign.planner import plan_campaign
     from src.contracts.registry import LocalRegistry
 
-    request = baseline_request(config, registry_root=registry_root)
+    request = baseline_request(
+        config, registry_root=registry_root, corpus_mode=corpus_mode
+    )
     plan = plan_campaign(
         config,
         request,
@@ -521,6 +547,8 @@ __all__ = [
     "VOLATILE_FIELDS",
     "W12_BASELINE_ARMS",
     "W12_BASELINE_ARTIFACT_PATH",
+    "W12_BASELINE_LIVE_ARTIFACT_PATH",
+    "W12_BASELINE_LIVE_CORPUS_MODE",
     "W12_BASELINE_CORPUS_MODE",
     "W12_BASELINE_PREFACE",
     "W12_BASELINE_PROTOCOL_ID",

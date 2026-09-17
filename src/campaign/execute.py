@@ -118,7 +118,19 @@ log = get_logger(__name__)
 #: overridden arm — which is a silent wrong answer rather than an error.
 #: `tests/e2e/conftest.py` documents the same failure and keeps the same
 #: kind of list; this one is the research graph's, plus the supervisor
-#: and the verifier that only arms C and D reach.
+#: and the verifier that only arms C and D reach, plus the provider
+#: gateway itself.
+#:
+#: `src.llm` joined the list in W21. It was absent before, and W20's
+#: rehearsal had to report the asymmetry that left behind: the admission
+#: probe read the campaign's `Settings` while the gateway read the
+#: process-global singleton, so a campaign run under a `model_copy`ed
+#: `Settings` carrying a different key or model was admitted against one
+#: credential and would have billed against another. Both doors read the
+#: same object now. Nothing changes at defaults, where one `.env` sits
+#: behind both, and the sentinel refusal stays structural: `_get_client`
+#: still raises on `local-preview-disabled` whichever `Settings` the
+#: name is bound to.
 SETTINGS_CONSUMERS: Final[tuple[str, ...]] = (
     "src.agents.critic",
     "src.agents.planner",
@@ -129,8 +141,20 @@ SETTINGS_CONSUMERS: Final[tuple[str, ...]] = (
     "src.agents.synthesizer",
     "src.agents.verifier",
     "src.graph.workflow",
+    "src.llm",
     "src.policies.orchestration",
 )
+
+#: The gateway module, and the name holding its memoised client. Listed
+#: apart from `SETTINGS_CONSUMERS` because rebinding `settings` there is
+#: necessary but not sufficient: `src.llm` reads the model per call but
+#: the credential exactly once, at client construction. An episode that
+#: inherited a client built from the process-global key would keep
+#: dialling with it however the `settings` name is bound, so
+#: `bound_settings` drops the memo on the way in and restores the
+#: caller's on the way out.
+GATEWAY_MODULE: Final[str] = "src.llm"
+GATEWAY_CLIENT_ATTR: Final[str] = "_client"
 
 #: The files one finished episode directory holds beside RFC 09 §5.3's
 #: sealed manifest pair. `completion.json` is written last and nothing
@@ -352,14 +376,23 @@ def bound_settings(config: Settings) -> Iterator[None]:
     is no single place to swap. The list is restored in reverse on the
     way out, including when the body raises, so one arm's settings can
     never leak into the next episode's manifest.
+
+    The gateway's memoised client is dropped for the same reason and
+    restored the same way (`GATEWAY_CLIENT_ATTR`): a client built before
+    the body was entered was built from somebody else's credential, and
+    a rebound `settings` name does not reach inside one.
     """
     modules = [importlib.import_module(name) for name in SETTINGS_CONSUMERS]
     saved = [module.settings for module in modules]
+    gateway = importlib.import_module(GATEWAY_MODULE)
+    saved_client = getattr(gateway, GATEWAY_CLIENT_ATTR)
     for module in modules:
         module.settings = config  # type: ignore[attr-defined]
+    setattr(gateway, GATEWAY_CLIENT_ATTR, None)
     try:
         yield
     finally:
+        setattr(gateway, GATEWAY_CLIENT_ATTR, saved_client)
         for module, previous in zip(modules, saved, strict=True):
             module.settings = previous  # type: ignore[attr-defined]
 
@@ -1680,6 +1713,8 @@ __all__ = [
     "ARTIFACT_INDEX_PATH",
     "ATTEMPTS_DIRNAME",
     "COMPLETION_FILENAME",
+    "GATEWAY_CLIENT_ATTR",
+    "GATEWAY_MODULE",
     "PRIMARY_METRIC",
     "PROJECTION_FILENAME",
     "RECORD_FILENAME",
