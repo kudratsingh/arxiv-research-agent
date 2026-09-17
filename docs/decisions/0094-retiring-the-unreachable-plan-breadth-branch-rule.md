@@ -227,6 +227,41 @@ exhumed.
   ever retired too, the fields and the digest break should be decided
   together and once.
 
+> **Amendment, 2026-09-17 (CAP-19,
+> [ADR 0098](0098-retiring-the-plan-breadth-tier-rule.md)), on owner
+> ruling R11. Both items above are closed.**
+>
+> **Rule 7 is retired.** The published-surface objection that kept it
+> was reviewed and did not survive contact: `REASON_CODES` is a module
+> surface, and no sealed contract enumerates it — not
+> `compute.tier_selected`'s schema (the fired codes are payload strings;
+> the envelope field checked against `REGISTERED_REASON_CODES` is left
+> empty, and that vocabulary is disjoint from the rule ids), not
+> `PolicyExecutionSnapshot.decision_rule_ids` (a label pattern, not an
+> enumeration), not the contract registry (257 objects, 0 mismatches,
+> unchanged). `REASON_CODES` goes from eight members to seven and no
+> digest, fixture or golden moves.
+>
+> ADR 0098's measurement adds the fact this ADR did not look for: rule
+> 7's threshold of 4 is the **top of the planner's own instructed
+> range**, not past it, so a compliant planner would fire it on the
+> modal query and escalate 12 of the 20 benchmark queries — the entire
+> T0 control arm. That makes rule 7 a worse rule than the one this ADR
+> retired, not an equivalent one.
+>
+> **The fields stay, and the digest does not break.** Decided here as
+> this ADR asked, together and once: their justification was always the
+> digest and never the rule — this ADR says so itself under "What did
+> not move" — so retiring the last rule that read them changes nothing
+> about the case for keeping them. They would go in a change already
+> paying for a `feature_snapshot_ref` re-baseline for some other reason.
+>
+> The pin named above is renamed and widened:
+> `test_no_branch_rule_reads_a_plan_time_count` is now
+> `test_no_rule_in_either_table_reads_a_plan_time_count`, and its final
+> assertion is inverted — the counts no longer move the T1 table, which
+> is the line that says rule 7 went.
+
 ## Alternatives considered
 
 - **Keep the rule and document it harder.** This is what ADR 0087 did,
@@ -248,7 +283,11 @@ exhumed.
   blast radius: it changes `REASON_CODES`, which ADR 0085 published and
   ADR 0087 was careful to leave alone, and a published-surface change
   bundled into a cleanup is a change nobody reviews as one. Recorded as
-  open above instead.
+  open above instead — and settled a fortnight later by
+  [ADR 0098](0098-retiring-the-plan-breadth-tier-rule.md), which
+  retired rule 7 as its own reviewed decision. Deferring was right for
+  the reason given; the deferral's *premise* was not, because the
+  published surface turned out to be sealed nowhere.
 - **Delete the plan-time fields along with the rule.** Rejected: it
   moves `feature_snapshot_ref` for every controller-on deployment, which
   is a real cost to arm-E analysis, in exchange for tidiness. The fields

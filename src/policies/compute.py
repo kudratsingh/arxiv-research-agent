@@ -30,8 +30,14 @@ one of them selects T1, and a run that matches none stays at T0.
 | 4 | `freshness_cue` | a recency word is in the query | T1 | "latest" claims go stale between retrieval and synthesis |
 | 5 | `multi_entity` | `entity_count >= 2` | T1 | two named systems means cross-entity claims |
 | 6 | `long_query` | `query_tokens >= 24` | T1 | a long ask carries more independent claims per report |
-| 7 | `plan_breadth` | `sub_question_count >= 4` or `search_query_count >= 6` | T1 | plan-time breadth, for callers that decide after planning |
 | 8 | `default_t0` | nothing above fired | T0 | the cheap path is the default, and stays the control arm |
+
+There is no rule 7. `plan_breadth` — "`sub_question_count >= 4` or
+`search_query_count >= 6` ⇒ T1" — was **retired** by CAP-19 (ADR 0098,
+which amends ADR 0085 and ADR 0094) for the defect CAP-18 measured and
+left open. The surviving rows keep the numbers ADR 0085 issued, because
+ADR 0086, ADR 0087 and ADR 0094 all cite rules by number and
+renumbering would silently falsify them.
 
 Thresholds are constants below rather than settings: a threshold an
 operator can move is a threshold no evaluation can attribute a result to.
@@ -104,13 +110,49 @@ Rule 11 is the pre-plan reading of the same signal, where it *is*
 answerable and *does* discriminate, and it is the reason retiring this
 one loses no coverage.
 
-**Rule 7 `plan_breadth` (T1) has the identical defect** — the same two
-call sites, the same 0/20-or-20/20 behaviour, measured — and is
-deliberately **not** retired here. It is a member of `TIER_RULES` and
-therefore of `REASON_CODES`, the vocabulary a *flag-off* deployment
-emits and a published surface ADR 0085 named; removing it is a
-published-surface change that gets its own decision rather than a ride
-on this one. ADR 0094 records it as open.
+## Rule 7, and why it is gone
+
+Rule 7 `plan_breadth` had the identical defect and ADR 0094 recorded it
+as open rather than taking it on that work order's blast radius. CAP-19
+measured it on its own terms and retired it (ADR 0098). The same four
+facts hold, and the first two are the decisive ones:
+
+- Both call sites pass the query alone, so both counts are always
+  `None` and `_plan_breadth` never fired: **0 of the twenty**
+  `research-policy-v1` rows has ever carried `plan_breadth` as a reason.
+- **It does not discriminate.** Feeding the counts a caller would have
+  to invent, the rule is false for **0/20** at every value below its
+  threshold and true for **20/20** at every value at or above it — on
+  `sub_question_count` and on `search_query_count`, under both ceilings.
+  There is no threshold at which it partitions the suite, because its
+  input is a property of the planner rather than of the query. For
+  contrast, on the same twenty queries `comparative_cue` fires 3,
+  `freshness_cue` 3, `multi_entity` 2, `branch_paired_comparison` 2 and
+  `branch_open_enumeration` 6 — each naming a reason per query.
+- **Its threshold sits inside the planner's own instructed range**,
+  which makes it worse than the branch rule rather than better. The
+  planner is asked for "2-4 focused sub-questions", so a planner that
+  complies produces four on the modal query and the rule escalates
+  nearly everything it sees. At the default ceiling that is **12/20**
+  — the entire T0 population, which is the control arm.
+- The tier it escalates to answers a different question. T1 is arm C's
+  verify-and-repair graph: it checks the claims a plan produced, it does
+  not widen the plan. A breadth signal escalating into a verification
+  budget is not wrong, but it is not the thing the rule claims to buy.
+
+`long_query` (rule 6) is the pre-plan reading of the same "this ask
+carries more independent claims" signal, off the query, where it is
+answerable before the graph is selected. It also fires **0/20** on this
+suite — and the difference between the two zeroes is the whole of why
+one rule was retired and the other was not. `long_query` is *reachable*
+and it *discriminates*: any caller may submit a 24-token query, and the
+rule then separates that query from a short one. It scores zero here
+because `research-policy-v1`'s objectives run 8-14 tokens, which is a
+gap in the suite's coverage of the rule. `plan_breadth` scored zero
+because no caller could reach it at all, and would have scored 20/20 if
+one had. A rule no query can distinguish itself by is a different
+object from a rule this particular twenty queries happen not to
+exercise (ADR 0098).
 
 ## The tiers, and what they are allowed to spend
 
@@ -141,14 +183,19 @@ exists. Every branch rule reads only pre-plan cues, because the tier
 selects the *graph* and therefore has to be decided before the planner
 runs.
 
-The two plan-time counts are kept as *fields* even though the only rule
-still reading them is rule 7, which cannot fire either. They stay for
-one reason and it is not the rule: `feature_snapshot_ref` is a
-`sha256:` over `ComputeFeatures.as_dict()`, so dropping a field would
-move the digest on every controller-on deployment and break the join
-between arm-E trajectories recorded before and after CAP-18. Retiring a
-*rule* moves no digest; retiring a *field* does. ADR 0094 §"What did not
-move".
+The two plan-time counts are kept as *fields* even though, after ADR
+0098, **no rule in either table reads them**. They stay for one reason
+and it was never the rule: `feature_snapshot_ref` is a `sha256:` over
+`ComputeFeatures.as_dict()`, so dropping a field would move the digest
+on every controller-on deployment and break the join between arm-E
+trajectories recorded before and after. Retiring a *rule* moves no
+digest; retiring a *field* does. ADR 0094 §"What did not move" gave
+that reason for keeping them when rule 7 still nominally read them, and
+ADR 0098 re-states it now that nothing does: the fields are inert, the
+digest is not, and a digest break is a cost to arm-E analysis paid in
+exchange for tidiness. ADR 0098 §"What did not move" also names the
+condition under which they would go — a re-baseline some other change
+is already paying for.
 
 CAP-04b (ADR 0087) added the two features rules 10 and 11 read —
 `paired_comparison` and `open_enumeration` — to the *available* half of
@@ -214,12 +261,14 @@ LONG_QUERY_TOKENS: Final[int] = 24
 #: cross-entity claim, which is the claim class verification catches.
 MULTI_ENTITY_THRESHOLD: Final[int] = 2
 
-#: Plan-time breadth, sized against the planner's own instruction: it
-#: is asked for "2-4 focused sub-questions" and "1-2 targeted queries"
-#: each, so four sub-questions is the top of its range and six queries
-#: is the upper half of the 2-8 that range implies.
-PLAN_SUB_QUESTION_THRESHOLD: Final[int] = 4
-PLAN_SEARCH_QUERY_THRESHOLD: Final[int] = 6
+# `PLAN_SUB_QUESTION_THRESHOLD` (4) and `PLAN_SEARCH_QUERY_THRESHOLD`
+# (6) stood here until CAP-19 retired rule `plan_breadth` (ADR 0098).
+# They go with the rule for the reason ADR 0094 gave when it deleted
+# `BRANCH_SUB_QUESTION_THRESHOLD`: a constant that no predicate reads is
+# a claim nothing can falsify. Both were sized against the planner's
+# instruction ("2-4 focused sub-questions", "1-2 targeted queries"
+# each), and that is precisely why the rule could not discriminate —
+# the top of the planner's own range is where the modal plan lands.
 
 #: Comparison cues, normalised the way `_normalise` normalises a query
 #: (lowercase, every non-alphanumeric run collapsed to one space), so
@@ -415,7 +464,10 @@ class ComputeFeatures:
             one. `None` on the API path, where the tier is chosen before
             the binding compiles a spec.
         sub_question_count: Plan-time breadth, or `None` before planning.
+            Carried for the digest's sake alone since ADR 0098 retired
+            the one rule that read it; `None` on every shipped path.
         search_query_count: Plan-time breadth, or `None` before planning.
+            Same, and for the same reason.
     """
 
     query_tokens: int
@@ -602,24 +654,11 @@ class TierRule:
     predicate: Callable[[ComputeFeatures], bool]
 
 
-def _plan_breadth(features: ComputeFeatures) -> bool:
-    """Whether a *known* plan is broad. Unknown counts never fire.
-
-    Rule 7, and **unreachable for the same reason CAP-18 retired
-    `branch_plan_breadth`** (ADR 0094): no shipped caller passes either
-    count, and the counts are a property of the planner rather than of
-    the query, so on `research-policy-v1` this predicate is false for
-    all twenty queries below the threshold and true for all twenty at or
-    above it. It is kept here, unlike the branch rule, because it is a
-    member of `REASON_CODES` — the vocabulary a flag-off deployment
-    emits, and a surface ADR 0085 published — so retiring it is its own
-    decision. ADR 0094 records that as open rather than closing it.
-    """
-    sub_questions = features.sub_question_count
-    queries = features.search_query_count
-    if sub_questions is not None and sub_questions >= PLAN_SUB_QUESTION_THRESHOLD:
-        return True
-    return queries is not None and queries >= PLAN_SEARCH_QUERY_THRESHOLD
+# `_plan_breadth` — rule 7's predicate — stood here until CAP-19 retired
+# it (ADR 0098). The module docstring carries the measurement; the short
+# version is that it read two counts no call site passes, and both are
+# properties of the planner rather than of the query, so it could only
+# ever fire on every query or on none.
 
 
 TIER_RULES: Final[tuple[TierRule, ...]] = (
@@ -658,12 +697,6 @@ TIER_RULES: Final[tuple[TierRule, ...]] = (
         tier="T1",
         decisive=False,
         predicate=lambda f: f.query_tokens >= LONG_QUERY_TOKENS,
-    ),
-    TierRule(
-        rule_id="plan_breadth",
-        tier="T1",
-        decisive=False,
-        predicate=_plan_breadth,
     ),
 )
 
@@ -750,6 +783,21 @@ DEFAULT_REASON: Final[str] = "default_t0"
 
 #: Every reason code this module can emit, for a consumer that groups by
 #: them without having to enumerate the table itself.
+#:
+#: Seven members since CAP-19 (ADR 0098) removed `plan_breadth`; eight
+#: from ADR 0085 until then. This is the one published surface the
+#: retirement moved, and it is a *module* surface rather than a sealed
+#: one: no contract enumerates it. `compute.tier_selected` carries the
+#: codes a decision produced in its payload, and the envelope's
+#: `reason_codes` — the field `src/contracts/trajectory.py` validates
+#: against `REGISTERED_REASON_CODES` — is left empty by the emitter, so
+#: no compute rule id has ever been checked against a closed set.
+#: `PolicyExecutionSnapshot.decision_rule_ids` is typed `PolicyMember`,
+#: a label pattern, and records what a decision produced rather than
+#: what the table could produce. So RFC 09/10's deprecation discipline
+#: has nothing to deprecate here: no registry object, manifest field,
+#: fixture or golden names the retired code, and no stored trajectory
+#: can carry it, because it never fired.
 REASON_CODES: Final[tuple[str, ...]] = tuple(
     [rule.rule_id for rule in TIER_RULES] + [DEFAULT_REASON]
 )

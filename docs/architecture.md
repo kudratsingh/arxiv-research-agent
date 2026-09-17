@@ -227,8 +227,9 @@ Every branch and its evidence table reach the contract trajectory as
 `branch.*` and sibling `candidate.*` events, which is the lineage the
 listwise selector below is measured against. The shape is also
 selectable per run as compute tier T2 when `ORCHESTRATION=on`; off — the
-default — the controller's rule table, reason codes and compiled graph
-set are exactly ADR 0085's. See ADR
+default — the controller's compiled graph set is exactly ADR 0085's, and
+so is its rule table bar one retirement: ADR 0098 removed rule 7
+`plan_breadth`, taking `REASON_CODES` from eight codes to seven. See ADR
 [0086](decisions/0086-orchestrator-workers-for-the-branch-tier.md).
 
 **What sends a run to T2 (ADR 0087, ADR 0094).** Three branch rules,
@@ -248,7 +249,13 @@ graph, so it is decided before the planner runs — and the count is a
 property of the planner rather than of the query, so the rule fired on
 all twenty benchmark queries or on none. The third rule above reads the
 same breadth signal before the planner runs, where it discriminates.
-The shared claim is that a
+ADR 0098 then retired the T1 table's `plan_breadth` on the same evidence
+and one fact more: its threshold was the *top* of the range the planner
+is instructed to produce, so a compliant planner would have escalated
+the whole T0 control arm. After both retirements every rule in both
+tables decides from the query alone, which is asserted as a property in
+`tests/test_compute_policy.py` and
+`tests/test_orchestration_controller.py`. The shared claim is that a
 ranked corpus ranks by one similarity and so cannot cover several
 independent lines of enquiry evenly. On the twenty-query
 `research-policy-v1` suite the router allocates **T0 10 / T1 2 / T2 8**;
