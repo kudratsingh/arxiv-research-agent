@@ -24,7 +24,9 @@ the gap was found — from the sites outwards:
    two sets that already existed: `KNOWN_EVENTS` for the codes and
    `report.TAXONOMY` for the classes. A code that is not also a log
    event would mean an operator grepping a log and an analyst reading a
-   campaign were naming different things.
+   campaign were naming different things. The reverse direction starts
+   from degradation-shaped names in the log registry, so adding a ninth
+   log-only code also fails this file until it has a trajectory emitter.
 5. **Nothing happens when nobody is listening.** The default is an
    unbound `ContextVar`, which is what keeps a trajectory that fires no
    degradation byte-identical to the one it was before ADR 0097.
@@ -72,6 +74,38 @@ pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
 _ROOT = Path(__file__).resolve().parents[1]
 _SRC = _ROOT / "src"
+
+# ADR 0097's eight log-only sites live in these four research components.
+# Combining the component prefix with the degradation language used by ADR
+# 0081 avoids treating unrelated API health and learning-session events as
+# research degradations, while keeping the set open to a ninth code. This is
+# deliberately a classifier over KNOWN_EVENTS rather than another eight-item
+# fixture: adding (for example) ``planner_new_fallback`` to the registry must
+# turn the reverse-direction assertion red before it has a trajectory site.
+_DEGRADATION_LOG_COMPONENTS = frozenset(
+    {"planner", "reader", "search", "synthesizer"}
+)
+_DEGRADATION_NAME_MARKERS = frozenset(
+    {
+        "abstract_only",
+        "budget_exhausted",
+        "citations_dropped",
+        "degraded",
+        "empty_keeping_prior",
+        "fallback",
+        "unparseable",
+    }
+)
+
+
+def _registered_degradation_codes() -> set[str]:
+    """Return ADR 0081/0097-shaped degradation names in the log registry."""
+    return {
+        event
+        for event in KNOWN_EVENTS
+        if event.partition("_")[0] in _DEGRADATION_LOG_COMPONENTS
+        and any(marker in event for marker in _DEGRADATION_NAME_MARKERS)
+    }
 
 
 @pytest.fixture
@@ -416,9 +450,18 @@ class TestTheVocabulariesAreClosed:
         )
 
     def test_every_code_is_also_a_known_log_event(self) -> None:
-        """One string, two records, so a grep and a report name the same thing."""
-        assert DEGRADATION_CODES <= KNOWN_EVENTS, sorted(
-            DEGRADATION_CODES - KNOWN_EVENTS
+        """Close log and trajectory vocabularies in both directions.
+
+        The source parse is the authority for trajectory emission sites. The
+        semantic scan of ``KNOWN_EVENTS`` is the authority for the log side;
+        unlike an eight-code fixture, it notices a ninth log-only degradation.
+        """
+        emitted = _literal_kwargs("record_degradation_reason", "code")
+        registered = _registered_degradation_codes()
+        assert emitted <= KNOWN_EVENTS, sorted(emitted - KNOWN_EVENTS)
+        assert registered <= emitted, (
+            "degradation-shaped log codes without a trajectory emitter: "
+            f"{sorted(registered - emitted)}"
         )
 
     def test_the_registered_event_is_a_success(self) -> None:

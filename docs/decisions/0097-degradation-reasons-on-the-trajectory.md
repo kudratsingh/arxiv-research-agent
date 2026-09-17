@@ -185,11 +185,12 @@ because a judge or a harness degrading is not the arm degrading — ADR
   degradations on its in-memory trajectory. The payload is four bounded
   strings from two closed sets, `content_class` stays `metadata`, and no
   user content is involved, so the D8 posture is unchanged.
-- **The obvious next rung is the reverse direction.**
-  `tests/test_degradation_ladder.py` pins which published rungs have no
-  emitter; nothing yet pins which *log-only* degradation codes have no
-  trajectory event. The eight are closed in both directions, but a ninth
-  log-only code could be added tomorrow and only this ADR would notice.
+- **The reverse-direction gap is closed.** In the style of
+  `tests/test_degradation_ladder.py`, an AST parse now compares trajectory
+  emission sites with the degradation-shaped names in `KNOWN_EVENTS`: every
+  registered planner, reader, search or synthesizer degradation must have an
+  emitter, and every emitted `error_code` must be registered. A ninth log-only
+  code now turns the contract test red instead of relying on this ADR to notice.
 
 ## Alternatives considered
 
