@@ -1,6 +1,6 @@
 # Phase A — assurance campaign status
 
-Updated: 2026-09-05
+Updated: 2026-09-17
 
 ## The campaign
 
@@ -415,6 +415,19 @@ rule that would have fired on a single cache miss; only unit-testing the rule's
 semantics caught it. The same shape appeared three times this wave — an alert
 that pages on a blip, a redaction rule that compiles and eats arXiv ids, a
 dashboard test that parses `expr` strings and cannot see a blank panel.
+
+## 2026-09-17 follow-up record
+
+| Work | Merged evidence | Result | Residual |
+|---|---|---|---|
+| **D8 — harness hygiene** | PR #243, `e2a2779` | Made Hypothesis housekeeping independent of its generated ignore file; closed the ADR-index ordering, duplicate and gap blind spots; documented why import-time coverage still belongs in the gate total; recorded the measured decision not to adopt `ruff format` across 277 of 327 Python files. The lock-exact zero-spend gate passed with 5,166 non-E2E tests and 93.73% coverage. | None from D8. Two of its four starting reports did not reproduce as defects; the record keeps the measurements instead of inventing fixes. |
+| **S8 — spine voice and durable metrics** | PR #244, `0fb951c` | A succeeded historic run now speaks as succeeded, “Report” became “Briefing”, rejoined copy stopped implying completion, and an expanded historical turn reads its five metrics from durable job detail. The web gate passed 3,547 tests across 163 files. | The copy changes deliberately left visual debt: the affected committed goldens still showed the old spine voice. |
+| **S8 golden pass** | PR #264, `17e5c15` | Regenerated **29 images**: 26 of 48 `@visual` snapshots and 3 of 5 README images. This closes S8's golden debt. | The pass exposed S10 below. |
+| **S10 — visual comparator sensitivity** | **Open** | The flat `MAX_DIFF_PIXELS = 200` budget does not scale with surface size or contrast. The `Report` → `Briefing` spine change at 412 px produced about 270 raw differing pixels, yet weak-pixel filtering left it under the comparator's effective bound: 16 of the 26 stale snapshots stayed green. The scrim-dimmed `rail-error-upstream-{light,dark}-412` pair had not been regenerated since PR #118 and also could not fail. | Replace the flat budget with a measured per-snapshot/per-surface budget or a ratio plus a hard strong-pixel floor. Prove the 412 px label regression and a deliberately shifted rail-error page both fail, then run the current visual suite twice without moving honest goldens. |
+
+`docs/assurance/README.md`'s two A24 entries now say **twenty-four** OTel
+instruments, matching the C5-era implementation count and the AST-backed
+`TestTheInstrumentCount` claim check.
 
 ## Coordination
 
