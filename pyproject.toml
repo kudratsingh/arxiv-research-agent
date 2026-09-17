@@ -115,6 +115,9 @@ build-backend = "setuptools.build_meta"
 include = ["src*"]
 namespaces = false
 
+[tool.setuptools.package-data]
+"src.eval" = ["mock_judge_fixture.json"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

@@ -106,6 +106,7 @@ from src.contracts.run_manifest import (
     RunReason,
 )
 from src.contracts.trajectory import import_jsonl, verify_trajectory
+from src.eval.mock_judge import build_mock_judge_scorer
 from src.observability.logging import (
     _STANDARD_LOG_KEYS,
     ALLOWED_EXTRA_KEYS,
@@ -452,6 +453,30 @@ def full_matrix(tmp_path_factory: pytest.TempPathFactory) -> Iterator[MatrixRun]
             root=root,
             plan=plan,
             graph_probe=arm_graph_probe(cfg),
+            sink_root=root / "trajectories",
+        )
+        yield MatrixRun(
+            report=report,
+            plan=plan,
+            directory=root / plan.campaign_id,
+            tripwire=tripwire,
+        )
+
+
+@pytest.fixture(scope="module")
+def mock_judge_matrix(tmp_path_factory: pytest.TempPathFactory) -> Iterator[MatrixRun]:
+    """Run the same 300 episodes with the opt-in fixture judge scorer."""
+    root = tmp_path_factory.mktemp("campaign-mock-judge-matrix")
+    with pytest.MonkeyPatch.context() as patch:
+        tripwire = install_tripwire(patch)
+        cfg = config()
+        plan = materialize(root, cfg, request(cfg))
+        report = execute_campaign(
+            cfg,
+            root=root,
+            plan=plan,
+            graph_probe=arm_graph_probe(cfg),
+            scorer=build_mock_judge_scorer(cfg),
             sink_root=root / "trajectories",
         )
         yield MatrixRun(
@@ -829,6 +854,61 @@ class TestTheFullMatrixRunsAtZeroCost:
             for path in sorted(full_matrix.directory.rglob(COMPLETION_FILENAME))
         }
         assert after == before
+
+
+# ---------------------------------------------------------------------------
+# 1b. The opt-in mock-judge matrix, still at exactly zero
+# ---------------------------------------------------------------------------
+class TestTheFullMockJudgeMatrixRunsAtZeroCost:
+    pytestmark = [pytest.mark.integration, pytest.mark.contract]
+
+    @pytest.mark.timeout(300)
+    def test_all_three_hundred_episodes_have_all_five_metrics(
+        self, mock_judge_matrix: MatrixRun
+    ) -> None:
+        report = mock_judge_matrix.report
+        assert report.attempted == EXPECTED_EPISODES
+        assert report.completed == EXPECTED_EPISODES
+        assert report.counts["completed"] == EXPECTED_EPISODES
+        assert report.counts["excluded"] == 0
+
+        records = load_episode_records(mock_judge_matrix.directory, mock_judge_matrix.plan)
+        assert len(records) == EXPECTED_EPISODES
+        for record in records:
+            assert record.scores["judges_run"] is True
+            assert record.scores["judge_rubrics_skipped"] == []
+            assert set(record.scores["metrics"]) == {
+                "citation_resolution",
+                "supported_claim_precision",
+                "completeness",
+                "faithfulness",
+                "retrieval_recall",
+            }
+            assert len(record.scores["judge_records"]) == 3
+
+    def test_judge_records_include_blinding_randomisation_and_abstention(
+        self, mock_judge_matrix: MatrixRun
+    ) -> None:
+        records = load_episode_records(mock_judge_matrix.directory, mock_judge_matrix.plan)
+        assert all(record.scores["judge_abstentions"] >= 1 for record in records)
+        for record in records:
+            control = record.scores["calibration_position_control"]
+            assert control["plan"]["presentation"] == "pairwise"
+            assert control["plan"]["both_orders"] is True
+            assert len(control["readings"]) == 12
+            assert all(
+                judge_record["blinded_item_id"].startswith("itm-")
+                for judge_record in record.scores["judge_records"]
+            )
+
+    def test_the_mock_judge_matrix_constructed_no_client_and_cost_nothing(
+        self, mock_judge_matrix: MatrixRun
+    ) -> None:
+        costs = mock_judge_matrix.report.summary.costs
+        assert costs.total_usd == "0.000000"
+        assert costs.judge_usd == "0.000000"
+        assert mock_judge_matrix.report.model_calls == 0
+        assert mock_judge_matrix.tripwire.touched == []
 
 
 # ---------------------------------------------------------------------------
@@ -1711,3 +1791,49 @@ class TestTheRunVerb:
         from src.campaign.cli import EXIT_USAGE, main
 
         assert main(["run"]) == EXIT_USAGE
+
+    def test_mock_judge_is_an_explicit_run_flag(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        import src.campaign.cli as cli_module
+        from src.campaign.cli import EXIT_OK, main
+
+        monkeypatch.setattr(cli_module, "shipped_settings", config())
+        argv = [
+            "--output-root",
+            str(tmp_path),
+            "--cases",
+            SLICE_CASES[0],
+            "--arms",
+            "A",
+            "--repeats",
+            "1",
+            "--sink-root",
+            str(tmp_path / "trajectories"),
+        ]
+        assert main(["plan", *argv]) == EXIT_OK
+        planned = json.loads(capsys.readouterr().out)
+
+        assert (
+            main(
+                [
+                    "run",
+                    "--mock-judge",
+                    "--campaign-id",
+                    planned["campaign_id"],
+                    *argv,
+                ]
+            )
+            == EXIT_OK
+        )
+        ran = json.loads(capsys.readouterr().out)
+        assert ran["completed"] == 1
+        record_path = next(
+            (tmp_path / planned["campaign_id"]).rglob(RECORD_FILENAME)
+        )
+        record = json.loads(record_path.read_text(encoding="utf-8"))
+        assert record["scores"]["judges_run"] is True
+        assert len(record["scores"]["judge_records"]) == 3
