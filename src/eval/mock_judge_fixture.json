@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "research-mock-judge-v1",
+  "completeness": {
+    "covered": true,
+    "reason": "Synthetic mock verdict: the fixture marks each requested topic covered."
+  },
+  "faithfulness": {
+    "supported": true,
+    "reason": "Synthetic mock verdict: the fixture marks the cited claim supported.",
+    "abstain_at": 1,
+    "abstain_reason": "Synthetic mock abstention: no verdict is asserted for this fixture slot."
+  },
+  "retrieval_recall": {
+    "covered": true,
+    "paper_ids": [0],
+    "reason": "Synthetic mock verdict: fixture paper zero is selected for each topic."
+  },
+  "position_seed": 95,
+  "pairwise_case_ids": [
+    "pair-evidence-density",
+    "pair-citation-density",
+    "pair-hedging",
+    "pair-structure",
+    "pair-length-matched",
+    "pair-contradiction-handling"
+  ]
+}

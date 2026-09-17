@@ -785,6 +785,13 @@ never renumbered.
   discriminates. No threshold, feature field, reason vocabulary or
   pinned tier moved.
 
+- [0095](0095-deterministic-mock-judge-campaign-scoring.md) — **Run all
+  five research metrics under a deterministic, fixture-backed mock judge.**
+  The opt-in scorer requires mock data plus the structural zero-spend
+  sentinel, validates every synthetic structured response, records blinded
+  judge inputs and seeded AB/BA calibration presentations, represents an
+  abstention, and leaves the existing partial scorer as the default.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

@@ -173,6 +173,15 @@ def _parser() -> argparse.ArgumentParser:
             "and stay in the denominator."
         ),
     )
+    parser.add_argument(
+        "--mock-judge",
+        action="store_true",
+        help=(
+            "Run the three judge metrics through the deterministic fixture "
+            "surface. Default: off. Requires USE_MOCK_DATA=true and "
+            "ANTHROPIC_API_KEY=local-preview-disabled."
+        ),
+    )
     return parser
 
 
@@ -309,6 +318,11 @@ def _run(args: argparse.Namespace) -> int:
         # pay for — or be able to reach — `build_workflow`.
         from src.campaign.execute import run_campaign
 
+        scorer = None
+        if args.mock_judge:
+            from src.eval.mock_judge import build_mock_judge_scorer
+
+            scorer = build_mock_judge_scorer(config)
         report = run_campaign(
             config,
             root=root,
@@ -316,6 +330,7 @@ def _run(args: argparse.Namespace) -> int:
             approval_backend=_backend(args),
             sink_root=args.sink_root,
             max_episodes=args.max_episodes,
+            scorer=scorer,
         )
         _emit(
             {
