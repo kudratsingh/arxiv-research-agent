@@ -35,6 +35,16 @@ at run time, and token counts that have never been measured. An approval
 granted today would be spendable and would still be spending against
 unmeasured numbers.
 
+**And a fourth thing, which nobody had noticed until a rehearsal looked
+for it.** P0-WO20 added `python -m src.campaign rehearse`, which walks
+the funded path under the zero-spend sentinel and stops at the
+credential. It reports that §1's `corpus_mode: snapshot` resolves to the
+*mock* corpus, under which every agent is model-free — so the scope this
+packet prices could not spend a dollar if it were approved. §8.3 has the
+measurements and what they leave for the owner to decide. The scope in
+§1 and the figures in §3 are left exactly as they were: correcting them
+would be answering §9.
+
 **Every token count below is an unmeasured assumption.** They describe
 prompts that exist and have never been run against this benchmark. They
 are the first thing to re-derive — ideally from a single real episode
@@ -116,17 +126,66 @@ adaptive compute and never once reached the adaptive part.
 
 ## 2. Provider and model ids — RE-PIN BEFORE APPROVAL
 
+**Ids verified on `main` 334280d on 2026-09-17.** The tables below are
+read off `src/llm_models.py` and `src/config.py` rather than
+transcribed, and `python -m src.campaign rehearse` re-reads them on
+every run (§8). What is re-pinned here is the **ids**: every price cell
+below and in §3 is untouched and still carries
+`ESTIMATE / RE-PRICE BEFORE APPROVAL`, because a price is a provider
+fact this repository has no way to check.
+
+### 2.1 What this campaign would route to
+
 | Role | Setting | Value on `main` today | Required action |
 |---|---|---|---|
 | Workflow model | `ANTHROPIC_MODEL` | `claude-sonnet-4-6` | **RE-PIN.** 07 §4 requires one exact then-current id, resolved immediately before the run. |
 | Judge model | `EVAL_JUDGE_MODEL` | `claude-sonnet-4-6` | **RE-PIN.** A separate instrument (ADR 0070); changing it invalidates every prior baseline. |
 | Per-agent overrides | `*_MODEL` | all empty | Keep empty, or record one explicit mapping used identically for the whole campaign. |
-| Temperature | `src/llm._TEMPERATURE` | `0.3` | **STATE THE VALUE PRICED.** Recorded in the manifest, not enforced by the campaign. |
+| Temperature | `LLM_TEMPERATURE` (`settings.llm_temperature`) | `0.3` | **STATE THE VALUE PRICED.** Recorded in the manifest, not enforced by the campaign. Sent only to a model whose row below says `sampling ✓`; ADR 0077 drops it for the rest rather than taking a 400. |
 | Price table | `PRICES_LAST_VERIFIED` | **2026-08-20** | **RE-VERIFY** against the provider's published list. `price_staleness()` prints the warning once the table is over 30 days old. |
 
 `claude-sonnet-4-6` is priced at **$3.00 / $15.00 per million tokens**
 (input / output) in `src/observability/costs.py`. Every figure in §3 is
 computed at that rate.
+
+### 2.2 The ids the gateway actually knows
+
+`src/llm_models.py`'s exact-id table (ADR 0077), which is what decides
+the shape of every request this campaign would send. It is the reason
+§2.1's "re-pin" is a one-line change rather than a hunt: an id in this
+table is a fully described id, and an id that is not is served a
+conservative row with every opt-in feature off.
+`CAPABILITIES_LAST_VERIFIED` is **2026-09-05**.
+
+| Model id | `temperature` | adaptive thinking | `output_config.effort` | structured outputs |
+|---|---|---|---|---|
+| `claude-fable-5` | ✗ 400 | ✓ | low, medium, high, xhigh, max | ✓ |
+| `claude-mythos-5` | ✗ 400 | ✓ | low, medium, high, xhigh, max | ✓ |
+| `claude-opus-5` | ✗ 400 | ✓ | low, medium, high, xhigh, max | ✓ |
+| `claude-opus-4-8` | ✗ 400 | ✓ | low, medium, high, xhigh, max | ✓ |
+| `claude-opus-4-7` | ✗ 400 | ✓ | low, medium, high, xhigh, max | ✓ |
+| `claude-opus-4-6` | ✓ | ✓ | low, medium, high, max | ✓ |
+| `claude-opus-4-5` | ✓ | ✗ | low, medium, high | ✓ |
+| `claude-sonnet-5` | ✗ 400 | ✓ | low, medium, high, xhigh, max | ✓ |
+| **`claude-sonnet-4-6`** | ✓ | ✓ | low, medium, high, max | ✓ |
+| `claude-haiku-4-5` | ✓ | ✗ | *(rejected outright)* | ✓ |
+| `claude-haiku-4-5-20251001` | ✓ | ✗ | *(rejected outright)* | ✓ |
+
+Eleven rows, and every one of them is also in
+`PRICES_USD_PER_MILLION` — `tests/test_llm_models.py` holds the two
+tables to the same set, so a fully-priced deployment is a fully
+described one. Five family prefixes (`claude-fable-`, `claude-mythos-`,
+`claude-opus-`, `claude-sonnet-`, `claude-haiku-`) catch an unseen
+member of a known family and guess *downwards*.
+
+**What §2.1's re-pin therefore costs, today.** Both roles resolve to
+`claude-sonnet-4-6`, which is in the table and accepts the temperature
+this campaign would price. Re-pinning to any other row is a settings
+change with no code change — but re-pinning to a row whose
+`temperature` cell reads ✗ silently changes the instrument, because the
+gateway stops sending the sampling parameter §2.1 says was priced. A
+re-pin across that line needs a sentence in §9's decision, not just a
+new id.
 
 ---
 
@@ -296,28 +355,97 @@ completed episodes are preserved and the reason is published.
 An approval granted now could not be executed. Listing this in the packet
 rather than discovering it after an approval is the point of the packet.
 
-1. ~~**The campaign execution loop does not exist.**~~ **Closed by
-   P0-WO07b.** `src/campaign/execute.py` runs the pending episodes of a
-   planned campaign and `python -m src.campaign run` is its verb.
-   `completion.json` is written by production code, so the ledger's
-   reconciliation path consumes receipts the loop wrote; and
-   `budget_stop_reached` — the between-episodes enforcement §3.4 relies
-   on — has a caller and a test that stops a campaign at its cap. The
-   full `20 x 3 x 5` mock matrix reconciles 300 completed and 0 excluded
-   at `$0.000000` with `llm_calls=0` on every episode
-   ([`15-stage0-qualification-report.md`](15-stage0-qualification-report.md)
-   §12). **What this does not do is make any figure below measured** —
-   §3's token counts are still assumptions and §2's prices are still
-   stale. The remaining preconditions are 2–4.
-2. **The approval backend is a shape, not an authority.**
-   `LocalApprovalRecordBackend` reads a JSON file of records and
-   delegates verification to W03's `FakeLocalApprovalBackend`. It fails
-   closed correctly and it is not a record an owner created.
-3. **Prices and model ids are not re-verified.** §2.
-4. **Token counts are unmeasured.** §3's basis. A single episode under a
-   separately approved micro-cap would replace every assumption in that
-   table with a measurement, and is the cheapest way to make this packet
-   real.
+Until P0-WO20 this list was a *claim*: somebody had read the code and
+believed these four lines were the whole of what was missing. It is now
+a **measurement**. `python -m src.campaign rehearse --campaign-id <id>`
+walks the funded path — approval check, ledger open, episode manifest
+sealed against the real compiled graph, provider credential, provider
+client — under `ANTHROPIC_API_KEY=local-preview-disabled`, and reports
+where it stopped and what it found still owed. It runs no episode,
+makes no network call, and leaves the campaign directory exactly as it
+found it. Every line below that says "owed" is a line the rehearsal
+derives from the tree on each run rather than one this document asserts.
+
+### 8.1 Mechanical now — these three cost nothing and are done
+
+| Was | Is now |
+|---|---|
+| The campaign execution loop does not exist | **Closed by P0-WO07b.** `src/campaign/execute.py` runs the pending episodes of a planned campaign; `completion.json` is written by production code, so the ledger's reconciliation path consumes receipts the loop wrote; `budget_stop_reached` — the between-episodes enforcement §3.4 relies on — has a caller and a test that stops a campaign at its cap. The full `20 x 3 x 5` mock matrix reconciles 300 completed and 0 excluded at `$0.000000` with `llm_calls=0` on every episode ([`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) §12). |
+| §1's scope is prose in this document | **Closed by P0-WO20.** [`campaigns/w12-arm-a-baseline.plan.json`](../../campaigns/w12-arm-a-baseline.plan.json) is the 60-episode arm-A design, checked in: campaign id, protocol and lock digests, the arm declaration digest, the case set in the task set's order, the repeats, the seed, every cap at zero, `chargeable: false`, `network_calls: 0`, and the command that produced it. `tests/test_campaign_plan_artifact.py` re-derives it from `eval_registry/` and compares byte for byte, so a registry change that moves a digest fails a test instead of leaving this packet describing a campaign nobody can plan. |
+| §2's model ids are placeholders | **Closed by P0-WO20.** §2 now carries `src/llm_models.py`'s eleven exact ids and their capability rows, verified on `main` 334280d on 2026-09-17, with the price cells deliberately untouched. |
+| Nobody can tell whether *anything else* is missing without funding a run | **Closed by P0-WO20.** `rehearse` is that answer, and 8.2 and 8.3 are what it returns. |
+
+**None of this makes a figure in §3 measured.** The token counts are
+still assumptions and the prices are still stale; the plan artifact
+describes a design, not a result.
+
+### 8.2 Still the owner's — three lines, none of them code
+
+1. **An approval record.** `LocalApprovalRecordBackend` reads a JSON
+   file of records and delegates verification to W03's
+   `FakeLocalApprovalBackend`. It fails closed correctly and it is not a
+   record an owner created. The rehearsal reports this line as owed
+   whenever the backend it was handed holds nothing — and proves the
+   machinery behind it works, because
+   `tests/test_campaign_rehearsal.py` rehearses a chargeable campaign
+   against a record built the way an operator would build one, and that
+   walk verifies the approval, seals the manifest, and stops at the
+   credential.
+2. **Prices re-verified, ids re-pinned at run time.** §2. The *ids* are
+   now pinned and both roles resolve to a fully described model; the
+   *prices* were last verified 2026-08-20 and `price_staleness()` says
+   so. This line stays owed on every rehearsal by construction: 07 §4
+   requires the resolution to happen immediately before the run, and no
+   check in this repository can stand in for reading the provider's
+   published list.
+3. **Token counts measured.** §3's basis. The rehearsal reads the
+   campaign's own completed count and reports this owed while it is
+   zero. A single episode under a separately approved micro-cap would
+   replace every assumption in that table with a measurement, and is
+   still the cheapest way to make this packet real.
+
+### 8.3 Found by the rehearsal — §1's corpus mode is not a funded run's
+
+This one is new, and it is the reason a rehearsal is worth more than a
+re-read.
+
+`corpus_mode: snapshot` in §1's table means `CorpusMode.SUPPLIED`, and
+`src/contracts/research_binding.py:source_scope` resolves *supplied* to
+exactly one thing: `USE_MOCK_DATA=true`, the five fixture papers of
+ADR 0041. Under that setting ADR 0080 makes all five research agents
+model-free — planner, reader, synthesizer, critic and verifier are
+served by `src/agents/mock_mode.py` and no client is constructed at all.
+So the scope as §1 writes it is not a campaign that could spend $22 or
+$60; it is a campaign that spends **$0.000000** and measures nothing,
+which is precisely what 15 §12's mock matrix already did.
+
+Measured, both ways, on `main` 334280d:
+
+| Deployment | `corpus_mode` | What `rehearse` reports |
+|---|---|---|
+| `USE_MOCK_DATA=true` | `snapshot` | Walks to `provider-credential-probed`. Every earlier step passes; both provider doors refuse under the sentinel. **And no model would ever be called, because mock mode serves every agent.** |
+| `USE_MOCK_DATA=false` | `snapshot` | Refuses at `episode-manifest-sealed`: *"campaign declares corpus_mode=snapshot but the episode resolves to live"*. |
+| `USE_MOCK_DATA=false` | `live`, zero cap | Refuses at `episode-manifest-sealed`: *"episode admission failed closed: task policy forbids chargeable work"* — the metered provider fails closed against a zero budget, exactly as invariant 10 requires. |
+| `USE_MOCK_DATA=false` | `live`, positive caps, approval record | Walks to `provider-credential-probed`. This is the funded shape, and nothing in the path is missing before the credential. |
+
+**What this means for the decision in §9.** A funded arm-A baseline has
+to be planned `--corpus-mode live`, which moves the campaign id (the id
+digests the protocol) and makes §5's `source-drift` stop rule — written
+as "stop if the resolved corpus mode is not `snapshot`" — read backwards
+for the campaign it would govern. Two consequences the owner is owed
+before answering §9, and neither is fixed here because both are the
+owner's call:
+
+- **§1's `snapshot` row and §5's `source-drift` rule need restating for
+  a live baseline**, or the baseline needs a controlled corpus that is
+  not the mock fixture set. This repository has no third option today.
+- **The variance a live baseline measures includes arXiv's own
+  variability**, which is not what §1 set out to size. That is a design
+  question for whoever answers §9, not a defect in the code.
+
+The checked-in plan artifact stays `snapshot` on purpose: it is the
+design §1 describes, published so that this disagreement is visible in a
+diff rather than discovered by an approved run.
 
 ---
 
