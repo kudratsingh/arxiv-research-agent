@@ -279,6 +279,8 @@ class RetentionTerms(StrictContractModel):
 
 
 class DeliverableDescriptor(StrictContractModel):
+    """One deliverable a benchmark case requires, as the registry states it."""
+
     deliverable_id: Annotated[str, StringConstraints(pattern=r"^del_[a-z0-9_]{1,48}$")]
     kind: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     media_type: Annotated[str, StringConstraints(min_length=1, max_length=100)]
@@ -328,6 +330,8 @@ class GraderLock(StrictContractModel):
 
     @model_validator(mode="after")
     def campaign_rubrics_are_locked(self) -> GraderLock:
+        """Require every campaign rubric to be named by a locked grader rubric."""
+
         known = {item.name for item in self.rubrics}
         missing = sorted(set(self.campaign_rubric_names) - known)
         if missing:
@@ -354,6 +358,8 @@ class ResearchExpectedTopics(StrictContractModel):
 
 
 class LearningGoalContent(StrictContractModel):
+    """One goal a learner persona states for itself."""
+
     goal_id: Annotated[str, StringConstraints(min_length=1, max_length=128)]
     statement: Annotated[str, StringConstraints(min_length=1, max_length=500)]
     target_date: Annotated[str, StringConstraints(max_length=32)]
@@ -361,6 +367,8 @@ class LearningGoalContent(StrictContractModel):
 
 
 class LearningSkillContent(StrictContractModel):
+    """One skill a persona claims, with the confidence behind the claim."""
+
     skill: Annotated[str, StringConstraints(min_length=1, max_length=128)]
     level: Annotated[str, StringConstraints(min_length=1, max_length=32)]
     source: Annotated[str, StringConstraints(min_length=1, max_length=32)]
@@ -370,6 +378,8 @@ class LearningSkillContent(StrictContractModel):
 
 
 class LearningPersonaContent(StrictContractModel):
+    """A learner persona as sealed, candidate-visible registry content."""
+
     persona_id: RegistryId
     #: Position in ``src.eval.learning_benchmark.PERSONAS``.  The module's list
     #: order is data — a registry that lost it could not rebuild the module's
@@ -385,6 +395,8 @@ class LearningPersonaContent(StrictContractModel):
 
 
 class LearningPaperContent(StrictContractModel):
+    """A benchmark paper and its reading plan, as sealed registry content."""
+
     #: Canonical ``arxiv:<id>`` form, verbatim; the object's logical id is a
     #: slug of it because a registry id admits no colon or dot.
     paper_id: Annotated[str, StringConstraints(min_length=1, max_length=128)]
@@ -406,6 +418,8 @@ class LearningScenarioInput(StrictContractModel):
 
 
 class LearningTurnContent(StrictContractModel):
+    """One scripted learner turn, with the intent it is meant to express."""
+
     turn_index: Annotated[int, Field(ge=0)]
     intent: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     text: Annotated[str, StringConstraints(min_length=1, max_length=4000)]
@@ -424,6 +438,8 @@ class LearningScript(StrictContractModel):
 
     @model_validator(mode="after")
     def turns_are_ordered(self) -> LearningScript:
+        """Require the scripted turn indices to be contiguous from zero."""
+
         expected = list(range(len(self.turns)))
         if [turn.turn_index for turn in self.turns] != expected:
             raise ValueError("scripted turn indices must be contiguous from 0")
@@ -540,6 +556,8 @@ _PAYLOAD_MODELS: Final[Mapping[ContentKind, tuple[type[StrictContractModel], ...
 
 
 class ContentIntegrity(StrictContractModel):
+    """The digest of a content payload, and the profile it was computed under."""
+
     algorithm: Literal["sha256"] = "sha256"
     digest_profile: Literal["agent-contract-json/v1"] = "agent-contract-json/v1"
     payload_digest: Digest
@@ -603,6 +621,8 @@ class ContentEnvelope(StrictContractModel):
 
     @model_validator(mode="after")
     def verify_kind_and_digest(self) -> ContentEnvelope:
+        """Refuse a mislabelled envelope, or one whose digest is not its content."""
+
         expected = _CONTENT_KIND[type(self.payload)]
         if self.schema_kind is not expected:
             raise ValueError(
@@ -612,6 +632,8 @@ class ContentEnvelope(StrictContractModel):
         return self
 
     def object_ref(self) -> ImmutableObjectRef:
+        """Return the exact immutable reference that addresses this envelope."""
+
         return ImmutableObjectRef(
             kind=self.schema_kind.value,
             id=self.content_id,
@@ -657,12 +679,16 @@ class LocalContentStore:
         self.root = (root / CONTENT_DIRNAME).resolve()
 
     def _path(self, ref: ImmutableObjectRef) -> Path:
+        """Map a reference onto its file, refusing a locator that escapes the root."""
+
         candidate = (self.root / ref.kind / ref.id / f"{ref.revision}.json").resolve()
         if not candidate.is_relative_to(self.root):
             raise RegistryResolutionError("content locator escaped its root")
         return candidate
 
     def resolve(self, ref: ImmutableObjectRef, *, role: RegistryRole) -> ContentEnvelope:
+        """Load and re-seal the content object an exact reference names."""
+
         path = self._path(ref)
         try:
             raw = path.read_text(encoding="utf-8")
@@ -698,6 +724,8 @@ class LocalContentStore:
 
 
 def _license(*, license_id: str, attribution: str | None) -> LicensePolicy:
+    """Return the licence this repository's own benchmark material can claim."""
+
     # The repository ships no LICENSE file, so the query and scenario text
     # carries no redistribution grant.  `prohibited` is the honest value; the
     # material is nonetheless publicly exposed, which the contamination record
@@ -769,6 +797,8 @@ class RegistryBundle(NamedTuple):
 
 
 def _rubric_lock(rubrics: Sequence[Rubric]) -> tuple[GraderRubricLock, ...]:
+    """Freeze the graders' rubric names, versions and prompt digests."""
+
     return tuple(
         GraderRubricLock(
             name=rubric.name,
@@ -784,6 +814,8 @@ def _confidence(value: float) -> str:
 
 
 def _retention_objects() -> tuple[RegistryEnvelope, ContentEnvelope, RetentionPolicyRef]:
+    """Seal the bootstrap retention policy every other object points at."""
+
     terms = seal_content_object(
         RetentionTerms(
             terms_id="bootstrap-repository-history",
@@ -871,6 +903,8 @@ _RESEARCH_RUBRIC_ITEMS: Final[tuple[tuple[str, str, str, str], ...]] = (
 def _research_content(
     query: BenchmarkQuery,
 ) -> ContentEnvelope:
+    """Seal one research query's expected topics as evaluator-only content."""
+
     return seal_content_object(
         ResearchExpectedTopics(
             case_id=query["query_id"],
@@ -892,6 +926,8 @@ def _research_case(
     source_policy_ref: ImmutableObjectRef,
     topics_ref: ImmutableObjectRef,
 ) -> RegistryEnvelope:
+    """Seal one research query as a registry task case."""
+
     return seal_registry_object(
         TaskCase(
             **_governed(
@@ -924,6 +960,8 @@ def _research_case(
 def _build_research(
     retention_ref: RetentionPolicyRef,
 ) -> tuple[list[RegistryEnvelope], list[ContentEnvelope], ImmutableObjectRef]:
+    """Build the research suite: its cases, rubrics, content and suite reference."""
+
     objects: list[RegistryEnvelope] = []
     contents: list[ContentEnvelope] = []
 
@@ -1111,6 +1149,8 @@ def _build_research(
 
 
 def _research_rubric_set(retention_ref: RetentionPolicyRef) -> RegistryEnvelope:
+    """Seal the rubric set the research graders apply."""
+
     items = tuple(
         RubricItem(
             rubric_item_id=name,
@@ -1220,6 +1260,8 @@ _LEARNING_RUBRIC_ITEMS: Final[tuple[tuple[str, str, _ScoringType, str, str], ...
 
 
 def _persona_content(persona: LearnerPersona, position: int) -> ContentEnvelope:
+    """Seal one learner persona, keeping its position in the roster."""
+
     return seal_content_object(
         LearningPersonaContent(
             persona_id=persona["persona_id"],
@@ -1256,6 +1298,8 @@ def _persona_content(persona: LearnerPersona, position: int) -> ContentEnvelope:
 
 
 def _paper_content(paper: BenchmarkPaper) -> ContentEnvelope:
+    """Seal one benchmark paper, keeping its position in the reading path."""
+
     return seal_content_object(
         LearningPaperContent(
             paper_id=paper["paper_id"],
@@ -1275,6 +1319,8 @@ def _paper_content(paper: BenchmarkPaper) -> ContentEnvelope:
 def _scenario_contents(
     scenario: LearningScenario,
 ) -> tuple[ContentEnvelope, ContentEnvelope, ContentEnvelope]:
+    """Seal one scenario as its input, its script and its expectations."""
+
     scenario_input = seal_content_object(
         LearningScenarioInput(
             scenario_id=scenario["scenario_id"],
@@ -1338,6 +1384,8 @@ def _fixture_objects(
     retention_ref: RetentionPolicyRef,
     schema_ref: ImmutableObjectRef,
 ) -> tuple[list[RegistryEnvelope], list[ContentEnvelope], dict[str, ImmutableObjectRef]]:
+    """Seal each recorded fixture set, returning the references by scenario."""
+
     objects: list[RegistryEnvelope] = []
     contents: list[ContentEnvelope] = []
     recordings: dict[str, ImmutableObjectRef] = {}
@@ -1406,6 +1454,8 @@ def _fixture_objects(
 
 
 def _learning_rubric_set(retention_ref: RetentionPolicyRef) -> RegistryEnvelope:
+    """Seal the rubric set the guided-learning graders apply."""
+
     versions = {rubric.name: rubric.version for rubric in LEARNING_RUBRICS}
     items = tuple(
         RubricItem(
@@ -1443,6 +1493,8 @@ def _build_learning(
     retention_ref: RetentionPolicyRef,
     fixture_root: Path,
 ) -> tuple[list[RegistryEnvelope], list[ContentEnvelope], ImmutableObjectRef]:
+    """Build the guided-learning suite from personas, papers and fixtures."""
+
     objects: list[RegistryEnvelope] = []
     contents: list[ContentEnvelope] = []
 
@@ -1793,6 +1845,8 @@ def write_registry(bundle: RegistryBundle, root: Path) -> list[Path]:
 
 
 def _suite_ref(objects: Iterable[RegistryEnvelope], suite_id: str) -> ImmutableObjectRef:
+    """Return the exact reference to one sealed suite, by id."""
+
     for envelope in objects:
         if isinstance(envelope.payload, BenchmarkSuite) and envelope.payload.suite_id == suite_id:
             return envelope.object_ref()
@@ -1901,6 +1955,8 @@ class BenchmarkReader:
         return self.registry.resolve(ref, role=self.role, intended_use=self.intended_use)
 
     def suite(self, suite_id: str) -> BenchmarkSuite:
+        """Resolve one benchmark suite by id, under this reader's role and use."""
+
         envelope = self._resolve(suite_ref(self.root, suite_id))
         if not isinstance(envelope.payload, BenchmarkSuite):
             raise RegistryResolutionError(f"{suite_id} did not resolve to a benchmark suite")
@@ -1915,6 +1971,8 @@ class BenchmarkReader:
         return task_set.payload.case_refs
 
     def case(self, ref: ImmutableObjectRef) -> TaskCase:
+        """Resolve one task case, under this reader's role and use."""
+
         envelope = self._resolve(ref)
         if not isinstance(envelope.payload, TaskCase):
             raise RegistryResolutionError(f"{ref.id} did not resolve to a task case")
@@ -1990,6 +2048,8 @@ def load_research_benchmark(root: Path | None = None) -> list[BenchmarkQuery]:
 
 
 def persona_from(content: LearningPersonaContent) -> LearnerPersona:
+    """Rebuild the in-memory persona record from its sealed content."""
+
     return LearnerPersona(
         persona_id=content.persona_id,
         label=content.label,
@@ -2019,6 +2079,8 @@ def persona_from(content: LearningPersonaContent) -> LearnerPersona:
 
 
 def paper_from(content: LearningPaperContent) -> BenchmarkPaper:
+    """Rebuild the in-memory paper record from its sealed content."""
+
     return BenchmarkPaper(
         paper_id=content.paper_id,
         title=content.title,
@@ -2184,6 +2246,8 @@ def _diff_json(expected: Any, actual: Any, path: str = "$") -> list[str]:
 
 
 def _summarize(lines: Sequence[str]) -> str:
+    """Join difference lines into one line, naming how many were left out."""
+
     if len(lines) <= _MAX_DIFF_LINES:
         return "; ".join(lines)
     head = "; ".join(lines[:_MAX_DIFF_LINES])
@@ -2195,6 +2259,8 @@ def _summarize(lines: Sequence[str]) -> str:
 #: Only used to *label* a mismatch, never to decide whether one exists.
 @lru_cache(maxsize=1)
 def _calibration_ids() -> frozenset[str]:
+    """Every object id the calibration bundle owns."""
+
     objects, contents = calibration_bundle_objects()
     return frozenset(
         [envelope.object_ref().id for envelope in objects]
@@ -2205,6 +2271,8 @@ def _calibration_ids() -> frozenset[str]:
 def _lane_for(
     object_id: str, research_ids: frozenset[str]
 ) -> Literal["research", "guided_learning", "calibration", "shared"]:
+    """Which lane an object belongs to; anything unclaimed is shared."""
+
     if object_id in research_ids:
         return "research"
     if object_id in _calibration_ids():
@@ -2428,6 +2496,8 @@ def _compare_score_semantics(contents: Sequence[ContentEnvelope]) -> list[Parity
 
 
 def _registry_case_ids(objects: Sequence[RegistryEnvelope], task_set_id: str) -> list[str]:
+    """The case ids a sealed task set names, or nothing if it is absent."""
+
     for envelope in objects:
         payload = envelope.payload
         if isinstance(payload, TaskSet) and payload.task_set_id == task_set_id:

@@ -83,6 +83,8 @@ MoneyUsd: TypeAlias = Annotated[
 
 
 def _validate_rfc3339_utc(value: str) -> str:
+    """Reject a timestamp that is not RFC 3339 UTC or not a real calendar date."""
+
     if not _RFC3339_UTC_RE.fullmatch(value):
         raise ValueError("timestamp must be RFC 3339 UTC with a trailing Z")
     try:
@@ -153,6 +155,8 @@ class DataClass(StrEnum):
 
     @classmethod
     def most_restrictive(cls, *values: DataClass) -> DataClass:
+        """Return the most restrictive of the supplied data classes."""
+
         if not values:
             raise ValueError("at least one data class is required")
         return max(values, key=lambda value: value.rank)
@@ -176,6 +180,13 @@ def _utf16_sort_key(value: str) -> bytes:
 
 
 def _normalize_json(value: Any, *, path: str = "$") -> Any:
+    """Return ``value`` reshaped into what the v1 digest profile admits.
+
+    Binary floats, out-of-range integers, non-string object keys and lone
+    surrogates are refused here rather than hashed; object keys are ordered by
+    RFC 8785's UTF-16 rule.
+    """
+
     if isinstance(value, BaseModel):
         return _normalize_json(value.model_dump(mode="json"), path=path)
     if value is None or isinstance(value, (str, bool)):

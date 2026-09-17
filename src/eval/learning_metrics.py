@@ -238,6 +238,7 @@ def _criterion(value: Any, where: str) -> CriterionScore:
 
 
 def _parse_plan_result(value: Any) -> SessionPlanCoherenceResult:
+    """Validate the plan judge's response into a typed result."""
     if not isinstance(value, Mapping):
         raise ValueError("plan judge response must be an object")
     keys = {
@@ -264,6 +265,7 @@ def _parse_plan_result(value: Any) -> SessionPlanCoherenceResult:
 
 
 def _parse_explain_back_result(value: Any) -> ExplainBackResult:
+    """Validate the explain-back judge's response, requiring unique gap ids."""
     if not isinstance(value, Mapping):
         raise ValueError("explain-back judge response must be an object")
     _exact_keys(value, {"gaps", "summary"}, "explain-back judge response")
@@ -295,6 +297,7 @@ def _parse_explain_back_result(value: Any) -> ExplainBackResult:
 
 
 def _parse_shame_free_result(value: Any, copy_texts: Sequence[str]) -> ShameFreeCopyResult:
+    """Validate the shame-free judge's response, requiring verbatim quotes."""
     if not isinstance(value, Mapping):
         raise ValueError("shame-free judge response must be an object")
     keys = {
@@ -338,6 +341,7 @@ def _parse_shame_free_result(value: Any, copy_texts: Sequence[str]) -> ShameFree
 
 
 def _failure(metric_name: str, exc: Exception) -> MetricEnvelope:
+    """Return an envelope that carries why a metric could not be produced."""
     return MetricEnvelope(
         metric=None,
         metrics_error=f"{metric_name}: {type(exc).__name__}: {exc}",
@@ -349,6 +353,7 @@ def _plan_prompt(
     scenario: LearningScenario,
     paper: BenchmarkPaper,
 ) -> str:
+    """Render the plan judge's prompt from the fixture, scenario and paper."""
     return json.dumps(
         {
             "declared_minutes_today": scenario["declared_minutes_today"],

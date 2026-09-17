@@ -95,6 +95,8 @@ class RunManifestError(ContractError):
 
 
 def _walk(value: Any, *, path: str = "$") -> Iterable[tuple[str, Any]]:
+    """Yield ``(json_path, value)`` for every node inside a nested value."""
+
     if isinstance(value, Mapping):
         for key, child in value.items():
             child_path = f"{path}.{key}"
@@ -129,6 +131,8 @@ def validate_manifest_safe_content(value: Any) -> None:
 
 
 class ManifestIntegrity(StrictContractModel):
+    """The payload digest and the exact profile it was computed under."""
+
     algorithm: Literal["sha256"] = "sha256"
     digest_profile: Literal["agent-contract-json/v1"] = "agent-contract-json/v1"
     canonicalization: Literal["RFC8785"] = "RFC8785"
@@ -136,6 +140,8 @@ class ManifestIntegrity(StrictContractModel):
 
 
 class RunIdentity(StrictContractModel):
+    """Who this run is: its campaign, episode, replicate group and repeat."""
+
     campaign_id: CampaignId
     episode_key: Digest
     replicate_group_id: Digest
@@ -146,6 +152,8 @@ class RunIdentity(StrictContractModel):
 
 
 class RunLineage(StrictContractModel):
+    """Why this run exists, and which run or manifest it descends from."""
+
     kind: Literal["rerun", "fork", "migration"]
     parent_run_id: RunId | None = None
     migrated_from_manifest_digest: Digest | None = None
@@ -153,6 +161,8 @@ class RunLineage(StrictContractModel):
 
     @model_validator(mode="after")
     def parent_matches_kind(self) -> RunLineage:
+        """Require the ancestor that this lineage kind cannot do without."""
+
         if self.kind == "migration":
             if self.migrated_from_manifest_digest is None:
                 raise ValueError("migration lineage requires a source manifest digest")
@@ -162,18 +172,24 @@ class RunLineage(StrictContractModel):
 
 
 class CompilationSnapshot(StrictContractModel):
+    """The compilation receipt, which necessarily predates every run event."""
+
     receipt_ref: ImmutableObjectRef
     receipt_locator: Annotated[str, StringConstraints(min_length=1, max_length=500)]
     occurred_before_run_events: Literal[True] = True
 
     @model_validator(mode="after")
     def receipt_kind(self) -> CompilationSnapshot:
+        """Require the referenced receipt to actually be a compilation receipt."""
+
         if self.receipt_ref.kind != "compilation_receipt":
             raise ValueError("compilation receipt ref has the wrong kind")
         return self
 
 
 class RegistryVisibility(StrictContractModel):
+    """How far each resolved registry object may travel, fixed for v1."""
+
     split_assignment: Literal["control-plane-only"] = "control-plane-only"
     rubric_set: Literal["mixed-projected"] = "mixed-projected"
     grader_profile: Literal["evaluator-only"] = "evaluator-only"
@@ -184,6 +200,8 @@ class RegistryVisibility(StrictContractModel):
 
 
 class RegistryResolution(StrictContractModel):
+    """Every registry object this run was sealed against, resolved exactly."""
+
     suite_ref: ImmutableObjectRef
     task_set_ref: ImmutableObjectRef
     task_case_ref: ImmutableObjectRef
@@ -197,6 +215,8 @@ class RegistryResolution(StrictContractModel):
 
     @model_validator(mode="after")
     def references_have_expected_kinds(self) -> RegistryResolution:
+        """Require each reference to have the kind its field names, and to be unique."""
+
         singular = (
             (self.suite_ref, "benchmark_suite"),
             (self.task_set_ref, "task_set"),
@@ -226,6 +246,8 @@ class RegistryResolution(StrictContractModel):
 
 
 class PolicyCapabilities(StrictContractModel):
+    """What the sealed policy graph is able to do."""
+
     supervisor: bool
     evidence_store: bool
     fixed_post_synthesis_verifier: bool
@@ -233,6 +255,8 @@ class PolicyCapabilities(StrictContractModel):
 
 
 class RuntimeFlags(StrictContractModel):
+    """The runtime switches the sealed policy was configured with."""
+
     enable_supervisor: bool
     enable_evidence_store: bool
     enable_verifier: bool
@@ -241,6 +265,8 @@ class RuntimeFlags(StrictContractModel):
 
 
 class PolicyConfig(StrictContractModel):
+    """Tunable policy parameters; unset means the policy does not use them."""
+
     allowed_tiers: tuple[Literal["T0", "T1", "T2"], ...] = ()
     default_tier: Literal["T0", "T1", "T2"] | None = None
     difficulty_features_version: SemVer | None = None
@@ -331,6 +357,12 @@ class PolicySnapshot(StrictContractModel):
 
     @model_validator(mode="after")
     def validate_policy_structure(self) -> PolicySnapshot:
+        """Route validation to the rules for this policy kind.
+
+        Only a research arm may carry an arm id or selector; any other kind must
+        name its own policy id instead.
+        """
+
         if self.policy_kind == "research_arm":
             return self._validate_arm()
         if self.arm_id is not None or self.selector is not None:
@@ -399,6 +431,8 @@ class PolicySnapshot(StrictContractModel):
         return self
 
     def _validate_arm(self) -> PolicySnapshot:
+        """Enforce the five-arm definition: selector, flags, config and capabilities."""
+
         if self.arm_id is None:
             raise ValueError("a research arm must name its arm id")
         if self.policy_id is not None or self.shape_nodes or self.session_graph is not None:
@@ -488,6 +522,8 @@ class PolicyExecutionSnapshot(StrictContractModel):
 
     @model_validator(mode="after")
     def selected_tier_is_a_declared_execution(self) -> PolicyExecutionSnapshot:
+        """Require an eligible selected tier and a sorted, unique executed shape."""
+
         if not self.eligible_tiers or self.compute_tier not in self.eligible_tiers:
             raise ValueError("selected compute tier must be eligible")
         if len(set(self.eligible_tiers)) != len(self.eligible_tiers):
@@ -504,17 +540,23 @@ class PolicyExecutionSnapshot(StrictContractModel):
 
 
 class RuntimeConfigSnapshot(StrictContractModel):
+    """The effective settings this run used, with their digest."""
+
     settings_schema_digest: Digest
     effective_values: Mapping[str, str | int | bool | None]
     effective_values_digest: Digest
 
     @model_validator(mode="after")
     def values_match_digest(self) -> RuntimeConfigSnapshot:
+        """Refuse recorded settings that are not what the digest says they were."""
+
         require_digest(dict(self.effective_values), self.effective_values_digest)
         return self
 
 
 class InvocationSnapshot(StrictContractModel):
+    """How the run was invoked: human review, bypass, and checkpointing."""
+
     enable_hitl: bool
     hitl_bypass: bool
     hitl_bypass_reason: SafeLabel | None = None
@@ -528,6 +570,8 @@ class InvocationSnapshot(StrictContractModel):
 
 
 class SamplingSnapshot(StrictContractModel):
+    """The decoding parameters a model was called with."""
+
     temperature: FixedDecimal
     top_p: FixedDecimal | None = None
     top_k: Annotated[int | None, Field(ge=1)] = None
@@ -536,6 +580,12 @@ class SamplingSnapshot(StrictContractModel):
 
 
 class CredentialBinding(StrictContractModel):
+    """Whether a credential was configured, named only by an opaque binding.
+
+    No value and no fingerprint is ever recorded: a hash of a credential is
+    still a credential for the purposes of this contract.
+    """
+
     present: bool
     binding_ref: Annotated[
         str, StringConstraints(pattern=r"^credential-binding://[A-Za-z0-9._/-]+$")
@@ -551,12 +601,16 @@ class CredentialBinding(StrictContractModel):
 
 
 class RetrySnapshot(StrictContractModel):
+    """The timeout, retry and fallback policy for provider calls."""
+
     timeout_seconds: Annotated[int, Field(ge=1, le=86_400)]
     max_retries: Annotated[int, Field(ge=0, le=20)]
     fallback: Literal["none", "declared-routes-only"] = "none"
 
 
 class LlmProviderSnapshot(StrictContractModel):
+    """The provider, routes, decoding and credential binding a run was sealed to."""
+
     provider: PolicyMember
     api_protocol_version: SafeLabel
     model_resolution: Literal["exact-id-required", "alias"]
@@ -575,12 +629,16 @@ class LlmProviderSnapshot(StrictContractModel):
 
 
 class PricingSnapshot(StrictContractModel):
+    """The immutable price table costs were computed against, and its date."""
+
     currency: Literal["USD"] = "USD"
     table_ref: ImmutableObjectRef
     prices_last_verified: Annotated[str, StringConstraints(pattern=r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")]
 
 
 class ProviderSnapshot(StrictContractModel):
+    """Everything about the model provider: routing plus pricing."""
+
     llm: LlmProviderSnapshot
     pricing: PricingSnapshot
 
@@ -598,6 +656,8 @@ class PolicyProviderProjection(StrictContractModel):
 
 
 class PromptSnapshot(StrictContractModel):
+    """Which prompt bundle and renderer ran; rendered prompts are never stored."""
+
     bundle_ref: ImmutableObjectRef
     renderer_digest: Digest
     prompt_isolation: Literal["enabled"] = "enabled"
@@ -605,6 +665,8 @@ class PromptSnapshot(StrictContractModel):
 
 
 class ToolSnapshot(StrictContractModel):
+    """Which tools existed, which the agent could call, and what was denied."""
+
     registry_ref: ImmutableObjectRef
     implementation_refs: tuple[ImmutableObjectRef, ...]
     agent_invocable: tuple[PolicyMember, ...]
@@ -616,6 +678,8 @@ class ToolSnapshot(StrictContractModel):
 
     @model_validator(mode="after")
     def tool_sets_are_coherent(self) -> ToolSnapshot:
+        """Require unique collections, and no tool that is both allowed and denied."""
+
         for values in (self.agent_invocable, self.internal_components, self.denied):
             if len(values) != len(set(values)):
                 raise ValueError("tool snapshot collections must be unique")
@@ -625,6 +689,8 @@ class ToolSnapshot(StrictContractModel):
 
 
 class SourceSnapshot(StrictContractModel):
+    """Where the run's sources came from, and whether live access was allowed."""
+
     input_corpus_mode: CorpusMode
     observation_capture_mode: Literal["none", "recorded"]
     source_policy_ref: ImmutableObjectRef
@@ -633,6 +699,8 @@ class SourceSnapshot(StrictContractModel):
 
     @model_validator(mode="after")
     def source_mode_is_consistent(self) -> SourceSnapshot:
+        """Require the snapshot reference and live access the corpus mode implies."""
+
         if self.source_policy_ref.kind != "source_policy":
             raise ValueError("source_policy_ref has the wrong kind")
         if self.input_corpus_mode is CorpusMode.SNAPSHOT:
@@ -648,12 +716,16 @@ class SourceSnapshot(StrictContractModel):
 
 
 class EvaluationBudget(StrictContractModel):
+    """The ceiling grading this run may spend."""
+
     currency: Literal["USD"] = "USD"
     cost_usd_max: MoneyUsd
     model_calls_max: Annotated[int, Field(ge=0)]
 
 
 class EvaluationSnapshot(StrictContractModel):
+    """How this run will be graded, sealed before it is."""
+
     candidate_visibility: Literal["control-plane-only"] = "control-plane-only"
     grader_profile_refs: tuple[ImmutableObjectRef, ...]
     judge_routes: Mapping[PolicyMember, SafeLabel]
@@ -668,6 +740,8 @@ class EvaluationSnapshot(StrictContractModel):
 
 
 class DeterminismClass(StrEnum):
+    """How reproducible a rerun of this manifest can be, at best."""
+
     DETERMINISTIC_LOCAL = "deterministic-local"
     SNAPSHOT_INPUT_SEEDED_MODEL = "snapshot-input-seeded-model"
     RECORDED_OBSERVATIONS_STOCHASTIC_MODEL = "recorded-observations-stochastic-model"
@@ -675,6 +749,8 @@ class DeterminismClass(StrEnum):
 
 
 class RandomnessSnapshot(StrictContractModel):
+    """Every source of randomness, so a repeat can be derived rather than guessed."""
+
     repeat_index: Annotated[int, Field(ge=0)]
     root_seed: int
     derivation: Literal["hmac-sha256(root_seed, component-name)"] = (
@@ -686,6 +762,8 @@ class RandomnessSnapshot(StrictContractModel):
 
 
 class AdmissionCeilings(StrictContractModel):
+    """The spend ceilings admission was asked to reconcile."""
+
     task_workflow_cost_usd: MoneyUsd
     platform_workflow_cost_usd: MoneyUsd
     campaign_workflow_allocation_usd: MoneyUsd
@@ -694,6 +772,8 @@ class AdmissionCeilings(StrictContractModel):
 
 
 class ResolvedLimits(StrictContractModel):
+    """The limits execution is actually held to, after admission."""
+
     hard_timeout_seconds: Annotated[int, Field(ge=1)]
     model_calls_max: Annotated[int, Field(ge=0)]
     tool_calls_max: Annotated[int, Field(ge=0)]
@@ -704,6 +784,8 @@ class ResolvedLimits(StrictContractModel):
 
 
 class AdmissionResolution(StrictContractModel):
+    """What admission decided, and the receipt that proves it decided it."""
+
     resolver_version: Literal["admission-controller/1.0.0"] = "admission-controller/1.0.0"
     input_workflow_ceilings: AdmissionCeilings
     resolved_workflow_cost_usd: MoneyUsd
@@ -716,6 +798,8 @@ class AdmissionResolution(StrictContractModel):
 
     @model_validator(mode="after")
     def cost_is_the_minimum(self) -> AdmissionResolution:
+        """Require the resolved cost to be the lowest input ceiling, nothing else."""
+
         values = self.input_workflow_ceilings.model_dump(mode="json").values()
         expected = f"{min(Decimal(value) for value in values):.6f}"
         if self.resolved_workflow_cost_usd != expected:
@@ -726,6 +810,8 @@ class AdmissionResolution(StrictContractModel):
 
 
 class EpisodeBudget(StrictContractModel):
+    """What one run may consume, per component and in total."""
+
     currency: Literal["USD"] = "USD"
     workflow_cost_usd_max: MoneyUsd
     judge_cost_usd_max: MoneyUsd
@@ -754,6 +840,8 @@ class EpisodeBudget(StrictContractModel):
 
 
 class CampaignBudget(StrictContractModel):
+    """What the whole campaign may consume, and how that is enforced."""
+
     currency: Literal["USD"] = "USD"
     total_cost_usd_max: MoneyUsd
     enforcement: Literal[
@@ -763,11 +851,15 @@ class CampaignBudget(StrictContractModel):
 
 
 class BudgetSnapshot(StrictContractModel):
+    """Both budgets a run is bound by: its own and its campaign's."""
+
     episode: EpisodeBudget
     campaign: CampaignBudget
 
 
 class ApprovalScope(StrictContractModel):
+    """Exactly what an external approval authorizes, and up to what amount."""
+
     campaign_id: CampaignId
     providers: tuple[PolicyMember, ...]
     stages: tuple[PolicyMember, ...]
@@ -779,6 +871,8 @@ class ApprovalScope(StrictContractModel):
 
     @model_validator(mode="after")
     def scope_is_bounded(self) -> ApprovalScope:
+        """Require unique members and allocations that fit inside the total cap."""
+
         if not self.providers or not self.stages:
             raise ValueError("approval scope requires providers and stages")
         if any(
@@ -796,6 +890,8 @@ class ApprovalScope(StrictContractModel):
 
 
 class ApprovalStatus(StrEnum):
+    """The state of the approval a chargeable run depends on."""
+
     NOT_REQUIRED = "not_required"
     APPROVED = "approved"
     PENDING = "pending"
@@ -804,6 +900,8 @@ class ApprovalStatus(StrEnum):
 
 
 class ApprovalRecord(StrictContractModel):
+    """An external approval as the backend reports it, with its validity window."""
+
     approval_id: Annotated[str, StringConstraints(pattern=r"^approval_[a-z0-9-]{8,64}$")]
     status: ApprovalStatus
     scope: ApprovalScope
@@ -820,6 +918,8 @@ class ApprovalRecord(StrictContractModel):
 
 
 class ApprovalVerificationReceipt(StrictContractModel):
+    """Proof that one approval was checked for one stage at one moment."""
+
     schema_kind: Literal["approval-verification-receipt"] = (
         "approval-verification-receipt"
     )
@@ -834,6 +934,12 @@ class ApprovalVerificationReceipt(StrictContractModel):
 
 
 class ApprovalSnapshot(StrictContractModel):
+    """The approval state sealed into the manifest.
+
+    It is either a fully referenced approval or an explained no-cost run; a
+    half-populated snapshot cannot be constructed.
+    """
+
     required: bool
     status_at_seal: ApprovalStatus
     not_required_reason: SafeLabel | None = None
@@ -851,6 +957,8 @@ class ApprovalSnapshot(StrictContractModel):
 
     @model_validator(mode="after")
     def state_is_coherent(self) -> ApprovalSnapshot:
+        """Require a complete approval, or a no-cost snapshot carrying only its reason."""
+
         approved_fields = (
             self.approval_id,
             self.record_ref,
@@ -877,6 +985,8 @@ class ApprovalSnapshot(StrictContractModel):
 
 
 class CodeSnapshot(StrictContractModel):
+    """Which code ran, and whether the tree it ran from was clean."""
+
     repository: SafeLabel
     commit_sha: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{40}$")]
     worktree_state: Literal["clean", "dirty"]
@@ -888,6 +998,8 @@ class CodeSnapshot(StrictContractModel):
 
     @model_validator(mode="after")
     def dirty_state_is_honest(self) -> CodeSnapshot:
+        """Require a dirty tree to record its patch digest and forgo promotion."""
+
         if self.worktree_state == "dirty":
             if self.patch_digest is None or self.promotion_eligible:
                 raise ValueError("dirty worktrees require a patch digest and are not promotable")
@@ -897,6 +1009,8 @@ class CodeSnapshot(StrictContractModel):
 
 
 class EnvironmentSnapshot(StrictContractModel):
+    """The machine and interpreter the run executed on."""
+
     execution_class: Literal["local-test", "local-eval", "ci", "production"]
     python_version: Annotated[str, StringConstraints(pattern=r"^[0-9]+\.[0-9]+\.[0-9]+$")]
     platform: SafeLabel
@@ -907,6 +1021,8 @@ class EnvironmentSnapshot(StrictContractModel):
 
 
 class OutputSnapshot(StrictContractModel):
+    """Where outputs are written and which artifact schema versions apply."""
+
     root: Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*$")]
     artifact_schema_version: SemVer
     trajectory_schema_version: SemVer
@@ -914,6 +1030,8 @@ class OutputSnapshot(StrictContractModel):
 
 
 class PrivacySnapshot(StrictContractModel):
+    """The run's data classification and the capture the contract forbids."""
+
     task_data_class: DataClass
     registry_object_classification: DataClass
     retention_policy_ref: RetentionPolicyRef
@@ -924,6 +1042,8 @@ class PrivacySnapshot(StrictContractModel):
 
 
 class PolicyRuntimeProjectionRef(StrictContractModel):
+    """The manifest's pointer to the projection candidate code may read."""
+
     schema_kind: Literal["policy-runtime-projection"] = "policy-runtime-projection"
     schema_version: Literal["1.0.0"] = "1.0.0"
     artifact_ref: ImmutableObjectRef
@@ -941,6 +1061,8 @@ class PolicyRuntimeProjectionRef(StrictContractModel):
 
     @model_validator(mode="after")
     def complete_exclusion_set(self) -> PolicyRuntimeProjectionRef:
+        """Require every control-plane class to be named as excluded, not just some."""
+
         required = {
             "sealed-case-and-split-identity",
             "evaluator-and-label-refs",
@@ -956,6 +1078,12 @@ class PolicyRuntimeProjectionRef(StrictContractModel):
 
 
 class RunManifestPayload(StrictContractModel):
+    """The complete, sealed description of one run.
+
+    Each section is validated on its own; ``cross_section_invariants`` then
+    settles the agreements no single section can see.
+    """
+
     identity: RunIdentity
     lineage: RunLineage | None
     compilation: CompilationSnapshot
@@ -984,6 +1112,12 @@ class RunManifestPayload(StrictContractModel):
 
     @model_validator(mode="after")
     def cross_section_invariants(self) -> RunManifestPayload:
+        """Enforce the agreements between sections no section can check alone.
+
+        Identity, privacy, source and budget values deliberately appear in more
+        than one section; a manifest that disagrees with itself is refused here.
+        """
+
         if self.campaign_lock_ref.kind != "campaign_lock":
             raise ValueError("campaign lock ref has the wrong kind")
         if self.identity.repeat_index != self.randomness.repeat_index:
@@ -1020,6 +1154,8 @@ class RunManifestPayload(StrictContractModel):
         return self
 
 class RunManifestV1(StrictContractModel):
+    """The immutable run manifest envelope: payload plus its digest."""
+
     schema_kind: Literal["run-manifest"] = "run-manifest"
     schema_version: Literal["1.0.0"] = "1.0.0"
     object_revision: Literal[1] = 1
@@ -1028,11 +1164,15 @@ class RunManifestV1(StrictContractModel):
 
     @model_validator(mode="after")
     def verify_integrity(self) -> RunManifestV1:
+        """Refuse an envelope whose digest is not the digest of its payload."""
+
         require_digest(self.payload, self.integrity.payload_sha256)
         return self
 
 
 class PolicyRuntimeProjectionPayload(StrictContractModel):
+    """The subset of a manifest that candidate policy code is allowed to read."""
+
     identity: Mapping[str, str | int]
     task: Mapping[str, Any]
     policy: PolicySnapshot
@@ -1046,11 +1186,15 @@ class PolicyRuntimeProjectionPayload(StrictContractModel):
 
     @model_validator(mode="after")
     def candidate_payload_is_safe(self) -> PolicyRuntimeProjectionPayload:
+        """Re-run the manifest content rules over the candidate-visible projection."""
+
         validate_manifest_safe_content(self.model_dump(mode="json"))
         return self
 
 
 class PolicyRuntimeProjection(StrictContractModel):
+    """The sealed projection envelope handed to candidate policy code."""
+
     schema_kind: Literal["policy-runtime-projection"] = "policy-runtime-projection"
     schema_version: Literal["1.0.0"] = "1.0.0"
     payload: PolicyRuntimeProjectionPayload
@@ -1058,6 +1202,8 @@ class PolicyRuntimeProjection(StrictContractModel):
 
     @model_validator(mode="after")
     def verify_integrity(self) -> PolicyRuntimeProjection:
+        """Refuse an envelope whose digest is not the digest of its payload."""
+
         require_digest(self.payload, self.integrity.payload_sha256)
         return self
 
@@ -1133,6 +1279,8 @@ def derive_replicate_group_id(
     task: TaskSpecRef,
     arm_digest: Digest,
 ) -> str:
+    """Return the id shared by every repeat of one task under one arm."""
+
     return sha256_digest(
         {
             "campaign_id": campaign_id,
@@ -1145,6 +1293,8 @@ def derive_replicate_group_id(
 
 
 def derive_episode_key(replicate_group_id: Digest, repeat_index: int) -> str:
+    """Return the key identifying one repeat inside a replicate group."""
+
     if repeat_index < 0:
         raise RunManifestError("repeat index must be non-negative")
     return sha256_digest(
@@ -1153,14 +1303,20 @@ def derive_episode_key(replicate_group_id: Digest, repeat_index: int) -> str:
 
 
 def new_run_id(*, entropy: uuid.UUID | None = None) -> str:
+    """Return a fresh run id, or render supplied entropy as one."""
+
     return f"run_{(entropy or uuid.uuid4()).hex}"
 
 
 def new_attempt_id(*, entropy: uuid.UUID | None = None) -> str:
+    """Return a fresh attempt id, or render supplied entropy as one."""
+
     return f"att_{(entropy or uuid.uuid4()).hex}"
 
 
 class ApprovalBackend(Protocol):
+    """Verify a plan against an external approval and receipt the result."""
+
     def verify(
         self,
         approval_id: str,
@@ -1198,6 +1354,12 @@ class FakeLocalApprovalBackend:
         required_judge_usd: MoneyUsd,
         verified_at: Rfc3339Utc,
     ) -> tuple[ApprovalRecord, ApprovalVerificationReceipt]:
+        """Check a plan against a stored approval and receipt the result.
+
+        Status, expiry, campaign, provider, stage, resources and every cap are all
+        checked; any one of them failing refuses the plan.
+        """
+
         self.calls += 1
         try:
             record = self._records[approval_id]
@@ -1238,6 +1400,8 @@ class FakeLocalApprovalBackend:
 
 
 class AdmissionPlan(StrictContractModel):
+    """What a caller asks admission to authorize, before anything is resolved."""
+
     campaign_id: CampaignId
     stage: PolicyMember
     provider: PolicyMember
@@ -1253,6 +1417,8 @@ class AdmissionPlan(StrictContractModel):
 
 
 class AdmissionDecision(StrictContractModel):
+    """What admission granted: resolved limits, approval state, chargeability."""
+
     resolution: AdmissionResolution
     approval: ApprovalSnapshot
     approval_receipt: ApprovalVerificationReceipt | None
@@ -1264,6 +1430,12 @@ def _is_subset(left: tuple[Any, ...], right: tuple[Any, ...]) -> bool:
 
 
 def _validate_policy_narrowing(plan: AdmissionPlan) -> None:
+    """Refuse a plan whose effective policy is broader than the task asked for.
+
+    Every comparison here is one-directional: the effective policy may narrow
+    a boundary the task set, and may never widen or replace one.
+    """
+
     requested = plan.task_policy
     effective = plan.effective_policy
     if effective.source_scope.corpus_mode is not requested.source_scope.corpus_mode:
@@ -1468,6 +1640,13 @@ class ManifestFileStore:
         *,
         before_publish: Callable[[], None] | None = None,
     ) -> tuple[Path, Path]:
+        """Write the manifest and its digest sidecar, refusing to overwrite a seal.
+
+        Both files are fsynced to temporaries and hard-linked into place, so a
+        reader never observes a partial manifest.  ``before_publish`` exists to
+        let a test act inside that window.
+        """
+
         target = directory / self.filename
         sidecar = directory / self.sidecar_filename
         directory.mkdir(parents=True, exist_ok=True)
@@ -1507,6 +1686,8 @@ class ManifestFileStore:
                     path.unlink(missing_ok=True)
 
     def load(self, directory: Path) -> RunManifestV1:
+        """Read a sealed manifest, trusting it only if the sidecar digest agrees."""
+
         target = directory / self.filename
         sidecar = directory / self.sidecar_filename
         if not target.is_file() or not sidecar.is_file():
@@ -1527,6 +1708,8 @@ class ManifestFileStore:
 
 
 class CompletionStatus(StrEnum):
+    """How a run ended."""
+
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -1534,6 +1717,8 @@ class CompletionStatus(StrEnum):
 
 
 class RunReason(StrEnum):
+    """Why a run ended the way it did; a closed vocabulary."""
+
     PROVIDER_ERROR = "provider_error"
     TOOL_ERROR = "tool_error"
     SCHEMA_ERROR = "schema_error"
@@ -1557,6 +1742,8 @@ class RunReason(StrEnum):
 
 
 class AttemptReceipt(StrictContractModel):
+    """One process attempt at a run, open or closed, with its accrued cost."""
+
     schema_kind: Literal["attempt-receipt"] = "attempt-receipt"
     schema_version: Literal["1.0.0"] = "1.0.0"
     run_id: RunId
@@ -1580,6 +1767,8 @@ class AttemptReceipt(StrictContractModel):
 
 
 class CompletionReceipt(StrictContractModel):
+    """The terminal record of a run; there is exactly one per run."""
+
     schema_kind: Literal["completion-receipt"] = "completion-receipt"
     schema_version: Literal["1.0.0"] = "1.0.0"
     run_id: RunId
@@ -1601,6 +1790,8 @@ class CompletionReceipt(StrictContractModel):
 
 
 class CheckpointCompatibility(StrictContractModel):
+    """The digests a checkpoint must still match before a run may be resumed."""
+
     run_id: RunId
     episode_key: Digest
     manifest_digest: Digest
@@ -1617,12 +1808,16 @@ class CheckpointCompatibility(StrictContractModel):
 
     @model_validator(mode="after")
     def ambiguous_side_effects_are_reconciled(self) -> CheckpointCompatibility:
+        """Require a reconciliation action wherever the boundary is not idempotent."""
+
         if not self.idempotent_boundary and self.reconciliation_action is None:
             raise ValueError("non-idempotent checkpoints require reconciliation")
         return self
 
 
 def manifest_compatibility(manifest: RunManifestV1) -> CheckpointCompatibility:
+    """Return the digests a resume of this manifest must reproduce."""
+
     payload = manifest.payload
     return CheckpointCompatibility(
         run_id=payload.identity.run_id,
@@ -1694,6 +1889,8 @@ def validate_resume(
 
 
 class LegacyImport(StrictContractModel):
+    """A pre-contract evaluation record, with every unknown said to be unknown."""
+
     schema_kind: Literal["legacy-import"] = "legacy-import"
     schema_version: Literal["1.0.0"] = "1.0.0"
     source_file_digest: Digest
@@ -1747,6 +1944,8 @@ def import_legacy_eval(
 
 
 def validate_arm_matrix(arms: Iterable[PolicySnapshot]) -> tuple[PolicySnapshot, ...]:
+    """Require arms A-E exactly once, in order, with distinct digests."""
+
     materialized = tuple(arms)
     if tuple(arm.arm_id for arm in materialized) != ("A", "B", "C", "D", "E"):
         raise RunManifestError("arm matrix must contain A-E exactly once in order")
@@ -1757,6 +1956,8 @@ def validate_arm_matrix(arms: Iterable[PolicySnapshot]) -> tuple[PolicySnapshot,
 
 
 def run_manifest_json_schema() -> dict[str, Any]:
+    """Export the RunManifest v1 JSON Schema."""
+
     schema = RunManifestV1.model_json_schema(mode="validation")
     schema["$id"] = "https://arxiv-research-agent.dev/schemas/run-manifest/1.0.0"
     schema["title"] = "RunManifest v1"

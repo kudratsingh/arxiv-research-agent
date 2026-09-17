@@ -70,11 +70,15 @@ _PAPER_RE: Final[re.Pattern[str]] = re.compile(r"^\[(\d+)\] ", re.MULTILINE)
 
 
 class _TopicRule(StrictContractModel):
+    """How the mock instrument decides one expected topic."""
+
     covered: bool
     reason: Annotated[str, StringConstraints(min_length=1, max_length=300)]
 
 
 class _FaithfulnessRule(StrictContractModel):
+    """How the mock instrument decides claims, and where it abstains."""
+
     supported: bool
     reason: Annotated[str, StringConstraints(min_length=1, max_length=300)]
     abstain_at: Annotated[int, Field(ge=1, le=100)]
@@ -82,6 +86,8 @@ class _FaithfulnessRule(StrictContractModel):
 
 
 class _RetrievalRule(_TopicRule):
+    """A topic rule that also names the papers the topic was found in."""
+
     paper_ids: tuple[Annotated[int, Field(ge=0)], ...]
 
 
@@ -106,16 +112,22 @@ class MockJudgeFixture(StrictContractModel):
 
 
 class MockTopicDecision(StrictContractModel):
+    """One topic-coverage decision in a synthetic reading."""
+
     topic: Annotated[str, StringConstraints(min_length=1)]
     covered: bool
     reason: Annotated[str, StringConstraints(min_length=1)]
 
 
 class MockCompletenessOutput(StrictContractModel):
+    """The response shape the completeness rubric is scored from."""
+
     coverage: tuple[MockTopicDecision, ...]
 
 
 class MockClaimDecision(StrictContractModel):
+    """One claim-level support decision in a synthetic reading."""
+
     claim: Annotated[str, StringConstraints(min_length=1)]
     cite: Annotated[str, StringConstraints(pattern=r"^\[[^\]]+,\s*\d{4}\]$")]
     supported: bool | None
@@ -123,14 +135,20 @@ class MockClaimDecision(StrictContractModel):
 
 
 class MockFaithfulnessOutput(StrictContractModel):
+    """The response shape the faithfulness rubric is scored from."""
+
     claims: tuple[MockClaimDecision, ...]
 
 
 class MockRetrievalDecision(MockTopicDecision):
+    """One retrieval decision: coverage, plus the papers behind it."""
+
     paper_ids: tuple[Annotated[int, Field(ge=0)], ...]
 
 
 class MockRetrievalOutput(StrictContractModel):
+    """The response shape the retrieval-recall rubric is scored from."""
+
     coverage: tuple[MockRetrievalDecision, ...]
 
 
@@ -165,6 +183,7 @@ def load_mock_judge_fixture(
 
 
 def _topics(prompt: str) -> tuple[str, ...]:
+    """The expected topics a completeness prompt lists, if it lists any."""
     if _TOPICS_MARKER not in prompt:
         return ()
     block = prompt.rsplit(_TOPICS_MARKER, 1)[1]
@@ -172,6 +191,7 @@ def _topics(prompt: str) -> tuple[str, ...]:
 
 
 def _citations(prompt: str) -> tuple[str, ...]:
+    """The cited sources a faithfulness prompt quotes back."""
     return tuple(f"[{match}]" for match in _CITED_SOURCE_RE.findall(prompt))
 
 
@@ -194,6 +214,7 @@ class MockJudgeSurface:
         model_name: str,
         max_tokens: int,
     ) -> dict[str, Any]:
+        """Answer one judge call from the fixture, refusing a prompt that leaked."""
         del model_name, max_tokens
         leaked = leaked_identity_terms(prompt, self.forbidden_identity_terms)
         if leaked:
@@ -290,6 +311,7 @@ def mock_judge_surface(surface: MockJudgeSurface) -> Iterator[None]:
 
 
 def _blinding_plan(fixture: MockJudgeFixture) -> BlindingPlan:
+    """The blinding plan the position control is run under."""
     return BlindingPlan(
         plan_id="e1-mock-judge-position-control",
         revision=fixture.schema_version,
@@ -309,6 +331,7 @@ def _blinding_plan(fixture: MockJudgeFixture) -> BlindingPlan:
 
 
 def _position_control(fixture: MockJudgeFixture) -> dict[str, Any]:
+    """Read the fixture's pairwise cases in both orders, as scheduled."""
     by_id = {case.case_id: case for case in load_pairwise()}
     missing = sorted(set(fixture.pairwise_case_ids) - set(by_id))
     if missing:
@@ -351,6 +374,7 @@ class MockJudgeScorer:
         self.position_control = _position_control(fixture)
 
     def __call__(self, episode: PlannedEpisode, run: EpisodeRun) -> EpisodeScores:
+        """Score one episode's metrics from the synthetic instrument's readings."""
         from src.eval.metrics import (
             measure_completeness,
             measure_faithfulness,

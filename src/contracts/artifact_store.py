@@ -297,6 +297,7 @@ class StagedArtifact:
 
 
 def _is_text(media_type: str) -> bool:
+    """Report whether a media type names text the content screen can read."""
     lowered = media_type.split(";", 1)[0].strip().lower()
     return any(lowered.startswith(prefix) for prefix in _TEXT_MEDIA_PREFIXES)
 
@@ -577,6 +578,7 @@ class LocalArtifactStore:
             raise
 
     def _build_ref(self, staged: StagedArtifact) -> ArtifactRef:
+        """Return the immutable reference these staged bytes will be promoted under."""
         suffix = staged.digest.removeprefix("sha256:")
         return ArtifactRef(
             artifact_id=f"artifact:{staged.digest}",
@@ -654,6 +656,7 @@ class LocalArtifactStore:
     # -- reference records ----------------------------------------------
 
     def _authorize(self, record: _RefRecord, principal_key_id: str) -> None:
+        """Refuse a read of principal-scoped content by a principal not on its list."""
         data_class = DataClass(record["data_class"])
         if data_class not in _PRINCIPAL_SCOPED:
             return
@@ -680,12 +683,14 @@ class LocalArtifactStore:
             )
 
     def _ref_path(self, artifact_id: str) -> Path:
+        """Return the record path for a content-addressed id, refusing any other."""
         suffix = artifact_id.removeprefix("artifact:sha256:")
         if not re.fullmatch(r"[0-9a-f]{64}", suffix):
             raise ArtifactNotFound(f"{artifact_id!r} is not a content-addressed id")
         return self._refs / f"{suffix}.json"
 
     def _object_path(self, digest: str) -> Path:
+        """Return the sharded path a promoted digest's bytes live at."""
         suffix = digest.removeprefix("sha256:")
         return self._cas / suffix[:2] / suffix[2:4] / suffix
 

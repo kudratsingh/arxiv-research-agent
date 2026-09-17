@@ -248,6 +248,7 @@ class JsonlTrajectorySink:
         return self._root / SINK_RUN_DIRECTORY / run_id
 
     def open_run(self, scope: RunScope) -> None:
+        """Create the run's directory and write its immutable scope record."""
         directory = self.run_directory(scope.run_id)
         directory.mkdir(parents=True, exist_ok=True)
         (directory / SINK_SCOPE_FILE).write_text(
@@ -256,6 +257,7 @@ class JsonlTrajectorySink:
         (directory / SINK_EVENTS_FILE).touch()
 
     def append(self, event: StoredTrajectoryEvent) -> None:
+        """Append one event line, flushed and fsync'd before the call returns."""
         directory = self.run_directory(event.run_id)
         directory.mkdir(parents=True, exist_ok=True)
         line = (canonical_json(event) + "\n").encode("utf-8")
@@ -272,6 +274,7 @@ class JsonlTrajectorySink:
                 os.close(handle)
 
     def close(self, run_id: str, *, head_event_hash: str, event_count: int) -> None:
+        """Write the head record that marks this run's ledger complete."""
         directory = self.run_directory(run_id)
         directory.mkdir(parents=True, exist_ok=True)
         (directory / SINK_HEAD_FILE).write_text(
@@ -289,6 +292,7 @@ class JsonlTrajectorySink:
         )
 
     def read_jsonl(self, run_id: str) -> str:
+        """The run's event lines, or an empty string if it has none."""
         path = self.run_directory(run_id) / SINK_EVENTS_FILE
         if not path.exists():
             return ""
@@ -505,6 +509,7 @@ class DurableTrajectoryStore(InMemoryTrajectoryStore):
         return self._sink
 
     def register_run(self, scope: RunScope) -> None:
+        """Register the run and open its sink, degrading rather than failing the run."""
         super().register_run(scope)
         if self._sink is None:
             return
@@ -515,6 +520,12 @@ class DurableTrajectoryStore(InMemoryTrajectoryStore):
             self._sink_failed(scope.run_id, "open_run")
 
     def _append_locked(self, event: ProposedTrajectoryEvent) -> StoredTrajectoryEvent:
+        """Commit one event in memory, then write it through to the sink.
+
+        The ledger is authoritative: a rejected event is counted and re-raised,
+        while a sink that fails sets `durability_degraded` and leaves the accepted
+        event exactly as it is.
+        """
         try:
             stored = super()._append_locked(event)
         except IdempotencyConflict:
@@ -546,6 +557,7 @@ class DurableTrajectoryStore(InMemoryTrajectoryStore):
         return stored
 
     def append(self, event: ProposedTrajectoryEvent) -> StoredTrajectoryEvent:
+        """Stamp the active branch onto an event, commit it, then project it."""
         stored = super().append(_stamped_with_active_branch(event))
         self._project(stored)
         return stored
@@ -553,6 +565,7 @@ class DurableTrajectoryStore(InMemoryTrajectoryStore):
     def append_batch(
         self, events: Sequence[ProposedTrajectoryEvent]
     ) -> tuple[StoredTrajectoryEvent, ...]:
+        """Commit a batch on the same terms as `append`, projecting each event."""
         # Stamped on the same terms as `append`. Nothing appends a batch
         # inside a branch scope today, and that is exactly why it is
         # worth doing: an accepted event is never rewritten, so a batch
@@ -565,6 +578,7 @@ class DurableTrajectoryStore(InMemoryTrajectoryStore):
         return stored
 
     def _project(self, event: StoredTrajectoryEvent) -> None:
+        """Run every projection, degrading the projection rather than history."""
         for projection in self._projections:
             try:
                 projection.project(event)
@@ -586,6 +600,7 @@ class DurableTrajectoryStore(InMemoryTrajectoryStore):
 
     @staticmethod
     def _sink_failed(run_id: str, stage: str) -> None:
+        """Count and log a failed sink write without failing the run."""
         record_trajectory_fault(stage="sink_write", error_type="service_unavailable")
         log.warning(
             "trajectory_sink_write_failed",
@@ -691,6 +706,7 @@ def reconcile_costs(
 
 
 def _replay_metadata() -> ReplayMetadata:
+    """Every event this bridge writes is a live observation of a real run."""
     return ReplayMetadata(
         origin=ReplayOrigin.LIVE, observation_status=ObservationStatus.OBSERVED
     )
@@ -726,6 +742,7 @@ def action_attempt_id(label: str) -> str:
 
 
 def _actor_name(raw: str) -> str:
+    """A graph node name in the actor vocabulary's shape."""
     cleaned = "".join(
         char if char.isalnum() or char in "_.-" else "_" for char in raw.lower()
     )
@@ -918,6 +935,7 @@ class ResearchRuntimeBridge(ShadowRun):
     def plan_created(
         self, artifact: ArtifactRef, *, objectives: int, actions: int, kind: str
     ) -> None:
+        """Record the plan the planner produced, and its shape."""
         self._append(
             "plan.created",
             "plan.created",
@@ -1183,6 +1201,7 @@ class ResearchRuntimeBridge(ShadowRun):
         method: str,
         supports: Sequence[str] = (),
     ) -> None:
+        """Record one evidence span pulled out of an accepted source."""
         self._append(
             "evidence.extracted",
             f"evidence.extracted:{evidence_id}",
@@ -1207,6 +1226,7 @@ class ResearchRuntimeBridge(ShadowRun):
         claim_kind: str,
         location: str,
     ) -> None:
+        """Record one claim a candidate makes, and where it sits."""
         self._append(
             "claim.created",
             f"claim.created:{claim_id}",
@@ -1231,6 +1251,7 @@ class ResearchRuntimeBridge(ShadowRun):
         relationship: str,
         method: str,
     ) -> None:
+        """Record how a piece of evidence bears on a claim."""
         self._append(
             "claim.evidence_linked",
             f"claim.evidence_linked:{claim_id}:{evidence_id}",
@@ -1252,6 +1273,7 @@ class ResearchRuntimeBridge(ShadowRun):
         missing: Sequence[str],
         method: str,
     ) -> None:
+        """Record which task items the evidence covers, and which it misses."""
         self._append(
             "evidence.coverage_assessed",
             "evidence.coverage_assessed",
@@ -1449,6 +1471,7 @@ class ResearchRuntimeBridge(ShadowRun):
     def repair_exhausted(
         self, *, subject_candidate_id: str, attempted: Sequence[str], reason: str
     ) -> None:
+        """Record that repair gave up on a candidate, naming what was tried."""
         self._append(
             "repair.exhausted",
             f"repair.exhausted:{subject_candidate_id}",
@@ -1943,6 +1966,7 @@ class ResearchRuntimeBridge(ShadowRun):
         selector_kind: str,
         selection_artifact: ArtifactRef,
     ) -> None:
+        """Record which candidate won, out of what, and by which selector."""
         self._append(
             "candidate.selected",
             f"candidate.selected:{selected}",
@@ -1989,6 +2013,7 @@ class ResearchRuntimeBridge(ShadowRun):
     def budget_reservation_released(
         self, *, reservation_id: str, actual_cost: str, reason: str
     ) -> None:
+        """Record a released reservation and what the work actually cost."""
         self._append(
             "budget.reservation_released",
             f"budget.reservation_released:{reservation_id}",
@@ -2108,6 +2133,7 @@ class ResearchRuntimeBridge(ShadowRun):
         artifact: ArtifactRef | None = None,
         resumable: bool = True,
     ) -> None:
+        """Record a checkpoint the run could be resumed from."""
         self._append(
             "checkpoint.saved",
             f"checkpoint.saved:{checkpoint_id}",
@@ -2128,6 +2154,7 @@ class ResearchRuntimeBridge(ShadowRun):
     def checkpoint_invalid(
         self, *, checkpoint_id: str, failure_codes: Sequence[str], fallback: str
     ) -> None:
+        """Record a checkpoint that cannot be resumed, and the fallback taken."""
         self._append(
             "checkpoint.invalid",
             f"checkpoint.invalid:{checkpoint_id}",
@@ -2143,6 +2170,7 @@ class ResearchRuntimeBridge(ShadowRun):
     # -- HITL outcomes beyond a plain answer --------------------------------
 
     def review_timed_out(self, *, pause_number: int, policy: str) -> None:
+        """Record a plan review that expired without a human answer."""
         self._append(
             "hitl.timed_out",
             f"hitl.timed_out:{pause_number}",
@@ -2153,6 +2181,7 @@ class ResearchRuntimeBridge(ShadowRun):
         self._open_hitl = None
 
     def review_cancelled(self, *, pause_number: int, reason: str) -> None:
+        """Record a plan review that was cancelled before it was answered."""
         self._append(
             "hitl.cancelled",
             f"hitl.cancelled:{pause_number}",
@@ -2296,6 +2325,7 @@ class ResearchRuntimeBridge(ShadowRun):
 
 
 def _log_reconciliation(run_id: str, result: CostReconciliation) -> None:
+    """Log one cost reconciliation, counting a mismatch as a fault."""
     fields = {
         "contract_run_id": run_id,
         "summed_event_cost": result.summed_event_cost,
@@ -2642,6 +2672,7 @@ class GuidedLearningBridge:
 
     @property
     def consent_scope(self) -> ConsentScope:
+        """The consent scope this session's events carry; synthetic sessions say so."""
         return (
             ConsentScope.SYNTHETIC_TEST
             if self._synthetic
@@ -2649,6 +2680,7 @@ class GuidedLearningBridge:
         )
 
     def _event_id(self, key: str) -> str:
+        """A stable event id derived from the run and the event's key."""
         return new_event_id(entropy=uuid.uuid5(uuid.NAMESPACE_URL, f"{self.run_id}:{key}"))
 
     def _actor(self, kind: ActorKind, name: str) -> Actor:
@@ -2660,6 +2692,7 @@ class GuidedLearningBridge:
         )
 
     def _governance(self) -> DataGovernance:
+        """The governance stamp every event of this session carries."""
         return DataGovernance(
             content_class=ContentClass.METADATA,
             effective_data_class=self._scope.task_data_class,
@@ -2682,6 +2715,11 @@ class GuidedLearningBridge:
         artifact_refs: tuple[ArtifactRef, ...] = (),
         reason_codes: tuple[str, ...] = (),
     ) -> StoredTrajectoryEvent:
+        """Build one event with this session's identity and append it.
+
+        Every recorder in this class goes through here, so the scope, actor
+        vocabulary and governance stamp are decided in exactly one place.
+        """
         event = ProposedTrajectoryEvent(
             event_type=event_type,
             event_id=self._event_id(key),
@@ -2854,6 +2892,7 @@ class GuidedLearningBridge:
         self._open_turn = None
 
     def turn_timed_out(self, *, turn: int, policy: str) -> None:
+        """Record a learner turn that expired without an answer."""
         self._append(
             "hitl.timed_out",
             f"hitl.timed_out:{turn}",
@@ -2864,6 +2903,11 @@ class GuidedLearningBridge:
         self._open_turn = None
 
     def _summary_artifact(self, summary: str) -> ArtifactRef | None:
+        """Promote the session summary into the artifact store.
+
+        Returns `None` when there is no store, and also when the store refuses the
+        content: a rejected summary is a degraded recording, not a failed session.
+        """
         if self.artifacts is None:
             return None
         try:
@@ -2965,6 +3009,7 @@ class GuidedLearningBridge:
         self._terminal = True
 
     def fail(self, *, error_code: str, stage: str) -> None:
+        """Record that the session failed, under a canonical error code."""
         from src.errors import ERROR_CODES  # noqa: PLC0415
 
         code = error_code if error_code in ERROR_CODES else "internal_unexpected"
@@ -2987,6 +3032,7 @@ class GuidedLearningBridge:
         self._terminal = True
 
     def cancel(self, *, reason_code: str, stage: str) -> None:
+        """Record that the session was asked to stop, under a canonical reason."""
         from src.errors import ERROR_CODES  # noqa: PLC0415
 
         code = reason_code if reason_code in ERROR_CODES else "user_requested"
@@ -3050,6 +3096,7 @@ class GuidedLearningBridge:
         return sink.read_jsonl(self.run_id) if sink is not None else ""
 
     def close(self) -> None:
+        """Close this run's durable ledger."""
         self.durable_store.close_run(self.run_id)
 
     def turn_trajectory(self) -> tuple[int, ...]:
