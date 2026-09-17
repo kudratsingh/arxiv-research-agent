@@ -47,6 +47,8 @@ _PRIVATE_ABSOLUTE_PATH = re.compile(r"(?:/Users/|/home/|/private/|[A-Za-z]:\\Use
 
 
 def _walk_strings(value: Any) -> Iterable[str]:
+    """Yield every string reachable inside a nested JSON-like value."""
+
     if isinstance(value, str):
         yield value
     elif isinstance(value, Mapping):
@@ -58,6 +60,8 @@ def _walk_strings(value: Any) -> Iterable[str]:
 
 
 def _validate_safe_content(value: Any) -> None:
+    """Reject secret-shaped values and private absolute paths anywhere inside."""
+
     for text in _walk_strings(value):
         if any(pattern.search(text) for pattern in _SECRET_PATTERNS):
             raise ValueError("TaskSpec cannot contain secret-shaped values")
@@ -73,6 +77,8 @@ class TaskSpecError(ContractError):
 
 
 class TaskKind(StrEnum):
+    """The task kinds v1 can express, namespaced by product lane."""
+
     RESEARCH_QUICK_ANSWER = "research.quick_answer"
     RESEARCH_FOCUSED_EVIDENCE_REVIEW = "research.focused_evidence_review"
     RESEARCH_LITERATURE_SURVEY = "research.literature_survey"
@@ -83,6 +89,8 @@ class TaskKind(StrEnum):
 
 
 class ProductSurface(StrEnum):
+    """Which product or evaluation entry point a task was compiled for."""
+
     RESEARCH_API = "research_api"
     GUIDED_LEARNING_API = "guided_learning_api"
     RESEARCH_EVAL = "research_eval"
@@ -90,6 +98,8 @@ class ProductSurface(StrEnum):
 
 
 class DeliverableKind(StrEnum):
+    """The artifact kinds a task can be required to produce."""
+
     ANSWER = "answer"
     RESEARCH_REPORT = "research_report"
     EVIDENCE_TABLE = "evidence_table"
@@ -101,12 +111,16 @@ class DeliverableKind(StrEnum):
 
 
 class CheckClass(StrEnum):
+    """What an acceptance check is for: outcome, non-regression, diagnostic."""
+
     PRIMARY_OUTCOME = "primary_outcome"
     NON_REGRESSION = "non_regression"
     DIAGNOSTIC = "diagnostic"
 
 
 class VerificationMethod(StrEnum):
+    """How an acceptance check is settled."""
+
     DETERMINISTIC = "deterministic"
     SOURCE_GROUNDED = "source_grounded"
     MODEL_JUDGE = "model_judge"
@@ -114,6 +128,8 @@ class VerificationMethod(StrEnum):
 
 
 class CorpusMode(StrEnum):
+    """Where the sources a task may read come from."""
+
     LIVE = "live"
     SNAPSHOT = "snapshot"
     SUPPLIED = "supplied"
@@ -121,6 +137,8 @@ class CorpusMode(StrEnum):
 
 
 class FreshnessMode(StrEnum):
+    """How recent a task's sources are required to be."""
+
     NO_REQUIREMENT = "no_requirement"
     AS_OF = "as_of"
     LATEST_AVAILABLE = "latest_available"
@@ -128,6 +146,8 @@ class FreshnessMode(StrEnum):
 
 
 class AutonomyTier(StrEnum):
+    """Autonomy ceiling, ordered from least to most permitted."""
+
     A0_DRAFT = "A0"
     A1_BOUNDED_TOOLS = "A1"
     A2_SANDBOXED_PLAN = "A2"
@@ -140,6 +160,8 @@ class AutonomyTier(StrEnum):
 
     @classmethod
     def most_restrictive(cls, *values: AutonomyTier) -> AutonomyTier:
+        """Return the least permissive of the supplied tiers."""
+
         if not values:
             raise ValueError("at least one autonomy tier is required")
         return min(values, key=lambda value: value.rank)
@@ -155,6 +177,8 @@ _AUTONOMY_RANK = {
 
 
 class DeliverableSpec(StrictContractModel):
+    """One artifact the task must produce, and the media type it arrives in."""
+
     deliverable_id: Annotated[str, StringConstraints(pattern=r"^del_[a-z0-9_]{1,48}$")]
     kind: DeliverableKind
     required: bool = True
@@ -163,6 +187,8 @@ class DeliverableSpec(StrictContractModel):
 
 
 class AcceptanceCheck(StrictContractModel):
+    """One check that decides whether the deliverables it names are acceptable."""
+
     check_id: Annotated[str, StringConstraints(pattern=r"^chk_[a-z0-9_]{1,48}$")]
     check_class: CheckClass
     subject_deliverable_ids: tuple[str, ...]
@@ -175,6 +201,8 @@ class AcceptanceCheck(StrictContractModel):
 
     @model_validator(mode="after")
     def subjects_are_unique(self) -> AcceptanceCheck:
+        """Require at least one unique subject, and a rubric ref of the right kind."""
+
         if not self.subject_deliverable_ids:
             raise ValueError("an acceptance check requires at least one subject")
         if len(set(self.subject_deliverable_ids)) != len(self.subject_deliverable_ids):
@@ -185,6 +213,8 @@ class AcceptanceCheck(StrictContractModel):
 
 
 class SourceScope(StrictContractModel):
+    """Which sources a task may use, and the corpus they are drawn from."""
+
     policy_ref: ImmutableObjectRef
     corpus_mode: CorpusMode
     allowed_providers: tuple[PolicyMember, ...]
@@ -198,6 +228,8 @@ class SourceScope(StrictContractModel):
 
     @model_validator(mode="after")
     def source_mode_is_coherent(self) -> SourceScope:
+        """Require exactly the corpus references the declared mode admits."""
+
         if self.policy_ref.kind != "source_policy":
             raise ValueError("source policy ref must have source_policy kind")
         if len(set(self.allowed_providers)) != len(self.allowed_providers):
@@ -229,12 +261,16 @@ class SourceScope(StrictContractModel):
 
 
 class FreshnessRequirement(StrictContractModel):
+    """How recent sources must be, with the one parameter its mode takes."""
+
     mode: FreshnessMode
     as_of: Rfc3339Utc | None = None
     max_age_days: Annotated[int | None, Field(ge=0, le=36_500)] = None
 
     @model_validator(mode="after")
     def parameters_match_mode(self) -> FreshnessRequirement:
+        """Require exactly the parameter this freshness mode takes, and no other."""
+
         if self.mode is FreshnessMode.AS_OF:
             if self.as_of is None or self.max_age_days is not None:
                 raise ValueError("as_of freshness requires only as_of")
@@ -247,6 +283,8 @@ class FreshnessRequirement(StrictContractModel):
 
 
 class ToolPolicy(StrictContractModel):
+    """Which agent tools, denied actions and network access the task allows."""
+
     policy_ref: ImmutableObjectRef
     allowed_agent_tools: tuple[PolicyMember, ...]
     denied_action_ids: tuple[PolicyMember, ...]
@@ -255,6 +293,8 @@ class ToolPolicy(StrictContractModel):
 
     @model_validator(mode="after")
     def members_are_unique_and_disjoint(self) -> ToolPolicy:
+        """Require unique members, and no capability that is both allowed and denied."""
+
         if self.policy_ref.kind != "tool_policy":
             raise ValueError("tool policy ref must have tool_policy kind")
         if len(set(self.allowed_agent_tools)) != len(self.allowed_agent_tools):
@@ -267,6 +307,8 @@ class ToolPolicy(StrictContractModel):
 
 
 class WorkflowCostBoundary(StrictContractModel):
+    """Whether the workflow may charge for work, and its ceiling if it may."""
+
     chargeable_work: Literal["forbidden", "requires_external_approval"] = "forbidden"
     workflow_spend_ceiling_usd: MoneyUsd
 
@@ -278,6 +320,8 @@ class WorkflowCostBoundary(StrictContractModel):
 
 
 class ExecutionLimits(StrictContractModel):
+    """The time, call and cost ceilings a run of this task may not exceed."""
+
     target_latency_seconds: Annotated[int | None, Field(ge=1, le=86_400)] = None
     hard_timeout_seconds: Annotated[int, Field(ge=1, le=86_400)]
     max_tool_calls: Annotated[int, Field(ge=0, le=10_000)]
@@ -295,6 +339,8 @@ class ExecutionLimits(StrictContractModel):
 
 
 class HumanCheckpoint(StrictContractModel):
+    """One point at which a human is consulted, and what puts them there."""
+
     checkpoint_id: Annotated[str, StringConstraints(pattern=r"^hcp_[a-z0-9_]{1,48}$")]
     kind: Literal[
         "plan_review",
@@ -310,6 +356,8 @@ class HumanCheckpoint(StrictContractModel):
 
     @model_validator(mode="after")
     def condition_matches_trigger(self) -> HumanCheckpoint:
+        """Require a condition code exactly when the trigger is conditional."""
+
         if self.trigger == "on_condition" and self.condition_code is None:
             raise ValueError("conditional checkpoint requires condition_code")
         if self.trigger == "always" and self.condition_code is not None:
@@ -318,6 +366,8 @@ class HumanCheckpoint(StrictContractModel):
 
 
 class AutonomyPolicy(StrictContractModel):
+    """The task's autonomy ceiling together with its human checkpoints."""
+
     maximum_tier: AutonomyTier
     human_checkpoints: tuple[HumanCheckpoint, ...] = ()
 
@@ -369,6 +419,8 @@ _SUPPLIED_CORPUS_PURPOSE: Final[str] = "Candidate-visible immutable benchmark co
 
 
 class ContextRef(StrictContractModel):
+    """One immutable object handed to the task as context, and the role it plays."""
+
     object_ref: ImmutableObjectRef
     locator: Annotated[str, StringConstraints(min_length=1, max_length=500)] | None = None
     kind: Literal[
@@ -386,6 +438,8 @@ class ContextRef(StrictContractModel):
 
     @model_validator(mode="after")
     def kind_matches_ref(self) -> ContextRef:
+        """Require the declared role to admit the registry kind it points at."""
+
         expected_kinds = {
             "conversation_summary": {"conversation_summary"},
             "supplied_corpus": {
@@ -413,6 +467,8 @@ class ContextRef(StrictContractModel):
 
 
 class TaskDataPolicy(StrictContractModel):
+    """Sensitivity, processing purposes and retention for this task's content."""
+
     policy_ref: ImmutableObjectRef
     data_class: DataClass
     processing_purposes: tuple[Literal["product_operation", "support", "aggregate_analytics"], ...]
@@ -421,6 +477,8 @@ class TaskDataPolicy(StrictContractModel):
 
     @model_validator(mode="after")
     def purposes_are_nonempty_and_unique(self) -> TaskDataPolicy:
+        """Require a data-policy ref and at least one unique processing purpose."""
+
         if self.policy_ref.kind != "data_policy":
             raise ValueError("data policy ref must have data_policy kind")
         if not self.processing_purposes:
@@ -431,6 +489,8 @@ class TaskDataPolicy(StrictContractModel):
 
 
 class BenchmarkOrigin(StrictContractModel):
+    """The exact registry case an evaluation task was compiled from."""
+
     suite_ref: ImmutableObjectRef
     task_set_ref: ImmutableObjectRef
     task_case_ref: ImmutableObjectRef
@@ -449,6 +509,8 @@ class BenchmarkOrigin(StrictContractModel):
 
 
 class TaskProvenance(StrictContractModel):
+    """Which compiler produced this spec, from what input, and when."""
+
     compiler_ref: ImmutableObjectRef
     source_kind: Literal["api_request", "benchmark_registry", "migration"]
     source_id: Annotated[str, StringConstraints(min_length=1, max_length=200)]
@@ -500,6 +562,13 @@ _LEARNING_NON_REGRESSION = frozenset(
 
 
 class TaskSpecV1(StrictContractModel):
+    """Immutable, fully resolved statement of what one run must achieve.
+
+    Every cross-field rule lives in `semantic_invariants`, so a spec that
+    validates is executable as written and nothing downstream has to re-decide
+    what the task was.
+    """
+
     schema_kind: Literal["task-spec"] = "task-spec"
     schema_version: Literal["1.0.0"] = "1.0.0"
     task_spec_id: TaskSpecId
@@ -523,6 +592,13 @@ class TaskSpecV1(StrictContractModel):
 
     @model_validator(mode="after")
     def semantic_invariants(self) -> TaskSpecV1:
+        """Enforce every cross-field rule that makes a task executable.
+
+        Lane coherence, the deliverables a kind requires, the mandatory
+        non-regression checks, the A0 no-tools rule and the benchmark-origin rule
+        are all settled here rather than by a caller.
+        """
+
         if self.task_kind is TaskKind.RESEARCH_LONG_HORIZON:
             raise ValueError("research.long_horizon is reserved and not executable in v1")
         if self.task_revision == 1 and self.supersedes_task_spec_id is not None:
@@ -611,6 +687,8 @@ class TaskSpecV1(StrictContractModel):
 
 
 class TaskSpecRef(StrictContractModel):
+    """Immutable reference to a stored spec, carrying both of its digests."""
+
     task_spec_id: TaskSpecId
     schema_kind: Literal["task-spec"] = "task-spec"
     schema_version: Literal["1.0.0"] = "1.0.0"
@@ -623,6 +701,8 @@ class TaskSpecRef(StrictContractModel):
 
     @model_validator(mode="after")
     def locator_is_safe(self) -> TaskSpecRef:
+        """Require a `task_spec` artifact and content with nothing secret in it."""
+
         if self.artifact_ref.kind != "task_spec":
             raise ValueError("TaskSpecRef artifact must have task_spec kind")
         _validate_safe_content(self.model_dump(mode="json"))
@@ -630,6 +710,8 @@ class TaskSpecRef(StrictContractModel):
 
 
 class TaskCompilationReceipt(StrictContractModel):
+    """Bounded record that one spec was compiled and persisted."""
+
     schema_kind: Literal["task-compilation-receipt"] = "task-compilation-receipt"
     schema_version: Literal["1.0.0"] = "1.0.0"
     receipt_id: Annotated[str, StringConstraints(pattern=r"^tcr_[a-z0-9]{16,32}$")]
@@ -641,6 +723,8 @@ class TaskCompilationReceipt(StrictContractModel):
 
 
 class TaskPolicyBundle(StrictContractModel):
+    """The policy half of a task, separable so it can be intersected alone."""
+
     source_scope: SourceScope
     freshness: FreshnessRequirement
     tool_policy: ToolPolicy
@@ -650,6 +734,8 @@ class TaskPolicyBundle(StrictContractModel):
 
 
 class PlatformPolicyCeiling(StrictContractModel):
+    """The platform's own limits, which a task may narrow but never exceed."""
+
     allowed_corpus_modes: tuple[CorpusMode, ...]
     allowed_providers: tuple[PolicyMember, ...]
     allowed_source_types: tuple[PolicyMember, ...]
@@ -669,6 +755,8 @@ class PlatformPolicyCeiling(StrictContractModel):
 
     @model_validator(mode="after")
     def collections_are_unique(self) -> PlatformPolicyCeiling:
+        """Require unique collections, and a zero ceiling when spend is forbidden."""
+
         collections = (
             self.allowed_corpus_modes,
             self.allowed_providers,
@@ -685,11 +773,15 @@ class PlatformPolicyCeiling(StrictContractModel):
 
 
 def _ordered_intersection(left: tuple[Any, ...], right: tuple[Any, ...]) -> tuple[Any, ...]:
+    """Return the members of `left` that `right` also allows, in left's order."""
+
     allowed = set(right)
     return tuple(item for item in left if item in allowed)
 
 
 def _ordered_union(left: tuple[Any, ...], right: tuple[Any, ...]) -> tuple[Any, ...]:
+    """Return both sequences concatenated, keeping the first of each duplicate."""
+
     return tuple(dict.fromkeys((*left, *right)))
 
 
@@ -812,6 +904,8 @@ def intersect_with_platform(
 
 
 class ResearchCompilerInput(StrictContractModel):
+    """Validated research intake, before it is compiled into a task spec."""
+
     task_id: TaskId
     query: Annotated[str, StringConstraints(min_length=1, max_length=8_000)]
     conversation_summary_ref: ImmutableObjectRef | None = None
@@ -821,6 +915,8 @@ class ResearchCompilerInput(StrictContractModel):
 
 
 class GuidedSessionCompilerInput(StrictContractModel):
+    """Validated guided-session intake, before it is compiled into a task spec."""
+
     task_id: TaskId
     path_id: Annotated[str, StringConstraints(pattern=r"^[a-z0-9-]{1,128}$")]
     resource_id: Annotated[str, StringConstraints(min_length=1, max_length=128)]
@@ -870,6 +966,8 @@ def _check(
 
 
 def _research_checks(subjects: tuple[str, ...]) -> tuple[AcceptanceCheck, ...]:
+    """Return the acceptance checks every research task carries."""
+
     return (
         _check(
             "chk_task_rubric",
@@ -929,6 +1027,8 @@ def _research_checks(subjects: tuple[str, ...]) -> tuple[AcceptanceCheck, ...]:
 
 
 def _learning_checks(subjects: tuple[str, ...]) -> tuple[AcceptanceCheck, ...]:
+    """Return the acceptance checks every guided-learning task carries."""
+
     return (
         _check(
             "chk_plan_fit",
@@ -977,6 +1077,8 @@ def _learning_checks(subjects: tuple[str, ...]) -> tuple[AcceptanceCheck, ...]:
 
 
 def _research_deliverables(task_kind: TaskKind) -> tuple[DeliverableSpec, ...]:
+    """Return the deliverables a research task kind is required to produce."""
+
     if task_kind is TaskKind.RESEARCH_QUICK_ANSWER:
         return (
             _deliverable(
@@ -1034,14 +1136,24 @@ def semantic_task_projection(spec: TaskSpecV1) -> dict[str, Any]:
 
 
 def full_task_digest(spec: TaskSpecV1) -> str:
+    """Return the digest of the whole spec, identity and provenance included."""
+
     return sha256_digest(spec)
 
 
 def semantic_task_digest(spec: TaskSpecV1) -> str:
+    """Return the digest of the behaviour-bearing projection alone."""
+
     return sha256_digest(semantic_task_projection(spec))
 
 
 def _finalize_task(fields: dict[str, Any]) -> TaskSpecV1:
+    """Build a spec whose id is derived from its own content.
+
+    The placeholder build validates first, so the content that determines the
+    real id is already known to be a valid task.
+    """
+
     placeholder = "tsp_" + "0" * 20
     provisional = TaskSpecV1(task_spec_id=placeholder, **fields)
     identity_material = provisional.model_dump(mode="json", exclude={"task_spec_id"})
@@ -1325,6 +1437,8 @@ def control_plane_task_projection(spec: TaskSpecV1) -> dict[str, Any]:
 
 
 class TaskSpecStore(Protocol):
+    """The two-call persistence surface a compiler needs."""
+
     def put(self, spec: TaskSpecV1) -> None: ...
 
     def get(self, task_spec_id: str) -> TaskSpecV1 | None: ...
@@ -1338,6 +1452,8 @@ class InMemoryTaskSpecStore:
         self._logical_revisions: dict[tuple[str, int], str] = {}
 
     def put(self, spec: TaskSpecV1) -> None:
+        """Store a spec, refusing an overwrite or a revision out of sequence."""
+
         current = self._by_id.get(spec.task_spec_id)
         if current is not None and full_task_digest(current) != full_task_digest(spec):
             raise TaskSpecError("immutable task_spec_id cannot be overwritten")
@@ -1361,6 +1477,8 @@ def build_task_spec_ref(
     *,
     artifact_locator: str | None = None,
 ) -> TaskSpecRef:
+    """Return the immutable reference that addresses a compiled spec."""
+
     full_digest = full_task_digest(spec)
     return TaskSpecRef(
         task_spec_id=spec.task_spec_id,
@@ -1406,6 +1524,8 @@ def persist_compiled_task(
 
 
 class ShadowCompatibility(StrictContractModel):
+    """Which fields of a legacy runtime surface a task spec accounts for."""
+
     surface: Literal["job", "research_state", "session_state"]
     task_spec_id: TaskSpecId | None = None
     mapped_fields: tuple[str, ...]
@@ -1443,6 +1563,8 @@ def shadow_research_state_compatibility(
     spec: TaskSpecV1,
     state: Mapping[str, Any],
 ) -> ShadowCompatibility:
+    """Map a research task onto the legacy research state it must agree with."""
+
     if spec.product_surface not in {ProductSurface.RESEARCH_API, ProductSurface.RESEARCH_EVAL}:
         raise TaskSpecError("research state cannot be compared with a learning task")
     if state.get("query") != spec.objective:
@@ -1472,6 +1594,8 @@ def shadow_session_state_compatibility(
     spec: TaskSpecV1,
     state: Mapping[str, Any],
 ) -> ShadowCompatibility:
+    """Map a learning task onto the legacy session state it must agree with."""
+
     if spec.product_surface not in {
         ProductSurface.GUIDED_LEARNING_API,
         ProductSurface.LEARNING_EVAL,
@@ -1501,6 +1625,8 @@ def shadow_session_state_compatibility(
 
 
 def task_spec_json_schema() -> dict[str, Any]:
+    """Export the TaskSpec v1 JSON Schema."""
+
     schema = TaskSpecV1.model_json_schema(mode="validation")
     schema["$id"] = "https://arxiv-research-agent.dev/schemas/task-spec/v1"
     schema["title"] = "TaskSpec v1"

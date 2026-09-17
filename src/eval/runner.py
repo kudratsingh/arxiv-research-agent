@@ -1362,6 +1362,7 @@ def _exit_code(
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run one evaluation campaign and return its process exit code."""
     args = _parse_args(argv if argv is not None else sys.argv[1:])
 
     if not os.environ.get("ANTHROPIC_API_KEY"):

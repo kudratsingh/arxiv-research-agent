@@ -308,6 +308,7 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _parse_provenance(payload: dict[str, Any], where: str) -> FixtureProvenance:
+    """Parse the provenance block every fixture file is required to carry."""
     block = _obj(payload.get("provenance"), f"{where}.provenance")
     return FixtureProvenance(
         fixture_kind=_str(block, "fixture_kind", where),
@@ -321,6 +322,7 @@ def _parse_provenance(payload: dict[str, Any], where: str) -> FixtureProvenance:
 
 
 def _parse_plan(payload: dict[str, Any], where: str) -> SessionPlanFixture:
+    """Parse one session-plan fixture, section by section."""
     sections: list[PlanSection] = []
     for index, entry in enumerate(_list(payload, "sections", where)):
         block = _obj(entry, f"{where}.sections[{index}]")
@@ -345,6 +347,7 @@ def _parse_plan(payload: dict[str, Any], where: str) -> SessionPlanFixture:
 
 
 def _parse_transcript(payload: dict[str, Any], where: str) -> SessionTranscriptFixture:
+    """Parse one session-transcript fixture, turn by turn."""
     turns: list[TranscriptTurn] = []
     for index, entry in enumerate(_list(payload, "transcript", where)):
         block = _obj(entry, f"{where}.transcript[{index}]")
@@ -443,6 +446,7 @@ def pending_fixture_sets(manifest: FixtureManifest) -> list[FixtureSet]:
 
 
 def _set_files(base: Path, entry: FixtureSet) -> list[Path]:
+    """The JSON files of one fixture set, in filename order."""
     directory = base / entry["directory"]
     if not directory.is_dir():
         return []

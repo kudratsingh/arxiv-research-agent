@@ -2771,6 +2771,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Compare a run against its baseline and report the regression verdict."""
     args = _parse_args(argv if argv is not None else sys.argv[1:])
     lane = LANES[args.lane]
 

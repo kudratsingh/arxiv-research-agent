@@ -41,6 +41,8 @@ MemberId: TypeAlias = Annotated[
 
 
 class RegistryKind(StrEnum):
+    """The object kinds this registry can seal, address, and resolve."""
+
     BENCHMARK_SUITE = "benchmark_suite"
     TASK_SET = "task_set"
     TASK_CASE = "task_case"
@@ -55,6 +57,8 @@ class RegistryKind(StrEnum):
 
 
 class LifecycleStatus(StrEnum):
+    """Publication state of an object; only ``active`` resolves."""
+
     DRAFT = "draft"
     REVIEWED = "reviewed"
     ACTIVE = "active"
@@ -63,12 +67,16 @@ class LifecycleStatus(StrEnum):
 
 
 class RegistryRole(StrEnum):
+    """Who is asking, which is the axis every access decision turns on."""
+
     CANDIDATE = "candidate"
     EVALUATOR = "evaluator"
     OWNER = "owner"
 
 
 class ObjectVisibility(StrEnum):
+    """The least-privileged role allowed to see an object's full payload."""
+
     PUBLIC = "public"
     CANDIDATE = "candidate"
     EVALUATOR = "evaluator"
@@ -76,6 +84,8 @@ class ObjectVisibility(StrEnum):
 
 
 class IntendedUse(StrEnum):
+    """Declared purpose of a resolution, checked against object and license."""
+
     DEVELOPMENT = "development"
     REGRESSION = "regression"
     CALIBRATION = "calibration"
@@ -84,17 +94,23 @@ class IntendedUse(StrEnum):
 
 
 class EvaluationLane(StrEnum):
+    """The product lane a benchmark suite scores."""
+
     RESEARCH = "research"
     GUIDED_LEARNING = "guided_learning"
     LONG_HORIZON = "long_horizon"
 
 
 class SourceMode(StrEnum):
+    """Whether a campaign reads frozen snapshots or the live world."""
+
     SNAPSHOT = "snapshot"
     LIVE = "live"
 
 
 class SplitKind(StrEnum):
+    """The split an assignment governs; only ``development`` resolves locally."""
+
     DEVELOPMENT = "development"
     VALIDATION = "validation"
     SEALED = "sealed"
@@ -102,6 +118,8 @@ class SplitKind(StrEnum):
 
 
 class Exposure(StrEnum):
+    """How widely the underlying content has been published."""
+
     PRIVATE_UNEXPOSED = "private_unexposed"
     LIMITED_ACCESS = "limited_access"
     PUBLIC_REPOSITORY = "public_repository"
@@ -110,18 +128,24 @@ class Exposure(StrEnum):
 
 
 class Redistribution(StrEnum):
+    """What the license permits when content leaves this repository."""
+
     PERMITTED = "permitted"
     METADATA_ONLY = "metadata_only"
     PROHIBITED = "prohibited"
 
 
 class TrainingUse(StrEnum):
+    """Whether content may be used to train a model."""
+
     PROHIBITED = "prohibited"
     CONSENT_REQUIRED = "consent_required"
     PERMITTED = "permitted"
 
 
 class LicensePolicy(StrictContractModel):
+    """License terms that gate redistribution and permitted use."""
+
     license_id: Annotated[str, StringConstraints(min_length=1, max_length=128)]
     redistribution: Redistribution
     permitted_uses: tuple[IntendedUse, ...]
@@ -130,6 +154,8 @@ class LicensePolicy(StrictContractModel):
 
     @model_validator(mode="after")
     def require_attribution_when_redistributable(self) -> LicensePolicy:
+        """Reject redistributable content with no attribution, and duplicate uses."""
+
         if self.redistribution is Redistribution.PERMITTED and self.attribution is None:
             raise ValueError("redistributable content requires attribution")
         if len(set(self.permitted_uses)) != len(self.permitted_uses):
@@ -138,6 +164,8 @@ class LicensePolicy(StrictContractModel):
 
 
 class DataPolicy(StrictContractModel):
+    """Sensitivity, personal-data, retention and deletion terms of one object."""
+
     registry_classification: DataClass
     effective_data_class: DataClass
     contains_personal_data: bool
@@ -147,12 +175,16 @@ class DataPolicy(StrictContractModel):
 
 
 class Contamination(StrictContractModel):
+    """Recorded exposure of the content, with the canary set that detects it."""
+
     exposure: Exposure
     canary_set_ref: ImmutableObjectRef | None = None
     last_reviewed_at: Rfc3339Utc
 
 
 class Provenance(StrictContractModel):
+    """Who created this revision, from which parent, under which review record."""
+
     created_at: Rfc3339Utc
     created_by: Annotated[str, StringConstraints(min_length=1, max_length=128)]
     parent: ImmutableObjectRef | None = None
@@ -160,6 +192,12 @@ class Provenance(StrictContractModel):
 
 
 class GovernedPayload(StrictContractModel):
+    """The governance every registry object carries, whatever its kind.
+
+    Subclasses add identity and content; these fields are what the resolver
+    authorizes against, so no kind can opt out of them.
+    """
+
     revision: SemVer
     status: LifecycleStatus
     owners: tuple[Annotated[str, StringConstraints(min_length=1, max_length=128)], ...]
@@ -173,6 +211,8 @@ class GovernedPayload(StrictContractModel):
 
     @model_validator(mode="after")
     def validate_governance(self) -> GovernedPayload:
+        """Require owners, and refuse a use that is both intended and prohibited."""
+
         if not self.owners:
             raise ValueError("at least one owner is required")
         if len(set(self.owners)) != len(self.owners):
@@ -185,6 +225,13 @@ class GovernedPayload(StrictContractModel):
 
 
 class BenchmarkSuite(GovernedPayload):
+    """A complete, self-describing evaluation suite.
+
+    The suite is a campaign's entry point: every other registry object it needs
+    is named by an exact reference, and the kind of each reference is part of
+    the suite's own validity.
+    """
+
     suite_id: RegistryId
     title: Annotated[str, StringConstraints(min_length=1, max_length=200)]
     description: Annotated[str, StringConstraints(min_length=1, max_length=2000)]
@@ -200,6 +247,8 @@ class BenchmarkSuite(GovernedPayload):
 
     @model_validator(mode="after")
     def references_have_declared_kinds(self) -> BenchmarkSuite:
+        """Check every reference's kind, and require unique task kinds and graders."""
+
         expected = (
             (self.task_set_ref, RegistryKind.TASK_SET),
             (self.rubric_set_ref, RegistryKind.RUBRIC_SET),
@@ -223,11 +272,15 @@ class BenchmarkSuite(GovernedPayload):
 
 
 class TaskSet(GovernedPayload):
+    """The set of task cases a suite scores."""
+
     task_set_id: RegistryId
     case_refs: tuple[ImmutableObjectRef, ...]
 
     @model_validator(mode="after")
     def cases_are_unique(self) -> TaskSet:
+        """Require a non-empty, unique set of references, all of them task cases."""
+
         keys = [(ref.id, ref.revision) for ref in self.case_refs]
         if not self.case_refs or len(set(keys)) != len(keys):
             raise ValueError("case_refs must be non-empty and unique")
@@ -237,6 +290,8 @@ class TaskSet(GovernedPayload):
 
 
 class TaskInput(StrictContractModel):
+    """The candidate-visible half of a task case."""
+
     objective: Annotated[str, StringConstraints(min_length=1, max_length=8000)]
     task_kind: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_.]+$")]
     constraint_refs: tuple[ImmutableObjectRef, ...] = ()
@@ -244,6 +299,8 @@ class TaskInput(StrictContractModel):
 
 
 class TaskCase(GovernedPayload):
+    """One scored task: its input, what the candidate sees, evaluator material."""
+
     case_id: RegistryId
     task_input: TaskInput
     candidate_visible_refs: tuple[ImmutableObjectRef, ...] = ()
@@ -252,6 +309,8 @@ class TaskCase(GovernedPayload):
 
 
 class RubricItem(StrictContractModel):
+    """One scored criterion, with its scale, evidence type and aggregation rule."""
+
     rubric_item_id: MemberId
     revision: SemVer
     description: Annotated[str, StringConstraints(min_length=1, max_length=1000)]
@@ -266,6 +325,8 @@ class RubricItem(StrictContractModel):
 
     @model_validator(mode="after")
     def range_is_valid(self) -> RubricItem:
+        """Require a minimum and maximum together, and in order."""
+
         if (self.minimum is None) != (self.maximum is None):
             raise ValueError("minimum and maximum must be supplied together")
         if self.minimum is not None and self.maximum is not None and self.minimum > self.maximum:
@@ -274,6 +335,8 @@ class RubricItem(StrictContractModel):
 
 
 class RubricSet(GovernedPayload):
+    """The rubric items a grader profile applies, unique by item id."""
+
     rubric_set_id: RegistryId
     items: tuple[RubricItem, ...]
 
@@ -286,6 +349,8 @@ class RubricSet(GovernedPayload):
 
 
 class LabelRecord(StrictContractModel):
+    """One judgement about a target object, with its annotator and guideline."""
+
     label_id: MemberId
     target_ref: ImmutableObjectRef
     label_type: Annotated[str, StringConstraints(min_length=1, max_length=128)]
@@ -299,6 +364,8 @@ class LabelRecord(StrictContractModel):
 
 
 class LabelSet(GovernedPayload):
+    """A revision-stable collection of labels with unique ids."""
+
     label_set_id: RegistryId
     labels: tuple[LabelRecord, ...]
 
@@ -311,6 +378,8 @@ class LabelSet(GovernedPayload):
 
 
 class SourceSnapshot(GovernedPayload):
+    """A frozen acquisition of external content, with its current availability."""
+
     snapshot_id: RegistryId
     source_ref: ImmutableObjectRef
     accessed_at: Rfc3339Utc
@@ -323,6 +392,8 @@ class SourceSnapshot(GovernedPayload):
 
 
 class FixtureObservation(StrictContractModel):
+    """One recorded tool observation inside a replayable fixture."""
+
     sequence: Annotated[int, Field(ge=1)]
     observation_ref: ImmutableObjectRef
     tool_contract_ref: ImmutableObjectRef
@@ -330,11 +401,15 @@ class FixtureObservation(StrictContractModel):
 
 
 class FixtureSet(GovernedPayload):
+    """An ordered replay of tool observations, numbered contiguously from 1."""
+
     fixture_set_id: RegistryId
     observations: tuple[FixtureObservation, ...]
 
     @model_validator(mode="after")
     def observations_are_ordered(self) -> FixtureSet:
+        """Require the observation sequence to be contiguous and start at 1."""
+
         expected = list(range(1, len(self.observations) + 1))
         if [item.sequence for item in self.observations] != expected:
             raise ValueError("fixture observation sequence must be contiguous from 1")
@@ -342,6 +417,8 @@ class FixtureSet(GovernedPayload):
 
 
 class SplitAssignment(GovernedPayload):
+    """Which cases belong to a split; membership is never candidate-visible."""
+
     split_assignment_id: RegistryId
     split: SplitKind
     case_refs: tuple[ImmutableObjectRef, ...]
@@ -349,6 +426,8 @@ class SplitAssignment(GovernedPayload):
 
     @model_validator(mode="after")
     def case_refs_are_valid(self) -> SplitAssignment:
+        """Require unique references, and nothing but task cases, in a split."""
+
         identities = [(ref.id, ref.revision) for ref in self.case_refs]
         if len(set(identities)) != len(identities):
             raise ValueError("split membership must be unique")
@@ -358,6 +437,8 @@ class SplitAssignment(GovernedPayload):
 
 
 class GraderProfile(GovernedPayload):
+    """How a suite is scored: metrics, optional judge, rubric and calibration."""
+
     grader_profile_id: RegistryId
     deterministic_metric_refs: tuple[ImmutableObjectRef, ...] = ()
     model_judge_ref: ImmutableObjectRef | None = None
@@ -374,12 +455,16 @@ class GraderProfile(GovernedPayload):
 
 
 class RetentionPolicy(GovernedPayload):
+    """How long content is kept and what its deletion leaves behind."""
+
     retention_policy_id: RegistryId
     duration_days: Annotated[int, Field(ge=0)] | None
     deletion_mode: Literal["delete_content_keep_tombstone", "repository_history"]
 
 
 class ExternalAdapter(GovernedPayload):
+    """Attribution and conversion record for content acquired upstream."""
+
     adapter_id: RegistryId
     upstream_name: Annotated[str, StringConstraints(min_length=1, max_length=200)]
     upstream_version: Annotated[str, StringConstraints(min_length=1, max_length=128)]
@@ -434,12 +519,20 @@ _ID_FIELD: dict[RegistryKind, str] = {
 
 
 class RegistryIntegrity(StrictContractModel):
+    """The payload digest, and the profile under which it was computed."""
+
     algorithm: Literal["sha256"] = "sha256"
     digest_profile: Literal["agent-contract-json/v1"] = "agent-contract-json/v1"
     payload_digest: Digest
 
 
 class RegistryEnvelope(StrictContractModel):
+    """A sealed registry object: its kind, its payload, and a matching digest.
+
+    Validation is the seal.  An envelope cannot exist whose declared kind
+    disagrees with its payload type, or whose digest disagrees with its content.
+    """
+
     schema_kind: RegistryKind
     schema_version: Literal["1.0.0"] = "1.0.0"
     payload: RegistryPayload
@@ -447,6 +540,8 @@ class RegistryEnvelope(StrictContractModel):
 
     @model_validator(mode="after")
     def verify_kind_and_digest(self) -> RegistryEnvelope:
+        """Refuse a mislabelled envelope or one whose digest is not its content."""
+
         expected_kind = _PAYLOAD_KIND[type(self.payload)]
         if self.schema_kind is not expected_kind:
             raise ValueError(
@@ -460,6 +555,8 @@ class RegistryEnvelope(StrictContractModel):
         return str(getattr(self.payload, _ID_FIELD[self.schema_kind]))
 
     def object_ref(self) -> ImmutableObjectRef:
+        """Return the exact immutable reference that addresses this envelope."""
+
         return ImmutableObjectRef(
             kind=self.schema_kind.value,
             id=self.object_id,
@@ -480,11 +577,15 @@ def seal_registry_object(payload: RegistryPayload) -> RegistryEnvelope:
 
 
 class RegistryAccessError(ContractError):
+    """The caller's role is not permitted to see the object it asked for."""
+
     def __init__(self, detail: str) -> None:
         super().__init__(ContractErrorCode.REDACTION_REQUIRED, detail)
 
 
 class RegistryResolutionError(ContractError):
+    """The reference did not resolve, or resolved to something unusable."""
+
     def __init__(self, detail: str) -> None:
         super().__init__(ContractErrorCode.REF_INVALID, detail)
 
@@ -494,6 +595,8 @@ class RestrictedRegistryUnavailable(RegistryAccessError):
 
 
 class RegistryResolver(Protocol):
+    """Resolve one exact reference for a named role and a declared use."""
+
     def resolve(
         self,
         ref: ImmutableObjectRef,
@@ -523,6 +626,8 @@ _CANDIDATE_DENIED_KINDS = {
 
 
 def _walk_strings(value: Any) -> Iterable[tuple[str, str]]:
+    """Yield ``(json_path, text)`` for every string reachable inside a payload."""
+
     if isinstance(value, str):
         yield "$", value
         return
@@ -558,6 +663,13 @@ def _authorize(
     intended_use: IntendedUse,
     now: datetime,
 ) -> None:
+    """Refuse a resolution that lifecycle, license, use or role forbids.
+
+    The order matters: an object that is not resolvable at all fails before any
+    role check, and a split this local resolver may not serve raises
+    ``RestrictedRegistryUnavailable`` rather than a flat denial.
+    """
+
     payload = envelope.payload
     validate_registry_safety(envelope)
     if payload.status is not LifecycleStatus.ACTIVE:
@@ -605,6 +717,8 @@ class InMemoryRegistry:
             self.add(envelope)
 
     def add(self, envelope: RegistryEnvelope) -> None:
+        """Store one envelope, refusing to give a sealed revision new content."""
+
         key = (envelope.schema_kind.value, envelope.object_id, envelope.payload.revision)
         current = self._objects.get(key)
         if current is not None and current.integrity.payload_digest != envelope.integrity.payload_digest:
@@ -619,6 +733,8 @@ class InMemoryRegistry:
         intended_use: IntendedUse,
         now: datetime | None = None,
     ) -> RegistryEnvelope:
+        """Resolve an exact reference, checking its digest before authorizing."""
+
         key = (ref.kind, ref.id, ref.revision)
         envelope = self._objects.get(key)
         if envelope is None:
@@ -641,6 +757,8 @@ class LocalRegistry:
         self.root = root.resolve()
 
     def _path(self, ref: ImmutableObjectRef) -> Path:
+        """Map a reference onto its file, refusing a locator that escapes the root."""
+
         candidate = (self.root / ref.kind / ref.id / f"{ref.revision}.json").resolve()
         if not candidate.is_relative_to(self.root):
             raise RegistryResolutionError("registry locator escaped its root")
@@ -654,6 +772,8 @@ class LocalRegistry:
         intended_use: IntendedUse,
         now: datetime | None = None,
     ) -> RegistryEnvelope:
+        """Load, re-seal and authorize the object an exact reference names."""
+
         path = self._path(ref)
         try:
             raw = path.read_text(encoding="utf-8")
@@ -747,6 +867,12 @@ def validate_split_disjointness(assignments: Iterable[SplitAssignment]) -> None:
 
 
 class CampaignLock(StrictContractModel):
+    """The fully resolved selection a campaign will run, frozen.
+
+    Every reference is exact and every case left out is named, so a rerun that
+    resolves the same lock scores the same denominator.
+    """
+
     schema_kind: Literal["registry-lock"] = "registry-lock"
     schema_version: Literal["1.0.0"] = "1.0.0"
     suite_ref: ImmutableObjectRef
@@ -762,6 +888,8 @@ class CampaignLock(StrictContractModel):
 
 
 class RegistryValidationReceipt(StrictContractModel):
+    """Proof that one lock digest was validated, by whom and when."""
+
     schema_kind: Literal["registry-validation-receipt"] = "registry-validation-receipt"
     schema_version: Literal["1.0.0"] = "1.0.0"
     lock_digest: Digest
@@ -771,6 +899,8 @@ class RegistryValidationReceipt(StrictContractModel):
 
 
 def _suite_refs(suite: BenchmarkSuite) -> tuple[ImmutableObjectRef, ...]:
+    """Return every registry reference a suite depends on, in a stable order."""
+
     return (
         suite.task_set_ref,
         suite.rubric_set_ref,
@@ -869,6 +999,8 @@ def validate_lock(
     validated_at: str,
     validator_ref: ImmutableObjectRef,
 ) -> RegistryValidationReceipt:
+    """Return a receipt binding a lock's digest to its validator and time."""
+
     return RegistryValidationReceipt(
         lock_digest=sha256_digest(lock),
         resolved_object_count=len(lock.resolved_refs),

@@ -84,6 +84,8 @@ _CONTROL_CANARY = re.compile(r"(?i)(?:ignore previous instructions|system prompt
 
 
 class TrajectoryError(ContractError):
+    """A trajectory contract failure; schema-invalid unless given another code."""
+
     def __init__(
         self,
         detail: str,
@@ -94,15 +96,21 @@ class TrajectoryError(ContractError):
 
 
 class IdempotencyConflict(TrajectoryError):
+    """One identity was reused for content that is not the same."""
+
     pass
 
 
 class IntegrityError(TrajectoryError):
+    """A stored trajectory does not hash to what it claims."""
+
     def __init__(self, detail: str) -> None:
         super().__init__(detail, code=ContractErrorCode.DIGEST_INVALID)
 
 
 def _walk(value: Any, *, path: str = "$") -> Iterable[tuple[str, Any]]:
+    """Yield ``(json_path, value)`` for every node inside a nested value."""
+
     if isinstance(value, Mapping):
         for key, child in value.items():
             child_path = f"{path}.{key}"
@@ -140,6 +148,8 @@ def validate_event_safe_content(value: Any) -> None:
 
 
 class EventStatus(StrEnum):
+    """How the work an event describes ended, or that it has not ended."""
+
     REQUESTED = "requested"
     STARTED = "started"
     SUCCEEDED = "succeeded"
@@ -154,6 +164,8 @@ class EventStatus(StrEnum):
 
 
 class ActorKind(StrEnum):
+    """What kind of participant emitted an event."""
+
     SYSTEM = "system"
     POLICY = "policy"
     AGENT = "agent"
@@ -163,6 +175,8 @@ class ActorKind(StrEnum):
 
 
 class ContentClass(StrEnum):
+    """What sort of content an event payload carries, if it carries any."""
+
     NONE = "none"
     METADATA = "metadata"
     USER_INPUT_SUMMARY = "user_input_summary"
@@ -173,6 +187,8 @@ class ContentClass(StrEnum):
 
 
 class ConsentScope(StrEnum):
+    """The purpose the subject's content is permitted to serve."""
+
     PRODUCT_OPERATION_ONLY = "product_operation_only"
     SUPPORT_ONLY = "support_only"
     AGGREGATE_ANALYTICS = "aggregate_analytics"
@@ -183,11 +199,15 @@ class ConsentScope(StrEnum):
 
 
 class RedactionStatus(StrEnum):
+    """Whether redaction ran, or was not applicable to this content."""
+
     PASSED = "passed"
     NOT_APPLICABLE = "not_applicable"
 
 
 class ReplayOrigin(StrEnum):
+    """Where an event came from: a live run, a fixture, or a replay."""
+
     LIVE = "live"
     FIXTURE = "fixture"
     OBSERVATIONAL_REPLAY = "observational_replay"
@@ -196,6 +216,8 @@ class ReplayOrigin(StrEnum):
 
 
 class ObservationStatus(StrEnum):
+    """Whether an observation was seen, recorded, held constant, or simulated."""
+
     OBSERVED = "observed"
     RECORDED = "recorded"
     HELD_CONSTANT_AFTER_DIVERGENCE = "held_constant_after_divergence"
@@ -204,6 +226,8 @@ class ObservationStatus(StrEnum):
 
 
 class TrustClass(StrEnum):
+    """How far the content of an artifact may be trusted."""
+
     SYSTEM_GENERATED = "system_generated"
     AUTHENTICATED_HUMAN = "authenticated_human"
     UNTRUSTED_USER = "untrusted_user"
@@ -213,6 +237,8 @@ class TrustClass(StrEnum):
 
 
 class ArtifactRole(StrEnum):
+    """The role an artifact plays in the run that produced it."""
+
     PLAN = "plan"
     TOOL_INPUT = "tool_input"
     TOOL_OUTPUT = "tool_output"
@@ -234,6 +260,8 @@ class ArtifactRole(StrEnum):
 
 
 class Actor(StrictContractModel):
+    """Which participant emitted an event, at which instance and version."""
+
     kind: ActorKind
     name: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_.-]{0,63}$")]
     instance_id: Annotated[str, StringConstraints(min_length=1, max_length=128)]
@@ -241,17 +269,23 @@ class Actor(StrictContractModel):
 
 
 class PolicyRef(StrictContractModel):
+    """The policy that was in force when an event was emitted."""
+
     policy_id: PolicyId
     policy_version: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     policy_digest: Digest
 
 
 class TraceRef(StrictContractModel):
+    """The trace and span an event belongs to."""
+
     trace_id: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{16,64}$")]
     span_id: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{16}$")]
 
 
 class ArtifactRef(StrictContractModel):
+    """A content-addressed artifact whose identity is its own digest."""
+
     artifact_id: Annotated[
         str, StringConstraints(pattern=r"^artifact:sha256:[0-9a-f]{64}$")
     ]
@@ -274,6 +308,8 @@ class ArtifactRef(StrictContractModel):
 
     @model_validator(mode="after")
     def identity_matches_digest(self) -> ArtifactRef:
+        """Require the id and storage URI to carry the artifact's own digest."""
+
         suffix = self.digest.removeprefix("sha256:")
         if self.artifact_id != f"artifact:{self.digest}":
             raise ValueError("artifact id must contain its digest")
@@ -285,6 +321,8 @@ class ArtifactRef(StrictContractModel):
 
 
 class UsageDelta(StrictContractModel):
+    """The work one event consumed, priced only against a frozen table."""
+
     provider: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_.-]{0,63}$")]
     model_id: Annotated[str, StringConstraints(min_length=1, max_length=256)]
     input_tokens: Annotated[int, Field(ge=0)] = 0
@@ -304,6 +342,8 @@ class UsageDelta(StrictContractModel):
 
     @model_validator(mode="after")
     def priced_usage_has_table(self) -> UsageDelta:
+        """Require a price table behind any cost, and some work behind any delta."""
+
         if Decimal(self.estimated_cost_usd) > 0 and self.price_table_ref is None:
             raise ValueError("non-zero cost requires an immutable price table ref")
         if not any(
@@ -324,6 +364,8 @@ class UsageDelta(StrictContractModel):
 
 
 class DataGovernance(StrictContractModel):
+    """Classification, consent and redaction state of a single event."""
+
     content_class: ContentClass
     effective_data_class: DataClass
     consent_scope: ConsentScope
@@ -333,6 +375,8 @@ class DataGovernance(StrictContractModel):
 
 
 class ReplayMetadata(StrictContractModel):
+    """Whether an event was observed or replayed, and from which run."""
+
     origin: ReplayOrigin
     source_run_id: RunId | None = None
     observation_status: ObservationStatus
@@ -341,6 +385,8 @@ class ReplayMetadata(StrictContractModel):
 
     @model_validator(mode="after")
     def replay_labels_are_honest(self) -> ReplayMetadata:
+        """Refuse a replay label its origin and divergence lineage do not support."""
+
         counterfactual = self.observation_status in {
             ObservationStatus.HELD_CONSTANT_AFTER_DIVERGENCE,
             ObservationStatus.SIMULATED,
@@ -405,6 +451,12 @@ REGISTERED_REASON_CODES: Final[frozenset[str]] = (
 
 
 class EventTypeDefinition(StrictContractModel):
+    """The closed contract for one event type.
+
+    Statuses, payload fields and artifact roles are all enumerated, so an event
+    carrying anything else is a schema failure rather than an extension.
+    """
+
     event_type: EventTypeName
     event_type_version: Literal["1.0.0"] = "1.0.0"
     owner: Annotated[str, StringConstraints(min_length=1, max_length=64)]
@@ -423,6 +475,8 @@ class EventTypeDefinition(StrictContractModel):
 
     @model_validator(mode="after")
     def definition_is_closed(self) -> EventTypeDefinition:
+        """Require a non-empty definition with unique, non-overlapping members."""
+
         if not self.allowed_statuses:
             raise ValueError("event type needs a legal status")
         if len(set(self.allowed_statuses)) != len(self.allowed_statuses):
@@ -451,6 +505,8 @@ def _definition(
     action_attempt: bool = False,
     post_terminal: bool = False,
 ) -> EventTypeDefinition:
+    """Build one event-type definition with the defaults most types share."""
+
     statuses = status if isinstance(status, tuple) else (status,)
     return EventTypeDefinition(
         event_type=event_type,
@@ -467,6 +523,8 @@ def _definition(
 
 
 def _build_event_registry() -> tuple[EventTypeDefinition, ...]:
+    """Return the closed set of event types this contract admits."""
+
     requested = EventStatus.REQUESTED
     started = EventStatus.STARTED
     succeeded = EventStatus.SUCCEEDED
@@ -548,6 +606,12 @@ EVENT_REGISTRY_DIGEST = sha256_digest(EVENT_TYPE_DEFINITIONS)
 
 
 class ProposedTrajectoryEvent(StrictContractModel):
+    """A bounded fact a producer offers to the store.
+
+    Everything a producer owns is validated here.  Order, commit time and the
+    hash chain belong to the store and appear only once the event is stored.
+    """
+
     schema_kind: Literal["trajectory-event"] = "trajectory-event"
     schema_version: Literal["1.0.0"] = "1.0.0"
     event_type: EventTypeName
@@ -583,6 +647,12 @@ class ProposedTrajectoryEvent(StrictContractModel):
 
     @model_validator(mode="after")
     def validate_registered_event(self) -> ProposedTrajectoryEvent:
+        """Check the event against its registered type and the v1 safety bounds.
+
+        Status, payload keys, artifact roles and reason codes are closed sets; the
+        whole event must also survive content safety and fit the inline byte limit.
+        """
+
         try:
             definition = EVENT_TYPE_REGISTRY[self.event_type]
         except KeyError as exc:
@@ -653,6 +723,8 @@ class ProposedTrajectoryEvent(StrictContractModel):
 
 
 class StoredTrajectoryEvent(ProposedTrajectoryEvent):
+    """A committed event: the proposal plus the order and hash the store owns."""
+
     run_seq: Annotated[int, Field(ge=1)]
     recorded_at: Rfc3339Utc
     prev_event_hash: Digest | None
@@ -660,6 +732,8 @@ class StoredTrajectoryEvent(ProposedTrajectoryEvent):
 
 
 class RunScope(StrictContractModel):
+    """The immutable identity every event of one run must repeat exactly."""
+
     run_id: RunId
     task_spec_id: TaskSpecId
     task_revision: Annotated[int, Field(ge=1)]
@@ -673,11 +747,15 @@ class RunScope(StrictContractModel):
 
 
 def new_event_id(*, entropy: uuid.UUID | None = None) -> str:
+    """Return a fresh event id, or render the supplied UUID as one."""
+
     source = entropy or uuid.uuid4()
     return str(source)
 
 
 def proposed_semantic_digest(event: ProposedTrajectoryEvent) -> str:
+    """Return the digest of an event's content, ignoring its event id."""
+
     return sha256_digest(event.model_dump(mode="json", exclude={"event_id"}))
 
 
@@ -685,6 +763,8 @@ def compute_event_hash(
     event_without_hashes: Mapping[str, Any],
     previous_event_hash: Digest | None,
 ) -> str:
+    """Return an event's chained hash over the previous hash and its body."""
+
     previous = (
         bytes.fromhex(previous_event_hash.removeprefix("sha256:"))
         if previous_event_hash is not None
@@ -697,12 +777,16 @@ def compute_event_hash(
 
 
 def _event_body_for_hash(event: StoredTrajectoryEvent) -> dict[str, Any]:
+    """Return the body the chain hashes: the event without either hash field."""
+
     return event.model_dump(
         mode="json", exclude={"prev_event_hash", "event_hash"}
     )
 
 
 class _RunLedger:
+    """Per-run mutable state the store folds committed events into."""
+
     def __init__(self, scope: RunScope) -> None:
         self.scope = scope
         self.events: list[StoredTrajectoryEvent] = []
@@ -733,6 +817,8 @@ class InMemoryTrajectoryStore:
         self._lock = threading.RLock()
 
     def register_run(self, scope: RunScope) -> None:
+        """Bind a run id to one immutable scope; rebinding to another is an error."""
+
         with self._lock:
             existing = self._runs.get(scope.run_id)
             if existing is not None:
@@ -742,6 +828,8 @@ class InMemoryTrajectoryStore:
             self._runs[scope.run_id] = _RunLedger(scope)
 
     def append(self, event: ProposedTrajectoryEvent) -> StoredTrajectoryEvent:
+        """Commit one event and return it with its sequence and hash."""
+
         with self._lock:
             return self._append_locked(event)
 
@@ -749,6 +837,8 @@ class InMemoryTrajectoryStore:
         self,
         events: Sequence[ProposedTrajectoryEvent],
     ) -> tuple[StoredTrajectoryEvent, ...]:
+        """Commit one run's events all or none, restoring the ledger on failure."""
+
         if not events:
             return ()
         run_ids = {event.run_id for event in events}
@@ -772,6 +862,12 @@ class InMemoryTrajectoryStore:
             raise TrajectoryError("run must be registered before append") from exc
 
     def _append_locked(self, event: ProposedTrajectoryEvent) -> StoredTrajectoryEvent:
+        """Validate, order, hash and commit one event.
+
+        An idempotency key already seen with the same content returns the event
+        that was stored then, rather than appending a second one.
+        """
+
         ledger = self._require_run(event.run_id)
         self._validate_scope(ledger.scope, event)
         semantic_digest = proposed_semantic_digest(event)
@@ -823,6 +919,8 @@ class InMemoryTrajectoryStore:
 
     @staticmethod
     def _validate_scope(scope: RunScope, event: ProposedTrajectoryEvent) -> None:
+        """Require every scoped field of an event to repeat the run scope exactly."""
+
         expected = {
             "run_id": scope.run_id,
             "task_spec_id": scope.task_spec_id,
@@ -838,6 +936,8 @@ class InMemoryTrajectoryStore:
 
     @staticmethod
     def _validate_attempt(ledger: _RunLedger, event: ProposedTrajectoryEvent) -> None:
+        """Require an event to carry the process lease that is currently active."""
+
         if event.event_type == "attempt.started":
             if ledger.active_attempt_id is not None:
                 raise TrajectoryError("a process attempt is already active")
@@ -847,6 +947,8 @@ class InMemoryTrajectoryStore:
 
     @staticmethod
     def _validate_references(ledger: _RunLedger, event: ProposedTrajectoryEvent) -> None:
+        """Require every reference, in envelope or payload, to name an earlier event."""
+
         for field in ("parent_event_id", "caused_by_event_id"):
             reference = getattr(event, field)
             if reference is not None and reference not in ledger.by_id:
@@ -874,6 +976,8 @@ class InMemoryTrajectoryStore:
 
     @staticmethod
     def _validate_governance(scope: RunScope, event: ProposedTrajectoryEvent) -> None:
+        """Refuse an event that classifies content below what it inherited."""
+
         inherited = DataClass.most_restrictive(
             scope.task_data_class,
             *(artifact.data_class for artifact in event.artifact_refs),
@@ -889,6 +993,8 @@ class InMemoryTrajectoryStore:
         ledger: _RunLedger,
         event: ProposedTrajectoryEvent,
     ) -> None:
+        """Enforce branch and candidate lifecycle: created once, used while open."""
+
         if event.event_type == "branch.created":
             new_branch = event.payload["new_branch_id"]
             parent_branch = event.payload["parent_branch_id"]
@@ -951,6 +1057,8 @@ class InMemoryTrajectoryStore:
         ledger: _RunLedger,
         event: ProposedTrajectoryEvent,
     ) -> None:
+        """Require each action and tool attempt to start once and end once."""
+
         attempt_id = event.action_attempt_id
         if event.event_type == "action.started":
             assert attempt_id is not None
@@ -978,6 +1086,8 @@ class InMemoryTrajectoryStore:
         ledger: _RunLedger,
         event: ProposedTrajectoryEvent,
     ) -> None:
+        """Require every verification and repair outcome to answer an open request."""
+
         if event.event_type == "verification.requested":
             check_id = event.payload["check_id"]
             if not isinstance(check_id, str) or check_id in ledger.verification_checks:
@@ -1023,6 +1133,8 @@ class InMemoryTrajectoryStore:
 
     @staticmethod
     def _apply_state(ledger: _RunLedger, event: StoredTrajectoryEvent) -> None:
+        """Fold a committed event into the ledger's lease, branch and candidate state."""
+
         if event.event_type == "attempt.started":
             ledger.active_attempt_id = event.attempt_id
             main_branch = event.payload["main_branch_id"]
@@ -1076,10 +1188,14 @@ class InMemoryTrajectoryStore:
             ledger.terminal_event_id = event.event_id
 
     def events(self, run_id: str) -> tuple[StoredTrajectoryEvent, ...]:
+        """Return every committed event of a run, in commit order."""
+
         with self._lock:
             return tuple(self._require_run(run_id).events)
 
     def export_jsonl(self, run_id: str) -> str:
+        """Serialize a run's events as canonical JSON lines."""
+
         return "".join(f"{canonical_json(event)}\n" for event in self.events(run_id))
 
 
@@ -1088,6 +1204,8 @@ def verify_trajectory(
     *,
     expected_scope: RunScope | None = None,
 ) -> None:
+    """Re-derive a trajectory's order and hash chain, raising on the first break."""
+
     if not events:
         raise IntegrityError("trajectory is empty")
     if events[0].event_type != "run.admitted" or events[0].run_seq != 1:
@@ -1115,6 +1233,8 @@ def verify_trajectory(
 
 
 def import_jsonl(text: str, *, expected_scope: RunScope | None = None) -> tuple[StoredTrajectoryEvent, ...]:
+    """Parse canonical JSON lines into a trajectory and verify it."""
+
     try:
         events = tuple(
             StoredTrajectoryEvent.model_validate_json(line)
@@ -1128,6 +1248,8 @@ def import_jsonl(text: str, *, expected_scope: RunScope | None = None) -> tuple[
 
 
 class CandidateEdge(StrictContractModel):
+    """One candidate and the candidate it was revised from, if any."""
+
     candidate_id: CandidateId
     parent_candidate_id: CandidateId | None
     created_at_seq: Annotated[int, Field(ge=1)]
@@ -1135,6 +1257,8 @@ class CandidateEdge(StrictContractModel):
 
 
 class ClaimEvidenceEdge(StrictContractModel):
+    """One claim-to-evidence link, and whether it is still in force."""
+
     claim_id: str
     evidence_id: str
     relationship: Literal["supports", "contradicts", "qualifies", "background"]
@@ -1143,6 +1267,8 @@ class ClaimEvidenceEdge(StrictContractModel):
 
 
 class TrajectoryFold(StrictContractModel):
+    """A run's totals and lineage, derived from its verified events."""
+
     schema_kind: Literal["trajectory-fold"] = "trajectory-fold"
     schema_version: Literal["1.0.0"] = "1.0.0"
     run_id: RunId
@@ -1160,6 +1286,8 @@ class TrajectoryFold(StrictContractModel):
 
 
 def fold_trajectory(events: Sequence[StoredTrajectoryEvent]) -> TrajectoryFold:
+    """Verify a trajectory and reduce it to usage totals and lineage."""
+
     verify_trajectory(events)
     candidate_edges: list[CandidateEdge] = []
     claim_edges: dict[tuple[str, str], ClaimEvidenceEdge] = {}
@@ -1229,6 +1357,8 @@ def fold_trajectory(events: Sequence[StoredTrajectoryEvent]) -> TrajectoryFold:
 
 
 class ReplayEventView(StrictContractModel):
+    """One event as a decision replay of its run would see it."""
+
     schema_kind: Literal["trajectory-replay-event-view"] = (
         "trajectory-replay-event-view"
     )
@@ -1244,6 +1374,12 @@ def decision_replay_view(
     *,
     diverged_at_run_seq: int | None,
 ) -> tuple[ReplayEventView, ...]:
+    """Describe how a decision replay would treat each event of a run.
+
+    Observations after the divergence point are held constant rather than
+    claimed as freshly observed, which is what makes the replay honest.
+    """
+
     verify_trajectory(events)
     if diverged_at_run_seq is not None and diverged_at_run_seq < 1:
         raise TrajectoryError("divergence sequence must be positive")
@@ -1277,6 +1413,8 @@ def decision_replay_view(
 
 
 def trajectory_json_schema() -> dict[str, Any]:
+    """Export the stored TrajectoryEvent v1 JSON Schema."""
+
     schema = StoredTrajectoryEvent.model_json_schema(mode="validation")
     schema["$id"] = "https://arxiv-research-agent.dev/schemas/trajectory-event/1.0.0"
     schema["title"] = "Stored TrajectoryEvent v1"

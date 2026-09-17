@@ -362,6 +362,7 @@ class ShadowRun:
         )
 
     def _actor(self, kind: ActorKind, name: str) -> Actor:
+        """An actor record in this shadow's own instance and version vocabulary."""
         return Actor(
             kind=kind,
             name=name,
@@ -879,6 +880,7 @@ class ShadowRun:
 
 
 def _deterministic_attempt_id(runtime_run_id: str) -> str:
+    """An attempt id derived from the runtime run id, stable across replays."""
     entropy = uuid.UUID(bytes=hashlib.sha256(f"attempt:{runtime_run_id}".encode()).digest()[:16])
     return f"att_{entropy.hex}"
 
@@ -909,6 +911,7 @@ def _replay_metadata() -> ReplayMetadata:
 
 
 def _remember(run: ShadowRun) -> None:
+    """Retain a shadow run, evicting the oldest once the bound is reached."""
     with _LOCK:
         _RUNS[run.runtime_run_id] = run
         while len(_RUNS) > MAX_RETAINED_RUNS:

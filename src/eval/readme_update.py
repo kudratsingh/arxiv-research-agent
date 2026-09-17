@@ -167,6 +167,7 @@ def patch_readme(readme_path: Path, block: str) -> bool:
 
 
 def _mean_or_none(rows: list[dict[str, Any]], field: str) -> float | None:
+    """The mean of a field over the rows that report it, or `None`."""
     values = [r[field] for r in rows if r.get(field) is not None]
     return statistics.fmean(values) if values else None
 
@@ -277,6 +278,7 @@ def _load_records(summary: Path) -> list[dict[str, Any]]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Refresh the README's evaluation block from a summary file."""
     args = _parse_args(argv if argv is not None else sys.argv[1:])
 
     if not args.summary.exists():
