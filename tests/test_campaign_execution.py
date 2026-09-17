@@ -59,6 +59,7 @@ from src.campaign.approval import (
 from src.campaign.arms import ARM_IDS, ArmId
 from src.campaign.errors import CampaignError
 from src.campaign.execute import (
+    ARTIFACT_INDEX_PATH,
     COMPLETION_FILENAME,
     PRIMARY_METRIC,
     PROJECTION_FILENAME,
@@ -688,6 +689,55 @@ class TestTheFullMatrixRunsAtZeroCost:
             ):
                 assert (target / name).is_file(), f"arm {arm} is missing {name}"
             assert list((target / "attempts").glob("att_*.json"))
+
+    def test_every_episode_retains_its_briefing_bytes_on_every_arm(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        """W11-F1 closed, measured across the whole matrix (ADR 0096).
+
+        The finding this replaces: the artifact store's private-reasoning
+        screen carried two natural-language patterns, one of which was
+        `chain[ _-]of[ _-]thought`. The evidence path quotes source
+        abstracts verbatim and the fixture corpus's survey paper says
+        "chain-of-thought prompting", so every briefing on an
+        evidence-path arm was refused and indexed `stored: false` — a
+        digest with no bytes behind it. Arm A, which quotes no abstract,
+        was unaffected. The loss therefore fell on the exact axis
+        `research-policy-v1` compares, and it was silent.
+
+        Asserted over all 300 episodes rather than one per arm, because
+        the thing that varied was never the writer: it was whether a
+        particular *document* happened to quote a particular sentence,
+        and only the full matrix covers every case-and-arm combination
+        where that could happen. `stored` comes from the index the
+        campaign writes, which asks the store itself
+        (`store.contains`), so this reads the same fact a Stage-3
+        artifact sweep would.
+        """
+        unstored: list[str] = []
+        indexed = 0
+        for episode in full_matrix.plan.runnable:
+            target = full_matrix.directory / episode.output_path
+            index = json.loads(
+                (target / ARTIFACT_INDEX_PATH).read_text(encoding="utf-8")
+            )
+            for entry in index["artifacts"]:
+                indexed += 1
+                if not entry["stored"]:
+                    unstored.append(
+                        f"{episode.arm_id}/{episode.case_id}: "
+                        f"{entry['artifact_id']} roles={entry['roles']}"
+                    )
+
+        assert indexed > 0, "no artifacts were indexed; this test is vacuous"
+        assert unstored == [], (
+            f"{len(unstored)} artifact(s) reached the index without bytes, "
+            f"first few: {unstored[:5]}. Before ADR 0096 this was W11-F1 — a "
+            "screen matching a natural-language phrase rejected briefings "
+            "that quoted a source abstract about chain-of-thought prompting. "
+            "If it is back, a topic pattern has returned to "
+            "`_PRIVATE_REASONING_PATTERNS`."
+        )
 
     def test_each_episodes_trajectory_verifies_against_the_durable_sink(
         self, full_matrix: MatrixRun

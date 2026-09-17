@@ -287,6 +287,20 @@ promotion system.
    known good.
 10. **Research claims are time-bounded.** The frontier review records an
     as-of date and distinguishes published evidence from our own hypotheses.
+11. **Safety and retention screens match structure, never phrases.** A
+    screen refuses on markers, field names, artifact kind, role or trust
+    class — things that say who *authored* a span. It never refuses on a
+    natural-language phrase, because product text quotes the world: the
+    phrase a screen forbids will appear in the material the system
+    legitimately handles. W11-F1 is the measured case
+    ([ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md))
+    — the artifact store forbade "chain of thought", which is the name of
+    a research topic, so it rejected the source abstracts a research
+    agent reads and the briefings that quote them. Such a failure is
+    doubly dangerous: it is *silent* (the run continues and only a
+    WARNING fires), and its false positives are *correlated with the
+    subject under study* rather than random, so they bias an experiment
+    instead of adding noise to it.
 
 ## Decision flow
 

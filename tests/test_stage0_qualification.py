@@ -852,19 +852,25 @@ class TestTheSyntheticEpisodes:
         ] == [f"action.completed:{node}" for node in visited]
         assert reconstruction.artifacts
         assert bridge.artifacts is not None
-        # Every artifact the ledger names is either promoted bytes or an
-        # honest digest-only reference, and a digest-only one happens for
-        # exactly one reason in this checkout: the artifact store's
-        # private-reasoning screen refused the body. That refusal is a
-        # real finding rather than a tolerated flake — see W11-F1 in
-        # `docs/agent-engineering/15-stage0-qualification-report.md` and
-        # `test_a_briefing_about_chain_of_thought_is_refused_storage`.
-        for artifact_id in reconstruction.artifacts:
-            if not bridge.artifacts.contains(artifact_id):
-                assert PRIVATE_REASONING_FALSE_POSITIVE.search(final["draft_report"]), (
-                    f"{artifact_id} was not stored and the report does not trip "
-                    "the private-reasoning screen; this is a new failure"
-                )
+        # Every artifact the ledger names carries its bytes. This used to
+        # tolerate a digest-only reference whenever the report tripped the
+        # private-reasoning screen — W11-F1, which was a real finding
+        # rather than a flake, and which owner ruling R9 closed by
+        # narrowing the screen to structural markers (ADR 0096). With the
+        # topic patterns gone there is no longer a case to tolerate, so
+        # the assertion is unconditional and a digest-only artifact is a
+        # failure again.
+        missing = [
+            artifact_id
+            for artifact_id in reconstruction.artifacts
+            if not bridge.artifacts.contains(artifact_id)
+        ]
+        assert missing == [], (
+            f"{missing} reached the ledger without bytes. Before ADR 0096 the "
+            "private-reasoning screen refused briefings that quoted a source "
+            "abstract about chain-of-thought prompting; if that is what this "
+            "is, the screen has regained a natural-language pattern."
+        )
 
         legacy = LegacyOutcome(
             surface="eval_record",
@@ -997,25 +1003,26 @@ class TestTheCandidateRoleCannotReachEvaluationMaterial:
             "hidden-rubric-content",
         }
 
-    def test_a_briefing_about_chain_of_thought_is_refused_storage(
+    def test_a_briefing_about_chain_of_thought_is_stored(
         self, tmp_path: Path
     ) -> None:
-        """W11-F1, pinned as behaviour rather than left as a surprise.
+        """W11-F1, closed by owner ruling R9 (ADR 0096).
 
-        The artifact store screens text bodies for private reasoning with
-        a substring rule, and `chain-of-thought` is one of its patterns.
-        A research briefing whose subject *is* chain-of-thought prompting
-        therefore has its bytes refused: the run continues, the candidate
-        is recorded digest-only, and a WARNING says which rule fired.
+        This test used to assert the opposite. The store screened text
+        bodies for private reasoning with two natural-language patterns
+        among its markers, and `chain[ _-]of[ _-]thought` was one — so a
+        research briefing whose subject *is* chain-of-thought prompting
+        had its bytes refused, the candidate was recorded digest-only,
+        and a WARNING named the rule. On a benchmark of LLM-research
+        questions that loss was correlated with the subject matter and
+        fell on the evidence-path arms but not on the control.
 
-        Graceful, and still a hole a funded campaign would notice —
-        `research-policy-v1` is a suite of LLM-research questions, so the
-        artifacts this loses are correlated with the benchmark's own
-        subject matter rather than randomly distributed. Fixing the rule
-        is outside this work order's fences; recording it here is what
-        stops it being discovered from a gap in Stage 3's artifact set.
+        Option C removed the two phrase patterns and kept the structural
+        ones. A document may now *discuss* private reasoning; what it may
+        not do is *carry* it, which is what the markers detect and what
+        the sibling test below still pins.
         """
-        from src.contracts.artifact_store import ArtifactRefused, LocalArtifactStore
+        from src.contracts.artifact_store import LocalArtifactStore
         from src.contracts.kernel import DataClass
         from src.contracts.research_binding import retention_policy_ref
         from src.contracts.trajectory import TrustClass
@@ -1027,10 +1034,61 @@ class TestTheCandidateRoleCannotReachEvaluationMaterial:
             "# Briefing\n\nGeneration-time mitigations include "
             "retrieval-augmented generation and chain-of-thought prompting.\n"
         )
-        assert PRIVATE_REASONING_FALSE_POSITIVE.search(text)
+        assert PRIVATE_REASONING_FALSE_POSITIVE.search(text), (
+            "the fixture no longer carries the phrase this finding is about"
+        )
+        ref = store.put(
+            text.encode("utf-8"),
+            role=ArtifactRole.CANDIDATE_REPORT,
+            media_type="text/markdown",
+            schema_ref="research-report/1.0.0",
+            trust_class=TrustClass.SYSTEM_GENERATED,
+            data_class=DataClass.INTERNAL,
+            retention_policy_ref=retention_policy_ref(),
+            principal_key_id="pk_stage0qualifica",
+        )
+        assert store.contains(ref.artifact_id)
+        assert (
+            store.read(ref.artifact_id, principal_key_id="pk_stage0qualifica")
+            == text.encode("utf-8")
+        ), (
+            "the stored bytes must be the briefing unmodified: the screen "
+            "refuses or accepts, it never sanitises (ADR 0083)"
+        )
+
+    @pytest.mark.parametrize(
+        "marker",
+        [
+            "<thinking>step one</thinking>",
+            "<scratchpad>notes</scratchpad>",
+            '{"reasoning_content": "..."}',
+        ],
+    )
+    def test_a_body_carrying_a_reasoning_marker_is_still_refused(
+        self, tmp_path: Path, marker: str
+    ) -> None:
+        """The half of the screen option C kept, pinned per marker.
+
+        ADR 0096 narrowed the rule to structure; it did not weaken it.
+        RFC 10 §3.2 makes storing private chain-of-thought a non-goal and
+        §4.2 invariant 9 makes it an invariant, and §7.1 rule 6 routes
+        bodies here — so the artifact store is exactly where that rule
+        would become decorative if it stopped holding. A delimiter or a
+        provider field name is evidence about who *authored* a span,
+        which is why these three survived the narrowing and the two
+        topic phrases did not.
+        """
+        from src.contracts.artifact_store import ArtifactRefused, LocalArtifactStore
+        from src.contracts.kernel import DataClass
+        from src.contracts.research_binding import retention_policy_ref
+        from src.contracts.trajectory import TrustClass
+
+        store = LocalArtifactStore(
+            tmp_path / "artifacts", scope_data_class=DataClass.INTERNAL
+        )
         with pytest.raises(ArtifactRefused, match="private reasoning"):
             store.put(
-                text.encode("utf-8"),
+                f"# Briefing\n\n{marker}\n".encode(),
                 role=ArtifactRole.CANDIDATE_REPORT,
                 media_type="text/markdown",
                 schema_ref="research-report/1.0.0",
@@ -1043,47 +1101,37 @@ class TestTheCandidateRoleCannotReachEvaluationMaterial:
             "a refused body must not be persisted for debugging"
         )
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "W11-F1 — the artifact store's private-reasoning screen refuses "
-            "an evidence-path briefing because a source abstract it quotes "
-            "verbatim contains 'chain-of-thought prompting'. The loss is "
-            "measured and the options are written up in "
-            "docs/agent-engineering/17-w11f1-retention-options.md; the owner "
-            "decides. This test asserts the behaviour the memo recommends, "
-            "so it XPASSes loudly the day the rule changes and this pin, the "
-            "memo and ADR 0083 are reconciled in one go."
-        ),
-    )
     def test_w11f1_a_briefing_quoting_a_source_abstract_keeps_its_bytes(
         self, tmp_path: Path
     ) -> None:
-        """The measured loss, pinned as the behaviour we do not have.
+        """The measured loss, now the measured fix (ADR 0096).
 
-        The sibling test above pins the *refusal* on a hand-written body.
-        This one pins the **loss**: it builds the briefing the evidence
-        path actually produces, from the shipped fixture corpus at the
-        shipped `reader_max_claims_per_paper` default of 5, and asks for
-        it to be stored.
+        This shipped as `xfail(strict=True)` alongside the options memo:
+        it asserted the behaviour the memo recommended and the repository
+        did not have, so it failed loudly the moment the rule changed.
+        Owner ruling R9 took option C, so the mark is gone and the
+        assertion stands on its own.
 
-        What makes it a false positive rather than a judgement call is
-        visible in the body itself. The phrase arrives inside an
-        `Evidence (abstract):` span — text quoted verbatim from a
-        retrieved paper, which the run did not author and which is the
-        opposite of private reasoning. One sentence of one of the five
-        fixture abstracts carries it, and the whole ~4.9 kB document is
-        refused for it.
+        The sibling test above uses a hand-written body. This one builds
+        the briefing the evidence path actually produces, from the
+        shipped fixture corpus at the shipped
+        `reader_max_claims_per_paper` default of 5.
 
-        The loss is also *asymmetric*, which is why it matters to an
+        What made it a false positive rather than a judgement call is
+        visible in the body itself, and the assertions below still check
+        it. The phrase arrives inside an `Evidence (abstract):` span —
+        text quoted verbatim from a retrieved paper, which the run did
+        not author and which is the opposite of private reasoning. One
+        sentence of one of the five fixture abstracts carries it, and the
+        whole ~4.9 kB document was refused for it.
+
+        The loss was also *asymmetric*, which is why it mattered to an
         experiment rather than only to a log: arm A does not run the
-        evidence path, so its briefing has no quoted abstract, trips
-        nothing and is stored. Arms B, C and D do, and lose their bytes.
-        That is the exact axis `research-policy-v1` compares.
-
-        Today `store.put` raises `ArtifactRefused` and this test xfails.
-        `strict=True` is the point: whoever narrows the rule gets a
-        failing XPASS rather than a silently-still-skipped test.
+        evidence path, so its briefing had no quoted abstract, tripped
+        nothing and was stored. Arms B, C and D did, and lost their
+        bytes. That is the exact axis `research-policy-v1` compares, and
+        `test_the_mock_matrix_retains_briefing_bytes_on_every_runnable_arm`
+        is where all four arms are now checked together.
         """
         from src.agents.mock_mode import (
             mock_analysis,

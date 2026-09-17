@@ -79,6 +79,21 @@ nothing more: the store has no deleter, because a deleter before a
 retention policy is a policy decision wearing an implementation's
 clothes.
 
+> **Amendment, 2026-09-17 (owner ruling R9,
+> [ADR 0096](0096-structural-screens-not-phrase-screens.md)).** The four
+> refusals above are unchanged, and "raw private reasoning" is still one
+> of them. What changed is *how* that one is detected. This ADR's screen
+> mixed two natural-language patterns
+> (`chain[ _-]of[ _-]thought`, `hidden[ _-]reasoning`) in with its
+> structural markers, and W11-F1 measured the result: product text
+> quotes the world, so the phrase appeared in the source abstracts a
+> research agent retrieves, and the screen silently refused the
+> evidence-path arms' briefings — and a retrieved paper's own abstract
+> under `SOURCE_DOCUMENT`. The two phrase patterns are retired; the
+> markers (`</thinking>`, `</scratchpad>`, `reasoning_content`) are kept
+> and are now the admission test for any future pattern. A body may
+> discuss private reasoning; it still may not carry it.
+
 ### The runtime bridge
 
 `src/contracts/runtime_bridge.py` carries two bridges over one recording
