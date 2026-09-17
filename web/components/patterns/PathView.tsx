@@ -1,3 +1,12 @@
+// The reading-path surface: the sequence, the observations and the start
+// control, rendered from props alone (04 §5.1).
+//
+// It never fetches and never writes. `onStartSession` is the only way a start
+// can be issued, and omitting it removes the affordance entirely rather than
+// rendering a control for a write this pattern cannot make. That is what lets
+// every state — including each refusal — be reached from a story with no
+// network.
+
 import Link from "next/link";
 import { useId } from "react";
 
@@ -208,6 +217,10 @@ export interface PathUnavailableProps {
   onRetry?: () => void;
 }
 
+/**
+ * The path could not be read. A stated refusal with one retry, and no claim
+ * about why beyond what the request actually established.
+ */
 export function PathUnavailable({ onRetry }: PathUnavailableProps) {
   return (
     <section
@@ -233,6 +246,13 @@ export function PathUnavailable({ onRetry }: PathUnavailableProps) {
   );
 }
 
+/**
+ * One published path: its goal, its ordered entries, and what was observed.
+ *
+ * Every position label comes from a recorded session event and nothing else,
+ * so an entry with no observation reads "Not yet observed" — a fact about
+ * the record — rather than "not started", a claim about the reader.
+ */
 export function PathView({
   path,
   observations = [],

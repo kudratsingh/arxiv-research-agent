@@ -1,5 +1,23 @@
 "use client";
 
+/**
+ * SessionDetailSurface — the fetching and writing half of
+ * `/learn/sessions/[id]`.
+ *
+ * IT REUSES THE RUN MACHINE RATHER THAN GROWING A SECOND ONE. A guided
+ * session has the same lifecycle problems as a research run — attach,
+ * reconnect, terminal — so it is driven by `useJobStream` with a client whose
+ * only method reads the session and projects it through `sessionAsJobDetail`.
+ * Session-only facts (the turn, the transcript, the cost cap) stay on the
+ * `SessionDetail` held here; the machine never sees them.
+ *
+ * A TURN IS AT MOST ONE IN FLIGHT, GUARDED BY A REF. `POST` of a turn spends
+ * model budget and carries no idempotency key, and a `useState` flag is not a
+ * guard — React batches it, so two clicks in one frame both read the
+ * pre-update value. `pendingTurn` is what re-arms the composer: the submit
+ * stays busy until a later read shows the turn number has actually moved, so
+ * the control never reopens on the strength of an accepted POST alone.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -20,6 +38,7 @@ import { useJobStream } from "@/lib/job/useJobStream";
 import { useLearnPath } from "@/lib/queries/learn";
 import { useReportRenderer } from "@/lib/queries/conversations";
 
+/** The `/learn/sessions/[id]` surface: one attached machine, one turn write. */
 export function SessionDetailSurface({ sessionId }: { sessionId: string }) {
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [response, setResponse] = useState("");

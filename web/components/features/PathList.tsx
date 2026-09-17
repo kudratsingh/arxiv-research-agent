@@ -1,3 +1,8 @@
+// The path library's rows — a pure list, no network (04 §5.1).
+//
+// A server component on purpose: nothing here has state, so the rows cost
+// `/learn` no client JavaScript. `PathListSurface` is what fetches.
+
 import Link from "next/link";
 
 import type { LearnPathSummary } from "@/lib/api";
@@ -9,6 +14,12 @@ export interface PathListProps {
   paths: LearnPathSummary[];
 }
 
+/**
+ * One `<li>` per published path, each linking to its detail route.
+ *
+ * The path id is percent-encoded into the href; ids come from the published
+ * manifest and are never assumed to be URL-safe.
+ */
 export function PathList({ paths }: PathListProps) {
   return (
     <ul className="divide-y divide-border-subtle border-y border-border-subtle">

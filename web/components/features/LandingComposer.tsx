@@ -3,21 +3,18 @@
 /**
  * LandingComposer — `QueryComposer` wired to the job machine (WO-13).
  *
- * IT IS NOT MOUNTED ON `/` YET, AND THE REASON IS MEASURED. Wiring it into
- * `web/app/(workspace)/page.tsx` puts the composer, the primitives it uses
- * and the whole of `lib/job/` into the landing route's first-load
- * JavaScript: **154,202 B against 04 §8.1's 148,480 B ceiling, a 5,722 B
- * breach**, measured on this tree. The composer stack is +10,333 B gzip and
- * `/` has 4,611 B of headroom now that WO-08's shell is on the route.
- *
- * There is no reduction that closes that gap honestly. `useJobRun().submit`
- * is the only permitted submission path (R-01), so `lib/job/` cannot leave;
- * lazy-loading `StatusBanner` recovers ~1 KB of it. So the mount belongs to
- * WO-20 (route composition — its criterion 2 is this exact hand-off), where
- * it can be weighed against the rest of the route's payload and, if it
- * still does not fit, against `budgets.json`'s ratchet rule with a stated
- * reason. Shipping the component without mounting it costs the route
- * nothing: `npm run budgets` on this branch is byte-identical to main.
+ * IT IS MOUNTED ON `/`, AND THE MOUNT WAS PAID FOR RATHER THAN ABSORBED.
+ * When this component was written the hand-off did not fit: the composer, its
+ * primitives and the whole of `lib/job/` are +10,333 B gzip, against 4,611 B
+ * of headroom on the landing route — **154,202 B against 04 §8.1's then
+ * 148,480 B ceiling, a 5,722 B breach**. No honest reduction closed the gap
+ * (`useJobRun().submit` is the only permitted submission path under R-01, so
+ * `lib/job/` cannot leave; lazy-loading `StatusBanner` recovers about 1 KB),
+ * so the mount was deferred to WO-20, whose criterion 2 is this exact
+ * hand-off. WO-20 raised the `/` row under `budgets.json`'s ratchet rule with
+ * the reason stated, and WO-31's legacy removal lowered it again;
+ * `budgets.json`'s `route-js-home` note carries both movements.
+ * `app/(workspace)/page.tsx` is the mount site.
  *
  * The whole path is proven at the component level in
  * `web/tests/features/LandingComposer.test.tsx`, which mirrors

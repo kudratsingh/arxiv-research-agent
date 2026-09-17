@@ -518,6 +518,12 @@ function statusCell(row) {
   }
 }
 
+/**
+ * `budget-report.md` in full — every row, the method, and the cross-checks.
+ *
+ * It is written on breach as well as on pass: a red run must leave the
+ * measured bytes behind, or the ratchet has nothing to argue from.
+ */
 export function renderReport({ result, budgets, crossChecks, generatedAt, nextVersion }) {
   const gatedRows = result.rows.filter((r) => r.row.enforcement === "gated");
   const externalRows = result.rows.filter((r) => r.row.enforcement === "external");

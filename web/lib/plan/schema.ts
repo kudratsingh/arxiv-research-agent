@@ -71,6 +71,7 @@ export interface PlanDraft {
   searchQueries: string[];
 }
 
+/** The two columns, in the order the editor renders them. */
 export const PLAN_LISTS = ["subQuestions", "searchQueries"] as const;
 
 export type PlanListKey = (typeof PLAN_LISTS)[number];

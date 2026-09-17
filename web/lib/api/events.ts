@@ -27,14 +27,15 @@ import type { Plan } from "./models";
 // ---------------------------------------------------------------------------
 
 /**
- * Names the consuming UI dispatches on today.
+ * Names the consuming UI dispatches on.
  *
- * This is the union the M0 compatibility shim exports, and it mixes
- * two sources: six real server events plus `stream_note` and `error`,
- * which are client-side transport notes the stream hook synthesizes.
- * Kept byte-identical to the superseded `web/lib/types.ts` so M0 stays
- * behaviour-neutral — `components/EventLog.tsx:10` keys an exhaustive
- * `Record<SseEventName, string>` off it.
+ * It mixes two sources: six real server events plus `stream_note` and
+ * `error`, which are client-side transport notes the stream hook
+ * synthesizes. The union was kept byte-identical to the superseded
+ * `web/lib/types.ts` so M0 stayed behaviour-neutral; both that shim and
+ * `components/EventLog.tsx`, which keyed an exhaustive
+ * `Record<SseEventName, string>` off it, were deleted by WO-31, and the
+ * union is now this module's own.
  */
 export type SseEventName =
   | "job_started"

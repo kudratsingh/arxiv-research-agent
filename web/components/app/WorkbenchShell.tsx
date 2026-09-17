@@ -239,10 +239,17 @@ export function readRailCollapsed(): boolean {
   }
 }
 
+/** Expanded on the server: a preference held in `localStorage` is unknowable there. */
 export function serverRailCollapsed(): boolean {
   return false;
 }
 
+/**
+ * Persist the preference and notify this tab's subscribers.
+ *
+ * The listener loop runs whether or not the write succeeded: a storage-blocked
+ * browser still gets the collapse it asked for, just not across reloads.
+ */
 export function writeRailCollapsed(collapsed: boolean): void {
   try {
     window.localStorage.setItem(RAIL_COLLAPSED_STORAGE_KEY, collapsed ? "1" : "0");
@@ -264,11 +271,13 @@ function offlineSubscribe(onStoreChange: () => void): () => void {
   };
 }
 
+/** `navigator.onLine === false` only. An absent `navigator` is not offline. */
 export function readOffline(): boolean {
   if (typeof navigator === "undefined") return false;
   return navigator.onLine === false;
 }
 
+/** Online on the server: the browser's connectivity is not the server's to claim. */
 export function serverOffline(): boolean {
   return false;
 }
