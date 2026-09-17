@@ -25,6 +25,10 @@ from src.config import settings
 from src.errors import NoPapersFound
 from src.graph.state import PaperMetadata, ResearchState
 from src.observability import get_logger
+from src.observability.degradation_events import (
+    TAXONOMY_RETRIEVAL_MISS,
+    record_degradation_reason,
+)
 from src.observability.metrics import (
     DEGRADATION_RUNG_REDUCED_TOOL,
     record_degradation_rung,
@@ -271,6 +275,15 @@ def search_agent(state: ResearchState) -> dict[str, Any]:
             # degradation `research_jobs_total` cannot see.
             record_degradation_rung(
                 rung=DEGRADATION_RUNG_REDUCED_TOOL, component="search"
+            )
+            # ADR 0097: 15 §7.1 files this under retrieval miss, a class
+            # the report could previously only reach through the
+            # retrieval-recall rubric — so on a judge-free pass it read
+            # as unmeasured however many rounds came back empty.
+            record_degradation_reason(
+                taxonomy_class=TAXONOMY_RETRIEVAL_MISS,
+                code="search_empty_keeping_prior_papers",
+                component="search",
             )
             return {
                 "papers": prior_papers,

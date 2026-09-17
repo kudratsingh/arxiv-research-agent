@@ -2057,19 +2057,33 @@ class TestTheCampaignReport:
         rows = {row.class_id: row for row in report.taxonomy}
 
         assert len(report.taxonomy) == len(TAXONOMY) == 13
+        # One class left, and it is the one 15 §7.1 calls a judgement
+        # rather than a runtime event. ADR 0097 closed the other four by
+        # putting eight log-only degradation codes on the trajectory:
+        # planning/decomposition became a record class outright, and the
+        # two rubric-borne classes now count their record-borne half on
+        # a judge-free pass — as a floor, which their note says.
         assert rows["task_understanding"].counted is False
-        assert rows["planning_decomposition"].counted is False
-        # The free scorer ran no rubric, so the two judge-borne classes
-        # were not measured either — and say so rather than showing zero.
-        assert rows["retrieval_miss"].counted is False
-        assert rows["synthesis_organization"].counted is False
-        assert "judges did not run" in (rows["retrieval_miss"].note or "")
-        for class_id in ("tool_runtime", "budget_timeout_stop", "verification"):
+        assert rows["planning_decomposition"].counted is True
+        assert rows["retrieval_miss"].counted is True
+        assert rows["synthesis_organization"].counted is True
+        assert "not the whole class" in (rows["retrieval_miss"].note or "")
+        # Mock mode short-circuits ahead of every one of the eight sites
+        # — no plan is unparseable, no PDF is fetched, no draft fails to
+        # parse — so the matrix's honest count is zero, and `0` now
+        # means zero for these classes rather than "we could not look".
+        # `tests/test_degradation_trajectory.py` drives the sites.
+        for class_id in (
+            "tool_runtime",
+            "budget_timeout_stop",
+            "verification",
+            "planning_decomposition",
+        ):
             assert rows[class_id].counted is True
             assert rows[class_id].occurrences == 0
 
         rendered = render_report(report)
-        assert rendered.count("not detected from records") == 5
+        assert rendered.count("| not detected from records |") == 1
         assert "| task understanding | not detected from records | — | — | — |" in rendered
 
     def test_the_lineage_digests_the_sealed_arm_and_reads_a_sealed_graph(
@@ -2195,9 +2209,9 @@ class TestTheCampaignReport:
         assert "--campaign-id <campaign_id>" in doc
         assert "outputs/trajectories/runs/<run_id>/events.jsonl" in doc
         assert len(TAXONOMY) == 13
-        assert "Five of the thirteen rows read that way on the free matrix." in doc
+        assert "One of the thirteen rows reads that way on the free matrix." in doc
         assert (
-            render_report(report).count("not detected from records") == 5
+            render_report(report).count("| not detected from records |") == 1
         ), "the document's count of unmeasurable classes is the report's"
         assert (
             "**0 workflow model calls and 0 judge model calls over 300 episodes**"

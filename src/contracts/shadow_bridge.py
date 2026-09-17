@@ -105,6 +105,11 @@ from src.contracts.trajectory import (
 )
 from src.errors import ERROR_CODES
 from src.observability.costs import LlmCallObservation, RunCosts
+from src.observability.degradation_events import (
+    DegradationObservation,
+    bind_degradation_observer,
+    reset_degradation_observer,
+)
 from src.observability.logging import get_logger
 
 log = get_logger(__name__)
@@ -229,6 +234,7 @@ class ShadowRun:
         self._clock = clock or utc_timestamp
         self._lock = RLock()
         self._counter = 0
+        self._degradations = 0
         self._budget_warned = False
         self._candidate_id: str | None = None
         self._final_artifact: ArtifactRef | None = None
@@ -708,6 +714,40 @@ class ShadowRun:
         )
         self._terminal = True
 
+    def degradation_recorded(
+        self, *, taxonomy_class: str, error_code: str, component: str
+    ) -> None:
+        """Record one rung of `docs/reliability.md` §5 on the trajectory (ADR 0097).
+
+        `succeeded`, because the run did: ADR 0081's finding is that a
+        degraded run reports success, `research_job_duration_seconds`
+        *improves*, and no existing instrument can see it. This event is
+        the record that can, and calling it a failure would make the
+        report count a successful run's abstract-only fallback as a
+        failed one.
+
+        The id is a per-run ordinal rather than a uuid so two runs of the
+        same fixture that degrade the same way produce the same
+        trajectory — the property `_event_id` exists to preserve, and the
+        reason a golden can be compared at all.
+        """
+        with self._lock:
+            self._degradations += 1
+            ordinal = self._degradations
+        degradation_id = f"deg-{ordinal:03d}"
+        self._append(
+            "degradation.recorded",
+            f"degradation.recorded:{degradation_id}",
+            {
+                "degradation_id": degradation_id,
+                "taxonomy_class": taxonomy_class,
+                "error_code": error_code,
+                "component": component,
+            },
+            status=EventStatus.SUCCEEDED,
+            actor=self._actor(ActorKind.AGENT, component),
+        )
+
     def fail(self, *, error_code: str, stage: str, partial_report: str = "") -> None:
         """Record a failed run, keeping whatever artifact it had produced."""
         last_good = self._recovered_artifact_id(partial_report)
@@ -1181,6 +1221,44 @@ def observe_node(run: ShadowRun | None, node: str, state_update: Mapping[str, An
         run.node_completed(node, state_update)
 
 
+@contextlib.contextmanager
+def observe_degradations(run: ShadowRun | None) -> Iterator[None]:
+    """Route this block's degradations onto `run`'s trajectory (ADR 0097).
+
+    A binder rather than a per-event hook, because the eight degradation
+    sites are inside `src/agents/` — one of them inside the reader's
+    per-paper thread pool — and none of them can reach a run. The
+    observer is the same shape `bind_llm_call_observer` uses for the
+    same reason, and it is bound around the workflow invocation so a
+    degradation recorded anywhere beneath it lands on the right run.
+
+    A no-op on the three paths that all mean "there is nothing to record
+    onto": no run, a degraded one, and a run object that predates this
+    vocabulary. On all three the block still executes and the sites still
+    log and count — this adds a record, it does not gate one.
+    """
+    recorder = None if run is None or run.degraded else getattr(
+        run, "degradation_recorded", None
+    )
+    if recorder is None:
+        yield
+        return
+
+    def _observe(observation: DegradationObservation) -> None:
+        with _contained(run, "observe_degradations"):
+            recorder(
+                taxonomy_class=observation.taxonomy_class,
+                error_code=observation.code,
+                component=observation.component,
+            )
+
+    token = bind_degradation_observer(_observe)
+    try:
+        yield
+    finally:
+        reset_degradation_observer(token)
+
+
 def observe_model_call(
     run: ShadowRun | None, call: LlmCallObservation, costs: RunCosts | None = None
 ) -> None:
@@ -1510,6 +1588,7 @@ __all__ = [
     "graph_shape",
     "legacy_eval_outcome",
     "legacy_job_outcome",
+    "observe_degradations",
     "observe_episode_terminal",
     "observe_job_terminal",
     "observe_model_call",

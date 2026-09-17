@@ -806,6 +806,16 @@ never renumbered.
   a thinking block, a scratchpad or `reasoning_content` is still
   refused.
 
+- [0097](0097-degradation-reasons-on-the-trajectory.md) — **A degradation
+  reason reaches the trajectory, so a campaign can count it.** Eight
+  codes existed only as log lines and a campaign record keeps no log, so
+  four of 03 §8's failure classes printed `not detected from records`.
+  They are now `degradation.recorded` events — `succeeded`, not
+  `failed`, because ADR 0081's finding is that a degraded run succeeds —
+  carried out of the agents by a bound `ContextVar` observer in the
+  shape `bind_llm_call_observer` already uses. The metric, the log line
+  and every golden are unchanged.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

@@ -597,6 +597,14 @@ def _build_event_registry() -> tuple[EventTypeDefinition, ...]:
         _definition("final.candidate_selected", succeeded, ("candidate_id", "selection_basis", "verification_event_ids", "unresolved_issue_codes"), candidate=True),
         _definition("final.artifact_produced", succeeded, ("candidate_id", "artifact_id", "deliverable_kind", "partial"), candidate=True, roles=(ArtifactRole.FINAL_REPORT,)),
         _definition("failure.recorded", failed, ("failure_id", "failure_class", "stage", "retryable", "safe_message"), roles=(ArtifactRole.FAILURE_DETAIL,), post_terminal=True),
+        # ADR 0097, added to RFC 10 §8.8 rather than found there. A
+        # degraded run *succeeds* — that is ADR 0081's whole argument —
+        # so the status is `succeeded`, and this is a kind of its own
+        # rather than a `failure.recorded` with a softer word inside it:
+        # routing a degradation through the failure vocabulary would put
+        # failure-shaped events on successful runs and inflate the class
+        # the campaign report already reads `failure.recorded` into.
+        _definition("degradation.recorded", succeeded, ("degradation_id", "taxonomy_class", "error_code", "component")),
     )
 
 

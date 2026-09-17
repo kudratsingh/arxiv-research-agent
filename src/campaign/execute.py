@@ -1034,25 +1034,30 @@ def _run_one_episode(
     closed = False
     try:
         step = _Step()
-        if policy_execution is None:
-            run = runner(
-                arm_config,
-                episode=episode,
-                objective=spec.objective,
-                run_id=sealed.manifest.payload.identity.run_id,
-                on_node=lambda node: bridge.node_step(node, step=step.next()),
-            )
-        else:
-            run = runner(
-                arm_config,
-                episode=episode,
-                objective=spec.objective,
-                run_id=sealed.manifest.payload.identity.run_id,
-                on_node=lambda node: bridge.node_step(node, step=step.next()),
-                on_tier=lambda execution: _record_tier_selection(
-                    bridge, sealed=sealed, execution=execution
-                ),
-            )
+        # ADR 0097: around the policy and nothing else. A degradation
+        # recorded by the scorer or by `_record_terminal` would be the
+        # harness degrading, not the arm, and ADR 0050's boundary is the
+        # one this scope is drawn on.
+        with _degradation_scope(bridge):
+            if policy_execution is None:
+                run = runner(
+                    arm_config,
+                    episode=episode,
+                    objective=spec.objective,
+                    run_id=sealed.manifest.payload.identity.run_id,
+                    on_node=lambda node: bridge.node_step(node, step=step.next()),
+                )
+            else:
+                run = runner(
+                    arm_config,
+                    episode=episode,
+                    objective=spec.objective,
+                    run_id=sealed.manifest.payload.identity.run_id,
+                    on_node=lambda node: bridge.node_step(node, step=step.next()),
+                    on_tier=lambda execution: _record_tier_selection(
+                        bridge, sealed=sealed, execution=execution
+                    ),
+                )
         scores = scorer(episode, run)
         _record_terminal(bridge, run)
         bridge.reconcile(Decimal(run.workflow_cost_usd))
@@ -1231,6 +1236,19 @@ def _open_trajectory(
         cost_ceiling_usd=plan.manifest.payload.protocol.episode_budget.workflow_cost_usd_max,
         sink_root=sink_root,
     )
+
+
+def _degradation_scope(bridge: Any) -> Any:
+    """Bind this episode's degradation observer, or a scope that does nothing.
+
+    The import is local for the reason every other `runtime_bridge`
+    import in this module is local: the campaign package must not put
+    the contract package on the import graph of a process that only
+    plans a matrix.
+    """
+    from src.contracts import runtime_bridge as rb
+
+    return rb.observe_degradations(bridge)
 
 
 def _record_tier_selection(

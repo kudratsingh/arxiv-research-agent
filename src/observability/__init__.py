@@ -26,6 +26,11 @@ Every `gen_ai.*` name those emit is a constant in
 here: a conventional attribute name should be reached for from the
 name table explicitly, not arrived at by autocomplete from a package
 that also exports thirty other things.
+
+`src.observability.degradation_events` (ADR 0097) is kept off this
+surface for the same reason. It carries the third record a degradation
+leaves — after its own log line and ADR 0081's counter — and its names
+are reached for deliberately at the eight sites that record one.
 """
 
 from src.observability.context import (

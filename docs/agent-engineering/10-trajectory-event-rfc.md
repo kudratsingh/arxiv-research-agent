@@ -706,6 +706,15 @@ budget event.
 | `final.candidate_selected` | `candidate_id`, `selection_basis`, `verification_event_ids`, `unresolved_issue_codes` | Finalization decision |
 | `final.artifact_produced` | `candidate_id`, `artifact_id`, `deliverable_kind`, `partial` | Deliverable exists before terminal run event |
 | `failure.recorded` | `failure_id`, `failure_class`, `stage`, `retryable`, `safe_message` | Non-terminal or terminal diagnostic |
+| `degradation.recorded` | `degradation_id`, `taxonomy_class`, `error_code`, `component` | **Added by ADR 0097; not in this RFC's v1 draft.** One rung of `docs/reliability.md` §5 taken, on a run that is still succeeding |
+
+`degradation.recorded` carries `succeeded`, which is the whole reason it is
+not a `failure.recorded`: a degraded run *succeeds*, and ADR 0081's finding
+is that every existing instrument moves in the reassuring direction while
+the product gets worse. Its `error_code` is a `KNOWN_EVENTS` log-event name
+rather than an `AppError` code, and is deliberately not called
+`error_class` — §5.1's validator requires that field name and
+`failure_class` to hold the canonical error registry.
 
 `hitl.responded` records the decision after authentication and principal-scope
 checks; raw human prose is an encrypted artifact only if the approved retention

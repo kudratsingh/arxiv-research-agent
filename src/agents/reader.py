@@ -87,6 +87,10 @@ from src.graph.state import (
 from src.llm import call_llm_json
 from src.observability import get_logger, propagate_run_context
 from src.observability.costs import CostBudgetExceeded
+from src.observability.degradation_events import (
+    TAXONOMY_PARSING_CHUNKING_RANKING,
+    record_degradation_reason,
+)
 from src.observability.metrics import (
     DEGRADATION_RUNG_PARTIAL_RESULTS,
     record_degradation_rung,
@@ -163,6 +167,16 @@ def _record_fallback(paper: PaperMetadata, reason: str) -> None:
     # ADR 0081.
     record_degradation_rung(
         rung=DEGRADATION_RUNG_PARTIAL_RESULTS, component="reader"
+    )
+    # ADR 0097, and the same "per paper" argument the rung is counted on:
+    # 15 §7.1 files this under parsing/chunking/ranking, where a *failed*
+    # extraction already reached the trajectory as `tool.failed` and a
+    # degraded one reached nothing. The observer is a `ContextVar`, which
+    # is what lets this work from the fan-out's worker threads.
+    record_degradation_reason(
+        taxonomy_class=TAXONOMY_PARSING_CHUNKING_RANKING,
+        code="reader_paper_abstract_only",
+        component="reader",
     )
     tally = _fallback_reasons.get()
     if tally is not None:
@@ -1037,4 +1051,13 @@ def _log_reader_summary(
                 "threshold": ABSTRACT_ONLY_WARN_THRESHOLD,
                 "fallback_reasons": by_reason,
             },
+        )
+        # ADR 0097. The run-level fact, recorded beside the per-paper
+        # ones rather than instead of them: the per-paper events say how
+        # many papers degraded, this one says the run crossed the
+        # threshold at which the analysis itself is in question.
+        record_degradation_reason(
+            taxonomy_class=TAXONOMY_PARSING_CHUNKING_RANKING,
+            code="reader_degraded_to_abstract_only",
+            component="reader",
         )

@@ -554,6 +554,11 @@ def _contract_shadow(
     run = None
     shadow_token = None
     observer_token = None
+    # ADR 0097. Resolved inside the containment below rather than at the
+    # `with`, because a bridge stub that does not carry the hook is one
+    # of the shapes `test_a_broken_bridge_cannot_fail_the_job` insists
+    # must still produce a finished job.
+    degradations: Any = contextlib.nullcontext()
     try:
         # P0-WO08 opens the run (ADR 0083). The object is still a
         # `ShadowRun`, so every hook below is unchanged; what the runtime
@@ -574,10 +579,16 @@ def _contract_shadow(
             observer_token = bind_llm_call_observer(
                 lambda call: bridge.observe_model_call(run, call, costs)
             )
+            # The eight degradation sites are inside `src/agents/` with
+            # no way to reach a run, so the binding spans the workflow
+            # rather than sitting at a call site — the same shape, and
+            # the same reason, as the model-call observer above.
+            degradations = bridge.observe_degradations(run)
     except Exception:  # noqa: BLE001 — see the docstring
         log.warning("contract_shadow_failed", extra={"hook": "open"}, exc_info=True)
     try:
-        yield run
+        with degradations:
+            yield run
     finally:
         if observer_token is not None:
             reset_llm_call_observer(observer_token)

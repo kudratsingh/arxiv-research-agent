@@ -686,13 +686,13 @@ order's fences.
 | Taxonomy class | Reason / error code on `main` | Where it is produced |
 |---|---|---|
 | task understanding | — (no code; a quality judgement, not a runtime event) | judged, not detected |
-| planning / decomposition | `planner_plan_fallback_to_query`, `planner_response_unparseable` | `src/agents/planner.py` |
-| retrieval miss | `search_empty_keeping_prior_papers`, `retrieval_recall` rubric | `src/agents/search.py`, `src/eval/metrics.py` |
+| planning / decomposition | `planner_plan_fallback_to_query`, `planner_response_unparseable` | `src/agents/planner.py`; on the trajectory as `degradation.recorded` since ADR 0097 |
+| retrieval miss | `search_empty_keeping_prior_papers`, `retrieval_recall` rubric | `src/agents/search.py` (as `degradation.recorded` since ADR 0097), `src/eval/metrics.py` |
 | source-quality / freshness miss | `source.rejected` reason codes; `FreshnessRequirement` on the TaskSpec | `runtime_bridge.source_discovered` |
-| parsing / chunking / ranking | `pdf_extraction_failed`, `reader_degraded_to_abstract_only`, `reader_paper_abstract_only` | `src/tools/pdf_parser.py`, `src/agents/reader.py` |
+| parsing / chunking / ranking | `pdf_extraction_failed`, `reader_degraded_to_abstract_only`, `reader_paper_abstract_only` | `src/tools/pdf_parser.py`, `src/agents/reader.py` (the two reader codes as `degradation.recorded` since ADR 0097) |
 | evidence-to-claim reasoning | `claim.created` / `claim.evidence_linked` edges; `unsupported_claim_count` | `runtime_bridge`, `src/eval/groundedness.py` |
-| synthesis / organization | `synthesizer_response_unparseable`, `synthesizer_retry_budget_exhausted` | `src/agents/synthesizer.py` |
-| citation / provenance | `citation_resolution_rate`, `synthesizer_citations_dropped` | `src/eval/groundedness.py` |
+| synthesis / organization | `synthesizer_response_unparseable`, `synthesizer_retry_budget_exhausted` | `src/agents/synthesizer.py`; on the trajectory as `degradation.recorded` since ADR 0097 |
+| citation / provenance | `citation_resolution_rate`, `synthesizer_citations_dropped` | `src/eval/groundedness.py`, `src/agents/synthesizer.py` (as `degradation.recorded` since ADR 0097) |
 | verification false pass / false fail | `verification.completed` verdicts (`pass`/`fail`/`abstain`), `verifier_llm_failed_fallback` | `src/agents/verifier.py`, `runtime_bridge.verification` |
 | tool / runtime failure | `tool.failed` with `error_type`; `upstream_paper_read`, `upstream_model` | `runtime_bridge.tool_failed`, `src/errors.py` |
 | budget / timeout / premature stop | `run.budget_stopped`, `budget_reached`, `max_iterations_reached`, `timed_out`, `mock_mode` | supervisor, ledger, `runtime_bridge` |
@@ -704,6 +704,16 @@ Two classes have no runtime code and are judged rather than detected —
 the correct state (they are quality classes, and quality is what W12
 measures), but a W12 error-analysis table should say so rather than
 report them as zero.
+
+**Amended 2026-09-17 (E4, ADR 0097).** When this table was written, the
+eight codes now marked `degradation.recorded` existed *only* as log
+lines, and a campaign record keeps no log — so the report could not
+count them however faithfully they were emitted. They are now trajectory
+events. What that changes here is the third column and nothing else: the
+same codes, produced at the same sites, with the class they belong to
+named by the site rather than inferred by a reader. **Task
+understanding** is unaffected and remains the one class with no runtime
+code at all.
 
 ### 7.2 The one remaining code item before W12 can run
 
@@ -1182,12 +1192,30 @@ says `judges_run on 0 of 60`. On the mock-judge pass (§12.2's companion,
 E1) all five rows carry numbers and the skipped list is empty.
 
 **A failure class the records cannot see prints `not detected from
-records`, never `0`.** §7.1 already said which classes those are, and the
-generator refuses to launder them into zeros: task understanding and
-planning/decomposition have no record-borne signal at all, and retrieval
-miss and synthesis/organization are carried only by a rubric — so on a
-pass with no judges they are *unmeasured*, and the row says so with the
-reason. Five of the thirteen rows read that way on the free matrix.
+records`, never `0`.** §7.1 says which classes those are, and the
+generator refuses to launder them into zeros.
+**One of the thirteen rows reads that way on the free matrix.**
+
+It was five until E4 (ADR 0097), and the four that closed are the point
+of that work order. Planning/decomposition had *no* record-borne signal
+at all, and retrieval miss and synthesis/organization were carried only
+by a rubric, because the eight codes behind them existed only as log
+lines and a campaign record keeps no log. Those eight now reach the
+trajectory as `degradation.recorded`, so planning/decomposition is a
+record class and the two rubric-borne classes count their record-borne
+half even on a judge-free pass — as a **floor**, which is what their
+note now says: the rubric half is still missing and the row still
+declines to pretend otherwise. Task understanding is the one row left,
+and it is the row §7.1 calls a judgement rather than a runtime event.
+
+On the mock matrix all four of the newly countable classes read `0`, and
+that zero is now honest rather than absent: `use_mock_data`
+short-circuits ahead of every one of the eight sites — no plan is
+unparseable, no PDF is fetched, no draft fails to parse — so nothing
+degraded. `tests/test_degradation_trajectory.py` is what drives each
+site with the harness's fake client and proves the eight events exist;
+this matrix proves the pipe is connected and that a run which degrades
+nothing records nothing.
 
 **A trajectory that disagrees with the record pointing at it is refused.**
 Each `trajectory-ref.json` carries an event count; if the JSONL holds a

@@ -299,6 +299,56 @@ class TestTheTrajectory:
         bridge.observe_review_answered(run, pause_number=1, action="approve")
         assert len(run.events()) == before
 
+    def test_a_degradation_recorded_inside_the_scope_reaches_the_trajectory(
+        self,
+    ) -> None:
+        """ADR 0097's binder, end to end, from a site that cannot see a run."""
+        from src.observability.degradation_events import record_degradation_reason
+
+        run = open_run()
+        with bridge.observe_degradations(run):
+            for _ in range(2):
+                record_degradation_reason(
+                    taxonomy_class="parsing_chunking_ranking",
+                    code="reader_paper_abstract_only",
+                    component="reader",
+                )
+
+        events = [
+            event for event in run.events() if event.event_type == "degradation.recorded"
+        ]
+        assert [event.payload["degradation_id"] for event in events] == [
+            "deg-001",
+            "deg-002",
+        ], "two papers degrading the same way are two facts, not one"
+        assert events[0].payload["error_code"] == "reader_paper_abstract_only"
+        assert events[0].payload["taxonomy_class"] == "parsing_chunking_ranking"
+        assert events[0].status.value == "succeeded"
+        assert events[0].actor.name == "reader"
+
+    def test_a_degradation_outside_the_scope_reaches_nothing(self) -> None:
+        """The property every golden rests on: unbound records nothing."""
+        from src.observability.degradation_events import record_degradation_reason
+
+        run = open_run()
+        before = len(run.events())
+        record_degradation_reason(
+            taxonomy_class="parsing_chunking_ranking",
+            code="reader_paper_abstract_only",
+            component="reader",
+        )
+        assert len(run.events()) == before
+
+    def test_the_binder_is_a_no_op_without_a_run(self) -> None:
+        from src.observability.degradation_events import record_degradation_reason
+
+        with bridge.observe_degradations(None):
+            record_degradation_reason(
+                taxonomy_class="retrieval_miss",
+                code="search_empty_keeping_prior_papers",
+                component="search",
+            )
+
 
 # ---------------------------------------------------------------------------
 # Terminal mapping
