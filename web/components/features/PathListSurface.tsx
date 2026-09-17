@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * PathListSurface — the fetching half of `/learn` (WO-W12).
+ *
+ * 04 §5.1's split, the same one `LedgerSurface` follows: `PathList` takes the
+ * paths as a prop and renders from a story with no network; this component is
+ * the only one here that knows they arrive over HTTP, and it owns all three
+ * outcomes — bounded loading with `aria-busy`, the unavailable surface with a
+ * retry, and the list. "No paths are published" is the list's own empty state,
+ * because it is a fact about the library rather than about the request.
+ */
 import Link from "next/link";
 
 import { EmptyState } from "@/components/patterns/EmptyState";

@@ -4,17 +4,21 @@
  * ReportReader — the briefing, as a document (WO-18).
  *
  * ONE RENDERER, AND THE FAILURE THAT MADE THAT NECESSARY (c2). Three
- * Markdown code paths exist on `main`: `ReportView.tsx:39-48` for the
- * current run, `ConversationThread.tsx:301-306` for a historical turn, and
- * the collapsed-turn path that renders nothing at all. They already differ —
- * one wraps the body in a bordered card with an export control, the other
- * does not — and nothing prevents them differing further. This component is
- * the single one, and it takes the SAME renderer for both cases, so "current
- * turn" and "history turn" are one prop apart rather than one component
- * apart. `web/tests/patterns/ReportReader.test.tsx` asserts the two produce
- * byte-identical DOM for identical input; `renderer-uniqueness` in the same
- * file asserts nothing outside the legacy files WO-20/WO-31 retire imports
- * `react-markdown` a second time.
+ * Markdown code paths existed on `main` when this was written:
+ * `ReportView.tsx:39-48` for the current run,
+ * `ConversationThread.tsx:301-306` for a historical turn, and the
+ * collapsed-turn path that rendered nothing at all. They already differed —
+ * one wrapped the body in a bordered card with an export control, the other
+ * did not — and nothing prevented them differing further. (Both named files
+ * were deleted by WO-31; `git show 5c1efc3:web/components/ReportView.tsx` is
+ * what every line reference here points into.) This component is the single
+ * one, and
+ * it takes the SAME renderer for both cases, so "current turn" and "history
+ * turn" are one prop apart rather than one component apart.
+ * `web/tests/patterns/ReportReader.test.tsx` asserts the two produce
+ * byte-identical DOM for identical input, and its "criterion 2 — one
+ * renderer, and one only" block asserts `lib/report/renderer.ts` is the whole
+ * tree's only importer of `react-markdown`.
  *
  * NO EARLY RETURN ON FAILURE (c1, H5, D-010 ruling 2). `ReportView` returns
  * before the report when `status === "failed" && detail.error`

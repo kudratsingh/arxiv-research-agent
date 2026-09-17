@@ -3,16 +3,16 @@
 /**
  * Menu — a genuine menu, with the roving focus the baseline never had.
  *
- * THE COUNTER-EXAMPLE IS IN THIS REPOSITORY. `web/components/ExportDropdown.tsx:69`
- * renders `role="menu"` over a `<ul>` of `<a role="menuitem">` and stops
- * there: no `tabindex="-1"` on the items, no arrow-key handling, no
- * typeahead, no focus moved into the list on open, no focus returned to the
- * trigger on close. A screen-reader user is told "menu" and then handed a
- * list that behaves like ordinary links — the announcement and the behaviour
- * disagree, which is worse than never claiming to be a menu at all. RC-09
- * deletes that component in favour of an `ExportDisclosure`; what survives
- * is this primitive, for the one control in the product that really is a
- * menu — the thread-row overflow (03 §4.2).
+ * THE COUNTER-EXAMPLE WAS IN THIS REPOSITORY, AND WO-31 DELETED IT.
+ * `web/components/ExportDropdown.tsx:69` rendered `role="menu"` over a `<ul>`
+ * of `<a role="menuitem">` and stopped there: no `tabindex="-1"` on the items,
+ * no arrow-key handling, no typeahead, no focus moved into the list on open,
+ * no focus returned to the trigger on close. A screen-reader user was told
+ * "menu" and then handed a list that behaved like ordinary links — the
+ * announcement and the behaviour disagreeing, which is worse than never
+ * claiming to be a menu at all. RC-09 replaced it with `ExportDisclosure`;
+ * what survives is this primitive, for the one control in the product that
+ * really is a menu — the thread-row overflow (03 §4.2).
  *
  * `@radix-ui/react-dropdown-menu`, imported as its own package rather than
  * through the `radix-ui` barrel (R-11). It supplies exactly the list above:

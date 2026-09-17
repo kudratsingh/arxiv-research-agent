@@ -107,6 +107,12 @@ export interface ConversationListResult {
   query: UseInfiniteQueryResult<ConversationPages, Error>;
 }
 
+/**
+ * The thread list, paged by explicit `limit`/`offset`.
+ *
+ * "Load more" is the only pagination offered, because a short page is the only
+ * end-of-list signal the contract gives — see point 2 in the header.
+ */
 export function useConversationList(
   options: ConversationListOptions = {}
 ): ConversationListResult {
@@ -186,6 +192,10 @@ export interface ConversationDetailResult {
   query: UseQueryResult<ConversationDetail, Error>;
 }
 
+/**
+ * One thread and its turns. Disabled while `conversationId` is null, so a
+ * surface waiting for its id issues no request rather than one for `""`.
+ */
 export function useConversationDetail(
   conversationId: string | null
 ): ConversationDetailResult {

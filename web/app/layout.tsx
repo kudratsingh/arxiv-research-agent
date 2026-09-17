@@ -1,3 +1,10 @@
+// `app/layout.tsx` — the root document (04-ARCHITECTURE.md §4.1).
+//
+// It owns the three things no route can own for itself: the `<html>` element
+// and its language, the font variables every `--font-*` stack resolves
+// through, and the pre-paint theme script. It deliberately mounts no
+// provider; the long note above `<body>` records the measurement behind that.
+
 import type { Metadata } from "next";
 
 import { readCspNonce } from "@/lib/server/csp";

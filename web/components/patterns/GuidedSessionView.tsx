@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * GuidedSessionView — one guided reading session, rendered from props alone
+ * (04 §5.1).
+ *
+ * It fetches nothing and submits nothing: `onSubmit` is the only way a turn
+ * leaves this surface, so every state — awaiting the learner, working,
+ * reconnecting, resumed, settled, refused — is reachable from a story.
+ *
+ * THE COMPOSER OPENS ONLY WHEN BOTH AUTHORITIES AGREE. The turn form renders
+ * when the session record says `awaiting_learner` AND the machine phase says
+ * the same. Either alone can be a poll behind the other, and a composer shown
+ * on a session that is still working invites a turn the service will refuse.
+ */
 import Link from "next/link";
 import type { FormEvent } from "react";
 
@@ -20,6 +33,14 @@ export interface SessionTurnView {
   feedback: string;
 }
 
+/**
+ * Narrow `SessionDetail.turn`, which the contract types as an open bag
+ * (`{ [key: string]: unknown } | null`), into the four fields this surface
+ * renders.
+ *
+ * Returns `null` when any required field is missing or the wrong type: a turn
+ * that cannot be read in full is not rendered in part.
+ */
 export function readSessionTurn(
   value: SessionDetail["turn"]
 ): SessionTurnView | null {
@@ -246,6 +267,7 @@ export function GuidedSessionView({
   );
 }
 
+/** The session could not be read. A stated refusal with one retry. */
 export function GuidedSessionUnavailable({ onRetry }: { onRetry: () => void }) {
   return (
     <section className="session-unavailable">

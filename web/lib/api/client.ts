@@ -200,6 +200,7 @@ export async function submitResearch(
   return json<ResearchAccepted>(resp);
 }
 
+/** One job's authoritative record. The GET the attach path runs before it opens a stream. */
 export async function getJob(
   jobId: string,
   options?: RequestOptions
@@ -311,6 +312,7 @@ function listQuery(options: ListConversationsOptions | undefined): string {
   return query === "" ? "" : `?${query}`;
 }
 
+/** One thread with its jobs. */
 export async function getConversation(
   conversationId: string,
   options?: RequestOptions
@@ -324,6 +326,12 @@ export async function getConversation(
   return json<ConversationDetail>(resp);
 }
 
+/**
+ * Delete one thread. No body, and no timeout.
+ *
+ * A destructive write is never given an automatic ceiling: an aborted DELETE
+ * whose response was merely lost would look retryable, and it is not.
+ */
 export async function deleteConversation(
   conversationId: string,
   options?: RequestOptions

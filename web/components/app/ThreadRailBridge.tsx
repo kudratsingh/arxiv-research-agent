@@ -22,8 +22,8 @@
  * id cannot express that (criterion 1, R-02).
  *
  * WO-14 — THE SWAP, AND WHY THE RAIL ARRIVES LAZILY.
- * `components/ConversationSidebar.tsx` is no longer rendered here; it stays
- * on disk until WO-31 removes it, with its own tests still green.
+ * `components/ConversationSidebar.tsx` is no longer rendered here, and WO-31
+ * has since removed it from disk.
  * `components/features/ThreadRail.tsx` replaces it through `React.lazy`,
  * for the same reason WO-08 lazily imports `ThreadDrawer`: this module is
  * reached from `app/(workspace)/layout.tsx`, so everything it imports

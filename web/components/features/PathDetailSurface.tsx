@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * PathDetailSurface — the fetching and writing half of `/learn/paths/[id]`.
+ *
+ * 04 §5.1's split: `PathView` renders the path and every refusal from props
+ * alone, and this component owns the two reads it composes (the path and the
+ * learner's progress) plus the one write there is — `createLearnSession`,
+ * which on success navigates into the new session route.
+ *
+ * A START IS AT MOST ONE IN FLIGHT, AND THE REFUSAL IS PER ENTRY. The
+ * outstanding entry is tracked by resource id so a refusal names the entry it
+ * belongs to and leaves the rest of the sequence startable.
+ */
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 
@@ -23,6 +35,12 @@ export interface PathDetailSurfaceProps {
   pathId: string;
 }
 
+/**
+ * The progress facts that belong to this path, or an empty list.
+ *
+ * The summary is learner-wide; a path surface may only show what was observed
+ * on the path it is displaying.
+ */
 export function resourceObservationsFromEvents(
   progress: LearnerProgressSummary | undefined,
   pathId: string
@@ -72,6 +90,7 @@ export function sessionCreateRequest(
     : { path_id: pathId, resource_id: entry.resource_id };
 }
 
+/** The `/learn/paths/[id]` surface: two reads, one write, one router push. */
 export function PathDetailSurface({ pathId }: PathDetailSurfaceProps) {
   const path = useLearnPath(pathId);
   const progress = useLearnerProgress();

@@ -49,6 +49,7 @@ export const MIN_JUSTIFICATION = 20;
 /** Required on every exception entry. The ruling names all five. */
 export const REQUIRED_FIELDS = ["package", "advisories", "path", "justification", "date"];
 
+/** Repo-relative, so a parse error names the file a reader has to edit. */
 export const EXCEPTIONS_PATH = "web/audit-exceptions.json";
 
 // ---------------------------------------------------------------------------
@@ -236,6 +237,10 @@ export function parseExceptions(raw, source = EXCEPTIONS_PATH) {
   });
 }
 
+/**
+ * Read and validate the exceptions file. Throws rather than defaulting to an
+ * empty list: a missing or malformed file must fail the gate, not open it.
+ */
 export function loadExceptions(webDir) {
   const file = path.join(webDir, "audit-exceptions.json");
   return parseExceptions(JSON.parse(fs.readFileSync(file, "utf8")), EXCEPTIONS_PATH);
@@ -301,6 +306,10 @@ function describe(finding) {
   return `${finding.package} (${finding.severity}, advisories ${advisories})${titles}`;
 }
 
+/**
+ * The job log's whole output. It prints both trees and every exception that
+ * was applied, so a green run records what it forgave and why.
+ */
 export function renderSummary({ production, full, exceptions }) {
   const lines = [];
   lines.push("Dependency audit gate (05-MIGRATION.md C4)");

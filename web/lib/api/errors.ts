@@ -103,6 +103,12 @@ const KIND_INDEX: Record<ApiFailureKind, true> = {
   unknown: true,
 };
 
+/**
+ * Every kind, derived from the index rather than written twice.
+ *
+ * A new kind is a compile error in `KIND_INDEX` and appears here for free, so
+ * an exhaustiveness test cannot be passing against a stale list.
+ */
 export const API_FAILURE_KINDS = Object.keys(KIND_INDEX) as ApiFailureKind[];
 
 // ---------------------------------------------------------------------------

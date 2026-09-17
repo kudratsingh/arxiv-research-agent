@@ -1,3 +1,10 @@
+// `app/(learn)/layout.tsx` — the workbench shell for every `/learn` route.
+//
+// The group adds no URL segment; it exists so the learn surfaces get the same
+// header, rail and `<main id="main">` as the workspace group without the
+// workspace group's providers. The query client is mounted here rather than
+// per page because all four learn surfaces read through it.
+
 import type { ReactNode } from "react";
 
 import { QueryProvider } from "@/app/providers";

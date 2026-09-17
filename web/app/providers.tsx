@@ -2,24 +2,16 @@
 
 // The client-side provider tree (04-ARCHITECTURE.md §4.1).
 //
-// **Not mounted yet, on purpose.** `app/layout.tsx` belongs to WO-08,
-// which is writing it concurrently, so this file exports the wiring and
-// WO-08 (and WO-20, for the workspace segment) does the mounting:
+// MOUNTED PER ROUTE, NOT AT THE ROOT, AND THAT IS A BUDGET DECISION.
+// WO-20 landed the mounts: `QueryProvider` is wrapped around the routes that
+// actually read through TanStack Query — `app/(learn)/layout.tsx` and
+// `app/(workspace)/c/[id]/page.tsx` — so the library is charged to those
+// chunk unions and not to `/`, which is the tighter of the two gated rows.
+// The measurement is in `app/layout.tsx`'s note above `<body>`.
 //
-//     import { Providers } from "@/app/providers";
-//     …
-//     <body>
-//       <Providers>{children}</Providers>
-//     </body>
-//
-// `Providers` is the seam that keeps that edit a one-time change: the
-// job machine's `JobRunProvider` and anything else that needs to wrap the
-// tree joins it here rather than in the layout.
-//
-// Until something mounts it, TanStack Query is not in any route's chunk
-// union — which is why `npm run budgets` does not move in the PR that
-// adds the library (R-11 / RC-01). The ~13 KB gzip lands on `/` when
-// WO-20 route-loads it, and WO-23's check is what will price it.
+// `Providers` is the composite for the day the whole tree needs wrapping, and
+// nothing mounts it yet. It exists so that edit stays one line in the layout
+// rather than a new provider in every route file.
 
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
