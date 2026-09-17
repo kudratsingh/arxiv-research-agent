@@ -792,6 +792,16 @@ never renumbered.
   judge inputs and seeded AB/BA calibration presentations, represents an
   abstention, and leaves the existing partial scorer as the default.
 
+- [0096](0096-structural-screens-not-phrase-screens.md) — **A retention
+  screen matches structure, not phrases.** Owner ruling R9 on W11-F1:
+  the artifact store's private-reasoning screen drops its two
+  natural-language patterns and keeps the markers, because product text
+  quotes the world — "chain of thought" is in the abstracts a research
+  agent reads, so the phrase rule silently refused the evidence-path
+  arms' briefings and a retrieved paper's own abstract. A body carrying
+  a thinking block, a scratchpad or `reasoning_content` is still
+  refused.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

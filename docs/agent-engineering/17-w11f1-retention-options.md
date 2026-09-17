@@ -1,6 +1,8 @@
 # 17. W11-F1 — artifact retention options
 
-Status: **OPTIONS MEMO — the owner decides. No behaviour changes here.**
+Status: **CLOSED — option C adopted by owner ruling R9 on 2026-09-17 and
+implemented in [ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md).
+Kept as the record the ruling chose from.**
 
 Snapshot date: **2026-09-17**
 
@@ -276,6 +278,11 @@ missing data an evaluation cannot reason around.
 
 **Option C**, with the two English-phrase patterns deleted and the
 structural patterns kept.
+
+> **Adopted by owner ruling R9 on 2026-09-17**, and implemented in
+> [ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md).
+> This memo stands as the record the ruling chose from, so §2's
+> measurements describe the state *before* the change.
 
 The reasoning is §2.3. The rule refuses a retrieved paper's own abstract
 under `SOURCE_DOCUMENT`/`UNTRUSTED_SOURCE` — bytes that entered from

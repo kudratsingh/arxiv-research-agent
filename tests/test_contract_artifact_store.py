@@ -200,17 +200,58 @@ class TestRefusals:
         [
             b"<thinking>the user probably means...</thinking>",
             b"<scratchpad>step 1</scratchpad>",
-            b"chain-of-thought: first I considered",
             b'{"reasoning_content": "..."}',
         ],
     )
     def test_raw_private_reasoning_is_refused(
         self, tmp_path: Path, body: bytes
     ) -> None:
-        """RFC 10 §10.1 excludes it from events; §7.1 must not be the loophole."""
+        """RFC 10 §10.1 excludes it from events; §7.1 must not be the loophole.
+
+        Every case is a *marker* — a delimiter or a provider field name.
+        ADR 0096 made that the rule rather than an accident of which
+        patterns happened to be listed: a marker is evidence about who
+        authored the span it encloses, which is the question this screen
+        is actually asking.
+        """
         subject = store(tmp_path)
         with pytest.raises(ArtifactRefused, match="private reasoning"):
             put(subject, body)
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            b"chain-of-thought prompting improves arithmetic accuracy",
+            b"We compare chain of thought against self-consistency.",
+            b"The hidden reasoning literature is surveyed in section 3.",
+        ],
+    )
+    def test_a_body_that_merely_discusses_private_reasoning_is_stored(
+        self, tmp_path: Path, body: bytes
+    ) -> None:
+        """W11-F1, closed by owner ruling R9 (ADR 0096).
+
+        `chain[ _-]of[ _-]thought` and `hidden[ _-]reasoning` used to sit
+        beside the markers above, and the first case here used to read
+        `chain-of-thought: first I considered` and be refused. Product
+        text quotes the world: these are the sentences a research agent's
+        own briefings and the abstracts it retrieves actually contain, so
+        the phrase rule turned source text into a silent refusal on the
+        arms that quote sources — and on a retrieved paper's own abstract
+        under `SOURCE_DOCUMENT`.
+
+        RFC 10 §3.2 forbids *storing* private chain-of-thought, not
+        *mentioning* it. Discussing the topic is the deliverable.
+        """
+        subject = store(tmp_path)
+        artifact_id = "artifact:sha256:" + hashlib.sha256(body).hexdigest()
+
+        put(subject, body)
+
+        assert subject.contains(artifact_id)
+        assert subject.read(artifact_id, principal_key_id=ALICE) == body, (
+            "the screen refuses or accepts; it never sanitises"
+        )
 
     def test_a_refused_body_is_never_persisted_for_debugging(
         self, tmp_path: Path

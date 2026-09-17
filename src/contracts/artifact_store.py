@@ -26,6 +26,14 @@ a rule the tests hold rather than a convenience:
   private reasoning or a data-class downgrade is not sanitised, not
   truncated, and not stored "for debugging".  It raises, and the bytes
   are removed from staging.
+- **The screens match structure, never natural language.**  Every
+  pattern is a marker — a delimiter, a field name, a credential shape —
+  because product text quotes the world: a body this store exists to
+  hold is *about* something, and a phrase rule cannot tell a document's
+  subject from its origin.  W11-F1 is the measured case (ADR 0096): two
+  phrase patterns silently rejected the evidence-path briefings on a
+  benchmark of LLM-research questions, and a retrieved paper's own
+  abstract, because the papers say "chain of thought".
 
 What this module deliberately does *not* have is a deleter.  Retention
 is an interface (`RetentionHook`) and nothing more: RFC 10 §14.2 and the
@@ -111,11 +119,23 @@ _SECRET_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
 #: them" from events; §7.1 rule 6 routes bodies to artifacts, so without
 #: this rule the artifact store would be the loophole that makes the
 #: event rule decorative.
+#:
+#: **Every pattern here matches a marker, never a phrase** — a delimiter
+#: or a provider field name, which is evidence about who *authored* a
+#: span rather than about what the span is *about*.  That is the whole
+#: rule, and it is a rule because the alternative was tried: two
+#: natural-language patterns (`chain[ _-]of[ _-]thought`,
+#: `hidden[ _-]reasoning`) stood here until W11-F1 measured what they
+#: cost.  Product text quotes the world, so the phrase appeared in the
+#: abstracts this system retrieves and reads, and the screen rejected
+#: whole evidence-path briefings — and a retrieved paper's own abstract
+#: under `SOURCE_DOCUMENT` — for saying the name of a research topic.
+#: A new pattern belongs here only if a body *not* carrying private
+#: reasoning cannot plausibly contain it.  See ADR 0096 and
+#: `docs/agent-engineering/17-w11f1-retention-options.md`.
 _PRIVATE_REASONING_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"(?i)</?thinking>"),
     re.compile(r"(?i)</?scratchpad>"),
-    re.compile(r"(?i)\bchain[ _-]of[ _-]thought\b"),
-    re.compile(r"(?i)\bhidden[ _-]reasoning\b"),
     re.compile(r"(?i)\breasoning_content\b"),
 )
 

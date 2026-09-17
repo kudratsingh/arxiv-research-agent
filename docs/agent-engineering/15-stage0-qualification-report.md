@@ -705,7 +705,16 @@ settings singleton), and it must write `completion.json`, check
 ### 7.4 Findings this qualification opened
 
 **W11-F1 — the artifact store refuses briefings about chain-of-thought
-prompting.** `_PRIVATE_REASONING_PATTERNS` in
+prompting. CLOSED 2026-09-17** by owner ruling R9 and
+[ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md):
+the two natural-language patterns were retired and the structural
+markers kept, so the briefings below are retained on every arm. The
+options this was chosen from, and the measurements, are
+[`17-w11f1-retention-options.md`](17-w11f1-retention-options.md). The
+finding as originally written follows, unedited, because it is the
+evidence the ruling rests on.
+
+`_PRIVATE_REASONING_PATTERNS` in
 `src/contracts/artifact_store.py` refuses any text body matching
 `chain[ _-]of[ _-]thought`. A research briefing whose subject *is*
 chain-of-thought prompting says that phrase in the course of doing its
@@ -727,6 +736,13 @@ exactly the axis the experiment compares. Pinned as behaviour by
 Fixing the rule — narrowing it to the delimiter and field-name forms that
 actually carry model reasoning — is outside this work order's fences and
 belongs to whoever next owns `src/contracts/artifact_store.py`.
+
+*Resolution.* That is what ADR 0096 did. The pinning test named above is
+now `..._is_stored`, a sibling pins that a body carrying a thinking
+block, a scratchpad or `reasoning_content` is still refused, and
+`tests/test_campaign_execution.py::test_every_episode_retains_its_briefing_bytes_on_every_arm`
+asserts across all 300 mock-matrix episodes that every indexed artifact
+carries its bytes — so the loss described above cannot return silently.
 
 **W11-F2 — `graph_shape` could hand arm C the graph arm B compiled.**
 Fixed in this PR. W05 keyed the compiled-shape cache on four flags;
