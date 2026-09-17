@@ -60,6 +60,8 @@ CASES = [
 
 
 class TestEverySchemaMatchesItsPrompt:
+    """Each schema asks for exactly what its prompt already asked for."""
+
     @pytest.mark.parametrize(("schema", "prompt", "indent"), CASES)
     def test_the_fields_are_exactly_the_keys_the_prompt_asks_for(
         self, schema: type[BaseModel], prompt: str, indent: int

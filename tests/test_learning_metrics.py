@@ -49,6 +49,8 @@ def _plans_by_variant() -> dict[str, dict[str, Any]]:
 
 
 class TestSessionPlanCoherence:
+    """The plan judge penalises a plan that ignores its declared budget."""
+
     def test_honest_downscope_passes_and_budget_ignoring_plan_is_penalized(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -110,6 +112,8 @@ class TestSessionPlanCoherence:
 
 
 class TestExplainBackJudge:
+    """The explain-back judge never fabricates a score from bad output."""
+
     def test_grounded_gap_parses(self, monkeypatch: pytest.MonkeyPatch) -> None:
         answer = "The mask only hides padding tokens."
         response = {
@@ -195,6 +199,8 @@ class TestExplainBackJudge:
 
 
 class TestShameFreeCopyJudge:
+    """The shame-free judge refuses a fabricated quote or an extra key."""
+
     def test_a_valid_response_scores(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             metrics, "call_llm_json", lambda **_: _shame_free_response()
@@ -245,6 +251,8 @@ class TestShameFreeCopyJudge:
 
 
 class TestCalibrationAgreement:
+    """The checked-in calibration set, and the agreement it reports."""
+
     def test_checked_in_set_has_honest_provenance_and_required_size(self) -> None:
         calibration = metrics.load_explain_back_calibration()
         assert len(calibration["cases"]) == 20
@@ -302,6 +310,8 @@ class TestCalibrationAgreement:
 
 
 class TestDeterministicChecks:
+    """The pure checks name every bad event and make no model call."""
+
     def test_evidence_link_check_names_every_bad_event(self) -> None:
         events = [
             {"kind": "assessment", "evidence_ref": "session:s1#turn-4"},
@@ -395,6 +405,8 @@ class TestTheJudgesArePinned:
 
 
 class TestTheRubricRegistry:
+    """Every registered rubric names a prompt this module defines."""
+
     def test_every_registered_rubric_names_a_prompt_this_module_defines(self) -> None:
         prompts = {
             metrics.PLAN_SYSTEM_PROMPT,

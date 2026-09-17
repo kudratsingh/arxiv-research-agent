@@ -36,6 +36,8 @@ def _report() -> EngagementReport:
 
 
 class TestGoldenCohort:
+    """The fourteen-day report, against a hand-computed golden cohort."""
+
     def test_the_14_day_report_matches_the_hand_computed_golden(self) -> None:
         raw = _fixture()
         assert _report().to_json_dict() == raw["expected"]
@@ -60,6 +62,8 @@ class TestGoldenCohort:
 
 
 class TestCostJoin:
+    """Guided-read and research spend are joined separately, never mixed."""
+
     def test_guided_read_and_research_spend_are_separate(self) -> None:
         report = _report()
         assert report.guided_session_cost_usd == 1.5
@@ -89,6 +93,8 @@ class TestCostJoin:
 
 
 class TestRefusedMetrics:
+    """The metrics this report refuses to publish, and where it says so."""
+
     @pytest.mark.parametrize("forbidden", ["app_open", "minute", "notification", "mastery"])
     def test_report_schema_has_no_refused_metric(self, forbidden: str) -> None:
         names = {field.name.lower() for field in dataclasses.fields(EngagementReport)}
@@ -110,6 +116,8 @@ class TestRefusedMetrics:
 
 
 class TestCli:
+    """The command line writes the same report the module computes."""
+
     def test_cli_writes_the_same_report(self, tmp_path: Path) -> None:
         raw = _fixture()
         events_path = tmp_path / "events.json"

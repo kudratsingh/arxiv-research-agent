@@ -140,6 +140,8 @@ class InterlopingClient:
 
 
 class TestSerialization:
+    """What the row carries, what it drops, and what it rebuilds on read."""
+
     def test_persistent_fields_excludes_event_queue(self) -> None:
         # event_queue is asyncio.Queue — not serializable, and lives
         # only on the worker running the job.
@@ -228,6 +230,8 @@ class TestSerialization:
 
 
 class TestCreateAndGet:
+    """A created job is visible to another worker as a rehydrated snapshot."""
+
     async def test_create_stores_and_get_returns(
         self, store: RedisJobStore
     ) -> None:
@@ -278,6 +282,8 @@ class TestCreateAndGet:
 
 
 class TestUpdate:
+    """An update replaces persistent state, and sets a TTL when terminal."""
+
     async def test_update_replaces_persistent_state(
         self, store: RedisJobStore
     ) -> None:
@@ -343,6 +349,8 @@ class TestUpdate:
 
 
 class TestUpdateDuringHitlPause:
+    """An update while a resume waiter is live does not raise."""
+
     async def test_update_with_live_resume_waiter_does_not_raise(
         self, store: RedisJobStore
     ) -> None:
@@ -366,6 +374,8 @@ class TestUpdateDuringHitlPause:
 
 
 class TestLocalCacheEviction:
+    """A terminal update evicts the local instance and reads from Redis."""
+
     async def test_terminal_update_evicts_local_and_reads_from_redis(
         self, store: RedisJobStore
     ) -> None:
@@ -413,6 +423,8 @@ class TestLocalCacheEviction:
 
 
 class TestTerminalTransitionGuard:
+    """A terminal row cannot be overwritten by a different outcome."""
+
     async def test_succeeded_cannot_overwrite_failed(
         self, redis_client: fakeredis.aioredis.FakeRedis
     ) -> None:
@@ -976,6 +988,8 @@ class TestTerminalFrameSuppression:
 
 
 class TestEvict:
+    """Eviction is a no-op, because Redis expiry owns it."""
+
     async def test_evict_is_no_op(self, store: RedisJobStore) -> None:
         # Redis TTL handles retention; the Protocol method exists
         # only for cross-implementation compatibility.
@@ -992,6 +1006,8 @@ class TestEvict:
 
 
 class TestConcurrency:
+    """Concurrent creates stay isolated."""
+
     async def test_concurrent_creates_isolated(
         self, store: RedisJobStore
     ) -> None:
@@ -1008,6 +1024,8 @@ class TestConcurrency:
 
 
 class TestClose:
+    """Closing the store returns cleanly."""
+
     async def test_close_returns_cleanly(self) -> None:
         # The lifespan calls close() on shutdown; it must not raise
         # even when the client has no pending operations. (Testing

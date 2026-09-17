@@ -108,6 +108,8 @@ class _DisconnectedConversationStore:
 
 
 class TestAnOptionalCacheLosesItsPool:
+    """A cache that loses its pool degrades to recompute and still succeeds."""
+
     async def test_the_run_degrades_to_recompute_and_still_succeeds(
         self,
         triple: TripleObserver,
@@ -183,6 +185,8 @@ class TestAnOptionalCacheLosesItsPool:
 
 
 class TestTheConversationAppendLosesItsConnection:
+    """A finished job stays finished, and the missing append is an error."""
+
     async def test_a_finished_job_stays_finished_and_the_gap_is_an_error(
         self,
         triple: TripleObserver,
@@ -228,6 +232,8 @@ class TestTheConversationAppendLosesItsConnection:
 
 
 class TestAConnectionDropsInsideANode:
+    """A dropped connection fails the job with a code, and keeps the DSN in."""
+
     async def test_the_job_fails_with_a_code_and_the_dsn_stays_inside(
         self,
         triple: TripleObserver,

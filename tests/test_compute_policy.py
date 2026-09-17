@@ -285,6 +285,8 @@ class TestEveryRuleFiresInBothDirections:
 
 
 class TestTheTableAndTheTiersAgree:
+    """The decision table and the executable tiers agree, row by row."""
+
     def test_the_reason_codes_are_exactly_the_table_plus_the_default(self) -> None:
         """A rule added without a reason code, or the reverse, fails here."""
         assert set(REASON_CODES) == {rule.rule_id for rule in TIER_RULES} | {

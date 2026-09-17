@@ -96,6 +96,7 @@ ASSERTED_JOB_CODES: frozenset[str] = frozenset(
 
 
 class TestTheVocabulariesThisTierAssertsOn:
+    """Every event, instrument and code this tier names exists today."""
     def test_every_event_this_tier_asserts_on_is_registered(self) -> None:
         """A typo'd event name is a test that can never fail.
 
@@ -160,6 +161,7 @@ class TestTheVocabulariesThisTierAssertsOn:
 
 
 class TestTheShapeOfTheJobCounter:
+    """The counters this tier reads carry exactly the labels it expects."""
     async def test_the_job_series_carries_exactly_status_and_error_type(
         self,
         triple: TripleObserver,

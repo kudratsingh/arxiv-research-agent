@@ -202,6 +202,8 @@ def _state(store: _PingStore) -> SimpleNamespace:
 
 
 class TestHealthzWiring:
+    """The probe logs the dependency edge and reports it in the body."""
+
     async def test_probe_logs_the_edge_and_reports_it_in_the_body(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:

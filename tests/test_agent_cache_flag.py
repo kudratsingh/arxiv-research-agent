@@ -166,6 +166,8 @@ def _empty_state(**overrides: Any) -> Any:
     ],
 )
 class TestAgentCacheFlagPassthrough:
+    """The caching flag reaches the LLM helper as the agent was configured."""
+
     def test_flag_off_sends_cache_false(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -250,6 +252,8 @@ class TestReaderCacheFlag:
 
 
 class TestCachingDefaultOff:
+    """Prompt caching is off unless a deployment turns it on."""
+
     def test_default_settings_have_caching_off(self) -> None:
         # Contract: baseline behavior unchanged unless user opts in.
         assert Settings().enable_prompt_caching is False

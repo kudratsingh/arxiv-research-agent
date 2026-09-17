@@ -70,6 +70,7 @@ def put(
 
 
 class TestIntegrity:
+    """Bytes read back exactly, and every declaration about them is checked."""
     def test_a_promoted_artifact_reads_back_byte_for_byte(self, tmp_path: Path) -> None:
         subject = store(tmp_path)
         ref = put(subject, b"an abstract span")
@@ -162,6 +163,7 @@ class TestIntegrity:
 
 
 class TestRefusals:
+    """Bodies the store refuses outright rather than redacting or storing."""
     @pytest.mark.parametrize(
         "body",
         [
@@ -296,6 +298,7 @@ class TestRefusals:
 
 
 class TestDataClasses:
+    """An artifact is never classified below its run or its own sources."""
     def test_an_artifact_below_the_run_class_is_refused(self, tmp_path: Path) -> None:
         subject = store(tmp_path, DataClass.USER_CONFIDENTIAL)
         with pytest.raises(ArtifactRefused, match="downgrades"):
@@ -372,6 +375,7 @@ class TestDataClasses:
 
 
 class TestDeduplicationAndScope:
+    """Identical bytes promote once, and sharing grants nobody a read."""
     def test_identical_bytes_promote_once(self, tmp_path: Path) -> None:
         subject = store(tmp_path)
         first = put(subject, b"the very same bytes")
@@ -484,6 +488,7 @@ class TestDeduplicationAndScope:
 
 
 class TestRetention:
+    """The hook sees every promotion, and the store deletes nothing."""
     def test_the_hook_sees_every_newly_promoted_artifact(self, tmp_path: Path) -> None:
         hook = NullRetentionHook()
         subject = LocalArtifactStore(tmp_path / "root", retention_hook=hook)

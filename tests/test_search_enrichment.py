@@ -81,6 +81,7 @@ def _state(
 
 
 class TestEnrichWithS2References:
+    """Which seeds are expanded, how many, and which are skipped."""
     def test_no_seeds_returns_empty(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -198,6 +199,7 @@ class TestEnrichWithS2References:
 
 
 class TestSearchAgentFlagOff:
+    """With the flag off the enrichment path is never reached."""
     def test_flag_off_never_calls_s2(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -223,6 +225,7 @@ class TestSearchAgentFlagOff:
 
 
 class TestSearchAgentFlagOn:
+    """With the flag on the two sources union and deduplicate."""
     def test_flag_on_unions_arxiv_and_s2_references(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

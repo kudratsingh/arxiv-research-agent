@@ -66,6 +66,7 @@ AT = "2026-09-05T00:00:00Z"
 
 
 class TestTheCorpusCoversWhatTheWorkOrderAsksFor:
+    """The corpus covers every family, cell and label type asked for."""
     def test_every_required_family_is_present(self) -> None:
         cases = load_cases()
 
@@ -122,6 +123,7 @@ class TestTheCorpusCoversWhatTheWorkOrderAsksFor:
 
 
 class TestNoJudgeHasBeenRun:
+    """Every verdict declares itself a prediction rather than a reading."""
     def test_every_single_item_verdict_declares_itself_a_prediction(self) -> None:
         assert all(case.verdict_basis == "hypothesis" for case in load_cases())
 
@@ -157,6 +159,7 @@ class TestNoJudgeHasBeenRun:
 
 
 class TestTheExpectedOutcomeCannotLie:
+    """A case's outcome is derived from its two decisions, not declared."""
     def test_every_case_s_outcome_is_derived_from_its_two_decisions(self) -> None:
         for case in load_cases():
             assert case.expected_outcome is classify_outcome(
@@ -195,6 +198,7 @@ class TestTheExpectedOutcomeCannotLie:
 
 
 class TestSchemaRefusals:
+    """What the fixture schemas refuse: foreign vocabularies and duplicates."""
     def test_a_decision_outside_the_label_type_s_vocabulary_is_refused(self) -> None:
         with pytest.raises(ValidationError, match="is not a claim_support decision"):
             CalibrationCase(
@@ -249,6 +253,7 @@ class TestSchemaRefusals:
 
 
 class TestTheStressSetIsNotACalibrationSet:
+    """The adversarial fixtures say so, and count toward no campaign set."""
     def test_both_authored_files_declare_the_adversarial_stratum(self) -> None:
         assert load_case_file(ADVERSARIAL_PATH).stratum is Stratum.ADVERSARIAL_STRESS
         assert load_case_file(PAIRWISE_PATH).stratum is Stratum.ADVERSARIAL_STRESS
@@ -290,6 +295,7 @@ class TestTheStressSetIsNotACalibrationSet:
 
 
 class TestTheWorkedSet:
+    """The worked set carries real disagreement and every adjudication rule."""
     def test_it_carries_multiple_annotators_and_real_disagreement(self) -> None:
         worked = load_labelled_set()
         states = {item.agreement_state for item in worked.items}
@@ -365,6 +371,7 @@ class TestTheWorkedSet:
 
 
 class TestConversionIntoTheMetricsVocabulary:
+    """The corpus converts into the metrics vocabulary and back again."""
     def test_a_case_blinds_to_the_id_the_fixture_salt_produces(self) -> None:
         from src.calibration.blinding import blind_item_id
         from src.calibration.fixtures import FIXTURE_SALT
@@ -416,6 +423,7 @@ class TestConversionIntoTheMetricsVocabulary:
 
 
 class TestTheFixtureFilesThemselves:
+    """Three authored files are the whole corpus, and each explains itself."""
     def test_the_three_authored_files_are_the_whole_corpus(self) -> None:
         assert sorted(path.name for path in FIXTURE_ROOT.glob("*.json")) == [
             "adversarial_cases.json",
@@ -453,6 +461,7 @@ class TestTheFixtureFilesThemselves:
 
 
 class TestTheRemainingFixtureRefusals:
+    """The remaining refusals the fixture loader makes."""
     def test_a_judge_verdict_outside_the_vocabulary_is_refused(self) -> None:
         with pytest.raises(ValidationError, match="is not a claim_support decision"):
             CalibrationCase(

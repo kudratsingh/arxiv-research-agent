@@ -121,6 +121,8 @@ def assessed(
 
 @pytest.mark.unit
 class TestProvenanceIsNonNullable:
+    """A claim cannot be constructed, or read back, without a source."""
+
     def test_a_claim_cannot_be_constructed_without_a_source(self) -> None:
         """`source` has no default, so the omission is a TypeError.
 
@@ -170,6 +172,8 @@ class TestProvenanceIsNonNullable:
 
 @pytest.mark.unit
 class TestInferredIsCapped:
+    """An inferred claim is capped, and must cite what it came from."""
+
     def test_inferred_above_the_cap_is_rejected(self) -> None:
         """The named criterion: an `inferred` write with confidence
         > 0.6 is rejected."""
@@ -197,6 +201,8 @@ class TestInferredIsCapped:
 
 @pytest.mark.unit
 class TestConfidenceOneIsReservedForDeclared:
+    """Only a declaration carries full confidence, and only for itself."""
+
     def test_declared_carries_exactly_one(self) -> None:
         assert declared().confidence == DECLARED_CONFIDENCE
 
@@ -235,6 +241,8 @@ class TestConfidenceOneIsReservedForDeclared:
 
 @pytest.mark.unit
 class TestSkillVocabulary:
+    """Skill names are normalised, and a sentence is not one."""
+
     def test_names_are_normalised(self) -> None:
         assert normalize_skill_name("  Back-Prop  ") == "back-prop"
         assert declared(skill="  BackProp ").skill == "backprop"
@@ -259,6 +267,8 @@ class TestSkillVocabulary:
 
 @pytest.mark.unit
 class TestDeclarationsSurviveInference:
+    """A contradiction is stored beside the declaration, never over it."""
+
     def test_a_contradicting_assessment_is_stored_as_a_second_entry(self) -> None:
         """01 §1.2's named case: "declared solid, explained it with
         major gaps" produces two claims, not a silent downgrade."""
@@ -322,6 +332,8 @@ class TestDeclarationsSurviveInference:
 
 @pytest.mark.unit
 class TestSkillCapNeverDropsADeclaration:
+    """Eviction takes guesses first, and refuses rather than drop a claim."""
+
     def test_guesses_are_evicted_before_evidence(self) -> None:
         existing = tuple(
             inferred(f"skill-{i}", updated_at=f"2026-08-{i + 1:02d}T00:00:00+00:00")
@@ -365,6 +377,8 @@ class TestSkillCapNeverDropsADeclaration:
 
 @pytest.mark.unit
 class TestLearnerProfileBounds:
+    """The profile's caps, its id rules, and its anonymous principal."""
+
     def test_the_anonymous_principal_has_no_profile(self) -> None:
         """01 §1.3: the store refuses the anonymous principal."""
         with pytest.raises(AnonymousPrincipalError):
@@ -425,6 +439,8 @@ class TestLearnerProfileBounds:
 
 @pytest.mark.unit
 class TestSchemaMatchesTheDomainRules:
+    """The DDL declares the same caps, bounds and vocabulary as the code."""
+
     def test_the_ddl_declares_the_learner_profiles_table(self) -> None:
         assert "CREATE TABLE IF NOT EXISTS learner_profiles" in SCHEMA_DDL
 
@@ -472,6 +488,8 @@ class TestSchemaMatchesTheDomainRules:
 
 @pytest.mark.unit
 class TestInMemoryProfileStore:
+    """The in-memory store's round trip, scoping and refusals."""
+
     async def test_put_then_get_roundtrips(self) -> None:
         store = InMemoryProfileStore()
         await store.put(
@@ -561,6 +579,8 @@ class TestInMemoryProfileStore:
 
 @pytest.mark.unit
 class TestStoreFactory:
+    """The factory defaults to memory, and can select Postgres."""
+
     def test_memory_is_the_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import src.config as config_module
 
@@ -610,6 +630,8 @@ if _postgres_available:
 @pytestmark_postgres
 @pytest.mark.integration
 class TestSchemaIdempotence:
+    """Initialising the schema twice is a no-op."""
+
     def test_init_schema_twice_is_a_no_op(self, pg_url: str) -> None:
         """The shared guard for the appended DDL section (§5.4).
 
@@ -629,6 +651,8 @@ class TestSchemaIdempotence:
 @pytestmark_postgres
 @pytest.mark.integration
 class TestPostgresProfileStore:
+    """The same behaviour against Postgres, contradictions included."""
+
     async def test_put_then_get_roundtrips(self, pg_url: str) -> None:
         store = PostgresProfileStore()
         await store.put(

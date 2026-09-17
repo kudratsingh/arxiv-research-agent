@@ -79,6 +79,8 @@ def _run() -> EpisodeRun:
 
 
 class TestTheFixtureAndSchemas:
+    """The checked-in fixture is strict, complete, and refuses extras."""
+
     def test_the_checked_in_fixture_is_strict_and_complete(self) -> None:
         fixture = load_mock_judge_fixture()
 
@@ -103,6 +105,8 @@ class TestTheFixtureAndSchemas:
 
 
 class TestTheMockJudgeScorer:
+    """The scorer runs every metric, records the instrument, and spends nothing."""
+
     def test_it_runs_all_five_metrics_and_records_the_instrument(self) -> None:
         scores = build_mock_judge_scorer(_config())(_episode(), _run())
 

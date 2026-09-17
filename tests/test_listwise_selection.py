@@ -199,6 +199,8 @@ def rebind(monkeypatch: pytest.MonkeyPatch, **overrides: Any) -> Settings:
 
 
 class TestTheRankingIsDeterministic:
+    """The ranking is deterministic, and costs no call in mock mode."""
+
     def test_candidates_rank_by_evidence_then_papers_then_plan_order(self) -> None:
         branches = [
             branch(0, claims=2, papers=1),
@@ -277,6 +279,8 @@ class TestTheRankingIsDeterministic:
 
 
 class TestSelectionNarrowsTheMerge:
+    """Selection narrows the merge, and cannot retract an earlier one."""
+
     def test_a_rejected_branch_keeps_its_record_and_loses_its_evidence(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -353,6 +357,8 @@ class TestSelectionNarrowsTheMerge:
 
 
 class TestTheModelPathIsListwiseOrItIsNothing:
+    """One call ranks the whole list, or the path degrades rather than guess."""
+
     def _live(self, monkeypatch: pytest.MonkeyPatch) -> None:
         rebind(monkeypatch, use_mock_data=False)
 
@@ -483,6 +489,8 @@ class TestTheModelPathIsListwiseOrItIsNothing:
 
 
 class TestTheMarginalStopPreventsSpend:
+    """The marginal stop is off by default, and records why it fired."""
+
     def _planned(self, count: int) -> list[WorkerBranch]:
         return [
             WorkerBranch(
@@ -645,6 +653,8 @@ class TestTheMarginalStopPreventsSpend:
 
 
 class TestArmEIsEarnedRatherThanDeclared:
+    """Arm E is earned by a deployment that really has both capabilities."""
+
     pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
     def test_the_branch_tier_without_a_selector_is_still_not_arm_e(self) -> None:
@@ -760,6 +770,8 @@ class TestArmEIsEarnedRatherThanDeclared:
 
 
 class TestTheSelectionReachesTheTrajectory:
+    """Scores, selection and the marginal stop all reach the trajectory."""
+
     pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
     def _bridge(self, tmp_path: Path) -> Any:
@@ -952,6 +964,8 @@ SUITE_ROUTING: tuple[tuple[str, str, tuple[str, ...]], ...] = (
 
 
 class TestTheRouterOnTheShippedSuite:
+    """Which tier each shipped benchmark query routes to, on record."""
+
     pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
     def test_the_tier_each_benchmark_query_routes_to_is_recorded(self) -> None:

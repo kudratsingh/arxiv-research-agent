@@ -120,6 +120,7 @@ def _base_response(**overrides: Any) -> dict[str, Any]:
 
 
 class TestAbstractWrapping:
+    """With the flag on the abstract is wrapped and the system prompt says so."""
     def test_flag_on_wraps_abstract_in_prompt(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -182,6 +183,7 @@ class TestAbstractWrapping:
 
 
 class TestControlFieldSanitization:
+    """A jailbreak in a control field is blanked or filtered out."""
     def test_missing_context_jailbreak_blanked(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -261,6 +263,7 @@ class TestControlFieldSanitization:
 
 
 class TestClaimSanitization:
+    """A jailbreak claim is dropped while legitimate claims survive."""
     def _ranked(self) -> list[dict[str, Any]]:
         return [
             {
@@ -341,6 +344,7 @@ class TestClaimSanitization:
 
 
 class TestAbstractOnlyPathIsolation:
+    """Isolation and the abstract-only path still report incompleteness."""
     def test_isolation_and_abstract_only_still_flag_incomplete(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

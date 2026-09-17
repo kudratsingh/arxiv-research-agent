@@ -50,6 +50,8 @@ class _ExplodingPaperCache:
 
 
 class TestEncodeTextsCacheDegradation:
+    """A failed cache read degrades to recompute rather than failing the job."""
+
     def test_cache_read_failure_degrades_to_recompute(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -72,6 +74,8 @@ class TestEncodeTextsCacheDegradation:
 
 
 class TestParsePdfCacheDegradation:
+    """A failed cache read is treated as a miss."""
+
     def test_cache_read_failure_treated_as_miss(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -97,6 +101,8 @@ class TestParsePdfCacheDegradation:
 
 
 class TestModelSingletonLock:
+    """A concurrent cold start constructs the model exactly once."""
+
     def test_concurrent_cold_start_constructs_model_once(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

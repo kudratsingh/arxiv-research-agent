@@ -100,6 +100,7 @@ def render_listing() -> str:
 
 
 class TestTheLegacyShapesAreTheShapesOnRecord:
+    """The compiled listing is the fixture these shapes are on record as."""
     def test_the_compiled_listing_matches_the_fixture(self) -> None:
         """The whole point of the file: default settings did not move.
 

@@ -22,6 +22,8 @@ def _mk_paper(paper_id: str, title: str = "T") -> PaperMetadata:
 
 
 class TestDeduplicatePapers:
+    """Deduplication keeps the first of each paper, and the order."""
+
     def test_empty_input(self) -> None:
         assert deduplicate_papers([]) == []
 
@@ -41,6 +43,8 @@ class TestDeduplicatePapers:
 
 
 class TestRouteAfterCritique:
+    """Where a critique routes, and when it falls through to the end."""
+
     def test_no_revision_needed_returns_end(self) -> None:
         state = {"revision_needed": False, "revision_target": ""}
         assert route_after_critique(state) == END

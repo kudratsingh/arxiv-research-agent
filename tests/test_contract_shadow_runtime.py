@@ -150,6 +150,8 @@ async def _drive(job: Job, workflow: _StubWorkflow) -> Job:
 
 
 class TestTheRunnerHooks:
+    """The runner's hooks record a matching trajectory, or nothing at all."""
+
     async def test_a_job_run_with_the_switch_on_leaves_a_matching_trajectory(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -324,6 +326,8 @@ class TestTheRunnerHooks:
 
 
 class TestTheEvalRunnerHooks:
+    """The eval record gains one key, and only when the switch is on."""
+
     @staticmethod
     def _prepare(monkeypatch: pytest.MonkeyPatch, cfg: Settings) -> None:
         monkeypatch.setattr(eval_runner, "settings", cfg)
@@ -390,6 +394,8 @@ class TestTheEvalRunnerHooks:
 
 
 class TestTheModelCallObserver:
+    """The observer sees what the accumulator recorded, and costs nothing."""
+
     def test_a_bound_observer_sees_the_call_the_accumulator_recorded(self) -> None:
         costs = start_cost_tracking()
         seen: list[LlmCallObservation] = []

@@ -81,6 +81,8 @@ def _line(
 
 
 class TestLoadSummary:
+    """How a summary file is read, and which malformations raise."""
+
     def test_missing_file_returns_empty(self, tmp_path: Path) -> None:
         assert load_summary(tmp_path / "nope.jsonl") == {}
 
@@ -117,6 +119,8 @@ class TestLoadSummary:
 
 
 class TestDiffSummariesClassification:
+    """What counts as a regression, an improvement, or no change at all."""
+
     def test_unchanged_when_scores_within_threshold(self) -> None:
         baseline = {"q1": _line("q1", citation_resolution_rate=0.80, completeness=0.75, faithfulness=0.70)}
         current = {"q1": _line("q1", citation_resolution_rate=0.82, completeness=0.73, faithfulness=0.72)}
@@ -454,6 +458,8 @@ class TestResourceBands:
 
 
 class TestDiffSummariesDeltas:
+    """Per-metric deltas, including when one side has no value."""
+
     def test_per_metric_deltas_computed(self) -> None:
         baseline = {
             "q1": _line(
@@ -498,6 +504,8 @@ class TestDiffSummariesDeltas:
 
 
 class TestAggregate:
+    """Aggregates are taken over the queries both runs actually scored."""
+
     def test_aggregate_over_queries_present_in_both(self) -> None:
         baseline = {
             "shared": _line("shared", citation_resolution_rate=0.8, completeness=0.6, faithfulness=0.7),
@@ -525,6 +533,8 @@ class TestAggregate:
 
 
 class TestFormatReport:
+    """What the rendered report shows, section by section."""
+
     def _minimal_report(
         self, has_regressions: bool = False, *, allow_removed: bool = False
     ) -> RegressionReport:
@@ -620,6 +630,8 @@ class TestFormatReport:
 
 
 class TestCLI:
+    """The diff's command line and the exit code each outcome gets."""
+
     def _write(self, path: Path, records: list[dict[str, Any]]) -> None:
         path.write_text(
             "\n".join(json.dumps(r) for r in records) + "\n", encoding="utf-8"
@@ -688,6 +700,8 @@ class TestCLI:
 
 
 class TestReturnedTypes:
+    """The report and diff shapes are the ones their types declare."""
+
     def test_report_shape(self) -> None:
         report = diff_summaries({}, {})
         assert set(RegressionReport.__required_keys__) == set(report.keys())
@@ -698,6 +712,8 @@ class TestReturnedTypes:
 
 
 class TestThresholdBoundary:
+    """A drop exactly at the threshold is not yet a regression."""
+
     def test_drop_exactly_at_threshold_is_not_regression(self) -> None:
         baseline = {"q1": _line("q1", citation_resolution_rate=0.9)}
         current = {"q1": _line("q1", citation_resolution_rate=0.8)}  # drop of 0.10
@@ -713,6 +729,8 @@ class TestThresholdBoundary:
 
 
 class TestDefaultThreshold:
+    """The default threshold is exposed rather than hidden."""
+
     def test_default_threshold_exposed(self) -> None:
         assert 0.0 < DEFAULT_THRESHOLD < 1.0
 
@@ -778,6 +796,8 @@ def _learning_diff(
 
 
 class TestLearningLaneLoading:
+    """The learning lane indexes by record id, and refuses a research file."""
+
     def test_indexes_by_record_id(self, tmp_path: Path) -> None:
         path = tmp_path / "summary.jsonl"
         path.write_text(
@@ -893,6 +913,8 @@ class TestLearningLaneEveryGatedField:
 
 
 class TestLearningLaneResourceBands:
+    """The learning lane's bands: what moves the gate, and what does not."""
+
     def test_one_extra_unmet_expectation_regresses(self) -> None:
         # Zero tolerance by design: a structural expectation that
         # stopped being met is a regression at +1.
@@ -1004,6 +1026,8 @@ class TestLearningLaneMissingSession:
 
 
 class TestLearningLaneReport:
+    """The learning report speaks the session vocabulary throughout."""
+
     def test_report_uses_session_vocabulary(self) -> None:
         md = format_report(_learning_diff({}, {"s.r1": _session("s.r1")}))
         assert md.startswith("# Learning-eval regression diff")
@@ -1136,6 +1160,8 @@ def _provenanced(row: dict[str, Any], **overrides: Any) -> dict[str, Any]:
 
 
 class TestRepeatAggregation:
+    """Repeats of one query become one task, with an honest denominator."""
+
     def test_repeats_of_one_query_become_one_task(self) -> None:
         rows = _rows(
             _repeat("q1", 1, faithfulness=0.6),
@@ -1246,6 +1272,8 @@ class TestRepeatAggregation:
 
 
 class TestQuantisedEpsilon:
+    """A quantised metric gets a band wide enough for one flipped decision."""
+
     def test_the_declared_quanta_match_the_benchmark_denominator(self) -> None:
         # `completeness` and `retrieval_recall` are both
         # `matched / len(expected_topics)`, and the coarsest topic list
@@ -1305,6 +1333,8 @@ class TestQuantisedEpsilon:
 
 
 class TestCriticScoreIsADiagnostic:
+    """The critic score is diffed and printed, but never gates."""
+
     def test_a_critic_collapse_alone_does_not_fail_the_gate(self) -> None:
         # `critic.py` coerces an unparseable judge response to 0.0, which
         # arrives here as a full-scale quality collapse indistinguishable
@@ -1329,6 +1359,8 @@ class TestCriticScoreIsADiagnostic:
 
 
 class TestComparability:
+    """Which provenance moves refuse a comparison, and which only note it."""
+
     def test_matching_provenance_compares(self) -> None:
         baseline = {"q1": _provenanced(_line("q1", faithfulness=0.8))}
         current = {"q1": _provenanced(_line("q1", faithfulness=0.8))}
@@ -1520,6 +1552,8 @@ class TestTheCitationMetricSwapRebaselines:
 
 
 class TestCitationAccuracyIsNowADiagnostic:
+    """Citation accuracy is a diagnostic; the deterministic check gates."""
+
     def test_a_citation_accuracy_collapse_alone_does_not_fail_the_gate(self) -> None:
         # It returns 1.0 for a report with zero citations and resolves
         # `[Author, Year]` tags against the list the synthesizer itself
@@ -1576,6 +1610,8 @@ class TestCitationAccuracyIsNowADiagnostic:
 
 
 class TestStatisticsAndDecision:
+    """The verdict, its interval, its power statement and its caveat."""
+
     def test_an_unchanged_small_campaign_holds_rather_than_promoting(self) -> None:
         rows = {
             f"q{i}": _line(f"q{i}", faithfulness=0.8, citation_resolution_rate=1.0)
@@ -1754,6 +1790,8 @@ class TestStatisticsAndDecision:
 
 
 class TestTheGateMakesNoModelCall:
+    """The whole diff runs with every model entry point broken."""
+
     def test_the_whole_diff_runs_with_every_llm_entry_point_broken(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -1794,6 +1832,8 @@ def main_code(report: RegressionReport) -> int:
 
 
 class TestCliStatuses:
+    """The exit status for a clean run, a missing file, and bad input."""
+
     def test_a_clean_run_exits_zero(self, tmp_path: Path) -> None:
         baseline = tmp_path / "b.jsonl"
         current = tmp_path / "c.jsonl"
@@ -1851,6 +1891,8 @@ def _claim_row(
 
 
 class TestClaimOutcomes:
+    """How claims are namespaced, dropped, and reconciled across repeats."""
+
     def test_claims_are_namespaced_by_task(self) -> None:
         """The mock corpus's trap, and the reason for the prefix.
 
@@ -1905,6 +1947,8 @@ class TestClaimOutcomes:
 
 
 class TestCompareClaims:
+    """How two arms' claims are matched, counted and bounded."""
+
     def test_no_claims_anywhere_is_none_not_an_empty_comparison(self) -> None:
         """"Not computed" and "compared and found nothing" are different
         facts, and a campaign written before WO-C1 is the first."""
@@ -1943,6 +1987,8 @@ class TestCompareClaims:
 
 
 class TestTheDeterministicLaneGatesOnOneClaim:
+    """The deterministic lane rolls back on a single lost claim."""
+
     def _rows(self, claims: dict[str, bool]) -> dict[str, dict[str, Any]]:
         return {"q1": _claim_row("q1", claims)}
 
@@ -2015,6 +2061,8 @@ class TestTheDeterministicLaneGatesOnOneClaim:
 
 
 class TestClaimsSection:
+    """The claims section reports its denominator, or renders nothing."""
+
     def test_it_reports_the_denominator_and_what_it_can_carry(self) -> None:
         lane = SCRIPTED_RESEARCH_LANE
         rows = {
@@ -2060,6 +2108,8 @@ class TestClaimsSection:
 
 
 class TestScriptedResearchLane:
+    """The scripted lane carries no judged metric and tolerates nothing."""
+
     def test_it_carries_no_judged_metric(self) -> None:
         """Three of the funded lane's metrics are paid judges and this
         campaign runs none; a permanently-null column is noise."""
@@ -2115,6 +2165,8 @@ class TestScriptedResearchLane:
 
 
 class TestClaimsSectionEdges:
+    """The claims section's edges: no shared claim, and no test run."""
+
     def test_a_comparison_with_no_shared_claim_says_so(self) -> None:
         baseline = {"q1": _claim_row("q1", {"c:only-baseline": True})}
         current = {"q2": _claim_row("q2", {"c:only-current": True})}

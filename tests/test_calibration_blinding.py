@@ -54,6 +54,7 @@ def plan(
 
 
 class TestBlindedIds:
+    """Blinded ids are stable per salt, distinct across salts, and well shaped."""
     def test_the_same_salt_and_id_always_give_the_same_blinded_id(self) -> None:
         assert blind_item_id("s", "case-1") == blind_item_id("s", "case-1")
 
@@ -81,6 +82,7 @@ class TestBlindedIds:
 
 
 class TestThePlanCannotHideLessThanRequired:
+    """A plan that hides less than the protocol requires is refused."""
     def test_the_required_field_set_names_arm_and_candidate_and_their_proxies(self) -> None:
         assert {"arm_id", "candidate_id"} <= HIDDEN_FROM_JUDGE
         # The fields that reconstruct them. A report tagged with its
@@ -124,6 +126,7 @@ class TestThePlanCannotHideLessThanRequired:
 
 
 class TestThePresentationSchedule:
+    """The schedule is seeded, contiguous, and independent of input order."""
     def test_a_single_plan_gives_one_assignment_per_item(self) -> None:
         ids = [f"itm-{index:012x}" for index in range(5)]
 
@@ -205,6 +208,7 @@ class TestThePresentationSchedule:
 
 
 class TestTheLeakScan:
+    """The scan finds a forbidden term as a word, and nothing else."""
     def test_a_forbidden_term_in_the_rendered_input_is_found(self) -> None:
         rendered = "The verify-and-repair pass in arm-c produced the following report."
 

@@ -128,6 +128,7 @@ def _write(root: Path, document: dict[str, Any]) -> Path:
 
 
 class TestQueueArithmetic:
+    """Curation and briefing hours are counted, and reported separately."""
     def test_curation_and_briefing_hours_are_reported_separately(
         self, tmp_path: Path
     ) -> None:
@@ -188,6 +189,7 @@ class TestQueueArithmetic:
 
 
 class TestRendering:
+    """What the rendered queue has to name for the owner to act on it."""
     def test_the_rendered_queue_names_every_enforced_rule(
         self, tmp_path: Path
     ) -> None:
@@ -227,6 +229,7 @@ class TestRendering:
 
 
 class TestDriftCheck:
+    """The check fails the moment the committed queue stops matching."""
     def test_check_passes_on_the_committed_queue(self) -> None:
         assert review_queue.main(["--check", "--root", str(default_content_root())]) == 0
 
@@ -279,6 +282,7 @@ class TestDriftCheck:
 
 
 class TestShippedQueue:
+    """The committed queue is what the generator produces, at its budget."""
     def test_the_flagship_queue_is_the_ten_to_twenty_hours_02_budgets(
         self,
     ) -> None:

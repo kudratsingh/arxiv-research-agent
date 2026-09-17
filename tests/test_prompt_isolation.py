@@ -24,6 +24,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.security]
 
 
 class TestWrapUntrusted:
+    """Wrapping adds both tags, and escapes a close tag in the content."""
+
     def test_adds_open_and_close_tags(self) -> None:
         wrapped = wrap_untrusted("some text")
         assert wrapped.startswith(UNTRUSTED_OPEN_TAG + "\n")
@@ -47,6 +49,8 @@ class TestWrapUntrusted:
 
 
 class TestSanitizeControlString:
+    """What a control string is trimmed, capped or blanked down to."""
+
     def test_trims_and_collapses_whitespace(self) -> None:
         assert (
             sanitize_control_string("  needs  more   context  \n\n more ")
@@ -86,6 +90,8 @@ class TestSanitizeControlString:
 
 
 class TestSanitizeSectionNames:
+    """Which section names survive, deduplicated and character-bounded."""
+
     def test_accepts_common_section_names(self) -> None:
         assert sanitize_section_names(
             ["Results", "limitations", "Related Work", "methods/approach"]
@@ -129,6 +135,8 @@ class TestSanitizeSectionNames:
 
 
 class TestIsolationSystemInstruction:
+    """The instruction names both delimiters and every control field."""
+
     def test_mentions_both_delimiter_tags(self) -> None:
         assert UNTRUSTED_OPEN_TAG in ISOLATION_SYSTEM_INSTRUCTION
         assert UNTRUSTED_CLOSE_TAG in ISOLATION_SYSTEM_INSTRUCTION

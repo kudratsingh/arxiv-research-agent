@@ -87,6 +87,8 @@ def _no_cost_accumulator() -> Any:
 
 
 class TestGetClient:
+    """How the client is constructed from settings, and when it refuses."""
+
     def test_uses_clamped_max_retries(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -387,6 +389,8 @@ class TestRetryEnvelope:
 
 
 class TestBuildSystemParam:
+    """How the system prompt is shaped, with and without caching."""
+
     def test_empty_prompt_returns_not_given(self) -> None:
         from src.llm import _build_system_param
 
@@ -508,6 +512,8 @@ class _FakeClient:
 
 
 class TestCallLlmCachePassthrough:
+    """Cache settings reach both the request and the cost recorder."""
+
     def test_cache_system_false_sends_plain_system_string(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -705,6 +711,8 @@ def _status_error(status_code: int, request_id: str) -> Exception:
 
 
 class TestRetryVisibility:
+    """Retries, latency and upstream failures all reach the record."""
+
     def test_retries_taken_reaches_the_cost_recorder(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

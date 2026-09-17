@@ -18,6 +18,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestFormatSSE:
+    """A frame's structure, and its deterministic JSON payload."""
+
     def test_produces_valid_frame_structure(self) -> None:
         frame = format_sse("node_completed", {"node": "planner"})
         text = frame.decode()
@@ -45,6 +47,8 @@ class TestFormatSSE:
 
 
 class TestHeartbeat:
+    """The heartbeat is a comment frame."""
+
     def test_is_comment_frame(self) -> None:
         # SSE comment lines start with `:`; clients discard them.
         assert format_heartbeat().startswith(b":")
@@ -52,6 +56,8 @@ class TestHeartbeat:
 
 
 class TestTerminalEvents:
+    """Which event names are terminal, and that the set is frozen."""
+
     @pytest.mark.parametrize(
         "name",
         ["job_completed", "job_failed", "job_cancelled"],

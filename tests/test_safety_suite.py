@@ -165,6 +165,8 @@ class TestBehaviouralAssertionsReplaceTheCanary:
 
 
 class TestCorpus:
+    """The corpus's coverage, its field rules, and its fingerprint."""
+
     def test_every_agentic_category_is_covered(self, corpus: list[SafetyCase]) -> None:
         covered = {case["primary_category"] for case in corpus}
         assert covered == set(suite.AGENTIC_CATEGORIES), (
@@ -315,6 +317,8 @@ class TestCorpus:
 
 
 class TestTheSuiteAgainstThisCheckout:
+    """What the suite finds here, against its committed baseline."""
+
     def test_no_categorical_hard_violation_occurs(
         self, corpus: list[SafetyCase], outcomes: list[suite.CaseOutcome]
     ) -> None:
@@ -389,6 +393,8 @@ class TestTheSuiteAgainstThisCheckout:
 
 
 class TestTheSuiteTouchesNothing:
+    """The suite runs with the model client sabotaged and no name lookups."""
+
     def test_the_module_never_reaches_the_model_client(self) -> None:
         # Static half. A judge inside a gate is an attack surface, not a
         # control — content-preserving wrappers flip 57-100% of LLM-judge
@@ -478,6 +484,8 @@ class TestTheSuiteTouchesNothing:
 
 
 class TestSurfacesRunTheRealDefence:
+    """Each surface exercises the real boundary rather than a stand-in."""
+
     def test_control_token_surface_blanks_a_marked_directive(
         self, corpus: list[SafetyCase]
     ) -> None:
@@ -642,6 +650,8 @@ def _blank_case(**overrides: Any) -> SafetyCase:
 
 
 class TestEachCheckFiresOnWhatItNames:
+    """Each check fires on what it names, and stays quiet otherwise."""
+
     def test_tool_authorisation(self) -> None:
         case = _blank_case()
         assert check_tool_authorisation(case, _behaviour(tools_called=("reader",))) == []
@@ -798,6 +808,8 @@ class TestEachCheckFiresOnWhatItNames:
 
 
 class TestIntervals:
+    """The intervals, against the worked example the design cites."""
+
     def test_wilson_matches_the_worked_example_the_design_cites(self) -> None:
         # 3/100 has a Wilson interval of roughly 1.0%-8.5%. That number
         # is the whole argument against an absolute "ASR < 5%" gate:
@@ -860,6 +872,8 @@ def _report(**overrides: Any) -> suite.SafetyReport:
 
 
 class TestTheGate:
+    """The safety veto, and the three states the gate can reach."""
+
     def test_the_safety_veto_is_evaluated_first_and_ignores_the_baseline(self) -> None:
         # A run that is *better* than baseline on the rate and still
         # exfiltrated a secret is a ROLLBACK. Absolute zero is not a
@@ -952,6 +966,8 @@ class TestTheGate:
 
 
 class TestRenderingAndCli:
+    """The rendered report's numbers, and the CLI's exit codes."""
+
     def test_the_rendered_report_states_the_rate_with_its_denominator(self) -> None:
         report = _report(known_residuals=["a"], failing_case_ids=["a"])
         text = "\n".join(report_lines(report, decide(report, _report())))
@@ -1006,6 +1022,8 @@ class TestRenderingAndCli:
 
 
 class TestNoDrift:
+    """Every constant this suite mirrors still matches its source."""
+
     def test_the_authorised_node_set_matches_the_router(self) -> None:
         # `AUTHORISED_NODES` is re-typed so the gate does not import the
         # model client. Re-typing is what keeps the tiers uncoupled;
@@ -1166,6 +1184,8 @@ class TestDegradedPaths:
 
 
 class TestPedagogyDenyList:
+    """The deny list is one list in three places, and fires on the shape."""
+
     def test_the_three_copies_of_the_deny_list_are_the_same_list(self) -> None:
         # Three enforcement points now, one vocabulary: the canonical
         # TypeScript list, the production Python constant this ADR
@@ -1253,6 +1273,8 @@ class TestPedagogyDenyList:
 
 
 class TestExtendedIsolationSurface:
+    """Every marker and boundary is distinct, and fires on its own shape."""
+
     def test_every_marker_id_is_unique_and_carries_a_category_code(self) -> None:
         ids = [marker.marker_id for marker in JAILBREAK_MARKERS]
         assert len(ids) == len(set(ids))

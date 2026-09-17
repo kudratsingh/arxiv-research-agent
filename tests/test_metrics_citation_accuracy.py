@@ -30,6 +30,8 @@ def _mk_citation(
 
 
 class TestNormalizeFirstAuthor:
+    """How a first author is normalised out of each citation style."""
+
     def test_single_author(self) -> None:
         assert _normalize_first_author("Smith") == "smith"
 
@@ -55,6 +57,8 @@ class TestNormalizeFirstAuthor:
 
 
 class TestMeasureCitationAccuracy:
+    """Which citations resolve, deduplicated, and what an empty report scores."""
+
     def test_all_citations_resolve(self) -> None:
         report = "As shown by [Smith, 2023], the method works."
         citations = [_mk_citation("Smith", "2023")]

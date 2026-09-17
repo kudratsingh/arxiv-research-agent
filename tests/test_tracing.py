@@ -59,6 +59,7 @@ def in_memory_tracer(monkeypatch: pytest.MonkeyPatch) -> InMemorySpanExporter:
 
 
 class TestTracedNodeDisabled:
+    """With tracing off the decorator returns the function untouched."""
     def test_returns_original_fn_when_disabled(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -75,6 +76,7 @@ class TestTracedNodeDisabled:
 
 
 class TestTracedNodeEnabled:
+    """What a node span is named, and which attributes it records."""
     def test_creates_conventionally_named_span(
         self, in_memory_tracer: InMemorySpanExporter
     ) -> None:
@@ -244,6 +246,7 @@ class TestTracedNodeEnabled:
 
 
 class TestConfigureTracing:
+    """Configuring is a no-op when disabled, and idempotent otherwise."""
     def test_no_op_when_disabled(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

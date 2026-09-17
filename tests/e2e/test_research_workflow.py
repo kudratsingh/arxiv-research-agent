@@ -88,6 +88,7 @@ def _message_trajectory(messages: Sequence[Any]) -> list[str]:
 
 
 class TestFullResearchWorkflow:
+    """A query reaches a cited report, and the trajectory says how."""
     def test_a_query_reaches_a_cited_report_through_every_node_in_order(
         self,
         install_settings: Callable[..., Any],

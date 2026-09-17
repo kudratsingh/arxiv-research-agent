@@ -106,6 +106,8 @@ async def _cancel(task: asyncio.Task[None]) -> None:
 
 
 class TestCadence:
+    """The sweep's timing: a jittered first wait, then once per interval."""
+
     async def test_first_wait_is_a_jittered_fraction_of_the_interval(
         self,
     ) -> None:
@@ -152,6 +154,8 @@ class TestCadence:
 
 
 class TestFailuresDoNotStopTheLoop:
+    """A sweep that fails, hangs or is cancelled leaves the loop healthy."""
+
     async def test_a_failing_sweep_is_retried_next_interval(self) -> None:
         # Reconciliation is best-effort housekeeping; a redriver bug
         # (or a Redis blip) must not silently end the sweep for the
@@ -208,6 +212,8 @@ class TestFailuresDoNotStopTheLoop:
 
 
 class TestReclaimAfterBoot:
+    """A lease that expires after boot is still reclaimed."""
+
     async def test_lease_that_expires_after_boot_is_reclaimed(self) -> None:
         """The restart timeline, compressed into two sweeps.
 
@@ -255,6 +261,8 @@ class TestReclaimAfterBoot:
 
 
 class TestLifespanWiring:
+    """The sweep task exists exactly when the app is configured for one."""
+
     async def _app(self, store: Any) -> Any:
         return app_module.create_app(
             build_workflow=lambda: MagicMock(name="compiled_workflow"),

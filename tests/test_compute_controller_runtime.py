@@ -212,6 +212,8 @@ def _job(query: str, job_id: str = "cap04-job") -> Job:
 
 
 class TestTheRunnerSelectsTheTiersGraph:
+    """The runner runs the graph the tier chose, and never tiers a session."""
+
     async def test_with_the_controller_off_the_handed_graph_runs(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -295,6 +297,8 @@ class TestTheRunnerSelectsTheTiersGraph:
 
 
 class TestTheTierIsBoundForTheRun:
+    """The tier is visible inside the graph, and gone once the run ends."""
+
     async def test_the_tier_is_visible_inside_the_graph_and_gone_after(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -329,6 +333,8 @@ class TestTheTierIsBoundForTheRun:
 
 
 class TestTheTrajectoryCarriesTheDecision:
+    """The decision reaches the trajectory, carrying no query text with it."""
+
     async def test_a_t0_execution_inside_arm_e_keeps_both_identities(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

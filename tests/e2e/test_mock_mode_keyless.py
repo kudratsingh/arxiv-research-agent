@@ -128,6 +128,7 @@ def _drive(app: Any, state: ResearchState) -> tuple[list[str], dict[str, Any]]:
 
 
 class TestTheKeylessGraph:
+    """The graph reaches a labelled briefing with no model and no key."""
     def test_a_query_reaches_a_labelled_briefing_with_no_model_and_no_key(
         self,
         install_settings: Callable[..., Any],
@@ -316,6 +317,7 @@ async def keyless_server(
 
 
 class TestTheKeylessHttpSurface:
+    """The keyless path over HTTP, down to its terminal frame."""
     async def test_a_job_submitted_without_a_key_succeeds_and_exports(
         self,
         keyless_server: AsyncClient,

@@ -117,6 +117,8 @@ def _complete_set(
 
 
 class TestShippedFixturesAreHonest:
+    """Every shipped fixture declares its provenance and claims no session."""
+
     def test_the_fixture_directory_validates(self) -> None:
         assert validate_fixtures() == []
 
@@ -321,6 +323,8 @@ class TestTheW03CompletionGate:
 
 
 class TestProvenanceValidation:
+    """A fixture that misstates how it was made is rejected."""
+
     def test_a_fixture_claiming_a_real_session_is_rejected(
         self, tmp_path: Path
     ) -> None:
@@ -414,6 +418,8 @@ class TestProvenanceValidation:
 
 
 class TestTranscriptValidation:
+    """A transcript that contradicts its scenario or leaks a probe is rejected."""
+
     def test_an_assessment_event_without_evidence_is_rejected(
         self, tmp_path: Path
     ) -> None:
@@ -525,6 +531,8 @@ class TestTranscriptValidation:
 
 
 class TestPlanFixtures:
+    """The plan judge's pair: one honest plan and one that is not."""
+
     def test_the_judge_pair_exists_for_one_scenario(self) -> None:
         # WO-W09 c2 needs both halves of a pair on the same scenario, or
         # its plan-judge test compares nothing.
@@ -607,6 +615,8 @@ class TestPlanFixtures:
 
 
 class TestLoaderFailsLoudly:
+    """Every loader failure names what was wrong rather than failing quietly."""
+
     def test_a_missing_manifest_raises(self, tmp_path: Path) -> None:
         with pytest.raises(ValueError, match="manifest is missing"):
             load_manifest(tmp_path)

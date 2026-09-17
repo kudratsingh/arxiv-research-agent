@@ -62,6 +62,7 @@ async def _run(job_id: str, workflow: Any) -> tuple[Job, InMemoryJobStore]:
 
 
 class TestCancellationBetweenNodes:
+    """A cancel between nodes stops the run and says who stopped it."""
     async def test_the_next_node_never_runs_and_the_job_says_why(
         self,
         triple: TripleObserver,
@@ -124,6 +125,7 @@ class TestCancellationBetweenNodes:
 
 
 class TestCancellationInsideANode:
+    """A cancel inside a node stops the spend before the request leaves."""
     async def test_a_cancelled_job_stops_spending_before_the_request_leaves(
         self,
         triple: TripleObserver,
@@ -205,6 +207,7 @@ class TestCancellationInsideANode:
 
 
 class TestCancellationAtShutdown:
+    """A shutdown cancel is a cancelled job, not a failed one."""
     async def test_a_shutdown_cancel_is_a_cancelled_job_not_a_failed_one(
         self,
         triple: TripleObserver,

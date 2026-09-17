@@ -47,6 +47,7 @@ def _mk_paper(
 # already carried its own marker.
 @pytest.mark.unit
 class TestBuildUserPrompt:
+    """What the reader's prompt carries, with and without excerpts."""
     def test_always_includes_query_title_abstract(self) -> None:
         paper = _mk_paper(title="Hallu Survey", abstract="LLMs hallucinate.")
         prompt = _build_user_prompt(paper, "How to reduce hallucination?", "")
@@ -71,6 +72,7 @@ class TestBuildUserPrompt:
 
 @pytest.mark.unit
 class TestGatherContextFallback:
+    """Every way context gathering comes back empty."""
     def test_pdf_fetch_failure_returns_empty(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -112,6 +114,7 @@ class TestGatherContextFallback:
 
 @pytest.mark.unit
 class TestGatherContextFormatting:
+    """Ranked chunks are formatted with the section they came from."""
     def test_formats_ranked_chunks_with_section_tags(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -193,6 +196,7 @@ def _fake_ranked_chunks() -> list[dict[str, Any]]:
 
 @pytest.mark.unit
 class TestNumberedChunkFormatting:
+    """Excerpts are numbered from one and tagged by section."""
     def test_numbers_start_at_one_and_tag_section(self) -> None:
         formatted = _format_numbered_chunks(_fake_ranked_chunks())  # type: ignore[arg-type]
         assert formatted.startswith("[1] [method] We use")
@@ -201,6 +205,7 @@ class TestNumberedChunkFormatting:
 
 @pytest.mark.unit
 class TestEvidencePromptShape:
+    """The evidence prompt carries the sub-questions and numbered excerpts."""
     def test_evidence_prompt_includes_sub_questions_and_numbered_excerpts(
         self,
     ) -> None:
@@ -218,6 +223,7 @@ class TestEvidencePromptShape:
 
 @pytest.mark.unit
 class TestParseClaim:
+    """Which claims bind to a source span, and which are dropped."""
     def _ranked(self) -> list[dict[str, Any]]:
         return _fake_ranked_chunks()
 
@@ -288,6 +294,7 @@ class TestParseClaim:
 
 @pytest.mark.unit
 class TestAnalyzePaperEvidencePath:
+    """The evidence path's claims, capped, and absent when the flag is off."""
     def _stub_pipeline(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -435,6 +442,7 @@ class TestAnalyzePaperEvidencePath:
 
 @pytest.mark.unit
 class TestReaderAgentEmission:
+    """The evidence key appears in state only when the flag is on."""
     def test_flag_off_omits_evidence_key(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

@@ -75,6 +75,8 @@ def _closed(app: Any) -> None:
 
 
 class TestTheSwitchOffIsInvisible:
+    """With the shadow off, the runner neither imports it nor records it."""
+
     def test_no_contract_module_reaches_the_runners_import_graph(self) -> None:
         """`import src.api.runner` must not drag in `src.contracts`.
 
@@ -171,6 +173,8 @@ class TestTheSwitchOffIsInvisible:
 
 
 class TestACannedRunThroughTheRealGraph:
+    """One canned run, sealed end to end: spec, manifest, trajectory."""
+
     def test_one_spec_one_manifest_and_the_trajectory_the_e2e_test_pins(
         self,
         install_settings: Callable[..., Any],
@@ -304,6 +308,8 @@ class TestACannedRunThroughTheRealGraph:
 
 
 class TestArmIdentityAgainstTheCompiledGraph:
+    """Every buildable arm compiles to a manifest only that arm produces."""
+
     def test_every_buildable_arm_compiles_to_its_own_manifest(
         self, install_settings: Callable[..., Any]
     ) -> None:
@@ -492,6 +498,8 @@ CRITIC_RESPONSE = {
 
 
 class TestTheRunnerHooksFireOnARealJob:
+    """A real HTTP job leaves a trajectory that matches the run it made."""
+
     async def test_an_http_job_succeeds_and_leaves_a_matching_trajectory(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

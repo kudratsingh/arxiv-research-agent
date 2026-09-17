@@ -329,6 +329,8 @@ class TestTheNamesAreTheStandardsNames:
 
 
 class TestConventionalSpans:
+    """Each span carries the attributes the conventions require of it."""
+
     def test_llm_span_carries_the_required_pair_and_the_request(
         self, spans: InMemorySpanExporter
     ) -> None:
@@ -482,6 +484,8 @@ class TestConventionalSpans:
 
 
 class TestConventionalMetrics:
+    """The client metrics are emitted under their exact conventional names."""
+
     def test_the_client_metrics_are_emitted_under_their_exact_names(
         self, reader: InMemoryMetricReader
     ) -> None:
@@ -634,6 +638,8 @@ class TestConventionalMetrics:
 
 
 class TestJobOutcomeCorrections:
+    """The job counters separate kind, degraded close, and queue wait."""
+
     def test_kind_separates_research_from_session(
         self, reader: InMemoryMetricReader
     ) -> None:
@@ -793,6 +799,8 @@ class _TracedStub:
 
 
 class TestTraceContinuity:
+    """One trace spans submit, node and model call, across the job row."""
+
     async def test_submit_node_and_model_call_share_one_trace(
         self,
         spans: InMemorySpanExporter,
@@ -1075,6 +1083,8 @@ class TestSamplingConfiguration:
 
 
 class TestTracerShutdown:
+    """Shutdown flushes and disarms, even when the flush itself fails."""
+
     def test_shutdown_flushes_and_disarms(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -1126,6 +1136,8 @@ class TestTracerShutdown:
 
 
 class TestPerInvocationCounters:
+    """Calls are counted against the agent span they were made inside."""
+
     def test_a_nodes_model_and_tool_calls_are_counted_against_it(
         self, reader: InMemoryMetricReader, spans: InMemorySpanExporter
     ) -> None:
@@ -1297,6 +1309,8 @@ class TestProviderConstruction:
 
 
 class TestTracedToolDecorator:
+    """The decorator opens a span and keeps the function's behaviour."""
+
     def test_the_decorator_opens_a_span_and_keeps_the_function(
         self, spans: InMemorySpanExporter
     ) -> None:
@@ -1338,6 +1352,8 @@ class TestTracedToolDecorator:
 
 
 class TestFailingScopesAreRecorded:
+    """A failing scope records its error type and still reports its counts."""
+
     def test_a_failing_workflow_records_its_error_type(
         self, spans: InMemorySpanExporter, reader: InMemoryMetricReader
     ) -> None:

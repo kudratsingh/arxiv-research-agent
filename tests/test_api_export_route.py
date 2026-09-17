@@ -76,6 +76,8 @@ async def _submit_and_wait(client: AsyncClient) -> str:
 
 
 class TestExportSuccessPath:
+    """Each export format comes back with the right headers and body."""
+
     @pytest.mark.parametrize(
         "fmt,expected_mime,expected_ext",
         [
@@ -150,6 +152,8 @@ class TestExportSuccessPath:
 
 
 class TestExportGuards:
+    """What export refuses: a missing job, an absent report, a bad format."""
+
     async def test_missing_job_is_404(self) -> None:
         app = create_app(build_workflow=lambda: _StubWorkflow())
         async with LifespanManager(app), AsyncClient(

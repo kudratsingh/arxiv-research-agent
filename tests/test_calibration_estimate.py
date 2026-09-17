@@ -62,6 +62,7 @@ def example() -> CostEstimate:
 
 
 class TestThePriceTableIsReadNotCopied:
+    """Prices come from the product's own table, never a local copy."""
     def test_the_table_is_the_products_own(self, prices: dict[str, dict[str, float]]) -> None:
         from src.observability.costs import PRICES_USD_PER_MILLION
 
@@ -107,6 +108,7 @@ class TestThePriceTableIsReadNotCopied:
 
 
 class TestTheArithmetic:
+    """The costing arithmetic, reproduced against the worked example."""
     def test_one_line_costs_what_the_table_says(self) -> None:
         line = JudgeCallLine(
             label="single-item verdicts",
@@ -173,6 +175,7 @@ class TestTheArithmetic:
 
 
 class TestStaleness:
+    """An old price table produces a note naming the gap, and it is rendered."""
     def test_a_fresh_table_produces_no_note(self) -> None:
         assert price_staleness("2026-09-01", today=TODAY) is None
 
@@ -205,6 +208,7 @@ class TestStaleness:
 
 
 class TestNothingHereIsAnApproval:
+    """An estimate can never read as an approval or as a started campaign."""
     def test_the_estimate_always_requires_repricing(self, example: CostEstimate) -> None:
         assert example.requires_repricing is True
 
@@ -234,6 +238,7 @@ class TestNothingHereIsAnApproval:
 
 
 class TestStopConditions:
+    """Every estimate carries stop conditions, and each names an action."""
     def test_an_estimate_without_stop_conditions_is_refused(
         self, example: CostEstimate
     ) -> None:
@@ -293,6 +298,7 @@ class TestStopConditions:
 
 
 class TestTheRenderedPacket:
+    """What the rendered packet has to state before anyone can fund it."""
     def test_it_names_the_exact_model_it_was_costed_on(self, example: CostEstimate) -> None:
         rendered = render(example, today=TODAY)
 
@@ -340,6 +346,7 @@ class TestTheRenderedPacket:
 
 
 class TestTheTemplateIsUsableWithoutTheProductsTable:
+    """A caller may supply its own prices, and its own stop condition."""
     def test_a_caller_may_supply_its_own_prices(self) -> None:
         estimate = worked_example(
             items=10,

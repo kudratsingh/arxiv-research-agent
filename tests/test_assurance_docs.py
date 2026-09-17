@@ -106,6 +106,8 @@ def _cited_paths(page: Path) -> list[tuple[str, Path, int | None]]:
 
 @pytest.mark.parametrize("page", PAGES, ids=lambda p: p.name)
 class TestEveryCitedArtifactResolves:
+    """Every path, line number and digest the assurance pack cites resolves."""
+
     def test_the_page_exists_and_cites_something(self, page: Path) -> None:
         assert page.is_file(), f"{page} is missing"
         assert _cited_paths(page), f"{page.name} cites no repository paths at all"
@@ -179,6 +181,8 @@ class TestTheHonestColumnsStayNonEmpty:
 
 
 class TestTheEvidencePackIsSelfDescribing:
+    """The pack carries its own SBOM, captures, and the commit it describes."""
+
     def test_the_sbom_is_committed_and_is_cyclonedx(self) -> None:
         import json
 

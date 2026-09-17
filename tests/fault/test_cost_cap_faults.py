@@ -73,6 +73,7 @@ async def _run_capped_job(
 
 
 class TestTheCapTripsMidRun:
+    """A ceiling tripped mid-run agrees on code, event, metric and spend."""
     async def test_a_capped_run_agrees_on_the_code_the_event_and_the_metric(
         self,
         triple: TripleObserver,

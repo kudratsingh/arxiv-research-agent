@@ -31,6 +31,8 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 class TestPlanBounds:
+    """The plan schema's caps, enforced as model validation."""
+
     def test_plan_at_the_caps_validates(self) -> None:
         plan = Plan(
             sub_questions=["s" * MAX_PLAN_ITEM_LEN] * MAX_PLAN_ITEMS,
@@ -74,6 +76,8 @@ class TestPlanBounds:
 
 
 class TestServeGracefulShutdown:
+    """Uvicorn is started with a bounded graceful shutdown."""
+
     def test_uvicorn_run_gets_bounded_graceful_shutdown(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -97,6 +101,8 @@ class TestServeGracefulShutdown:
 
 
 class TestPostgresPoolTimeouts:
+    """The pool carries server-side timeouts, and the schema its indexes."""
+
     def test_pool_kwargs_carry_server_side_timeouts(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

@@ -66,6 +66,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestInitialState:
+    """The initial state carries every key the graph expects."""
+
     def test_returns_all_researchstate_keys(self) -> None:
         state = _initial_state("what is X?", "run-a")
         expected = {
@@ -110,6 +112,8 @@ class TestInitialState:
 
 
 class TestSerializeState:
+    """Serialization drops the messages and keeps everything else."""
+
     def test_drops_messages(self) -> None:
         state: ResearchState = _initial_state("q", "r")
         state["messages"] = ["not-serializable-marker"]  # type: ignore[typeddict-item]
@@ -131,6 +135,8 @@ class TestSerializeState:
 
 
 class TestGetScore:
+    """How a score is read out of a metric, and when it reads as absent."""
+
     def test_extracts_score_from_metric_dict(self) -> None:
         metrics = {"citation_accuracy": {"score": 0.75, "resolved": 3}}
         assert _get_score(metrics, "citation_accuracy") == 0.75
@@ -154,6 +160,8 @@ class TestGetScore:
 
 
 class TestGetCount:
+    """How a counter is read, and why a bool is not one."""
+
     def test_extracts_integer_counter(self) -> None:
         metrics = {"citation_accuracy": {"score": 1.0, "total_citations": 0}}
         assert _get_count(metrics, "citation_accuracy", "total_citations") == 0
@@ -167,6 +175,8 @@ class TestGetCount:
 
 
 class TestFmt:
+    """How each value type is formatted for the summary table."""
+
     def test_none_dashes(self) -> None:
         assert _fmt(None) == "-"
 
@@ -206,6 +216,8 @@ class TestFmtCellText:
 
 
 class TestMean:
+    """The mean ignores absent values, and an empty set has none."""
+
     def test_computes_mean_ignoring_nones(self) -> None:
         rows = [
             {"score": 1.0},
@@ -223,6 +235,8 @@ class TestMean:
 
 
 class TestCostDelta:
+    """The cost delta differences the scalar totals only."""
+
     def test_differences_scalar_totals(self) -> None:
         before = {"total_cost_usd": 1.0, "call_count": 3, "total_input_tokens": 10}
         after = {"total_cost_usd": 1.75, "call_count": 5, "total_input_tokens": 40}
@@ -241,6 +255,8 @@ class TestCostDelta:
 
 
 class TestRecordTotalCost:
+    """A record's total is its workflow and judge spend together."""
+
     def test_sums_workflow_and_judge(self) -> None:
         record = {
             "costs": {"total_cost_usd": 0.30},
@@ -258,6 +274,8 @@ class TestRecordTotalCost:
 
 
 class TestSummaryLine:
+    """What one summary row carries, including the split costs."""
+
     def test_extracts_scores_state_and_split_cost_fields(self) -> None:
         record = {
             "query_id": "q1",
@@ -499,6 +517,8 @@ class TestResearchProvenance:
 
 
 class TestSummaryMarkdown:
+    """The rendered summary's counts, aggregates and escaping."""
+
     def test_header_and_counts_present(self) -> None:
         records = [
             {
@@ -603,6 +623,8 @@ class TestSummaryMarkdown:
 
 
 class TestSelectQueries:
+    """Selection preserves the requested order and refuses unknown ids."""
+
     def test_none_returns_all(self) -> None:
         result = _select_queries(None)
         assert len(result) == len(BENCHMARK_QUERIES)
@@ -622,6 +644,8 @@ class TestSelectQueries:
 
 
 class TestBenchmarkOrder:
+    """Known ids sort in benchmark order, and unknown ones last."""
+
     def test_known_ids_sort_in_benchmark_order(self) -> None:
         ids = [q["query_id"] for q in BENCHMARK_QUERIES]
         shuffled = list(reversed(ids))
@@ -715,6 +739,8 @@ def _stub_metrics(
 
 
 class TestComputeMetrics:
+    """One failing judge stops no other, and an interrupt passes through."""
+
     def test_all_five_scored_and_no_error(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -807,6 +833,8 @@ def _finished_state(report: str = "A report body [Smith, 2023].") -> ResearchSta
 
 
 class TestRunAndScoreSuccess:
+    """What a successful episode leaves on the record, and releases."""
+
     def test_populates_record_fields(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -911,6 +939,8 @@ class TestRunAndScoreSuccess:
 
 
 class TestRunAndScoreError:
+    """What a failing episode still records, and still releases."""
+
     def test_workflow_exception_captured_on_record(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -1079,6 +1109,8 @@ def _record(qid: str, err: str | None = None, cost: float = 0.0) -> dict[str, An
 
 
 class TestPersistRecord:
+    """A record is written per query and appended to the summary."""
+
     def test_writes_per_query_json_and_appends_summary_line(
         self, tmp_path: Path
     ) -> None:
@@ -1110,6 +1142,8 @@ class TestPersistRecord:
 
 
 class TestLoadRecords:
+    """Reading records back, skipping whatever cannot be read."""
+
     def test_reads_back_persisted_records(self, tmp_path: Path) -> None:
         persist_record(tmp_path, _record("q1"))
         persist_record(tmp_path, _record("q2"))
@@ -1135,6 +1169,8 @@ class TestLoadRecords:
 
 
 class TestRebuildSummaries:
+    """Summaries rebuild from disk in benchmark order, without duplicates."""
+
     def test_rebuilds_from_disk_in_benchmark_order(self, tmp_path: Path) -> None:
         ids = [q["query_id"] for q in BENCHMARK_QUERIES[:3]]
         for qid in reversed(ids):
@@ -1173,6 +1209,8 @@ class TestRebuildSummaries:
 
 
 class TestCheckOutputDir:
+    """Which output directories are refused, and how resume changes that."""
+
     def test_missing_directory_is_fine(self, tmp_path: Path) -> None:
         assert _check_output_dir(tmp_path / "new", resume=False) is None
 
@@ -1205,6 +1243,8 @@ class TestCheckOutputDir:
 
 
 class TestExitCode:
+    """The exit codes, their precedence, and their distinctness."""
+
     def test_all_succeeded(self) -> None:
         assert (
             _exit_code(
@@ -1268,6 +1308,8 @@ class TestExitCode:
 
 
 class TestInterruptHandler:
+    """SIGTERM becomes a keyboard interrupt, and the handler is restored."""
+
     def test_sigterm_raises_keyboard_interrupt_and_restores(self) -> None:
         # P0/P1 mutation check: SIGTERM's default disposition kills the
         # process without unwinding, so no `finally` runs and nothing
@@ -1322,6 +1364,8 @@ def _fake_runs(
 
 
 class TestMain:
+    """The runner's command line, end to end, including kill and resume."""
+
     def test_missing_api_key_exits_config(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

@@ -258,6 +258,8 @@ async def live_server(
 
 
 class TestHttpSurface:
+    """Submit, stream, fetch and export, in the order a client does them."""
+
     async def test_a_client_submits_streams_fetches_and_exports_one_job(
         self,
         live_server: tuple[AsyncClient, threading.Event],

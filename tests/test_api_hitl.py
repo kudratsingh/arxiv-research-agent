@@ -220,6 +220,8 @@ async def _wait_for_status(
 
 
 class TestHitlPause:
+    """A run reaches pending review and exposes the plan, unless bypassed."""
+
     async def test_reaches_pending_review_and_exposes_plan(self) -> None:
         stub = InterruptingStub()
         app = _app_with(stub)
@@ -257,6 +259,8 @@ class TestHitlPause:
 
 
 class TestReviewApprove:
+    """An approval resumes the run without edits."""
+
     async def test_approve_resumes_without_edits(self) -> None:
         stub = InterruptingStub()
         app = _app_with(stub)
@@ -280,6 +284,8 @@ class TestReviewApprove:
 
 
 class TestReviewRevise:
+    """A revision applies the plan edits before the run resumes."""
+
     async def test_revise_applies_plan_edits_before_resume(self) -> None:
         stub = InterruptingStub()
         app = _app_with(stub)
@@ -410,6 +416,8 @@ class TestPlanBounds:
 
 
 class TestResumePublishFailure:
+    """A publish failure on resume is logged, and review still answers."""
+
     async def test_publish_failure_is_logged_and_review_returns_200(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
@@ -467,6 +475,8 @@ class TestResumePublishFailure:
 
 
 class TestReviewCancel:
+    """A cancelled review moves the job to cancelled."""
+
     async def test_cancel_transitions_to_cancelled(self) -> None:
         stub = InterruptingStub()
         app = _app_with(stub)
@@ -485,6 +495,8 @@ class TestReviewCancel:
 
 
 class TestReviewGuards:
+    """What review refuses: a missing job, a wrong state, a bad action."""
+
     async def test_review_missing_job_returns_404(self) -> None:
         stub = InterruptingStub()
         app = _app_with(stub)
@@ -540,6 +552,8 @@ class TestReviewGuards:
 
 
 class TestReviewTimeout:
+    """A review nobody answers fails the job."""
+
     async def test_hitl_timeout_fails_the_job(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -560,6 +574,8 @@ class TestReviewTimeout:
 
 
 class TestNoDoubleRun:
+    """A completed run streams once and is never invoked again."""
+
     async def test_completed_run_streams_once_and_never_invokes(self) -> None:
         """The audit's double-run: the old trailing
         `invoke(initial_state)` re-executed the whole graph — every
@@ -585,6 +601,8 @@ class TestNoDoubleRun:
 
 
 class TestMultiPauseResumeLoop:
+    """A second pause auto-resumes without another review."""
+
     async def test_second_pause_auto_resumes_without_review(self) -> None:
         """`interrupt_after` re-arms when the critic routes back to
         the planner. A single-pause runner returned the interrupt
@@ -627,6 +645,8 @@ class TestMultiPauseResumeLoop:
 
 
 class TestPlanReadyEvent:
+    """The plan-ready frame arrives before the terminal one."""
+
     async def test_stream_emits_plan_ready_before_terminal(self) -> None:
         stub = InterruptingStub()
         app = _app_with(stub)
@@ -661,6 +681,8 @@ class TestPlanReadyEvent:
 
 
 class TestJobStatusEnum:
+    """Pending review is a non-terminal status."""
+
     def test_pending_review_is_non_terminal(self) -> None:
         from src.api.jobs import TERMINAL_STATUSES
 
@@ -696,6 +718,8 @@ class _NoCheckpointerStub:
 
 
 class TestAgetStateFailureModes:
+    """What the runner does when the graph cannot report its state."""
+
     async def test_no_checkpointer_falls_back_to_merged_updates(self) -> None:
         """`ValueError: No checkpointer set` is the one aget_state
         failure that means "nothing to read back" — the job must

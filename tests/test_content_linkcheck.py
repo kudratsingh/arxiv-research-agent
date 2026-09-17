@@ -69,6 +69,8 @@ def _target(url: str) -> LinkTarget:
 
 
 class TestCheckTarget:
+    """What counts as a broken link, and what only looks broken."""
+
     def test_a_200_is_ok(self) -> None:
         session = _StubSession()
         result = check_target(session, _target("https://example.org/"), timeout=1)
@@ -111,6 +113,8 @@ class TestCheckTarget:
 
 
 class TestCollectAndReport:
+    """Every published URL is collected, paced per host, and reported."""
+
     def test_every_url_a_manifest_publishes_is_collected(self) -> None:
         paths = load_content_root(default_content_root())
         targets = collect_targets(paths.values())
@@ -158,6 +162,8 @@ class TestCollectAndReport:
 
 
 class TestCli:
+    """The link checker's command line and its machine-readable output."""
+
     @pytest.fixture(autouse=True)
     def _clear_cache(self) -> None:
         loader.clear_cache()

@@ -113,6 +113,7 @@ def nodes_of(app: Any) -> set[str]:
 
 
 class TestTheDefaultTableDidNotMove:
+    """The shipped controller decides exactly what it always decided."""
     def test_the_default_ceiling_evaluates_exactly_the_baselined_rules(
         self,
     ) -> None:
@@ -204,6 +205,7 @@ class TestTheDefaultTableDidNotMove:
 
 
 class TestTheBranchTierIsReachableWhenAskedFor:
+    """A raised ceiling escalates only the branch-shaped query."""
     def test_the_rules_are_only_evaluated_under_a_raised_ceiling(self) -> None:
         assert _rules_for(BRANCH_TIER) == (*TIER_RULES, *BRANCH_TIER_RULES)
 
@@ -417,6 +419,7 @@ class TestTheBranchTierIsReachableWhenAskedFor:
 
 
 class TestTheShapeIsClassifiedAsItself:
+    """The branch graph seals as itself, and never as an arm it is not."""
     def test_the_branch_graph_is_not_recorded_as_arm_c(self) -> None:
         """It carries verify and repair, and is still not arm C.
 
@@ -543,6 +546,7 @@ class TestTheShapeIsClassifiedAsItself:
 
 
 class TestTheSettingsRefuseAContradiction:
+    """The settings refuse a configuration that contradicts the shape."""
     @pytest.mark.parametrize(
         ("overrides", "message"),
         [

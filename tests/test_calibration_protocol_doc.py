@@ -59,6 +59,7 @@ def _digits(text: str, pattern: str) -> int:
 
 
 class TestTheSamplingNumbers:
+    """The document's sampling numbers are re-derived from the estimators."""
     def test_the_noise_floor_paragraph_matches_the_estimators(self, doc: str) -> None:
         floor = noise_floor()
 
@@ -112,6 +113,7 @@ class TestTheSamplingNumbers:
 
 
 class TestTheFixtureAndSuiteCounts:
+    """The document's corpus and registry counts match the tree."""
     def test_the_corpus_sizes_match(self, doc: str) -> None:
         cases = load_cases()
         pairs = load_pairwise()
@@ -159,6 +161,7 @@ class TestTheFixtureAndSuiteCounts:
 
 
 class TestTheCostExample:
+    """The document's worked cost example matches the estimate template."""
     def test_the_priced_totals_match_the_template(self, doc: str) -> None:
         prices, verified = current_price_table()
         estimate = default_example(items=141, pairwise_items=40, priced_on="2026-09-05")
@@ -199,6 +202,7 @@ class TestTheCostExample:
 
 
 class TestTheThresholdsAndVocabulary:
+    """The document's thresholds and vocabularies are the module's own."""
     def test_the_proposed_thresholds_match_the_module(self, doc: str) -> None:
         assert f"| {DEFAULT_THRESHOLDS.false_pass_ceiling:.2f} |" in doc
         assert f"| {DEFAULT_THRESHOLDS.phi_floor:.2f} |" in doc
@@ -217,6 +221,7 @@ class TestTheThresholdsAndVocabulary:
 
 
 class TestTheDocumentSaysNothingHasStarted:
+    """The document still states that no judge and no campaign has run."""
     def test_the_status_line_names_no_spend(self, doc: str) -> None:
         assert "NO JUDGING, NO LABELING CAMPAIGN, NO SPEND" in doc
 
@@ -236,6 +241,7 @@ class TestTheDocumentSaysNothingHasStarted:
 
 
 class TestTheIndex:
+    """The protocol is listed in the index, with no gap and no stale count."""
     def test_the_protocol_is_listed_in_the_documents_index(self) -> None:
         index = _INDEX.read_text(encoding="utf-8")
 

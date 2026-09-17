@@ -78,6 +78,8 @@ async def _run_to_success(store: InMemoryJobStore, workflow: Any) -> Job:
 
 
 class TestTheTerminalFrameCannotBeDelivered:
+    """An undeliverable terminal frame is retried, logged, then given up."""
+
     async def test_the_job_row_is_correct_and_the_give_up_is_an_error(
         self,
         triple: TripleObserver,
@@ -191,6 +193,8 @@ class TestTheTerminalFrameCannotBeDelivered:
 
 
 class TestAnIntermediateFrameCannotBeDelivered:
+    """A dropped progress frame degrades the stream, not the job."""
+
     async def test_a_dropped_progress_frame_degrades_the_stream_not_the_job(
         self,
         triple: TripleObserver,

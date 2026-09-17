@@ -23,6 +23,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestCacheKey:
+    """How a cache key is derived, and when a URL is hashed instead."""
+
     def test_extracts_arxiv_id_from_pdf_url(self) -> None:
         assert _cache_key("https://arxiv.org/pdf/2311.09000") == "2311.09000"
 
@@ -151,6 +153,8 @@ class TestDownloadPdf:
 
 
 class TestParsePdf:
+    """The cached paths, and the empty input that never downloads."""
+
     def test_empty_url_returns_empty_string(self, tmp_path: Path) -> None:
         assert parse_pdf("", cache_dir=tmp_path) == ""
 
@@ -196,6 +200,8 @@ def _fake_getaddrinfo(address: str):  # type: ignore[no-untyped-def]
 # they are selectable on their own with `pytest -m security`.
 @pytest.mark.security
 class TestUpgradeArxivScheme:
+    """An arXiv URL is upgraded to HTTPS; others are left alone."""
+
     def test_http_arxiv_upgraded_to_https(self) -> None:
         assert (
             _upgrade_arxiv_scheme("http://arxiv.org/pdf/2311.09000")
@@ -213,6 +219,8 @@ class TestUpgradeArxivScheme:
 
 @pytest.mark.security
 class TestIsFetchable:
+    """Which hosts are fetchable, and which addresses are refused."""
+
     def test_arxiv_https_trusted_without_dns(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -260,6 +268,8 @@ class TestIsFetchable:
 
 @pytest.mark.security
 class TestDownloadRedirectValidation:
+    """Every redirect hop is revalidated, and a loop gives up."""
+
     def _redirect_response(self, location: str) -> MagicMock:
         resp = MagicMock()
         resp.status_code = 302

@@ -19,6 +19,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestJob:
+    """The job model's defaults, terminal set, and elapsed-time rules."""
+
     def test_defaults(self) -> None:
         job = Job(job_id="abc", query="q")
         assert job.status == JobStatus.pending
@@ -60,6 +62,8 @@ class TestJob:
 
 
 class TestInMemoryJobStore:
+    """The in-memory store's create, update, eviction and isolation."""
+
     async def test_create_then_get(self) -> None:
         store = InMemoryJobStore()
         job = Job(job_id="j1", query="q")
@@ -123,6 +127,8 @@ class TestInMemoryJobStore:
 
 
 class TestDrainEvents:
+    """Draining yields events until the job is terminal and the queue empty."""
+
     async def test_yields_events_until_terminal(self) -> None:
         job = Job(job_id="j", query="q")
         await job.event_queue.put({"event": "node_started", "data": {"node": "planner"}})

@@ -495,6 +495,8 @@ def mock_judge_matrix(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Matr
 
 
 class TestTheFullMatrixRunsAtZeroCost:
+    """The whole matrix runs, accounts for every slot, and spends nothing."""
+
     #: `integration`, not `e2e`: `tests/test_documented_claims.py::
     #: TestTheE2eTier::test_the_marker_and_the_directory_are_the_same_set`
     #: requires every `e2e`-marked module to live under `tests/e2e/`,
@@ -916,6 +918,8 @@ class TestTheFullMatrixRunsAtZeroCost:
 # 1b. The opt-in mock-judge matrix, still at exactly zero
 # ---------------------------------------------------------------------------
 class TestTheFullMockJudgeMatrixRunsAtZeroCost:
+    """The mock judge scores every episode with no client and no cost."""
+
     pytestmark = [pytest.mark.integration, pytest.mark.contract]
 
     @pytest.mark.timeout(300)
@@ -973,6 +977,8 @@ class TestTheFullMockJudgeMatrixRunsAtZeroCost:
 
 
 class TestKillAndResume:
+    """A resumed campaign finishes what is left and keeps what it sealed."""
+
     pytestmark = [pytest.mark.integration, pytest.mark.contract]
 
     def test_a_resumed_campaign_skips_what_finished_and_finishes_the_rest(
@@ -1176,6 +1182,8 @@ def chargeable(
 
 
 class TestTheCampaignBudgetStop:
+    """A cap smaller than the matrix stops between episodes, and holds."""
+
     pytestmark = [pytest.mark.integration, pytest.mark.contract]
 
     def test_a_cap_smaller_than_the_matrix_stops_between_episodes(
@@ -1328,6 +1336,8 @@ class TestTheCampaignBudgetStop:
 
 
 class TestAdmissionGatesTheProvider:
+    """A metered provider is admitted by an approval record, never a key."""
+
     pytestmark = [pytest.mark.integration, pytest.mark.security]
 
     def test_a_metered_campaign_without_an_approval_record_is_refused_first(
@@ -1460,6 +1470,8 @@ class TestAdmissionGatesTheProvider:
 
 
 class TestEveryOutcomeStaysInTheDenominator:
+    """Every outcome gets a bucket; nothing leaves the denominator."""
+
     pytestmark = [pytest.mark.integration, pytest.mark.contract]
 
     def test_errors_cancellations_timeouts_and_budget_stops_get_their_own_bucket(
@@ -1779,6 +1791,8 @@ def _extras(record: logging.LogRecord) -> set[str]:
 
 
 class TestTheRunVerb:
+    """The run verb's command line, and what it prints."""
+
     pytestmark = [pytest.mark.integration]
 
     def test_plan_then_run_prints_the_ledger_counts_as_json(

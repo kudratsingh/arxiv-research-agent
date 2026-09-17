@@ -188,6 +188,8 @@ async def _run_routing_through_a_job(
 
 
 class TestTheProviderRefusesTheRoutingCall:
+    """A failed routing call is reported even though the run carries on."""
+
     async def test_the_outage_is_reported_even_though_the_run_continues(
         self,
         triple: TripleObserver,
@@ -302,6 +304,8 @@ class TestTheProviderRefusesTheRoutingCall:
 
 
 class TestTheJudgeAnswersWithGarbage:
+    """An unparseable routing answer is not reported as an outage."""
+
     async def test_a_parse_failure_does_not_look_like_an_outage(
         self,
         triple: TripleObserver,
@@ -352,6 +356,8 @@ class TestTheJudgeAnswersWithGarbage:
 
 
 class TestCancellationIsNotABadRoute:
+    """A cancelled job stops instead of being routed."""
+
     async def test_a_cancelled_job_stops_instead_of_being_routed(
         self,
         triple: TripleObserver,

@@ -212,6 +212,8 @@ def three_branches() -> list[dict[str, Any]]:
 
 
 class TestOneBranchPerSubQuestion:
+    """The lead opens one branch per planned sub-question, and closes it."""
+
     def test_the_lead_creates_a_branch_for_every_planned_sub_question(
         self, tmp_path: Path
     ) -> None:
@@ -277,6 +279,8 @@ class TestOneBranchPerSubQuestion:
 
 
 class TestEachBranchsEvidenceTableIsACandidate:
+    """Every surviving branch records a candidate a selector can compare."""
+
     def test_every_succeeded_branch_records_a_candidate_the_selector_can_compare(
         self, tmp_path: Path
     ) -> None:
@@ -356,6 +360,8 @@ class TestEachBranchsEvidenceTableIsACandidate:
 
 
 class TestAFailedBranchIsPreservedRatherThanDropped:
+    """Each way a branch can end reaches the record, typed."""
+
     @pytest.mark.parametrize(
         ("status", "reason", "event_type", "field"),
         [
@@ -421,6 +427,8 @@ class TestAFailedBranchIsPreservedRatherThanDropped:
 
 
 class TestTheRecordSurvivesTheGraphsRepetitions:
+    """A branch seen three times is recorded once, and the chain verifies."""
+
     def test_the_same_branch_seen_three_times_is_recorded_once(
         self, tmp_path: Path
     ) -> None:
@@ -503,6 +511,8 @@ class TestTheRecordSurvivesTheGraphsRepetitions:
 
 
 class TestNothingElseMoved:
+    """A run without branches records no branch events, and still runs."""
+
     def test_a_node_update_without_branches_records_no_branch_events(
         self, tmp_path: Path
     ) -> None:

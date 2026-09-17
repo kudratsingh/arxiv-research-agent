@@ -62,6 +62,8 @@ def _override_settings(monkeypatch: pytest.MonkeyPatch, **overrides: object) -> 
 # Per-class tiers: the Postgres section below is `integration`.
 @pytest.mark.unit
 class TestDiskPaperCache:
+    """The disk cache's round trip, its directory, and its overwrite."""
+
     def test_get_returns_none_for_missing_key(self, tmp_path: Path) -> None:
         cache = DiskPaperCache(tmp_path)
         assert cache.get_text("missing") is None
@@ -119,6 +121,8 @@ if _postgres_available:
 @pytestmark_postgres
 @pytest.mark.integration
 class TestPostgresPaperCache:
+    """The Postgres cache's schema, its round trip and its upsert."""
+
     def test_schema_init_creates_paper_cache_table(self, pg_url: str) -> None:
         postgres_pool.init_schema()
 
@@ -167,6 +171,8 @@ class TestPostgresPaperCache:
 
 @pytest.mark.unit
 class TestFactory:
+    """The factory defaults to disk, selects Postgres, and reuses one."""
+
     def test_defaults_to_disk_impl(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

@@ -139,6 +139,8 @@ def session_settings(
 
 
 class TestGuidedReadSession:
+    """A guided read survives its pauses, its worker, and an early exit."""
+
     def test_a_session_pauses_for_every_turn_and_closes_on_recorded_evidence(
         self,
         session_settings: Callable[..., Any],

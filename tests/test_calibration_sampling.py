@@ -93,6 +93,7 @@ def _item(item_id: str, tags: tuple[str, ...], *, resolved: bool) -> LabelledIte
 
 
 class TestTheSlicesAre07Section8s:
+    """The declared slices and failure classes are the ones the RFC names."""
     def test_five_axes_with_two_levels_each(self) -> None:
         assert len(TASK_SLICES) == 10
         assert {spec.axis for spec in TASK_SLICES} == set(SliceAxis)
@@ -128,6 +129,7 @@ class TestTheSlicesAre07Section8s:
 
 
 class TestPrecisionSizing:
+    """The published item counts reproduce, and reach the width they claim."""
     @pytest.mark.parametrize(
         ("rate", "half_width", "expected"),
         [
@@ -188,6 +190,7 @@ class TestPrecisionSizing:
 
 
 class TestTheNoiseFloorOfTwentyQueries:
+    """What twenty queries can and cannot resolve, stated printably."""
     def test_twenty_queries_cannot_resolve_less_than_twenty_points(self) -> None:
         floor = noise_floor()
 
@@ -241,6 +244,7 @@ class TestTheNoiseFloorOfTwentyQueries:
 
 
 class TestSliceRequirements:
+    """Every slice is sized from the same inputs, with ids that follow it."""
     def test_every_slice_gets_the_same_sizing_inputs(self) -> None:
         requirements = slice_requirements()
 
@@ -261,6 +265,7 @@ class TestSliceRequirements:
 
 
 class TestTheStandardPlan:
+    """The standard plan sizes itself, and a pilot cannot be the campaign."""
     def test_the_plan_sizes_itself_from_the_estimators(self) -> None:
         plan = standard_plan(pilot_items=30)
 
@@ -292,6 +297,7 @@ class TestTheStandardPlan:
 
 
 class TestCoverage:
+    """Only resolved items count toward a slice, and stray tags are named."""
     def test_only_resolved_items_count_toward_a_slice_target(self) -> None:
         plan = standard_plan(pilot_items=30)
         items = [
@@ -334,6 +340,7 @@ class TestCoverage:
 
 
 class TestTheRemainingRefusals:
+    """The remaining refusals the sampler makes rather than searching on."""
     def test_an_impossible_precision_request_is_refused_rather_than_spinning(self) -> None:
         with pytest.raises(ValueError, match="no sample size at or below"):
             items_for_precision(expected_rate=0.5, half_width=0.00001)

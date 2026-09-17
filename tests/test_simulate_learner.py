@@ -133,6 +133,8 @@ def _zero_spend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 @pytest.mark.usefixtures("_zero_spend")
 class TestScriptedTierRunsTheFullSet:
+    """The whole scenario set runs at zero spend, honestly and contained."""
+
     def test_every_scenario_completes_with_zero_spend(self) -> None:
         # THE c1 CHECK. The whole benchmark, through the real compiled
         # session graph, with client construction fatal.
@@ -546,6 +548,8 @@ class TestLearnerFacingCopyNamesNoPedagogyScalar:
 
 
 class TestScriptAlignment:
+    """The script and the graph agree about when a session ends."""
+
     def test_the_closing_explain_back_waits_for_the_explain_back_turn(self) -> None:
         scenario = get_scenario("switcher-scaling-laws-time-poor")
         assert scenario is not None
@@ -660,6 +664,8 @@ def _record(
 
 
 class TestSummaryShape:
+    """What a summary row carries, and what it refuses to claim."""
+
     def test_the_cost_split_names_three_payers(self) -> None:
         # THE c4 CHECK. ADR 0050 separates the product from the harness;
         # this campaign's harness has two halves, so `cost_usd` must
@@ -734,6 +740,8 @@ class TestSummaryShape:
 
 
 class TestRepeatWarning:
+    """A single-run campaign is warned about; three repeats are not."""
+
     def test_a_single_run_campaign_is_warned_about(self) -> None:
         warning = sim.repeat_warning(1)
         assert warning is not None
@@ -777,6 +785,8 @@ def _shame_free_response(quotes: list[str] | None = None) -> dict[str, Any]:
 
 
 class TestJudgeIsolation:
+    """One failed judge keeps the other."""
+
     def test_one_failed_judge_keeps_the_other(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -820,6 +830,8 @@ class TestJudgeIsolation:
 
 
 class TestFundedTierRefusals:
+    """Every configuration the funded tier refuses to start under."""
+
     def test_funded_without_a_budget_is_refused(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
@@ -893,6 +905,8 @@ class TestFundedTierRefusals:
 
 
 class TestFundedTierLearner:
+    """The model learner fills only unscripted turns, and falls back."""
+
     def test_the_model_learner_only_fills_unscripted_turns(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -980,6 +994,8 @@ def main_with(
 
 
 class TestCampaignDiscipline:
+    """Exit codes, resume, kill and budget, across a whole campaign."""
+
     def test_all_succeed_exits_zero_and_writes_everything(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -1166,6 +1182,8 @@ class TestCampaignDiscipline:
 
 
 class TestJudgedOutcomesReachTheSummary:
+    """A real campaign's judged outcomes reach the summary file."""
+
     def test_a_real_campaign_emits_judged_outcomes_in_summary_jsonl(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -1239,6 +1257,8 @@ class TestJudgedOutcomesReachTheSummary:
 
 
 class TestCampaignShapeIsolation:
+    """The two campaigns keep their own layout and their own directory."""
+
     def test_the_research_campaign_layout_is_unchanged(self) -> None:
         # The `CampaignShape` parameterization must leave `runner.py`'s
         # own behaviour alone: its tests are untouched, and its defaults

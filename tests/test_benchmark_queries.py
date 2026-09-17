@@ -27,6 +27,8 @@ SLUG_PATTERN = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 
 class TestBenchmarkQueriesInvariants:
+    """The query set's invariants: unique slug ids, full fields, mixed domains."""
+
     def test_query_set_has_at_least_twenty(self) -> None:
         # Sprint 1 target — expanded from the initial 10.
         assert len(BENCHMARK_QUERIES) >= 20
@@ -67,6 +69,8 @@ class TestBenchmarkQueriesInvariants:
 
 
 class TestGetQueries:
+    """The accessor filters by domain and hands back a copy, not the list."""
+
     def test_returns_all_queries_when_no_filter(self) -> None:
         assert get_queries() == BENCHMARK_QUERIES
 
@@ -131,6 +135,8 @@ class TestDatasetProvenance:
 
 
 class TestDatasetVersion:
+    """The dataset version is derived from the data, not declared beside it."""
+
     def test_the_version_names_the_dataset_and_its_size(self) -> None:
         assert RESEARCH_DATASET_VERSION.startswith(
             f"{DATASET_NAME}@{len(BENCHMARK_QUERIES)}:"

@@ -119,6 +119,7 @@ def _patch_llm_surface(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class TestSmokeEndToEnd:
+    """One job through the production wiring, with nothing stubbed."""
     async def test_job_succeeds_through_production_workflow(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

@@ -52,6 +52,8 @@ def _broken(scenario_id: str) -> LearningScenario:
 
 
 class TestBenchmarkIsValid:
+    """The shipped benchmark validates, whole and scenario by scenario."""
+
     def test_shipped_benchmark_has_no_problems(self) -> None:
         # The single assertion that has to hold for every other card in
         # Track B to mean anything.
@@ -63,6 +65,8 @@ class TestBenchmarkIsValid:
 
 
 class TestScenarioSetInvariants:
+    """The scenario set's invariants: ids, counts, fields, vocabularies."""
+
     def test_scenario_count_is_in_the_card_range(self) -> None:
         # WO-W08 sizes the set at ~12-15 scenarios.
         assert 12 <= len(LEARNING_SCENARIOS) <= 15
@@ -158,6 +162,8 @@ class TestCoverage:
 
 
 class TestPersonaHonesty:
+    """A persona may only declare skills, and keeps only what it declared."""
+
     def test_personas_may_only_declare_skills(self) -> None:
         # A benchmark that handed the system a pre-baked `inferred`
         # skill would be measuring its own fiction (01 §1.2).
@@ -178,6 +184,8 @@ class TestPersonaHonesty:
 
 
 class TestPaperGuidance:
+    """Paper guidance names the chunker's sections, and reads in order."""
+
     def test_section_names_come_from_the_chunker(self) -> None:
         # 02 §2.2 keys close-read/skim guidance to the sections the
         # existing chunker detects. If that vocabulary changes, this
@@ -202,6 +210,8 @@ class TestPaperGuidance:
 
 
 class TestExpectationsAreConsistent:
+    """Every scenario expects only events this phase can actually produce."""
+
     def test_every_scenario_expects_a_session_completed_event(self) -> None:
         for scenario in LEARNING_SCENARIOS:
             assert (
@@ -312,6 +322,8 @@ class TestValidatorCatchesBreakage:
 
 
 class TestAccessors:
+    """The accessors copy, filter case-insensitively, and compose."""
+
     def test_get_scenarios_returns_a_copy(self) -> None:
         result = get_scenarios()
         result.clear()

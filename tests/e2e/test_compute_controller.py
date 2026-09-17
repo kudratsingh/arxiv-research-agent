@@ -165,6 +165,7 @@ async def tiered_app(
 
 
 class TestOnePairOfGraphsServesBothTiers:
+    """Both tiers run off one compiled pair, and each keeps its own shape."""
     async def test_the_pair_is_compiled_once_and_holds_both_shapes(
         self, tiered_app: Any
     ) -> None:
@@ -289,6 +290,7 @@ class TestOnePairOfGraphsServesBothTiers:
 
 
 class TestTheEscalatedRunIsStillFree:
+    """Escalating to the verified tier spends nothing."""
     async def test_neither_tier_spends_anything(
         self, tiered_app: Any, verifier_script: Callable[..., dict[str, int]]
     ) -> None:

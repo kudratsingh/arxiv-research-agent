@@ -209,6 +209,8 @@ def _degrading_reader(
 
 
 class TestRunSummary:
+    """Abstract-only degradation is counted per run, and warned past a bar."""
+
     def test_run_summary_counts_every_degraded_paper(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:

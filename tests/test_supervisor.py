@@ -86,6 +86,8 @@ def _empty_state(**overrides: Any) -> ResearchState:
 
 
 class TestDefaultNextAction:
+    """The default routing table, state by state."""
+
     def test_empty_state_goes_to_plan(self) -> None:
         assert _default_next_action(_empty_state()) == "plan"
 
@@ -162,6 +164,8 @@ class TestDefaultNextAction:
 
 
 class TestStateAwareMockNextAction:
+    """The state-aware mock router, and where hard limits outrank it."""
+
     @pytest.fixture(autouse=True)
     def _enable_state_aware_mock(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
@@ -248,6 +252,8 @@ class TestStateAwareMockNextAction:
 
 
 class TestSummarizeState:
+    """What the state summary carries, and how it is bounded."""
+
     def test_includes_counts_and_query(self) -> None:
         state = _empty_state(
             query="what is X?",
@@ -276,6 +282,8 @@ class TestSummarizeState:
 
 
 class TestSupervisorShortCircuits:
+    """The caps that stop the run before any model call is made."""
+
     def test_iteration_cap_stops_without_llm_call(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -322,6 +330,8 @@ class TestSupervisorShortCircuits:
 
 
 class TestSupervisorLLMPath:
+    """What the model may return, and what each answer is taken as."""
+
     def _stub_llm(
         self, monkeypatch: pytest.MonkeyPatch, response: dict[str, Any]
     ) -> dict[str, Any]:
@@ -609,6 +619,8 @@ class TestTheControlSignalsPropagate:
 
 
 class TestRouteAfterSupervisor:
+    """Which actions map to nodes, and which end the run."""
+
     @pytest.mark.parametrize(
         "action,expected",
         [
@@ -640,6 +652,8 @@ class TestRouteAfterSupervisor:
 
 
 class TestActionEnumInvariants:
+    """The action table covers every action but stop, with no duplicates."""
+
     def test_action_to_node_covers_every_action_except_stop(self) -> None:
         assert set(ACTION_TO_NODE.keys()) == VALID_ACTIONS - {"stop"}
 
@@ -654,6 +668,8 @@ class TestActionEnumInvariants:
 
 
 class TestVerifierGating:
+    """The verify action exists only when the verifier is enabled."""
+
     def test_available_actions_excludes_verify_by_default(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -769,6 +785,8 @@ class TestVerifierGating:
 
 
 class TestQueryRefinerGating:
+    """The refine action exists only when the refiner is enabled."""
+
     def test_available_actions_excludes_refine_by_default(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -872,6 +890,8 @@ class TestQueryRefinerGating:
 
 
 class TestReaderRecoverySurface:
+    """What the recovery fields add to the summary and to the prompt."""
+
     def test_summary_hides_recovery_fields_when_flag_off(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

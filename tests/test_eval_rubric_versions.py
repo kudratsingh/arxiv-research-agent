@@ -58,6 +58,8 @@ def _history(name: str) -> list[dict[str, str]]:
 
 
 class TestTheLockCoversEveryRubric:
+    """The lock names every rubric, and no rubric the harness dropped."""
+
     def test_the_lock_file_is_readable_and_versioned(self) -> None:
         assert _lock()["schema_version"] == 1
 
@@ -80,6 +82,8 @@ class TestTheLockCoversEveryRubric:
 
 
 class TestTheLiveTextMatchesItsLockedVersion:
+    """The live prompt's digest and version are the newest locked entry."""
+
     @pytest.mark.parametrize("rubric", ALL_RUBRICS, ids=lambda r: r.name)
     def test_the_prompt_digest_matches_the_newest_locked_entry(
         self, rubric: Rubric
@@ -131,6 +135,8 @@ class TestTheMechanismActuallyFires:
 
 
 class TestTheCampaignSubsetsAreHonest:
+    """Each campaign records exactly the versioned instruments it ran."""
+
     def test_the_research_campaign_records_every_versioned_instrument(self) -> None:
         # Three judges and one deterministic check. The rule is "a
         # metric is in the registry iff it publishes a versioned

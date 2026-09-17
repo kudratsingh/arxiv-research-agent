@@ -128,6 +128,7 @@ def cost_ledger() -> Iterator[RunCosts]:
 
 
 class TestThePlanBecomesBranches:
+    """A plan becomes bounded branches, appended rather than renumbered."""
     def test_sub_questions_become_bounded_branches_in_plan_order(self) -> None:
         """The lead bounds the plan; it does not re-decompose it."""
         branches = orch.plan_branches(_state())
@@ -270,6 +271,7 @@ class TestThePlanBecomesBranches:
 
 
 class TestABranchIsIsolatedFromItsSiblings:
+    """A branch shares nothing, and one failing leaves its siblings whole."""
     def test_the_branch_state_is_built_fresh_and_shares_nothing(self) -> None:
         """The isolation guarantee, asserted on object identity.
 
@@ -408,6 +410,7 @@ class TestABranchIsIsolatedFromItsSiblings:
 
 
 class TestTheCapsBind:
+    """The branch and paper caps bind the plan and the model calls."""
     def test_the_branch_cap_truncates_the_plan(self) -> None:
         """Three sub-questions, a cap of two, two branches."""
         state = _state()
@@ -462,6 +465,7 @@ class TestTheCapsBind:
 
 
 class TestTheBudgetIsTheRunsAndTheShareIsTheBranchs:
+    """Each branch runs under its own share of the run's budget."""
     def test_each_branch_runs_under_a_cap_of_its_own(
         self, cost_ledger: RunCosts
     ) -> None:
@@ -571,6 +575,7 @@ class TestTheBudgetIsTheRunsAndTheShareIsTheBranchs:
 
 
 class TestTheMergeIsDeterministicAndKeepsProvenance:
+    """The merge is byte-deterministic and keeps every branch's provenance."""
     def _two_branches(self) -> list[WorkerBranch]:
         state = _state()
         planned = orch.plan_branches(state)
@@ -717,6 +722,7 @@ class TestTheMergeIsDeterministicAndKeepsProvenance:
 
 
 class TestTheNodesReportWhatHappened:
+    """Each node stamps one message, and a dead run carries a branch's code."""
     def test_a_run_with_no_surviving_branch_fails_with_the_branchs_own_code(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -798,6 +804,7 @@ class TestTheNodesReportWhatHappened:
 
 
 class TestTheModuleIsCallableWithoutTheGraph:
+    """The module's own contract, exercised without a compiled graph."""
     @pytest.mark.parametrize(
         "status", [orch.STATUS_SUCCEEDED, orch.STATUS_FAILED, orch.STATUS_CANCELLED]
     )

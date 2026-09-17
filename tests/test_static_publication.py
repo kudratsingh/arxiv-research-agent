@@ -22,6 +22,8 @@ FIXTURE_PATH = ROOT / "content" / "paths" / "fixture-guided-read"
 
 
 class TestDecisionGates:
+    """What the publication build refuses while a decision is still open."""
+
     def test_real_path_cannot_publish_while_review_decisions_are_open(self, tmp_path: Path) -> None:
         with pytest.raises(ValueError, match="not 'published'.*W-OD-2/3"):
             build_publication(
@@ -60,6 +62,8 @@ class TestDecisionGates:
 
 
 class TestPreviewArtifact:
+    """What the built preview contains, and what it never collects."""
+
     def test_real_preview_is_noindex_and_collects_nothing(self, tmp_path: Path) -> None:
         output = tmp_path / "preview"
         emitted = build_publication(REAL_PATH, output, preview=True)

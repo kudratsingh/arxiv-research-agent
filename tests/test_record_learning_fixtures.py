@@ -136,6 +136,7 @@ def _record_into(root: Path, *, commit: str = FIXED_COMMIT) -> dict[str, str]:
 
 
 class TestDeterminism:
+    """Two recordings of the same code differ only by their commit stamp."""
     def test_two_recordings_of_the_same_code_are_byte_identical(
         self, tmp_path: Path
     ) -> None:
@@ -183,6 +184,7 @@ class TestDeterminism:
 
 
 class TestTheCheckedInSetIsFresh:
+    """A fresh recording reproduces exactly the committed files."""
     def test_a_fresh_recording_reproduces_the_committed_files(
         self, tmp_path: Path
     ) -> None:
@@ -229,6 +231,7 @@ class TestTheCheckedInSetIsFresh:
 
 
 class TestRecordedContent:
+    """What a recording may contain, and what it may never claim."""
     def test_the_recorded_set_validates(self) -> None:
         assert validate_fixtures() == []
 
@@ -286,6 +289,7 @@ class TestRecordedContent:
 
 
 class TestRecorderRefusals:
+    """What the recorder refuses rather than recording."""
     def test_recording_outside_mock_mode_is_refused(
         self, monkeypatch: pytest.MonkeyPatch, capsys: Any, tmp_path: Path
     ) -> None:

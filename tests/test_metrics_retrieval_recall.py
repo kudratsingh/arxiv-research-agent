@@ -37,6 +37,8 @@ def _mk_paper(
 
 
 class TestBuildPrompt:
+    """How papers and topics are numbered and listed in the prompt."""
+
     def test_papers_numbered_from_zero(self) -> None:
         papers = [
             _mk_paper("p1", "Alpha paper", "alpha abstract"),
@@ -55,6 +57,8 @@ class TestBuildPrompt:
 
 
 class TestAggregateRetrieval:
+    """How retrieval coverage aggregates, and what is dropped."""
+
     def test_all_covered(self) -> None:
         parsed = {
             "coverage": [
@@ -118,6 +122,8 @@ class TestAggregateRetrieval:
 
 
 class TestMeasureRetrievalRecall:
+    """The whole path, and the two cases that never call a judge."""
+
     def test_no_topics_short_circuits_no_llm(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -182,6 +188,8 @@ class TestMeasureRetrievalRecall:
 
 
 class TestReturnedTypes:
+    """The result's keys are exactly the ones its type declares."""
+
     def test_result_shape(self) -> None:
         result = measure_retrieval_recall([], [])
         assert set(RetrievalRecallResult.__required_keys__) == set(result.keys())

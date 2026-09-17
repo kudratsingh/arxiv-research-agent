@@ -169,6 +169,8 @@ class TestTheConfusionTableIsHandComputed:
 
 
 class TestTheAbstentionPolicyIsDeclaredAndItsSwingIsVisible:
+    """Every report names its abstention policy, and the policy moves the table."""
+
     def test_the_three_policies_give_three_different_tables(
         self, worked_pairs: tuple[tuple[str, bool | None, bool | None], ...]
     ) -> None:
@@ -207,6 +209,8 @@ class TestTheAbstentionPolicyIsDeclaredAndItsSwingIsVisible:
 
 
 class TestPhiRefusesToInventAnAssociation:
+    """Phi reports nothing rather than zero where it is undefined."""
+
     def test_a_degenerate_margin_gives_none_rather_than_zero(self) -> None:
         # A judge that passed everything: TN = FN = 0, two margins zero.
         pairs = [("itm-00000000000a", True, True), ("itm-00000000000b", False, True)]
@@ -239,6 +243,8 @@ class TestPhiRefusesToInventAnAssociation:
 
 
 class TestPositionBiasNeedsBothOrders:
+    """Position bias is measured only over pairs seen in both orders."""
+
     def test_the_fixture_pairs_give_eight_first_position_wins_of_twelve(self) -> None:
         """Hand-counted from tests/fixtures/calibration/pairwise_cases.json.
 
@@ -343,6 +349,8 @@ class TestPositionBiasNeedsBothOrders:
 
 
 class TestIntegrityViolations:
+    """What counts as an integrity violation, and how each one is named."""
+
     def test_an_unadjudicated_dispute_is_a_violation(self) -> None:
         def label(label_id: str, decision: str, who: str) -> CalibrationLabel:
             return CalibrationLabel(
@@ -414,6 +422,8 @@ class TestIntegrityViolations:
 
 
 class TestSliceCoverage:
+    """A slice with nothing resolved is unmeasured, not absent."""
+
     def test_a_slice_with_no_resolved_item_is_unmeasured(self) -> None:
         observation = SliceObservation(
             slice_id="contradiction-present", labelled=2, resolved=0, target=34, shortfall=34
@@ -483,6 +493,8 @@ def _report(**overrides: object) -> CalibrationReport:
 
 
 class TestTheGateReachesAllThreeStates:
+    """The gate promotes, holds and rolls back, and what drives each."""
+
     def test_a_clean_measured_report_promotes(self) -> None:
         decision = decide(_report())
 
@@ -591,6 +603,8 @@ class TestTheGateReachesAllThreeStates:
 
 
 class TestTheGateMirrorsAdr0072:
+    """This gate has the same shape as the safety gate, deliberately."""
+
     def test_the_decision_type_has_the_same_fields_as_the_safety_gate(self) -> None:
         """Two gates in one repository should answer in one vocabulary."""
         assert GateDecision._fields == safety_suite.GateDecision._fields
@@ -616,6 +630,8 @@ class TestTheGateMirrorsAdr0072:
 
 
 class TestTheRenderedReportCannotQuoteRawAgreementAlone:
+    """Raw agreement is never rendered without what qualifies it."""
+
     def test_raw_agreement_shares_a_line_with_phi_and_both_positive_rates(self) -> None:
         """docs/eval.md's rule, enforced by the renderer's line breaks.
 
@@ -645,6 +661,8 @@ class TestTheRenderedReportCannotQuoteRawAgreementAlone:
 
 
 class TestBuildReportOnTheWorkedSet:
+    """The worked set builds a report that holds and finds nothing wrong."""
+
     def test_the_worked_set_builds_a_report_that_holds(self) -> None:
         worked = load_labelled_set()
 
@@ -681,6 +699,8 @@ class TestBuildReportOnTheWorkedSet:
 
 
 class TestTheRemainingMetricPaths:
+    """The remaining estimator paths, including the empty ones."""
+
     def test_an_item_neither_side_decided_is_counted_as_unmatched(self) -> None:
         counts = confusion([("itm-00000000000a", None, None)])
 

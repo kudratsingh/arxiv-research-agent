@@ -148,6 +148,8 @@ async def _run_job_whose_node_calls_the_model(
 
 
 class TestTheProviderRefusesTheCall:
+    """A refused provider call is counted, logged, and lands on the job."""
+
     @pytest.mark.parametrize(
         ("build_error", "status"),
         [

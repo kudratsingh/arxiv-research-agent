@@ -93,6 +93,7 @@ async def _seed_abandoned(
 
 
 class TestTheOwnerIsGone:
+    """A job whose worker died is reclaimed once, and never requeued if paid."""
     async def test_a_reclaimed_job_carries_a_code_a_warning_and_a_count(
         self, triple: TripleObserver, store: RedisJobStore
     ) -> None:
@@ -190,6 +191,7 @@ class TestTheOwnerIsGone:
 
 
 class TestTheOwnerIsAliveAfterAll:
+    """A live lease keeps a healthy job out of the reclaim path."""
     async def test_a_live_lease_keeps_a_healthy_job_out_of_the_failure_counter(
         self, triple: TripleObserver, store: RedisJobStore, backend: Any
     ) -> None:

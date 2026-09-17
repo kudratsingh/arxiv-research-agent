@@ -25,6 +25,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestDefaults:
+    """The defaults each settings group ships with."""
+
     def test_anthropic_defaults(self) -> None:
         s = Settings(anthropic_api_key="sk-test")
         assert s.anthropic_model == "claude-sonnet-4-6"
@@ -91,6 +93,8 @@ class TestDefaults:
 
 
 class TestEnvLoading:
+    """How settings read the environment, case- and type-insensitively."""
+
     def test_reads_api_key_from_env(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -146,6 +150,8 @@ class TestEnvLoading:
 
 
 class TestValidation:
+    """The ranges and vocabularies the settings refuse to leave."""
+
     def test_unknown_mock_supervisor_router_rejected(self) -> None:
         with pytest.raises(ValidationError):
             Settings(mock_supervisor_router="creative")  # type: ignore[arg-type]
@@ -176,6 +182,8 @@ class TestValidation:
 
 
 class TestImmutability:
+    """Settings are frozen once constructed."""
+
     def test_settings_are_frozen(self) -> None:
         s = Settings()
         with pytest.raises(ValidationError):
@@ -247,6 +255,8 @@ class TestEnumFieldsAreLiteral:
 
 
 class TestExtraKeysIgnored:
+    """An unknown environment variable does not break construction."""
+
     def test_unknown_env_vars_dont_break_construction(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

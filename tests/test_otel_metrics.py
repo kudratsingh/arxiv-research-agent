@@ -153,6 +153,8 @@ def _point_for(points: list[Any], **attributes: Any) -> Any:
 
 
 class TestJobTerminalMetrics:
+    """Terminal jobs are counted and timed, with their error type."""
+
     def test_success_records_counter_and_histogram(
         self, reader: InMemoryMetricReader
     ) -> None:
@@ -276,6 +278,8 @@ class TestJobTerminalMetrics:
 
 
 class TestLlmUsageMetrics:
+    """Model usage is recorded per model, with or without a run."""
+
     def test_record_llm_call_records_per_model(
         self, reader: InMemoryMetricReader
     ) -> None:
@@ -397,6 +401,8 @@ class TestLlmRetryMetrics:
 
 
 class TestRateLimitRejectionMetric:
+    """A rejection is counted, attributed to the limiter that made it."""
+
     async def test_in_memory_limiter_429_records(
         self, reader: InMemoryMetricReader
     ) -> None:
@@ -446,6 +452,8 @@ class TestRateLimitRejectionMetric:
 
 
 class TestRuntimeGauges:
+    """The gauges read live accounting, and rebind rather than duplicate."""
+
     def test_gauges_reflect_live_accounting_at_collection_time(
         self, reader: InMemoryMetricReader
     ) -> None:
@@ -502,6 +510,8 @@ class TestRuntimeGauges:
 
 
 class TestDisabled:
+    """With metrics off, nothing is installed and nothing records."""
+
     def test_configure_installs_no_provider(
         self, disabled_metrics: None
     ) -> None:
@@ -778,6 +788,8 @@ class TestRedriveReclaimMetric:
 
 
 class TestLifespanWiring:
+    """The gauges track the app's tasks and agree with the health probe."""
+
     async def test_gauges_track_the_apps_in_flight_tasks(
         self, reader: InMemoryMetricReader
     ) -> None:
@@ -868,6 +880,8 @@ class TestLifespanWiring:
 
 
 class TestProviderLifecycle:
+    """Configure is idempotent, and shutdown disarms within a budget."""
+
     def test_configure_is_idempotent(
         self, reader: InMemoryMetricReader
     ) -> None:

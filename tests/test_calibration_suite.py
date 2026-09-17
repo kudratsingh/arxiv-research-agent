@@ -81,6 +81,8 @@ def suite(registry: LocalRegistry) -> BenchmarkSuite:
 
 
 class TestTheCheckedInTreeIsWhatTheFixturesBuild:
+    """The committed tree is byte-identical to what the fixtures build."""
+
     def test_parity_is_clean(self) -> None:
         assert tree_mismatches() == ()
 
@@ -210,6 +212,8 @@ class TestTheCheckedInTreeIsWhatTheFixturesBuild:
 
 
 class TestTheSuiteResolvesForAnEvaluator:
+    """The suite and everything it references resolve in the evaluator role."""
+
     def test_the_suite_resolves_in_the_evaluator_role_for_calibration(
         self, suite: BenchmarkSuite
     ) -> None:
@@ -270,6 +274,8 @@ class TestTheSuiteResolvesForAnEvaluator:
 
 
 class TestTheLabelsAreInvisibleToACandidate:
+    """A candidate can resolve nothing that carries or implies an answer."""
+
     def test_a_candidate_cannot_resolve_the_label_set(
         self, registry: LocalRegistry, suite: BenchmarkSuite
     ) -> None:
@@ -369,6 +375,8 @@ class TestTheLabelsAreInvisibleToACandidate:
 
 
 class TestTheLabelSetAndTheGraderProfile:
+    """Each case has one bound label, and the grader profile pins no model."""
+
     def test_every_case_has_exactly_one_label_bound_by_value_ref(
         self, registry: LocalRegistry, suite: BenchmarkSuite
     ) -> None:
@@ -446,6 +454,8 @@ class TestTheLabelSetAndTheGraderProfile:
 
 
 class TestTheGovernanceRecords:
+    """The governance each object carries, and why the split is development."""
+
     def test_the_split_is_development_because_sealed_would_fail_closed(
         self, registry: LocalRegistry, suite: BenchmarkSuite
     ) -> None:
@@ -557,6 +567,8 @@ class TestThereIsOneRegistryRoot:
 
 
 class TestTheContentEnvelope:
+    """A content envelope whose id or payload moved is refused."""
+
     def test_an_envelope_whose_id_disagrees_with_its_payload_is_refused(self) -> None:
         _, contents = read_tree()
         payload = json.loads(
@@ -597,6 +609,8 @@ class TestTheContentEnvelope:
 
 
 class TestTheRemainingSuiteRefusals:
+    """The remaining refusals the suite's readers make."""
+
     def test_a_blinding_content_whose_ids_disagree_is_refused(self) -> None:
         _, contents = read_tree()
         payload = json.loads(

@@ -126,6 +126,7 @@ def _rule_of(exc: pytest.ExceptionInfo[ContentValidationError]) -> str:
 
 
 class TestLicensingPosture:
+    """The licensing rules live in the loader rather than in prose."""
     def test_the_baseline_document_loads(self) -> None:
         """Guards the negative tests: they must differ by one thing only."""
         assert parse_manifest(_manifest()).path_id == "test-path"
@@ -334,6 +335,7 @@ class TestLicensingPosture:
 
 
 class TestStatusQueue:
+    """The review states, and what each one requires before it is valid."""
     def test_approved_without_a_reviewer_is_refused(self) -> None:
         document = _manifest(
             entries=[
@@ -519,6 +521,7 @@ class TestStatusQueue:
 
 
 class TestBriefingProvenance:
+    """A briefing declares how it was made, and quotes within its bounds."""
     def test_a_valid_briefing_parses(self) -> None:
         briefing = parse_briefing(_briefing())
         assert briefing.header.generated_by == "job-abc123"
@@ -617,6 +620,7 @@ def _write_path(tmp_path: Path, document: dict[str, Any]) -> Path:
 
 
 class TestLoaderCrossChecks:
+    """The cross-checks between a manifest, its files and its banners."""
     def test_an_approved_entry_with_no_briefing_file_on_disk_fails(
         self, tmp_path: Path
     ) -> None:
@@ -714,6 +718,7 @@ class TestLoaderCrossChecks:
 
 
 class TestShippedContent:
+    """What the repository actually ships, asserted against those rules."""
     @pytest.fixture(autouse=True)
     def _clear(self) -> None:
         loader.clear_cache()

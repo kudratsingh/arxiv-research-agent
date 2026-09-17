@@ -324,6 +324,8 @@ class TestLearnerTextIsIsolated:
 
 
 class TestSections:
+    """Sections are ordered grounded-first, and empty ones are dropped."""
+
     def test_sections_are_ordered_grounded_first(self) -> None:
         headings = [
             section.heading

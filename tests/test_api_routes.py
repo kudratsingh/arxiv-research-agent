@@ -157,6 +157,8 @@ class _RedisishStore:
 
 
 class TestHealthz:
+    """What the health probe reports about each dependency, and headroom."""
+
     async def test_healthz_returns_ok_and_concurrency_headroom(self) -> None:
         app = _make_app_with_stub(StubWorkflow(), max_concurrent_jobs=5)
         async with LifespanManager(app), AsyncClient(
@@ -265,6 +267,8 @@ class TestHealthz:
 
 
 class TestSubmitAndPoll:
+    """Submit, poll, and both terminal outcomes."""
+
     async def test_submit_returns_202_with_status_and_stream_urls(self) -> None:
         app = _make_app_with_stub(StubWorkflow())
         async with LifespanManager(app), AsyncClient(
@@ -333,6 +337,8 @@ class TestSubmitAndPoll:
 
 
 class TestQueryValidation:
+    """Which queries the submit route refuses."""
+
     async def test_empty_query_rejected(self) -> None:
         app = _make_app_with_stub(StubWorkflow())
         async with LifespanManager(app), AsyncClient(
@@ -396,6 +402,8 @@ def _parse_sse_stream(text: str) -> list[dict[str, Any]]:
 
 
 class TestStreaming:
+    """The stream's node frames, its terminal frame, and its replay."""
+
     async def test_stream_emits_node_events_and_terminal_frame(self) -> None:
         stub = StubWorkflow(sleep_per_node_sec=0.01)
         app = _make_app_with_stub(stub)
@@ -457,6 +465,8 @@ class TestStreaming:
 
 
 class TestConcurrencyLimit:
+    """Jobs beyond the ceiling are serialized by the semaphore."""
+
     async def test_semaphore_serializes_jobs_beyond_ceiling(self) -> None:
         # Two-slot semaphore, three jobs, each sleeps ~0.1s. The
         # third job must wait for one of the first two to release a

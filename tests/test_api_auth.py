@@ -69,6 +69,7 @@ async def _booted_app(
 
 
 class TestParseApiKeys:
+    """What the key-pair parser accepts, and which duplicates it refuses."""
     def test_empty_string_yields_empty_map(self) -> None:
         assert parse_api_keys(SecretStr("")) == {}
         assert parse_api_keys(SecretStr("  ")) == {}
@@ -107,6 +108,7 @@ class TestParseApiKeys:
 
 
 class TestLoadKeystoreDuplicateNames:
+    """A keystore file with a duplicate principal name is refused."""
     def test_duplicate_name_in_file_raises(self, tmp_path: Path) -> None:
         # `json.loads` alone would silently keep the LAST value for a
         # repeated key — the parser must reject instead (ADR 0042).
@@ -119,6 +121,7 @@ class TestLoadKeystoreDuplicateNames:
 
 
 class TestLookupPrincipal:
+    """Lookup compares wire bytes, so a non-ASCII key is a miss, not a crash."""
     def test_hit_returns_principal(self) -> None:
         store = {"sk_a": ApiKeyPrincipal(key_id="internal")}
         assert _lookup_principal("sk_a", store) == ApiKeyPrincipal(key_id="internal")
@@ -171,6 +174,7 @@ class TestLookupPrincipal:
 
 
 class TestInMemoryRateLimiter:
+    """The in-memory limiter's window, its ceiling, and its per-key buckets."""
     @pytest.mark.asyncio
     async def test_under_limit_never_raises(self) -> None:
         rl = InMemoryRateLimiter(limit_per_hour=5)
