@@ -1064,3 +1064,72 @@ against the registry. That is the direction `tests/test_log_contract.py`
 cannot check: it re-parses the source to catch an *unregistered* name,
 and this catches a registered name the code has quietly stopped
 emitting.
+
+### 12.6 The report a finished pass produces (E3)
+
+Added: **2026-09-17**. No ADR — the generator reads records and writes
+markdown; it adds no decision and changes no contract.
+
+§12.2's table was assembled by hand out of a JSON dump. The sixth verb
+produces it:
+
+```bash
+python -m src.campaign report \
+  --campaign-id <campaign_id> \
+  --output-root outputs/campaigns \
+  --output outputs/campaigns/<campaign_id>/report.md
+```
+
+With no `--output` it prints to stdout. `--sink-root` overrides where the
+durable trajectories are looked for, for a tree that moved after the run;
+by default each episode record names its own run directory.
+
+**The report writes nothing.** It reconciles the denominator ledger *in
+memory* rather than rewriting it — `status` is the verb that rewrites —
+and it does not leave its markdown inside the campaign directory unless
+`--output` is pointed there. A report that edited the campaign it
+describes would have changed the thing it was reporting on.
+
+What it contains, and where each number comes from:
+
+| Section | Read from |
+|---|---|
+| Denominators, expected/accounted/analysis, per ledger status | the reconciled `campaign-denominator-ledger`, plus §11's paired-item and required-pair figures from `summarize()` |
+| Quality per arm — all five research metrics, pooled numerator/denominator with a 95% Wilson interval from `src/eval/stats.py`, and the unweighted per-episode mean beside it | each episode's `episode-record.json` `scores` |
+| `judges_run` and the skipped rubric names, per arm | the same `scores` |
+| Cost per arm — workflow and judge dollars, workflow and judge model calls | the same records; harness spend stays a campaign-level category (ADR 0050) and is not attributed to an arm |
+| Latency per arm — total, mean, p50, p95, max | each record's `elapsed_seconds` (policy wall clock, judges excluded) |
+| Error taxonomy, §7.1's thirteen classes | episode reasons and ledger statuses, plus the durable trajectories under `outputs/trajectories/runs/<run_id>/events.jsonl` |
+| Lineage | the sealed campaign manifest (protocol and lock digests, one sha256 per `ArmDeclaration`) and one sealed run manifest per arm for the compiled graph digest |
+| Episode appendix — every run id, ledger status, manifest digest and event count | one row per episode record |
+
+Three properties are worth stating because they are the ones a report
+like this usually gets wrong.
+
+**A metric that did not run prints `not run`, never `0.000`.** The free
+scorer runs two of the five instruments; on the 240-of-300 free pass the
+three judge rows carry the reason they are empty and the arm's header
+says `judges_run on 0 of 60`. On the mock-judge pass (§12.2's companion,
+E1) all five rows carry numbers and the skipped list is empty.
+
+**A failure class the records cannot see prints `not detected from
+records`, never `0`.** §7.1 already said which classes those are, and the
+generator refuses to launder them into zeros: task understanding and
+planning/decomposition have no record-borne signal at all, and retrieval
+miss and synthesis/organization are carried only by a rubric — so on a
+pass with no judges they are *unmeasured*, and the row says so with the
+reason. Five of the thirteen rows read that way on the free matrix.
+
+**A trajectory that disagrees with the record pointing at it is refused.**
+Each `trajectory-ref.json` carries an event count; if the JSONL holds a
+different number, `build_report` raises rather than reporting a lower
+error count than the run actually produced.
+
+Measured on the same 300-episode pass §12.2 describes: 300 episode
+records and 300 durable trajectories read, ledger `completed: 300`,
+analysis denominator 300, workflow/judge/harness all `$0.000000`, and
+**0 workflow model calls and 0 judge model calls over 300 episodes** —
+the report's own sentence, not a summary of it.
+`tests/test_campaign_execution.py::TestTheCampaignReport` asserts every
+one of those against the records, including that a second `build_report`
+leaves every file in the campaign directory byte- and mtime-identical.

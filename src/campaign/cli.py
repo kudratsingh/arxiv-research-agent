@@ -1,14 +1,20 @@
-"""`python -m src.campaign plan|dry-run|run|resume|status`.
+"""`python -m src.campaign plan|dry-run|run|resume|status|report`.
 
-Five verbs, and the split between them is the work order's: **`plan`,
-`dry-run`, `resume` and `status` have no execution side effects, and
-`run` is the only one that does.** `dry-run` writes nothing at all and
+Six verbs, and the split between them is the work order's: **`plan`,
+`dry-run`, `resume`, `status` and `report` have no execution side
+effects, and `run` is the only one that does.** `dry-run` writes nothing at all and
 enumerates every planned episode with its zero-cost status; `plan`
 materializes the campaign directory — manifest, lock, arm configs, task
 set and the denominator ledger — and still runs nothing; `resume`
 reopens a materialized campaign under the same lock and cap and reports
 what is left; `status` reconciles the ledger against the receipts on
 disk.
+
+`report` is the pass after `run`: it reads the campaign's sealed
+records and the durable trajectories they point at and writes one
+markdown document — quality per arm, cost and latency per arm, the
+error-taxonomy counts, the denominators and the lineage. It runs no
+episode, calls no model, and writes nothing into the campaign directory.
 
 `run` executes the pending episodes of a campaign that was already
 planned. It is deliberately a *separate* verb from `plan`: the campaign
@@ -79,7 +85,8 @@ def _parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "command", choices=("plan", "dry-run", "run", "resume", "status")
+        "command",
+        choices=("plan", "dry-run", "run", "resume", "status", "report"),
     )
     parser.add_argument(
         "--registry-root",
@@ -153,7 +160,17 @@ def _parser() -> argparse.ArgumentParser:
         help="Approved aggregate cap. Default: zero.",
     )
     parser.add_argument(
-        "--campaign-id", default=None, help="For run, resume and status."
+        "--campaign-id", default=None, help="For run, resume, status and report."
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help=(
+            "Where report writes its markdown. Default: stdout. The report is "
+            "derived from the records and is never written into the campaign "
+            "directory."
+        ),
     )
     parser.add_argument(
         "--sink-root",
@@ -307,10 +324,28 @@ def _run(args: argparse.Namespace) -> int:
 
     if args.campaign_id is None:
         print(
-            "Error: --campaign-id is required for run, resume and status.",
+            "Error: --campaign-id is required for run, resume, status and report.",
             file=sys.stderr,
         )
         return EXIT_USAGE
+
+    if args.command == "report":
+        # Imported here for the same reason `run` is: the report reads
+        # episode records, and `src.campaign.execute` is where their
+        # schema lives, so importing it at module scope would put the
+        # graph's module graph behind the four read-only verbs.
+        from src.campaign.report import build_report, render_report
+
+        rendered = render_report(
+            build_report(root, args.campaign_id, sink_root=args.sink_root)
+        )
+        if args.output is None:
+            print(rendered, end="")
+        else:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(rendered, encoding="utf-8")
+            print(str(args.output))
+        return EXIT_OK
 
     if args.command == "run":
         # Imported here, not at module import: `run` is the only verb
