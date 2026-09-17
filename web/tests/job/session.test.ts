@@ -1,3 +1,13 @@
+/**
+ * `sessionAsJobDetail` — the projection that lets a guided session reuse the
+ * research job machine instead of growing a second one.
+ *
+ * The one invariant worth a test: it carries the server's status and identity
+ * across unchanged, and leaves every research-only metric null. A session has
+ * no quality score, no iteration count and no plan, and a projection that
+ * defaulted them to zero would put invented numbers in front of a learner.
+ */
+
 import { describe, expect, it } from "vitest";
 
 import sessionFixture from "@/contract/fixtures/learn.session.awaiting.json";

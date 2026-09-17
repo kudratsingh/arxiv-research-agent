@@ -1,3 +1,19 @@
+/**
+ * The guided-session pattern from props alone (WO-W13), and the narrowing it
+ * depends on.
+ *
+ * WHAT IS BEING HELD. The paper stays reachable beside a bounded turn; a
+ * close the judge did not assess is stated as a fact and never as a score; a
+ * refused cost-cap call is stated without discarding the transcript the
+ * learner already wrote; and an assessed close gets no banner at all, because
+ * the only thing worth announcing is a MISSING result.
+ *
+ * `readSessionTurn` is tested beside the view because it is the boundary the
+ * view trusts: `SessionDetail.turn` is an open bag on the wire, and a turn
+ * that cannot be read in full is refused outright rather than rendered in
+ * part.
+ */
+
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 

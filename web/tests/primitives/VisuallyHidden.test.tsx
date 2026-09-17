@@ -1,3 +1,13 @@
+/**
+ * WO-07 criterion 2 for `VisuallyHidden`: clipped, never removed.
+ *
+ * The distinction is the whole component. `display: none` would take the node
+ * out of the accessibility tree, which is the opposite of what every clipped
+ * word in this product is for, so the rule is asserted to clip with both the
+ * deprecated `clip` and the current `clip-path`, and never with
+ * `display: none`.
+ */
+
 import { afterEach, describe, expect, it } from "vitest";
 
 import {

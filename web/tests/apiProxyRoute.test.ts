@@ -1,3 +1,19 @@
+/**
+ * The same-origin proxy route handler, frozen (04-ARCHITECTURE.md §3.1).
+ *
+ * It drives `app/api/[...path]/route.ts` directly and proves what the handler
+ * exists to do: the upstream path is encoded and the query preserved, the
+ * server-only key is injected into the upstream request, request bodies and
+ * upstream auth failures pass through unchanged, the auth-off local
+ * configuration sends no header at all, a non-HTTP `API_INTERNAL_BASE` fails
+ * closed, and an upstream network failure maps to a stable 502.
+ *
+ * THE FILE IS DELIBERATELY UNMODIFIED, AND THAT IS ITS SECOND JOB. WO-30
+ * replaced the inline `process.env` read with `resolveUpstreamPrincipal()`
+ * (MT-01 seam S1) and claimed the change was a no-op; the route's own header
+ * names this test as the proof. Any edit here costs that proof.
+ */
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   GET,

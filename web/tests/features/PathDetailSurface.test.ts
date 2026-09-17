@@ -1,3 +1,14 @@
+/**
+ * `resourceObservationsFromEvents` — position provenance, in isolation.
+ *
+ * The rule the function exists for: a path surface may show only what a
+ * recorded progress event says about that path. A summary naming no
+ * observation for this path yields none, an unavailable progress read yields
+ * none, and nothing is folded in from another path's events — so "not yet
+ * observed" is always the absence of a record rather than a default the
+ * client chose.
+ */
+
 import { describe, expect, it } from "vitest";
 
 import progressFixture from "@/contract/fixtures/learn.progress.json";

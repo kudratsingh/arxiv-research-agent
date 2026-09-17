@@ -1,3 +1,15 @@
+/**
+ * WO-07 criterion 2 for `Textarea`, and the reason `limit` is not
+ * `maxLength`.
+ *
+ * Over budget is a stated, marked refusal with the value intact — a native
+ * `maxLength` would silently swallow a paste — so the counter is driven to
+ * warning and over-limit from props alone, in both the controlled and the
+ * uncontrolled case. The counter and the error are asserted not to be live
+ * regions (03 §7.3), and the description order is the reading order: hint,
+ * then counter, then error.
+ */
+
 import { describe, expect, it, vi } from "vitest";
 
 import { Textarea } from "@/components/primitives/Textarea";

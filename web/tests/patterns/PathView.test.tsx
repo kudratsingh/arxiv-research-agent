@@ -1,3 +1,20 @@
+/**
+ * The reading-path pattern from props alone (WO-W12), and the start
+ * affordance WO-W13b added to it.
+ *
+ * The view half: only entries a recorded event supports are marked, links go
+ * to arXiv abstract pages and never to paper bodies, an entry with no
+ * briefing says so while its empty vocabulary block is omitted rather than
+ * rendered hollow, and the unavailable state claims nothing it does not know.
+ *
+ * The start half is a set of refusals, and each is asserted separately so a
+ * regression names which one broke: no handler means no control at all; the
+ * whole entry is handed back so the feature invents no id; while one start is
+ * outstanding that entry is busy and the rest are unavailable with no
+ * progress claim; and a refusal renders on the refused entry only, quoting
+ * the service's own word verbatim when the failure is unmapped.
+ */
+
 import { describe, expect, it, vi } from "vitest";
 
 import detailFixture from "@/contract/fixtures/learn.path.detail.json";

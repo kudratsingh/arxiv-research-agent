@@ -1,3 +1,20 @@
+/**
+ * The learning client: committed-manifest reads and guided-session writes
+ * (WO-W12, WO-W13).
+ *
+ * TWO POLICIES ARE THE POINT, AND THEY DIFFER BY DIRECTION. Reads are bounded
+ * — a session snapshot gets the same default ceiling every other read has —
+ * and go through the same-origin proxy, never at paper full text. Writes get
+ * no automatic timeout at all, for the reason `POST /research` does not: the
+ * endpoint has no idempotency key, so a lost response must never become a
+ * second session or a second turn.
+ *
+ * The learner's own words are asserted to go out verbatim, with the
+ * end-of-session flag beside them rather than folded into them. Bodies come
+ * from the recorded contract fixtures, so no assertion here can drift from
+ * what the service actually returns.
+ */
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import detailFixture from "@/contract/fixtures/learn.path.detail.json";

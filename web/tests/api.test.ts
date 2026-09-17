@@ -1,3 +1,25 @@
+/**
+ * The typed HTTP client, and the three containments that ride with it
+ * (04-ARCHITECTURE.md §3.1).
+ *
+ * The client half: the submit and read envelopes, path-segment encoding, and
+ * the timeout policy — every read carries the default ceiling, a caller's
+ * signal is composed rather than replaced, and a billable write is left
+ * without one, because an aborted POST whose response was merely lost is not
+ * retryable. Failures reach callers as a normalized `ApiFailure` beside the
+ * legacy message.
+ *
+ * The containments, each asserted against the tree rather than promised:
+ *
+ *   1. `@/lib/api` resolves to `lib/api/index.ts` — the M0 shim `lib/api.ts`
+ *      is gone, and every name 05-MIGRATION.md §1.1 pins is the same binding.
+ *   2. The plan-review bypass field (H12) is named nowhere outside `lib/api`
+ *      and is never sent unless a caller opts in. Its literal is assembled at
+ *      runtime here so this file can be scanned alongside every other.
+ *   3. `contract/openapi.json` is the only source the generated types are
+ *      built from, and `models.ts` aliases them rather than duplicating them.
+ */
+
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
