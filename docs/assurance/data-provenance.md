@@ -4,7 +4,8 @@ Every dataset this repository ships, documented on the **NIST AI 300-1 ipd**
 dataset template. Origin, author, licence, date, and — where there is one — the
 contamination note.
 
-**Reviewed at `ed71098`.** Counts here were obtained by parsing the files, not
+**Reviewed at `ed71098`; citations re-resolved at `a3b112f`, 2026-09-17.**
+Counts here were obtained by parsing the files, not
 by reading a docstring; where a count is derived from a fingerprint the
 fingerprint is quoted so it can be recomputed.
 
@@ -96,8 +97,10 @@ to that single value by `tests/test_benchmark_queries.py:104-109`.
 The comment at `:42-46` is the reasoning and it is worth preserving: this
 repository ships no `LICENSE` file, so the query text carries no grant.
 `UNLICENSED` is the honest value, not a placeholder for whoever notices later.
-It changes when the repository's licensing is settled, which is an owner
-decision (W-OD-3), not a code one.
+**W-OD-3 is now settled and the value does not change.** Owner ruling,
+2026-09-17: no licence is adopted, no grant is offered, and all rights are
+reserved. `UNLICENSED` was the provisional-looking constant that turned out
+to be the permanent one.
 
 ### 4. Composition and provenance
 
@@ -354,7 +357,7 @@ and owner ratification."
 `safety-corpus@42:c5888040c7bc`, from the same content fingerprint.
 
 A second, independent version travels with it: `CHECKS_VERSION = "1.0.0"`
-(`safety_suite.py:111-115`) — the *instrument* version. Changing what any check
+(`safety_suite.py:110-116`) — the *instrument* version. Changing what any check
 decides bumps it, and a bump declares that the attack success rate before and
 after are not the same measurement. A corpus fingerprint alone would not catch
 that.
@@ -646,7 +649,7 @@ These five papers **are** the contamination in §1. The
 `hallucination-mitigation` benchmark query is well-covered by them, so its
 retrieval recall is measured against a corpus selected to match it.
 
-A second contamination-adjacent finding is recorded in `docs/eval.md:720-726`
+A second contamination-adjacent finding is recorded in `docs/eval.md:803-810`
 and belongs here: the e2e fixture cites `arxiv:2311.05232` while mock mode's
 survey paper is `2311.09000`, so `measure_citation_accuracy` returns `1.0` for
 a citation the run never retrieved. That is the exact failure ADR 0074's

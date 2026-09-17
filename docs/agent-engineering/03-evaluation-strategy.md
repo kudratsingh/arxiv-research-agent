@@ -303,5 +303,10 @@ engine.
 
 The first planned comparison is now specified in
 [`07-first-policy-experiment.md`](07-first-policy-experiment.md). Its design is
-approved; its implementation, paid calibration, and funded execution remain
-separate gates.
+approved and all five arms have since been implemented; its paid calibration
+and funded execution remain separate gates, and neither has been opened. Of the
+five research metrics `src/eval/metrics.py` publishes, three are LLM-judged,
+and none of the three has ever been calibrated against a human label — §7 is
+the protocol for changing that and
+[`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md) is its
+no-cost half.

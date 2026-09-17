@@ -27,9 +27,12 @@ choice to evaluate rather than an assumption.
 
 ### Product translation
 
-The repository already has sequential revision and a supervisor, but not
-parallel candidate trajectories or adaptive allocation. The useful next step is
-not a larger loop limit. It is a matched-budget experiment over:
+The repository has sequential revision and a supervisor, and since ADRs 0085,
+0086 and 0091 it also has parallel candidate trajectories and deterministic
+T0/T1/T2 allocation — all flag-gated, off by default, and never run against a
+live model. What is missing is therefore no longer the mechanism; it is the
+evidence. The useful next step is not a larger loop limit. It is a
+matched-budget experiment over:
 
 - diverse search plans;
 - candidate outlines or section drafts;

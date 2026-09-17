@@ -72,7 +72,7 @@ exactly as it always has. The four have one builder each in
 | Supervisor loop | `research_policy=legacy`, `enable_supervisor=true` | [0014](decisions/0014-supervisor-loop-behind-flag.md) |
 | Fixed verify-and-repair | `research_policy=fixed_verify_repair` | [0076](decisions/0076-fixed-verify-repair-research-policy.md) |
 | Orchestrator-workers | `research_policy=orchestrated_workers` | [0086](decisions/0086-orchestrator-workers-for-the-branch-tier.md) |
-| Listwise selection and the marginal stop | `candidate_selection=listwise`, `marginal_stop=on` | [0091](decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md) |
+| ↳ *not a fifth shape* — two options inside the one above: listwise selection and the marginal stop | `candidate_selection=listwise`, `marginal_stop=on` | [0091](decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md) |
 
 With `compute_controller="deterministic"` the shape stops being a
 process-wide constant and is chosen per job instead — see
@@ -442,10 +442,11 @@ runner's live frame carried `iterations` / `quality_score` /
 `error_type`, so a browser reading `data.status` got a `KeyError` if it
 happened to be connected when the job finished. Both now build through
 `runner.py::terminal_event_data`, which carries the union — every field
-was load bearing for one of the two readers. The live `job_failed` and
-`job_cancelled` frames are still the runner's own smaller payloads;
-that is a recorded gap in
-[`observability.md`](observability.md#known-gaps), not a second design.
+was load bearing for one of the two readers. WO-B3 finished the job:
+the live `job_failed` and `job_cancelled` frames and the redriver's own
+copy all call the same builder now, so **every** terminal frame on
+every path is that one twelve-field shape, `reason` included and `None`
+where it does not apply.
 
 **Job leases + redriver.** Under the Redis job store, a worker holds
 `joblease:{job_id}` (TTL `job_lease_ttl_sec`, refreshed in the

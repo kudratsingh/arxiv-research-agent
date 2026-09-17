@@ -48,8 +48,10 @@ under a separately approved micro-cap — before this packet is presented.
 
 > Start with the current fixed policy only to estimate variance and cost.
 > Add a paired existing-policy arm only if the approved cap covers the
-> comparison and the analysis remains interpretable. Do not include
-> unimplemented C or E.
+> comparison and the analysis remains interpretable. C and E are no longer
+> unimplemented, but the recommendation stands: a first funded run sizes
+> the variance, and adding the two newest arms to it buys a wider matrix
+> rather than a better estimate.
 
 So: **arm A only, the whole development suite, three repeats.**
 
@@ -200,8 +202,9 @@ not worth an N-fold overshoot exposure on the first funded run. If
 concurrency is wanted later, the overshoot bound must be restated at
 that N.
 
-*(The enforcement predicate `budget_stop_reached` exists and has no
-production caller today — see §8.)*
+*(The enforcement predicate `budget_stop_reached` has had a production
+caller since P0-WO07b, and a test that stops a campaign at its cap — see
+§8.)*
 
 ---
 
@@ -277,12 +280,12 @@ completed episodes are preserved and the reason is published.
 |---|---|
 | W11 Stage-0 qualification | [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md), and `tests/test_stage0_qualification.py` |
 | W07b execution loop, full mock matrix at zero cost | report §12, and `tests/test_campaign_execution.py` |
-| Dry-run lock, 300/240/60, zero provider init | report §2 |
-| A/B/C/D sealed against real compiled graphs; E non-runnable | report §3 |
+| Dry-run lock over the whole suite, zero provider init | report §2 (300/240/60 as measured on 2026-09-05; 300/300/0 since arm E became runnable) |
+| A/B/C/D sealed against real compiled graphs | report §3; arm E earns its own graph since ADR 0091 and is sealed by `tests/test_campaign_execution.py` |
 | Four synthetic episodes, verified chains, zero parity mismatches | report §4 |
 | Denominator and identity integrity | report §5 |
 | Privacy, leakage, adversarial, ASR gate | report §6 |
-| W10 calibration protocol and fixtures | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry/` (the calibration suite moved there byte for byte, ADR 0089) |
+| W10 calibration protocol and fixtures | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/` and its `packets`/`ingest` verbs, `eval_registry/` (the calibration suite moved there byte for byte, ADR 0089). Packets can be written and labels ingested; no human has labelled anything and no judge has been called. |
 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) |
 | Zero-external-call attestation | report §8 |
 
@@ -300,7 +303,7 @@ rather than discovering it after an approval is the point of the packet.
    reconciliation path consumes receipts the loop wrote; and
    `budget_stop_reached` — the between-episodes enforcement §3.4 relies
    on — has a caller and a test that stops a campaign at its cap. The
-   full `20 x 3 x 5` mock matrix reconciles 240 completed and 60 excluded
+   full `20 x 3 x 5` mock matrix reconciles 300 completed and 0 excluded
    at `$0.000000` with `llm_calls=0` on every episode
    ([`15-stage0-qualification-report.md`](15-stage0-qualification-report.md)
    §12). **What this does not do is make any figure below measured** —

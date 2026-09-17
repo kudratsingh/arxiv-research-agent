@@ -688,7 +688,7 @@ model call and no network:
 
 | Surface | The defence it runs |
 |---|---|
-| `control_token` | `sanitize_control_string` / `sanitize_section_names`, the two functions `src/agents/reader.py:321-322` applies |
+| `control_token` | `sanitize_control_string` / `sanitize_section_names`, the two functions `src/agents/reader.py:353-354` applies |
 | `untrusted_wrapper` | `wrap_untrusted*` plus `wrapper_integrity`, over all three boundaries |
 | `supervisor_routing` | `route_after_supervisor` — the one place model output selects what executes |
 | `profile_write` | `skill_entry_from_mapping` + `merge_skill_entries`, behind the session write boundary mirrored from `src/api/runner.py` |
@@ -966,10 +966,15 @@ three, so no direction of drift is free.
   instead of the mutable display name — removes the rename/reuse
   hazard structurally; needs a row migration (ADR 0042 interim:
   duplicate-name rejection + permanence rule).
-- `/readyz` with 503-on-dependency-failure semantics for
-  orchestrators that want dependency-gated routing (`/healthz`
-  deliberately stays 200 — ADR 0042; ADR 0053 re-affirmed the
-  liveness-only scope when it considered a model-warmup probe).
+- ~~`/readyz` with 503-on-dependency-failure semantics for
+  orchestrators that want dependency-gated routing.~~ **Landed.** The
+  route runs the same probes through the same helper as `/healthz` and
+  returns 503 when a dependency is down or the queue is saturated;
+  `/healthz` deliberately stays 200 (ADR 0042; ADR 0053 re-affirmed the
+  liveness-only scope when it considered a model-warmup probe). What is
+  still open is that **nothing polls it** on the shipped compose stack —
+  the container healthcheck reads `/healthz` — so the signal exists and
+  no orchestrator consumes it. See `docs/observability.md`.
 - Cache purge command for the paper / embedding caches, now that
   the `created_at` indexes exist to support it (ADR 0042 follow-up;
   `admin_migrate delete --older-than-days` covers only NULL-owner

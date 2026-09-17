@@ -1,10 +1,10 @@
 # Agent design pages
 
-One page per agent in `src/agents/`. Every page follows the same
-skeleton — **Purpose · Flow · Inputs · Outputs · Prompt design ·
-Failure modes · Flags · Testing · Related** — with agent-specific
-sections (evidence path, recovery path, dedup, iteration cap …)
-inserted wherever they read best.
+One page per agent in `src/agents/`, with one exception named below.
+Every page follows the same skeleton — **Purpose · Flow · Inputs ·
+Outputs · Prompt design · Failure modes · Flags · Testing · Related** —
+with agent-specific sections (evidence path, recovery path, dedup,
+iteration cap …) inserted wherever they read best.
 
 These pages describe `main` as it is. Workflow-level wiring — the four
 graph shapes, checkpointing, the API layer — lives in
@@ -24,7 +24,16 @@ graph shapes, checkpointing, the API layer — lives in
 
 `repair` is a node without an agent page: it makes no model call and
 picks from a deterministic table — see [repair.md](repair.md). So are
-`lead`, `workers` and `merge`, the branch tier's three (ADR 0086).
+`lead`, `workers` and `merge`, the branch tier's three (ADR 0086), and
+`select`, CAP-09's listwise candidate selector (ADR 0091), which is
+compiled into the branch shape only when `candidate_selection=listwise`
+and is the one of those four that *does* make a model call.
+
+The **assessment judge** (`src/agents/assessment.py`) is the exception
+to the one-page rule: it runs on the guided-read session graph beside
+the [tutor](tutor.md), produces tutor guidance rather than anything the
+research graph reads, and its design record is
+[ADR 0060](../decisions/0060-evidence-grounded-assessment-judge.md).
 
 ## The four shapes
 
@@ -65,7 +74,11 @@ and both put the verifier on the graph as a node:
   [0086](../decisions/0086-orchestrator-workers-for-the-branch-tier.md))
   — `planner → lead → workers → merge` replaces the single
   `search → reader` leg, each worker researching one sub-question on an
-  isolated state; after the merge the graph *is* the shape above.
+  isolated state; after the merge the graph *is* the shape above. With
+  `candidate_selection=listwise` a `select` node sits between `workers`
+  and `merge` (ADR
+  [0091](../decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md));
+  at the setting's `off` default the edges are ADR 0086's exactly.
 
 Both refuse to load unless `enable_supervisor=false`,
 `enable_evidence_store=true` and `enable_verifier=false`. Drawn edge by
@@ -86,7 +99,7 @@ that touch more than one:
   sanitizing; the choke point that protects the supervisor's routing
   (ADR 0020). Extended to the planner's `prior_context` by ADR 0033.
 - `enable_prompt_caching`, `<agent>_model` — per-agent LLM plumbing,
-  uniform across all seven LLM-calling agents (ADRs 0022 / 0021). The
+  uniform across all nine LLM-calling agents (ADRs 0022 / 0021). The
   search agent makes no LLM call and reads neither.
 - `max_cost_usd` — checked by the supervisor before its own LLM call,
   and independently by the API runner between nodes under both shapes

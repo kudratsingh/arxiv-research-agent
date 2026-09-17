@@ -114,13 +114,20 @@ built in Sprint 1 is what makes measuring the loop upgrade possible.
   migration (PR #70), work orders + dependency graph (PR #72) — all
   independently reviewed (reject → corrected → approve) and merged on
   green CI; the sixteen rulings are `docs/revamp/DECISIONS.md` D-010.
-- [ ] Gate 3 approval after the foundation and one complete vertical slice
-  are merged: Storybook/state evidence, end-to-end behavior, and tests.
-- [ ] Gate 4 approval after quality hardening and documentation: before/after
-  quality report, operational docs, rollout plan, and ship decision.
+- [x] Gate 3 approval (2026-08-29, under the standing delegation) after the
+  foundation and one complete vertical slice were merged: Storybook/state
+  evidence, end-to-end behavior, and tests; the ruling is
+  `docs/revamp/DECISIONS.md` D-014.
+- [x] Gate 4 approval (2026-08-29, under the standing delegation, with one
+  reservation) after quality hardening and documentation: before/after
+  quality report, operational docs, rollout plan, and ship decision; the
+  ruling is `docs/revamp/DECISIONS.md` D-015 and the reservation is RR-02,
+  the human screen-reader pass, reserved to the user.
 
-Gate 1 evidence is indexed from [`docs/revamp/STATUS.md`](../docs/revamp/STATUS.md).
-Product implementation remains intentionally blocked until Gate 1 is approved.
+Campaign evidence is indexed from [`docs/revamp/STATUS.md`](../docs/revamp/STATUS.md).
+All four gates are closed and all 33 work orders are merged; what is left is
+the user's own — RR-02, MT-01, DEPLOY, a funded eval campaign, the license
+decision, and the social-preview upload.
 
 ## Sprint 6+ — Enterprise moat
 

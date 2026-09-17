@@ -1,6 +1,6 @@
 # Phase A — assurance campaign status
 
-Updated: 2026-09-04
+Updated: 2026-09-05
 
 ## The campaign
 
@@ -222,8 +222,6 @@ now asserts that residue explicitly.
 
 None of these blocks the gates; each has a named home.
 
-| # | Item | Found by |
-|---|---|---|
 All eight were closed by the follow-up wave (B1–B5, PRs #189–#194).
 
 | # | Item | Found by | Closed by |

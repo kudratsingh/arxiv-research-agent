@@ -538,9 +538,12 @@ never renumbered.
   design resumes and raising a cap by a cent *cannot* — it is a
   different campaign, and `resume` says so and names lineage as the
   remedy. The design matrix is enumerated over all five arms including
-  the ones this checkout cannot run (arm E is `capability_missing` and
-  its slots are excluded-with-reason, so 20 x 3 x 5 reports as 300
-  expected / 240 planned / 60 excluded), arm order is interleaved per
+  the ones this checkout cannot run (arm E was `capability_missing` when
+  0082 shipped and its slots were excluded-with-reason, so 20 x 3 x 5
+  reported as 300 expected / 240 planned / 60 excluded; ADR 0091 made arm
+  E runnable and the same matrix now reports 300 / 300 / 0, the
+  exclusion mechanism surviving for the *next* undeliverable arm), arm
+  order is interleaved per
   block from a seed the manifest records, and the denominator ledger is
   written before the first episode so a failure, timeout, cancellation,
   budget stop or null metric can never leave it. A local approval-record
@@ -685,8 +688,9 @@ never renumbered.
   episode pending, and an interrupted episode re-seals to *compare*
   digests — equal means a new attempt on the same run id, different means
   `manifest_mismatch` and a refusal. The full 20 x 3 x 5 matrix runs in
-  ~16s at exactly `$0.000000` with `llm_calls=0` on all 240 episodes,
-  reconciling 240 completed and 60 excluded.
+  ~16s at exactly `$0.000000` with `llm_calls=0` on every runnable
+  episode — 240 of them when 0088 shipped and all 300 since ADR 0091
+  made arm E runnable, reconciling 300 completed and 0 excluded.
 
 - [0089](0089-non-arm-policy-snapshots-and-one-registry-root.md) —
   **Non-arm policy snapshots, learning context kinds, and one registry

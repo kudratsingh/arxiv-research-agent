@@ -166,8 +166,12 @@ Settings that drive the synthesizer (see `src/config.py`):
 - LLM-call plumbing: `tests/test_agent_model_routing.py` (the
   `synthesizer_model` override) and `tests/test_agent_cache_flag.py`
   (the prompt-caching flag).
-- E2E: the workflow-level cassette suite is still **planned, not
-  built** — see `docs/testing.md`.
+- E2E: `tests/e2e/test_research_workflow.py` drives the compiled fixed
+  pipeline through this node, and `tests/e2e/test_verify_repair.py` and
+  `tests/e2e/test_orchestrated_workers.py` drive the two policies whose
+  `verify` node reads the draft it writes. The tier is mock-mode rather
+  than the recorded cassettes originally planned, and `docs/testing.md`
+  says why.
 
 ## Follow-ups
 

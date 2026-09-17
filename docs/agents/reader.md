@@ -364,8 +364,10 @@ adversarial tests in `tests/test_reader_isolation.py`.
   `tests/test_runner_cost_cap.py`.
 - PDF layer: `tests/test_pdf_parser.py`, `tests/test_chunker.py`,
   `tests/test_chunk_ranker.py` — the tools this agent composes.
-- E2E: the workflow-level cassette suite is still **planned, not
-  built** — see `docs/testing.md`.
+- E2E: `tests/e2e/test_research_workflow.py` drives the compiled fixed
+  pipeline through this node, and `tests/e2e/test_mock_mode_keyless.py`
+  drives the keyless one. The tier is mock-mode rather than the recorded
+  cassettes originally planned, and `docs/testing.md` says why.
 
 ## Follow-ups tracked in ADRs
 

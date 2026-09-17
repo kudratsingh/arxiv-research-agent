@@ -1,11 +1,18 @@
 # Dependency-ordered roadmap
 
-Status: **PROPOSED — NO WORK ORDERS AUTHORIZED**
+Status: **PROPOSED — P0 BUILT AT ZERO SPEND; NO PAID WORK AUTHORIZED**
 
 This roadmap is sequenced by evidence dependencies, not calendar estimates.
 Each phase should be split into reviewable work orders only after the relevant
 decisions in [`06-decisions-and-discussion.md`](06-decisions-and-discussion.md)
 are made.
+
+**Where this stands, 2026-09-17.** P0's contract items (AE-000 through AE-003)
+are built, and so are three P2 items — AE-201, AE-202 and AE-203 — which the
+agent-capability lane took out of order because arm E needed them. All of it
+landed at zero spend and flag-gated off. Nothing cost-bearing has moved:
+AE-004's labelling campaign is unstarted, AE-005 is blocked on D9, and every
+phase gate below still requires a funded comparison that has not been run.
 
 ## 1. Roadmap at a glance
 
@@ -35,9 +42,9 @@ The order prevents three common failures:
 
 ## 2. Phase P0 — measurement foundation
 
-Proposed implementation decomposition:
-[`12-p0-work-orders.md`](12-p0-work-orders.md). The work orders remain
-unauthorized planning until the owner selects an implementation wave.
+Implementation decomposition:
+[`12-p0-work-orders.md`](12-p0-work-orders.md). W00 through W11 have been
+built; W12, the one cost-bearing work order, is still blocked on D9.
 
 Objective: turn each run into a reproducible, inspectable episode and establish
 the first statistically credible baseline.

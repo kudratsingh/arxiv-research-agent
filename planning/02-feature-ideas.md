@@ -5,6 +5,11 @@
 > conversation mode / follow-ups (ADR 0032), multi-format export
 > (ADR 0031), web UI (ADR 0029). The rest remains unscheduled —
 > see the Sprint 6+ section of [03-roadmap.md](03-roadmap.md).
+>
+> *Amended 2026-09-17: several of these are no longer unscheduled. The
+> nine long-term directions the owner adopted under LP-D2 are in
+> [`07-learning-platform/06-DIRECTION-PORTFOLIO.md`](07-learning-platform/06-DIRECTION-PORTFOLIO.md),
+> one in build at a time behind an evidence gate.*
 
 Idea catalog grouped by category. Not prioritized here — see [03-roadmap.md](03-roadmap.md) for sequencing.
 

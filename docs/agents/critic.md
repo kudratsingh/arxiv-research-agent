@@ -115,7 +115,7 @@ END never reads as an approved report.
 | `revision_needed` not a literal JSON `true` | `critic_agent` | Treated as `false`. Same idiom the verifier uses for its `verified` field — a truthy-but-not-`true` value never triggers a revision round. |
 | `revision_needed` with an unroutable `revision_target` | `critic_agent` | `critic_revision_target_invalid` WARNING; revision cancelled — deliver the report rather than spin a round the graph cannot route. |
 | `revision_target` outside the enum reaching the router (e.g. a stale checkpoint) | `route_after_critique` | Falls through to `END` with a `revision_target_undispatchable` WARNING — run finishes with the current draft. |
-| Score inflation / judge drift | Not handled here | The offline eval metrics (`src/eval/metrics.py`) score the same reports independently, so systematic critic drift shows up in the nightly regression diff. |
+| Score inflation / judge drift | Not handled here | The offline eval metrics (`src/eval/metrics.py`) score the same reports independently, which is where systematic critic drift *would* surface — but the nightly eval workflow is disabled and no campaign has ever produced a regression diff, so nothing watches for it today. |
 | Injected paper text steering the verdict | Prompt path | Paper *titles* and the draft are in the prompt; reader-side isolation (ADR 0020) scrubs upstream, but the critic's own prompt is not tag-wrapped — same follow-up as the synthesizer/verifier (ADR 0020 non-goals). |
 
 ## Flags
@@ -158,7 +158,9 @@ Settings that drive the critic (see `src/config.py`):
   the tier that found the off-by-one, and it owns it: the branch is
   invisible to a unit test of the critic, which never sees the loop it
   bounds.
-- Judge quality itself is guarded by the nightly eval, not unit tests.
+- Judge quality itself is not guarded by anything running today: the
+  nightly eval workflow that was to carry it is disabled, and no
+  campaign has completed, so no measurement of this judge exists.
 
 ## Related
 

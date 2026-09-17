@@ -2,7 +2,7 @@
 
 Status: **CURRENT-STATE SNAPSHOT — NOT A TARGET DESIGN**
 
-Snapshot: `main@0caefa2`, 2026-09-04
+Snapshot: `main@a3b112f`, 2026-09-17
 
 The code-level source of truth remains [`../architecture.md`](../architecture.md).
 This page maps the same system in agent-engineering terms: control policy,
@@ -21,7 +21,7 @@ flowchart TB
     end
 
     subgraph POLICIES[Agent policies]
-        R[Research graph<br/>fixed DAG or supervisor loop]
+        R[Research graph<br/>four shapes: fixed DAG, supervisor loop,<br/>verify-repair, orchestrated workers]
         L[Guided-reading graph<br/>bounded tutor session]
     end
 
@@ -87,8 +87,18 @@ flowchart LR
 ```
 
 This path is predictable and is still the default. The critic can cause a
-bounded re-entry, but there is no general search over alternative plans or
+bounded re-entry, but this path itself runs no search over alternative plans or
 candidate reports.
+
+`src/graph/workflow.py` compiles **four** shapes in all, and the three below
+the default are each flag-gated and off by default: the supervisor loop;
+`research_policy=fixed_verify_repair`, which inserts an explicit `verify` node
+with at most one deterministic `repair` and a re-verification (ADR 0076); and
+`research_policy=orchestrated_workers`, which replaces the `search → reader`
+leg with `planner → lead → workers → merge` (ADR 0086). With
+`compute_controller=deterministic` the shape is chosen per job rather than per
+process (ADR 0085), and with `orchestration=on` beside it the branch graph is
+reachable to that controller as T2.
 
 ### Optional path: supervisor-controlled loop
 
@@ -98,9 +108,11 @@ and `stop`, with `verify` and `refine_query` added by separate flags. The loop
 has cost, iteration, and quality short-circuits and deterministic fallbacks for
 malformed routing output.
 
-This is a real observe-decide-act loop, but it is not yet a learned policy. It
-does not estimate task difficulty, compare candidate trajectories, predict the
-value of another tool call, or optimize a measured long-horizon reward.
+This is a real observe-decide-act loop, but it is not a learned policy. The
+supervisor itself estimates no task difficulty and compares no candidate
+trajectories — those belong to the compute controller and the listwise
+selector, which refuse to load beside it — and nothing here predicts the value
+of another tool call or optimizes a measured long-horizon reward.
 
 ### Agent and tool responsibilities
 
@@ -166,8 +178,10 @@ feedback, or update model weights.
 The repository has more than a conventional unit-test suite:
 
 - a 20-query research benchmark;
-- citation accuracy, completeness, faithfulness, retrieval recall, critic
-  score, iterations, LLM-call count, and cost;
+- five research metrics — citation resolution rate (deterministic, ADR 0074),
+  citation accuracy (a regex diagnostic), and three LLM-judged ones
+  (completeness, faithfulness, retrieval recall) — plus critic score,
+  iterations, LLM-call count, and cost;
 - per-query persistence, resume, judge-failure isolation, budget caps, and
   regression diffing;
 - 15 guided-reading scenarios across learner personas and adversarial or
@@ -196,11 +210,11 @@ providing it.
 | Dynamic agent routing | Partial | Flag-gated supervisor with strict actions and stop caps |
 | Source-grounded synthesis | Partial | Full-text ranking and typed evidence claims exist; evidence path is flag-gated |
 | Robust verification | Partial | Critic, verifier, deterministic citation metric; no verifier ensemble or calibrated abstention |
-| Adaptive test-time compute | Absent | Static loop and spend caps; no difficulty/uncertainty-based allocation |
-| Parallel candidate search | Absent | Reader parallelism processes papers, not alternative solution trajectories |
+| Adaptive test-time compute | Partial | `compute_controller=deterministic` scores difficulty and routes a job to T0/T1/T2 (ADR 0085); flag-gated, default off, and never run for money |
+| Parallel candidate search | Partial | The orchestrator-workers branch tier runs sibling candidates and a listwise selector picks among them with a marginal-stop record (ADRs 0086, 0091); flag-gated, default off. Reader parallelism still processes papers, not trajectories |
 | General web deep research | Absent | arXiv + optional Semantic Scholar + paper PDFs, not persistent open-web browsing |
 | General code/tool execution | Absent | Purpose-built internal tools only; no sandboxed Python/shell/research notebook tool |
-| Episodic trajectory memory | Partial | Checkpoints, events, logs, conversations; no normalized trajectory/reward dataset |
+| Episodic trajectory memory | Partial | A canonical append-only trajectory with a per-run hash chain and a durable sink now exists (P0-WO04/WO08); there is still no reward signal and nothing is training-eligible |
 | Long-term learner memory | Partial | Provenance-aware profile and progress ledger, bounded in scope |
 | Learning from user feedback | Absent | No explicit report rating/edit/citation feedback schema or training-consent path |
 | Prompt/policy optimization | Absent | Changes are manually authored and promoted through ordinary tests |
@@ -226,16 +240,22 @@ providing it.
 
 ## 8. Highest-leverage gaps
 
-1. **No canonical trajectory record.** Logs, checkpoints, job rows, costs, and
-   eval records cannot yet be joined into one versioned episode suitable for
-   failure analysis, policy comparison, or learning.
+1. ~~**No canonical trajectory record.**~~ **Closed by P0-WO04/WO05/WO08.**
+   Logs, checkpoints, job rows, costs and eval records now join into one
+   versioned episode: a sealed `RunManifest`, an append-only trajectory with a
+   verified hash chain on a durable sink, and content-addressed artifacts. What
+   is still absent is the *reward* half — every event is
+   `training_eligible: false` and no policy learns from one.
 2. **No calibrated quality baseline.** Before advanced agent designs are
    defensible, repeated funded runs and a human-labeled judge set are needed.
 3. **Verification is mostly model-on-model.** Deterministic and source checks
    need expansion, and model judges need independence, calibration, and
    explicit abstention.
-4. **Compute policy is static.** Easy and hard tasks receive the same graph
-   shape until a critic or supervisor reacts after spending compute.
+4. **Compute policy is static by default.** A per-job controller exists (ADR
+   0085) and is off unless `compute_controller=deterministic` is set, so on the
+   shipped defaults easy and hard tasks still receive the same graph shape until
+   a critic or supervisor reacts after spending compute. Whether routing helps
+   is unmeasured: no funded run has exercised it.
 5. **Retrieval breadth and evidence reasoning are narrow.** The system is very
    good at arXiv-centric research, but not yet at heterogeneous sources,
    conflicting claims, temporal freshness, or source-quality ranking.

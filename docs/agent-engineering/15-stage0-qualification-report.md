@@ -14,9 +14,18 @@ closing record) touch nothing this report measures.
 
 Executable half: [`tests/test_stage0_qualification.py`](../../tests/test_stage0_qualification.py)
 
-The commit the campaign-execution-loop work order (W07b) is waiting on is
+The commit the campaign-execution-loop work order (W07b) waited on was
 `4d9a2d8` — *"feat(agents): the supervisor serves a fixture route under
 mock mode"* — which is what makes an arm-D episode provider-free (§4.1).
+W07b has since landed; §12 is its addendum.
+
+**Read this as a dated record.** Sections 0–11 are the measurements
+P0-WO11 made on 2026-09-05 and are left as they were made. Where the tree
+has since moved out from under a finding, the finding carries an
+**amended** line saying so rather than being rewritten — §§2.1, 3.1, 3.3,
+3.4, 4, 7.3, 9, 10 and 12.2. Everything those lines correct comes from
+the same two changes: arm E became runnable (ADRs 0085/0086/0089/0091)
+and the artifact store's screen became structural (ADR 0096).
 
 ---
 
@@ -42,8 +51,8 @@ Two other things this report does not do. It does not request approval —
 [`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md) is a
 template with an unanswered go/no-go question, and every figure in it is
 labelled `ESTIMATE`. And it does not close the P0 gate on its own: §10
-records three bullets that pass only with a stated reservation and one
-implementation item that is not built.
+records two bullets that pass only with a stated reservation and one that
+fails by construction, because passing it is the owner's act.
 
 ---
 
@@ -98,6 +107,11 @@ arm-E slot, each carrying `exclusion_reason: arm_capability_missing` and
 denominator ledger opens with them as `excluded` and
 `analysis_denominator` is `expected - excluded = 240`, so an arm that
 cannot run is visible as a refusal rather than absent from the design.
+
+**Amended 2026-09-17.** Arm E is runnable now (ADR 0091 built the last
+two of its four capabilities), so the same command plans all 300 slots
+and excludes none. The exclusion machinery is unchanged and unexercised
+by this suite — it is what a *future* undeclared arm's slots would enter.
 
 ### 2.2 The locked refs
 
@@ -176,6 +190,14 @@ exactly why `UNRUNNABLE_ARMS` refuses E from the capability table rather
 than from a graph probe: probing a graph to discover E's gap would imply
 some graph could close it.
 
+**Amended 2026-09-17.** A graph did close it. ADR 0089 redefined arm E
+without the supervisor, and CAP-04/CAP-03/CAP-09 (ADRs 0085, 0086, 0091)
+built the controller, the branch tier, the listwise selector and the
+marginal stop, so E now compiles a graph of its own and earns its four
+capabilities structurally. `UNRUNNABLE_ARMS` is empty and every refusal
+comes from a probed graph. The row above is what this checkout compiled
+on 2026-09-05, not what it compiles today.
+
 ### 3.2 Sealed manifests for A, B, C and D
 
 One case (`hallucination-mitigation`), repeat 0, four arms, sealed
@@ -206,7 +228,7 @@ configuration (`enable_supervisor=false`, `enable_verifier=true`,
 or `verifier` node at all, and `classify_arm(config, "C", shape)` refuses
 it: *"compiled graph runs arm A, not the declared arm C"*.
 
-### 3.3 Arm E's descriptor: schema-valid, `capability_missing`, non-runnable
+### 3.3 Arm E's descriptor: schema-valid, `capability_missing`, non-runnable (as of 2026-09-05)
 
 ```json
 {
@@ -238,6 +260,18 @@ graph, so C is `available`. Arm E's four are named and none is earned by
 any graph this repository can compile. **T3 is not in the tier list and
 is not expressible**: nothing in `src/` routes a compute tier at all.
 
+**Amended 2026-09-17.** Every sentence in this subsection about arm E is
+now history. E's row in `ARM_SETTINGS` turns on a deterministic compute
+controller, the branch tier, the listwise selector and the marginal stop;
+its descriptor is `available`, it is runnable, and its sixty slots are
+planned and run rather than excluded. What survives unchanged is the
+last clause: **T3 is still not expressible.** The controller routes
+T0/T1/T2 and nothing registers a fourth tier, so 07 §3's "reserved for
+later long-horizon work" remains reserved. The validator behaviour
+described above also survives — a `capability_missing` arm must still
+name its gap and must still be non-runnable — it simply has no member to
+apply to on this checkout.
+
 ### 3.4 The arm-difference and common-config report
 
 Read from `Settings` for each arm, not restated from the RFC.
@@ -250,6 +284,16 @@ Differences — exactly the four fields `ARM_SETTINGS` owns:
 | `enable_evidence_store` | false | true | true | true | true |
 | `enable_verifier` | false | false | false | true | true |
 | `research_policy` | `legacy` | `legacy` | `fixed_verify_repair` | `legacy` | `legacy` |
+
+**Amended 2026-09-17.** E's column is history. Its row was a placeholder
+copy of D's while arm E had no implementation; ADR 0089 then removed the
+supervisor from E's definition and ADR 0091 gave it a row of its own.
+`ARM_SETTINGS["E"]` today: `enable_supervisor` **false**,
+`enable_evidence_store` true, `enable_verifier` **false**,
+`research_policy` `legacy`, plus four fields this table predates —
+`compute_controller` `deterministic`, `orchestration` `on`,
+`candidate_selection` `listwise`, `marginal_stop` `on`. The differences
+are still exactly the fields `ARM_SETTINGS` owns; there are more of them.
 
 Common, identical in all five (`COMMON_FROZEN_SETTINGS`, applied *after*
 the per-arm overrides so a caller cannot override one per arm):
@@ -329,6 +373,11 @@ nothing from the live bridge:
 
 Arm E has no episode. `classify_arm(config, "E", …)` raises with a typed
 reason naming its four missing capabilities.
+
+**Amended 2026-09-17.** Arm E has sixty episodes now, and they run in the
+same mock pass as the other four — §12.2's amendment has the figures.
+The four episodes tabled above are still the four this work order
+measured; they are not a claim about how many arms run today.
 
 ### 4.1 The supervisor's mock branch, added here
 
@@ -443,7 +492,12 @@ is refused rather than absorbed.
 Worked at full scale in `tests/test_campaign_lock.py`: 20 × 3 × 5 gives
 expected 300, excluded 60, analysis denominator 240; a smaller worked
 example folds all six terminal categories at once and lands
-expected == accounted == 30 with denominator 24.
+expected == accounted == 30 with denominator 24. **Amended 2026-09-17:**
+those figures still come out of that module, but for a different reason.
+It now probes arm E against a *stub* graph that deliberately does not
+earn the arm, because `UNRUNNABLE_ARMS` is empty and a module whose
+subject is the ledger needs an excluded slot to reconcile. A real arm-E
+deployment earns its graph and excludes nothing — see §12.2's amendment.
 
 ### 5.4 Source integrity
 
@@ -694,10 +748,10 @@ settings singleton), and it must write `completion.json`, check
 
 | Prerequisite | State | Owner |
 |---|---|---|
-| Campaign execution loop | **built** — P0-WO07b, §12 addendum. `src/campaign/execute.py` and the `run` verb; the full mock matrix reconciles 240 completed / 60 excluded at `$0.000000`. | engineering |
+| Campaign execution loop | **built** — P0-WO07b, §12 addendum. `src/campaign/execute.py` and the `run` verb; the full mock matrix reconciles 300 completed / 0 excluded at `$0.000000`. | engineering |
 | Approval backend record | **no real backend.** `LocalApprovalRecordBackend` reads a JSON file and delegates to W03's `FakeLocalApprovalBackend`. It is a correct *shape*, not an authority. A funded run needs a record an owner actually created. | owner + engineering |
 | Exact model ids and verified prices | `anthropic_model` and `eval_judge_model` are both `claude-sonnet-4-6`; `PRICES_LAST_VERIFIED` is 2026-08-20. Both must be re-pinned and re-verified immediately before the run. | owner |
-| Judge calibration expert time | W10 estimates **48.7 h** across two annotators plus adjudication for the recommended 141-item set; 30 synthetic items exist and calibrate nothing. Blocked on D8.10 and 13 §5's human-label retention decision. | owner |
+| Judge calibration expert time | W10 estimates **48.7 h** across two annotators plus adjudication for the recommended 141-item set; 30 synthetic items exist and calibrate nothing. `python -m src.calibration packets` now writes the blinded packets an annotator would fill in and `ingest` un-blinds and scores agreement, but no human has labelled anything and no campaign has started. Blocked on D8.10 and 13 §5's human-label retention decision. | owner |
 | D8 retained-content decision | Required before any production or user trajectory capture. Not needed for a W12 baseline over the *public* benchmark, which carries `evaluation_only` consent. | owner |
 | Temperature and per-agent routes | Recorded, not enforced. A packet must state what it was priced at. | engineering |
 | Validation / sealed canary splits | Absent (§6.3). Needed before *promotion*, not before W12. | owner |
@@ -833,7 +887,8 @@ was never invoked outside a `tmp_path`.
 
 ## 9. Where the tests live
 
-`tests/test_stage0_qualification.py`, 23 checks:
+`tests/test_stage0_qualification.py`, 27 checks (23 when this report was
+written; the candidate-boundary group has since grown by four):
 
 | Group | Tier | Count |
 |---|---|---:|
@@ -841,7 +896,7 @@ was never invoked outside a `tmp_path`.
 | The dry-run lock | `unit` + `contract` | 3 |
 | The five arm identities | `unit` + `contract` | 4 |
 | The synthetic episodes | `integration` + `contract` | 5 |
-| The candidate boundary | `unit` + `security` | 8 |
+| The candidate boundary | `unit` + `security` | 12 |
 
 The synthetic episodes are `integration`, not `e2e`, and the repository
 decides that rather than the module:
@@ -865,8 +920,8 @@ puts this qualification inside the coverage selection, which
 | 4 | No candidate role can access hidden evaluation material | **PASS** | §6.1–§6.3, over the shipped registry. |
 | 5 | Manifests seal before side effects and chargeable admission fails closed | **PASS** | §3.2; RFC 09 §5.1's order is `seal_campaign_episode`'s. Admission now also fails closed on a task that forbids chargeable work (W11-F3), and no credential is read before an approval verifies. |
 | 6 | Repeat/resume/rerun semantics and denominators are tested | **PASS** | §5.2–§5.3. |
-| 7 | Current A/B/D capability claims match compiled graphs | **PASS** | §3.1–§3.2, against the graphs this checkout compiles, not stand-in shapes. C also matches, which 12 §17 did not assume it would. |
-| 8 | Missing C/E capabilities are explicit and non-runnable | **PASS** | C is now *present* (CAP-02) and earns its three capabilities structurally; an impostor flag combination is refused. E names four missing capabilities, is `capability_missing` against any graph, is never runnable, and T3 is not expressible. §3.3. |
+| 7 | Every arm's capability claim matches the graph this checkout compiles | **PASS** | §3.1–§3.2, against the graphs this checkout compiles, not stand-in shapes. C also matched, which 12 §17 did not assume it would. **Amended 2026-09-17:** the bullet read "current A/B/D capability claims" and now covers all five, because E compiles a graph of its own (ADR 0091). |
+| 8 | An arm this checkout cannot run is explicit and non-runnable | **PASS** | C is *present* (CAP-02) and earns its three capabilities structurally; an impostor flag combination is refused. **Amended 2026-09-17:** this row read that E names four missing capabilities and is never runnable. E is runnable now, `UNRUNNABLE_ARMS` is empty, and the bullet holds in the only way left to it — every refusal comes from probing a compiled graph, and a `capability_missing` arm must still name its gap and must still be non-runnable. T3 remains not expressible. §3.3. |
 | 9 | D8 has a recorded decision for any proposed retained user/learner content | **PASS, vacuously — and the vacuum is the point** | This package proposes retaining **no** user or learner content. Capture is refused to any run whose consent is `product_operation_only`, independently of configuration (§6.4), and every event is `training_eligible: false`. D8 therefore has nothing to decide *for W12 over the public benchmark*. It remains open, and it blocks W10's human-labeling campaign and any production capture. |
 | 10 | The W12 approval packet names an exact maximum cost and stop rule | **FAIL — deliberately** | [`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md) is a draft. Every figure is labelled `ESTIMATE / RE-PRICE BEFORE APPROVAL`, the model id and prices must be re-verified at run time, and the go/no-go question is left unanswered. A packet whose numbers were priced against a table last verified on 2026-08-20 and whose token counts have never been measured against this benchmark is not an "exact maximum cost". |
 
@@ -949,6 +1004,15 @@ must do the first.
 | Wall clock, whole matrix | **18.6 s** |
 | Paired items / required pairs at a 5-point move | 60 / 77 |
 
+**Amended 2026-09-17.** Arm E became runnable after this pass, so the
+matrix reconciles **300 completed, 0 excluded**, analysis denominator
+**300**, still `$0.000000` in every cost category and still **0** model
+calls — the figures `tests/test_campaign_execution.py` asserts and the
+figures §12.6's generator reads. The rest of this addendum is left as it
+was measured; wherever it counts 240 episodes or four arms, read 300 and
+five. Nothing about the loop changed to produce those numbers: the sixty
+slots that were excluded are now planned.
+
 Per-episode, over all 240 records: `model_calls` is the single value
 `{0}`, `workflow_cost_usd` and `judge_cost_usd` are both the single value
 `{"0.000000"}`, and every episode's trajectory is durable
@@ -1005,6 +1069,11 @@ Two limits are worth naming rather than leaving to be discovered:
   three skipped rubrics in every record. `execute_campaign` refuses to
   use that scorer for a campaign that budgeted judge model calls, so a
   funded run cannot silently be scored with less than it declared.
+  *Since 2026-09-06:* ADR 0095's `--mock-judge` runs the three judged
+  paths against a checked-in fixture, so the metric code executes at zero
+  cost. It is default-off, refuses unless both mock data and the
+  zero-spend sentinel are set, and is not a quality signal — **no live
+  judge has ever run.**
 - ~~**Per-episode operator logging is absent.**~~ **Closed by P0-WO07c.**
   When W07b landed, the four campaign event names and their extra keys
   could not be registered — `src/observability/logging.py` was outside
@@ -1107,7 +1176,7 @@ Three properties are worth stating because they are the ones a report
 like this usually gets wrong.
 
 **A metric that did not run prints `not run`, never `0.000`.** The free
-scorer runs two of the five instruments; on the 240-of-300 free pass the
+scorer runs two of the five instruments; on the 300-episode free pass the
 three judge rows carry the reason they are empty and the arm's header
 says `judges_run on 0 of 60`. On the mock-judge pass (§12.2's companion,
 E1) all five rows carry numbers and the skipped list is empty.

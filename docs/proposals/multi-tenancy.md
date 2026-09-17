@@ -13,6 +13,20 @@
 > [§5 Phased delivery](#5-phased-delivery-plan-for-the-recommendation)
 > before agreeing to anything: the first gate is deliberately cheap and
 > the expensive gates are deliberately later.
+>
+> **Citation note, 2026-09-17.** This proposal's own rule is that a claim
+> about `main` carries a `path:line`, and an uncited one is a bug. Enough
+> merges have landed since it was written to make a second kind of bug
+> possible: a citation that still resolves and points at the wrong line.
+> §1.1's "on `main` today" list and §9's evidence index were re-resolved
+> against `a3b112f` and corrected, and two web modules that had moved
+> (`web/lib/useResearchStream.ts`, `web/lib/api.ts`) are now cited at
+> their current homes. **Line ranges elsewhere in §§2–8 were taken on
+> 2026-08-28 and several have drifted** — read the file and symbol, and
+> treat a range that disagrees with the sentence beside it as stale
+> rather than as evidence. Nothing about the *decision* has changed:
+> multi-tenancy is still unbuilt, still unapproved, and still the
+> owner's call.
 
 - **Workstream**: MT-01
 - **Date**: 2026-08-28
@@ -41,32 +55,32 @@ Per-principal data ownership is not missing. It shipped in ADR 0036 and
 was hardened by ADR 0043. Concretely, on `main` today:
 
 - Both durable resources carry an owner column:
-  `Job.principal_key_id` (`src/api/jobs.py:90`) and
+  `Job.principal_key_id` (`src/api/jobs.py:203`) and
   `Conversation.principal_key_id` (`src/api/conversations.py:82`),
   backed in Postgres by `principal_key_id TEXT NULL` plus a partial
   index on non-NULL values (`src/tools/postgres_pool.py:71-91`) and in
   Redis by the `_persistent_fields()` round-trip
-  (`src/api/redis_store.py:157,182,255`).
+  (`src/api/redis_store.py:186,211,288`).
 - Rows are stamped at creation from the authenticated caller —
-  `src/api/routes.py:184` for jobs, `src/api/routes.py:550` for
+  `src/api/routes.py:224` for jobs, `src/api/routes.py:592` for
   conversations, both via `_principal_key_id()`
-  (`src/api/routes.py:87-93`).
+  (`src/api/routes.py:129-135`).
 - Reads and mutations are ownership-checked. `_check_ownership()`
-  (`src/api/routes.py:59-84`) returns **404, not 403**, on a mismatch
+  (`src/api/routes.py:98-127`) returns **404, not 403**, on a mismatch
   so an attacker cannot enumerate another tenant's ids; it is wired
-  into every job route (`src/api/routes.py:231,259,363,432`).
+  into every job route (`src/api/routes.py:269,295,396,465`).
 - Listing pushes the filter into SQL rather than filtering after the
-  fact (`src/api/routes.py:586-590` →
+  fact (`src/api/routes.py:629-633` →
   `src/api/conversations.py:362-364`), and delete carries the owner
-  inline in a single statement (`src/api/routes.py:645-648` →
+  inline in a single statement (`src/api/routes.py:685-688` →
   `src/api/conversations.py:540-542`).
 - Cross-tenant piggybacking on `POST /research` is blocked: a caller
   submitting into a `conversation_id` must own it
-  (`src/api/routes.py:173-177`), which is what keeps another
+  (`src/api/routes.py:213-217`), which is what keeps another
   principal's prior-report context out of the planner prompt.
 - The rate limiter buckets per principal
-  (`src/api/auth.py:538`), Redis-backed so the bucket holds across
-  workers (ADR 0037; `src/api/auth.py:229-297`).
+  (`src/api/auth.py:651`), Redis-backed so the bucket holds across
+  workers (ADR 0037; `src/api/auth.py:290-414`).
 
 The property this buys is real and tested — `tests/test_api_auth.py`
 and `tests/test_per_principal_scoping.py` prove that principal B gets
@@ -599,7 +613,7 @@ An `oauth2-proxy` (or equivalent) in front of Caddy in a local overlay
 only. Proves: the IdP round-trip works; the trusted header arrives at
 `web`; the header cannot be spoofed from outside the edge; sign-out
 works; and the SSE path survives the edge (native `EventSource` cannot
-set headers — `web/lib/useResearchStream.ts:121` — so the session must
+set headers — `web/lib/job/useJobStream.ts` — so the session must
 be cookie-borne through the whole stream, which is the specific thing
 to prove rather than assume).
 
@@ -676,7 +690,7 @@ workstreams, and both are one-directional:
 2. **401 handling in the data layer and proxy.** The proxy already
    forwards `www-authenticate` and returns upstream status verbatim
    (`web/app/api/[...path]/route.ts:19-25,110-114`), and the client has
-   an `ApiError` carrying status (`web/lib/api.ts:15-23`). A 401 today
+   an `ApiError` carrying status (`web/lib/api/errors.ts:314-324`). A 401 today
    means "the server key is wrong"; after MT-01 it means "your session
    expired". The revamp can render a generic recoverable-auth-error
    state that is correct under both without knowing MT-01 exists.
@@ -728,7 +742,7 @@ key — turning any page on the internet into a trigger for a *paid,
 non-idempotent* research submission
 (`docs/revamp/00-DISCOVERY.md:328` lists exactly-one-submit as a
 must-keep contract). Compounding it: the SSE path uses native
-`EventSource` (`web/lib/useResearchStream.ts:121`), which cannot set
+`EventSource` (`web/lib/job/useJobStream.ts`), which cannot set
 headers, so the session credential **must** be cookie-borne. A
 header-token design is not available. Mitigation is therefore an
 explicit `Origin`/`Sec-Fetch-Site` check on mutating methods in the
@@ -933,16 +947,20 @@ without them.
 Primary sources for every claim above, for a reviewer who wants to
 check the work:
 
-- **Single-key injection**: `web/app/api/[...path]/route.ts:81-82`;
-  wiring at `docker-compose.yml:125` and
-  `deploy/hetzner/compose.prod.yml:15,27`.
-- **Ownership machinery**: `src/api/routes.py:59-93,173-177,184,550,586-590,645-648`;
+- **Single-key injection**: `web/app/api/[...path]/route.ts:166`;
+  wiring at `docker-compose.yml:95` and
+  `deploy/hetzner/compose.prod.yml:15`.
+- **Ownership machinery**: `src/api/routes.py:98-135,213-217,224,592,629-633,685-688`;
   `src/api/conversations.py:82,362-364,540-542`;
-  `src/api/jobs.py:90`; `src/tools/postgres_pool.py:71-91`.
-- **Auth and keystore**: `src/api/auth.py:94-98,127-133,332-389,392-477,480-518,538`;
-  `src/config.py:174-245,598-607`.
+  `src/api/jobs.py:203`; `src/tools/postgres_pool.py:71-91`.
+- **Auth and keystore**: `src/api/auth.py` — `parse_api_keys`,
+  `load_keystore_from_file`, `InMemoryRateLimiter`, `RedisRateLimiter`,
+  `build_rate_limiter`, `require_principal`, `enforce_rate_limit`. Cited by
+  symbol rather than by line: this file has been edited repeatedly since this
+  proposal was written and every line range in it had drifted.
+  `src/config.py` — `api_keys`, `api_keys_file`, `api_key_hourly_limit`.
 - **Edge**: `deploy/hetzner/Caddyfile:8-16,29`;
-  `deploy/hetzner/compose.prod.yml:12,24`; `docker-compose.yml:44,94,126`.
+  `deploy/hetzner/compose.prod.yml:12,30`; `docker-compose.yml:44,94,168`.
 - **Prior art and precedent**: ADR
   [0033](../decisions/0033-safety-hardening-bundle.md),
   [0036](../decisions/0036-per-principal-store-scoping.md),

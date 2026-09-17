@@ -1,8 +1,10 @@
 # RFC: immutable run manifest and reproducibility contract
 
-Status: **PROPOSED — IMPLEMENTATION NOT AUTHORIZED**
+Status: **IMPLEMENTED BY P0-WO03 (`src/contracts/run_manifest.py`) — NO SPEND
+AUTHORIZED**
 
-Snapshot date: **2026-09-04**
+Snapshot date: **2026-09-04**; status amended **2026-09-17**. §§1–18 describe
+the contract as proposed; §19 is the one amendment that changed it.
 
 Target schema kind/version: `run-manifest` / `1.0.0`
 
@@ -1412,8 +1414,8 @@ a run starts, so no stage of the chosen graph can represent it. It is
 still not earnable by a policy *name* — the setting is refused at load
 unless the shapes it selects among are legal.
 
-**Arm E remains `capability_missing`**, and the refusal now names exactly
-what is absent rather than a category:
+**Arm E was `capability_missing` when this amendment was written**, and
+the refusal named exactly what was absent rather than a category:
 
 ```
 Arm E graph lacks marginal_stop, candidate_lineage_selector: the listwise
@@ -1421,11 +1423,18 @@ candidate selector and the marginal-stop record are CAP-09's and nothing
 in this repository builds them yet
 ```
 
-**Known follow-up.** `src/campaign/arms.py`'s `ARM_SETTINGS["E"]` still
-copies arm D's row, including `enable_supervisor: True`. That row is
-inert today — `UNRUNNABLE_ARMS` refuses arm E before any snapshot is
-built — but it now describes an arm that no longer exists, and CAP-09's
-companion campaign change should drop the supervisor from it.
+**Known follow-up — closed by CAP-09 (ADR 0091) on 2026-09-06.** Both
+things this subsection left open are done. CAP-09 built the listwise
+selector and the marginal-stop record, so all four capabilities are
+earnable and `UNRUNNABLE_ARMS` is now **empty**: no arm is refused
+categorically and every refusal comes from probing a compiled graph. And
+CAP-09's companion campaign change dropped the supervisor from
+`src/campaign/arms.py`'s `ARM_SETTINGS["E"]`, which no longer copies arm
+D's row — it is `enable_supervisor: False`, `enable_verifier: False`,
+`research_policy: "legacy"`, plus `compute_controller: "deterministic"`,
+`orchestration: "on"`, `candidate_selection: "listwise"` and
+`marginal_stop: "on"`. Arm E is `available` against the graph a real
+arm-E deployment compiles. None of it has been run for money.
 
 ### 19.3 Both bridges seal the same manifest
 

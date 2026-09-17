@@ -40,7 +40,7 @@ Alert rule: `PoisonJobDeadLettered`.
 
 `kind` on the dead-letter metric reads `"unknown"`, not `research` or
 `session` — the redriver has `job.kind` in hand and does not pass it.
-That is a known gap (`docs/observability.md` §Known gaps 7), and it
+That is a known gap (`docs/observability.md` §Known gaps 6), and it
 means the alert cannot tell you which workflow the poison job belongs
 to. The log line's `job_id` can.
 

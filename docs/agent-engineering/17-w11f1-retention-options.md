@@ -1,12 +1,16 @@
 # 17. W11-F1 — artifact retention options
 
-Status: **CLOSED — option C adopted by owner ruling R9 on 2026-09-17 and
-implemented in [ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md).
-Kept as the record the ruling chose from.**
+Status: **CLOSED — option C adopted by owner ruling R9 on 2026-09-17,
+implemented in [ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md)
+by PR #253 (`c6d4bdf`). Kept as the record the ruling chose from; nothing
+below is a live question.**
 
 Snapshot date: **2026-09-17**
 
-Repository baseline: `18c3990` on `main`
+Repository baseline for the measurements below: `18c3990` on `main` —
+i.e. before the ruling. Everything this memo measures describes the
+*old* rule. The current one is the three structural patterns of §3's
+option C.
 
 Finding: **W11-F1**, opened by
 [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md)
@@ -18,9 +22,9 @@ introduced by ADR
 [0083](../decisions/0083-runtime-event-bridge-and-artifact-adapter.md).
 
 This memo does three things and stops: it states what the rule protects,
-measures what it currently costs, and lays out three ways to change it
-with their costs and risks. It recommends one. **It changes no
-behaviour**, and the refusal is exactly where it was.
+measures what it cost, and lays out three ways to change it with their
+costs and risks. It recommends one. **It changed no behaviour itself** —
+owner ruling R9 and ADR 0096 did that, on the strength of it.
 
 ---
 
@@ -29,7 +33,8 @@ behaviour**, and the refusal is exactly where it was.
 `src/contracts/artifact_store.py` refuses four kinds of body outright
 rather than sanitising them: an expiring signed URL, a credential shape,
 **raw private reasoning**, and a data class below the run's. The third is
-this memo's subject:
+this memo's subject, **as it stood before ADR 0096** (the two English
+phrases are gone from `src/` now; the other three remain):
 
 ```python
 _PRIVATE_REASONING_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
@@ -166,28 +171,30 @@ The screen runs in `_screen_text`, before any consideration of `role` or
 
 `SOURCE_DOCUMENT` under `UNTRUSTED_SOURCE` is a role and a trust class
 that, by definition, contain no model reasoning — the bytes came from
-outside the system. They are refused anyway. This checkout therefore
-cannot store a retrieved paper about chain-of-thought prompting under any
-role at all, which is a strictly larger problem than the one Stage 0
-found, and the one that decides the recommendation below.
+outside the system. They were refused anyway. Under the old rule this
+repository therefore could not store a retrieved paper about
+chain-of-thought prompting under any role at all, which is a strictly
+larger problem than the one Stage 0 found, and the one that decided the
+recommendation below.
 
 ### 2.4 Pinned by a test
 
 `tests/test_stage0_qualification.py::TestTheCandidateRoleCannotReachEvaluationMaterial::test_w11f1_a_briefing_quoting_a_source_abstract_keeps_its_bytes`
 
 It builds the evidence-path briefing above and asserts it is **stored** —
-the behaviour this memo recommends and the repository does not have. It
-is `@pytest.mark.xfail(strict=True)` with W11-F1 as the reason, so it
-xfails today and turns into a loud `XPASS(strict)` **failure** the moment
-the rule is narrowed. That is deliberate: whoever changes the rule is
-made to come back to this memo and to ADR 0083 rather than leaving a
-stale pin behind. Verified both ways — it xfails on this tree, and
-temporarily dropping the one pattern makes it fail as `XPASS(strict)`.
+the behaviour this memo recommended and the repository did not have. It
+shipped as `@pytest.mark.xfail(strict=True)` with W11-F1 as the reason,
+so it xfailed until the rule was narrowed and would have turned into a
+loud `XPASS(strict)` **failure** the moment it was. That was deliberate:
+whoever changed the rule was made to come back to this memo and to ADR
+0083 rather than leave a stale pin behind.
 
-The existing sibling test
-(`test_a_briefing_about_chain_of_thought_is_refused_storage`) pins the
-refusal itself on a hand-written body and is untouched. The two are
-complementary: one says the rule fires, the other says what that costs.
+**Since ADR 0096** the mark is gone and the assertion stands on its own:
+the briefing keeps its bytes, and the sibling that pinned the refusal on
+a hand-written body is now
+`test_a_briefing_about_chain_of_thought_is_stored`. A second sibling
+pins what did *not* change — a body carrying a thinking block, a
+scratchpad or `reasoning_content` is still refused.
 
 ---
 
@@ -306,7 +313,9 @@ covers. A and B both leave §2.3 broken, so neither is a substitute for C.
 
 ### What changing this rule would require
 
-Not done here, and listed so the work is priced rather than discovered:
+Listed here so the work was priced rather than discovered. **All five
+items were done by ADR 0096 / PR #253**; the list is left as the estimate
+it was.
 
 - an ADR amending ADR 0083, stating the narrowed rule and why;
 - deleting or rewriting

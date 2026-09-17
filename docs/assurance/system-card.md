@@ -6,9 +6,12 @@ honest artifact therefore describes the *system* — what it is for, what it mus
 not be used for, which models it routes to, what has actually been measured
 about it, and what has not.
 
-**Reviewed at `ed71098`.** Every number below came out of a runner and is linked
-to the file it came out of. Where there is no number, this card says there is no
-number rather than supplying an adjective.
+**Reviewed at `a3b112f`, 2026-09-17.** Every number below came out of a runner
+and is linked to the file it came out of. Where there is no number, this card
+says there is no number rather than supplying an adjective. §5.1's figures are
+the dated Gate A3 pack's and are quoted from it verbatim — a re-run would move
+them, and `tests/test_assurance_docs.py` fails if the card and the pack ever
+disagree.
 
 ## 1. Identity
 
@@ -18,7 +21,7 @@ number rather than supplying an adjective.
 | **What it is** | A multi-agent research assistant for ML/AI papers, plus the operable surface around it: a FastAPI async job API with SSE streaming, and a Next.js browser client (the "Evidence Workbench"). |
 | **Version** | The commit. There is no release tag; the repository is the artifact. |
 | **Provider** | One maintainer, Kudrat Singh. Not an organisation. |
-| **Licence** | **None.** The repository ships no `LICENSE` file, so no grant is offered. This is recorded rather than fixed: licensing is an owner decision (W-OD-3), and inventing an SPDX identifier here would be a licensing claim the repository does not make. |
+| **Licence** | **None, and settled.** The repository ships no `LICENSE` file, so no grant is offered, and W-OD-3 was decided on 2026-09-17: no licence is adopted and all rights are reserved. The absence is deliberate — this repository is published to be read, not reused — and inventing an SPDX identifier here would be a licensing claim the repository does not make. `README.md` §Rights carries the statement. Note the separable question this does **not** answer: PyMuPDF is AGPL-3.0 and AGPL §13's source-offer obligation runs from an *operator* to the users a deployment serves, so it survives this ruling (`docs/development.md` §Dependency licensing). |
 | **Deployment status** | **Not deployed.** No hosted instance, no collector, no dashboards running. Everything operational ships as reviewable files that nothing runs. |
 | **Trains a model?** | No. |
 | **Fine-tunes a model?** | No. |
@@ -92,12 +95,12 @@ tuned or distilled.
 
 | Role | Setting | Default on this tree |
 |---|---|---|
-| Every agent, unless overridden | `anthropic_model` | `claude-sonnet-4-6` (`src/config.py:62-63`) |
-| Eval judges | `eval_judge_model` | `claude-sonnet-4-6` (`src/config.py:799-800`), pinned separately **on purpose** — falling back to `anthropic_model` is the defect ADR 0070 records, because it makes the judge move when the product moves. |
-| Per-agent overrides | `reader_model`, `planner_model`, `synthesizer_model`, `critic_model`, `verifier_model`, `supervisor_model`, `query_refiner_model`, `tutor_model`, `assessment_model` | Empty — each falls back to `anthropic_model` (`src/config.py:950-1015`). |
+| Every agent, unless overridden | `anthropic_model` | `claude-sonnet-4-6` (`src/config.py:253-254`) |
+| Eval judges | `eval_judge_model` | `claude-sonnet-4-6` (`src/config.py:1165-1166`), pinned separately **on purpose** — falling back to `anthropic_model` is the defect ADR 0070 records, because it makes the judge move when the product moves. |
+| Per-agent overrides | `reader_model`, `planner_model`, `synthesizer_model`, `critic_model`, `verifier_model`, `supervisor_model`, `query_refiner_model`, `tutor_model`, `assessment_model` | Empty — each falls back to `anthropic_model` (`src/config.py:1327-1389`). |
 
 **On the routing recommendation.** ADR 0021 recommends putting a cheaper model
-on the reader, supervisor and query refiner. `README.md:611` attaches a number
+on the reader, supervisor and query refiner. `README.md:842` attaches a number
 to that — "~50-60% cost cut with baseline quality preserved". **That number has
 no measurement behind it anywhere in this repository**, and neither does
 "quality preserved". ADR 0021 itself defers the evidence to "paired-diff eval
@@ -161,11 +164,16 @@ in [`framework-mapping.md`](framework-mapping.md) §4.
 
 ### 5.2 Not measured — and this is the honest headline
 
-**No accuracy metric has ever been measured on a real run.** The four
-LLM-judged research metrics — citation accuracy, faithfulness, completeness,
-retrieval recall — are implemented, unit-tested and wired into a nightly
-workflow that **failed every one of its runs at a missing repository secret**.
-No campaign has produced a `summary.jsonl`. There is deliberately no eval badge
+**No accuracy metric has ever been measured on a real run.** There are **five**
+research metrics and **three** of them are LLM-judged — completeness,
+faithfulness and retrieval recall. (The other two are not judge calls:
+`citation_resolution_rate` is the deterministic check ADR 0074 added and the
+one the gate reads, and `citation_accuracy` is a regex diagnostic. This card
+previously called all four of the pre-0074 set "LLM-judged"; that was never
+true of the regex one.) All five are implemented, unit-tested and wired into a
+nightly workflow that is **disabled at the repository** (`disabled_manually`)
+and **failed every one of the 54 runs it did have, at a missing repository
+secret**. No campaign has produced a `summary.jsonl`. There is deliberately no eval badge
 and there are deliberately no placeholder numbers, because a red badge for work
 that was never funded says the wrong thing and a placeholder says a worse one.
 
@@ -183,8 +191,9 @@ Stated separately because it is the load-bearing gap under every judged number
 this system could ever produce.
 
 **Nothing in this repository calibrates any LLM judge against a human reader.**
-Not the four research metrics, not the assessment judge, not the explain-back
-scorer. The infrastructure that a calibration would need exists — pinned judge
+Not the three judged research metrics, not the assessment judge, not the
+explain-back scorer. ADR 0095's `--mock-judge` lets those three paths *execute*
+against a checked-in fixture at zero cost; a fixture is not a human. The infrastructure that a calibration would need exists — pinned judge
 models, versioned rubrics locked by digest, a paired McNemar comparison path,
 and a 20-case `explain_back_calibration.json` fixture — and the fixture's own
 provenance block says what it is: *"synthetic explain-backs; not real learner
@@ -277,9 +286,11 @@ The ones a user or reviewer would want to know, not a disclaimers list.
     *declared, not earned*, and no runtime number exists.
 11. **The lock file is not hashed.** ADR 0045 records it; the SBOM's own tool
     warns about it.
-12. **Several documented claims are stale or unenforced.** The claim index in
-    [`README.md`](README.md) lists them by name, including three claims that are
-    false on this tree. That list is part of this card by reference.
+12. **Twenty-one documented claims are enforced more narrowly than they are
+    stated.** The claim index in [`README.md`](README.md) names each gap in its
+    own row. Nothing is recorded as unenforced or false any more — which is not
+    a clean bill of health, and that page says why. That list is part of this
+    card by reference.
 
 ## 8. Recourse and reporting
 

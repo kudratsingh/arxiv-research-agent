@@ -1,8 +1,8 @@
 # P0 measurement-foundation work orders
 
-Status: **PROPOSED — NO IMPLEMENTATION OR SPEND AUTHORIZED**
+Status: **W00–W11 IMPLEMENTED AT ZERO SPEND — W12 STILL NOT AUTHORIZED**
 
-Date: **2026-09-04**
+Date: **2026-09-04**; status amended **2026-09-17**
 
 Target roadmap phase: **P0 — measurement foundation**
 
@@ -17,9 +17,16 @@ Inputs:
 - [`11-benchmark-data-registry-rfc.md`](11-benchmark-data-registry-rfc.md)
 
 This document translates the P0 RFCs into bounded, reviewable implementation
-units. It is a planning artifact only. It does not authorize code changes,
-production data collection, live model calls, human-labeling spend, deployment,
-GPU/cloud use, or implementation of experimental policies C and E.
+units. It does not authorize production data collection, live model calls,
+human-labeling spend, deployment, or GPU/cloud use.
+
+**Amended 2026-09-17.** W00 through W11 have since been implemented, and with
+them the two policies this document called future work: arm C (ADR 0076) and
+arm E (ADRs 0085, 0086, 0091). All of it landed at zero spend. What is still
+unauthorized is the chargeable half — W12, a live judge, a paid labeling
+campaign, any funded run at all. The per-work-order sections below are left as
+they were written, with a dated amendment wherever a statement about what
+exists has stopped being true.
 
 ## 1. P0 outcome
 
@@ -54,8 +61,10 @@ These remain unresolved and constrain implementation:
 - D8 blocks production/user trajectory collection and training exports until
   consent, retention, deletion, and processing purposes are approved;
 - D9 blocks every live baseline, model judge, paid label, or funded experiment;
-- C's fixed verify-repair policy and E's adaptive-compute policy are future
-  implementation work, not P0 foundation work;
+- C's fixed verify-repair policy and E's adaptive-compute policy were future
+  implementation work rather than P0 foundation work when this was written;
+  both have since landed (ADR 0076; ADRs 0085/0086/0091), which changes what
+  can be *run* but not D9, which still blocks running either for money;
 - validation/sealed data storage requires a real access boundary and cannot be
   simulated by a private-looking folder in the agent-readable repository.
 
@@ -553,7 +562,10 @@ baseline or implement candidate policies.
 - dry-run campaign lock over the development suite;
 - valid manifests for A/B/D using current real graph capabilities;
 - schema-valid non-executable descriptors for C/E that are explicitly marked
-  `capability_missing`, not runnable;
+  `capability_missing`, not runnable (**amended 2026-09-17:** both arms were
+  built after this deliverable was written, `UNRUNNABLE_ARMS` is now empty, and
+  the standing requirement is the general one — an arm this checkout cannot run
+  says so structurally rather than being planned as if it could);
 - mocked/recorded synthetic episodes exercising all five policy identities;
 - arm-difference and common-config report;
 - task/ref/source/seed/repeat/denominator integrity report;
@@ -595,11 +607,21 @@ Before execution, present:
 - no-cost W10/W11 evidence;
 - explicit go/no-go question.
 
+A draft of that packet now exists at
+[`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md). It asks
+for nothing: every figure carries `ESTIMATE / RE-PRICE BEFORE APPROVAL` and the
+go/no-go question is deliberately left unanswered. The code blocker is closed —
+the execution loop landed with ADR 0088 — so what is left is the owner's D9
+approval record, prices re-verified against the provider on the day, and expert
+labeling time.
+
 ### Initial scope recommendation
 
 Start with the current fixed policy only to estimate variance and cost. Add a
 paired existing-policy arm only if the approved cap covers the comparison and
-the analysis remains interpretable. Do not include unimplemented C or E.
+the analysis remains interpretable. C and E are no longer unimplemented, but
+the recommendation stands: a first funded run sizes the variance, and adding
+the two newest arms to it buys a wider matrix rather than a better estimate.
 
 ### Outputs
 
@@ -686,10 +708,21 @@ Before requesting W12 approval, all of the following must be true:
 - no candidate role can access hidden evaluation material;
 - manifests seal before side effects and chargeable admission fails closed;
 - repeat/resume/rerun semantics and denominators are tested;
-- current A/B/D capability claims match compiled graphs;
-- missing C/E capabilities are explicit and non-runnable;
+- every arm's capability claim matches the graph this checkout compiles;
+- an arm this checkout cannot run is explicit and non-runnable;
 - D8 has a recorded decision for any proposed retained user/learner content;
 - the W12 approval packet names an exact maximum cost and stop rule.
 
 If this gate fails, continue local schema, fixture, replay, and documentation
 work. Do not substitute a live campaign for missing contract evidence.
+
+**Gate status, 2026-09-17: not green.** Nine of the ten bullets pass — the
+evidence is
+[`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) §12.
+The tenth fails by construction: naming an exact maximum cost is the owner's
+act, and the packet at
+[`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md) is a draft
+that deliberately declines to name one on the owner's behalf. The seventh and
+eighth bullets were reworded on this date; they read "current A/B/D capability
+claims match compiled graphs" and "missing C/E capabilities are explicit and
+non-runnable" while C and E were unbuilt, and both arms have since shipped.

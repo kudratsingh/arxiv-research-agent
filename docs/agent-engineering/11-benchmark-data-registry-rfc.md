@@ -1,8 +1,10 @@
 # RFC: benchmark and evaluation-data registry
 
-Status: **PROPOSED — PLANNING ONLY**
+Status: **IMPLEMENTED BY P0-WO02/WO06 (`src/contracts/registry.py`,
+`eval_registry/`) — NO SPEND AUTHORIZED**
 
-Date: **2026-09-04**
+Date: **2026-09-04**; status amended **2026-09-17**. §23 is the one amendment
+that changed the contract.
 
 Roadmap items: **AE-003**, with interfaces to AE-000, AE-001, AE-002,
 AE-004, and AE-005
@@ -17,9 +19,11 @@ Related documents:
 - [`09-run-manifest-rfc.md`](09-run-manifest-rfc.md)
 - [`10-trajectory-event-rfc.md`](10-trajectory-event-rfc.md)
 
-This RFC defines a registry contract. It does not authorize implementation,
-human-labeling spend, live model evaluation, provider calls, dataset download,
-or hosted infrastructure.
+This RFC defines a registry contract. The development subset was implemented;
+it still does not authorize human-labeling spend, live model evaluation,
+provider calls, dataset download, or hosted infrastructure, and the
+validation/sealed/canary payload modes still fail closed for want of a broker
+nobody has configured.
 
 ## 1. Decision summary
 

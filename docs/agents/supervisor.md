@@ -68,8 +68,10 @@ Writes to `ResearchState`:
 - `stop_reason: str` — populated only when `next_action == "stop"`;
   cleared to `""` otherwise. Values the code can emit:
   `max_iterations_reached`, `budget_reached`, `supervisor_stop`,
-  `llm_failed`, and whatever the judge returns for a self-chosen stop
-  (the prompt offers `quality_reached` alongside the other three).
+  `llm_failed`, `mock_mode` (the mock router's stop, so a keyless run is
+  never filed as a decision), and whatever the judge returns for a
+  self-chosen stop (the prompt offers `quality_reached` alongside the
+  other three).
 - `loop_iterations: int` — bumped by 1 on each supervisor call.
 - A `messages` entry (`AIMessage` named `"supervisor"`) recording the
   decision + reason.
@@ -242,15 +244,25 @@ Settings that drive the supervisor (see `src/config.py`):
   graph shape in `_build_graph_shape`.
 - `use_mock_data: bool = False` — **Mock mode** (P0-WO11, extending ADR
   [0080](../decisions/0080-mock-mode-covers-the-whole-research-graph.md)
-  to this node): the router returns `_default_next_action`'s
-  fixed-pipeline route with **no model call**, after the loop and cost
-  short-circuits and before the prompt is built, and a stop carries the
-  `mock_mode` reason rather than borrowing `supervisor_stop`. **Nothing
-  is decided here** — the route is byte-for-byte the one the
-  malformed-judge fallback already produced. What changed is that it is
-  no longer reached *by way of* a provider client that could not be
-  constructed, so a keyless supervisor run stops recording a failure as
-  a decision.
+  to this node): the router asks no model at all. It runs after the loop
+  and cost short-circuits and before the prompt is built, and a stop
+  carries the `mock_mode` reason rather than borrowing
+  `supervisor_stop`. Which route it returns is
+  `mock_supervisor_router`'s, below.
+- `mock_supervisor_router: Literal["fixed_order", "state_aware"] =
+  "fixed_order"` — which model-free policy the bullet above runs (ADR
+  [0093](../decisions/0093-state-aware-mock-supervisor-routing.md)).
+  Under the default `fixed_order`, **nothing is decided here**: the
+  route is byte-for-byte `_default_next_action`'s, the one the
+  malformed-judge fallback already produced, and all that changed is
+  that it is no longer reached *by way of* a provider client that could
+  not be constructed. `state_aware` is additive and is what arm D runs:
+  at the first point the fixed order would critique a completed draft,
+  it picks `verify` instead when `enable_verifier` is on and the run has
+  evidence and no verifier outcome yet — which the mock verifier then
+  records, so the action is selected exactly once and the run continues
+  through critique. Prerequisites and critic-directed revisions stay the
+  fixed order's either way.
 - `enable_verifier: bool = False` — adds `verify` to the action enum
   and wires the [verifier](verifier.md) node. Independent of
   `enable_supervisor` so the two can be A/B'd separately. See ADR 0015.
@@ -295,8 +307,10 @@ All env-overridable per ADR 0011.
   the flag still selects the loop shape so the premise cannot rot.
 - Graph shape: `tests/test_workflow_backend_selector.py`,
   `tests/test_workflow_startup_once.py`.
-- E2E: the workflow-level cassette suite is still **planned, not
-  built** — see `docs/testing.md`.
+- E2E: the tier exists (`tests/e2e/`, `make test-e2e`, mock-mode rather
+  than the recorded cassettes originally planned — `docs/testing.md`
+  says why), but **no module in it turns `enable_supervisor` on**, so
+  this shape's only whole-run coverage is the fault-tier file above.
 
 ## Follow-ups (tracked in `planning/05-agentic-upgrade-plan.md`)
 

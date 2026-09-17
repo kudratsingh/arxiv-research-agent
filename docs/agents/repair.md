@@ -148,11 +148,18 @@ on the prompt.
 
 ## Flags
 
-- `research_policy: Literal["legacy", "fixed_verify_repair"] =
-  "legacy"` — the only switch. Under `legacy` this module is imported
-  and never called: no node runs it, and its four state keys never
-  appear.
-- The policy requires `enable_supervisor=false`,
+- `research_policy: Literal["legacy", "fixed_verify_repair",
+  "orchestrated_workers"] = "legacy"` — the only switch. Under `legacy`
+  this module is imported and never called: no node runs it, and its
+  four state keys never appear. `orchestrated_workers` (ADR
+  [0086](../decisions/0086-orchestrator-workers-for-the-branch-tier.md))
+  compiles the same `repair` node with the same decision table and the
+  same one-repair cap; what differs is where a
+  `retrieve_missing_evidence` decision executes —
+  `route_after_repair_orchestrated` sends it to `lead`, so the fresh
+  queries are researched as worker branches rather than by a bare
+  `search → reader` leg.
+- Either policy requires `enable_supervisor=false`,
   `enable_evidence_store=true` and `enable_verifier=false`; any other
   combination is refused at settings load (ADR 0076).
 

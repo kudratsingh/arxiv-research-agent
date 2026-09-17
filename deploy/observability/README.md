@@ -158,23 +158,26 @@ model call — so no `gen_ai.request.model`, no token counts, no
 empty. A trace with `chat` spans in it needs a real credential and real
 money.
 
-Running the same command *without* `USE_MOCK_DATA` at the disabled
-sentinel does get you one `chat` span for free, and it is the other
-half of the same disappointment: the planner's first call fails, so the
-trace is four spans —
+Running the same command *without* `USE_MOCK_DATA` does not get you one
+for free either, and that is newer than it looks. Since PR #247
+`src/llm.py::_get_client` **refuses to construct the Anthropic client**
+under `ANTHROPIC_API_KEY=local-preview-disabled` — the sentinel is a
+structural refusal now, not merely a credential that would be rejected
+upstream — and it raises before `llm_span` opens, so the run ends at the
+planner with no `chat` span in it —
 
 ```
 POST /research
 └── invoke_workflow research
-    └── plan planner                    error.type=UpstreamModel
-        └── chat claude-sonnet-4-6      error.type=UpstreamModel
+    └── plan planner                    error.type=RuntimeError
 ```
 
-— and the job is `failed` with `error_type=upstream_model`. Mock mode
-shows the whole shape and no model calls; the sentinel shows a model
-call and no whole shape. Pick the half you need. This repository has no
-free way to produce a clean tree of successful model calls, and a
-command that implied otherwise would waste your afternoon.
+— and the job is `failed` with `error_type=internal_unexpected`, because
+a `RuntimeError` is nobody's typed error. Mock mode shows the whole
+shape and no model calls; the sentinel shows neither. This repository
+has **no** free way to produce a `chat` span or a tree of successful
+model calls, and a command that implied otherwise would waste your
+afternoon.
 
 ## The naming rule, which is the whole reason this is checkable
 

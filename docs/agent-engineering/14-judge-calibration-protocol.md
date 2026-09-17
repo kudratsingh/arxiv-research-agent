@@ -27,24 +27,29 @@ paid grader has been called; no human-labeling campaign has started; no
 owner or expert time has been committed. §12 lists exactly which steps
 need which of those, and every one of them is still ahead of us. What
 exists today is a vocabulary, a plan, a synthetic fixture corpus, a
-metrics module and a gate — all of them running locally at zero cost.
+metrics module, a gate, and — since §17 — an operator CLI that writes
+blinded packets and ingests the labels that come back. All of it runs
+locally at zero cost, and none of it has been pointed at a human or a
+judge.
 
 ---
 
 ## 1. What this package is for
 
 `docs/eval.md` states the current position plainly: **judge–human
-agreement is unmeasured on all four research metrics**, and it is
-deferred rather than planned, "because it needs labelled human verdicts
-nobody has produced". AE-004 is the item that changes that, and 12 §16 is
-the no-cost half of it — everything that can be built before an owner
-commits expert time or model spend.
+agreement is unmeasured on all three judged research metrics** —
+`completeness`, `faithfulness` and `retrieval_recall`; the other two of
+the five publish no judge to agree with. It is deferred rather than
+planned, "because it needs labelled human verdicts nobody has produced".
+AE-004 is the item that changes that, and 12 §16 is the no-cost half of
+it — everything that can be built before an owner commits expert time or
+model spend.
 
 The frame that shapes every decision below comes from 03 §7's first
 sentence: **LLM judges are instruments, not labels.** An instrument can
 be calibrated, and a calibrated instrument can carry a release gate. An
 uncalibrated one produces numbers that look like measurements, and this
-repository already publishes four of them.
+repository already publishes three of them.
 
 So this document answers five questions:
 
@@ -900,6 +905,18 @@ authorizes chargeable work (12 §3.10).
 - **Nothing in `src/eval/**` changed.** This package reads
   `src/eval/stats.py`, `src/eval/metrics.RESEARCH_RUBRICS` and
   `src/observability/costs.py`, and writes to none of them.
+- **No live judge call has been made since, either** (added 2026-09-17).
+  Two things landed after this package that a reader could mistake for
+  one. `src/eval/mock_judge.py` ([ADR
+  0095](../decisions/0095-deterministic-mock-judge-campaign-scoring.md))
+  lets the three judged metric paths *execute* against a checked-in
+  fixture under `--mock-judge`; it is default-off, refuses unless both
+  mock data and the zero-spend sentinel are set, and its verdicts are
+  fixture text — it exercises the code, it calibrates nothing. And
+  `python -m src.calibration packets|ingest` (§17) writes the blinded
+  packets an annotator would fill in and scores the agreement in one
+  they send back; nobody has filled one in. The blocked list above is
+  unchanged.
 
 ## 13. What W11 and W12 consume from this
 
