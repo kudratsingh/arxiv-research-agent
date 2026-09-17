@@ -136,6 +136,11 @@ def _principal_key_id(caller: ApiKeyPrincipal | None) -> str | None:
 
 
 def _job_to_detail(job: Job) -> JobDetail:
+    """Project a stored job onto the wire model the status endpoints return.
+
+    This projection is where the row's internals stop: the event queue, the
+    resume event, the trace carrier and the owning key never cross it.
+    """
     plan = None
     if job.plan is not None:
         plan = Plan(
@@ -164,6 +169,11 @@ def _job_to_detail(job: Job) -> JobDetail:
 
 
 def _new_job_id() -> str:
+    """Mint a job id: 16 hex characters of a random UUID.
+
+    Same shape and same reasoning as `new_conversation_id` — the id travels
+    in URLs, and 64 random bits is already far past what a job table needs.
+    """
     return uuid.uuid4().hex[:16]
 
 
@@ -465,6 +475,13 @@ async def stream_research(
     _check_ownership(job.principal_key_id, principal, error=JobNotFound)
 
     async def event_source() -> AsyncIterator[bytes]:
+        """Yield this job's SSE frames until it ends or the budget runs out.
+
+        Replay first, then live frames. The replay is what makes a reconnect
+        self-sufficient — neither transport keeps a backlog, so a client that
+        dropped and came back would otherwise wait in silence for a frame
+        that was published while it was away.
+        """
         # Terminal jobs replay a single frame and close — no
         # streaming to do. This is what makes reconnects idempotent.
         if job.is_terminal():
@@ -743,6 +760,12 @@ def _learner_key_id(caller: ApiKeyPrincipal | None) -> str:
 
 
 def _profile_to_response(profile: LearnerProfile) -> LearnerProfileResponse:
+    """Project a stored learner profile onto its wire model.
+
+    Goals and skills are rebuilt claim by claim rather than passed through,
+    so a field added to the stored record cannot reach a client until it is
+    added to the response model too.
+    """
     return LearnerProfileResponse(
         academic_level=profile.academic_level,
         time_budget_min_per_day=profile.time_budget_min_per_day,
@@ -1038,6 +1061,11 @@ def _evidence_to_response(record: EvidenceRecord) -> ProgressEvidence:
 
 
 def _conversation_to_detail(conversation: Conversation) -> ConversationDetail:
+    """Project a conversation and its jobs onto the detail wire model.
+
+    The owner stays behind: ownership decides whether this response is
+    produced at all, and is not part of what it says.
+    """
     return ConversationDetail(
         conversation_id=conversation.conversation_id,
         title=conversation.title,
@@ -1322,6 +1350,12 @@ async def readyz(request: Request, response: Response) -> HealthResponse:
 
 
 def _terminal_event_name(job: Job) -> str:
+    """The SSE event a finished job closes its stream with.
+
+    Success and cancellation each get their own name; anything else reports
+    as a failure, so a status this build does not recognise still closes the
+    stream in the shape a client knows how to handle.
+    """
     if job.status == JobStatus.succeeded:
         return "job_completed"
     if job.status == JobStatus.cancelled:

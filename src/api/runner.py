@@ -1946,6 +1946,13 @@ async def run_job(
         _shadow_compute_tier(decision)
 
         async def on_node(node_name: str, state_update: dict[str, Any]) -> None:
+            """Publish, record and budget-check one completed graph node.
+
+            The order is deliberate: the client's frame first, then the
+            trajectory record, then the cost check — so neither bookkeeping
+            nor a raised budget error can delay or swallow the node the
+            client is waiting to see.
+            """
             # Only publish scalar fields — the papers/citations lists
             # can be large and readers can fetch the full result via
             # `GET /research/{job_id}`. Keeps SSE frames compact.

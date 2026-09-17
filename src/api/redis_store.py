@@ -339,6 +339,13 @@ class RedisJobStore:
         key_prefix: str = JOB_KEY_PREFIX,
         retention_sec: int | None = None,
     ) -> None:
+        """Bind the client and derive every key namespace from `key_prefix`.
+
+        Leases, the redrive lock and the attempt counters all hang off the
+        same prefix, so two deployments sharing one Redis cannot reach into
+        each other's. The default prefix reproduces the historic key names
+        exactly, so an existing deployment sees no rename.
+        """
         self._client = client
         self._key_prefix = key_prefix
         # ADR 0038: lease and redrive-lock keys carry the same
@@ -380,12 +387,24 @@ class RedisJobStore:
         return f"{self._lease_prefix}{job_id}"
 
     async def create(self, job: Job) -> None:
+        """Record the job locally and in Redis, in that order.
+
+        The local instance is the only one holding the live `event_queue`, so
+        it has to exist before the submit returns and a client can start
+        streaming.
+        """
         # Local cache first so streaming picks up the live queue,
         # even if the Redis write races behind.
         self._local[job.job_id] = job
         await self._client.set(self._key(job.job_id), _job_to_json(job))
 
     async def get(self, job_id: str) -> Job | None:
+        """Read a job, preferring this worker's live instance over Redis.
+
+        Only a live local instance wins: once a job is terminal, Redis is
+        authoritative so that retention TTLs and operator deletes are obeyed
+        on every worker, including the one that ran it.
+        """
         # Prefer the local instance for LIVE jobs — it's the only
         # place with the live event_queue / resume_event. Terminal
         # jobs fall through to Redis so the retention TTL and operator

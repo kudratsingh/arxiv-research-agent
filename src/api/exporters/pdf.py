@@ -69,6 +69,12 @@ def render_pdf(job: Job) -> bytes:
 
 
 def _make_styles() -> dict[str, ParagraphStyle]:
+    """Build every paragraph style this exporter uses, keyed by name.
+
+    Built fresh per render and threaded through the walker rather than kept
+    at module level: ReportLab styles are mutable objects, and a shared sheet
+    would be shared state between concurrent exports.
+    """
     base = getSampleStyleSheet()
     styles: dict[str, ParagraphStyle] = {}
     styles["Title"] = ParagraphStyle(
@@ -169,6 +175,11 @@ def _make_styles() -> dict[str, ParagraphStyle]:
 def _metadata_table(
     job: Job, styles: dict[str, ParagraphStyle]
 ) -> Table:
+    """Build the run's provenance table: job id plus whatever else is known.
+
+    Every row after the job id is conditional, so an export of a job that
+    never finished is shorter rather than full of blanks.
+    """
     rows: list[tuple[str, str]] = [("Job ID", job.job_id)]
     if job.completed_at is not None:
         rows.append(
@@ -228,6 +239,13 @@ def _metadata_table(
 def _tokens_to_flowables(
     tokens: list[Token], styles: dict[str, ParagraphStyle]
 ) -> list[Flowable]:
+    """Walk the markdown token stream once, building the page's flowables.
+
+    An index walk rather than recursion: lists and tables span a run of
+    tokens, and the helpers that consume them report how many they took so
+    this loop can skip past. An unrecognised token is stepped over, costing a
+    paragraph rather than the export.
+    """
     flowables: list[Flowable] = []
     i = 0
     while i < len(tokens):
@@ -498,6 +516,11 @@ def _inline_to_html(token: Token | None) -> str:
 
 
 def _escape_html(text: str) -> str:
+    """Escape the three structural characters for ReportLab's mini-HTML.
+
+    Used both for text content and, in `_inline_to_html`, for an `href`
+    attribute value; quote characters are passed through as they are.
+    """
     return (
         text.replace("&", "&amp;")
         .replace("<", "&lt;")

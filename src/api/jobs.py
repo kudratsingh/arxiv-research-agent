@@ -223,6 +223,7 @@ class Job:
     resume_event: asyncio.Event = field(default_factory=asyncio.Event)
 
     def is_terminal(self) -> bool:
+        """True once the job has reached a status it can never leave."""
         return self.status in TERMINAL_STATUSES
 
     def is_awaiting_review(self) -> bool:
@@ -265,13 +266,35 @@ class JobStore(Protocol):
     (ADRs 0034/0035/0038).
     """
 
-    async def create(self, job: Job) -> None: ...
+    async def create(self, job: Job) -> None:
+        """Record a newly accepted job."""
+        ...
 
-    async def get(self, job_id: str) -> Job | None: ...
+    async def get(self, job_id: str) -> Job | None:
+        """Load one job, or `None` when the id is unknown.
 
-    async def update(self, job: Job) -> None: ...
+        Ownership is not checked here — the routes decide what a principal
+        may see, and a store that filtered as well would hide that decision.
+        """
+        ...
 
-    async def evict_older_than(self, retention_sec: int) -> int: ...
+    async def update(self, job: Job) -> None:
+        """Write the job's current state back as a whole row.
+
+        The caller mutates the `Job` it holds and hands it back; there is no
+        field-level merge. A store may refuse a *terminal* write that
+        contradicts a terminal status already recorded, so a caller must not
+        assume the stored row now matches what it passed.
+        """
+        ...
+
+    async def evict_older_than(self, retention_sec: int) -> int:
+        """Drop terminal jobs older than `retention_sec`, returning the count.
+
+        Non-terminal jobs are never evicted however old they are: a job stuck
+        for days is a signal worth keeping, not garbage.
+        """
+        ...
 
 
 class InMemoryJobStore:

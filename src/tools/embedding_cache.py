@@ -54,13 +54,25 @@ class EmbeddingCache(Protocol):
 
     def get_many(
         self, hashes: list[str], model_name: str
-    ) -> dict[str, np.ndarray]: ...
+    ) -> dict[str, np.ndarray]:
+        """Look up many vectors at once, returning only the hits.
+
+        A miss is an absent key rather than an error or a zero vector, so
+        the caller can encode exactly the texts that were not cached.
+        """
+        ...
 
     def put_many(
         self,
         entries: list[tuple[str, np.ndarray]],
         model_name: str,
-    ) -> None: ...
+    ) -> None:
+        """Store vectors under `(content_hash, model_name)`, overwriting.
+
+        May raise on a storage failure; `encode_texts` catches and logs it,
+        because a write that did not land is only a miss next time.
+        """
+        ...
 
 
 # ---------------------------------------------------------------------

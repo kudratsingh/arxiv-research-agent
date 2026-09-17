@@ -62,12 +62,24 @@ Respond with JSON only:
 
 
 def _string(value: Any, *, limit: int = 500) -> str:
+    """Collapse an untrusted value to bounded single-line text, or to ``""``.
+
+    Fail-soft on purpose: a non-string where the schema promised one is an
+    absent field, not an error the learner should be shown.
+    """
     if not isinstance(value, str):
         return ""
     return " ".join(value.split()).strip()[:limit]
 
 
 def _available_minutes(state: SessionState) -> int:
+    """The minutes this session may plan for: the tightest credible budget.
+
+    The smaller of what the request asked for and what the learner's profile
+    says they have, because either number alone can overpromise. Falls back to
+    20 when neither is a usable positive integer, so the plan is always
+    bounded by something rather than by nothing.
+    """
     spec = state.get("session_spec", {})
     tier1 = state.get("tier1", {})
     requested = spec.get("available_minutes")
@@ -86,6 +98,11 @@ def _available_minutes(state: SessionState) -> int:
 
 
 def _guidance(state: SessionState) -> list[dict[str, str]]:
+    """The briefing's reading guidance, keeping only well-formed entries.
+
+    This is the closed set of sections a plan may name, so anything malformed
+    is dropped rather than repaired — a half-read entry would widen the set.
+    """
     raw = state.get("session_spec", {}).get("reading_guidance")
     if not isinstance(raw, list):
         return []
@@ -123,6 +140,13 @@ def _fallback_plan(state: SessionState, *, parse_failed: bool = False) -> dict[s
 
 
 def _coerce_plan(raw: Any, state: SessionState) -> dict[str, Any] | None:
+    """Coerce the model's plan into a bounded one, or `None` to fall back.
+
+    The section list is filtered against the briefing's guidance and then
+    truncated to what the available minutes allow, so the model can narrow a
+    session but never invent a section or lengthen one. `None` means nothing
+    usable survived, which the caller answers with `_fallback_plan`.
+    """
     if not isinstance(raw, dict):
         return None
     allowed = _guidance(state)

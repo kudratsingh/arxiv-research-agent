@@ -62,6 +62,11 @@ def _max_similarity_per_chunk(
 
 
 def _to_ranked_chunk(chunk: Chunk, score: float) -> RankedChunk:
+    """Pair a chunk with the score it earned, keeping its original index.
+
+    `chunk_index` is carried through so a caller can still map a ranked
+    chunk back to its position in the document after reordering.
+    """
     return RankedChunk(
         section=chunk["section"],
         text=chunk["text"],

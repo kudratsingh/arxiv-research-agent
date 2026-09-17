@@ -1012,6 +1012,12 @@ def summary_line(
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
+    """Parse the admin CLI's arguments; `argv` excludes the program name.
+
+    Only shape is checked here. Whether `--owner` names a real key, and
+    whether a destructive action is allowed to match every row, are decided
+    against the live keystore by the callers below.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.api.admin_migrate",
         description=(

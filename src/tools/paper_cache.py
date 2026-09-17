@@ -37,9 +37,18 @@ class PaperCache(Protocol):
     a repeat write is treated as an update.
     """
 
-    def get_text(self, paper_key: str) -> str | None: ...
+    def get_text(self, paper_key: str) -> str | None:
+        """The cached extraction for `paper_key`, or `None` on a miss."""
+        ...
 
-    def put_text(self, paper_key: str, pdf_url: str, full_text: str) -> None: ...
+    def put_text(self, paper_key: str, pdf_url: str, full_text: str) -> None:
+        """Store the extraction for `paper_key`, replacing any earlier one.
+
+        `pdf_url` is recorded for auditing rather than used for lookup — the
+        key already encodes the URL identity, so an implementation that has
+        nowhere to keep the URL may ignore it.
+        """
+        ...
 
 
 # ---------------------------------------------------------------------

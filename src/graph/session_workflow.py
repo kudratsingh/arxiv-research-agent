@@ -58,6 +58,13 @@ def _run_session_node_body(
     state: SessionState,
     token: CancelToken | None,
 ) -> dict[str, Any]:
+    """Run one session node inside its cancellation scope, if there is one.
+
+    The node is registered with the token before it starts and deregistered
+    however it ends, so a cancel arriving mid-session knows which node it
+    interrupted. With no token this is a plain call, which is what sync and
+    eval callers get.
+    """
     if token is None:
         return fn(state)
     handle = token.enter_node(name)
@@ -69,6 +76,12 @@ def _run_session_node_body(
 
 
 def _session_traced_wrapper(name: str, fn: SessionNodeFn) -> Any:
+    """Wrap a node for the sync build: tracing only, no executor, no token.
+
+    The sync path runs the graph on the caller's own thread, so there is no
+    cancel token to honour and nothing to hand off — the async build is where
+    those apply.
+    """
     traced = traced_node(name, fn)
 
     def node(state: SessionState) -> dict[str, Any]:
@@ -112,6 +125,13 @@ def _session_executor_wrapper(executor: Executor | None) -> SessionNodeWrapper:
 
 
 def _shape(wrap: SessionNodeWrapper) -> StateGraph[SessionState, Any, Any, Any]:
+    """Build the session topology, uncompiled, with `wrap` applied to each node.
+
+    The node names here are the graph's whole vocabulary: they become span
+    names and `gen_ai.agent.name` values, so they are written as literals to
+    keep that set finite. Both builds share this one shape — the only thing
+    that differs between sync and async is the wrapper passed in.
+    """
     graph = StateGraph(SessionState)
     graph.add_node("check_in", wrap("check_in", check_in_agent))
     graph.add_node("passage", wrap("passage", passage_agent))
@@ -174,6 +194,12 @@ def _shape(wrap: SessionNodeWrapper) -> StateGraph[SessionState, Any, Any, Any]:
 
 
 def _compile(graph: StateGraph[SessionState, Any, Any, Any], checkpointer: Any | None) -> Any:
+    """Compile the shape, attaching a checkpointer only when one was opened.
+
+    No `interrupt_before` is declared: the learner-input nodes raise
+    LangGraph's dynamic interrupt themselves, and declaring a static one as
+    well would suspend the graph twice at the same point.
+    """
     kwargs: dict[str, Any] = {}
     if checkpointer is not None:
         kwargs["checkpointer"] = checkpointer
@@ -184,6 +210,13 @@ def _compile(graph: StateGraph[SessionState, Any, Any, Any], checkpointer: Any |
 
 
 async def _abuild_session_workflow(node_executor: Executor | None) -> Any:
+    """Build the async graph, parking the checkpointer's exit stack on it.
+
+    The checkpointer has to outlive this coroutine, so the stack is stashed on
+    the compiled graph and the caller owns closing it. If opening the
+    checkpointer fails the stack is unwound here instead, because there is
+    then no graph for anyone to close it through.
+    """
     stack = AsyncExitStack()
     try:
         checkpointer = await _aopen_checkpointer(stack)

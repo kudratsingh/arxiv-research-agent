@@ -197,7 +197,15 @@ class RateLimiter(Protocol):
 
     async def check_and_record(
         self, key_id: str, *, now: float | None = None
-    ) -> None: ...
+    ) -> None:
+        """Count one submit by `key_id`, raising `RateLimitedError` over quota.
+
+        Check and record are deliberately one call: the two halves have to be
+        atomic for the cap to hold under concurrency, and a caller able to
+        record separately could also forget to. `now` lets a test drive the
+        window without sleeping.
+        """
+        ...
 
 
 def _raise_429(
@@ -346,6 +354,12 @@ class RedisRateLimiter:
     async def check_and_record(
         self, key_id: str, *, now: float | None = None
     ) -> None:
+        """Count one submit, degrading to the local limiter if Redis is away.
+
+        The 429 is raised here rather than inside `_count` so that the broad
+        `except` below can stay broad without ever swallowing the rejection
+        this limiter exists to produce.
+        """
         ts = now if now is not None else time.time()
         try:
             retry_after = await self._count(key_id, ts)
@@ -565,6 +579,13 @@ class KeystoreReloader:
                 )
 
     async def _check_once(self) -> None:
+        """Swap the keystore in if the file changed and still parses.
+
+        A missing file or a parse error leaves the running keystore alone and
+        leaves `_last_mtime` where it was, so the next poll retries the same
+        edit rather than treating a broken save as handled. Nothing raises: a
+        bad edit must not be able to lock out callers whose keys still work.
+        """
         try:
             mtime = self._path.stat().st_mtime
         except FileNotFoundError:

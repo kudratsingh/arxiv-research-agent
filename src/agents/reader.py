@@ -315,6 +315,7 @@ class ReaderRecoverySignal(TypedDict):
 
 
 def _default_signal() -> ReaderRecoverySignal:
+    """The "nothing to recover from" signal every non-recovery path returns."""
     return ReaderRecoverySignal(
         analysis_complete=True,
         missing_context="",

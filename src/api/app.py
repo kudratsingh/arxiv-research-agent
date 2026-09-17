@@ -895,6 +895,13 @@ def create_app(
         return default_build_workflow(async_checkpointer=True, node_executor=node_executor)
 
     def _make_session_workflow(node_executor: ThreadPoolExecutor) -> Any:
+        """Compile the guided-read graph, honouring either injected factory.
+
+        A caller that injected only `build_workflow` gets that graph here
+        too: replacing the research workflow with a stub means to replace
+        this one as well, and compiling a real session graph beside a stub
+        would open a checkpointer the caller never asked for.
+        """
         if build_session_workflow is not None:
             return build_session_workflow()
         if build_workflow is not None:
@@ -938,6 +945,18 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        """Own everything built once per process: pool, graphs, background tasks.
+
+        Each thing started here has a matching teardown in the `finally`
+        below, and the order there is load-bearing — sweepers stop before the
+        jobs they could otherwise reclaim, and the node pool is joined with a
+        budget so a node that ignores its cancel token cannot hold shutdown
+        open past the orchestrator's grace period.
+
+        Teardown suppresses its own failures on purpose: a process on its way
+        out that raises while closing one resource would skip closing the
+        rest.
+        """
         # ADR 0034: compile the workflow ONCE at startup. The old
         # code invoked `build_workflow()` per request, which opened
         # a fresh checkpointer + ExitStack per job — a slow leak of

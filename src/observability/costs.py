@@ -254,6 +254,12 @@ class RunCosts:
         cache_read_input_tokens: int = 0,
         cache_creation_input_tokens: int = 0,
     ) -> None:
+        """Add one model call's usage to the run totals and to its model's slot.
+
+        Both updates happen under the instance lock, so a concurrent reader
+        never sees the run total advanced while the per-model breakdown still
+        lags behind it.
+        """
         with self._lock:
             self.total_cost_usd += cost_usd
             self.total_input_tokens += input_tokens
@@ -331,6 +337,12 @@ class CostBudgetExceeded(Exception):
     def __init__(
         self, spent_usd: float, cap_usd: float, partial_report: str = ""
     ) -> None:
+        """Record what was spent, what the cap was, and any draft to keep.
+
+        `partial_report` defaults to empty because most raisers have no draft
+        in hand; the ones that do pass it so the run's spend still yields
+        something.
+        """
         self.spent_usd = spent_usd
         self.cap_usd = cap_usd
         self.partial_report = partial_report

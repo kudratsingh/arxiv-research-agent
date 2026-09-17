@@ -118,6 +118,12 @@ def _size_cap(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
 
 
 def _report_to_chunks(job_id: str, ordinal: int, query: str, report: str) -> list[_ReportChunk]:
+    """Split one prior report into retrievable chunks, each tagged with its job.
+
+    Sections first, then a size cap within each, so a chunk never straddles
+    two headings. Fragments under `MIN_CHUNK_CHARS` are dropped: a stray line
+    embeds to noise and would only compete with real passages for `top_k`.
+    """
     chunks: list[_ReportChunk] = []
     for section_title, body in _split_report_by_heading(report):
         for text in _size_cap(body):
