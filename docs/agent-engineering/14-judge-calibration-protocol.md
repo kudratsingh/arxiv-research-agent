@@ -972,3 +972,151 @@ unchanged: `python -m src.calibration.suite parity` still proves this
 suite's objects are exactly what the fixtures build, and
 `python -m src.contracts.registry parity` proves the whole tree is
 exactly what every module builds.
+
+## 17. Amendment — offline labeling packets and the agreement report (2026-09-17)
+
+Appended rather than edited in place. §6 sized a labelling campaign and
+§7 said how a judge is blinded; neither said what an annotator actually
+receives, or what happens to the file they send back. `src/calibration/packets.py`
+and `python -m src.calibration` are those two missing halves. No ADR: this
+adds no decision, only the operator surface the protocol already implies.
+
+### 17.1 The workflow, in four steps
+
+```bash
+# 1. Generate. Writes outputs/calibration/<packet_set_id>/ and nothing else.
+python -m src.calibration packets
+
+# 2. Label. Offline, by two people, independently. Nothing runs here.
+
+# 3+4. Ingest and report, once per returned packet.
+python -m src.calibration ingest outputs/calibration/<id>/expert-a/returned.json \
+  --manifest outputs/calibration/<id>/manifest.json \
+  --output outputs/calibration/<id>/expert-a/agreement.md
+```
+
+`packets` takes `--output` (default `outputs/calibration`) and `--seed`.
+The default seed is the **registered blinding plan's** — seed `20260905`,
+from `judge-calibration-blinding@1.0.0` — so the default packet set is
+reproducible by anybody holding this repository, and the packet set id is
+a digest of the corpus, the seed and the packet shape rather than a
+timestamp. Re-running `packets` with the same seed rewrites the same
+bytes into the same directory; a different seed is a different set with a
+different id, so the two cannot be confused on disk.
+
+### 17.2 What the annotator sees, and what stays hidden
+
+| In the packet | Not in the packet |
+|---|---|
+| The blinded item id `itm-<12 hex>` | The registry case id |
+| The report excerpt, cited source, source excerpt, rubric item | The reference decision |
+| For pairwise items, two excerpts in *display* order | Which of the two is candidate A, and the presentation order itself |
+| The label type's full decision vocabulary | The slice tags |
+| Blank `decision`, `confidence`, `rationale` fields | The authored rationale for the reference decision |
+
+The absent `presentation_order` field is deliberate. An annotator who can
+see that *this* item was swapped knows something about the item that the
+item is not meant to tell them, and the report does not need them to
+report it: the order is in the manifest.
+
+Two packets, `expert-a` and `expert-b`, carry the same thirty items in
+independently shuffled order. Every pairwise item is shown in both orders
+**across the set** and in one order **to each annotator** — §7.3's two
+constraints at once — and which packet gets `ab` is a seeded coin flip
+per item, so neither packet is "the swapped one".
+
+### 17.3 The layout, and the blinding key
+
+```
+outputs/calibration/<packet_set_id>/expert-a/packet.json   <- handed over
+outputs/calibration/<packet_set_id>/expert-b/packet.json   <- handed over
+outputs/calibration/<packet_set_id>/manifest.json          <- kept
+outputs/calibration/<packet_set_id>/README.md
+```
+
+`manifest.json` is the blinding key and it sits **outside** both packet
+directories, so handing over the wrong thing means handing over a
+directory that visibly is not a packet. It maps every blinded id back to
+its registry case, names each item's slices, and records the presentation
+order each packet used. It does **not** carry the reference decisions: the
+answer key stays in the sealed label set and is resolved at ingest time,
+so a leaked manifest reveals which case an item is and never what the
+right answer was.
+
+`outputs/` is git-ignored and a generated packet is never committed. A
+*completed* packet is a human-label artifact, and §12 and §14 still leave
+its retention an open owner decision — so it stays in the operator's
+hands, not in this repository.
+
+### 17.4 What ingestion refuses, loudly
+
+The manifest is the only thing that can un-blind a returned file, and it
+carries the seed — which is enough to re-render the packets and prove the
+file describes *this* set. Ingestion exits `2` with a message naming the
+problem when:
+
+- the manifest is not a manifest, or no longer renders the registry it
+  claims (the label set moved under it);
+- the label file is not JSON, or not a JSON object;
+- **the file is partially labelled** — the message names every unlabelled
+  item, because that is the most likely thing to come back from an
+  offline labeler and a partial file that scored anyway would be a
+  measurement nobody could reproduce;
+- the file does not cover exactly the packet's items, or repeats one;
+- a decision is outside its label type's vocabulary, or a label renames
+  its own registered type;
+- a returned packet changed the material it was sent with.
+
+Two file shapes are accepted: the whole packet with its `response` fields
+filled in, and a compact `{packet_id, annotator_id, labels[]}` file. They
+produce the same measurement.
+
+### 17.5 What the report publishes
+
+Per slice and over the whole set, in the reporting form §9.1 fixed:
+
+- **raw agreement, φ/MCC, and both positive rates on one table row** —
+  there is no line a reader can copy that carries raw agreement without
+  the numbers that qualify it;
+- **false pass** over the reference-fail items, **false fail** over the
+  reference-pass items, **abstention** over items with a resolved
+  reference decision, and **unresolved reference** over every item seen —
+  four different denominators, all printed (§9.3);
+- every rate with its numerator, its denominator and a **95% Wilson
+  interval** from `src/eval/stats.py`, and `None` rather than `0.0` at a
+  zero denominator;
+- the **abstention policy** as a stated field (`excluded`, §9.2), not a
+  default buried in the implementation;
+- pairwise decisions in their own table, normalized back to registry
+  candidate identity through the manifest's order, with no fabricated
+  pass/fail projection.
+
+**Position bias is not computed here, and the report says so.** §7.3
+shows each annotator one order only, so a single packet cannot separate a
+preference from a position. `position_bias()` measures a judge, which is
+a different instrument reading and a different campaign.
+
+### 17.6 When a packet set must be regenerated
+
+03 §7.7's recalibration triggers, made concrete for this surface. Change
+any of these and the labels already collected stop describing the current
+instrument:
+
+| Change | Consequence |
+|---|---|
+| The judge, its prompt, or a rubric version | `decide()` returns HOLD against the probe lock; re-judge, and re-label only if the *material* changed |
+| The source representation shown to a labeler | Regenerate the packet set; the old labels describe different text |
+| The label set's membership or any reference decision | The packet set id changes, and ingest refuses the old manifest by name |
+| The annotation guideline revision | Re-label: §4's rules are what the decisions mean |
+| The blinding plan's hidden fields or seed | A new revision, a new packet set (`BlindingPlan.revision` exists for this) |
+
+A seed change alone is not a recalibration trigger; it is a new draw of
+the same corpus, and the id says so.
+
+### 17.7 What this does not do
+
+This workflow starts no labeling campaign. It renders the already-approved
+**synthetic** material for offline review and proves the ingest
+arithmetic on labels a test generates. No expert has labelled anything, no
+judge has been called, and §12's expert-time and paid-call gates and
+§14's retention decision are all exactly where they were.
