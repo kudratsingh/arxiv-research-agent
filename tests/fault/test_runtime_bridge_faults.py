@@ -213,6 +213,8 @@ class _BrokenSink(rb.JsonlTrajectorySink):
 
 
 class TestTheSinkWriteFails:
+    """A sink that cannot write degrades durability, never the run."""
+
     def test_the_fault_lands_on_all_three_contracts(
         self, tmp_path: Path, triple: TripleObserver
     ) -> None:
@@ -288,6 +290,8 @@ class TestTheSinkWriteFails:
 
 
 class TestAProjectionFails:
+    """A projection that fails cannot unwrite an accepted event."""
+
     def test_the_fault_lands_on_all_three_contracts(
         self, tmp_path: Path, triple: TripleObserver
     ) -> None:
@@ -359,6 +363,8 @@ class TestAProjectionFails:
 
 
 class TestConcurrentAppends:
+    """Concurrent branches produce one ordered chain and one event per key."""
+
     def test_two_branches_appending_at_once_produce_one_ordered_chain(
         self, tmp_path: Path, triple: TripleObserver
     ) -> None:
@@ -493,6 +499,8 @@ class _WorkerDied(BaseException):
 
 
 class TestACrashBetweenAcceptAndProjection:
+    """A crash after accept leaves the event, and no guessed terminal."""
+
     def test_the_accepted_event_survives_the_crash(
         self, tmp_path: Path, triple: TripleObserver
     ) -> None:
@@ -569,6 +577,8 @@ class TestACrashBetweenAcceptAndProjection:
 
 
 class TestTheReconciliationFailsClosed:
+    """A cost discrepancy is itself an event, not only a log line."""
+
     def test_a_cost_discrepancy_lands_on_all_three_contracts(
         self, tmp_path: Path, triple: TripleObserver
     ) -> None:
@@ -613,6 +623,8 @@ class TestTheReconciliationFailsClosed:
 
 
 class TestABrokenChain:
+    """Closing a tampered run reports the break rather than hiding it."""
+
     def test_closing_a_tampered_run_reports_rather_than_pretends(
         self, tmp_path: Path, triple: TripleObserver
     ) -> None:

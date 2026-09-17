@@ -187,6 +187,7 @@ def written(tmp_path: Path, packet_set: PacketSet) -> Path:
 
 
 class TestWhatTheAnnotatorSees:
+    """A packet carries the material and nothing that answers it."""
     def test_the_packets_carry_the_material_and_nothing_that_answers_it(
         self, packet_set: PacketSet
     ) -> None:
@@ -271,6 +272,7 @@ class TestWhatTheAnnotatorSees:
 
 
 class TestDeterminism:
+    """One seed renders one set, and another seed renders another."""
     def test_the_same_seed_renders_the_same_set(self) -> None:
         assert build_packet_set().model_dump_json() == build_packet_set().model_dump_json()
 
@@ -317,6 +319,7 @@ class TestDeterminism:
 
 
 class TestTheWrittenLayout:
+    """The key is written outside every packet, and git ignores the output."""
     def test_the_key_is_written_outside_every_packet_directory(
         self, tmp_path: Path, packet_set: PacketSet
     ) -> None:
@@ -355,6 +358,7 @@ class TestTheWrittenLayout:
 
 
 class TestIngestingACompletedPacket:
+    """A completed packet ingests into the counts the registry implies."""
     def test_the_report_counts_are_the_ones_the_registry_implies(
         self, written: Path, packet_set: PacketSet
     ) -> None:
@@ -543,6 +547,7 @@ class TestIngestingACompletedPacket:
 
 
 class TestWhatIngestRefuses:
+    """What ingest refuses rather than reading as a label."""
     @pytest.fixture()
     def manifest(self, written: Path) -> Path:
         return written / "manifest.json"
@@ -668,6 +673,7 @@ class TestWhatIngestRefuses:
 
 
 class TestTheObjectsRefuseTheirOwnMisuse:
+    """The packet objects refuse shapes that contradict themselves."""
     def test_a_manifest_key_for_an_unknown_packet(self, packet_set: PacketSet) -> None:
         with pytest.raises(ValueError, match="is not a packet of set"):
             packet_set.manifest.key_for("expert-z")
@@ -842,6 +848,7 @@ class TestTheObjectsRefuseTheirOwnMisuse:
 
 
 class TestTheCommandLine:
+    """The whole workflow from the command line: packets, then ingest."""
     def test_packets_then_ingest_is_the_whole_workflow(
         self, tmp_path: Path, packet_set: PacketSet, capsys: pytest.CaptureFixture[str]
     ) -> None:
@@ -901,6 +908,7 @@ class TestTheCommandLine:
 
 
 class TestTheProtocolDocumentDescribesThisWorkflow:
+    """The protocol document describes the workflow that actually exists."""
     def test_the_commands_in_the_document_are_the_commands_that_exist(
         self, doc: str
     ) -> None:

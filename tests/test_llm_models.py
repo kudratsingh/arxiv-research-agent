@@ -132,6 +132,8 @@ class TestTheDocumentedMatrix:
 
 
 class TestResolution:
+    """How a model id resolves to a row, by family and by snapshot."""
+
     def test_an_exact_id_wins(self) -> None:
         assert capabilities_for("claude-opus-5") is MODEL_CAPABILITIES["claude-opus-5"]
 
@@ -205,6 +207,8 @@ class TestEveryGuessGuessesDownward:
 
 
 class TestUndescribedModels:
+    """Every shipped id is described, and the report names any that is not."""
+
     def test_the_shipped_ids_are_all_described(self) -> None:
         assert undescribed_models(PRICES_USD_PER_MILLION) == set()
 
@@ -225,6 +229,8 @@ class TestUndescribedModels:
 
 
 class TestTheRowIsImmutable:
+    """A capability row cannot be edited in place."""
+
     def test_a_row_cannot_be_edited_in_place(self) -> None:
         """One mutated row would change every later call in the process."""
         with pytest.raises(AttributeError):

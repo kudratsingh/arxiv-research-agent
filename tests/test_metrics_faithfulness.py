@@ -51,6 +51,8 @@ def _mk_citation(*, paper_id: str, year: str, first_author: str) -> Citation:
 
 
 class TestBuildSourceIndex:
+    """Which papers enter the source index, and which are omitted."""
+
     def test_joins_papers_and_citations_on_paper_id(self) -> None:
         papers = [
             _mk_paper(paper_id="p1", first_author="Jane Smith", abstract="A1"),
@@ -103,6 +105,8 @@ class TestBuildSourceIndex:
 
 
 class TestBuildFaithfulnessPrompt:
+    """What the prompt carries, verbatim, and per source."""
+
     def test_report_appears_verbatim(self) -> None:
         prompt = _build_faithfulness_prompt(
             "REPORT BODY", {("smith", "2023"): "abstract text"}
@@ -126,6 +130,8 @@ class TestBuildFaithfulnessPrompt:
 
 
 class TestCiteKeyFromString:
+    """Which citation forms parse into a key, and which return nothing."""
+
     def test_parses_bracketed_form(self) -> None:
         assert _cite_key_from_string("[Smith, 2023]") == ("smith", "2023")
 
@@ -145,6 +151,8 @@ class TestCiteKeyFromString:
 
 
 class TestAggregateClaims:
+    """How claims aggregate, and what leaves the denominator."""
+
     _SOURCE_IDX = {("smith", "2023"): "abstract", ("doe", "2024"): "abstract"}
 
     def test_all_supported_scores_1(self) -> None:
@@ -237,6 +245,8 @@ class TestAggregateClaims:
 
 
 class TestMeasureFaithfulness:
+    """The whole path, including the short circuit and a missing source."""
+
     def test_empty_report_short_circuits_without_llm_call(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -337,6 +347,8 @@ class TestMeasureFaithfulness:
 
 
 class TestReturnedTypes:
+    """The result's keys are exactly the ones its type declares."""
+
     def test_faithfulness_result_keys(self) -> None:
         r = measure_faithfulness("", [], [])
         assert set(FaithfulnessResult.__required_keys__) == set(r.keys())

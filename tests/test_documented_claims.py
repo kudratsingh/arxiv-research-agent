@@ -613,6 +613,8 @@ def _run_job_kind_branches() -> list[int]:
 
 
 class TestTheCiJobCount:
+    """The README's CI job count is the workflow's, and no job waits."""
+
     def test_the_readme_job_count_is_the_workflow_job_count(self) -> None:
         claimed = _word_to_int(
             _claim(r"\*\*(\w+) parallel jobs\*\*", _readme(), "README.md").group(1),
@@ -641,6 +643,8 @@ class TestTheCiJobCount:
 
 
 class TestThePythonSuiteCount:
+    """The collected suite clears the README floor, and the floor is current."""
+
     def test_the_collected_suite_clears_the_readme_floor(self) -> None:
         floor = _digits(
             _claim(r"\*\*over ([\d,]+) tests\*\*", _readme(), "README.md").group(1)
@@ -668,6 +672,8 @@ class TestThePythonSuiteCount:
 
 
 class TestTheVitestCounts:
+    """The README's Vitest numbers are the last reseed's, and the tree's."""
+
     def test_the_readme_matches_the_last_coverage_reseed(self) -> None:
         """An agreement between two documents, and no more than that.
 
@@ -773,6 +779,8 @@ class TestTheVitestCounts:
 
 
 class TestTheE2eTier:
+    """The e2e tier's count, its modules and its marker are one set."""
+
     def test_the_readme_count_is_the_marker_selected_count(self) -> None:
         match = _claim(
             r"\*\*([\w-]+) tests across ([\w-]+) modules\*\*", _readme(), "README.md"
@@ -846,6 +854,8 @@ class TestTheE2eTier:
 
 
 class TestTheModelledRoutingSaving:
+    """The routing saving is the arithmetic stated, and still unmeasured."""
+
     def test_haiku_is_one_third_of_sonnet_on_both_token_directions(self) -> None:
         prices = _model_prices()
         haiku = prices["claude-haiku-4-5-20251001"]
@@ -906,6 +916,8 @@ class TestTheModelledRoutingSaving:
 
 
 class TestTheInstrumentCount:
+    """The architecture document's instrument count is the measured one."""
+
     def test_the_architecture_number_is_the_measured_number(self) -> None:
         claimed = _word_to_int(
             _claim(
@@ -922,6 +934,8 @@ class TestTheInstrumentCount:
 
 
 class TestTheJobKindBranches:
+    """The architecture document's branch count is the measured one."""
+
     def test_the_architecture_number_is_the_measured_number(self) -> None:
         claimed = _word_to_int(
             _claim(

@@ -199,6 +199,8 @@ def seal(cfg: Settings, app: _AppStub, *, query: str = "why do LLMs hallucinate?
 
 
 class TestTheSnapshotCannotCarryASecret:
+    """No secret, locator or private path reaches a sealed manifest."""
+
     def test_no_module_in_the_contracts_package_unwraps_a_secret(self) -> None:
         """`get_secret_value()` appears nowhere under `src/contracts/`.
 
@@ -284,6 +286,8 @@ class TestTheSnapshotCannotCarryASecret:
 
 
 class TestArmIdentityIsReadFromTheGraph:
+    """An arm is read off the graph, and an undesigned graph is named."""
+
     def test_a_b_and_d_are_three_manifests_with_three_policy_ids(self) -> None:
         """The acceptance criterion, stated as a test.
 
@@ -501,6 +505,8 @@ class TestArmIdentityIsReadFromTheGraph:
 
 
 class TestSealingIsCompleteOrRefused:
+    """A manifest seals completely and deterministically, or not at all."""
+
     def test_a_sealed_manifest_binds_the_task_the_projection_and_the_code(self) -> None:
         episode = seal(config(), fixed_app())
         payload = episode.manifest.payload
@@ -619,6 +625,8 @@ class TestSealingIsCompleteOrRefused:
 
 
 class TestCompilationIsDeterministicAndVerbatim:
+    """A query compiles verbatim, to the same immutable id every time."""
+
     def test_the_api_objective_is_the_submitted_query_unchanged(self) -> None:
         query = "Which retrieval strategies reduce hallucination, and by how much?"
         spec = compile_research_intake(
@@ -713,6 +721,8 @@ def _outcome_pair() -> tuple[LegacyOutcome, ContractOutcome]:
 
 
 class TestParityDiagnostics:
+    """The parity diagnostics report drift rather than raising on it."""
+
     def test_agreeing_records_produce_no_mismatch(self) -> None:
         legacy, contract = _outcome_pair()
         assert compare_outcomes(legacy, contract) == ()

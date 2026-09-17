@@ -8,6 +8,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestEmptyAndTrivial:
+    """Empty and short documents, where there is nothing to split."""
+
     def test_empty_string_returns_empty(self) -> None:
         assert chunk_paper("") == []
 
@@ -24,6 +26,8 @@ class TestEmptyAndTrivial:
 
 
 class TestSectionDetection:
+    """Which lines count as a section header, and which only look like one."""
+
     def test_plain_headers_labeled_correctly(self) -> None:
         text = (
             "Abstract\nThis paper studies X.\n\n"
@@ -65,6 +69,8 @@ class TestSectionDetection:
 
 
 class TestPreamble:
+    """Text before the first header becomes its own chunk."""
+
     def test_text_before_first_header_is_preamble(self) -> None:
         text = (
             "A Great Paper\nJane Doe, John Roe\n\n"
@@ -77,6 +83,8 @@ class TestPreamble:
 
 
 class TestChunking:
+    """How a long section splits, and how the chunk index runs."""
+
     def test_long_section_splits_with_incrementing_chunk_index(self) -> None:
         # Build a body well over the 800-token (~3200 char) default.
         paragraph = ("This is a sentence. " * 50).strip()  # ~1000 chars
@@ -115,6 +123,8 @@ class TestChunking:
 
 
 class TestCustomBudget:
+    """A smaller budget produces more chunks."""
+
     def test_smaller_budget_produces_more_chunks(self) -> None:
         text = ("Sentence content here. " * 200).strip()
         default_result = chunk_paper(text)

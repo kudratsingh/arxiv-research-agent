@@ -70,6 +70,8 @@ def _subclasses(cls: type[AppError]) -> set[type[AppError]]:
 
 
 class TestTheClosedSet:
+    """Codes and classes are one-to-one, snake case, and a closed set."""
+
     def test_every_subclass_declares_a_code_that_is_in_the_closed_set(self) -> None:
         # Import the modules that define subclasses outside `errors.py`,
         # so re-parented classes are counted rather than merely assumed.
@@ -174,6 +176,8 @@ class TestTheFamilies:
 
 
 class TestTheInstance:
+    """A public message never carries what only the log should see."""
+
     def test_the_public_message_never_carries_the_log_detail(self) -> None:
         """The one property the whole module exists for.
 
@@ -212,6 +216,8 @@ class TestTheInstance:
 
 
 class TestTheEnvelope:
+    """The error envelope has exactly its five documented fields."""
+
     def test_it_has_exactly_the_five_documented_fields(self) -> None:
         body = error_envelope(
             code="upstream_model_output",
@@ -242,6 +248,8 @@ class TestTheEnvelope:
 
 
 class TestTheStateConflictSentence:
+    """The conflict sentence translates the status and echoes no unknown."""
+
     def test_it_translates_the_wire_status(self) -> None:
         assert "still running" in state_conflict_message("export a report", "running")
 

@@ -59,6 +59,7 @@ def _paper(**overrides: Any) -> PaperMetadata:
 
 
 class TestThePlan:
+    """The plan mock reuses the fallback shape rather than inventing one."""
     def test_it_reuses_the_fallback_shape_rather_than_inventing_one(self) -> None:
         """The raw query, once, on both fields — ADR 0041's own fallback.
 
@@ -83,6 +84,7 @@ class TestThePlan:
 
 
 class TestTheAnalysis:
+    """Every finding is a verbatim span of the paper's own abstract."""
     def test_every_finding_is_a_verbatim_span_of_the_abstract(self) -> None:
         paper = _paper()
         analysis = mock_mode.mock_analysis(paper)
@@ -113,6 +115,7 @@ class TestTheAnalysis:
 
 
 class TestTheClaims:
+    """A claim and its source are one span, attributed to the plan."""
     def test_claim_and_source_are_the_same_verbatim_span(self) -> None:
         """What the verifier judges against must be findable in the source.
 
@@ -159,6 +162,7 @@ class TestTheClaims:
 
 
 class TestTheBriefing:
+    """The briefing's banner, its sections, and what it cites and quotes."""
     def _briefing(self, **overrides: Any) -> tuple[str, list[Any]]:
         papers = list(MOCK_PAPERS)
         kwargs: dict[str, Any] = {
@@ -272,6 +276,7 @@ class TestTheBriefing:
 
 
 class TestTheIdentifierHelpers:
+    """The identifier helpers read the tail and the year off an id."""
     @pytest.mark.parametrize(
         ("paper_id", "expected"),
         [
@@ -386,6 +391,7 @@ def _analysis(paper_id: str) -> PaperAnalysis:
 
 
 class TestTheLivePathIsUnchanged:
+    """With mock mode off, every agent still reaches the model."""
     def test_the_planner_reaches_the_model(
         self,
         live_mode: Settings,

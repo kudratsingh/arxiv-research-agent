@@ -590,6 +590,8 @@ class TestTheStructuredPath:
 
 
 class TestTheSpanStillDescribesTheRequest:
+    """The temperature attribute follows the profile that was sent."""
+
     def test_the_temperature_attribute_follows_the_profile(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

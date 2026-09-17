@@ -123,6 +123,7 @@ BODY = {
 
 
 class TestReadAndWrite:
+    """The profile round-trips, and every claim names its source."""
     async def test_put_then_get_roundtrips(
         self, client: httpx.AsyncClient
     ) -> None:
@@ -241,6 +242,7 @@ class TestReadAndWrite:
 
 
 class TestInferredClaimsSurviveAnEdit:
+    """A learner's edit leaves evidence-backed claims alone."""
     async def test_a_learner_edit_leaves_evidence_backed_claims_alone(
         self, client: httpx.AsyncClient, profile_store: InMemoryProfileStore
     ) -> None:
@@ -272,6 +274,7 @@ class TestInferredClaimsSurviveAnEdit:
 
 
 class TestPerPrincipalScoping:
+    """One principal can never read or write another's profile."""
     async def test_bob_never_sees_alices_profile(
         self, client: httpx.AsyncClient
     ) -> None:
@@ -317,6 +320,7 @@ class TestPerPrincipalScoping:
 
 
 class TestDeletionIsFirstClass:
+    """Delete removes every claim, and says what it does not cover."""
     async def test_delete_removes_every_claim(
         self, client: httpx.AsyncClient, profile_store: InMemoryProfileStore
     ) -> None:
@@ -367,6 +371,7 @@ class TestDeletionIsFirstClass:
 
 
 class TestTheFlagIsARealOffSwitch:
+    """With the flag off every verb is a 404, and nothing is written."""
     async def test_every_verb_is_404_while_the_flag_is_off(
         self, flag_off_client: httpx.AsyncClient
     ) -> None:
@@ -415,6 +420,7 @@ class TestTheFlagIsARealOffSwitch:
 
 
 class TestTheFlagPairing:
+    """The profile refuses to load without auth, and is off by default."""
     def test_the_profile_refuses_to_load_without_auth(self) -> None:
         """01 §1.3, enforced at settings load rather than per request."""
         with pytest.raises(ValidationError, match="requires enable_api_auth"):
@@ -443,6 +449,7 @@ class TestTheFlagPairing:
 
 
 class TestTheStoreIsAddressedByTheCallerAlone:
+    """No route carries a profile id; the store keys on the caller."""
     def test_no_route_path_carries_a_profile_id(self) -> None:
         """The principal-addressed routes never accept a profile id.
 

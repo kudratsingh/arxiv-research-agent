@@ -115,6 +115,8 @@ async def _attach(job: Job, drainer: _ParkedDrainer) -> AsyncIterator[bytes]:
 
 
 class TestPendingReviewReplay:
+    """A client attaching to a parked job is replayed the plan frame first."""
+
     async def test_first_frame_is_plan_ready(self) -> None:
         job = Job(
             job_id="j1",

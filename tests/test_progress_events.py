@@ -154,6 +154,8 @@ def _session(
 
 @pytest.mark.unit
 class TestEventKindVocabulary:
+    """Which event kinds are reserved, and which this phase may write."""
+
     def test_the_full_01_44_vocabulary_is_reserved(self) -> None:
         # The six kinds `01-LEARNING-AGENT.md` §4.4 names, so Phase L
         # adds producers rather than a migration.
@@ -201,6 +203,8 @@ class TestEventKindVocabulary:
 
 @pytest.mark.unit
 class TestEvidenceAtTheWriteBoundary:
+    """The store validates at the write boundary and never trusts its caller."""
+
     def test_assessment_is_the_kind_that_requires_evidence(self) -> None:
         assert {"assessment"} == KINDS_REQUIRING_EVIDENCE
 
@@ -298,6 +302,8 @@ class TestEvidenceAtTheWriteBoundary:
 
 @pytest.mark.unit
 class TestAppendOnly:
+    """The ledger is append-only in the code, the SQL and the routes alike."""
+
     def test_the_store_surface_is_pinned_and_has_no_mutation_method(
         self,
     ) -> None:
@@ -488,6 +494,8 @@ by a human instead of silently agreeing with itself."""
 
 @pytest.mark.unit
 class TestRecomputableViews:
+    """Every view is recomputed from the raw log, and crosses no principal."""
+
     def test_the_summary_rebuilds_from_the_raw_log(self) -> None:
         # 01 §4.4: everything a surface says is a view over these
         # events. Rebuilding it from the log and getting the identical
@@ -739,6 +747,8 @@ class TestNoMasteryPercentage:
 
 @pytest.mark.unit
 class TestSchemaDdlSection:
+    """The DDL section is fenced, appended, idempotent and structural."""
+
     def test_the_section_is_comment_fenced(self) -> None:
         # 05 §5.4: `SCHEMA_DDL` is append-only and each card owns a
         # fenced block. The fence style is WO-W02's, adopted on the
@@ -833,6 +843,8 @@ async def learner_client() -> AsyncIterator[
 # runs. That is its own PR; recorded in docs/testing.md as a known gap.
 @pytest.mark.unit
 class TestProgressEndpoint:
+    """The endpoint's flag, its auth, its scoping, and what it will not say."""
+
     async def test_flag_off_leaves_no_surface(self) -> None:
         # Default settings: the endpoint is registered (so the contract
         # snapshot describes one shape, not two) but the deployment
@@ -1111,6 +1123,8 @@ def _insert_raw(url: str, **columns: Any) -> None:
 @pytestmark_postgres
 @pytest.mark.integration
 class TestPostgresProgressEvents:
+    """The database enforces the same rules the Python store does."""
+
     def test_schema_init_creates_the_table(self, pg_url: str) -> None:
         postgres_pool.init_schema()
         with psycopg.connect(pg_url) as conn, conn.cursor() as cur:

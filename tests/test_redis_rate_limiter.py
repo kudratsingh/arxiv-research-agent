@@ -97,6 +97,8 @@ class _BrokenAfterPipeline(_BrokenRedis):
 
 
 class TestRedisRateLimiter:
+    """The shared limiter's window, its rollback, and its per-key buckets."""
+
     @pytest.mark.asyncio
     async def test_under_limit_never_raises(
         self, shared_backend: fakeredis.aioredis.FakeRedis

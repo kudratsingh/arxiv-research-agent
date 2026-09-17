@@ -194,6 +194,8 @@ def pttl(server: fakeredis.FakeServer, job_id: str) -> int:
 
 
 class TestPureHelpers:
+    """The SQL builders and preview helpers, checked without a database."""
+
     def test_truncate_preview_clips_and_marks(self) -> None:
         long = "x" * 200
         clipped = truncate_preview(long, max_chars=20)
@@ -903,6 +905,8 @@ def test_conversations_half_is_skipped_without_postgres_url(
 
 
 class TestExitCodes:
+    """What the CLI exits with, and which argument combinations it refuses."""
+
     def test_clean_report_is_zero(
         self, redis_cli: fakeredis.FakeServer, redis_settings: Settings
     ) -> None:

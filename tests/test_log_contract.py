@@ -111,6 +111,8 @@ def _isolated_context() -> Any:
 
 
 class TestCorrelationFieldsOnTheLine:
+    """Every identifier a line needs to be joinable, the hashed one included."""
+
     def test_a_bound_context_puts_every_identifier_on_the_record(self) -> None:
         token = bind_context(
             run_id="rid-1",
@@ -267,6 +269,8 @@ class TestThePrincipalSaltComesFromSettings:
 
 
 class TestTraceCorrelation:
+    """An active span puts its ids on the line, and absence means absence."""
+
     def test_an_active_span_puts_its_ids_on_the_record(self) -> None:
         # A local provider, never installed globally: `get_current_span`
         # reads the context the span manager set, so this needs no
@@ -286,6 +290,8 @@ class TestTraceCorrelation:
 
 
 class TestContextCrossesTheThreadPoolBoundary:
+    """A pooled worker inherits the whole context, and keeps none after."""
+
     def test_a_fan_out_worker_inherits_the_whole_context_not_just_the_run_id(
         self,
     ) -> None:
@@ -376,6 +382,8 @@ def _emitted_from_source() -> tuple[set[tuple[str, int, str]], set[tuple[str, in
 
 
 class TestTheEventNameSetIsClosed:
+    """Every event the source emits is registered, and only ours is held to it."""
+
     def test_every_event_the_source_emits_is_registered(self) -> None:
         events, _ = _emitted_from_source()
         unregistered = sorted(e for e in events if e[2] not in KNOWN_EVENTS)
@@ -408,6 +416,8 @@ class TestTheEventNameSetIsClosed:
 
 
 class TestTheExtraKeyAllowlistIsClosed:
+    """Every extra key is allowlisted; an unknown one is dropped and counted."""
+
     def test_every_extra_key_the_source_passes_is_allowlisted(self) -> None:
         _, keys = _emitted_from_source()
         unregistered = sorted(k for k in keys if k[2] not in ALLOWED_EXTRA_KEYS)
@@ -462,6 +472,8 @@ class TestTheExtraKeyAllowlistIsClosed:
 
 
 class TestValuesAreBounded:
+    """Every value is bounded, at every level, and says what it dropped."""
+
     def test_a_hundred_kilobyte_value_is_truncated_with_a_marker(self) -> None:
         payload = _format(reason="x" * 100_000)
         value = payload["reason"]
@@ -496,6 +508,8 @@ class TestValuesAreBounded:
 
 
 class TestUserContentIsRedactedByDefault:
+    """User content never reaches the output unless a flag opts it in."""
+
     def test_a_report_body_passed_as_extra_never_reaches_the_output(self) -> None:
         body = "SECRET REPORT BODY about diffusion models. " * 2000
         line = JsonFormatter().format(

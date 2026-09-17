@@ -157,6 +157,8 @@ class TestAModelCannotProduceALabel:
 
 
 class TestTheDecisionVocabulary:
+    """Each label type owns its values, and a foreign value is refused."""
+
     @pytest.mark.parametrize(
         ("label_type", "expected"),
         [
@@ -212,6 +214,8 @@ class TestTheDecisionVocabulary:
 
 
 class TestAdjudicationPreservesLineage:
+    """An adjudication keeps every individual decision that produced it."""
+
     def test_every_individual_decision_survives_in_the_record(self) -> None:
         decisions = (
             label("l1", "unsupported", who=annotator("a1f4")),
@@ -458,6 +462,8 @@ class TestAnUnresolvedDisagreementHasNoValue:
 
 
 class TestProjectionIntoTheRegistry:
+    """Each decision becomes its own registry record, beside the outcome."""
+
     def test_every_decision_becomes_its_own_registry_record_plus_the_outcome(self) -> None:
         decisions = (
             label("l1", "unsupported", who=annotator("a1f4")),
@@ -526,6 +532,8 @@ class TestProjectionIntoTheRegistry:
 
 
 class TestPairingAndDigests:
+    """Pairing keeps one-sided items, and a digest does not move with keys."""
+
     def test_an_item_only_one_side_decided_is_counted_not_intersected_away(self) -> None:
         item = LabelledItem(
             blinded_item_id=ITEM,

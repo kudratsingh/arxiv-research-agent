@@ -328,6 +328,7 @@ def _clean_contract_registries() -> Iterator[None]:
 
 
 class TestTheContractDefectsW07Found:
+    """The three contract defects W07 found, each of them now closed."""
     pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
     def test_the_graph_shape_cache_cannot_hand_arm_c_the_graph_arm_b_compiled(
@@ -477,6 +478,7 @@ class TestTheContractDefectsW07Found:
 
 
 class TestTheDryRunLocksTheWholeDevelopmentSuite:
+    """The dry run pins every input, and initialises nothing."""
     pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
     def test_the_matrix_is_three_hundred_slots_of_which_none_are_excluded(
@@ -547,6 +549,7 @@ class TestTheDryRunLocksTheWholeDevelopmentSuite:
 
 
 class TestTheFiveArmIdentities:
+    """The five arms are five identities, earned rather than declared."""
     pytestmark = [pytest.mark.unit, pytest.mark.contract]
 
     def test_the_four_runnable_arms_seal_distinct_manifests_over_one_task(
@@ -739,6 +742,7 @@ class TestTheFiveArmIdentities:
 
 
 class TestTheSyntheticEpisodes:
+    """Each runnable identity runs end to end and reconstructs."""
     #: `integration`, not `e2e`, and the repository decides that rather
     #: than this module: `tests/test_documented_claims.py::TestTheE2eTier
     #: ::test_the_marker_and_the_directory_are_the_same_set` requires
@@ -912,6 +916,7 @@ class TestTheSyntheticEpisodes:
 
 
 class TestTheCandidateRoleCannotReachEvaluationMaterial:
+    """A candidate reaches no evaluator material by any route."""
     pytestmark = [pytest.mark.unit, pytest.mark.security]
 
     @pytest.mark.parametrize("kind", ["label_set", "grader_profile", "split_assignment", "task_set"])

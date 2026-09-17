@@ -119,6 +119,7 @@ def _nodes(app: Any) -> set[str]:
 
 
 class TestTheSwitchOffChangesNothing:
+    """With the controller off, nothing extra is compiled and nothing moves."""
     def test_the_default_is_off(self) -> None:
         assert Settings().compute_controller == "off"
         assert Settings().tier_effort_overrides == {}
@@ -161,6 +162,7 @@ class TestTheSwitchOffChangesNothing:
 
 
 class TestTheSwitchRefusesASecondClaimantOnTheShape:
+    """Two claimants on one graph shape are refused at load, by name."""
     def test_the_controller_loads_on_its_own(self) -> None:
         """No companion flag is required, which is deliberate.
 
@@ -210,6 +212,7 @@ class TestTheSwitchRefusesASecondClaimantOnTheShape:
 
 
 class TestTheTierEffortMapIsCheckedAtLoad:
+    """The tier-effort map is validated at load, switch on or off."""
     @pytest.mark.parametrize(
         "overrides,expected",
         [
@@ -252,6 +255,7 @@ class TestTheTierEffortMapIsCheckedAtLoad:
 
 
 class TestTheControllerCompilesBothShapesOnce:
+    """Both tiers compile once off one checkpointer, with T0 primary."""
     def test_both_tiers_are_compiled_and_t0_is_the_primary_graph(
         self, built: Callable[..., Any]
     ) -> None:
@@ -327,6 +331,7 @@ class TestTheControllerCompilesBothShapesOnce:
 
 
 class TestWhatTheBindingCallsEachShape:
+    """What the contract binding calls each of the two compiled shapes."""
     def test_with_the_evidence_store_on_the_tiers_are_arms_b_and_c(
         self, built: Callable[..., Any]
     ) -> None:
@@ -384,6 +389,7 @@ def on_tier() -> Iterator[Callable[[str], None]]:
 
 
 class TestTheTierOverrideReachesOneAgentAndNoOther:
+    """A bound tier raises effort only for the agent its key names."""
     def test_no_tier_bound_means_the_adr_0077_answer(self) -> None:
         loaded = Settings(tier_effort_overrides={"T1.verifier": "high"})
         assert loaded.effort_for("verifier") == ""
@@ -639,6 +645,7 @@ AGENT_DRIVERS: tuple[tuple[str, Any, Callable[[pytest.MonkeyPatch], None]], ...]
 
 
 class TestEveryCallSiteNamesItsAgent:
+    """Every effort call site reaches the gateway under its own name."""
     def test_the_driver_table_covers_exactly_the_effort_agents(self) -> None:
         assert tuple(name for name, _, _ in AGENT_DRIVERS) == EFFORT_AGENTS
 
@@ -677,6 +684,7 @@ class TestEveryCallSiteNamesItsAgent:
 
 
 class TestTheGatewayCarriesTheAgentThrough:
+    """The gateway forwards the agent, and sends no effort by default."""
     def test_call_llm_json_forwards_the_agent_to_call_llm(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

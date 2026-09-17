@@ -158,6 +158,8 @@ def _empty_state(**overrides: Any) -> Any:
 
 
 class TestPlannerRouting:
+    """An empty planner override passes None; a set one passes through."""
+
     def test_empty_override_passes_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -180,6 +182,8 @@ class TestPlannerRouting:
 
 
 class TestCriticRouting:
+    """An empty critic override passes None; a set one passes through."""
+
     def test_empty_override_passes_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -202,6 +206,8 @@ class TestCriticRouting:
 
 
 class TestSynthesizerRouting:
+    """An empty synthesizer override passes None; a set one passes through."""
+
     def test_empty_override_passes_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -224,6 +230,8 @@ class TestSynthesizerRouting:
 
 
 class TestVerifierRouting:
+    """An empty verifier override passes None; a set one passes through."""
+
     def test_empty_override_passes_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -246,6 +254,8 @@ class TestVerifierRouting:
 
 
 class TestSupervisorRouting:
+    """An empty supervisor override passes None; a set one passes through."""
+
     def test_empty_override_passes_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -268,6 +278,8 @@ class TestSupervisorRouting:
 
 
 class TestQueryRefinerRouting:
+    """An empty refiner override passes None; a set one passes through."""
+
     def test_empty_override_passes_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -364,6 +376,8 @@ class TestReaderRouting:
 
 
 class TestConfigDefaults:
+    """Every per-agent model override defaults to empty."""
+
     def test_all_agent_model_overrides_default_to_empty(self) -> None:
         # Contract: default settings have every override empty so the
         # base config exactly matches Sprint 1 behavior.

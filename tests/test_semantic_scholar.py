@@ -44,6 +44,7 @@ def _s2_record(**overrides: Any) -> dict[str, Any]:
 
 
 class TestMapS2Paper:
+    """Which records map to a paper, which are dropped, and how fields fold."""
     def test_maps_all_fields_when_arxiv_id_present(self) -> None:
         record = _s2_record(externalIds={"ArXiv": "2311.09000"})
         paper = _map_s2_paper(record)
@@ -141,6 +142,7 @@ class TestMapS2Paper:
 
 
 class TestArxivUrlToS2Id:
+    """How an arXiv URL becomes a lookup id, version suffix and all."""
     def test_arxiv_url_becomes_arxiv_prefixed_id(self) -> None:
         assert (
             _arxiv_url_to_s2_id("http://arxiv.org/abs/2311.09000")
@@ -186,6 +188,7 @@ class TestArxivUrlToS2Id:
 
 
 class TestHeaders:
+    """The API key becomes a header, and its absence becomes nothing."""
     def test_no_key_returns_empty_dict(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -211,6 +214,7 @@ class TestHeaders:
 
 
 class TestSearchPapers:
+    """The search path's early exits, and a response it cannot read."""
     def test_empty_query_returns_empty(self) -> None:
         assert search_papers("", limit=5) == []
         assert search_papers("   ", limit=5) == []
@@ -258,6 +262,7 @@ class TestSearchPapers:
 
 
 class TestGetReferences:
+    """The references path's early exits, and the edges it reads."""
     def test_empty_paper_id_returns_empty(self) -> None:
         assert get_references("", limit=5) == []
         assert get_references("   ", limit=5) == []
@@ -325,6 +330,7 @@ class TestGetReferences:
 
 
 class TestConstants:
+    """The API base is the graph v1 endpoint."""
     def test_api_base_is_v1_graph(self) -> None:
         # Sanity: if S2 changes their versioning we should fail loudly here.
         assert S2_API_BASE == "https://api.semanticscholar.org/graph/v1"

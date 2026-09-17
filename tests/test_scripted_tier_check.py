@@ -59,6 +59,8 @@ def _clean(count: int = 3) -> list[dict[str, Any]]:
 
 
 class TestCleanCampaign:
+    """A clean campaign has no problems, and its costs sum."""
+
     def test_a_clean_campaign_has_no_problems(self) -> None:
         assert check.check_rows(_clean(), expected_sessions=3) == []
 
@@ -74,6 +76,8 @@ class TestCleanCampaign:
 
 
 class TestMutations:
+    """Each mutation breaks one property and is reported as that one."""
+
     def test_a_short_campaign_fails(self) -> None:
         problems = check.check_rows(_clean(12), expected_sessions=15)
         assert any("did not run the whole benchmark" in p for p in problems)
@@ -185,6 +189,8 @@ class TestProvenanceIsAsserted:
 
 
 class TestCLI:
+    """The check's exit codes, and its default session count."""
+
     def _write(self, path: Path, rows: list[dict[str, Any]]) -> None:
         path.write_text(
             "\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8"

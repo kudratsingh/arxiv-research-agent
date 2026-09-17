@@ -231,6 +231,7 @@ def planned(**kwargs: Any) -> CampaignPlan:
 
 
 class TestTheLockPinsEveryRegistryObject:
+    """The lock pins every registry object by exact revision and digest."""
     def test_every_resolved_ref_carries_an_exact_revision_and_digest(self) -> None:
         lock = planned().manifest.payload.lock
         assert lock.resolved_refs
@@ -296,6 +297,7 @@ class TestTheLockPinsEveryRegistryObject:
 
 
 class TestTheMatrixEnumeratesTheWholeDesign:
+    """The matrix enumerates the whole design, interleaved from its seed."""
     def test_twenty_by_three_by_five_enumerates_exactly_the_expected_keys(self) -> None:
         cases = all_case_ids()
         assert len(cases) == 20
@@ -367,6 +369,7 @@ class TestTheMatrixEnumeratesTheWholeDesign:
 
 
 class TestArmsAreClaimsUntilAGraphEarnsThem:
+    """An arm is a claim until a compiled graph earns it."""
     def test_arm_e_on_a_graph_that_does_not_branch_is_capability_missing(
         self,
     ) -> None:
@@ -458,6 +461,7 @@ class TestArmsAreClaimsUntilAGraphEarnsThem:
 
 
 class TestIdentitySeparatesRepeatResumeAndRerun:
+    """Repeat, resume and rerun are three identities and stay distinct."""
     def test_a_repeat_is_a_new_run_in_the_same_replicate_group(self) -> None:
         plan = planned(cases=("hallucination-mitigation",), arms=("A",), repeats=3)
         episodes = sorted(plan.runnable, key=lambda item: item.repeat_index)
@@ -600,6 +604,7 @@ class TestIdentitySeparatesRepeatResumeAndRerun:
 
 
 class TestTheDenominatorKeepsEveryEpisode:
+    """The ledger is written first, and no episode leaves the denominator."""
     def test_the_ledger_is_written_before_any_episode_runs(self, tmp_path: Path) -> None:
         plan = planned()
         directory = write_campaign(tmp_path, plan)
@@ -696,6 +701,7 @@ class TestTheDenominatorKeepsEveryEpisode:
 
 
 class TestCompletedEpisodesAreNeverOverwritten:
+    """A sealed episode, manifest or campaign refuses a second write."""
     def test_a_completed_episode_directory_refuses_a_second_seal(
         self, tmp_path: Path
     ) -> None:
@@ -749,6 +755,7 @@ class TestCompletedEpisodesAreNeverOverwritten:
 
 
 class TestSnapshotAndLiveNeverAggregate:
+    """Two corpus modes, or two locks, never share one summary."""
     def test_two_corpus_modes_cannot_share_a_summary(self) -> None:
         snapshot = planned()
         live_cfg = config(use_mock_data=False)
@@ -794,6 +801,7 @@ class TestSnapshotAndLiveNeverAggregate:
 
 
 class TestTheDryRunSpendsAndInitializesNothing:
+    """A dry run enumerates every slot and writes and opens nothing."""
     def test_it_enumerates_every_planned_episode_with_a_zero_cost_status(self) -> None:
         plan = planned(repeats=3)
         report = dry_run(plan)
@@ -874,6 +882,7 @@ def _approval(campaign_id: str, **overrides: Any) -> Any:
 
 
 class TestApprovalAdmitsAndAKeyDoesNot:
+    """Only an approval record admits a chargeable campaign; a key never does."""
     def test_a_chargeable_campaign_is_rejected_before_credential_lookup(self) -> None:
         cfg = config(use_mock_data=False)
         plan = plan_campaign(cfg, _chargeable_request(cfg), resolver=registry())
@@ -1001,6 +1010,7 @@ class TestApprovalAdmitsAndAKeyDoesNot:
 
 
 class TestCostsAreSplitAndStatisticsAreDelegated:
+    """Costs are reported by kind, and the statistics come from one module."""
     def test_workflow_judge_and_harness_are_reported_separately(self) -> None:
         plan = planned(cases=("hallucination-mitigation",), arms=("A", "B"), repeats=1)
         reconciled = reconcile(
@@ -1081,6 +1091,7 @@ class TestCostsAreSplitAndStatisticsAreDelegated:
 
 
 class TestTheEpisodeManifestCarriesTheCampaign:
+    """An episode manifest pins the lock, the registry and its task."""
     def test_it_pins_the_lock_the_registry_and_the_task(self, tmp_path: Path) -> None:
         plan, episode = _sealed_episode(tmp_path)
         payload = plan.manifest.payload
@@ -1142,6 +1153,7 @@ class TestTheEpisodeManifestCarriesTheCampaign:
 
 
 class TestTheCommandLine:
+    """The orchestrator's command line, from dry run through to status."""
     def test_dry_run_prints_the_plan_and_writes_nothing(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
@@ -1376,6 +1388,7 @@ def _rebuilt(model: Any, **overrides: Any) -> Any:
 
 
 class TestTheManifestRefusesAnIncoherentCampaign:
+    """What the campaign manifest refuses rather than sealing."""
     def test_a_lineage_that_is_not_a_rerun_cannot_name_a_rerun_parent(self) -> None:
         base = CampaignLineage(
             kind="cap_raised",
@@ -1525,6 +1538,7 @@ class TestTheManifestRefusesAnIncoherentCampaign:
 
 
 class TestTheMatrixAndLedgerRefuseIncoherentSlots:
+    """What the matrix and the ledger refuse rather than recording."""
     def test_a_planned_episode_must_explain_itself(self) -> None:
         episode = planned().episodes[0]
         runnable = next(item for item in planned().episodes if item.runnable)
@@ -1672,6 +1686,7 @@ class TestTheMatrixAndLedgerRefuseIncoherentSlots:
 
 
 class TestArmDeclarationsRefuseIncoherence:
+    """An arm declaration must agree with what its graph can do."""
     @pytest.mark.parametrize(
         ("overrides", "message"),
         [
@@ -1734,6 +1749,7 @@ class TestArmDeclarationsRefuseIncoherence:
 
 
 class TestThePlannerRefusesWhatItCannotProve:
+    """What the planner refuses rather than assuming."""
     def test_a_case_with_no_compiled_spec_is_named(self) -> None:
         with pytest.raises(CampaignError, match="no TaskSpec was compiled"):
             planned().task_spec_for("a-case-nobody-selected")

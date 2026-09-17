@@ -62,6 +62,8 @@ render_docx_bytes = EXPORTERS["docx"][2]
 
 
 class TestExportersRegistry:
+    """The registry declares three formats with standard media types."""
+
     def test_three_formats_are_registered(self) -> None:
         assert set(EXPORTERS.keys()) == {"md", "pdf", "docx"}
 
@@ -78,6 +80,8 @@ class TestExportersRegistry:
 
 
 class TestMarkdownRenderer:
+    """The Markdown export keeps the body verbatim and carries metadata."""
+
     def test_returns_utf8_bytes(self) -> None:
         out = render_markdown_bytes(_job())
         assert isinstance(out, bytes)
@@ -120,6 +124,8 @@ class TestMarkdownRenderer:
 
 
 class TestPdfRenderer:
+    """The PDF export is a real PDF and embeds the report and metadata."""
+
     def test_returns_pdf_bytes_with_magic(self) -> None:
         out = render_pdf_bytes(_job())
         assert isinstance(out, bytes)
@@ -148,6 +154,8 @@ class TestPdfRenderer:
 
 
 class TestDocxRenderer:
+    """The DOCX export is a valid zip with a document part and metadata."""
+
     def test_returns_zip_bytes_with_pk_magic(self) -> None:
         # DOCX = ZIP archive of XML parts.
         out = render_docx_bytes(_job())

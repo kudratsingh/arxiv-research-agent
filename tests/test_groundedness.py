@@ -85,6 +85,8 @@ def _citation(paper_id: str, author: str = "Rosen", year: str = "2024") -> Citat
 
 
 class TestCanonicalArxivId:
+    """Which surface forms fold to one paper, and which are refused."""
+
     @pytest.mark.parametrize(
         ("raw", "expected"),
         [
@@ -140,6 +142,8 @@ class TestCanonicalArxivId:
 
 
 class TestIdentifierExtraction:
+    """Which identifiers are read out of a report, and which are not claims."""
+
     def test_prefixed_and_url_forms_are_both_found(self) -> None:
         report = (
             "See arXiv:2311.09000 and https://arxiv.org/abs/2305.13269 for the "
@@ -301,6 +305,8 @@ class TestWhatIsNotNormalized:
 
 
 class TestLocateQuote:
+    """The weakest matching level that found a quote is the one reported."""
+
     def test_the_weakest_level_that_matched_is_the_one_reported(self) -> None:
         source = "The fine-tuned model\nattains a gain."
         assert g.locate_quote("The fine-tuned model", source) == "exact"
@@ -352,6 +358,8 @@ class TestLocateQuote:
 
 
 class TestQuoteExtraction:
+    """What counts as a quotation, and which source it is attributed to."""
+
     def test_a_short_quoted_span_is_terminology_not_a_quotation(self) -> None:
         """Scare quotes and terminology must not enter the denominator.
 
@@ -445,6 +453,8 @@ class TestQuoteExtraction:
 
 
 class TestSourceIndex:
+    """Which text backs a paper, in which order of preference."""
+
     def test_parsed_text_beats_evidence_chunks_beats_the_abstract(self) -> None:
         paper = _paper("http://arxiv.org/abs/2401.00001", abstract="the abstract")
         claim = EvidenceClaim(
@@ -543,6 +553,8 @@ class TestSourceIndex:
 
 
 class TestCitationResolution:
+    """Which citations resolve to a retrieved paper, and how they fail."""
+
     def test_a_citation_to_a_paper_the_run_never_retrieved_is_flagged(self) -> None:
         """The headline acceptance case, and the interesting failure.
 
@@ -620,6 +632,8 @@ class TestCitationResolution:
 
 
 class TestQuoteVerdicts:
+    """When a quote passes, fails, or is undecidable rather than wrong."""
+
     PAPER = "http://arxiv.org/abs/2401.00001"
     TEXT = "State-of-the-\nart decoding reduces unsupported claims by 41%."
 
@@ -834,6 +848,8 @@ class TestZeroIsNotAPerfectScore:
 
 
 class TestPairedOutcomes:
+    """Claim ids are content-derived, so two arms pair on one id."""
+
     def test_claim_ids_are_content_derived_and_stable_across_runs(self) -> None:
         """Pairing needs an id that does not move when the report does."""
         first = g.measure_groundedness(
@@ -878,6 +894,8 @@ class TestPairedOutcomes:
 
 
 class TestCheckIdentity:
+    """A result names the check and the run provenance that produced it."""
+
     def test_the_normalization_spec_is_locked_to_its_version(self) -> None:
         """Editing the spec without bumping the version fails here.
 

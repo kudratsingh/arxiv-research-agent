@@ -23,6 +23,8 @@ def _state(**overrides: Any) -> dict[str, Any]:
 
 
 class TestBuildUserPrompt:
+    """Where prior context appears in the planner's prompt, if at all."""
+
     def test_no_prior_context_omits_the_section(self) -> None:
         prompt = _build_user_prompt(_state())  # type: ignore[arg-type]
         assert "Research question: hallucination reduction" in prompt

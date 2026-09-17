@@ -33,6 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.security]
 
 
 class TestOwnershipHelper:
+    """Who can see a row with auth on, with auth off, and with no owner."""
     def test_auth_off_never_blocks(self) -> None:
         # `caller is None` == auth off. Any resource is visible.
         _check_ownership(None, None, error=JobNotFound)
@@ -65,6 +66,7 @@ class TestOwnershipHelper:
 
 
 class TestPrincipalKeyIdHelper:
+    """The principal is None with auth off, and the key id with it on."""
     def test_auth_off_returns_none(self) -> None:
         assert _principal_key_id(None) is None
 

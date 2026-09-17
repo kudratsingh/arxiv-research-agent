@@ -182,6 +182,8 @@ class TestRetriesHappenAtOneLevelOnly:
 
 
 class TestTheBudgetIsInvisibleUntilItIsNeeded:
+    """A full budget changes nothing about a healthy or a retried call."""
+
     def test_a_full_budget_changes_nothing_about_a_healthy_call(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -240,6 +242,8 @@ class TestTheBudgetIsInvisibleUntilItIsNeeded:
 
 
 class TestAnExhaustedBudgetFailsFast:
+    """An exhausted budget stops the chain at the first retry."""
+
     def test_the_chain_stops_at_the_first_retry(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -327,6 +331,8 @@ class TestAnExhaustedBudgetFailsFast:
 
 
 class TestTheBudgetSurvivesUrllib3sInternalCopying:
+    """The policy object still carries its budget after urllib3 copies it."""
+
     def test_the_policy_object_still_carries_its_budget_after_a_retry(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -352,6 +358,8 @@ class TestTheBudgetSurvivesUrllib3sInternalCopying:
 
 
 class TestTheApplicationAddsNoLoopOfItsOwn:
+    """The arXiv wrapper adds no retry loop of its own."""
+
     def test_a_transport_failure_is_not_retried_by_the_arxiv_wrapper(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

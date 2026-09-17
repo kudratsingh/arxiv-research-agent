@@ -50,6 +50,8 @@ def _override_settings(monkeypatch: pytest.MonkeyPatch, **overrides: object) -> 
 # Per-class tiers: the Postgres section below is `integration`.
 @pytest.mark.unit
 class TestContentHash:
+    """The content hash is stable, distinct, and the length it claims."""
+
     def test_stable_for_same_input(self) -> None:
         assert content_hash("hello") == content_hash("hello")
 
@@ -65,6 +67,8 @@ class TestContentHash:
 
 @pytest.mark.unit
 class TestNoOpEmbeddingCache:
+    """The no-op cache returns nothing and stores nothing."""
+
     def test_get_many_always_returns_empty(self) -> None:
         cache = NoOpEmbeddingCache()
         assert cache.get_many(["h1", "h2"], MODEL) == {}
@@ -93,6 +97,8 @@ if _postgres_available:
 @pytestmark_postgres
 @pytest.mark.integration
 class TestPostgresEmbeddingCache:
+    """The Postgres cache round-trips vectors exactly, keyed by model."""
+
     def test_get_many_empty_input_returns_empty_dict(self, pg_url: str) -> None:
         cache = PostgresEmbeddingCache()
         # Note: no schema init needed for an empty query — it never
@@ -155,6 +161,8 @@ class TestPostgresEmbeddingCache:
 
 @pytest.mark.unit
 class TestFactory:
+    """The factory returns the configured implementation, once."""
+
     def test_defaults_to_noop(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

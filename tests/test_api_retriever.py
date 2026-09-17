@@ -91,6 +91,8 @@ class TestChunkingBehavior:
 
 
 class TestRankingBehavior:
+    """The retriever returns the top k, ordered by score."""
+
     def test_returns_top_k_ordered_by_score(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -134,6 +136,8 @@ class TestRankingBehavior:
 
 
 class TestFormatContextForPlanner:
+    """How retrieved chunks are rendered into the planner's prior context."""
+
     def test_empty_chunks_returns_empty_string(self) -> None:
         assert format_context_for_planner([]) == ""
 

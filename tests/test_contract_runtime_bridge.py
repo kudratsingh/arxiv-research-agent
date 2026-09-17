@@ -287,6 +287,8 @@ def drive_learning_episode(bridge: rb.GuidedLearningBridge) -> None:
 
 
 class TestTheSyntheticResearchEpisode:
+    """One research episode, reconstructed from its durable file alone."""
+
     def test_it_reconstructs_from_the_durable_jsonl_alone(
         self, tmp_path: Path
     ) -> None:
@@ -387,6 +389,8 @@ class TestTheSyntheticResearchEpisode:
 
 
 class TestTheSyntheticLearningEpisode:
+    """One guided session, recorded without a word of the learner's prose."""
+
     def test_it_reconstructs_from_the_durable_jsonl_alone(
         self, tmp_path: Path
     ) -> None:
@@ -566,6 +570,8 @@ class TestTheSyntheticLearningEpisode:
 
 
 class TestGovernance:
+    """Who may have a durable sink, and what the gate will not open for."""
+
     def test_no_v1_event_is_training_eligible(self, tmp_path: Path) -> None:
         research = research_bridge(tmp_path)
         drive_research_episode(research)
@@ -675,6 +681,8 @@ class TestGovernance:
 
 
 class TestResumeAndConcurrency:
+    """A resume duplicates nothing, and concurrent appends stay ordered."""
+
     def test_a_resume_does_not_duplicate_an_action(self, tmp_path: Path) -> None:
         bridge = research_bridge(tmp_path)
         for index, node in enumerate(FIXED_PIPELINE[:3], start=1):
@@ -793,6 +801,8 @@ def _observation(*, cost: float = 0.0, model: str = "claude-sonnet-4-6") -> Any:
 
 
 class TestCostReconciliation:
+    """Costs reconcile within tolerance, once, after the terminal event."""
+
     def test_matching_totals_reconcile(self, tmp_path: Path) -> None:
         bridge = research_bridge(tmp_path)
         bridge.model_call(_observation(cost=0.004))
@@ -863,6 +873,8 @@ class TestCostReconciliation:
 
 
 class TestProjections:
+    """Every projection target is a frame or log event the client knows."""
+
     def test_a_broken_projection_cannot_erase_an_accepted_event(
         self, tmp_path: Path
     ) -> None:
@@ -1017,6 +1029,8 @@ class TestProjections:
 
 
 class TestTheTemperatureAttribute:
+    """The temperature attribute appears only when one was actually sent."""
+
     def test_it_is_absent_when_no_temperature_was_sent(
         self, in_memory_tracer: InMemorySpanExporter
     ) -> None:
@@ -1342,6 +1356,8 @@ class TestTheRestOfTheTaxonomy:
 
 
 class TestTheContainedFacade:
+    """A broken bridge degrades itself rather than raising at a caller."""
+
     def test_a_broken_bridge_degrades_itself_rather_than_raising(
         self, tmp_path: Path
     ) -> None:
@@ -1373,6 +1389,8 @@ class TestTheContainedFacade:
 
 
 class TestTheRunnerEntryPoint:
+    """What the runner opens, and for which kinds of job."""
+
     def test_a_session_job_gets_no_research_trajectory(self, tmp_path: Path) -> None:
         job = Job(job_id="s1", query="q", kind="session")
         assert (
@@ -1431,6 +1449,8 @@ class TestTheRunnerEntryPoint:
 
 
 class TestTheSink:
+    """The sink's path scheme, what it refuses, and what reads back empty."""
+
     def test_the_path_scheme_is_one_directory_per_run(self, tmp_path: Path) -> None:
         sink = rb.JsonlTrajectorySink(tmp_path / "sink")
         directory = sink.run_directory("run_" + "a" * 32)

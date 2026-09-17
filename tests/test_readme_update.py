@@ -56,6 +56,8 @@ def _write_readme(tmp_path: Path, block_body: str = "") -> Path:
 
 
 class TestRenderBlock:
+    """What the rendered block contains, including errored and empty runs."""
+
     def test_all_success_rows_produce_aggregate_row(self) -> None:
         block = render_block(
             [
@@ -232,6 +234,8 @@ class TestCitationAccuracyDenominator:
 
 
 class TestPatchReadme:
+    """Patching between the markers, and every way the markers can fail."""
+
     def test_replaces_content_between_markers(self, tmp_path: Path) -> None:
         readme = _write_readme(tmp_path, "old block content")
         changed = patch_readme(readme, "brand new block")
@@ -272,6 +276,8 @@ class TestPatchReadme:
 
 
 class TestMainEntryPoint:
+    """The updater's exit codes, from happy path to malformed input."""
+
     def _write_summary(
         self, tmp_path: Path, records: list[dict[str, object]]
     ) -> Path:

@@ -134,6 +134,8 @@ def model_call(cost: float = 0.0, model: str = "claude-sonnet-4-6") -> LlmCallOb
 
 
 class TestTheSwitch:
+    """The shadow is off by default and opens nothing it may not open."""
+
     def test_off_is_the_default_and_opens_nothing(self) -> None:
         assert shipped_settings.contract_shadow == "off"
         assert bridge.shadow_enabled(config(contract_shadow="off")) is False
@@ -180,6 +182,8 @@ class TestTheSwitch:
 
 
 class TestTheTrajectory:
+    """What the shadow records for one canned run, event by event."""
+
     def test_run_admitted_is_first_and_binds_the_sealed_manifest(self) -> None:
         run = open_run()
         events = run.events()
@@ -302,6 +306,8 @@ class TestTheTrajectory:
 
 
 class TestTerminalOutcomesMatchTheJobRow:
+    """Each job outcome maps to exactly one terminal event."""
+
     @pytest.mark.parametrize(
         ("status", "error_type", "expected"),
         [
@@ -376,6 +382,8 @@ class TestTerminalOutcomesMatchTheJobRow:
 
 
 class TestFailureContainment:
+    """A hook that raises degrades the shadow and nothing else."""
+
     def test_a_hook_that_raises_degrades_the_shadow_and_nothing_else(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
@@ -433,6 +441,8 @@ class TestFailureContainment:
 
 
 class TestTheRegistryAndItsReaders:
+    """The bounded run registry, and what its readers may report."""
+
     def test_the_registry_is_bounded_and_keeps_the_newest(self) -> None:
         for index in range(bridge.MAX_RETAINED_RUNS + 3):
             open_run(job=research_job(job_id=f"job-{index}"))
@@ -526,6 +536,8 @@ class TestTheRegistryAndItsReaders:
 
 
 class TestScriptedResearchHooks:
+    """The scripted hooks open, stream and close a single episode."""
+
     def test_the_hooks_open_stream_and_close_one_episode(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -596,6 +608,8 @@ def test_the_bridge_never_writes_user_text_into_a_payload() -> None:
 
 
 class TestTheEdgesOfTheBridge:
+    """The bridge's edges: no run, no context, no switch."""
+
     def test_a_failure_before_a_run_exists_is_still_logged_once(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:

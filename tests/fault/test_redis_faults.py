@@ -109,6 +109,8 @@ class _TerminalWriteRefusingStore(InMemoryJobStore):
 
 
 class TestRedisIsDownAtSubmit:
+    """A submit against a dead Redis returns a code, not a driver message."""
+
     async def test_the_client_gets_a_code_and_none_of_the_drivers_message(
         self, triple: TripleObserver, scripted_workflow: type[ScriptedWorkflow]
     ) -> None:
@@ -272,6 +274,8 @@ class TestTheRedisRateLimiterRejectsOverCap:
 
 
 class TestRedisIsDownMidJob:
+    """An outage mid-job leaves the outcome counted and still recoverable."""
+
     async def test_the_outcome_is_still_counted_and_still_recoverable(
         self,
         triple: TripleObserver,
@@ -317,6 +321,8 @@ class TestRedisIsDownMidJob:
 
 
 class TestRedisIsDownDuringSseFanOut:
+    """A fan-out failure propagates from the store and the runner escalates."""
+
     async def test_the_real_store_propagates_and_the_runner_escalates(
         self,
         triple: TripleObserver,

@@ -24,6 +24,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestBuildCompletenessPrompt:
+    """What the prompt carries, and in what order."""
+
     def test_includes_report_verbatim(self) -> None:
         prompt = _build_completeness_prompt("REPORT BODY", ["t1"])
         assert "REPORT BODY" in prompt
@@ -41,6 +43,8 @@ class TestBuildCompletenessPrompt:
 
 
 class TestAggregateCoverage:
+    """How coverage aggregates, including every malformed judge reply."""
+
     def test_all_covered_scores_1(self) -> None:
         parsed = {
             "coverage": [
@@ -134,6 +138,8 @@ class TestAggregateCoverage:
 
 
 class TestMeasureCompleteness:
+    """The whole path, and the short circuit that skips the judge."""
+
     def test_empty_topics_short_circuits_without_llm_call(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -188,6 +194,8 @@ class TestMeasureCompleteness:
 
 
 class TestReturnedTypeShape:
+    """The result's keys are exactly the ones its type declares."""
+
     def test_completeness_result_keys(self) -> None:
         result = measure_completeness("", [])
         assert set(CompletenessResult.__required_keys__) == set(result.keys())

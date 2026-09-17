@@ -159,6 +159,8 @@ async def _wait_for_status(
 
 
 class TestSessionApiEndToEnd:
+    """Four pauses, an explain-back, and the evidence they append."""
+
     async def test_four_pauses_explain_back_and_append_evidence(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -291,6 +293,8 @@ class TestSessionApiEndToEnd:
 
 
 class TestTutorHonesty:
+    """The tutor downscopes structurally and fabricates nothing on bad output."""
+
     def _state(self, minutes: int = 10) -> dict[str, object]:
         return initial_session_state(
             {
@@ -353,6 +357,8 @@ class TestTutorHonesty:
 
 
 class TestCheckpointReattachment:
+    """A new process reads the parked transcript back from the checkpoint."""
+
     async def test_a_new_graph_process_reads_the_parked_transcript(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

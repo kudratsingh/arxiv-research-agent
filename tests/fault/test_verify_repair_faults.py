@@ -194,6 +194,7 @@ def _spend_over_the_cap() -> None:
 
 
 class TestACancelLandingMidRepair:
+    """A cancel during a repair stops the nodes queued behind it."""
     async def test_the_nodes_queued_behind_the_repair_never_run(
         self,
         arm_c_graph: Settings,
@@ -254,6 +255,7 @@ class TestACancelLandingMidRepair:
 
 
 class TestTheCeilingTrippingInsideTheVerification:
+    """A ceiling hit inside verification propagates instead of abstaining."""
     def test_the_node_propagates_the_stop_instead_of_abstaining(
         self, arm_c_graph: Settings, monkeypatch: pytest.MonkeyPatch
     ) -> None:

@@ -90,6 +90,8 @@ def _install(monkeypatch: pytest.MonkeyPatch, app: _StubApp) -> None:
 
 
 class TestCheckpointRecovery:
+    """What the CLI can recover from a checkpoint after a failed run."""
+
     def test_recovers_a_finished_report_from_the_checkpoint(
         self,
         monkeypatch: pytest.MonkeyPatch,

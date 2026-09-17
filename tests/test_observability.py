@@ -90,6 +90,8 @@ def _make_record(
 
 
 class TestJsonFormatter:
+    """The formatter produces one JSON line, with extras and exceptions."""
+
     def test_produces_valid_json_line(self) -> None:
         formatter = JsonFormatter()
         out = formatter.format(_make_record())
@@ -140,6 +142,8 @@ class TestJsonFormatter:
 
 
 class TestRunIdContext:
+    """The run id context binds, resets, and nests."""
+
     def test_default_is_dash(self) -> None:
         assert current_run_id() == "-"
 
@@ -165,6 +169,8 @@ class TestRunIdContext:
 
 
 class TestEstimateCost:
+    """The price table's arithmetic, and the fallback that warns once."""
+
     def test_sonnet_input_output_math(self) -> None:
         # 1_000_000 input tokens at $3, 500_000 output tokens at $15 -> 3 + 7.5 = 10.5
         result = estimate_cost("claude-sonnet-4-6", 1_000_000, 500_000)
@@ -347,6 +353,8 @@ class TestPriceTableCoverage:
 
 
 class TestRunCosts:
+    """The accumulator's totals, per-model breakdown and thread safety."""
+
     def test_starts_empty(self) -> None:
         costs = RunCosts()
         assert costs.total_cost_usd == 0.0
@@ -401,6 +409,8 @@ class TestRunCosts:
 
 
 class TestCacheTokenPricing:
+    """How each cache token bucket is priced, and that they add up."""
+
     def test_cache_read_priced_at_ten_percent(self) -> None:
         # Sonnet input is $3/M. Cache read should be $0.30/M → 1M read = 0.30.
         result = estimate_cost(
@@ -450,6 +460,8 @@ class TestCacheTokenPricing:
 
 
 class TestRunCostsCacheAccumulation:
+    """Cache tokens accumulate at both the total and the model."""
+
     def test_cache_tokens_accumulate_at_totals_and_per_model(self) -> None:
         costs = RunCosts()
         costs.record(
@@ -501,6 +513,8 @@ class TestRunCostsCacheAccumulation:
 
 
 class TestCurrentCostsAndRecordCall:
+    """Recording a call reaches the bound accumulator, or nothing at all."""
+
     def test_current_costs_is_none_when_not_started(self) -> None:
         assert current_costs() is None
 
@@ -564,6 +578,8 @@ class TestCurrentCostsAndRecordCall:
 
 
 class TestCrossThreadContextPropagation:
+    """What a worker inherits, what it does not, and what it keeps after."""
+
     def test_propagate_carries_run_id_and_costs_across_workers(self) -> None:
         token = bind_run_id("rid-parent")
         costs = start_cost_tracking()
@@ -689,6 +705,8 @@ class TestCrossThreadContextPropagation:
 
 
 class TestGetLogger:
+    """The logger factory returns the configured logger."""
+
     def test_returns_configured_logger(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -956,6 +974,8 @@ class TestFaulthandler:
 
 
 class TestRecordLlmCallRetryFields:
+    """Retries and latency reach the line, and an untimed call says nothing."""
+
     def test_retries_and_latency_reach_the_log_line(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:

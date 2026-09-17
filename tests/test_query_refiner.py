@@ -90,6 +90,8 @@ def _stub_llm(
 
 
 class TestBuildUserPrompt:
+    """What the refiner's prompt carries, and what it leaves out."""
+
     def test_lists_tried_queries_and_current(self) -> None:
         state = _empty_state(
             query="RAG for hallucination?",
@@ -145,6 +147,8 @@ class TestBuildUserPrompt:
 
 
 class TestNormalize:
+    """Normalisation folds case and whitespace."""
+
     @pytest.mark.parametrize(
         "raw,expected",
         [
@@ -165,6 +169,8 @@ class TestNormalize:
 
 
 class TestFailClosedPaths:
+    """Every unusable answer keeps the queries the run already had."""
+
     def test_llm_exception_keeps_current(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -214,6 +220,8 @@ class TestFailClosedPaths:
 
 
 class TestHappyPath:
+    """Fresh queries replace, deduplicated and capped, with history kept."""
+
     def test_fresh_queries_replace_and_history_extends(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

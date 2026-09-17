@@ -50,6 +50,7 @@ def _signal(**overrides: Any) -> dict[str, Any]:
 
 
 class TestParseRecoverySignal:
+    """How a recovery signal is parsed, and when it downgrades itself."""
     def test_missing_analysis_complete_defaults_to_true(self) -> None:
         signal = _parse_recovery_signal({})
         assert signal["analysis_complete"] is True
@@ -104,6 +105,7 @@ class TestParseRecoverySignal:
 
 
 class TestAggregateRecovery:
+    """How per-paper signals aggregate into one workflow signal."""
     def test_all_complete_returns_true(self) -> None:
         complete, missing, sections = _aggregate_recovery(
             [_paper("p1"), _paper("p2")],
@@ -232,6 +234,7 @@ def _base_response(**overrides: Any) -> dict[str, Any]:
 
 
 class TestAnalyzePaperRecovery:
+    """What the analysis emits behind the flag, and what it forces."""
     def test_flag_off_returns_default_signal(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -305,6 +308,7 @@ class TestAnalyzePaperRecovery:
 
 
 class TestReaderAgentRecovery:
+    """The recovery keys the reader adds to state, and what feeds them."""
     def _base_state(self, **overrides: Any) -> dict[str, Any]:
         base = {
             "papers": [_paper()],

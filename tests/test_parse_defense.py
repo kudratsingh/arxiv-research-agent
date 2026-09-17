@@ -58,6 +58,7 @@ def _paper(n: int = 1) -> PaperMetadata:
 
 
 class TestPlannerParseDefense:
+    """Unusable planner output falls back to the raw query."""
     def _run(self, monkeypatch: pytest.MonkeyPatch, response: Any) -> dict[str, Any]:
         monkeypatch.setattr(planner_module, "settings", Settings())
 
@@ -122,6 +123,7 @@ class TestPlannerParseDefense:
 
 
 class TestReaderParseDefense:
+    """One malformed analysis degrades that paper, never the whole run."""
     def _wire(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -238,6 +240,7 @@ def _synth_state() -> Any:
 
 
 class TestSynthesizerParseDefense:
+    """The synthesizer retries once, then raises a typed failure."""
     def _wire(
         self, monkeypatch: pytest.MonkeyPatch, responses: list[Any]
     ) -> list[str]:
@@ -342,6 +345,7 @@ class TestSynthesizerParseDefense:
 
 
 class TestCriticParseDefense:
+    """Unusable critic output approves rather than inventing a revision."""
     def _run(self, monkeypatch: pytest.MonkeyPatch, response: Any) -> dict[str, Any]:
         monkeypatch.setattr(critic_module, "settings", Settings())
 

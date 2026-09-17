@@ -116,6 +116,8 @@ class TestEnvironmentIsolation:
 
 
 class TestNetworkGuard:
+    """The network guard refuses non-loopback, and the marker lifts it."""
+
     def test_a_non_loopback_connect_is_refused(
         self, guard_exceptions: tuple[type[BaseException], type[BaseException]]
     ) -> None:
@@ -158,6 +160,8 @@ class TestNetworkGuard:
 
 
 class TestSpendGuard:
+    """The spend guard raises on the whole call path, not the constructor."""
+
     def test_get_client_raises_without_a_fake(
         self, guard_exceptions: tuple[type[BaseException], type[BaseException]]
     ) -> None:
@@ -207,6 +211,8 @@ class TestSpendGuard:
 
 
 class TestTierMarkers:
+    """Every module declares a tier, and every test resolves to exactly one."""
+
     def test_every_test_module_declares_a_tier(self) -> None:
         """Walks the directory rather than a list, so a module added by
         another branch is covered the moment it lands."""
@@ -498,6 +504,8 @@ class TestPurposeMarkerBands:
 
 
 class TestDeterminism:
+    """Randomness is reseeded per test, and the clock moves only when told."""
+
     #: Both tests draw from the same seeded generator. If the reseed were
     #: per session instead of per test, the second draw would differ.
     def test_random_is_reseeded_before_each_test(self) -> None:

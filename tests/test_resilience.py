@@ -133,6 +133,8 @@ class TestTheBudgetIsAPassThroughWhileItIsFull:
 
 
 class TestExhaustion:
+    """An empty budget refuses, counts the refusal, and stays empty."""
+
     def test_the_budget_refuses_once_it_is_empty(self) -> None:
         budget = _budget(capacity=2.0)
         assert budget.try_spend() is True
@@ -160,6 +162,8 @@ class TestExhaustion:
 
 
 class TestRefill:
+    """Time returns tokens at the configured rate; a success refunds a share."""
+
     def test_time_returns_tokens_at_the_configured_rate(self) -> None:
         clock = FakeClock()
         budget = _budget(capacity=10.0, refill_per_sec=2.0, clock=clock)
@@ -211,6 +215,8 @@ class TestRefill:
 
 
 class TestConcurrentSpending:
+    """Two threads cannot both spend the last token."""
+
     def test_two_threads_cannot_over_issue_the_last_token(self) -> None:
         """The graph runs nodes in a thread pool, so one budget is contended.
 
@@ -240,6 +246,8 @@ class TestConcurrentSpending:
 
 
 class TestTheSharedBudgetRegistry:
+    """One budget per dependency, shared, and refused if unknown."""
+
     def test_one_budget_per_dependency_shared_across_callers(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -490,6 +498,8 @@ class TestDegradationIsVisible:
 
 
 class TestInterruptibleSleep:
+    """The sleep notices a cancel within one poll, and waits otherwise."""
+
     def test_it_waits_when_nothing_is_cancelled(self) -> None:
         started = time.monotonic()
         interruptible_sleep(0.15, poll_sec=0.01)
@@ -535,6 +545,8 @@ class TestInterruptibleSleep:
 
 
 class TestTheFailFastFailureIsAnUpstreamCode:
+    """An exhausted budget surfaces as an upstream failure."""
+
     def test_an_exhausted_budget_surfaces_as_upstream_arxiv(self) -> None:
         """Not a new code, and deliberately so.
 

@@ -148,6 +148,8 @@ def _rows(output_dir: Path) -> list[dict[str, Any]]:
 
 
 class TestScriptedResearchCampaign:
+    """A whole campaign through the real graph, at exactly zero cost."""
+
     def test_a_campaign_runs_the_whole_graph_and_costs_exactly_nothing(
         self,
         install_settings: Callable[..., Any],

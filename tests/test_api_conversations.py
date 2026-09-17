@@ -55,6 +55,8 @@ if _postgres_available:
 # would sit on those too.
 @pytest.mark.unit
 class TestTitleFromQuery:
+    """A title is derived from the query, normalised and clipped."""
+
     def test_short_query_stays_intact(self) -> None:
         assert title_from_query("what is X?") == "what is X?"
 
@@ -70,6 +72,8 @@ class TestTitleFromQuery:
 
 @pytest.mark.unit
 class TestNewConversationId:
+    """Conversation ids are sixteen hex characters, and unique."""
+
     def test_returns_16_hex_chars(self) -> None:
         cid = new_conversation_id()
         assert len(cid) == 16
@@ -86,6 +90,8 @@ class TestNewConversationId:
 
 @pytest.mark.unit
 class TestInMemoryConversationStore:
+    """The in-memory store's create, list, append and delete behaviour."""
+
     async def test_create_then_get(self) -> None:
         store = InMemoryConversationStore()
         conv = Conversation(conversation_id="c1", title="First")
@@ -352,6 +358,8 @@ if _postgres_available:
 @pytestmark_postgres
 @pytest.mark.integration
 class TestPostgresConversationStore:
+    """The same behaviour against Postgres, including scoping and order."""
+
     async def test_create_and_get_roundtrip(self, pg_url: str) -> None:
         store = PostgresConversationStore()
         await store.create(Conversation(conversation_id="c1", title="First"))
@@ -729,6 +737,8 @@ async def _client() -> AsyncIterator[AsyncClient]:
 # definition in docs/testing.md.
 @pytest.mark.integration
 class TestConversationEndpoints:
+    """The conversation routes, including their pagination bounds."""
+
     async def test_create_returns_201_with_defaults(self) -> None:
         async for client in _client():
             resp = await client.post("/conversations", json={})
@@ -816,6 +826,8 @@ class TestConversationEndpoints:
 
 @pytest.mark.integration
 class TestResearchWithConversation:
+    """A job submitted with a conversation id is appended to it."""
+
     async def test_bad_conversation_id_is_404(self) -> None:
         async for client in _client():
             resp = await client.post(

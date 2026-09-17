@@ -31,6 +31,7 @@ def _write_keystore(path: Path, mapping: dict[str, str]) -> None:
 
 
 class TestLoadKeystoreFromFile:
+    """What the keystore file loader accepts, and what it refuses."""
     def test_parses_valid_file(self, tmp_path: Path) -> None:
         path = tmp_path / "keys.json"
         _write_keystore(
@@ -68,6 +69,7 @@ class TestLoadKeystoreFromFile:
 
 
 class TestKeystoreReloader:
+    """The reloader picks up a change, and keeps the old map on error."""
     @pytest.mark.asyncio
     async def test_initial_load_populates_and_seeds_mtime(
         self, tmp_path: Path

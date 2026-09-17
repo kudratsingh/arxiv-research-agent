@@ -137,6 +137,8 @@ class TestLeaseFailureLogging:
 
 
 class TestLeaseKeeperContext:
+    """The keeper's lines carry the run id, and leak no binding."""
+
     async def test_keeper_lines_carry_the_run_id(
         self, caught: _RunIdCapturingHandler, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -222,6 +224,8 @@ class _StubStore:
 
 
 class TestJobLeaseAcquireLogging:
+    """What acquiring, contending for, and releasing a lease logs."""
+
     async def test_acquire_error_carries_detail_and_run_id(
         self, caught: _RunIdCapturingHandler, monkeypatch: pytest.MonkeyPatch
     ) -> None:

@@ -81,6 +81,8 @@ def _with_device(monkeypatch: pytest.MonkeyPatch, device: str) -> None:
 
 
 class TestDeviceSelection:
+    """Which device the embedder pins, and where that is decided."""
+
     def test_default_settings_force_cpu(
         self, monkeypatch: pytest.MonkeyPatch, fake_model: type[_FakeModel]
     ) -> None:
@@ -184,6 +186,8 @@ class TestNativeThreadPinning:
 
 
 class TestLoadLogging:
+    """The load line reports the device and thread count actually bound."""
+
     def test_device_is_logged_once_at_model_load(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -289,6 +293,8 @@ class _WriteOnlyFailingCache:
 
 
 class TestCacheWriteVisibility:
+    """A cache write failure is logged rather than swallowed."""
+
     def test_cache_write_failure_is_logged(
         self,
         monkeypatch: pytest.MonkeyPatch,

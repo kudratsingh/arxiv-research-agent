@@ -158,6 +158,8 @@ def _stubborn_agent(
 
 
 class TestCancelToken:
+    """The token itself: an idempotent cancel, and honest drain counts."""
+
     def test_cancel_is_idempotent_and_keeps_the_first_reason(self) -> None:
         token = CancelToken("j1")
         assert not token.is_cancelled()
@@ -252,6 +254,8 @@ class TestCancelToken:
 
 
 class TestExecutorNode:
+    """A node runs on the supplied pool, registered, and never after a cancel."""
+
     async def test_agent_runs_on_the_supplied_pool(self) -> None:
         """The point of the wrapper: nodes land on *our* executor.
 
@@ -508,6 +512,8 @@ def _drain_queue(job: Job) -> list[dict[str, Any]]:
 
 
 class TestRunnerDrain:
+    """A timeout cancels the token and waits for the node thread to unwind."""
+
     async def test_timeout_cancels_the_token_and_the_node_unwinds(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
@@ -782,6 +788,8 @@ class TestRunnerDrain:
 
 
 class TestLifespanWiring:
+    """The pool is sized to the job ceiling, handed over, and shut down."""
+
     async def test_pool_is_sized_to_the_job_ceiling_and_shut_down(self) -> None:
         app = create_app(
             build_workflow=lambda: MagicMock(name="wf"),
@@ -844,6 +852,8 @@ class TestLifespanWiring:
 
 
 class TestCallSites:
+    """The two call sites that must see a cancel before they spend."""
+
     def test_call_llm_aborts_before_touching_the_client(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

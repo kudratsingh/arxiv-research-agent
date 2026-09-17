@@ -145,6 +145,8 @@ class TestTheE2eFixtureDemonstration:
 
 
 class TestTheAdapterPreservesTheCheck:
+    """The adapter reports exactly what the underlying check decided."""
+
     def test_a_retrieved_citation_resolves(self) -> None:
         papers = [_paper("http://arxiv.org/abs/2311.09000")]
         result = measure_citation_resolution(
@@ -213,6 +215,8 @@ class TestTheSwapIsRecordedAsARebaseline:
 
 
 class TestTheMetricCostsNothing:
+    """The scoring path calls no judge and opens no socket."""
+
     def test_no_judge_and_no_network_on_the_scoring_path(self) -> None:
         # Zero spend is structural in this package. `measure_groundedness`
         # is pure, and the adapter adds no call of its own — asserted by

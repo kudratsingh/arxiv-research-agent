@@ -213,6 +213,7 @@ def failing_search(monkeypatch: pytest.MonkeyPatch) -> Callable[..., list[str]]:
 
 
 class TestTheBranchTierTrajectory:
+    """Sub-questions fan out into branches and merge back to one briefing."""
     def test_three_sub_questions_become_three_branches_and_one_briefing(
         self,
         install_settings: Callable[..., Any],
@@ -372,6 +373,7 @@ class TestTheBranchTierTrajectory:
 
 
 class TestTheVerificationStageIsArmCUnchanged:
+    """The branch tier leaves arm C's verification stage exactly as it was."""
     def test_an_overclaim_is_rewritten_by_the_synthesizer_and_verified_again(
         self,
         install_settings: Callable[..., Any],
@@ -585,6 +587,7 @@ class TestTheVerificationStageIsArmCUnchanged:
 
 
 class TestAFaultInOneBranchStaysThere:
+    """A branch that fails costs its own branch and not the run."""
     def test_a_failed_search_costs_one_branch_and_not_the_run(
         self,
         install_settings: Callable[..., Any],
@@ -703,6 +706,7 @@ class TestAFaultInOneBranchStaysThere:
 
 
 class TestTheProductPathRunsWithoutAHarness:
+    """Mock mode alone drives the branch tier, with no test harness."""
     def test_mock_mode_alone_drives_the_branch_tier_end_to_end(
         self,
         install_settings: Callable[..., Any],

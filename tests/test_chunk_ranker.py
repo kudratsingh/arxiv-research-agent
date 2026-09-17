@@ -25,6 +25,8 @@ def _mk_chunk(section: str, text: str, idx: int) -> Chunk:
 
 
 class TestMaxSimilarityPerChunk:
+    """The pure reduction: per-chunk maxima, with invalid indices ignored."""
+
     def test_single_query_maps_to_chunk_indices(self) -> None:
         scores = np.array([[0.9, 0.5, 0.1]], dtype=np.float32)
         indices = np.array([[2, 0, 1]], dtype=np.int64)
@@ -75,6 +77,8 @@ class TestMaxSimilarityPerChunk:
 
 
 class TestRankChunksEarlyExits:
+    """The ranker's early exits, before any scoring happens."""
+
     def test_empty_chunks_returns_empty(self) -> None:
         assert rank_chunks_by_relevance([], ["what is X?"]) == []
 
@@ -113,6 +117,8 @@ class TestRankChunksEarlyExits:
 
 
 class TestRankedChunkType:
+    """A ranked chunk carries exactly the fields its type declares."""
+
     def test_ranked_chunk_is_typed_dict_of_expected_fields(self) -> None:
         rc = RankedChunk(
             section="s", text="t", chunk_index=0, relevance_score=0.5
@@ -129,6 +135,8 @@ class TestRankedChunkType:
 
 
 class TestApplyPreferredSections:
+    """Preferred sections reserve slots, matched case-insensitively and capped."""
+
     def _chunks(self) -> list[Chunk]:
         return [
             _mk_chunk("intro", "A", 0),

@@ -60,6 +60,8 @@ def fixture(prefix: str, body: str) -> str:
 
 
 class TestRedactUrl:
+    """Connection-string credentials never survive into a log line."""
+
     def test_postgres_url_password_is_stripped(self) -> None:
         assert (
             redact_url("postgresql://arxiv_prod:S3cr3t@db.internal:5432/arxiv")
@@ -125,6 +127,8 @@ class TestRedactTextUrlCredentials:
 
 
 class TestRedactTextBearerTokens:
+    """A bearer token is scrubbed; the word in prose is left alone."""
+
     def test_an_authorization_header_echoed_into_a_log_is_scrubbed(self) -> None:
         assert redact_text("Authorization: Bearer abc123.def456-ghi789") == (
             "Authorization: Bearer ***"
@@ -141,6 +145,8 @@ class TestRedactTextBearerTokens:
 
 
 class TestRedactTextApiKeys:
+    """An API key is replaced by its prefix, body and all."""
+
     def test_an_sk_style_key_is_replaced_by_its_prefix(self) -> None:
         assert redact_text("using sk-ant-api03-AbCdEf123456ghijkl") == "using sk-***"
 
@@ -155,6 +161,8 @@ class TestRedactTextApiKeys:
 
 
 class TestRedactTextEmailAddresses:
+    """The local part goes and the domain stays."""
+
     def test_the_local_part_goes_and_the_domain_stays(self) -> None:
         # The domain says which tenant; the local part is the person.
         assert redact_text("contact a.researcher+arxiv@example.ac.uk") == (
@@ -173,6 +181,8 @@ class TestRedactTextEmailAddresses:
 
 
 class TestRedactTextBase64Blobs:
+    """A long encoded blob is replaced by its length, and only a blob is."""
+
     def test_a_long_encoded_blob_is_replaced_by_its_length(self) -> None:
         blob = "QWxhZGRpbjpvcGVuIHNlc2FtZQ" * 3
         redacted = redact_text(f"token={blob}")
@@ -292,6 +302,8 @@ class TestRedactTextVendorPrefixedTokens:
 
 
 class TestRedactTextAwsAccessKeyIds:
+    """An access key id keeps only its prefix, and the width is exact."""
+
     def test_an_access_key_id_keeps_only_its_four_letter_prefix(self) -> None:
         assert redact_text(fixture("AKIA", "IOSFODNN7EXAMPLE")) == "AKIA***"
 
@@ -305,6 +317,8 @@ class TestRedactTextAwsAccessKeyIds:
 
 
 class TestRedactTextJsonWebTokens:
+    """A token is replaced whole, and three dotted words are not one."""
+
     def test_a_jwt_is_replaced_whole(self) -> None:
         token = (
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
@@ -401,6 +415,8 @@ class TestRedactionReachesEveryStringOnTheLine:
 
 
 class TestJsonFormatterTimestamp:
+    """The timestamp is timezone-aware UTC and round-trips to the record."""
+
     def _format_record(self) -> tuple[logging.LogRecord, dict[str, object]]:
         record = logging.LogRecord(
             name="test",

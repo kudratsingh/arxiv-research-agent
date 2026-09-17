@@ -101,6 +101,7 @@ def _stub_llm(
 
 
 class TestShortCircuits:
+    """The two states that verify without reaching the model at all."""
     def test_empty_draft_skips_llm_and_verifies(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -126,6 +127,7 @@ class TestShortCircuits:
 
 
 class TestSuccessPath:
+    """How each verdict maps to the recommendation it implies."""
     def _draft_state(self, **overrides: Any) -> ResearchState:
         return _empty_state(
             query="What is X?",
@@ -232,6 +234,7 @@ class TestSuccessPath:
 
 
 class TestInvariants:
+    """The invariants that correct a self-contradicting verdict."""
     def _draft_state(self) -> ResearchState:
         return _empty_state(
             draft_report="body [Smith, 2023].",
@@ -317,6 +320,7 @@ class TestInvariants:
 
 
 class TestMalformedOutput:
+    """What unusable verifier output falls back to."""
     def _draft_state(self) -> ResearchState:
         return _empty_state(
             draft_report="body [Smith, 2023].",
@@ -425,6 +429,7 @@ def _mk_claim(
 
 
 class TestDossierFromEvidence:
+    """Which papers enter the dossier, and what stands in for evidence."""
     def test_cited_paper_with_evidence_uses_chunks(self) -> None:
         dossier = _dossier_from_evidence(
             [_mk_paper()],
@@ -483,6 +488,7 @@ class TestDossierFromEvidence:
 
 
 class TestBuildUserPromptSourceSelection:
+    """Which source the prompt uses, by flag and by available evidence."""
     def test_flag_off_uses_abstract_dossier(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

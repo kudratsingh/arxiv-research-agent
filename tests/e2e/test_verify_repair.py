@@ -179,6 +179,7 @@ def record_synthesizer_prompts(
 
 
 class TestTheVerifyAndRepairTrajectory:
+    """What arm C's graph does with each verdict, in the order it does it."""
     def test_a_reported_gap_is_retrieved_read_synthesised_and_verified_again(
         self,
         install_settings: Callable[..., Any],

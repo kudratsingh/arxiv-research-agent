@@ -142,6 +142,7 @@ def _recipe(target: str) -> str:
 
 
 class TestMakefileThreadHygiene:
+    """Every test target pins the native thread counts."""
     @pytest.mark.parametrize(
         "target", ["test-unit", "test-integration", "test-e2e", "test-all"]
     )
@@ -157,6 +158,7 @@ class TestMakefileThreadHygiene:
 
 
 class TestCleanTargets:
+    """Which clean target removes the checkpoints, and which keeps them."""
     def test_clean_keeps_the_graph_checkpoints(self) -> None:
         recipe = _recipe("clean")
         assert ".cache/pdfs" in recipe
@@ -183,6 +185,7 @@ class TestCleanTargets:
 
 
 class TestDemoDocHonesty:
+    """The demo document describes the calls the code actually makes."""
     def test_the_no_external_calls_claim_is_gone(self) -> None:
         """ADR 0052's original finding, kept.
 

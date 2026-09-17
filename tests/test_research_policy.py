@@ -122,6 +122,7 @@ def _compile_listing(**overrides: Any) -> tuple[set[str], set[str]]:
 
 
 class TestTheSelectorRefusesAnImpossibleArm:
+    """A declared arm loads only with the combination it declares."""
     def test_the_default_is_legacy_and_changes_nothing(self) -> None:
         assert Settings().research_policy == "legacy"
 
@@ -184,6 +185,7 @@ class TestTheSelectorRefusesAnImpossibleArm:
 
 
 class TestTheCompiledShapeIsStructural:
+    """Arm C compiles the nodes and edges the ADR publishes, and only it."""
     def test_arm_c_compiles_the_nodes_and_edges_the_adr_publishes(self) -> None:
         nodes, edges = _compile_listing(
             research_policy="fixed_verify_repair", **ARM_C_FLAGS
@@ -262,6 +264,7 @@ class TestTheCompiledShapeIsStructural:
 
 
 class TestTheRepairDecisionTable:
+    """Every row of the repair decision table, and its frozen bounds."""
     def test_missing_evidence_retrieves_it(self) -> None:
         decision = decide_repair(
             _state(missing_evidence=["quantisation error rates"])  # type: ignore[arg-type]

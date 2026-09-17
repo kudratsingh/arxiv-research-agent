@@ -229,6 +229,7 @@ def _client() -> AsyncClient:
 
 
 class TestFlagGating:
+    """The routes exist, report their flag honestly, and are off by default."""
     @pytest.mark.parametrize(
         "url", ["/learn/paths", "/learn/paths/demo-path"]
     )
@@ -247,6 +248,7 @@ class TestFlagGating:
 
 
 class TestListing:
+    """Only published paths are listed, and each carries its banner."""
     async def test_only_published_paths_are_listed(
         self, monkeypatch: pytest.MonkeyPatch, content_tree: Path
     ) -> None:
@@ -284,6 +286,7 @@ class TestListing:
 
 
 class TestDetail:
+    """What a path detail carries, and what a missing one returns."""
     async def test_the_detail_carries_entries_and_briefings(
         self, monkeypatch: pytest.MonkeyPatch, content_tree: Path
     ) -> None:
@@ -346,6 +349,7 @@ class TestDetail:
 
 
 class TestServingGate:
+    """Nothing unapproved, and no full text or media link, reaches the wire."""
     async def test_a_withdrawn_entry_never_reaches_the_wire(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -417,6 +421,7 @@ class TestServingGate:
 
 
 class TestBrokenContent:
+    """An invalid manifest is a 503 rather than a partial answer."""
     async def test_an_invalid_manifest_is_a_503_not_a_partial_answer(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -433,6 +438,7 @@ class TestBrokenContent:
 
 
 class TestShippedContentOverHttp:
+    """The shipped fixture path serves; the flagship path does not yet."""
     async def test_the_repo_shipped_fixture_path_serves(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

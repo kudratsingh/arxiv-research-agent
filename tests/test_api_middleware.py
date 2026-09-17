@@ -272,6 +272,8 @@ async def booted(
 
 
 class TestTheRequestIdIsOneValue:
+    """One request id, on the wire, in the log line, and in the envelope."""
+
     async def test_a_response_carries_an_id_and_the_log_line_carries_the_same_one(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -377,6 +379,8 @@ class TestTheRequestIdIsOneValue:
 
 
 class TestTheStructuredAccessLine:
+    """The access line carries the route template and survives its allowlist."""
+
     async def test_it_carries_the_route_template_and_never_the_raw_path(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -501,6 +505,8 @@ class TestTheStructuredAccessLine:
 
 
 class TestTheCorrelationContextIsBoundAtTheEdge:
+    """The correlation context is bound at the edge and does not leak on."""
+
     async def test_the_principal_reaches_the_line_as_a_hash_not_a_key_id(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -575,6 +581,8 @@ class TestTheCorrelationContextIsBoundAtTheEdge:
 
 
 class TestInboundTraceContext:
+    """A caller's trace context is adopted, and never fabricated."""
+
     async def test_a_callers_traceparent_is_adopted(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -789,6 +797,8 @@ class TestTheServerSpan:
 
 
 class TestTheRedMetrics:
+    """The RED metrics: keyed on the route template, and balanced."""
+
     async def test_the_duration_histogram_is_keyed_on_the_route_template(
         self, monkeypatch: pytest.MonkeyPatch, reader: InMemoryMetricReader
     ) -> None:
@@ -956,6 +966,8 @@ class TestTheConventionalErrorTypeRule:
 
 
 class TestTheHealthReadinessSplit:
+    """Liveness stays up while readiness reports what the worker can take."""
+
     async def test_healthz_stays_200_while_a_dependency_is_down(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

@@ -196,6 +196,8 @@ async def _wait_for_turn(
 
 
 class TestJobKind:
+    """Every declared kind has a runtime, and an unknown kind falls back."""
+
     def test_the_default_is_research_so_nothing_existing_changes_meaning(
         self,
     ) -> None:
@@ -256,6 +258,8 @@ class TestJobKind:
 
 
 class TestSessionParking:
+    """A session parks on every turn rather than running itself onward."""
+
     async def test_parks_in_awaiting_learner_and_emits_turn_ready(self) -> None:
         stub = TurnTakingStub(turns=1)
         store = RecordingStore()
@@ -443,6 +447,8 @@ async def shared_backend() -> AsyncIterator[fakeredis.aioredis.FakeRedis]:
 
 
 class TestCrossWorkerTurnResume:
+    """A turn submitted to another worker wakes the runner that parked."""
+
     async def test_a_turn_submitted_to_another_worker_wakes_the_runner(
         self, shared_backend: fakeredis.aioredis.FakeRedis
     ) -> None:
@@ -502,6 +508,8 @@ class TestCrossWorkerTurnResume:
 
 
 class TestRedisRoundTrip:
+    """Kind, turn and resume payload survive a Redis round trip."""
+
     async def test_kind_turn_and_resume_payload_round_trip(
         self, shared_backend: fakeredis.aioredis.FakeRedis
     ) -> None:
@@ -562,6 +570,8 @@ class TestRedisRoundTrip:
 
 
 class TestRedriveOfParkedSessions:
+    """A parked session is left alone while live, and failed once orphaned."""
+
     async def test_a_parked_session_on_a_live_worker_is_left_alone(
         self, shared_backend: fakeredis.aioredis.FakeRedis
     ) -> None:
@@ -658,6 +668,8 @@ class TestRedriveOfParkedSessions:
 
 
 class TestResearchIsUntouched:
+    """Research jobs keep their runtime, their timeouts and their codes."""
+
     async def test_a_research_job_still_gets_the_research_runtime(self) -> None:
         assert runtime_for("research") is RESEARCH_RUNTIME
         assert runtime_for("session") is SESSION_RUNTIME

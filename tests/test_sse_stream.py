@@ -214,6 +214,8 @@ class TestIdleHeartbeat:
 
 
 class TestNoFrameLoss:
+    """An event landing on the heartbeat boundary is still delivered."""
+
     @pytest.mark.parametrize("delay", [0.045, 0.05, 0.055])
     async def test_event_landing_on_the_heartbeat_boundary_is_delivered(
         self, delay: float
@@ -242,6 +244,8 @@ class TestNoFrameLoss:
 
 
 class TestTerminalHandling:
+    """The loop stops on the terminal frame and reads no further."""
+
     async def test_stops_on_terminal_and_does_not_read_past_it(self) -> None:
         drainer = _drainer(
             _event("plan_ready", plan={"sub_questions": []}),
@@ -278,6 +282,8 @@ class TestTerminalHandling:
 
 
 class TestDisconnect:
+    """A disconnect ends the stream, even before the first read."""
+
     async def test_disconnect_ends_the_stream(self) -> None:
         # Silent job: without the disconnect probe this would run to
         # the deadline, so ending at all proves the probe fired.
@@ -319,6 +325,8 @@ class TestDisconnect:
 
 
 class TestDeadline:
+    """The deadline closes the stream, but never before a terminal frame."""
+
     async def test_deadline_emits_stream_timeout_and_closes(self) -> None:
         drainer = _drainer(HEARTBEAT * 100)
         # `now` is read once for the deadline, then once per loop:
@@ -609,6 +617,8 @@ class TestRouteClosesTheStream:
 
 
 class TestImmediateKeepalive:
+    """The first chunk is a keepalive, before any read."""
+
     async def test_first_chunk_is_a_keepalive_before_any_read(self) -> None:
         # Time-to-first-byte must not depend on how long the first
         # graph node takes; proxies that buffer until first output

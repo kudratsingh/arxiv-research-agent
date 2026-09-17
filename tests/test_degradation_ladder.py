@@ -257,6 +257,8 @@ def degradation_reader(
 
 
 class TestTheScanItself:
+    """The source scan finds the call sites and resolves their attributes."""
+
     def test_the_scan_finds_the_call_sites_it_is_supposed_to(self) -> None:
         # Without this, a refactor that renamed the helper would make
         # every check below pass vacuously against an empty set — the
@@ -291,6 +293,8 @@ class TestTheScanItself:
 
 
 class TestTheVocabularyIsClosed:
+    """Every rung and component a call site names is registered, and used."""
+
     def test_every_rung_a_call_site_names_is_registered(self) -> None:
         unregistered = sorted(r for r in RUNGS_EMITTED if r[2] not in DEGRADATION_RUNGS)
         assert not unregistered, (

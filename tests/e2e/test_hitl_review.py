@@ -133,6 +133,7 @@ def _final_plan(checkpoints: Path, job_id: str) -> dict[str, Any]:
 
 
 class TestPlanReview:
+    """The plan breakpoint, driven to each of approve, revise and cancel."""
     async def test_a_run_parks_for_review_and_shows_the_reviewer_the_plan(
         self,
         hitl_client: tuple[AsyncClient, Path],

@@ -86,6 +86,8 @@ def _stub_ranker(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 class TestMockGating:
+    """Mock papers are reachable only under the mock flag, never on empty."""
+
     def test_zero_live_results_never_serves_mock_papers(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -164,6 +166,8 @@ class TestMockGating:
 
 
 class TestQueryCap:
+    """An oversized plan is trimmed to the query cap."""
+
     def test_oversized_plan_trimmed_to_cap(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -184,6 +188,8 @@ class TestQueryCap:
 
 
 class TestSearchArxivUnavailableContract:
+    """When the arXiv tool returns empty, and when it raises instead."""
+
     def _rate_limited_response(self) -> MagicMock:
         resp = MagicMock()
         resp.status_code = 200
@@ -231,6 +237,8 @@ class TestSearchArxivUnavailableContract:
 
 
 class TestCanonicalDedup:
+    """Which identifiers collide under canonicalisation, and which do not."""
+
     def test_versioned_http_and_unversioned_https_collide(self) -> None:
         assert canonical_paper_key(
             "http://arxiv.org/abs/2311.09000v1"

@@ -45,6 +45,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestInterval:
+    """An interval's width, its string form, and when it excludes zero."""
+
     def test_width_and_string_form(self) -> None:
         interval = Interval(-0.125, 0.25)
         assert interval.width == pytest.approx(0.375)
@@ -59,6 +61,8 @@ class TestInterval:
 
 
 class TestWilsonInterval:
+    """The Wilson interval, against values computed by hand."""
+
     def test_matches_the_hand_computed_interval_at_16_of_20(self) -> None:
         # p = 0.8, n = 20, z = 1.959964.
         #   centre = (0.8 + z^2/40) / (1 + z^2/20)
@@ -169,6 +173,8 @@ class TestWilsonSharedReferenceValues:
 
 
 class TestRuleOfThree:
+    """The rule of three, and the exact bound that is tighter than it."""
+
     def test_three_over_n(self) -> None:
         assert rule_of_three(20) == pytest.approx(0.15)
         assert rule_of_three(15) == pytest.approx(0.2)
@@ -195,6 +201,8 @@ class TestRuleOfThree:
 
 
 class TestPassHatK:
+    """The pass-at-k estimator against the hypergeometric ratio by hand."""
+
     def test_matches_the_hypergeometric_ratio_by_hand(self) -> None:
         # C(2,2)/C(3,2) = 1/3: two of three attempts succeeded, so one
         # of the three ways to draw two attempts is clean.
@@ -222,6 +230,8 @@ class TestPassHatK:
 
 
 class TestMcNemar:
+    """McNemar's test, both branches, against tails computed by hand."""
+
     def test_exact_p_value_matches_the_binomial_tail_by_hand(self) -> None:
         # b = 10, c = 2, n_d = 12. Two-sided exact p is twice the lower
         # tail of Binomial(12, 1/2) at 2:
@@ -389,6 +399,8 @@ class TestPairingBinaryOutcomes:
 
 
 class TestSampleSize:
+    """The published sample sizes reproduce, paired and unpaired."""
+
     def test_reproduces_the_seventy_seven_paired_items(self) -> None:
         # 02-STANDARDS.md §2.3's headline. Connor's formula at the
         # lowest discordance a 5-point difference can have, with the
@@ -448,6 +460,8 @@ class TestSampleSize:
 
 
 class TestPairedBootstrap:
+    """The paired bootstrap's estimate, its seeding, and its refusals."""
+
     def test_identical_arms_give_a_zero_width_interval(self) -> None:
         # ADR 0071's acceptance criterion, in its purest form: nothing
         # moved, so no resample can move it.
@@ -571,6 +585,8 @@ class TestPairedBootstrap:
 
 
 class TestHonestyAboutN:
+    """The small-sample caveat fires where it applies, and only there."""
+
     def test_the_caveat_fires_in_this_repository_s_regime(self) -> None:
         caveat = small_sample_caveat(20)
         assert caveat is not None
@@ -600,6 +616,8 @@ class TestHonestyAboutN:
 
 
 class TestRepeatPolicyIsShared:
+    """Both lanes quote the same repeat bar, and warn below it."""
+
     def test_both_lanes_quote_the_same_repeat_bar(self) -> None:
         # The constant is declared twice — `simulate_learner` imports
         # `runner`, so a shared home would have to be `runner` and that

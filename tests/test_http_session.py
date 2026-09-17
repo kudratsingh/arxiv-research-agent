@@ -29,6 +29,8 @@ pytestmark = pytest.mark.unit
 
 
 class TestBuildRetryingSession:
+    """The retry policy the shared session is actually built with."""
+
     def _retry_policy(self, session) -> Retry:
         adapter = session.get_adapter("https://arxiv.org")
         return adapter.max_retries
@@ -101,6 +103,8 @@ class TestBuildRetryingSession:
 
 
 class TestRetryableStatusesConstant:
+    """Which statuses count as transient, and which deliberately do not."""
+
     def test_covers_expected_transient_codes(self) -> None:
         for code in (408, 425, 429, 500, 502, 503, 504):
             assert code in RETRYABLE_STATUSES

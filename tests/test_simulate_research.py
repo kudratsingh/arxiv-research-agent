@@ -77,6 +77,8 @@ def _clean_state(papers: int = 3) -> dict[str, Any]:
 
 
 class TestTheScript:
+    """What each scripted responder produces, and what it never produces."""
+
     def test_the_plan_is_derived_from_the_benchmark_query(self) -> None:
         """Derived, not fixed — so a benchmark edit moves the campaign."""
         query = _query()
@@ -187,6 +189,8 @@ class TestTheScript:
 
 
 class TestTheScriptVersion:
+    """The script version is derived from the responders' own source."""
+
     def test_the_digest_is_derived_from_the_responders_own_source(self) -> None:
         digest = sim.script_digest()
         assert len(digest) == 12
@@ -237,6 +241,8 @@ class TestTheScriptVersion:
 
 
 class TestProvenance:
+    """A scripted row is attributable, and names neither other tier."""
+
     def test_a_scripted_row_is_attributable(self) -> None:
         assert check_provenance(dict(sim.scripted_provenance())) == []
 
@@ -259,6 +265,8 @@ class TestProvenance:
 
 
 class TestStructuralExpectations:
+    """Every way a trajectory can fail its structural expectations."""
+
     def test_a_clean_run_has_none(self) -> None:
         outcomes = sim.compute_outcomes(sim.FIXED_PIPELINE, _clean_state())
         assert outcomes.expectation_failures == []
@@ -324,6 +332,8 @@ class TestStructuralExpectations:
 
 
 class TestTheSurface:
+    """The surface installs and restores every patch, and refuses a real call."""
+
     def _args(self, **overrides: Any) -> argparse.Namespace:
         return argparse.Namespace(**{"repeats": 1, **overrides})
 
@@ -455,6 +465,8 @@ class TestTheSurface:
 
 
 class TestConfigProblem:
+    """Which configurations the campaign refuses to start under."""
+
     def _args(self, **overrides: Any) -> argparse.Namespace:
         return argparse.Namespace(**{"repeats": 1, **overrides})
 
@@ -501,6 +513,8 @@ class TestConfigProblem:
 
 
 class TestSummaryLine:
+    """What the scripted summary row publishes, and what it omits."""
+
     def _record(self, **overrides: Any) -> dict[str, Any]:
         record: dict[str, Any] = {
             "record_id": "q1",
@@ -580,6 +594,8 @@ class TestSummaryLine:
 
 
 class TestSummaryMarkdown:
+    """The summary names the tier's own limitation."""
+
     def test_it_names_the_tier_s_own_limitation(self) -> None:
         markdown = sim.summary_markdown([], "rs-test")
         assert "the harness's" in markdown
@@ -744,6 +760,8 @@ def _happy_chunks() -> list[Any]:
 
 
 class TestRunQuery:
+    """What one query's run records, in success, failure and interrupt."""
+
     def test_a_clean_run_records_its_trajectory_and_claims(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -801,6 +819,8 @@ class TestRunQuery:
 
 
 class TestCampaignReporting:
+    """Errors and unmet expectations reach the summary and the console."""
+
     def _errored(self) -> dict[str, Any]:
         return {
             "record_id": "q-bad",
@@ -861,6 +881,8 @@ class TestCampaignReporting:
 
 
 class TestCampaignCLI:
+    """The campaign's command line, its selection, and its exit codes."""
+
     def test_an_unknown_query_id_is_refused(self) -> None:
         with pytest.raises(SystemExit, match="Unknown query IDs"):
             sim._select_queries(["no-such-query"])

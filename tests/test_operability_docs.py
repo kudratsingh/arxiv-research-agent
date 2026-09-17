@@ -535,6 +535,8 @@ def _doc_identifiers(cell: str) -> list[str]:
 
 
 class TestTheInstrumentScan:
+    """The scan resolves every instrument name the source emits."""
+
     def test_every_instrument_name_in_src_is_resolvable(self) -> None:
         assert not UNRESOLVED_INSTRUMENTS, (
             "these `meter.create_*` call sites name their instrument in a "
@@ -587,6 +589,8 @@ class TestTheInstrumentScan:
 
 
 class TestAlertRulesNameRealInstruments:
+    """Every alert and panel names an instrument that exists in the source."""
+
     def test_every_alert_metric_exists_in_src(self) -> None:
         missing: list[str] = []
         for rule in _alert_rules():
@@ -840,6 +844,8 @@ class TestTheDashboardIsProvisionable:
 
 
 class TestLogAlarmsNameRealEvents:
+    """Every log alarm names a known event, and only where no metric exists."""
+
     def test_every_log_alarm_event_is_a_known_event(self) -> None:
         unknown: list[str] = []
         for alarm in _log_alarms():
@@ -882,6 +888,8 @@ class TestLogAlarmsNameRealEvents:
 
 
 class TestRunbooksNameSignalsThatExist:
+    """Every runbook has its sections, its commands, and real signals."""
+
     @pytest.mark.parametrize("runbook", INCIDENT_RUNBOOKS)
     def test_runbook_has_the_four_required_sections(self, runbook: str) -> None:
         text = (_RUNBOOKS / runbook).read_text(encoding="utf-8")
@@ -951,6 +959,8 @@ class TestRunbooksNameSignalsThatExist:
 
 
 class TestTheSLODocumentNamesRealInstruments:
+    """Every instrument named in the SLI table exists."""
+
     def test_every_instrument_in_the_sli_table_exists(self) -> None:
         text = (_ROOT / "docs" / "reliability.md").read_text(encoding="utf-8")
         section = text.split("## 3. The SLIs and their objectives", 1)[1]
@@ -980,6 +990,8 @@ class TestTheSLODocumentNamesRealInstruments:
 
 
 class TestTheOverlayStaysOptional:
+    """The observability overlay adds services and env, and nothing else."""
+
     def test_collector_disables_metric_suffixes(self) -> None:
         config = _load_yaml("otel-collector.yaml")
         exporter = config["exporters"]["prometheus"]

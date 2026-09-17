@@ -99,6 +99,7 @@ def _valid_response() -> dict[str, Any]:
 
 
 class TestAssessmentParseDefense:
+    """A judgment that cannot be trusted degrades to unassessed, never a default."""
     def test_valid_findings_are_grounded_and_guidance_only(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -201,6 +202,7 @@ class TestAssessmentParseDefense:
 
 
 class TestIsolationAndExposure:
+    """Learner text reaches the judge wrapped, and its schema never leaves."""
     def test_jailbreak_is_isolation_wrapped_before_the_judge(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -257,6 +259,7 @@ class TestIsolationAndExposure:
 
 
 class TestGraphIntegration:
+    """Where the judge sits in the session graph, including with the flag off."""
     def test_flag_off_preserves_informal_recorded_ungraded_close(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

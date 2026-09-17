@@ -77,6 +77,8 @@ def _settings(**overrides: Any) -> Settings:
 
 
 class TestJudgeModel:
+    """The judge model is the pinned setting, never the product's."""
+
     def test_reads_the_pinned_judge_setting(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -103,6 +105,8 @@ class TestJudgeModel:
 
 
 class TestRubricVersions:
+    """Rubric versions are mapped and sorted so two rows compare exactly."""
+
     def test_maps_names_to_versions(self) -> None:
         assert rubric_versions(_RUBRICS) == {"alpha": "1.0.0", "beta": "2.1.0"}
 
@@ -114,6 +118,8 @@ class TestRubricVersions:
 
 
 class TestDatasetFingerprint:
+    """The fingerprint moves with the data, and only with the data."""
+
     def test_names_the_dataset_and_its_size(self) -> None:
         version = dataset_fingerprint("bench", [{"a": 1}, {"a": 2}])
         assert version.startswith("bench@2:")
@@ -149,6 +155,8 @@ class TestDatasetFingerprint:
 
 
 class TestCodeRevision:
+    """Which revision is reported, and what is said when none is knowable."""
+
     def test_git_head_is_preferred_and_carries_dirtiness(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -263,6 +271,8 @@ class TestGitQuery:
 
 
 class TestSeedCampaign:
+    """Seeding is reproducible, overridable, and survives absent numpy."""
+
     def test_returns_the_configured_seed(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -295,6 +305,8 @@ class TestSeedCampaign:
 
 
 class TestCapture:
+    """The captured block records every field a comparison needs."""
+
     def test_records_every_field_a_comparison_needs(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -352,6 +364,8 @@ class TestCapture:
 
 
 class TestCheckProvenance:
+    """Every way a block can be incomplete is reported, not just the first."""
+
     def _block(self, **overrides: Any) -> dict[str, Any]:
         block = dict(capture(tier="scripted", dataset_version="d@1:x", rubrics=_RUBRICS))
         block.update(overrides)
@@ -420,6 +434,8 @@ class TestCheckProvenance:
 
 
 class TestProvenanceMarkdown:
+    """How a campaign's provenance renders, including when it moved."""
+
     def _row(self, **overrides: Any) -> dict[str, Any]:
         block = dict(capture(tier="scripted", dataset_version="d@1:x", rubrics=_RUBRICS))
         block.update(overrides)

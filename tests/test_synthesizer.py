@@ -146,6 +146,8 @@ def _stub_llm(
 
 
 class TestUseEvidencePath:
+    """When the evidence path is taken, and when it is not."""
+
     def test_false_when_flag_off(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             synth_module, "settings", Settings(enable_evidence_store=False)
@@ -177,6 +179,8 @@ class TestUseEvidencePath:
 
 
 class TestBasePathPromptStability:
+    """The base prompt's blocks, and what it never contains."""
+
     def test_analyses_block_has_expected_headers(self) -> None:
         state = _empty_state(
             papers=[_paper()],
@@ -227,6 +231,8 @@ class TestBasePathPromptStability:
 
 
 class TestEvidenceBlockFormatting:
+    """How evidence is grouped, ordered and quoted in the prompt."""
+
     def test_groups_by_supports_question_in_planner_order(self) -> None:
         state = _empty_state(
             papers=[_paper("p1"), _paper("p2", lastname="Doe")],
@@ -287,6 +293,8 @@ class TestEvidenceBlockFormatting:
 
 
 class TestEvidencePathPromptShape:
+    """The evidence prompt is appended to the analyses block."""
+
     def test_evidence_prompt_appended_to_analyses(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -313,6 +321,8 @@ class TestEvidencePathPromptShape:
 
 
 class TestSynthesizerAgentPathSelection:
+    """Which system prompt each configuration selects, and what comes back."""
+
     def test_flag_off_uses_base_system_prompt(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
