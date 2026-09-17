@@ -1,14 +1,23 @@
-"""`python -m src.campaign plan|dry-run|run|resume|status|report`.
+"""`python -m src.campaign plan|dry-run|run|rehearse|resume|status|report`.
 
-Six verbs, and the split between them is the work order's: **`plan`,
-`dry-run`, `resume`, `status` and `report` have no execution side
-effects, and `run` is the only one that does.** `dry-run` writes nothing at all and
-enumerates every planned episode with its zero-cost status; `plan`
+Seven verbs, and the split between them is the work order's: **`plan`,
+`dry-run`, `rehearse`, `resume`, `status` and `report` have no execution
+side effects, and `run` is the only one that does.** `dry-run` enumerates
+every planned episode with its zero-cost status and writes nothing —
+unless `--artifact` names a file, which is the one thing it writes and is
+a projection of the plan rather than a campaign directory; `plan`
 materializes the campaign directory — manifest, lock, arm configs, task
 set and the denominator ledger — and still runs nothing; `resume`
 reopens a materialized campaign under the same lock and cap and reports
 what is left; `status` reconciles the ledger against the receipts on
 disk.
+
+`rehearse` walks the funded path of a materialized campaign — approval
+check, ledger open, episode manifest seal against the real compiled
+graph, provider credential, provider client — and stops at the first
+door a credential opens, naming what is still owed. It runs no episode
+and makes no call; `src/campaign/rehearse.py` says why each step is the
+real one.
 
 `report` is the pass after `run`: it reads the campaign's sealed
 records and the durable trajectories they point at and writes one
@@ -28,7 +37,11 @@ the resume, under the same lock and the same cap.
 The four read-only verbs compile no graph and construct no provider. Arm
 capability is left `unverified` at plan time and proved at seal time by
 the process that actually has a compiled graph, which is the only place
-the evidence exists — and `run` is that process.
+the evidence exists — and `run` is that process. `rehearse` is the fifth
+verb with no execution side effects and the exception to the first
+sentence: it *does* compile a graph and *does* reach the provider's
+constructor, on purpose, because proving the funded path is complete up
+to the credential is the whole of what it is for.
 
 Every verb prints JSON on stdout so the output is usable by W11's
 qualification report without a parser for prose.
@@ -57,18 +70,13 @@ from src.campaign.planner import (
     rebuild_plan,
     resume_campaign,
     status_counts,
+    suite_case_ids,
     write_campaign,
 )
 from src.config import Settings
 from src.config import settings as shipped_settings
 from src.contracts.benchmark_adapters import suite_ref
-from src.contracts.registry import (
-    BenchmarkSuite,
-    IntendedUse,
-    LocalRegistry,
-    RegistryRole,
-    TaskSet,
-)
+from src.contracts.registry import LocalRegistry
 
 EXIT_OK = 0
 EXIT_USAGE = 2
@@ -86,7 +94,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "command",
-        choices=("plan", "dry-run", "run", "resume", "status", "report"),
+        choices=("plan", "dry-run", "run", "rehearse", "resume", "status", "report"),
     )
     parser.add_argument(
         "--registry-root",
@@ -200,6 +208,18 @@ def _parser() -> argparse.ArgumentParser:
             "ANTHROPIC_API_KEY=local-preview-disabled."
         ),
     )
+    parser.add_argument(
+        "--artifact",
+        type=Path,
+        default=None,
+        help=(
+            "For dry-run: also write the plan as a publishable artifact at "
+            "this path. The file carries the sealed protocol and lock "
+            "digests, the arm declarations, the case set, the repeats, the "
+            "zero caps and the command that produced it, and it is the only "
+            "thing dry-run writes."
+        ),
+    )
     return parser
 
 
@@ -235,22 +255,7 @@ def _case_ids(root: Path, suite: str, explicit: str) -> tuple[str, ...]:
     """Read the suite's case order from the registry, or take the operator's."""
     if explicit.strip():
         return tuple(item.strip() for item in explicit.split(",") if item.strip())
-    registry = LocalRegistry(root)
-    ref = suite_ref(root, suite)
-    envelope = registry.resolve(
-        ref, role=RegistryRole.EVALUATOR, intended_use=IntendedUse.DEVELOPMENT
-    )
-    payload = envelope.payload
-    if not isinstance(payload, BenchmarkSuite):
-        raise CampaignError(f"{suite} did not resolve to a benchmark suite")
-    task_set = registry.resolve(
-        payload.task_set_ref,
-        role=RegistryRole.EVALUATOR,
-        intended_use=IntendedUse.DEVELOPMENT,
-    ).payload
-    if not isinstance(task_set, TaskSet):
-        raise CampaignError("suite task_set_ref did not resolve to a task set")
-    return tuple(ref.id for ref in task_set.case_refs)
+    return suite_case_ids(root, suite)
 
 
 def _request(args: argparse.Namespace, config: Settings) -> CampaignRequest:
@@ -327,7 +332,15 @@ def _run(args: argparse.Namespace) -> int:
         preflight_approval(plan, _backend(args))
         if args.command == "dry-run":
             _emit(dry_run(plan).model_dump(mode="json"))
+            if args.artifact is not None:
+                _emit({"artifact": str(_write_artifact(args, plan, request))})
             return EXIT_OK
+        if args.artifact is not None:
+            raise CampaignError(
+                "--artifact belongs to dry-run: plan materializes a campaign "
+                "directory under the output root, and a published artifact is "
+                "a projection rather than a second copy of one"
+            )
         directory = write_campaign(root, plan)
         _emit(
             {
@@ -344,10 +357,27 @@ def _run(args: argparse.Namespace) -> int:
 
     if args.campaign_id is None:
         print(
-            "Error: --campaign-id is required for run, resume, status and report.",
+            "Error: --campaign-id is required for run, rehearse, resume, "
+            "status and report.",
             file=sys.stderr,
         )
         return EXIT_USAGE
+
+    if args.command == "rehearse":
+        # Imported inside the branch for the same reason `run` is: the
+        # rehearsal seals an episode against a compiled graph, so it
+        # reaches `build_workflow` and the read-only verbs must not.
+        from src.campaign.rehearse import rehearse_campaign
+
+        rehearsal = rehearse_campaign(
+            config,
+            root=root,
+            campaign_id=args.campaign_id,
+            approval_backend=_backend(args),
+            approval_id=args.approval_id,
+        )
+        _emit(rehearsal.model_dump(mode="json"))
+        return EXIT_OK
 
     if args.command == "report":
         # Imported here for the same reason `run` is: the report reads
@@ -442,6 +472,33 @@ def _run(args: argparse.Namespace) -> int:
         }
     )
     return EXIT_OK
+
+
+def _write_artifact(
+    args: argparse.Namespace, plan: Any, request: CampaignRequest
+) -> Path:
+    """Publish the dry run's plan as an artifact a commit can hold.
+
+    The `produced_by` line is rebuilt from the resolved request rather
+    than from `sys.argv`, so the command recorded in the file is the one
+    that reproduces it and not whatever else the operator typed.
+    """
+    from src.campaign.baseline import (
+        artifact_command,
+        build_plan_artifact,
+        write_plan_artifact,
+    )
+
+    target: Path = args.artifact
+    return write_plan_artifact(
+        target,
+        build_plan_artifact(
+            plan,
+            request=request,
+            produced_by=artifact_command(request, output=str(target)),
+            derived_from=str(args.registry_root),
+        ),
+    )
 
 
 def _loaded(root: Path, campaign_id: str) -> Any:

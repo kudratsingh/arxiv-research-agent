@@ -341,6 +341,47 @@ def plan_campaign(
     )
 
 
+def suite_case_ids(registry_root: Path, suite: str) -> tuple[str, ...]:
+    """Every case in a suite's task set, in the registry's own order.
+
+    The default case selection for any campaign over `suite`, and the
+    only one that is not an operator's typing: the order is the task
+    set's, and the task set is reached through the suite's sealed
+    `task_set_ref` rather than by globbing a directory.
+
+    Args:
+        registry_root: The registry tree to resolve against.
+        suite: Benchmark suite id.
+
+    Returns:
+        The case ids, in registry order.
+
+    Raises:
+        CampaignError: The suite does not resolve to a benchmark suite,
+            or its `task_set_ref` does not resolve to a task set.
+    """
+    from src.contracts.benchmark_adapters import suite_ref
+    from src.contracts.registry import BenchmarkSuite, LocalRegistry, TaskSet
+
+    registry = LocalRegistry(registry_root)
+    envelope = registry.resolve(
+        suite_ref(registry_root, suite),
+        role=RegistryRole.EVALUATOR,
+        intended_use=IntendedUse.DEVELOPMENT,
+    )
+    payload = envelope.payload
+    if not isinstance(payload, BenchmarkSuite):
+        raise CampaignError(f"{suite} did not resolve to a benchmark suite")
+    task_set = registry.resolve(
+        payload.task_set_ref,
+        role=RegistryRole.EVALUATOR,
+        intended_use=IntendedUse.DEVELOPMENT,
+    ).payload
+    if not isinstance(task_set, TaskSet):
+        raise CampaignError("suite task_set_ref did not resolve to a task set")
+    return tuple(ref.id for ref in task_set.case_refs)
+
+
 def dry_run(plan: CampaignPlan) -> DryRunPlan:
     """Enumerate every planned episode with its zero-cost status.
 
@@ -909,6 +950,7 @@ __all__ = [
     "resume_episode",
     "seal_next_episode",
     "status_counts",
+    "suite_case_ids",
     "write_campaign",
     "write_ledger",
 ]

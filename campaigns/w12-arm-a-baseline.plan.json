@@ -1,0 +1,695 @@
+{
+  "approval_id": null,
+  "arm_declaration_digest": "sha256:ea8bd661d71200f028e59d8d3f3c65a32b5afaf5ad0d14e2f1c246f11c9e467f",
+  "arms": [
+    {
+      "arm_id": "A",
+      "declaration_digest": "sha256:9cd55588334e7d3d0bd56158ba31e4056ec9b6635261be872cd7b5800200ee9d",
+      "runnable": true,
+      "selector": "fixed",
+      "settings_overrides": {
+        "enable_evidence_store": false,
+        "enable_hitl": false,
+        "enable_prompt_caching": false,
+        "enable_prompt_isolation": true,
+        "enable_query_refiner": false,
+        "enable_reader_recovery": false,
+        "enable_semantic_scholar": false,
+        "enable_supervisor": false,
+        "enable_verifier": false,
+        "research_policy": "legacy"
+      },
+      "status": "unverified"
+    }
+  ],
+  "campaign_budget": {
+    "currency": "USD",
+    "enforcement": "between-episodes-with-in-flight-overshoot-risk",
+    "total_cost_usd_max": "0.000000"
+  },
+  "campaign_id": "camp_8c810c0a9a334487b37330d20a6c67d5",
+  "case_ids": [
+    "hallucination-mitigation",
+    "rag-multi-hop",
+    "alignment-beyond-rlhf",
+    "cot-reasoning-effects",
+    "lora-vs-full-finetune",
+    "vlm-spatial-reasoning",
+    "long-context-efficiency",
+    "reasoning-benchmarks",
+    "moe-vs-dense",
+    "coding-agent-safety",
+    "tool-use-agents",
+    "synthetic-data-training",
+    "quantization-inference",
+    "in-context-learning-mechanisms",
+    "scaling-laws",
+    "jailbreak-robustness",
+    "reasoning-fine-tuning",
+    "speculative-decoding",
+    "interpretability-methods",
+    "agentic-memory-architectures"
+  ],
+  "chargeable": false,
+  "corpus_mode": "snapshot",
+  "derived_from": "eval_registry",
+  "describes": "The funded arm-A baseline of docs/agent-engineering/16-w12-approval-packet-draft.md §1 (P0-WO12). 20 cases x 3 repeats x arm A = 60 episodes over research-policy-v1, planned at a zero cap and published unapproved. Planning it costs nothing and authorizes nothing.",
+  "design": [
+    {
+      "arm_id": "A",
+      "case_id": "hallucination-mitigation",
+      "design_index": 0,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/hallucination-mitigation/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "rag-multi-hop",
+      "design_index": 1,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/rag-multi-hop/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "alignment-beyond-rlhf",
+      "design_index": 2,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/alignment-beyond-rlhf/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "cot-reasoning-effects",
+      "design_index": 3,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/cot-reasoning-effects/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "lora-vs-full-finetune",
+      "design_index": 4,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/lora-vs-full-finetune/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "vlm-spatial-reasoning",
+      "design_index": 5,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/vlm-spatial-reasoning/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "long-context-efficiency",
+      "design_index": 6,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/long-context-efficiency/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "reasoning-benchmarks",
+      "design_index": 7,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/reasoning-benchmarks/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "moe-vs-dense",
+      "design_index": 8,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/moe-vs-dense/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "coding-agent-safety",
+      "design_index": 9,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/coding-agent-safety/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "tool-use-agents",
+      "design_index": 10,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/tool-use-agents/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "synthetic-data-training",
+      "design_index": 11,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/synthetic-data-training/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "quantization-inference",
+      "design_index": 12,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/quantization-inference/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "in-context-learning-mechanisms",
+      "design_index": 13,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/in-context-learning-mechanisms/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "scaling-laws",
+      "design_index": 14,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/scaling-laws/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "jailbreak-robustness",
+      "design_index": 15,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/jailbreak-robustness/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "reasoning-fine-tuning",
+      "design_index": 16,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/reasoning-fine-tuning/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "speculative-decoding",
+      "design_index": 17,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/speculative-decoding/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "interpretability-methods",
+      "design_index": 18,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/interpretability-methods/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "agentic-memory-architectures",
+      "design_index": 19,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/agentic-memory-architectures/repeat-01/arm-A",
+      "repeat_index": 0,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "hallucination-mitigation",
+      "design_index": 20,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/hallucination-mitigation/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "rag-multi-hop",
+      "design_index": 21,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/rag-multi-hop/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "alignment-beyond-rlhf",
+      "design_index": 22,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/alignment-beyond-rlhf/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "cot-reasoning-effects",
+      "design_index": 23,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/cot-reasoning-effects/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "lora-vs-full-finetune",
+      "design_index": 24,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/lora-vs-full-finetune/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "vlm-spatial-reasoning",
+      "design_index": 25,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/vlm-spatial-reasoning/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "long-context-efficiency",
+      "design_index": 26,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/long-context-efficiency/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "reasoning-benchmarks",
+      "design_index": 27,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/reasoning-benchmarks/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "moe-vs-dense",
+      "design_index": 28,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/moe-vs-dense/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "coding-agent-safety",
+      "design_index": 29,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/coding-agent-safety/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "tool-use-agents",
+      "design_index": 30,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/tool-use-agents/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "synthetic-data-training",
+      "design_index": 31,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/synthetic-data-training/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "quantization-inference",
+      "design_index": 32,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/quantization-inference/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "in-context-learning-mechanisms",
+      "design_index": 33,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/in-context-learning-mechanisms/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "scaling-laws",
+      "design_index": 34,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/scaling-laws/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "jailbreak-robustness",
+      "design_index": 35,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/jailbreak-robustness/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "reasoning-fine-tuning",
+      "design_index": 36,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/reasoning-fine-tuning/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "speculative-decoding",
+      "design_index": 37,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/speculative-decoding/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "interpretability-methods",
+      "design_index": 38,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/interpretability-methods/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "agentic-memory-architectures",
+      "design_index": 39,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/agentic-memory-architectures/repeat-02/arm-A",
+      "repeat_index": 1,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "hallucination-mitigation",
+      "design_index": 40,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/hallucination-mitigation/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "rag-multi-hop",
+      "design_index": 41,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/rag-multi-hop/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "alignment-beyond-rlhf",
+      "design_index": 42,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/alignment-beyond-rlhf/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "cot-reasoning-effects",
+      "design_index": 43,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/cot-reasoning-effects/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "lora-vs-full-finetune",
+      "design_index": 44,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/lora-vs-full-finetune/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "vlm-spatial-reasoning",
+      "design_index": 45,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/vlm-spatial-reasoning/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "long-context-efficiency",
+      "design_index": 46,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/long-context-efficiency/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "reasoning-benchmarks",
+      "design_index": 47,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/reasoning-benchmarks/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "moe-vs-dense",
+      "design_index": 48,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/moe-vs-dense/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "coding-agent-safety",
+      "design_index": 49,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/coding-agent-safety/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "tool-use-agents",
+      "design_index": 50,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/tool-use-agents/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "synthetic-data-training",
+      "design_index": 51,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/synthetic-data-training/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "quantization-inference",
+      "design_index": 52,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/quantization-inference/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "in-context-learning-mechanisms",
+      "design_index": 53,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/in-context-learning-mechanisms/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "scaling-laws",
+      "design_index": 54,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/scaling-laws/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "jailbreak-robustness",
+      "design_index": 55,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/jailbreak-robustness/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "reasoning-fine-tuning",
+      "design_index": 56,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/reasoning-fine-tuning/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "speculative-decoding",
+      "design_index": 57,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/speculative-decoding/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "interpretability-methods",
+      "design_index": 58,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/interpretability-methods/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    },
+    {
+      "arm_id": "A",
+      "case_id": "agentic-memory-architectures",
+      "design_index": 59,
+      "exclusion_reason": null,
+      "order_in_block": 0,
+      "output_path": "episodes/agentic-memory-architectures/repeat-03/arm-A",
+      "repeat_index": 2,
+      "status": "planned"
+    }
+  ],
+  "episode_budget": {
+    "currency": "USD",
+    "infrastructure_cost_usd_max": "0.000000",
+    "judge_cost_usd_max": "0.000000",
+    "judge_model_calls_max": 0,
+    "paid_tool_cost_usd_max": "0.000000",
+    "tool_calls_max": 58,
+    "total_cost_usd_max": "0.000000",
+    "wall_time_seconds_max": 600,
+    "workflow_cost_usd_max": "0.000000",
+    "workflow_model_calls_max": 264
+  },
+  "excluded_episode_count": 0,
+  "expected_episode_count": 60,
+  "lock_digest": "sha256:d45d39fd7df5d2ef67abfeb1c3d3cae6a2379d53e95307ad0dbf8784c7d20a18",
+  "network_calls": 0,
+  "planned_episode_count": 60,
+  "produced_by": "python -m src.campaign dry-run --suite research-policy-v1 --arms A --repeats 3 --seed 0 --corpus-mode snapshot --artifact campaigns/w12-arm-a-baseline.plan.json",
+  "protocol_digest": "sha256:9a7e1805b0f6f5775913e5d4213f4e1fa7f916961ed543232f6f0506bd5e5b71",
+  "protocol_id": "research-policy-v1-stage-0",
+  "provider_initialized": false,
+  "repeats": 3,
+  "schema_kind": "campaign-plan-artifact",
+  "schema_version": "1.0.0",
+  "seed": 0,
+  "stage": "stage-0-qualification",
+  "suite_ref": {
+    "digest": "sha256:b7536e62c8dc8f896ed0bfedbcd65109a68eff42dd6be6a5ad2fe9d127dc0ecc",
+    "id": "research-policy-v1",
+    "kind": "benchmark_suite",
+    "revision": "1.0.0"
+  },
+  "volatile_fields_omitted": [
+    "episode_key: derived from the episode's TaskSpec ref, whose id digests the spec's own compiled_at timestamp",
+    "run_id: derived from episode_key, and therefore equally volatile"
+  ]
+}

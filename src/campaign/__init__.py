@@ -38,8 +38,16 @@ What it owns, and why each piece exists:
   error taxonomy and lineage, read back from the episode records and
   rendered as one markdown document. Derived on every call, and it
   writes nothing.
-- `planner` / `cli` — `plan`, `dry-run`, `run`, `resume`, `status`,
-  `report`.
+- `baseline` — the published plan artifact: a zero-cost campaign
+  projected into a file a commit can hold, under `campaigns/`, so the
+  design a packet describes is reviewable in a diff and a test can hold
+  it to the registry byte for byte.
+- `rehearse` — the funded path walked to the credential boundary and
+  stopped there, under the zero-spend sentinel. Added by P0-WO20, which
+  is where "what else is missing?" stopped being answerable only by
+  funding a run and watching it fail.
+- `planner` / `cli` — `plan`, `dry-run`, `run`, `rehearse`, `resume`,
+  `status`, `report`.
 - `summary` — the three cost categories and the statistics, delegated to
   `src/eval/stats.py`.
 

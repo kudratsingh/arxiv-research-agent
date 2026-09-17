@@ -208,6 +208,14 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "campaign_episode_completed",
         "campaign_episode_failed",
         "campaign_episode_started",
+        # P0-WO20. The rehearsal walks the funded path to the credential
+        # boundary and stops there. Two names rather than one, for the
+        # same reason `campaign_episode_started` is not redundant with
+        # `completed`: a rehearsal that compiled a graph and hung emits
+        # only the first line, and that line is the only thing naming
+        # which campaign it was walking.
+        "campaign_rehearsal_started",
+        "campaign_rehearsal_stopped",
         # CAP-09 (ADR 0091). One name, and one on purpose: ADR 0086
         # declined log events for branch *outcomes* because those are
         # on the state, in the node's SSE message and in the
@@ -646,6 +654,11 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "pdf_url",
         "per_model",
         "policy_id",
+        # P0-WO20. The closed set of 16 §8 preconditions a campaign
+        # rehearsal found still outstanding — three ids at most, never
+        # free text, so the field is a fixed-cardinality fact about a
+        # checkout rather than a message.
+        "preconditions_owed",
         "preview",
         "previous_public_turn",
         "previous_status",
