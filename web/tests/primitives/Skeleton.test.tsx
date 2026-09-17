@@ -1,3 +1,12 @@
+/**
+ * WO-07 criterion 2 for `Skeleton`, and 03 §3.7's ban on the shimmer.
+ *
+ * The bar count is clamped at one whatever it is handed, every bar is hidden
+ * from assistive technology, and the block carries a clipped name only when
+ * the caller asks for one. The last two assertions read the stylesheet
+ * directly: no shimmer animation, and no literal colour.
+ */
+
 import { describe, expect, it } from "vitest";
 
 import { Skeleton } from "@/components/primitives/Skeleton";

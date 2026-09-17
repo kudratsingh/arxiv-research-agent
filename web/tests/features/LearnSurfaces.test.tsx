@@ -1,3 +1,17 @@
+/**
+ * The read-only learning surfaces against a mocked `fetch` (WO-W12, WO-W14).
+ *
+ * The fetching half of 04 §5.1's split is what is under test: that the
+ * surfaces tell their three outcomes apart rather than collapsing them. An
+ * empty library is not a failed read; a failed content read is not hidden
+ * behind the independent progress read; a retry re-issues only the idempotent
+ * one. Position is rendered only where a recorded event supports it, and
+ * fixture content is labelled as fixture content.
+ *
+ * Starting a session is a write and lives in
+ * `tests/features/PathDetailSurfaceStart.test.tsx`.
+ */
+
 import { QueryClient } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

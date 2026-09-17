@@ -1,3 +1,15 @@
+/**
+ * WO-07 criterion 2 for `Field`, and 03 §7.3's live-region budget.
+ *
+ * The error is wired through `aria-invalid` and `aria-describedby` and is
+ * asserted NOT to be a live region: the product is allowed two, and a field
+ * that announced itself on every keystroke would be a third. The rest is the
+ * naming contract — a clipped label still names the control, "required" reads
+ * in the label and on the control, and hint precedes error in reading order —
+ * plus the mark and the clipped "Error:" that carry the state when colour
+ * does not.
+ */
+
 import { describe, expect, it, vi } from "vitest";
 
 import { Field } from "@/components/primitives/Field";

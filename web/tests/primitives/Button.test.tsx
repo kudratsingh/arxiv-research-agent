@@ -1,3 +1,15 @@
+/**
+ * WO-07 criterion 2 for `Button`, and the two refusals that make the
+ * component's header more than a preference.
+ *
+ * Every state below is reached by props alone, with no network. The two that
+ * matter: `busy` and a caller's own `aria-disabled` keep the control
+ * focusable and announced while refusing the click — asserted as behaviour,
+ * because the DOM `disabled` attribute would pass a shallower test and strand
+ * the keyboard user — and an icon-only button with no accessible name throws
+ * at render rather than shipping an axe `button-name` violation.
+ */
+
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 

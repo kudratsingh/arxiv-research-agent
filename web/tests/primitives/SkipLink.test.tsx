@@ -1,3 +1,12 @@
+/**
+ * WO-07 criterion 2 for `SkipLink`, and 03 §7.2's focus policy.
+ *
+ * Clipped rather than hidden, so it keeps its tab stop and is the first thing
+ * Tab reaches; revealed on `:focus-visible` and not on `:focus`, which is the
+ * distinction that keeps it from flashing on a pointer click. Both facts are
+ * asserted against the stylesheet as well as the DOM.
+ */
+
 import { afterEach, describe, expect, it } from "vitest";
 
 import { SkipLink } from "@/components/primitives/SkipLink";

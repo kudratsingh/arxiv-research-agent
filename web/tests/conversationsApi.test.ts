@@ -1,3 +1,14 @@
+/**
+ * The conversation half of the typed client (04-ARCHITECTURE.md §3.1).
+ *
+ * One assertion per wire-level decision: the create body carries a title only
+ * when one is given, every id is percent-encoded into its path segment, a 404
+ * surfaces as an `ApiError` rather than an empty result, delete is a bare
+ * DELETE, and `conversation_id` rides on a research submit only when the
+ * caller supplied it — which is what keeps a follow-up in its thread and a
+ * first question out of someone else's.
+ */
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   ApiError,

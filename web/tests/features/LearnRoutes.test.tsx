@@ -1,3 +1,15 @@
+/**
+ * The `(learn)` route group's composition — that the four route files put the
+ * right surface in the right place, and nothing else.
+ *
+ * Every route renders inside one `WorkbenchShell` and one query boundary, so
+ * the learning surfaces inherit the landmark structure the workspace group
+ * has rather than declaring a second one; and the two dynamic routes are
+ * asserted to hand Next's already-decoded segment straight down, re-encoding
+ * nothing — the client owns the `encodeURIComponent` on the way back out, and
+ * a route that encoded it too would double-encode every id with a slash.
+ */
+
 import { describe, expect, it, vi } from "vitest";
 
 import LearnLayout from "@/app/(learn)/layout";
