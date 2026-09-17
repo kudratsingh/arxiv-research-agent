@@ -775,6 +775,16 @@ never renumbered.
   with evidence once, then continues through critique, below the existing
   loop and cost stops.
 
+- [0094](0094-retiring-the-unreachable-plan-breadth-branch-rule.md) —
+  **The branch rule that could not fire is retired.**
+  `branch_plan_breadth` read a plan-time count no shipped caller passes,
+  and the measurement adds the reason that settles it: the count is a
+  property of the planner rather than of the query, so the rule fires on
+  all twenty benchmark queries or on none. `branch_open_enumeration`
+  already reads the same signal before the planner runs, where it
+  discriminates. No threshold, feature field, reason vocabulary or
+  pinned tier moved.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

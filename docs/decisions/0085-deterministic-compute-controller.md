@@ -153,6 +153,23 @@ escalation: any one selects T1, none leaves T0.
 | 7 | `plan_breadth` | `sub_question_count >= 4` or `search_query_count >= 6` | T1 |
 | 8 | `default_t0` | nothing above fired | T0 |
 
+> **Amendment, 2026-09-17 (CAP-18,
+> [ADR 0094](0094-retiring-the-unreachable-plan-breadth-branch-rule.md)).**
+> This table is unchanged — rules 1-8 are still exactly these, and so
+> are `REASON_CODES` and every threshold. What ADR 0094 retired is the
+> *branch* table's `branch_plan_breadth`, which ADR 0086 added beside
+> this one. But the amendment is recorded here because the measurement
+> that retired it indicts **rule 7 above** on the same grounds: both
+> read `sub_question_count`, neither call site passes one, and the count
+> is a property of the planner rather than of the query, so on
+> `research-policy-v1` rule 7 is false for all twenty queries below its
+> threshold and true for all twenty at or above it. Rule 7 is kept for
+> now only because it is a published surface (`REASON_CODES`, this ADR's
+> "What CAP-03 and W05 may rely on"), and retiring it is its own
+> decision. Read "the plan thresholds sit at the top of the planner's
+> own instructed range", below, as a statement about a rule that has
+> never fired.
+
 Every matching escalation is reported, not only the first: the reasons
 are the audit trail an arm-E analysis groups by, and reporting one would
 make two structurally different escalations indistinguishable.

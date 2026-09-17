@@ -43,7 +43,6 @@ from src.policies.compute import (
     REASON_CODES,
     TIER_LIMITS,
     TIER_RULES,
-    _branch_plan_breadth,
     _rules_for,
     decide_tier,
     eligible_tiers,
@@ -143,10 +142,11 @@ class TestTheDefaultTableDidNotMove:
         `COMPUTE_TIERS` and `TIER_LIMITS` is keyed by it, so widening
         either would change what a *flag-off* deployment accepts at
         load. The branch tier's own vocabulary lives beside them, and it
-        is the half CAP-04b widened: two rules were added to the branch
-        table (ADR 0087) and none to CAP-04's, so `REASON_CODES` — the
-        vocabulary a flag-off deployment can emit — is unchanged and the
-        two sets stay disjoint.
+        is the only half that has ever moved: CAP-04b added two rules to
+        the branch table (ADR 0087) and CAP-18 retired one from it (ADR
+        0094), while neither touched CAP-04's. So `REASON_CODES` — the
+        vocabulary a flag-off deployment can emit — is still exactly what
+        ADR 0085 baselined, and the two sets stay disjoint.
         """
         assert COMPUTE_TIERS == ("T0", "T1")
         assert set(TIER_LIMITS) == {"T0", "T1"}
@@ -165,7 +165,12 @@ class TestTheDefaultTableDidNotMove:
             "branch_multi_entity_comparison",
             "branch_paired_comparison",
             "branch_open_enumeration",
-            "branch_plan_breadth",
+        )
+        assert "branch_plan_breadth" not in BRANCH_REASON_CODES, (
+            "retired by CAP-18 (ADR 0094): it read a plan-time count no "
+            "caller passes, and its input is a property of the planner "
+            "rather than of the query, so it could only ever fire on all "
+            "queries or none"
         )
 
     def test_the_default_controller_compiles_the_two_graphs_it_always_did(
@@ -229,28 +234,61 @@ class TestTheBranchTierIsReachableWhenAskedFor:
 
         assert decide_tier(features, max_tier=BRANCH_TIER).tier == "T0"
 
-    def test_a_plan_broader_than_the_planners_range_branches(self) -> None:
-        """The post-plan rule, for a caller that decides after planning."""
-        features = extract_features("survey the field", sub_question_count=5)
+    def test_no_branch_rule_reads_a_plan_time_count(self) -> None:
+        """CAP-18 retired `branch_plan_breadth` (ADR 0094).
 
-        assert decide_tier(features, max_tier=BRANCH_TIER).tier == "T2"
-        assert decide_tier(features).tier == "T1", "unchanged under the default"
-
-    def test_a_query_only_feature_vector_can_never_reach_that_rule(self) -> None:
-        """Rule 12's known gap, pinned so it stays known (ADR 0087).
-
-        Every shipped caller hands `extract_features` a query and nothing
-        else, because the tier selects the *graph* and so cannot wait for
-        the planner. `sub_question_count` is `None` on all of those
-        paths, `_branch_plan_breadth` treats `None` as unanswered, and
-        the rule therefore fires nowhere — which is why CAP-04b put the
-        breadth signal in a query-time rule instead of tuning this one.
+        The retirement is asserted as a *property* of the table rather
+        than as the absence of one id: every branch rule now decides
+        from the query alone, so a plan count reaching `extract_features`
+        cannot change which tier the branch table allocates. That is the
+        invariant the retirement was for — a rule keyed on a count no
+        caller passes is a rule no evaluation can attribute a result to
+        — and it would still hold if the id came back under a new name,
+        which asserting on the id would not catch.
         """
-        features = extract_features("survey the field")
+        plain = extract_features("survey the field")
+        planned = extract_features(
+            "survey the field", sub_question_count=9, search_query_count=9
+        )
 
-        assert features.sub_question_count is None
-        assert features.search_query_count is None
-        assert not _branch_plan_breadth(features)
+        assert plain.sub_question_count is None
+        assert plain.search_query_count is None
+
+        for rule in BRANCH_TIER_RULES:
+            assert rule.predicate(plain) == rule.predicate(planned), (
+                f"branch rule {rule.rule_id} reads a plan-time count; the "
+                "tier selects the graph, so no shipped caller can pass one"
+            )
+
+        def branch_reasons(features: Any) -> tuple[str, ...]:
+            decision = decide_tier(features, max_tier=BRANCH_TIER)
+            return tuple(r for r in decision.reasons if r in BRANCH_REASON_CODES)
+
+        assert branch_reasons(planned) == branch_reasons(plain) == ()
+
+        # The counts still move the *T1* table, because rule 7
+        # `plan_breadth` survived this work order: it is a member of
+        # `REASON_CODES`, the vocabulary a flag-off deployment emits, so
+        # retiring it is its own decision (ADR 0094 records it open).
+        # Asserted rather than merely noted, so the day rule 7 goes this
+        # line is what says so.
+        assert decide_tier(plain, max_tier=BRANCH_TIER).tier == "T0"
+        assert decide_tier(planned, max_tier=BRANCH_TIER).tier == "T1"
+        assert "plan_breadth" in decide_tier(planned, max_tier=BRANCH_TIER).reasons
+
+    def test_the_plan_counts_are_still_carried_in_the_snapshot(self) -> None:
+        """Retiring a rule moved no `feature_snapshot_ref` (ADR 0094).
+
+        The digest is taken over `ComputeFeatures.as_dict()`, so dropping
+        the now-ruleless plan-time fields would move it on every
+        controller-on deployment and break the join between arm-E
+        trajectories recorded either side of CAP-18. The fields stay; the
+        rule went.
+        """
+        snapshot = extract_features("survey the field").as_dict()
+
+        assert "sub_question_count" in snapshot
+        assert "search_query_count" in snapshot
 
     #: Query -> (paired_comparison, open_enumeration), the two features
     #: ADR 0087 added. Both negatives are the load-bearing rows: a bare

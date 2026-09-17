@@ -231,19 +231,24 @@ default — the controller's rule table, reason codes and compiled graph
 set are exactly ADR 0085's. See ADR
 [0086](decisions/0086-orchestrator-workers-for-the-branch-tier.md).
 
-**What sends a run to T2 (ADR 0087).** Four branch rules, evaluated only
-under the raised ceiling and only after ADR 0085's table: a comparison
-word beside three or more recognised entities; a comparison word beside a
-connective that binds two operands (`versus`, `compared to`,
-`between … and` — a bare coordinating "and" is excluded, so "trade off
-cost and quality" compares two properties of one method class and stays
-T1); an interrogative followed by a plural *solution-class* noun
-(`approaches`, `methods`, `techniques`, `architectures`, `defenses`…,
-where observation classes such as `benchmarks` and `mechanisms` are
-excluded because one ranked corpus about one object of study carries
-them); and a known plan broader than the planner's own range, which no
-shipped caller can reach because the tier selects the graph and is
-therefore decided before the planner runs. The shared claim is that a
+**What sends a run to T2 (ADR 0087, ADR 0094).** Three branch rules,
+evaluated only under the raised ceiling and only after ADR 0085's table:
+a comparison word beside three or more recognised entities; a comparison
+word beside a connective that binds two operands (`versus`,
+`compared to`, `between … and` — a bare coordinating "and" is excluded,
+so "trade off cost and quality" compares two properties of one method
+class and stays T1); and an interrogative followed by a plural
+*solution-class* noun (`approaches`, `methods`, `techniques`,
+`architectures`, `defenses`…, where observation classes such as
+`benchmarks` and `mechanisms` are excluded because one ranked corpus
+about one object of study carries them). A fourth,
+`branch_plan_breadth`, was **retired** by ADR 0094: it read a plan-time
+sub-question count that no shipped caller passes — the tier selects the
+graph, so it is decided before the planner runs — and the count is a
+property of the planner rather than of the query, so the rule fired on
+all twenty benchmark queries or on none. The third rule above reads the
+same breadth signal before the planner runs, where it discriminates.
+The shared claim is that a
 ranked corpus ranks by one similarity and so cannot cover several
 independent lines of enquiry evenly. On the twenty-query
 `research-policy-v1` suite the router allocates **T0 10 / T1 2 / T2 8**;

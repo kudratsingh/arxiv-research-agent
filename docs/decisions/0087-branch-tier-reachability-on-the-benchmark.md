@@ -11,6 +11,29 @@
 - **Follows**: [ADR 0070](0070-eval-integrity-provenance.md) (a threshold
   an operator can move is one no evaluation can attribute a result to)
 
+> **Amendment, 2026-09-17 (CAP-18,
+> [ADR 0094](0094-retiring-the-unreachable-plan-breadth-branch-rule.md)).**
+> Everything this ADR *decided* stands: rules 10 and 11
+> (`branch_paired_comparison`, `branch_open_enumeration`) are unchanged,
+> no threshold moved, and the pinned T0 10 / T1 2 / T2 8 routing with
+> its per-query reasons is byte-identical. What ADR 0094 reverses is this
+> ADR's one deferral — "Rule 12 is kept, unreachable" — and it does so on
+> evidence this ADR did not gather. This ADR established that *no caller
+> passes the count*; CAP-18 measured what would happen if one did, and
+> the answer is that `sub_question_count` is a property of the planner
+> rather than of the query, so the rule fires on **all twenty queries or
+> none** at every plan size. It could not have discriminated even once
+> reached, the branch tier it escalates to would have dropped the fifth
+> sub-question (`orchestration_max_branches` defaults to 4), and reaching
+> it at all needs a planner-prompt re-baseline. The rule, its predicate
+> and `BRANCH_SUB_QUESTION_THRESHOLD` are gone;
+> `BRANCH_REASON_CODES` has three members. Below, read every mention of
+> "rule 12" as a description of the rule that was retired, and note that
+> this ADR's own internal numbering is inconsistent — the evidence
+> section calls `branch_plan_breadth` "rule 10" while the decision
+> section calls it "rule 12"; the module docstring's numbering (rule 12)
+> was the one that shipped.
+
 ## Context
 
 CAP-09 made arm E runnable and then measured what it does. The answer,
@@ -189,6 +212,16 @@ Rule 12 is kept, unreachable, for the reason ADR 0085 carried the
 plan-time fields at all: the rule has to exist before the caller that
 decides after planning does. Its unreachability is now pinned by a test
 rather than left to be rediscovered.
+
+> **Reversed, 2026-09-17 (CAP-18, ADR 0094).** "Kept, unreachable" was
+> the wrong call, and the test that pinned it is what made the cost
+> visible: the rule was carried through a third work order and had to be
+> re-measured from scratch to be understood. It is retired. The
+> justification above — "the rule has to exist before the caller that
+> decides after planning does" — assumed such a caller would want *this*
+> rule; the measurement in ADR 0094 says the rule carries no signal even
+> when reached, so a future post-plan caller should be given a rule
+> measured against it rather than this one exhumed.
 
 ## Consequences
 
