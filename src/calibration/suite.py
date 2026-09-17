@@ -359,6 +359,8 @@ _CONTENT_ID_FIELD: Final[dict[CalibrationContentKind, str]] = {
 
 
 class ContentIntegrity(StrictContractModel):
+    """A content object's digest header, in the shared v1 profile."""
+
     algorithm: Literal["sha256"] = "sha256"
     digest_profile: Literal["agent-contract-json/v1"] = "agent-contract-json/v1"
     payload_digest: Digest
@@ -394,6 +396,12 @@ class CalibrationContentEnvelope(StrictContractModel):
         return self
 
     def object_ref(self) -> ImmutableObjectRef:
+        """The exact reference that resolves back to this object.
+
+        :meth:`CalibrationContentStore.resolve` compares the reference it
+        was given against this one, so a ref carrying a stale digest or
+        revision fails to resolve rather than returning a near-match.
+        """
         return ImmutableObjectRef(
             kind=self.schema_kind.value,
             id=self.content_id,
@@ -433,6 +441,11 @@ class CalibrationContentStore:
         self.root = (root / CONTENT_DIRNAME).resolve()
 
     def _path(self, ref: ImmutableObjectRef) -> Path:
+        """Where a reference lives, refusing one that points outside the tree.
+
+        A kind, id or revision is a reference's own field, so a crafted
+        one could otherwise address any file on disk through ``..``.
+        """
         candidate = (self.root / ref.kind / ref.id / f"{ref.revision}.json").resolve()
         if not candidate.is_relative_to(self.root):
             raise RegistryResolutionError("content locator escaped its root")
@@ -533,6 +546,13 @@ class Bundle(StrictContractModel):
 
 
 def _retention() -> tuple[RegistryEnvelope, CalibrationContentEnvelope, RetentionPolicyRef]:
+    """Build the root retention policy, its terms, and the ref to it.
+
+    Two objects rather than one because the policy cannot reference its
+    own digest, so the prose lives in a separate content object the
+    policy points at. Returned as a triple because every other builder
+    here needs the ref before it can seal anything.
+    """
     terms = seal_content(
         RetentionTerms(
             terms_id="calibration-bootstrap-terms",
@@ -609,6 +629,12 @@ _RUBRIC_ITEMS: Final[tuple[tuple[str, str, str, str], ...]] = (
 
 
 def _rubric_set(retention_ref: RetentionPolicyRef) -> RegistryEnvelope:
+    """The four things this probe measures, with their denominators.
+
+    Each item names how it is aggregated and what its denominator counts,
+    because "agreement" without those two is the number ``docs/eval.md``
+    says not to publish.
+    """
     return seal_registry_object(
         RubricSet(
             **_governed(visibility=ObjectVisibility.EVALUATOR, retention_ref=retention_ref),
@@ -667,6 +693,12 @@ def _expected_label_values() -> tuple[CalibrationContentEnvelope, ...]:
 
 
 def _guideline() -> CalibrationContentEnvelope:
+    """The annotation guideline: what each decision means, in one object.
+
+    Registered rather than left in the protocol document so that a label
+    set points at the exact wording its annotators were given — a
+    guideline that drifts afterwards leaves the old labels addressable.
+    """
     return seal_content(
         GuidelineText(
             guideline_id=GUIDELINE_ID,
@@ -692,6 +724,13 @@ def _guideline() -> CalibrationContentEnvelope:
 
 
 def _probe_lock() -> CalibrationContentEnvelope:
+    """Lock the four rubric prompts this set was authored against.
+
+    Names and versions and prompt digests, read from the live rubrics —
+    no model, because a grader profile that pinned one would be an
+    approval away from a chargeable run. When a judge is finally
+    measured, an entry that no longer matches is what makes the gate HOLD.
+    """
     return seal_content(
         JudgeProbeLock(
             lock_id=PROBE_LOCK_ID,
@@ -719,6 +758,13 @@ def _probe_lock() -> CalibrationContentEnvelope:
 
 
 def _generation_record() -> CalibrationContentEnvelope:
+    """Record that the corpus was written, not collected, and by whom.
+
+    RFC 11 §11's requirement for a generated expansion. The empty
+    ``source_inputs`` is the substantive claim: nothing here is copied
+    from a paper and no model produced a case, so there is no upstream
+    material for the record to name.
+    """
     return seal_content(
         SyntheticGenerationRecord(
             record_id=GENERATION_RECORD_ID,
@@ -742,6 +788,11 @@ def _generation_record() -> CalibrationContentEnvelope:
 
 
 def _blinding_plan(salt_ref: ImmutableObjectRef) -> BlindingPlan:
+    """This suite's registered plan: pairwise, both orders, fixed seed.
+
+    The hidden-field list is :data:`HIDDEN_FROM_JUDGE` entire rather than
+    a copy of it, so widening what must be hidden widens this plan too.
+    """
     return BlindingPlan(
         plan_id=BLINDING_PLAN_ID,
         revision=OBJECT_REVISION,
@@ -755,6 +806,12 @@ def _blinding_plan(salt_ref: ImmutableObjectRef) -> BlindingPlan:
 
 
 def _blinding_content() -> CalibrationContentEnvelope:
+    """Seal the plan together with the salt it uses, and say why it may.
+
+    The only object in this tree that carries a salt in the clear. It is
+    accompanied by the reason, so a campaign that copies this shape for a
+    real corpus has to read the sentence explaining why it must not.
+    """
     # The plan references its own content object, so the ref is built
     # from a placeholder digest of the salt string rather than of the
     # enclosing object: a salt reference that depended on the plan's
@@ -785,6 +842,12 @@ def _blinding_content() -> CalibrationContentEnvelope:
 
 
 def _deliverable() -> CalibrationContentEnvelope:
+    """What a judge probe owes per item: one decision and a rationale.
+
+    The decision vocabularies are carried per label type rather than
+    described, so a probe's answer can be checked against the contract
+    without anyone reading :mod:`src.calibration.labels`.
+    """
     return seal_content(
         DeliverableContract(
             contract_id=DELIVERABLE_ID,
@@ -806,6 +869,12 @@ def _deliverable() -> CalibrationContentEnvelope:
 
 
 def _case_content(case: CalibrationCase) -> tuple[CalibrationContentEnvelope, ...]:
+    """Split one adversarial fixture into its item and its rationale.
+
+    Two objects because they are read by different people at different
+    times: the item is the material an annotator sees, the rationale is
+    why the reference decision is what it is and belongs with the key.
+    """
     item = seal_content(
         CalibrationItemContent(
             case_id=case.case_id,
@@ -829,6 +898,11 @@ def _case_content(case: CalibrationCase) -> tuple[CalibrationContentEnvelope, ..
 
 
 def _pairwise_content(case: PairwiseCase) -> tuple[CalibrationContentEnvelope, ...]:
+    """The same split for a pairwise fixture, with both excerpts on one item.
+
+    The pair travels as a single content object so the two reports cannot
+    be resolved independently and shown out of their intended pairing.
+    """
     item = seal_content(
         CalibrationItemContent(
             case_id=case.case_id,
@@ -859,6 +933,12 @@ def _task_case(
     item_ref: ImmutableObjectRef,
     rationale_ref: ImmutableObjectRef,
 ) -> RegistryEnvelope:
+    """Register one case, pointing at its item and rationale content.
+
+    The slice tags travel with the case rather than being derived later,
+    because per-slice sample sizes are a property of the design and a
+    slice recomputed at report time would be a different denominator.
+    """
     return seal_registry_object(
         TaskCase(
             **_governed(visibility=ObjectVisibility.EVALUATOR, retention_ref=retention_ref),

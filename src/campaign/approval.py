@@ -163,6 +163,11 @@ class SettingsCredentialProbe:
         self.calls = 0
 
     def __call__(self) -> None:
+        """Raise unless a credential that could actually pay is configured.
+
+        The call is counted whether it succeeds or refuses, because the
+        property under test is *when* it happened, not whether it passed.
+        """
         self.calls += 1
         secret = self._config.anthropic_api_key
         key = secret.get_secret_value() if secret is not None else ""
@@ -187,6 +192,7 @@ class NoCredentialProbe:
         self.calls = 0
 
     def __call__(self) -> None:
+        """Always refuse: being called at all is the defect it detects."""
         self.calls += 1
         raise CampaignError("a zero-cost campaign must not read a credential")
 

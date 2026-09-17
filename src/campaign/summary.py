@@ -210,6 +210,12 @@ def assert_aggregatable(summaries: Sequence[CampaignSummary]) -> None:
 def _arm_summaries(
     manifest: CampaignManifestV1, ledger: DenominatorLedger
 ) -> tuple[ArmSummary, ...]:
+    """Split the ledger by arm, keeping every arm the protocol declared.
+
+    Each arm's `expected` is cases x repeats — its own share of the
+    design — so an arm this checkout could not run still reports the
+    episodes it owes rather than disappearing from the summary.
+    """
     blocks = len(manifest.payload.protocol.case_ids) * manifest.payload.protocol.repeats
     summaries: list[ArmSummary] = []
     for arm in manifest.payload.arms:

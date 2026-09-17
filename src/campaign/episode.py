@@ -539,6 +539,11 @@ def _task_set_ref(lock: CampaignLock) -> ImmutableObjectRef:
 
 
 def _only(lock: CampaignLock, kind: str) -> ImmutableObjectRef:
+    """The lock's single ref of one kind, refusing an ambiguous lock.
+
+    A second task set or suite would mean the episode could be sealed
+    against either, so the seal stops rather than picking the first.
+    """
     refs = _all(lock, kind)
     if len(refs) != 1:
         raise CampaignError(f"campaign lock resolves {len(refs)} {kind} refs, expected one")
