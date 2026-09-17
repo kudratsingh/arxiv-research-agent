@@ -49,9 +49,8 @@ alone unless the caller raises `max_tier` to `BRANCH_TIER`, which
 | 9 | `branch_multi_entity_comparison` | a comparison word **and** `entity_count >= 3` | T2 | one ranked corpus cannot serve three compared systems |
 | 10 | `branch_paired_comparison` | a comparison word **and** a connective that binds two operands | T2 | a ranked corpus ranks by one similarity, so it cannot cover two named operands evenly |
 | 11 | `branch_open_enumeration` | an interrogative followed by a plural solution-class noun | T2 | an unnamed set of alternatives is a retrieval per member, not one |
-| 12 | `branch_plan_breadth` | `sub_question_count >= 5` | T2 | a plan past the planner's own range is several questions |
 
-All four are escalations, all four are evaluated after the table above,
+All three are escalations, all three are evaluated after the table above,
 and the **highest** tier any matching escalation names is the one
 selected. With the ceiling at its default none of them is evaluated at
 all, so a deployment that has not enabled the branch tier gets the same
@@ -73,14 +72,45 @@ measurement, so the fix is two features the extractor did not have, and
 `BRANCH_ENTITY_THRESHOLD` is untouched (ADR 0091 rejected moving it, and
 it was right to).
 
-Rule 12 is unreachable on every path this repository ships, and that is
-recorded here rather than fixed: both call sites
-(`src/api/runner.py::_compute_decision`,
-`src/campaign/execute.py::_tier_app`) call `extract_features` with the
-query alone, so `sub_question_count` is always `None`; the tier selects
-the *graph*, so it cannot wait for the planner; and the planner is
-instructed to "2-4 focused sub-questions", which puts `>= 5` past its
-own range. Rule 11 is the pre-plan reading of the same signal.
+There is no rule 12. `branch_plan_breadth` — "`sub_question_count >= 5`
+⇒ T2" — sat in this table unreachable for three work orders and was
+**retired** by CAP-18 (ADR 0094), which amends ADR 0085 and ADR 0087.
+Four measured facts, not one:
+
+- Both call sites (`src/api/runner.py::_compute_decision`,
+  `src/campaign/execute.py::_tier_app`) call `extract_features` with the
+  query alone, so `sub_question_count` is always `None`. That is a
+  consequence rather than an oversight: the tier selects the *graph*, so
+  it is decided before the planner runs.
+- **It does not discriminate.** Its input is a property of the planner,
+  not of the query, so on `research-policy-v1`'s twenty queries it fires
+  on **0/20 at any plan size below 5 and 20/20 at any plan size of 5 or
+  more**. A rule that can only partition a suite 0/20 or 20/20 carries
+  no information about the query it is asked about; it is a global
+  switch wearing a rule's clothes. Rules 9-11 partition the same suite
+  8/20 with per-query reasons.
+- **The tier it escalates to cannot serve the breadth that fired it.**
+  `orchestration_max_branches` defaults to 4 and
+  `src/policies/orchestration.py::plan_branches` slices
+  `questions[:limit]`, so the five-sub-question plan that triggers the
+  rule arrives at the branch tier with its fifth sub-question dropped.
+- Reaching it needs a prompt change. The planner is instructed to "2-4
+  focused sub-questions", which puts `>= 5` past its own range, and
+  under `USE_MOCK_DATA` `mock_plan` returns exactly one. Prompt text is
+  an instrument (ADR 0070): moving that range is a re-baseline, not a
+  fix for a rule.
+
+Rule 11 is the pre-plan reading of the same signal, where it *is*
+answerable and *does* discriminate, and it is the reason retiring this
+one loses no coverage.
+
+**Rule 7 `plan_breadth` (T1) has the identical defect** — the same two
+call sites, the same 0/20-or-20/20 behaviour, measured — and is
+deliberately **not** retired here. It is a member of `TIER_RULES` and
+therefore of `REASON_CODES`, the vocabulary a *flag-off* deployment
+emits and a published surface ADR 0085 named; removing it is a
+published-surface change that gets its own decision rather than a ride
+on this one. ADR 0094 records it as open.
 
 ## The tiers, and what they are allowed to spend
 
@@ -107,17 +137,25 @@ has no depth field, `compile_research_intake` compiles exactly one
 research `task_kind`, and the tier has to be chosen before the planner
 runs because it selects the graph. They are parameters rather than
 absences because the rule table has to be complete before a caller
-exists. CAP-03 used the seam ADR 0085 left: its first branch rule reads
-only pre-plan cues, because the tier selects the *graph* and therefore
-has to be decided before the planner runs; its second reads
-`sub_question_count` and is there for a caller that decides after
-planning, which is still nobody today.
+exists. Every branch rule reads only pre-plan cues, because the tier
+selects the *graph* and therefore has to be decided before the planner
+runs.
+
+The two plan-time counts are kept as *fields* even though the only rule
+still reading them is rule 7, which cannot fire either. They stay for
+one reason and it is not the rule: `feature_snapshot_ref` is a
+`sha256:` over `ComputeFeatures.as_dict()`, so dropping a field would
+move the digest on every controller-on deployment and break the join
+between arm-E trajectories recorded before and after CAP-18. Retiring a
+*rule* moves no digest; retiring a *field* does. ADR 0094 §"What did not
+move".
 
 CAP-04b (ADR 0087) added the two features rules 10 and 11 read —
 `paired_comparison` and `open_enumeration` — to the *available* half of
 that split, on purpose: a rule that only fires on a count nobody passes
-is a rule no evaluation can attribute a result to, which is how rule 12
-came to sit unreachable for two work orders.
+is a rule no evaluation can attribute a result to, which is how
+`branch_plan_breadth` came to sit unreachable for three work orders
+before ADR 0094 retired it.
 """
 
 from __future__ import annotations
@@ -565,7 +603,18 @@ class TierRule:
 
 
 def _plan_breadth(features: ComputeFeatures) -> bool:
-    """Whether a *known* plan is broad. Unknown counts never fire."""
+    """Whether a *known* plan is broad. Unknown counts never fire.
+
+    Rule 7, and **unreachable for the same reason CAP-18 retired
+    `branch_plan_breadth`** (ADR 0094): no shipped caller passes either
+    count, and the counts are a property of the planner rather than of
+    the query, so on `research-policy-v1` this predicate is false for
+    all twenty queries below the threshold and true for all twenty at or
+    above it. It is kept here, unlike the branch rule, because it is a
+    member of `REASON_CODES` — the vocabulary a flag-off deployment
+    emits, and a surface ADR 0085 published — so retiring it is its own
+    decision. ADR 0094 records that as open rather than closing it.
+    """
     sub_questions = features.sub_question_count
     queries = features.search_query_count
     if sub_questions is not None and sub_questions >= PLAN_SUB_QUESTION_THRESHOLD:
@@ -626,22 +675,12 @@ TIER_RULES: Final[tuple[TierRule, ...]] = (
 #: repository can actually detect before planning.
 BRANCH_ENTITY_THRESHOLD: Final[int] = 3
 
-#: Sub-questions above which a *known* plan is broad enough to branch.
-#: One higher than `PLAN_SUB_QUESTION_THRESHOLD`, deliberately: four
-#: sub-questions is the top of the planner's own instructed range and
-#: escalates to verification; five is a plan that outgrew it.
-#:
-#: Unreachable on every path this repository ships — see the module
-#: docstring's note on rule 12 — and kept rather than deleted for the
-#: reason ADR 0085 carried the plan-time fields at all: the rule has to
-#: exist before the caller that decides after planning does.
-BRANCH_SUB_QUESTION_THRESHOLD: Final[int] = 5
-
-
-def _branch_plan_breadth(features: ComputeFeatures) -> bool:
-    """Whether a *known* plan is broad enough to branch. Unknown never fires."""
-    sub_questions = features.sub_question_count
-    return sub_questions is not None and sub_questions >= BRANCH_SUB_QUESTION_THRESHOLD
+# `BRANCH_SUB_QUESTION_THRESHOLD` (5) and `_branch_plan_breadth` stood
+# here until CAP-18 retired rule `branch_plan_breadth` (ADR 0094). The
+# threshold is gone with the rule rather than kept "for a future
+# caller": it was never the binding constraint, and a constant that no
+# predicate reads is a claim nothing can falsify. The module docstring
+# carries the four measurements that retired it.
 
 
 BRANCH_TIER_RULES: Final[tuple[TierRule, ...]] = (
@@ -665,12 +704,6 @@ BRANCH_TIER_RULES: Final[tuple[TierRule, ...]] = (
         decisive=False,
         predicate=lambda f: f.open_enumeration,
     ),
-    TierRule(
-        rule_id="branch_plan_breadth",
-        tier=BRANCH_TIER,
-        decisive=False,
-        predicate=_branch_plan_breadth,
-    ),
 )
 """The branch tier's rules, kept out of `TIER_RULES` on purpose.
 
@@ -692,9 +725,11 @@ Each rule's purpose, stated so it can be falsified:
 - `branch_open_enumeration` (ADR 0087) — a query that asks for members
   of a solution class does not name them, so the plan has to discover
   them and each one is its own retrieval. This is the pre-plan reading
-  of rule 12's "a plan past the planner's own range is several
-  questions", and it is pre-plan because the tier selects the graph.
-  Falsified if such a query's branches converge on one sub-literature.
+  of the retired `branch_plan_breadth`'s "a plan past the planner's own
+  range is several questions", and it is pre-plan because the tier
+  selects the graph — which is why it survived and that rule did not
+  (ADR 0094). Falsified if such a query's branches converge on one
+  sub-literature.
 
 Neither new rule moved a threshold. `BRANCH_ENTITY_THRESHOLD` is where
 ADR 0085 put it, and the module docstring records the measured
