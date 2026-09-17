@@ -33,7 +33,7 @@
 
 import type { ReactElement } from "react";
 
-import { HttpResponse, delay, http } from "msw";
+import { HttpResponse, http } from "msw";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { ActiveRunPanel } from "@/components/features/ActiveRunPanel";
@@ -227,28 +227,49 @@ describe("a 502 and a 503 are told apart, because the remedies differ", () => {
 });
 
 describe("a stale plan keeps the editor on screen and offers the re-read", () => {
+  /**
+   * FLAKE, NAMED AND CLOSED. The conflict window used to be an 80 ms
+   * `delay()` on the re-read and the three assertions below cost 5-8 ms of it
+   * on an idle machine, so on a loaded runner the role query for
+   * `PLAN.refresh` read the surface AFTER the re-read had already cleared the
+   * banner — the failure PR 232 hit, `Unable to find an accessible element
+   * with the role "button" and name "Check where the run got to"`. The window
+   * is now opened by the 409 and closed by this test, so nothing races a timer.
+   */
   it("states the conflict while it lasts, then re-renders rather than stranding", async () => {
     server.use(recordedFailure("error.409"));
     await openEditor();
 
-    // Widen the conflict window deliberately. It is bounded by the re-read
-    // the 409 itself triggers (`useJobStream`'s `review`), which over a local
-    // MSW lands in well under a millisecond — so without the delay this
-    // asserts a race rather than a state.
+    // The conflict window, held open rather than timed. It is bounded by the
+    // re-read the 409 itself triggers (`useJobStream`'s `review`), which over
+    // a local MSW lands in well under a millisecond — so the read is parked
+    // here until the "while it lasts" half has been asserted, and the "then
+    // re-renders" half begins by letting it go.
+    let letTheReReadLand = (): void => {};
+    const reReadHeld = new Promise<void>((resolve) => {
+      letTheReReadLand = resolve;
+    });
     server.use(
       http.get(`${API_BASE}/research/:jobId`, async () => {
-        await delay(80);
+        await reReadHeld;
         return fixtureResponse(loadFixture("job.pending_review"));
       }),
     );
-    await approve();
 
-    // `machine.ts` sends a 409 back through `attaching` to re-read the run.
-    // On `main` that took the editor off screen and put nothing in its place.
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(PLAN.conflict);
-    expect(alert).toHaveTextContent(PLAN.conflictRecovery);
-    expect(screen.getByRole("button", { name: PLAN.refresh })).toBeEnabled();
+    try {
+      await approve();
+
+      // `machine.ts` sends a 409 back through `attaching` to re-read the run.
+      // On `main` that took the editor off screen and put nothing in its place.
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent(PLAN.conflict);
+      expect(alert).toHaveTextContent(PLAN.conflictRecovery);
+      expect(screen.getByRole("button", { name: PLAN.refresh })).toBeEnabled();
+    } finally {
+      // Released even on a failed assertion, so a held request never outlives
+      // the test that parked it.
+      letTheReReadLand();
+    }
 
     // And then the read's own answer takes over. It says the run IS still
     // awaiting review, which contradicts the 409 outright — the read is
