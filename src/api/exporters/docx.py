@@ -44,12 +44,18 @@ def render_docx(job: Job) -> bytes:
 
 
 def _apply_default_style(doc: Any) -> None:
+    """Set the document's base font, which every unstyled run inherits."""
     style = doc.styles["Normal"]
     style.font.name = "Calibri"
     style.font.size = Pt(11)
 
 
 def _write_title(doc: Any, job: Job) -> None:
+    """Write the fixed report title and the job's query beneath it.
+
+    Built from runs rather than a heading style so the title cannot end up in
+    the document's own outline, which belongs to the report's headings.
+    """
     title = doc.add_paragraph()
     title_run = title.add_run("Research briefing")
     title_run.bold = True
@@ -62,6 +68,11 @@ def _write_title(doc: Any, job: Job) -> None:
 
 
 def _write_metadata_table(doc: Any, job: Job) -> None:
+    """Write the run's provenance table: job id plus whatever else is known.
+
+    Every row after the job id is conditional, so an exported job that never
+    finished shows fewer rows rather than a table of blanks.
+    """
     rows: list[tuple[str, str]] = [("Job ID", job.job_id)]
     if job.completed_at is not None:
         rows.append(
@@ -103,6 +114,13 @@ def _write_metadata_table(doc: Any, job: Job) -> None:
 
 
 def _write_tokens(doc: Any, tokens: list[Token]) -> None:
+    """Walk the markdown token stream once, emitting document elements.
+
+    An index walk rather than recursion: lists and tables span a run of
+    tokens, and the helpers that consume them report how many they took so
+    this loop can skip past. Anything unrecognised is stepped over, so a
+    token type this walker does not handle costs a paragraph, not an export.
+    """
     i = 0
     while i < len(tokens):
         tok = tokens[i]
@@ -183,6 +201,12 @@ def _write_tokens(doc: Any, tokens: list[Token]) -> None:
 
 
 def _write_list(doc: Any, tokens: list[Token], start: int, style: str) -> int:
+    """Write one list starting at `start`, returning how many tokens it spanned.
+
+    Only the top level carries the list style; anything deeper is emitted as
+    a plain paragraph under its item. Real nesting would need the numbering
+    definitions this exporter deliberately does not build.
+    """
     j = start + 1
     depth = 1
     while j < len(tokens) and depth > 0:
@@ -227,6 +251,12 @@ def _write_list(doc: Any, tokens: list[Token], start: int, style: str) -> int:
 
 
 def _write_table(doc: Any, tokens: list[Token], start: int) -> int:
+    """Write one GFM table, returning how many tokens it spanned.
+
+    Cells are collected as plain text first: a Word cell is single-run, so
+    inline emphasis inside one cannot survive and is dropped rather than
+    half-applied.
+    """
     rows: list[list[str]] = []
     row_is_header: list[bool] = []
     current: list[str] = []
@@ -323,6 +353,11 @@ def _apply_inline(para: Any, inline: Token | None) -> None:
 
 
 def _add_run(para: Any, text: str, style: dict[str, Any]) -> None:
+    """Append one styled run to `para`, skipping empty text.
+
+    `style` is the inline walker's accumulated state, so bold, italic, code
+    and link marks compose rather than overwrite one another.
+    """
     if not text:
         return
     run = para.add_run(text)

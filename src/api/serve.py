@@ -40,6 +40,11 @@ GRACEFUL_SHUTDOWN_TIMEOUT_SEC = 10
 
 
 def main() -> None:
+    """Run the API under uvicorn; blocks until the server stops.
+
+    The app is given as a factory so it is built after uvicorn has a running
+    loop, which is what lets the lifespan open its async resources.
+    """
     uvicorn.run(
         "src.api.app:create_app",
         factory=True,

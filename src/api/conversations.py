@@ -37,6 +37,12 @@ MAX_LIST_LIMIT = 200
 
 
 def new_conversation_id() -> str:
+    """Mint a conversation id: 16 hex characters of a random UUID.
+
+    Truncated because the id travels in URLs, and 64 random bits is already
+    far more than a per-deployment conversation table needs to stay
+    collision-free.
+    """
     return uuid.uuid4().hex[:16]
 
 
@@ -86,9 +92,22 @@ class ConversationStore(Protocol):
     """Structural type for conversation storage. Safe under concurrent
     asyncio tasks."""
 
-    async def create(self, conversation: Conversation) -> None: ...
+    async def create(self, conversation: Conversation) -> None:
+        """Persist a new conversation, owner and title exactly as given.
 
-    async def get(self, conversation_id: str) -> Conversation | None: ...
+        The caller mints the id and composes the title, so a store never has
+        to guess either.
+        """
+        ...
+
+    async def get(self, conversation_id: str) -> Conversation | None:
+        """Load one conversation with its jobs in ordinal order, or `None`.
+
+        Ownership-agnostic on purpose: the route layer decides what a
+        principal may see, and a store that also filtered would make that
+        check invisible to whoever reads the route.
+        """
+        ...
 
     async def list(
         self,
@@ -96,7 +115,19 @@ class ConversationStore(Protocol):
         *,
         limit: int = DEFAULT_LIST_LIMIT,
         offset: int = 0,
-    ) -> list[Conversation]: ...
+    ) -> list[Conversation]:
+        """Page the caller's conversations, most recently updated first.
+
+        Jobs are left empty here — the sidebar only needs titles, and loading
+        every thread's reports to draw it would be the expensive way to do
+        nothing. `principal_key_id=None` is the auth-off case and means "no
+        scoping"; with a principal, rows owned by anyone else — legacy rows
+        with no owner included — are not visible.
+
+        The store honours `limit` and `offset` as handed to it; clamping them
+        is the route layer's job.
+        """
+        ...
 
     async def append_job(
         self,
@@ -104,7 +135,14 @@ class ConversationStore(Protocol):
         job_id: str,
         query: str,
         report: str,
-    ) -> ConversationJob | None: ...
+    ) -> ConversationJob | None:
+        """Add one finished job to the thread, or `None` if it is gone.
+
+        The store allocates the ordinal, so concurrent appends to the same
+        conversation cannot both claim the same slot. Bumps `updated_at`,
+        which is what reorders the sidebar.
+        """
+        ...
 
     # ADR 0048 (ADR 0040 follow-up). Ownership-agnostic, matching
     # `get` and `append_job` rather than `list` and `delete`: the only
@@ -116,13 +154,23 @@ class ConversationStore(Protocol):
     # sidebar. The store does not truncate; `title_from_query` owns
     # `MAX_TITLE_LEN`, keeping stores dumb like the pagination
     # contract above.
-    async def update_title(self, conversation_id: str, title: str) -> bool: ...
+    async def update_title(self, conversation_id: str, title: str) -> bool:
+        """Rename a conversation; `False` means it no longer exists."""
+        ...
 
     async def delete(
         self,
         conversation_id: str,
         principal_key_id: str | None = None,
-    ) -> bool: ...
+    ) -> bool:
+        """Delete a conversation and its jobs; `False` if not deletable.
+
+        Ownership is checked inside the delete rather than by a prior `get`,
+        so there is no window between the check and the write. A row owned by
+        someone else reports `False` exactly as a missing one does — the
+        route maps both to 404, so a probe cannot learn that an id exists.
+        """
+        ...
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +179,13 @@ class ConversationStore(Protocol):
 
 
 class InMemoryConversationStore:
+    """Process-local `ConversationStore`; the default, and it dies on restart.
+
+    Correct only under a single worker: nothing here is shared between
+    processes. A lock guards every method because the routes touch the store
+    from concurrent asyncio tasks.
+    """
+
     def __init__(self) -> None:
         self._conversations: dict[str, Conversation] = {}
         self._lock = asyncio.Lock()

@@ -885,6 +885,13 @@ def register_runtime_gauges(
         return
 
     def _observer(name: str) -> Callable[[CallbackOptions], Iterable[Observation]]:
+        """Build a callback that reports gauge `name` from the source registry.
+
+        The source is looked up at collection time rather than closed over,
+        so a re-register swaps what the gauge reads without minting a second
+        instrument under the same name.
+        """
+
         def _observe(options: CallbackOptions) -> Iterable[Observation]:
             source = _gauge_sources.get(name)
             # The source is unbound only between `shutdown_metrics` and

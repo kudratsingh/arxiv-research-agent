@@ -54,6 +54,12 @@ RESOURCE_NOT_FOUND_DETAIL = LearnResourceNotFound.code
 
 
 class _Strict(BaseModel):
+    """Base for this module's wire models: unknown fields are an error.
+
+    Rejecting extras rather than ignoring them is what makes a client's typo
+    visible at the boundary instead of silently taking a default.
+    """
+
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
@@ -76,6 +82,7 @@ class SessionTurnRequest(_Strict):
 
     @model_validator(mode="after")
     def _reply_or_end(self) -> SessionTurnRequest:
+        """Reject a turn that neither answers the tutor nor ends the session."""
         if not self.end_session and not self.message.strip():
             raise ValueError("message is required unless end_session=true")
         return self
@@ -117,11 +124,17 @@ class SessionDetail(_Strict):
 
 
 def _require_session_enabled() -> None:
+    """Raise `SessionLoopDisabled` unless this deployment runs the session loop."""
     if not settings.enable_session_loop:
         raise SessionLoopDisabled()
 
 
 def _principal_id(principal: ApiKeyPrincipal | None) -> str:
+    """The key id a session will be owned by; raises rather than inventing one.
+
+    A session is always attributed to a real principal — an anonymous one
+    could not be resumed by its owner and could not be kept from anyone else.
+    """
     if principal is None:
         # Config validation already makes this impossible for a correctly
         # configured session deployment. Keep the data boundary defensive.
@@ -132,6 +145,11 @@ def _principal_id(principal: ApiKeyPrincipal | None) -> str:
 
 
 def _owned_session(job: Job | None, principal: ApiKeyPrincipal | None) -> Job:
+    """The caller's own session for this id, or `SessionNotFound`.
+
+    Missing, not a session, and owned by someone else all raise the same
+    error, so a caller cannot learn from a status code that an id exists.
+    """
     if job is None or job.kind != "session":
         raise SessionNotFound()
     if settings.enable_api_auth and (principal is None or job.principal_key_id != principal.key_id):
@@ -142,6 +160,15 @@ def _owned_session(job: Job | None, principal: ApiKeyPrincipal | None) -> Job:
 
 
 async def _content_entry(path_id: str, resource_id: str) -> tuple[LoadedPath, Entry]:
+    """Resolve the path and entry a session will be run against, or raise.
+
+    Four separate refusals, each with its own error, because they mean
+    different things to whoever is debugging: the content tree is broken, the
+    path is not published, the entry is not servable, or the entry has no
+    reviewed briefing companion to teach from.
+
+    Loading runs off the event loop; after the first call it is a cache hit.
+    """
     try:
         paths = await asyncio.to_thread(loaded_paths)
     except ContentValidationError as exc:
@@ -193,6 +220,12 @@ def _reading_guidance(path: LoadedPath, entry: Entry) -> list[dict[str, str]]:
 
 
 def _message_text(message: Any) -> str:
+    """Flatten a LangChain message's content to plain text, or to ``""``.
+
+    Content arrives either as a string or as a list of blocks depending on
+    the model call that produced it; anything else is treated as empty rather
+    than guessed at.
+    """
     content = getattr(message, "content", "")
     if isinstance(content, str):
         return content.strip()
@@ -208,6 +241,13 @@ def _message_text(message: Any) -> str:
 
 
 def _transcript(values: dict[str, Any]) -> list[SessionTranscriptEntry]:
+    """Render the checkpoint's messages as the learner-visible conversation.
+
+    Only what was actually exchanged survives: a message that is neither
+    clearly the learner's nor clearly the tutor's is dropped rather than
+    guessed at, because a transcript that misattributes a line is worse than
+    one that is short.
+    """
     messages = values.get("messages")
     if not isinstance(messages, list):
         return []
@@ -240,6 +280,12 @@ def _transcript(values: dict[str, Any]) -> list[SessionTranscriptEntry]:
 def _assessment_status(
     values: dict[str, Any],
 ) -> Literal["", "recorded_ungraded", "unassessed", "assessed"]:
+    """Narrow the checkpoint's assessment to the four states the wire carries.
+
+    Anything unrecognised reads as ``""`` — no assessment — so a checkpoint
+    written by a build with a wider vocabulary degrades to silence rather
+    than putting an unknown word in front of a learner.
+    """
     assessment = values.get("assessment")
     if not isinstance(assessment, dict):
         return ""
@@ -254,6 +300,13 @@ def _assessment_status(
 
 
 async def _checkpoint_values(request: Request, job: Job) -> tuple[dict[str, Any], bool]:
+    """Read the session's graph state, and say whether the read succeeded.
+
+    The flag is what lets a response distinguish "no transcript yet" from "we
+    could not reach the checkpointer". Every failure returns `({}, False)`
+    rather than raising: the job row is worth serving even when the
+    checkpoint behind it is not readable.
+    """
     workflow = getattr(request.app.state, "session_workflow", None)
     read_state = getattr(workflow, "aget_state", None)
     if not callable(read_state):
@@ -277,6 +330,12 @@ def _session_detail(
     *,
     transcript_available: bool = True,
 ) -> SessionDetail:
+    """Compose the wire view of a session from its job row and checkpoint.
+
+    The job row alone is enough for a valid response; the checkpoint only
+    adds the transcript and the assessment status, so a caller that could not
+    read one passes `transcript_available=False` and still gets a session.
+    """
     spec = job.input_payload.get("session_spec", {})
     values = checkpoint_values or {}
     return SessionDetail(

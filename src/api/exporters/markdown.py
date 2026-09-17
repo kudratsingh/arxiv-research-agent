@@ -21,6 +21,12 @@ def render_markdown(job: Job) -> bytes:
 
 
 def _header(job: Job) -> str:
+    """Build the self-describing metadata block that opens the file.
+
+    Only the job id and the completion line are unconditional; the rest of
+    the rows appear when the job has the figure, so an unfinished export
+    shows fewer rows rather than a column of blanks.
+    """
     lines: list[str] = []
     lines.append(f"# Research briefing — {job.job_id}")
     lines.append("")

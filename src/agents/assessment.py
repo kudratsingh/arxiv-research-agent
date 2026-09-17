@@ -47,16 +47,28 @@ No numeric score, level, mastery claim, or revision loop.
 
 
 class Finding(TypedDict):
+    """One gap or strength, with the learner quote that grounds it."""
+
     finding: str
     evidence_quote: str
 
 
 class Evidence(TypedDict):
+    """A verbatim span of the learner's own text and the turn it came from."""
+
     quote: str
     turn_index: int
 
 
 class AssessmentResult(TypedDict):
+    """The judge's whole output, in either of its two shapes.
+
+    `status` is ``assessed`` or ``unassessed`` and nothing else, and
+    `guidance_only` is always true: this is advice for the tutor, so no
+    consumer can read a learner-facing score out of it. An ``unassessed``
+    result carries empty findings and a `note` saying why.
+    """
+
     status: str
     guidance_only: bool
     gaps: list[Finding]
@@ -68,6 +80,11 @@ class AssessmentResult(TypedDict):
 
 
 def _text(value: Any, where: str, *, limit: int) -> str:
+    """Normalise one model-supplied string, or raise `ValueError` naming `where`.
+
+    Whitespace is collapsed before the truncation so that a quote's grounding
+    check compares the same normalised form the learner's text was reduced to.
+    """
     if not isinstance(value, str):
         raise ValueError(f"{where} must be a string")
     text = " ".join(value.split()).strip()
@@ -77,12 +94,26 @@ def _text(value: Any, where: str, *, limit: int) -> str:
 
 
 def _exact_keys(value: Mapping[str, Any], expected: set[str], where: str) -> None:
+    """Require exactly `expected` keys, raising `ValueError` on any difference.
+
+    Extra keys are a failure rather than something to ignore: an unrecognised
+    key is a model that answered a different schema, and keeping the rest of
+    its object would be trusting the half we happened to recognise.
+    """
     actual = set(value)
     if actual != expected:
         raise ValueError(f"{where} keys must be {sorted(expected)}; got {sorted(actual)}")
 
 
 def _findings(value: Any, learner_text: str, where: str) -> list[Finding]:
+    """Parse one findings list, raising `ValueError` unless every quote grounds.
+
+    `value` is untrusted model output and `learner_text` is the only text a
+    quote may come from, so a quote that is not a substring of it is rejected
+    rather than dropped — a judgment that cites words the learner never wrote
+    is wrong about the learner, not merely missing one finding. Repeated
+    (finding, quote) pairs are rejected for the same reason.
+    """
     if not isinstance(value, list):
         raise ValueError(f"{where} must be a list")
     findings: list[Finding] = []
@@ -105,6 +136,11 @@ def _findings(value: Any, learner_text: str, where: str) -> list[Finding]:
 
 
 def _evidence(value: Any, learner_text: str) -> list[Evidence]:
+    """Parse the evidence table, raising `ValueError` on any ungrounded quote.
+
+    The turn index has to be a real non-negative integer, so a bool — which
+    Python would otherwise accept as one — is refused.
+    """
     if not isinstance(value, list):
         raise ValueError("assessment.evidence must be a list")
     evidence: list[Evidence] = []
@@ -124,6 +160,13 @@ def _evidence(value: Any, learner_text: str) -> list[Evidence]:
 
 
 def _parse(value: Any, learner_text: str) -> AssessmentResult:
+    """Turn the model's raw JSON into an ``assessed`` result, or raise.
+
+    Whole-metric: any violation anywhere rejects the entire response, which
+    the caller degrades to `unassessed`. Beyond the per-list checks this adds
+    two cross-field ones — every finding's quote must also appear in the
+    evidence table, and a judgment with gaps must carry a follow-up probe.
+    """
     if not isinstance(value, Mapping):
         raise ValueError("assessment response must be an object")
     _exact_keys(

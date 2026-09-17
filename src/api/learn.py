@@ -162,6 +162,11 @@ class LearnPathList(BaseModel):
 
 
 def _summary(path: LoadedPath) -> LearnPathSummary:
+    """Project one loaded path onto its list-view shape.
+
+    The entry count and total minutes are taken over `servable_entries`, so a
+    list row never advertises work the detail view would refuse to serve.
+    """
     manifest = path.manifest
     servable = manifest.servable_entries
     return LearnPathSummary(
@@ -180,6 +185,11 @@ def _summary(path: LoadedPath) -> LearnPathSummary:
 
 
 def _entry(path: LoadedPath, entry: Entry) -> LearnEntry:
+    """Project one entry onto its wire shape, briefing included if one exists.
+
+    `briefing_markdown` is `None` when no companion has been written for the
+    entry yet, which is the ordinary pre-campaign state rather than an error.
+    """
     briefing = path.servable_briefing(entry)
     abstract = (
         LearnAbstract(
@@ -219,6 +229,7 @@ def _entry(path: LoadedPath, entry: Entry) -> LearnEntry:
 
 
 def _detail(path: LoadedPath) -> LearnPathDetail:
+    """Project one loaded path onto its full shape: summary, licensing, entries."""
     posture = path.manifest.licensing
     return LearnPathDetail(
         **_summary(path).model_dump(),
@@ -240,6 +251,12 @@ def _detail(path: LoadedPath) -> LearnPathDetail:
 
 
 def _require_enabled() -> None:
+    """Raise 404 `learn_content_disabled` unless this deployment serves content.
+
+    A 404 rather than a 403 because, from the caller's side, a deployment
+    with the flag off genuinely has no learning content — and the detail
+    string is what separates that from a mistyped path id.
+    """
     if not settings.enable_learn_content:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=DISABLED_DETAIL

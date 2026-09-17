@@ -1662,6 +1662,16 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _check_session_loop_dependencies(self) -> Settings:
+        """Refuse a session configuration that could only fail at runtime.
+
+        Each flag below is individually valid; what is not is enabling a
+        feature without the thing it reads. Caught at settings load so the
+        message names the missing flag, instead of surfacing later as a
+        learner's session dying mid-turn.
+
+        Raises:
+            ValueError: When a flag is enabled without its dependency.
+        """
         if self.enable_session_loop and not self.enable_learner_profile:
             raise ValueError(
                 "enable_session_loop requires enable_learner_profile=true: "

@@ -74,6 +74,12 @@ class BudgetedRetry(Retry):
     """
 
     def __init__(self, *args: Any, budget: RetryBudget | None = None, **kwargs: Any) -> None:
+        """Take urllib3's own retry arguments, plus the bucket to charge.
+
+        `budget=None` is a policy with no bucket, which behaves exactly like
+        the base `Retry` — the seam has to stay optional because urllib3
+        constructs these itself in paths this class does not own.
+        """
         super().__init__(*args, **kwargs)
         self._budget = budget
 

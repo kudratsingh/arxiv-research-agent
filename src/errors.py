@@ -160,6 +160,14 @@ class AppError(Exception):
         wire_detail: str | Mapping[str, Any] | list[Any] | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> None:
+        """Raise one of these with as much or as little detail as is known.
+
+        The two audiences are kept apart by construction: `log_detail` is
+        what `str(exc)` yields and never reaches a client, while
+        `public_message` is the only sentence that does. `wire_detail` and
+        `headers` exist for the few responses whose shape predates this
+        taxonomy; every other raise leaves them alone and gets the code.
+        """
         # `str(exc)` is the log-side detail, never the client-side one.
         # Falling back to the code keeps a bare `raise JobNotFound()`
         # from producing an empty log line.
