@@ -1,6 +1,6 @@
 # Agent-capability lane — status
 
-Updated: 2026-09-06
+Updated: 2026-09-17
 
 ## Execution log
 
@@ -19,6 +19,9 @@ Updated: 2026-09-06
 | 2026-09-06 | CAP-09 #239 (ADR 0091): listwise candidate selection + marginal-stop record; arm E runnable. Ruling R8: `ARM_SETTINGS["E"]` is the router, because ADR 0085 refuses a controller beside a shape-fixing policy. Pinned cost: T0×12/T1×8/T2×0 on `research-policy-v1` |
 | 2026-09-06 | CAP-04b #241 (ADR 0087): the router reaches the branch tier on the benchmark (T2×0 → T2×8) through two entity-blind query-time rules; no threshold moved; defaults byte-identical. PR #240: a hypothesis-found flake in `tests/property/test_property_redaction.py` fixed as a disclosed one-line exception in the assurance lane's tree |
 | 2026-09-06 | Coordinator queue empty of zero-spend work. Open: CAP-06 (funded smoke) and W12 (funded baseline) — both owner-gated; W12 packet at `docs/agent-engineering/16-w12-approval-packet-draft.md` §1.1 now states arm-E reachability |
+| 2026-09-06 | Codex session (puma) resumed and closed three follow-ups: W13 #245 (ADR 0092, tier provenance in campaign trajectories + arm-E per-run classification), W14 #246 (ADR 0093, state-aware mock supervisor route — arm D exercises one verify action under mock), W15 #247 (the `local-preview-disabled` sentinel refuses client construction structurally). All sessions then stopped by owner order |
+| 2026-09-17 | Resumed after eleven idle days. CI was red repo-wide on new npm advisories → #250. W18 #248 (ADR 0094: rule 12 `branch_plan_breadth` retired with evidence; rule 7 shares the defect, open). W16 memo #251 → owner ruling R9 (option C) → W16b #253 (ADR 0096: the artifact screen is structural; W11-F1 closed; lesson recorded). Evaluation queue: E1 #249 (ADR 0095, mock judge — all five metrics execute under mock), E2 #252 (calibration packets + ingest/agreement report; a draft hazard removed), E3 #254 (`python -m src.campaign report`). Repo-wide comments-only pass, AST-proved: #258, #257, #260, #255, #256, #259. Docs currency #261 (README evaluation section; GitHub description + topics; owner ruling R10: no license, all rights reserved). Zero spend throughout |
+| 2026-09-17 | In flight: C5 (API docstrings with the OpenAPI snapshot regenerated) → E4 (ADR 0097, degradation reasons on the trajectory so campaign reports count them); the assurance golden pass (28 @visual + 3 README images stale since #244) |
 
 ## Wave 1 — CLOSED 2026-09-05
 
@@ -58,22 +61,43 @@ this lane's to act on, not the agent-engineering lane's.
 
 P0 work taken over from the Codex session and merged by this coordinator: W04 #203, W09 #205, W06 #214 (0079), W05 #215 (0078), W10 #217, W07 #221 (0082), W08 #222 (0083), W11 #228, W07b #234 (0088), W03b/W01b/W06b #236 (0089), W07c #238.
 
+### Follow-ups landed after the lane closed
+
+| WO | PR | Main | ADR | State |
+|---|---|---|---|---|
+| W13 tier provenance + arm-E per-run classification (puma) | #245 | 4073476 | 0092 | merged |
+| W14 mock supervisor route for arm D (puma) | #246 | 05a4387 | 0093 | merged |
+| W15 sentinel refuses client construction (puma) | #247 | 18c3990 | — | merged |
+| Audit-gate fix (2026-09 npm advisories) | #250 | 00447cf | — | merged |
+| W18 rule 12 retired | #248 | a395998 | 0094 | merged |
+| W16 retention options memo | #251 | ef3daad | — | merged |
+| W16b artifact screen structural (owner R9, option C) | #253 | c6d4bdf | 0096 | merged |
+| E1 mock judge path | #249 | 529160f | 0095 | merged |
+| E2 calibration packets + agreement report | #252 | — | — | merged |
+| E3 campaign report generator | #254 | a3b112f | — | merged |
+| Comments-only pass C1–C4 (six PRs) | #255 #256 #257 #258 #259 #260 | 12dd643 | — | merged |
+| Docs currency + GitHub profile (owner R10) | #261 | a59c5f8 | — | merged |
+| C5 API docstrings + OpenAPI snapshot | — | — | — | in flight |
+| E4 degradation reasons on the trajectory | — | — | 0097 | in flight |
+| Assurance golden pass (S8 debt) | — | — | — | in flight |
+
 ## Known residuals (this lane)
 
-- Arm D's mock route is the fixed order and never selects `verify`; a mock arm-D episode does not exercise action selection (needs a mock router with a non-trivial policy, or a paid episode).
+- ~~Arm D's mock route never selects `verify`~~ — closed by W14 #246 (ADR 0093).
 - Arm E on `research-policy-v1` after ADR 0087: T0×10 / T1×2 / T2×8. A T0-vs-T1 contrast from arm E alone rests on two cases; the branch rules make claims about retrieval this benchmark cannot score (ADR 0087 Consequences).
-- Rule 12 `branch_plan_breadth` is structurally unreachable (both call sites decide from the query alone); the learning lane never reaches the controller (session jobs).
-- Per-run classification of a T0 run in an arm-E deployment still reads as arm B; campaign trajectories carry no `compute.tier_selected` (ADR 0091 Consequences).
-- `src.llm._get_client` constructs a real client under the `local-preview-disabled` sentinel outside pytest; only the invalid key prevents spend (candidate hardening, unscheduled).
+- ~~Rule 12 `branch_plan_breadth` unreachable~~ — retired by W18 #248 (ADR 0094). **Rule 7 `plan_breadth` (T1) has the identical defect** but sits in `REASON_CODES`, a published vocabulary; needs its own decision (owner).
+- ~~Per-run classification / `compute.tier_selected` in campaign trajectories~~ — closed by W13 #245 (ADR 0092).
+- ~~`src.llm._get_client` constructs a real client under the sentinel~~ — closed by W15 #247: the sentinel now refuses client construction structurally.
+- Eight taxonomy error codes exist only as log lines and cannot be counted from campaign records — E4 (ADR 0097) in flight.
+- The learning lane never reaches the compute controller (session jobs) — by design, recorded.
 
 ## Open for the owner
 
-- **CAP-06** funded live smoke of CAP-01/02/04/09 (checklist in ADR 0090) and **W12** funded baseline (`docs/agent-engineering/16-w12-approval-packet-draft.md`; §1.1 arm-E reachability; caps in §3.3 are proposals). Presented only when both this lane's and the assurance lane's queues are empty (owner ruling 2026-09-05).
-- The shared main checkout is ~70 commits behind `origin/main` and is another session's working directory; nobody fast-forwards it (coordination ruling R7). Its `.venv` matches that old tree; current-main gates use the lock-exact venv outside the checkouts.
-- W11-F1 artifact retention (`chain[ _-]of[ _-]thought` refusal loses briefing bytes on the evidence arms) — routing still owed.
-
-- ~~`research_degradations_total` routing~~ — ruled by the orchestrator 2026-09-05: the assurance lane gets a one-PR exception in `src/observability/` before Puma's W08 starts (coordination board ruling R4).
-- Hosted observability: the assurance lane's scoping recommends declining (no production to observe); wiring the collector into the default compose would reverse ADR 0073 §7. Both are owner calls; recorded on the coordination board.
+- **CAP-06** funded live smoke of CAP-01/02/04/09 (checklist in ADR 0090) and **W12** funded baseline (`docs/agent-engineering/16-w12-approval-packet-draft.md`; §1.1 arm-E reachability; caps in §3.3 are proposals). The packet's own recommendation: one real episode under a separately approved micro-cap first. Both queues have been empty since 2026-09-06; presented, undecided.
+- **Rule 7 `plan_breadth`**: retire (same evidence as ADR 0094) or keep — it is in the published reason-code vocabulary.
+- **Owner rulings recorded 2026-09-17:** R9 W11-F1 → option C (done, ADR 0096); R10 no license — all rights reserved, "maybe later".
+- The shared main checkout is synced only on an explicit owner order (R7; synced 2026-09-06 and 2026-09-17); its `.venv` is lock-exact after the 2026-09-06 rebuild.
+- Social preview image (GitHub web UI only); `SECURITY.md`/`CONTRIBUTING.md` deliberately absent under R10.
 
 ## Coordination
 
