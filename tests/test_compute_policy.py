@@ -39,8 +39,6 @@ from src.policies.compute import (
     LONG_QUERY_TOKENS,
     MAX_DECIDABLE_TIER,
     MULTI_ENTITY_THRESHOLD,
-    PLAN_SEARCH_QUERY_THRESHOLD,
-    PLAN_SUB_QUESTION_THRESHOLD,
     REASON_CODES,
     TIER_LIMITS,
     TIER_RULES,
@@ -154,11 +152,14 @@ class TestTheFeatureExtractor:
         assert extract_features("the 1998 LSTM paper").freshness_cue is False
 
     def test_the_optional_fields_default_to_unknown(self) -> None:
-        """Three features no surface carries yet are `None`, not zero.
+        """Four features no surface carries yet are `None`, not zero.
 
-        `0` would be a claim — "this plan has no sub-questions" — and
-        `_plan_breadth` would have to treat it as a quiet plan rather
-        than as an unanswered question.
+        `0` would be a claim — "this plan has no sub-questions" —
+        where `None` is the honest "nobody asked the planner yet". The
+        distinction outlived the rule that depended on it: ADR 0098
+        retired `plan_breadth`, and the two counts now exist only to
+        hold `feature_snapshot_ref` still, so what they must not do is
+        change value on a path that never sets them.
         """
         snapshot = extract_features("q")
         assert snapshot.requested_depth is None
@@ -220,23 +221,58 @@ class TestEveryRuleFiresInBothDirections:
         assert (at.tier, below.tier) == ("T1", "T0")
         assert "long_query" in at.reasons
 
-    def test_plan_breadth_fires_on_either_count_and_never_on_unknown(self) -> None:
-        """Both halves of one rule, and the `None` that is not zero."""
-        by_sub_questions = features(
-            sub_question_count=PLAN_SUB_QUESTION_THRESHOLD, search_query_count=1
-        )
-        by_queries = features(
-            sub_question_count=1, search_query_count=PLAN_SEARCH_QUERY_THRESHOLD
-        )
-        narrow = features(
-            sub_question_count=PLAN_SUB_QUESTION_THRESHOLD - 1,
-            search_query_count=PLAN_SEARCH_QUERY_THRESHOLD - 1,
-        )
-        assert decide_tier(by_sub_questions).tier == "T1"
-        assert decide_tier(by_queries).tier == "T1"
-        assert decide_tier(narrow).tier == "T0"
-        # Unknown counts are the pre-run case, and must not escalate.
-        assert decide_tier(features()).tier == "T0"
+    def test_no_rule_in_the_default_table_reads_a_plan_time_count(self) -> None:
+        """CAP-19 retired `plan_breadth` (ADR 0098).
+
+        Asserted as a *property* of the table rather than as the absence
+        of one id, for the reason
+        `tests/test_orchestration_controller.py` gives about the branch
+        rule CAP-18 retired: the invariant is that a plan count reaching
+        `extract_features` cannot change what the default table
+        allocates. That would still hold if the id came back under a new
+        name, which asserting on the id would not catch.
+
+        The counts are swept rather than sampled at one value, because
+        the defect the retirement was for is that the rule partitioned
+        the suite 0/20 or 20/20 at *every* threshold — so a test that
+        checked one value would be the measurement that missed it.
+        """
+        plain = features()
+        assert plain.sub_question_count is None
+        assert plain.search_query_count is None
+
+        for count in range(0, 12):
+            for planned in (
+                features(sub_question_count=count),
+                features(search_query_count=count),
+                features(sub_question_count=count, search_query_count=count),
+            ):
+                for rule in TIER_RULES:
+                    assert rule.predicate(planned) == rule.predicate(plain), (
+                        f"rule {rule.rule_id} reads a plan-time count; the "
+                        "tier selects the graph, so no shipped caller can "
+                        "pass one"
+                    )
+                assert decide_tier(planned).tier == decide_tier(plain).tier == "T0"
+                assert decide_tier(planned).reasons == (DEFAULT_REASON,)
+
+    def test_the_plan_counts_are_still_carried_in_the_snapshot(self) -> None:
+        """Retiring the last rule that read them moved no digest.
+
+        `feature_snapshot_ref` is a `sha256:` over
+        `ComputeFeatures.as_dict()`, so dropping the now-ruleless fields
+        would move it on every controller-on deployment and break the
+        join between arm-E trajectories recorded either side of ADR
+        0098 — a real cost to arm-E analysis in exchange for tidiness.
+        ADR 0094 kept them for this reason while rule 7 still nominally
+        read them; ADR 0098 keeps them now that nothing does.
+        """
+        snapshot = extract_features("survey the field").as_dict()
+
+        assert "sub_question_count" in snapshot
+        assert "search_query_count" in snapshot
+        assert snapshot["sub_question_count"] is None
+        assert snapshot["search_query_count"] is None
 
     def test_an_explicit_quick_request_outranks_every_escalation(self) -> None:
         """The decisive half of the table, in the direction that costs.

@@ -816,6 +816,20 @@ never renumbered.
   shape `bind_llm_call_observer` already uses. The metric, the log line
   and every golden are unchanged.
 
+- [0098](0098-retiring-the-plan-breadth-tier-rule.md) — **The last rule
+  that read a plan it could not see is retired.** Owner ruling R11 on the
+  residual ADR 0094 left open: rule 7 `plan_breadth` has never fired, and
+  it could not discriminate if it did — its input is a property of the
+  planner, so it partitions the benchmark 0/20 or 20/20 at every
+  threshold on both axes. Worse than the branch rule ADR 0094 retired,
+  because its threshold is the *top of the planner's instructed range*,
+  so a compliant planner would escalate the whole control arm.
+  `REASON_CODES` goes from eight members to seven — the one published
+  surface that moves, and no sealed contract enumerates it. No digest,
+  feature field, registry object or pinned tier moved. `long_query` also
+  fires 0/20 and is deliberately kept: its zero is the suite's, not the
+  rule's.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

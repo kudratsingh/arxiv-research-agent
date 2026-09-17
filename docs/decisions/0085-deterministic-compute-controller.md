@@ -126,6 +126,16 @@ The plan-time counts are the seam CAP-03 needs: a T2 decision is taken
 when the counts are known. `None` is not zero, and `_plan_breadth`
 treats it as "unanswered" rather than "narrow".
 
+> **Amended 2026-09-17 (ADR 0094, then ADR 0098).** The seam never
+> arrived: the tier selects the *graph*, so it is always decided before
+> the planner runs and no caller passes a count. Both rules built on
+> this paragraph — ADR 0086's `branch_plan_breadth` and rule 7
+> `plan_breadth` — are now retired, and `_plan_breadth` no longer
+> exists. The two *fields* are kept, because `feature_snapshot_ref`
+> hashes them and a deletion would move the digest for no behavioural
+> gain; `None` is still not zero, and the distinction now protects the
+> digest rather than a rule.
+
 **Entity counting deliberately ignores sentence case.** "What" and
 "Compare" open half the queries in the benchmark corpus, so counting a
 leading capital would make `entity_count` a proxy for "the query is a
@@ -150,8 +160,34 @@ escalation: any one selects T1, none leaves T0.
 | 4 | `freshness_cue` | a recency phrase is present | T1 |
 | 5 | `multi_entity` | `entity_count >= 2` | T1 |
 | 6 | `long_query` | `query_tokens >= 24` | T1 |
-| 7 | `plan_breadth` | `sub_question_count >= 4` or `search_query_count >= 6` | T1 |
+| ~~7~~ | ~~`plan_breadth`~~ | ~~`sub_question_count >= 4` or `search_query_count >= 6`~~ | ~~T1~~ |
 | 8 | `default_t0` | nothing above fired | T0 |
+
+> **Amendment, 2026-09-17 (CAP-19,
+> [ADR 0098](0098-retiring-the-plan-breadth-tier-rule.md)), on owner
+> ruling R11.** **Rule 7 is retired**, struck through above. The
+> amendment below predicted this and left the rule standing on
+> published-surface grounds; ADR 0098 reviewed that surface, found that
+> no sealed contract enumerates `REASON_CODES` — not the trajectory
+> event schema, not the run manifest, not the contract registry — and
+> removed the rule with its predicate and both thresholds.
+> `REASON_CODES` therefore has **seven** members, not the eight this ADR
+> published; it is the only surface here that moved. The surviving rows
+> keep their numbers (1-6, 8) because three ADRs cite rules by number.
+>
+> The measurement that decided it adds one fact neither this ADR nor
+> ADR 0094 had: the threshold of 4 is not merely unreachable, it is *the
+> top of the planner's own instructed range*, so a planner that complies
+> with "2-4 focused sub-questions" would have escalated 12 of the 20
+> benchmark queries — the entire T0 control arm. Read "the plan
+> thresholds sit at the top of the planner's own instructed range",
+> below, as the defect rather than the justification.
+>
+> Nothing else in this ADR moved: `COMPUTE_TIERS`, `TIER_LIMITS`, every
+> surviving threshold, both plan-time *fields* and therefore every
+> `feature_snapshot_ref` are unchanged, as is `DIFFICULTY_FEATURES_VERSION`
+> — deliberately, since the router's behaviour is identical on every
+> input a caller can construct.
 
 > **Amendment, 2026-09-17 (CAP-18,
 > [ADR 0094](0094-retiring-the-unreachable-plan-breadth-branch-rule.md)).**
@@ -356,6 +392,18 @@ Published surface, changed only with a new ADR:
 - `ResearchRuntimeBridge.compute_tier_selected` and the module-level
   `observe_compute_tier`, taking primitives so `src/contracts` acquires
   no dependency on `src/policies`.
+
+> **Amendment, 2026-09-17 (CAP-19,
+> [ADR 0098](0098-retiring-the-plan-breadth-tier-rule.md)).** One member
+> of this list has changed since: **`REASON_CODES` has seven members,
+> not eight** — `plan_breadth` is gone. That is the new-ADR this
+> paragraph asks for. ADR 0098 also records what the list overstated:
+> `REASON_CODES` is a *module* surface, and no sealed contract
+> enumerates it. `compute.tier_selected` carries the fired codes as
+> payload strings, the envelope field that is validated against a closed
+> set is left empty, `PolicyExecutionSnapshot.decision_rule_ids` is a
+> label pattern rather than an enumeration, and no registry object names
+> a compute reason code. Everything else on this list is unchanged.
 
 ## What is not verified without a live call
 
