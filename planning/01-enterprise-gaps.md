@@ -8,6 +8,10 @@
 > the FastAPI surface (ADR 0025+). Still open: secrets-manager
 > integration, RBAC/SSO, audit log, license tracking, DLQ. Kept as
 > written for the record.
+>
+> *Amended 2026-09-17: the DLQ has since landed — ADR 0068's
+> `internal_dead_letter`, dead-lettered by the redriver
+> (`src/api/redriver.py`). The other four are still open.*
 
 Foundation work before layering on features. These are the things enterprise buyers and reviewers always look for. The current codebase is a solid prototype; this doc lists what separates prototype from production.
 

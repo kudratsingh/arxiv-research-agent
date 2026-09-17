@@ -61,3 +61,8 @@ Full provenance, hashes, community candidates, and fallbacks: [`skills-installed
 ## Next decision
 
 All four gates are decided; the revamp implementation is complete on `main`. What remains is the user's alone: the RR-02 screen-reader pass (protocol at [`evidence/gate-4/manual/screen-reader.md`](evidence/gate-4/manual/screen-reader.md)), MT-01 approval (proposal §8 questions), anything cost-bearing (DEPLOY, a funded eval campaign), the license decision, and the GitHub social-preview upload. The residual register ([`evidence/gate-4/residual-risks.md`](evidence/gate-4/residual-risks.md)) carries every accepted limitation with its owner and revisit trigger.
+
+*Amended 2026-09-17: one of those has since been decided. **The licence
+question is settled — no licence, all rights reserved.** No `LICENSE` file is
+adopted and no grant is offered; see `README.md` §Rights. The rest of this
+sentence still stands.*

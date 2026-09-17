@@ -503,12 +503,16 @@ The honest limit: mock mode (ADR 0080) branches in front of every model
 call, so that trace contains **no `chat` spans** and none of the
 `gen_ai.*` request, usage or cost attributes in the table above. Those
 need a real credential and real money. Dropping `USE_MOCK_DATA` at the
-disabled sentinel does produce a `chat` span for free — but the job
-fails at the planner's first call, so the trace is four spans ending in
-`error.type=UpstreamModel` rather than a graph. So: mock mode shows the
-whole shape and no model calls; the sentinel shows a model call and no
-whole shape. Both prove the trace is continuous across the process
-boundary, and neither is a clean tree of successful model calls.
+disabled sentinel does not buy one either — since PR #247
+`src/llm.py::_get_client` *refuses to construct the client* under
+`ANTHROPIC_API_KEY=local-preview-disabled`, and it raises before
+`llm_span` opens, so the run ends at the planner with the server span,
+the workflow span and the planner's node span and **no `chat` span at
+all**. The `RuntimeError` is nobody's typed error, so the job fails
+`internal_unexpected` rather than `upstream_model`. So: mock mode shows
+the whole shape and no model calls, and the sentinel shows neither.
+There is no free way here to produce a `chat` span, let alone a clean
+tree of successful ones.
 
 ### Content stays off
 
@@ -764,20 +768,23 @@ environment variables are unchanged; only out-of-range and
 unparseable *values* behave differently, and they now refuse rather
 than clamp.
 
-1. **The `job_failed` and `job_cancelled` SSE frames still have two
-   shapes.** WO-A10 reconciled the two `job_completed` frames onto one
-   builder (`src/api/runner.py::terminal_event_data`) and the route's
-   replay uses it for every terminal frame — but the runner's *live*
-   failure and cancellation frames still build their own smaller
-   payloads at eight call sites, because that work order owned only the
-   `job_completed` one. A client reading a live `job_failed` still gets
-   `{job_id, error, error_type, elapsed_sec}` where the replay gives it
-   eleven fields. Same defect, same fix, one call site at a time.
-2. **`src/api/redriver.py` keeps its own copy of the terminal payload.**
-   Its `_terminal_event_data` says it is "kept field-for-field in sync"
-   with the route's and no longer is; it predates the shared builder and
-   belongs to another work order. Merging it is a three-line change
-   whenever that file is next opened.
+1. ~~**The `job_failed` and `job_cancelled` SSE frames still have two
+   shapes.**~~ — **closed.** WO-A10 had reconciled only the two
+   `job_completed` frames onto one builder
+   (`src/api/runner.py::terminal_event_data`), leaving the runner's
+   *live* failure and cancellation frames building their own smaller
+   payloads. All eight `_put_terminal_event` call sites in
+   `src/api/runner.py` now pass `terminal_event_data(job)`, so a live
+   `job_failed` and a replayed one are the same twelve-field shape.
+2. ~~**`src/api/redriver.py` keeps its own copy of the terminal
+   payload.**~~ — **closed.** `_terminal_event_data` there is now a
+   one-line delegate to the shared builder. The copy it replaced was
+   three fields short of it: `cost_cap_status`, `cost_cap_message` and
+   `llm_calls`.
+
+   These two are struck rather than deleted, and the list is not
+   renumbered, because other documents cite these items by number —
+   `docs/runbooks/poison-job.md` cites item 6.
 3. **A schema standard is landing.** ISO/IEC FDIS 24970 (AI system
    logging) is at stage 50.20 and likely to become the reference for
    exactly the fields above. The field names are therefore constants in

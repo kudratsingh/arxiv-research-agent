@@ -291,7 +291,11 @@ Self-improvement:
 ```
 
 The five-arm experiment is specified in
-[`07-first-policy-experiment.md`](07-first-policy-experiment.md). The next
-documentation step is to write the P0 technical RFCs for `TaskSpec`,
-`RunManifest`, trajectory events, and the benchmark/data registry—still without
-implementing them.
+[`07-first-policy-experiment.md`](07-first-policy-experiment.md). The four P0
+technical RFCs that were the next documentation step have since been written
+and implemented: [`08-task-spec-rfc.md`](08-task-spec-rfc.md),
+[`09-run-manifest-rfc.md`](09-run-manifest-rfc.md),
+[`10-trajectory-event-rfc.md`](10-trajectory-event-rfc.md) and
+[`11-benchmark-data-registry-rfc.md`](11-benchmark-data-registry-rfc.md), with
+the work orders in [`12-p0-work-orders.md`](12-p0-work-orders.md). None of that
+moved D4–D15, all of which are still as recorded above.

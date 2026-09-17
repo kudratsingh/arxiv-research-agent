@@ -353,6 +353,21 @@ design log in
 [`docs/decisions/`](docs/decisions/README.md); the sprint-by-sprint
 roadmap lives in [`planning/03-roadmap.md`](planning/03-roadmap.md).
 
+Newer policy work is deliberately **not** a boolean, so it is not in the
+count above: `RESEARCH_POLICY` (`legacy` | `fixed_verify_repair` |
+`orchestrated_workers`) selects a whole graph shape,
+`COMPUTE_CONTROLLER` (`off` | `deterministic`) hands that choice to a
+per-job router, and `ORCHESTRATION`, `CANDIDATE_SELECTION`,
+`MARGINAL_STOP`, `CONTRACT_SHADOW` and `MOCK_SUPERVISOR_ROUTER` are the
+rest of the adaptive-compute surface. **Every one of them ships inert** —
+`legacy`, `off`, `off`, `off`, `off`, `off`, `fixed_order` — so the
+shipped default is still the Sprint 1 pipeline, and two of them refuse to
+load together on purpose (ADR
+[0085](docs/decisions/0085-deterministic-compute-controller.md): a policy
+that fixes the shape and a controller that chooses one are two claimants
+for the same graph). Per-agent reasoning effort works the same way:
+`<AGENT>_EFFORT` is empty by default and inherits `LLM_EFFORT`.
+
 ## How this was built
 
 Every non-trivial decision in this repo has an Architecture Decision
@@ -360,13 +375,18 @@ Record — an extensively ADR-documented build in
 [`docs/decisions/`](docs/decisions/README.md) covering everything from
 "why roll our own chunker" (0002) to "why the container bakes MiniLM
 weights at build time" (0053) to "where the production trust boundary
-sits" (0054). The ADR index plus the dated log in
+sits" (0054) to "why a retention screen matches structure and never a
+natural-language phrase" (0096). The ADR index plus the dated log in
 [`planning/03-roadmap.md`](planning/03-roadmap.md) reconstruct the
 entire build sequence: what was decided, when, what the alternatives
-were, and what broke along the way. The frontend redesign has its own
-gated campaign record — discovery, design brief, architecture, work
-orders, independent gate reviews and a decision log — under
-[`docs/revamp/`](docs/revamp/STATUS.md).
+were, and what broke along the way. Two campaigns keep their own gated
+records beside it: the frontend redesign — discovery, design brief,
+architecture, work orders, independent gate reviews and a decision log —
+under [`docs/revamp/`](docs/revamp/STATUS.md), and the agent-engineering
+program — contracts, RFCs, work orders, the governance and threat
+review, the judge-calibration protocol and the Stage-0 qualification
+report — under
+[`docs/agent-engineering/`](docs/agent-engineering/README.md).
 
 ## Demo
 
@@ -485,6 +505,7 @@ API_HOST=0.0.0.0 API_PORT=8080 python -m src.api.serve
 | `POST` | `/learn/sessions/{session_id}/turn` | Resume a session parked in `awaiting_learner`. Body: `{message, end_session?: bool}`. |
 | `GET`  | `/research/{job_id}/stream` | SSE event stream: `job_started` → N × `node_completed` (+ `plan_ready` when HITL is on, `turn_ready` for a guided session) → terminal frame. Reconnect-safe: attaching replays the terminal frame for a finished job, `plan_ready` for one awaiting review and `turn_ready` for one awaiting a learner. |
 | `GET`  | `/healthz` | Liveness + per-dependency status + concurrency headroom. Always 200; `status: degraded` in the body when a dependency is down. |
+| `GET`  | `/readyz` | Readiness for an orchestrator: **503** when a required dependency is down or every concurrency permit is taken, so a worker can be drained instead of being sent submits it can only fail. Deliberately absent from the OpenAPI document — no browser client calls it. |
 | `GET`  | `/docs` | Auto-generated OpenAPI docs. |
 
 ### HITL plan review
@@ -555,7 +576,7 @@ restarts (the compose stack wires this up automatically).
 
 Every PR and every push to `main` runs **nine parallel jobs**, with no
 `needs:` edge between any of them: ruff, strict mypy, the whole Python
-suite (**over 4,900 tests**, every tier including `e2e`, under enforced
+suite (**over 5,300 tests**, every tier including `e2e`, under enforced
 project, per-package and patch coverage floors, publishing the
 adversarial suite's attack-success rate as an artifact), a Docker image
 build with base and production compose-file
@@ -565,7 +586,8 @@ drift, **3,477 Vitest tests across 158 files** with coverage floors, and
 a production build with per-route JS budgets), the dependency-audit gate
 in its own bounded job, the Storybook static build with story tests, and
 Playwright + `@axe-core/playwright` against a seeded Compose stack
-pinned to a deliberately invalid API key. The same workflow runs
+pinned to the repository's zero-spend sentinel, which `src/llm.py`
+refuses to build a provider client from at all. The same workflow runs
 nightly with the full browser matrix (firefox, webkit and two device
 profiles) instead of chromium alone — the tiers, what fails each one,
 and the local equivalents are in [`docs/testing.md`](docs/testing.md).
@@ -601,9 +623,13 @@ pytest tests/ -q -m "not e2e"        # the Python half of the gate
 Two things worth stating plainly rather than leaving to inference. The
 good one: **no tier under `web/` ever makes a paid model call**, and
 three independent mechanisms enforce that rather than one convention —
-the Compose overlay pins an invalid key, the Playwright config
-overwrites the variable before any test loads, and the submit leg is
-fulfilled in the browser so it never reaches the backend. The gap, and
+the Compose overlay pins `ANTHROPIC_API_KEY=local-preview-disabled`, the
+Playwright config overwrites the variable before any test loads, and the
+submit leg is fulfilled in the browser so it never reaches the backend.
+That sentinel is a **structural** stop rather than a credential that
+happens to be rejected: `src/llm.py` refuses to construct the Anthropic
+client at all under it, before the SDK can open a transport, so the
+failure arrives without a request. The gap, and
 it is narrower than this page claimed for months: the Python **`e2e`
 tier is built and gates every pull request** — **fifty-three tests across
 nine modules** under `tests/e2e/`, driving the real graphs through the
@@ -626,8 +652,8 @@ every claim in this README and in `docs/architecture.md`, and the test, gate
 or instrument that fails when it stops being true — plus a **system** card
 (this project trains no model), a data-provenance record on the NIST AI 300-1
 field set, and a framework mapping across NIST, OWASP, ISO 42001 and the EU AI
-Act. Read the **Partial** rows first, and the one claim that is still false.
-Nothing-enforces is down to zero — every sentence in that table now has
+Act. Read the **Partial** rows first; nothing in that table is false now.
+Nothing-enforces is down to zero too — every sentence in it now has
 something behind it, read back out of the prose by
 [`tests/test_documented_claims.py`](tests/test_documented_claims.py) — but
 twenty-one claims have *less* behind them than the sentence says, and each
@@ -642,10 +668,15 @@ half no test will ever hold.
 
 Twenty benchmark queries covering hallucination, retrieval, alignment,
 reasoning, efficiency, and safety topics
-(`src/eval/benchmark_queries.py`). Four LLM-judged metrics — citation
-accuracy, faithfulness, completeness, retrieval recall — plus critic
-score, iteration count, LLM call count, and cost per query in
-`summary.jsonl`. Full design in [`docs/eval.md`](docs/eval.md).
+(`src/eval/benchmark_queries.py`). **Five metrics, three of them
+LLM-judged** — faithfulness, completeness and retrieval recall go to a
+judge; `citation_resolution_rate` resolves every cited identifier against
+the papers the run actually retrieved and is deterministic (ADR
+[0074](docs/decisions/0074-deterministic-groundedness.md)), which is why
+it is the one the regression gate reads, and `citation_accuracy` is pure
+regex kept as a diagnostic. Plus critic score, iteration count, LLM call
+count, and cost per query in `summary.jsonl`. Full design in
+[`docs/eval.md`](docs/eval.md).
 
 ```bash
 make eval                              # run the benchmark
@@ -658,7 +689,7 @@ python -m src.eval.regression_diff \
 ```
 
 The runner is hardened for real campaigns (ADR
-[0050](docs/decisions/0050-eval-runner-hardening.md)): each of the four
+[0050](docs/decisions/0050-eval-runner-hardening.md)): each of the five
 metrics is scored in its own guard (a broken judge costs one score, not
 the query), results persist incrementally after every query, `--resume`
 re-enters a partial run without re-spending, and `--max-budget-usd`
@@ -709,6 +740,82 @@ _Auto-updated by the nightly eval workflow. No campaign has completed, so this r
 |---|---|---|---|---|---|---|---|
 | - | - | - | - | - | - | - | (never run) |
 <!-- eval-nightly:end -->
+
+## The policy experiment — contracts, arms, and a campaign that costs nothing
+
+The eval harness above scores one configuration. The layer on top of it
+exists to answer a different question — *does a change to the agent
+policy actually help?* — and it is built so that the answer cannot be
+produced by accident, by a stale config, or by a run nobody authorized.
+The program is written up in
+[`docs/agent-engineering/`](docs/agent-engineering/README.md); it is a
+**planning package plus the contracts that have landed against it**, not
+a result.
+
+**Four typed contracts** under `src/contracts/`: a `TaskSpec` that fixes
+the objective, rubric, budget and autonomy boundary before an episode
+starts; a sealed `RunManifest` that freezes policy, model, prompt, tool,
+data, code and budget identity; an append-only `TrajectoryEvent` stream;
+and a versioned benchmark registry (`eval_registry/`, digest-verified
+against the modules that generate it by `python -m src.contracts.registry
+parity`). A candidate agent receives a hashed *projection* of the
+manifest — never the sealed split identity, labels or grader
+configuration.
+
+**Five policy arms** over the same twenty queries (`src/campaign/arms.py`,
+[07 §4](docs/agent-engineering/07-first-policy-experiment.md)): **A**
+fixed pipeline, **B** evidence path, **C** verify-and-repair (ADR
+[0076](docs/decisions/0076-fixed-verify-repair-research-policy.md)), **D**
+supervisor with the verifier, **E** the deterministic compute controller
+routing T0/T1/T2 with a branch tier, a listwise candidate selector and a
+marginal stop (ADRs
+[0085](docs/decisions/0085-deterministic-compute-controller.md),
+[0086](docs/decisions/0086-orchestrator-workers-for-the-branch-tier.md),
+[0091](docs/decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md)).
+Held-out factors and confounders are frozen identically across every arm,
+so a difference that is not in `ARM_SETTINGS` is not an arm difference.
+An arm is a *claim* until a compiled graph earns it: the declaration is
+checked structurally at seal time, so `ENABLE_VERIFIER=true` on the fixed
+pipeline is still arm A.
+
+**Six campaign verbs**, of which exactly one executes:
+
+```bash
+python -m src.campaign dry-run    # enumerate every planned episode; writes nothing
+python -m src.campaign plan       # materialize manifest, lock, arm configs, ledger
+python -m src.campaign run        # the only verb with execution side effects
+python -m src.campaign resume     # re-enter under the same lock and cap
+python -m src.campaign status     # reconcile the ledger against receipts on disk
+python -m src.campaign report     # read sealed records; write one markdown report
+```
+
+A chargeable campaign is **refused before a credential is read** unless an
+external approval record covers it. `dry-run` on this checkout reports
+`network_calls: 0`, `provider_initialized: false`, `chargeable: false`
+over a `20 cases × 3 repeats × 5 arms` matrix — 300 planned episodes, 0
+excluded — and the whole matrix also *executes* end to end under
+`USE_MOCK_DATA=true` at exactly `$0.000000` with `llm_calls=0` (ADR
+[0088](docs/decisions/0088-campaign-execution-loop.md)). The three judged
+metrics can be exercised on that path too, behind `--mock-judge`, against
+a checked-in fixture that refuses to run without both mock data and the
+zero-spend sentinel (ADR
+[0095](docs/decisions/0095-deterministic-mock-judge-campaign-scoring.md)).
+Judge calibration has its own offline surface — `python -m
+src.calibration packets` renders blinded labeling packets and `ingest`
+un-blinds a completed label file and reports agreement — which produces
+labels for a human, not judgements from a model.
+
+**None of that is policy evidence, and the repository says so in every
+place it could be mistaken for some.** A mock episode serves fixtures
+instead of reasoning; what the matrix proves is the contracts, the
+denominators, the resume rule and the budget stop. **No funded run has
+ever happened** — no live campaign, no live judge, no paid baseline. The
+funded repeated baseline (W12) and the funded live smoke of the new
+gateway path (CAP-06) are both **owner-gated on spend**;
+[`16-w12-approval-packet-draft.md`](docs/agent-engineering/16-w12-approval-packet-draft.md)
+is a pre-filled, unsigned packet in which every figure is labelled
+`ESTIMATE / RE-PRICE BEFORE APPROVAL` and the go/no-go question is
+deliberately left unanswered. It asks for nothing.
 
 ## Production considerations
 
@@ -778,24 +885,43 @@ conversation mode). The hardening chain (ADRs 0033–0054) then took the
 system from "works" to "operable": auth + rate limiting + cost caps,
 cross-worker HITL/SSE, per-principal scoping, job leases + redriver,
 supply-chain pinning + lockfile, OTel metrics, eval-runner crash-safety,
-and an end-to-end pre-flight of the shipped container + web path. Most
-recently, the Evidence Workbench redesign landed as a gated campaign —
-design tokens, a component library with Storybook, route composition,
+and an end-to-end pre-flight of the shipped container + web path. The
+Evidence Workbench redesign then landed as a gated campaign — design
+tokens, a component library with Storybook, route composition,
 route/bundle budgets, an axe gate with an empty allowlist, and the
-seeded Playwright tier.
+seeded Playwright tier — closing all 33 of its work orders across Gates
+3 and 4 ([`docs/revamp/STATUS.md`](docs/revamp/STATUS.md)). Most recently
+the agent-engineering layer landed (ADRs 0075–0096): the four typed
+contracts, the registry and its parity check, the campaign harness and
+its five policy arms, the verify-and-repair and orchestrator-workers
+graph shapes, the deterministic compute controller with its listwise
+selector and marginal stop, mock mode over the whole research graph, the
+Anthropic SDK 1.x upgrade, and a deterministic mock judge — **all of it
+default-off and all of it exercised at zero spend.**
 
 **In progress or planned — not on `main`, and not claimed above:**
 
 | Work | State |
 |---|---|
-| Revamp hardening wave (a11y, visual regression, Lighthouse, legacy removal, ADRs) — WO-27–29, 31–33 | **In progress**, tracked in [`docs/revamp/STATUS.md`](docs/revamp/STATUS.md) |
+| Funded repeated policy baseline (W12) — the twenty-query, five-arm campaign the harness exists to run | **Blocked on the owner.** The code blocker is closed; what remains is an approval record, re-verified prices and expert labeling time. The packet is a [draft that asks for nothing](docs/agent-engineering/16-w12-approval-packet-draft.md) |
+| Funded live smoke of the SDK 1.x gateway path (CAP-06) | **Blocked on the owner.** The wire body is byte-identical across the upgrade, but no live call has been made on 1.x, so provider behaviour there is unverified (checklist in ADR [0090](docs/decisions/0090-anthropic-sdk-1x.md)) |
 | MT-01 — real multi-tenancy (per-user accounts, not the current shared workspace) | **PROPOSED only.** The proposal is merged; the decision is reserved for the repository owner |
 | Hetzner deployment | **Planned, blocked.** The overlay and runbook exist; provisioning is a cost decision reserved for the owner |
 | First funded eval campaign, and the results table it would populate | **Planned, blocked** on the same cost decision (see the eval status above) |
 | Recorded cassettes for the Python `e2e` tier | **Not built.** The tier itself ships and gates every PR; what is missing is captured real provider responses to replay against — every e2e test runs on mock mode and canned agent output |
+| A live screen-reader pass over the workbench (RR-02) | **Reserved for the owner.** The protocol is written; the pass is a human one nobody has run |
 
 The dated per-merge log — and the authoritative list of what's next —
 lives in [`planning/03-roadmap.md`](planning/03-roadmap.md); the
 documentation index is [`docs/README.md`](docs/README.md); the frontend
 campaign's own index is
 [`docs/revamp/STATUS.md`](docs/revamp/STATUS.md).
+
+## Rights
+
+Copyright © 2025–2026 Kudrat Singh. All rights reserved. No license is
+granted to use, copy, modify, or distribute this code. The absence of a
+`LICENSE` file is deliberate, not an oversight: this repository is
+published to be **read**, not reused. Everything here — the ADRs, the
+assurance pack, the campaign records — is written so that the reasoning
+is inspectable, and that is the whole of the offer.

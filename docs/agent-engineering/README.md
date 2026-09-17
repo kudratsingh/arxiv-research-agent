@@ -2,9 +2,9 @@
 
 Status: **DRAFT FOR DISCUSSION**
 
-Snapshot date: **2026-09-04**
+Snapshot date: **2026-09-17**
 
-Repository baseline: `0caefa2` on `main`
+Repository baseline: `a3b112f` on `main`
 
 This folder is the forward-looking engineering program for the research and
 learning agents. It starts from what is actually implemented, defines how
@@ -80,15 +80,25 @@ build next, and in what evidence-gated order?**
     annotation guide, the sampling plan and the noise floor of a twenty-query
     set, the blinding and position-bias plan, synthetic adversarial fixtures,
     the calibration metrics and their PROMOTE/HOLD/ROLLBACK gate, and a
-    cost/time estimate template. No judging, no labeling campaign, no spend.
+    cost/time estimate template. The protocol's offline half has since
+    shipped — `python -m src.calibration packets|ingest` renders blinded
+    packets and reports agreement on completed labels — and the judged
+    metric paths can be exercised against a fixture judge under mock mode
+    ([ADR 0095](../decisions/0095-deterministic-mock-judge-campaign-scoring.md)).
+    Still no judging against a live model, no labeling campaign, no spend.
 15. [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) —
     the no-cost evidence package: the dry-run campaign lock over the whole
     development suite, sealed manifests for A/B/C/D against the graphs this
-    checkout compiles, arm E refused as `capability_missing`, four synthetic
-    episodes with verified hash chains and zero parity mismatches, the
-    integrity, privacy and failure-taxonomy reports, and a bullet-by-bullet
-    verdict on the 12 §21 program gate. Contract qualification, explicitly
-    not policy-quality evidence.
+    checkout compiles, four synthetic episodes with verified hash chains and
+    zero parity mismatches, the integrity, privacy and failure-taxonomy
+    reports, and a bullet-by-bullet verdict on the 12 §21 program gate.
+    Contract qualification, explicitly not policy-quality evidence. Read it
+    as the **dated report** it is: it qualified arm E as
+    `capability_missing`, which CAP-09 has since closed
+    ([ADR 0091](../decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md)),
+    and it fenced the W11-F1 artifact-retention finding, which
+    [ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md)
+    has since settled.
 16. [`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md) — the
     12 §18 packet, pre-filled and unsigned. Every figure is labelled
     `ESTIMATE / RE-PRICE BEFORE APPROVAL`, the preconditions that are not met
@@ -96,12 +106,15 @@ build next, and in what evidence-gated order?**
     question is left unanswered. **Not an approval request.**
 17. [`17-w11f1-retention-options.md`](17-w11f1-retention-options.md) — the
     options memo for finding W11-F1: the artifact store's private-reasoning
-    screen refuses any body containing "chain-of-thought", which costs the
+    screen refused any body containing "chain-of-thought", which cost the
     evidence-path arms their briefing bytes on a benchmark made of
     LLM-research questions. States what the rule protects, measures the loss
-    (and shows the same rule also refuses a retrieved paper's own abstract
+    (and shows the same rule also refused a retrieved paper's own abstract
     under `source_document`), and sets out three options with costs and
-    risks. **Recommends one; the owner decides. No behaviour change.**
+    risks. **Settled**: the owner took option C, and
+    [ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md)
+    made the screen structural — markers, not phrases — so the memo is now
+    the record of a decision rather than a question.
 
 ## P0 implementation status
 
@@ -110,22 +123,28 @@ landed against them. It is the answer to "can I build on that yet?",
 which the work-order document deliberately does not track — a dependency
 graph says what *may* start, not what has merged.
 
-| Work order | Output | Status |
-|---|---|---|
-| P0-WO00 | Shared contract kernel | Landed — [#167](https://github.com/kudratsingh/arxiv-research-agent/pull/167) |
-| P0-WO01 | TaskSpec models and deterministic compilers | Landed — [#193](https://github.com/kudratsingh/arxiv-research-agent/pull/193) |
-| P0-WO02 | Development benchmark registry core | Landed — [#188](https://github.com/kudratsingh/arxiv-research-agent/pull/188) |
-| P0-WO03 | Sealed RunManifest and admission | Landed — [#201](https://github.com/kudratsingh/arxiv-research-agent/pull/201) |
-| P0-WO04 | Trajectory schema and in-memory adapter | Landed — [#203](https://github.com/kudratsingh/arxiv-research-agent/pull/203) |
-| P0-WO05 | Research shadow integration | Landed — [#215](https://github.com/kudratsingh/arxiv-research-agent/pull/215) |
-| P0-WO06 | Benchmark migration and parity | Landed — [#214](https://github.com/kudratsingh/arxiv-research-agent/pull/214) |
-| P0-WO07 | Campaign lock, repeats, resume, denominators | Landed — [#221](https://github.com/kudratsingh/arxiv-research-agent/pull/221) |
-| P0-WO07b | Campaign execution loop and the `run` verb | This PR — see [ADR 0088](../decisions/0088-campaign-execution-loop.md) |
-| P0-WO08 | Runtime event bridge and artifact adapter | Landed — [#222](https://github.com/kudratsingh/arxiv-research-agent/pull/222) |
-| P0-WO09 | Governance and threat review | Landed — [#205](https://github.com/kudratsingh/arxiv-research-agent/pull/205) |
-| P0-WO10 | Judge-calibration protocol and fixtures | Landed — see [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md); no ADR, this is a design package |
-| P0-WO11 | Stage-0 contract qualification | This PR — see [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md); no ADR, this is a report plus three fixes inside existing ADRs' scope |
-| P0-WO12 | Funded repeated current-policy baseline | Blocked on funding approval (D9). The execution-loop blocker is closed by W07b; what remains is an owner's approval record, re-verified prices and expert labeling time — see [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) §7.3 |
+| Work order | Output | Where it lives | Status |
+|---|---|---|---|
+| P0-WO00 | Shared contract kernel | `src/contracts/kernel.py` | Landed — [#167](https://github.com/kudratsingh/arxiv-research-agent/pull/167) |
+| P0-WO01 | TaskSpec models and deterministic compilers | `src/contracts/task_spec.py` | Landed — [#193](https://github.com/kudratsingh/arxiv-research-agent/pull/193) |
+| P0-WO02 | Development benchmark registry core | `src/contracts/registry.py` | Landed — [#188](https://github.com/kudratsingh/arxiv-research-agent/pull/188) |
+| P0-WO03 | Sealed RunManifest and admission | `src/contracts/run_manifest.py` | Landed — [#201](https://github.com/kudratsingh/arxiv-research-agent/pull/201) |
+| P0-WO04 | Trajectory schema and in-memory adapter | `src/contracts/trajectory.py` | Landed — [#203](https://github.com/kudratsingh/arxiv-research-agent/pull/203) |
+| P0-WO05 | Research shadow integration | `src/contracts/research_binding.py`, `src/contracts/shadow_bridge.py` | Landed — [#215](https://github.com/kudratsingh/arxiv-research-agent/pull/215) |
+| P0-WO06 | Benchmark migration and parity | `eval_registry/`, `src/contracts/benchmark_adapters.py` | Landed — [#214](https://github.com/kudratsingh/arxiv-research-agent/pull/214) |
+| P0-WO07 | Campaign lock, repeats, resume, denominators | `src/campaign/` | Landed — [#221](https://github.com/kudratsingh/arxiv-research-agent/pull/221) |
+| P0-WO07b | Campaign execution loop and the `run` verb | `src/campaign/execute.py` | Landed — [#234](https://github.com/kudratsingh/arxiv-research-agent/pull/234), [ADR 0088](../decisions/0088-campaign-execution-loop.md) |
+| P0-WO07c | Per-episode operator log events for campaign execution | `src/campaign/execute.py` | Landed — [#238](https://github.com/kudratsingh/arxiv-research-agent/pull/238) |
+| P0-WO08 | Runtime event bridge and artifact adapter | `src/contracts/runtime_bridge.py`, `src/contracts/artifact_store.py` | Landed — [#222](https://github.com/kudratsingh/arxiv-research-agent/pull/222) |
+| P0-WO09 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) | Landed — [#205](https://github.com/kudratsingh/arxiv-research-agent/pull/205) |
+| P0-WO10 | Judge-calibration protocol and fixtures | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry/` | Landed — [#217](https://github.com/kudratsingh/arxiv-research-agent/pull/217); no ADR, this is a design package |
+| P0-WO11 | Stage-0 contract qualification | [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md), [`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md), `tests/test_stage0_qualification.py` | Landed — [#228](https://github.com/kudratsingh/arxiv-research-agent/pull/228); no ADR, this is a report plus three fixes inside existing ADRs' scope |
+| Contract follow-ups | Non-arm `PolicySnapshot`, arm-E redefinition, learning `ContextRef` kinds, one registry root | `src/contracts/` | Landed — [#236](https://github.com/kudratsingh/arxiv-research-agent/pull/236), [ADR 0089](../decisions/0089-non-arm-policy-snapshots-and-one-registry-root.md) |
+| W11-F1 | Artifact-retention options memo, then the structural screen | [`17-w11f1-retention-options.md`](17-w11f1-retention-options.md), `src/contracts/artifact_store.py` | Landed — [#251](https://github.com/kudratsingh/arxiv-research-agent/pull/251) and [#253](https://github.com/kudratsingh/arxiv-research-agent/pull/253), [ADR 0096](../decisions/0096-structural-screens-not-phrase-screens.md) |
+| Mock judge | The three judged metric paths execute under mock mode | `src/eval/mock_judge.py` | Landed — [#249](https://github.com/kudratsingh/arxiv-research-agent/pull/249), [ADR 0095](../decisions/0095-deterministic-mock-judge-campaign-scoring.md) |
+| Offline labeling | Blinded labeling packets and the agreement report | `src/calibration/packets.py`, `src/calibration/labels.py` | Landed — [#252](https://github.com/kudratsingh/arxiv-research-agent/pull/252); no ADR |
+| Campaign report | The `report` verb over a finished campaign's sealed records | `src/campaign/report.py` | Landed — [#254](https://github.com/kudratsingh/arxiv-research-agent/pull/254); no ADR |
+| P0-WO12 | Funded repeated current-policy baseline | — | **Blocked on funding approval (D9).** The execution-loop blocker is closed by W07b; what remains is an owner's approval record, re-verified prices and expert labeling time — see [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) §7.3 |
 
 Nothing in this table authorizes spend. W12 stays blocked until the
 program gate in [`12-p0-work-orders.md`](12-p0-work-orders.md) §21 is
@@ -168,37 +187,22 @@ These are proposed integration contracts, not owner approval of implementation
 or spend. An implementation ADR may refine them only by updating all four RFC
 interfaces together.
 
-## P0 implementation status
-
-The RFCs above are contracts; this table is what exists in the tree. A work
-order is "landed" only when its acceptance criteria are green in CI.
-
-| Work order | Output | Where it lives | State |
-|---|---|---|---|
-| P0-WO00 | Shared contract kernel | `src/contracts/kernel.py` | landed |
-| P0-WO01 | TaskSpec models and compilers | `src/contracts/task_spec.py` | landed |
-| P0-WO02 | Development registry core | `src/contracts/registry.py` | landed |
-| P0-WO03 | Sealed RunManifest and admission | `src/contracts/run_manifest.py` | landed |
-| P0-WO04 | Trajectory schema and replay | `src/contracts/trajectory.py` | landed |
-| P0-WO05 | Research shadow integration | `src/contracts/research_binding.py`, `src/contracts/shadow_bridge.py` | landed |
-| P0-WO06 | Benchmark migration and parity | `eval_registry/`, `src/contracts/benchmark_adapters.py` | landed |
-| P0-WO07 | Campaign lock, repeats, denominators | `src/campaign/` | landed |
-| P0-WO08 | Runtime event bridge | `src/contracts/runtime_bridge.py`, `src/contracts/artifact_store.py` | landed |
-| P0-WO09 | Governance and threat review | [`13-governance-threat-review.md`](13-governance-threat-review.md) | landed |
-| P0-WO10 | Judge-calibration design | [`14-judge-calibration-protocol.md`](14-judge-calibration-protocol.md), `src/calibration/`, `eval_registry/` | landed |
-| P0-WO11 | Stage-0 contract qualification | [`15-stage0-qualification-report.md`](15-stage0-qualification-report.md), [`16-w12-approval-packet-draft.md`](16-w12-approval-packet-draft.md), `tests/test_stage0_qualification.py` | in flight |
-| P0-WO12 | Funded repeated baseline | — | approval-gated, blocked on D9 **and on unwritten code** — see below |
+### What the contracts settled after the work orders closed
 
 **P0 contract follow-ups (2026-09-05, [ADR 0089](../decisions/0089-non-arm-policy-snapshots-and-one-registry-root.md)).**
 Three findings the work orders above recorded rather than fixed are now
 closed. `PolicySnapshot` has a `policy_kind` discriminator, so a branch
 run (`research_shape`) and a guided session (`guided_session`) seal
-manifests instead of declining them, and arm E is redefined as the
+manifests instead of declining them, and arm E was redefined as the
 deterministic controller plus a listwise selector plus a marginal-stop
-record — still `capability_missing`, with the refusal naming the two
-capabilities CAP-09 owes. `ContextRef` carries the three candidate-visible
-learning kinds, so a guided-learning case compiles with its refs
-populated. And W10's calibration suite lives under `eval_registry/`:
+record. ADR 0089 left that redefinition `capability_missing`, with the
+refusal naming the two capabilities CAP-09 owed; **CAP-09 then built
+both** ([ADR 0091](../decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md)),
+so `UNRUNNABLE_ARMS` is now empty, arm E is runnable, and every refusal
+comes from probing a compiled graph rather than from a standing constant.
+`ContextRef` carries the three candidate-visible learning kinds, so a
+guided-learning case compiles with its refs populated. And W10's
+calibration suite lives under `eval_registry/`:
 `eval_registry_calibration/` is gone, the 120 objects moved byte for
 byte, and parity is stated over the union at 257 objects, 0 mismatches.
 
@@ -208,25 +212,41 @@ generated, digest-verified view of `src/eval/benchmark_queries.py`,
 proves the two agree, and a later ADR decides which one is authoritative
 ([ADR 0079](../decisions/0079-benchmark-registry-migration-and-parity.md)).
 
-Campaign orchestration is `python -m src.campaign plan|dry-run|resume|status`.
-`dry-run` enumerates every planned episode of a registry-locked
+Campaign orchestration is now six verbs —
+`python -m src.campaign plan|dry-run|run|resume|status|report` — and
+**`run` is the only one with execution side effects.** `dry-run`
+enumerates every planned episode of a registry-locked
 `cases x repeats x arms` matrix at zero cost and writes nothing; `plan`
-materializes the campaign directory including its denominator ledger. Neither
-runs an episode, contacts a provider, or authorizes spend — a chargeable
-campaign is refused before a credential is read unless an external approval
-record covers it, and **P0-WO12 remains blocked on D9**
+materializes the campaign directory including its denominator ledger;
+`resume` reopens a materialized campaign under the same lock and cap;
+`status` reconciles the ledger against the receipts on disk; and `report`
+reads a finished campaign's sealed records and the trajectories they
+point at and writes one markdown document — quality, cost and latency per
+arm, the error-taxonomy counts, the denominators and the lineage. None of
+the five read-only verbs runs an episode, contacts a provider, or
+authorizes spend — a chargeable campaign is refused before a credential
+is read unless an external approval record covers it, and **P0-WO12
+remains blocked on D9**
 ([ADR 0082](../decisions/0082-campaign-lock-repeats-and-denominators.md)).
 
-`run` is the one verb with execution side effects, and P0-WO07b added it.
-It iterates the manifest's interleaved order, seals each episode, opens
+`run` iterates the manifest's interleaved order, seals each episode, opens
 W08's durable trajectory, drives the policy, scores it with free
 deterministic checks, writes the episode's artifacts with `completion.json`
 last, and checks the campaign cap between episodes — which is where
 `budget_stop_reached` finally acquired a production caller. The full
 `20 x 3 x 5` development matrix executes end to end under `USE_MOCK_DATA`
-in about sixteen seconds at exactly `$0.000000`, with `llm_calls=0` on all
-240 runnable episodes and the ledger reconciling 240 completed and 60
-excluded ([ADR 0088](../decisions/0088-campaign-execution-loop.md)).
+at exactly `$0.000000` with `llm_calls=0`; since arm E became runnable the
+ledger reconciles **300 completed and 0 excluded**
+([ADR 0088](../decisions/0088-campaign-execution-loop.md),
+[ADR 0091](../decisions/0091-listwise-candidate-selection-and-the-marginal-stop.md)).
+The three judged metrics can be exercised on that same path behind
+`--mock-judge`, against a checked-in fixture that refuses to run without
+both mock data and the zero-spend sentinel
+([ADR 0095](../decisions/0095-deterministic-mock-judge-campaign-scoring.md)).
+Judge calibration has an offline surface of its own:
+`python -m src.calibration packets` renders blinded labeling packets and
+`ingest` un-blinds a completed label file and reports agreement. It
+produces work for a human labeler; it judges nothing and spends nothing.
 
 **Running the matrix is not policy evidence.** It proves the contracts,
 the denominators, the resume rule and the cap stop; it says nothing about

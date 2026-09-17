@@ -1,6 +1,7 @@
 # First research-policy experiment
 
-Status: **DESIGN APPROVED — IMPLEMENTATION AND EXECUTION DEFERRED**
+Status: **DESIGN APPROVED — ALL FIVE ARMS IMPLEMENTED; FUNDED EXECUTION
+DEFERRED**
 
 Approved by the owner: **2026-09-04**
 
@@ -13,8 +14,12 @@ This protocol implements decisions D1–D3:
 - run the funded experiment only after a separate cost estimate and explicit
   approval.
 
-No result exists yet. Arms C and E require new behavior, so the full experiment
-cannot be run against the current code without mislabeling the arms.
+No result exists yet: no funded run of this protocol has happened. Arms C and E
+required new behavior when this was written, and both have since landed — arm C
+with `research_policy=fixed_verify_repair` (ADR 0076), arm E with the compute
+controller, the branch tier, the listwise selector and the marginal stop (ADRs
+0085, 0086, 0091). All five arms are now mechanically distinguishable against
+the current code; what is still absent is the spend approval, not the behavior.
 
 ## 1. Research question
 
@@ -85,9 +90,12 @@ Allowed initial repairs:
 Purpose: measure the value of verification that changes the result, without
 introducing general supervisor routing.
 
-**Implementation status:** not present. The current `enable_verifier` setting
-adds a supervisor action and is a no-op in the fixed graph. Arm C therefore
-requires a new fixed verify-and-repair policy and tests before execution.
+**Implementation status:** ~~not present~~ **built.** ADR 0076's
+`research_policy=fixed_verify_repair` compiles the explicit `verify` node, at
+most one deterministic `repair`, and a re-verification before the critic. The
+`enable_verifier` setting is still only a supervisor action and still a no-op in
+the fixed graph, which is why setting it does not make arm C — the distinction
+the paragraph below demanded is now structural and tested.
 
 ### Arm D — supervisor plus evidence and verifier
 
@@ -139,9 +147,9 @@ deterministic compute controller selecting among T0/T1/T2 with candidate
 branching, **and** a listwise candidate selector, **and** a
 marginal-stop record. A supervisor is permitted and not required.
 
-**Authorization is unchanged.** The table in §12 says "Arm E
-implementation: not authorized", and that is a *spend* decision about
-running the arm in a funded campaign, not a claim about whether the code
+**Authorization is unchanged.** The table in §12 says "Arm E in a funded
+campaign: not authorized", and that is a *spend* decision about running
+the arm against the live model, not a claim about whether the code
 exists — the same way arm C's row read while arm C was already built. It
 remains an owner call.
 
@@ -163,9 +171,9 @@ are frozen identically across every arm.
 
 | Setting | A | B | C | D | E | Reason |
 |---|---:|---:|---:|---:|---:|---|
-| `ENABLE_SUPERVISOR` | false | false | false | true | true | Defines fixed versus supervisor graph shape |
+| `ENABLE_SUPERVISOR` | false | false | false | true | false† | Defines fixed versus supervisor graph shape |
 | `ENABLE_EVIDENCE_STORE` | false | true | true | true | true | Isolates the evidence path in B |
-| `ENABLE_VERIFIER` | false | false | false* | true | true | Existing flag only has behavior under the supervisor |
+| `ENABLE_VERIFIER` | false | false | false* | true | false† | Existing flag only has behavior under the supervisor |
 | `ENABLE_QUERY_REFINER` | false | false | false | false | false | Held out of the first five-arm comparison |
 | `ENABLE_READER_RECOVERY` | false | false | false | false | false | Held out of the first five-arm comparison |
 | `ENABLE_PROMPT_ISOLATION` | true | true | true | true | true | Common safety floor; required for untrusted paper-derived control signals |
@@ -173,18 +181,31 @@ are frozen identically across every arm.
 | `ENABLE_PROMPT_CACHING` | false | false | false | false | false | Prevents run order/cache state from changing effective cost |
 | `USE_MOCK_DATA` | false | false | false | false | false | Funded quality evaluation must use the live model and real benchmark inputs |
 | `ENABLE_HITL` | false | false | false | false | false | Human plan edits would make arms incomparable; eval runner compiles without the pause |
+| `COMPUTE_CONTROLLER` | off | off | off | off | deterministic | Arm E's per-job tier router (ADR 0085) |
+| `ORCHESTRATION` | off | off | off | off | on | Makes the branch tier reachable to the router as T2 (ADR 0086) |
+| `CANDIDATE_SELECTION` | off | off | off | off | listwise | Arm E chooses among sibling candidates (ADR 0091) |
+| `MARGINAL_STOP` | off | off | off | off | on | Arm E records the marginal-value stop (ADR 0091) |
 
-`*` Arm C invokes a new fixed-policy verifier stage, not the existing
-`ENABLE_VERIFIER` supervisor action. That distinction must be structural and
+`*` Arm C invokes a fixed-policy verifier stage, not the existing
+`ENABLE_VERIFIER` supervisor action. That distinction is structural and
 tested; setting `ENABLE_VERIFIER=true` with `ENABLE_SUPERVISOR=false` does not
 create Arm C.
+
+`†` Corrected 2026-09-17; the change it records is ADR 0089's, 2026-09-05, and
+this table was missed at the time. These two cells read `true` for arm E while
+the heading above still called E "supervisor plus adaptive compute". The compute
+controller and the branch tier both refuse to load beside
+`ENABLE_SUPERVISOR=true`, so requiring the supervisor would make arm E
+unreachable on the only implementation there is. `src/campaign/arms.py`'s
+`ARM_SETTINGS["E"]` is the authority: supervisor and verifier off,
+`research_policy=legacy`, and the four rows above on.
 
 ### Proposed policy selectors
 
 Final names require an implementation ADR. The experiment uses these conceptual
 selectors so the intended behavior is unambiguous:
 
-| Arm | Conceptual policy | Required new implementation |
+| Arm | Conceptual policy | New implementation it required (all since landed) |
 |---|---|---|
 | A | `fixed` | None |
 | B | `fixed_evidence` | None beyond configuration and manifest capture |
@@ -238,9 +259,10 @@ under the dataset-registry work in P0.
 ### Repetition rule
 
 Run at least three independent repeats per query and arm. The research runner
-does not currently expose `--repeats`, so orchestration must create distinct
-run manifests/output directories rather than overwrite or treat `--resume` as
-a repeat.
+did not expose `--repeats` when this was written; it does now (ADR 0071), and
+`python -m src.campaign` takes `--repeats` as well, defaulting to three. Each
+repeat still gets its own run manifest and output directory rather than
+overwriting one or treating `--resume` as a repeat.
 
 With all five arms, the full v1 matrix is:
 
@@ -459,8 +481,8 @@ Experiment approval is not default-policy approval.
 | D2 scorecard structure | Approved 2026-09-04 |
 | D3 fixed control/fallback | Approved 2026-09-04 |
 | Five-arm protocol design | Approved 2026-09-04 |
-| Arm C implementation | Not authorized |
-| Arm E implementation | Not authorized |
+| Arm C in a funded campaign | Not authorized (the policy itself was built 2026-09-05, ADR 0076) |
+| Arm E in a funded campaign | Not authorized (the capabilities themselves were built 2026-09-06, ADRs 0085/0086/0091) |
 | Paid calibration smoke test | Not authorized; cost approval required |
 | Screening/full campaign | Not authorized; cost approval required |
 | Policy promotion | Not authorized; requires results and a later decision |

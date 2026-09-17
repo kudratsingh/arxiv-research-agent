@@ -292,6 +292,22 @@ and its verdict means nothing. The provenance block records the value,
 so the swap is visible in the data rather than only in somebody's
 memory.
 
+### `src/eval/mock_judge.py`
+
+ADR [0095](decisions/0095-deterministic-mock-judge-campaign-scoring.md).
+The three judged metrics above need a provider, so until this landed the
+zero-spend campaign simply skipped them and the code paths that score
+them ran nowhere. This module lets those three execute under mock mode
+against a checked-in fixture, with every response validated against a
+strict output model before the metric sees it.
+
+It is **default-off** and opted into per campaign with `--mock-judge`,
+and `build_mock_judge_scorer` refuses unless *both* `USE_MOCK_DATA=true`
+and the zero-spend sentinel are set. It is an execution harness, not a
+model simulator: nothing it returns is quality evidence, and it cannot
+stand in for the calibration below. **No live judge run has ever
+happened in this repository.**
+
 ### `src/eval/groundedness.py`
 
 **Landed (WO-A16, ADR
@@ -578,9 +594,22 @@ nor a version constant, so there is nothing a lock could hold it to.
 
 Provenance says *which* instrument produced a number. It says nothing
 about whether that instrument is any good, and this repository has never
-measured it: **judge–human agreement is unmeasured on all four research
-metrics**, and it is deferred rather than planned, because it needs
-labelled human verdicts nobody has produced.
+measured it: **judge–human agreement is unmeasured on all three judged
+research metrics** — `completeness`, `faithfulness` and
+`retrieval_recall`; the other two of the five publish no judge to agree
+with. It needs labelled human verdicts, and none have been produced.
+
+The machinery for producing them offline now exists and is deliberately
+short of a campaign. `python -m src.calibration packets` writes one
+blinded packet set — two packets plus the evaluator-only manifest — and
+`python -m src.calibration ingest` un-blinds a completed label file
+through that manifest and reports agreement. Both take
+`--registry-root`, call no model, touch no network and spend nothing;
+the protocol is
+[`14-judge-calibration-protocol.md`](agent-engineering/14-judge-calibration-protocol.md).
+What is still missing is the labelling itself: expert time nobody has
+been asked for, and the owner approval [Paid calibration remains
+locked](#paid-calibration-remains-locked) records.
 
 When it is measured, the reporting form is not negotiable:
 
@@ -1396,6 +1425,13 @@ requires renewed owner approval, a ratified label set, and a campaign run under
 outputs are tutor guidance only. The disabled nightly research eval is not a
 substitute for this campaign and remains disabled independently.
 
+`python -m src.calibration packets` / `ingest` is not that step either.
+It blinds a packet set for offline labelling and scores the agreement of
+a completed label file — no judging, no spend, no campaign — so it
+shortens the path to the ratified label set without starting one. See
+[Judge–human calibration remains
+unmeasured](#judgehuman-calibration-remains-unmeasured).
+
 ## The learner-simulation benchmark (Phase W)
 
 `src/eval/simulate_learner.py` is the regression harness for the guided
@@ -1591,9 +1627,12 @@ surface the funded nightly lane uses. It takes about two seconds on the
 full fifteen scenarios.
 
 Zero spend is structural rather than hoped for. `USE_MOCK_DATA=true`
-keeps the graph on its mock path, the key is the same deliberately
-invalid sentinel the rest of `ci.yml` uses, `simulate_learner` refuses
-the scripted tier outright when `USE_MOCK_DATA` is false, and
+keeps the graph on its mock path, the key is the same
+`local-preview-disabled` sentinel the rest of `ci.yml` uses — and
+`src/llm.py::_get_client` now **refuses to construct a client under it
+at all**, rather than constructing one that would have failed on an
+invalid credential — `simulate_learner` refuses the scripted tier
+outright when `USE_MOCK_DATA` is false, and
 `src/eval/scripted_tier_check.py` then asserts every row: 15 of 15
 sessions, no errors, `$0.0000` across all four cost columns, a zero call
 count on all three call columns, and no unmet structural expectations.

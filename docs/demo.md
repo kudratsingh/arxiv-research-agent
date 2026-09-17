@@ -29,7 +29,7 @@ not. Stated up front rather than left to inference:
 |---|---|---|
 | [Report body](#report-body) + [citation list](#citation-list) | Captured from a `USE_MOCK_DATA=true` run when this page was written (2026-07-09, `0911ef0`) and **not re-captured since**; the retrieval and degradation paths have changed under it (ADRs 0041, 0052), and ADR 0080 changed what the mode itself produces — that run still called the model, so this prose is model-written and **the same command today returns model-free text instead** | Shape, structure, citation style. The five citations still match `MOCK_PAPERS` exactly — that is checked. The prose is representative, not current, and not reproducible. |
 | [`summary.jsonl` line](#summaryjsonl-line) | **Hand-written.** The field names, order and types are verified against `src/eval/runner.py::_summary_line`; the *values* are illustrative | The schema. Not the numbers. |
-| [HTTP + SSE samples](#the-same-run-over-the-http-api) | **Recorded off the wire** from the seeded local Compose stack with `ANTHROPIC_API_KEY=local-preview-disabled`, and committed under [`web/contract/`](../web/contract/). Each fixture carries its own `x-recording` header saying whether the bytes were observed or transcribed | Field names, framing, ordering, status codes. |
+| [HTTP + SSE samples](#the-same-run-over-the-http-api) | **Recorded off the wire** from the seeded local Compose stack with `ANTHROPIC_API_KEY=local-preview-disabled`, and committed under [`web/contract/`](../web/contract/). Each fixture carries its own `x-recording` header saying whether the bytes were observed or transcribed — and both SSE fixtures were recorded at `e54d1c9`, before WO-A10/WO-B3 converged the terminal payloads | Framing, ordering, close behaviour, status codes. For the *terminal* frame's field names read the table below it, not the fixture. |
 
 No number on this page is a benchmark result. **No eval campaign has
 ever completed** — every run the nightly workflow had failed on a
@@ -285,8 +285,8 @@ The CLI invocation above is the shortest path to a report. The
 production surface is the FastAPI job API
 ([`docs/architecture.md`](architecture.md) has the job model; the
 committed OpenAPI document is
-[`web/contract/openapi.json`](../web/contract/openapi.json)). Ten
-operations across eight paths, of which five matter to a single
+[`web/contract/openapi.json`](../web/contract/openapi.json)). Nineteen
+operations across fifteen paths, of which five matter to a single
 research run:
 
 | Method | Path | What it does |
@@ -297,11 +297,15 @@ research run:
 | `POST` | `/research/{job_id}/review` | Resolve a `pending_review` job: `approve`, `revise`, or `cancel`. |
 | `GET` | `/research/{job_id}/export?format=md\|pdf\|docx` | Download the report. |
 
-The remaining five are `/healthz` and the four `/conversations`
+The remaining fourteen are `/healthz`, the four `/conversations`
 routes (create, list, fetch, delete) that thread follow-up queries
-together. There is **no `/readyz`** and no metrics route on the HTTP
-app — `/healthz` carries the dependency pings and always returns 200,
-because restarting the process does not fix a dead Redis (ADR 0042).
+together, and the nine `/learn/*` routes — the profile, the Ledger
+view, the path library and the guided-session start / read / turn.
+`/readyz` exists on the app and is deliberately **not in this
+document**: it is the frontend's generated contract and `/readyz` has
+no browser client. There is no metrics route at all — `/healthz`
+carries the dependency pings and always returns 200, because
+restarting the process does not fix a dead Redis (ADR 0042).
 
 ### Submit
 
@@ -338,9 +342,9 @@ the runner only emits after a node returns.
 | `node_completed` | `{node, state_delta}` — scalars only; the papers/citations lists are fetched from `GET /research/{job_id}` instead, so frames stay small | no |
 | `plan_ready` | `{job_id, plan: {sub_questions, search_queries}}` — the HITL breakpoint. **Not terminal**: the stream stays open through the review and the resumed nodes | no |
 | `turn_ready` | `{job_id, turn}` — the guided-session pause (ADR 0057), `plan_ready`'s counterpart for a `kind="session"` job. **Not terminal**: the stream stays open across the learner's reply. The payload is a pause *signal*; a client reads the turn and the transcript from `GET /learn/sessions/{session_id}`, which is what makes a live turn and a reloaded one render identically | no |
-| `job_completed` | `{job_id, iterations, quality_score, cost_usd, llm_calls, elapsed_sec}` | yes |
-| `job_failed` | `{job_id, error, error_type, elapsed_sec}` | yes |
-| `job_cancelled` | `{job_id, elapsed_sec}`, plus `reason` when a HITL `cancel` caused it | yes |
+| `job_completed` | one twelve-field union — `{job_id, status, elapsed_sec, error, error_type, cost_cap_status, cost_cap_message, iterations, quality_score, cost_usd, llm_calls, reason}` | yes |
+| `job_failed` | the same union | yes |
+| `job_cancelled` | the same union; `reason` is `hitl_cancelled` or `shutdown` where one applies and `null` otherwise | yes |
 | `stream_timeout` | `{job_id, reason, max_duration_sec, reconnect}` — emitted by the *server*, never the runner. The job is still running; reconnect to the same URL | no (closes the connection) |
 
 **The report body never arrives over SSE.** `job_completed` carries
@@ -378,11 +382,17 @@ data: {"cost_usd":0.42,"elapsed_sec":74.0,"iterations":2,"job_id":"baseline-runn
 ```
 
 Reconnecting to an already-terminal job replays one frame and closes,
-which is what makes reconnects idempotent. That replay frame is a
-slightly different shape — it adds `status` and drops `llm_calls` —
-and it is one of the fixtures that *was* observed end to end
-([`web/contract/sse/replay_terminal.jsonl`](../web/contract/sse/replay_terminal.jsonl),
-`authored: false`).
+which is what makes reconnects idempotent. That replay frame is now the
+**same** shape as the live one: WO-A10 and WO-B3 converged every
+terminal payload on `runner.py::terminal_event_data`, precisely because
+a client that read `data.status` off the live frame used to get a
+`KeyError` depending on whether it happened to be connected when the
+job finished. Both fixtures here
+([`web/contract/sse/live_success.jsonl`](../web/contract/sse/live_success.jsonl),
+[`web/contract/sse/replay_terminal.jsonl`](../web/contract/sse/replay_terminal.jsonl))
+were recorded at `e54d1c9`, *before* that convergence, so read them for
+framing, ordering and close behaviour and read
+[`architecture.md`](architecture.md#the-api-layer) for the payload.
 
 ### The HITL pause
 
@@ -538,8 +548,11 @@ which is what keeps SSE and file downloads working.
 
 ### Driving it with no API key at all
 
-The whole stack runs against canned data with a deliberately invalid
-key, which is how the Playwright + axe tier runs in CI. The manual is
+The whole stack runs against canned data under the repository's
+zero-spend sentinel `ANTHROPIC_API_KEY=local-preview-disabled` — which
+`src/llm.py::_get_client` refuses to construct a client under at all,
+rather than constructing one that would fail on a bad credential. This
+is how the Playwright + axe tier runs in CI. The manual is
 [`web/e2e/README.md`](../web/e2e/README.md):
 
 ```bash
@@ -582,22 +595,26 @@ exactly; **the values are illustrative**, for the reason given in
 [Provenance](#provenance-of-everything-on-this-page).
 
 ```json
-{"query_id": "hallucination-mitigation", "elapsed_sec": 42.7, "scoring_sec": 21.3, "error": null, "metrics_error": null, "citation_accuracy": 1.00, "completeness": 0.85, "faithfulness": 0.92, "retrieval_recall": 0.80, "total_citations": 5, "critic_score": 0.82, "iterations": 1, "cost_usd": 0.087, "llm_calls": 8, "judge_cost_usd": 0.031, "judge_llm_calls": 3, "total_cost_usd": 0.118, "loop_iterations": 0, "stop_reason": ""}
+{"record_id": "hallucination-mitigation", "query_id": "hallucination-mitigation", "repeat": 1, "elapsed_sec": 42.7, "scoring_sec": 21.3, "error": null, "metrics_error": null, "citation_resolution_rate": 1.00, "citations_checked": 10, "citation_resolution_reason": null, "citation_accuracy": 1.00, "completeness": 0.85, "faithfulness": 0.92, "retrieval_recall": 0.80, "total_citations": 5, "critic_score": 0.82, "iterations": 1, "cost_usd": 0.087, "llm_calls": 8, "judge_cost_usd": 0.031, "judge_llm_calls": 3, "total_cost_usd": 0.118, "loop_iterations": 0, "stop_reason": "", "paired_outcomes": {"citation:30033b659c1aaa3f": true, "citation:95e6766197cc842e": true, "citation:cf6a29071a4213e6": true, "citation:b1f6a8047c37d10f": true, "citation:d7561e91c9e3c684": true}, "claims_decided": 5, "provenance": {"harness_version": "1.0.0", "judge_model": "claude-sonnet-4-6", "product_model": "claude-sonnet-4-6", "rubric_versions": {"completeness": "1.0.0", "faithfulness": "1.0.0", "groundedness": "1.0.0", "retrieval_recall": "1.0.0"}, "code_commit": "…", "code_dirty": false, "dataset_version": "research-benchmark@20:1d15ae819776", "tier": "research", "seed": 0, "mock_mode": false, "captured_at": "…"}}
 ```
 
 Field-by-field:
 
 | Field | Value | Source |
 |---|---|---|
-| `query_id` | `hallucination-mitigation` | `benchmark_queries.py` |
+| `record_id` / `query_id` | `hallucination-mitigation` | `benchmark_queries.py`; they diverge on `--repeats`, where `record_id` gains an `.rN` suffix and `query_id` keeps naming the query (ADR 0071) |
+| `repeat` | 1 | which repeat of the query this row is |
 | `elapsed_sec` | 42.7 | workflow wall-clock, runner |
 | `scoring_sec` | 21.3 | wall-clock of the metric judges (ADR 0050) |
 | `error` / `metrics_error` | `null` | populated when the workflow / a metric judge failed; a judge failure leaves its metric `null` and keeps the run (ADR 0050) |
-| `citation_accuracy` | 1.00 | regex + citation-list join |
+| `citation_resolution_rate` | 1.00 | **the gated metric** — cited identifiers that resolve against the papers *this run* retrieved, deterministic and judge-free (ADR 0074) |
+| `citations_checked` | 10 | its denominator, always published: one per identifier **per surface** (report body and citation list) |
+| `citation_resolution_reason` | `null` | why the rate is `null` when it is — `no_citations` |
+| `citation_accuracy` | 1.00 | regex + citation-list join. **Diagnostic, not gated** — it scores 1.0 on a report with no citations |
 | `completeness` | 0.85 | batched LLM judge over `expected_topics` (ADR 0006) |
 | `faithfulness` | 0.92 | per-claim LLM judge vs. abstracts (ADR 0007) |
 | `retrieval_recall` | 0.80 | LLM judge over the retrieved paper set (ADR 0013) |
-| `total_citations` | 5 | citation-accuracy denominator, surfaced for the README block's exclusion rule (ADR 0050) |
+| `total_citations` | 5 | citation-**accuracy** denominator, surfaced for the README block's exclusion rule (ADR 0050); `citations_checked` is the one to read |
 | `critic_score` | 0.82 | in-workflow critic average |
 | `iterations` | 1 | critic revisions used (0 = no revision, capped by `max_iterations`) |
 | `cost_usd` | 0.087 | the **workflow's** spend only (ADR 0012; split from judge spend by ADR 0050) |
@@ -606,6 +623,9 @@ Field-by-field:
 | `total_cost_usd` | 0.118 | workflow + judges — what the benchmark query cost to run |
 | `loop_iterations` | `0` | supervisor loop was off; positive under `enable_supervisor` |
 | `stop_reason` | `""` | see above |
+| `paired_outcomes` | `{claim_id: grounded}` | every claim the deterministic check decided, keyed by a content-derived id, so two campaigns can be compared claim by claim under McNemar (WO-C1, ADR 0075) |
+| `claims_decided` | 5 | how many it holds — one per identifier **identity**, where `citations_checked` counts one per surface |
+| `provenance` | nested block | what judged it, what was judged, which rubrics, which commit, which dataset, which tier, the seed, and whether it ran on mock data (ADR 0070). Two rows that disagree here are refused a comparison |
 
 **`loop_iterations` and `stop_reason` are `0` and `""`, not `null`.**
 The runner seeds every `ResearchState` key before invoking the graph
@@ -621,7 +641,7 @@ enable_evidence_store=true`, both populate. The fields that move
 (everything else is as above):
 
 ```json
-{"query_id": "hallucination-mitigation", "elapsed_sec": 58.3, "citation_accuracy": 1.00, "completeness": 0.88, "faithfulness": 0.95, "retrieval_recall": 0.80, "critic_score": 0.85, "iterations": 1, "cost_usd": 0.142, "llm_calls": 14, "loop_iterations": 9, "stop_reason": "quality_reached"}
+{"query_id": "hallucination-mitigation", "elapsed_sec": 58.3, "citation_resolution_rate": 1.00, "citation_accuracy": 1.00, "completeness": 0.88, "faithfulness": 0.95, "retrieval_recall": 0.80, "critic_score": 0.85, "iterations": 1, "cost_usd": 0.142, "llm_calls": 14, "loop_iterations": 9, "stop_reason": "quality_reached"}
 ```
 
 Higher cost (loop tax + verifier call), slightly higher faithfulness
@@ -652,16 +672,25 @@ behind: `eval-run-<run_id>` (the whole directory above),
 this is what the *next* night diffs against), and
 `regression-report-<run_id>` (the markdown diff). The diff itself is
 [`src/eval/regression_diff.py`](../src/eval/regression_diff.py), and
-it gates two metric classes differently:
+it gates metric classes differently:
 
-- **Score metrics** (`citation_accuracy`, `completeness`,
-  `faithfulness`, `retrieval_recall`, `critic_score`) — an absolute
-  drop greater than `--threshold`, default `0.10`.
+- **Score metrics, flat band** (`citation_resolution_rate`, which is
+  also the lane's predeclared primary, and `faithfulness`) — an
+  absolute drop greater than `--threshold`, default `0.10`.
+- **Score metrics, quantised** (`completeness`, `retrieval_recall`) —
+  both are `matched / len(expected_topics)`, so they move in steps of
+  0.25; the band is `1.5 ×` the quantum, **0.375**, so one flipped
+  topic decision passes and two fire.
 - **Resource metrics** (`iterations`, `llm_calls`, `cost_usd`) — a
   rise past **both** an absolute floor and a relative band: `+1` /
   `+50%` for `iterations`, `+4` / `+25%` for `llm_calls`, `+$0.10` /
   `+25%` for `cost_usd`. Both legs must be exceeded, so one extra
   critic revision or a two-cent wiggle cannot fail the nightly.
+- **Diagnostics that never gate** — `citation_accuracy` (it scores 1.0
+  on a report with no citations, so it cannot fail on a fabrication),
+  `critic_score` (produced by the workflow under test) and
+  `claims_decided`. All three are diffed and printed, marked *(not
+  gated)*.
 
 A baseline query missing from the current run is also a regression
 (ADR 0050) unless `--allow-removed` is passed, which the nightly only
@@ -677,28 +706,29 @@ repository. See
 
 ## Reproducing this demo
 
-Four ways in, in ascending order of what they cost you. Only the
-first is free.
+Four ways in, in ascending order of what they cost you. The first two
+are free.
 
 **No key, canned data — the seeded stack.** The whole UI, every job
 state, and no path to a model. This is the tier CI runs; see
 [Driving it with no API key at all](#driving-it-with-no-api-key-at-all)
 above.
 
-Everything below spends real Anthropic credits.
-
-**One report, mock papers — the CLI:**
+**One report, mock papers — the CLI.** Also free, also keyless, and
+also offline since ADR 0080:
 
 ```bash
-# mock papers, no live search; the five mock PDFs are fetched from
-# arxiv.org on a cold .cache/pdfs and served from it afterwards —
+# mock papers, no live search, no PDF fetch and no model call —
 # see "What USE_MOCK_DATA=true does and does not skip" above
 USE_MOCK_DATA=true python -m src.main \
   "What are the latest approaches to reducing hallucination in large language models?"
 ```
 
 The single-query runner prints the report to stdout and saves it under
-`outputs/report_<timestamp>.md`.
+`outputs/report_<timestamp>.md`. Nothing it writes is a quality signal;
+the briefing says so on its own first line.
+
+Everything below spends real Anthropic credits.
 
 **One report, through the API and the workbench:** `docker compose up`
 brings up app + web + Redis + Postgres, binding the API to

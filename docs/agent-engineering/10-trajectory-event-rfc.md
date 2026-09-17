@@ -1,14 +1,18 @@
 # Canonical trajectory-event RFC
 
-Status: **PROPOSED — IMPLEMENTATION NOT AUTHORIZED**
+Status: **IMPLEMENTED BY P0-WO04/WO08 (`src/contracts/trajectory.py`,
+`runtime_bridge.py`, `artifact_store.py`) — NO SPEND AUTHORIZED, NO PRODUCTION
+USER CAPTURE**
 
-Planning date: **2026-09-04**
+Planning date: **2026-09-04**; status amended **2026-09-17**
 
 This RFC specifies the append-only event contract needed to inspect, replay,
-evaluate, and improve agent runs. It is an implementation-ready proposal, not
-authority to change the runtime, collect new user data, run a live model, or
-spend money. Real Anthropic calls, paid evaluations, hosted infrastructure,
-training, and deployment remain separately approval-gated.
+evaluate, and improve agent runs. The schema and the runtime bridge shipped;
+they are still not authority to collect new user data, run a live model, or
+spend money, and production or retained user-content capture remains blocked on
+D8. Real Anthropic calls, paid evaluations, hosted infrastructure, training and
+deployment remain separately approval-gated, and every v1 event is
+`training_eligible: false`.
 
 The contract supports the approved D1–D3 direction:
 
@@ -1279,7 +1283,11 @@ true:
 
 ## 20. Proposed implementation slices
 
-These are planning slices, not authorized work orders.
+These were planning slices rather than authorized work orders. They became
+P0-WO04 (the schema package and in-memory adapter) and P0-WO08 (the runtime
+bridge and the local content-addressed artifact store), both of which have
+landed. §19's criteria were met except for its second: D8 is still open, so
+production and user-content capture stay blocked.
 
 1. **Schema package:** envelope, event registry, artifact refs, canonical JSON,
    validators, golden synthetic fixtures.

@@ -25,9 +25,24 @@ more space. This page is the map of what "here" holds.
 - [`revamp/`](revamp/STATUS.md) — the frontend-revamp campaign
   (Direction A, the "Evidence Workbench"): discovery, design brief +
   tokens, architecture, migration plan, work orders, decision log,
-  risks, and the independent gate reviews.
-  [`revamp/STATUS.md`](revamp/STATUS.md) is the index — read it first;
-  the rest of the directory is only navigable through it.
+  risks, and the independent gate reviews. The campaign closed on
+  2026-08-29 with all 33 work orders merged, so the directory is now a
+  **record** rather than a plan; it is not edited to keep up with the
+  tree. [`revamp/STATUS.md`](revamp/STATUS.md) is the index — read it
+  first; the rest of the directory is only navigable through it.
+- [`agent-engineering/`](agent-engineering/README.md) — the
+  agent-engineering program: the capability and measurement architecture
+  the policy work is built on. Seventeen numbered documents —
+  current/target architecture, evaluation strategy, roadmap, research
+  frontier, the five-arm policy experiment, the four P0 contract RFCs
+  (task spec, run manifest, trajectory event, benchmark registry), the
+  work orders, the governance and threat review, the judge-calibration
+  protocol, the Stage-0 qualification report, the unsigned W12 approval
+  packet, and the W11-F1 retention options memo. The package is
+  **planning plus the contracts that have landed against it**; its
+  README carries the implementation-status table and the operating
+  principles. Nothing in it authorizes spend, and no funded run has
+  happened.
 - [`testing.md`](testing.md) — testing strategy: the flat Python layout
   and its two marker axes (tier and purpose), the web suite's tiers
   (coverage, dependency audit, route budgets, Storybook, Playwright +
@@ -69,9 +84,11 @@ more space. This page is the map of what "here" holds.
   project trains no model), a data-provenance record on the NIST AI 300-1
   field set, and the framework mapping across NIST, OWASP, ISO 42001 and
   the EU AI Act, with a deliberately non-empty out-of-reach column.
-- [`eval.md`](eval.md) — evaluation: the benchmark, the four metrics,
-  the runner's isolation and resume behavior, the campaign run-book,
-  the regression gate, and the nightly workflow.
+- [`eval.md`](eval.md) — evaluation: the benchmark, the five metrics
+  (three of them LLM-judged), the runner's isolation and resume
+  behavior, the campaign run-book, the regression gate, and the nightly
+  workflow — which is disabled, and which has never produced a green
+  campaign.
 - [`demo.md`](demo.md) — a canonical end-to-end example run, across all
   three surfaces: CLI, HTTP API, and the browser workbench.
 
@@ -85,7 +102,12 @@ objective they watch.
 The roadmap and sprint log live in
 [`planning/03-roadmap.md`](../planning/03-roadmap.md) — that file is
 the single source of truth for sprint status; docs link to it rather
-than restating it.
+than restating it. The campaigns that came after the sprints keep their
+own status pages, and those are where current state lives:
+[`planning/08-assurance/STATUS.md`](../planning/08-assurance/STATUS.md)
+for the assurance lane and
+[`planning/09-agent-capability/STATUS.md`](../planning/09-agent-capability/STATUS.md)
+for the agent-capability lane.
 
 ## How to contribute docs
 

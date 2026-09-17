@@ -1,15 +1,16 @@
 # TaskSpec contract RFC
 
-Status: **PROPOSED — IMPLEMENTATION NOT AUTHORIZED**
+Status: **IMPLEMENTED BY P0-WO01 — NO SPEND AUTHORIZED**
 
-Snapshot date: **2026-09-04**
+Snapshot date: **2026-09-04**; status amended **2026-09-17**
 
 Target phase: **P0 / AE-000**
 
 This RFC defines the normalized contract for one research or guided-learning
-task. It is planning, not product code or approval to run a paid experiment.
-Live model calls, paid evaluations, hosted resources, training, and deployment
-still require explicit owner approval before cost is incurred.
+task. It shipped as `src/contracts/task_spec.py`, and it is still not approval
+to run a paid experiment. Live model calls, paid evaluations, hosted resources,
+training, and deployment continue to require explicit owner approval before
+cost is incurred, and none has been given.
 
 ## 1. Decision summary
 
@@ -1127,7 +1128,9 @@ that:
 
 ## 19. Proposed implementation work-order split
 
-No work order below is authorized by this RFC.
+No work order below was authorized by this RFC. All five were subsequently
+folded into P0-WO01 and P0-WO05 and have landed, each with its no-cost test
+slice; nothing in them requested or received funded execution.
 
 1. **TS-WO1 — models and canonicalization:** strict nested models, JSON Schema,
    semantic validators, canonical digest, and golden fixtures.

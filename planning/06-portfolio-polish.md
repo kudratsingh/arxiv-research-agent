@@ -10,25 +10,30 @@
 > Workbench" — is on `main`, along with a Storybook, a Playwright +
 > axe browser tier running against a seeded key-disabled Compose
 > stack, route/bundle budgets, a dependency-audit gate, and a
-> generated-types contract check. `ci.yml` now runs **eight jobs** per
+> generated-types contract check. `ci.yml` now runs **nine jobs** per
 > PR: ruff, mypy (strict), pytest, docker build, web image smoke, the
-> web tier (typecheck / ESLint / audit gate / contract drift / vitest
-> with coverage floors / build + route budgets), the Storybook static
-> build with story tests, and the E2E + axe job. Campaign state,
-> gates and decision log: [`docs/revamp/STATUS.md`](../docs/revamp/STATUS.md).
+> web tier (typecheck / ESLint / contract drift / vitest with coverage
+> floors / build + route budgets), the web dependency audit as its own
+> bounded job, the Storybook static build with story tests, and the
+> E2E + axe job. Campaign state, gates and decision log:
+> [`docs/revamp/STATUS.md`](../docs/revamp/STATUS.md).
 >
-> In flight, not on `main`: the README overhaul (screenshots, badges,
-> repo metadata) on a sibling branch — item 1's successor, and the
+> Landed since: the README overhaul — item 1's successor, and the
 > thing that finally gives the 90-second experience below its visuals.
+> `README.md` carries the CI / Python / Node / Next badges and five
+> checked-in Evidence Workbench screenshots, bound to a spec by
+> `tests/test_documented_claims.py::TestTheScreenshotMechanism`.
+> Uploading the social preview to GitHub stays the owner's.
 >
 > Still outstanding: **item 3, the eval-results table.** It is not
 > blocked on code. `src/eval/readme_update.py`, the nightly workflow
-> and the PR-opening step all exist and are unit-tested; every one of
-> the workflow's 54 runs to date has failed at the missing
-> `ANTHROPIC_API_KEY` secret, so no campaign has ever produced a
-> `summary.jsonl` to publish. Unblocking it means funding a paid
-> 20-query campaign — **a decision reserved for the repository
-> owner**, not something an implementer can take. Detail and
+> and the PR-opening step all exist and are unit-tested; all 54 of the
+> workflow's runs between 2026-07-07 and 2026-08-29 failed at the
+> missing `ANTHROPIC_API_KEY` secret, and `nightly-eval` is now
+> **disabled at the repository** (`disabled_manually`), so no campaign
+> has ever produced a `summary.jsonl` to publish. Unblocking it means
+> funding a paid 20-query campaign — **a decision reserved for the
+> repository owner**, not something an implementer can take. Detail and
 > consequences: [`docs/eval.md`](../docs/eval.md).
 >
 > Kept as written below for the record; the sketches in items 5 and 6

@@ -99,7 +99,16 @@ record an episode, but it cannot use that episode to change its own policy.
 
 ## 3. Core contracts
 
-These are conceptual schemas. Field names should be finalized in an ADR before
+These were conceptual schemas when this page was written, with field names to
+be finalized before implementation. **Five of them have since been specified
+and built** and this section is no longer where their field names live:
+`TaskSpec` in [`08-task-spec-rfc.md`](08-task-spec-rfc.md), `RunManifest` in
+[`09-run-manifest-rfc.md`](09-run-manifest-rfc.md), and `TrajectoryEvent`,
+`ArtifactRef` and `VerificationResult` in
+[`10-trajectory-event-rfc.md`](10-trajectory-event-rfc.md), all under
+`src/contracts/`. Read the sketches below as the intent the RFCs were written
+against; where a sketch and an RFC differ, the RFC is the contract.
+`EvidenceNode`/`EvidenceEdge` and `FeedbackEvent` remain proposals with no
 implementation.
 
 ### `TaskSpec`
@@ -204,6 +213,16 @@ Admission can initially use deterministic features: requested deliverable,
 number of entities/sub-questions, freshness need, source diversity, conflict
 signals, retrieval yield, verifier uncertainty, and remaining budget. A learned
 router should come only after these decisions and outcomes exist as data.
+
+**Built since, T0–T2 only.** `compute_controller=deterministic` (ADR 0085)
+routes a job across T0/T1/T2 on deterministic features, the branch tier is the
+orchestrator-workers graph (ADR 0086), and listwise selection with a
+marginal-stop record is ADR 0091 — which is §5 Layer 2's "prefer listwise
+comparison" and this section's last compute action, both implemented. **T3 is
+not expressible**: the trajectory contract refuses a `compute.tier_selected`
+event naming it, and nothing routes it. All of it is flag-gated, off by
+default, and has never been run against a live model, so none of §4's required
+measurements has been taken.
 
 ### Compute actions
 

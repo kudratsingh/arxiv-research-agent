@@ -67,14 +67,20 @@ Three things follow, and the second is the one that bites.
    which would authenticate as `**********` (a key), salt the whole
    fleet with `**********` (the salt), or send `**********` to
    Semantic Scholar, which answers 403 and leaves enrichment silently
-   empty. There are exactly four unwrap sites in `src/`, one per
-   field: `src/llm.py`'s `_get_client`,
+   empty. There are six unwrap sites in `src/`. Four are the
+   point-of-use ones, one per field: `src/llm.py`'s `_get_client`,
    `src/observability/context.py`'s `_resolve_salt`,
    `src/api/auth.py`'s `parse_api_keys` and
    `src/tools/semantic_scholar.py`'s `_headers`. `parse_api_keys`
    takes a `SecretStr` parameter rather than a `str` so mypy keeps it
    that way — unwrapping at its call site in `create_app` would put
-   every inbound secret in a startup frame.
+   every inbound secret in a startup frame. The other two unwrap only
+   to *compare against the zero-spend sentinel* and never send the
+   value anywhere: `src/campaign/approval.py`'s credential probe, which
+   refuses to let a key that cannot pay look like an authorized
+   campaign, and `src/eval/mock_judge.py`'s `build_mock_judge_scorer`,
+   which refuses to construct itself unless the sentinel is what is
+   configured.
 
 A blank value means *unset* for all four — `ANTHROPIC_API_KEY=`, or a
 whitespace-only value, takes the "not configured" branch rather than
@@ -149,9 +155,9 @@ because it is the kind of thing somebody re-proposes every few months:
 > never enforced.
 
 The size of "this late" is measurable, so here it is. `ruff format
---check .` on ruff 0.15.21 wants to reformat **277 of the 327 tracked
-Python files** — 85% of them — and `ruff format --diff` is **8,208
-lines removed against 4,026 added**. The net is not a tidy-up; it is
+--check .` on ruff 0.15.21 wants to reformat **283 of the 333 tracked
+Python files** — 85% of them — and `ruff format --diff` is **8,199
+lines removed against 3,877 added**. The net is not a tidy-up; it is
 the formatter collapsing hand-wrapped expressions back onto single
 lines wherever they fit inside `line-length = 100`. Those wraps are
 where the reasoning lives in this codebase: the argument lists,
@@ -175,7 +181,7 @@ a reformat of files your change did not otherwise touch.
 One consequence to be honest about: `E501` sits in the ignore list
 under a comment that used to say line length was "handled by
 formatter". It is not handled by anything. Line length is a convention
-held by review: `ruff check --select E501 .` reports 271 findings
+held by review: `ruff check --select E501 .` reports 273 findings
 today, most of them long strings in prompts and tests. That is the
 price of the ruling, not an oversight in it — turning `E501` on would
 be the megadiff by another route.
@@ -332,6 +338,15 @@ service:
 
 ### What you get
 
+The ten below are the ones an operator reaches for first. They are
+**not** the whole set: `src/` declares **twenty-four** instruments, and
+the fourteen this table leaves out are a queue-wait histogram, two
+further gauges (queue depth and queue saturation), the seven
+conventional `gen_ai.*` instruments, the two HTTP server RED
+instruments and the contract event bridge's two. The full enumeration
+lives in [`architecture.md`](architecture.md#cross-cutting-concerns)
+and is re-derived from the source by `tests/test_operability_docs.py`.
+
 | Instrument | Kind | Attributes | Answers |
 |---|---|---|---|
 | `research_jobs_total` | counter | `status`, `error_type` | "how many jobs are failing right now, and why" |
@@ -345,13 +360,13 @@ service:
 | `rate_limit_rejections_total` | counter | `backend` | 429s, by limiter backend |
 | `research_degradations_total` | counter | `rung`, `component` | "how much of the traffic is being served degraded, and down which rung" — the quality SLI's instrument (ADR 0081) |
 
-Both gauges are **per worker** — they report the process that emits
+Every gauge is **per worker** — they report the process that emits
 them, so aggregate across workers by summing on the resource's
 instance attribute. `research_active_jobs` is deliberately the same
 figure `/healthz` reports (in-flight jobs *plus* abandoned node
 threads), read from the same accounting rather than a second counter.
 
-Note the two gauges reset when a worker restarts and the counters are
+Note the gauges reset when a worker restarts and the counters are
 monotonic within a process lifetime — query them as rates, and expect
 a counter reset on every deploy.
 
@@ -503,14 +518,24 @@ the job no longer represents the production runtime.
 
 ## Dependency licensing
 
-PyMuPDF (`fitz`, the PDF extractor behind `src/tools/pdf_parser.py`)
-is **AGPL-3.0 dual-licensed** (AGPL or a commercial Artifex license).
-AGPL §13 attaches a source-offer obligation to *network* use, which
-is exactly how this service runs. The repo currently declares no
-license of its own — adopting one (and deciding whether to keep
-PyMuPDF, buy the commercial license, or swap to a permissive
-extractor such as `pypdfium2`) is an explicit open decision recorded
-in ADR 0045. Do not add copyleft dependencies without an ADR.
+**The repository's own licensing is settled, and the answer is "no
+licence."** Owner ruling, 2026-09-17: no `LICENSE` file is adopted, no
+grant is offered, and all rights are reserved. ADR 0045 recorded this as
+an open decision; it is open no longer, and the top-level
+[`README.md`](../README.md#rights) carries the rights line. Nothing here
+may be used, copied, modified or distributed.
+
+**That does not dispose of the PyMuPDF question, and the two must not be
+confused.** PyMuPDF (`fitz`, the PDF extractor behind
+`src/tools/pdf_parser.py`) is **AGPL-3.0 dual-licensed** (AGPL or a
+commercial Artifex license), and AGPL §13 attaches a source-offer
+obligation to *network* use — which is exactly how this service runs.
+That obligation runs from the operator to whoever the deployment serves,
+so it is unaffected by this repository declining to license itself: a
+deployment that reaches users has to keep PyMuPDF and honour §13, buy
+the commercial license, or swap to a permissive extractor such as
+`pypdfium2`. That choice is still open and still belongs in an ADR.
+Do not add copyleft dependencies without one.
 
 ## The moved-repo venv trap
 
@@ -551,7 +576,7 @@ for the branch-naming and PR conventions. Short version:
   signal, and the briefing says so on its first line.
 - **`make test` finds only part of the suite** — `make test-unit`
   filters with `-m unit`, which since WO-A02 selects a real tier
-  (2,826 of 3,277 tests) rather than an arbitrary subset, but a tier is
+  (4,765 of 5,380 tests) rather than an arbitrary subset, but a tier is
   still not the suite. CI's gate is `make test-cov` (which selects
   `-m "not e2e"`) followed by `make test-e2e`. `make test-all` runs
   every tier in one pass, without the coverage floors.

@@ -65,7 +65,7 @@ never runs. There are two axes and they answer different questions
   driven through httpx, canned XML for arXiv, a checked-in sample PDF
   for PyMuPDF. Still no live network.
 - `e2e` — a whole workflow end to end at zero spend, asserted on the
-  trajectory it took. 16 tests, in `tests/e2e/` (see "The e2e tier"
+  trajectory it took. 53 tests, in `tests/e2e/` (see "The e2e tier"
   below). Excluded from the merge gate's first selection, so a change
   here does not move what CI measures coverage over; it runs as its own
   step in the same job (WO-A13).
@@ -87,21 +87,29 @@ The purpose axis is what makes a boundary runnable on its own. Before
 it existed, "run the tenancy and injection tests" had no expression;
 now it is `make test-security`.
 
-**State of the suite** (measured on `c3d63da` with WO-B2 applied,
-`pytest --collect-only`): **3,456 tests collected** from **2,977 `def
-test_` functions** across **139 modules** — the gap is parametrization.
-By tier: 3,005 `unit` + 435 `integration` + 16 `e2e` = 3,456, which is
-the whole suite, because the tier axis is a partition and a test module
-with no tier fails `tests/test_harness_guards.py`. By purpose: 314
-`security`, 166 `fault`, 152 `property`, 117 `contract`, 1 `network`.
+**State of the suite** (measured on `a3b112f` with
+`pytest --collect-only -q`): **5,380 tests collected** from **4,570
+`def test_` functions** across **187 modules** — the gap is
+parametrization. By tier: 4,765 `unit` + 563 `integration` + 53 `e2e`
+= 5,381, one *more* than the suite, because the tier axis is only
+almost a partition. A test module with no tier fails
+`tests/test_harness_guards.py`, but exactly one test is selected by
+two tiers: `tests/test_contract_shadow_bridge.py` declares
+`pytestmark = pytest.mark.unit` at module level and marks
+`TestTheCachedGraphShape` `integration` on the class, and a class
+marker *adds* rather than replaces. It does not reach the merge gate,
+which selects `-m "not e2e"` — 5,327 tests. By purpose: 409
+`security`, 206 `fault`, 240 `property`, 424 `contract`, 1 `network`.
 
 The four purpose counts have a **band** around them since WO-B2, in
 `tests/test_harness_guards.py`. Nothing else notices a tier going
 empty: purpose markers gate a merge only by sitting inside the `-m
 "not e2e"` selection, so a renamed marker or a deleted `pytestmark`
 takes the tier out of CI without taking a single test red. The bands
-are stated over test *functions* rather than collected items — 40
-`property` functions expand to the 152 collected above — with the
+are stated over test *functions* rather than collected items —
+`property`'s band is centred on the 40 functions the census counted
+when it was written, which `parametrize` and Hypothesis expand into
+the 240 items collected above — with the
 **floor** at 80% of the measured population, set so that dropping the
 tier's largest single module lands below it, and the **ceiling** at
 twice it. The ceiling is there because a floor only ever looks down: a
@@ -140,11 +148,12 @@ jobs on every PR and every push to `main`:
 3. `tests` — **every Python tier, under coverage**. Five gates in one
    job, and the reasoning for that shape is written out in the workflow:
    - `make test-cov` — the unit and integration tiers, which is
-     everything but the 16 `e2e` tests. The runner reports **3,259
-     passed and 2 skipped** where a laptop reports 3,206 and 55:
-     Postgres is on PATH in this job, so the integration tests that
-     skip locally actually run. With the **project floor and the four
-     per-package floors** enforced — through the Makefile target, not a
+     everything but the 53 `e2e` tests. A laptop reports **5,273
+     passed and 54 skipped** of the 5,327 selected; the runner passes
+     more and skips fewer, because Postgres is on PATH in this job and
+     the integration tests that skip locally actually run there. With
+     the **project floor and the four per-package floors**
+     enforced — through the Makefile target, not a
      pytest line copied into the workflow, so the floors have one
      definition (`pyproject.toml` for the project number, `COV_API` /
      `COV_AGENTS` / `COV_SECURITY` / `COV_EVAL` for the packages).
@@ -156,7 +165,7 @@ jobs on every PR and every push to `main`:
    - **patch coverage** — `diff-cover` against `origin/main` at the
      `COV_DIFF` floor, reading the XML the step above wrote rather than
      running the suite a second time
-   - **the `e2e` tier** — `make test-e2e`, 16 tests in ~5 s, in mock
+   - **the `e2e` tier** — `make test-e2e`, 53 tests in ~30 s, in mock
      mode at zero spend. Wired in by WO-A13; before that the `-m "not
      e2e"` filter excluded it from CI entirely
    - **the adversarial safety suite** (ADR 0072) — the 42-case corpus
@@ -195,18 +204,24 @@ and npm fetch bounds (`NPM_CONFIG_FETCH_TIMEOUT` and friends), because
 a job-level ceiling bounds the *job*, not a step that hangs — npm's
 default is a five-minute timeout **per request** with two retries.
 
-Nothing else gates a merge. Three schedules run beside it, none of them
-blocking a PR:
+Nothing else gates a merge. Three schedules are *declared* beside it,
+none of them blocking a PR — and only the first of the three actually
+runs, because `gh workflow list --all` reports the other two as
+`disabled_manually`:
 
-- `ci.yml` itself on a 03:20 UTC schedule, where the only behavioural
-  difference is that `web-e2e` runs the **full browser matrix** instead
-  of chromium alone.
+- `ci.yml` itself on a 03:20 UTC schedule (**active**), where the only
+  behavioural difference is that `web-e2e` runs the **full browser
+  matrix** instead of chromium alone.
 - `.github/workflows/nightly.yml` — Lighthouse CI against the seeded
-  stack (WO-29); see tier 8 below.
+  stack (WO-29); see tier 8 below. **Disabled at the repository**, so
+  the cron does not fire.
 - `.github/workflows/eval-nightly.yml` (ADR
   [0010](decisions/0010-nightly-eval-ci.md)) — the LLM-judged benchmark
-  diffed against the stored baseline. **This is the only workflow in
-  the repo that spends Anthropic credits.** No web tier ever makes a
+  diffed against the stored baseline. **Disabled at the repository**
+  too, and it has never completed a campaign; see
+  [`eval.md`](eval.md#status-disabled-and-no-green-campaign-yet). It is
+  nonetheless **the only workflow in the repo that would spend
+  Anthropic credits** if it were enabled. No web tier ever makes a
   paid model call, structurally; see "The cost boundary" below.
 
 Local equivalent of the Python half of the gate — the same commands CI
@@ -231,13 +246,13 @@ again; branch, floor and verdict are identical, so a green
 `make test-cov-diff` here means a green step there.
 
 **`make test` is still not the merge gate.** It expands to
-`pytest -m unit`, which selects a real tier (2,826 of 3,277 tests)
+`pytest -m unit`, which selects a real tier (4,765 of 5,380 tests)
 rather than an arbitrary subset — but it is a tier, not the suite. The
 merge gate is `-m "not e2e"` **plus the e2e tier as its own step**,
 which is every test in the repository. ADR 0024's follow-up ("add a
 merge-to-main variant that runs `pytest -m 'unit or integration'`") is
-closed by that: `-m "unit or integration"` selects the same 3,261 tests
-`-m "not e2e"` does, and the 16 the filter drops are now run beside it.
+closed by that: `-m "unit or integration"` selects the same 5,327 tests
+`-m "not e2e"` does, and the 53 the filter drops are now run beside it.
 
 ## The web suite
 
@@ -316,8 +331,11 @@ LHCI_BASE_URL="$(bash ./e2e/support/stack.sh url)" npm run lhci
 npm run e2e:stack:down
 ```
 
-Nightly rather than per-PR because it needs the full Compose stack, so
-a regression is caught within a day rather than at the gate. Reports,
+Nightly rather than per-PR because it needs the full Compose stack.
+**In practice nothing catches it automatically at all:
+`nightly-lighthouse` is `disabled_manually` at the repository**, so the
+cron does not fire and the local command above is the only way these
+assertions run today. Reports,
 resolved configs and assertion results land in `web/build/lhci/`, and
 `summary.md` is written *before* the script exits non-zero, so a red
 run publishes its own numbers.
@@ -438,8 +456,11 @@ prose.
 
 **The cost boundary is structural.** No web tier ever makes a paid model
 call, and four independent mechanisms enforce it rather than one
-convention: the Compose overlay pins `ANTHROPIC_API_KEY` to the invalid
-sentinel `local-preview-disabled`, `playwright.config.ts` overwrites the
+convention: the Compose overlay pins `ANTHROPIC_API_KEY` to the
+zero-spend sentinel `local-preview-disabled` — which
+`src/llm.py::_get_client` now refuses to construct a client under at
+all, rather than constructing one that would fail on a bad credential
+— `playwright.config.ts` overwrites the
 variable in the runner process before any test loads (with
 `global-setup.ts` refusing to start if it is anything else),
 `e2e/support/paid-path.ts` fulfils every paid write in the browser —
@@ -523,12 +544,12 @@ cannot forget them, and opting out leaves a marker in the diff.
 |---|---|---|
 | Env isolation | The developer's `.env` is not read, and every environment variable `Settings` declares is scrubbed before `src.config` is first imported. The suite then declares its own: `ANTHROPIC_API_KEY=local-preview-disabled`. `Settings(_env_file=...)` still works when a test asks for a file explicitly. | none |
 | Network guard | A `connect`/`connect_ex` to any non-loopback address raises `NetworkAccessDenied`, naming the test. Loopback and unix sockets pass, so `pytest-postgresql` and every ASGI transport are unaffected. DNS is untouched — `tests/test_pdf_parser.py` patches `getaddrinfo` for the SSRF checks. | `@pytest.mark.network` |
-| Spend guard | `src.llm._get_client` raises `LLMSpendDenied` unless a fake is installed — either by patching `_get_client` itself (twenty existing call sites) or by patching `src.llm.anthropic.Anthropic` (what `tests/test_llm.py::TestGetClient` does, since it tests the construction logic). The denial fires on exactly one condition: a real client about to be built with a real key. | install a fake |
+| Spend guard | `src.llm._get_client` raises `LLMSpendDenied` unless a fake is installed — either by patching `_get_client` itself (about forty existing call sites) or by patching `src.llm.anthropic.Anthropic` (what `tests/test_llm.py::TestGetClient` does, since it tests the construction logic). The denial fires on exactly one condition: a real client about to be built with a real key — and since PR #247 the production function refuses to build one under the `local-preview-disabled` sentinel too, so the guard is belt to that braces. | install a fake |
 | Determinism | `random` reseeded before *every* test, so a failure reproduces from its node id without a recorded ordering. `numpy`'s global RNG too when it is loaded. A `frozen_clock` fixture is available (not autouse) for the modules that hand-patch time. | `frozen_clock` is opt-in |
 
 Both guard exceptions derive from `BaseException`, not `Exception`.
 That is deliberate: this codebase degrades gracefully on purpose, and
-around fifty `except Exception` sites implement that. A guard those
+about seventy-five `except Exception` sites implement that. A guard those
 handlers can swallow reports a green test for a run that reached the
 internet.
 
@@ -694,10 +715,10 @@ first selection rather than beside it, so these targets are for running
 one of them alone, not for making it gate:
 
 ```bash
-make test-security   # 314 tests: tenancy, injection, SSRF, auth, redaction
-make test-fault      # 160 tests: behaviour when a dependency fails
-make test-property   # 152 tests: Hypothesis invariants
-make test-e2e        #  16 tests: whole workflows, ~5s, $0.0000
+make test-security   # 409 tests: tenancy, injection, SSRF, auth, redaction
+make test-fault      # 206 tests: behaviour when a dependency fails
+make test-property   # 240 tests: Hypothesis invariants
+make test-e2e        #  53 tests: whole workflows, ~30s, $0.0000
 ```
 
 Path-based selection (running only the test modules that mirror a PR's
@@ -760,8 +781,8 @@ happy path, canned LLM output, no recorded real responses.
 
 ## The property tier
 
-`tests/property/`, selected by `pytest -m property`, run with Hypothesis. 36
-properties expand to 126 cases in roughly 15 seconds. Where the rest of the
+`tests/property/`, selected by `pytest -m property`, run with Hypothesis. 59
+properties expand to 240 cases in roughly 37 seconds. Where the rest of the
 suite asserts that a specific input produces a specific output, these assert
 that **something is true of every input** — no chunk exceeds its budget,
 header-free text survives chunking byte-for-byte, a generated secret never
@@ -785,7 +806,9 @@ which is the outcome worth knowing about before review rather than after.
 
 ## The fault tier
 
-`tests/fault/`, selected by `pytest -m fault`, ~150 cases in about 10 seconds.
+`tests/fault/`, selected by `pytest -m fault`, 206 cases in about 15 seconds —
+96 of them inside the directory, the rest beside the modules they exercise,
+which is the marker-not-path rule working.
 Unit tests exercise the happy path, so error-handling code is the least-tested
 code in most systems by construction. This tier asserts what happens when a
 dependency fails: Redis gone at submit and mid-job, the Postgres pool
@@ -807,7 +830,7 @@ fixes it the assertion fails and tells them.
 
 ## The e2e tier
 
-`tests/e2e/`, marked `e2e`, **16 tests in ~5s**. Run it with `make
+`tests/e2e/`, marked `e2e`, **53 tests in ~30s**. Run it with `make
 test-e2e`. It drives whole workflows from a caller's first call to
 their last, and asserts on the **trajectory** each one took rather than
 on the prose it produced (WO-A15; design in
@@ -935,13 +958,30 @@ job row and on the terminal SSE frame, and the exported markdown's
   the graph — the revised plan is read back out of the checkpointer
   after the run, and a cancel is asserted to have stopped *at* the
   planner rather than after searching and reading.
+- `test_verify_repair.py` — arm C's five trajectories (ADR 0076): that
+  a failed verdict actually reaches the repair, that the repaired
+  output is verified again before the critic, and that the one-repair
+  cap survives a verifier which fails twice.
+- `test_orchestrated_workers.py` — the branch tier's six sequences (ADR
+  0086), read off `app.stream` node by node the same way.
+- `test_compute_controller.py` — two compute tiers in one process off a
+  single `build_workflow` (ADR 0085): a run the controller escalated
+  really does verify and repair, and one it did not really skips the
+  stage, with nothing but the query different between them.
+- `test_contract_shadow_research.py` — that the shadow is invisible with
+  the switch off (no contract module in the runners' import graph) and
+  that with it on the recorded trajectory is the run that happened.
+- `test_mock_mode_keyless.py` — the product's *own* mock path with no
+  canned agent surface at all: a briefing with no credential, proved
+  with two assertions rather than one (`zero_spend_ledger` that nothing
+  was billed, `no_client_constructed` that nothing was even built).
 
 ### Where it runs, and what it still does not cover
 
 **This tier gates a merge.** WO-A15 built it, WO-A13 wired it in: the
 coverage step still selects `-m "not e2e"`, and `make test-e2e` runs
 immediately after it as its own step in the same `tests` job. It got a
-step rather than a job because 16 tests in 5 seconds do not justify a
+step rather than a job because half a minute of tests does not justify a
 runner spin-up and a second install of the ML stack, and it stays
 outside the coverage selection because the floors were measured against
 `-m "not e2e"` — running the tier must not lift the project number and

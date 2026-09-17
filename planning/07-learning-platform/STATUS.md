@@ -1,6 +1,6 @@
 # Learning platform campaign — status
 
-Updated: 2026-09-04
+Updated: 2026-09-04; amended 2026-09-17 (PR #162 has since merged)
 
 ## The campaign
 
@@ -196,6 +196,11 @@ rather than wait on a data source that was returning nothing. So what closes
 `known-gaps.md` §18 is the **owner's ruling of 2026-09-04**, which is what that
 entry always said would close it; #162 records the ruling in the source, and
 the merge only publishes it.
+
+*Amended 2026-09-17: #162 has since merged, as `70a1eeb` on 2026-09-05, once
+the npm advisory endpoint recovered and `web dependency audit` went green.
+What closed §18 is still the ruling and not the merge, exactly as written
+above.*
 
 - **#163 takes the audit out of the `web` job.** The audit gate is a **network
   call to npm's advisory endpoint** and it ran as a step inside `web` with no
@@ -503,6 +508,13 @@ W-OD-4 (Rung 1 publication), W-OD-5 (pilots — which must approve concrete
 SR-09 values per erratum (e)) and W-OD-6 (threshold ratification, before any
 pilot starts) all remain open. W-OD-4/5/6 together gate WO-W20.
 
+*Amended 2026-09-17: **W-OD-3 is decided** — no licence, all rights reserved.
+No `LICENSE` file is adopted and no grant is offered; the repository is
+published to be read, not reused (`README.md` §Rights), and nothing under
+`content/` is offered for reuse either. The five other W-OD items above are
+unchanged. PyMuPDF's AGPL §13 obligation is a separate question and survives
+the ruling — see `docs/development.md` §Dependency licensing.*
+
 **Deferred by the owner, 2026-09-04:** the W-OD ledger decisions above and
 **WO-W20** are put to a later date, so nothing in this list is waiting on the
 coordinator.
@@ -526,8 +538,8 @@ recorded, with their outcomes; the numbering does not move.**
 2. **A typography ruling on the landing card's fonts** (`known-gaps.md` §18). —
    **ANSWERED: option A, the third of the three below** — the bytes stand and
    the false premise in `web/app/fonts/fonts.ts` is corrected; restyling the
-   card was declined. Recorded in the source by #162, open at the time of
-   writing. *As recorded:*
+   card was declined. Recorded in the source by #162, merged 2026-09-05 as
+   `70a1eeb`. *As recorded:*
    `LearnLandingEntry` puts Literata and IBM Plex Mono on `/`, where the gate-4
    pack measured one face: `total-byte-weight` **205,331 → 262,231 B**. It costs
    no assertion today and no ceiling moved. #159 declined to fix it because the

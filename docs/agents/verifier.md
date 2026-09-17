@@ -13,10 +13,10 @@ Two entry points reach that one judge (ADR
 | Entry point | Reachable when | Writes |
 |---|---|---|
 | `verifier_agent` | the supervisor picks `verify`, with `enable_verifier` on | the four fields under [Outputs](#outputs) |
-| `verify_node` | `research_policy="fixed_verify_repair"` | those four, plus a first-class verdict and the two repair keys |
+| `verify_node` | `research_policy="fixed_verify_repair"`, and `"orchestrated_workers"`, which compiles the same node after its merge (ADR 0086) | those four, plus a first-class verdict and the two repair keys |
 
-Same prompt, same call, same cost. What the fixed policy's node adds is
-the **verdict** — `pass` / `fail` / `abstain` — which its graph routes on
+Same prompt, same call, same cost. What the node adds is the
+**verdict** — `pass` / `fail` / `abstain` — which its graph routes on
 and its [repair policy](repair.md) decides from.
 
 Under the legacy fixed pipeline neither is wired in. That is what
@@ -254,11 +254,12 @@ Settings that drive the verifier (see `src/config.py`):
   a fifth abstain code, extending the four ADR 0076 published — because
   `pass` would tell `src/policies/repair.py` a faithfulness check
   succeeded when none ran.
-- `research_policy: Literal["legacy", "fixed_verify_repair"] =
-  "legacy"` — selects the fixed verify-and-repair graph, whose `verify`
-  node is the other entry point (ADR 0076). It requires
-  `enable_verifier=false`: that flag names the *supervisor's* verify
-  action, and the two together would put two verifiers in one
+- `research_policy: Literal["legacy", "fixed_verify_repair",
+  "orchestrated_workers"] = "legacy"` — either non-legacy value selects
+  a graph whose `verify` node is the other entry point (ADR 0076 for the
+  fixed shape, ADR 0086 for the branch shape that reuses its tail). Both
+  require `enable_verifier=false`: that flag names the *supervisor's*
+  verify action, and the two together would put two verifiers in one
   configuration with nothing to say which a result came from, so the
   combination is refused at settings load.
 - `enable_verifier: bool = False` — master flag for the supervisor's
