@@ -445,7 +445,51 @@ owner's call:
 
 The checked-in plan artifact stays `snapshot` on purpose: it is the
 design §1 describes, published so that this disagreement is visible in a
-diff rather than discovered by an approved run.
+diff rather than discovered by an approved run. §8.4 publishes the other
+one beside it.
+
+---
+
+### 8.4 The two variants, side by side — REQUIRES OWNER DECISION
+
+§8.3 established that the baseline §1 describes and the baseline §1
+*wants* are not the same campaign. Rather than rewrite §1 on the owner's
+behalf, both designs are now published, produced by the same
+`dry-run --artifact` path from the same registry and differing in
+exactly one argument. Neither is approved, both are sealed at zero caps,
+and planning either one costs nothing and contacts nobody.
+
+| | `snapshot` variant | `live` variant |
+|---|---|---|
+| File | [`campaigns/w12-arm-a-baseline.plan.json`](../../campaigns/w12-arm-a-baseline.plan.json) | [`campaigns/w12-arm-a-baseline-live.plan.json`](../../campaigns/w12-arm-a-baseline-live.plan.json) |
+| Command | `--corpus-mode snapshot` | `--corpus-mode live` |
+| Campaign id | `camp_8c810c0a9a334487b37330d20a6c67d5` | `camp_d53219123389b6b6f2de22c44d0926a5` |
+| Protocol digest | `sha256:9a7e1805…bd5e5b71` | `sha256:f5b3e627…bebeb063b` |
+| Registry lock digest | `sha256:d45d39fd…c7d20a18` | `sha256:77ceba17…4b2a70bd` |
+| Design matrix | 20 cases × 3 repeats × arm A = 60 | identical, slot for slot |
+| What it would measure | nothing: `snapshot` resolves to `USE_MOCK_DATA=true`, ADR 0080 serves all five agents from `src/agents/mock_mode.py`, no client is constructed | a real arm-A baseline on `supported_claim_precision`, with arXiv's own variability inside the variance |
+| What it would cost, funded | `$0.000000` | §3's estimate, once §2's ids are re-priced |
+| §5 `source-drift` | satisfied trivially — the rule stops a run whose corpus is *not* `snapshot` | **reads backwards**: the rule as written would stop this campaign at its first episode |
+| `chargeable` / `approval_id` / `network_calls` | `false` / `null` / `0` | `false` / `null` / `0` |
+
+The three digests move together because all three take the corpus mode
+as input; the design, the case ids in the task set's own order and the
+arm declaration digest do not move at all, which is what makes the two
+files a choice between variants rather than two different experiments.
+`tests/test_campaign_plan_artifact.py` holds both to byte equality
+against the registry and asserts that exactly those fields differ.
+
+One consequence is visible in the live file itself: its `describes`
+field does **not** carry the packet preface the snapshot file carries,
+because `is_w12_baseline` pins `corpus_mode=snapshot`. That is left as
+it is rather than smoothed over. The live plan is not the scope §1
+states, and a reader who opens the JSON alone should not be told it is.
+
+Funding the live variant means restating §1's corpus row and §5's
+`source-drift` rule. Funding the snapshot variant means accepting that
+the run measures nothing a mock matrix has not already measured. There
+is no third artifact here because this repository has no third option
+today — **the owner chooses; nothing here is approved.**
 
 ---
 

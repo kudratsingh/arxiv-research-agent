@@ -33,6 +33,8 @@ from src.campaign.baseline import (
     VOLATILE_FIELDS,
     W12_BASELINE_ARMS,
     W12_BASELINE_ARTIFACT_PATH,
+    W12_BASELINE_LIVE_ARTIFACT_PATH,
+    W12_BASELINE_LIVE_CORPUS_MODE,
     W12_BASELINE_REPEATS,
     CampaignPlanArtifact,
     arm_declaration_digest,
@@ -52,6 +54,7 @@ from src.contracts.registry import LocalRegistry
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 REGISTRY_ROOT = REPO_ROOT / "eval_registry"
 ARTIFACT = REPO_ROOT / W12_BASELINE_ARTIFACT_PATH
+LIVE_ARTIFACT = REPO_ROOT / W12_BASELINE_LIVE_ARTIFACT_PATH
 
 #: 16 §1's own arithmetic, spelled out rather than read off the artifact.
 EXPECTED_CASES = 20
@@ -489,3 +492,99 @@ class TestTheRecordedRegistryRoot:
         self, stored: dict[str, Any]
     ) -> None:
         assert stored["derived_from"] == "eval_registry"
+
+
+@pytest.mark.integration
+@pytest.mark.contract
+class TestTheLiveVariantIsPublishedBesideIt:
+    """Two plans, one decision, and neither of them approved (W20b).
+
+    W20 found that 16 §1's planned `corpus_mode=snapshot` resolves to
+    `USE_MOCK_DATA=true`: the funded run the packet describes would
+    charge nothing and measure nothing, while §5's source-drift clause
+    is about a corpus only the `live` variant plans. The remedy is not
+    to rewrite §1 — the owner has not chosen — so the live design is
+    published beside the snapshot one and held to the same byte
+    equality, and the packet presents them side by side.
+    """
+
+    @pytest.fixture(scope="class")
+    @classmethod
+    def live(cls) -> CampaignPlanArtifact:
+        return build_w12_baseline_artifact(
+            _config(),
+            registry_root=REGISTRY_ROOT,
+            output=W12_BASELINE_LIVE_ARTIFACT_PATH,
+            corpus_mode=W12_BASELINE_LIVE_CORPUS_MODE,
+        )
+
+    def test_the_live_file_is_the_bytes_the_builder_produces(
+        self, live: CampaignPlanArtifact
+    ) -> None:
+        assert LIVE_ARTIFACT.read_text(encoding="utf-8") == render_plan_artifact(live), (
+            "campaigns/w12-arm-a-baseline-live.plan.json is not what the "
+            "registry derives today. Regenerate it with the command the "
+            "file's `produced_by` field names and read the diff."
+        )
+
+    def test_the_two_plans_differ_in_the_corpus_mode_and_its_consequences(
+        self, live: CampaignPlanArtifact, stored: dict[str, Any]
+    ) -> None:
+        """Same design, one field apart — which is what makes them a choice.
+
+        The identities that *derive* from the corpus mode are expected to
+        move: the campaign id, the sealed protocol digest and the
+        registry lock digest all take it as input, and a variant that
+        left them alone would not be a different campaign.
+        """
+        published = json.loads(LIVE_ARTIFACT.read_text(encoding="utf-8"))
+        assert published["corpus_mode"] == "live"
+        assert stored["corpus_mode"] == "snapshot"
+        derived_identities = {
+            "campaign_id",
+            "corpus_mode",
+            "describes",
+            "lock_digest",
+            "produced_by",
+            "protocol_digest",
+        }
+        moved = {key for key in stored if stored[key] != published.get(key)}
+        assert moved == derived_identities
+        assert published["design"] == stored["design"]
+        assert published["case_ids"] == stored["case_ids"]
+        assert published["arm_declaration_digest"] == stored["arm_declaration_digest"]
+        assert live.campaign_id != stored["campaign_id"]
+
+    def test_the_live_plan_authorizes_no_more_than_the_other_one(self) -> None:
+        """A live corpus is not a funded one: still zero, still unapproved."""
+        published = json.loads(LIVE_ARTIFACT.read_text(encoding="utf-8"))
+        assert published["chargeable"] is False
+        assert published["approval_id"] is None
+        assert published["network_calls"] == 0
+        assert published["provider_initialized"] is False
+        assert published["campaign_budget"]["total_cost_usd_max"] == "0.000000"
+        for field in (
+            "total_cost_usd_max",
+            "workflow_cost_usd_max",
+            "judge_cost_usd_max",
+        ):
+            assert published["episode_budget"][field] == "0.000000"
+
+    def test_the_live_scope_does_not_claim_to_be_the_packets(self) -> None:
+        """`is_w12_baseline` pins `snapshot`, so the preface is not earned.
+
+        Deliberate, and left visible in the file: the live plan is *not*
+        the scope 16 §1 states, which is the finding W20 reported. A
+        reader who opens the JSON alone is not told otherwise.
+        """
+        published = json.loads(LIVE_ARTIFACT.read_text(encoding="utf-8"))
+        assert not published["describes"].startswith("The funded arm-A baseline of")
+        request = baseline_request(
+            _config(),
+            registry_root=REGISTRY_ROOT,
+            corpus_mode=W12_BASELINE_LIVE_CORPUS_MODE,
+        )
+        assert not is_w12_baseline(request)
+        assert published["produced_by"] == artifact_command(
+            request, output=W12_BASELINE_LIVE_ARTIFACT_PATH
+        )
