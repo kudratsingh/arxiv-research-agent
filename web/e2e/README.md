@@ -376,12 +376,15 @@ regenerated on sight asserts nothing. So:
 | Chromium only (`@visual` in `CHROMIUM_ONLY`) | `playwright.config.ts` | A snapshot's artefact *is* the engine's rasterisation; three engines would be three sets of bytes that disagree for reasons that are never product defects |
 
 **Measured result:** 45 of the 48 are byte-identical between two forced
-regenerations; the other three differ by 4, 9 and 14 raw pixels, below
-Playwright's per-pixel threshold. `maxDiffPixels` is **200**, and
-`MAX_DIFF_PIXELS` in `visual.spec.ts` carries the measurement, the cause
-(a `position: sticky` `SectionRail` at a fractional x offset, snapped or not
-depending on compositor promotion) and the fixes that were tried and rejected.
-For scale: a deliberate 2 px shift moves 1,441–13,703 pixels.
+regenerations; the other three differ by 4, 9 and 14 raw pixels, below the
+per-pixel threshold. The comparator uses `maxDiffPixelRatio: 0.00024` and
+`threshold: 0.1`: about 90 allowed pixels at 412 × 915 and 311 at 1440 × 900.
+That keeps the desktop `SectionRail` compositor seam—281 pixels when measured
+at the stricter threshold—inside the bound without giving a phone capture the
+same allowance, and makes low-contrast changes behind a scrim count.
+`visual.spec.ts` carries the full measurement and ADR 0099 records the old flat
+200-pixel bound's false-negative cases. For scale: a deliberate 2 px shift
+moves 1,441–13,703 pixels.
 
 ### Regenerating
 
