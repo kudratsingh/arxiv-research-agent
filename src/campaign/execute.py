@@ -1481,8 +1481,10 @@ def _write_artifact_index(target: Path, *, events: Sequence[Any], bridge: Any) -
     same bytes 240 times and give a reader two places to disagree. The
     index names each artifact, its digest, its content address and
     whether the store actually holds the bytes — the last because the
-    artifact store may *refuse* a body (W11-F1), and a digest-only
-    reference is a fact worth recording rather than an absence.
+    artifact store still refuses a body carrying a *structural* reasoning
+    marker (ADR 0096, which narrowed the topical refusal W11-F1 found to
+    that one case), and a digest-only reference is a fact worth recording
+    rather than an absence.
     """
     seen: dict[str, dict[str, Any]] = {}
     store = getattr(bridge, "artifacts", None)

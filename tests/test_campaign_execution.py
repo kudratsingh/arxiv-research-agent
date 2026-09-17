@@ -6,7 +6,7 @@ planned, locked, sealed and reconciled a campaign and never *ran* one.
 This module is the evidence that it now does, and every claim it makes is
 measured rather than declared.
 
-Five groups, in the order the work order asks for them.
+Six groups, in the order the work orders asked for them.
 
 1. **The full runnable matrix.** 20 queries x 3 repeats x arms A-E = 300
    episodes end to end under mock mode, with nothing excluded. That last
@@ -30,6 +30,12 @@ Five groups, in the order the work order asks for them.
    does, and never admitted by the presence of an API key alone.
 5. **Denominators.** Injected errors, cancellations, timeouts and null
    metrics land in their own ledger buckets and stay in the denominator.
+6. **The report.** `python -m src.campaign report` over the two matrices
+   groups 1 and the mock-judge pass already measured — deliberately the
+   *same* records, because the report's whole claim is that its numbers
+   are the records' numbers. It writes nothing, refuses a trajectory
+   that disagrees with the record pointing at it, and prints a class the
+   records cannot see as "not detected from records" rather than zero.
 
 Nothing here is canned. Group 1 drives the real compiled graph for every
 one of the 300 episodes; the fault-injection groups use a scripted runner
@@ -1887,3 +1893,589 @@ class TestTheRunVerb:
         record = json.loads(record_path.read_text(encoding="utf-8"))
         assert record["scores"]["judges_run"] is True
         assert len(record["scores"]["judge_records"]) == 3
+
+
+# ---------------------------------------------------------------------------
+# 6. The report over the finished matrix
+# ---------------------------------------------------------------------------
+
+
+class TestTheCampaignReport:
+    """`report` over the same two passes the groups above measured.
+
+    Deliberately over the *shared* module-scoped matrices rather than a
+    campaign of its own: the report's whole claim is that its numbers are
+    the records' numbers, and the strongest way to check that is to make
+    it describe the pass whose records another test already asserted.
+    """
+
+    pytestmark = [pytest.mark.integration, pytest.mark.contract]
+
+    @pytest.mark.timeout(300)
+    def test_the_report_says_three_hundred_episodes_ran_at_zero_cost(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        from src.campaign.report import build_report, render_report
+
+        report = build_report(
+            full_matrix.directory.parent,
+            full_matrix.plan.campaign_id,
+            generated_at="2026-09-17T00:00:00Z",
+        )
+
+        assert report.records_read == PLANNED_EPISODES
+        assert report.trajectories_read == PLANNED_EPISODES
+        assert report.trajectories_unavailable == ()
+        assert report.denominators.expected == EXPECTED_EPISODES
+        assert report.denominators.accounted == EXPECTED_EPISODES
+        assert report.denominators.analysis_denominator == PLANNED_EPISODES
+        assert report.denominators.counts["completed"] == PLANNED_EPISODES
+        assert (report.workflow_usd, report.judge_usd, report.harness_usd) == (
+            "0.000000",
+            "0.000000",
+            "0.000000",
+        )
+        assert report.total_usd == "0.000000"
+        assert (report.model_calls, report.judge_model_calls) == (0, 0)
+
+        rendered = render_report(report)
+        assert f"# Campaign report — `{full_matrix.plan.campaign_id}`" in rendered
+        assert f"| Episode records read | {PLANNED_EPISODES} |" in rendered
+        assert f"| Ledger: completed | {PLANNED_EPISODES} |" in rendered
+        assert (
+            "total `$0.000000`; 0 workflow model calls and 0 judge model calls "
+            f"over {PLANNED_EPISODES} episodes." in rendered
+        )
+
+    def test_the_free_scorers_three_skipped_rubrics_are_named_not_scored(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        """A rubric that did not run must never print as a number."""
+        from src.campaign.report import JUDGE_METRICS, METRIC_IDS, build_report
+
+        report = build_report(
+            full_matrix.directory.parent, full_matrix.plan.campaign_id
+        )
+
+        assert [arm.arm_id for arm in report.quality] == list(ARM_IDS)
+        for arm in report.quality:
+            assert arm.episodes == PLANNED_EPISODES // len(ARM_IDS)
+            assert arm.judges_run_episodes == 0
+            assert arm.skipped_rubrics == (
+                "completeness",
+                "faithfulness",
+                "retrieval_recall",
+            )
+            rows = {row.metric_id: row for row in arm.metrics}
+            assert set(rows) == set(METRIC_IDS)
+            for metric_id in JUDGE_METRICS:
+                row = rows[metric_id]
+                assert row.instrument == "llm_judge"
+                assert row.rate is None
+                assert row.episodes_scored == 0
+                assert row.not_run_reason is not None
+            for metric_id in ("supported_claim_precision", "citation_resolution_rate"):
+                row = rows[metric_id]
+                assert row.instrument == "deterministic"
+                assert row.not_run_reason is None
+                assert row.denominator > 0
+                assert row.rate == pytest.approx(row.numerator / row.denominator)
+
+    @pytest.mark.timeout(300)
+    def test_the_mock_judge_pass_reports_all_five_metrics(
+        self, mock_judge_matrix: MatrixRun
+    ) -> None:
+        from src.campaign.report import METRIC_IDS, build_report
+
+        report = build_report(
+            mock_judge_matrix.directory.parent, mock_judge_matrix.plan.campaign_id
+        )
+
+        assert report.judge_model_calls == 0
+        assert report.judge_usd == "0.000000"
+        for arm in report.quality:
+            assert arm.judges_run_episodes == arm.episodes
+            assert arm.skipped_rubrics == ()
+            rows = {row.metric_id: row for row in arm.metrics}
+            for metric_id in METRIC_IDS:
+                row = rows[metric_id]
+                assert row.not_run_reason is None
+                assert row.episodes_scored == arm.episodes
+                assert row.denominator > 0
+                assert row.interval_low is not None and row.interval_high is not None
+
+    def test_every_cost_and_latency_figure_is_the_arms_own_records(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        """Recomputed from the records rather than trusted from the report."""
+        from decimal import Decimal
+
+        from src.campaign.report import build_report
+
+        report = build_report(
+            full_matrix.directory.parent, full_matrix.plan.campaign_id
+        )
+        records = load_episode_records(full_matrix.directory, full_matrix.plan)
+
+        for cost in report.cost:
+            mine = [record for record in records if record.arm_id == cost.arm_id]
+            assert cost.episodes == len(mine)
+            assert Decimal(cost.workflow_usd) == sum(
+                (Decimal(record.workflow_cost_usd) for record in mine), Decimal("0")
+            )
+            assert cost.model_calls == sum(record.model_calls for record in mine)
+            latencies = sorted(record.elapsed_seconds for record in mine)
+            assert cost.latency_max_seconds == pytest.approx(latencies[-1], abs=5e-4)
+            assert cost.latency_p50_seconds is not None
+            assert cost.latency_p95_seconds is not None
+            assert cost.latency_p50_seconds <= cost.latency_p95_seconds
+            assert cost.latency_p95_seconds <= cost.latency_max_seconds + 5e-4
+
+    def test_a_class_the_records_cannot_see_is_not_reported_as_zero(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        """The distinction 15 §7.1 asks for, enforced on the rendered table."""
+        from src.campaign.report import TAXONOMY, build_report, render_report
+
+        report = build_report(
+            full_matrix.directory.parent, full_matrix.plan.campaign_id
+        )
+        rows = {row.class_id: row for row in report.taxonomy}
+
+        assert len(report.taxonomy) == len(TAXONOMY) == 13
+        assert rows["task_understanding"].counted is False
+        assert rows["planning_decomposition"].counted is False
+        # The free scorer ran no rubric, so the two judge-borne classes
+        # were not measured either — and say so rather than showing zero.
+        assert rows["retrieval_miss"].counted is False
+        assert rows["synthesis_organization"].counted is False
+        assert "judges did not run" in (rows["retrieval_miss"].note or "")
+        for class_id in ("tool_runtime", "budget_timeout_stop", "verification"):
+            assert rows[class_id].counted is True
+            assert rows[class_id].occurrences == 0
+
+        rendered = render_report(report)
+        assert rendered.count("not detected from records") == 5
+        assert "| task understanding | not detected from records | — | — | — |" in rendered
+
+    def test_the_lineage_digests_the_sealed_arm_and_reads_a_sealed_graph(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        from src.campaign.report import build_report
+        from src.contracts.run_manifest import ManifestFileStore
+
+        report = build_report(
+            full_matrix.directory.parent, full_matrix.plan.campaign_id
+        )
+        paths = {
+            episode.run_id: episode.output_path
+            for episode in full_matrix.plan.runnable
+        }
+
+        assert [arm.arm_id for arm in report.lineage] == list(ARM_IDS)
+        assert len({arm.arm_digest for arm in report.lineage}) == len(ARM_IDS)
+        for arm in report.lineage:
+            assert arm.episodes == PLANNED_EPISODES // len(ARM_IDS)
+            assert arm.graph_digest_read_from in paths
+            assert arm.graph_capabilities
+            assert arm.policy_version is not None
+            # The digest is read back out of the very file the report names.
+            sealed = ManifestFileStore().load(
+                full_matrix.directory / paths[arm.graph_digest_read_from]
+            )
+            assert sealed.payload.policy.graph_digest == arm.graph_digest
+            assert sealed.payload.policy.arm_id == arm.arm_id
+
+        # 15 §3.1: arms that differ only by settings compile one graph,
+        # and the table shows that rather than inventing five.
+        by_arm = {arm.arm_id: arm.graph_digest for arm in report.lineage}
+        assert by_arm["A"] == by_arm["B"]
+        assert len({by_arm["C"], by_arm["D"], by_arm["E"], by_arm["A"]}) == 4
+
+    def test_the_appendix_names_every_episode_exactly_once(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        from src.campaign.report import build_report, render_report
+
+        report = build_report(
+            full_matrix.directory.parent, full_matrix.plan.campaign_id
+        )
+
+        assert len(report.episodes) == PLANNED_EPISODES
+        assert len({episode.run_id for episode in report.episodes}) == PLANNED_EPISODES
+        assert {episode.run_id for episode in report.episodes} == {
+            episode.run_id for episode in full_matrix.plan.runnable
+        }
+        assert all(episode.trajectory_events > 0 for episode in report.episodes)
+        rendered = render_report(report)
+        assert f"<details><summary>{PLANNED_EPISODES} episodes</summary>" in rendered
+
+    def test_the_report_writes_nothing_into_the_campaign_directory(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        from src.campaign.report import build_report
+
+        before = {
+            path: path.stat().st_mtime_ns
+            for path in sorted(full_matrix.directory.rglob("*"))
+            if path.is_file()
+        }
+
+        build_report(full_matrix.directory.parent, full_matrix.plan.campaign_id)
+
+        after = {
+            path: path.stat().st_mtime_ns
+            for path in sorted(full_matrix.directory.rglob("*"))
+            if path.is_file()
+        }
+        assert after == before
+
+    def test_a_truncated_trajectory_is_refused_rather_than_reported(
+        self, tmp_path: Path
+    ) -> None:
+        """A short trajectory would silently lower every error count."""
+        from src.campaign.report import build_report
+
+        cfg = config()
+        plan = materialize(tmp_path, cfg, request(cfg, cases=SLICE_CASES[:1], arms=("A",), repeats=1))
+        execute_campaign(
+            cfg,
+            root=tmp_path,
+            plan=plan,
+            graph_probe=arm_graph_probe(cfg),
+            sink_root=tmp_path / "trajectories",
+        )
+        events = next((tmp_path / "trajectories" / "runs").rglob("events.jsonl"))
+        kept = events.read_text(encoding="utf-8").splitlines()[:-1]
+        events.write_text("\n".join(kept) + "\n", encoding="utf-8")
+
+        with pytest.raises(CampaignError, match="the episode record counted"):
+            build_report(tmp_path, plan.campaign_id)
+
+    def test_an_absent_campaign_is_refused(self, tmp_path: Path) -> None:
+        from src.campaign.report import build_report
+
+        with pytest.raises(CampaignError, match="no campaign directory"):
+            build_report(tmp_path, "camp_" + "0" * 32)
+
+    def test_the_run_book_section_describes_the_verb_that_exists(
+        self, full_matrix: MatrixRun
+    ) -> None:
+        """15 §12.6 is the run-book; its command has to be a real one."""
+        from src.campaign.cli import _parser
+        from src.campaign.report import TAXONOMY, build_report, render_report
+
+        doc = (
+            REPO_ROOT
+            / "docs"
+            / "agent-engineering"
+            / "15-stage0-qualification-report.md"
+        ).read_text(encoding="utf-8")
+        parsed = _parser().parse_args(["report", "--campaign-id", "camp_x"])
+        report = build_report(
+            full_matrix.directory.parent, full_matrix.plan.campaign_id
+        )
+
+        assert parsed.command == "report"
+        assert "python -m src.campaign report \\" in doc
+        assert "--campaign-id <campaign_id>" in doc
+        assert "outputs/trajectories/runs/<run_id>/events.jsonl" in doc
+        assert len(TAXONOMY) == 13
+        assert "Five of the thirteen rows read that way on the free matrix." in doc
+        assert (
+            render_report(report).count("not detected from records") == 5
+        ), "the document's count of unmeasurable classes is the report's"
+        assert (
+            "**0 workflow model calls and 0 judge model calls over 300 episodes**"
+            in doc
+        )
+        assert report.model_calls == 0 and report.judge_model_calls == 0
+        assert report.records_read == PLANNED_EPISODES == 300
+
+    def _one_episode_campaign(
+        self, root: Path, *, arms: tuple[ArmId, ...] = ("A",), max_episodes: int | None = None
+    ) -> CampaignPlan:
+        cfg = config()
+        plan = materialize(
+            root, cfg, request(cfg, cases=SLICE_CASES[:1], arms=arms, repeats=1)
+        )
+        execute_campaign(
+            cfg,
+            root=root,
+            plan=plan,
+            graph_probe=arm_graph_probe(cfg),
+            sink_root=root / "trajectories",
+            max_episodes=max_episodes,
+        )
+        return plan
+
+    def test_a_metric_whose_counts_are_unreadable_is_missing_rather_than_zero(
+        self, tmp_path: Path
+    ) -> None:
+        """A malformed score block must not become a rate of 0.000."""
+        from src.campaign.report import METRIC_IDS, build_report, render_report
+
+        plan = self._one_episode_campaign(tmp_path)
+        directory = tmp_path / plan.campaign_id
+        path = next(directory.rglob(RECORD_FILENAME))
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["scores"] = {
+            "judges_run": True,
+            "judge_rubrics_skipped": [],
+            "claim_count": "five",
+            "supported_claim_count": 5,
+            "citation_resolution_rate": {"resolved": None, "total_citations": 10},
+            "metrics": {
+                "completeness": {"covered_topics": 1.5, "total_topics": 5},
+                "retrieval_recall": {},
+                "faithfulness": {"supported": 1, "unsupported": None,
+                                 "source_unavailable": 0},
+            },
+        }
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        report = build_report(tmp_path, plan.campaign_id)
+
+        (arm,) = report.quality
+        rows = {row.metric_id: row for row in arm.metrics}
+        assert set(rows) == set(METRIC_IDS)
+        for row in rows.values():
+            assert row.episodes_scored == 0
+            assert row.rate is None
+            assert row.not_run_reason == "no episode record carried this metric"
+        assert "0.000" not in render_report(report).split("## Cost")[0].split(
+            "## Quality"
+        )[1]
+
+    def test_a_metric_over_no_trials_prints_its_two_counts_and_no_rate(
+        self, tmp_path: Path
+    ) -> None:
+        """A report with zero claims is scored — over nothing, and says so."""
+        from src.campaign.report import build_report, render_report
+
+        plan = self._one_episode_campaign(tmp_path)
+        path = next((tmp_path / plan.campaign_id).rglob(RECORD_FILENAME))
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["scores"] = dict(
+            payload["scores"], claim_count=0, supported_claim_count=0
+        )
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        report = build_report(tmp_path, plan.campaign_id)
+
+        row = next(
+            item
+            for item in report.quality[0].metrics
+            if item.metric_id == "supported_claim_precision"
+        )
+        assert (row.episodes_scored, row.denominator, row.rate) == (1, 0, None)
+        assert "| `supported_claim_precision` | deterministic | 0/0 n/a |" in (
+            render_report(report)
+        )
+
+    def test_an_arm_with_no_episodes_reports_no_latency_rather_than_zero(
+        self, tmp_path: Path
+    ) -> None:
+        from src.campaign.report import build_report
+
+        plan = self._one_episode_campaign(tmp_path, arms=("A", "B"), max_episodes=1)
+
+        report = build_report(tmp_path, plan.campaign_id)
+
+        empty = next(arm for arm in report.cost if arm.episodes == 0)
+        assert empty.latency_mean_seconds is None
+        assert empty.latency_p50_seconds is None
+        assert empty.latency_p95_seconds is None
+        assert empty.latency_max_seconds is None
+        assert empty.total_usd == "0.000000"
+
+    def test_a_trajectory_the_sink_no_longer_holds_is_named_not_assumed_empty(
+        self, tmp_path: Path
+    ) -> None:
+        from src.campaign.report import build_report, render_report
+
+        plan = self._one_episode_campaign(tmp_path)
+        elsewhere = tmp_path / "moved"
+        (elsewhere / "runs").mkdir(parents=True)
+
+        report = build_report(tmp_path, plan.campaign_id, sink_root=elsewhere)
+
+        assert report.trajectories_read == 0
+        assert report.trajectory_events_read == 0
+        assert len(report.trajectories_unavailable) == report.records_read == 1
+        rendered = render_report(report)
+        assert "1 episode(s) had no readable durable trajectory" in rendered
+        assert report.trajectories_unavailable[0] in rendered
+
+    def test_an_unreadable_trajectory_is_refused(self, tmp_path: Path) -> None:
+        from src.campaign.report import build_report
+
+        plan = self._one_episode_campaign(tmp_path)
+        events = next((tmp_path / "trajectories" / "runs").rglob("events.jsonl"))
+        events.write_text("{not json}\n", encoding="utf-8")
+
+        with pytest.raises(CampaignError, match="is unreadable"):
+            build_report(tmp_path, plan.campaign_id)
+
+    def test_the_taxonomy_reads_the_event_types_it_says_it_reads(
+        self, tmp_path: Path
+    ) -> None:
+        """Proved against a hand-built trajectory of the mapped event types.
+
+        The mock graph produces a clean pass, so the classes that read
+        trajectory events would otherwise only ever be observed at zero.
+        The file below is written at exactly the length the episode's
+        `trajectory-ref` recorded, which is the invariant
+        `build_report` checks before it counts anything.
+        """
+        from src.campaign.report import build_report
+
+        plan = self._one_episode_campaign(tmp_path)
+        record = json.loads(
+            next((tmp_path / plan.campaign_id).rglob(RECORD_FILENAME)).read_text(
+                encoding="utf-8"
+            )
+        )
+        rows: list[dict[str, Any]] = [
+            {"event_type": "source.rejected", "status": "rejected",
+             "payload": {"rejection_codes": ["paywalled", "stale"]}},
+            {"event_type": "tool.failed", "status": "failed",
+             "payload": {"error_class": "pdf_extraction_failed"}},
+            {"event_type": "verification.completed", "status": "failed",
+             "payload": {"verdict": "fail"}},
+            {"event_type": "verification.completed", "status": "succeeded",
+             "payload": {"verdict": "pass"}},
+            {"event_type": "hitl.timed_out", "status": "timed_out", "payload": {}},
+            {"event_type": "action.skipped", "status": "skipped",
+             "payload": {"reason_code": "pdf_url_rejected_scheme"}},
+            {"event_type": "run.budget_stopped", "status": "budget_stopped",
+             "payload": {"stop_reason_code": "budget_exhausted"}},
+            {"event_type": "claim.evidence_unlinked", "status": "succeeded",
+             "payload": {}},
+        ]
+        padding = record["trajectory"]["event_count"] - len(rows)
+        assert padding >= 0
+        rows.extend(
+            {"event_type": "action.completed", "status": "succeeded", "payload": {}}
+            for _ in range(padding)
+        )
+        sink = tmp_path / "rewritten" / "runs" / record["run_id"]
+        sink.mkdir(parents=True)
+        (sink / "events.jsonl").write_text(
+            "\n".join(json.dumps(row) for row in rows) + "\n\n", encoding="utf-8"
+        )
+
+        report = build_report(
+            tmp_path, plan.campaign_id, sink_root=tmp_path / "rewritten"
+        )
+
+        counts = {row.class_id: row for row in report.taxonomy}
+        assert counts["source_quality_freshness"].codes == {"paywalled": 1, "stale": 1}
+        assert counts["parsing_chunking_ranking"].codes == {
+            "pdf_extraction_failed": 1
+        }
+        # A passing verification is the check working, not a failure.
+        assert counts["verification"].codes == {"verification.fail": 1}
+        assert counts["human_interface"].codes == {"hitl.timed_out": 1}
+        assert counts["safety_policy_refusal"].codes == {
+            "pdf_url_rejected_scheme": 1
+        }
+        assert counts["budget_timeout_stop"].codes == {"budget_exhausted": 1}
+        # A mapped event whose payload key is absent still counts, under
+        # the event's own name rather than silently not at all.
+        assert counts["evidence_to_claim"].codes["claim.evidence_unlinked"] == 1
+
+    def test_a_record_that_carries_a_failure_is_classified_by_the_table(
+        self, tmp_path: Path
+    ) -> None:
+        """The record-side half of the taxonomy, over records that fail.
+
+        The ledger still reads `completed` because the completion receipt
+        was not touched; this test is about the *reader*, and what it does
+        with an episode record whose fields say a run went wrong.
+        """
+        from src.campaign.report import build_report
+
+        plan = self._one_episode_campaign(tmp_path)
+        path = next((tmp_path / plan.campaign_id).rglob(RECORD_FILENAME))
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["reason"] = "timeout"
+        payload["ledger_status"] = "timed_out"
+        payload["scores"] = {
+            "judges_run": True,
+            "judge_rubrics_skipped": [],
+            "claim_count": 5,
+            "supported_claim_count": 2,
+            "citation_resolution_rate": {
+                "resolved": 8,
+                "total_citations": 10,
+                "unresolved": ["[Ghost, 2031]", "[Absent, 2030]"],
+            },
+            "metrics": {
+                "completeness": {"covered_topics": 3, "total_topics": 5},
+                "retrieval_recall": {"covered_topics": 4, "total_topics": 5},
+            },
+        }
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+        report = build_report(tmp_path, plan.campaign_id)
+
+        rows = {row.class_id: row for row in report.taxonomy}
+        assert rows["budget_timeout_stop"].occurrences == 2
+        assert rows["budget_timeout_stop"].codes == {"timeout": 1, "timed_out": 1}
+        assert rows["evidence_to_claim"].occurrences == 3
+        assert rows["citation_provenance"].occurrences == 2
+        assert rows["synthesis_organization"].counted is True
+        assert rows["synthesis_organization"].occurrences == 2
+        assert rows["retrieval_miss"].occurrences == 1
+
+    def test_the_cli_writes_the_markdown_and_refuses_without_a_campaign_id(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        import src.campaign.cli as cli_module
+        from src.campaign.cli import EXIT_OK, EXIT_USAGE, main
+
+        monkeypatch.setattr(cli_module, "shipped_settings", config())
+        cfg = config()
+        plan = materialize(tmp_path, cfg, request(cfg, cases=SLICE_CASES[:1], arms=("A",), repeats=1))
+        execute_campaign(
+            cfg,
+            root=tmp_path,
+            plan=plan,
+            graph_probe=arm_graph_probe(cfg),
+            sink_root=tmp_path / "trajectories",
+        )
+        capsys.readouterr()
+
+        assert main(["report", "--output-root", str(tmp_path)]) == EXIT_USAGE
+        assert "--campaign-id is required" in capsys.readouterr().err
+
+        target = tmp_path / "reports" / "campaign.md"
+        assert (
+            main(
+                [
+                    "report",
+                    "--campaign-id",
+                    plan.campaign_id,
+                    "--output-root",
+                    str(tmp_path),
+                    "--output",
+                    str(target),
+                ]
+            )
+            == EXIT_OK
+        )
+        assert capsys.readouterr().out.strip() == str(target)
+        written = target.read_text(encoding="utf-8")
+        assert written.startswith(f"# Campaign report — `{plan.campaign_id}`")
+        assert "## Error taxonomy" in written
+        assert "## Lineage" in written
+
+        assert (
+            main(["report", "--campaign-id", plan.campaign_id, "--output-root", str(tmp_path)])
+            == EXIT_OK
+        )
+        assert "## Cost and latency, per arm" in capsys.readouterr().out
