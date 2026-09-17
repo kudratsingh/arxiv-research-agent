@@ -550,6 +550,12 @@ def _order_value(order: PairOrder | None) -> Literal["ab", "ba"] | None:
 
 
 def _packet_item(case: RegisteredCase, *, order: PairOrder | None) -> PacketItem:
+    """Render one registry case as the annotator will see it.
+
+    A ``ba`` order swaps the two excerpts rather than labelling them, so
+    the annotator's "the first one" is a position and the manifest is the
+    only thing that can map it back to a candidate.
+    """
     report = case.material.report_excerpt
     second = case.material.second_excerpt
     # A pairwise case always carries both excerpts — ``PacketItem`` refuses
@@ -688,6 +694,12 @@ def build_packet_set(
 
 
 def _readme(packet_set: PacketSet) -> str:
+    """The steward's hand-over instructions, written beside the packets.
+
+    Chiefly the one rule the whole design rests on: the two annotator
+    directories go out and ``manifest.json`` stays, because the manifest
+    is the blinding key and sending it un-blinds the set.
+    """
     return (
         f"# Calibration packet set `{packet_set.packet_set_id}`\n\n"
         f"Seed `{packet_set.seed}`; reference set "
@@ -765,6 +777,12 @@ def _filled(value: object) -> bool:
 
 
 def _blank_rows(rows: list[Any], *, nested: bool) -> tuple[str, ...]:
+    """Name the rows that are not fully answered, in either file shape.
+
+    All three fields are required together: a decision with no rationale
+    is not a labelled item, because 03 §7.8 sends disagreements to an
+    adjudicator who cannot review a verdict that gives no reason.
+    """
     fields = ("decision", "confidence", "rationale")
     blank: list[str] = []
     for index, row in enumerate(rows, start=1):

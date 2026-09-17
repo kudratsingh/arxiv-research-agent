@@ -253,6 +253,12 @@ def _case_ids(root: Path, suite: str, explicit: str) -> tuple[str, ...]:
 
 
 def _request(args: argparse.Namespace, config: Settings) -> CampaignRequest:
+    """Turn parsed arguments into the planner's request.
+
+    `--arms` is re-ordered into `ARM_IDS` order rather than kept as
+    typed, so two operators who name the same arms get the same protocol
+    digest and therefore the same campaign id.
+    """
     requested = [item.strip() for item in str(args.arms).split(",") if item.strip()]
     unknown = [arm for arm in requested if arm not in ARM_IDS]
     if unknown:
@@ -286,6 +292,12 @@ def _backend(args: argparse.Namespace) -> LocalApprovalRecordBackend:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run one verb and return its exit code.
+
+    A refusal is `EXIT_REFUSED` with the structural fact on stderr, never
+    a traceback and never a partial success: the campaign vocabulary has
+    no degraded outcome for an operator to misread as one.
+    """
     args = _parser().parse_args(argv if argv is not None else sys.argv[1:])
     try:
         return _run(args)
@@ -295,6 +307,13 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _run(args: argparse.Namespace) -> int:
+    """Dispatch one verb, letting a refusal propagate to `main`.
+
+    The ordering is the module's contract in executable form: the two
+    planning verbs return before `--campaign-id` is needed, and `run` and
+    `report` import their heavy modules inside their own branch so the
+    read-only verbs never reach the graph.
+    """
     config = _config()
     root: Path = args.output_root
 

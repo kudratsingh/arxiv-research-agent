@@ -9,8 +9,10 @@ therefore "stop using the campaign CLI", not a revert.
 What it owns, and why each piece exists:
 
 - `arms` — the five conceptual selectors from 07 §4 mapped onto real
-  settings, with arm E declared `capability_missing` and refused as
-  runnable rather than approximated by the nearest flag combination.
+  settings. An arm stays a claim until a compiled graph earns it, so a
+  declaration reads `available`, `capability_missing` or `unverified`
+  from a probe rather than approximating an arm by the nearest flag
+  combination.
 - `manifest` — the sealed campaign record, with the campaign id *derived*
   from the protocol, the registry lock and the lineage, so raising a cap
   cannot resume the old campaign.
@@ -32,7 +34,12 @@ What it owns, and why each piece exists:
   episode's artifacts with `completion.json` last, and check the
   campaign cap between episodes. Added by P0-WO07b, which is where
   `budget_stop_reached` finally acquired a production caller.
-- `planner` / `cli` — `plan`, `dry-run`, `run`, `resume`, `status`.
+- `report` — what each arm actually produced: quality, cost, latency,
+  error taxonomy and lineage, read back from the episode records and
+  rendered as one markdown document. Derived on every call, and it
+  writes nothing.
+- `planner` / `cli` — `plan`, `dry-run`, `run`, `resume`, `status`,
+  `report`.
 - `summary` — the three cost categories and the statistics, delegated to
   `src/eval/stats.py`.
 

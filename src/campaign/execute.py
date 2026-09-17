@@ -527,6 +527,13 @@ class GraphEpisodeRunner:
         on_node: Callable[[str], None],
         on_tier: Callable[[PolicyExecutionSnapshot], None] | None = None,
     ) -> EpisodeRun:
+        """Run one episode to a terminal outcome, raising nothing.
+
+        Every exit is an `EpisodeRun`, including an interrupt and an
+        unhandled exception, because an episode that failed still owes
+        the ledger its status and its spend. `on_node` fires once per
+        visited node and `on_tier` at most once, before streaming starts.
+        """
         from src.graph.state import initial_research_state
         from src.observability.costs import start_cost_tracking
 

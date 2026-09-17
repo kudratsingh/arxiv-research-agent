@@ -557,6 +557,12 @@ def _read_events(record: EpisodeRecord, sink_root: Path | None) -> _EpisodeEvent
 
 
 def _score_block(record: EpisodeRecord, key: str) -> Mapping[str, Any] | None:
+    """Find one metric's block under either layout a record may use.
+
+    A judged episode groups its five rubrics under `metrics`; the free
+    scorer writes its two at the top level. Both are read here rather
+    than normalised on write, because records already on disk cannot be.
+    """
     metrics = record.scores.get("metrics")
     if isinstance(metrics, Mapping):
         block = metrics.get(key)
@@ -612,6 +618,12 @@ def _counts_for(record: EpisodeRecord, metric_id: str) -> tuple[int, int, int] |
 
 
 def _skipped_rubrics(records: Sequence[EpisodeRecord]) -> tuple[str, ...]:
+    """Every rubric any of these episodes recorded as not run.
+
+    The union rather than the intersection: a rubric skipped in one
+    episode is enough for the arm's row to say so, since the report never
+    prints a partial instrument as if it had run throughout.
+    """
     skipped: set[str] = set()
     for record in records:
         value = record.scores.get("judge_rubrics_skipped")
@@ -621,6 +633,15 @@ def _skipped_rubrics(records: Sequence[EpisodeRecord]) -> tuple[str, ...]:
 
 
 def _metric_row(metric_id: str, records: Sequence[EpisodeRecord]) -> MetricRow:
+    """Pool one metric across an arm's episodes into a single reported row.
+
+    Counts are pooled before the rate is taken, so an episode with more
+    claims weighs more than one with two — the interval is then about the
+    observations, not about a mean of per-episode ratios. An episode that
+    did not carry the metric is skipped and counted as missing, and a
+    metric no episode carried prints `not run` with the reason instead of
+    a zero.
+    """
     instrument: Literal["deterministic", "llm_judge"] = (
         "llm_judge" if metric_id in JUDGE_METRICS else "deterministic"
     )
@@ -681,6 +702,12 @@ def _percentile(values: Sequence[float], quantile: float) -> float | None:
 
 
 def _arm_quality(arm_id: str, records: Sequence[EpisodeRecord]) -> ArmQuality:
+    """One arm's quality block: every metric, plus what did not run.
+
+    The counts beside the rows are what makes them readable — how many
+    episodes were scored at all, how many ran judges, which rubrics were
+    skipped — so a low rate can be told apart from a thin sample.
+    """
     judges_run = sum(1 for record in records if record.scores.get("judges_run") is True)
     return ArmQuality(
         arm_id=arm_id,
@@ -696,6 +723,13 @@ def _arm_quality(arm_id: str, records: Sequence[EpisodeRecord]) -> ArmQuality:
 
 
 def _arm_cost(arm_id: str, records: Sequence[EpisodeRecord]) -> ArmCost:
+    """One arm's spend and latency, with workflow and judge kept apart.
+
+    ADR 0050's split survives all the way to the printed table: the two
+    categories are summed separately and a total is offered beside them
+    rather than instead of them. Money is summed as `Decimal`, because a
+    campaign total is an accounting figure and not a float.
+    """
     workflow = sum((Decimal(record.workflow_cost_usd) for record in records), Decimal("0"))
     judge = sum((Decimal(record.judge_cost_usd) for record in records), Decimal("0"))
     latencies = [record.elapsed_seconds for record in records]

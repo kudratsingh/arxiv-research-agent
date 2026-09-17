@@ -826,6 +826,13 @@ def _case_objectives(
 
 
 def _completion(directory: Path) -> CompletionReceipt | None:
+    """One episode's terminal receipt, or `None` when it never wrote one.
+
+    Absence means interrupted, not failed: RFC 09 §11.1 leaves an episode
+    with no terminal receipt unknown, so it stays pending rather than
+    being inferred either way. A receipt that exists and does not parse
+    is a refusal, because guessing there would move a denominator.
+    """
     path = directory / "completion.json"
     if not path.is_file():
         return None
@@ -836,6 +843,12 @@ def _completion(directory: Path) -> CompletionReceipt | None:
 
 
 def _validator_ref() -> ImmutableObjectRef:
+    """This planner's identity as the validator of a registry lock.
+
+    Digested from the module name and `CAMPAIGN_PLANNER_VERSION`, so a
+    receipt records which planner validated the lock and a later version
+    of this package cannot be mistaken for the one that did.
+    """
     return ImmutableObjectRef(
         kind="registry_validator",
         id="campaign-planner",
