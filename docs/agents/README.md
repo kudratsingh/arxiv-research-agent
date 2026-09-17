@@ -1,10 +1,12 @@
 # Agent design pages
 
-One page per agent in `src/agents/`, with one exception named below.
-Every page follows the same skeleton — **Purpose · Flow · Inputs ·
-Outputs · Prompt design · Failure modes · Flags · Testing · Related** —
-with agent-specific sections (evidence path, recovery path, dedup,
-iteration cap …) inserted wherever they read best.
+One page per agent in `src/agents/`, with one exception named below, plus
+one page for a model caller that is deliberately *not* an agent — the
+[evaluation judge](judge.md). Every page follows the same skeleton —
+**Purpose · Flow · Inputs · Outputs · Prompt design · Failure modes ·
+Flags · Testing · Related** — with agent-specific sections (evidence
+path, recovery path, dedup, iteration cap …) inserted wherever they read
+best.
 
 These pages describe `main` as it is. Workflow-level wiring — the four
 graph shapes, checkpointing, the API layer — lives in
@@ -21,6 +23,18 @@ graph shapes, checkpointing, the API layer — lives in
 | Verifier | supervisor loop as an *action*; `fixed_verify_repair` and `orchestrated_workers` as the `verify` **node** | `enable_verifier` for the action; the policy for the node | [verifier.md](verifier.md) |
 | Query refiner | supervisor loop | `enable_query_refiner` | [query_refiner.md](query_refiner.md) |
 | Tutor | guided-read session graph | `enable_session_loop` | [tutor.md](tutor.md) |
+| Evaluation judge | **no graph** — it scores finished runs offline | `EVAL_JUDGE_MODEL`; the campaign's `--mock-judge` flag | [judge.md](judge.md) |
+
+The judge is the row that is not an agent. It lives in
+`src/eval/metrics.py`, never runs inside a job, and produces three of the
+five metrics a scored run carries — the other two are deterministic
+(ADR [0074](../decisions/0074-deterministic-groundedness.md)). It earns a
+page here because it is a model caller with prompts, versions, a failure
+taxonomy and a calibration story, and because the three nearby things it
+is *not* — the [verifier](verifier.md), the [critic](critic.md) and the
+assessment judge below — are exactly what a reader confuses it with. No
+live judge call has ever been made in this repository; see
+[judge.md](judge.md) for what one would still need.
 
 `repair` is a node without an agent page: it makes no model call and
 picks from a deterministic table — see [repair.md](repair.md). So are
@@ -33,7 +47,11 @@ The **assessment judge** (`src/agents/assessment.py`) is the exception
 to the one-page rule: it runs on the guided-read session graph beside
 the [tutor](tutor.md), produces tutor guidance rather than anything the
 research graph reads, and its design record is
-[ADR 0060](../decisions/0060-evidence-grounded-assessment-judge.md).
+[ADR 0060](../decisions/0060-evidence-grounded-assessment-judge.md). It
+is a different thing from the [evaluation judge](judge.md) above, which
+shares neither its graph, its prompts nor its purpose; the two are
+distinguished at the top of that page because the names alone will not
+do it.
 
 ## The four shapes
 
