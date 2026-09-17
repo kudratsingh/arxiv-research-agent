@@ -47,6 +47,7 @@ import {
 
 import {
   loadReportRenderer,
+  loadedReportRenderer,
   type ReportRenderer,
 } from "@/lib/report/renderer";
 
@@ -332,6 +333,80 @@ export type { ReportRenderer, ReportRendererProps } from "@/lib/report/renderer"
 export { loadReportRenderer };
 
 /**
+ * What the Markdown pipeline is doing, for a caller that needs it.
+ *
+ * TWO FACTS AND NOT ONE, BECAUSE THEY ARE DIFFERENT QUESTIONS (WO-S2d).
+ * `renderer` answers "can this briefing be rendered"; `settled` answers "has
+ * the import finished trying". They part company exactly once — when the
+ * chunk fails to load — and that single case is why `settled` exists at all:
+ * `ThreadTimeline` holds its loading frame until the pipeline has settled,
+ * and a hold keyed on `renderer !== null` would never release on a stale
+ * deployment whose chunk 404s. The reader's own skeleton is what a failed
+ * pipeline is allowed to leave on screen; a thread with no transcript at all
+ * is not.
+ */
+export interface ReportPipeline {
+  /** The one renderer, or `null` while loading AND if the load failed. */
+  renderer: ReportRenderer | null;
+  /** `true` once the import resolved or rejected — never before either. */
+  settled: boolean;
+}
+
+/** Neither loaded nor tried. Frozen so a caller cannot write into it. */
+const PIPELINE_PENDING: ReportPipeline = Object.freeze({
+  renderer: null,
+  settled: false,
+});
+
+/**
+ * The Markdown pipeline, loaded on demand.
+ *
+ * `needed` IS THE WHOLE OF THE "A COLLAPSED TURN NEVER PARSES" GUARANTEE.
+ * With it false this hook starts nothing and reports nothing, which is what
+ * `web/tests/queries/conversations.test.ts` asserts by counting how many
+ * times the module is loaded.
+ *
+ * THE INITIAL STATE READS THE CACHE, AND THAT IS WO-S2d's OTHER HALF. Once
+ * the module has been loaded, `loadedReportRenderer()` answers during render
+ * rather than in a microtask, so a surface that mounts after the pipeline
+ * has arrived renders the briefing in its FIRST commit instead of showing
+ * the reader's skeleton for one more paint. It reads the cache and never
+ * fills it, so the guarantee above is untouched.
+ */
+export function useReportPipeline(needed: boolean): ReportPipeline {
+  const [pipeline, setPipeline] = useState<ReportPipeline>(() => {
+    const loaded = loadedReportRenderer();
+    return loaded === null ? PIPELINE_PENDING : { renderer: loaded, settled: true };
+  });
+
+  useEffect(() => {
+    if (!needed || pipeline.settled) return;
+    let live = true;
+    void loadReportRenderer().then(
+      (loaded) => {
+        // The renderer is held INSIDE an object, so the `setState(fn)`
+        // updater trap the previous shape had to dodge cannot arise: a
+        // component is a function and a bare `setRenderer(loaded)` would
+        // have been read as an updater.
+        if (live) setPipeline({ renderer: loaded, settled: true });
+      },
+      () => {
+        // A chunk that will not load is SETTLED, not pending. Swallowing the
+        // rejection here is deliberate: the surfaces below render the
+        // reader's loading state for a pipeline that never arrives, which is
+        // what they did before this hook existed.
+        if (live) setPipeline({ renderer: null, settled: true });
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [needed, pipeline.settled]);
+
+  return needed ? pipeline : PIPELINE_PENDING;
+}
+
+/**
  * The renderer for one turn, or `null` while it is collapsed.
  *
  * Returning `null` for a collapsed turn is not a convenience — it is the
@@ -340,21 +415,5 @@ export { loadReportRenderer };
  * that by counting how many times the module is loaded.
  */
 export function useReportRenderer(expanded: boolean): ReportRenderer | null {
-  const [renderer, setRenderer] = useState<ReportRenderer | null>(null);
-
-  useEffect(() => {
-    if (!expanded || renderer !== null) return;
-    let live = true;
-    void loadReportRenderer().then((loaded) => {
-      // `() => loaded`, not `loaded`: the state IS a function, and a
-      // bare `setRenderer(loaded)` would be read as an updater and
-      // called with `null`.
-      if (live) setRenderer(() => loaded);
-    });
-    return () => {
-      live = false;
-    };
-  }, [expanded, renderer]);
-
-  return expanded ? renderer : null;
+  return useReportPipeline(expanded).renderer;
 }

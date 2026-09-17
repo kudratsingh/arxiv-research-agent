@@ -58,7 +58,11 @@ import { ApiError, type JobDetail } from "@/lib/api";
 import { THREAD, THREAD_RAIL, THREAD_ROW, turnCount, turnLabel } from "@/lib/copy/threads";
 import { useJobRun } from "@/lib/job/provider";
 import type { JobState } from "@/lib/job/types";
-import { useConversationDetail, useReportRenderer } from "@/lib/queries/conversations";
+import {
+  useConversationDetail,
+  useReportPipeline,
+  useReportRenderer,
+} from "@/lib/queries/conversations";
 import { useJobDetail } from "@/lib/queries/job";
 import {
   selectBriefings,
@@ -190,6 +194,58 @@ export function ThreadTimeline({
   const [painted, setPainted] = useState(false);
   const holdForRun = !painted && isRunUnread(state);
 
+  /**
+   * WO-S2d — THE SAME FRAME AGAIN, HELD UNTIL THE BRIEFING CAN MOUNT AT THE
+   * HEIGHT IT KEEPS.
+   *
+   * WHAT WAS MEASURED. `ReportReader`'s loading state is seven skeleton lines
+   * — 216px at 412x915 — and the briefing it holds the place of renders at
+   * 844px, 1,161px once its rail and metrics are in. Below 767px the thread
+   * is a DOCUMENT and not a frame (WO-S2, `workspace.css`), so the reading
+   * column does not scroll inside itself and everything under the briefing
+   * moves when it grows: at the Pixel 7 profile on `thread-populated`, 8× CPU
+   * throttle, `div.ew-thread__composer` went from y792 to off-screen and
+   * Chromium charged 0.03768 against 04 §8.2's 0.02 ceiling. The cliff is
+   * sharp because it is a race — the Markdown pipeline is a dynamic
+   * `import()` and only a client slow enough loses it — which is why this was
+   * first reported as a flaky test rather than as a defect (F1).
+   *
+   * WHY HOLDING, AND NOT A RESERVED HEIGHT. A briefing's height is its own
+   * document's; there is no number this file could put on the skeleton that
+   * would be right for the next report, and a generous one is the same defect
+   * with the sign flipped (WO-S2b, "the reservation is exact, not generous").
+   * Holding needs no number: the frame is released when the briefing can be
+   * rendered, so the reading column mounts ONCE, already the size it keeps.
+   * That is WO-S2c's mechanism applied to the third member of the family.
+   *
+   * WHY NOT DEFER THE COMPOSER INSTEAD. The composer is in the loading frame
+   * deliberately (Gate 3 criterion 7, above): it is the route's largest
+   * contentful element, and withdrawing it from the loaded frame until the
+   * reader settled would take the field off screen after it had been on it —
+   * a shift and a flicker, to cure a shift.
+   *
+   * WHAT IT COSTS, STATED. The transcript now appears when the Markdown chunk
+   * does rather than a beat before it — the same wait, moved off the reader
+   * and onto the frame that was going to move anyway. Nothing is delayed that
+   * was not already being waited for: the import starts on the commit that
+   * decides to hold, which is the commit `TimelineTurn` would have started it
+   * on.
+   *
+   * `settled`, NOT `renderer !== null`. A chunk that will not load must still
+   * release the frame; `useReportPipeline` is what distinguishes the two, and
+   * a failed pipeline leaves the reader's own loading state on screen exactly
+   * as it did before.
+   */
+  const openBriefing = useMemo(
+    () => briefings.find((briefing) => isOpen(briefing.jobId)) ?? null,
+    [briefings, isOpen],
+  );
+  // An open turn with no briefing body renders a sentence, not a document:
+  // there is nothing for the pipeline to do and nothing to wait for.
+  const needsBriefing = openBriefing !== null && openBriefing.markdown.trim() !== "";
+  const pipeline = useReportPipeline(needsBriefing);
+  const holdForBriefing = !painted && needsBriefing && !pipeline.settled;
+
   const notFound = query.error instanceof ApiError && query.error.status === 404;
 
   if (notFound) {
@@ -286,10 +342,16 @@ export function ThreadTimeline({
   // screen, which is the definition of a layout shift and, at 412x915, is
   // 0.55191 of a 0.02 budget.
   //
+  // WO-S2d adds the second reason to hold it, and it is the same reason: the
+  // reading column would be released at 216px and corrected to 844-1,161px
+  // once the Markdown pipeline lands. Both predicates are latched on
+  // `painted`, so the frame is held while EITHER is still true and released
+  // once neither is — one transition into the loaded shape, never two.
+  //
   // `painted` is latched HERE rather than beside its declaration, because the
   // claim it holds is "the loaded frame has been on screen" and this is the
   // only line that puts it there.
-  if (holdForRun) {
+  if (holdForRun || holdForBriefing) {
     return (
       <div
         className={["ew-thread", "ew-thread--loading", className]

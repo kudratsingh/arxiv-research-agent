@@ -15,6 +15,8 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
+import { flushSync } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -708,6 +710,68 @@ describe("criterion 1 — failure keeps the work", () => {
     expect(screen.getByText(REPORT.empty)).toBeInTheDocument();
     expect(container.querySelector("[data-severity]")).toBeNull();
     expect(container.querySelector("[data-briefing]")).toBeNull();
+  });
+});
+
+// ===========================================================================
+// WO-S2d — the rail is in the same frame as the document it indexes.
+// ===========================================================================
+
+describe("WO-S2d — the heading pass runs before the paint, not after it", () => {
+  /**
+   * THE DEFECT, AND WHY jsdom CAN STILL CATCH IT.
+   *
+   * Below 1280px the rail is `flex: 1 1 100%` (`tokens.css`), so it stacks
+   * ABOVE the reading column rather than beside it. `readHeadings` used to
+   * run in a `useEffect` — after the browser had painted — so the rail
+   * appeared one commit late and pushed an article the reader was already
+   * looking at down by its own height: `article.ew-report` y531 -> y619 at
+   * the Pixel 7 profile, 88px, scored 0.04176 against 04 §8.2's 0.02.
+   *
+   * jsdom has no paint, so the assertion is on the thing that decides which
+   * side of one the rail lands on: React runs LAYOUT effects, and the state
+   * they set, synchronously inside `flushSync`'s commit, and defers passive
+   * ones to a later task. Nothing below is awaited, and that is the whole
+   * point — with a `useEffect` the rail is absent at that line.
+   *
+   * Outside the act environment on purpose: `flushSync` is the measuring
+   * instrument here rather than a way to render, and `act` flushes both kinds
+   * of effect, which would make the two indistinguishable.
+   */
+  it("has the rail in the DOM before anything is awaited", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    // React reads this flag off the global; `vitest.setup.ts` sets it, and
+    // it is not in React's own published types, so it is reached through a
+    // narrow view of `globalThis` rather than declared into it.
+    const reactGlobals = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+    const actEnvironment = reactGlobals.IS_REACT_ACT_ENVIRONMENT;
+    reactGlobals.IS_REACT_ACT_ENVIRONMENT = false;
+
+    try {
+      flushSync(() => {
+        root.render(<ReportReader markdown={HEADINGS} renderer={renderer} />);
+      });
+
+      expect(host.querySelector("[data-briefing]")).not.toBeNull();
+      expect(
+        host.querySelector("nav.ew-section-rail"),
+        "the rail was not in the commit that put the document on screen, so " +
+          "it arrives a paint later and moves the briefing down by its own " +
+          "height. `readHeadings` has to run in a layout effect.",
+      ).not.toBeNull();
+      expect(
+        host.querySelectorAll("nav.ew-section-rail a").length,
+        "the rail is present but empty, which reserves the wrong height.",
+      ).toBe(3);
+    } finally {
+      flushSync(() => {
+        root.unmount();
+      });
+      host.remove();
+      reactGlobals.IS_REACT_ACT_ENVIRONMENT = actEnvironment;
+    }
   });
 });
 

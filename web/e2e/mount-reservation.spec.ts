@@ -51,6 +51,9 @@ const HOLD = 600;
 
 const REVIEW = `/c/${FIXTURES.populatedConversation}?job=${FIXTURES.planReview}`;
 
+/** The same thread with no run named — WO-S2d's state, and `thread-populated`. */
+const POPULATED = `/c/${FIXTURES.populatedConversation}`;
+
 const WIDTHS = [
   { label: "1280x900", width: 1280, height: 900 },
   { label: "412x915", width: 412, height: 915 },
@@ -61,6 +64,16 @@ interface FirstPaint {
   first: number;
   /** `data-run` on that same frame. */
   dataRun: string | null;
+}
+
+/** What the loaded thread frame contained the first time it existed (WO-S2d). */
+interface LoadedFrame {
+  /** Is `ReportReader` still showing its 216px skeleton? */
+  readerLoading: boolean;
+  /** Is the briefing itself in this frame? */
+  briefing: boolean;
+  /** Is the section rail in it, or does it arrive a paint later? */
+  rail: boolean;
 }
 
 interface LoadShift {
@@ -79,6 +92,7 @@ declare global {
   interface Window {
     __mountFirst?: Record<string, FirstPaint>;
     __mountCls?: LoadBucket;
+    __loadedFrame?: LoadedFrame | null;
   }
 }
 
@@ -182,6 +196,70 @@ async function holdRunRead(page: Page): Promise<void> {
     (url) => /\/api\/research\/[^/]+$/.test(url.pathname),
     async (route) => {
       await new Promise((resolve) => setTimeout(resolve, HOLD));
+      await route.continue();
+    },
+  );
+}
+
+/**
+ * Record what the LOADED thread frame contained the first time it existed.
+ *
+ * WO-S2d's claim is not about a height — a briefing's height is its own
+ * document's — it is about what is in the frame the reader first sees. The
+ * same `requestAnimationFrame` loop as `observeFirstPaint` and for the same
+ * reason: a frame is the unit the browser paints in.
+ */
+async function observeLoadedFrame(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.__loadedFrame = null;
+    const tick = () => {
+      if (window.__loadedFrame === null) {
+        const thread = document.querySelector(".ew-thread");
+        if (thread !== null && !thread.classList.contains("ew-thread--loading")) {
+          window.__loadedFrame = {
+            readerLoading:
+              document.querySelector(".ew-report-reader__loading") !== null,
+            briefing: document.querySelector("[data-briefing]") !== null,
+            rail: document.querySelector("nav.ew-section-rail") !== null,
+          };
+        }
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+/**
+ * Make the Markdown chunk late, deterministically (WO-S2d).
+ *
+ * The pipeline is a dynamic `import()`, so on a fast enough machine it lands
+ * in the same commit as the transcript and nothing is charged — which is
+ * exactly why this defect arrived as a flaky test rather than as a bug report
+ * (F1, PR 270). The chunk cannot be named by URL, because its filename is a
+ * content hash that changes with every build; what identifies it without
+ * pinning anything to a build is WHEN it is asked for. Every route chunk is
+ * requested before the first API call; the only JS this route fetches AFTER
+ * `GET /conversations/{id}` has answered is the lazily imported pipeline.
+ *
+ * Holding makes the worst case certain, and the worst case is a superset of
+ * the plain cold load's: anything that passes here passes unheld.
+ */
+async function holdReportPipeline(page: Page): Promise<void> {
+  let transcriptLanded = false;
+  page.on("response", (response) => {
+    if (/\/api\/conversations\/[^/]+$/.test(new URL(response.url()).pathname)) {
+      transcriptLanded = true;
+    }
+  });
+  await page.route(
+    (url) =>
+      url.pathname.startsWith("/_next/static/chunks/") &&
+      url.pathname.endsWith(".js"),
+    async (route) => {
+      if (transcriptLanded) {
+        await new Promise((resolve) => setTimeout(resolve, HOLD));
+      }
       await route.continue();
     },
   );
@@ -359,6 +437,164 @@ test.describe("WO-S2c — the run panel mounts once, at the height it keeps", ()
       ).toBe(settled);
 
       paid.expectExactly(0, "WO-S2c — holding the stream");
+    },
+  );
+});
+
+/* =========================================================================
+ * WO-S2d — the reading column mounts at the height it keeps.
+ *
+ * THE THIRD MEMBER OF THE FAMILY, AND THE ONE WITH NO NUMBER TO RESERVE.
+ * WO-S2b made the plan editor's Suspense fallback an exact mirror of the
+ * form; WO-S2c held this same frame until the run behind `?job=` had been
+ * read. Both reserved a box whose size was knowable. A briefing's is not: it
+ * is its own document's, and the reader's loading state is seven skeleton
+ * lines — 216px at 412x915 — standing in for 844px of report, 1,161px once
+ * the rail and the metrics are in.
+ *
+ * Measured by F1 (PR 270) at the gated Pixel 7 profile on
+ * `thread-populated`, one run per cell, CLS against 04 §8.2's 0.02:
+ *
+ *   1x-5x  0.00000     6x-7x  0.04176     8x-20x  0.07944
+ *
+ * from two entries, and they have two different causes:
+ *
+ *   0.03768 — `div.ew-thread__composer` [y792 h47] pushed off screen. The
+ *   Markdown pipeline landing after first paint. Below 767px the thread is a
+ *   DOCUMENT and not a frame (WO-S2, `workspace.css`), so the reading column
+ *   does not scroll inside itself and everything under it moves.
+ *
+ *   0.04176 — `article.ew-report` [y531 h308] -> [y619 h220], 88px down. The
+ *   SECTION RAIL, which is `flex: 1 1 100%` below 1280px and therefore stacks
+ *   ABOVE the document it indexes. `readHeadings` ran in a `useEffect`, which
+ *   is to say after the browser had painted, so the rail arrived one commit
+ *   late and pushed a briefing the reader was already looking at down by its
+ *   own height.
+ *
+ * So there are two fixes and two tests. `ThreadTimeline` holds the loading
+ * frame until the pipeline has settled, so the column mounts once; and
+ * `ReportReader` reads its headings in a LAYOUT effect, so the rail is in the
+ * frame the document is painted in.
+ *
+ * WHERE EACH HALF IS GATED, AND THE INSTRUMENT THAT CANNOT SEE ONE OF THEM.
+ * The hold is asserted directly below: the loaded frame either has the
+ * briefing in it or it has the reader's skeleton, and a
+ * `requestAnimationFrame` loop can tell those apart. The LAYOUT-EFFECT half
+ * cannot be asserted that way, and this was measured rather than assumed — a
+ * rAF callback runs at the START of the next frame, by which time React has
+ * already flushed the passive effect, so the loop sees the rail in place even
+ * on `origin/main` where it demonstrably arrived a paint late. Two things do
+ * see it, and they are where it is gated: the CLS test below, in whose
+ * `origin/main` entries `article.ew-report` [y519 h396] -> [y607 h308] is
+ * exactly that 88px; and `tests/patterns/ReportReader.test.tsx`, which
+ * renders inside `flushSync` and asks whether the rail is there before
+ * anything is awaited. `frame.rail` is recorded here for the failure message
+ * and is not asserted, because an assertion that cannot fail is a green tick
+ * over an unmeasured surface.
+ *
+ * WHAT IS DELIBERATELY NOT ASSERTED AS AN EQUALITY. The reader's settled
+ * height is not its first-painted height, and the residue is not this work
+ * order's: `fontReport` — the report family, declared in `app/fonts/fonts.ts`
+ * — is not requested by the browser until a briefing renders, so it swaps
+ * afterwards and re-wraps the report's own `h1` by one line. 34px, scored
+ * 0.00495 at 8x and nothing at all below it. That is WO-02's fallback
+ * metrics, measured and recorded rather than absorbed here.
+ * ====================================================================== */
+
+test.describe("WO-S2d — the briefing mounts at the height it keeps", () => {
+  for (const size of WIDTHS) {
+    test(
+      `the loaded thread never shows the reader's skeleton, at ${size.label}`,
+      { tag: "@cls" },
+      async ({ page }, testInfo) => {
+        const paid = await interceptPaidPath(page, testInfo);
+        await page.setViewportSize({ width: size.width, height: size.height });
+
+        await observeLoadedFrame(page);
+        await holdReportPipeline(page);
+        await page.goto(POPULATED, { waitUntil: "domcontentloaded" });
+
+        await expect(page.locator("[data-briefing]")).toHaveCount(1);
+        await page.waitForTimeout(500);
+
+        const frame = await page.evaluate(() => window.__loadedFrame ?? null);
+
+        expect(
+          frame,
+          "the loaded thread frame never appeared, so nothing was measured.",
+        ).not.toBeNull();
+        expect(
+          frame?.readerLoading,
+          `at ${size.label} the thread painted with the reader still showing ` +
+            "its loading skeleton. On `origin/main` that is what happens, and " +
+            "the column then grows from 216px to 844px under a composer that " +
+            "is already on screen — 0.03768 at the Pixel 7 profile. " +
+            "`ThreadTimeline` holds the loading frame until the Markdown " +
+            "pipeline has SETTLED (`useReportPipeline`), so the reading " +
+            "column mounts once, already the size it keeps. " +
+            JSON.stringify(frame),
+        ).toBe(false);
+        expect(
+          frame?.briefing,
+          `at ${size.label} the loaded thread had no briefing in it at all, ` +
+            "which is the same defect with the skeleton deleted rather than " +
+            `held. ${JSON.stringify(frame)}`,
+        ).toBe(true);
+        // `frame.rail` is RECORDED and deliberately not asserted; the header
+        // says why.
+
+        paid.expectExactly(0, `WO-S2d — holding the pipeline at ${size.label}`);
+      },
+    );
+  }
+
+  test(
+    "cold-loading a populated thread at 412x915 stays inside the CLS budget",
+    { tag: "@cls" },
+    async ({ page, browserName }, testInfo) => {
+      test.skip(
+        browserName !== "chromium",
+        "`layout-shift` is a Chromium-only performance entry: Firefox and " +
+          "WebKit implement neither it nor CLS, so this would collect nothing " +
+          "and pass without measuring.",
+      );
+      const paid = await interceptPaidPath(page, testInfo);
+
+      await page.setViewportSize({ width: 412, height: 915 });
+      await observeLoadShift(page);
+      // The forced worst case, not a hope: see `holdReportPipeline`.
+      await holdReportPipeline(page);
+      await page.goto(POPULATED, { waitUntil: "domcontentloaded" });
+
+      // Everything the reading column waits on: the document, its rail, and
+      // the per-turn metrics read under it.
+      await expect(page.locator("[data-briefing]")).toHaveCount(1);
+      await expect(page.getByRole("table").first()).toBeVisible();
+      // A shift is reported on the frame after the one that caused it.
+      await page.waitForTimeout(1_500);
+
+      const cls = await page.evaluate(
+        () => window.__mountCls ?? { supported: false, total: 0, entries: [] },
+      );
+
+      expect(
+        cls.supported,
+        "the `layout-shift` entry type is not available, so nothing was " +
+          "measured. This assertion must never pass by default.",
+      ).toBe(true);
+      expect(
+        cls.total,
+        `cold-load CLS on a populated thread at 412x915 is ` +
+          `${cls.total.toFixed(5)} against 04 §8.2's ${LOAD_CLS_CEILING} ` +
+          "ceiling. With the pipeline held this read 0.07944 before WO-S2d — " +
+          "0.03768 from `div.ew-thread__composer` going off screen as the " +
+          "reading column grew from 216px to 844px, and 0.04176 from " +
+          "`article.ew-report` dropping 88px when the section rail arrived a " +
+          "commit after the document it indexes. Entries: " +
+          JSON.stringify(cls.entries),
+      ).toBeLessThanOrEqual(LOAD_CLS_CEILING);
+
+      paid.expectExactly(0, "WO-S2d — cold-loading a populated thread");
     },
   );
 });
