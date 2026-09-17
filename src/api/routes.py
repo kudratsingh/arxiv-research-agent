@@ -272,6 +272,11 @@ async def get_research(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> JobDetail:
+    """Read one job's lifecycle snapshot, whatever stage it has reached.
+
+    A job the caller does not own answers the same 404 as one that never
+    existed, so the response never confirms an id (ADR 0036).
+    """
     state = _get_state(request)
     job = await state["store"].get(job_id)
     if job is None:
@@ -637,6 +642,11 @@ async def list_conversations(
         "conversations, newest first.",
     ),
 ) -> list[ConversationListItem]:
+    """List the caller's own conversations, newest first.
+
+    Report bodies stay out of the page: this feeds the sidebar, and the
+    window is applied in the store's SQL rather than in Python (ADR 0043).
+    """
     state = _get_state(request)
     # ADR 0036: scope the list to the caller's principal. Auth-off
     # passes `None` and gets everything (legacy behavior). ADR 0043:
@@ -669,6 +679,11 @@ async def get_conversation(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> ConversationDetail:
+    """Return one conversation thread with every job's report body.
+
+    Unknown and not-yours are the same 404 here as everywhere else, so a
+    caller cannot probe for ids they do not own (ADR 0036).
+    """
     state = _get_state(request)
     conversation = await state["conversation_store"].get(conversation_id)
     if conversation is None:
@@ -691,6 +706,11 @@ async def delete_conversation(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> Response:
+    """Delete one conversation and every job filed under it — 204, no body.
+
+    Ownership is part of the delete statement, so the row cannot change
+    hands between the check and the destructive call (ADR 0043).
+    """
     state = _get_state(request)
     # ADR 0043 (closes the ADR 0036 follow-up): ownership is inline
     # in the store's DELETE — one statement instead of the old

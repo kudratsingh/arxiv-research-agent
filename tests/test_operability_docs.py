@@ -554,15 +554,16 @@ class TestTheInstrumentScan:
         assert "research_jobs_total" in INSTRUMENTS
         assert semconv.METRIC_CLIENT_TOKEN_USAGE in INSTRUMENTS
         assert semconv.METRIC_HTTP_SERVER_REQUEST_DURATION in INSTRUMENTS
-        # 21 today, and this was a bare `>= 20`. A floor only ever looks
-        # down: `docs/architecture.md` claimed NINE instruments while this
-        # set grew from nine to twenty-one, and this assertion — the one
-        # place in the repository carrying the count as a number — stayed
-        # green through all twelve of those additions. The upper edge is
-        # what a floor cannot do. Five of headroom is more than any single
-        # PR here has added and well under the twelve that made up the
-        # drift, so ordinary growth passes and a wave has to come back to
-        # this line, which is where the number prose quotes gets re-read.
+        # 24 today (21 when the band was written), and this was a bare
+        # `>= 20`. A floor only ever looks down: `docs/architecture.md`
+        # claimed NINE instruments while this set grew from nine to
+        # twenty-one, and this assertion — the one place in the repository
+        # carrying the count as a number — stayed green through all twelve
+        # of those additions. The upper edge is what a floor cannot do, and
+        # it is doing it: two of headroom left, so the next wave to add an
+        # instrument has to come back to this line, which is where the
+        # number prose quotes gets re-read. `src/observability/metrics.py`
+        # still said "twenty-two" when the set was already twenty-four.
         assert 20 <= len(INSTRUMENTS) <= 26, (
             f"{len(INSTRUMENTS)} instruments declared in src/. Below 20 the "
             "scan has probably stopped matching and every check in this file "

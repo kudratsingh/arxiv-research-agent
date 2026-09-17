@@ -2,7 +2,7 @@
   "x-provenance": {
     "generated": "DO NOT EDIT BY HAND. Regenerate with the command below.",
     "source": "create_app().openapi() -- src/api/app.py",
-    "commit": "65874107bbca0f1c0d9a2c1931e4c1804729afcb",
+    "commit": "a59c5f8fa87b263b1ed0d20c51ea90a305ae737b",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
@@ -56,6 +56,7 @@
     "/research/{job_id}": {
       "get": {
         "summary": "Get the current status + result of a job.",
+        "description": "Read one job's lifecycle snapshot, whatever stage it has reached.\n\nA job the caller does not own answers the same 404 as one that never\nexisted, so the response never confirms an id (ADR 0036).",
         "operationId": "get_research_research__job_id__get",
         "parameters": [
           {
@@ -274,6 +275,7 @@
       },
       "get": {
         "summary": "List conversations, newest first (no job bodies), paginated.",
+        "description": "List the caller's own conversations, newest first.\n\nReport bodies stay out of the page: this feeds the sidebar, and the\nwindow is applied in the store's SQL rather than in Python (ADR 0043).",
         "operationId": "list_conversations_conversations_get",
         "parameters": [
           {
@@ -335,6 +337,7 @@
     "/conversations/{conversation_id}": {
       "get": {
         "summary": "Full conversation thread including every job's report body.",
+        "description": "Return one conversation thread with every job's report body.\n\nUnknown and not-yours are the same 404 here as everywhere else, so a\ncaller cannot probe for ids they do not own (ADR 0036).",
         "operationId": "get_conversation_conversations__conversation_id__get",
         "parameters": [
           {
@@ -372,6 +375,7 @@
       },
       "delete": {
         "summary": "Delete a conversation + all its jobs.",
+        "description": "Delete one conversation and every job filed under it \u2014 204, no body.\n\nOwnership is part of the delete statement, so the row cannot change\nhands between the check and the destructive call (ADR 0043).",
         "operationId": "delete_conversation_conversations__conversation_id__delete",
         "parameters": [
           {
@@ -606,6 +610,7 @@
     "/learn/sessions": {
       "post": {
         "summary": "Start one checkpointed guided-read session.",
+        "description": "Start a guided read of one published resource and return 202.\n\nA learner profile is a precondition, not a convenience: it seeds the\ntutor's tier-1 memory, so without one the session is refused.",
         "operationId": "create_session_learn_sessions_post",
         "requestBody": {
           "content": {
@@ -644,6 +649,7 @@
     "/learn/sessions/{session_id}": {
       "get": {
         "summary": "Read one guided session and its currently parked turn.",
+        "description": "Read one session, its transcript, and the turn it is parked on.\n\nAn unreadable checkpoint still answers: the job row alone makes a valid\nresponse, flagged `transcript_status=\"unavailable\"`.",
         "operationId": "get_session_learn_sessions__session_id__get",
         "parameters": [
           {
@@ -683,6 +689,7 @@
     "/learn/sessions/{session_id}/turn": {
       "post": {
         "summary": "Resume a parked guided session with the learner's reply.",
+        "description": "Hand the learner's reply to a session parked on a turn.\n\nThe reply is persisted before the runner is woken, so a resume lost in\ntransit costs a retry rather than the turn. Any other status is 409.",
         "operationId": "submit_turn_learn_sessions__session_id__turn_post",
         "parameters": [
           {
@@ -2117,7 +2124,8 @@
           "status_url",
           "stream_url"
         ],
-        "title": "SessionAccepted"
+        "title": "SessionAccepted",
+        "description": "`POST /learn/sessions` response \u2014 202 Accepted, tutor loop in flight.\n\n`stream_url` is the shared SSE transport under `/research`, which the\nsession loop reuses rather than duplicating."
       },
       "SessionCreateRequest": {
         "properties": {
@@ -2154,7 +2162,8 @@
           "path_id",
           "resource_id"
         ],
-        "title": "SessionCreateRequest"
+        "title": "SessionCreateRequest",
+        "description": "Body for `POST /learn/sessions` \u2014 which resource, and for how long.\n\n`available_minutes` is an override; omitted, the session takes the\nlearner's daily time budget from their profile."
       },
       "SessionDetail": {
         "properties": {
@@ -2358,7 +2367,8 @@
           "cost_usd",
           "llm_calls"
         ],
-        "title": "SessionDetail"
+        "title": "SessionDetail",
+        "description": "`GET /learn/sessions/{id}` \u2014 the full state of one guided session.\n\nComposed from the job row plus the graph checkpoint;\n`transcript_status` says which of the two the client actually got."
       },
       "SessionTranscriptEntry": {
         "properties": {
@@ -2381,7 +2391,8 @@
           "role",
           "text"
         ],
-        "title": "SessionTranscriptEntry"
+        "title": "SessionTranscriptEntry",
+        "description": "One exchanged line of a guided session: who spoke, and what they said.\n\nThe two roles are the whole cast \u2014 there is no system or tool voice on\nthe transcript a learner reads back."
       },
       "SessionTurnAccepted": {
         "properties": {
@@ -2405,7 +2416,8 @@
           "status",
           "accepted"
         ],
-        "title": "SessionTurnAccepted"
+        "title": "SessionTurnAccepted",
+        "description": "`POST /learn/sessions/{id}/turn` response \u2014 the reply was taken.\n\nAcceptance is not an answer: the tutor's response to the turn arrives\nover the session's stream, never in this body."
       },
       "SessionTurnRequest": {
         "properties": {
@@ -2423,7 +2435,8 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "title": "SessionTurnRequest"
+        "title": "SessionTurnRequest",
+        "description": "Body for `POST /learn/sessions/{id}/turn` \u2014 the learner's reply.\n\nOne of the two fields must carry something: an empty message is only\na valid turn when it is also the request to end the session."
       },
       "SkillClaim": {
         "properties": {

@@ -64,12 +64,24 @@ class _Strict(BaseModel):
 
 
 class SessionCreateRequest(_Strict):
+    """Body for `POST /learn/sessions` — which resource, and for how long.
+
+    `available_minutes` is an override; omitted, the session takes the
+    learner's daily time budget from their profile.
+    """
+
     path_id: str = Field(min_length=1, max_length=128, pattern=r"^[a-z0-9-]+$")
     resource_id: str = Field(min_length=1, max_length=128)
     available_minutes: int | None = Field(default=None, ge=5, le=180)
 
 
 class SessionAccepted(_Strict):
+    """`POST /learn/sessions` response — 202 Accepted, tutor loop in flight.
+
+    `stream_url` is the shared SSE transport under `/research`, which the
+    session loop reuses rather than duplicating.
+    """
+
     session_id: str
     status: str
     status_url: str
@@ -77,6 +89,12 @@ class SessionAccepted(_Strict):
 
 
 class SessionTurnRequest(_Strict):
+    """Body for `POST /learn/sessions/{id}/turn` — the learner's reply.
+
+    One of the two fields must carry something: an empty message is only
+    a valid turn when it is also the request to end the session.
+    """
+
     message: str = Field(default="", max_length=4_000)
     end_session: bool = False
 
@@ -89,17 +107,35 @@ class SessionTurnRequest(_Strict):
 
 
 class SessionTurnAccepted(_Strict):
+    """`POST /learn/sessions/{id}/turn` response — the reply was taken.
+
+    Acceptance is not an answer: the tutor's response to the turn arrives
+    over the session's stream, never in this body.
+    """
+
     session_id: str
     status: str
     accepted: bool
 
 
 class SessionTranscriptEntry(_Strict):
+    """One exchanged line of a guided session: who spoke, and what they said.
+
+    The two roles are the whole cast — there is no system or tool voice on
+    the transcript a learner reads back.
+    """
+
     role: Literal["learner", "tutor"]
     text: str
 
 
 class SessionDetail(_Strict):
+    """`GET /learn/sessions/{id}` — the full state of one guided session.
+
+    Composed from the job row plus the graph checkpoint;
+    `transcript_status` says which of the two the client actually got.
+    """
+
     session_id: str
     status: str
     kind: Literal["session"]
@@ -374,6 +410,11 @@ async def create_session(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> SessionAccepted:
+    """Start a guided read of one published resource and return 202.
+
+    A learner profile is a precondition, not a convenience: it seeds the
+    tutor's tier-1 memory, so without one the session is refused.
+    """
     _require_session_enabled()
     principal_id = _principal_id(principal)
     await enforce_rate_limit(request, principal)
@@ -465,6 +506,11 @@ async def get_session(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> SessionDetail:
+    """Read one session, its transcript, and the turn it is parked on.
+
+    An unreadable checkpoint still answers: the job row alone makes a valid
+    response, flagged `transcript_status="unavailable"`.
+    """
     _require_session_enabled()
     job = _owned_session(await request.app.state.store.get(session_id), principal)
     values, available = await _checkpoint_values(request, job)
@@ -482,6 +528,11 @@ async def submit_turn(
     request: Request,
     principal: ApiKeyPrincipal | None = Depends(require_principal),
 ) -> SessionTurnAccepted:
+    """Hand the learner's reply to a session parked on a turn.
+
+    The reply is persisted before the runner is woken, so a resume lost in
+    transit costs a retry rather than the turn. Any other status is 409.
+    """
     _require_session_enabled()
     await enforce_rate_limit(request, principal)
     store = request.app.state.store
