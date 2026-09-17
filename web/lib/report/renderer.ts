@@ -46,6 +46,35 @@ export type ReportRenderer = ComponentType<ReportRendererProps>;
 let rendererPromise: Promise<ReportRenderer> | null = null;
 
 /**
+ * The renderer once the import above has resolved, readable synchronously.
+ *
+ * WHY A SECOND VARIABLE AND NOT `rendererPromise` (WO-S2d). A promise that
+ * has already resolved still only hands its value back in a microtask, and a
+ * microtask is one React commit — and therefore, potentially, one PAINT —
+ * away. `ThreadTimeline` now holds its loading frame until the Markdown
+ * pipeline has settled precisely so the briefing can mount at the height it
+ * keeps; if the component that mounts a beat later had to go round the
+ * promise again it would paint the reader's 216px skeleton first and the
+ * hold would have bought nothing. This variable is what makes "already
+ * loaded" answerable during render.
+ *
+ * It is written in the `then` below and nowhere else, so it is `null` until
+ * the import resolves and can never disagree with the promise.
+ */
+let loadedRenderer: ReportRenderer | null = null;
+
+/**
+ * The renderer if it is ALREADY loaded, and `null` otherwise.
+ *
+ * It never starts the import — that is `loadReportRenderer`'s job, and the
+ * separation is what keeps "a collapsed turn never parses" true: a caller
+ * that only asks whether the pipeline is here cannot accidentally fetch it.
+ */
+export function loadedReportRenderer(): ReportRenderer | null {
+  return loadedRenderer;
+}
+
+/**
  * Load the Markdown pipeline — and only then.
  *
  * A conversation detail response carries every report body in full
@@ -86,6 +115,7 @@ export function loadReportRenderer(): Promise<ReportRenderer> {
     const Renderer: ReportRenderer = ({ children, components }) =>
       createElement(ReactMarkdown, { remarkPlugins: plugins, components }, children);
     Renderer.displayName = "ReportRenderer";
+    loadedRenderer = Renderer;
     return Renderer;
   });
   return rendererPromise;

@@ -53,8 +53,8 @@
  */
 
 import {
-  useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -229,7 +229,31 @@ export function ReportReader({
   const described =
     failure === null ? null : describeErrorType(failure.errorType, failure.error);
 
-  useEffect(() => {
+  /**
+   * BEFORE THE PAINT, NOT AFTER IT (WO-S2d).
+   *
+   * This used to be a `useEffect`, and a `useEffect` runs after the browser
+   * has painted. The rail is `flex: 1 1 100%` below 1280px (`tokens.css`),
+   * so it STACKS ABOVE the reading column there: filling it one commit late
+   * pushed an article the reader was already looking at down by the rail's
+   * own height. Measured at the Pixel 7 profile on `thread-populated`, 8×
+   * CPU throttle — `article.ew-report` y531→y619, 88px, scored 0.04176
+   * against 04 §8.2's 0.02 ceiling, the larger of the two shifts WO-S2d
+   * closes.
+   *
+   * `useLayoutEffect` is the fix and it is not a workaround: the heading list
+   * is a LAYOUT input — it decides the height of the box above the document —
+   * so it has to be resolved in the same frame the document is. React flushes
+   * the state this sets synchronously before yielding to the browser, so the
+   * rail and the article are painted together or not at all.
+   *
+   * IT IS STILL READ OFF THE RENDERED DOM (c4). Nothing about WHAT is
+   * measured changes; only when. The equality check below still stops the
+   * loop, and `Renderer === null` means there is no `bodyRef` to read, so on
+   * the server — where the pipeline is a dynamic import that never resolves —
+   * this has nothing to do and does nothing.
+   */
+  useLayoutEffect(() => {
     const root = bodyRef.current;
     const next = root === null ? [] : readHeadings(root);
     setHeadings((previous) =>
