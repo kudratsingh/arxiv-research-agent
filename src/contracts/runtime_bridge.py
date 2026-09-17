@@ -93,6 +93,7 @@ from src.contracts.run_manifest import (
 from src.contracts.shadow_bridge import (
     ShadowRun,
     episode_block,
+    observe_degradations,
     observe_episode_terminal,
     observe_job_terminal,
     observe_model_call,
@@ -3689,6 +3690,7 @@ __all__ = [
     "observe_close",
     "observe_selection",
     "observe_compute_tier",
+    "observe_degradations",
     "observe_episode_terminal",
     "observe_job_terminal",
     "observe_model_call",

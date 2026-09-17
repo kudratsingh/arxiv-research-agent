@@ -23,11 +23,17 @@ row says how many of its episodes ran judges, and an unrun metric prints
 
 **An undetectable error class is not an absent one.** 15 §7.1 maps 03
 §8's thirteen failure classes onto the codes that exist on `main`, and
-two of them — task understanding, and half of synthesis/organization —
-have no runtime code at all. Three more are carried only by log lines,
-which a campaign record does not keep. Those classes print `not detected
-from records` and say why; only a class this module actually reads a
-signal for prints a count, and only then does `0` mean zero.
+one of them — task understanding — has no runtime code at all. That
+class prints `not detected from records` and says why; only a class this
+module actually reads a signal for prints a count, and only then does
+`0` mean zero.
+
+Three more classes used to print it, because eight degradation codes
+existed only as log lines and a campaign record keeps no log. ADR 0097
+put those eight on the trajectory as `degradation.recorded`, so
+planning/decomposition is now a record class, and retrieval miss and
+synthesis/organization are counted on a judge-free pass as a floor —
+their rubric half is still missing and their note still says so.
 
 The report is derived, never authoritative: it is rebuilt from the
 records on every call, and it **writes nothing** — the ledger is
@@ -134,6 +140,10 @@ class TaxonomyClass:
         signals: What this module reads, named so a reader can check it.
         note: Why an ``undetectable`` class is undetectable, or what a
             ``judge`` class is conditional on.
+        record_signal: Set on a ``judge`` class that ADR 0097 also gave a
+            record-borne signal. Such a class is counted even on a
+            judge-free pass — the count is then a floor rather than the
+            whole class, which is what its note has to say.
     """
 
     class_id: str
@@ -141,6 +151,7 @@ class TaxonomyClass:
     detection: Detection
     signals: tuple[str, ...]
     note: str | None = None
+    record_signal: bool = False
 
 
 #: The thirteen classes, in 15 §7.1's order. Codes named in that table
@@ -160,23 +171,31 @@ TAXONOMY: Final[tuple[TaxonomyClass, ...]] = (
     TaxonomyClass(
         class_id="planning_decomposition",
         label="planning / decomposition",
-        detection="undetectable",
-        signals=(),
+        detection="record",
+        signals=(
+            "trajectory degradation.recorded (error_code): "
+            "planner_plan_fallback_to_query, planner_response_unparseable",
+        ),
         note=(
-            "planner_plan_fallback_to_query and planner_response_unparseable are "
-            "log-only degradations (src/agents/planner.py); no trajectory event or "
-            "episode-record field carries them."
+            "ADR 0097 put both codes on the trajectory. Until then they were "
+            "log-only and this class read `not detected from records`."
         ),
     ),
     TaxonomyClass(
         class_id="retrieval_miss",
         label="retrieval miss",
         detection="judge",
-        signals=("scores.metrics.retrieval_recall",),
-        note=(
-            "counted as expected topics the retrieval-recall rubric left uncovered; "
-            "search_empty_keeping_prior_papers is log-only."
+        signals=(
+            "scores.metrics.retrieval_recall",
+            "trajectory degradation.recorded (error_code): "
+            "search_empty_keeping_prior_papers",
         ),
+        note=(
+            "counted as expected topics the retrieval-recall rubric left uncovered, "
+            "plus ADR 0097's empty-round degradations, which are counted whether or "
+            "not the judges ran."
+        ),
+        record_signal=True,
     ),
     TaxonomyClass(
         class_id="source_quality_freshness",
@@ -188,11 +207,15 @@ TAXONOMY: Final[tuple[TaxonomyClass, ...]] = (
         class_id="parsing_chunking_ranking",
         label="parsing / chunking / ranking",
         detection="record",
-        signals=("trajectory tool.failed / action.failed (error_class)",),
+        signals=(
+            "trajectory tool.failed / action.failed (error_class)",
+            "trajectory degradation.recorded (error_code): "
+            "reader_degraded_to_abstract_only, reader_paper_abstract_only",
+        ),
         note=(
-            "reader_degraded_to_abstract_only and reader_paper_abstract_only are "
-            "log-only; a failed extraction reaches the trajectory, a degraded one "
-            "does not."
+            "ADR 0097 closed the half of this class that was invisible: a failed "
+            "extraction already reached the trajectory, a degraded one reached "
+            "nothing."
         ),
     ),
     TaxonomyClass(
@@ -208,19 +231,32 @@ TAXONOMY: Final[tuple[TaxonomyClass, ...]] = (
         class_id="synthesis_organization",
         label="synthesis / organization",
         detection="judge",
-        signals=("scores.metrics.completeness", "episode reason no_report_produced"),
-        note=(
-            "counted as expected topics the completeness rubric left uncovered; "
-            "synthesizer_response_unparseable and synthesizer_retry_budget_exhausted "
-            "are log-only."
+        signals=(
+            "scores.metrics.completeness",
+            "episode reason no_report_produced",
+            "trajectory degradation.recorded (error_code): "
+            "synthesizer_response_unparseable, synthesizer_retry_budget_exhausted",
         ),
+        note=(
+            "counted as expected topics the completeness rubric left uncovered, plus "
+            "ADR 0097's synthesizer degradations, which are counted whether or not "
+            "the judges ran."
+        ),
+        record_signal=True,
     ),
     TaxonomyClass(
         class_id="citation_provenance",
         label="citation / provenance",
         detection="record",
-        signals=("scores.citation_resolution_rate.unresolved",),
-        note="synthesizer_citations_dropped is log-only.",
+        signals=(
+            "scores.citation_resolution_rate.unresolved",
+            "trajectory degradation.recorded (error_code): "
+            "synthesizer_citations_dropped",
+        ),
+        note=(
+            "an unresolved citation was always countable; ADR 0097 added the one "
+            "the synthesizer dropped before it could be resolved at all."
+        ),
     ),
     TaxonomyClass(
         class_id="verification",
@@ -314,6 +350,11 @@ _EVENT_CLASS: Final[Mapping[str, tuple[str, str | None]]] = {
     "hitl.cancelled": ("human_interface", "reason_code"),
     "checkpoint.invalid": ("tool_runtime", "failure_codes"),
 }
+
+#: The event ADR 0097 added, kept out of `_EVENT_CLASS` because its
+#: class is in its payload rather than fixed by its type — it is the
+#: only event in the contract that can land in any of five classes.
+DEGRADATION_EVENT: Final[str] = "degradation.recorded"
 
 #: A `verification.completed` whose verdict is `pass` is the check
 #: working, not a failure. Only these two verdicts are counted.
@@ -815,6 +856,23 @@ def _taxonomy_rows(
         if episode_events is None:
             continue
         for event_type, _status, _reasons, payload in episode_events.rows:
+            if event_type == DEGRADATION_EVENT:
+                # ADR 0097. The one event whose class is read off the
+                # payload rather than out of a table here, and
+                # deliberately: the site that degraded named its own
+                # class, so this module keeps no second code-to-class
+                # mapping that could drift from the eight call sites. An
+                # unrecognised class is counted under `tool_runtime`
+                # rather than dropped — the rule `_REASON_CLASS` uses,
+                # for its reason: an unclassified degradation is still a
+                # degradation.
+                class_id = str(payload.get("taxonomy_class") or "")
+                hit(
+                    class_id if class_id in occurrences else "tool_runtime",
+                    str(payload.get("error_code") or event_type),
+                    record.run_id,
+                )
+                continue
             mapped = _EVENT_CLASS.get(event_type)
             if mapped is None:
                 continue
@@ -839,15 +897,27 @@ def _taxonomy_rows(
 
     rows: list[TaxonomyRow] = []
     for entry in TAXONOMY:
-        counted = entry.detection == "record" or (
-            entry.detection == "judge" and judges_ran
+        # ADR 0097 added a third way to be countable: a `judge` class
+        # that also carries record-borne degradations is counted on a
+        # judge-free pass, and its note says the number is a floor. The
+        # alternative — printing `not measured` over a trajectory that
+        # holds the evidence — is the same laundering this module
+        # refuses to do in the other direction.
+        counted = (
+            entry.detection == "record"
+            or entry.record_signal
+            or (entry.detection == "judge" and judges_ran)
         )
         note = entry.note
         if entry.detection == "judge" and not judges_ran:
-            note = (
-                "judges did not run in this campaign, so this class was not measured. "
-                + (entry.note or "")
-            ).strip()
+            preamble = (
+                "the rubric did not run in this campaign, so this count is only the "
+                "degradations the records carry, not the whole class. "
+                if entry.record_signal
+                else "judges did not run in this campaign, so this class was not "
+                "measured. "
+            )
+            note = (preamble + (entry.note or "")).strip()
         rows.append(
             TaxonomyRow(
                 class_id=entry.class_id,
@@ -1249,6 +1319,7 @@ def render_report(report: CampaignReport) -> str:
 
 
 __all__ = [
+    "DEGRADATION_EVENT",
     "JUDGE_METRICS",
     "METRIC_IDS",
     "REPORT_SCHEMA_VERSION",

@@ -212,6 +212,11 @@ def _eval_shadow(
         return
     run = None
     observer_token = None
+    # ADR 0097. Resolved inside the containment below, not at the `with`:
+    # a bridge stub without the hook is one of the shapes
+    # `test_a_broken_bridge_leaves_the_record_alone` insists must still
+    # produce a finished record.
+    degradations: Any = contextlib.nullcontext()
     try:
         run = bridge.start_eval_episode(
             config=settings,
@@ -228,10 +233,15 @@ def _eval_shadow(
             observer_token = bind_llm_call_observer(
                 lambda call: bridge.observe_model_call(run, call, costs)
             )
+            # Scoped exactly where the model-call observer is scoped:
+            # everything past `invoke` is harness work, and a judge that
+            # degraded would not be the policy degrading.
+            degradations = bridge.observe_degradations(run)
     except Exception:  # noqa: BLE001 — a diagnostic must not fail a campaign
         log.warning("contract_shadow_failed", extra={"hook": "open"}, exc_info=True)
     try:
-        yield run
+        with degradations:
+            yield run
     finally:
         if observer_token is not None:
             reset_llm_call_observer(observer_token)

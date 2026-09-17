@@ -51,6 +51,11 @@ from src.errors import UpstreamModelOutput
 from src.graph.state import Citation, EvidenceClaim, ResearchState
 from src.llm import _retry_envelope, call_llm_json
 from src.observability import get_logger
+from src.observability.degradation_events import (
+    TAXONOMY_CITATION_PROVENANCE,
+    TAXONOMY_SYNTHESIS_ORGANIZATION,
+    record_degradation_reason,
+)
 from src.observability.metrics import (
     DEGRADATION_RUNG_MODEL_FALLBACK,
     record_degradation_rung,
@@ -131,6 +136,14 @@ def _second_attempt_fits(elapsed_sec: float) -> bool:
             "budget_sec": budget_sec,
             "worst_case_request_sec": worst_case_sec,
         },
+    )
+    # ADR 0097. 15 §7.1 files this under synthesis/organization, a class
+    # whose only record-borne signal was the completeness rubric — so a
+    # retry the clock refused was invisible on a judge-free pass.
+    record_degradation_reason(
+        taxonomy_class=TAXONOMY_SYNTHESIS_ORGANIZATION,
+        code="synthesizer_retry_budget_exhausted",
+        component="synthesizer",
     )
     return False
 
@@ -452,6 +465,14 @@ def _call_with_one_retry(user_prompt: str, system_prompt: str) -> dict[str, Any]
                 "synthesizer_response_unparseable",
                 extra={"attempt": attempt, "error": str(exc)},
             )
+            # ADR 0097: recorded per attempt, because an unparseable
+            # first attempt that the retry rescues is still a
+            # degradation the report should be able to count.
+            record_degradation_reason(
+                taxonomy_class=TAXONOMY_SYNTHESIS_ORGANIZATION,
+                code="synthesizer_response_unparseable",
+                component="synthesizer",
+            )
             parsed = {}
         if not isinstance(parsed, dict):
             # Valid JSON that isn't an object — `call_llm_json`'s dict
@@ -524,6 +545,14 @@ def _parse_citations(raw: Any) -> list[Citation]:
         log.warning(
             "synthesizer_citations_dropped",
             extra={"dropped": dropped, "kept": len(citations)},
+        )
+        # ADR 0097: the citation/provenance class already counted
+        # unresolved citations from the scores; a citation the
+        # synthesizer never emitted at all left no trace anywhere.
+        record_degradation_reason(
+            taxonomy_class=TAXONOMY_CITATION_PROVENANCE,
+            code="synthesizer_citations_dropped",
+            component="synthesizer",
         )
     return citations
 

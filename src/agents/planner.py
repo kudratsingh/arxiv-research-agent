@@ -24,6 +24,10 @@ from src.config import settings
 from src.graph.state import ResearchState
 from src.llm import call_llm_json
 from src.observability import get_logger
+from src.observability.degradation_events import (
+    TAXONOMY_PLANNING_DECOMPOSITION,
+    record_degradation_reason,
+)
 from src.observability.metrics import (
     DEGRADATION_RUNG_MODEL_FALLBACK,
     record_degradation_rung,
@@ -177,6 +181,14 @@ def planner_agent(state: ResearchState) -> dict[str, Any]:
             "planner_response_unparseable",
             extra={"error": str(exc)},
         )
+        # ADR 0097: the planning/decomposition class of 15 §7.1 had no
+        # record-borne signal at all, so a campaign report could only
+        # say "not detected from records" about it. This is the record.
+        record_degradation_reason(
+            taxonomy_class=TAXONOMY_PLANNING_DECOMPOSITION,
+            code="planner_response_unparseable",
+            component="planner",
+        )
         parsed = {}
     if not isinstance(parsed, dict):
         # Valid JSON that isn't an object (a bare list / string /
@@ -205,6 +217,11 @@ def planner_agent(state: ResearchState) -> dict[str, Any]:
         # run that will report `succeeded`. ADR 0081.
         record_degradation_rung(
             rung=DEGRADATION_RUNG_MODEL_FALLBACK, component="planner"
+        )
+        record_degradation_reason(
+            taxonomy_class=TAXONOMY_PLANNING_DECOMPOSITION,
+            code="planner_plan_fallback_to_query",
+            component="planner",
         )
         sub_questions = sub_questions or [state["query"]]
         search_queries = search_queries or [state["query"]]
