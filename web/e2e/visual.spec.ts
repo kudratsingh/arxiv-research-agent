@@ -100,7 +100,7 @@ import type { ReadyCondition, StateEntry } from "./support/states";
 const VISUAL_WIDTHS = [412, 1440] as const;
 
 /**
- * The one tolerance in this file, and the measurement behind it.
+ * The two-part tolerance in this file, and the measurement behind it.
  *
  * FORTY-FIVE OF THE FORTY-EIGHT ARE BYTE-IDENTICAL between two forced
  * regenerations, and the three that are not differ by 4, 9 and 14 raw pixels —
@@ -130,13 +130,13 @@ const VISUAL_WIDTHS = [412, 1440] as const;
  * the product does not ship, and would then not notice if `sticky` were
  * removed.
  *
- * So it is a bound on the AREA that may differ, at 1.5× the largest value
- * ever observed. It is 0.015% of a 1440 × 900 frame, and the deliberate
- * 2 px shift criterion 2 asks for moves **two to three orders of magnitude**
- * more pixels than this — the PR body carries that number — so the tolerance
- * cannot swallow the regression the gate exists to catch. It bounds area
- * rather than raising `threshold`, deliberately: a colour change over a whole
- * surface stays red however small the per-pixel delta is.
+ * `MAX_DIFF_PIXEL_RATIO` scales the area budget with the capture: 0.024% is
+ * 90 pixels at 412 × 915 and 311 at 1440 × 900. The desktop allowance is
+ * above the compositor seam's 281 pixels at the stricter threshold; the
+ * mobile allowance is less than half the old flat 200-pixel budget.
+ * `PIXEL_THRESHOLD` lowers pixelmatch's YIQ threshold from 0.2 to 0.1 so a
+ * change behind a dim scrim is counted instead of disappearing before the
+ * area budget is applied.
  *
  * WO-D6 RE-MEASURED THIS OVER THREE FORCED REGENERATIONS AND THE BOUND STILL
  * HOLDS, with one addition worth recording rather than discovering later.
@@ -148,11 +148,21 @@ const VISUAL_WIDTHS = [412, 1440] as const;
  * bimodal seam, 30 raw pixels in light and 39 in dark, at a **maximum
  * channel delta of 1 and 2**. That is an order of magnitude below the
  * per-pixel `threshold`, so Playwright counts zero differing pixels and the
- * comparator never sees it; it is recorded here because a future reader
- * measuring raw bytes will, and should know it is antialiasing on a new
- * surface rather than drift.
+ * comparator never sees it even at 0.1; it is recorded here because a future
+ * reader measuring raw bytes will, and should know it is antialiasing on a
+ * new surface rather than drift.
+ *
+ * ADR 0099 closes the failure the 2026-09-17 golden pass measured. The
+ * `Report` → `Briefing` change at 412 px moved about 270 raw pixels but stayed
+ * under the old comparator after its default 0.2 threshold, and 16 of 26 stale
+ * snapshots remained green. The two scrim-dimmed
+ * `rail-error-upstream-*-412` snapshots had survived since PR 118 for the
+ * same reason. The proof for this pair of bounds is the inverse: changing the
+ * label back and deliberately shifting that rail page both fail, while the
+ * current forty-eight goldens pass twice without regeneration.
  */
-const MAX_DIFF_PIXELS = 200;
+const MAX_DIFF_PIXEL_RATIO = 0.00024;
+const PIXEL_THRESHOLD = 0.1;
 
 // ---------------------------------------------------------------------------
 // The inventory
@@ -497,8 +507,9 @@ test.describe("WO-28 criterion 1 — the slice and the degraded states, light an
               animations: "disabled",
               caret: "hide",
               scale: "css",
-              // The one tolerance. See `MAX_DIFF_PIXELS` for the measurement.
-              maxDiffPixels: MAX_DIFF_PIXELS,
+              // The two-part tolerance. See the constants for the measurement.
+              maxDiffPixelRatio: MAX_DIFF_PIXEL_RATIO,
+              threshold: PIXEL_THRESHOLD,
             });
           },
         );

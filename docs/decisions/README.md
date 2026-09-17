@@ -830,6 +830,13 @@ never renumbered.
   fires 0/20 and is deliberately kept: its zero is the suite's, not the
   rule's.
 
+- [0099](0099-scale-and-strength-bound-visual-diffs.md) — **Visual diffs
+  bound both changed area and pixel strength.** The former flat 200-pixel
+  allowance missed a one-word phone-width spine change and low-contrast
+  changes behind a scrim. A capture-scaled ratio now permits about 90 phone
+  pixels and 311 desktop pixels, while a stricter perceived-colour threshold
+  makes the scrimmed change count before the area bound is applied.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.
