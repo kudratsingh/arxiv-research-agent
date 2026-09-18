@@ -1147,3 +1147,16 @@ This workflow starts no labeling campaign. It renders the already-approved
 arithmetic on labels a test generates. No expert has labelled anything, no
 judge has been called, and §12's expert-time and paid-call gates and
 §14's retention decision are all exactly where they were.
+
+### Representative pools from funded episodes (§8.4)
+
+The stress set remains the checked-in `judge-calibration-v1` material. A funded
+campaign may produce a separate representative revision with
+`python -m src.calibration pool --campaign-id <id> --campaign-root <runs>`.
+The builder reads persisted `episode-state.json` plus judge verdicts, retains
+abstracts and ranked chunks under their recorded source scope, stratifies by
+metric and pass/fail/abstain verdict, and emits blinded items with a leak scan.
+It records revision `1.1.0` and never appends these items to the stress set.
+`None` scores are abstentions with their reason. The command is offline and
+makes no model calls; the resulting pool feeds the existing packet and verdict
+ingest workflow.

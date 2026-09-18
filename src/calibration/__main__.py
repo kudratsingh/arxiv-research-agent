@@ -24,6 +24,7 @@ from src.calibration.packets import (
     render_report,
     write_packet_set,
 )
+from src.calibration.pool import build_pool
 from src.calibration.suite import CALIBRATION_REGISTRY_ROOT
 
 
@@ -51,6 +52,11 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help="presentation seed (default: the registered blinding plan's seed)",
     )
+
+    pool = sub.add_parser("pool", help="build a blinded representative pool from episode state and verdicts")
+    pool.add_argument("--campaign-id", required=True)
+    pool.add_argument("--campaign-root", type=Path, required=True)
+    pool.add_argument("--output", type=Path, default=Path("outputs/calibration/representative-pool-1.1.0.json"))
 
     ingest = sub.add_parser(
         "ingest",
@@ -85,6 +91,9 @@ def main(argv: Iterable[str] | None = None) -> int:
     """
     args = _parser().parse_args(list(argv) if argv is not None else None)
     try:
+        if args.command == "pool":
+            print(build_pool(args.campaign_id, args.campaign_root, output=args.output))
+            return 0
         if args.command == "packets":
             for path in write_packet_set(args.output, seed=args.seed, root=args.registry_root):
                 print(path)
