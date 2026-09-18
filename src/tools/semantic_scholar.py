@@ -140,7 +140,29 @@ def _map_s2_paper(item: dict[str, Any]) -> PaperMetadata | None:
         abstract=abstract.strip(),
         url=landing_url,
         pdf_url=pdf_url,
+        published=_published_year(item.get("year")),
     )
+
+
+def _published_year(raw: Any) -> str | None:
+    """S2's `year` as a year-precision ISO date, or `None`.
+
+    `_PAPER_FIELDS` has always asked for `year` and nothing has ever
+    read it. It is a *year*, not a date, so that is what it is recorded
+    as: ISO 8601 allows a reduced-precision date and four digits is
+    exactly how much this source knows. Widening the request to S2's
+    `publicationDate` would buy a day and a month at the cost of a live
+    API change nothing here can test, and the one consumer
+    (`build_faithfulness_sources`) reads four characters.
+
+    Anything outside a plausible publication year — a string, a null, a
+    number arriving from a field S2 filled with something else — is
+    `None` rather than coerced, on the same rule the arXiv reader
+    follows: a date this cannot read is one it must not invent.
+    """
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        return None
+    return str(raw) if 1800 <= raw <= 2999 else None
 
 
 def _get_json(path: str, params: dict[str, Any]) -> Any | None:

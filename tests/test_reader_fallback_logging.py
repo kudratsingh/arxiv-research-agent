@@ -333,4 +333,4 @@ class TestRunSummary:
         reader_module.reader_agent(
             {"papers": [_mk_paper("p0")], "query": "Q?", "sub_questions": []}  # type: ignore[arg-type]
         )
-        assert reader_module._fallback_reasons.get() is None
+        assert reader_module._fallbacks.get() is None

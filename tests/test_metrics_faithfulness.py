@@ -1,6 +1,6 @@
 """Unit tests for the faithfulness metric.
 
-Pure helpers (`build_source_index`, `build_faithfulness_sources`,
+Pure helpers (`build_faithfulness_sources`,
 `_build_faithfulness_prompt`, `_aggregate_claims`, `resolve_cite`,
 `_cite_key_from_string`) are tested directly. The full
 `measure_faithfulness` path is exercised with `call_llm_json`
@@ -39,7 +39,6 @@ from src.eval.metrics import (
     _build_faithfulness_prompt,
     _cite_key_from_string,
     build_faithfulness_sources,
-    build_source_index,
     measure_faithfulness,
     resolve_cite,
 )
@@ -54,6 +53,7 @@ def _mk_paper(
     first_author: str,
     abstract: str = "Some abstract.",
     title: str = "Paper title",
+    published: str | None = None,
 ) -> PaperMetadata:
     return PaperMetadata(
         id=paper_id,
@@ -62,6 +62,7 @@ def _mk_paper(
         abstract=abstract,
         url=paper_id,
         pdf_url=f"{paper_id}.pdf",
+        published=published,
     )
 
 
@@ -113,71 +114,25 @@ def _dossier_block(prompt: str, cite_key: str) -> str:
     return ""
 
 
-class TestBuildSourceIndexIsTheVerifiersAdapter:
-    """The ADR 0015 contract, kept — including the defect it carries."""
+class TestTheLegacyJoinIsGone:
+    """LE-V: `build_source_index` had one caller left, and it was the bug.
 
-    def test_joins_papers_and_citations_on_paper_id(self) -> None:
-        papers = [
-            _mk_paper(paper_id="p1", first_author="Jane Smith", abstract="A1"),
-            _mk_paper(paper_id="p2", first_author="John Doe", abstract="A2"),
-        ]
-        citations = [
-            _mk_citation(paper_id="p1", year="2023", first_author="Jane Smith"),
-            _mk_citation(paper_id="p2", year="2024", first_author="John Doe"),
-        ]
-        index = build_source_index(papers, citations)
-        assert index == {("smith", "2023"): "A1", ("doe", "2024"): "A2"}
+    ADR 0100 kept that `(surname, year)` join alive at its original
+    contract — two same-surname, same-year papers collapsing to one
+    entry and all — because `src/agents/verifier.py` built its
+    abstract-path dossier from its keys, and a metrics work order may not
+    change a runtime agent's prompt. The class that used to sit here
+    pinned the defect so the follow-up could not be lost.
 
-    def test_paper_without_matching_citation_is_omitted(self) -> None:
-        papers = [
-            _mk_paper(paper_id="p1", first_author="Jane Smith"),
-            _mk_paper(paper_id="uncited", first_author="Nobody Cited"),
-        ]
-        citations = [_mk_citation(paper_id="p1", year="2023", first_author="Jane Smith")]
-        index = build_source_index(papers, citations)
-        assert ("cited", "0000") not in index
-        assert list(index.keys()) == [("smith", "2023")]
+    The follow-up landed: the verifier builds its dossier from
+    `build_faithfulness_sources`, and a join with a known collision and
+    no callers is a trap rather than an API. This is the assertion that
+    replaces the pin — it fails if the function comes back.
+    """
 
-    def test_year_suffix_stripped(self) -> None:
-        papers = [_mk_paper(paper_id="p1", first_author="Jane Smith")]
-        citations = [
-            _mk_citation(paper_id="p1", year="2023a", first_author="Jane Smith")
-        ]
-        assert build_source_index(papers, citations) == {
-            ("smith", "2023"): "Some abstract."
-        }
-
-    def test_paper_without_authors_omitted(self) -> None:
-        papers = [
-            PaperMetadata(
-                id="p1",
-                title="t",
-                authors=[],
-                abstract="a",
-                url="u",
-                pdf_url="p",
-            )
-        ]
-        citations = [_mk_citation(paper_id="p1", year="2023", first_author="X")]
-        assert build_source_index(papers, citations) == {}
-
-    def test_citation_without_year_omitted(self) -> None:
-        papers = [_mk_paper(paper_id="p1", first_author="Jane Smith")]
-        citations = [_mk_citation(paper_id="p1", year="", first_author="Jane Smith")]
-        assert build_source_index(papers, citations) == {}
-
-    def test_it_still_collides_and_that_is_recorded_not_fixed(self) -> None:
-        """EL-08 survives here on purpose; the metric no longer uses it.
-
-        `verifier.py` builds its abstract-path dossier from these keys
-        and belongs to another lane, so the contract is held rather than
-        widened underneath it. ADR 0100 carries this as an open
-        follow-up; this test is what stops it being forgotten.
-        """
-        papers, citations = _two_zhangs()
-        index = build_source_index(papers, citations)
-        assert len(index) == 1
-        assert index[("zhang", "2024")] == "ZHANG-TWO measures annotator drift."
+    def test_metrics_publishes_exactly_one_cited_source_join(self) -> None:
+        assert not hasattr(metrics_module, "build_source_index")
+        assert hasattr(metrics_module, "build_faithfulness_sources")
 
 
 class TestBuildFaithfulnessSources:
@@ -217,6 +172,88 @@ class TestBuildFaithfulnessSources:
         dossier = build_faithfulness_sources(papers, citations)
 
         assert dossier["sources"][0]["year"] == "2024"
+
+    def test_the_publication_date_outranks_the_identifier(self) -> None:
+        """LE-V. Three year sources, in order of independence.
+
+        `published` is what the retrieval source *stated*; the
+        identifier's `YYMM` is a submission month inferred from a
+        numbering scheme; the citation's year was written by the model
+        under examination. The first one available wins.
+        """
+        paper_id = "https://arxiv.org/abs/2401.00001"
+        papers = [
+            _mk_paper(
+                paper_id=paper_id, first_author="Jane Smith", published="2023-12-30"
+            )
+        ]
+        citations = [
+            _mk_citation(paper_id=paper_id, year="2019", first_author="Jane Smith")
+        ]
+        dossier = build_faithfulness_sources(papers, citations)
+
+        assert dossier["sources"][0]["year"] == "2023"
+
+    def test_a_year_precision_date_is_enough(self) -> None:
+        """Semantic Scholar states a year and no more; that is a date."""
+        papers = [
+            _mk_paper(
+                paper_id="local-fixture-1",
+                first_author="Jane Smith",
+                published="2021",
+            )
+        ]
+        citations = [
+            _mk_citation(paper_id="local-fixture-1", year="2019", first_author="J Smith")
+        ]
+
+        assert build_faithfulness_sources(papers, citations)["sources"][0]["year"] == (
+            "2021"
+        )
+
+    def test_an_unreadable_date_falls_through_rather_than_deciding(self) -> None:
+        paper_id = "https://arxiv.org/abs/2401.00001"
+        for unreadable in ("", "   ", "last Tuesday", "0000-01-01", None):
+            papers = [
+                _mk_paper(
+                    paper_id=paper_id,
+                    first_author="Jane Smith",
+                    published=unreadable,
+                )
+            ]
+            citations = [
+                _mk_citation(paper_id=paper_id, year="2019", first_author="J Smith")
+            ]
+            dossier = build_faithfulness_sources(papers, citations)
+
+            assert dossier["sources"][0]["year"] == "2024", unreadable
+
+    def test_a_paper_recorded_before_the_key_existed_still_joins(self) -> None:
+        """`episode-state.json` files written before LE-V have no such key.
+
+        They are parsed straight back into `PaperMetadata`, so a
+        subscript here would turn an old snapshot into a `KeyError` on a
+        re-judge months later.
+        """
+        legacy: Any = {
+            "id": "https://arxiv.org/abs/2401.00001",
+            "title": "t",
+            "authors": ["Jane Smith"],
+            "abstract": "a",
+            "url": "u",
+            "pdf_url": "p",
+        }
+        citations = [
+            _mk_citation(
+                paper_id="https://arxiv.org/abs/2401.00001",
+                year="2019",
+                first_author="J Smith",
+            )
+        ]
+
+        assert build_faithfulness_sources([legacy], citations)["sources"][0][
+            "year"
+        ] == "2024"
 
     def test_the_citations_year_still_resolves_as_an_alias(self) -> None:
         # The report's inline tags were written from the citation list,
@@ -656,14 +693,18 @@ class TestTheJudgeSeesTheRightSource:
         assert result["collision_count"] == 2
         assert result["sources_total"] == 2
 
-    def test_before_el_08_the_second_paper_had_replaced_the_first(self) -> None:
+    def test_both_papers_survive_the_join(self) -> None:
         # The defect, stated as an assertion rather than as prose: the
-        # old join kept one entry for two papers, so a `[Zhang, 2024]`
-        # claim about the first was checked against the second's
-        # abstract. The new dossier keeps both.
+        # old `(surname, year)` join kept one entry for two papers, so a
+        # `[Zhang, 2024]` claim about the first was checked against the
+        # second's abstract. The dossier keeps both, under keys that tell
+        # them apart.
         papers, citations = _two_zhangs()
-        assert len(build_source_index(papers, citations)) == 1
-        assert len(build_faithfulness_sources(papers, citations)["sources"]) == 2
+        dossier = build_faithfulness_sources(papers, citations)
+        assert [source["cite_key"] for source in dossier["sources"]] == [
+            "Zhang, 2024a",
+            "Zhang, 2024b",
+        ]
 
 
 class TestTheJudgeSeesWhatTheWriterSaw:

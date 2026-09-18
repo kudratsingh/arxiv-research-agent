@@ -611,13 +611,23 @@ def build_corpus_index(papers: Sequence[PaperMetadata]) -> dict[str, PaperMetada
     return index
 
 
-def build_source_index(
+def build_checkable_text_index(
     papers: Sequence[PaperMetadata],
     *,
     full_texts: Mapping[str, str] | None = None,
     evidence: Sequence[EvidenceClaim] | None = None,
 ) -> dict[str, SourceText]:
     """Assemble the best available checkable text for each retrieved paper.
+
+    **Called `build_source_index` until LE-V.** `src/eval/metrics.py`
+    declared a function of that same name in the same package with a
+    different signature and a different return type — one builds a
+    `(surname, year) -> abstract` join for a judge's dossier, this one
+    builds a `paper_key -> SourceText` index for a string search — and
+    two same-named functions one import apart is a reader's trap rather
+    than a naming style. The name now says which of the two this is:
+    what it assembles is the *checkable text*, and `build_corpus_index`
+    above it already owns "which papers exist".
 
     Priority, best first:
 
@@ -1291,7 +1301,7 @@ def measure_groundedness(
       the ids the citation list asserts, resolved against
       `build_corpus_index(papers)`.
     - **Verbatim quotation** over the quoted spans in the report body,
-      located in `build_source_index(...)`.
+      located in `build_checkable_text_index(...)`.
 
     Args:
         report: The synthesized report markdown, `state["final_report"]`.
@@ -1309,7 +1319,9 @@ def measure_groundedness(
         an empty denominator is `None` with a reason.
     """
     corpus = build_corpus_index(papers)
-    sources = build_source_index(papers, full_texts=full_texts, evidence=evidence)
+    sources = build_checkable_text_index(
+        papers, full_texts=full_texts, evidence=evidence
+    )
 
     identifiers = [
         *extract_report_identifiers(report),

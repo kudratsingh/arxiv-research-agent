@@ -57,8 +57,15 @@ from src.agents.schemas import VerifierOutput
 from src.cancellation import JobCancelledError
 from src.config import settings
 from src.errors import UpstreamModelOutput
-from src.eval.metrics import build_source_index
-from src.graph.state import Citation, EvidenceClaim, PaperMetadata, ResearchState
+from src.eval.metrics import (
+    CITE_AMBIGUOUS,
+    SourceDocument,
+    SourceDossier,
+    build_faithfulness_sources,
+    report_cite_tags,
+    resolve_cite,
+)
+from src.graph.state import Citation, EvidenceClaim, ResearchState
 from src.llm import call_llm_json
 from src.observability import get_logger
 from src.observability.costs import CostBudgetExceeded
@@ -98,6 +105,15 @@ VERDICT_REASONS: Final[frozenset[str]] = frozenset(
         # answer — and the only one of the five a reader can act on by
         # changing a setting rather than by investigating an incident.
         "mock_mode",
+        # LE-V, closing ADR 0100's open item. The briefing cites a
+        # `(surname, year)` that two of the papers it retrieved answer
+        # to, and it did not say which — so no verdict about that claim
+        # is better than a coin flip. The name is `resolve_cite`'s own
+        # resolution code, not a new word for the same thing: the
+        # offline metric abstains one *claim* on it, and this abstains
+        # the verification, because the runtime verdict has no smaller
+        # unit than the report.
+        CITE_AMBIGUOUS,
     }
 )
 """Every reason code a verdict can carry, published by ADR 0076.
@@ -106,7 +122,9 @@ Two of them are `src/errors.py`'s own codes, reused rather than
 reinvented: an abstention caused by a failed judge call reports
 `upstream_model`, one caused by output the parser could not use reports
 `upstream_model_output` — the same names those failures carry when they
-reach a job as an error, so a dashboard can join the two surfaces.
+reach a job as an error, so a dashboard can join the two surfaces. The
+seventh, `ambiguous_citation`, is `src/eval/metrics.py`'s, for the same
+reason.
 """
 
 # Recovery actions the verifier can recommend. Values are what the
@@ -136,6 +154,13 @@ extracted:
   - **Abstract fallback** — only the paper's abstract, marked
     "abstract (no chunks available)". Judge more strictly here since
     abstracts are a lower bound on what the paper actually claims.
+
+Each source block opens with the key that identifies it, followed by
+the paper's title. When two cited papers share a first author and a
+year, their keys carry a distinguishing letter — [Zhang, 2024a] and
+[Zhang, 2024b] — and the titles tell you which is which. Match a
+claim's citation to a source by key first and by title second; never
+judge a claim against a paper you are not certain it cited.
 
 Definitions:
   - A "factual claim" is a statement that could be true or false about
@@ -173,101 +198,126 @@ and pick the single most impactful recovery action.
 """
 
 
-def _paper_cite_lastname(paper: PaperMetadata) -> str:
-    """First-author lowercased last name, or empty if unresolvable.
+def _cited_years(citations: list[Citation]) -> dict[str, str]:
+    """`paper_id -> the four-digit year the citation list claims`.
 
-    Same normalization as `build_source_index` so the two dossier
-    builders agree on which papers map to which cite keys.
+    The dossier presents each paper under the year its *metadata* gives
+    (ADR 0100, extended by LE-V to prefer `PaperMetadata.published`), and
+    that is the right year to judge by. It is not always the year the
+    briefing's own inline tags spell, because those were written from
+    this list — so the two are printed side by side when they disagree
+    rather than leaving the judge to match `[Zhang, 2023]` in the prose
+    against `[Zhang, 2024]` in the dossier and conclude the paper was
+    never provided.
     """
-    authors = paper.get("authors", [])
-    if not authors or not authors[0].strip():
-        return ""
-    return authors[0].strip().split()[-1].lower()
-
-
-def _dossier_from_evidence(
-    papers: list[PaperMetadata],
-    citations: list[Citation],
-    evidence: list[EvidenceClaim],
-) -> str:
-    """Build a `[Author, Year]`-keyed dossier from evidence claims.
-
-    Groups evidence by paper_id, resolves each to its cite key against
-    the citation list (same key shape as `build_source_index`), and
-    emits one block per paper with all its evidence source_text
-    chunks. Falls back to the abstract for cited papers that have no
-    evidence claims (partial coverage) — that's the same conservative
-    behavior as the abstract-only path.
-    """
-    year_by_id: dict[str, str] = {}
+    years: dict[str, str] = {}
     for citation in citations:
         year = citation["year"].strip()[:4]
         if year:
-            year_by_id[citation["paper_id"]] = year
+            years[citation["paper_id"]] = year
+    return years
 
-    paper_by_id: dict[str, PaperMetadata] = {p["id"]: p for p in papers}
 
+def _source_header(source: SourceDocument, cited_year: str) -> str:
+    """One source's opening lines: its key, its title, and its alias."""
+    lines = [f"[{source['cite_key']}] — {source['title']}"]
+    if cited_year and cited_year != source["year"]:
+        lines.append(
+            f"(the briefing's own tags cite this paper as "
+            f"[{source['lastname'].title()}, {cited_year}])"
+        )
+    return "\n".join(lines)
+
+
+def _dossier_from_evidence(
+    dossier: SourceDossier,
+    citations: list[Citation],
+    evidence: list[EvidenceClaim],
+) -> str:
+    """Render the dossier from the reader's ranked chunks (ADR 0016).
+
+    Groups evidence by `paper_id` and emits one block per cited paper
+    with all of that paper's `source_text` chunks, each tagged with its
+    section and relevance. Falls back to the abstract for cited papers
+    with no evidence claims (partial coverage — the reader could not
+    fetch that PDF), which is the same conservative behaviour as the
+    abstract-only path.
+
+    The keys are the `SourceDossier`'s, not this function's. It used to
+    mint its own `[Surname, Year]` from the citation list, which meant
+    two papers by one Zhang in one year produced two blocks under one
+    key — the same ambiguity ADR 0100 found on the metric path, arriving
+    by a different route.
+    """
     evidence_by_paper: dict[str, list[EvidenceClaim]] = {}
     for claim in evidence:
         evidence_by_paper.setdefault(claim["paper_id"], []).append(claim)
 
+    cited_years = _cited_years(citations)
     blocks: list[str] = []
-    for paper_id, year in year_by_id.items():
-        paper = paper_by_id.get(paper_id)
-        if paper is None:
-            continue
-        lastname = _paper_cite_lastname(paper)
-        if not lastname:
-            continue
-        cite_key = f"[{lastname.title()}, {year}]"
-
-        claims_for_paper = evidence_by_paper.get(paper_id, [])
+    for source in dossier["sources"]:
+        header = _source_header(source, cited_years.get(source["paper_id"], ""))
+        claims_for_paper = evidence_by_paper.get(source["paper_id"], [])
         if claims_for_paper:
-            chunk_blocks = [
-                f"({c['section']}, relevance={c['relevance_score']:.2f})\n{c['source_text']}"
+            body = "\n\n".join(
+                f"({c['section']}, relevance={c['relevance_score']:.2f})\n"
+                f"{c['source_text']}"
                 for c in claims_for_paper
-            ]
-            body = "\n\n".join(chunk_blocks)
-            blocks.append(f"{cite_key} — source chunks:\n{body}\n")
+            )
+            blocks.append(f"{header}\nsource chunks:\n{body}\n")
         else:
             # Cited paper has no evidence claims (e.g. reader couldn't
             # fetch its PDF). Fall back to the abstract so the judge
             # isn't left blind on that paper.
             blocks.append(
-                f"{cite_key} — abstract (no chunks available):\n{paper['abstract']}\n"
+                f"{header}\nabstract (no chunks available):\n"
+                f"{source['abstract']}\n"
             )
 
     return "\n".join(blocks) or "(no cited papers with sources available)"
 
 
-def _build_user_prompt(state: ResearchState) -> str:
+def _dossier_from_abstracts(dossier: SourceDossier, citations: list[Citation]) -> str:
+    """Render the dossier from abstracts alone — the ADR 0007 substrate."""
+    cited_years = _cited_years(citations)
+    blocks = [
+        f"{_source_header(source, cited_years.get(source['paper_id'], ''))}\n"
+        f"{source['abstract']}\n"
+        for source in dossier["sources"]
+    ]
+    return "\n".join(blocks) or "(no cited papers with abstracts available)"
+
+
+def _build_user_prompt(state: ResearchState, dossier: SourceDossier) -> str:
     """Assemble the user message: report + cited-paper dossier + sub-questions.
 
-    Two dossier shapes:
-      - **Evidence path** (`enable_evidence_store=True` and `state.evidence`
-        populated): dossier lists the actual ranked chunks the reader
-        used, keyed by `[Author, Year]`. Judge decides against real
-        text — the ADR-0007 abstract limitation is closed here.
-      - **Abstract path** (default): uses `build_source_index` from
-        `src.eval.metrics` so the runtime and offline judges agree on
-        the abstract-only substrate.
+    Two dossier shapes over one identity. `build_faithfulness_sources`
+    decides *which* papers are in the dossier and what each is called;
+    this function decides what text each block carries:
+
+      - **Evidence path** (`enable_evidence_store=True` and
+        `state.evidence` populated): the actual ranked chunks the reader
+        used. The judge decides against real text — the ADR 0007
+        abstract limitation is closed here.
+      - **Abstract path** (default): the abstracts, which is the
+        substrate ADR 0007 defined and ADR 0015 shared with the offline
+        metric.
+
+    Both paths are keyed by `paper_id` since LE-V and print
+    ADR 0100's disambiguated cite keys, so two same-surname,
+    same-year papers are two blocks the judge can tell apart rather than
+    one the old `(surname, year)` join silently collapsed them into.
     """
     report = state.get("draft_report", "")
-    papers = state.get("papers", [])
     citations = state.get("citations", [])
     sub_questions = state.get("sub_questions", [])
     evidence = state.get("evidence", [])
 
     if settings.enable_evidence_store and evidence:
-        dossier = _dossier_from_evidence(papers, citations, evidence)
+        rendered = _dossier_from_evidence(dossier, citations, evidence)
         dossier_label = "Cited papers (ranked source chunks):"
     else:
-        source_index = build_source_index(papers, citations)
-        dossier_lines: list[str] = []
-        for (lastname, year), abstract in source_index.items():
-            cite_key = f"[{lastname.title()}, {year}]"
-            dossier_lines.append(f"{cite_key}\n{abstract}\n")
-        dossier = "\n".join(dossier_lines) or "(no cited papers with abstracts available)"
+        rendered = _dossier_from_abstracts(dossier, citations)
         dossier_label = "Cited papers (abstracts):"
 
     sub_q_lines = "\n".join(f"  - {q}" for q in sub_questions) or "  (none)"
@@ -276,8 +326,32 @@ def _build_user_prompt(state: ResearchState) -> str:
         f"Research question: {state.get('query', '(unknown)')}\n\n"
         f"Sub-questions the report should cover:\n{sub_q_lines}\n\n"
         f"Draft report:\n\n{report}\n\n"
-        f"{dossier_label}\n\n{dossier}"
+        f"{dossier_label}\n\n{rendered}"
     )
+
+
+def _unattributable_cites(report: str, dossier: SourceDossier) -> list[str]:
+    """The report's own tags that name two cited papers and not one.
+
+    Each `[Author, Year]` tag in the briefing is resolved against the
+    dossier with `resolve_cite` — the same resolver the offline metric
+    uses on the judge's echo, applied here to the text the judge is
+    about to be shown. A tag that resolves to exactly one paper is fine;
+    one that resolves to none is a fabricated or unretrieved citation,
+    which is the verifier's job to catch and not a reason to stop; one
+    that resolves to *two* is the EL-08 case, and nothing in the tag
+    distinguishes them.
+
+    Deduplicated and returned in first-appearance order, so the log line
+    and the summary name each contested key once and say the same thing
+    twice running.
+    """
+    contested: list[str] = []
+    for tag in report_cite_tags(report):
+        _, resolution = resolve_cite(tag, dossier)
+        if resolution == CITE_AMBIGUOUS and tag not in contested:
+            contested.append(tag)
+    return contested
 
 
 def _coerce_string_list(value: Any) -> list[str]:
@@ -399,6 +473,65 @@ def _mock_outcome() -> VerificationOutcome:
     )
 
 
+def _ambiguous_outcome(contested: list[str], collisions: int) -> VerificationOutcome:
+    """The briefing cites a key two of its own papers answer to (LE-V).
+
+    ADR 0100 closed this on the metric path and left it open here,
+    because closing it meant changing a runtime agent's prompt: the
+    offline judge abstains the *claim*, excludes it from the denominator
+    and counts it, and the runtime verdict has no unit smaller than the
+    report to abstain. So the verification abstains, before the model
+    call, and the run costs nothing for a judgement nobody could make.
+
+    Why abstain rather than judge and discount: this verifier's output is
+    one verdict, and under the fixed verify-and-repair policy a `fail`
+    spends the run's one repair (ADR 0076). A repair aimed at a claim
+    that may have been checked against the wrong Zhang is worse than no
+    repair — it is a second synthesis paid for on the strength of a coin
+    flip, which is the EL-08 defect wearing a different hat. `abstain`
+    is what the policy already does with an unjudged report.
+
+    Why it is *narrow*: the trigger is a tag in the briefing's own prose,
+    not a collision in the dossier. Two same-surname, same-year papers
+    that the briefing cites with ADR 0100's letters — or does not cite in
+    the body at all — are perfectly judgeable, because the dossier now
+    prints both under distinct keys with their titles beside them, and
+    the verification proceeds.
+
+    Args:
+        contested: The briefing's tags that name two papers, in first
+            appearance order.
+        collisions: `SourceDossier.collision_count` — cited papers that
+            needed a disambiguating letter. Reported beside the tags
+            because it is the size of the underlying problem, while the
+            tags are the part of it this briefing tripped over.
+    """
+    keys = ", ".join(contested)
+    log.warning(
+        "verifier_ambiguous_citations_abstained",
+        extra={"count": len(contested), "detail": keys},
+    )
+    return VerificationOutcome(
+        verdict="abstain",
+        reason=CITE_AMBIGUOUS,
+        summary=(
+            f"skipped: {len(contested)} citation tag(s) name two cited papers "
+            f"each ({keys}); {collisions} cited paper(s) share a surname and "
+            f"year, and the briefing did not say which it meant"
+        ),
+        fields={
+            # `verified=True` for the same reason the other pre-LLM
+            # short-circuits use it: ADR 0015's contract says this field
+            # means "no follow-up needed", and nothing here found a
+            # fault. The verdict beside it is what says nothing checked.
+            "verified": True,
+            "unsupported_claims": [],
+            "missing_evidence": [],
+            "verifier_recommendation": "",
+        },
+    )
+
+
 def _failure_reason(unsupported: list[str], missing: list[str]) -> str:
     """Which of the fail codes this verdict earned."""
     if unsupported and missing:
@@ -433,12 +566,18 @@ def run_verification(state: ResearchState) -> VerificationOutcome:
     if not report.strip():
         return _abstained("no_draft", "no draft to verify")
 
-    if not state.get("citations"):
+    citations = state.get("citations", [])
+    if not citations:
         # A report with no citations has nothing verifiable in ADR-0007's
         # frame. Flag it but don't block — the critic will catch it.
         return _abstained("no_citations", "draft has no citations")
 
-    user_prompt = _build_user_prompt(state)
+    dossier = build_faithfulness_sources(state.get("papers", []), citations)
+    contested = _unattributable_cites(report, dossier)
+    if contested:
+        return _ambiguous_outcome(contested, dossier["collision_count"])
+
+    user_prompt = _build_user_prompt(state, dossier)
 
     try:
         parsed = call_llm_json(

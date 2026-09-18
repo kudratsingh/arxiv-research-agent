@@ -385,8 +385,19 @@ class LlmCallObservation:
     *reader* of a call that already happened, and handing it the mutable
     `RunCosts` would invite a bookkeeping second opinion. Everything a
     downstream recorder needs to describe the call — the billed model,
-    the four token buckets, the priced cost, the retries thrown away —
-    is here, and nothing it does not.
+    the four token buckets, the priced cost, the retries thrown away,
+    and the provider's own handle on it — is here, and nothing it does
+    not.
+
+    `request_id` is Anthropic's `request-id` response header, and it is
+    the field that makes an observation *takeable to the provider*: a
+    slow or mispriced call an analyst can name is a support ticket, and
+    one they cannot is an anecdote. It was recorded on the failure path
+    from ADR 0051 onward and discarded on the success path, which is the
+    wrong way round — a call that failed is visible in three other
+    records, and a call that succeeded expensively is visible in none.
+    `None` is the honest value for a call whose response carried no such
+    header and for every caller that does not have one to hand.
     """
 
     model: str
@@ -397,6 +408,7 @@ class LlmCallObservation:
     cost_usd: float
     retries: int
     latency_ms: float | None
+    request_id: str | None = None
 
 
 LlmCallObserver = Callable[[LlmCallObservation], None]
@@ -488,6 +500,7 @@ def record_llm_call(
     cache_creation_input_tokens: int = 0,
     latency_ms: float | None = None,
     retries: int = 0,
+    request_id: str | None = None,
 ) -> None:
     """Record a completed LLM call against the current run's accumulator.
 
@@ -524,6 +537,12 @@ def record_llm_call(
         retries: Attempts discarded before the successful one. Their
             token spend is unknowable (`usage` only exists on a 2xx
             body), which is exactly why the count is recorded.
+        request_id: Anthropic's `request-id` for the attempt that
+            returned, when the caller read it off the raw response.
+            `None` — the default, and what every caller outside
+            `src.llm` passes — omits the field from the line rather
+            than writing an empty one, so a reader can tell "no id was
+            available" from "the id was the empty string".
     """
     cost = estimate_cost(
         model,
@@ -546,6 +565,14 @@ def record_llm_call(
     }
     if latency_ms is not None:
         payload["latency_ms"] = round(latency_ms, 1)
+    # Present only when there is one, for the same reason `latency_ms`
+    # is: a key that is always there and usually empty teaches a reader
+    # to stop looking at it. `llm_upstream_error` has carried this field
+    # since ADR 0051 and the two lines now name the same thing, so one
+    # id joins a failure to the retry chain that produced it and a
+    # success to the spend it caused.
+    if request_id:
+        payload["request_id"] = request_id
     log.info("llm_call", extra=payload)
     costs = _current_costs.get()
     if costs is not None:
@@ -570,6 +597,7 @@ def record_llm_call(
                     cost_usd=cost,
                     retries=retries,
                     latency_ms=latency_ms,
+                    request_id=request_id,
                 )
             )
         except Exception:

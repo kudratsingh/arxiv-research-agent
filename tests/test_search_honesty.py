@@ -85,6 +85,30 @@ def _stub_ranker(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
+class TestTheFixtureCorpusDates:
+    """LE-V. The demo papers carry a date, at the precision they have.
+
+    An arXiv identifier's first four digits *are* the submission `YYMM`
+    by construction, so recording November 2023 for `2311.09000` invents
+    nothing — and a day would have had to be made up. This test is what
+    stops a later edit fabricating one, or mistyping a month.
+    """
+
+    def test_every_fixture_papers_month_is_the_one_its_identifier_states(
+        self,
+    ) -> None:
+        for paper in search_module.MOCK_PAPERS:
+            arxiv_id = paper["id"].rsplit("/", 1)[-1]
+            yymm = arxiv_id[:4]
+            expected = f"20{yymm[:2]}-{yymm[2:]}"
+
+            assert paper["published"] == expected, paper["id"]
+
+    def test_none_of_them_claims_a_day(self) -> None:
+        for paper in search_module.MOCK_PAPERS:
+            assert len(str(paper["published"])) == len("2023-11"), paper["id"]
+
+
 class TestMockGating:
     """Mock papers are reachable only under the mock flag, never on empty."""
 

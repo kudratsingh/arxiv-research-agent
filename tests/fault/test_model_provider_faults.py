@@ -132,7 +132,11 @@ class _RetryingSdkClient:
         parsed = SimpleNamespace(
             content=[SimpleNamespace(type="text", text="ok")], usage=usage
         )
-        return SimpleNamespace(retries_taken=self._retries_taken, parse=lambda: parsed)
+        return SimpleNamespace(
+            retries_taken=self._retries_taken,
+            request_id="req_fake",
+            parse=lambda: parsed,
+        )
 
 
 async def _run_job_whose_node_calls_the_model(

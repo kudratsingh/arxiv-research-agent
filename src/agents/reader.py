@@ -58,6 +58,14 @@ from their abstracts scores lower on completeness and faithfulness
 for a reason that has nothing to do with the prompts, and that was
 previously invisible in the log stream.
 
+The log stream was, until LE-V, the *only* place that record existed,
+which made a campaign wanting it attach a `logging.Handler` to this
+module — process-wide, so two episodes at once collected each other's
+papers. `abstract_only_recorded()` is the durable answer: a
+`ContextVar`-scoped list, bound per run by whoever opened it, carrying
+one `AbstractOnlyFallback` per degraded paper with the stage that lost
+it. Nothing is bound by default and an unobserved run records nothing.
+
 Mock mode (ADR 0080): under `settings.use_mock_data` each paper's
 analysis — and, when the evidence store is on, its claims — is built by
 `src.agents.mock_mode` from the paper's own abstract. The branch sits
@@ -68,9 +76,12 @@ the only one that would otherwise leave the machine.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Any, TypedDict
+from dataclasses import dataclass
+from typing import Any, Final, TypedDict
 
 from langchain_core.messages import AIMessage
 
@@ -119,7 +130,38 @@ MAX_CHUNKS_PER_PAPER = settings.reader_max_chunks_per_paper
 #: metrics should be read as "computed on abstracts".
 ABSTRACT_ONLY_WARN_THRESHOLD = 2
 
-#: Per-invocation tally of abstract-only fallbacks, keyed by reason.
+@dataclass(frozen=True, slots=True)
+class AbstractOnlyFallback:
+    """One paper the reader analysed from its abstract, and which stage lost it.
+
+    The *stage* is the whole point and is why this is not read back off
+    ADR 0097's degradation observer, which carries the code
+    `reader_paper_abstract_only` and stops there: "the PDF link was
+    dead", "the fetch produced no text", "the text would not chunk" and
+    "the ranker returned nothing" are four different findings with four
+    different owners, and a campaign that cannot tell them apart cannot
+    act on any of them.
+
+    Attributes:
+        paper_id: `PaperMetadata.id` for the degraded paper.
+        reason: A member of `ABSTRACT_ONLY_REASONS`.
+    """
+
+    paper_id: str
+    reason: str
+
+
+#: Every stage `_gather_ranked_chunks` can lose a paper at, closed.
+#:
+#: Published because the consumer is now a *record* rather than a log
+#: line: a campaign tabulating these needs to know which keys can
+#: appear, and a reader of the table needs to know that a fifth one
+#: arriving is a change rather than a long tail.
+ABSTRACT_ONLY_REASONS: Final[frozenset[str]] = frozenset(
+    {"no_pdf_url", "no_text", "no_chunks", "no_ranked_chunks"}
+)
+
+#: Per-invocation tally of abstract-only fallbacks.
 #:
 #: A ContextVar rather than a return value because `_analyze_paper`'s
 #: 3-tuple is load-bearing for a dozen call sites in the test suite,
@@ -127,9 +169,83 @@ ABSTRACT_ONLY_WARN_THRESHOLD = 2
 #: jobs' runs into one number. `reader_agent` binds a fresh list
 #: *inside each worker thread* (see `_analyze_or_degrade`'s wrapper)
 #: so the fan-out shares one object without sharing it across runs.
-_fallback_reasons: ContextVar[list[str] | None] = ContextVar(
-    "reader_fallback_reasons", default=None
+_fallbacks: ContextVar[list[AbstractOnlyFallback] | None] = ContextVar(
+    "reader_fallbacks", default=None
 )
+
+#: Where one *run's* fallbacks are published, when anything is listening.
+#:
+#: Distinct from `_fallbacks` above, and the distinction is the fix. That
+#: one is bound inside the fan-out's worker threads and is emptied when
+#: the node returns; this one is bound by whoever opened the run — the
+#: campaign executor, the eval runner, an API job — and outlives the
+#: node. `reader_agent` reads it in the node's own context, which is the
+#: caller's context (LangGraph copies it into the node), and never from
+#: a worker thread, where a `ThreadPoolExecutor` would have handed it
+#: nothing at all.
+_fallback_sink: ContextVar[list[AbstractOnlyFallback] | None] = ContextVar(
+    "reader_fallback_sink", default=None
+)
+
+
+@contextmanager
+def abstract_only_recorded() -> Iterator[list[AbstractOnlyFallback]]:
+    """Collect every abstract-only fallback the reader makes in this context.
+
+    The durable replacement for reading the reader's own log stream.
+    LE-S had to attach a `logging.Handler` to `src.agents.reader` for the
+    length of an episode, because the per-paper *reason* existed nowhere
+    else — and a log handler is process-wide, so two episodes running at
+    once would each have collected both episodes' papers. Its own
+    docstring says as much, and names this as the fix.
+
+    A `ContextVar` is correct at any concurrency for the reason ADR 0078
+    gives for the cost accumulator: two runs in two threads have two
+    contexts, so each binding sees its own run and no other. Nothing is
+    bound by default, and an unobserved run pays one `ContextVar` read
+    and records nothing — which is what keeps every golden, the scripted
+    tier and the mock matrix byte-identical to what they were.
+
+    Usage, one block per run:
+
+        with abstract_only_recorded() as fallbacks:
+            result = app.invoke(state)
+        summary = abstract_only_summary(fallbacks)
+
+    Yields:
+        The list the reader appends to, in the order its papers
+        degraded. Readable inside the block as well as after it.
+    """
+    sink: list[AbstractOnlyFallback] = []
+    token = _fallback_sink.set(sink)
+    try:
+        yield sink
+    finally:
+        _fallback_sink.reset(token)
+
+
+def abstract_only_summary(
+    fallbacks: list[AbstractOnlyFallback],
+) -> dict[str, Any]:
+    """Tally collected fallbacks into the shape a campaign record wants.
+
+    Here rather than at the consumer so the count, the per-reason
+    breakdown and the per-paper list are derived once, by the module
+    that knows what a reason is. Sorted by reason, because a snapshot
+    that reorders between two runs of one fixture is a snapshot that
+    cannot be compared byte for byte.
+    """
+    by_reason: dict[str, int] = {}
+    for fallback in fallbacks:
+        by_reason[fallback.reason] = by_reason.get(fallback.reason, 0) + 1
+    return {
+        "abstract_only_count": len(fallbacks),
+        "reasons": dict(sorted(by_reason.items())),
+        "papers": [
+            {"paper_id": fallback.paper_id, "reason": fallback.reason}
+            for fallback in fallbacks
+        ],
+    }
 
 
 def _record_fallback(paper: PaperMetadata, reason: str) -> None:
@@ -140,10 +256,19 @@ def _record_fallback(paper: PaperMetadata, reason: str) -> None:
     top of that would be noise. The run-level WARNING in
     `reader_agent` is where the aggregate gets its volume.
 
+    Called from the fan-out's worker threads, which is what decides
+    where each of the three records below can live. A log line and an
+    OTel counter are both thread-safe and neither reads a `ContextVar`;
+    the two records that *are* `ContextVar`-scoped — ADR 0097's
+    degradation observer and the run-level fallback sink — are published
+    by `reader_agent` instead, from the node's own context, because a
+    `ThreadPoolExecutor` worker starts with an empty context and would
+    have found nothing bound.
+
     Args:
         paper: The paper that will be analyzed from its abstract.
-        reason: Which stage produced nothing — `no_pdf_url`,
-            `no_text`, `no_chunks`, or `no_ranked_chunks`.
+        reason: Which stage produced nothing — a member of
+            `ABSTRACT_ONLY_REASONS`.
     """
     log.info(
         "reader_paper_abstract_only",
@@ -168,21 +293,11 @@ def _record_fallback(paper: PaperMetadata, reason: str) -> None:
     record_degradation_rung(
         rung=DEGRADATION_RUNG_PARTIAL_RESULTS, component="reader"
     )
-    # ADR 0097, and the same "per paper" argument the rung is counted on:
-    # 15 §7.1 files this under parsing/chunking/ranking, where a *failed*
-    # extraction already reached the trajectory as `tool.failed` and a
-    # degraded one reached nothing. The observer is a `ContextVar`, which
-    # is what lets this work from the fan-out's worker threads.
-    record_degradation_reason(
-        taxonomy_class=TAXONOMY_PARSING_CHUNKING_RANKING,
-        code="reader_paper_abstract_only",
-        component="reader",
-    )
-    tally = _fallback_reasons.get()
+    tally = _fallbacks.get()
     if tally is not None:
         # `list.append` is atomic under the GIL, so the fan-out's
         # threads need no lock of their own here.
-        tally.append(reason)
+        tally.append(AbstractOnlyFallback(paper_id=paper.get("id", ""), reason=reason))
 
 
 class AllPaperAnalysesFailedError(UpstreamPaperRead):
@@ -892,16 +1007,16 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
     # ThreadPoolExecutor inherits no context at all — so the binding
     # has to happen in the worker, on the same object every worker
     # shares, for `_record_fallback` deep in the call stack to find it.
-    fallback_reasons: list[str] = []
+    fallbacks: list[AbstractOnlyFallback] = []
 
     def _tallied(
         p: PaperMetadata,
     ) -> tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal, bool]:
-        token = _fallback_reasons.set(fallback_reasons)
+        token = _fallbacks.set(fallbacks)
         try:
             return _analyze_or_degrade(p)
         finally:
-            _fallback_reasons.reset(token)
+            _fallbacks.reset(token)
 
     # Propagate the parent's request context, cost accumulator, cancel
     # token and effective cost cap into each worker thread — plain
@@ -913,6 +1028,15 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
         results: list[
             tuple[PaperAnalysis, list[EvidenceClaim], ReaderRecoverySignal, bool]
         ] = list(executor.map(analyze, papers))
+
+    # The two `ContextVar`-scoped records, published here rather than at
+    # the site — this line runs in the node's context, which is the
+    # caller's, while `_record_fallback` runs in a worker whose context
+    # is empty. Before the total-failure branch below, deliberately: a
+    # paper that degraded to its abstract degraded whether or not the
+    # fan-out went on to fail every analysis, and a record that only
+    # survives a successful run is a record of successful runs.
+    _publish_fallbacks(fallbacks, papers)
 
     failed_count = sum(1 for _, _, _, ok in results if not ok)
     if papers and failed_count == len(papers):
@@ -995,11 +1119,72 @@ def reader_agent(state: ResearchState) -> dict[str, Any]:
         n_papers=len(papers),
         n_failed=failed_count,
         n_claims=len(update.get("evidence", [])),
-        fallback_reasons=fallback_reasons,
+        fallback_reasons=[fallback.reason for fallback in fallbacks],
     )
 
     update["messages"] = [AIMessage(content=summary, name="reader")]
     return update
+
+
+def _publish_fallbacks(
+    fallbacks: list[AbstractOnlyFallback], papers: list[PaperMetadata]
+) -> None:
+    """Hand one node invocation's fallbacks to whatever is observing the run.
+
+    Two readers, neither of which the fan-out could reach.
+
+    The **run-level sink** is `abstract_only_recorded`'s list, and it is
+    what makes the reason durable: a campaign reads the stage each paper
+    was lost at off a structure scoped to its own run instead of
+    off a log handler attached to a shared logger.
+
+    Published **in `papers` order**, not in the order the fan-out
+    happened to finish. The tally is appended to from a thread pool, so
+    its own order is a race; a snapshot built from it would reorder
+    between two runs of one fixture, and `episode-state.json` is
+    compared byte for byte. Ordering by the input is the cheap fix and
+    the meaningful one — a reader of the record sees the corpus's own
+    sequence. A `paper_id` not in `papers` (nothing produces one today)
+    sorts last and keeps its relative position, because a stable sort is
+    the only kind that cannot silently reorder equals.
+
+    ADR 0097's **degradation observer** is offered the same papers, one
+    record each, which is the granularity ADR 0081 counts the rung at.
+    Until LE-V this call sat in `_record_fallback`, inside the worker
+    thread — where `_degradation_observer.get()` is always `None`,
+    because a `ThreadPoolExecutor` worker begins with an empty context
+    and `propagate_run_context` carries four named `ContextVar`s that do
+    not include it. Every per-paper degradation this repository believed
+    it was recording on the trajectory was being dropped; the test that
+    covered it called `_gather_ranked_chunks` directly, on the test's own
+    thread, where the binding was visible. The emission moved rather
+    than the propagation list growing, because the node's context is
+    already the right one and widening `propagate_run_context` would
+    change what every other fan-out in the repository carries.
+    """
+    for _ in fallbacks:
+        # One record per degraded paper and none of the paper's own
+        # detail: ADR 0097's payload is four bounded strings from two
+        # closed sets, deliberately, so what it publishes is a count in
+        # a class. 15 §7.1 files this under parsing/chunking/ranking,
+        # where a *failed* extraction already reached the trajectory as
+        # `tool.failed` and a degraded one reached nothing. The stage
+        # each paper was lost at travels on the sink below instead,
+        # which is the whole reason the sink exists.
+        record_degradation_reason(
+            taxonomy_class=TAXONOMY_PARSING_CHUNKING_RANKING,
+            code="reader_paper_abstract_only",
+            component="reader",
+        )
+    sink = _fallback_sink.get()
+    if sink is not None:
+        position = {paper["id"]: index for index, paper in enumerate(papers)}
+        sink.extend(
+            sorted(
+                fallbacks,
+                key=lambda fallback: position.get(fallback.paper_id, len(position)),
+            )
+        )
 
 
 def _log_reader_summary(

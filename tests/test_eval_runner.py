@@ -1776,7 +1776,7 @@ class TestClaimOutcomes:
 class TestQuoteSourcesReachTheCheck:
     """WO-D1 — the quote half of ADR 0074 stops waiting on its caller.
 
-    `build_source_index` ranks checkable text parsed PDF > evidence
+    `build_checkable_text_index` ranks checkable text parsed PDF > evidence
     chunks > abstract. Until this work order the runner passed neither
     of the first two, so `_check_one_quote` fell through to
     `quote_source_incomplete` for every quotation the abstract did not

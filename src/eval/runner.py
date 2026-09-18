@@ -418,7 +418,7 @@ def _claim_outcomes(state: ResearchState) -> dict[str, bool] | None:
     *score* here would rebaseline every campaign.
 
     **`evidence` is passed; `full_texts` is not, and that is a
-    decision.** `build_source_index` ranks checkable text parsed PDF >
+    decision.** `build_checkable_text_index` ranks checkable text parsed PDF >
     evidence chunks > abstract, and until WO-D1 this call site handed it
     neither of the first two — so `_check_one_quote` fell through to
     `quote_source_incomplete` on every quotation the abstract did not
@@ -435,7 +435,7 @@ def _claim_outcomes(state: ResearchState) -> dict[str, bool] | None:
     per-paper network read inside a guard whose only failure mode is
     `None` — so one pool timeout would erase a whole query's paired
     outcomes rather than degrade them, which is a worse row than the one
-    it set out to improve. `build_source_index`'s no-I/O rule is about
+    it set out to improve. `build_checkable_text_index`'s no-I/O rule is about
     the metric module and this is not the metric module, so the read is
     *placeable* here; it just needs a per-paper guard and a flag, and
     those belong with whoever owns this file next (ADR 0074 follow-up).

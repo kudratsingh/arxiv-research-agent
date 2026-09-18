@@ -127,7 +127,9 @@ class _GarbageSdkClient:
         parsed = SimpleNamespace(
             content=[SimpleNamespace(type="text", text=self._text)], usage=usage
         )
-        return SimpleNamespace(retries_taken=0, parse=lambda: parsed)
+        return SimpleNamespace(
+            retries_taken=0, request_id="req_fake", parse=lambda: parsed
+        )
 
 
 def _status_error(status_code: int) -> Exception:

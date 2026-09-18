@@ -466,15 +466,15 @@ class TestSourceIndex:
             supports_question="q",
         )
 
-        abstract_only = g.build_source_index([paper])
+        abstract_only = g.build_checkable_text_index([paper])
         assert abstract_only["arxiv:2401.00001"]["origin"] == "abstract"
         assert abstract_only["arxiv:2401.00001"]["completeness"] == "partial"
 
-        with_chunks = g.build_source_index([paper], evidence=[claim])
+        with_chunks = g.build_checkable_text_index([paper], evidence=[claim])
         assert with_chunks["arxiv:2401.00001"]["origin"] == "evidence_chunks"
         assert with_chunks["arxiv:2401.00001"]["completeness"] == "partial"
 
-        with_text = g.build_source_index(
+        with_text = g.build_checkable_text_index(
             [paper],
             evidence=[claim],
             full_texts={"http://arxiv.org/abs/2401.00001": "the whole paper"},
@@ -503,7 +503,7 @@ class TestSourceIndex:
             )
             for text in ("the first chunk ends here", "and a second one begins")
         ]
-        source = g.build_source_index([paper], evidence=claims)["arxiv:2401.00001"]
+        source = g.build_checkable_text_index([paper], evidence=claims)["arxiv:2401.00001"]
         bridging = "the first chunk ends here and a second one begins"
 
         assert source["segments"] == [
@@ -523,24 +523,24 @@ class TestSourceIndex:
         assert g.locate_quote_in_segments("one two three", ["nothing here"]) is None
 
     def test_a_paper_with_no_text_at_all_is_absent_from_the_index(self) -> None:
-        assert g.build_source_index([_paper("arxiv:2401.00001", abstract="  ")]) == {}
+        assert g.build_checkable_text_index([_paper("arxiv:2401.00001", abstract="  ")]) == {}
 
     def test_a_paper_with_no_identifier_is_skipped_rather_than_indexed_as_empty(
         self,
     ) -> None:
         """An id-less row would otherwise claim the `""` key for itself."""
-        assert g.build_source_index([_paper("", abstract="text")]) == {}
+        assert g.build_checkable_text_index([_paper("", abstract="text")]) == {}
         assert g.build_corpus_index([_paper("")]) == {}
 
     def test_a_blank_full_text_falls_through_to_the_next_source(self) -> None:
         paper = _paper("arxiv:2401.00001", abstract="the abstract")
-        index = g.build_source_index([paper], full_texts={"arxiv:2401.00001": "  "})
+        index = g.build_checkable_text_index([paper], full_texts={"arxiv:2401.00001": "  "})
         assert index["arxiv:2401.00001"]["origin"] == "abstract"
 
     def test_coverage_is_published_so_the_rate_can_be_read(self) -> None:
         fixture = _fixture()
         coverage = g.source_coverage(
-            g.build_source_index(_papers(), full_texts=fixture["pdf_text"])
+            g.build_checkable_text_index(_papers(), full_texts=fixture["pdf_text"])
         )
         assert coverage == g.SourceCoverage(
             papers=3, full_text=2, evidence_chunks=0, abstract_only=1

@@ -6,7 +6,29 @@ from langgraph.graph.message import add_messages
 
 
 class PaperMetadata(TypedDict):
-    """Metadata for a retrieved arXiv paper."""
+    """Metadata for a retrieved arXiv paper.
+
+    `published` is the retrieval pipeline's own answer to "when was this
+    written", and it exists because the alternatives were worse. Until
+    LE-V the only year anywhere in a run was the one the *synthesizer*
+    put on each `Citation`, and ADR 0100 had to fall back to digging a
+    `YYMM` out of the arXiv identifier — a submission month, from a
+    string whose shape is an accident of arXiv's numbering, absent for
+    every non-arXiv source. A faithfulness judge that takes a document's
+    date from the text it is checking cannot catch a date the model
+    invented, which is why the field is carried rather than inferred.
+
+    It is `str | None`, holding an ISO 8601 date at whatever precision
+    the source actually stated — `2023-11-15` from arXiv's Atom feed,
+    `2023` from a source that knows only the year — and `None` when the
+    source gave nothing. `None` is a real answer and not a defect: it
+    says the pipeline was not told, and the readers fall back to the
+    identifier and then to the citation exactly as they did before.
+    Consumers read it with `.get("published")`, because records
+    persisted before this key existed are still parsed back into this
+    type (`src/campaign/execute.py`'s episode-state recovery) and a
+    subscript would turn an old snapshot into a `KeyError`.
+    """
 
     id: str
     title: str
@@ -14,6 +36,7 @@ class PaperMetadata(TypedDict):
     abstract: str
     url: str
     pdf_url: str
+    published: str | None
 
 
 class PaperAnalysis(TypedDict):
