@@ -27,7 +27,8 @@ def test_full_measured_table_rederives_cost_and_caps() -> None:
 
 
 def test_missing_role_refuses_with_key_error() -> None:
-    roles = _compact(); roles.pop("critic")
+    roles = _compact()
+    roles.pop("critic")
     with pytest.raises(KeyError):
         reestimate_from_measurements(roles, revision_count=1, prices=PRICES, prices_last_verified="2026-09-05")
 
@@ -52,6 +53,7 @@ def test_bad_shape_and_counts_are_rejected() -> None:
         reestimate_from_measurements(_compact(), revision_count=-1, prices=PRICES, prices_last_verified="2026-09-05")
     with pytest.raises(ValueError, match="min <= median"):
         MeasuredRoleTokens(input_min=3, input_median=2, input_max=4, output_min=1, output_median=1, output_max=1)
-    malformed = _compact(); malformed["planner"] = {"input_min": 1, "input_max": 3, "output_min": 1, "output_max": 3}
+    malformed = _compact()
+    malformed["planner"] = {"input_min": 1, "input_max": 3, "output_min": 1, "output_max": 3}
     with pytest.raises((KeyError, ValueError)):
         reestimate_from_measurements(malformed, revision_count=1, prices=PRICES, prices_last_verified="2026-09-05")

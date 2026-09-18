@@ -732,7 +732,7 @@ def _metric_score(record: EpisodeRecord, metric_id: str) -> float | None:
 def _variance_rows(
     records: Sequence[EpisodeRecord],
 ) -> tuple[VarianceRow, ...]:
-    grouped: dict[tuple[str, str, str], list[float]] = {}
+    grouped: dict[tuple[str, str, MetricId], list[float]] = {}
     for record in records:
         for metric_id in METRIC_IDS:
             score = _metric_score(record, metric_id)
@@ -758,7 +758,7 @@ def _variance_rows(
 def _variance_intervals(
     records: Sequence[EpisodeRecord], *, seed: int, resamples: int = 10_000
 ) -> tuple[VarianceInterval, ...]:
-    grouped: dict[tuple[str, str], dict[str, list[float]]] = {}
+    grouped: dict[tuple[str, MetricId], dict[str, list[float]]] = {}
     for record in records:
         for metric_id in METRIC_IDS:
             score = _metric_score(record, metric_id)
@@ -1377,11 +1377,12 @@ def render_report(report: CampaignReport) -> str:
             "|---|---|---|---:|---:|---:|---:|---:|",
         ]
     )
-    for row in report.variance:
+    for variance_row in report.variance:
         lines.append(
-            f"| `{row.query_id}` | {row.arm_id} | `{row.metric_id}` | "
-            f"{row.episodes_scored} | {_score(row.mean)} | {_score(row.sd)} | "
-            f"{_score(row.minimum)} | {_score(row.maximum)} |"
+            f"| `{variance_row.query_id}` | {variance_row.arm_id} "
+            f"| `{variance_row.metric_id}` | {variance_row.episodes_scored} "
+            f"| {_score(variance_row.mean)} | {_score(variance_row.sd)} "
+            f"| {_score(variance_row.minimum)} | {_score(variance_row.maximum)} |"
         )
     lines.extend(
         [
@@ -1391,16 +1392,18 @@ def render_report(report: CampaignReport) -> str:
             "|---|---|---:|---:|---:|---|---|---:|",
         ]
     )
-    for row in report.variance_intervals:
+    for interval_row in report.variance_intervals:
         interval = (
-            f"[{row.interval_low:.3f}–{row.interval_high:.3f}]"
-            if row.interval_low is not None and row.interval_high is not None
+            f"[{interval_row.interval_low:.3f}–{interval_row.interval_high:.3f}]"
+            if interval_row.interval_low is not None and interval_row.interval_high is not None
             else "n/a"
         )
         lines.append(
-            f"| {row.arm_id} | `{row.metric_id}` | {row.query_count} | "
-            f"{row.episodes_scored} | {_score(row.point)} | {interval} | "
-            f"{row.method} ({row.resamples} resamples) | {row.seed} |"
+            f"| {interval_row.arm_id} | `{interval_row.metric_id}` "
+            f"| {interval_row.query_count} | {interval_row.episodes_scored} "
+            f"| {_score(interval_row.point)} | {interval} "
+            f"| {interval_row.method} ({interval_row.resamples} resamples) "
+            f"| {interval_row.seed} |"
         )
     lines.extend(
         [
@@ -1415,12 +1418,14 @@ def render_report(report: CampaignReport) -> str:
             "|---|---|---|",
         ]
     )
-    for row in report.baseline_difficulty:
+    for difficulty_row in report.baseline_difficulty:
         metrics = ", ".join(
             f"`{metric}`={value:.3f}" if value is not None else f"`{metric}`=n/a"
-            for metric, value in row.metrics.items()
+            for metric, value in difficulty_row.metrics.items()
         )
-        lines.append(f"| `{row.query_id}` | {row.arm_id} | {metrics or 'n/a'} |")
+        lines.append(
+            f"| `{difficulty_row.query_id}` | {difficulty_row.arm_id} | {metrics or 'n/a'} |"
+        )
     if report.small_sample_caveat:
         lines.extend(["", report.small_sample_caveat])
 

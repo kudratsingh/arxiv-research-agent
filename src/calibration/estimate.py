@@ -165,8 +165,19 @@ class MeasuredRoleTokens(StrictContractModel):
         return self
 
 
+#: What a caller may hand :func:`reestimate_from_measurements` for one
+#: role. Three shapes, because three places produce them: the parsed
+#: model, the compact ledger shape whose values are per-direction rows
+#: (``{"min": {"input": ..., "output": ...}, ...}``), and the flat shape
+#: whose values are token counts (``{"input_min": ..., ...}``). The two
+#: mapping shapes differ in their *value* type, so the alias admits both
+#: and :func:`reestimate_from_measurements` narrows per branch rather
+#: than trusting the caller.
+MeasuredRoleInput = MeasuredRoleTokens | Mapping[str, Mapping[str, int] | int]
+
+
 def reestimate_from_measurements(
-    measured_roles: Mapping[str, Mapping[str, int] | MeasuredRoleTokens],
+    measured_roles: Mapping[str, MeasuredRoleInput],
     *,
     revision_count: int,
     episodes: int = 60,
@@ -190,6 +201,18 @@ def reestimate_from_measurements(
     if table is None or verified is None:
         table, verified = current_price_table()
 
+    def direction_row(value: Mapping[str, int] | int, quantile_name: str) -> Mapping[str, int]:
+        """One quantile of the compact shape, refused if it is not a row."""
+        if not isinstance(value, Mapping):
+            raise ValueError(f"measured quantile {quantile_name!r} must map direction to token count")
+        return value
+
+    def count(value: Mapping[str, int] | int, field: str) -> int:
+        """One token count of the flat shape, refused if it is a row."""
+        if isinstance(value, Mapping):
+            raise ValueError(f"measured field {field!r} must be a token count, not a mapping")
+        return int(value)
+
     def quantile(role: str) -> MeasuredRoleTokens:
         raw = measured_roles[role]
         if isinstance(raw, MeasuredRoleTokens):
@@ -197,9 +220,9 @@ def reestimate_from_measurements(
         # Accept the compact ledger shape:
         # {"min": {"input": ..., "output": ...}, "median": ..., "max": ...}
         if "median" in raw:
-            minimum = raw["min"]
-            median = raw["median"]
-            maximum = raw["max"]
+            minimum = direction_row(raw["min"], "min")
+            median = direction_row(raw["median"], "median")
+            maximum = direction_row(raw["max"], "max")
 
             def token(row: Mapping[str, int], direction: str) -> int:
                 return int(row.get(direction, row.get(f"{direction}_tokens", 0)))
@@ -213,12 +236,12 @@ def reestimate_from_measurements(
                 output_max=token(maximum, "output"),
             )
         return MeasuredRoleTokens(
-            input_min=int(raw["input_min"]),
-            input_median=int(raw.get("input_median", raw.get("median_input", 0))),
-            input_max=int(raw["input_max"]),
-            output_min=int(raw["output_min"]),
-            output_median=int(raw.get("output_median", raw.get("median_output", 0))),
-            output_max=int(raw["output_max"]),
+            input_min=count(raw["input_min"], "input_min"),
+            input_median=count(raw.get("input_median", raw.get("median_input", 0)), "input_median"),
+            input_max=count(raw["input_max"], "input_max"),
+            output_min=count(raw["output_min"], "output_min"),
+            output_median=count(raw.get("output_median", raw.get("median_output", 0)), "output_median"),
+            output_max=count(raw["output_max"], "output_max"),
         )
 
     role_calls = {
