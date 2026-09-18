@@ -207,7 +207,39 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         "campaign_budget_stop",
         "campaign_episode_completed",
         "campaign_episode_failed",
+        # LE-S (ADR 0101). The funded episode path's new facts, and each
+        # of them is a line because the artifact that would otherwise
+        # carry it is the one that did not get written.
+        # `state_written` is the only record that the pre-scoring
+        # snapshot exists at all — a scorer that then fails leaves a
+        # directory with no `scores.json` — and the level it reduced to
+        # is what tells an operator whether the judge saw ranked chunks.
+        # `scoring_failed` is the episode that was paid for and not
+        # measured; `recovered` is the one that was *not* paid for
+        # twice, scored from that snapshot without re-running the graph.
+        "campaign_episode_recovered",
+        "campaign_episode_scoring_failed",
         "campaign_episode_started",
+        "campaign_episode_state_written",
+        # LE-S. The judge's own cap, reached inside an episode that
+        # keeps going: the remaining rubrics come back null with
+        # `judge_budget_exhausted` and the episode still completes, so
+        # without this line the only evidence is an absent score.
+        "campaign_judge_budget_exhausted",
+        # LE-S. 16 §5's stop rules that had no implementation. Separate
+        # from `campaign_budget_stop` because that one is about money
+        # and these three are about the *instrument* changing under the
+        # campaign — a drifted model id, a drifted corpus, a judge
+        # failing often enough that the scores are mostly absent.
+        "campaign_stop_rule_triggered",
+        # LE-S (EL-04). The CAP-06 funded smoke: one line when it starts
+        # under a named approval and a cap, one per probe with its
+        # classification, one when the receipt is written. Per probe
+        # rather than one summary line, because a smoke that dies on
+        # probe three must still leave the first two on the record.
+        "campaign_smoke_completed",
+        "campaign_smoke_probe",
+        "campaign_smoke_started",
         # P0-WO20. The rehearsal walks the funded path to the credential
         # boundary and stops there. Two names rather than one, for the
         # same reason `campaign_episode_started` is not redundant with
@@ -489,6 +521,12 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "address",
         "api_job_timeout_sec",
         "api_keys_configured",
+        # LE-S (EL-04). The external approval record a funded smoke was
+        # authorized by. An opaque id an owner minted (`approval_<slug>`),
+        # never a credential and never a name: the point of logging it is
+        # that a paid call can be traced back to the record that
+        # authorized it.
+        "approval_id",
         "arm_id",
         "artifact_id",
         "artifact_role",
@@ -590,6 +628,10 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "job_redriver_periodic",
         "judge_cost_usd",
         "judge_costs",
+        # LE-S (ADR 0101). The judges' own call count, beside their own
+        # dollars: a campaign that reports judge spend and not judge
+        # calls cannot tell a cheap rubric from a rubric that never ran.
+        "judge_model_calls",
         "kept",
         "key",
         "keystore_source",
@@ -669,6 +711,10 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         # hand outside a request scope: `admin_migrate`, which hashes it
         # rather than binding a whole context for a CLI sweep (WO-A10).
         "principal_hash",
+        # LE-S (EL-04). Which of ADR 0090's five CAP-06 probes a line is
+        # about. A closed set of five names, so it is bounded in the
+        # same sense `rung` is.
+        "probe",
         "processed_turns",
         "progress_event_store",
         "progress_events",
@@ -703,6 +749,12 @@ ALLOWED_EXTRA_KEYS: Final[frozenset[str]] = frozenset(
         "result",
         "result_head",
         "result_len",
+        # LE-S (EL-05). How far `episode-state.json` had to be reduced to
+        # fit its byte bound and pass the ADR 0096 screen: 0 is the whole
+        # snapshot, 3 is identity and counts only. An operator reading a
+        # faithfulness score needs to know whether the judge saw the
+        # ranked chunks, and this integer is the only place that is said.
+        "retention_level",
         "retries",
         "revision_target",
         # The matched route **template**, never the raw path — the same

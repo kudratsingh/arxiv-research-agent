@@ -30,10 +30,14 @@ What it owns, and why each piece exists:
 - `episode` — sealing one episode's `RunManifest` with the campaign's
   real lock ref, registry resolution, budgets and approval.
 - `execute` — the loop that actually runs the planned episodes: seal,
-  open the durable trajectory, drive the policy, score it, write the
-  episode's artifacts with `completion.json` last, and check the
-  campaign cap between episodes. Added by P0-WO07b, which is where
-  `budget_stop_reached` finally acquired a production caller.
+  open the durable trajectory, drive the policy, **persist its state**,
+  score it, write the episode's artifacts with `completion.json` last,
+  and check the campaign cap and 16 §5's stop rules between episodes.
+  Added by P0-WO07b, which is where `budget_stop_reached` finally
+  acquired a production caller; LE-S added the state snapshot (so a
+  judge has something to read and a scoring failure cannot strand a paid
+  episode), the mid-episode cost cap, and the three stop rules that were
+  prose in the approval packet.
 - `report` — what each arm actually produced: quality, cost, latency,
   error taxonomy and lineage, read back from the episode records and
   rendered as one markdown document. Derived on every call, and it
@@ -45,9 +49,19 @@ What it owns, and why each piece exists:
 - `rehearse` — the funded path walked to the credential boundary and
   stopped there, under the zero-spend sentinel. Added by P0-WO20, which
   is where "what else is missing?" stopped being answerable only by
-  funding a run and watching it fail.
+  funding a run and watching it fail. LE-S walks it three steps further:
+  what the episode snapshot will retain, which stop rules are armed, and
+  whether a live judge scorer constructs.
+- `scoring` — the live judge scorer (LE-S, ADR 0101). Runs the three
+  rubrics against the provider under a *separate* cost accumulator with
+  the episode's own judge allocation bound as its cap, so judge dollars
+  and workflow dollars stop sharing a ceiling, and never raises: a
+  failed rubric is a null metric with a reason, not a lost episode.
+- `smoke` — ADR 0090's five CAP-06 probes under one accumulator, one
+  cap and the same approval record a campaign needs, with a JSON receipt
+  saying which of the five are now verified against the real provider.
 - `planner` / `cli` — `plan`, `dry-run`, `run`, `rehearse`, `resume`,
-  `status`, `report`.
+  `status`, `report`, `smoke`.
 - `summary` — the three cost categories and the statistics, delegated to
   `src/eval/stats.py`.
 

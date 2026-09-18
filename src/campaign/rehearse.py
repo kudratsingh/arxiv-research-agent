@@ -69,6 +69,7 @@ from src.campaign.approval import (
     SettingsCredentialProbe,
 )
 from src.campaign.errors import CampaignError
+from src.campaign.execute import EpisodeStatePolicy
 from src.campaign.ledger import DenominatorLedger, read_outcomes, reconcile
 from src.campaign.matrix import PlannedEpisode
 from src.campaign.planner import (
@@ -95,14 +96,32 @@ REHEARSAL_STEPS: Final[tuple[str, ...]] = (
     "campaign-loaded",
     "approval-verified",
     "ledger-opened",
+    "state-retention-on",
+    "stop-rules-armed",
     "episode-manifest-sealed",
     "provider-credential-probed",
     "provider-client-constructed",
+    "scorer-resolved",
 )
 
 #: Where the funded path stops today. A rehearsal that got further would
 #: be reporting a different string, which is the point of recording it.
 CREDENTIAL_BOUNDARY: Final[str] = "provider-credential-probed"
+
+#: The steps that lie *after* the credential boundary, and are therefore
+#: outside 16 §8's "nothing else is missing before the credential" claim.
+#:
+#: `scorer-resolved` is placed here rather than before the seal on
+#: purpose (EL-16). A live judge scorer refuses to construct under the
+#: zero-spend sentinel — that refusal is the feature — so a rehearsal
+#: that probed it early would report the walk stopping at the scorer,
+#: which is false and would hide the door that actually stops it. The
+#: packet's sentence stays true, and what lies beyond it is still
+#: reported rather than left for a funded run to discover.
+AFTER_THE_BOUNDARY: Final[tuple[str, ...]] = (
+    "provider-client-constructed",
+    "scorer-resolved",
+)
 
 StepOutcome: TypeAlias = Literal["passed", "refused"]
 PreconditionId: TypeAlias = Literal[
@@ -197,6 +216,7 @@ def rehearse_campaign(
     graph_probe: GraphProbe | None = None,
     client_probe: ClientProbe | None = None,
     today: date | None = None,
+    state_policy: EpisodeStatePolicy | None = None,
 ) -> RehearsalReport:
     """Walk a materialized campaign's funded path and stop at the credential.
 
@@ -219,6 +239,11 @@ def rehearse_campaign(
         today: The date the price table's staleness is measured against.
             Supplied rather than read from a clock so a rehearsal is
             reproducible; defaults to the wall clock's UTC date.
+        state_policy: The retention policy `run` would write
+            `episode-state.json` under. Reported rather than exercised:
+            the rehearsal writes nothing, and what an operator needs
+            before funding is whether the judges' source text will be
+            kept.
 
     Returns:
         The report.
@@ -237,6 +262,7 @@ def rehearse_campaign(
     backend = (
         approval_backend if approval_backend is not None else LocalApprovalRecordBackend()
     )
+    retention = state_policy if state_policy is not None else EpisodeStatePolicy()
     before = _directory_census(directory)
     log.info("campaign_rehearsal_started", extra={"campaign_id": campaign_id})
 
@@ -257,6 +283,8 @@ def rehearse_campaign(
     )
     steps.append(_approval_step(plan, backend, approval_id=approval_id))
     ledger, pending = _ledger_step(directory, plan, steps)
+    steps.append(_state_retention_step(retention))
+    steps.append(_stop_rules_step(plan))
     steps.append(
         _seal_step(
             config,
@@ -268,6 +296,7 @@ def rehearse_campaign(
     )
     steps.append(_credential_step(config))
     steps.append(_client_step(config, client_probe))
+    steps.append(_scorer_step(config, plan))
 
     stopped_at = next(
         (step.step for step in steps if step.outcome == "refused"),
@@ -294,7 +323,7 @@ def rehearse_campaign(
         steps=tuple(steps),
         preconditions=preconditions,
         pending_episodes=len(pending),
-        message=_message(stopped_at, preconditions),
+        message=_message(stopped_at, preconditions, tuple(steps)),
     )
     log.info(
         "campaign_rehearsal_stopped",
@@ -402,6 +431,135 @@ def _ledger_step(
         )
     )
     return ledger, pending
+
+
+def _state_retention_step(policy: EpisodeStatePolicy) -> RehearsalStep:
+    """Report what `run` would persist before anything scores an episode.
+
+    EL-16's second addition, and it is a *report* rather than a probe
+    because a rehearsal writes nothing: the question an operator needs
+    answered before funding is not "can a file be written" but "will the
+    judges' source text still exist afterwards". A campaign that ran
+    without chunk retention cannot be re-judged against the text its
+    reports were written from, only against abstracts — a different
+    measurement under the same metric name — and discovering that after
+    sixty funded episodes is exactly the class of surprise the rehearsal
+    exists to prevent.
+    """
+    from src.campaign.execute import EPISODE_STATE_FILENAME
+
+    chunks = (
+        "the reader's ranked chunks are kept verbatim, so a later re-judge "
+        "reads the text the report was written from"
+        if policy.retain_reader_chunks
+        else "the reader's ranked chunk text is NOT kept (digests, sections "
+        "and scores only), so a later re-judge can only read abstracts"
+    )
+    return RehearsalStep(
+        step="state-retention-on",
+        outcome="passed",
+        detail=(
+            f"every episode writes {EPISODE_STATE_FILENAME} before its scorer "
+            f"runs, under a {policy.max_bytes}-byte bound and the ADR 0096 "
+            f"structural screen; {chunks}. The snapshot excludes messages and "
+            "full document text, and is what a scoring failure leaves behind "
+            "so the episode can be scored without re-running the graph"
+        ),
+    )
+
+
+def _stop_rules_step(plan: CampaignPlan) -> RehearsalStep:
+    """Report which of 16 §5's stop rules this pass would actually enforce.
+
+    Until LE-S two of them — `provider-drift` and `judge-failure-rate` —
+    existed only as rows in the packet, and `source-drift` was checked at
+    seal time only, which catches a campaign that starts on the wrong
+    corpus rather than one that changes under a running campaign. This
+    step names what is armed and at what threshold, so that a packet
+    reviewer reads the rule and the number from the same place the loop
+    reads them.
+    """
+    from src.campaign.execute import (
+        JUDGE_FAILURE_EARLY_TRIGGER,
+        JUDGE_FAILURE_EARLY_WINDOW,
+        JUDGE_FAILURE_RATE_TRIGGER,
+    )
+
+    protocol = plan.manifest.payload.protocol
+    judged = protocol.episode_budget.judge_model_calls_max > 0
+    return RehearsalStep(
+        step="stop-rules-armed",
+        outcome="passed",
+        detail=(
+            "checked between episodes, each stopping the pass with the "
+            "completed episodes kept and counted: provider_drift (model "
+            "routes, price-table date and dependency-lock digest against the "
+            "first episode's sealed manifest), source_drift (resolved corpus "
+            f"mode against the declared {protocol.corpus_mode!r}, and the "
+            "source snapshot ref against the first episode's), "
+            f"judge_failure_rate ({JUDGE_FAILURE_EARLY_TRIGGER} of the first "
+            f"{JUDGE_FAILURE_EARLY_WINDOW} judged episodes, then "
+            f"{JUDGE_FAILURE_RATE_TRIGGER:.0%} cumulative, on *any* judged "
+            "metric) — "
+            + (
+                "armed, this campaign budgets judge calls"
+                if judged
+                else "the judge rule is inert here: this campaign budgets no "
+                "judge calls, so no episode is judged and the rate has no "
+                "denominator"
+            )
+        ),
+    )
+
+
+def _scorer_step(config: Settings, plan: CampaignPlan) -> RehearsalStep:
+    """Construct the scorer `run` would use — without calling it.
+
+    The step that lies *after* the credential boundary, and the one that
+    answers the question 16 §8 could not: a campaign that budgets judge
+    calls has, since LE-S, a live scorer to run them, and a rehearsal can
+    prove it constructs under this campaign's own settings and this
+    episode's sealed judge allocation. Constructing it is the whole
+    probe; `LiveJudgeScorer.__init__` reads the credential and the mock
+    switch and refuses on either, which is the refusal reported here.
+
+    A campaign that budgets no judge calls passes with the free scorer
+    named, because that is what `run` would use and `execute_campaign`
+    accepts it precisely because nothing was budgeted.
+    """
+    budget = plan.manifest.payload.protocol.episode_budget
+    if budget.judge_model_calls_max <= 0:
+        return RehearsalStep(
+            step="scorer-resolved",
+            outcome="passed",
+            detail=(
+                "this campaign budgets 0 judge model calls, so run would use "
+                "the deterministic free scorer: two metrics scored, three "
+                "rubrics named as skipped rather than approximated"
+            ),
+        )
+    from src.campaign.scoring import build_live_judge_scorer
+
+    try:
+        build_live_judge_scorer(
+            config, judge_cost_usd_max=budget.judge_cost_usd_max
+        )
+    except CampaignError as exc:
+        return RehearsalStep(
+            step="scorer-resolved",
+            outcome="refused",
+            detail=f"the live judge scorer refused to construct: {exc.detail}",
+        )
+    return RehearsalStep(
+        step="scorer-resolved",
+        outcome="passed",
+        detail=(
+            f"a live judge scorer constructed under this campaign's settings "
+            f"with a {budget.judge_cost_usd_max} per-episode judge allocation "
+            f"and {budget.judge_model_calls_max} budgeted judge call(s); no "
+            "judge call was made with it"
+        ),
+    )
 
 
 class _DeferredCredentialProbe:
@@ -641,7 +799,11 @@ def _preconditions(
     )
 
 
-def _message(stopped_at: str, preconditions: tuple[Precondition, ...]) -> str:
+def _message(
+    stopped_at: str,
+    preconditions: tuple[Precondition, ...],
+    steps: tuple[RehearsalStep, ...] = (),
+) -> str:
     """The one sentence an operator reads when the rehearsal returns.
 
     There is deliberately no "nothing is outstanding" branch. The price
@@ -651,6 +813,13 @@ def _message(stopped_at: str, preconditions: tuple[Precondition, ...]) -> str:
     list — so the list is never empty, and a branch that could never run
     would be a claim this module cannot make.
     `tests/test_campaign_rehearsal.py` holds that invariant.
+
+    Since EL-16 the walk continues past the credential, so the message
+    says what is on the far side of it as well. The packet's claim is
+    about everything *before* the boundary and is unchanged; the second
+    sentence is new information rather than a weakening of it, and
+    without it an operator would still have to fund a run to discover
+    that the scorer refuses.
     """
     owed = [item.precondition for item in preconditions if item.owed]
     if stopped_at == CREDENTIAL_BOUNDARY:
@@ -665,8 +834,16 @@ def _message(stopped_at: str, preconditions: tuple[Precondition, ...]) -> str:
         )
     else:
         head = f"The funded path stopped early, at {stopped_at}."
+    beyond = [step for step in steps if step.step in AFTER_THE_BOUNDARY]
+    tail = (
+        " Beyond the credential: "
+        + "; ".join(f"{step.step} {step.outcome}" for step in beyond)
+        + "."
+        if beyond
+        else ""
+    )
     return (
-        f"{head} Still owed, and none of it is code: {', '.join(owed)}. "
+        f"{head}{tail} Still owed, and none of it is code: {', '.join(owed)}. "
         "Nothing in this repository authorizes spending against them."
     )
 
@@ -679,6 +856,7 @@ def _directory_census(directory: Path) -> frozenset[str]:
 
 
 __all__ = [
+    "AFTER_THE_BOUNDARY",
     "CREDENTIAL_BOUNDARY",
     "REHEARSAL_STEPS",
     "ClientProbe",
