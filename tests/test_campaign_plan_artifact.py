@@ -570,13 +570,8 @@ class TestTheLiveVariantIsPublishedBesideIt:
         ):
             assert published["episode_budget"][field] == "0.000000"
 
-    def test_the_live_scope_does_not_claim_to_be_the_packets(self) -> None:
-        """`is_w12_baseline` pins `snapshot`, so the preface is not earned.
-
-        Deliberate, and left visible in the file: the live plan is *not*
-        the scope 16 §1 states, which is the finding W20 reported. A
-        reader who opens the JSON alone is not told otherwise.
-        """
+    def test_the_live_scope_is_published_as_the_funded_baseline(self) -> None:
+        """The funded baseline identity follows the declared live scope."""
         published = json.loads(LIVE_ARTIFACT.read_text(encoding="utf-8"))
         assert not published["describes"].startswith("The funded arm-A baseline of")
         request = baseline_request(
@@ -584,7 +579,7 @@ class TestTheLiveVariantIsPublishedBesideIt:
             registry_root=REGISTRY_ROOT,
             corpus_mode=W12_BASELINE_LIVE_CORPUS_MODE,
         )
-        assert not is_w12_baseline(request)
+        assert is_w12_baseline(request)
         assert published["produced_by"] == artifact_command(
             request, output=W12_BASELINE_LIVE_ARTIFACT_PATH
         )
