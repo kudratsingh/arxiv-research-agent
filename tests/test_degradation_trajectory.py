@@ -136,6 +136,43 @@ def _paper(pdf_url: str = "") -> PaperMetadata:
     )
 
 
+def _degrading_reader(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Wire `reader_agent` so every paper degrades through the real path.
+
+    The fake `_analyze_paper` calls `_gather_ranked_chunks` itself
+    rather than recording a fallback directly, so the worker-thread
+    binding the tally depends on is exercised exactly as it is in a run.
+    """
+    monkeypatch.setattr(reader_module, "parse_pdf", lambda _url: "")
+
+    def _fake_analyze(
+        paper: PaperMetadata,
+        _query: str,
+        subquestions: list[str],
+        _preferred: list[str] | None = None,
+    ) -> tuple[dict[str, Any], list[Any], dict[str, Any]]:
+        reader_module._gather_ranked_chunks(paper, subquestions)
+        return (
+            {
+                "paper_id": paper["id"],
+                "title": paper["title"],
+                "key_findings": [],
+                "methodology": "",
+                "results_summary": "",
+                "limitations": "",
+                "relevance": 0.0,
+            },
+            [],
+            {
+                "analysis_complete": True,
+                "missing_context": "",
+                "request_more_sections": [],
+            },
+        )
+
+    monkeypatch.setattr(reader_module, "_analyze_paper", _fake_analyze)
+
+
 def _decode_error() -> json.JSONDecodeError:
     return json.JSONDecodeError("Unterminated string", '{"draft', 7)
 
@@ -201,9 +238,25 @@ class TestTheSitesRecord:
     def test_a_paper_with_no_pdf_records_the_per_paper_fallback(
         self, monkeypatch: pytest.MonkeyPatch, observed: list[DegradationObservation]
     ) -> None:
-        monkeypatch.setattr(reader_module, "settings", Settings())
+        """Driven through `reader_agent`, because the thread is the point.
 
-        assert reader_module._gather_ranked_chunks(_paper(), ["a"]) == []
+        This used to call `_gather_ranked_chunks` directly, and it
+        passed for a reason that had nothing to do with production: the
+        site ran on the test's own thread, where the observer binding is
+        visible. In a real run that site executes inside the reader's
+        `ThreadPoolExecutor`, whose context starts empty and carries
+        four named `ContextVar`s that do not include the degradation
+        observer — so every per-paper record was dropped and no test
+        could see it. LE-V moved the emission to the node, which runs in
+        the caller's context; this test now goes through the fan-out so
+        that a move back would fail.
+        """
+        monkeypatch.setattr(reader_module, "settings", Settings())
+        _degrading_reader(monkeypatch)
+
+        reader_module.reader_agent(
+            {"papers": [_paper()], "query": "Q?", "sub_questions": ["a"]}  # type: ignore[typeddict-item]
+        )
 
         observation = _only(observed, "reader_paper_abstract_only")
         assert observation.taxonomy_class == TAXONOMY_PARSING_CHUNKING_RANKING
