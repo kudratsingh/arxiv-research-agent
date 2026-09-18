@@ -57,7 +57,7 @@ import sys
 import time
 import traceback
 import uuid
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from types import FrameType
@@ -310,7 +310,9 @@ def _serialize_state(state: ResearchState) -> dict[str, Any]:
 
 
 def _compute_metrics(
-    state: ResearchState, benchmark_query: BenchmarkQuery
+    state: ResearchState,
+    benchmark_query: BenchmarkQuery,
+    chunks_by_paper: Mapping[str, Sequence[str]] | None = None,
 ) -> tuple[dict[str, Any], str | None]:
     """Score a completed run with all five metrics. Never raises.
 
@@ -327,6 +329,24 @@ def _compute_metrics(
     `citation_accuracy` is computed alongside it because ADR 0070
     forbids dropping a row field and the README block still averages it,
     not because it is still trusted — see `metrics.py`.
+
+    `chunks_by_paper` is ADR 0100's D-3 Option A seam, threaded through
+    rather than reached for: `measure_faithfulness` shows the judge the
+    reader's ranked chunks beside each cited abstract when a caller
+    supplies them, and records `source_scope` either way. This runner
+    supplies nothing and stays on `abstract_only`, byte-identical to
+    what it produced before; the campaign's live scorer supplies them
+    from the persisted episode state, because that is the only copy that
+    survives the process and is therefore the only one a re-judge could
+    read (ADR 0101). The two scopes are different instruments and the
+    result says which one it is.
+
+    Args:
+        state: The finished run's state.
+        benchmark_query: The query and its expected topics.
+        chunks_by_paper: `paper_id -> ranked chunk texts`, in rank
+            order, for the cited papers. `None` — the default and what
+            this module passes — is the abstract-only substrate.
 
     Returns:
         `(metrics, metrics_error)` where `metrics` maps every metric
@@ -351,7 +371,9 @@ def _compute_metrics(
         ("completeness", lambda: dict(measure_completeness(report, topics))),
         (
             "faithfulness",
-            lambda: dict(measure_faithfulness(report, papers, citations)),
+            lambda: dict(
+                measure_faithfulness(report, papers, citations, chunks_by_paper)
+            ),
         ),
         (
             "retrieval_recall",

@@ -849,6 +849,17 @@ never renumbered.
   The three judge calls carry `eval_judge_temperature` (0.0) and their own
   output schema, judge model only. All three rubric versions go to 2.0.0.
 
+- [0101](0101-the-funded-episode-path.md) — **Complete the funded episode
+  path before funding it.** Each episode persists `episode-state.json`
+  before anything scores it; a live judge scorer runs the three rubrics
+  under its own accumulator and its own cap; a scorer that fails leaves a
+  null metric rather than an unrepeatable episode; the per-episode cost
+  ceiling binds between calls instead of after the graph; provider,
+  source and judge-failure drift become stop rules the loop checks
+  between episodes; the rehearsal walks three steps further; and
+  `python -m src.campaign smoke` runs ADR 0090's five CAP-06 probes under
+  one approval, one cap and a JSON receipt.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

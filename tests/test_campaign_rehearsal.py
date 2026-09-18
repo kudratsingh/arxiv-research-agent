@@ -49,6 +49,7 @@ from src.campaign.planner import (
     write_campaign,
 )
 from src.campaign.rehearse import (
+    AFTER_THE_BOUNDARY,
     CREDENTIAL_BOUNDARY,
     REHEARSAL_STEPS,
     RehearsalReport,
@@ -429,8 +430,34 @@ class TestTheReportIsAClosedShape:
     """A rehearsal that skipped a step could not report itself."""
 
     def test_every_declared_step_is_reported_in_order(self) -> None:
-        assert REHEARSAL_STEPS[-1] == "provider-client-constructed"
+        # The walk no longer ends at the credential (EL-16). It ends at
+        # the scorer, which is *after* the credential and is the first
+        # thing a funded campaign needs that a rehearsal under the
+        # sentinel cannot prove — so the packet's "nothing is missing
+        # before the credential" claim is now checked by where the
+        # boundary sits in the sequence rather than by it being last.
+        assert REHEARSAL_STEPS[-1] == "scorer-resolved"
         assert CREDENTIAL_BOUNDARY in REHEARSAL_STEPS
+
+    def test_the_steps_after_the_credential_are_the_declared_ones(self) -> None:
+        """Everything past the boundary is declared as being past it.
+
+        16 §8's claim is about the steps *before* the credential, so
+        which steps are after it is load-bearing: a step that drifted
+        earlier in the sequence without leaving `AFTER_THE_BOUNDARY`
+        would silently widen the claim.
+        """
+        boundary = REHEARSAL_STEPS.index(CREDENTIAL_BOUNDARY)
+        assert REHEARSAL_STEPS[boundary + 1 :] == AFTER_THE_BOUNDARY
+
+    def test_retention_and_stop_rules_are_provable_before_the_credential(
+        self,
+    ) -> None:
+        """The two free additions are before the boundary; the scorer is not."""
+        boundary = REHEARSAL_STEPS.index(CREDENTIAL_BOUNDARY)
+        assert REHEARSAL_STEPS.index("state-retention-on") < boundary
+        assert REHEARSAL_STEPS.index("stop-rules-armed") < boundary
+        assert REHEARSAL_STEPS.index("scorer-resolved") > boundary
 
     def test_a_short_walk_is_not_a_report(self) -> None:
         payload = {

@@ -1,8 +1,8 @@
-"""`python -m src.campaign plan|dry-run|run|rehearse|resume|status|report`.
+"""`python -m src.campaign plan|dry-run|run|rehearse|resume|status|report|smoke`.
 
-Seven verbs, and the split between them is the work order's: **`plan`,
+Eight verbs, and the split between them is the work order's: **`plan`,
 `dry-run`, `rehearse`, `resume`, `status` and `report` have no execution
-side effects, and `run` is the only one that does.** `dry-run` enumerates
+side effects, and `run` and `smoke` are the two that do.** `dry-run` enumerates
 every planned episode with its zero-cost status and writes nothing —
 unless `--artifact` names a file, which is the one thing it writes and is
 a projection of the plan rather than a campaign directory; `plan`
@@ -33,6 +33,14 @@ cap before authorizing anything to execute against them. Resume is not a
 sixth verb — `run` always skips episodes that already hold a terminal
 `completion.json`, so running a second time after an interruption *is*
 the resume, under the same lock and the same cap.
+
+`smoke` is the eighth verb and the newest (LE-S, EL-04). It runs
+[ADR 0090](../../docs/decisions/0090-anthropic-sdk-1x.md)'s five
+CAP-06 probes against the real provider under one accumulator and one
+`--cap-usd`, and writes a JSON receipt saying which of the five are now
+verified. It is not a campaign and runs no episode, but it **cannot
+bypass approval**: it verifies an owner's record against its own campaign
+id and stage before a client is constructed, exactly as `run` does.
 
 The four read-only verbs compile no graph and construct no provider. Arm
 capability is left `unverified` at plan time and proved at seal time by
@@ -94,7 +102,16 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "command",
-        choices=("plan", "dry-run", "run", "rehearse", "resume", "status", "report"),
+        choices=(
+            "plan",
+            "dry-run",
+            "run",
+            "rehearse",
+            "resume",
+            "status",
+            "report",
+            "smoke",
+        ),
     )
     parser.add_argument(
         "--registry-root",
@@ -206,6 +223,45 @@ def _parser() -> argparse.ArgumentParser:
             "Run the three judge metrics through the deterministic fixture "
             "surface. Default: off. Requires USE_MOCK_DATA=true and "
             "ANTHROPIC_API_KEY=local-preview-disabled."
+        ),
+    )
+    parser.add_argument(
+        "--live-judge",
+        action="store_true",
+        help=(
+            "Score the three judge rubrics with real model calls, under the "
+            "episode's own judge allocation and a separate cost accumulator. "
+            "Default: off. Refused under USE_MOCK_DATA=true or the zero-spend "
+            "sentinel, and mutually exclusive with --mock-judge."
+        ),
+    )
+    parser.add_argument(
+        "--no-state-chunks",
+        action="store_true",
+        help=(
+            "Write episode-state.json without the reader's ranked chunk text, "
+            "keeping each chunk's digest, section, paper and score. Default: "
+            "the chunks are kept, because a campaign that discarded them "
+            "cannot be re-judged against the text its reports were written "
+            "from."
+        ),
+    )
+    parser.add_argument(
+        "--cap-usd",
+        default="0.000000",
+        help=(
+            "For smoke: the ceiling every probe runs under, bound as the "
+            "effective cost cap. Must be positive and must be covered by the "
+            "named approval record."
+        ),
+    )
+    parser.add_argument(
+        "--receipt",
+        type=Path,
+        default=None,
+        help=(
+            "For smoke: where the JSON receipt is written. Default: stdout "
+            "only."
         ),
     )
     parser.add_argument(
@@ -355,6 +411,30 @@ def _run(args: argparse.Namespace) -> int:
         )
         return EXIT_OK
 
+    if args.command == "smoke":
+        # Before the `--campaign-id` gate rather than after it: the smoke
+        # is not a campaign and has a campaign id of its own
+        # (`SMOKE_CAMPAIGN_ID`), which is what its approval record has to
+        # name. Requiring an unrelated campaign here would invite an
+        # operator to point a research campaign's approval at it.
+        from src.campaign.smoke import render_receipt, run_smoke
+
+        if args.approval_id is None:
+            raise CampaignError(
+                "the CAP-06 smoke requires --approval-id and the "
+                "--approval-records file holding it; possessing a key is "
+                "never authorization to spend"
+            )
+        receipt = run_smoke(
+            config,
+            approval_id=args.approval_id,
+            cap_usd=str(args.cap_usd),
+            approval_backend=_backend(args),
+            receipt_path=args.receipt,
+        )
+        print(render_receipt(receipt))
+        return EXIT_OK if receipt.passed else EXIT_REFUSED
+
     if args.campaign_id is None:
         print(
             "Error: --campaign-id is required for run, rehearse, resume, "
@@ -401,13 +481,8 @@ def _run(args: argparse.Namespace) -> int:
         # Imported here, not at module import: `run` is the only verb
         # that touches the graph, and the four read-only verbs must not
         # pay for — or be able to reach — `build_workflow`.
-        from src.campaign.execute import run_campaign
+        from src.campaign.execute import EpisodeStatePolicy, run_campaign
 
-        scorer = None
-        if args.mock_judge:
-            from src.eval.mock_judge import build_mock_judge_scorer
-
-            scorer = build_mock_judge_scorer(config)
         report = run_campaign(
             config,
             root=root,
@@ -415,7 +490,10 @@ def _run(args: argparse.Namespace) -> int:
             approval_backend=_backend(args),
             sink_root=args.sink_root,
             max_episodes=args.max_episodes,
-            scorer=scorer,
+            scorer=_scorer(args, config, root),
+            state_policy=EpisodeStatePolicy(
+                retain_reader_chunks=not args.no_state_chunks
+            ),
         )
         _emit(
             {
@@ -426,9 +504,11 @@ def _run(args: argparse.Namespace) -> int:
                 "skipped_already_complete": report.skipped_already_complete,
                 "pending_after": report.pending_after,
                 "stop_reason": report.stop_reason,
+                "stop_detail": report.stop_detail,
                 "campaign_cost_usd_max": report.campaign_cost_usd_max,
                 "observed_cost_usd": report.observed_cost_usd,
                 "model_calls": report.model_calls,
+                "judge_model_calls": report.judge_model_calls,
                 "elapsed_seconds": round(report.elapsed_seconds, 3),
                 "counts": dict(report.counts),
                 "analysis_denominator": report.summary.denominators.analysis_denominator,
@@ -472,6 +552,47 @@ def _run(args: argparse.Namespace) -> int:
         }
     )
     return EXIT_OK
+
+
+def _scorer(args: argparse.Namespace, config: Settings, root: Path) -> Any:
+    """Resolve the `run` verb's scorer, or `None` for the free default.
+
+    Three mutually exclusive answers and one refusal. `--mock-judge`
+    executes the three rubrics against the checked-in fixture at zero
+    cost (ADR 0095); `--live-judge` executes them against the provider
+    under the *sealed* judge allocation — read from the campaign's own
+    manifest rather than from a flag, because the cap an episode's judges
+    may spend is part of the protocol an approval covered and is not an
+    operator's to raise at the command line; neither leaves the free
+    deterministic scorer, which `execute_campaign` refuses for a campaign
+    that budgeted judge calls.
+
+    Both at once is refused rather than resolved by precedence. They
+    answer the same question with opposite methods, and a run that
+    silently picked one would put a number in a campaign report whose
+    provenance is a flag-ordering rule.
+    """
+    if args.mock_judge and args.live_judge:
+        raise CampaignError(
+            "--mock-judge and --live-judge both score the same three rubrics, "
+            "one from a fixture and one from the provider; name one"
+        )
+    if args.mock_judge:
+        from src.eval.mock_judge import build_mock_judge_scorer
+
+        return build_mock_judge_scorer(config)
+    if args.live_judge:
+        from src.campaign.planner import load_campaign
+        from src.campaign.scoring import build_live_judge_scorer
+
+        manifest, _specs = load_campaign(root / args.campaign_id)
+        return build_live_judge_scorer(
+            config,
+            judge_cost_usd_max=(
+                manifest.payload.protocol.episode_budget.judge_cost_usd_max
+            ),
+        )
+    return None
 
 
 def _write_artifact(
