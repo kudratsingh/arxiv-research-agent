@@ -853,7 +853,8 @@ def _deliverable() -> CalibrationContentEnvelope:
             contract_id=DELIVERABLE_ID,
             task_kind=TASK_KIND,
             decision_vocabularies=tuple(
-                (label_type.value, decision_vocabulary(label_type)) for label_type in LabelType
+                (label_type.value, decision_vocabulary(label_type))
+                for label_type in LabelType
             ),
             requires_rationale=True,
             description=(

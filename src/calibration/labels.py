@@ -91,7 +91,7 @@ AgreementState: TypeAlias = Literal["unreviewed", "agreed", "disputed", "adjudic
 
 
 class LabelType(StrEnum):
-    """The four label types AE-004 needs.
+    """The calibration label types, including retrieval coverage.
 
     Two of them score a *claim*, one scores a *rubric item*, and one
     scores a *pair of reports*. They are separate types rather than one
@@ -104,6 +104,7 @@ class LabelType(StrEnum):
     CLAIM_SUPPORT = "claim_support"
     CITATION_CORRECTNESS = "citation_correctness"
     RUBRIC_COVERAGE = "rubric_coverage"
+    RETRIEVAL_RECALL = "retrieval_recall"
     PAIRWISE_PREFERENCE = "pairwise_preference"
 
 
@@ -215,6 +216,14 @@ class RubricCoverageDecision(StrEnum):
     ABSTAIN = "abstain"
 
 
+class RetrievalRecallDecision(StrEnum):
+    """Whether a topic is covered by the supplied paper list."""
+
+    COVERED = "covered"
+    NOT_COVERED = "not_covered"
+    ABSTAIN = "abstain"
+
+
 class PairwisePreferenceDecision(StrEnum):
     """Which of two reports is better?
 
@@ -234,6 +243,7 @@ _VOCABULARY: Final[dict[LabelType, type[StrEnum]]] = {
     LabelType.CLAIM_SUPPORT: ClaimSupportDecision,
     LabelType.CITATION_CORRECTNESS: CitationCorrectnessDecision,
     LabelType.RUBRIC_COVERAGE: RubricCoverageDecision,
+    LabelType.RETRIEVAL_RECALL: RetrievalRecallDecision,
     LabelType.PAIRWISE_PREFERENCE: PairwisePreferenceDecision,
 }
 
@@ -255,6 +265,7 @@ _NEGATIVE: Final[frozenset[str]] = frozenset(
         CitationCorrectnessDecision.UNRESOLVABLE.value,
         RubricCoverageDecision.PARTIAL.value,
         RubricCoverageDecision.NOT_COVERED.value,
+        RetrievalRecallDecision.NOT_COVERED.value,
     }
 )
 

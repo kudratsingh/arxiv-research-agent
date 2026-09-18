@@ -399,7 +399,7 @@ def test_every_moved_calibration_object_resolves_from_the_one_root() -> None:
     by_content_ref = {content.object_ref(): content for content in on_disk.contents}
 
     assert len(built_objects) == 37
-    assert len(built_contents) == 83
+    assert len(built_contents) == 86
     for envelope in built_objects:
         ref = envelope.object_ref()
         assert ref in by_ref, f"{ref.kind}/{ref.id} did not survive the move"
@@ -1027,7 +1027,7 @@ def test_the_writer_regenerates_a_byte_identical_tree(tmp_path: Path) -> None:
 
     `main` regenerates every module's objects since ADR 0089, so this
     still compares the whole checked-in tree file for file — including
-    the 120 that moved out of `eval_registry_calibration/`, which is the
+    the 123 that moved out of `eval_registry_calibration/`, which is the
     strongest available proof that they moved byte for byte.
     """
     root = tmp_path / "eval_registry"
@@ -1043,7 +1043,7 @@ def test_the_writer_regenerates_a_byte_identical_tree(tmp_path: Path) -> None:
     assert main(["--root", str(benchmarks_only), "--benchmarks-only"]) == 0
     partial = {path.relative_to(benchmarks_only) for path in benchmarks_only.rglob("*.json")}
     assert partial < set(written)
-    assert len(set(written) - partial) == 120
+    assert len(set(written) - partial) == 123
 
 
 def test_the_parity_cli_reports_and_exits_zero(capsys: pytest.CaptureFixture[str]) -> None:

@@ -101,7 +101,7 @@ class TestTheCheckedInTreeIsWhatTheFixturesBuild:
         write_tree(build_bundle(), root)
 
         written = sorted(path.relative_to(root) for path in root.rglob("*.json"))
-        assert len(written) == 120
+        assert len(written) == 123
         for relative in written:
             committed = CALIBRATION_REGISTRY_ROOT / relative
             assert committed.is_file(), f"{relative} did not survive the move"
@@ -150,7 +150,7 @@ class TestTheCheckedInTreeIsWhatTheFixturesBuild:
         objects, contents = read_tree()
 
         assert len(objects) == 37
-        assert len(contents) == 83
+        assert len(contents) == 86
         for envelope in objects:
             assert locator(envelope.object_ref(), content=False)
         for content in contents:
@@ -208,7 +208,7 @@ class TestTheCheckedInTreeIsWhatTheFixturesBuild:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         assert main(["write", "--root", str(tmp_path / "tree")]) == 0
-        assert "wrote 120 objects" in capsys.readouterr().out
+        assert "wrote 123 objects" in capsys.readouterr().out
 
 
 class TestTheSuiteResolvesForAnEvaluator:
