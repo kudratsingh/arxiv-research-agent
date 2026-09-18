@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 import pytest
 from src.calibration.pool import build_pool
+from src.calibration.pool import _verdict
+from src.calibration.__main__ import main
 
 pytestmark = pytest.mark.unit
 
@@ -20,3 +22,17 @@ def test_pool_reads_episode_state_and_verdicts_and_blinds(tmp_path: Path) -> Non
 def test_pool_refuses_missing_campaign(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="no episode verdicts"):
         build_pool("missing", tmp_path)
+
+def test_verdict_normalisation_covers_string_and_malformed_shapes() -> None:
+    assert _verdict("supported")[0] == "passed"
+    assert _verdict("unknown")[0] == "abstain"
+    assert _verdict({"reason": "why"}) == ("abstain", "why")
+    assert _verdict(3)[0] == "abstain"
+
+def test_cli_pool_verb_writes_output(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    run = tmp_path / "r"; run.mkdir()
+    (run / "episode-state.json").write_text(json.dumps({"campaign_id":"c","papers":[],"reader":{"chunks":[]}}))
+    (run / "scores.json").write_text(json.dumps({"scores":{"faithfulness":{"claims":[True]},"completeness":{"coverage":[]}}}))
+    out = tmp_path / "pool.json"
+    assert main(["pool", "--campaign-id", "c", "--campaign-root", str(tmp_path), "--output", str(out)]) == 0
+    assert out.exists(); assert str(out) in capsys.readouterr().out
