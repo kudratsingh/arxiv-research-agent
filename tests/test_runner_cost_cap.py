@@ -136,7 +136,9 @@ class _SpendingClient:
             model="claude-sonnet-4-6",
             stop_reason="end_turn",
         )
-        return SimpleNamespace(retries_taken=0, parse=lambda: parsed)
+        return SimpleNamespace(
+            retries_taken=0, request_id="req_fake", parse=lambda: parsed
+        )
 
 
 def test_sync_pipeline_run_trips_the_cap(

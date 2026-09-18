@@ -106,7 +106,9 @@ class RecordedClient:
             model=kwargs["model"],
             stop_reason="end_turn",
         )
-        return SimpleNamespace(parse=lambda: parsed, retries_taken=0)
+        return SimpleNamespace(
+            parse=lambda: parsed, retries_taken=0, request_id="req_fake"
+        )
 
 
 def campaign_settings() -> Settings:

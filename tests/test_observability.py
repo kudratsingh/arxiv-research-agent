@@ -14,6 +14,7 @@ import json
 import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 import pytest
 
@@ -37,7 +38,12 @@ from src.observability import (
 )
 from src.observability import costs as costs_module
 from src.observability import logging as logging_module
-from src.observability.costs import resolved_model_ids, unpriced_models
+from src.observability.costs import (
+    bind_llm_call_observer,
+    reset_llm_call_observer,
+    resolved_model_ids,
+    unpriced_models,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -1002,3 +1008,44 @@ class TestRecordLlmCallRetryFields:
         record = next(r for r in caplog.records if r.message == "llm_call")
         assert not hasattr(record, "latency_ms")
         assert record.retries == 0
+
+    def test_the_request_id_reaches_the_line_when_there_is_one(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """LE-V. `llm_upstream_error` has carried this field since ADR
+        0051; now the success line names the same thing, so one id joins
+        a failure to its retry chain and a success to its spend."""
+        start_cost_tracking()
+        with caplog.at_level(logging.INFO, logger="src.observability.costs"):
+            record_llm_call("claude-sonnet-4-6", 100, 50, request_id="req_01H")
+
+        record = next(r for r in caplog.records if r.message == "llm_call")
+        assert record.request_id == "req_01H"
+
+    def test_a_call_without_one_omits_the_field_rather_than_emptying_it(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Same rule `latency_ms` follows: an always-present, usually-empty
+        key teaches a reader to stop looking at it."""
+        start_cost_tracking()
+        with caplog.at_level(logging.INFO, logger="src.observability.costs"):
+            record_llm_call("claude-sonnet-4-6", 100, 50)
+
+        record = next(r for r in caplog.records if r.message == "llm_call")
+        assert not hasattr(record, "request_id")
+
+    def test_the_observer_is_handed_the_request_id(self) -> None:
+        """The seam LE-S's smoke wrapped the SDK client to get at.
+
+        `LlmCallObservation` is the cost record an observer reads, and
+        carrying the id there means a future smoke can bind an observer
+        instead of re-implementing `with_raw_response`.
+        """
+        seen: list[Any] = []
+        token = bind_llm_call_observer(seen.append)
+        try:
+            record_llm_call("claude-sonnet-4-6", 100, 50, request_id="req_01H")
+        finally:
+            reset_llm_call_observer(token)
+
+        assert [call.request_id for call in seen] == ["req_01H"]

@@ -1429,7 +1429,7 @@ class TestObservabilityCannotBreakTheCall:
             messages=SimpleNamespace(
                 with_raw_response=SimpleNamespace(
                     create=lambda **_kwargs: SimpleNamespace(
-                        retries_taken=0, parse=lambda: parsed
+                        retries_taken=0, request_id="req_fake", parse=lambda: parsed
                     )
                 )
             )

@@ -457,12 +457,21 @@ class _FakeRawResponse:
     """Stands in for the SDK's `LegacyAPIResponse`.
 
     `retries_taken` is the field ADR 0051 reads: the SDK's own count of
-    attempts it discarded before the one that came back.
+    attempts it discarded before the one that came back. `request_id` is
+    the one LE-V reads on the success path — the provider's handle on
+    the call that returned, which until then was recorded only when the
+    call failed.
     """
 
-    def __init__(self, parsed: _FakeResponse, retries_taken: int) -> None:
+    def __init__(
+        self,
+        parsed: _FakeResponse,
+        retries_taken: int,
+        request_id: str | None = "req_fake",
+    ) -> None:
         self._parsed = parsed
         self.retries_taken = retries_taken
+        self.request_id = request_id
 
     def parse(self) -> _FakeResponse:
         return self._parsed
@@ -483,12 +492,14 @@ class _FakeMessages:
         usage: _FakeUsage | None = None,
         retries_taken: int = 0,
         raises: Exception | None = None,
+        request_id: str | None = "req_fake",
     ) -> None:
         self.calls: list[dict[str, Any]] = []
         self._text = text
         self._usage = usage or _FakeUsage()
         self._retries_taken = retries_taken
         self._raises = raises
+        self._request_id = request_id
         self.with_raw_response = _FakeRawMessages(self)
 
     def _create(self, **kwargs: Any) -> _FakeRawResponse:
@@ -496,7 +507,9 @@ class _FakeMessages:
         if self._raises is not None:
             raise self._raises
         return _FakeRawResponse(
-            _FakeResponse(self._text, self._usage), self._retries_taken
+            _FakeResponse(self._text, self._usage),
+            self._retries_taken,
+            self._request_id,
         )
 
 
@@ -507,8 +520,9 @@ class _FakeClient:
         usage: _FakeUsage | None = None,
         retries_taken: int = 0,
         raises: Exception | None = None,
+        request_id: str | None = "req_fake",
     ) -> None:
-        self.messages = _FakeMessages(text, usage, retries_taken, raises)
+        self.messages = _FakeMessages(text, usage, retries_taken, raises, request_id)
 
 
 class TestCallLlmCachePassthrough:
@@ -732,6 +746,44 @@ class TestRetryVisibility:
         llm_module.call_llm("u")
 
         assert seen["retries"] == 3
+
+    def test_the_request_id_reaches_the_cost_recorder_on_success(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """LE-V. The id was kept on failure only, which is the wrong half.
+
+        A call that failed is already visible in three other records; a
+        call that *succeeded* slowly or expensively was the one an
+        analyst most wanted to take to Anthropic, and it was the one
+        with no handle on it. Read off the same raw response
+        `retries_taken` comes from — the parsed `Message` carries
+        neither.
+        """
+        client = _FakeClient(request_id="req_01H")
+        monkeypatch.setattr(llm_module, "_get_client", lambda: client)
+        seen: dict[str, Any] = {}
+        monkeypatch.setattr(
+            llm_module, "record_llm_call", lambda **kw: seen.update(kw)
+        )
+
+        llm_module.call_llm("u")
+
+        assert seen["request_id"] == "req_01H"
+
+    def test_a_response_without_the_header_records_none(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """`None` is a real answer: the response carried no such header."""
+        client = _FakeClient(request_id=None)
+        monkeypatch.setattr(llm_module, "_get_client", lambda: client)
+        seen: dict[str, Any] = {}
+        monkeypatch.setattr(
+            llm_module, "record_llm_call", lambda **kw: seen.update(kw)
+        )
+
+        llm_module.call_llm("u")
+
+        assert seen["request_id"] is None
 
     def test_latency_is_recorded_on_every_call(
         self, monkeypatch: pytest.MonkeyPatch

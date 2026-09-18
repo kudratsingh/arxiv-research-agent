@@ -89,6 +89,7 @@ class _RawResponse:
     def __init__(self, parsed: _Response) -> None:
         self._parsed = parsed
         self.retries_taken = 0
+        self.request_id = "req_fake"
 
     def parse(self) -> _Response:
         return self._parsed

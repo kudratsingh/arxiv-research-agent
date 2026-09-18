@@ -615,6 +615,14 @@ def call_llm(
             cache_write=cache_write,
             latency_ms=latency_ms,
             retries=raw.retries_taken,
+            # Read off the same raw response `retries_taken` comes from,
+            # and for the same reason ADR 0051 reached for that response
+            # at all: the parsed `Message` carries neither. Until LE-V
+            # this id was kept only when the call *failed*, so the one
+            # call an analyst most wants to take to the provider — the
+            # slow, expensive one that returned — was the one with no
+            # handle on it.
+            request_id=raw.request_id,
         )
 
 
@@ -678,6 +686,7 @@ def _finish_call(
     cache_write: int,
     latency_ms: float,
     retries: int,
+    request_id: str | None = None,
 ) -> str:
     """Record the call's cost and return its text, fences stripped.
 
@@ -685,6 +694,15 @@ def _finish_call(
     sequence — issue, observe, account, return — rather than nesting
     the whole accounting and parsing tail one level deeper inside the
     `with`.
+
+    `request_id` defaults to `None` rather than being required, because
+    it is genuinely optional information: the raw response is the only
+    place it exists and a caller that reached this function some other
+    way has none to offer. It reaches the `llm_call` line and the
+    `LlmCallObservation` and stops there — the trajectory's own
+    idempotency keys and event ids are derived from the run's shape, and
+    a provider-minted id in that derivation would make two runs of one
+    fixture stop being byte-identical.
     """
     record_llm_call(
         model=model,
@@ -698,6 +716,7 @@ def _finish_call(
         # there instead of quietly reporting zero retries forever
         # (ADR 0051).
         retries=retries,
+        request_id=request_id,
     )
 
     text = _text_of(response)
