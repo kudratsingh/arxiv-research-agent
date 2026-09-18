@@ -145,6 +145,152 @@ class JudgeCallLine(StrictContractModel):
         return cost.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
 
+class MeasuredRoleTokens(StrictContractModel):
+    """Measured input/output token quantiles for one funded-path role."""
+
+    input_min: Annotated[int, Field(ge=0)]
+    input_median: Annotated[int, Field(ge=0)]
+    input_max: Annotated[int, Field(ge=0)]
+    output_min: Annotated[int, Field(ge=0)]
+    output_median: Annotated[int, Field(ge=0)]
+    output_max: Annotated[int, Field(ge=0)]
+
+    @model_validator(mode="after")
+    def ordered(self) -> MeasuredRoleTokens:
+        if not (
+            self.input_min <= self.input_median <= self.input_max
+            and self.output_min <= self.output_median <= self.output_max
+        ):
+            raise ValueError("measured token quantiles must be min <= median <= max")
+        return self
+
+
+#: What a caller may hand :func:`reestimate_from_measurements` for one
+#: role. Three shapes, because three places produce them: the parsed
+#: model, the compact ledger shape whose values are per-direction rows
+#: (``{"min": {"input": ..., "output": ...}, ...}``), and the flat shape
+#: whose values are token counts (``{"input_min": ..., ...}``). The two
+#: mapping shapes differ in their *value* type, so the alias admits both
+#: and :func:`reestimate_from_measurements` narrows per branch rather
+#: than trusting the caller.
+MeasuredRoleInput = MeasuredRoleTokens | Mapping[str, Mapping[str, int] | int]
+
+
+def reestimate_from_measurements(
+    measured_roles: Mapping[str, MeasuredRoleInput],
+    *,
+    revision_count: int,
+    episodes: int = 60,
+    max_papers: int = 10,
+    judge_model: str = "claude-sonnet-4-6",
+    prices: Mapping[str, Mapping[str, float]] | None = None,
+    prices_last_verified: str | None = None,
+    priced_on: str = "1970-01-01",
+) -> CostEstimate:
+    """Re-price W12 from measured role token quantiles.
+
+    The median is the expected path; ``revision_count`` adds the measured
+    revision passes to workflow roles. The packet's 1.25x rule is applied to
+    the expected total for both caps. Prices are supplied by the product's
+    table, never invented here.
+    """
+    if revision_count < 0 or episodes <= 0 or max_papers <= 0:
+        raise ValueError("revision_count, episodes and max_papers must be non-negative/positive")
+    table = prices
+    verified = prices_last_verified
+    if table is None or verified is None:
+        table, verified = current_price_table()
+
+    def direction_row(value: Mapping[str, int] | int, quantile_name: str) -> Mapping[str, int]:
+        """One quantile of the compact shape, refused if it is not a row."""
+        if not isinstance(value, Mapping):
+            raise ValueError(f"measured quantile {quantile_name!r} must map direction to token count")
+        return value
+
+    def count(value: Mapping[str, int] | int, field: str) -> int:
+        """One token count of the flat shape, refused if it is a row."""
+        if isinstance(value, Mapping):
+            raise ValueError(f"measured field {field!r} must be a token count, not a mapping")
+        return int(value)
+
+    def quantile(role: str) -> MeasuredRoleTokens:
+        raw = measured_roles[role]
+        if isinstance(raw, MeasuredRoleTokens):
+            return raw
+        # Accept the compact ledger shape:
+        # {"min": {"input": ..., "output": ...}, "median": ..., "max": ...}
+        if "median" in raw:
+            minimum = direction_row(raw["min"], "min")
+            median = direction_row(raw["median"], "median")
+            maximum = direction_row(raw["max"], "max")
+
+            def token(row: Mapping[str, int], direction: str) -> int:
+                return int(row.get(direction, row.get(f"{direction}_tokens", 0)))
+
+            return MeasuredRoleTokens(
+                input_min=token(minimum, "input"),
+                input_median=token(median, "input"),
+                input_max=token(maximum, "input"),
+                output_min=token(minimum, "output"),
+                output_median=token(median, "output"),
+                output_max=token(maximum, "output"),
+            )
+        return MeasuredRoleTokens(
+            input_min=count(raw["input_min"], "input_min"),
+            input_median=count(raw.get("input_median", raw.get("median_input", 0)), "input_median"),
+            input_max=count(raw["input_max"], "input_max"),
+            output_min=count(raw["output_min"], "output_min"),
+            output_median=count(raw.get("output_median", raw.get("median_output", 0)), "output_median"),
+            output_max=count(raw["output_max"], "output_max"),
+        )
+
+    role_calls = {
+        "planner": episodes,
+        "reader": episodes * max_papers,
+        "synthesizer": episodes,
+        "critic": episodes * revision_count,
+        "completeness": episodes,
+        "faithfulness": episodes,
+        "retrieval_recall": episodes,
+    }
+    lines: list[JudgeCallLine] = []
+    for role, calls in role_calls.items():
+        if calls == 0:
+            continue
+        measured = quantile(role)
+        model = judge_model if role in {"completeness", "faithfulness", "retrieval_recall"} else "claude-sonnet-4-6"
+        lines.append(
+            JudgeCallLine(
+                label=role,
+                model_id=model,
+                calls=calls,
+                input_tokens_per_call=measured.input_median,
+                output_tokens_per_call=measured.output_median,
+                note="measured Stage-1 median tokens; min/median/max retained in the ledger",
+            )
+        )
+    expected = sum(line.cost_usd(table) for line in lines)
+    cap = (expected * Decimal("1.25")).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+    per_episode = (cap / Decimal(episodes)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+    return CostEstimate(
+        estimate_id="w12-measured-reestimate",
+        revision="1.0.0",
+        prepared_for=f"W12 arm-A baseline, {episodes} episodes, {revision_count} revisions",
+        priced_on=priced_on,
+        prices_last_verified=verified,
+        judge_lines=tuple(lines),
+        per_episode_cap_usd=f"{per_episode:.6f}",
+        campaign_cap_usd=f"{cap:.6f}",
+        overshoot_behaviour="one in-flight episode at concurrency 1; cap is 1.25x measured expected spend",
+        stop_conditions=CALIBRATION_STOP_CONDITIONS[:1],
+        note="Measured-token re-estimate; prices remain ESTIMATE until the owner verifies them.",
+    )
+
+
+# Descriptive alias for callers that use the work-order wording.
+reestimate_measured_tokens = reestimate_from_measurements
+
+
 class ExpertTimeLine(StrictContractModel):
     """One line of human time.
 

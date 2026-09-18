@@ -27,7 +27,7 @@
     "enforcement": "between-episodes-with-in-flight-overshoot-risk",
     "total_cost_usd_max": "0.000000"
   },
-  "campaign_id": "camp_d283b09f6bb9c4653c2bc5e1cd4b8bed",
+  "campaign_id": "camp_cefcfeb0abfdbb3a023104c061b691df",
   "case_ids": [
     "hallucination-mitigation",
     "rag-multi-hop",
@@ -53,7 +53,7 @@
   "chargeable": false,
   "corpus_mode": "live",
   "derived_from": "eval_registry",
-  "describes": "20 cases x 3 repeats x arm A = 60 episodes over research-policy-v1, planned at a zero cap and published unapproved. Planning it costs nothing and authorizes nothing.",
+  "describes": "Live-retrieval variant of the W12 arm-A scope. 20 cases x 3 repeats x arm A = 60 episodes over research-policy-v1, planned at a zero cap and published unapproved. Planning it costs nothing and authorizes nothing.",
   "design": [
     {
       "arm_id": "A",
@@ -674,7 +674,7 @@
   "network_calls": 0,
   "planned_episode_count": 60,
   "produced_by": "python -m src.campaign dry-run --suite research-policy-v1 --arms A --repeats 3 --seed 0 --corpus-mode live --artifact campaigns/w12-arm-a-baseline-live.plan.json",
-  "protocol_digest": "sha256:e6b0e727948e6d271fddec21f3c6c6f1a077c6e89020b6c274880d5e32e99e62",
+  "protocol_digest": "sha256:60d2e4b305daf7096a20de835543d881e1098f4786a1dec61de5c11c3593fe94",
   "protocol_id": "research-policy-v1-stage-0",
   "provider_initialized": false,
   "repeats": 3,

@@ -51,6 +51,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from statistics import fmean, stdev
 from typing import Annotated, Any, Final, Literal
 
 from pydantic import Field
@@ -73,7 +74,12 @@ from src.contracts.kernel import (
     sha256_digest,
 )
 from src.contracts.run_manifest import ManifestFileStore
-from src.eval.stats import wilson_interval
+from src.eval.stats import (
+    PairedSample,
+    paired_bootstrap_delta,
+    small_sample_caveat,
+    wilson_interval,
+)
 
 REPORT_SCHEMA_VERSION: Final[str] = "1.0.0"
 
@@ -406,6 +412,43 @@ class MetricRow(StrictContractModel):
     mean_episode_score: float | None
     abstentions: Annotated[int, Field(ge=0)] = 0
     not_run_reason: str | None = None
+    interval_label: str = "pooled, assumes independence — not for gating"
+
+
+class VarianceRow(StrictContractModel):
+    """Per-query repeat variation for one metric and arm."""
+
+    query_id: str
+    arm_id: str
+    metric_id: str
+    episodes_scored: Annotated[int, Field(ge=0)]
+    mean: float | None
+    sd: float | None
+    minimum: float | None
+    maximum: float | None
+
+
+class VarianceInterval(StrictContractModel):
+    """Query-first nested bootstrap interval for an arm metric."""
+
+    arm_id: str
+    metric_id: str
+    query_count: Annotated[int, Field(ge=0)]
+    episodes_scored: Annotated[int, Field(ge=0)]
+    point: float | None
+    interval_low: float | None
+    interval_high: float | None
+    seed: Annotated[int, Field(ge=0)]
+    resamples: Annotated[int, Field(ge=1)]
+    method: str = "query-first resampling, then repeats"
+
+
+class BaselineDifficultyRow(StrictContractModel):
+    """Difficulty values by query, from the baseline arm's scores."""
+
+    query_id: str
+    arm_id: str
+    metrics: Mapping[str, float | None]
 
 
 class ArmQuality(StrictContractModel):
@@ -518,6 +561,10 @@ class CampaignReport(StrictContractModel):
     model_calls: Annotated[int, Field(ge=0)]
     judge_model_calls: Annotated[int, Field(ge=0)]
     quality: tuple[ArmQuality, ...]
+    variance: tuple[VarianceRow, ...] = ()
+    variance_intervals: tuple[VarianceInterval, ...] = ()
+    baseline_difficulty: tuple[BaselineDifficultyRow, ...] = ()
+    small_sample_caveat: str | None = None
     cost: tuple[ArmCost, ...]
     taxonomy: tuple[TaxonomyRow, ...]
     lineage: tuple[ArmLineage, ...]
@@ -640,6 +687,8 @@ def _counts_for(record: EpisodeRecord, metric_id: str) -> tuple[int, int, int] |
         block = _score_block(record, metric_id)
         if block is None:
             return None
+        if "score" in block and block.get("score") is None:
+            return None
         covered = block.get("covered_topics")
         total = block.get("total_topics")
         if not isinstance(covered, int) or not isinstance(total, int):
@@ -647,6 +696,8 @@ def _counts_for(record: EpisodeRecord, metric_id: str) -> tuple[int, int, int] |
         return (covered, total, 0)
     block = _score_block(record, "faithfulness")
     if block is None:
+        return None
+    if "score" in block and block.get("score") is None:
         return None
     supported = block.get("supported")
     unsupported = block.get("unsupported")
@@ -656,6 +707,107 @@ def _counts_for(record: EpisodeRecord, metric_id: str) -> tuple[int, int, int] |
     assert isinstance(supported, int) and isinstance(unsupported, int)
     assert isinstance(unavailable, int)
     return (supported, supported + unsupported, unavailable)
+
+
+def _metric_score(record: EpisodeRecord, metric_id: str) -> float | None:
+    """Read one episode score, preserving judge ``None`` as unscored."""
+    block = _score_block(record, metric_id)
+    if metric_id == "supported_claim_precision":
+        numerator = record.scores.get("supported_claim_count")
+        denominator = record.scores.get("claim_count")
+        return (
+            numerator / denominator
+            if isinstance(numerator, int) and isinstance(denominator, int) and denominator
+            else None
+        )
+    if block is not None and "score" in block:
+        value = block.get("score")
+        return float(value) if isinstance(value, (int, float)) else None
+    counts = _counts_for(record, metric_id)
+    if counts is None or counts[1] == 0:
+        return None
+    return counts[0] / counts[1]
+
+
+def _variance_rows(
+    records: Sequence[EpisodeRecord],
+) -> tuple[VarianceRow, ...]:
+    grouped: dict[tuple[str, str, MetricId], list[float]] = {}
+    for record in records:
+        for metric_id in METRIC_IDS:
+            score = _metric_score(record, metric_id)
+            if score is not None:
+                grouped.setdefault((record.case_id, record.arm_id, metric_id), []).append(score)
+    rows: list[VarianceRow] = []
+    for (query_id, arm_id, metric_id), values in sorted(grouped.items()):
+        rows.append(
+            VarianceRow(
+                query_id=query_id,
+                arm_id=arm_id,
+                metric_id=metric_id,
+                episodes_scored=len(values),
+                mean=fmean(values),
+                sd=stdev(values) if len(values) > 1 else 0.0,
+                minimum=min(values),
+                maximum=max(values),
+            )
+        )
+    return tuple(rows)
+
+
+def _variance_intervals(
+    records: Sequence[EpisodeRecord], *, seed: int, resamples: int = 10_000
+) -> tuple[VarianceInterval, ...]:
+    grouped: dict[tuple[str, MetricId], dict[str, list[float]]] = {}
+    for record in records:
+        for metric_id in METRIC_IDS:
+            score = _metric_score(record, metric_id)
+            if score is not None:
+                grouped.setdefault((record.arm_id, metric_id), {}).setdefault(
+                    record.case_id, []
+                ).append(score)
+    rows: list[VarianceInterval] = []
+    for (arm_id, metric_id), by_query in sorted(grouped.items()):
+        samples = tuple(
+            PairedSample(query_id, (0.0,), tuple(values))
+            for query_id, values in sorted(by_query.items())
+        )
+        result = paired_bootstrap_delta(samples, seed=seed, resamples=resamples)
+        rows.append(
+            VarianceInterval(
+                arm_id=arm_id,
+                metric_id=metric_id,
+                query_count=result.tasks,
+                episodes_scored=sum(len(values) for values in by_query.values()),
+                point=result.point,
+                interval_low=result.interval.low,
+                interval_high=result.interval.high,
+                seed=seed,
+                resamples=resamples,
+            )
+        )
+    return tuple(rows)
+
+
+def _difficulty_rows(
+    records: Sequence[EpisodeRecord], *, baseline_arm: str = "A"
+) -> tuple[BaselineDifficultyRow, ...]:
+    by_query: dict[str, dict[str, list[float]]] = {}
+    for record in records:
+        if record.arm_id != baseline_arm:
+            continue
+        for metric_id in METRIC_IDS:
+            score = _metric_score(record, metric_id)
+            if score is not None:
+                by_query.setdefault(record.case_id, {}).setdefault(metric_id, []).append(score)
+    return tuple(
+        BaselineDifficultyRow(
+            query_id=query_id,
+            arm_id=baseline_arm,
+            metrics={metric: fmean(values) for metric, values in sorted(metrics.items())},
+        )
+        for query_id, metrics in sorted(by_query.items())
+    )
 
 
 def _skipped_rubrics(records: Sequence[EpisodeRecord]) -> tuple[str, ...]:
@@ -1058,6 +1210,12 @@ def build_report(
         quality=tuple(
             _arm_quality(arm_id, by_arm.get(arm_id, ())) for arm_id in arm_order
         ),
+        variance=_variance_rows(records),
+        variance_intervals=_variance_intervals(records, seed=payload.protocol.seed),
+        baseline_difficulty=_difficulty_rows(records),
+        small_sample_caveat=small_sample_caveat(
+            len({record.case_id for record in records})
+        ),
         cost=tuple(_arm_cost(arm_id, by_arm.get(arm_id, ())) for arm_id in arm_order),
         taxonomy=_taxonomy_rows(records, events, judges_ran=judges_ran),
         lineage=tuple(
@@ -1096,7 +1254,7 @@ def _rate_cell(row: MetricRow) -> str:
         return f"{row.numerator}/{row.denominator} n/a"
     return (
         f"{row.rate:.3f} [{row.interval_low:.3f}–{row.interval_high:.3f}] "
-        f"({row.numerator}/{row.denominator})"
+        f"({row.numerator}/{row.denominator})<br><small>{row.interval_label}</small>"
     )
 
 
@@ -1206,6 +1364,70 @@ def render_report(report: CampaignReport) -> str:
                 f"| {row.episodes_scored} | {row.episodes_missing} "
                 f"| {row.abstentions} |"
             )
+
+    lines.extend(
+        [
+            "",
+            "## Variance and baseline difficulty",
+            "",
+            "Repeat variation is reported per query, arm and metric. Judge scores "
+            "that are `None` are not scored and never enter a zero-valued bucket.",
+            "",
+            "| Query | Arm | Metric | Episodes scored | Mean | SD | Min | Max |",
+            "|---|---|---|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for variance_row in report.variance:
+        lines.append(
+            f"| `{variance_row.query_id}` | {variance_row.arm_id} "
+            f"| `{variance_row.metric_id}` | {variance_row.episodes_scored} "
+            f"| {_score(variance_row.mean)} | {_score(variance_row.sd)} "
+            f"| {_score(variance_row.minimum)} | {_score(variance_row.maximum)} |"
+        )
+    lines.extend(
+        [
+            "",
+            "| Arm | Metric | Queries | Episodes scored | Mean | 95% interval | "
+            "Method | Seed |",
+            "|---|---|---:|---:|---:|---|---|---:|",
+        ]
+    )
+    for interval_row in report.variance_intervals:
+        interval = (
+            f"[{interval_row.interval_low:.3f}–{interval_row.interval_high:.3f}]"
+            if interval_row.interval_low is not None and interval_row.interval_high is not None
+            else "n/a"
+        )
+        lines.append(
+            f"| {interval_row.arm_id} | `{interval_row.metric_id}` "
+            f"| {interval_row.query_count} | {interval_row.episodes_scored} "
+            f"| {_score(interval_row.point)} | {interval} "
+            f"| {interval_row.method} ({interval_row.resamples} resamples) "
+            f"| {interval_row.seed} |"
+        )
+    lines.extend(
+        [
+            "",
+            "The pooled Wilson row above is labelled **pooled, assumes "
+            "independence — not for gating**. The interval in this section "
+            "resamples queries first and repeats within each drawn query.",
+            "",
+            "### Per-query baseline difficulty",
+            "",
+            "| Query | Arm | Metric means |",
+            "|---|---|---|",
+        ]
+    )
+    for difficulty_row in report.baseline_difficulty:
+        metrics = ", ".join(
+            f"`{metric}`={value:.3f}" if value is not None else f"`{metric}`=n/a"
+            for metric, value in difficulty_row.metrics.items()
+        )
+        lines.append(
+            f"| `{difficulty_row.query_id}` | {difficulty_row.arm_id} | {metrics or 'n/a'} |"
+        )
+    if report.small_sample_caveat:
+        lines.extend(["", report.small_sample_caveat])
 
     lines.extend(
         [

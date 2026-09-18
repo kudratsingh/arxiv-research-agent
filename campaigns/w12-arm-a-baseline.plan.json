@@ -27,7 +27,7 @@
     "enforcement": "between-episodes-with-in-flight-overshoot-risk",
     "total_cost_usd_max": "0.000000"
   },
-  "campaign_id": "camp_4599b4b0a746f4ccf301e80ce9ca5863",
+  "campaign_id": "camp_8615b68fdff011ebc6eeee4af76e8531",
   "case_ids": [
     "hallucination-mitigation",
     "rag-multi-hop",
@@ -674,7 +674,7 @@
   "network_calls": 0,
   "planned_episode_count": 60,
   "produced_by": "python -m src.campaign dry-run --suite research-policy-v1 --arms A --repeats 3 --seed 0 --corpus-mode snapshot --artifact campaigns/w12-arm-a-baseline.plan.json",
-  "protocol_digest": "sha256:03188be8a1d9c10566ac3e2a84f7e93daa1f2600928f3dc2310e3dfcd5b20712",
+  "protocol_digest": "sha256:b36f72f0a172bd9669fa3bf2853eb36238223f59449d86065f5e8cde07af26fd",
   "protocol_id": "research-policy-v1-stage-0",
   "provider_initialized": false,
   "repeats": 3,

@@ -34,7 +34,7 @@ import tempfile
 from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated, Final, Literal, TypeAlias
+from typing import Annotated, Any, Final, Literal, TypeAlias
 
 from pydantic import Field, StringConstraints, model_validator
 
@@ -57,6 +57,44 @@ from src.contracts.run_manifest import (
     SafeLabel,
 )
 from src.contracts.task_spec import TaskSpecRef
+
+# Doc 07 §4: request-shaping settings whose value must be frozen alongside
+# the protocol. The explicit order is part of the reviewable contract.
+FROZEN_PROTOCOL_SETTINGS: Final[tuple[str, ...]] = (
+    "llm_temperature",
+    "eval_judge_temperature",
+    "enable_structured_outputs",
+    "max_cost_usd",
+    "max_papers",
+    "results_per_query",
+    "max_iterations",
+    "reader_max_workers",
+    "reader_max_chunks_per_paper",
+    "reader_max_claims_per_paper",
+    "reader_model",
+    "reader_effort",
+    "llm_thinking",
+    "llm_effort",
+)
+
+
+def frozen_settings_snapshot(config: Any) -> dict[str, Any]:
+    """Return the canonical settings subset for a campaign protocol.
+
+    ``eval_judge_temperature`` is supplied by the judge-definition work
+    order; a missing field is represented explicitly until that change lands.
+    """
+    def digest_value(value: Any) -> Any:
+        # Canonical JSON intentionally rejects binary floats. Preserve the
+        # setting while giving the digest a stable decimal spelling.
+        if isinstance(value, float):
+            return format(value, ".6f")
+        return value
+
+    return {
+        name: digest_value(getattr(config, name, None))
+        for name in FROZEN_PROTOCOL_SETTINGS
+    }
 
 #: This package's own version, folded into every campaign it plans.
 CAMPAIGN_PLANNER_VERSION: Final[str] = "1.0.0"
@@ -167,6 +205,10 @@ class CampaignProtocol(StrictContractModel):
     episode_budget: EpisodeBudget
     campaign_budget: CampaignBudget
     denominator_policy: DenominatorPolicy = DenominatorPolicy()
+    #: Settings that affect the compiled/evaluated research request.  They
+    #: are part of the protocol identity rather than process-global context:
+    #: changing one therefore creates a new campaign id.
+    frozen_settings: Mapping[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def selection_and_caps_are_coherent(self) -> CampaignProtocol:

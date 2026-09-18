@@ -55,7 +55,7 @@ from pydantic import Field, model_validator
 
 from src.campaign.arms import ARM_IDS, ArmId, ArmSelector, ArmStatus, CampaignArm
 from src.campaign.errors import CampaignError
-from src.campaign.manifest import CorpusModeChoice
+from src.campaign.manifest import CorpusModeChoice, frozen_settings_snapshot
 from src.campaign.planner import (
     CampaignPlan,
     CampaignRequest,
@@ -286,6 +286,7 @@ def baseline_request(
         approval_id=None,
         episode_budget=default_episode_budget(config, ordered),
         campaign_budget=default_campaign_budget(),
+        frozen_settings=frozen_settings_snapshot(config),
     )
 
 
@@ -317,7 +318,6 @@ def is_w12_baseline(request: CampaignRequest) -> bool:
         and request.arms == W12_BASELINE_ARMS
         and request.repeats == W12_BASELINE_REPEATS
         and request.seed == W12_BASELINE_SEED
-        and request.corpus_mode == W12_BASELINE_CORPUS_MODE
         and request.protocol_id == W12_BASELINE_PROTOCOL_ID
         and request.stage == W12_BASELINE_STAGE
     )
@@ -339,8 +339,10 @@ def artifact_description(request: CampaignRequest) -> str:
         f"{request.suite_ref.id}, planned at a zero cap and published "
         "unapproved. Planning it costs nothing and authorizes nothing."
     )
-    if is_w12_baseline(request):
+    if is_w12_baseline(request) and request.corpus_mode == W12_BASELINE_CORPUS_MODE:
         return f"{W12_BASELINE_PREFACE} {body}"
+    if is_w12_baseline(request):
+        return f"Live-retrieval variant of the W12 arm-A scope. {body}"
     return body
 
 
