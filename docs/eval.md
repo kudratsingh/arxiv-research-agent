@@ -250,16 +250,18 @@ prompts got scrutinized independently:
   missing / extra / malformed judge output. See ADR
   [0006](decisions/0006-completeness-batched-judge.md) for the
   batched-vs-per-topic tradeoff.
-- **Faithfulness**. Single LLM-as-judge call
-  extracts each factual, cited claim from the report and decides
-  `supported: true|false|null` against the cited paper's abstract.
-  Source of truth is `state["papers"]` abstracts joined with
-  `state["citations"]` on `paper_id`. Score = supported / (supported +
-  unsupported); `source_unavailable` claims are reported separately.
-  Defensive override: if the judge claims support against a cite key
-  we didn't provide, we force `supported=None`. See ADR
-  [0007](decisions/0007-faithfulness-single-call-abstracts.md) for
-  source-of-truth and denominator tradeoffs.
+- **Faithfulness**. Single LLM-as-judge call extracts each factual,
+  cited claim from the report and decides `supported: true|false|null`
+  against the cited paper's abstract together with the reader's ranked
+  evidence chunks, when present. The source scope is recorded per paper
+  (`abstract` or `abstract+chunks`) and is joined to citations by
+  `paper_id`. Score = supported / (supported + unsupported);
+  `source_unavailable` claims are reported separately. Empty or
+  unavailable evidence produces `None` with a reason, never a fabricated
+  zero or one. Defensive override: if the judge claims support against a
+  cite key we didn't provide, we force `supported=None`. See ADR
+  [0007](decisions/0007-faithfulness-single-call-abstracts.md) and ADR
+  [0100](decisions/0100-judge-definitions-v2.md).
 - **Retrieval recall**. LLM-as-judge over the retrieved paper set
   against `expected_topics` — did search actually fetch material for
   each expected topic, independent of what the report did with it

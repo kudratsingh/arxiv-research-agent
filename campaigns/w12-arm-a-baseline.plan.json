@@ -27,7 +27,7 @@
     "enforcement": "between-episodes-with-in-flight-overshoot-risk",
     "total_cost_usd_max": "0.000000"
   },
-  "campaign_id": "camp_afd9df887b844b901f98724e9b13cc14",
+  "campaign_id": "camp_8615b68fdff011ebc6eeee4af76e8531",
   "case_ids": [
     "hallucination-mitigation",
     "rag-multi-hop",
@@ -670,11 +670,11 @@
   },
   "excluded_episode_count": 0,
   "expected_episode_count": 60,
-  "lock_digest": "sha256:d45d39fd7df5d2ef67abfeb1c3d3cae6a2379d53e95307ad0dbf8784c7d20a18",
+  "lock_digest": "sha256:c7072ea63787d58ff6815b4bf6afbcf60934da8cb8dd94117efbdfb5166ebb5d",
   "network_calls": 0,
   "planned_episode_count": 60,
   "produced_by": "python -m src.campaign dry-run --suite research-policy-v1 --arms A --repeats 3 --seed 0 --corpus-mode snapshot --artifact campaigns/w12-arm-a-baseline.plan.json",
-  "protocol_digest": "sha256:4eb4b94be507e4db2852091a9110fbc160fdeac84d26e1dbbce8c00c73d3b082",
+  "protocol_digest": "sha256:b36f72f0a172bd9669fa3bf2853eb36238223f59449d86065f5e8cde07af26fd",
   "protocol_id": "research-policy-v1-stage-0",
   "provider_initialized": false,
   "repeats": 3,
@@ -683,7 +683,7 @@
   "seed": 0,
   "stage": "stage-0-qualification",
   "suite_ref": {
-    "digest": "sha256:b7536e62c8dc8f896ed0bfedbcd65109a68eff42dd6be6a5ad2fe9d127dc0ecc",
+    "digest": "sha256:ba3ad4e20f2df9278751638ba1d0e4ee34c30cc9dc77a07c280d748d24e732a8",
     "id": "research-policy-v1",
     "kind": "benchmark_suite",
     "revision": "1.0.0"

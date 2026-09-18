@@ -860,6 +860,12 @@ never renumbered.
   `python -m src.campaign smoke` runs ADR 0090's five CAP-06 probes under
   one approval, one cap and a JSON receipt.
 
+- [0102](0102-live-eval-analysis-and-protocol.md) — **Analyze live-evaluation
+  variance and freeze the funded protocol.** Reports preserve query-level
+  variation and query-first intervals; measured token counts re-estimate
+  caps and cost; frozen settings become part of the campaign digest; and
+  the packet records the remaining live-evaluation preconditions.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.
