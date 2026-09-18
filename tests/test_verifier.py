@@ -23,6 +23,7 @@ from src.agents.verifier import (
     verifier_agent,
 )
 from src.config import Settings
+from src.eval.metrics import build_faithfulness_sources
 from src.graph.state import ResearchState
 
 pytestmark = pytest.mark.unit
@@ -428,31 +429,46 @@ def _mk_claim(
     }
 
 
+def _rendered_evidence(
+    papers: list[Any], citations: list[Any], evidence: list[Any]
+) -> str:
+    """Render the evidence dossier the way `run_verification` does.
+
+    Identity comes from `build_faithfulness_sources` since LE-V — which
+    papers are in, and what each is called — and this function renders
+    the text. The two are exercised together because a rendering keyed
+    off a different join is exactly the defect that was fixed.
+    """
+    return _dossier_from_evidence(
+        build_faithfulness_sources(papers, citations), citations, evidence
+    )
+
+
 class TestDossierFromEvidence:
     """Which papers enter the dossier, and what stands in for evidence."""
     def test_cited_paper_with_evidence_uses_chunks(self) -> None:
-        dossier = _dossier_from_evidence(
+        dossier = _rendered_evidence(
             [_mk_paper()],
             [_mk_citation()],
             [_mk_claim(text="F1 rose from 0.62 to 0.78.")],
         )
-        assert "[Smith, 2023] — source chunks:" in dossier
+        assert "[Smith, 2023] — T" in dossier
+        assert "source chunks:" in dossier
         assert "(results, relevance=0.85)" in dossier
         assert "F1 rose from 0.62 to 0.78." in dossier
         assert "An abstract sentence." not in dossier
 
     def test_cited_paper_without_evidence_falls_back_to_abstract(self) -> None:
-        dossier = _dossier_from_evidence(
-            [_mk_paper()], [_mk_citation()], evidence=[]
-        )
-        assert "[Smith, 2023] — abstract (no chunks available):" in dossier
+        dossier = _rendered_evidence([_mk_paper()], [_mk_citation()], [])
+        assert "[Smith, 2023] — T" in dossier
+        assert "abstract (no chunks available):" in dossier
         assert "An abstract sentence." in dossier
 
     def test_uncited_paper_skipped(self) -> None:
         # Uncited paper (Doe) + cited-but-missing paper (Smith citation
         # with no matching paper metadata) -> both excluded, dossier
         # ends up empty and returns the placeholder.
-        dossier = _dossier_from_evidence(
+        dossier = _rendered_evidence(
             [_mk_paper("p2", lastname="Doe")], [_mk_citation()], []
         )
         assert "Doe" not in dossier
@@ -461,7 +477,7 @@ class TestDossierFromEvidence:
     def test_cited_paper_and_uncited_paper_only_cited_appears(self) -> None:
         # Both papers exist in metadata; only Smith is cited. Doe should
         # be excluded from the dossier regardless.
-        dossier = _dossier_from_evidence(
+        dossier = _rendered_evidence(
             [_mk_paper("p1", lastname="Smith"), _mk_paper("p2", lastname="Doe")],
             [_mk_citation("p1", "2023", "Smith")],
             [],
@@ -470,7 +486,7 @@ class TestDossierFromEvidence:
         assert "Doe" not in dossier
 
     def test_multiple_claims_per_paper_stacked(self) -> None:
-        dossier = _dossier_from_evidence(
+        dossier = _rendered_evidence(
             [_mk_paper()],
             [_mk_citation()],
             [
@@ -484,7 +500,57 @@ class TestDossierFromEvidence:
         assert "(method, relevance=0.90)" in dossier
 
     def test_no_citations_yields_placeholder(self) -> None:
-        assert _dossier_from_evidence([], [], []) == "(no cited papers with sources available)"
+        assert _rendered_evidence([], [], []) == (
+            "(no cited papers with sources available)"
+        )
+
+    def test_two_same_surname_same_year_papers_are_two_blocks(self) -> None:
+        """EL-08 on the runtime path, which ADR 0100 left open.
+
+        Both papers are cited, both are by a Zhang, both are from 2024.
+        The old rendering minted `[Zhang, 2024]` from the citation list
+        for each of them and emitted two blocks under one key, so the
+        judge was shown two abstracts it had no way to tell apart — the
+        same ambiguity the metric's index resolved by dropping one.
+        """
+        papers = [
+            _mk_paper("p1", lastname="Zhang"),
+            _mk_paper("p2", lastname="Zhang"),
+        ]
+        citations = [
+            _mk_citation("p1", "2024", "Zhang"),
+            _mk_citation("p2", "2024", "Zhang"),
+        ]
+
+        dossier = _rendered_evidence(papers, citations, [])
+
+        assert "[Zhang, 2024a]" in dossier
+        assert "[Zhang, 2024b]" in dossier
+        assert dossier.count("abstract (no chunks available):") == 2
+
+    def test_the_briefings_own_year_is_printed_when_it_differs(self) -> None:
+        """The dossier's year is metadata's; the briefing's tags are not.
+
+        A paper whose arXiv id says 2024 and whose citation entry says
+        2023 is keyed `[Smith, 2024]` in the dossier, and the briefing
+        says `[Smith, 2023]`. Printing the alias is what stops the judge
+        concluding the cited paper was never provided.
+        """
+        dossier = _rendered_evidence(
+            [_mk_paper("http://arxiv.org/abs/2401.00001")],
+            [_mk_citation("http://arxiv.org/abs/2401.00001", "2023")],
+            [],
+        )
+
+        assert "[Smith, 2024] — T" in dossier
+        assert "cite this paper as [Smith, 2023]" in dossier
+
+
+def _dossier_for(state: ResearchState) -> Any:
+    """The dossier `run_verification` would build for this state."""
+    return build_faithfulness_sources(
+        state.get("papers", []), state.get("citations", [])
+    )
 
 
 class TestBuildUserPromptSourceSelection:
@@ -501,7 +567,7 @@ class TestBuildUserPromptSourceSelection:
             citations=[_mk_citation()],
             evidence=[_mk_claim()],  # populated but flag off -> ignored
         )
-        prompt = _build_user_prompt(state)
+        prompt = _build_user_prompt(state, _dossier_for(state))
         assert "Cited papers (abstracts):" in prompt
         assert "An abstract sentence." in prompt
         assert "Cited papers (ranked source chunks):" not in prompt
@@ -518,7 +584,7 @@ class TestBuildUserPromptSourceSelection:
             citations=[_mk_citation()],
             evidence=[_mk_claim(text="F1 rose 62 to 78.")],
         )
-        prompt = _build_user_prompt(state)
+        prompt = _build_user_prompt(state, _dossier_for(state))
         assert "Cited papers (ranked source chunks):" in prompt
         assert "F1 rose 62 to 78." in prompt
         # The chunk-based path doesn't ship the abstract for papers with claims.
@@ -538,5 +604,199 @@ class TestBuildUserPromptSourceSelection:
             citations=[_mk_citation()],
             evidence=[],
         )
-        prompt = _build_user_prompt(state)
+        prompt = _build_user_prompt(state, _dossier_for(state))
         assert "Cited papers (abstracts):" in prompt
+
+
+# ---------------------------------------------------------------------------
+# Ambiguous citations — ADR 0100's open item, closed at runtime (LE-V)
+# ---------------------------------------------------------------------------
+
+
+class TestAmbiguousCitationAbstains:
+    """Two Zhangs, one tag, no verdict.
+
+    Before LE-V the abstract dossier came from `build_source_index`,
+    whose `(surname, year)` key held one entry for the two of them: the
+    second paper overwrote the first and every `[Zhang, 2024]` claim was
+    judged against whichever abstract the loop wrote last. ADR 0100 fixed
+    the offline metric and recorded this half as open, because closing it
+    changes a runtime agent's prompt.
+
+    Both halves are pinned here: the dossier now carries both papers
+    under distinct keys, and a briefing whose own tag cannot say which of
+    them it meant abstains instead of guessing.
+    """
+
+    @staticmethod
+    def _two_zhangs() -> tuple[list[Any], list[Any]]:
+        return (
+            [_mk_paper("p1", lastname="Zhang"), _mk_paper("p2", lastname="Zhang")],
+            [
+                _mk_citation("p1", "2024", "Zhang"),
+                _mk_citation("p2", "2024", "Zhang"),
+            ],
+        )
+
+    def _state(self, report: str) -> ResearchState:
+        papers, citations = self._two_zhangs()
+        return _empty_state(draft_report=report, papers=papers, citations=citations)
+
+    def test_an_unsuffixed_tag_abstains_before_the_model_call(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(verifier_module, "settings", Settings())
+        captured = _stub_llm(monkeypatch, {"verified": False})
+
+        outcome = verifier_module.run_verification(
+            self._state("Scaling helps [Zhang, 2024].")
+        )
+
+        assert outcome.verdict == "abstain"
+        assert outcome.reason == "ambiguous_citation"
+        # The point of abstaining *here* rather than after: a judgement
+        # nobody could make must not be paid for.
+        assert captured["calls"] == 0
+
+    def test_the_reason_is_published_on_the_verdict_table(self) -> None:
+        assert "ambiguous_citation" in verifier_module.VERDICT_REASONS
+
+    def test_the_summary_names_the_contested_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(verifier_module, "settings", Settings())
+        _stub_llm(monkeypatch, {"verified": False})
+
+        outcome = verifier_module.run_verification(
+            self._state("Scaling helps [Zhang, 2024].")
+        )
+
+        assert "[Zhang, 2024]" in outcome.summary
+
+    def test_it_abstains_rather_than_failing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """`fail` would spend the fixed policy's one repair (ADR 0076).
+
+        A repair aimed at a claim that may have been checked against the
+        wrong paper is a second synthesis bought with a coin flip.
+        """
+        monkeypatch.setattr(verifier_module, "settings", Settings())
+        _stub_llm(monkeypatch, {"verified": False})
+
+        update = verifier_module.verify_node(
+            self._state("Scaling helps [Zhang, 2024].")
+        )
+
+        assert update["verification_verdict"] == "abstain"
+        assert update["verification_reason"] == "ambiguous_citation"
+        assert update["verified"] is True
+        assert update["unsupported_claims"] == []
+
+    def test_a_suffixed_tag_is_judged_normally(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The disambiguation is usable, so the verification proceeds."""
+        monkeypatch.setattr(verifier_module, "settings", Settings())
+        captured = _stub_llm(
+            monkeypatch,
+            {
+                "verified": True,
+                "unsupported_claims": [],
+                "missing_evidence": [],
+                "recommended_action": "",
+                "reason": "all supported",
+            },
+        )
+
+        outcome = verifier_module.run_verification(
+            self._state("Scaling helps [Zhang, 2024a].")
+        )
+
+        assert outcome.verdict == "pass"
+        assert captured["calls"] == 1
+        assert "[Zhang, 2024a]" in captured["prompt"]
+        assert "[Zhang, 2024b]" in captured["prompt"]
+
+    def test_a_collision_the_briefing_never_cites_is_not_a_stop(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Narrow on purpose: the trigger is the briefing's own tag.
+
+        Two Zhangs in the corpus that the prose never cites ambiguously
+        are perfectly judgeable — the dossier prints them apart — so an
+        abstention here would throw away a verification for nothing.
+        """
+        monkeypatch.setattr(verifier_module, "settings", Settings())
+        papers, citations = self._two_zhangs()
+        papers.append(_mk_paper("p3", lastname="Smith"))
+        citations.append(_mk_citation("p3", "2023", "Smith"))
+        captured = _stub_llm(
+            monkeypatch,
+            {
+                "verified": True,
+                "unsupported_claims": [],
+                "missing_evidence": [],
+                "recommended_action": "",
+                "reason": "all supported",
+            },
+        )
+
+        outcome = verifier_module.run_verification(
+            _empty_state(
+                draft_report="Retrieval grounds output [Smith, 2023].",
+                papers=papers,
+                citations=citations,
+            )
+        )
+
+        assert outcome.verdict == "pass"
+        assert captured["calls"] == 1
+
+    def test_an_unresolvable_tag_is_the_verifiers_job_not_a_stop(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A cite naming no paper is the fabrication the judge must catch."""
+        monkeypatch.setattr(verifier_module, "settings", Settings())
+        captured = _stub_llm(
+            monkeypatch,
+            {
+                "verified": False,
+                "unsupported_claims": ["invented"],
+                "missing_evidence": [],
+                "recommended_action": "revise_report",
+                "reason": "cites a paper we never retrieved",
+            },
+        )
+
+        outcome = verifier_module.run_verification(
+            _empty_state(
+                draft_report="A claim [Nobody, 1999].",
+                papers=[_mk_paper()],
+                citations=[_mk_citation()],
+            )
+        )
+
+        assert outcome.verdict == "fail"
+        assert captured["calls"] == 1
+
+    def test_the_abstention_is_logged_once_with_its_keys(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        monkeypatch.setattr(verifier_module, "settings", Settings())
+        _stub_llm(monkeypatch, {"verified": False})
+
+        with caplog.at_level("WARNING", logger="src.agents.verifier"):
+            verifier_module.run_verification(
+                self._state("Scaling helps [Zhang, 2024]; and again [Zhang, 2024].")
+            )
+
+        lines = [
+            record
+            for record in caplog.records
+            if record.message == "verifier_ambiguous_citations_abstained"
+        ]
+        assert len(lines) == 1
+        # Deduplicated: one contested key, cited twice.
+        assert lines[0].count == 1  # type: ignore[attr-defined]
+        assert lines[0].detail == "[Zhang, 2024]"  # type: ignore[attr-defined]

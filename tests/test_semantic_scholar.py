@@ -117,6 +117,24 @@ class TestMapS2Paper:
         record = _s2_record(paperId="")
         assert _map_s2_paper(record) is None
 
+    def test_the_year_becomes_a_year_precision_published_date(self) -> None:
+        """LE-V. `_PAPER_FIELDS` always asked for `year`; nothing read it.
+
+        Recorded at the precision the source has. S2 knows a year, not a
+        date, and ISO 8601 has the reduced form for exactly that —
+        widening the request to `publicationDate` would buy a month and
+        a day at the price of a live API change nothing here can test.
+        """
+        paper = _map_s2_paper(_s2_record(year=2024))
+        assert paper is not None
+        assert paper["published"] == "2024"
+
+    def test_a_year_the_field_did_not_hold_is_none_not_a_guess(self) -> None:
+        for bad in (None, "2024", 12.5, True, 1500, 3000, {}):
+            paper = _map_s2_paper(_s2_record(year=bad))
+            assert paper is not None
+            assert paper["published"] is None, bad
+
     def test_wrong_type_input_returns_none(self) -> None:
         assert _map_s2_paper(None) is None  # type: ignore[arg-type]
         assert _map_s2_paper("not a dict") is None  # type: ignore[arg-type]

@@ -74,6 +74,14 @@ class NoPapersFoundError(NoPapersFound):
 # (ADR 0041) — never as a fallback for a live search, where these five
 # hallucination/RAG papers would masquerade as real retrieval results
 # for whatever the user actually asked about.
+#
+# `published` is month-precision, and that is the precision this fixture
+# actually has: an arXiv identifier's first four digits *are* the
+# submission `YYMM` by construction, so `2311.09000` was submitted in
+# November 2023 and recording that invents nothing. A day would have had
+# to be made up, and a fixture asserting a date nobody checked is worse
+# than one that declines to — hence `2023-11` and not `2023-11-15`. ISO
+# 8601 has the reduced precision for exactly this case.
 MOCK_PAPERS: list[PaperMetadata] = [
     PaperMetadata(
         id="http://arxiv.org/abs/2311.09000",
@@ -82,6 +90,7 @@ MOCK_PAPERS: list[PaperMetadata] = [
         abstract="Large language models (LLMs) are prone to generate content that is nonsensical or unfaithful to the provided source. This phenomenon, termed hallucination, poses significant challenges. This survey provides a broad overview of recent advances in detecting and mitigating hallucinations in LLMs, categorizing approaches into training-time, generation-time, and post-hoc correction methods. Training-time methods include RLHF and factuality-aware fine-tuning. Generation-time methods include retrieval-augmented generation (RAG), constrained decoding, and chain-of-thought prompting. Post-hoc methods include self-consistency checking, external knowledge verification, and citation-based validation.",
         url="http://arxiv.org/abs/2311.09000",
         pdf_url="http://arxiv.org/pdf/2311.09000",
+        published="2023-11",
     ),
     PaperMetadata(
         id="http://arxiv.org/abs/2305.13269",
@@ -90,6 +99,7 @@ MOCK_PAPERS: list[PaperMetadata] = [
         abstract="We explore retrieval-augmented generation (RAG) as a method to reduce hallucination in large language models by grounding outputs in retrieved documents. Our approach combines a pre-trained parametric model with a non-parametric retrieval component that accesses a dense vector index of Wikipedia. RAG models achieve state-of-the-art results on open-domain QA benchmarks while significantly reducing factual hallucinations compared to purely parametric models. We show that the retrieval component provides a form of implicit fact-checking during generation.",
         url="http://arxiv.org/abs/2305.13269",
         pdf_url="http://arxiv.org/pdf/2305.13269",
+        published="2023-05",
     ),
     PaperMetadata(
         id="http://arxiv.org/abs/2310.01377",
@@ -98,6 +108,7 @@ MOCK_PAPERS: list[PaperMetadata] = [
         abstract="We introduce Self-RAG, a framework that trains a single LLM to adaptively retrieve passages on-demand, generate text informed by retrieved passages, and reflect on its own output using special reflection tokens. Unlike conventional RAG, Self-RAG learns when retrieval is necessary and can self-evaluate the relevance and support of generated content. On six tasks including fact verification and open-domain QA, Self-RAG significantly outperforms both vanilla LLMs and fixed RAG pipelines, improving factuality by 20-30% while maintaining generation fluency.",
         url="http://arxiv.org/abs/2310.01377",
         pdf_url="http://arxiv.org/pdf/2310.01377",
+        published="2023-10",
     ),
     PaperMetadata(
         id="http://arxiv.org/abs/2309.11495",
@@ -106,6 +117,7 @@ MOCK_PAPERS: list[PaperMetadata] = [
         abstract="We present Chain-of-Verification (CoVe), a method to reduce hallucinations by having the model first draft a response, then plan verification questions, answer those questions independently, and generate a revised response. CoVe leverages the model's own capabilities for self-verification without external tools. Experiments on tasks including list-based questions, closed-book QA, and long-form generation show CoVe reduces hallucination rates by 30-50% across model sizes, with larger models benefiting more from the self-verification process.",
         url="http://arxiv.org/abs/2309.11495",
         pdf_url="http://arxiv.org/pdf/2309.11495",
+        published="2023-09",
     ),
     PaperMetadata(
         id="http://arxiv.org/abs/2401.01313",
@@ -114,6 +126,7 @@ MOCK_PAPERS: list[PaperMetadata] = [
         abstract="We present RLHF-V, a framework to align multimodal large language models (MLLMs) with human preferences to reduce hallucination. Unlike prior RLHF methods that use holistic preference labels, RLHF-V collects fine-grained correctional feedback targeting specific hallucinated segments. We introduce a dense direct preference optimization objective that learns from segment-level annotations. RLHF-V reduces hallucination rates in image captioning by 34.8% relative to the base model while preserving helpfulness, significantly outperforming standard RLHF approaches.",
         url="http://arxiv.org/abs/2401.01313",
         pdf_url="http://arxiv.org/pdf/2401.01313",
+        published="2024-01",
     ),
 ]
 

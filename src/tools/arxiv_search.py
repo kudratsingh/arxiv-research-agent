@@ -38,7 +38,30 @@ ATOM_NS = "{http://www.w3.org/2005/Atom}"
 # and both must collide to one entry.
 _ARXIV_ABS_ID = re.compile(r"arxiv\.org/abs/([^?#]+?)(?:v\d+)?/?$", re.IGNORECASE)
 
+#: A calendar date at the head of arXiv's `<published>` timestamp, which
+#: the Atom feed spells `2023-11-15T18:59:03Z`. Anchored and bounded on
+#: the month and day so a timestamp in some other shape is rejected
+#: whole rather than sliced into a date that was never asserted.
+_ATOM_PUBLISHED_DATE = re.compile(r"^(\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01]))")
+
 log = get_logger(__name__)
+
+
+def _published_date(raw: str) -> str | None:
+    """The ISO calendar date from an Atom `<published>` timestamp, or `None`.
+
+    The time of day is dropped deliberately. `PaperMetadata.published`
+    is read for a year and printed for a human, neither of which is made
+    better by a submission's clock time, and a date is the precision
+    arXiv's own listing pages show.
+
+    Anything that does not start with a well-formed `YYYY-MM-DD` — an
+    absent element, an empty string, a feed that changed shape — is
+    `None`: the field's whole purpose is to be metadata nobody guessed,
+    so a value this function could not read is one it must not invent.
+    """
+    match = _ATOM_PUBLISHED_DATE.match(raw.strip())
+    return match.group(1) if match else None
 
 
 class ArxivUnavailableError(UpstreamArxiv):
@@ -174,6 +197,7 @@ def search_arxiv(
                 abstract=abstract,
                 url=entry_id,
                 pdf_url=pdf_url,
+                published=_published_date(entry.findtext(f"{ATOM_NS}published", "")),
             )
         )
 

@@ -498,6 +498,14 @@ KNOWN_EVENTS: Final[frozenset[str]] = frozenset(
         # name rather than only a state field. Emitted by the runtime
         # bridge on `verification.completed`.
         "verify_verdict_recorded",
+        # LE-V, closing ADR 0100's open item. The briefing cited a
+        # `(surname, year)` that two of its own retrieved papers answer
+        # to, so the verification abstained before the model call rather
+        # than judging a claim against whichever of them it guessed.
+        # WARNING, and an event of its own: an operator seeing this
+        # repeatedly is watching a corpus the synthesizer cannot cite
+        # unambiguously, which is a retrieval-side finding.
+        "verifier_ambiguous_citations_abstained",
         "verifier_llm_failed_fallback",
     }
 )

@@ -34,11 +34,15 @@ Source: `src/agents/verifier.py`. Wiring:
 flowchart LR
   IN["draft_report · citations<br/>papers · evidence · sub_questions"] --> SC{"draft empty or<br/>no citations?"}
   SC -->|"yes"| SKIP["verified = true<br/>no LLM call"]
-  SC -->|"no"| DOS{"enable_evidence_store<br/>and state.evidence?"}
+  SC -->|"no"| SRC["build_faithfulness_sources<br/>keyed by paper_id"]
+  SRC --> AMB{"a briefing tag names<br/>two cited papers?"}
+  AMB -->|"yes"| ABST["verdict = abstain<br/>ambiguous_citation<br/>no LLM call"]
+  AMB -->|"no"| DOS{"enable_evidence_store<br/>and state.evidence?"}
   DOS -->|"yes"| CH["chunks dossier<br/>_dossier_from_evidence"]
-  DOS -->|"no"| AB["abstracts dossier<br/>build_source_index"]
+  DOS -->|"no"| AB["abstracts dossier<br/>_dossier_from_abstracts"]
   CH --> J["call_llm_json<br/>faithfulness judge"]
   AB --> J
+  ABST --> OUT
   J -->|"parsed"| OUT["verified · unsupported_claims<br/>missing_evidence<br/>verifier_recommendation"]
   J -->|"raised or unusable"| FB["verified = false<br/>revise_report"]
   FB --> OUT
@@ -54,9 +58,14 @@ Reads from `ResearchState`:
   with `verified=True` and no LLM call.
 - `citations` — required; a draft with no citations skips the judge
   entirely and returns `verified=True` (the critic catches that case).
-- `papers` — supplies the abstracts joined against `citations` via
-  `build_source_index` (shared with ADR 0007's offline metric), and
-  the author last names that key the chunks dossier.
+- `papers` — joined against `citations` by
+  `build_faithfulness_sources` (shared with ADR 0007's offline metric),
+  which decides which papers are in the dossier and what each is
+  called. Since LE-V that join is keyed by `paper_id`, so two papers by
+  one Zhang in one year are two entries with distinguishable keys
+  rather than one; `PaperMetadata.published` is what supplies each
+  key's year, falling back to the arXiv identifier and then to the
+  citation's.
 - `evidence` — optional. When populated **and**
   `enable_evidence_store` is on, the dossier is built from the
   reader's ranked chunks instead of abstracts.
@@ -97,7 +106,7 @@ it:
 |---|---|---|
 | `pass` | the judge approved every cited claim | `verified` |
 | `fail` | the judge reported a problem | `unsupported_claims`, `missing_evidence`, `unsupported_and_missing`, `verifier_reported_failure` |
-| `abstain` | nothing was judged | `no_draft`, `no_citations`, `upstream_model`, `upstream_model_output` |
+| `abstain` | nothing was judged | `no_draft`, `no_citations`, `upstream_model`, `upstream_model_output`, `mock_mode`, `ambiguous_citation` |
 
 **Abstain is not a polite fail.** Every path that reaches a result
 without a usable judgement — the two pre-LLM short-circuits, a provider
@@ -108,9 +117,13 @@ cannot tell those cases apart: `verified=True` with empty lists is
 emitted both by a judge that approved the report and by the
 short-circuit that never asked one.
 
-The last two abstention codes are `src/errors.py`'s own
+Two of the abstention codes are `src/errors.py`'s own
 (`upstream_model`, `upstream_model_output`), reused so a dashboard can
 join an abstention to the provider failure that caused it.
+`ambiguous_citation` is `src/eval/metrics.py`'s, reused for the same
+reason: the offline judge abstains one *claim* on it, and this abstains
+the verification, because a runtime verdict has no unit smaller than
+the report.
 
 Two exceptions are **not** verdicts and are re-raised out of the judge
 call rather than caught by the fallback path: `JobCancelledError` and
@@ -204,22 +217,38 @@ falls back to its own routing rather than being handed a guess.
 
 ## Source dossier — abstracts vs chunks (ADR 0016)
 
-`_build_user_prompt` picks its dossier shape at call time:
+`build_faithfulness_sources` decides **which** papers are in the
+dossier and what each one is called; `_build_user_prompt` decides what
+text each block carries:
 
 - **Chunks dossier** (`_dossier_from_evidence`) — when
   `settings.enable_evidence_store` is on AND `state.evidence` is
-  populated. Groups evidence claims by cited paper, keyed by
-  `[Author, Year]` using the same first-author-lastname + 4-digit-year
-  normalization as `build_source_index`, and emits each paper's ranked
-  chunks verbatim with `(section, relevance=X.XX)` headers. Papers
-  cited but lacking evidence claims (partial coverage — e.g. the
-  reader couldn't fetch that PDF) fall back to their abstract inside
-  the same block, explicitly marked `abstract (no chunks available)`,
-  so the judge can calibrate strictness per paper. Cited papers whose
-  first author can't be resolved to a last name are skipped entirely.
-- **Abstracts dossier** — default. Uses `build_source_index` (shared
-  with the offline faithfulness metric) so runtime and offline
-  judges read the same substrate.
+  populated. Groups evidence claims by cited paper and emits each
+  paper's ranked chunks verbatim with `(section, relevance=X.XX)`
+  headers. Papers cited but lacking evidence claims (partial coverage —
+  e.g. the reader couldn't fetch that PDF) fall back to their abstract
+  inside the same block, explicitly marked `abstract (no chunks
+  available)`, so the judge can calibrate strictness per paper. Cited
+  papers whose first author can't be resolved to a last name are
+  skipped entirely.
+- **Abstracts dossier** (`_dossier_from_abstracts`) — default. The
+  ADR 0007 substrate, shared with the offline faithfulness metric so
+  runtime and offline judges read the same text.
+
+Both blocks open with the paper's cite key and title. The keys are
+ADR 0100's: `Surname, Year`, plus a lowercase letter when two cited
+papers share that base — `[Zhang, 2024a]`, `[Zhang, 2024b]`. Where the
+dossier's year (metadata's) differs from the year the briefing's own
+tags use (the citation list's), the block prints the briefing's
+spelling too, so the judge does not conclude a cited paper was never
+provided.
+
+**Before LE-V the abstracts dossier came from `build_source_index`**,
+whose `(surname, year)` key held one entry for two same-surname,
+same-year papers: the second silently replaced the first, and every
+`[Zhang, 2024]` claim was judged against whichever abstract the loop
+wrote last. ADR 0100 fixed the offline metric and recorded this half as
+open, because closing it meant changing a runtime agent's prompt.
 
 Either way, a dossier that ends up empty is sent as the literal string
 `(no cited papers with sources available)` / `(no cited papers with
@@ -231,6 +260,7 @@ abstracts available)` rather than a blank block.
 |---|---|---|
 | Empty draft | Pre-LLM check | `verified=True`, no LLM call, no recommendation. Prevents paying for verification before synthesis. |
 | Draft has no citations | Pre-LLM check | `verified=True`, no LLM call. Critic catches the "no citations" case separately. |
+| A briefing tag names two cited papers | Pre-LLM check | `verified=True`, no LLM call, verdict `abstain`, reason `ambiguous_citation`. Logged as `verifier_ambiguous_citations_abstained`. Nothing distinguishes the two papers in a `[Zhang, 2024]` tag, and a `fail` here would spend the fixed policy's one repair on a coin flip. Narrow: it fires on the *briefing's own* tags, so a corpus collision the prose never cites ambiguously is judged normally. |
 | Anthropic 429 / other exception | `call_llm_json` | Caught; falls back to `verified=False, recommendation="revise_report"`. Logged as `verifier_llm_failed_fallback`. Verdict `abstain`, reason `upstream_model`. |
 | Judge output not JSON | `call_llm_json` | Same fallback path — the raised `JSONDecodeError` is caught by the same broad `except`. Verdict `abstain`, reason `upstream_model_output`. |
 | Job cancelled, or the cost ceiling tripped | `call_llm_json` | **Re-raised**, ahead of the broad handler. Neither is a judgement, and an abstention here would let a stopped run carry on spending (ADRs 0047 / 0051). |
@@ -296,7 +326,11 @@ including this one, and the API runner's between-node budget check
   rejected, state summary contents, router behavior with stale
   checkpoints).
 - Shared join: `tests/test_metrics_faithfulness.py` — exercises
-  `build_source_index`, the abstracts-dossier substrate.
+  `build_faithfulness_sources`, which both dossiers are keyed by.
+- Ambiguous citations:
+  `tests/test_verifier.py::TestAmbiguousCitationAbstains` — the
+  abstention, its narrowness, and the two same-surname papers surviving
+  as two blocks.
 
 ## Known limitations
 

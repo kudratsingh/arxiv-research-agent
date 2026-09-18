@@ -33,6 +33,7 @@ ATOM_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
     <summary>{abstract}</summary>
     <author><name>Alice</name></author>
     <author><name>Bob</name></author>
+    <published>2023-11-15T18:59:03Z</published>
     <link title="pdf" href="{pdf_url}"/>
   </entry>
 </feed>
@@ -71,6 +72,56 @@ def test_search_arxiv_parses_entries() -> None:
     assert papers[0]["title"] == "A Study of RAG"
     assert papers[0]["authors"] == ["Alice", "Bob"]
     assert papers[0]["pdf_url"].startswith("https://arxiv.org/pdf/")
+
+
+class TestThePublicationDateIsCarried:
+    """LE-V. The feed states a date; `PaperMetadata` now keeps it.
+
+    Before this, the only year anywhere in a run was the one the
+    synthesizer wrote on each `Citation`, so ADR 0100's "year from
+    metadata" fell back to digging `YYMM` out of the arXiv identifier —
+    and to the model's own guess for anything that was not an arXiv id.
+    """
+
+    @staticmethod
+    def _search(xml: str) -> Any:
+        with patch(
+            "src.tools.arxiv_search.build_retrying_session"
+        ) as fake_session_factory:
+            fake_session_factory.return_value.get.return_value = _mock_response(xml)
+            return search_arxiv("rag", max_results=5)
+
+    def test_the_atom_timestamp_becomes_an_iso_date(self) -> None:
+        papers = self._search(
+            ATOM_TEMPLATE.format(title="T", abstract="A", pdf_url="https://x/p.pdf")
+        )
+
+        # The date, not the timestamp: this field is read for a year and
+        # printed for a human, and a submission's clock time improves
+        # neither.
+        assert papers[0]["published"] == "2023-11-15"
+
+    def test_an_entry_without_the_element_carries_none(self) -> None:
+        xml = ATOM_TEMPLATE.format(
+            title="T", abstract="A", pdf_url="https://x/p.pdf"
+        ).replace("<published>2023-11-15T18:59:03Z</published>", "")
+
+        assert self._search(xml)[0]["published"] is None
+
+    def test_a_timestamp_in_another_shape_is_none_not_a_guess(self) -> None:
+        """The field's whole purpose is a date nobody invented."""
+        xml = ATOM_TEMPLATE.format(
+            title="T", abstract="A", pdf_url="https://x/p.pdf"
+        ).replace("2023-11-15T18:59:03Z", "15 November 2023")
+
+        assert self._search(xml)[0]["published"] is None
+
+    def test_an_impossible_month_is_refused_whole(self) -> None:
+        xml = ATOM_TEMPLATE.format(
+            title="T", abstract="A", pdf_url="https://x/p.pdf"
+        ).replace("2023-11-15T", "2023-13-15T")
+
+        assert self._search(xml)[0]["published"] is None
 
 
 def test_search_arxiv_rejects_entity_expansion() -> None:

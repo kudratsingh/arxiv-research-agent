@@ -991,65 +991,45 @@ class SourceDossier(TypedDict):
     sources_with_chunks: int
 
 
-def build_source_index(
-    papers: list[PaperMetadata], citations: list[Citation]
-) -> dict[tuple[str, str], str]:
-    """Join papers and citations into a surname-year -> abstract map.
+def _year_from_published(published: str | None) -> str:
+    """The year from `PaperMetadata.published`, or `""`.
 
-    Returns `{(first-author-lastname-lower, 4-digit-year): abstract}` for
-    every cited paper we have both a citation entry and a `PaperMetadata`
-    entry for.
+    The best of the three year sources and the last to arrive (LE-V).
+    `published` is an ISO 8601 date at whatever precision the retrieval
+    source stated — `2023-11-15` from arXiv's Atom feed, `2023` from
+    Semantic Scholar — so the year is its first four characters, and
+    the only check worth making is that they *are* four digits of a
+    plausible year. Nothing is parsed into a `date`: the value is read
+    for a year and a fully-typed parse would reject the reduced
+    precisions this field deliberately allows.
 
-    **This is the runtime verifier's adapter, and it is kept at its
-    original contract on purpose.** The faithfulness metric no longer
-    calls it: a `(surname, year)` key cannot hold two papers by a Zhang
-    in 2024, and the second silently replaced the first — so a
-    `[Zhang, 2024]` claim was judged against whichever abstract this
-    loop wrote last (EL-08). `build_faithfulness_sources` below is what
-    the metric uses now, keyed by `paper_id`.
-
-    ADR 0015 shares this function with `src/agents/verifier.py`, whose
-    abstract-path dossier is built from the returned keys. Changing the
-    return shape here would change the verifier's prompt, which belongs
-    to a different owner and a different lane, so the contract stays and
-    the metric moved instead. **The verifier therefore still loses one
-    of two same-surname, same-year papers**; ADR 0100 records that as an
-    open follow-up for whoever holds `verifier.py` next, not as
-    something this function quietly fixed underneath it.
-
-    Public API — do not widen without reading ADR 0015 first.
+    `""` means "this paper carries no publication date", which is the
+    honest state for every record written before the field existed and
+    for every source that did not state one, and is the signal to fall
+    back to the identifier.
     """
-    year_by_id: dict[str, str] = {}
-    for citation in citations:
-        cited_year = citation["year"].strip()[:4]
-        if cited_year:
-            year_by_id[citation["paper_id"]] = cited_year
-
-    index: dict[tuple[str, str], str] = {}
-    for paper in papers:
-        paper_year = year_by_id.get(paper["id"])
-        if not paper_year or not paper["authors"]:
-            continue
-        first_author = paper["authors"][0].strip()
-        if not first_author:
-            continue
-        lastname = first_author.split()[-1].lower()
-        if lastname:
-            index[(lastname, paper_year)] = paper["abstract"]
-    return index
+    head = (published or "").strip()[:4]
+    if len(head) != 4 or not head.isdigit():
+        return ""
+    return head if 1800 <= int(head) <= 2999 else ""
 
 
 def _year_from_paper_id(paper_id: str) -> str:
     """The submission year encoded in an arXiv identifier, or `""`.
 
     arXiv ids carry `YYMM` in their first four digits — `2401.00001` and
-    `cs.CL/0301001` alike — which makes the identifier the only
-    year-bearing field `PaperMetadata` has. It is preferred over the
-    citation's year for one reason: the citation list is written by the
-    synthesizer, the same model whose output the metric is checking, and
-    a metric that takes a document's identity from the text under
-    examination has no way to catch a year the model invented. The
-    retrieval pipeline wrote the id.
+    `cs.CL/0301001` alike — which made the identifier the only
+    year-bearing field `PaperMetadata` had before it carried
+    `published`. Both are preferred over the citation's year for one
+    reason: the citation list is written by the synthesizer, the same
+    model whose output the metric is checking, and a metric that takes a
+    document's identity from the text under examination has no way to
+    catch a year the model invented. The retrieval pipeline wrote the id
+    and the date.
+
+    It stays second behind `published` rather than being replaced by it,
+    because it is the only year available for a corpus retrieved before
+    LE-V and for any record whose date the source did not state.
 
     Returns `""` for anything that is not a well-formed arXiv id, which
     is the signal to fall back to the citation's year — the local
@@ -1091,8 +1071,15 @@ def build_faithfulness_sources(
 ) -> SourceDossier:
     """Assemble the cited-source dossier, keyed by `paper_id` (EL-08).
 
-    The replacement for `build_source_index` on the metric path, and the
-    two fixes ADR 0100 makes to ADR 0007 live here.
+    The two fixes ADR 0100 makes to ADR 0007 live here, and since LE-V
+    this is the *only* cited-source join in the repository. It replaced
+    `build_source_index` on the metric path in ADR 0100, which kept that
+    function — collision and all — because `src/agents/verifier.py` built
+    its abstract dossier from those keys and a metrics work order may not
+    change a runtime agent's prompt. LE-V moved the verifier onto this
+    function and deleted the other, rather than leave a `(surname, year)`
+    join with a known defect and no callers where the next one would
+    find it.
 
     **Identity.** One entry per cited paper, keyed by `paper_id`, so two
     papers by a Zhang in 2024 are two entries rather than one. Each gets
@@ -1105,6 +1092,14 @@ def build_faithfulness_sources(
     inline tags were written from the citation list and a dossier the
     report's own tags cannot address would trade one silent failure for
     another.
+
+    **The presented year** is `PaperMetadata.published` when the
+    retrieval source stated one, the arXiv identifier's `YYMM` when it
+    did not, and the citation's year only when neither is available
+    (LE-V). The order is the order of independence from the model under
+    examination: ADR 0100 could reach no further than the identifier
+    because nothing carried a date, so "year from metadata" fell back to
+    the synthesizer's guess for every non-arXiv paper.
 
     **Scope.** `chunks_by_paper` maps `paper_id` to that paper's ranked
     reader chunks, in rank order. Supplied, they go into the dossier
@@ -1146,7 +1141,17 @@ def build_faithfulness_sources(
         # Non-empty after the strip, so `split()` has at least one token
         # and the last of them is a non-empty surname. No second guard.
         lastname = first_author.split()[-1].lower()
-        year = _year_from_paper_id(paper["id"]) or cited_year
+        # Three sources, best first: the date the retrieval pipeline was
+        # *told*, the date encoded in the identifier it was given, and
+        # last the year the synthesizer wrote on the citation — the only
+        # one of the three that comes out of the text under examination.
+        # `.get` rather than a subscript: a paper parsed back from a
+        # record written before `published` existed has no such key.
+        year = (
+            _year_from_published(paper.get("published"))
+            or _year_from_paper_id(paper["id"])
+            or cited_year
+        )
         staged.append((paper, lastname, year, cited_year))
 
     # Pass two: which base keys are shared, and therefore need a suffix.
@@ -1269,6 +1274,25 @@ def _build_faithfulness_prompt(report: str, dossier: SourceDossier) -> str:
         f"Research briefing:\n\n{report}\n\n"
         f"Cited papers:\n\n" + "\n".join(blocks)
     )
+
+
+def report_cite_tags(report: str) -> list[str]:
+    """Every `[Author, Year]` tag a report carries, verbatim and in order.
+
+    Public because a second judge needs it. `resolve_cite` answers "which
+    paper does this tag name", and answering it for the *report's own*
+    tags — rather than for a judge's echo of them — is how the runtime
+    verifier finds out, before it spends a model call, that a tag names
+    two of the papers it was about to show (LE-V). The tags come back
+    bracketed and unnormalised, because they are handed straight to
+    `resolve_cite`, which accepts either form and owns the
+    normalisation.
+
+    Duplicates are kept: a caller counting how often an ambiguous tag
+    appears wants every occurrence, and a caller that does not can call
+    `set`.
+    """
+    return [match.group(0) for match in _SUFFIXED_CITE_PATTERN.finditer(report)]
 
 
 def resolve_cite(cite: str, dossier: SourceDossier) -> tuple[str | None, str]:
