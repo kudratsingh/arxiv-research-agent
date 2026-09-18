@@ -24,8 +24,8 @@ from src.calibration.packets import (
     render_report,
     write_packet_set,
 )
-from src.calibration.suite import CALIBRATION_REGISTRY_ROOT
 from src.calibration.pool import build_pool
+from src.calibration.suite import CALIBRATION_REGISTRY_ROOT
 
 
 def _parser() -> argparse.ArgumentParser:
