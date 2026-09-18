@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import json
 import random
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Any, Final, Literal
@@ -453,6 +453,16 @@ class LabelIngestReport(StrictContractModel):
     labels_ingested: Annotated[int, Field(ge=0)]
     overall: SliceLabelReport
     slices: tuple[SliceLabelReport, ...]
+
+
+class VerdictIngestReport(StrictContractModel):
+    """Measured judge readings accepted from a production score record."""
+
+    basis: Literal["measured"] = "measured"
+    judge_probe_lock: str
+    verdicts_ingested: Annotated[int, Field(ge=0)]
+    abstentions: Annotated[int, Field(ge=0)]
+    rubric_versions: Mapping[str, str]
 
 
 def _read_registry(path: Path) -> RegistryEnvelope:
@@ -1057,6 +1067,95 @@ def ingest_labels(
     )
 
 
+def ingest_verdicts(
+    verdict_path: Path,
+    *,
+    root: Path = CALIBRATION_REGISTRY_ROOT,
+) -> VerdictIngestReport:
+    """Ingest measured per-claim/topic judge verdicts without model calls.
+
+    The production scorer may provide either ``claims`` or ``coverage``
+    entries under a blinded item.  The probe-lock versions are checked before
+    any reading is counted; a verdict from a changed rubric is refused rather
+    than silently compared with the old reference set.
+    """
+    payload = json.loads(verdict_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, Mapping):
+        raise ValueError("verdict input must be a JSON object")
+    lock = payload.get("judge_probe_lock") or payload.get("provenance", {}).get(
+        "judge_probe_lock", {}
+    )
+    if not isinstance(lock, Mapping):
+        raise ValueError("verdict input is missing judge_probe_lock provenance")
+    lock_id = str(lock.get("id") or lock.get("lock_id") or "")
+    lock_revision = str(lock.get("revision") or "")
+    if lock_id != "instrument-under-calibration" or lock_revision != "1.0.0":
+        raise ValueError("judge_probe_lock provenance does not match the registered lock")
+
+    lock_path = root / "content" / "judge_probe_lock" / "instrument-under-calibration" / "1.0.0.json"
+    registered = json.loads(lock_path.read_text(encoding="utf-8"))
+    expected = {
+        str(entry["name"]): str(entry["version"])
+        for entry in registered["payload"]["entries"]
+    }
+    provided_versions = lock.get("rubric_versions") or {}
+    if provided_versions and dict(provided_versions) != expected:
+        raise ValueError("judge_probe_lock rubric versions do not match the registered lock")
+
+    rows = payload.get("verdicts")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("verdict input must contain a non-empty verdicts list")
+    count = 0
+    abstentions = 0
+    seen: set[tuple[str, str, str]] = set()
+    measured_versions: dict[str, str] = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            raise ValueError("each verdict must be an object")
+        row_lock = row.get("provenance", {}).get("judge_probe_lock") if isinstance(row.get("provenance"), Mapping) else None
+        if row_lock is not None and row_lock != lock:
+            raise ValueError("verdict provenance does not match judge_probe_lock")
+        item_id = str(row.get("blinded_item_id") or "")
+        rubric = str(row.get("rubric_name") or "")
+        version = str(row.get("rubric_version") or "")
+        if not rubric:
+            metrics = row.get("scores", {}).get("metrics", {}) if isinstance(row.get("scores"), Mapping) else {}
+            if isinstance(metrics, Mapping):
+                names = [name for name in ("faithfulness", "completeness", "retrieval_recall") if name in metrics]
+                if len(names) == 1:
+                    rubric = names[0]
+                    version = str(metrics[rubric].get("rubric_version") or row.get("rubric_versions", {}).get(rubric, ""))
+        if not item_id or rubric not in expected or version != expected[rubric]:
+            raise ValueError(f"verdict provenance does not match judge_probe_lock for {rubric!r}")
+        key = (item_id, rubric, version)
+        if key in seen:
+            raise ValueError(f"duplicate measured verdict for {item_id}/{rubric}")
+        seen.add(key)
+        measured_versions[rubric] = version
+        verdicts = row.get("verdicts")
+        if verdicts is None:
+            verdicts = row.get("claims") or row.get("coverage") or [row]
+        if verdicts == [row]:
+            metrics = row.get("scores", {}).get("metrics", {}) if isinstance(row.get("scores"), Mapping) else {}
+            block = metrics.get(rubric, {}) if isinstance(metrics, Mapping) else {}
+            if isinstance(block, Mapping):
+                verdicts = block.get("claims") or block.get("coverage") or [row]
+        if not isinstance(verdicts, list):
+            raise ValueError(f"{item_id}/{rubric}: verdict entries must be a list")
+        for verdict in verdicts:
+            if isinstance(verdict, Mapping):
+                decision = verdict.get("decision", verdict.get("supported", verdict.get("covered")))
+                if decision is None:
+                    abstentions += 1
+                count += 1
+    return VerdictIngestReport(
+        judge_probe_lock=f"{lock_id}:{lock_revision}",
+        verdicts_ingested=count,
+        abstentions=abstentions,
+        rubric_versions=measured_versions,
+    )
+
+
 def _format_rate(rate: RateSummary) -> str:
     if rate.rate is None or rate.interval_low is None or rate.interval_high is None:
         return f"{rate.numerator}/{rate.denominator} n/a"
@@ -1160,6 +1259,7 @@ __all__ = [
     "REPORT_ABSTENTION_POLICY",
     "CompletedLabelPacket",
     "LabelIngestReport",
+    "VerdictIngestReport",
     "LabelPacket",
     "ManifestEntry",
     "PacketItem",
@@ -1174,6 +1274,7 @@ __all__ = [
     "SubmittedLabelFile",
     "build_packet_set",
     "ingest_labels",
+    "ingest_verdicts",
     "load_registered_cases",
     "registered_blinding_plan",
     "render_report",

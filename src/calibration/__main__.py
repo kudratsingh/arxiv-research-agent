@@ -10,6 +10,7 @@ labeling campaign — see
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Iterable
 from pathlib import Path
@@ -19,6 +20,7 @@ from pydantic import ValidationError
 from src.calibration.packets import (
     DEFAULT_OUTPUT_ROOT,
     ingest_labels,
+    ingest_verdicts,
     render_report,
     write_packet_set,
 )
@@ -87,9 +89,14 @@ def main(argv: Iterable[str] | None = None) -> int:
             for path in write_packet_set(args.output, seed=args.seed, root=args.registry_root):
                 print(path)
             return 0
-        rendered = render_report(
-            ingest_labels(args.labels, args.manifest, root=args.registry_root)
-        )
+        raw = json.loads(args.labels.read_text(encoding="utf-8"))
+        if isinstance(raw, dict) and "verdicts" in raw:
+            report = ingest_verdicts(args.labels, root=args.registry_root)
+            rendered = json.dumps(report.model_dump(mode="json"), indent=2) + "\n"
+        else:
+            rendered = render_report(
+                ingest_labels(args.labels, args.manifest, root=args.registry_root)
+            )
         if args.output is None:
             print(rendered, end="")
         else:

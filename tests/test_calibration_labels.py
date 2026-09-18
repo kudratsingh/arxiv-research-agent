@@ -171,6 +171,7 @@ class TestTheDecisionVocabulary:
                 ("correct", "wrong_source", "unresolvable", "abstain"),
             ),
             (LabelType.RUBRIC_COVERAGE, ("covered", "partial", "not_covered", "abstain")),
+            (LabelType.RETRIEVAL_RECALL, ("covered", "not_covered", "abstain")),
             (LabelType.PAIRWISE_PREFERENCE, ("first", "second", "tie", "abstain")),
         ],
     )

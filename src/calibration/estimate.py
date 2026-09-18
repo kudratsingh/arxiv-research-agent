@@ -439,6 +439,82 @@ def worked_example(
             f"{judge_model} is not in the price table; an estimate priced at a "
             "fallback would under-report by up to 3.3x"
         )
+    judge_lines = [
+        JudgeCallLine(
+            label="single-item verdicts",
+            model_id=judge_model,
+            calls=items,
+            input_tokens_per_call=2200,
+            output_tokens_per_call=200,
+            note=(
+                "One call per item. Input is the judge rubric prompt (about 400 "
+                "tokens for the four in src/eval/metrics.py), a report excerpt and "
+                "a source excerpt; output is one decision plus a one-sentence "
+                "reason in the JSON shape those judges already return. Re-derive "
+                "against the real prompt before any approval."
+            ),
+        )
+    ]
+    if pairwise_items:
+        judge_lines.append(
+            JudgeCallLine(
+                label="pairwise verdicts, both orders",
+                model_id=judge_model,
+                calls=pairwise_items * 2,
+                input_tokens_per_call=3600,
+                output_tokens_per_call=200,
+                note="Two calls per pair, because a pair judged in one order cannot separate a preference from a position.",
+            )
+        )
+    judge_lines.append(
+        JudgeCallLine(
+            label="repeat pass for judge self-consistency",
+            model_id=judge_model,
+            calls=items,
+            input_tokens_per_call=2200,
+            output_tokens_per_call=200,
+            note="A second independent reading of every single-item probe estimates judge variance.",
+        )
+    )
+    expert_lines = [
+        ExpertTimeLine(
+            label="claim-support and citation labelling",
+            role="annotator",
+            items=items,
+            minutes_per_item=6.0,
+            annotators_per_item=2,
+            note="Two annotators per item are the minimum that can produce a disagreement.",
+        )
+    ]
+    if pairwise_items:
+        expert_lines.append(
+            ExpertTimeLine(
+                label="pairwise preference labelling",
+                role="annotator",
+                items=pairwise_items,
+                minutes_per_item=8.0,
+                annotators_per_item=2,
+                note="Pairwise labeling is deferred until a pairwise judge exists.",
+            )
+        )
+    expert_lines.extend([
+        ExpertTimeLine(
+            label="adjudication of disputed items",
+            role="adjudicator",
+            items=max(1, items // 4),
+            minutes_per_item=10.0,
+            annotators_per_item=1,
+            note="The disputed fraction is a planning figure, not a measurement.",
+        ),
+        ExpertTimeLine(
+            label="guide authoring and annotator calibration session",
+            role="reviewer",
+            items=1,
+            minutes_per_item=240.0,
+            annotators_per_item=1,
+            note="One session to agree the guide before labeling.",
+        ),
+    ])
     return CostEstimate(
         estimate_id="judge-calibration-pilot",
         revision="1.0.0",
@@ -448,104 +524,8 @@ def worked_example(
         ),
         priced_on=priced_on,
         prices_last_verified=prices_last_verified,
-        judge_lines=(
-            JudgeCallLine(
-                label="single-item verdicts",
-                model_id=judge_model,
-                calls=items,
-                input_tokens_per_call=2200,
-                output_tokens_per_call=200,
-                note=(
-                    "One call per item. Input is the judge rubric prompt (about 400 "
-                    "tokens for the four in src/eval/metrics.py), a report excerpt and "
-                    "a source excerpt; output is one decision plus a one-sentence "
-                    "reason in the JSON shape those judges already return. Re-derive "
-                    "against the real prompt before any approval."
-                ),
-            ),
-            JudgeCallLine(
-                label="pairwise verdicts, both orders",
-                model_id=judge_model,
-                calls=pairwise_items * 2,
-                input_tokens_per_call=3600,
-                output_tokens_per_call=200,
-                note=(
-                    "Two calls per pair, because a pair judged in one order cannot "
-                    "separate a preference from a position. Input carries two report "
-                    "excerpts, so it is larger than a single-item call."
-                ),
-            ),
-            JudgeCallLine(
-                label="repeat pass for judge self-consistency",
-                model_id=judge_model,
-                calls=items,
-                input_tokens_per_call=2200,
-                output_tokens_per_call=200,
-                note=(
-                    "A second independent reading of every single-item probe. The "
-                    "Messages API exposes no sampling seed, so judge variance is real "
-                    "and unmeasured; one repeat is the cheapest estimate of it and the "
-                    "first line to cut if the cap binds."
-                ),
-            ),
-        ),
-        expert_lines=(
-            ExpertTimeLine(
-                label="claim-support and citation labelling",
-                role="annotator",
-                items=items,
-                minutes_per_item=6.0,
-                annotators_per_item=2,
-                note=(
-                    "Six minutes assumes the annotator reads a report excerpt and a "
-                    "source excerpt and writes a one-sentence rationale. Two "
-                    "annotators per item is the minimum that can produce a "
-                    "disagreement; the worked set in "
-                    "tests/fixtures/calibration/labelled_set.json records 50-210 "
-                    "seconds per label as an authored illustration, not a measurement."
-                ),
-            ),
-            ExpertTimeLine(
-                label="pairwise preference labelling",
-                role="annotator",
-                items=pairwise_items,
-                minutes_per_item=8.0,
-                annotators_per_item=2,
-                note=(
-                    "Longer than a single item because the annotator reads two "
-                    "excerpts. Annotators see one order only; the swap is a judge "
-                    "control, and asking a person to read the same pair twice measures "
-                    "their memory."
-                ),
-            ),
-            ExpertTimeLine(
-                label="adjudication of disputed items",
-                role="adjudicator",
-                items=max(1, items // 4),
-                minutes_per_item=10.0,
-                annotators_per_item=1,
-                note=(
-                    "Assumes a quarter of items are disputed, which is a planning "
-                    "figure and not a measurement: the disputed fraction is itself an "
-                    "output of the first campaign, and the "
-                    "annotator-disagreement-collapse stop condition fires at exactly "
-                    "this rate."
-                ),
-            ),
-            ExpertTimeLine(
-                label="guide authoring and annotator calibration session",
-                role="reviewer",
-                items=1,
-                minutes_per_item=240.0,
-                annotators_per_item=1,
-                note=(
-                    "A fixed cost paid once per guideline revision: writing the guide, "
-                    "walking two annotators through the worked examples, and settling "
-                    "the first disagreements together. Omitting it is how two "
-                    "annotators end up as two populations."
-                ),
-            ),
-        ),
+        judge_lines=tuple(judge_lines),
+        expert_lines=tuple(expert_lines),
         per_episode_cap_usd="0.050000",
         campaign_cap_usd="25.000000",
         overshoot_behaviour=(

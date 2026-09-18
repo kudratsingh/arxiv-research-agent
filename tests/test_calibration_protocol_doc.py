@@ -164,7 +164,7 @@ class TestTheCostExample:
     """The document's worked cost example matches the estimate template."""
     def test_the_priced_totals_match_the_template(self, doc: str) -> None:
         prices, verified = current_price_table()
-        estimate = default_example(items=141, pairwise_items=40, priced_on="2026-09-05")
+        estimate = default_example(items=141, pairwise_items=0, priced_on="2026-09-05")
 
         assert f"`PRICES_LAST_VERIFIED` is **{verified}**" in doc
         assert f"**${estimate.model_cost_usd(prices):.2f}**" in doc
@@ -172,21 +172,21 @@ class TestTheCostExample:
 
     def test_each_priced_line_matches(self, doc: str) -> None:
         prices, _ = current_price_table()
-        estimate = default_example(items=141, pairwise_items=40, priced_on="2026-09-05")
+        estimate = default_example(items=141, pairwise_items=0, priced_on="2026-09-05")
 
         for line in estimate.judge_lines:
             assert f"| {line.label} | {line.calls} |" in doc
             assert f"${line.cost_usd(prices):.3f} |" in doc
 
     def test_each_expert_line_matches(self, doc: str) -> None:
-        estimate = default_example(items=141, pairwise_items=40, priced_on="2026-09-05")
+        estimate = default_example(items=141, pairwise_items=0, priced_on="2026-09-05")
 
         for line in estimate.expert_lines:
             assert f"| {line.label} | {line.items} |" in doc
             assert f"| {line.hours:.1f} |" in doc
 
     def test_the_caps_match(self, doc: str) -> None:
-        estimate = default_example(items=141, pairwise_items=40, priced_on="2026-09-05")
+        estimate = default_example(items=141, pairwise_items=0, priced_on="2026-09-05")
 
         assert (
             f"**${Decimal(estimate.per_episode_cap_usd):.2f} per episode, "
@@ -195,7 +195,7 @@ class TestTheCostExample:
 
     def test_the_paid_call_total_in_section_12_matches(self, doc: str) -> None:
         prices, _ = current_price_table()
-        estimate = default_example(items=141, pairwise_items=40, priced_on="2026-09-05")
+        estimate = default_example(items=141, pairwise_items=0, priced_on="2026-09-05")
         calls = sum(line.calls for line in estimate.judge_lines)
 
         assert f"| **total** | **{calls}** | **${estimate.model_cost_usd(prices):.2f}** |" in doc

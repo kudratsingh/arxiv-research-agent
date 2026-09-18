@@ -72,7 +72,7 @@ or paid calls (§12).
 
 | Artifact | Where | What it is |
 |---|---|---|
-| Label schemas | `src/calibration/labels.py` | The four label types, the annotator vocabulary, adjudication records, and the projection into W02's `LabelRecord` |
+| Label schemas | `src/calibration/labels.py` | The label types, retrieval vocabulary, annotator rules, adjudication records, and the projection into W02's `LabelRecord` |
 | Blinding and randomisation | `src/calibration/blinding.py` | Blinded ids, the hidden-field set, the seeded presentation schedule, the leak scan |
 | Sampling plan | `src/calibration/sampling.py` | The ten task slices, the failure taxonomy, and the item counts derived from `src/eval/stats.py` |
 | Calibration metrics and gate | `src/calibration/metrics.py` | φ/MCC with both positive rates, false pass/fail, abstention, position bias, slice coverage, and PROMOTE/HOLD/ROLLBACK |
@@ -90,10 +90,10 @@ being true fails a test that quotes it back.
 
 ## 3. Label schemas
 
-### 3.1 Four types, not one score
+### 3.1 Label types, not one score
 
 03 §7 asks for rubric-level and claim-level judgments rather than one
-holistic score, so there are four label types and they have different
+holistic score, so the first calibration set uses three single-item label types and they have different
 denominators:
 
 | Type | Question | Decisions | Denominator |
@@ -101,7 +101,12 @@ denominators:
 | `claim_support` | Does the cited source support this claim? | `supported`, `unsupported`, `contradicted`, `not_verifiable`, `abstain` | per checked factual claim |
 | `citation_correctness` | Does this citation point at a source that carries the claim? | `correct`, `wrong_source`, `unresolvable`, `abstain` | per resolved citation |
 | `rubric_coverage` | Is this rubric item satisfied, with admissible evidence? | `covered`, `partial`, `not_covered`, `abstain` | per rubric item |
-| `pairwise_preference` | Which of two reports is better? | `first`, `second`, `tie`, `abstain` | per pair, per presentation |
+| `retrieval_recall` | Does this topic have coverage in the supplied paper list? | `covered`, `not_covered`, `abstain` | per topic, with paper ids |
+
+`citation_correctness` folds into `claim_support` once the annotator sees the
+cited source; it is not a separate first-set denominator. `pairwise_preference`
+remains available for a later position-bias study, but is excluded from this
+first calibration set because no pairwise judge exists.
 
 Three vocabulary choices are load-bearing.
 
@@ -327,6 +332,12 @@ cannot decide, it is reportable, and it stays out of every denominator —
 
 ### 5.3 The escalation path
 
+The first human labeling pass is a stratified **40–50 item pilot**, selected
+across the ten slices. It measures actual disagreement and false-pass rates
+before the protocol commits to the 141-item representative set. The second
+annotator is **owner-named, not yet named**. Until that person is assigned, a
+one-annotator pass is reported as **agreement unmeasured** in every report.
+
 1. Two annotators label every item independently. They do not see each
    other's decisions or rationales.
 2. Items where they agree are `agreed` and resolve without an
@@ -446,6 +457,8 @@ slice may re-size it — as a new plan revision with a recorded reason.
 slices, reported with whole-set bounds and per-slice diagnostics.** Not
 340: the marginal slice precision is not worth 200 extra expert
 judgements before anyone has seen a single real disagreement rate.
+
+The 141-item set is therefore a post-pilot commitment, not the first pass.
 
 For the campaign question, unchanged from ADR 0071: **77** paired
 episodes for a 5-point arm difference to reach significance, **155** at
@@ -804,22 +817,20 @@ instead of the ledger.
 
 Priced **2026-09-05** against `src/observability/costs.py`, whose
 `PRICES_LAST_VERIFIED` is **2026-08-20**. Model: `claude-sonnet-5`
-($3/$15 per million). 141 single-item probes, 40 pairs.
+($3/$15 per million). 141 single-item probes; no pairwise judge exists in the first calibration set.
 
 | Line | Calls | Tokens in/out | Cost |
 |---|---:|---|---:|
 | single-item verdicts | 141 | 2,200 / 200 | $1.354 |
-| pairwise verdicts, both orders | 80 | 3,600 / 200 | $1.104 |
 | repeat pass for judge self-consistency | 141 | 2,200 / 200 | $1.354 |
-| **total model spend** | | | **$3.81** |
+| **total model spend** | | | **$2.71** |
 
 | Line | Items | Minutes each | People | Hours |
 |---|---:|---:|---:|---:|
 | claim-support and citation labelling | 141 | 6 | 2 | 28.2 |
-| pairwise preference labelling | 40 | 8 | 2 | 10.7 |
 | adjudication of disputed items | 35 | 10 | 1 | 5.8 |
 | guide authoring and annotator calibration session | 1 | 240 | 1 | 4.0 |
-| **total expert time** | | | | **48.7 h** |
+| **total expert time** | | | | **38.0 h** |
 
 Caps: **$0.05 per episode, $25.00 per campaign**.
 
@@ -880,9 +891,8 @@ lineage half is built; the other four are owner decisions.
 | Step | Calls | Estimated | Blocked by |
 |---|---:|---:|---|
 | Judge every single-item probe once | 141 | $1.35 | D9 |
-| Judge every pair in both orders | 80 | $1.10 | D9 |
 | Second independent reading, for judge self-consistency | 141 | $1.35 | D9 |
-| **total** | **362** | **$3.81** | D9 |
+| **total** | **282** | **$2.71** | D9 |
 
 12 §2's D9 blocks every live baseline, model judge, paid label and funded
 experiment. Possessing an API key or declaring a positive ceiling never
@@ -947,7 +957,7 @@ authorizes chargeable work (12 §3.10).
 | Decision | Needed before | Recommendation |
 |---|---|---|
 | Human-label retention and consent (13 §5, D8.10) | Any labelling of real material | Adopt a labels-specific retention policy; do not inherit the registry's repository-history terms |
-| Expert-time budget | The 48.7 h in §11.1 | Approve or cut a line; the pairwise set is the cheapest line to drop and costs the position-bias measurement |
+| Expert-time budget | The 38.0 h in §11.1 | Approve or cut a line; the first pass measures disagreement before a larger set is committed |
 | The four thresholds in §10.1 | Any PROMOTE | Set from the repeated baseline (07 §7), not from this document |
 | Whether a validation/sealed calibration split is needed | Any promotion claim | Today's split is `development`, because a sealed split fails closed without the access broker 13 §8 leaves open |
 | Which instrument to calibrate first | The first paid pass | `faithfulness` — it is the judge closest to supported-claim precision, the first primary outcome (D1) |
