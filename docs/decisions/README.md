@@ -837,6 +837,18 @@ never renumbered.
   pixels and 311 desktop pixels, while a stricter perceived-colour threshold
   makes the scrimmed change count before the area bound is applied.
 
+- [0100](0100-judge-definitions-v2.md) — **Judge definitions v2: identified
+  sources, the writer's evidence, honest empty denominators, and a
+  judge-scoped sampler.** Two cited papers by a Zhang in 2024 collided on one
+  `(surname, year)` key and the second silently replaced the first; the
+  faithfulness dossier is now keyed by `paper_id` with disambiguated cite
+  keys, and a cite that still names two papers abstains and is counted. The
+  judge is shown the reader's ranked chunks beside each abstract when a caller
+  supplies them, with the scope recorded either way. Every judged metric
+  reports `None` with a reason instead of a free 1.0 on an empty denominator.
+  The three judge calls carry `eval_judge_temperature` (0.0) and their own
+  output schema, judge model only. All three rubric versions go to 2.0.0.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

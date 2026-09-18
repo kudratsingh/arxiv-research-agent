@@ -317,7 +317,9 @@ class RequestProfile:
     structured_outputs: bool
 
 
-def resolve_profile(model: str, agent: str = "") -> RequestProfile:
+def resolve_profile(
+    model: str, agent: str = "", *, temperature: float | None = None
+) -> RequestProfile:
     """Resolve what may be sent to `model` on behalf of `agent`.
 
     The conjunction is the whole point: a feature is sent only when the
@@ -334,15 +336,23 @@ def resolve_profile(model: str, agent: str = "") -> RequestProfile:
         agent: One of `src.config.EFFORT_AGENTS`, selecting that
             agent's effort override. Empty takes the deployment-wide
             `llm_effort`.
+        temperature: A caller-scoped override for
+            `settings.llm_temperature`, or `None` to take the
+            deployment-wide value. It overrides *which* temperature is
+            considered, never *whether* one is sent: a model whose row
+            rejects sampling parameters still receives none, so an
+            override cannot turn a working request into an HTTP 400
+            (ADR 0100, respecting ADR 0077).
 
     Returns:
         The frozen profile for this call.
     """
     caps = capabilities_for(model)
     effort = settings.effort_for(agent)
+    requested = settings.llm_temperature if temperature is None else temperature
     return RequestProfile(
         model=model,
-        temperature=settings.llm_temperature if caps.sampling_params else None,
+        temperature=requested if caps.sampling_params else None,
         adaptive_thinking=(
             settings.llm_thinking == "adaptive" and caps.adaptive_thinking
         ),
@@ -420,6 +430,7 @@ def call_llm(
     *,
     agent: str = "",
     schema: type[pydantic.BaseModel] | None = None,
+    temperature: float | None = None,
 ) -> str:
     """Call Claude and return the text response.
 
@@ -442,6 +453,14 @@ def call_llm(
             model supports it. The returned text is then JSON matching
             the schema; validating it is `call_llm_json`'s job, not
             this function's.
+        temperature: Sample this call at a temperature of its own
+            instead of the deployment-wide `llm_temperature`. `None` —
+            what every workflow caller passes — is the deployment
+            value. Added for the eval judges, which must not resample
+            their own verdicts at the temperature the thing they are
+            grading runs at (ADR 0100). Still subject to the model's
+            capability row: where sampling parameters are refused, no
+            temperature is sent and this argument changes nothing.
 
     Returns:
         The model's text response, with any markdown code fences
@@ -474,7 +493,7 @@ def call_llm(
     _check_cost_budget()
     client = _get_client()
     resolved_model = model_name or settings.anthropic_model
-    profile = resolve_profile(resolved_model, agent)
+    profile = resolve_profile(resolved_model, agent, temperature=temperature)
     request_kwargs = _build_request_kwargs(
         profile=profile,
         prompt=prompt,
@@ -776,6 +795,7 @@ def call_llm_json(
     *,
     agent: str = "",
     schema: type[pydantic.BaseModel] | None = None,
+    temperature: float | None = None,
 ) -> dict[str, Any]:
     """Call Claude and parse the response as JSON.
 
@@ -817,6 +837,7 @@ def call_llm_json(
         schema: The shape to ask the model for. Ignored — silently, and
             with no change in behaviour — when structured outputs are
             off or unsupported.
+        temperature: A temperature for this call alone; see `call_llm`.
 
     Returns:
         Parsed JSON dict. On the structured path this is the validated
@@ -842,6 +863,7 @@ def call_llm_json(
         cache_system=cache_system,
         agent=agent,
         schema=schema,
+        temperature=temperature,
     )
 
     if schema is not None and _structured_output_applies(model_name, agent):

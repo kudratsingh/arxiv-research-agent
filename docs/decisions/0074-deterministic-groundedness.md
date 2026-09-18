@@ -333,3 +333,24 @@ each has its own test.
       module's.
   - **Fold the normalization spec into the shared rubric lock**, once a
     work order owns both `metrics.py` and the lock file.
+
+## Amendment — 2026-09-17 (ADR 0100)
+
+Two follow-ups this ADR left open are now closed, and one sentence in it has
+gone stale.
+
+- **The `None`-with-a-reason rule is no longer the citation path's alone.**
+  This ADR fixed the free 1.0 for `citation_resolution_rate` and left the same
+  defect standing in the three judged metrics. All three now publish
+  `score: float | None` beside a reason code (`empty_report`,
+  `no_cited_claims`, `all_sources_unavailable`, `no_expected_topics`), built
+  on the pattern this ADR established.
+- **"Index the abstract alongside the chunks" is closed for the faithfulness
+  metric only.** Its dossier now carries both — the abstract *and* the
+  reader's ranked chunks — because it no longer picks one source per paper.
+  `src/eval/groundedness.py`'s own `build_source_index`, which is a different
+  function with the same name, still ranks and picks one; that half of the
+  follow-up is untouched and remains this module's.
+- **Unchanged:** the deterministic check, its version, its spec digest and its
+  place in `RESEARCH_RUBRICS` all stay at 1.0.0. ADR 0100 moved the three
+  judge rubrics to 2.0.0 and left `groundedness` alone.

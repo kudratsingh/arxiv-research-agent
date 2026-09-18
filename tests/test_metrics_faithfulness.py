@@ -1,9 +1,17 @@
 """Unit tests for the faithfulness metric.
 
-Pure helpers (`build_source_index`, `_build_faithfulness_prompt`,
-`_aggregate_claims`, `_cite_key_from_string`) are tested directly.
-The full `measure_faithfulness` path is exercised once with
-`call_llm_json` monkeypatched — no real Claude calls, no network.
+Pure helpers (`build_source_index`, `build_faithfulness_sources`,
+`_build_faithfulness_prompt`, `_aggregate_claims`, `resolve_cite`,
+`_cite_key_from_string`) are tested directly. The full
+`measure_faithfulness` path is exercised with `call_llm_json`
+monkeypatched — no real Claude calls, no network, no spend.
+
+The ADR 0100 cases are the ones to read first: two papers by a Zhang in
+2024 must be judged against their own abstracts (EL-08), a claim
+supported only by a body chunk must turn on whether the chunks were
+supplied (EL-09), an empty denominator must be `None` with a reason
+(EL-10), and each judge call must carry its own schema and temperature
+(EL-11).
 """
 
 from typing import Any
@@ -14,13 +22,26 @@ from src.config import Settings
 from src.eval import metrics as metrics_module
 from src.eval import provenance as provenance_module
 from src.eval.metrics import (
+    ALL_SOURCES_UNAVAILABLE,
+    CITE_AMBIGUOUS,
+    CITE_MALFORMED,
+    CITE_RESOLVED,
+    CITE_UNRESOLVED,
+    EMPTY_REPORT,
+    NO_CITED_CLAIMS,
+    SOURCE_SCOPE_ABSTRACT_AND_CHUNKS,
+    SOURCE_SCOPE_ABSTRACT_ONLY,
     ClaimJudgement,
+    FaithfulnessJudgeOutput,
     FaithfulnessResult,
+    SourceDossier,
     _aggregate_claims,
     _build_faithfulness_prompt,
     _cite_key_from_string,
+    build_faithfulness_sources,
     build_source_index,
     measure_faithfulness,
+    resolve_cite,
 )
 from src.graph.state import Citation, PaperMetadata
 
@@ -28,11 +49,15 @@ pytestmark = pytest.mark.unit
 
 
 def _mk_paper(
-    *, paper_id: str, first_author: str, abstract: str = "Some abstract."
+    *,
+    paper_id: str,
+    first_author: str,
+    abstract: str = "Some abstract.",
+    title: str = "Paper title",
 ) -> PaperMetadata:
     return PaperMetadata(
         id=paper_id,
-        title="Paper title",
+        title=title,
         authors=[first_author, "Second Author"],
         abstract=abstract,
         url=paper_id,
@@ -50,8 +75,46 @@ def _mk_citation(*, paper_id: str, year: str, first_author: str) -> Citation:
     )
 
 
-class TestBuildSourceIndex:
-    """Which papers enter the source index, and which are omitted."""
+def _two_zhangs() -> tuple[list[PaperMetadata], list[Citation]]:
+    """The EL-08 reproduction: two cited papers, one surname, one year."""
+    papers = [
+        _mk_paper(
+            paper_id="p1",
+            first_author="Wei Zhang",
+            abstract="ZHANG-ONE proves the retrieval bound.",
+            title="Retrieval bounds",
+        ),
+        _mk_paper(
+            paper_id="p2",
+            first_author="Lin Zhang",
+            abstract="ZHANG-TWO measures annotator drift.",
+            title="Annotator drift",
+        ),
+    ]
+    citations = [
+        _mk_citation(paper_id="p1", year="2024", first_author="Wei Zhang"),
+        _mk_citation(paper_id="p2", year="2024", first_author="Lin Zhang"),
+    ]
+    return papers, citations
+
+
+def _dossier_block(prompt: str, cite_key: str) -> str:
+    """The prompt text the judge was given under one cite key.
+
+    A stand-in for what a real judge reads: the block that opens with
+    that key, up to the blank line. The fake judges below decide
+    `supported` from this and nothing else, so a passing test can only
+    have passed because the right text sat under the right key.
+    """
+    body = prompt.split("Cited papers:\n\n", 1)[1]
+    for block in body.split("\n\n"):
+        if block.startswith(f"[{cite_key}]"):
+            return block
+    return ""
+
+
+class TestBuildSourceIndexIsTheVerifiersAdapter:
+    """The ADR 0015 contract, kept — including the defect it carries."""
 
     def test_joins_papers_and_citations_on_paper_id(self) -> None:
         papers = [
@@ -103,34 +166,259 @@ class TestBuildSourceIndex:
         citations = [_mk_citation(paper_id="p1", year="", first_author="Jane Smith")]
         assert build_source_index(papers, citations) == {}
 
+    def test_it_still_collides_and_that_is_recorded_not_fixed(self) -> None:
+        """EL-08 survives here on purpose; the metric no longer uses it.
+
+        `verifier.py` builds its abstract-path dossier from these keys
+        and belongs to another lane, so the contract is held rather than
+        widened underneath it. ADR 0100 carries this as an open
+        follow-up; this test is what stops it being forgotten.
+        """
+        papers, citations = _two_zhangs()
+        index = build_source_index(papers, citations)
+        assert len(index) == 1
+        assert index[("zhang", "2024")] == "ZHANG-TWO measures annotator drift."
+
+
+class TestBuildFaithfulnessSources:
+    """Identity by `paper_id`, unique cite keys, and declared scope."""
+
+    def test_two_same_surname_same_year_papers_both_survive(self) -> None:
+        papers, citations = _two_zhangs()
+        dossier = build_faithfulness_sources(papers, citations)
+
+        assert [s["paper_id"] for s in dossier["sources"]] == ["p1", "p2"]
+        assert [s["cite_key"] for s in dossier["sources"]] == [
+            "Zhang, 2024a",
+            "Zhang, 2024b",
+        ]
+        assert dossier["collision_count"] == 2
+        assert dossier["sources"][0]["abstract"].startswith("ZHANG-ONE")
+        assert dossier["sources"][1]["abstract"].startswith("ZHANG-TWO")
+
+    def test_an_uncontested_key_carries_no_suffix(self) -> None:
+        papers = [_mk_paper(paper_id="p1", first_author="Jane Smith")]
+        citations = [_mk_citation(paper_id="p1", year="2023", first_author="Jane Smith")]
+        dossier = build_faithfulness_sources(papers, citations)
+
+        assert dossier["sources"][0]["cite_key"] == "Smith, 2023"
+        assert dossier["sources"][0]["suffix"] == ""
+        assert dossier["collision_count"] == 0
+
+    def test_the_year_comes_from_the_paper_id_when_it_is_an_arxiv_id(self) -> None:
+        # The citation says 2019; the identifier the retrieval pipeline
+        # wrote says 2401 -> 2024. The metric trusts the pipeline, not
+        # the model whose output it is checking.
+        paper_id = "https://arxiv.org/abs/2401.00001"
+        papers = [_mk_paper(paper_id=paper_id, first_author="Jane Smith")]
+        citations = [
+            _mk_citation(paper_id=paper_id, year="2019", first_author="Jane Smith")
+        ]
+        dossier = build_faithfulness_sources(papers, citations)
+
+        assert dossier["sources"][0]["year"] == "2024"
+
+    def test_the_citations_year_still_resolves_as_an_alias(self) -> None:
+        # The report's inline tags were written from the citation list,
+        # so a dossier the report's own tags cannot address would trade
+        # one silent failure for another.
+        paper_id = "https://arxiv.org/abs/2401.00001"
+        papers = [_mk_paper(paper_id=paper_id, first_author="Jane Smith")]
+        citations = [
+            _mk_citation(paper_id=paper_id, year="2019", first_author="Jane Smith")
+        ]
+        dossier = build_faithfulness_sources(papers, citations)
+
+        assert resolve_cite("[Smith, 2019]", dossier) == (paper_id, CITE_RESOLVED)
+        assert resolve_cite("[Smith, 2024]", dossier) == (paper_id, CITE_RESOLVED)
+
+    def test_the_citation_year_is_the_fallback_for_a_non_arxiv_id(self) -> None:
+        papers = [_mk_paper(paper_id="local-fixture-1", first_author="Jane Smith")]
+        citations = [
+            _mk_citation(paper_id="local-fixture-1", year="2023", first_author="J Smith")
+        ]
+        dossier = build_faithfulness_sources(papers, citations)
+        assert dossier["sources"][0]["year"] == "2023"
+
+    def test_an_identifier_with_an_impossible_month_is_not_a_date(self) -> None:
+        # `2413` parses as an arXiv id and is not a `YYMM`. Falling back
+        # is the honest move; reading it as month 13 would invent a year.
+        papers = [_mk_paper(paper_id="2413.00001", first_author="Jane Smith")]
+        citations = [
+            _mk_citation(paper_id="2413.00001", year="2019", first_author="J Smith")
+        ]
+        assert build_faithfulness_sources(papers, citations)["sources"][0]["year"] == (
+            "2019"
+        )
+
+    def test_a_blank_first_author_omits_the_paper(self) -> None:
+        papers = [
+            PaperMetadata(
+                id="p1", title="t", authors=["   "], abstract="a", url="u", pdf_url="p"
+            )
+        ]
+        citations = [_mk_citation(paper_id="p1", year="2023", first_author="X")]
+        assert build_faithfulness_sources(papers, citations)["sources"] == []
+
+    def test_an_old_style_arxiv_id_yields_its_century(self) -> None:
+        papers = [_mk_paper(paper_id="cs.CL/0301001", first_author="Jane Smith")]
+        citations = [
+            _mk_citation(paper_id="cs.CL/0301001", year="2019", first_author="J Smith")
+        ]
+        assert build_faithfulness_sources(papers, citations)["sources"][0]["year"] == (
+            "2003"
+        )
+
+    def test_papers_without_a_citation_authors_or_year_are_omitted(self) -> None:
+        papers = [
+            _mk_paper(paper_id="uncited", first_author="Nobody Cited"),
+            PaperMetadata(
+                id="no-authors", title="t", authors=[], abstract="a", url="u", pdf_url="p"
+            ),
+            _mk_paper(paper_id="no-year", first_author="Jane Smith"),
+        ]
+        citations = [
+            _mk_citation(paper_id="no-authors", year="2023", first_author="X"),
+            _mk_citation(paper_id="no-year", year="", first_author="Jane Smith"),
+        ]
+        assert build_faithfulness_sources(papers, citations)["sources"] == []
+
+    def test_supplied_chunks_change_the_declared_scope(self) -> None:
+        papers, citations = _two_zhangs()
+        dossier = build_faithfulness_sources(
+            papers, citations, {"p1": ["first chunk", "   ", "second chunk"]}
+        )
+
+        assert dossier["source_scope"] == SOURCE_SCOPE_ABSTRACT_AND_CHUNKS
+        assert dossier["sources_with_chunks"] == 1
+        # Blank chunks are dropped rather than shown as empty excerpts.
+        assert dossier["sources"][0]["chunks"] == ["first chunk", "second chunk"]
+        assert dossier["sources"][0]["source_scope"] == SOURCE_SCOPE_ABSTRACT_AND_CHUNKS
+        assert dossier["sources"][1]["source_scope"] == SOURCE_SCOPE_ABSTRACT_ONLY
+
+    def test_no_chunks_is_abstract_only(self) -> None:
+        papers, citations = _two_zhangs()
+        dossier = build_faithfulness_sources(papers, citations)
+        assert dossier["source_scope"] == SOURCE_SCOPE_ABSTRACT_ONLY
+        assert dossier["sources_with_chunks"] == 0
+
+    def test_more_than_twenty_six_collisions_still_get_distinct_keys(self) -> None:
+        papers = [
+            _mk_paper(paper_id=f"p{i}", first_author="Wei Zhang") for i in range(30)
+        ]
+        citations = [
+            _mk_citation(paper_id=f"p{i}", year="2024", first_author="Wei Zhang")
+            for i in range(30)
+        ]
+        dossier = build_faithfulness_sources(papers, citations)
+        keys = [s["cite_key"] for s in dossier["sources"]]
+        assert len(set(keys)) == 30
+        assert keys[26] == "Zhang, 2024aa"
+
+
+class TestResolveCite:
+    """Which cite forms resolve, which abstain, and which are refused."""
+
+    @staticmethod
+    def _dossier() -> SourceDossier:
+        papers, citations = _two_zhangs()
+        papers.append(_mk_paper(paper_id="p3", first_author="Jane Smith"))
+        citations.append(
+            _mk_citation(paper_id="p3", year="2023", first_author="Jane Smith")
+        )
+        return build_faithfulness_sources(papers, citations)
+
+    def test_a_suffixed_key_resolves_to_its_own_paper(self) -> None:
+        dossier = self._dossier()
+        assert resolve_cite("[Zhang, 2024a]", dossier) == ("p1", CITE_RESOLVED)
+        assert resolve_cite("[Zhang, 2024b]", dossier) == ("p2", CITE_RESOLVED)
+
+    def test_an_unsuffixed_key_with_one_candidate_resolves(self) -> None:
+        assert resolve_cite("[Smith, 2023]", self._dossier()) == ("p3", CITE_RESOLVED)
+
+    def test_an_unsuffixed_key_with_two_candidates_abstains(self) -> None:
+        # The EL-08 case at resolution time: never resolved to one of
+        # them, because either choice would be a coin flip recorded as a
+        # measurement.
+        assert resolve_cite("[Zhang, 2024]", self._dossier()) == (None, CITE_AMBIGUOUS)
+
+    def test_an_unknown_paper_is_unresolved(self) -> None:
+        assert resolve_cite("[Ghost, 2020]", self._dossier()) == (
+            None,
+            CITE_UNRESOLVED,
+        )
+
+    def test_a_non_citation_is_malformed(self) -> None:
+        dossier = self._dossier()
+        assert resolve_cite("not a citation", dossier) == (None, CITE_MALFORMED)
+        assert resolve_cite("", dossier) == (None, CITE_MALFORMED)
+
+    def test_a_cite_whose_author_field_is_punctuation_is_malformed(self) -> None:
+        # Matches the tag shape, normalises to no surname at all.
+        assert resolve_cite("[ , 2023]", self._dossier()) == (None, CITE_MALFORMED)
+
+    def test_the_bare_and_et_al_forms_are_accepted(self) -> None:
+        dossier = self._dossier()
+        assert resolve_cite("Smith, 2023", dossier) == ("p3", CITE_RESOLVED)
+        assert resolve_cite("[Smith et al., 2023]", dossier) == ("p3", CITE_RESOLVED)
+
+    def test_a_suffix_naming_no_entry_falls_back_to_the_base_key(self) -> None:
+        # The judge invented `c`; there are only `a` and `b`. That is
+        # still an ambiguous `[Zhang, 2024]`, not a resolution to `a`.
+        assert resolve_cite("[Zhang, 2024c]", self._dossier()) == (
+            None,
+            CITE_AMBIGUOUS,
+        )
+
 
 class TestBuildFaithfulnessPrompt:
     """What the prompt carries, verbatim, and per source."""
 
     def test_report_appears_verbatim(self) -> None:
+        papers, citations = _two_zhangs()
         prompt = _build_faithfulness_prompt(
-            "REPORT BODY", {("smith", "2023"): "abstract text"}
+            "REPORT BODY", build_faithfulness_sources(papers, citations)
         )
         assert "REPORT BODY" in prompt
 
-    def test_each_source_appears_with_its_cite_key(self) -> None:
-        source_index = {
-            ("smith", "2023"): "smith abstract",
-            ("doe", "2024"): "doe abstract",
-        }
-        prompt = _build_faithfulness_prompt("r", source_index)
-        assert "[Smith, 2023]" in prompt
-        assert "[Doe, 2024]" in prompt
-        assert "smith abstract" in prompt
-        assert "doe abstract" in prompt
+    def test_each_source_appears_under_its_own_key_with_its_title(self) -> None:
+        papers, citations = _two_zhangs()
+        prompt = _build_faithfulness_prompt(
+            "r", build_faithfulness_sources(papers, citations)
+        )
+
+        assert "[Zhang, 2024a]\nTitle: Retrieval bounds" in prompt
+        assert "[Zhang, 2024b]\nTitle: Annotator drift" in prompt
+        assert "ZHANG-ONE" in _dossier_block(prompt, "Zhang, 2024a")
+        assert "ZHANG-TWO" not in _dossier_block(prompt, "Zhang, 2024a")
+
+    def test_chunks_are_rendered_in_rank_order_when_supplied(self) -> None:
+        papers, citations = _two_zhangs()
+        prompt = _build_faithfulness_prompt(
+            "r",
+            build_faithfulness_sources(papers, citations, {"p1": ["top", "next"]}),
+        )
+        block = _dossier_block(prompt, "Zhang, 2024a")
+
+        assert "(1) top" in block
+        assert "(2) next" in block
+        assert block.index("(1) top") < block.index("(2) next")
+
+    def test_a_paper_without_chunks_says_so(self) -> None:
+        papers, citations = _two_zhangs()
+        prompt = _build_faithfulness_prompt(
+            "r", build_faithfulness_sources(papers, citations)
+        )
+        assert "none available" in _dossier_block(prompt, "Zhang, 2024a")
 
     def test_empty_source_index_produces_no_sources_line(self) -> None:
-        prompt = _build_faithfulness_prompt("r", {})
-        assert "(none provided)" in prompt
+        assert "(none provided)" in _build_faithfulness_prompt(
+            "r", build_faithfulness_sources([], [])
+        )
 
 
 class TestCiteKeyFromString:
-    """Which citation forms parse into a key, and which return nothing."""
+    """The legacy helper's contract, which a property test also pins."""
 
     def test_parses_bracketed_form(self) -> None:
         assert _cite_key_from_string("[Smith, 2023]") == ("smith", "2023")
@@ -153,7 +441,17 @@ class TestCiteKeyFromString:
 class TestAggregateClaims:
     """How claims aggregate, and what leaves the denominator."""
 
-    _SOURCE_IDX = {("smith", "2023"): "abstract", ("doe", "2024"): "abstract"}
+    @staticmethod
+    def _dossier() -> SourceDossier:
+        papers = [
+            _mk_paper(paper_id="p1", first_author="Jane Smith", abstract="abstract"),
+            _mk_paper(paper_id="p2", first_author="John Doe", abstract="abstract"),
+        ]
+        citations = [
+            _mk_citation(paper_id="p1", year="2023", first_author="Jane Smith"),
+            _mk_citation(paper_id="p2", year="2024", first_author="John Doe"),
+        ]
+        return build_faithfulness_sources(papers, citations)
 
     def test_all_supported_scores_1(self) -> None:
         parsed = {
@@ -162,8 +460,9 @@ class TestAggregateClaims:
                 {"claim": "B", "cite": "[Doe, 2024]", "supported": True, "reason": "ok"},
             ]
         }
-        result = _aggregate_claims(parsed, self._SOURCE_IDX)
+        result = _aggregate_claims(parsed, self._dossier())
         assert result["score"] == 1.0
+        assert result["reason"] is None
         assert result["supported"] == 2
         assert result["unsupported"] == 0
         assert result["source_unavailable"] == 0
@@ -175,10 +474,20 @@ class TestAggregateClaims:
                 {"claim": "B", "cite": "[Doe, 2024]", "supported": False, "reason": ""},
             ]
         }
-        result = _aggregate_claims(parsed, self._SOURCE_IDX)
+        result = _aggregate_claims(parsed, self._dossier())
         assert result["score"] == 0.5
         assert result["supported"] == 1
         assert result["unsupported"] == 1
+
+    def test_a_resolved_claim_records_the_paper_it_was_judged_against(self) -> None:
+        parsed = {
+            "claims": [
+                {"claim": "A", "cite": "[Doe, 2024]", "supported": True, "reason": ""}
+            ]
+        }
+        claim = _aggregate_claims(parsed, self._dossier())["claims"][0]
+        assert claim["paper_id"] == "p2"
+        assert claim["resolution"] == CITE_RESOLVED
 
     def test_source_unavailable_excluded_from_denominator(self) -> None:
         parsed = {
@@ -187,37 +496,93 @@ class TestAggregateClaims:
                 {"claim": "B", "cite": "[Ghost, 2020]", "supported": None, "reason": ""},
             ]
         }
-        result = _aggregate_claims(parsed, self._SOURCE_IDX)
-        # supported=1 / (supported=1 + unsupported=0) = 1.0, unavailable reported separately.
+        result = _aggregate_claims(parsed, self._dossier())
         assert result["score"] == 1.0
         assert result["supported"] == 1
         assert result["unsupported"] == 0
         assert result["source_unavailable"] == 1
+        assert result["unresolved_citations"] == 1
         assert result["total_claims"] == 2
 
     def test_judge_says_supported_but_source_missing_forces_unavailable(self) -> None:
         # If judge claims a source it wasn't given, we override to None.
         parsed = {
             "claims": [
-                # Ghost isn't in source_idx; judge said "supported: true" but
-                # we can't trust that.
                 {"claim": "B", "cite": "[Ghost, 2020]", "supported": True, "reason": ""},
             ]
         }
-        result = _aggregate_claims(parsed, self._SOURCE_IDX)
+        result = _aggregate_claims(parsed, self._dossier())
         assert result["source_unavailable"] == 1
         assert result["supported"] == 0
         assert result["unsupported"] == 0
 
+    def test_an_ambiguous_cite_abstains_and_is_counted(self) -> None:
+        """EL-08's acceptance: never silently resolved."""
+        papers, citations = _two_zhangs()
+        dossier = build_faithfulness_sources(papers, citations)
+        parsed = {
+            "claims": [
+                {"claim": "A", "cite": "[Zhang, 2024]", "supported": True, "reason": ""}
+            ]
+        }
+        result = _aggregate_claims(parsed, dossier)
+
+        assert result["claims"][0]["supported"] is None
+        assert result["claims"][0]["paper_id"] is None
+        assert result["claims"][0]["resolution"] == CITE_AMBIGUOUS
+        assert result["ambiguous_citations"] == 1
+        assert result["source_unavailable"] == 1
+        assert result["collision_count"] == 2
+        assert result["score"] is None
+        assert result["reason"] == ALL_SOURCES_UNAVAILABLE
+
+    def test_a_malformed_cite_is_counted_apart_from_an_unknown_one(self) -> None:
+        parsed = {
+            "claims": [
+                {"claim": "A", "cite": "see above", "supported": True, "reason": ""},
+                {"claim": "B", "cite": "[Ghost, 2020]", "supported": True, "reason": ""},
+            ]
+        }
+        result = _aggregate_claims(parsed, self._dossier())
+        assert result["malformed_citations"] == 1
+        assert result["unresolved_citations"] == 1
+
+    def test_no_claims_is_none_with_no_cited_claims(self) -> None:
+        result = _aggregate_claims({"claims": []}, self._dossier())
+        assert result["score"] is None
+        assert result["reason"] == NO_CITED_CLAIMS
+        assert result["total_claims"] == 0
+
+    def test_claims_but_no_decidable_one_is_none_with_its_own_reason(self) -> None:
+        # Distinct from the case above: the report *did* cite, and the
+        # harness could not check any of it. That is a finding.
+        parsed = {
+            "claims": [
+                {"claim": "A", "cite": "[Ghost, 2020]", "supported": True, "reason": ""}
+            ]
+        }
+        result = _aggregate_claims(parsed, self._dossier())
+        assert result["score"] is None
+        assert result["reason"] == ALL_SOURCES_UNAVAILABLE
+        assert result["total_claims"] == 1
+
     def test_malformed_claims_field_yields_empty_result(self) -> None:
         parsed: dict[str, Any] = {"claims": "not a list"}
-        result = _aggregate_claims(parsed, self._SOURCE_IDX)
+        result = _aggregate_claims(parsed, self._dossier())
         assert result["total_claims"] == 0
-        assert result["score"] == 1.0  # nothing to judge => trivially perfect
+        assert result["score"] is None
+        assert result["reason"] == NO_CITED_CLAIMS
 
     def test_missing_claims_field_yields_empty_result(self) -> None:
-        result = _aggregate_claims({}, self._SOURCE_IDX)
-        assert result["total_claims"] == 0
+        assert _aggregate_claims({}, self._dossier())["total_claims"] == 0
+
+    def test_a_tuple_claims_field_is_read_like_a_list(self) -> None:
+        parsed: dict[str, Any] = {
+            "claims": (
+                {"claim": "A", "cite": "[Smith, 2023]", "supported": True, "reason": "ok"},
+            )
+        }
+        assert _aggregate_claims(parsed, self._dossier())["score"] == 1.0
 
     def test_bad_claim_entries_are_dropped(self) -> None:
         parsed = {
@@ -228,7 +593,7 @@ class TestAggregateClaims:
                 {"claim": "good", "cite": "[Smith, 2023]", "supported": True, "reason": ""},
             ]
         }
-        result = _aggregate_claims(parsed, self._SOURCE_IDX)
+        result = _aggregate_claims(parsed, self._dossier())
         assert result["total_claims"] == 1
         assert result["supported"] == 1
 
@@ -238,10 +603,133 @@ class TestAggregateClaims:
                 {"claim": "A", "cite": "[Smith, 2023]", "supported": "yes", "reason": ""},
             ]
         }
-        result = _aggregate_claims(parsed, self._SOURCE_IDX)
+        result = _aggregate_claims(parsed, self._dossier())
         # "yes" is not bool, not None -> treated as None (unavailable) so we
         # don't misattribute a text-y judge response as support.
         assert result["source_unavailable"] == 1
+
+    def test_the_dossier_facts_ride_on_every_result(self) -> None:
+        result = _aggregate_claims({"claims": []}, self._dossier())
+        assert result["sources_total"] == 2
+        assert result["sources_with_chunks"] == 0
+        assert result["source_scope"] == SOURCE_SCOPE_ABSTRACT_ONLY
+        assert result["collision_count"] == 0
+
+
+class TestTheJudgeSeesTheRightSource:
+    """EL-08's end-to-end acceptance, through a judge that actually reads."""
+
+    def test_each_zhang_claim_is_judged_against_its_own_abstract(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        papers, citations = _two_zhangs()
+
+        def reading_judge(**kwargs: Any) -> dict[str, Any]:
+            """Decide from the text under each cite key, like a judge."""
+            prompt = str(kwargs["prompt"])
+            return {
+                "claims": [
+                    {
+                        "claim": "the retrieval bound is proved",
+                        "cite": "[Zhang, 2024a]",
+                        "supported": "ZHANG-ONE"
+                        in _dossier_block(prompt, "Zhang, 2024a"),
+                        "reason": "read from the block",
+                    },
+                    {
+                        "claim": "annotator drift was measured",
+                        "cite": "[Zhang, 2024b]",
+                        "supported": "ZHANG-TWO"
+                        in _dossier_block(prompt, "Zhang, 2024b"),
+                        "reason": "read from the block",
+                    },
+                ]
+            }
+
+        monkeypatch.setattr(metrics_module, "call_llm_json", reading_judge)
+
+        result = measure_faithfulness("a report body", papers, citations)
+
+        assert result["score"] == 1.0
+        assert [c["paper_id"] for c in result["claims"]] == ["p1", "p2"]
+        assert all(c["supported"] is True for c in result["claims"])
+        assert result["collision_count"] == 2
+        assert result["sources_total"] == 2
+
+    def test_before_el_08_the_second_paper_had_replaced_the_first(self) -> None:
+        # The defect, stated as an assertion rather than as prose: the
+        # old join kept one entry for two papers, so a `[Zhang, 2024]`
+        # claim about the first was checked against the second's
+        # abstract. The new dossier keeps both.
+        papers, citations = _two_zhangs()
+        assert len(build_source_index(papers, citations)) == 1
+        assert len(build_faithfulness_sources(papers, citations)["sources"]) == 2
+
+
+class TestTheJudgeSeesWhatTheWriterSaw:
+    """EL-09: the same claim, scored two ways, by scope alone."""
+
+    @staticmethod
+    def _body_only_judge(**kwargs: Any) -> dict[str, Any]:
+        """Support the claim only if the body sentence was provided."""
+        block = _dossier_block(str(kwargs["prompt"]), "Smith, 2023")
+        return {
+            "claims": [
+                {
+                    "claim": "the ablation removed 12 points",
+                    "cite": "[Smith, 2023]",
+                    "supported": "ABLATION-12-POINTS" in block,
+                    "reason": "from the provided material",
+                }
+            ]
+        }
+
+    @staticmethod
+    def _papers() -> tuple[list[PaperMetadata], list[Citation]]:
+        papers = [
+            _mk_paper(
+                paper_id="p1",
+                first_author="Jane Smith",
+                abstract="We study ablations. (The number is not in the abstract.)",
+            )
+        ]
+        citations = [
+            _mk_citation(paper_id="p1", year="2023", first_author="Jane Smith")
+        ]
+        return papers, citations
+
+    def test_a_body_only_claim_is_supported_when_chunks_are_supplied(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(metrics_module, "call_llm_json", self._body_only_judge)
+        papers, citations = self._papers()
+
+        result = measure_faithfulness(
+            "a report body",
+            papers,
+            citations,
+            {"p1": ["In the results, ABLATION-12-POINTS was observed."]},
+        )
+
+        assert result["claims"][0]["supported"] is True
+        assert result["score"] == 1.0
+        assert result["source_scope"] == SOURCE_SCOPE_ABSTRACT_AND_CHUNKS
+        assert result["sources_with_chunks"] == 1
+
+    def test_the_same_claim_is_unsupported_on_abstracts_alone(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(metrics_module, "call_llm_json", self._body_only_judge)
+        papers, citations = self._papers()
+
+        result = measure_faithfulness("a report body", papers, citations)
+
+        assert result["claims"][0]["supported"] is False
+        assert result["score"] == 0.0
+        # The scope is on the result, so a reader can tell "the report
+        # was wrong" from "the harness could not see the evidence".
+        assert result["source_scope"] == SOURCE_SCOPE_ABSTRACT_ONLY
+        assert result["sources_with_chunks"] == 0
 
 
 class TestMeasureFaithfulness:
@@ -259,8 +747,11 @@ class TestMeasureFaithfulness:
         monkeypatch.setattr(metrics_module, "call_llm_json", _no)
 
         result = measure_faithfulness("", [], [])
-        assert result["score"] == 1.0
+        # ADR 0100: a run that produced no report is not a perfect one.
+        assert result["score"] is None
+        assert result["reason"] == EMPTY_REPORT
         assert result["total_claims"] == 0
+        assert result["judge"] is None
         assert called["n"] == 0
 
     def test_end_to_end_with_stubbed_judge(
@@ -285,12 +776,8 @@ class TestMeasureFaithfulness:
 
         captured: dict[str, Any] = {}
 
-        def fake_judge(
-            *, prompt: str, system_prompt: str, model_name: str, max_tokens: int
-        ) -> dict[str, Any]:
-            captured["prompt"] = prompt
-            captured["model_name"] = model_name
-            captured["max_tokens"] = max_tokens
+        def fake_judge(**kwargs: Any) -> dict[str, Any]:
+            captured.update(kwargs)
             return {
                 "claims": [
                     {
@@ -320,6 +807,7 @@ class TestMeasureFaithfulness:
         assert "[Smith, 2023]" in captured["prompt"]
         assert "[Doe, 2024]" in captured["prompt"]
         assert "Smith 2023 shows X." in captured["prompt"]
+        assert captured["max_tokens"] == 8192
 
     def test_end_to_end_source_missing_marks_unavailable(
         self, monkeypatch: pytest.MonkeyPatch
@@ -340,10 +828,37 @@ class TestMeasureFaithfulness:
         monkeypatch.setattr(metrics_module, "call_llm_json", fake_judge)
 
         result = measure_faithfulness("something", [], [])
-        # Even though judge said supported=True, no source -> forced to None.
+        # Even though judge said supported=True, no source -> forced to None,
+        # and the empty denominator is now `None` rather than a free 1.0.
         assert result["source_unavailable"] == 1
         assert result["supported"] == 0
-        assert result["score"] == 1.0  # 0/0 denom -> 1.0 (nothing judgeable)
+        assert result["score"] is None
+        assert result["reason"] == ALL_SOURCES_UNAVAILABLE
+
+    def test_the_judge_call_carries_its_schema_and_its_own_temperature(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """EL-11: the judge does not sample at the workflow's setting."""
+        seen: dict[str, Any] = {}
+
+        def fake_judge(**kwargs: Any) -> dict[str, Any]:
+            seen.update(kwargs)
+            return {"claims": []}
+
+        monkeypatch.setattr(metrics_module, "call_llm_json", fake_judge)
+        monkeypatch.setattr(
+            metrics_module,
+            "settings",
+            Settings(llm_temperature=0.7, eval_judge_temperature=0.0),
+        )
+
+        result = measure_faithfulness("a report", [], [])
+
+        assert seen["schema"] is FaithfulnessJudgeOutput
+        assert seen["temperature"] == 0.0
+        assert result["judge"] is not None
+        assert result["judge"]["schema"] == "FaithfulnessJudgeOutput"
+        assert result["judge"]["model"] == seen["model_name"]
 
 
 class TestReturnedTypes:
@@ -354,6 +869,8 @@ class TestReturnedTypes:
         assert set(FaithfulnessResult.__required_keys__) == set(r.keys())
 
     def test_claim_judgement_keys(self) -> None:
+        papers = [_mk_paper(paper_id="p1", first_author="Jane Smith")]
+        citations = [_mk_citation(paper_id="p1", year="2023", first_author="Jane Smith")]
         r = _aggregate_claims(
             {
                 "claims": [
@@ -365,7 +882,7 @@ class TestReturnedTypes:
                     }
                 ]
             },
-            {("smith", "2023"): "abstract"},
+            build_faithfulness_sources(papers, citations),
         )
         assert set(ClaimJudgement.__required_keys__) == set(r["claims"][0].keys())
 

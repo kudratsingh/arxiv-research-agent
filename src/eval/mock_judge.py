@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Any, Final, Literal
 
+import pydantic
 from pydantic import Field, StringConstraints, model_validator
 
 from src.calibration.blinding import (
@@ -53,6 +54,12 @@ from src.eval.metrics import (
     FAITHFULNESS_SYSTEM_PROMPT,
     RETRIEVAL_RECALL_RUBRIC_VERSION,
     RETRIEVAL_RECALL_SYSTEM_PROMPT,
+    ClaimSupportJudgement,
+    CompletenessJudgeOutput,
+    FaithfulnessJudgeOutput,
+    RetrievalRecallJudgeOutput,
+    TopicCoverageJudgement,
+    TopicRetrievalJudgement,
 )
 from src.llm import LOCAL_PREVIEW_DISABLED_API_KEY
 
@@ -63,8 +70,13 @@ MOCK_JUDGE_SALT: Final[str] = "e1-mock-judge-public-fixture-salt"
 MOCK_JUDGE_CREATED_AT: Final[str] = "2026-09-17T00:00:00Z"
 
 _TOPICS_MARKER: Final[str] = "Topics expected to be covered:\n"
+#: A dossier entry's opening line. The trailing letters accept the
+#: disambiguating suffix ADR 0100 gives two cited papers that share a
+#: surname and a year (`[Zhang, 2024a]`), and the required newline keeps
+#: this anchored on the dossier rather than on a citation that happens
+#: to start a line of the briefing quoted above it.
 _CITED_SOURCE_RE: Final[re.Pattern[str]] = re.compile(
-    r"^\[([^\]\n]+,\s*\d{4})\]\n", re.MULTILINE
+    r"^\[([^\]\n]+,\s*\d{4}[a-z]*)\]\n", re.MULTILINE
 )
 _PAPER_RE: Final[re.Pattern[str]] = re.compile(r"^\[(\d+)\] ", re.MULTILINE)
 
@@ -111,45 +123,18 @@ class MockJudgeFixture(StrictContractModel):
         return self
 
 
-class MockTopicDecision(StrictContractModel):
-    """One topic-coverage decision in a synthetic reading."""
-
-    topic: Annotated[str, StringConstraints(min_length=1)]
-    covered: bool
-    reason: Annotated[str, StringConstraints(min_length=1)]
-
-
-class MockCompletenessOutput(StrictContractModel):
-    """The response shape the completeness rubric is scored from."""
-
-    coverage: tuple[MockTopicDecision, ...]
-
-
-class MockClaimDecision(StrictContractModel):
-    """One claim-level support decision in a synthetic reading."""
-
-    claim: Annotated[str, StringConstraints(min_length=1)]
-    cite: Annotated[str, StringConstraints(pattern=r"^\[[^\]]+,\s*\d{4}\]$")]
-    supported: bool | None
-    reason: Annotated[str, StringConstraints(min_length=1)]
-
-
-class MockFaithfulnessOutput(StrictContractModel):
-    """The response shape the faithfulness rubric is scored from."""
-
-    claims: tuple[MockClaimDecision, ...]
-
-
-class MockRetrievalDecision(MockTopicDecision):
-    """One retrieval decision: coverage, plus the papers behind it."""
-
-    paper_ids: tuple[Annotated[int, Field(ge=0)], ...]
-
-
-class MockRetrievalOutput(StrictContractModel):
-    """The response shape the retrieval-recall rubric is scored from."""
-
-    coverage: tuple[MockRetrievalDecision, ...]
+# The synthetic instrument validates its readings against the *same*
+# models the live judges are asked for (`src.eval.metrics`, ADR 0100).
+# They used to be a second, stricter set defined here, which meant the
+# mock could satisfy a shape the real judge was never asked for — the
+# one thing an execution harness must not be able to do. The old names
+# stay as aliases because they are the imported surface.
+MockTopicDecision = TopicCoverageJudgement
+MockCompletenessOutput = CompletenessJudgeOutput
+MockClaimDecision = ClaimSupportJudgement
+MockFaithfulnessOutput = FaithfulnessJudgeOutput
+MockRetrievalDecision = TopicRetrievalJudgement
+MockRetrievalOutput = RetrievalRecallJudgeOutput
 
 
 class MockJudgeCall(StrictContractModel):
@@ -166,7 +151,8 @@ class MockJudgeCall(StrictContractModel):
         str,
         StringConstraints(
             pattern=(
-                r"^(MockCompletenessOutput|MockFaithfulnessOutput|MockRetrievalOutput)$"
+                r"^(CompletenessJudgeOutput|FaithfulnessJudgeOutput"
+                r"|RetrievalRecallJudgeOutput)$"
             )
         ),
     ]
@@ -213,9 +199,18 @@ class MockJudgeSurface:
         system_prompt: str,
         model_name: str,
         max_tokens: int,
+        schema: type[pydantic.BaseModel] | None = None,
+        temperature: float | None = None,
     ) -> dict[str, Any]:
-        """Answer one judge call from the fixture, refusing a prompt that leaked."""
-        del model_name, max_tokens
+        """Answer one judge call from the fixture, refusing a prompt that leaked.
+
+        `schema` and `temperature` are accepted and discarded: this
+        surface stands in for the gateway, and ADR 0100 has the metrics
+        pass both on every judge call. Refusing them here would make the
+        mock path diverge from the live one at the signature, which is
+        the one place a harness must agree with what it replaces.
+        """
+        del model_name, max_tokens, schema, temperature
         leaked = leaked_identity_terms(prompt, self.forbidden_identity_terms)
         if leaked:
             raise CampaignError(
@@ -224,7 +219,7 @@ class MockJudgeSurface:
             )
 
         if system_prompt == COMPLETENESS_SYSTEM_PROMPT:
-            output: StrictContractModel = MockCompletenessOutput(
+            output: pydantic.BaseModel = MockCompletenessOutput(
                 coverage=tuple(
                     MockTopicDecision(
                         topic=topic,

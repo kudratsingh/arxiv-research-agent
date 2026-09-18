@@ -13,6 +13,7 @@ from src.config import Settings
 from src.eval import metrics as metrics_module
 from src.eval import provenance as provenance_module
 from src.eval.metrics import (
+    NO_EXPECTED_TOPICS,
     CompletenessResult,
     TopicCoverage,
     _aggregate_coverage,
@@ -130,11 +131,31 @@ class TestAggregateCoverage:
         assert result["score"] == 0.0
         assert result["total_topics"] == 2
 
-    def test_score_of_1_when_no_topics_requested(self) -> None:
+    def test_no_requested_topics_scores_none_with_a_reason(self) -> None:
+        # ADR 0100: an empty denominator is not a perfect score. This
+        # used to return 1.0, which is the one answer indistinguishable
+        # from "this run covered everything it was asked to".
         result = _aggregate_coverage({"coverage": []}, [])
-        assert result["score"] == 1.0
+        assert result["score"] is None
+        assert result["reason"] == NO_EXPECTED_TOPICS
         assert result["total_topics"] == 0
         assert result["coverage"] == []
+
+    def test_a_scored_result_carries_no_reason(self) -> None:
+        result = _aggregate_coverage(
+            {"coverage": [{"topic": "a", "covered": True, "reason": "ok"}]}, ["a"]
+        )
+        assert result["score"] == 1.0
+        assert result["reason"] is None
+
+    def test_a_tuple_coverage_field_is_read_like_a_list(self) -> None:
+        # What `model_dump()` returns on the structured-output path. A
+        # list-only check would have read every structured response as
+        # an empty one and scored 0.0 across the board.
+        parsed: dict[str, Any] = {
+            "coverage": ({"topic": "a", "covered": True, "reason": "ok"},)
+        }
+        assert _aggregate_coverage(parsed, ["a"])["score"] == 1.0
 
 
 class TestMeasureCompleteness:
@@ -154,8 +175,10 @@ class TestMeasureCompleteness:
         )
 
         result = measure_completeness("report body", [])
-        assert result["score"] == 1.0
+        assert result["score"] is None
+        assert result["reason"] == NO_EXPECTED_TOPICS
         assert result["total_topics"] == 0
+        assert result["judge"] is None
         assert called["count"] == 0
 
     def test_end_to_end_with_stubbed_judge(
@@ -163,13 +186,8 @@ class TestMeasureCompleteness:
     ) -> None:
         captured: dict[str, Any] = {}
 
-        def fake_judge(
-            *, prompt: str, system_prompt: str, model_name: str, max_tokens: int
-        ) -> dict[str, Any]:
-            captured["prompt"] = prompt
-            captured["system_prompt"] = system_prompt
-            captured["model_name"] = model_name
-            captured["max_tokens"] = max_tokens
+        def fake_judge(**kwargs: Any) -> dict[str, Any]:
+            captured.update(kwargs)
             return {
                 "coverage": [
                     {"topic": "alpha", "covered": True, "reason": "ok"},
@@ -191,6 +209,30 @@ class TestMeasureCompleteness:
         assert "- alpha" in captured["prompt"]
         assert "- beta" in captured["prompt"]
         assert "strict" in captured["system_prompt"].lower()
+
+    def test_the_judge_call_carries_its_schema_and_its_own_temperature(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """EL-11: judges stop sampling at the workflow's temperature."""
+        seen: dict[str, Any] = {}
+
+        def fake_judge(**kwargs: Any) -> dict[str, Any]:
+            seen.update(kwargs)
+            return {"coverage": [{"topic": "a", "covered": True, "reason": "ok"}]}
+
+        monkeypatch.setattr(metrics_module, "call_llm_json", fake_judge)
+        monkeypatch.setattr(
+            metrics_module,
+            "settings",
+            Settings(llm_temperature=0.7, eval_judge_temperature=0.0),
+        )
+
+        result = measure_completeness("report", ["a"])
+
+        assert seen["schema"] is metrics_module.CompletenessJudgeOutput
+        assert seen["temperature"] == 0.0
+        assert result["judge"] is not None
+        assert result["judge"]["schema"] == "CompletenessJudgeOutput"
 
 
 class TestReturnedTypeShape:
