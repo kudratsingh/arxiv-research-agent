@@ -12,6 +12,7 @@ from src.config import Settings
 from src.eval import metrics as metrics_module
 from src.eval import provenance as provenance_module
 from src.eval.metrics import (
+    NO_EXPECTED_TOPICS,
     RetrievalRecallResult,
     TopicRetrieval,
     _aggregate_retrieval,
@@ -115,10 +116,33 @@ class TestAggregateRetrieval:
         assert result["score"] == 0.0
         assert all(c["covered"] is False for c in result["coverage"])
 
-    def test_zero_topics_yields_score_1(self) -> None:
-        result = _aggregate_retrieval({"coverage": []}, [], n_papers=1)
+    def test_a_non_list_paper_ids_field_is_dropped_not_raised(self) -> None:
+        parsed: dict[str, Any] = {
+            "coverage": [
+                {"topic": "a", "covered": True, "paper_ids": "nope", "reason": "ok"}
+            ]
+        }
+        result = _aggregate_retrieval(parsed, ["a"], n_papers=1)
+        assert result["coverage"][0]["paper_ids"] == []
         assert result["score"] == 1.0
+
+    def test_zero_topics_yields_none_with_a_reason(self) -> None:
+        # ADR 0100. The 1.0 this used to return said "retrieval covered
+        # every topic asked of it" about a query that asked for none.
+        result = _aggregate_retrieval({"coverage": []}, [], n_papers=1)
+        assert result["score"] is None
+        assert result["reason"] == NO_EXPECTED_TOPICS
         assert result["total_topics"] == 0
+
+    def test_a_tuple_coverage_field_is_read_like_a_list(self) -> None:
+        parsed: dict[str, Any] = {
+            "coverage": (
+                {"topic": "a", "covered": True, "paper_ids": (0,), "reason": "ok"},
+            )
+        }
+        result = _aggregate_retrieval(parsed, ["a"], n_papers=1)
+        assert result["score"] == 1.0
+        assert result["coverage"][0]["paper_ids"] == [0]
 
 
 class TestMeasureRetrievalRecall:
@@ -135,7 +159,9 @@ class TestMeasureRetrievalRecall:
 
         monkeypatch.setattr(metrics_module, "call_llm_json", _no)
         result = measure_retrieval_recall([_mk_paper("p1", "t")], [])
-        assert result["score"] == 1.0
+        assert result["score"] is None
+        assert result["reason"] == NO_EXPECTED_TOPICS
+        assert result["judge"] is None
         assert calls["n"] == 0
 
     def test_no_papers_returns_zero_no_llm(
@@ -149,7 +175,10 @@ class TestMeasureRetrievalRecall:
 
         monkeypatch.setattr(metrics_module, "call_llm_json", _no)
         result = measure_retrieval_recall([], ["topic-x", "topic-y"])
+        # A real denominator with nothing covered: 0.0 is a measurement,
+        # and stays one (ADR 0100 changed only the empty denominator).
         assert result["score"] == 0.0
+        assert result["reason"] is None
         assert result["total_topics"] == 2
         assert result["covered_topics"] == 0
         assert calls["n"] == 0
@@ -162,11 +191,8 @@ class TestMeasureRetrievalRecall:
     ) -> None:
         captured: dict[str, Any] = {}
 
-        def fake_judge(
-            *, prompt: str, system_prompt: str, model_name: str, max_tokens: int
-        ) -> dict[str, Any]:
-            captured["prompt"] = prompt
-            captured["model_name"] = model_name
+        def fake_judge(**kwargs: Any) -> dict[str, Any]:
+            captured.update(kwargs)
             return {
                 "coverage": [
                     {"topic": "alpha", "covered": True, "paper_ids": [0], "reason": "yes"},
@@ -185,6 +211,30 @@ class TestMeasureRetrievalRecall:
         assert result["covered_topics"] == 1
         assert result["total_topics"] == 2
         assert "[0] Paper A" in captured["prompt"]
+
+    def test_the_judge_call_carries_its_schema_and_its_own_temperature(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """EL-11, retrieval recall's half."""
+        seen: dict[str, Any] = {}
+
+        def fake_judge(**kwargs: Any) -> dict[str, Any]:
+            seen.update(kwargs)
+            return {"coverage": []}
+
+        monkeypatch.setattr(metrics_module, "call_llm_json", fake_judge)
+        monkeypatch.setattr(
+            metrics_module,
+            "settings",
+            Settings(llm_temperature=0.7, eval_judge_temperature=0.0),
+        )
+
+        result = measure_retrieval_recall([_mk_paper("p1", "Paper A")], ["alpha"])
+
+        assert seen["schema"] is metrics_module.RetrievalRecallJudgeOutput
+        assert seen["temperature"] == 0.0
+        assert result["judge"] is not None
+        assert result["judge"]["schema"] == "RetrievalRecallJudgeOutput"
 
 
 class TestReturnedTypes:

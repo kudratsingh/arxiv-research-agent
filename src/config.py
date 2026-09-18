@@ -1177,6 +1177,26 @@ class Settings(BaseSettings):
             "across a judge swap compares two different instruments."
         ),
     )
+    eval_judge_temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Sampling temperature for the LLM-as-judge metrics only, "
+            "read instead of `llm_temperature` on the three judge "
+            "calls. 0.0 by default because a grader that resamples its "
+            "own verdicts adds variance to every measurement taken with "
+            "it, and that variance is indistinguishable on the row from "
+            "a real difference between two arms. The workflow keeps "
+            "`llm_temperature`: this changes the instrument, not the "
+            "thing being measured. Like `llm_temperature` it reaches "
+            "only models whose capability row accepts sampling "
+            "parameters and is silently dropped elsewhere (ADR 0077); "
+            "the value actually sent is recorded on every judged metric "
+            "result. Changing it rebaselines the judged metrics. See "
+            "ADR 0100."
+        ),
+    )
     eval_seed: int = Field(
         default=0,
         ge=0,

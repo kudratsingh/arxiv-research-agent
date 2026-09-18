@@ -117,3 +117,27 @@ show it.
     (tracked as `feat/faithfulness-fulltext-source`).
   - Add a small hand-labeled calibration set once metrics run in
     real evals (same idea as the completeness follow-up in ADR 0006).
+
+## Amendment — 2026-09-17 (ADR 0100)
+
+Three claims above are no longer true of the shipped metric.
+
+- **"Judged against the cited paper's abstract" is now conditional.**
+  `measure_faithfulness` accepts the reader's ranked chunks per cited paper
+  and puts them in the dossier beside the abstract. The negative consequence
+  recorded above — that real faithfulness is systematically underestimated
+  for a reader working from full text — therefore applies only to the
+  `abstract_only` scope, which every result now declares. It is still the
+  scope every caller in this repository lands on until LE-S persists the
+  chunks.
+- **The `(surname, year)` dossier key was not an identity.** Two cited papers
+  sharing one dropped the first silently, so the "defensive override on
+  `supported=true` for missing sources" it describes was, for that case,
+  protecting a verdict taken against the wrong paper. The metric now keys the
+  dossier by `paper_id`, and a cite naming two papers abstains rather than
+  resolving.
+- **"Score is a fraction of claims actually judgeable" broke on an empty
+  denominator**, which returned 1.0. It now returns `None` with a reason.
+
+The single-call extract-and-judge shape, the abstention denominator and the
+defensive override all stand.
