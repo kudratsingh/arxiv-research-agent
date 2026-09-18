@@ -64,6 +64,7 @@ from src.campaign.manifest import (
     CorpusModeChoice,
     DenominatorPolicy,
     derive_campaign_id,
+    frozen_settings_snapshot,
     seal_campaign_manifest,
     write_json,
 )
@@ -114,6 +115,11 @@ ARM_CONFIG_DIRNAME: Final[str] = "arm-configs"
 #: for: the sequential runner keeps its own output layout untouched.
 DEFAULT_OUTPUT_ROOT: Final[str] = "outputs/campaign/research-policy-v1"
 
+# Groundedness is a deterministic research metric. Only these three rubric
+# calls consume the judge budget; deriving this from the four research metric
+# rows used to overstate the judge call ceiling by one.
+JUDGE_RUBRIC_COUNT: Final[int] = 3
+
 #: A probe that hands the planner one compiled graph shape per arm. The
 #: planner never compiles a graph itself — `build_workflow` reads the
 #: process-global settings singleton, so a planner that tried to probe
@@ -150,6 +156,7 @@ class CampaignRequest(StrictContractModel):
     )
     lineage: CampaignLineage | None = None
     intended_use: IntendedUse = IntendedUse.DEVELOPMENT
+    frozen_settings: Mapping[str, Any] = Field(default_factory=dict)
 
 
 class CampaignTaskSet(StrictContractModel):
@@ -265,7 +272,7 @@ def plan_campaign(
     stamp = _stamp(moment)
     lock = _resolve_lock(request, resolver=resolver, now=moment)
     receipt = validate_lock(lock, validated_at=stamp, validator_ref=_validator_ref())
-    protocol = _protocol(request)
+    protocol = _protocol(request, config=config)
     protocol_digest = sha256_digest(protocol)
     lock_digest = sha256_digest(lock)
     campaign_id = derive_campaign_id(
@@ -743,9 +750,7 @@ def default_episode_budget(
     ).execution_limits
     judge_calls = 0
     if Decimal(judge_usd) > 0:
-        from src.eval.metrics import RESEARCH_RUBRICS
-
-        judge_calls = len(RESEARCH_RUBRICS)
+        judge_calls = JUDGE_RUBRIC_COUNT
     total = Decimal(workflow_usd) + Decimal(judge_usd)
     try:
         return EpisodeBudget(
@@ -778,6 +783,13 @@ def default_campaign_budget(total_usd: str = "0.000000") -> CampaignBudget:
 def _assert_same_campaign(manifest: CampaignManifestV1, request: CampaignRequest) -> None:
     """Refuse a resume whose request is not the campaign on disk."""
     payload = manifest.payload
+    # Resume callers from before frozen settings were part of CampaignRequest
+    # omit this field. Compare them against the sealed values on disk; an
+    # explicitly supplied mapping still has to match exactly.
+    if not request.frozen_settings:
+        request = request.model_copy(
+            update={"frozen_settings": dict(payload.protocol.frozen_settings)}
+        )
     derived = derive_campaign_id(
         protocol_digest=sha256_digest(_protocol(request)),
         lock_digest=payload.lock_digest,
@@ -800,7 +812,7 @@ def _assert_same_campaign(manifest: CampaignManifestV1, request: CampaignRequest
     )
 
 
-def _protocol(request: CampaignRequest) -> CampaignProtocol:
+def _protocol(request: CampaignRequest, config: Settings | None = None) -> CampaignProtocol:
     try:
         return CampaignProtocol(
             protocol_id=request.protocol_id,
@@ -817,6 +829,11 @@ def _protocol(request: CampaignRequest) -> CampaignProtocol:
             episode_budget=request.episode_budget,
             campaign_budget=request.campaign_budget,
             denominator_policy=DenominatorPolicy(),
+            frozen_settings=(
+                frozen_settings_snapshot(config)
+                if config is not None
+                else dict(request.frozen_settings)
+            ),
         )
     except ValueError as exc:
         raise CampaignError(f"campaign protocol is not coherent: {exc}") from exc

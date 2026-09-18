@@ -631,6 +631,18 @@ and is worth controlling by swap/AB+BA averaging — but none of these
 judges runs a pairwise comparison, so there is no position to swap
 today. If a pairwise judge is ever added, that control comes with it.
 
+## Campaign variation and live follow-up
+
+Within one campaign, variation means the planner rewords its searches under
+the sealed plan; it does not silently change the arm. Stage 4 is a fresh,
+interleaved A+C campaign with live retrieval and its own manifest, timestamps,
+and resolved source ids. Its results are reported separately from the
+controlled campaign.
+
+The same judge model id is recorded for every judged metric in a campaign.
+Prices remain **ESTIMATE** until the owner re-pins ids and verifies the current
+provider table immediately before credentials are supplied.
+
 ## Deterministic groundedness (no judge)
 
 `src/eval/groundedness.py`. The domain hands this repository a signal

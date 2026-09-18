@@ -219,7 +219,9 @@ should fail at settings load.
 
 ### Common frozen settings
 
-The final manifest must record the exact values. The starting proposal is:
+The final manifest and protocol digest record the exact values below. A change
+to any value creates a new campaign id; values are sealed before the first
+episode.
 
 | Setting | Proposed value |
 |---|---|
@@ -237,6 +239,10 @@ The final manifest must record the exact values. The starting proposal is:
 | `ANTHROPIC_MAX_RETRIES` | `4` |
 | `ANTHROPIC_TIMEOUT_SEC` | `120` |
 | `MAX_COST_USD` | One common per-episode cap, no higher than the current `$2.00` default; exact value requires approval |
+| `ENABLE_STRUCTURED_OUTPUTS` | Exact shared structured-output setting |
+| `EVAL_JUDGE_TEMPERATURE` | Exact judge sampling temperature, when the judge is enabled |
+| `LLM_THINKING` / `LLM_EFFORT` | Exact reasoning settings |
+| `READER_MODEL` / `READER_EFFORT` | Exact reader model and effort |
 | Campaign cap | Required through `--max-budget-usd`; calculated after a no-cost/pilot estimate and approved separately |
 
 The common prompt-isolation setting means A is the fixed graph under the
@@ -295,6 +301,11 @@ After a separate approval, run one repeat on a small, predeclared development
 slice chosen to cover easy, hard, retrieval-heavy, and synthesis-heavy tasks.
 The slice and maximum campaign cost must be written before execution.
 
+The Stage-1 plan artifact predeclares three queries: one straightforward, one
+comparative, and one likely to trigger a planner revision. Its report includes
+tokens per role, revisions per episode, judge JSON parse success, the definition
+used for `claim_count`, surname-year collisions, and abstract-only fallbacks.
+
 Exit: every arm completes, artifacts are valid, observed per-episode costs are
 available, and no arm violates a safety or budget gate. This stage sizes—not
 proves—the full campaign.
@@ -311,6 +322,15 @@ Archive an arm before Stage 3 if it is structurally failing, dominated on every
 target metric, or materially breaches a non-regression gate. Do not eliminate
 an arm only because a noisy mean is lower.
 
+#### Stage 2a checkpoint
+
+Tranche 2a is exactly `--max-episodes 20`. Proceed only when all five checks
+hold: every episode has a retained state record; the live scorer resolves and
+returns structured judged metrics; the stop and budget rules are armed; the
+measured per-role token table and revision count are recorded; and all 20
+episode manifests, retrieval provenance, and denominators reconcile. A failed
+check pauses the tranche and preserves its partial records.
+
 ### Stage 3 — full comparative campaign
 
 Run A plus every surviving candidate over all 20 queries with three repeats.
@@ -319,10 +339,9 @@ drift does not align with one arm. Record start time and retrieval provenance.
 
 ### Stage 4 — live-retrieval robustness follow-up
 
-The core comparison should use the most controlled source snapshot practical.
-A later, separately reported sweep uses live retrieval to measure freshness,
-tool failures, and source drift. Do not mix controlled and live-source episodes
-inside one aggregate.
+Stage 4 is a fresh interleaved A+C campaign. It uses live retrieval to measure
+freshness, tool failures, and source drift; do not append it to the controlled
+campaign or mix its episodes into that aggregate.
 
 ### Stage 5 — human adjudication and promotion decision
 
@@ -339,8 +358,10 @@ previously approved total cap.
 
 Use two primary measures rather than blending them:
 
-1. **Task-rubric success:** proportion of predeclared task-specific rubric
-   items satisfied with admissible evidence.
+1. **Completeness (the task-rubric-success stand-in):** proportion of
+   predeclared task-specific rubric items satisfied with admissible evidence.
+   The current evaluator records completeness; it stands in for
+   `task_rubric_success` until a separate task rubric is implemented.
 2. **Supported-claim precision:** supported factual claims divided by all
    checked factual claims; abstained/unverifiable claims stay visible and do
    not become passes.
@@ -406,6 +427,9 @@ the predeclared contrasts decide the experiment.
   results;
 - treat the checked-in 20-query result as evidence for this benchmark, not a
   universal claim about research agents.
+- pre-register saturation for the R12 checkpoint: stop widening the topic set
+  when mean completeness is at least 0.90 or at least 15 of 20 queries score
+  1.0; otherwise widen the set and document the reason.
 
 ### Task slices
 

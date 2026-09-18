@@ -35,15 +35,11 @@ at run time, and token counts that have never been measured. An approval
 granted today would be spendable and would still be spending against
 unmeasured numbers.
 
-**And a fourth thing, which nobody had noticed until a rehearsal looked
-for it.** P0-WO20 added `python -m src.campaign rehearse`, which walks
-the funded path under the zero-spend sentinel and stops at the
-credential. It reports that §1's `corpus_mode: snapshot` resolves to the
-*mock* corpus, under which every agent is model-free — so the scope this
-packet prices could not spend a dollar if it were approved. §8.3 has the
-measurements and what they leave for the owner to decide. The scope in
-§1 and the figures in §3 are left exactly as they were: correcting them
-would be answering §9.
+**And a fourth thing, which rehearsal makes explicit.** P0-WO20 added
+`python -m src.campaign rehearse`, which walks the funded path under the
+zero-spend sentinel and stops at the credential. The declared scope is now
+`corpus_mode: live`; rehearsal still refuses before credentials and reports
+the after-credential preconditions that remain owner-owned.
 
 **Every token count below is an unmeasured assumption.** They describe
 prompts that exist and have never been run against this benchmark. They
@@ -72,7 +68,7 @@ So: **arm A only, the whole development suite, three repeats.**
 | Arms | **A only** (`fixed`) |
 | Repeats | 3 |
 | Episodes | **60** |
-| Corpus mode | `snapshot` |
+| Corpus mode | `live` |
 | Interleaving | not applicable at one arm; the seed is still recorded |
 | Campaign lock | `sha256:d45d39fd7df5d2ef…` (recompute at plan time; a moved digest is a different campaign) |
 | Judge calls | 3 LLM rubrics per episode (`completeness`, `faithfulness`, `retrieval_recall`); `groundedness` is deterministic (ADR 0074) and free |
@@ -126,7 +122,7 @@ adaptive compute and never once reached the adaptive part.
 
 ## 2. Provider and model ids — RE-PIN BEFORE APPROVAL
 
-**Ids verified on `main` 334280d on 2026-09-17.** The tables below are
+**Ids verified on `main` `dbd4bb8` on 2026-09-17; PRICES STILL ESTIMATE.** The tables below are
 read off `src/llm_models.py` and `src/config.py` rather than
 transcribed, and `python -m src.campaign rehearse` re-reads them on
 every run (§8). What is re-pinned here is the **ids**: every price cell
@@ -247,13 +243,13 @@ is not expressible, and an approval id with a zero cap is not either.
 ### 3.4 In-flight overshoot
 
 12 §18 asks for this by name, because a ceiling with no in-flight rule is
-a ceiling crossed once per concurrency unit.
+a ceiling crossed once per reader fan-out.
 
 `CampaignBudget.enforcement` is
 `"between-episodes-with-in-flight-overshoot-risk"`, and the name is
-honest: the check happens *between* episodes. At concurrency 1 the
-maximum overshoot is one episode's per-episode cap ($1.50). At
-concurrency N it is N × that.
+honest: the check happens *between* episodes. The funded path has one reader
+fan-out per episode; its bound is that fan-out's measured reader work, rather
+than an arbitrary worker-count multiplier.
 
 **Recommendation: run the baseline at concurrency 1.** Sixty episodes at
 an expected ~2 minutes each is about two hours of wall clock, which is
@@ -300,8 +296,8 @@ completed episodes are preserved and the reason is published.
 | `episode-cap-reached` | One episode crosses its per-episode cap | Terminate it `budget_stopped`, **keep it in the denominator**, continue. |
 | `manifest-mismatch` | A sealed episode manifest does not match the declared arm | Stop. A run that cannot prove what it ran is not data. |
 | `provider-drift` | Model id, API version or price table changes mid-campaign | Stop. Episodes before and after measure two instruments; resume as a new campaign against a new lock. |
-| `judge-failure-rate` | More than 10% of episodes lose a primary score to judge failure | Stop and report the null-score denominator. A campaign whose scores are mostly absent is not a variance estimate. |
-| `source-drift` | The resolved corpus mode is not `snapshot`, or the source snapshot digest moves | Stop. Refused at seal time already; a stop rule for the case where it changes between episodes. |
+| `judge-failure-rate` | More than 10% of episodes lose any judged metric to judge failure | Stop and report the null-score denominator. A campaign whose scores are mostly absent is not a variance estimate. |
+| `source-drift` | The resolved corpus mode differs from the declared mode, or retrieval provenance changes | Stop. Retain a retrieval timestamp and resolved source ids for every episode. |
 | `label-or-grader-edit` | Anyone proposes changing a label, rubric or grader after seeing results | **Refuse.** Supersede with a new revision and its own rationale. |
 | `safety-or-privacy-event` | Any hard violation class from ADR 0072, or any leakage of hidden evaluation material | Stop immediately. Gated at absolute zero. |
 
@@ -372,7 +368,7 @@ derives from the tree on each run rather than one this document asserts.
 |---|---|
 | The campaign execution loop does not exist | **Closed by P0-WO07b.** `src/campaign/execute.py` runs the pending episodes of a planned campaign; `completion.json` is written by production code, so the ledger's reconciliation path consumes receipts the loop wrote; `budget_stop_reached` — the between-episodes enforcement §3.4 relies on — has a caller and a test that stops a campaign at its cap. The full `20 x 3 x 5` mock matrix reconciles 300 completed and 0 excluded at `$0.000000` with `llm_calls=0` on every episode ([`15-stage0-qualification-report.md`](15-stage0-qualification-report.md) §12). |
 | §1's scope is prose in this document | **Closed by P0-WO20.** [`campaigns/w12-arm-a-baseline.plan.json`](../../campaigns/w12-arm-a-baseline.plan.json) is the 60-episode arm-A design, checked in: campaign id, protocol and lock digests, the arm declaration digest, the case set in the task set's order, the repeats, the seed, every cap at zero, `chargeable: false`, `network_calls: 0`, and the command that produced it. `tests/test_campaign_plan_artifact.py` re-derives it from `eval_registry/` and compares byte for byte, so a registry change that moves a digest fails a test instead of leaving this packet describing a campaign nobody can plan. |
-| §2's model ids are placeholders | **Closed by P0-WO20.** §2 now carries `src/llm_models.py`'s eleven exact ids and their capability rows, verified on `main` 334280d on 2026-09-17, with the price cells deliberately untouched. |
+| §2's model ids are placeholders | **Closed by P0-WO20.** §2 now carries `src/llm_models.py`'s eleven exact ids and their capability rows, verified on `main` `dbd4bb8` on 2026-09-17, with the price cells deliberately untouched. |
 | Nobody can tell whether *anything else* is missing without funding a run | **Closed by P0-WO20.** `rehearse` is that answer, and 8.2 and 8.3 are what it returns. |
 
 **None of this makes a figure in §3 measured.** The token counts are
@@ -404,12 +400,19 @@ describes a design, not a result.
    replace every assumption in that table with a measurement, and is
    still the cheapest way to make this packet real.
 
-### 8.3 Found by the rehearsal — §1's corpus mode is not a funded run's
+### 8.3 Found by the rehearsal — after-credential preconditions
 
-This one is new, and it is the reason a rehearsal is worth more than a
-re-read.
+The rehearsal proves the mechanical path up to the credential. After that
+boundary the owner still must supply a live scorer, durable per-episode state
+retention, and armed stop rules. Those are prerequisites to a chargeable
+episode, not claims that the zero-spend rehearsal has executed one.
 
-`corpus_mode: snapshot` in §1's table means `CorpusMode.SUPPLIED`, and
+The funded scope is declared `corpus_mode: live`. Mock rehearsal remains a
+zero-spend gateway check; it does not stand in for a live result. The
+resolved mode must match the declared mode, and each episode retains a
+retrieval timestamp and source ids.
+
+`corpus_mode: snapshot` in the historical comparison below means `CorpusMode.SUPPLIED`, and
 `src/contracts/research_binding.py:source_scope` resolves *supplied* to
 exactly one thing: `USE_MOCK_DATA=true`, the five fixture papers of
 ADR 0041. Under that setting ADR 0080 makes all five research agents
@@ -423,41 +426,20 @@ Measured, both ways, on `main` 334280d:
 
 | Deployment | `corpus_mode` | What `rehearse` reports |
 |---|---|---|
-| `USE_MOCK_DATA=true` | `snapshot` | Walks to `provider-credential-probed`. Every earlier step passes; both provider doors refuse under the sentinel. **And no model would ever be called, because mock mode serves every agent.** |
-| `USE_MOCK_DATA=false` | `snapshot` | Refuses at `episode-manifest-sealed`: *"campaign declares corpus_mode=snapshot but the episode resolves to live"*. |
-| `USE_MOCK_DATA=false` | `live`, zero cap | Refuses at `episode-manifest-sealed`: *"episode admission failed closed: task policy forbids chargeable work"* — the metered provider fails closed against a zero budget, exactly as invariant 10 requires. |
-| `USE_MOCK_DATA=false` | `live`, positive caps, approval record | Walks to `provider-credential-probed`. This is the funded shape, and nothing in the path is missing before the credential. |
+| `USE_MOCK_DATA=true` | `live` | Walks to `provider-credential-probed`; the sentinel refuses before a client is built. |
+| `USE_MOCK_DATA=false` | `live`, zero cap | Refuses closed before chargeable work. |
+| `USE_MOCK_DATA=false` | `live`, positive caps, approval record | Walks to `provider-credential-probed`; this is the funded shape. |
 
-**What this means for the decision in §9.** A funded arm-A baseline has
-to be planned `--corpus-mode live`, which moves the campaign id (the id
-digests the protocol) and makes §5's `source-drift` stop rule — written
-as "stop if the resolved corpus mode is not `snapshot`" — read backwards
-for the campaign it would govern. Two consequences the owner is owed
-before answering §9, and neither is fixed here because both are the
-owner's call:
+The live plan is the funded scope. Its campaign id moves when corpus mode or
+any frozen setting changes. Every episode retains retrieval timestamp and
+resolved source ids, and a resolved mode that differs from `live` is source
+drift and stops the campaign.
 
-- **§1's `snapshot` row and §5's `source-drift` rule need restating for
-  a live baseline**, or the baseline needs a controlled corpus that is
-  not the mock fixture set. This repository has no third option today.
-- **The variance a live baseline measures includes arXiv's own
-  variability**, which is not what §1 set out to size. That is a design
-  question for whoever answers §9, not a defect in the code.
+### 8.4 The two plan artifacts
 
-The checked-in plan artifact stays `snapshot` on purpose: it is the
-design §1 describes, published so that this disagreement is visible in a
-diff rather than discovered by an approved run. §8.4 publishes the other
-one beside it.
-
----
-
-### 8.4 The two variants, side by side — REQUIRES OWNER DECISION
-
-§8.3 established that the baseline §1 describes and the baseline §1
-*wants* are not the same campaign. Rather than rewrite §1 on the owner's
-behalf, both designs are now published, produced by the same
-`dry-run --artifact` path from the same registry and differing in
-exactly one argument. Neither is approved, both are sealed at zero caps,
-and planning either one costs nothing and contacts nobody.
+The snapshot and live files are both generated at zero cost for review. The
+snapshot file is retained as a controlled mock comparison; it is not the
+funded scope. The live file is the arm-A baseline named in §1.
 
 | | `snapshot` variant | `live` variant |
 |---|---|---|
@@ -467,9 +449,9 @@ and planning either one costs nothing and contacts nobody.
 | Protocol digest | `sha256:9a7e1805…bd5e5b71` | `sha256:f5b3e627…bebeb063b` |
 | Registry lock digest | `sha256:d45d39fd…c7d20a18` | `sha256:77ceba17…4b2a70bd` |
 | Design matrix | 20 cases × 3 repeats × arm A = 60 | identical, slot for slot |
-| What it would measure | nothing: `snapshot` resolves to `USE_MOCK_DATA=true`, ADR 0080 serves all five agents from `src/agents/mock_mode.py`, no client is constructed | a real arm-A baseline on `supported_claim_precision`, with arXiv's own variability inside the variance |
+| What it would measure | zero-cost mock behavior | a real arm-A baseline, with retrieval variability in the reported variance |
 | What it would cost, funded | `$0.000000` | §3's estimate, once §2's ids are re-priced |
-| §5 `source-drift` | satisfied trivially — the rule stops a run whose corpus is *not* `snapshot` | **reads backwards**: the rule as written would stop this campaign at its first episode |
+| §5 `source-drift` | mode must match `snapshot` | mode must match `live`; timestamp and source ids are retained |
 | `chargeable` / `approval_id` / `network_calls` | `false` / `null` / `0` | `false` / `null` / `0` |
 
 The three digests move together because all three take the corpus mode
@@ -479,17 +461,8 @@ files a choice between variants rather than two different experiments.
 `tests/test_campaign_plan_artifact.py` holds both to byte equality
 against the registry and asserts that exactly those fields differ.
 
-One consequence is visible in the live file itself: its `describes`
-field does **not** carry the packet preface the snapshot file carries,
-because `is_w12_baseline` pins `corpus_mode=snapshot`. That is left as
-it is rather than smoothed over. The live plan is not the scope §1
-states, and a reader who opens the JSON alone should not be told it is.
-
-Funding the live variant means restating §1's corpus row and §5's
-`source-drift` rule. Funding the snapshot variant means accepting that
-the run measures nothing a mock matrix has not already measured. There
-is no third artifact here because this repository has no third option
-today — **the owner chooses; nothing here is approved.**
+The live description identifies the funded scope explicitly. `is_w12_baseline`
+does not pin a snapshot mode; corpus mode remains a sealed protocol field.
 
 ---
 
