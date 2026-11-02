@@ -150,6 +150,9 @@ services:
       # before either session write is forwarded; do not remove without
       # reading that file's header.
       USE_MOCK_DATA: "true"
+      # Opt-in durable-browser tier. Ordinary and pilot stacks stay off.
+      ENABLE_WORKSPACE: "${E2E_WORKSPACE:-false}"
+      WORKSPACE_SCHEDULE_APPROVED: "false"
 
   web:
     container_name: ${E2E_WEB_CONTAINER:-arxiv-wo21-web}
@@ -161,6 +164,7 @@ services:
       # only: `app/api/[...path]/route.ts` injects it upstream and it never
       # reaches the browser.
       ARXIV_API_KEY: "${E2E_API_SECRET:-sk_e2e_local_preview_disabled}"
+      WORKSPACE_LIVE: "${E2E_WORKSPACE:-0}"
 
   redis:
     container_name: ${E2E_REDIS_CONTAINER:-arxiv-wo21-redis}

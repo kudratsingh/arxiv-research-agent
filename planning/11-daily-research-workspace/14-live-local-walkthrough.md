@@ -1,7 +1,7 @@
 # Durable local workspace walkthrough
 
-Implementation batch: 2026-11-02. Based on preview PR #281 (`11154b7`, including
-the verified CI repair). This is the real metadata/manual-reading stage; owner
+Implementation batch: 2026-11-02. Based on preview PR #281 (`139e065`, including
+the verified CI repair and ADR reservation correction). This is the real metadata/manual-reading stage; owner
 experience acceptance and paid generation remain pending.
 
 ## Run locally
@@ -172,6 +172,12 @@ export is available from `python -m src.workspace export --owner personal-local`
 with the same environment as the launcher. The UI Markdown export is portable
 reading context; it is not a complete database backup.
 
+The latest restore check compared all 20 workspace tables by row count and
+canonical-record hash: 83 works, 158 versions/materials and zero active notes
+after private QA cleanup. Its private receipt is
+`outputs/workspace-live/backup-restore-current-receipt.json`; the disposable
+restore database was removed after comparison, and the original was untouched.
+
 ## Deliberate limits
 
 This batch does not establish the 60-record identity qualification set, the
@@ -183,4 +189,39 @@ generation executor. Bounded PDF extraction accepts supplied permitted bytes;
 its real extraction tests use synthetic PDFs, not a new scientific full-text
 acquisition. Those boundaries remain in the implementation sequence.
 
-The supported production launcher uses Next.js standalone output and copies the build static assets. Use `bash scripts/workspace-local.sh dev` for development. A later date-normalization replay added75metadata revisions without additional HTTP reads, retaining83logical works and all earlier source versions. The snapshot/cache and scheduler regression tests include uncommitted ingestion, import anchor/source changes, queued-before-sleep and actual concurrent workers.
+The supported production launcher uses Next.js standalone output and copies
+the build static assets. Use `bash scripts/workspace-local.sh dev` for
+development. A later date-normalization replay added 75 metadata revisions
+without additional HTTP reads, retaining 83 logical works and all earlier
+source versions. The snapshot/cache and scheduler regression tests include
+uncommitted ingestion, import anchor/source changes, queued-before-sleep and
+actual concurrent workers.
+
+## Browser regression tier and remote CI
+
+The existing `web-e2e` CI job also runs the eight durable desktop/mobile cases
+against its authenticated API and real Postgres. It opts in with
+`E2E_WORKSPACE=1` and seeds explicitly labelled **synthetic** metadata through
+`bash web/e2e/support/stack.sh seed-workspace`. That seed makes zero HTTP or
+model requests, keeps the schedule disabled, preserves existing notes/profile
+revisions, and can be repeated without duplicate works or versions. Its five
+source receipts say `not_checked`/`offline_fixture`; they do not assert live
+connector success. The ordinary stack stays workspace-disabled unless opted in.
+CI uploads its screenshots, traces and exports under `web/build/workspace-live`.
+The locally captured 83-work intake receipts remain separate evidence of real
+public reads. A synthetic CI record is never a substitute for those receipts.
+
+The inherited pull-request trigger targeted only `main`, so the first stacked
+head needed explicit workflow dispatch. The follow-up now includes stacked
+`codex/**` bases in the same trigger; its tests and floors are unchanged.
+To inspect or explicitly verify a branch when needed:
+
+```bash
+gh workflow run ci.yml --ref codex/daily-workspace-live
+gh run list --branch codex/daily-workspace-live --limit 3
+```
+
+Check the reported head SHA before attributing a result. Manual dispatch runs
+the full legacy browser matrix; it does not change the existing tiers, inputs
+or coverage floors. The current run/head receipt is kept with local outputs and
+the draft PR description, rather than claiming every future head has passed.
