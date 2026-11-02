@@ -21,7 +21,7 @@ if hasattr(support, "workspace_pg"):
 pytestmark = pytest.mark.integration
 
 
-@pytest.mark.parametrize("verb", ["migrate", "worker-once", "refresh", "export"])
+@pytest.mark.parametrize("verb", ["migrate", "initialize", "worker-once", "refresh", "export"])
 def test_real_workspace_commands(store, monkeypatch, capsys, verb):
     monkeypatch.setattr(cli, "get_pool", lambda: store.pool)
     closed = []
@@ -34,6 +34,15 @@ def test_real_workspace_commands(store, monkeypatch, capsys, verb):
     assert closed == [True]
     if verb == "migrate":
         assert "schema migrated" in output
+    elif verb == "initialize":
+        assert store.profile("a")["revision"] == 1
+        original = store.profile("a")
+        cli.main()
+        assert store.profile("a") == original
+        from src.workspace.schemas import ProfileWrite
+        store.write_profile("a", ProfileWrite(revision=1, request_id="owner-edit", data=ProfileData(research_question="My edited question")))
+        cli.main()
+        assert store.profile("a")["data"]["research_question"] == "My edited question"
     elif verb == "worker-once":
         assert json.loads(output)["state"] == "idle"
     elif verb == "refresh":
