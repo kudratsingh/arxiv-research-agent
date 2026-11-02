@@ -6,6 +6,14 @@ import { usePreview } from "./state";
 export function Library() {
   const { data } = usePreview();
   const items = ITEMS.filter((item) => data.saved.includes(item.id));
+  function exportPreview() {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "research-preview-original.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
   function exportNotes() {
     const body = [
       "# My research workspace — preview export",
@@ -46,6 +54,7 @@ export function Library() {
           Export notes as Markdown
         </button>
       </div>
+      <button className="daily-secondary" onClick={exportPreview}>Download preview JSON for explicit import</button>
       <div className="daily-columns">
         <section>
           <h2>Saved reading</h2>

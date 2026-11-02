@@ -34,12 +34,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
-from typing import Annotated, Final, Literal
+from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
+from typing import TYPE_CHECKING, Annotated, Final, Literal
 
 from pydantic import Field, StringConstraints, model_validator
 
 from src.contracts.kernel import StrictContractModel
+
+if TYPE_CHECKING:
+    from src.config import Settings
 
 #: How long a verified price may stand before an estimate built on it
 #: has to be re-derived. Thirty days is not a market fact — provider
@@ -181,109 +184,202 @@ def reestimate_from_measurements(
     *,
     revision_count: int,
     episodes: int = 60,
-    max_papers: int = 10,
-    judge_model: str = "claude-sonnet-4-6",
+    max_papers: int | None = None,
+    judge_model: str | None = None,
+    config: Settings | None = None,
+    revision_targets: Sequence[Literal["planner", "search", "synthesizer"]] | None = None,
     prices: Mapping[str, Mapping[str, float]] | None = None,
     prices_last_verified: str | None = None,
     priced_on: str = "1970-01-01",
 ) -> CostEstimate:
-    """Re-price W12 from measured role token quantiles.
+    """Re-price the fixed W12 graph without constructing any model client.
 
-    The median is the expected path; ``revision_count`` adds the measured
-    revision passes to workflow roles. The packet's 1.25x rule is applied to
-    the expected total for both caps. Prices are supplied by the product's
-    table, never invented here.
+    ``revision_count`` counts completed extra passes: zero still includes the
+    initial critic. Explicit targets follow ``route_after_critique``; without
+    them, planner revisions conservatively repeat the whole workflow. Expected
+    lines use median tokens and normal synthesis attempts. Caps use observed
+    maximum tokens, the configured TOTAL critic-pass ceiling, full planner
+    revisions and both possible synthesis attempts per pass. Judges run once
+    after the final report. SDK retries/unknown billing are not measured here.
+
+    Optional legacy paper/model arguments remain usable; when ``config`` is
+    supplied they must agree with it, so a model route is never silently priced
+    differently from that effective configuration. Unsupported graph policies
+    are refused rather than assigned the fixed graph's cost.
     """
-    if revision_count < 0 or episodes <= 0 or max_papers <= 0:
-        raise ValueError("revision_count, episodes and max_papers must be non-negative/positive")
-    table = prices
-    verified = prices_last_verified
-    if table is None or verified is None:
-        table, verified = current_price_table()
+    from src.config import settings as default_config
 
-    def direction_row(value: Mapping[str, int] | int, quantile_name: str) -> Mapping[str, int]:
-        """One quantile of the compact shape, refused if it is not a row."""
-        if not isinstance(value, Mapping):
-            raise ValueError(f"measured quantile {quantile_name!r} must map direction to token count")
-        return value
+    cfg = config if config is not None else default_config
+    papers = cfg.max_papers if max_papers is None else max_papers
+    judge = cfg.eval_judge_model if judge_model is None else judge_model
+    if (
+        type(revision_count) is not int
+        or revision_count < 0
+        or type(episodes) is not int
+        or episodes <= 0
+        or type(papers) is not int
+        or papers <= 0
+        or revision_count >= cfg.max_iterations
+    ):
+        raise ValueError(
+            "revision_count must fit max_iterations total critic passes; episodes/max_papers must be positive integers"
+        )
+    if config is not None and (papers != cfg.max_papers or judge != cfg.eval_judge_model):
+        raise ValueError("paper bound and judge route must match the supplied configuration")
+    if (
+        cfg.research_policy != "legacy"
+        or cfg.enable_supervisor
+        or cfg.enable_verifier
+        or cfg.enable_query_refiner
+        or cfg.compute_controller != "off"
+    ):
+        raise ValueError(
+            "measured estimator supports only the fixed legacy graph without supervisor, verifier, refiner or controller"
+        )
+    targets = (
+        tuple(revision_targets) if revision_targets is not None else ("planner",) * revision_count
+    )
+    if len(targets) != revision_count or any(
+        target not in {"planner", "search", "synthesizer"} for target in targets
+    ):
+        raise ValueError("revision_targets must name one routable target per completed revision")
+    if (prices is None) != (prices_last_verified is None):
+        raise ValueError("prices and prices_last_verified must be supplied together")
+    table, verified = current_price_table() if prices is None else (prices, prices_last_verified)
+    assert verified is not None
+    date.fromisoformat(verified)
+    date.fromisoformat(priced_on)
 
     def count(value: Mapping[str, int] | int, field: str) -> int:
-        """One token count of the flat shape, refused if it is a row."""
-        if isinstance(value, Mapping):
-            raise ValueError(f"measured field {field!r} must be a token count, not a mapping")
-        return int(value)
+        if type(value) is not int:
+            raise ValueError(f"measured field {field!r} must be an integer token count")
+        return value
 
     def quantile(role: str) -> MeasuredRoleTokens:
         raw = measured_roles[role]
         if isinstance(raw, MeasuredRoleTokens):
             return raw
-        # Accept the compact ledger shape:
-        # {"min": {"input": ..., "output": ...}, "median": ..., "max": ...}
         if "median" in raw:
-            minimum = direction_row(raw["min"], "min")
-            median = direction_row(raw["median"], "median")
-            maximum = direction_row(raw["max"], "max")
 
-            def token(row: Mapping[str, int], direction: str) -> int:
-                return int(row.get(direction, row.get(f"{direction}_tokens", 0)))
+            def token(quantile_name: str, direction: str) -> int:
+                row = raw[quantile_name]
+                if not isinstance(row, Mapping):
+                    raise ValueError(
+                        f"measured quantile {quantile_name!r} must map direction to token count"
+                    )
+                key = direction if direction in row else f"{direction}_tokens"
+                return count(row[key], key)
 
             return MeasuredRoleTokens(
-                input_min=token(minimum, "input"),
-                input_median=token(median, "input"),
-                input_max=token(maximum, "input"),
-                output_min=token(minimum, "output"),
-                output_median=token(median, "output"),
-                output_max=token(maximum, "output"),
+                input_min=token("min", "input"),
+                input_median=token("median", "input"),
+                input_max=token("max", "input"),
+                output_min=token("min", "output"),
+                output_median=token("median", "output"),
+                output_max=token("max", "output"),
             )
         return MeasuredRoleTokens(
             input_min=count(raw["input_min"], "input_min"),
-            input_median=count(raw.get("input_median", raw.get("median_input", 0)), "input_median"),
+            input_median=count(
+                raw["input_median"] if "input_median" in raw else raw["median_input"],
+                "input_median",
+            ),
             input_max=count(raw["input_max"], "input_max"),
             output_min=count(raw["output_min"], "output_min"),
-            output_median=count(raw.get("output_median", raw.get("median_output", 0)), "output_median"),
+            output_median=count(
+                raw["output_median"] if "output_median" in raw else raw["median_output"],
+                "output_median",
+            ),
             output_max=count(raw["output_max"], "output_max"),
         )
 
-    role_calls = {
-        "planner": episodes,
-        "reader": episodes * max_papers,
-        "synthesizer": episodes,
-        "critic": episodes * revision_count,
-        "completeness": episodes,
-        "faithfulness": episodes,
-        "retrieval_recall": episodes,
+    workflow_roles = ("planner", "reader", "synthesizer", "critic")
+    judge_roles = ("completeness", "faithfulness", "retrieval_recall")
+    roles = workflow_roles + judge_roles
+    if set(measured_roles) - set(roles):
+        raise ValueError("unmodeled measured roles require a different cost model")
+    measured = {role: quantile(role) for role in roles}
+    expected_calls = {
+        "planner": 1 + targets.count("planner"),
+        "reader": papers * (1 + sum(target in {"planner", "search"} for target in targets)),
+        "synthesizer": 1 + revision_count,
+        "critic": 1 + revision_count,
+        **dict.fromkeys(judge_roles, 1),
     }
-    lines: list[JudgeCallLine] = []
-    for role, calls in role_calls.items():
-        if calls == 0:
-            continue
-        measured = quantile(role)
-        model = judge_model if role in {"completeness", "faithfulness", "retrieval_recall"} else "claude-sonnet-4-6"
-        lines.append(
+    worst_calls = {
+        "planner": cfg.max_iterations,
+        "reader": papers * cfg.max_iterations,
+        "synthesizer": 2 * cfg.max_iterations,
+        "critic": cfg.max_iterations,
+        **dict.fromkeys(judge_roles, 1),
+    }
+    models = {role: cfg.model_for(role) for role in workflow_roles}
+    models.update(dict.fromkeys(judge_roles, judge))
+    # Estimates refuse unpriced/negative/non-finite rows; no runtime fallback.
+    for model in set(models.values()):
+        row = table[model]
+        for direction in ("input", "output"):
+            rate = Decimal(str(row[direction]))
+            if not rate.is_finite() or rate < 0:
+                raise ValueError("prices must be finite non-negative USD per million tokens")
+
+    def lines(counts: Mapping[str, int], maximum: bool) -> tuple[JudgeCallLine, ...]:
+        return tuple(
             JudgeCallLine(
                 label=role,
-                model_id=model,
-                calls=calls,
-                input_tokens_per_call=measured.input_median,
-                output_tokens_per_call=measured.output_median,
-                note="measured Stage-1 median tokens; min/median/max retained in the ledger",
+                model_id=models[role],
+                calls=episodes * counts[role],
+                input_tokens_per_call=measured[role].input_max
+                if maximum
+                else measured[role].input_median,
+                output_tokens_per_call=measured[role].output_max
+                if maximum
+                else measured[role].output_median,
+                note=(
+                    "Stage-1 observed maximum per-call tokens; full planner passes and synthesis corrective retry"
+                    if maximum
+                    else "Stage-1 measured median per-call tokens; initial pass plus declared revision targets"
+                ),
             )
+            for role in roles
         )
-    expected = sum(line.cost_usd(table) for line in lines)
-    cap = (expected * Decimal("1.25")).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
-    per_episode = (cap / Decimal(episodes)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+
+    expected_lines, worst_lines = lines(expected_calls, False), lines(worst_calls, True)
+    # Do not round each tiny line down before deriving a cap. Round the envelope
+    # UP to a micro-dollar, then multiply so the campaign covers every episode.
+    worst_total = sum(
+        (
+            Decimal(line.calls)
+            * (
+                Decimal(line.input_tokens_per_call) * Decimal(str(table[line.model_id]["input"]))
+                + Decimal(line.output_tokens_per_call)
+                * Decimal(str(table[line.model_id]["output"]))
+            )
+            / Decimal(TOKENS_PER_MILLION)
+            for line in worst_lines
+        ),
+        Decimal(0),
+    )
+    per_episode = (worst_total / Decimal(episodes) * Decimal("1.25")).quantize(
+        Decimal("0.000001"), rounding=ROUND_CEILING
+    )
+    cap = per_episode * episodes
     return CostEstimate(
         estimate_id="w12-measured-reestimate",
-        revision="1.0.0",
-        prepared_for=f"W12 arm-A baseline, {episodes} episodes, {revision_count} revisions",
+        revision="2.0.0",
+        prepared_for=f"W12 fixed arm-A baseline, {episodes} episodes, {revision_count} completed revisions; at most {cfg.max_iterations} critic passes",
         priced_on=priced_on,
         prices_last_verified=verified,
-        judge_lines=tuple(lines),
+        judge_lines=expected_lines,
+        worst_case_lines=worst_lines,
+        measured_roles=measured,
+        measured_revision_targets=targets,
+        maximum_critic_passes=cfg.max_iterations,
         per_episode_cap_usd=f"{per_episode:.6f}",
         campaign_cap_usd=f"{cap:.6f}",
-        overshoot_behaviour="one in-flight episode at concurrency 1; cap is 1.25x measured expected spend",
-        stop_conditions=CALIBRATION_STOP_CONDITIONS[:1],
-        note="Measured-token re-estimate; prices remain ESTIMATE until the owner verifies them.",
+        overshoot_behaviour="One in-flight reader fan-out; both caps use 1.25x observed-max tokens at full planner-pass and synthesis-retry ceilings, rounded up per episode. SDK retries/unknown billing require separate reservations.",
+        stop_conditions=CALIBRATION_STOP_CONDITIONS[:2],
+        note="Measured-token re-estimate; prices remain ESTIMATE. Missing revision targets conservatively mean planner revisions. Observed token maxima are measurements, not hard provider output limits or an approval. Actual routes and quantiles are retained; SDK retries, caching and unknown spend are not inferred.",
     )
 
 
@@ -373,6 +469,10 @@ class CostEstimate(StrictContractModel):
     priced_on: Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$")]
     prices_last_verified: Annotated[str, StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$")]
     judge_lines: tuple[JudgeCallLine, ...] = ()
+    worst_case_lines: tuple[JudgeCallLine, ...] = ()
+    measured_roles: Mapping[str, MeasuredRoleTokens] = Field(default_factory=dict)
+    measured_revision_targets: tuple[str, ...] = ()
+    maximum_critic_passes: int | None = None
     expert_lines: tuple[ExpertTimeLine, ...] = ()
     per_episode_cap_usd: Annotated[str, StringConstraints(pattern=r"^\d+\.\d{6}$")]
     campaign_cap_usd: Annotated[str, StringConstraints(pattern=r"^\d+\.\d{6}$")]
@@ -385,9 +485,7 @@ class CostEstimate(StrictContractModel):
     @model_validator(mode="after")
     def caps_and_conditions_are_present(self) -> CostEstimate:
         if not self.stop_conditions:
-            raise ValueError(
-                "an estimate without stop conditions is a budget, not a plan (07 §9)"
-            )
+            raise ValueError("an estimate without stop conditions is a budget, not a plan (07 §9)")
         ids = [condition.condition_id for condition in self.stop_conditions]
         if len(set(ids)) != len(ids):
             raise ValueError("stop condition ids must be unique")
@@ -442,6 +540,18 @@ class CostEstimate(StrictContractModel):
                 f"= ${line.cost_usd(prices)}"
             )
         rendered.append(f"    total model spend ${self.model_cost_usd(prices)}")
+        if self.worst_case_lines:
+            rendered.append(
+                f"  cap basis: observed-max tokens, up to {self.maximum_critic_passes} total critic passes and two synthesis attempts/pass"
+            )
+            for worst in self.worst_case_lines:
+                rendered.append(
+                    f"    {worst.label}: {worst.calls} calls on {worst.model_id}, {worst.input_tokens_per_call} in / {worst.output_tokens_per_call} out"
+                )
+            for role, measured in self.measured_roles.items():
+                rendered.append(
+                    f"    measured {role}: min/median/max input {measured.input_min}/{measured.input_median}/{measured.input_max}, output {measured.output_min}/{measured.output_median}/{measured.output_max}"
+                )
         rendered.append("  expert time")
         for expert in self.expert_lines:
             rendered.append(
@@ -643,24 +753,26 @@ def worked_example(
                 note="Pairwise labeling is deferred until a pairwise judge exists.",
             )
         )
-    expert_lines.extend([
-        ExpertTimeLine(
-            label="adjudication of disputed items",
-            role="adjudicator",
-            items=max(1, items // 4),
-            minutes_per_item=10.0,
-            annotators_per_item=1,
-            note="The disputed fraction is a planning figure, not a measurement.",
-        ),
-        ExpertTimeLine(
-            label="guide authoring and annotator calibration session",
-            role="reviewer",
-            items=1,
-            minutes_per_item=240.0,
-            annotators_per_item=1,
-            note="One session to agree the guide before labeling.",
-        ),
-    ])
+    expert_lines.extend(
+        [
+            ExpertTimeLine(
+                label="adjudication of disputed items",
+                role="adjudicator",
+                items=max(1, items // 4),
+                minutes_per_item=10.0,
+                annotators_per_item=1,
+                note="The disputed fraction is a planning figure, not a measurement.",
+            ),
+            ExpertTimeLine(
+                label="guide authoring and annotator calibration session",
+                role="reviewer",
+                items=1,
+                minutes_per_item=240.0,
+                annotators_per_item=1,
+                note="One session to agree the guide before labeling.",
+            ),
+        ]
+    )
     return CostEstimate(
         estimate_id="judge-calibration-pilot",
         revision="1.0.0",

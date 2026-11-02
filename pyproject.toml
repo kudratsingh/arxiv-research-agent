@@ -53,6 +53,7 @@ dependencies = [
     "reportlab>=4.2.0,<6.0",
     "python-docx>=1.1.0,<2.0",
     "defusedxml>=0.7.1,<0.8",
+    "urllib3>=2.7.0,<3.0",
 ]
 
 [project.optional-dependencies]
@@ -117,6 +118,7 @@ namespaces = false
 
 [tool.setuptools.package-data]
 "src.eval" = ["mock_judge_fixture.json"]
+"src.workspace" = ["migrations/*.sql"]
 
 [tool.ruff]
 line-length = 100

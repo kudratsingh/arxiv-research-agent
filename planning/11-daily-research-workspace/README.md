@@ -78,3 +78,5 @@ Use [STATUS.md](STATUS.md) for the live work record and
 [the baseline and walkthrough](12-w0-w1-baseline-and-walkthrough.md) for the
 first runnable milestone, checks and unresolved evidence. The broader product
 is not complete at the fixture milestone.
+
+The live follow-up is documented in [the local walkthrough](14-live-local-walkthrough.md), [current status](STATUS.md) and [unexecuted generation proposal](15-grounded-generation-approval-packet.md).

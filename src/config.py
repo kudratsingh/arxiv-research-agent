@@ -1577,6 +1577,15 @@ class Settings(BaseSettings):
     # Comment-fenced like the section above, so the Phase W merge queue
     # can order every card's config edit without a textual collision
     # (planning/07-learning-platform/05-WEDGE-WORK-ORDERS.md §5.4).
+    enable_workspace: bool = Field(
+        default=False,
+        description="Enable durable personal workspace routes; authenticated named principal and Postgres required.",
+    )
+    workspace_schedule_approved: bool = Field(
+        default=False,
+        description="Operator records explicit owner confirmation of recurring local schedule time; off by default.",
+    )
+
     enable_learn_content: bool = Field(
         default=False,
         description=(

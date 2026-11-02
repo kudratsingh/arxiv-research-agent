@@ -73,6 +73,12 @@ describe("criterion 2 — the route group adds no URL segment", () => {
       "/library",
       "/library/items/[id]",
       "/today",
+      "/workspace/interests",
+      "/workspace/items/[id]",
+      "/workspace/library",
+      "/workspace/operations",
+      "/workspace/radar",
+      "/workspace/today",
     ]);
   });
 
@@ -88,7 +94,7 @@ describe("criterion 2 — the route group adds no URL segment", () => {
     // (04 §2.1: "both wrap manually today").
     for (const page of pages) {
       expect(
-        page.file.startsWith("(workspace)/") || page.file.startsWith("(learn)/") || page.file.startsWith("(daily)/"),
+        page.file.startsWith("(workspace)/") || page.file.startsWith("(learn)/") || page.file.startsWith("(daily)/") || page.file.startsWith("(live)/"),
         `${page.file} is outside a shell-owning group`,
       ).toBe(true);
     }

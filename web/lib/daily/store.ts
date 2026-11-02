@@ -1,6 +1,6 @@
 import { RESEARCH_QUESTION, STREAMS } from "./profile";
 
-/** ADR 0103: disposable preview data, never a job or credential store. */
+/** the workspace ADR proposal: disposable preview data, never a job or credential store. */
 export const PREVIEW_KEY = "arxiv-agent.workspace-preview.v1";
 export interface Entry {
   id: string;

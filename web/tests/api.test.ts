@@ -487,6 +487,19 @@ describe("the committed OpenAPI snapshot", () => {
       "/research/{job_id}/export",
       "/research/{job_id}/review",
       "/research/{job_id}/stream",
+      "/workspace/edition",
+      "/workspace/entries",
+      "/workspace/export",
+      "/workspace/generate",
+      "/workspace/import/apply",
+      "/workspace/import/preview",
+      "/workspace/items",
+      "/workspace/manual",
+      "/workspace/profile",
+      "/workspace/reading",
+      "/workspace/refresh",
+      "/workspace/schedule",
+      "/workspace/state",
     ]);
   });
 

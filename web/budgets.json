@@ -153,6 +153,25 @@
       "pr": "Daily workspace W0/W1, ADR 0103",
       "measuredBytes": 310082,
       "why": "Derived sum follows the CSS-only movement: 192512 + 15872 + 109568 = 317952. Existing JS and font ceilings are unchanged."
+    },
+    {
+      "row": "emitted-css",
+      "from": 15872,
+      "to": 17408,
+      "date": "2026-11-02",
+      "pr": "W2-W6 durable live workspace follow-up",
+      "measuredBytes": 16309,
+      "headroom": "+6.7%",
+      "why": "Six real API routes reuse the daily shell. New responsive forms, retained-source version notices, readable focusable receipts and outage/recovery states add1267B over the measured W1 CSS baseline15042B. The old15872B ceiling breaches by437B. Reusing only the built W1 stylesheet would fit15042B but omits live form/receipt/mobile presentation. Keep the usable layout, add1536B allowance and preserve every JS ceiling and the measurement script."
+    },
+    {
+      "row": "derived-total-first-load",
+      "from": 317952,
+      "to": 319488,
+      "date": "2026-11-02",
+      "pr": "W2-W6 durable live workspace follow-up",
+      "measuredBytes": 311507,
+      "why": "Reported only, defined as conversationJS192512 + CSS17408 + fonts109568 =319488. Follows CSS allowance by1536B."
     }
   ],
   "rows": [
@@ -250,8 +269,8 @@
       "id": "emitted-css",
       "kind": "emitted-css",
       "label": "All emitted CSS",
-      "budgetBytes": 15872,
-      "budgetLabel": "15.5 KiB",
+      "budgetBytes": 17408,
+      "budgetLabel": "17 KiB",
       "baselineBytes": 4288,
       "gate": "every PR",
       "enforcement": "gated",
@@ -285,8 +304,8 @@
       "id": "derived-total-first-load",
       "kind": "derived-total-first-load",
       "label": "Derived: total first-load transfer for `/c/[id]`, cold cache",
-      "budgetBytes": 317952,
-      "budgetLabel": "310.5 KiB",
+      "budgetBytes": 319488,
+      "budgetLabel": "312 KiB",
       "baselineBytes": null,
       "gate": "reported, not gated",
       "enforcement": "reported",
@@ -349,6 +368,84 @@
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
       "note": "W1 initial measurement 156705 B on the patched Next.js 16.4.4 build. Same 160 KiB allowance for each daily route; the largest starts with 4.6% headroom. Existing route ceilings do not change."
+    },
+    {
+      "id": "route-js-live-today",
+      "kind": "route-first-load-js",
+      "route": "/workspace/today",
+      "label": "`/workspace/today` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "Measured 154,732 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
+    },
+    {
+      "id": "route-js-live-radar",
+      "kind": "route-first-load-js",
+      "route": "/workspace/radar",
+      "label": "`/workspace/radar` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "Measured 154,498 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
+    },
+    {
+      "id": "route-js-live-interests",
+      "kind": "route-first-load-js",
+      "route": "/workspace/interests",
+      "label": "`/workspace/interests` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "Measured 161,087 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
+    },
+    {
+      "id": "route-js-live-library",
+      "kind": "route-first-load-js",
+      "route": "/workspace/library",
+      "label": "`/workspace/library` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "Measured 156,627 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
+    },
+    {
+      "id": "route-js-live-items-reader",
+      "kind": "route-first-load-js",
+      "route": "/workspace/items/[id]",
+      "label": "`/workspace/items/[id]` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "Measured 156,214 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
+    },
+    {
+      "id": "route-js-live-operations",
+      "kind": "route-first-load-js",
+      "route": "/workspace/operations",
+      "label": "`/workspace/operations` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "Measured 153,446 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
     }
   ]
 }
