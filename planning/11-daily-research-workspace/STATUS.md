@@ -30,7 +30,7 @@ The owner checkout remains at `dbd4bb8` with its original local changes.
 |---|---|---|
 | Preview CI diagnosis | Original run `41468750549` cancelled at the explicit 15-minute ceiling; report module 523.4 s, no evidence of a hung DB | Remaining Python stages were unrun in that original run |
 | Preview CI repair | Shared real 300-episode report retains all 57 tests and 344 assertions; targeted 127 tests, 256.24 → 173.46 s; all 9 jobs green at `11154b7`, Python 15m37s | Latest `139e065` only moves the ADR proposal unnumbered; its new remote CI is tracked separately |
-| Mandatory Python patch gate | 5,800 passed, 54 skipped, 53 e2e deselected; project 94.54%, reported patch 99% | 54 local legacy Postgres-binary skips remain; new workspace integration ran against real isolated Compose Postgres |
+| Mandatory Python patch gate | 5,802 passed, 54 skipped, 53 e2e deselected; project 94.54%, reported patch 99% | 54 local legacy Postgres-binary skips remain; new workspace integration ran against real isolated Compose Postgres |
 | Package coverage floors | API 88 ≥ 86, agents 96 ≥ 92, security 100 ≥ 97, eval 95 ≥ 91 | Same full-source coverage report, floors unchanged |
 | Python e2e / scripted research | 53 passed; 20/20 scripted episodes, 0 errors, $0.0000 | Scripted research is a regression check, not live generated-quality evidence |
 | Registry / typing / lint | 260 objects, 0 mismatches; strict mypy 153 modules; Ruff pass | No registry object or funded protocol digest changed |
