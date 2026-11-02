@@ -1,4 +1,4 @@
-# 0103. Build a personal daily research workspace
+# Proposal: Build a personal daily research workspace
 
 - **Status**: proposed implementation ADR for the owner-adopted direction; number allocation must be reconciled before merge
 - **Date**: 2026-11-02
@@ -6,10 +6,10 @@
 
 ## Context
 
-The September coordination board reserved 0103 for LE-E. This branch proposes
-the next unmerged ADR for the newly prioritized workspace; it does not consume
-that reservation through a merge. Reconcile the number with the coordinator
-before merging. The owner has explicitly moved the personal workflow ahead of
+The September coordination board reserved 0103 for LE-E and 0104 for a verifier
+follow-up. The daily workspace proposal is deliberately unnumbered until the
+coordinator allocates a free number. No reservation is consumed or overwritten;
+the numeric index remains dense through 0102. Assign and index a number before merge. The owner has explicitly moved the personal workflow ahead of
 the old evaluation-first sequence; its required evaluation fixes remain W7.
 
 The owner selected daily briefings and guided deep dives, local operation, and

@@ -197,7 +197,7 @@ change under `web/`, and both are enforced rather than trusted.
 ### Rule 1 — two cosmetic preferences and an isolated workspace preview
 
 The existing workbench writes **two cosmetic preferences** (RC-05), both
-defined in `web/lib/tokens.ts`. ADR [0103](decisions/0103-personal-daily-research-workspace.md)
+defined in `web/lib/tokens.ts`. ADR [workspace proposal](decisions/proposals/personal-daily-research-workspace.md)
 adds one isolated data key for the opt-in daily-workspace preview only:
 
 | Key | Values | What it is |
