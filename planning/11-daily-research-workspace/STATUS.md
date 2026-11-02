@@ -7,7 +7,7 @@ Paid services require a separate, concrete approval before activation.
 
 | Card | Branch / concrete output | Evidence / remaining boundary |
 |---|---|---|
-| W0 | `codex/daily-workspace-preview`, base `88d283d`; ADR 0103; direction kit preserved | Shared `main` remains unchanged. Gates below pass locally. ADR number is proposed pending reconciliation before merge |
+| W0 | `codex/daily-workspace-preview`, base `88d283d`; unnumbered workspace ADR proposal; direction kit preserved | Shared `main` remains unchanged. Gates below pass locally. Proposal deliberately unnumbered; ADR 0103 remains reserved for LE-E |
 | W1 | Opt-in `/today`, `/interests`, `/library`, `/library/items/[id]` | Connected fictional preview; browser-only continuity. Eight desktop/mobile browser cases pass, including keyboard-only completion, dark theme, export and return continuity; owner experience review pending |
 | W2 | Next: principal-scoped Postgres interests, canonical items and reading state | Browser preview data must have an explicit import/export path; no silent migration |
 | W3–W6 | Bounded arXiv/approved RSS metadata intake, finite ranking, manual reading, local catch-up | Source selection, adapter terms, schema/identity/restart gates and schedule confirmation before activation |

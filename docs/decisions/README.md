@@ -866,8 +866,6 @@ never renumbered.
   caps and cost; frozen settings become part of the campaign digest; and
   the packet records the remaining live-evaluation preconditions.
 
-- [0103](0103-personal-daily-research-workspace.md) — **Build a personal daily research workspace.** Prioritize the daily briefing, source reader and saved research question; preserve the query workflow and separate metadata, preview and approved generated analysis.
-
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.
@@ -878,3 +876,5 @@ never renumbered.
 
 If you're not sure whether a decision warrants an ADR, err toward
 writing one. They're cheap to write and priceless six months later.
+
+Unallocated proposal: [Personal daily research workspace](proposals/personal-daily-research-workspace.md). ADR 0103 remains reserved for LE-E; this proposal requires allocation before merge.
