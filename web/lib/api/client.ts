@@ -47,6 +47,23 @@ export const API_BASE = "/api";
  */
 export const DEFAULT_READ_TIMEOUT_MS = 15_000;
 
+/** Workspace calls share the existing same-origin transport and error boundary. */
+export async function requestWorkspaceJSON<T>(
+  path: string,
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
+  const response = await request(`/workspace/${path}`, {
+    method: body === undefined ? "GET" : "POST",
+    cache: "no-store",
+    ...(body === undefined ? {} : {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  }, { signal }, path === "refresh" ? 120_000 : DEFAULT_READ_TIMEOUT_MS);
+  return response.json() as Promise<T>;
+}
+
 export interface RequestOptions {
   /** Caller cancellation. Composed with the timeout, never replaced. */
   signal?: AbortSignal;

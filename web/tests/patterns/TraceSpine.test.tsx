@@ -486,13 +486,13 @@ describe("criterion 6 — an <ol> of four in a labelled region, with a nested <o
     }
   });
 
-  it("keeps live announcements in the two shell-specific owners", () => {
-    // Each rendered shell has one announcer. ADR 0103 adds a separate
-    // daily shell that never mounts TraceSpine.
+  it("keeps live announcements in the three shell-specific owners", () => {
+    // Each rendered shell has one announcer. Preview and live workspace
+    // shells each own a region and never mount TraceSpine.
     const files = listFiles("components").filter((file) => file.endsWith(".tsx"));
     expect(files.length).toBeGreaterThan(10);
     const owners = files.filter((file) => /role=\{?["']status["']\}?/.test(code(file)));
-    expect(owners.sort()).toEqual(["components/daily/Announcement.tsx", "components/patterns/TraceSpine.tsx"]);
+    expect(owners.sort()).toEqual(["components/daily/Announcement.tsx", "components/patterns/TraceSpine.tsx", "components/workspace/Common.tsx"]);
   });
 
   it("announces material transitions and never an individual checkpoint", () => {
