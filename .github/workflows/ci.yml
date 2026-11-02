@@ -203,13 +203,16 @@ jobs:
     # That file belongs to another work order, so this is a gap with an
     # address rather than a shrug.
     runs-on: ubuntu-latest
-    # Was 10 when this job ran one uninstrumented pytest invocation and
-    # finished in 214 s. It is 299 s now (numbers above), and the ceiling
-    # also has to cover a cold pip resolve when the lock changes and the
-    # setup-python cache misses. 15 is headroom, not a budget: a job that
-    # dies at its ceiling reports nothing at all, which is the exact
-    # failure `web-audit` was split out to prevent.
-    timeout-minutes: 15
+    # Run 41468750549 hit the old 15-minute job ceiling while coverage
+    # was still making progress (38%, no failures). It selected 5,636
+    # tests, compared with the historical ~3,208 behind the timings above.
+    # Campaign execution alone took 523 s: its repeated report assertions
+    # each reran the new nested 10,000-resample intervals. They now share
+    # one real immutable report; no matrix, resamples or assertions shrink.
+    # Keep a bounded 30-minute ceiling for the enlarged suite plus cold
+    # install, and publish slow-test timings to measure the corrected run.
+    # This is headroom, not evidence of a successful remote coverage run.
+    timeout-minutes: 30
     env:
       # Never a real key, in a job that now runs the e2e tier and the
       # adversarial safety suite as well as the unit and integration
@@ -240,9 +243,8 @@ jobs:
         #
         # Same bound as `typecheck`'s copy of this step, and the reasoning is
         # written out there. 80 s measured here (33936777399), 72 s on
-        # 33935998295; seven minutes leaves eight of this job's fifteen for a
-        # remainder that measures 200 s, which is every gate below getting to
-        # report rather than being cancelled behind a stuck install.
+        # 33935998295. Keep this network bound independent of the enlarged
+        # test ceiling: a stuck install must still fail before the tiers.
         timeout-minutes: 7
         run: |
           python -m pip install --upgrade pip
@@ -312,7 +314,7 @@ jobs:
         # to this number: a floor lifted to the CI measurement is a floor
         # no developer can meet before pushing.
         env:
-          PYTEST_ADDOPTS: --cov-report=xml:build/coverage.xml
+          PYTEST_ADDOPTS: --cov-report=xml:build/coverage.xml --durations=25
         run: |
           set -o pipefail
           mkdir -p build
