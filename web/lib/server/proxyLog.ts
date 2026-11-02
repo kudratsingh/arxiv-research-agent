@@ -58,6 +58,19 @@ export const LITERAL_SEGMENTS: ReadonlySet<string> = new Set([
   "sessions",
   "stream",
   "turn",
+  "workspace",
+  "state",
+  "reading",
+  "entries",
+  "refresh",
+  "edition",
+  "items",
+  "manual",
+  "import",
+  "preview",
+  "apply",
+  "schedule",
+  "generate",
 ]);
 
 /** What an unrecognised segment is replaced by. Never the value itself. */

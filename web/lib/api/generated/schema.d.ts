@@ -464,6 +464,266 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspace/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get State
+         * @description Read the owner's private profile, reading records and current public candidates.
+         */
+        get: operations["get_state_workspace_state_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Profile
+         * @description Create an interest revision with optimistic concurrency and retry identity.
+         */
+        post: operations["save_profile_workspace_profile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/reading": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Reading
+         * @description Save read state and a source-version anchor without moving existing notes.
+         */
+        post: operations["save_reading_workspace_reading_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Entry
+         * @description Save an authored note, question or next action against an immutable version.
+         */
+        post: operations["save_entry_workspace_entries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Sources
+         * @description Fetch at most one bounded page per approved connector; no model work occurs.
+         */
+        post: operations["refresh_sources_workspace_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/edition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Build Edition
+         * @description Freeze a finite metadata edition using the current profile and stored receipts.
+         */
+        post: operations["build_edition_workspace_edition_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Items
+         * @description Filter a stable observation cutoff with a cursor bound to the actual filters.
+         */
+        get: operations["list_items_workspace_items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Manual Save
+         * @description Save a controlled identifier as honest metadata/link-only; no arbitrary URL fetch.
+         */
+        post: operations["manual_save_workspace_manual_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Import
+         * @description Show an explicit import diff without modifying either browser or server records.
+         */
+        post: operations["preview_import_workspace_import_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/import/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Import
+         * @description Apply the reviewed import once; conflicting private notes remain untouched.
+         */
+        post: operations["apply_import_workspace_import_apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Schedule
+         * @description Persist local scheduling preferences; activation requires separate owner confirmation.
+         */
+        post: operations["save_schedule_workspace_schedule_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Notes
+         * @description Export authored text with the exact work/version/anchor context and source URL.
+         */
+        get: operations["export_notes_workspace_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Generation
+         * @description Refuse before importing or constructing any provider; a key is never approval.
+         */
+        post: operations["request_generation_workspace_generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -526,6 +786,89 @@ export interface components {
             created_at: number;
             /** Updated At */
             updated_at: number;
+        };
+        /** Edition */
+        Edition: {
+            /** Id */
+            id: string;
+            /** Created At */
+            created_at: string;
+            /** Profile Revision */
+            profile_revision: number;
+            /** Minutes */
+            minutes: number;
+            /** Work Ids */
+            work_ids: string[];
+            /** Work Versions */
+            work_versions?: {
+                [key: string]: string;
+            };
+            /** Coverage */
+            coverage: components["schemas"]["SourceStatus"][];
+            /** Status */
+            status: string;
+        };
+        /** EntryData */
+        EntryData: {
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "question" | "note" | "next-action";
+            /** Body */
+            body: string;
+            /**
+             * Anchor
+             * @default abstract:0
+             */
+            anchor: string;
+        };
+        /** EntryRevision */
+        EntryRevision: {
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "question" | "note" | "next-action";
+            /** Body */
+            body: string;
+            /**
+             * Anchor
+             * @default abstract:0
+             */
+            anchor: string;
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+        };
+        /** EntryWrite */
+        EntryWrite: {
+            /** Id */
+            id: string;
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["EntryData"];
+        };
+        /** GenerationRequest */
+        GenerationRequest: {
+            /** Work Id */
+            work_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "deep-dive";
         };
         /**
          * GoalClaim
@@ -620,6 +963,58 @@ export interface components {
             dependencies?: {
                 [key: string]: string;
             };
+        };
+        /** ImportApply */
+        ImportApply: {
+            record: components["schemas"]["PreviewRecord"];
+            /** Profile Revision */
+            profile_revision: number;
+            /**
+             * Import Profile
+             * @default false
+             */
+            import_profile: boolean;
+            /** Digest */
+            digest: string;
+        };
+        /** ImportPreview */
+        ImportPreview: {
+            /** Digest */
+            digest: string;
+            /** Entries New */
+            entries_new: number;
+            /** Entries Existing */
+            entries_existing: number;
+            /** Conflicts */
+            conflicts: string[];
+            /** Profile Will Change */
+            profile_will_change: boolean;
+            /**
+             * Original Retained
+             * @default true
+             * @constant
+             */
+            original_retained: true;
+        };
+        /** ImportRequest */
+        ImportRequest: {
+            record: components["schemas"]["PreviewRecord"];
+            /** Profile Revision */
+            profile_revision: number;
+            /**
+             * Import Profile
+             * @default false
+             */
+            import_profile: boolean;
+        };
+        /** ItemPage */
+        ItemPage: {
+            /** Items */
+            items: components["schemas"]["WorkItem"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** As Of */
+            as_of: string;
         };
         /**
          * JobDetail
@@ -918,6 +1313,55 @@ export interface components {
             /** Artifacts */
             artifacts: components["schemas"]["ProgressEvidence"][];
         };
+        /** ManualRequest */
+        ManualRequest: {
+            /** Value */
+            value: string;
+        };
+        /** MaterialVersion */
+        MaterialVersion: {
+            /** Version Id */
+            version_id: string;
+            /** Version Label */
+            version_label: string;
+            /**
+             * Abstract
+             * @default
+             */
+            abstract: string;
+            /**
+             * Access State
+             * @default metadata
+             */
+            access_state: string;
+            /**
+             * Content Hash
+             * @default
+             */
+            content_hash: string;
+            /**
+             * Fetched At
+             * @default
+             */
+            fetched_at: string;
+            /**
+             * Source Scope
+             * @default abstract
+             */
+            source_scope: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Url
+             * @default
+             */
+            url: string;
+            /** Authors */
+            authors?: string[];
+        };
         /**
          * Plan
          * @description The planner's output, exposed for HITL review (ADR 0030).
@@ -938,6 +1382,91 @@ export interface components {
              * @description Planner-generated arXiv search queries. The planner emits 2-6; the cap of 20 items x 500 chars is generous headroom (ADR 0042).
              */
             search_queries?: string[];
+        };
+        /** PreviewEntry */
+        PreviewEntry: {
+            /** Id */
+            id: string;
+            /** Itemid */
+            itemId: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "question" | "note" | "next-action";
+            /** Body */
+            body: string;
+            /** Anchor */
+            anchor: string;
+        };
+        /** PreviewRecord */
+        PreviewRecord: {
+            /**
+             * Revision
+             * @constant
+             */
+            revision: 1;
+            /** Topics */
+            topics: string[];
+            /** Customtopics */
+            customTopics: string[];
+            /** Configured */
+            configured: boolean;
+            /**
+             * Minutes
+             * @enum {integer}
+             */
+            minutes: 5 | 15 | 45;
+            /** Saved */
+            saved: string[];
+            /** Entries */
+            entries: components["schemas"]["PreviewEntry"][];
+            /** Anchors */
+            anchors: {
+                [key: string]: string;
+            };
+            /** Done */
+            done: boolean;
+            /** Researchquestion */
+            researchQuestion: string;
+            /** Streams */
+            streams: string[];
+        };
+        /** ProfileData */
+        ProfileData: {
+            /** Topics */
+            topics?: string[];
+            /** Custom Topics */
+            custom_topics?: string[];
+            /** Exclusions */
+            exclusions?: string[];
+            /** Streams */
+            streams?: string[];
+            /**
+             * Minutes
+             * @default 15
+             * @enum {integer}
+             */
+            minutes: 5 | 15 | 45;
+            /**
+             * Research Question
+             * @default
+             */
+            research_question: string;
+            /**
+             * Exploration
+             * @default 0.15
+             */
+            exploration: number;
+        };
+        /** ProfileRevision */
+        ProfileRevision: {
+            /**
+             * Revision
+             * @default 0
+             */
+            revision: number;
+            data?: components["schemas"]["ProfileData"];
         };
         /**
          * ProfileUpdateRequest
@@ -972,6 +1501,14 @@ export interface components {
              * @default
              */
             profile_note: string;
+        };
+        /** ProfileWrite */
+        ProfileWrite: {
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["ProfileData"];
         };
         /**
          * ProgressDailySessions
@@ -1086,6 +1623,68 @@ export interface components {
              */
             event_ids: string[];
         };
+        /** ReadingData */
+        ReadingData: {
+            /**
+             * Status
+             * @default unread
+             * @enum {string}
+             */
+            status: "unread" | "saved" | "read" | "archived" | "dismissed" | "snoozed";
+            /**
+             * Anchor
+             * @default abstract:0
+             */
+            anchor: string;
+            /**
+             * Version Id
+             * @default
+             */
+            version_id: string;
+            /** Snoozed Until */
+            snoozed_until?: string | null;
+        };
+        /** ReadingRevision */
+        ReadingRevision: {
+            /**
+             * Status
+             * @default unread
+             * @enum {string}
+             */
+            status: "unread" | "saved" | "read" | "archived" | "dismissed" | "snoozed";
+            /**
+             * Anchor
+             * @default abstract:0
+             */
+            anchor: string;
+            /**
+             * Version Id
+             * @default
+             */
+            version_id: string;
+            /** Snoozed Until */
+            snoozed_until?: string | null;
+            /**
+             * Revision
+             * @default 0
+             */
+            revision: number;
+        };
+        /** ReadingWrite */
+        ReadingWrite: {
+            /** Work Id */
+            work_id: string;
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["ReadingData"];
+        };
+        /** RefreshRequest */
+        RefreshRequest: {
+            /** Source Ids */
+            source_ids?: string[];
+        };
         /**
          * ResearchAccepted
          * @description `POST /research` response — 202 Accepted, work now in flight.
@@ -1156,6 +1755,57 @@ export interface components {
             status: string;
             /** Action */
             action: string;
+        };
+        /** ScheduleData */
+        ScheduleData: {
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Timezone
+             * @default America/Los_Angeles
+             */
+            timezone: string;
+            /**
+             * Local Time
+             * @default 07:00
+             */
+            local_time: string;
+        };
+        /** ScheduleRevision */
+        ScheduleRevision: {
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Timezone
+             * @default America/Los_Angeles
+             */
+            timezone: string;
+            /**
+             * Local Time
+             * @default 07:00
+             */
+            local_time: string;
+            /**
+             * Revision
+             * @default 0
+             */
+            revision: number;
+            /** Next Check */
+            next_check?: string | null;
+        };
+        /** ScheduleWrite */
+        ScheduleWrite: {
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            data: components["schemas"]["ScheduleData"];
         };
         /**
          * SessionAccepted
@@ -1357,6 +2007,24 @@ export interface components {
              */
             level: "none" | "aware" | "working" | "solid";
         };
+        /** SourceStatus */
+        SourceStatus: {
+            /** Source Id */
+            source_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @default not_checked
+             */
+            status: string;
+            /** Last Success At */
+            last_success_at?: string | null;
+            /** Receipt */
+            receipt?: {
+                [key: string]: unknown;
+            };
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1369,6 +2037,103 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WorkItem */
+        WorkItem: {
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Source Id */
+            source_id: string;
+            /**
+             * Source Record Id
+             * @default
+             */
+            source_record_id: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Authors */
+            authors?: string[];
+            /**
+             * Abstract
+             * @default
+             */
+            abstract: string;
+            /**
+             * Access State
+             * @default metadata
+             */
+            access_state: string;
+            /** Categories */
+            categories?: string[];
+            /** Published At */
+            published_at?: string | null;
+            /** Updated At */
+            updated_at?: string | null;
+            /**
+             * Published Precision
+             * @default unknown
+             */
+            published_precision: string;
+            /**
+             * Updated Precision
+             * @default unknown
+             */
+            updated_precision: string;
+            /** First Seen At */
+            first_seen_at: string;
+            /** Fetched At */
+            fetched_at: string;
+            /**
+             * Content Hash
+             * @default
+             */
+            content_hash: string;
+            /**
+             * Version Label
+             * @default observed
+             */
+            version_label: string;
+            /**
+             * Kind
+             * @default paper
+             */
+            kind: string;
+            /** Versions */
+            versions?: components["schemas"]["MaterialVersion"][];
+            reading?: components["schemas"]["ReadingRevision"];
+            /** Entries */
+            entries?: components["schemas"]["EntryRevision"][];
+            /** Reasons */
+            reasons?: string[];
+        };
+        /** WorkspaceState */
+        WorkspaceState: {
+            /** Principal Key Id */
+            principal_key_id: string;
+            profile: components["schemas"]["ProfileRevision"];
+            /** Works */
+            works: components["schemas"]["WorkItem"][];
+            /** Sources */
+            sources: components["schemas"]["SourceStatus"][];
+            /** Editions */
+            editions: components["schemas"]["Edition"][];
+            schedule: components["schemas"]["ScheduleRevision"];
+            /** Tasks */
+            tasks?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Generation
+             * @default approval_required
+             * @constant
+             */
+            generation: "approval_required";
+            /** As Of */
+            as_of: string;
         };
     };
     responses: never;
@@ -1935,6 +2700,401 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SessionTurnAccepted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_state_workspace_state_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceState"];
+                };
+            };
+        };
+    };
+    save_profile_workspace_profile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileRevision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_reading_workspace_reading_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadingWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadingRevision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_entry_workspace_entries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntryRevision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_sources_workspace_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    build_edition_workspace_edition_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Edition"];
+                };
+            };
+        };
+    };
+    list_items_workspace_items_get: {
+        parameters: {
+            query?: {
+                q?: string;
+                source_id?: string;
+                access_state?: string;
+                status?: string;
+                days?: number;
+                cursor?: string;
+                as_of?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    manual_save_workspace_manual_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_import_workspace_import_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_import_workspace_import_apply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportApply"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_schedule_workspace_schedule_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleRevision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_notes_workspace_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
+    };
+    request_generation_workspace_generate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

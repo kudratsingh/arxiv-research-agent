@@ -219,7 +219,17 @@ versioned, bounded preview interests, reading anchors and user notes. The UI
 labels browser-only storage and offers Markdown export. Failed writes remain
 unsaved and visible. This data is separate from jobs and credentials; W2 must
 replace it with principal-scoped server persistence before daily-use acceptance.
-Further storage keys require their own decision.
+The live `/workspace/*` routes keep authoritative data in authenticated,
+owner-scoped Postgres. Explicit import previews the original preview JSON and
+never erases it. `arxiv-agent.workspace-drafts.v1` is an additional **sessionStorage**
+exception for unsaved reader text only: a bounded, versioned map keyed by
+principal + work + immutable source version. A confirmed server save clears
+only that draft. An outage or revision conflict retains it; a new principal
+cannot load another principal's entry. The UI labels recovery as unsaved.
+It contains no credential, job, provider response or approval. Storage failure
+leaves the mounted draft intact and asks the user to keep/copy the text.
+Clearing the browser session can still lose unsaved drafts. Other storage keys
+require their own decision.
 
 ### Rule 2 — the budget ratchet
 

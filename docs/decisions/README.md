@@ -866,6 +866,7 @@ never renumbered.
   caps and cost; frozen settings become part of the campaign digest; and
   the packet records the remaining live-evaluation preconditions.
 
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

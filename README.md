@@ -308,7 +308,7 @@ redesign (brief, tokens, architecture, work orders, gate reviews) is
 
 Every feature added after Sprint 1 is behind an independent flag so
 comparisons against the Sprint 1 baseline stay apples-to-apples.
-`Settings` declares **twenty `enable_*` flags**, and the **eight** of
+`Settings` declares **twenty-one `enable_*` flags**, and the **eight** of
 them in the table below are the Sprint 2-3 workflow-behavior set: every
 one of those defaults **off**, and every one can be switched on by
 itself, which is what *independent* is asserted to mean here. (The
@@ -329,13 +329,13 @@ flag.) Full list in `src/config.py`.
 
 The table stops at Sprint 3 because it tracks *workflow-behavior*
 flags — the ones that change what the agents do and so must stay
-independently toggleable for A/B eval runs. The other **twelve**
+independently toggleable for A/B eval runs. The other **thirteen**
 `enable_*` flags are named here rather than left implicit, because a
 flag nobody lists is a switch nobody knows to throw. Four are API and
 infrastructure concerns that default **on** (`enable_hitl`,
 `enable_checkpointing`, `enable_job_redriver`, `enable_retry_budget`);
-three default off and change no agent behaviour (`enable_api_auth`,
-`enable_tracing`, `enable_metrics`); four are the learning
+four default off and change no agent behaviour (`enable_api_auth`,
+`enable_tracing`, `enable_metrics`, `enable_workspace`); four are the learning
 platform's ladder, all off and deliberately **not** independent of one
 another — `enable_learner_profile` needs `enable_api_auth`,
 `enable_session_loop` needs `enable_learner_profile`, and
@@ -580,7 +580,7 @@ restarts (the compose stack wires this up automatically).
 
 Every PR and every push to `main` runs **nine parallel jobs**, with no
 `needs:` edge between any of them: ruff, strict mypy, the whole Python
-suite (**over 5,300 tests**, every tier including `e2e`, under enforced
+suite (**over 5,800 tests**, every tier including `e2e`, under enforced
 project, per-package and patch coverage floors, publishing the
 adversarial suite's attack-success rate as an artifact), a Docker image
 build with base and production compose-file
