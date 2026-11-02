@@ -112,6 +112,17 @@ case "${1:-}" in
     E2E_COMPOSE_PROJECT="${project}" E2E_PILOT="${pilot}" \
       bash "${here}/../fixtures/seed.sh"
     ;;
+  seed-workspace)
+    if [ "${E2E_WORKSPACE:-}" != "1" ] || [ "${pilot}" = "1" ]; then
+      echo 'seed-workspace requires E2E_WORKSPACE=1 and a non-pilot disposable test stack.' >&2
+      exit 2
+    fi
+    # Stdin keeps /app on sys.path; this never runs a script from a foreign
+    # directory or calls the refresh/provider path. It does not clear notes.
+    compose exec -T -e WORKSPACE_E2E_SEED=1 \
+      -e "E2E_PRINCIPAL=${E2E_PRINCIPAL:-e2e}" app python - \
+      < "${here}/../fixtures/workspace_seed.py"
+    ;;
   url)
     echo "${base_url}"
     ;;
@@ -127,7 +138,7 @@ case "${1:-}" in
     compose down
     ;;
   *)
-    echo "usage: stack.sh {up|seed|url|logs|down}" >&2
+    echo "usage: stack.sh {up|seed|seed-workspace|url|logs|down}" >&2
     exit 2
     ;;
 esac

@@ -12,7 +12,8 @@ name: ci
 # for a gate that can hang, or one whose failure would be misattributed
 # — which is `web-audit`, and the reasoning is written out there.
 #
-# Runs on every PR against `main` and on every push to `main`. The
+# Runs on every PR against `main` or a stacked `codex/` base, and on every
+# push to `main`. Stacked workspace PRs otherwise had no checks at all. The
 # nightly eval (`.github/workflows/eval-nightly.yml`) is the only
 # workflow in this repository that makes real model calls; this one does
 # not consume Anthropic credits. Two different tiers are called "e2e"
@@ -46,7 +47,7 @@ name: ci
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'codex/**']
   push:
     branches: [main]
   schedule:
@@ -1066,6 +1067,9 @@ jobs:
       ANTHROPIC_API_KEY: local-preview-disabled
       # WO-24 criterion 4: chromium only per PR; every project nightly.
       E2E_FULL_MATRIX: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+      # Real API/Postgres browser tier with explicitly synthetic metadata;
+      # no public feed or provider is contacted by its seed or tests.
+      E2E_WORKSPACE: "1"
     defaults:
       run:
         working-directory: web
@@ -1146,6 +1150,12 @@ jobs:
           else
             npm run e2e -- --project=chromium
           fi
+      - name: Durable workspace desktop/mobile (real API/Postgres, synthetic metadata)
+        timeout-minutes: 5
+        run: |
+          bash ./e2e/support/stack.sh seed-workspace
+          WORKSPACE_LIVE_URL="http://127.0.0.1:${E2E_WEB_PORT:-13210}" \
+            npx playwright test --config=live-workspace-e2e/playwright.config.ts
       - name: Capture the proxy request log
         # WO-30 / 05-MIGRATION.md C6. The suite has just driven every §4 state
         # through the same-origin proxy, so the web container's stdout now
@@ -1179,6 +1189,7 @@ jobs:
           path: |
             web/build/e2e
             web/build/workspace
+            web/build/workspace-live
           if-no-files-found: warn
           retention-days: 14
       - name: Stack logs on failure
