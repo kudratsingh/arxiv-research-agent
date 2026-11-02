@@ -1,0 +1,5199 @@
+{
+  "schema_version": "1.0.0",
+  "seed_version": "0.1.0",
+  "created_on": "2026-11-02",
+  "status": "proposal_seed_not_runtime_catalog",
+  "purpose": "Broad selectable study navigation with detailed ML tracks. Expand through versioned external taxonomy import and user-defined interests.",
+  "authorship": {
+    "external_domain_and_field_labels": "OpenAlex metadata retrieved 2026-11-02; CC0 metadata. All 26 field anchors included.",
+    "study_and_ml_nodes": "Original product navigation suggestions, not an official taxonomy; field membership is a navigation choice, not a scholarly classification assertion.",
+    "not_claimed": [
+      "exhaustive coverage of all knowledge",
+      "all sources integrated",
+      "official mapping for authored children",
+      "guaranteed relevance or full-text access"
+    ]
+  },
+  "external_taxonomy": {
+    "provider": "OpenAlex",
+    "hierarchy": "domain > field > subfield > topic",
+    "documentation": "https://help.openalex.org/data/topics/",
+    "field_api": "https://api.openalex.org/fields",
+    "retrieved_on": "2026-11-02",
+    "import_next": [
+      "Fetch/cache versioned /subfields and /topics dictionaries under current API limits",
+      "Keep external IDs separate from authored interest IDs",
+      "Human-review many-to-many fine-grained mappings",
+      "Retain unclassified and user-defined topics"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "oa-domain:1",
+      "label": "Life Sciences",
+      "kind": "external_domain",
+      "parent_ids": [],
+      "external_refs": [
+        {
+          "scheme": "openalex-domain",
+          "id": "1",
+          "uri": "https://openalex.org/domains/1"
+        }
+      ]
+    },
+    {
+      "id": "oa-domain:2",
+      "label": "Social Sciences",
+      "kind": "external_domain",
+      "parent_ids": [],
+      "external_refs": [
+        {
+          "scheme": "openalex-domain",
+          "id": "2",
+          "uri": "https://openalex.org/domains/2"
+        }
+      ]
+    },
+    {
+      "id": "oa-domain:3",
+      "label": "Physical Sciences",
+      "kind": "external_domain",
+      "parent_ids": [],
+      "external_refs": [
+        {
+          "scheme": "openalex-domain",
+          "id": "3",
+          "uri": "https://openalex.org/domains/3"
+        }
+      ]
+    },
+    {
+      "id": "oa-domain:4",
+      "label": "Health Sciences",
+      "kind": "external_domain",
+      "parent_ids": [],
+      "external_refs": [
+        {
+          "scheme": "openalex-domain",
+          "id": "4",
+          "uri": "https://openalex.org/domains/4"
+        }
+      ]
+    },
+    {
+      "id": "oa-field:11",
+      "label": "Agricultural and Biological Sciences",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:1"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "11",
+          "uri": "https://openalex.org/fields/11"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:11/agronomy-and-crop-science",
+      "label": "Agronomy and crop science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:11"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Agronomy and crop science"
+      ]
+    },
+    {
+      "id": "study:11/forestry",
+      "label": "Forestry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:11"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Forestry"
+      ]
+    },
+    {
+      "id": "study:11/fisheries-and-aquaculture",
+      "label": "Fisheries and aquaculture",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:11"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Fisheries and aquaculture"
+      ]
+    },
+    {
+      "id": "study:11/ecology-and-biodiversity",
+      "label": "Ecology and biodiversity",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:11"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Ecology and biodiversity"
+      ]
+    },
+    {
+      "id": "study:11/plant-science",
+      "label": "Plant science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:11"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Plant science"
+      ]
+    },
+    {
+      "id": "study:11/animal-science",
+      "label": "Animal science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:11"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Animal science"
+      ]
+    },
+    {
+      "id": "study:11/food-science",
+      "label": "Food science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:11"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Food science"
+      ]
+    },
+    {
+      "id": "study:11/soil-science",
+      "label": "Soil science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:11"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Soil science"
+      ]
+    },
+    {
+      "id": "oa-field:12",
+      "label": "Arts and Humanities",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:2"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "12",
+          "uri": "https://openalex.org/fields/12"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:12/history",
+      "label": "History",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "History"
+      ]
+    },
+    {
+      "id": "study:12/philosophy",
+      "label": "Philosophy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Philosophy"
+      ]
+    },
+    {
+      "id": "study:12/linguistics",
+      "label": "Linguistics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Linguistics"
+      ]
+    },
+    {
+      "id": "study:12/literature",
+      "label": "Literature",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Literature"
+      ]
+    },
+    {
+      "id": "study:12/archaeology",
+      "label": "Archaeology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Archaeology"
+      ]
+    },
+    {
+      "id": "study:12/religious-studies",
+      "label": "Religious studies",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Religious studies"
+      ]
+    },
+    {
+      "id": "study:12/visual-arts-and-design",
+      "label": "Visual arts and design",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Visual arts and design"
+      ]
+    },
+    {
+      "id": "study:12/music-and-performing-arts",
+      "label": "Music and performing arts",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Music and performing arts"
+      ]
+    },
+    {
+      "id": "study:12/digital-humanities",
+      "label": "Digital humanities",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Digital humanities"
+      ]
+    },
+    {
+      "id": "study:12/history-and-philosophy-of-science",
+      "label": "History and philosophy of science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:12"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "History and philosophy of science"
+      ]
+    },
+    {
+      "id": "oa-field:13",
+      "label": "Biochemistry, Genetics and Molecular Biology",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:1"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "13",
+          "uri": "https://openalex.org/fields/13"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:13/biochemistry",
+      "label": "Biochemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Biochemistry"
+      ]
+    },
+    {
+      "id": "study:13/molecular-biology",
+      "label": "Molecular biology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Molecular biology"
+      ]
+    },
+    {
+      "id": "study:13/genetics-and-genomics",
+      "label": "Genetics and genomics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Genetics and genomics"
+      ]
+    },
+    {
+      "id": "study:13/cell-biology",
+      "label": "Cell biology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Cell biology"
+      ]
+    },
+    {
+      "id": "study:13/developmental-biology",
+      "label": "Developmental biology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Developmental biology"
+      ]
+    },
+    {
+      "id": "study:13/structural-biology",
+      "label": "Structural biology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Structural biology"
+      ]
+    },
+    {
+      "id": "study:13/systems-biology",
+      "label": "Systems biology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Systems biology"
+      ]
+    },
+    {
+      "id": "study:13/synthetic-biology",
+      "label": "Synthetic biology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Synthetic biology"
+      ]
+    },
+    {
+      "id": "study:13/proteomics",
+      "label": "Proteomics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Proteomics"
+      ]
+    },
+    {
+      "id": "study:13/evolutionary-biology",
+      "label": "Evolutionary biology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:13"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Evolutionary biology"
+      ]
+    },
+    {
+      "id": "oa-field:14",
+      "label": "Business, Management and Accounting",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:2"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "14",
+          "uri": "https://openalex.org/fields/14"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:14/management-and-strategy",
+      "label": "Management and strategy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:14"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Management and strategy"
+      ]
+    },
+    {
+      "id": "study:14/entrepreneurship",
+      "label": "Entrepreneurship",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:14"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Entrepreneurship"
+      ]
+    },
+    {
+      "id": "study:14/accounting",
+      "label": "Accounting",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:14"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Accounting"
+      ]
+    },
+    {
+      "id": "study:14/marketing",
+      "label": "Marketing",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:14"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Marketing"
+      ]
+    },
+    {
+      "id": "study:14/innovation-studies",
+      "label": "Innovation studies",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:14"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Innovation studies"
+      ]
+    },
+    {
+      "id": "study:14/operations-management",
+      "label": "Operations management",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:14"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Operations management"
+      ]
+    },
+    {
+      "id": "study:14/organizational-behavior",
+      "label": "Organizational behavior",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:14"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Organizational behavior"
+      ]
+    },
+    {
+      "id": "study:14/information-systems",
+      "label": "Information systems",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:14"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Information systems"
+      ]
+    },
+    {
+      "id": "oa-field:15",
+      "label": "Chemical Engineering",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "15",
+          "uri": "https://openalex.org/fields/15"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:15/process-engineering",
+      "label": "Process engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:15"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Process engineering"
+      ]
+    },
+    {
+      "id": "study:15/catalysis",
+      "label": "Catalysis",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:15"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Catalysis"
+      ]
+    },
+    {
+      "id": "study:15/separation-processes",
+      "label": "Separation processes",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:15"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Separation processes"
+      ]
+    },
+    {
+      "id": "study:15/biochemical-engineering",
+      "label": "Biochemical engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:15"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Biochemical engineering"
+      ]
+    },
+    {
+      "id": "study:15/polymer-processing",
+      "label": "Polymer processing",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:15"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Polymer processing"
+      ]
+    },
+    {
+      "id": "study:15/electrochemical-engineering",
+      "label": "Electrochemical engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:15"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Electrochemical engineering"
+      ]
+    },
+    {
+      "id": "study:15/transport-phenomena",
+      "label": "Transport phenomena",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:15"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Transport phenomena"
+      ]
+    },
+    {
+      "id": "study:15/sustainable-manufacturing",
+      "label": "Sustainable manufacturing",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:15"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Sustainable manufacturing"
+      ]
+    },
+    {
+      "id": "oa-field:16",
+      "label": "Chemistry",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "16",
+          "uri": "https://openalex.org/fields/16"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:16/organic-chemistry",
+      "label": "Organic chemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:16"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Organic chemistry"
+      ]
+    },
+    {
+      "id": "study:16/inorganic-chemistry",
+      "label": "Inorganic chemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:16"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Inorganic chemistry"
+      ]
+    },
+    {
+      "id": "study:16/physical-chemistry",
+      "label": "Physical chemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:16"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Physical chemistry"
+      ]
+    },
+    {
+      "id": "study:16/analytical-chemistry",
+      "label": "Analytical chemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:16"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Analytical chemistry"
+      ]
+    },
+    {
+      "id": "study:16/computational-chemistry",
+      "label": "Computational chemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:16"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Computational chemistry"
+      ]
+    },
+    {
+      "id": "study:16/medicinal-chemistry",
+      "label": "Medicinal chemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:16"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Medicinal chemistry"
+      ]
+    },
+    {
+      "id": "study:16/chemical-biology",
+      "label": "Chemical biology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:16"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Chemical biology"
+      ]
+    },
+    {
+      "id": "study:16/electrochemistry",
+      "label": "Electrochemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:16"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Electrochemistry"
+      ]
+    },
+    {
+      "id": "oa-field:17",
+      "label": "Computer Science",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "17",
+          "uri": "https://openalex.org/fields/17"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:17/machine-learning",
+      "label": "Machine learning",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Machine learning"
+      ]
+    },
+    {
+      "id": "study:17/algorithms-and-complexity",
+      "label": "Algorithms and complexity",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Algorithms and complexity"
+      ]
+    },
+    {
+      "id": "study:17/programming-languages-and-compilers",
+      "label": "Programming languages and compilers",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Programming languages and compilers"
+      ]
+    },
+    {
+      "id": "study:17/software-engineering",
+      "label": "Software engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Software engineering"
+      ]
+    },
+    {
+      "id": "study:17/distributed-systems",
+      "label": "Distributed systems",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Distributed systems"
+      ]
+    },
+    {
+      "id": "study:17/databases-and-data-engineering",
+      "label": "Databases and data engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Databases and data engineering"
+      ]
+    },
+    {
+      "id": "study:17/computer-architecture",
+      "label": "Computer architecture",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Computer architecture"
+      ]
+    },
+    {
+      "id": "study:17/computer-networking",
+      "label": "Computer networking",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Computer networking"
+      ]
+    },
+    {
+      "id": "study:17/cybersecurity-and-cryptography",
+      "label": "Cybersecurity and cryptography",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Cybersecurity and cryptography"
+      ]
+    },
+    {
+      "id": "study:17/human-computer-interaction",
+      "label": "Human computer interaction",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Human computer interaction"
+      ]
+    },
+    {
+      "id": "study:17/computer-graphics",
+      "label": "Computer graphics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Computer graphics"
+      ]
+    },
+    {
+      "id": "study:17/information-retrieval",
+      "label": "Information retrieval",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Information retrieval"
+      ]
+    },
+    {
+      "id": "study:17/computational-theory",
+      "label": "Computational theory",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Computational theory"
+      ]
+    },
+    {
+      "id": "study:17/quantum-computing",
+      "label": "Quantum computing",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:17"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Quantum computing"
+      ]
+    },
+    {
+      "id": "oa-field:18",
+      "label": "Decision Sciences",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:2"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "18",
+          "uri": "https://openalex.org/fields/18"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:18/operations-research",
+      "label": "Operations research",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:18"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Operations research"
+      ]
+    },
+    {
+      "id": "study:18/optimization",
+      "label": "Optimization",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:18"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Optimization"
+      ]
+    },
+    {
+      "id": "study:18/decision-theory",
+      "label": "Decision theory",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:18"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Decision theory"
+      ]
+    },
+    {
+      "id": "study:18/simulation",
+      "label": "Simulation",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:18"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Simulation"
+      ]
+    },
+    {
+      "id": "study:18/risk-analysis",
+      "label": "Risk analysis",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:18"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Risk analysis"
+      ]
+    },
+    {
+      "id": "study:18/supply-chain-analytics",
+      "label": "Supply chain analytics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:18"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Supply chain analytics"
+      ]
+    },
+    {
+      "id": "study:18/management-science",
+      "label": "Management science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:18"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Management science"
+      ]
+    },
+    {
+      "id": "study:18/game-theory",
+      "label": "Game theory",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:18"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Game theory"
+      ]
+    },
+    {
+      "id": "oa-field:19",
+      "label": "Earth and Planetary Sciences",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "19",
+          "uri": "https://openalex.org/fields/19"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:19/geology",
+      "label": "Geology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Geology"
+      ]
+    },
+    {
+      "id": "study:19/geophysics",
+      "label": "Geophysics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Geophysics"
+      ]
+    },
+    {
+      "id": "study:19/geochemistry",
+      "label": "Geochemistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Geochemistry"
+      ]
+    },
+    {
+      "id": "study:19/atmospheric-science",
+      "label": "Atmospheric science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Atmospheric science"
+      ]
+    },
+    {
+      "id": "study:19/oceanography",
+      "label": "Oceanography",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Oceanography"
+      ]
+    },
+    {
+      "id": "study:19/hydrology",
+      "label": "Hydrology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Hydrology"
+      ]
+    },
+    {
+      "id": "study:19/planetary-science",
+      "label": "Planetary science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Planetary science"
+      ]
+    },
+    {
+      "id": "study:19/remote-sensing-and-geospatial-science",
+      "label": "Remote sensing and geospatial science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Remote sensing and geospatial science"
+      ]
+    },
+    {
+      "id": "study:19/paleontology",
+      "label": "Paleontology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Paleontology"
+      ]
+    },
+    {
+      "id": "study:19/natural-hazards",
+      "label": "Natural hazards",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:19"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Natural hazards"
+      ]
+    },
+    {
+      "id": "oa-field:20",
+      "label": "Economics, Econometrics and Finance",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:2"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "20",
+          "uri": "https://openalex.org/fields/20"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:20/microeconomics",
+      "label": "Microeconomics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Microeconomics"
+      ]
+    },
+    {
+      "id": "study:20/macroeconomics",
+      "label": "Macroeconomics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Macroeconomics"
+      ]
+    },
+    {
+      "id": "study:20/econometrics",
+      "label": "Econometrics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Econometrics"
+      ]
+    },
+    {
+      "id": "study:20/development-economics",
+      "label": "Development economics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Development economics"
+      ]
+    },
+    {
+      "id": "study:20/labor-economics",
+      "label": "Labor economics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Labor economics"
+      ]
+    },
+    {
+      "id": "study:20/financial-markets",
+      "label": "Financial markets",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Financial markets"
+      ]
+    },
+    {
+      "id": "study:20/behavioral-economics",
+      "label": "Behavioral economics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Behavioral economics"
+      ]
+    },
+    {
+      "id": "study:20/public-economics",
+      "label": "Public economics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Public economics"
+      ]
+    },
+    {
+      "id": "study:20/environmental-economics",
+      "label": "Environmental economics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:20"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Environmental economics"
+      ]
+    },
+    {
+      "id": "oa-field:21",
+      "label": "Energy",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "21",
+          "uri": "https://openalex.org/fields/21"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:21/solar-energy",
+      "label": "Solar energy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:21"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Solar energy"
+      ]
+    },
+    {
+      "id": "study:21/wind-energy",
+      "label": "Wind energy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:21"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Wind energy"
+      ]
+    },
+    {
+      "id": "study:21/nuclear-energy",
+      "label": "Nuclear energy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:21"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Nuclear energy"
+      ]
+    },
+    {
+      "id": "study:21/batteries-and-energy-storage",
+      "label": "Batteries and energy storage",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:21"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Batteries and energy storage"
+      ]
+    },
+    {
+      "id": "study:21/power-systems",
+      "label": "Power systems",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:21"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Power systems"
+      ]
+    },
+    {
+      "id": "study:21/hydrogen-and-fuel-cells",
+      "label": "Hydrogen and fuel cells",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:21"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Hydrogen and fuel cells"
+      ]
+    },
+    {
+      "id": "study:21/energy-efficiency",
+      "label": "Energy efficiency",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:21"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Energy efficiency"
+      ]
+    },
+    {
+      "id": "study:21/energy-economics-and-transitions",
+      "label": "Energy economics and transitions",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:21"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Energy economics and transitions"
+      ]
+    },
+    {
+      "id": "oa-field:22",
+      "label": "Engineering",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "22",
+          "uri": "https://openalex.org/fields/22"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:22/electrical-and-electronic-engineering",
+      "label": "Electrical and electronic engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Electrical and electronic engineering"
+      ]
+    },
+    {
+      "id": "study:22/mechanical-engineering",
+      "label": "Mechanical engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Mechanical engineering"
+      ]
+    },
+    {
+      "id": "study:22/civil-and-structural-engineering",
+      "label": "Civil and structural engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Civil and structural engineering"
+      ]
+    },
+    {
+      "id": "study:22/aerospace-engineering",
+      "label": "Aerospace engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Aerospace engineering"
+      ]
+    },
+    {
+      "id": "study:22/control-systems",
+      "label": "Control systems",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Control systems"
+      ]
+    },
+    {
+      "id": "study:22/robotics-and-mechatronics",
+      "label": "Robotics and mechatronics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Robotics and mechatronics"
+      ]
+    },
+    {
+      "id": "study:22/biomedical-engineering",
+      "label": "Biomedical engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Biomedical engineering"
+      ]
+    },
+    {
+      "id": "study:22/industrial-engineering",
+      "label": "Industrial engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Industrial engineering"
+      ]
+    },
+    {
+      "id": "study:22/manufacturing",
+      "label": "Manufacturing",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Manufacturing"
+      ]
+    },
+    {
+      "id": "study:22/signal-processing",
+      "label": "Signal processing",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Signal processing"
+      ]
+    },
+    {
+      "id": "study:22/communications-engineering",
+      "label": "Communications engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Communications engineering"
+      ]
+    },
+    {
+      "id": "study:22/transportation-engineering",
+      "label": "Transportation engineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:22"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Transportation engineering"
+      ]
+    },
+    {
+      "id": "oa-field:23",
+      "label": "Environmental Science",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "23",
+          "uri": "https://openalex.org/fields/23"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:23/climate-science",
+      "label": "Climate science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Climate science"
+      ]
+    },
+    {
+      "id": "study:23/conservation",
+      "label": "Conservation",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Conservation"
+      ]
+    },
+    {
+      "id": "study:23/environmental-monitoring",
+      "label": "Environmental monitoring",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Environmental monitoring"
+      ]
+    },
+    {
+      "id": "study:23/pollution-and-remediation",
+      "label": "Pollution and remediation",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Pollution and remediation"
+      ]
+    },
+    {
+      "id": "study:23/sustainability",
+      "label": "Sustainability",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Sustainability"
+      ]
+    },
+    {
+      "id": "study:23/environmental-health",
+      "label": "Environmental health",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Environmental health"
+      ]
+    },
+    {
+      "id": "study:23/water-resources",
+      "label": "Water resources",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Water resources"
+      ]
+    },
+    {
+      "id": "study:23/circular-economy",
+      "label": "Circular economy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Circular economy"
+      ]
+    },
+    {
+      "id": "study:23/ecological-modeling",
+      "label": "Ecological modeling",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:23"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Ecological modeling"
+      ]
+    },
+    {
+      "id": "oa-field:24",
+      "label": "Immunology and Microbiology",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:1"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "24",
+          "uri": "https://openalex.org/fields/24"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:24/immunology",
+      "label": "Immunology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:24"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Immunology"
+      ]
+    },
+    {
+      "id": "study:24/microbiology",
+      "label": "Microbiology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:24"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Microbiology"
+      ]
+    },
+    {
+      "id": "study:24/virology",
+      "label": "Virology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:24"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Virology"
+      ]
+    },
+    {
+      "id": "study:24/bacteriology",
+      "label": "Bacteriology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:24"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Bacteriology"
+      ]
+    },
+    {
+      "id": "study:24/host-pathogen-interactions",
+      "label": "Host pathogen interactions",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:24"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Host pathogen interactions"
+      ]
+    },
+    {
+      "id": "study:24/vaccinology",
+      "label": "Vaccinology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:24"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Vaccinology"
+      ]
+    },
+    {
+      "id": "study:24/microbial-ecology",
+      "label": "Microbial ecology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:24"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Microbial ecology"
+      ]
+    },
+    {
+      "id": "study:24/antimicrobial-resistance",
+      "label": "Antimicrobial resistance",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:24"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Antimicrobial resistance"
+      ]
+    },
+    {
+      "id": "oa-field:25",
+      "label": "Materials Science",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "25",
+          "uri": "https://openalex.org/fields/25"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:25/nanomaterials",
+      "label": "Nanomaterials",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Nanomaterials"
+      ]
+    },
+    {
+      "id": "study:25/semiconductors",
+      "label": "Semiconductors",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Semiconductors"
+      ]
+    },
+    {
+      "id": "study:25/polymers",
+      "label": "Polymers",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Polymers"
+      ]
+    },
+    {
+      "id": "study:25/metallurgy",
+      "label": "Metallurgy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Metallurgy"
+      ]
+    },
+    {
+      "id": "study:25/ceramics",
+      "label": "Ceramics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Ceramics"
+      ]
+    },
+    {
+      "id": "study:25/biomaterials",
+      "label": "Biomaterials",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Biomaterials"
+      ]
+    },
+    {
+      "id": "study:25/computational-materials",
+      "label": "Computational materials",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Computational materials"
+      ]
+    },
+    {
+      "id": "study:25/photonic-materials",
+      "label": "Photonic materials",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Photonic materials"
+      ]
+    },
+    {
+      "id": "study:25/quantum-materials",
+      "label": "Quantum materials",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Quantum materials"
+      ]
+    },
+    {
+      "id": "study:25/materials-characterization",
+      "label": "Materials characterization",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:25"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Materials characterization"
+      ]
+    },
+    {
+      "id": "oa-field:26",
+      "label": "Mathematics",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "26",
+          "uri": "https://openalex.org/fields/26"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:26/algebra",
+      "label": "Algebra",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Algebra"
+      ]
+    },
+    {
+      "id": "study:26/analysis",
+      "label": "Analysis",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Analysis"
+      ]
+    },
+    {
+      "id": "study:26/geometry-and-topology",
+      "label": "Geometry and topology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Geometry and topology"
+      ]
+    },
+    {
+      "id": "study:26/probability",
+      "label": "Probability",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Probability"
+      ]
+    },
+    {
+      "id": "study:26/statistics",
+      "label": "Statistics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Statistics"
+      ]
+    },
+    {
+      "id": "study:26/numerical-analysis",
+      "label": "Numerical analysis",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Numerical analysis"
+      ]
+    },
+    {
+      "id": "study:26/discrete-mathematics",
+      "label": "Discrete mathematics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Discrete mathematics"
+      ]
+    },
+    {
+      "id": "study:26/mathematical-logic",
+      "label": "Mathematical logic",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Mathematical logic"
+      ]
+    },
+    {
+      "id": "study:26/applied-mathematics",
+      "label": "Applied mathematics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Applied mathematics"
+      ]
+    },
+    {
+      "id": "study:26/dynamical-systems",
+      "label": "Dynamical systems",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Dynamical systems"
+      ]
+    },
+    {
+      "id": "study:26/information-theory",
+      "label": "Information theory",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Information theory"
+      ]
+    },
+    {
+      "id": "study:26/category-theory",
+      "label": "Category theory",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:26"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Category theory"
+      ]
+    },
+    {
+      "id": "oa-field:27",
+      "label": "Medicine",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:4"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "27",
+          "uri": "https://openalex.org/fields/27"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:27/clinical-research",
+      "label": "Clinical research",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Clinical research"
+      ]
+    },
+    {
+      "id": "study:27/public-health",
+      "label": "Public health",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Public health"
+      ]
+    },
+    {
+      "id": "study:27/epidemiology",
+      "label": "Epidemiology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Epidemiology"
+      ]
+    },
+    {
+      "id": "study:27/oncology",
+      "label": "Oncology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Oncology"
+      ]
+    },
+    {
+      "id": "study:27/cardiology",
+      "label": "Cardiology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Cardiology"
+      ]
+    },
+    {
+      "id": "study:27/neurology",
+      "label": "Neurology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Neurology"
+      ]
+    },
+    {
+      "id": "study:27/psychiatry",
+      "label": "Psychiatry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Psychiatry"
+      ]
+    },
+    {
+      "id": "study:27/infectious-disease",
+      "label": "Infectious disease",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Infectious disease"
+      ]
+    },
+    {
+      "id": "study:27/precision-medicine",
+      "label": "Precision medicine",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Precision medicine"
+      ]
+    },
+    {
+      "id": "study:27/medical-imaging",
+      "label": "Medical imaging",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Medical imaging"
+      ]
+    },
+    {
+      "id": "study:27/health-informatics",
+      "label": "Health informatics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Health informatics"
+      ]
+    },
+    {
+      "id": "study:27/evidence-synthesis",
+      "label": "Evidence synthesis",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:27"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Evidence synthesis"
+      ]
+    },
+    {
+      "id": "oa-field:28",
+      "label": "Neuroscience",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:1"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "28",
+          "uri": "https://openalex.org/fields/28"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:28/computational-neuroscience",
+      "label": "Computational neuroscience",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:28"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Computational neuroscience"
+      ]
+    },
+    {
+      "id": "study:28/cognitive-neuroscience",
+      "label": "Cognitive neuroscience",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:28"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Cognitive neuroscience"
+      ]
+    },
+    {
+      "id": "study:28/systems-neuroscience",
+      "label": "Systems neuroscience",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:28"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Systems neuroscience"
+      ]
+    },
+    {
+      "id": "study:28/neuroengineering",
+      "label": "Neuroengineering",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:28"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Neuroengineering"
+      ]
+    },
+    {
+      "id": "study:28/neuroimaging",
+      "label": "Neuroimaging",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:28"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Neuroimaging"
+      ]
+    },
+    {
+      "id": "study:28/neural-coding",
+      "label": "Neural coding",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:28"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Neural coding"
+      ]
+    },
+    {
+      "id": "study:28/brain-computer-interfaces",
+      "label": "Brain computer interfaces",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:28"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Brain computer interfaces"
+      ]
+    },
+    {
+      "id": "study:28/developmental-neuroscience",
+      "label": "Developmental neuroscience",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:28"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Developmental neuroscience"
+      ]
+    },
+    {
+      "id": "oa-field:29",
+      "label": "Nursing",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:4"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "29",
+          "uri": "https://openalex.org/fields/29"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:29/nursing-research",
+      "label": "Nursing research",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:29"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Nursing research"
+      ]
+    },
+    {
+      "id": "study:29/clinical-care",
+      "label": "Clinical care",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:29"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Clinical care"
+      ]
+    },
+    {
+      "id": "study:29/community-nursing",
+      "label": "Community nursing",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:29"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Community nursing"
+      ]
+    },
+    {
+      "id": "study:29/patient-safety",
+      "label": "Patient safety",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:29"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Patient safety"
+      ]
+    },
+    {
+      "id": "study:29/nursing-education",
+      "label": "Nursing education",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:29"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Nursing education"
+      ]
+    },
+    {
+      "id": "study:29/care-delivery",
+      "label": "Care delivery",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:29"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Care delivery"
+      ]
+    },
+    {
+      "id": "study:29/geriatric-nursing",
+      "label": "Geriatric nursing",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:29"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Geriatric nursing"
+      ]
+    },
+    {
+      "id": "study:29/health-equity",
+      "label": "Health equity",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:29"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Health equity"
+      ]
+    },
+    {
+      "id": "oa-field:30",
+      "label": "Pharmacology, Toxicology and Pharmaceutics",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:1"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "30",
+          "uri": "https://openalex.org/fields/30"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:30/drug-discovery",
+      "label": "Drug discovery",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:30"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Drug discovery"
+      ]
+    },
+    {
+      "id": "study:30/pharmacology",
+      "label": "Pharmacology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:30"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Pharmacology"
+      ]
+    },
+    {
+      "id": "study:30/toxicology",
+      "label": "Toxicology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:30"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Toxicology"
+      ]
+    },
+    {
+      "id": "study:30/drug-delivery",
+      "label": "Drug delivery",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:30"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Drug delivery"
+      ]
+    },
+    {
+      "id": "study:30/pharmacokinetics",
+      "label": "Pharmacokinetics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:30"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Pharmacokinetics"
+      ]
+    },
+    {
+      "id": "study:30/pharmacogenomics",
+      "label": "Pharmacogenomics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:30"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Pharmacogenomics"
+      ]
+    },
+    {
+      "id": "study:30/medicinal-development",
+      "label": "Medicinal development",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:30"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Medicinal development"
+      ]
+    },
+    {
+      "id": "study:30/drug-safety",
+      "label": "Drug safety",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:30"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Drug safety"
+      ]
+    },
+    {
+      "id": "oa-field:31",
+      "label": "Physics and Astronomy",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:3"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "31",
+          "uri": "https://openalex.org/fields/31"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:31/astrophysics-and-cosmology",
+      "label": "Astrophysics and cosmology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Astrophysics and cosmology"
+      ]
+    },
+    {
+      "id": "study:31/particle-physics",
+      "label": "Particle physics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Particle physics"
+      ]
+    },
+    {
+      "id": "study:31/nuclear-physics",
+      "label": "Nuclear physics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Nuclear physics"
+      ]
+    },
+    {
+      "id": "study:31/condensed-matter",
+      "label": "Condensed matter",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Condensed matter"
+      ]
+    },
+    {
+      "id": "study:31/quantum-information",
+      "label": "Quantum information",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Quantum information"
+      ]
+    },
+    {
+      "id": "study:31/quantum-optics",
+      "label": "Quantum optics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Quantum optics"
+      ]
+    },
+    {
+      "id": "study:31/plasma-physics",
+      "label": "Plasma physics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Plasma physics"
+      ]
+    },
+    {
+      "id": "study:31/statistical-physics",
+      "label": "Statistical physics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Statistical physics"
+      ]
+    },
+    {
+      "id": "study:31/biophysics",
+      "label": "Biophysics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Biophysics"
+      ]
+    },
+    {
+      "id": "study:31/gravitation",
+      "label": "Gravitation",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Gravitation"
+      ]
+    },
+    {
+      "id": "study:31/atomic-and-molecular-physics",
+      "label": "Atomic and molecular physics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:31"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Atomic and molecular physics"
+      ]
+    },
+    {
+      "id": "oa-field:32",
+      "label": "Psychology",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:2"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "32",
+          "uri": "https://openalex.org/fields/32"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:32/cognitive-psychology",
+      "label": "Cognitive psychology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:32"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Cognitive psychology"
+      ]
+    },
+    {
+      "id": "study:32/developmental-psychology",
+      "label": "Developmental psychology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:32"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Developmental psychology"
+      ]
+    },
+    {
+      "id": "study:32/social-psychology",
+      "label": "Social psychology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:32"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Social psychology"
+      ]
+    },
+    {
+      "id": "study:32/clinical-psychology",
+      "label": "Clinical psychology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:32"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Clinical psychology"
+      ]
+    },
+    {
+      "id": "study:32/learning-and-memory",
+      "label": "Learning and memory",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:32"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Learning and memory"
+      ]
+    },
+    {
+      "id": "study:32/psychometrics",
+      "label": "Psychometrics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:32"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Psychometrics"
+      ]
+    },
+    {
+      "id": "study:32/human-factors",
+      "label": "Human factors",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:32"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Human factors"
+      ]
+    },
+    {
+      "id": "study:32/behavioral-science",
+      "label": "Behavioral science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:32"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Behavioral science"
+      ]
+    },
+    {
+      "id": "oa-field:33",
+      "label": "Social Sciences",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:2"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "33",
+          "uri": "https://openalex.org/fields/33"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:33/sociology",
+      "label": "Sociology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Sociology"
+      ]
+    },
+    {
+      "id": "study:33/political-science",
+      "label": "Political science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Political science"
+      ]
+    },
+    {
+      "id": "study:33/education",
+      "label": "Education",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Education"
+      ]
+    },
+    {
+      "id": "study:33/law",
+      "label": "Law",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Law"
+      ]
+    },
+    {
+      "id": "study:33/anthropology",
+      "label": "Anthropology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Anthropology"
+      ]
+    },
+    {
+      "id": "study:33/geography",
+      "label": "Geography",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Geography"
+      ]
+    },
+    {
+      "id": "study:33/communication-and-media-studies",
+      "label": "Communication and media studies",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Communication and media studies"
+      ]
+    },
+    {
+      "id": "study:33/demography",
+      "label": "Demography",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Demography"
+      ]
+    },
+    {
+      "id": "study:33/public-policy",
+      "label": "Public policy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Public policy"
+      ]
+    },
+    {
+      "id": "study:33/international-relations",
+      "label": "International relations",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "International relations"
+      ]
+    },
+    {
+      "id": "study:33/science-and-technology-studies",
+      "label": "Science and technology studies",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Science and technology studies"
+      ]
+    },
+    {
+      "id": "study:33/library-and-information-science",
+      "label": "Library and information science",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:33"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Library and information science"
+      ]
+    },
+    {
+      "id": "oa-field:34",
+      "label": "Veterinary",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:4"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "34",
+          "uri": "https://openalex.org/fields/34"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:34/veterinary-medicine",
+      "label": "Veterinary medicine",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:34"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Veterinary medicine"
+      ]
+    },
+    {
+      "id": "study:34/animal-health",
+      "label": "Animal health",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:34"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Animal health"
+      ]
+    },
+    {
+      "id": "study:34/veterinary-epidemiology",
+      "label": "Veterinary epidemiology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:34"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Veterinary epidemiology"
+      ]
+    },
+    {
+      "id": "study:34/wildlife-health",
+      "label": "Wildlife health",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:34"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Wildlife health"
+      ]
+    },
+    {
+      "id": "study:34/one-health",
+      "label": "One health",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:34"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "One health"
+      ]
+    },
+    {
+      "id": "study:34/veterinary-pathology",
+      "label": "Veterinary pathology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:34"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Veterinary pathology"
+      ]
+    },
+    {
+      "id": "study:34/animal-welfare",
+      "label": "Animal welfare",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:34"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Animal welfare"
+      ]
+    },
+    {
+      "id": "study:34/veterinary-public-health",
+      "label": "Veterinary public health",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:34"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Veterinary public health"
+      ]
+    },
+    {
+      "id": "oa-field:35",
+      "label": "Dentistry",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:4"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "35",
+          "uri": "https://openalex.org/fields/35"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:35/dental-research",
+      "label": "Dental research",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:35"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Dental research"
+      ]
+    },
+    {
+      "id": "study:35/oral-health",
+      "label": "Oral health",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:35"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Oral health"
+      ]
+    },
+    {
+      "id": "study:35/restorative-dentistry",
+      "label": "Restorative dentistry",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:35"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Restorative dentistry"
+      ]
+    },
+    {
+      "id": "study:35/periodontology",
+      "label": "Periodontology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:35"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Periodontology"
+      ]
+    },
+    {
+      "id": "study:35/orthodontics",
+      "label": "Orthodontics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:35"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Orthodontics"
+      ]
+    },
+    {
+      "id": "study:35/dental-materials",
+      "label": "Dental materials",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:35"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Dental materials"
+      ]
+    },
+    {
+      "id": "study:35/oral-microbiology",
+      "label": "Oral microbiology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:35"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Oral microbiology"
+      ]
+    },
+    {
+      "id": "study:35/dental-public-health",
+      "label": "Dental public health",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:35"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Dental public health"
+      ]
+    },
+    {
+      "id": "oa-field:36",
+      "label": "Health Professions",
+      "kind": "external_field",
+      "parent_ids": [
+        "oa-domain:4"
+      ],
+      "external_refs": [
+        {
+          "scheme": "openalex-field",
+          "id": "36",
+          "uri": "https://openalex.org/fields/36"
+        }
+      ],
+      "source_coverage": "discovery_planned_fulltext_varies"
+    },
+    {
+      "id": "study:36/rehabilitation",
+      "label": "Rehabilitation",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:36"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Rehabilitation"
+      ]
+    },
+    {
+      "id": "study:36/physical-therapy",
+      "label": "Physical therapy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:36"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Physical therapy"
+      ]
+    },
+    {
+      "id": "study:36/occupational-therapy",
+      "label": "Occupational therapy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:36"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Occupational therapy"
+      ]
+    },
+    {
+      "id": "study:36/nutrition-and-dietetics",
+      "label": "Nutrition and dietetics",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:36"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Nutrition and dietetics"
+      ]
+    },
+    {
+      "id": "study:36/speech-and-language-therapy",
+      "label": "Speech and language therapy",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:36"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Speech and language therapy"
+      ]
+    },
+    {
+      "id": "study:36/radiography",
+      "label": "Radiography",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:36"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Radiography"
+      ]
+    },
+    {
+      "id": "study:36/health-services-research",
+      "label": "Health services research",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:36"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Health services research"
+      ]
+    },
+    {
+      "id": "study:36/assistive-technology",
+      "label": "Assistive technology",
+      "kind": "authored_study_area",
+      "parent_ids": [
+        "oa-field:36"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Assistive technology"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning",
+      "label": "Foundations and statistical learning",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Foundations and statistical learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/learning-theory",
+      "label": "Learning theory",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundations-and-statistical-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Learning theory"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/generalization-and-scaling-laws",
+      "label": "Generalization and scaling laws",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundations-and-statistical-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Generalization and scaling laws"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/representation-learning",
+      "label": "Representation learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundations-and-statistical-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Representation learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/self-supervised-learning",
+      "label": "Self supervised learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundations-and-statistical-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Self supervised learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/bayesian-machine-learning",
+      "label": "Bayesian machine learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundations-and-statistical-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Bayesian machine learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/optimization-for-learning",
+      "label": "Optimization for learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundations-and-statistical-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Optimization for learning"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures",
+      "label": "Neural architectures",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Neural architectures"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/transformers-and-attention",
+      "label": "Transformers and attention",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:neural-architectures"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Transformers and attention"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/state-space-models",
+      "label": "State space models",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:neural-architectures"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "State space models"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/mixture-of-experts",
+      "label": "Mixture of experts",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:neural-architectures"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Mixture of experts"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/graph-neural-networks",
+      "label": "Graph neural networks",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:neural-architectures"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Graph neural networks"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/sparse-and-modular-architectures",
+      "label": "Sparse and modular architectures",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:neural-architectures"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Sparse and modular architectures"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/sequence-modeling",
+      "label": "Sequence modeling",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:neural-architectures"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Sequence modeling"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining",
+      "label": "Foundation model pretraining",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Foundation model pretraining"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/data-mixtures-and-curation",
+      "label": "Data mixtures and curation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundation-model-pretraining"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Data mixtures and curation"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/tokenization",
+      "label": "Tokenization",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundation-model-pretraining"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Tokenization"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/pretraining-objectives",
+      "label": "Pretraining objectives",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundation-model-pretraining"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Pretraining objectives"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/multilingual-modeling",
+      "label": "Multilingual modeling",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundation-model-pretraining"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Multilingual modeling"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/synthetic-training-data",
+      "label": "Synthetic training data",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundation-model-pretraining"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Synthetic training data"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/continual-pretraining",
+      "label": "Continual pretraining",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:foundation-model-pretraining"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Continual pretraining"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment",
+      "label": "Post training and alignment",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Post training and alignment"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/supervised-fine-tuning",
+      "label": "Supervised fine tuning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:post-training-and-alignment"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Supervised fine tuning"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/preference-optimization",
+      "label": "Preference optimization",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:post-training-and-alignment"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Preference optimization"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/reinforcement-learning-from-feedback",
+      "label": "Reinforcement learning from feedback",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:post-training-and-alignment"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Reinforcement learning from feedback"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/reward-modeling",
+      "label": "Reward modeling",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:post-training-and-alignment"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Reward modeling"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/distillation",
+      "label": "Distillation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:post-training-and-alignment"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Distillation"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/parameter-efficient-fine-tuning",
+      "label": "Parameter efficient fine tuning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:post-training-and-alignment"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Parameter efficient fine tuning"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute",
+      "label": "Reasoning and inference time compute",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Reasoning and inference time compute"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/search-and-planning",
+      "label": "Search and planning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:reasoning-and-inference-time-compute"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Search and planning"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/test-time-scaling",
+      "label": "Test time scaling",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:reasoning-and-inference-time-compute"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Test time scaling"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/verifier-guided-inference",
+      "label": "Verifier guided inference",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:reasoning-and-inference-time-compute"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Verifier guided inference"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/process-supervision",
+      "label": "Process supervision",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:reasoning-and-inference-time-compute"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Process supervision"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/mathematical-reasoning",
+      "label": "Mathematical reasoning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:reasoning-and-inference-time-compute"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Mathematical reasoning"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/programmatic-reasoning",
+      "label": "Programmatic reasoning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:reasoning-and-inference-time-compute"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Programmatic reasoning"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use",
+      "label": "Agents and tool use",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Agents and tool use"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/agent-orchestration",
+      "label": "Agent orchestration",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:agents-and-tool-use"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Agent orchestration"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/tool-calling",
+      "label": "Tool calling",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:agents-and-tool-use"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Tool calling"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/computer-use-agents",
+      "label": "Computer use agents",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:agents-and-tool-use"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Computer use agents"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/coding-agents",
+      "label": "Coding agents",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:agents-and-tool-use"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Coding agents"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/long-horizon-tasks",
+      "label": "Long horizon tasks",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:agents-and-tool-use"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Long horizon tasks"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/multi-agent-cooperation",
+      "label": "Multi agent cooperation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:agents-and-tool-use"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Multi agent cooperation"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory",
+      "label": "Retrieval and memory",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Retrieval and memory"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/retrieval-augmented-generation",
+      "label": "Retrieval augmented generation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:retrieval-and-memory"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Retrieval augmented generation"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/embedding-models",
+      "label": "Embedding models",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:retrieval-and-memory"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Embedding models"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/reranking",
+      "label": "Reranking",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:retrieval-and-memory"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Reranking"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/long-context-methods",
+      "label": "Long context methods",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:retrieval-and-memory"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Long context methods"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/agent-memory",
+      "label": "Agent memory",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:retrieval-and-memory"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Agent memory"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/knowledge-graphs",
+      "label": "Knowledge graphs",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:retrieval-and-memory"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Knowledge graphs"
+      ]
+    },
+    {
+      "id": "ml:language-and-information",
+      "label": "Language and information",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Language and information"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/natural-language-processing",
+      "label": "Natural language processing",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:language-and-information"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Natural language processing"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/information-extraction",
+      "label": "Information extraction",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:language-and-information"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Information extraction"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/machine-translation",
+      "label": "Machine translation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:language-and-information"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Machine translation"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/speech-and-audio",
+      "label": "Speech and audio",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:language-and-information"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Speech and audio"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/information-retrieval",
+      "label": "Information retrieval",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:language-and-information"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Information retrieval"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/document-understanding",
+      "label": "Document understanding",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:language-and-information"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Document understanding"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception",
+      "label": "Multimodal and perception",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Multimodal and perception"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/vision-language-models",
+      "label": "Vision language models",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:multimodal-and-perception"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Vision language models"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/image-understanding",
+      "label": "Image understanding",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:multimodal-and-perception"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Image understanding"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/video-understanding",
+      "label": "Video understanding",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:multimodal-and-perception"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Video understanding"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/3d-perception",
+      "label": "3D perception",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:multimodal-and-perception"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "3D perception"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/sensor-fusion",
+      "label": "Sensor fusion",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:multimodal-and-perception"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Sensor fusion"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/multimodal-evaluation",
+      "label": "Multimodal evaluation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:multimodal-and-perception"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Multimodal evaluation"
+      ]
+    },
+    {
+      "id": "ml:generative-models",
+      "label": "Generative models",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Generative models"
+      ]
+    },
+    {
+      "id": "ml:generative-models/diffusion-and-flow-models",
+      "label": "Diffusion and flow models",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:generative-models"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Diffusion and flow models"
+      ]
+    },
+    {
+      "id": "ml:generative-models/autoregressive-generation",
+      "label": "Autoregressive generation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:generative-models"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Autoregressive generation"
+      ]
+    },
+    {
+      "id": "ml:generative-models/image-and-video-generation",
+      "label": "Image and video generation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:generative-models"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Image and video generation"
+      ]
+    },
+    {
+      "id": "ml:generative-models/audio-generation",
+      "label": "Audio generation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:generative-models"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Audio generation"
+      ]
+    },
+    {
+      "id": "ml:generative-models/controllable-generation",
+      "label": "Controllable generation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:generative-models"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Controllable generation"
+      ]
+    },
+    {
+      "id": "ml:generative-models/generative-model-evaluation",
+      "label": "Generative model evaluation",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:generative-models"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Generative model evaluation"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence",
+      "label": "Embodied intelligence",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Embodied intelligence"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/robot-learning",
+      "label": "Robot learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:embodied-intelligence"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Robot learning"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/imitation-learning",
+      "label": "Imitation learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:embodied-intelligence"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Imitation learning"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/world-models",
+      "label": "World models",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:embodied-intelligence"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "World models"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/model-based-reinforcement-learning",
+      "label": "Model based reinforcement learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:embodied-intelligence"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Model based reinforcement learning"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/simulation-and-sim-to-real",
+      "label": "Simulation and sim to real",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:embodied-intelligence"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Simulation and sim to real"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/autonomous-systems",
+      "label": "Autonomous systems",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:embodied-intelligence"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Autonomous systems"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency",
+      "label": "ML systems and efficiency",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "ML systems and efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/distributed-training",
+      "label": "Distributed training",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:ml-systems-and-efficiency"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Distributed training"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/gpu-kernels-and-compilers",
+      "label": "GPU kernels and compilers",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:ml-systems-and-efficiency"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "GPU kernels and compilers"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/inference-serving",
+      "label": "Inference serving",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:ml-systems-and-efficiency"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Inference serving"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/quantization",
+      "label": "Quantization",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:ml-systems-and-efficiency"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Quantization"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/speculative-decoding",
+      "label": "Speculative decoding",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:ml-systems-and-efficiency"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Speculative decoding"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/memory-and-communication-efficiency",
+      "label": "Memory and communication efficiency",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:ml-systems-and-efficiency"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Memory and communication efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/training-reliability",
+      "label": "Training reliability",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:ml-systems-and-efficiency"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Training reliability"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/on-device-machine-learning",
+      "label": "On device machine learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:ml-systems-and-efficiency"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "On device machine learning"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml",
+      "label": "Evaluation and responsible ML",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Evaluation and responsible ML"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/benchmark-design",
+      "label": "Benchmark design",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:evaluation-and-responsible-ml"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Benchmark design"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/contamination-and-leakage",
+      "label": "Contamination and leakage",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:evaluation-and-responsible-ml"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Contamination and leakage"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/factuality-and-groundedness",
+      "label": "Factuality and groundedness",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:evaluation-and-responsible-ml"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Factuality and groundedness"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/interpretability",
+      "label": "Interpretability",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:evaluation-and-responsible-ml"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Interpretability"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/robustness-and-security",
+      "label": "Robustness and security",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:evaluation-and-responsible-ml"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Robustness and security"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/privacy-and-unlearning",
+      "label": "Privacy and unlearning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:evaluation-and-responsible-ml"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Privacy and unlearning"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/fairness-and-accessibility",
+      "label": "Fairness and accessibility",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:evaluation-and-responsible-ml"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Fairness and accessibility"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/model-governance",
+      "label": "Model governance",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:evaluation-and-responsible-ml"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Model governance"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning",
+      "label": "Causal and reliable learning",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Causal and reliable learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/causal-inference",
+      "label": "Causal inference",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:causal-and-reliable-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Causal inference"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/uncertainty-and-calibration",
+      "label": "Uncertainty and calibration",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:causal-and-reliable-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Uncertainty and calibration"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/out-of-distribution-generalization",
+      "label": "Out of distribution generalization",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:causal-and-reliable-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Out of distribution generalization"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/active-learning",
+      "label": "Active learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:causal-and-reliable-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Active learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/data-efficient-learning",
+      "label": "Data efficient learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:causal-and-reliable-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Data efficient learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/probabilistic-programming",
+      "label": "Probabilistic programming",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:causal-and-reliable-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Probabilistic programming"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science",
+      "label": "Machine learning for science",
+      "kind": "authored_ml_group",
+      "parent_ids": [
+        "study:17/machine-learning"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Machine learning for science"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/scientific-machine-learning",
+      "label": "Scientific machine learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:machine-learning-for-science"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Scientific machine learning"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/ai-for-biology",
+      "label": "AI for biology",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:machine-learning-for-science"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "AI for biology"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/ai-for-chemistry-and-materials",
+      "label": "AI for chemistry and materials",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:machine-learning-for-science"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "AI for chemistry and materials"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/ai-for-physics",
+      "label": "AI for physics",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:machine-learning-for-science"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "AI for physics"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/weather-and-climate-modeling",
+      "label": "Weather and climate modeling",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:machine-learning-for-science"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Weather and climate modeling"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/ai-for-mathematics",
+      "label": "AI for mathematics",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:machine-learning-for-science"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "AI for mathematics"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/healthcare-machine-learning",
+      "label": "Healthcare machine learning",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:machine-learning-for-science"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Healthcare machine learning"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/automated-scientific-discovery",
+      "label": "Automated scientific discovery",
+      "kind": "authored_ml_topic",
+      "parent_ids": [
+        "ml:machine-learning-for-science"
+      ],
+      "external_refs": [],
+      "crosswalk_status": "unmapped_below_field",
+      "query_hints": [
+        "Automated scientific discovery"
+      ]
+    }
+  ],
+  "facets": {
+    "content_types": [
+      "paper",
+      "preprint",
+      "journal_article",
+      "review",
+      "technical_report",
+      "official_blog",
+      "news_article",
+      "software_release",
+      "model_release",
+      "dataset_release",
+      "benchmark",
+      "tutorial",
+      "lecture",
+      "standard",
+      "correction_or_retraction"
+    ],
+    "goal": [
+      "keep_up",
+      "learn_foundations",
+      "read_deeply",
+      "implement",
+      "reproduce",
+      "compare",
+      "find_open_questions",
+      "develop_hypotheses"
+    ],
+    "learning_level": [
+      "introductory",
+      "intermediate",
+      "advanced",
+      "research"
+    ],
+    "reading_budget_minutes": [
+      5,
+      15,
+      30,
+      60
+    ],
+    "alert_policy": [
+      "daily_digest",
+      "weekly_digest",
+      "high_signal_only",
+      "in_app_only",
+      "muted"
+    ],
+    "evidence_access": [
+      "metadata_only",
+      "abstract_available",
+      "selected_excerpts",
+      "full_text_available",
+      "full_text_unavailable"
+    ],
+    "publication_status": [
+      "preprint",
+      "peer_reviewed",
+      "technical_report",
+      "vendor_announcement",
+      "journalism",
+      "unknown"
+    ],
+    "coverage_status": [
+      "connected_and_fresh",
+      "connected_but_stale",
+      "source_unavailable",
+      "metadata_only",
+      "planned_not_connected"
+    ],
+    "interest_mode": [
+      "core",
+      "adjacent",
+      "explore",
+      "exclude"
+    ]
+  },
+  "interest_profile_example": {
+    "profile_id": "frontier-ml-student",
+    "name": "Frontier ML study",
+    "enabled_by_default": false,
+    "positive_topic_ids": [
+      "ml:reasoning-and-inference-time-compute",
+      "ml:agents-and-tool-use",
+      "ml:ml-systems-and-efficiency",
+      "ml:evaluation-and-responsible-ml"
+    ],
+    "adjacent_topic_ids": [
+      "study:26/applied-mathematics",
+      "study:28/computational-neuroscience"
+    ],
+    "free_text_goals": [
+      "Understand assumptions behind new systems",
+      "Find small experiments I can implement"
+    ],
+    "exclude_terms": [],
+    "implementation_note": "Example interests use existing seed IDs; source adapters are separately configured."
+  }
+}

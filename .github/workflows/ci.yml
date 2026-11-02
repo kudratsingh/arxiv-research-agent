@@ -1106,6 +1106,12 @@ jobs:
           else
             npx playwright install --with-deps chromium
           fi
+      - name: Daily workspace desktop/mobile preview (zero spend)
+        # This fixture-only flow has its own loopback server and cannot reach
+        # the seeded API or a provider. Keep its specs outside e2e/ so the
+        # existing stack suite never collects them without this configuration.
+        timeout-minutes: 5
+        run: npm run e2e:workspace
       - name: Compose up (seeded stack, disabled API key)
         # `docker compose up -d --build --wait`, under the isolating overlay
         # web/e2e/support/compose.e2e.yml. `--wait` blocks on the
@@ -1168,7 +1174,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: web-e2e-${{ github.run_id }}
-          path: web/build/e2e
+          path: |
+            web/build/e2e
+            web/build/workspace
           if-no-files-found: warn
           retention-days: 14
       - name: Stack logs on failure

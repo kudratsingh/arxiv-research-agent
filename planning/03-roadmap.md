@@ -1,5 +1,12 @@
 # Roadmap
 
+> Current priority (2026-11-02): the owner adopted a personal daily research
+> workspace. [Direction and implementation status](11-daily-research-workspace/STATUS.md)
+> now lead the next build sequence. Phase W and the chronology below remain
+> historical evidence; course publication and educational pilots do not block
+> the daily briefing and reader.
+
+
 Prioritized sprint-by-sprint plan. Ordered by (impact × unblocks-later-work) / effort.
 
 ## Sprint 1 (~2 weeks) — Make it observable and testable — **DONE**

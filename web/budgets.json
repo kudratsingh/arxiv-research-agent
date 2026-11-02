@@ -135,6 +135,24 @@
       "measuredBytes": 302205,
       "headroom": "+4.0%",
       "why": "This ceiling is defined as route-js-conversation + emitted-css + self-hosted-fonts. The CSS ceiling moved by 1,024 B, so the derived ceiling moves by exactly 1,024 B: 192512 + 12288 + 109568 = 314368 B."
+    },
+    {
+      "row": "emitted-css",
+      "from": 12288,
+      "to": 15872,
+      "date": "2026-11-02",
+      "pr": "Daily workspace W0/W1, ADR 0103",
+      "measuredBytes": 15016,
+      "why": "W1 adds the opt-in daily briefing, interests and responsive source reader. All emitted CSS measured 15,016 B against the patched baseline of 11,518 B (+3,498 B). A dedicated client template removed the draft boundary over-count from legacy route JS; every existing JS ceiling remains unchanged. The CSS ceiling is 15,872 B (+5.7% over measurement). No skip mechanism or measurement script changes."
+    },
+    {
+      "row": "derived-total-first-load",
+      "from": 314368,
+      "to": 317952,
+      "date": "2026-11-02",
+      "pr": "Daily workspace W0/W1, ADR 0103",
+      "measuredBytes": 310082,
+      "why": "Derived sum follows the CSS-only movement: 192512 + 15872 + 109568 = 317952. Existing JS and font ceilings are unchanged."
     }
   ],
   "rows": [
@@ -232,8 +250,8 @@
       "id": "emitted-css",
       "kind": "emitted-css",
       "label": "All emitted CSS",
-      "budgetBytes": 12288,
-      "budgetLabel": "12 KiB",
+      "budgetBytes": 15872,
+      "budgetLabel": "15.5 KiB",
       "baselineBytes": 4288,
       "gate": "every PR",
       "enforcement": "gated",
@@ -267,8 +285,8 @@
       "id": "derived-total-first-load",
       "kind": "derived-total-first-load",
       "label": "Derived: total first-load transfer for `/c/[id]`, cold cache",
-      "budgetBytes": 314368,
-      "budgetLabel": "307 KiB",
+      "budgetBytes": 317952,
+      "budgetLabel": "310.5 KiB",
       "baselineBytes": null,
       "gate": "reported, not gated",
       "enforcement": "reported",
@@ -279,6 +297,58 @@
         "self-hosted-fonts"
       ],
       "definition": "JS + CSS + fonts. A transfer ceiling, not an LCP ceiling: fonts load font-display: swap, are cached across both routes, and do not block first paint."
+    },
+    {
+      "id": "route-js-daily-today",
+      "kind": "route-first-load-js",
+      "route": "/today",
+      "label": "`/today` first-load JS, excl. polyfill",
+      "budgetBytes": 163840,
+      "budgetLabel": "160 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "W1 initial measurement 154092 B on the patched Next.js 16.4.4 build. Same 160 KiB allowance for each daily route; the largest starts with 4.6% headroom. Existing route ceilings do not change."
+    },
+    {
+      "id": "route-js-daily-interests",
+      "kind": "route-first-load-js",
+      "route": "/interests",
+      "label": "`/interests` first-load JS, excl. polyfill",
+      "budgetBytes": 163840,
+      "budgetLabel": "160 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "W1 initial measurement 153551 B on the patched Next.js 16.4.4 build. Same 160 KiB allowance for each daily route; the largest starts with 4.6% headroom. Existing route ceilings do not change."
+    },
+    {
+      "id": "route-js-daily-library",
+      "kind": "route-first-load-js",
+      "route": "/library",
+      "label": "`/library` first-load JS, excl. polyfill",
+      "budgetBytes": 163840,
+      "budgetLabel": "160 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "W1 initial measurement 152994 B on the patched Next.js 16.4.4 build. Same 160 KiB allowance for each daily route; the largest starts with 4.6% headroom. Existing route ceilings do not change."
+    },
+    {
+      "id": "route-js-daily-reader",
+      "kind": "route-first-load-js",
+      "route": "/library/items/[id]",
+      "label": "`/library/items/[id]` first-load JS, excl. polyfill",
+      "budgetBytes": 163840,
+      "budgetLabel": "160 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "W1 initial measurement 156705 B on the patched Next.js 16.4.4 build. Same 160 KiB allowance for each daily route; the largest starts with 4.6% headroom. Existing route ceilings do not change."
     }
   ]
 }

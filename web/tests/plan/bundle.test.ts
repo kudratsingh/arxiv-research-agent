@@ -524,8 +524,8 @@ describe("the two dependencies WO-17 adds", () => {
     expect(pkg.dependencies["react-hook-form"]).toBe("7.86.0");
   });
 
-  it("ships Zod at WO-04's pin, exactly", () => {
-    expect(pkg.dependencies["zod"]).toBe("4.4.3");
+  it("ships Zod at the W0 security pin, exactly", () => {
+    expect(pkg.dependencies["zod"]).toBe("4.6.6");
   });
 
   it("keeps both listed, and NEITHER LISTING IS A CLAIM THAT IT SHIPS", () => {
@@ -574,6 +574,6 @@ describe("the two dependencies WO-17 adds", () => {
       readFileSync(path.join(WEB_ROOT, "package-lock.json"), "utf8"),
     ) as { packages: Record<string, { version?: string }> };
     expect(lock.packages["node_modules/react-hook-form"]?.version).toBe("7.86.0");
-    expect(lock.packages["node_modules/zod"]?.version).toBe("4.4.3");
+    expect(lock.packages["node_modules/zod"]?.version).toBe("4.6.6");
   });
 });
