@@ -39,6 +39,7 @@ for port in (8137, 3137):
 PY
     "${COMPOSE[@]}" up -d --wait
     "$VENV_PYTHON" -m src.workspace migrate
+    "$VENV_PYTHON" -m src.workspace initialize --owner "$WORKSPACE_OWNER"
     "$VENV_PYTHON" -m uvicorn src.api.app:create_app --factory --host 127.0.0.1 --port 8137 --no-access-log > outputs/workspace-live/api.log 2>&1 &
     API_PID=$!
     trap 'kill "$API_PID" 2>/dev/null || true' EXIT INT TERM

@@ -11,7 +11,7 @@ from src.workspace.store import WorkspaceStore
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("verb", choices=["migrate", "worker-once", "refresh", "export"])
+    parser.add_argument("verb", choices=["migrate", "initialize", "worker-once", "refresh", "export"])
     parser.add_argument("--owner", default="personal-local")
     parser.add_argument("--sources", nargs="*", default=[])
     args = parser.parse_args()
@@ -20,6 +20,13 @@ def main() -> None:
         store.migrate()
         if args.verb == "migrate":
             print("workspace schema migrated; no source/model calls")
+        elif args.verb == "initialize":
+            from src.workspace.schemas import ProfileData, ProfileWrite
+
+            current = store.profile(args.owner)
+            if current["revision"] == 0:
+                store.write_profile(args.owner, ProfileWrite(revision=0, request_id="workspace-initial-profile-v1", data=ProfileData(**current["data"])))
+            print("local operator preferences initialized; existing revisions preserved")
         elif args.verb == "worker-once":
             from src.workspace import routes
             routes._store = store
