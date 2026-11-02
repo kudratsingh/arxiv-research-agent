@@ -63,12 +63,16 @@ describe("criterion 2 — the route group adds no URL segment", () => {
     expect(pages.map((page) => page.route).sort()).toEqual([
       "/",
       "/c/[id]",
+      "/interests",
       "/learn",
       "/learn/paths/[id]",
       // WO-W14. `(learn)` contributes no segment, so the Ledger is
       // `/learn/progress` and not `/(learn)/learn/progress`.
       "/learn/progress",
       "/learn/sessions/[id]",
+      "/library",
+      "/library/items/[id]",
+      "/today",
     ]);
   });
 
@@ -84,7 +88,7 @@ describe("criterion 2 — the route group adds no URL segment", () => {
     // (04 §2.1: "both wrap manually today").
     for (const page of pages) {
       expect(
-        page.file.startsWith("(workspace)/") || page.file.startsWith("(learn)/"),
+        page.file.startsWith("(workspace)/") || page.file.startsWith("(learn)/") || page.file.startsWith("(daily)/"),
         `${page.file} is outside a shell-owning group`,
       ).toBe(true);
     }

@@ -1,0 +1,395 @@
+{
+  "schema_version": "1.0.0",
+  "seed_version": "0.1.0",
+  "checked_on": "2026-11-02",
+  "status": "proposal_disabled_sources",
+  "scope": "Starter source options for a local-first ML and science workspace; not a universal news catalogue.",
+  "activation_rule": "All sources remain disabled until the user selects interests and approves the source list; endpoint verification does not activate ingestion.",
+  "verification_method": "Bounded public GET, at most 4096 decoded bytes per feed candidate; no feed entry import, article body or PDF fetch. Feed prefix verification is not a complete XML parse. arXiv checks were sequential with at least 3.1 seconds between request starts.",
+  "global_rules": {
+    "share_arxiv_host_rate_governor": true,
+    "respect_retry_after_and_cache_headers": true,
+    "sanitize_feed_html": true,
+    "initial_backfill": "preview_count_then_user_selected_lookback",
+    "deduplication": "canonical external IDs first; feeds may contain a large historical backlog",
+    "notification_policy": "digest_only_by_default_after_activation",
+    "allow_paid_services": false
+  },
+  "sources": [
+    {
+      "source_id": "arxiv-cs-lg",
+      "name": "arXiv Machine Learning",
+      "website_url": "https://arxiv.org/list/cs.LG/recent",
+      "candidate_feed_url": "https://rss.arxiv.org/rss/cs.LG",
+      "access_mode": "rss",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "paper_feed",
+      "interest_tags": [
+        "machine_learning"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "arXiv category feed; includes cross-lists and revisions"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": "https://rss.arxiv.org/rss/cs.LG",
+      "verification": {
+        "checked_at": "2026-11-02T13:49:07.645234+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "application/rss+xml",
+        "resolved_url": "https://rss.arxiv.org/rss/cs.LG",
+        "bytes_read": 4096,
+        "feed_root_prefix": "rss",
+        "verification": "http_and_feed_prefix_confirmed"
+      }
+    },
+    {
+      "source_id": "arxiv-cs-ai",
+      "name": "arXiv Artificial Intelligence",
+      "website_url": "https://arxiv.org/list/cs.AI/recent",
+      "candidate_feed_url": "https://rss.arxiv.org/rss/cs.AI",
+      "access_mode": "rss",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "paper_feed",
+      "interest_tags": [
+        "artificial_intelligence"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "Deduplicate against cs.LG and cs.CL on base arXiv ID"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": "https://rss.arxiv.org/rss/cs.AI",
+      "verification": {
+        "checked_at": "2026-11-02T13:49:10.755460+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "application/rss+xml",
+        "resolved_url": "https://rss.arxiv.org/rss/cs.AI",
+        "bytes_read": 4096,
+        "feed_root_prefix": "rss",
+        "verification": "http_and_feed_prefix_confirmed"
+      }
+    },
+    {
+      "source_id": "arxiv-cs-cl",
+      "name": "arXiv Computation and Language",
+      "website_url": "https://arxiv.org/list/cs.CL/recent",
+      "candidate_feed_url": "https://rss.arxiv.org/rss/cs.CL",
+      "access_mode": "rss",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "paper_feed",
+      "interest_tags": [
+        "language_models",
+        "nlp"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "Includes language research beyond frontier language models"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": "https://rss.arxiv.org/rss/cs.CL",
+      "verification": {
+        "checked_at": "2026-11-02T13:49:13.865516+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "application/rss+xml",
+        "resolved_url": "https://rss.arxiv.org/rss/cs.CL",
+        "bytes_read": 4096,
+        "feed_root_prefix": "rss",
+        "verification": "http_and_feed_prefix_confirmed"
+      }
+    },
+    {
+      "source_id": "hugging-face-blog",
+      "name": "Hugging Face Blog",
+      "website_url": "https://huggingface.co/blog",
+      "candidate_feed_url": "https://huggingface.co/blog/feed.xml",
+      "access_mode": "rss",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "official_blog",
+      "interest_tags": [
+        "models",
+        "datasets",
+        "tooling",
+        "ml_systems"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "Publisher and guest contributions; classify authorship per item"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": "https://huggingface.co/blog/feed.xml",
+      "verification": {
+        "checked_at": "2026-11-02T13:49:16.974986+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "application/rss+xml; charset=utf-8",
+        "resolved_url": "https://huggingface.co/blog/feed.xml",
+        "bytes_read": 4096,
+        "feed_root_prefix": "rss",
+        "verification": "http_and_feed_prefix_confirmed"
+      }
+    },
+    {
+      "source_id": "openai-news",
+      "name": "OpenAI News",
+      "website_url": "https://openai.com/news/",
+      "candidate_feed_url": "https://openai.com/news/rss.xml",
+      "access_mode": "rss",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "official_announcement",
+      "interest_tags": [
+        "frontier_models",
+        "agents",
+        "research",
+        "policy"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "Mixed company/product/research announcements; filter for user interests"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": "https://openai.com/news/rss.xml",
+      "verification": {
+        "checked_at": "2026-11-02T13:49:16.975511+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "text/xml; charset=utf-8",
+        "resolved_url": "https://openai.com/news/rss.xml",
+        "bytes_read": 4096,
+        "feed_root_prefix": "rss",
+        "verification": "http_and_feed_prefix_confirmed"
+      }
+    },
+    {
+      "source_id": "google-research",
+      "name": "Google Research Blog",
+      "website_url": "https://research.google/blog/",
+      "candidate_feed_url": "https://research.google/blog/rss/",
+      "access_mode": "rss",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "official_blog",
+      "interest_tags": [
+        "machine_learning",
+        "science",
+        "systems"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "Institutional research announcements; preserve paper/project links"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": "https://research.google/blog/rss/",
+      "verification": {
+        "checked_at": "2026-11-02T13:49:16.975921+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "application/rss+xml; charset=utf-8",
+        "resolved_url": "https://research.google/blog/rss/",
+        "bytes_read": 4096,
+        "feed_root_prefix": "rss",
+        "verification": "http_and_feed_prefix_confirmed"
+      }
+    },
+    {
+      "source_id": "google-deepmind",
+      "name": "Google DeepMind Blog",
+      "website_url": "https://deepmind.google/blog/",
+      "candidate_feed_url": "https://deepmind.google/blog/rss.xml",
+      "access_mode": "website_manual",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "official_announcement",
+      "interest_tags": [
+        "frontier_models",
+        "science",
+        "robotics"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "Lab claims and announcements are not independent validation"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": null,
+      "verification": {
+        "checked_at": "2026-11-02T13:49:16.976382+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "application/xml",
+        "resolved_url": "https://deepmind.google/blog/rss.xml",
+        "bytes_read": 4096,
+        "feed_root_prefix": null,
+        "verification": "http_response_not_confirmed_feed"
+      }
+    },
+    {
+      "source_id": "nature",
+      "name": "Nature Journal Feed",
+      "website_url": "https://www.nature.com/nature/",
+      "candidate_feed_url": "https://www.nature.com/nature.rss",
+      "access_mode": "rss",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "journal_feed",
+      "interest_tags": [
+        "general_science"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "Publisher feed may mix research and editorial/news items; full text may be restricted"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": "https://www.nature.com/nature.rss",
+      "verification": {
+        "checked_at": "2026-11-02T13:49:17.101798+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "application/rss+xml; charset=utf-8",
+        "resolved_url": "https://www.nature.com/nature.rss",
+        "bytes_read": 4096,
+        "feed_root_prefix": "RDF",
+        "verification": "http_and_feed_prefix_confirmed"
+      }
+    },
+    {
+      "source_id": "google-ai-blog",
+      "name": "Google AI Blog",
+      "website_url": "https://blog.google/technology/ai/",
+      "candidate_feed_url": "https://blog.google/technology/ai/rss/",
+      "access_mode": "rss",
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "official_announcement",
+      "interest_tags": [
+        "ai_products",
+        "research"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred_from_feed",
+        "linkout_default": true
+      },
+      "notes": [
+        "May overlap Google Research and DeepMind; cluster related announcements"
+      ],
+      "proposed_poll_interval_minutes": 180,
+      "feed_url": "https://blog.google/innovation-and-ai/technology/ai/rss/",
+      "verification": {
+        "checked_at": "2026-11-02T13:49:17.131172+00:00",
+        "method": "GET",
+        "read_limit_bytes": 4096,
+        "purpose": "verify response and feed prefix only; no entry import or article-body fetch",
+        "full_document_parse": false,
+        "http_status": 200,
+        "content_type": "application/xml; charset=utf-8",
+        "resolved_url": "https://blog.google/innovation-and-ai/technology/ai/rss/",
+        "bytes_read": 4096,
+        "feed_root_prefix": "rss",
+        "verification": "http_and_feed_prefix_confirmed"
+      }
+    },
+    {
+      "source_id": "anthropic-news",
+      "name": "Anthropic News",
+      "website_url": "https://www.anthropic.com/news",
+      "access_mode": "website_manual",
+      "feed_url": null,
+      "enabled_by_default": false,
+      "requires_user_source_selection": true,
+      "content_class": "official_announcement",
+      "interest_tags": [
+        "frontier_models",
+        "agents",
+        "safety"
+      ],
+      "content_policy": {
+        "store_metadata_and_links": true,
+        "auto_fetch_fulltext": false,
+        "redistribution_permission": "not_inferred",
+        "linkout_default": true
+      },
+      "verification": {
+        "checked_on": "2026-11-02",
+        "verification": "feed_not_established",
+        "method": "none",
+        "note": "Official website is a manual starter; no RSS URL is invented or claimed verified."
+      },
+      "notes": [
+        "Manual user URL imports in the first version; any future site adapter needs separate verification."
+      ]
+    }
+  ]
+}

@@ -194,27 +194,32 @@ tiers — commands for each are in
 [`testing.md`](testing.md#the-web-suite). Two house rules bind every
 change under `web/`, and both are enforced rather than trusted.
 
-### Rule 1 — exactly two persisted client preferences
+### Rule 1 — two cosmetic preferences and an isolated workspace preview
 
-The product may write **two** keys to browser storage and no others
-(RC-05). Both are defined in one place, `web/lib/tokens.ts`:
+The existing workbench writes **two cosmetic preferences** (RC-05), both
+defined in `web/lib/tokens.ts`. ADR [0103](decisions/0103-personal-daily-research-workspace.md)
+adds one isolated data key for the opt-in daily-workspace preview only:
 
 | Key | Values | What it is |
 |---|---|---|
 | `arxiv-agent.theme` | `"light"` \| `"dark"` \| `"system"` | The theme override, applied before first paint by an inline script in `app/layout.tsx` so there is no flash |
 | `arxiv-agent.rail-collapsed` | `"1"` \| `"0"` | Whether the thread rail is collapsed. `"1"` means collapsed; anything else, including a throw, means expanded |
 
-Both are **cosmetic and safely absent**, which is the property that
+The two preferences are **cosmetic and safely absent**, which is the property that
 matters: no job id, plan, checkpoint or query is ever written to browser
 storage, so nothing in storage can outlive `api_job_retention_sec`, and
-a rollback loses nothing but a preference. The job id lives in the URL
+a rollback of the existing workbench loses nothing but a preference. The job id lives in the URL
 as `?job=`, not in storage.
 
 Every read and write is wrapped in `try`/`catch`, because
 `localStorage` throws outright in a partitioned context. The failure
 mode must always be "the preference does not persist" and never "the
-control throws". If you add a third key, you are changing the rollback
-argument — that needs a decision, not a commit.
+control throws". The preview key `arxiv-agent.workspace-preview.v1` contains
+versioned, bounded preview interests, reading anchors and user notes. The UI
+labels browser-only storage and offers Markdown export. Failed writes remain
+unsaved and visible. This data is separate from jobs and credentials; W2 must
+replace it with principal-scoped server persistence before daily-use acceptance.
+Further storage keys require their own decision.
 
 ### Rule 2 — the budget ratchet
 

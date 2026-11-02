@@ -114,6 +114,10 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
       "/learn/progress/page": "/learn/progress",
       "/learn/sessions/[id]/page": "/learn/sessions/[id]",
       "/api/[...path]/route": "/api/[...path]",
+      "/today/page": "/today",
+      "/interests/page": "/interests",
+      "/library/page": "/library",
+      "/library/items/[id]/page": "/library/items/[id]",
     }),
   );
 
@@ -197,6 +201,10 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
       '<script src="/_next/static/chunks/webpack-1111111111111111.js" id="_R_" async=""></script>',
     ].join("\n"),
   );
+
+  for (const route of ["today", "interests", "library", "library/items/[id]"]) {
+    write(path.join(nextDir, "server/app", route, "page_client-reference-manifest.js"), `globalThis.__RSC_MANIFEST={"/${route}/page":${JSON.stringify({clientModules: homeModules, entryCSSFiles: {}})}};`);
+  }
 
   for (const font of options.fonts ?? []) {
     const abs = path.join(root, font.rel);
@@ -592,7 +600,7 @@ describe("report format", () => {
 describe("the committed budgets.json encodes RC-01 in bytes", () => {
   const budgets = loadBudgets(BUDGETS_PATH);
 
-  it("has the seven reconciled rows plus the four (learn) route rows", () => {
+  it("has the historical rows plus four gated daily-workspace routes", () => {
     expect(budgets.rows.map((r) => r.id)).toEqual([
       "route-js-home",
       "route-js-conversation",
@@ -611,6 +619,10 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
       "self-hosted-fonts",
       "total-transferred-js",
       "derived-total-first-load",
+      "route-js-daily-today",
+      "route-js-daily-interests",
+      "route-js-daily-library",
+      "route-js-daily-reader",
     ]);
   });
 
@@ -639,7 +651,7 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     // session's two-column margin measured 11,335 B, 71 B over the WO-31
     // ceiling. 12 KiB is the smallest whole-KiB ceiling above it and keeps
     // less proportional headroom than the ceiling it replaces.
-    ["emitted-css", 12_288, 4_288],
+    ["emitted-css", 15_872, 4_288],
     ["self-hosted-fonts", 109_568, 0],
     // The one row WO-31 could not ratchet: its `enforcedBy` names a WO-21
     // Playwright transfer assertion that was never written, so there is no
@@ -647,8 +659,12 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     ["total-transferred-js", 245_760, null],
     // Mechanical: this row is defined as route-js-conversation +
     // emitted-css + self-hosted-fonts, so the CSS movement above moves it by
-    // exactly the same 1,024 B. 192,512 + 12,288 + 109,568 = 314,368.
-    ["derived-total-first-load", 314_368, null],
+    // the same delta. W1: 192,512 + 15,872 + 109,568 = 317,952.
+    ["derived-total-first-load", 317_952, null],
+    ["route-js-daily-today", 163_840, null],
+    ["route-js-daily-interests", 163_840, null],
+    ["route-js-daily-library", 163_840, null],
+    ["route-js-daily-reader", 163_840, null],
   ])("row %s carries the ratified ceiling in bytes", (id, budgetBytes, baselineBytes) => {
     const row = budgets.rows.find((r) => r.id === id);
     expect(row?.budgetBytes).toBe(budgetBytes);
@@ -656,14 +672,14 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     expect(row?.baselineBytes ?? null).toBe(baselineBytes);
   });
 
-  it("gates the eight per-asset-class rows, delegates one and only reports one", () => {
+  it("gates thirteen rows, delegates one and only reports one", () => {
     const by = (enforcement: string) =>
       budgets.rows.filter((r) => r.enforcement === enforcement).map((r) => r.id);
     // Seven at WO-31, plus WO-W13's `/learn/sessions/[id]` and WO-W14's
     // `/learn/progress`. A new route row is gated from its first commit;
     // there is no "reported for a while first" grace, because a ceiling
     // nobody enforces is a note.
-    expect(by("gated")).toHaveLength(9);
+    expect(by("gated")).toHaveLength(13);
     expect(by("external")).toEqual(["total-transferred-js"]);
     expect(by("reported")).toEqual(["derived-total-first-load"]);
   });
@@ -864,8 +880,8 @@ describe("run()", () => {
     const { result, reportPath } = run({ webDir: fixture.root, now: new Date(0) });
     expect(reportPath).toBe(path.join(fixture.root, "budget-report.md"));
     expect(fs.readFileSync(reportPath, "utf8")).toContain("# Route budget report");
-    // Eleven rows: the seven reconciled ones plus the four `(learn)` routes.
-    expect(result.rows).toHaveLength(11);
+    // Fifteen rows: historical rows plus four `(daily)` routes.
+    expect(result.rows).toHaveLength(15);
   });
 
   it("explains how to fix a missing build instead of measuring nothing", () => {

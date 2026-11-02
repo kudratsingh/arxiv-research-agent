@@ -866,6 +866,8 @@ never renumbered.
   caps and cost; frozen settings become part of the campaign digest; and
   the packet records the remaining live-evaluation preconditions.
 
+- [0103](0103-personal-daily-research-workspace.md) — **Build a personal daily research workspace.** Prioritize the daily briefing, source reader and saved research question; preserve the query workflow and separate metadata, preview and approved generated analysis.
+
 ## When to write an ADR
 
 - Choosing between competing libraries or frameworks.

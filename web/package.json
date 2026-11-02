@@ -33,28 +33,31 @@
     "e2e:pilot:stack:up": "E2E_PILOT=1 bash ./e2e/support/stack.sh up",
     "e2e:pilot:stack:seed": "E2E_PILOT=1 bash ./e2e/support/stack.sh seed",
     "e2e:pilot:stack:down": "E2E_PILOT=1 bash ./e2e/support/stack.sh down",
-    "e2e:pilot": "E2E_PILOT=1 playwright test -c playwright.pilot.config.ts"
+    "e2e:pilot": "E2E_PILOT=1 playwright test -c playwright.pilot.config.ts",
+    "dev:workspace": "WORKSPACE_PREVIEW=1 ANTHROPIC_API_KEY=local-preview-disabled USE_MOCK_DATA=true API_INTERNAL_BASE=http://127.0.0.1:9 next dev --hostname 127.0.0.1 --port 3126",
+    "e2e:workspace": "playwright test -c playwright.workspace.config.ts",
+    "preview:workspace": "WORKSPACE_PREVIEW=1 ANTHROPIC_API_KEY=local-preview-disabled USE_MOCK_DATA=true API_INTERNAL_BASE=http://127.0.0.1:9 next start --hostname 127.0.0.1 --port 3127"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.23",
     "@radix-ui/react-dropdown-menu": "2.1.24",
     "@tanstack/react-query": "5.102.2",
-    "next": "^16.3.3",
+    "next": "^16.4.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "7.86.0",
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
     "web-vitals": "6.2.1",
-    "zod": "4.4.3"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
     "@lhci/cli": "0.15.1",
     "@playwright/test": "1.62.1",
-    "@storybook/addon-a11y": "10.5.10",
-    "@storybook/addon-vitest": "10.5.10",
-    "@storybook/nextjs-vite": "10.5.10",
+    "@storybook/addon-a11y": "10.6.5",
+    "@storybook/addon-vitest": "10.6.5",
+    "@storybook/nextjs-vite": "10.6.5",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
@@ -65,15 +68,20 @@
     "@vitest/coverage-v8": "4.1.11",
     "autoprefixer": "^10.4.20",
     "eslint": "9.39.5",
-    "eslint-config-next": "^16.3.3",
+    "eslint-config-next": "^16.4.4",
     "jsdom": "^30.0.1",
     "msw": "2.15.0",
     "openapi-typescript": "7.13.0",
     "postcss": "^8.4.47",
-    "storybook": "10.5.10",
+    "storybook": "10.6.5",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
     "vitest": "^4.1.11",
-    "zod": "4.4.3"
+    "zod": "4.6.6"
+  },
+  "overrides": {
+    "lighthouse": "13.6.0",
+    "tmp": "0.2.7",
+    "basic-ftp": "6.2.5"
   }
 }
