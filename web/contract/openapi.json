@@ -5,7 +5,8 @@
     "commit": "a59c5f8fa87b263b1ed0d20c51ea90a305ae737b",
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
-    "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi()."
+    "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi().",
+    "workspace_update": "2026-11-02 durable workspace; no provider client"
   },
   "openapi": "3.1.0",
   "info": {
@@ -735,6 +736,571 @@
           }
         }
       }
+    },
+    "/workspace/state": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Get State",
+        "description": "Read the owner's private profile, reading records and current public candidates.",
+        "operationId": "get_state_workspace_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/profile": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Save Profile",
+        "description": "Create an interest revision with optimistic concurrency and retry identity.",
+        "operationId": "save_profile_workspace_profile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRevision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/reading": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Save Reading",
+        "description": "Save read state and a source-version anchor without moving existing notes.",
+        "operationId": "save_reading_workspace_reading_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadingWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingRevision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/entries": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Save Entry",
+        "description": "Save an authored note, question or next action against an immutable version.",
+        "operationId": "save_entry_workspace_entries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryRevision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/refresh": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Refresh Sources",
+        "description": "Fetch at most one bounded page per approved connector; no model work occurs.",
+        "operationId": "refresh_sources_workspace_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/edition": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Build Edition",
+        "description": "Freeze a finite metadata edition using the current profile and stored receipts.",
+        "operationId": "build_edition_workspace_edition_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Edition"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/items": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "List Items",
+        "description": "Filter a stable observation cutoff with a cursor bound to the actual filters.",
+        "operationId": "list_items_workspace_items_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 500,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "access_state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Access State"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Status"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 0,
+              "default": 7,
+              "title": "Days"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 2048,
+              "default": "",
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "As Of"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/manual": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Manual Save",
+        "description": "Save a controlled identifier as honest metadata/link-only; no arbitrary URL fetch.",
+        "operationId": "manual_save_workspace_manual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkItem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/import/preview": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Preview Import",
+        "description": "Show an explicit import diff without modifying either browser or server records.",
+        "operationId": "preview_import_workspace_import_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/import/apply": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Apply Import",
+        "description": "Apply the reviewed import once; conflicting private notes remain untouched.",
+        "operationId": "apply_import_workspace_import_apply_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportApply"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/schedule": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Save Schedule",
+        "description": "Persist local scheduling preferences; activation requires separate owner confirmation.",
+        "operationId": "save_schedule_workspace_schedule_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleRevision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/export": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Export Notes",
+        "description": "Export authored text with the exact work/version/anchor context and source URL.",
+        "operationId": "export_notes_workspace_export_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/generate": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Request Generation",
+        "description": "Refuse before importing or constructing any provider; a key is never approval.",
+        "operationId": "request_generation_workspace_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Request Generation Workspace Generate Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -857,6 +1423,220 @@
         ],
         "title": "ConversationListItem",
         "description": "`GET /conversations` \u2014 sidebar entry, no job bodies."
+      },
+      "Edition": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "profile_revision": {
+            "type": "integer",
+            "title": "Profile Revision"
+          },
+          "minutes": {
+            "type": "integer",
+            "title": "Minutes"
+          },
+          "work_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Work Ids"
+          },
+          "work_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Work Versions"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/SourceStatus"
+            },
+            "type": "array",
+            "title": "Coverage"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "profile_revision",
+          "minutes",
+          "work_ids",
+          "coverage",
+          "status"
+        ],
+        "title": "Edition"
+      },
+      "EntryData": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Version Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "question",
+              "note",
+              "next-action"
+            ],
+            "title": "Kind"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor",
+            "default": "abstract:0"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_id",
+          "version_id",
+          "kind",
+          "body"
+        ],
+        "title": "EntryData"
+      },
+      "EntryRevision": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Version Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "question",
+              "note",
+              "next-action"
+            ],
+            "title": "Kind"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor",
+            "default": "abstract:0"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_id",
+          "version_id",
+          "kind",
+          "body",
+          "id",
+          "revision"
+        ],
+        "title": "EntryRevision"
+      },
+      "EntryWrite": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/EntryData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "request_id",
+          "data"
+        ],
+        "title": "EntryWrite"
+      },
+      "GenerationRequest": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "title": "Work Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "deep-dive"
+            ],
+            "title": "Kind"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_id",
+          "kind"
+        ],
+        "title": "GenerationRequest"
       },
       "GoalClaim": {
         "properties": {
@@ -1005,6 +1785,134 @@
         ],
         "title": "HealthResponse",
         "description": "`GET /healthz` \u2014 process liveness + dependency visibility (ADR 0042).\n\n`status` is `ok` when every checked dependency answered its ping,\n`degraded` otherwise. The endpoint always returns 200 \u2014 it\nreports liveness of *this process*, and restarting the process\ndoes not fix a dead Redis. Orchestrators that want to gate\ntraffic on dependencies should parse `status` / `dependencies`."
+      },
+      "ImportApply": {
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/PreviewRecord"
+          },
+          "profile_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Profile Revision"
+          },
+          "import_profile": {
+            "type": "boolean",
+            "title": "Import Profile",
+            "default": false
+          },
+          "digest": {
+            "type": "string",
+            "title": "Digest"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "record",
+          "profile_revision",
+          "digest"
+        ],
+        "title": "ImportApply"
+      },
+      "ImportPreview": {
+        "properties": {
+          "digest": {
+            "type": "string",
+            "title": "Digest"
+          },
+          "entries_new": {
+            "type": "integer",
+            "title": "Entries New"
+          },
+          "entries_existing": {
+            "type": "integer",
+            "title": "Entries Existing"
+          },
+          "conflicts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conflicts"
+          },
+          "profile_will_change": {
+            "type": "boolean",
+            "title": "Profile Will Change"
+          },
+          "original_retained": {
+            "type": "boolean",
+            "const": true,
+            "title": "Original Retained",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "digest",
+          "entries_new",
+          "entries_existing",
+          "conflicts",
+          "profile_will_change"
+        ],
+        "title": "ImportPreview"
+      },
+      "ImportRequest": {
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/PreviewRecord"
+          },
+          "profile_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Profile Revision"
+          },
+          "import_profile": {
+            "type": "boolean",
+            "title": "Import Profile",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "record",
+          "profile_revision"
+        ],
+        "title": "ImportRequest"
+      },
+      "ItemPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "as_of": {
+            "type": "string",
+            "title": "As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor",
+          "as_of"
+        ],
+        "title": "ItemPage"
       },
       "JobDetail": {
         "properties": {
@@ -1729,6 +2637,82 @@
         "title": "LearnerProgressSummary",
         "description": "`GET /learn/progress` \u2014 the whole ledger view for one principal.\n\nRecomputable by construction: the route reads raw events and folds\nthem with `src.learning.progress_store.summarize`, a pure function\nwith no clock and no store access. There is no cached aggregate\nanywhere, so the displayed record cannot drift from the log."
       },
+      "ManualRequest": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "title": "ManualRequest"
+      },
+      "MaterialVersion": {
+        "properties": {
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "version_label": {
+            "type": "string",
+            "title": "Version Label"
+          },
+          "abstract": {
+            "type": "string",
+            "title": "Abstract",
+            "default": ""
+          },
+          "access_state": {
+            "type": "string",
+            "title": "Access State",
+            "default": "metadata"
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash",
+            "default": ""
+          },
+          "fetched_at": {
+            "type": "string",
+            "title": "Fetched At",
+            "default": ""
+          },
+          "source_scope": {
+            "type": "string",
+            "title": "Source Scope",
+            "default": "abstract"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "default": ""
+          },
+          "authors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Authors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version_id",
+          "version_label"
+        ],
+        "title": "MaterialVersion"
+      },
       "Plan": {
         "properties": {
           "sub_questions": {
@@ -1755,6 +2739,223 @@
         "type": "object",
         "title": "Plan",
         "description": "The planner's output, exposed for HITL review (ADR 0030).\n\nBoth lists are bounded (ADR 0042): each search query costs one\narXiv HTTP call plus a hard 3s politeness sleep on an executor\nthread, so an unbounded revised plan is a resource-exhaustion\nvector, not just bad input."
+      },
+      "PreviewEntry": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Id"
+          },
+          "itemId": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Itemid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "question",
+              "note",
+              "next-action"
+            ],
+            "title": "Kind"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "itemId",
+          "kind",
+          "body",
+          "anchor"
+        ],
+        "title": "PreviewEntry"
+      },
+      "PreviewRecord": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "const": 1,
+            "title": "Revision"
+          },
+          "topics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Topics"
+          },
+          "customTopics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Customtopics"
+          },
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "minutes": {
+            "type": "integer",
+            "enum": [
+              5,
+              15,
+              45
+            ],
+            "title": "Minutes"
+          },
+          "saved": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Saved"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewEntry"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Entries"
+          },
+          "anchors": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Anchors"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          },
+          "researchQuestion": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Researchquestion"
+          },
+          "streams": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Streams"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "topics",
+          "customTopics",
+          "configured",
+          "minutes",
+          "saved",
+          "entries",
+          "anchors",
+          "done",
+          "researchQuestion",
+          "streams"
+        ],
+        "title": "PreviewRecord"
+      },
+      "ProfileData": {
+        "properties": {
+          "topics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Topics"
+          },
+          "custom_topics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Custom Topics"
+          },
+          "exclusions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Exclusions"
+          },
+          "streams": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Streams"
+          },
+          "minutes": {
+            "type": "integer",
+            "enum": [
+              5,
+              15,
+              45
+            ],
+            "title": "Minutes",
+            "default": 15
+          },
+          "research_question": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Research Question",
+            "default": ""
+          },
+          "exploration": {
+            "type": "number",
+            "maximum": 0.3,
+            "minimum": 0.0,
+            "title": "Exploration",
+            "default": 0.15
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProfileData"
+      },
+      "ProfileRevision": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "default": 0
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProfileData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProfileRevision"
       },
       "ProfileUpdateRequest": {
         "properties": {
@@ -1806,6 +3007,32 @@
         "type": "object",
         "title": "ProfileUpdateRequest",
         "description": "Body for `PUT /learn/profile` \u2014 a full replacement of what the\nlearner has declared.\n\nClaims the system inferred or assessed are *not* addressable here:\nthey survive the write untouched, because the learner edits what\nthey said about themselves and the system's own observations stand\nor fall on their evidence."
+      },
+      "ProfileWrite": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProfileData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "request_id",
+          "data"
+        ],
+        "title": "ProfileWrite"
       },
       "ProgressDailySessions": {
         "properties": {
@@ -1981,6 +3208,145 @@
         "title": "ProgressSchedule",
         "description": "Schedule arithmetic for one path. Not a knowledge claim.\n\n01 \u00a74.1 permits \"14 of 21 sessions in this milestone complete\"\nbecause it is arithmetic about sessions, and requires it be\nlabeled as schedule progress rather than knowledge \u2014 hence\n`schedule_label` and the `schedule_progress` field name on the\nsummary. There is deliberately no percentage here, and no field\nthat could carry one."
       },
+      "ReadingData": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "unread",
+              "saved",
+              "read",
+              "archived",
+              "dismissed",
+              "snoozed"
+            ],
+            "title": "Status",
+            "default": "unread"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor",
+            "default": "abstract:0"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Version Id",
+            "default": ""
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ReadingData"
+      },
+      "ReadingRevision": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "unread",
+              "saved",
+              "read",
+              "archived",
+              "dismissed",
+              "snoozed"
+            ],
+            "title": "Status",
+            "default": "unread"
+          },
+          "anchor": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Anchor",
+            "default": "abstract:0"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Version Id",
+            "default": ""
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ReadingRevision"
+      },
+      "ReadingWrite": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ReadingData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_id",
+          "revision",
+          "request_id",
+          "data"
+        ],
+        "title": "ReadingWrite"
+      },
+      "RefreshRequest": {
+        "properties": {
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Source Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RefreshRequest"
+      },
       "ResearchAccepted": {
         "properties": {
           "job_id": {
@@ -2096,6 +3462,92 @@
         ],
         "title": "ReviewResponse",
         "description": "Response for `POST /research/{job_id}/review`.\n\n`status` is the job's status *at the moment the review was\naccepted* \u2014 always `pending_review` \u2014 not the post-resume state.\nThe resume is asynchronous: the runner applies the action after\nthis response is written, so clients should poll `status_url`\n(or watch the SSE stream) for the settled outcome rather than\nasserting on this snapshot."
+      },
+      "ScheduleData": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "default": "America/Los_Angeles"
+          },
+          "local_time": {
+            "type": "string",
+            "title": "Local Time",
+            "default": "07:00"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ScheduleData"
+      },
+      "ScheduleRevision": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "default": "America/Los_Angeles"
+          },
+          "local_time": {
+            "type": "string",
+            "title": "Local Time",
+            "default": "07:00"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "default": 0
+          },
+          "next_check": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Check"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ScheduleRevision"
+      },
+      "ScheduleWrite": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ScheduleData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "request_id",
+          "data"
+        ],
+        "title": "ScheduleWrite"
       },
       "SessionAccepted": {
         "properties": {
@@ -2521,6 +3973,45 @@
         "title": "SkillDeclaration",
         "description": "One skill the learner says they have.\n\nNo provenance field by design \u2014 see the section comment above."
       },
+      "SourceStatus": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "not_checked"
+          },
+          "last_success_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          },
+          "receipt": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Receipt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "name"
+        ],
+        "title": "SourceStatus"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -2560,6 +4051,213 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WorkItem": {
+        "properties": {
+          "work_id": {
+            "type": "string",
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "source_record_id": {
+            "type": "string",
+            "title": "Source Record Id",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "authors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Authors"
+          },
+          "abstract": {
+            "type": "string",
+            "title": "Abstract",
+            "default": ""
+          },
+          "access_state": {
+            "type": "string",
+            "title": "Access State",
+            "default": "metadata"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "published_precision": {
+            "type": "string",
+            "title": "Published Precision",
+            "default": "unknown"
+          },
+          "updated_precision": {
+            "type": "string",
+            "title": "Updated Precision",
+            "default": "unknown"
+          },
+          "first_seen_at": {
+            "type": "string",
+            "title": "First Seen At"
+          },
+          "fetched_at": {
+            "type": "string",
+            "title": "Fetched At"
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash",
+            "default": ""
+          },
+          "version_label": {
+            "type": "string",
+            "title": "Version Label",
+            "default": "observed"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "default": "paper"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialVersion"
+            },
+            "type": "array",
+            "title": "Versions"
+          },
+          "reading": {
+            "$ref": "#/components/schemas/ReadingRevision"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/EntryRevision"
+            },
+            "type": "array",
+            "title": "Entries"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "work_id",
+          "version_id",
+          "source_id",
+          "title",
+          "url",
+          "first_seen_at",
+          "fetched_at"
+        ],
+        "title": "WorkItem"
+      },
+      "WorkspaceState": {
+        "properties": {
+          "principal_key_id": {
+            "type": "string",
+            "title": "Principal Key Id"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/ProfileRevision"
+          },
+          "works": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItem"
+            },
+            "type": "array",
+            "title": "Works"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceStatus"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "editions": {
+            "items": {
+              "$ref": "#/components/schemas/Edition"
+            },
+            "type": "array",
+            "title": "Editions"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleRevision"
+          },
+          "tasks": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tasks"
+          },
+          "generation": {
+            "type": "string",
+            "const": "approval_required",
+            "title": "Generation",
+            "default": "approval_required"
+          },
+          "as_of": {
+            "type": "string",
+            "title": "As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "principal_key_id",
+          "profile",
+          "works",
+          "sources",
+          "editions",
+          "schedule",
+          "as_of"
+        ],
+        "title": "WorkspaceState"
       }
     }
   }

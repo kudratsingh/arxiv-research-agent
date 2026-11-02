@@ -1337,4 +1337,7 @@ def create_app(
     # `enable_learn_content` is off.
     app.include_router(learn_router)
     app.include_router(session_router)
+    from src.workspace.routes import router as workspace_router
+
+    app.include_router(workspace_router)
     return app

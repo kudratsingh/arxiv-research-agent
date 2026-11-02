@@ -1,0 +1,19 @@
+# Isolated loopback storage only. Never combines with the owner's default stack.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: workspace
+      POSTGRES_PASSWORD: workspace-local-only
+      POSTGRES_DB: workspace
+    ports:
+      - "127.0.0.1:15438:5432"
+    volumes:
+      - workspace-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workspace -d workspace"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+volumes:
+  workspace-data:

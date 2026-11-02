@@ -82,6 +82,11 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
     paths = document["paths"]
 
     assert set(paths) == {
+        "/workspace/state", "/workspace/profile", "/workspace/reading",
+        "/workspace/entries", "/workspace/refresh", "/workspace/edition",
+        "/workspace/items", "/workspace/manual", "/workspace/import/preview",
+        "/workspace/import/apply", "/workspace/schedule", "/workspace/export",
+        "/workspace/generate",
         # WO-W07: the learner progress ledger. Present in the document
         # whatever `enable_learner_profile` says — the flag is runtime
         # behaviour (404 when off), not schema shape, so the contract

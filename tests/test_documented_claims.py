@@ -218,6 +218,7 @@ _NUMBER_WORDS: Final[dict[str, int]] = {
     "nine": 9,
     "eleven": 11,
     "twelve": 12,
+    "thirteen": 13,
     "sixteen": 16,
     "nineteen": 19,
     "twenty": 20,
@@ -1282,7 +1283,7 @@ class TestTheFlagSet:
     def test_the_readme_counts_every_enable_flag(self) -> None:
         claimed = _word_to_int(
             _claim(
-                r"declares \*\*(\w+) `enable_\*` flags\*\*", _readme(), "README.md"
+                r"declares \*\*([\w-]+) `enable_\*` flags\*\*", _readme(), "README.md"
             ).group(1),
             "README.md",
         )
