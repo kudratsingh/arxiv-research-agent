@@ -380,7 +380,7 @@
       "gate": "every PR",
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
-      "note": "W2-W6 measured 154,734 B on Next16.4.4 production build; six new routes use166KiB, largest5.5% headroom. Existing JS ceilings unchanged."
+      "note": "Measured 154,732 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
     },
     {
       "id": "route-js-live-radar",
@@ -393,7 +393,7 @@
       "gate": "every PR",
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
-      "note": "W2-W6 measured 154,500 B on Next16.4.4 production build; six new routes use166KiB, largest5.5% headroom. Existing JS ceilings unchanged."
+      "note": "Measured 154,498 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
     },
     {
       "id": "route-js-live-interests",
@@ -406,7 +406,7 @@
       "gate": "every PR",
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
-      "note": "W2-W6 measured 161,089 B on Next16.4.4 production build; six new routes use166KiB, largest5.5% headroom. Existing JS ceilings unchanged."
+      "note": "Measured 161,087 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
     },
     {
       "id": "route-js-live-library",
@@ -419,7 +419,7 @@
       "gate": "every PR",
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
-      "note": "W2-W6 measured 156,629 B on Next16.4.4 production build; six new routes use166KiB, largest5.5% headroom. Existing JS ceilings unchanged."
+      "note": "Measured 156,627 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
     },
     {
       "id": "route-js-live-items-reader",
@@ -432,7 +432,7 @@
       "gate": "every PR",
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
-      "note": "W2-W6 measured 156,195 B on Next16.4.4 production build; six new routes use166KiB, largest5.5% headroom. Existing JS ceilings unchanged."
+      "note": "Measured 156,214 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
     },
     {
       "id": "route-js-live-operations",
@@ -445,7 +445,7 @@
       "gate": "every PR",
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
-      "note": "W2-W6 measured 153,448 B on Next16.4.4 production build; six new routes use166KiB, largest5.5% headroom. Existing JS ceilings unchanged."
+      "note": "Measured 153,446 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
     }
   ]
 }

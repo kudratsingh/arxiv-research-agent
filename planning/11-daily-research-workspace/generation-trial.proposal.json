@@ -1,0 +1,105 @@
+{
+  "status": "unapproved_proposal",
+  "approved": false,
+  "approval_record": null,
+  "model_id": "claude-sonnet-4-6",
+  "prices_usd_per_million": {
+    "input": 3,
+    "output": 15
+  },
+  "prices_verified_at": "2026-11-02",
+  "price_source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "sources": [
+    {
+      "work_id": "arxiv:2610.41482",
+      "version_id": "arxiv:2610.41482:v1:metadata-e5c832a06d88973f",
+      "material_id": "mat-54f2f6e0645f499458d5030d06e35a59",
+      "content_hash": "sha256:a1e2d03e8e9d1c84b615b075c16a309c69499e3fa466b8502a8ae63cc36aca32",
+      "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1"
+    },
+    {
+      "work_id": "arxiv:2610.41552",
+      "version_id": "arxiv:2610.41552:v1:metadata-1c364e8ae805a931",
+      "material_id": "mat-37637e07527abf0d35a62bf375e4ad57",
+      "content_hash": "sha256:d3957979392138a48583d19fbe4eacdd34a9c9b5a7be53c71e284e37a247a492",
+      "source_hash": "sha256:57d828d72e965955c14487b74cfd406d58aeab909942be50c97cafac89d3ccae",
+      "scope": "abstract",
+      "parser_revision": "workspace-plain-text-v1"
+    },
+    {
+      "work_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411",
+      "version_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411:observed-42d6cea8785311a4",
+      "material_id": "mat-c0f4d4d0fc482dc92002c7cdbef738da",
+      "content_hash": "sha256:97761022fb36ff719a56d706bdd6f879c3f3f270960de59d8b404c165b5dea03",
+      "source_hash": "sha256:a9d24ada1cc839d6c40f857f0e963df612039b888706519edb9870398db8eab1",
+      "scope": "excerpt",
+      "parser_revision": "workspace-plain-text-v1"
+    }
+  ],
+  "private_context": {
+    "notes": false,
+    "drafts": false,
+    "organizing_question": false
+  },
+  "settings": {
+    "draft_temperature": 0.2,
+    "judge_temperature": 0.0,
+    "thinking": "disabled",
+    "effort": null,
+    "structured_outputs": true,
+    "sdk_retries": 0,
+    "max_concurrency": 1,
+    "timeout_seconds": 30
+  },
+  "envelope": {
+    "summary": {
+      "max_calls": 2,
+      "draft_tokens": [
+        6000,
+        1200
+      ],
+      "check_tokens": [
+        8000,
+        800
+      ],
+      "job_cap_usd": "0.10"
+    },
+    "guided_study": {
+      "max_calls": 3,
+      "draft_tokens": [
+        16000,
+        2400
+      ],
+      "check_tokens": [
+        18000,
+        1200
+      ],
+      "repair_tokens": [
+        18000,
+        2400
+      ],
+      "job_cap_usd": "0.32"
+    },
+    "qualification": {
+      "summaries": 3,
+      "guided_studies": 1,
+      "max_calls": 9,
+      "estimated_max_usd": "0.462",
+      "reserved_job_caps_usd": "0.62",
+      "trial_cap_usd": "0.75",
+      "day_cap_usd": "0.75",
+      "month_cap_usd": "0.75"
+    }
+  },
+  "measured_token_counts": null,
+  "provider_calls": 0,
+  "execution_enabled": false,
+  "remaining": [
+    "Actual executor and per-call settings/token enforcement",
+    "Exact token measurements",
+    "Checker qualification and representative labels",
+    "Specific owner GO; no code-generated approval"
+  ]
+}
