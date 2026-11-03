@@ -10,10 +10,20 @@ async function realState(page: import("@playwright/test").Page) {
   expect(response.ok()).toBe(true);
   const state = (await response.json()) as WorkspaceState;
   expect(state.principal_key_id).toBeTruthy();
+  const principal = process.env.WORKSPACE_VERIFICATION_PRINCIPAL ?? "e2e";
+  expect(
+    principal,
+    "Write walkthroughs require an isolated verification principal.",
+  ).not.toBe("personal-local");
+  expect(state.principal_key_id).toBe(principal);
   expect(state.generation).toBe("approval_required");
   expect(state.sources.length).toBe(5);
   return state;
 }
+
+test.beforeEach(async ({ page }) => {
+  await realState(page);
+});
 
 test("real Today → source → server-saved question → reload → Library export", async ({
   page,
@@ -237,4 +247,322 @@ test("keyboard-only source-to-question flow keeps the real server record", async
   );
   await page.reload();
   await expect(page.getByText(question, { exact: true })).toBeVisible();
+});
+
+test("editing an earlier question becomes latest activity, pins its exact version and returns to the Library view", async ({
+  page,
+}, testInfo) => {
+  const initial = await realState(page);
+  const item = initial.works.find(
+    (work) => work.versions.filter((version) => version.abstract).length > 1,
+  );
+  expect(
+    item,
+    "The isolated browser seed must retain two material versions.",
+  ).toBeTruthy();
+  const earlier = item!.versions.find(
+    (version) => version.version_id !== item!.version_id,
+  )!;
+  const marker = `${testInfo.project.name} ${Date.now()}`;
+  const first = `Earlier question ${marker}: which baseline stays fixed?`;
+  const later = `Later question ${marker}: how is retrieval measured?`;
+  let entryId: string | undefined;
+  try {
+    for (const [version, question] of [
+      [earlier.version_id, first],
+      [item!.version_id, later],
+    ]) {
+      await page.goto(
+        `/workspace/items/${encodeURIComponent(item!.work_id)}?version=${encodeURIComponent(version!)}#notes`,
+      );
+      await page
+        .getByRole("textbox", { name: "Your question", exact: true })
+        .fill(question!);
+      await page
+        .getByRole("button", { name: "Save question", exact: true })
+        .click();
+      await expect(page.getByRole("status")).toContainText(
+        "is saved on the server",
+      );
+    }
+    const created = await realState(page);
+    entryId = created.works
+      .find((work) => work.work_id === item!.work_id)!
+      .entries.find((entry) => entry.body === first)!.id;
+    await page.goto("/workspace/today");
+    await expect(page.locator(".workspace-activity")).toContainText(later);
+    await page.goto("/workspace/library?view=notes");
+    const libraryEntry = page
+      .getByRole("article")
+      .filter({ has: page.getByText(first, { exact: true }) });
+    await libraryEntry
+      .getByRole("link", { name: "Resume this question →" })
+      .click();
+    const resumed = page.locator(`[id="workspace-entry-${entryId}"]`);
+    await expect(resumed).toBeFocused();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      earlier.title || item!.title,
+    );
+    await resumed
+      .getByRole("button", { name: "Edit question", exact: true })
+      .click();
+    const edited = `${first} Edited after inspecting the retained version.`;
+    await page
+      .getByRole("textbox", { name: "Your question", exact: true })
+      .fill(edited);
+    await page
+      .getByRole("button", { name: "Save question", exact: true })
+      .click();
+    await expect(page.getByRole("status")).toContainText(
+      "is saved on the server",
+    );
+    await page.getByRole("link", { name: "← Library", exact: true }).click();
+    await expect(page).toHaveURL(/\/workspace\/library\?view=notes$/);
+    await expect(page.getByText(edited, { exact: true })).toBeVisible();
+    await page.goto("/workspace/today");
+    await expect(page.locator(".workspace-activity")).toContainText(edited);
+    await page
+      .getByRole("button", { name: "Pin this question", exact: true })
+      .click();
+    await expect(page.locator(".workspace-activity")).toContainText(
+      "Pinned · your question",
+    );
+    await page.locator(".workspace-activity").getByRole("link").click();
+    await expect(resumed).toBeFocused();
+    await page.getByRole("button", { name: "Mark read", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText(
+      "Reading state saved on the server",
+    );
+    await page.goto("/workspace/today");
+    await expect(page.locator(".workspace-activity")).toContainText(edited);
+    await page
+      .getByRole("button", { name: "Unpin saved item", exact: true })
+      .click();
+    await expect(page.locator(".workspace-activity")).toContainText(
+      "Latest activity · reading location",
+    );
+    await page.screenshot({
+      path: testInfo.outputPath("activity-and-return.png"),
+      fullPage: true,
+    });
+  } finally {
+    const state = await realState(page);
+    if (entryId && state.profile.data.pinned_entry_id === entryId) {
+      const response = await page.request.post("/api/workspace/profile", {
+        data: {
+          revision: state.profile.revision,
+          request_id: crypto.randomUUID(),
+          data: { ...state.profile.data, pinned_entry_id: null },
+        },
+      });
+      expect(response.ok()).toBe(true);
+    }
+  }
+});
+
+test("a frozen candidate review stays unlabelled until an explicit verification judgment is saved", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/workspace/review");
+  const prepare = page.getByRole("button", {
+    name: /^Prepare (up to 10 candidates|another candidate set)$/,
+  });
+  await expect(prepare).toBeEnabled();
+  const preparedResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/workspace/review/prepare") &&
+      response.request().method() === "POST",
+  );
+  await prepare.click();
+  const packet = (await (await preparedResponse).json()) as {
+    id: string;
+    items: { feedback: { label: string | null } }[];
+  };
+  expect(packet.items.length).toBeGreaterThan(0);
+  expect(packet.items.length).toBeLessThanOrEqual(10);
+  expect(
+    packet.items.every((candidate) => candidate.feedback.label === null),
+  ).toBe(true);
+  await expect(
+    page.getByRole("heading", {
+      name: `${packet.items.length} candidates · 0 labelled`,
+      exact: true,
+    }),
+  ).toBeVisible();
+  const candidate = page.getByRole("article").first();
+  await candidate.getByRole("radio", { name: "Maybe", exact: true }).check();
+  const reason = `Verification-only feedback ${testInfo.project.name} ${Date.now()}; not an owner usefulness label.`;
+  await candidate
+    .getByRole("textbox", {
+      name: "Optional reason for candidate 1",
+      exact: true,
+    })
+    .fill(reason);
+  await expect(
+    page.getByRole("heading", {
+      name: `${packet.items.length} candidates · 0 labelled`,
+      exact: true,
+    }),
+  ).toBeVisible();
+  await candidate
+    .getByRole("button", { name: "Save judgment for candidate 1", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText(
+    "Your maybe label is saved on the server",
+  );
+  await candidate
+    .getByRole("link", { name: "Inspect retained source →", exact: true })
+    .click();
+  await page
+    .getByRole("link", { name: "← Candidate review", exact: true })
+    .click();
+  await expect(page).toHaveURL(
+    new RegExp(`/workspace/review\\?packet=${packet.id}$`),
+  );
+  await page.reload();
+  await expect(
+    page
+      .getByRole("article")
+      .first()
+      .getByRole("radio", { name: "Maybe", exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole("textbox", {
+      name: "Optional reason for candidate 1",
+      exact: true,
+    }),
+  ).toHaveValue(reason);
+  await page.screenshot({
+    path: testInfo.outputPath("candidate-review.png"),
+    fullPage: true,
+  });
+});
+
+test("an explicit synthetic request uses only selected retained text and exposes its zero-dollar checkpoint", async ({
+  page,
+}, testInfo) => {
+  const state = await realState(page);
+  const item = state.works.find(
+    (work) => work.abstract && work.access_state !== "metadata",
+  )!;
+  expect(
+    item,
+    "The isolated seed must contain an actual stored abstract; the browser does not intercept it.",
+  ).toBeTruthy();
+  const response = await page.request.get(
+    `/api/workspace/materials?work_id=${encodeURIComponent(item.work_id)}&version_id=${encodeURIComponent(item.version_id)}`,
+  );
+  expect(response.ok()).toBe(true);
+  const materials = (await response.json()) as {
+    material_id: string;
+    page_count: number | null;
+    scope: string;
+  }[];
+  const selected = materials.find(
+    (material) =>
+      material.page_count === null &&
+      ["abstract", "excerpt"].includes(material.scope),
+  );
+  expect(
+    selected,
+    "The actual API must retain source text before synthetic execution.",
+  ).toBeTruthy();
+  let advances = 0;
+  page.on("request", (request) => {
+    if (
+      /\/api\/workspace\/generation\/jobs\/[^/]+\/advance$/.test(request.url())
+    )
+      advances++;
+  });
+  await page.goto(
+    `/workspace/items/${encodeURIComponent(item.work_id)}?version=${encodeURIComponent(item.version_id)}#understand`,
+  );
+  await page
+    .getByRole("button", {
+      name: "Choose retained source context",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("combobox", { name: "Source context", exact: true })
+    .selectOption(selected!.material_id);
+  await expect(
+    page.getByRole("textbox", {
+      name: "Optional request question",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", {
+      name: "Preview exact synthetic request",
+      exact: true,
+    })
+    .click();
+  const raw = await page
+    .getByRole("region", { name: "Exact synthetic request JSON", exact: true })
+    .textContent();
+  const request = JSON.parse(raw!) as {
+    private_context: {
+      notes: boolean;
+      profile: boolean;
+      reading_history: boolean;
+    };
+    question: string;
+  };
+  expect(request.private_context).toEqual({
+    notes: false,
+    profile: false,
+    reading_history: false,
+  });
+  expect(request.question).toBe("");
+  await page
+    .getByRole("button", { name: "Run synthetic workflow · $0", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: /^Synthetic checkpoint · ready( partial)?$/,
+    }),
+  ).toBeVisible();
+  expect(advances).toBeLessThanOrEqual(4);
+  await expect(
+    page.getByText(
+      /This result has not qualified a real model or calibrated judge/,
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: "Run synthetic workflow · $0",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  const job = await page.request.get("/api/workspace/generation/jobs");
+  expect(job.ok()).toBe(true);
+  const checkpoints = (await job.json()) as {
+    usage: { actual_usd: string };
+    mode: string;
+  }[];
+  expect(checkpoints.length).toBeGreaterThan(0);
+  expect(
+    checkpoints.every(
+      (checkpoint) =>
+        checkpoint.mode === "fake" &&
+        checkpoint.usage.actual_usd === "0.000000",
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: testInfo.outputPath("synthetic-workflow.png"),
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: /^Inspect retained evidence/ })
+    .first()
+    .click();
+  await expect(page.locator("#source mark")).toBeVisible();
+  await expect(page.locator("#source mark")).toBeInViewport();
+  const a11y = await new AxeBuilder({ page }).analyze();
+  expect(
+    a11y.violations.filter((violation) =>
+      ["critical", "serious"].includes(violation.impact ?? ""),
+    ),
+  ).toEqual([]);
 });

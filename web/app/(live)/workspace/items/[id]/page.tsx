@@ -1,5 +1,6 @@
 import { LiveReader } from "@/components/workspace/Reader";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 export default async function Page({
   params,
 }: {
@@ -12,5 +13,9 @@ export default async function Page({
   } catch {
     notFound();
   }
-  return <LiveReader id={decoded} />;
+  return (
+    <Suspense fallback={<p className="daily-muted">Opening your source…</p>}>
+      <LiveReader id={decoded} />
+    </Suspense>
+  );
 }

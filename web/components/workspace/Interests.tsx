@@ -11,6 +11,8 @@ import {
 } from "@/lib/workspace/api";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
 import { LoadingState, Message, ServiceNotice } from "./Common";
+import { AllocationReceipt } from "./AllocationReceipt";
+import { InterestCoverage } from "./InterestCoverage";
 
 const topics = topicsSeed.topics;
 function lines(value: string) {
@@ -226,8 +228,18 @@ export function LiveInterests() {
                     <strong>{topic.label}</strong>
                     <small>
                       {topic.kind.startsWith("external")
-                        ? "Scholarly catalogue · connected coverage varies"
-                        : "Authored study topic · exact term matches where available"}
+                        ? "Scholarly catalogue · navigation is separate from monitoring"
+                        : data.topics.includes(topic.id)
+                          ? state.interest_coverage.find(
+                              (coverage) => coverage.topic_id === topic.id,
+                            )?.matching_mode === "browse_only"
+                            ? "Browse only · no matching terms configured"
+                            : state.interest_coverage.some(
+                                  (coverage) => coverage.topic_id === topic.id,
+                                )
+                              ? "Saved matching vocabulary · inspect its terms and sources below"
+                              : "Save this selection to inspect its matching vocabulary"
+                          : "Select and save to inspect matching terms and source scope"}
                     </small>
                   </span>
                 </label>
@@ -275,10 +287,36 @@ export function LiveInterests() {
                 }
               >
                 <option value={0}>0% · only explicit matches</option>
-                <option value={0.15}>Up to 15% · adjacent source items</option>
-                <option value={0.3}>Up to 30% · broader exploration</option>
+                <option value={0.15}>15% upper bound · round down</option>
+                <option value={0.3}>30% upper bound · round down</option>
               </select>
             </label>
+            <p className="daily-muted">
+              The percentage caps the final edition’s item count. Small
+              briefings can have zero exploration items; the allowance is never
+              rounded up.
+            </p>
+            <div className="workspace-allocation-previews">
+              <h3>Current saved preference, by reading window</h3>
+              {state.allocation_previews.map((allocation) => (
+                <AllocationReceipt
+                  key={String(allocation.minutes)}
+                  allocation={allocation}
+                  minutes={
+                    typeof allocation.minutes === "number"
+                      ? allocation.minutes
+                      : undefined
+                  }
+                  compact
+                />
+              ))}
+              {draft && (
+                <p className="daily-muted">
+                  Save your draft to recalculate these slots for its actual
+                  candidates and cap.
+                </p>
+              )}
+            </div>
             <p>
               {data.topics.length} topics selected. Ranking shows the actual
               matching terms. Opening a paper does not rewrite your declared
@@ -286,6 +324,11 @@ export function LiveInterests() {
             </p>
           </aside>
         </div>
+        <InterestCoverage
+          coverage={state.interest_coverage}
+          sources={state.sources}
+          draft={draft !== null}
+        />
         <div className="workspace-toolbar">
           <button className="daily-button" disabled={busy}>
             {busy ? "Saving interests…" : "Save interests and question"}
