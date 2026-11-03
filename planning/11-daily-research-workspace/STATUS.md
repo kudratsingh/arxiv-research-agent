@@ -50,10 +50,10 @@ draft/unmerged. The workspace ADR proposal remains unnumbered.
   rounded job reservations$1.00 and proposed trial/day/month caps$1.25. These
   are unapproved design bounds, not measured tokens or spend.
 
-Production build and all existing route/CSS ceilings pass; web3710/3710 with
-zero skips, statements98.23%, branches94.25%, functions92.05%, lines99.34%.
+Production build and all existing route/CSS ceilings pass; web3711/3711 with
+zero skips, statements98.23%, branches94.28%, functions92.04%, lines99.34%.
 The documented suite-count check caught stale158-file prose; README/config now
-record177files/3710tests. Function coverage floor ratchets88.8→91.8; other
+record177files/3711tests. Function coverage floor ratchets88.8→91.8; other
 floors and all coverage inputs/tier selections remain intact.
 Production standalone desktop/mobile14 and real scientific-PDF2 pass using only
 an isolated verification principal/database. Two substantive integration defects
@@ -69,6 +69,24 @@ See [connected walkthrough and remaining sequence](16-review-and-executor-walkth
 [unexecuted generation proposal](15-grounded-generation-approval-packet.md).
 Owner usefulness/experience review, paid adapter/token/checker measurement,
 specific spending GO and optional schedule activation remain outstanding.
+
+### CI-discovered Library correction
+
+First remote run `41578188828` at `efd545b` passed eight jobs and failed the
+new durable browser return case on both viewports. Trace data proved the edited
+question was committed and present in fresh API state, but the URL said
+`view=notes` while Library displayed Saved. The real-corpus local test masked
+this because its edited work was already saved. The clean three-work CI seed
+reproduced8passed/2failed/4notrun. This is recorded as a real UI defect.
+
+Library now derives its filter from the reactive router query, with the required
+Suspense boundary. A new unread-work regression failed before the fix and passes
+afterward; the browser explicitly checks Notes on return and preserves the
+edited-body/version assertions and existing timeout. The same seeded production
+suite now passes14/14; full web3711/177passes with zero skips and unchanged
+floors. Final Python patch gate and replacement exact-head CI follow this
+source checkpoint. No blind CI rerun, lowered assertion, extra wait or owner-data
+write was used to hide the failure.
 
 ## Historical autonomous batch evidence (2026-11-02)
 

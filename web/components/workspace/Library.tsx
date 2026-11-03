@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
   errorMessage,
@@ -18,15 +19,12 @@ export function LiveLibrary() {
   const [notice, setNotice] = useState("");
   const [manual, setManual] = useState("");
   const [busy, setBusy] = useState(false);
-  const [filter, setFilter] = useState(() => {
-    const view =
-      typeof window === "undefined"
-        ? null
-        : new URLSearchParams(window.location.search).get("view");
-    return view && ["saved", "notes", "read", "archived", "all"].includes(view)
+  const view = useSearchParams().get("view");
+  // Derive the view from the router on every render, including client returns.
+  const filter =
+    view && ["saved", "notes", "read", "archived", "all"].includes(view)
       ? view
       : "saved";
-  });
   const actions = useReadingActions(state, setState, setNotice);
   if (!state) return <LoadingState error={error} retry={() => void reload()} />;
   const works = state.works.filter((item) =>
@@ -107,7 +105,6 @@ export function LiveLibrary() {
           <select
             value={filter}
             onChange={(event) => {
-              setFilter(event.target.value);
               window.history.replaceState(
                 null,
                 "",

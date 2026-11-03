@@ -1,9 +1,4 @@
-import {
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveToday } from "@/components/workspace/Today";
@@ -302,6 +297,41 @@ describe("durable activity and exact reading continuity", () => {
     expect(screen.getByRole("link", { name: "← Today" })).toHaveAttribute(
       "href",
       "/workspace/today",
+    );
+  });
+  it("follows a client return to the notes URL even when the question's work is unread", async () => {
+    const value = entry();
+    current.works[0]!.entries = [value];
+    current.works.push(
+      work({
+        work_id: "a-saved-source",
+        title: "A saved source without notes",
+        entries: [],
+        reading: { ...work().reading, status: "saved" },
+      }),
+    );
+    window.history.replaceState(null, "", "/workspace/library?view=saved");
+    const mounted = render(<LiveLibrary />);
+    await screen.findByRole("link", { name: "A saved source without notes" });
+    expect(screen.queryByText(value.body)).not.toBeInTheDocument();
+    // Next's native-history integration rerenders useSearchParams on soft
+    // navigation. Re-render the same component instance to model that signal.
+    window.history.replaceState(null, "", "/workspace/library?view=notes");
+    mounted.rerender(<LiveLibrary />);
+    expect(screen.getByRole("combobox", { name: "Library view" })).toHaveValue(
+      "notes",
+    );
+    expect(screen.getByText(value.body)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "A saved source without notes" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Resume this question →" }),
+    ).toHaveAttribute(
+      "href",
+      expect.stringContaining(
+        "return_to=%2Fworkspace%2Flibrary%3Fview%3Dnotes",
+      ),
     );
   });
   it("preserves a Library notes filter and the exact entry identity in its resume link", async () => {
