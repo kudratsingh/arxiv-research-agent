@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { RUN_STATUS_LINE } from "../lib/copy/run";
 
 import { FIXTURES } from "./support/env";
-import { sseFrame } from "./support/intercept";
+import { holdCheckpoints } from "./support/held-checkpoints";
 import { interceptPaidPath } from "./support/paid-path";
 import { REPORT_READER, RUN_PANEL, STATES, readyLocator } from "./support/states";
 
@@ -21,7 +22,12 @@ import { REPORT_READER, RUN_PANEL, STATES, readyLocator } from "./support/states
  * nothing to do with checkpoints. So the stream is intercepted and HELD with
  * no frames at all until the thread has fully arrived; the accumulator is then
  * zeroed at a mark; and only then are three `node_completed` frames released.
- * Everything measured after the mark is caused by the frames.
+ * The stream stays open after delivery, so EOF/reconnection is outside this
+ * checkpoint-only window. CI41595416524 exposed the old fulfilled response
+ * closing and adding0.007CLS; forced callback separation reproduced3/3.
+ * A held-open per-frame probe then exposed the first announcement shortening
+ * (0.004 CLS). TraceSpine reserves that sentence without changing its words.
+ * The zero-CLS assertion is unchanged, and checkpoints now get separate paints.
  *
  * WHAT MAKES IT TRUE, in the two files that own it. `spine.css` gives the run
  * row and the ledger a `min-height` so the first tick fades in rather than
@@ -35,17 +41,6 @@ import { REPORT_READER, RUN_PANEL, STATES, readyLocator } from "./support/states
 
 const THREAD = `/c/${FIXTURES.populatedConversation}`;
 
-/** Three checkpoints, in one release, exactly as the runner emits them. */
-const CHECKPOINTS = ["retrieve", "read", "synthesize"]
-  .map((node) =>
-    sseFrame("node_completed", {
-      job_id: FIXTURES.running,
-      node,
-      state_delta: { papers_seen: 3 },
-    }),
-  )
-  .join("");
-
 test.describe("WO-20 criterion 5 — a live run does not move the reading column", () => {
   test(
     "three checkpoints arrive and the cumulative layout shift is 0.000",
@@ -53,25 +48,12 @@ test.describe("WO-20 criterion 5 — a live run does not move the reading column
     async ({ page }, testInfo) => {
       const paid = await interceptPaidPath(page, testInfo);
 
-      // The handler holds the stream until the test says the page has
-      // settled, then releases every frame at once. Holding is what separates
-      // "the page arrived" from "an event arrived".
-      let release = (): void => {};
-      const released = new Promise<void>((resolve) => {
-        release = resolve;
-      });
-      await page.route(
-        (url) => url.pathname === `/api/research/${FIXTURES.running}/stream`,
-        async (route) => {
-          await released;
-          await route.fulfill({
-            status: 200,
-            contentType: "text/event-stream",
-            headers: { "cache-control": "no-cache" },
-            body: CHECKPOINTS,
-          });
-        },
-      );
+      // CI41595416524 exposed EOF/reconnection being counted as checkpoint
+      // layout. A fulfilled body closes the stream; slow callback delivery
+      // makes that extra transition visible. Keep the socket logically open,
+      // settle its open state before the mark, and deliver each tick in its
+      // own browser frame. Transport/reconnect behavior has separate specs.
+      const stream = await holdCheckpoints(page, FIXTURES.running, ["retrieve", "read", "synthesize"]);
 
       await page.goto(`${THREAD}?job=${FIXTURES.running}`, {
         waitUntil: "domcontentloaded",
@@ -96,8 +78,12 @@ test.describe("WO-20 criterion 5 — a live run does not move the reading column
       // to budget.
       await expect(page.locator("[data-briefing]")).toHaveCount(1);
       await expect(page.getByRole("table").first()).toBeVisible();
-      // Nothing may still be arriving when the accumulator is zeroed.
-      await page.waitForTimeout(1_500);
+      await stream.ready();
+      await expect(page.locator(`${RUN_PANEL} .ew-spine-live`)).toBeVisible();
+      await expect(page.locator('[data-spine-part="announcement"]')).toHaveText(RUN_STATUS_LINE.rejoined);
+      await page.evaluate(() => document.fonts.ready);
+      await stream.outsideRecentInput();
+      await stream.drainLayout();
 
       // Zero the accumulator. `hadRecentInput` shifts are excluded for the
       // same reason CLS excludes them: a shift the user asked for by clicking
@@ -184,14 +170,14 @@ test.describe("WO-20 criterion 5 — a live run does not move the reading column
       });
 
       // Release the checkpoints.
-      release();
+      expect(await stream.release()).toBe(3);
 
       // They arrived: the ledger carries the newest one by name, verbatim
       // (H11 — the node is an opaque string and is never looked up).
       await expect(page.getByText("synthesize").first()).toBeVisible();
       // And let the observer drain — a shift is reported on the frame after
       // the one that caused it.
-      await page.waitForTimeout(1_500);
+      await stream.drainLayout();
 
       const cls = await page.evaluate(
         () =>
@@ -256,7 +242,7 @@ test.describe("WO-20 criterion 5 — a live run does not move the reading column
 
       const line = await page.evaluate(() => {
         const announcement = document.querySelector('[data-spine-part="announcement"]');
-        const row = announcement?.parentElement ?? null;
+        const row = announcement?.closest("p") ?? null;
         if (row === null) return null;
         const box = row.getBoundingClientRect();
         const style = getComputedStyle(row);
