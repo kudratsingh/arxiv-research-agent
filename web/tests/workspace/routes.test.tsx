@@ -68,6 +68,7 @@ describe("live route admission and identity contracts", () => {
     expect(
       screen.getByRole("link", { name: /Fictional preview/ }),
     ).toHaveAttribute("href", "/today");
+    await userEvent.setup().click(screen.getByText(/Source checks:/));
     expect(
       screen.getByRole("button", { name: "Check sources now" }),
     ).toBeInTheDocument();

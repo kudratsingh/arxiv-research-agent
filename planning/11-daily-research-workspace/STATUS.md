@@ -59,8 +59,19 @@ API-equality assertion: the revised test pins immutable stored metadata/notes
 while explicitly requiring the new derived availability. A superseded local
 project-coverage run was interrupted to strengthen the final HTTP-construction
 approval/count-receipt guard;5961passed/54skipped at interruption, no green claim.
-Both full gates are repeated after that fix. Final-head local/CI results belong
-to the checkpoint receipt; these focused results are not a green CI claim.
+Both full gates are repeated after that fix. Final repeated Python gates pass6042/54skipped/53e2edeselected, project94.78%,
+patch99% (19uncovered/3658changed lines); package floors88/96/100/95 all pass.
+The final viewport test pins the first title before800px; real390px capture
+places it at771px versus1019px before, and the saved-question heading at394px
+versus3126px before. Refresh/search now sit inside visible source-health details;
+save failures and undo stay outside. Clean CI-seed16 and real-corpus16 plus
+scientific4 pass. Final-head remote CI remains separately recorded in the
+checkpoint receipt; local success is not a green CI claim.
+
+Every original owner row across27tables remains unchanged. Requested product
+preparation appended one ten-item metadata review packet and its retry record;
+all judgments remain blank, profile revision1 and notes0 unchanged. Private
+backup/disposable restore passed. All write-based tests used isolated principals.
 
 See [readiness walkthrough](20-readiness-and-qualification-walkthrough.md) and
 [unexecuted trial](15-grounded-generation-approval-packet.md). The historical

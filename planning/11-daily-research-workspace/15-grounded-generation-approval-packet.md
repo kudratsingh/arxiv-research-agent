@@ -127,14 +127,15 @@ verdict starts null. Engineering challenge names are not ground-truth labels.
 Mechanical identity/scope rejection is recorded separately from factual support.
 The initial24-case pool uses three text sources; scientific PDF region review
 remains in the extraction inspection and must be sampled separately for a larger
-checker qualification. The cases are prepared for review, not automatically sent
+checker qualification. Cases sharing a source are correlated; that binomial illustration is not a
+qualification bound for this pool. The cases are prepared for review, not automatically sent
 to a provider by the four-job experiment.
 
 Human review should inspect every emitted claim/span pair, missed major claims,
 unsupported assertions, abstentions, wrong-version use, fabricated numbers,
 privacy/context leakage, scope disclosure and whether the result helps the
 research question. Preserve denominators. A0-error tiny sample is not a
-qualification: even0false passes among12negative labels has an approximate
+qualification: even assuming independent labels,0false passes among12negative labels has an approximate
 one-sided95% upper bound of22%. Everyday quality criteria and an adequate
 representative negative set must be approved before declaring qualification.
 
