@@ -78,6 +78,25 @@ See [readiness walkthrough](20-readiness-and-qualification-walkthrough.md) and
 follow-up below describes the earlier instrument and earlier envelope only.
 Real grounded summaries and guided dives remain the next product milestone.
 
+### Remote-CI layout correction
+
+First readiness run41595416524 atfd3be2d passed8jobs and failed the legacy CLS
+checkpoint test (0.007 on both attempts); durable workspace CI was consequently
+not run. Local forced callback separation reproduced0.007 in3/3. Holding the
+connection open and painting checkpoints separately then exposed an actual
+first-checkpoint announcement-width shift (0.004 in10/10). TraceSpine now reserves
+the pre-checkpoint sentence outside the live region and accessibility tree,
+without changing visible words or the strict0.000assertion. The test waits for
+open/font/input state and drains animation frames; EOF/reconnection is excluded
+from its checkpoint-only window. Semantic paragraph selectors still measure the
+same announcement row through the new sizing wrapper. Ten independent runs,
+35related layout/CSP checks, four Pixel7 checks and all55existing Darwin visual
+checks pass; no golden image was regenerated. Fullfrontend3714passes with its
+coverage floors intact. A fresh mandatory Python patch run precedes the next
+push. Replacement CI will be attributed to its exact new head; the original
+failure remains on record. Owner3137 remains available throughout verification
+because the changed frontend was built in a separate temporary clone.
+
 ## Current follow-up: personal workflow and fake executor (2026-11-03)
 
 Branch `codex/daily-workspace-next` starts at the unchanged reviewed #282 head

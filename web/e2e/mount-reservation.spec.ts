@@ -387,7 +387,7 @@ test.describe("WO-S2c — the run panel mounts once, at the height it keeps", ()
    * and after — that is WO-W13c's rule 4 holding — so the width that needs the
    * assertion is the narrow one, and it is the one 04 §8.3 audits.
    *
-   * `p:has(> [data-spine-part="announcement"])` rather than the row's class
+   * `p:has([data-spine-part="announcement"])` rather than the row's class
    * list: the class list is six utilities long and would pin this test to a
    * styling decision, while the part attribute is the contract `stream.spec.ts`
    * and `cls.spec.ts` already read the line by.
@@ -399,7 +399,7 @@ test.describe("WO-S2c — the run panel mounts once, at the height it keeps", ()
       const paid = await interceptPaidPath(page, testInfo);
       await page.setViewportSize({ width: 412, height: 915 });
 
-      const ROW = 'p:has(> [data-spine-part="announcement"])';
+      const ROW = 'p:has([data-spine-part="announcement"])';
       await observeFirstPaint(page, { line: ROW });
       await page.route(
         (url) => /\/api\/research\/[^/]+\/stream$/.test(url.pathname),

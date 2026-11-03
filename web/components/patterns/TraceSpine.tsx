@@ -167,6 +167,10 @@ export function TraceSpine({
 }: TraceSpineProps) {
   const headingId = `${id}-label`;
   const model = inputs === null ? null : describeSpine(inputs);
+  const runningReservation = inputs !== null && model !== null &&
+    (model.id === "rejoined" || model.id === "running_observed")
+    ? describeSpine({...inputs, observation: {...inputs.observation, checkpoints: []}}).announcement
+    : null;
 
   // No run: the four names from the dictionary, every one of them
   // unobserved. Nothing is claimed, and the shape the user is about to meet
@@ -262,8 +266,13 @@ export function TraceSpine({
       {model === null ? null : (
         <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-ui-sm text-ink">
           {/* THE product's single role="status". Announcement only. */}
-          <span role="status" data-spine-part="announcement">
-            {model.announcement}
+          <span className="grid">
+            {/* Reserve the pre-checkpoint sentence's width and wrapped height.
+                The hidden sizer is outside the live region and accessibility tree. */}
+            {runningReservation !== null && <span aria-hidden="true" style={{gridArea: "1 / 1", visibility: "hidden"}}>{runningReservation}</span>}
+            <span role="status" data-spine-part="announcement" style={{gridArea: "1 / 1"}}>
+              {model.announcement}
+            </span>
           </span>
           {model.detail === null ? null : (
             <span className="text-ink-muted" data-spine-part="detail">
