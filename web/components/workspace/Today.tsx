@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import {
   displayDate,
   errorMessage,
-  readerHref,
   requestId,
   workspaceRequest,
   type WorkspaceState,
@@ -20,6 +19,8 @@ import {
   sourceAvailable,
 } from "./Common";
 import { WorkCard } from "./WorkCard";
+import { ActivityCard } from "./ActivityCard";
+import { AllocationReceipt } from "./AllocationReceipt";
 
 export function LiveToday() {
   const { state, setState, error, reload } = useWorkspace();
@@ -62,9 +63,34 @@ export function LiveToday() {
         !item.reading.snoozed_until ||
         new Date(item.reading.snoozed_until) <= new Date()),
   );
-  const last = state.works
-    .flatMap((item) => item.entries.map((entry) => ({ entry, item })))
-    .at(-1);
+  const activity = state.latest_activity;
+  const activityWork = activity
+    ? state.works.find((item) => item.work_id === activity.work_id)
+    : undefined;
+  async function pin(entryId: string | null) {
+    if (!state) return;
+    const input = {
+      revision: state.profile.revision,
+      data: { ...state.profile.data, pinned_entry_id: entryId },
+    };
+    const fingerprint = JSON.stringify(input),
+      id = pending.current.get(fingerprint) ?? requestId();
+    pending.current.set(fingerprint, id);
+    setSavingProfile(true);
+    try {
+      await workspaceRequest("profile", { ...input, request_id: id });
+      await reload();
+      setNotice(
+        entryId
+          ? "Saved item pinned. Its source version and passage stay attached."
+          : "Saved item unpinned. The latest activity is shown again.",
+      );
+    } catch (failure) {
+      setNotice(errorMessage(failure));
+    } finally {
+      setSavingProfile(false);
+    }
+  }
   async function refresh() {
     setRefreshing(true);
     setNotice(
@@ -174,6 +200,12 @@ export function LiveToday() {
       <div className="daily-columns">
         <div>
           <Coverage sources={latest?.coverage ?? state.sources} />
+          {latest && (
+            <AllocationReceipt
+              allocation={latest.allocation}
+              minutes={latest.minutes}
+            />
+          )}
           <section aria-labelledby="live-changes">
             <div className="daily-section-heading">
               <h2 id="live-changes">Changes to consider</h2>
@@ -214,6 +246,7 @@ export function LiveToday() {
                   key={item.work_id}
                   item={item}
                   versionId={latest?.work_versions[item.work_id]}
+                  returnTo="/workspace/today"
                   lead={index === 0}
                   busy={actions.busy}
                   status={(work, status) => void actions.status(work, status)}
@@ -243,28 +276,17 @@ export function LiveToday() {
                   "Add your current research question in Interests."}
               </p>
             </div>
-            {last && (
-              <>
-                <div>
-                  <span>Your {last.entry.kind.replaceAll("-", " ")}</span>
-                  <p>{last.entry.body}</p>
-                </div>
-                <div>
-                  <span>Return to its source</span>
-                  <Link
-                    href={readerHref(last.item, last.entry.version_id, "notes")}
-                    prefetch={false}
-                  >
-                    {last.item.versions.find(
-                      (material) =>
-                        material.version_id === last.entry.version_id,
-                    )?.title || last.item.title}{" "}
-                    →
-                  </Link>
-                </div>
-              </>
-            )}
           </div>
+          <ActivityCard
+            activity={activity}
+            work={activityWork}
+            pinned={Boolean(
+              activity?.entry_id &&
+              state.profile.data.pinned_entry_id === activity.entry_id,
+            )}
+            busy={savingProfile}
+            onPin={(entryId) => void pin(entryId)}
+          />
           <GenerationBoundary />
           <Link
             href="/workspace/library"
@@ -273,6 +295,15 @@ export function LiveToday() {
           >
             Your saved work →
           </Link>
+          <p className="workspace-review-link">
+            <Link
+              href="/workspace/review"
+              className="daily-link"
+              prefetch={false}
+            >
+              Review candidate usefulness →
+            </Link>
+          </p>
         </aside>
       </div>
     </>

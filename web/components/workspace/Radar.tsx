@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   errorMessage,
@@ -114,6 +115,11 @@ export function LiveRadar() {
         </div>
       </div>
       <ServiceNotice error={error} />
+      <p className="workspace-review-link">
+        <Link href="/workspace/review" className="daily-link" prefetch={false}>
+          Review a finite candidate set →
+        </Link>
+      </p>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -241,6 +247,11 @@ export function LiveRadar() {
                     entries: current.entries,
                   }
                 : item
+            }
+            returnTo={
+              typeof window === "undefined"
+                ? "/workspace/radar"
+                : `${window.location.pathname}${window.location.search}`
             }
             busy={actions.busy}
             status={(work, status) => void actions.status(work, status)}

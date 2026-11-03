@@ -215,6 +215,107 @@
 .workspace-app .daily-saved-entries article .daily-link {
   margin-left: 16px;
 }
+.workspace-activity-link {
+  display: block;
+  margin-top: 10px;
+  line-height: 1.7;
+}
+.workspace-activity time {
+  display: block;
+  margin-block: 8px 0;
+}
+.workspace-app .daily-saved-entries article.workspace-focused-entry {
+  outline: 2px solid var(--color-signature);
+  outline-offset: 4px;
+}
+.workspace-allocation {
+  padding: 16px;
+  margin-block: 16px 24px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+  background: var(--color-surface);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.workspace-allocation strong {
+  font-weight: 600;
+}
+.workspace-allocation details {
+  margin-top: 8px;
+}
+.workspace-allocation-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  margin-top: 12px;
+}
+.workspace-allocation-details dt {
+  color: var(--color-ink-muted);
+}
+.workspace-allocation-compact {
+  padding: 12px;
+  margin-block: 12px;
+}
+.workspace-allocation-previews h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.workspace-interest-coverage {
+  margin-block: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.workspace-interest-row {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.workspace-interest-row summary {
+  cursor: pointer;
+}
+.workspace-interest-row p {
+  margin-top: 10px;
+}
+.workspace-review-link {
+  margin-block: 18px;
+}
+.workspace-review-intro {
+  margin-block: 16px;
+}
+.workspace-review-method {
+  margin-block: 18px;
+  line-height: 1.8;
+}
+.workspace-review-method > p {
+  margin-top: 10px;
+  font-size: 14px;
+}
+.workspace-review-candidate h2 {
+  font: 500 24px/1.4 var(--font-report);
+  margin-block: 12px;
+}
+.workspace-review-candidate .daily-item-change {
+  white-space: pre-wrap;
+}
+.workspace-feedback {
+  max-width: 760px;
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 4px;
+  background: var(--color-surface);
+}
+.workspace-feedback fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 8px;
+}
+.workspace-feedback legend {
+  font-size: 14px;
+  font-weight: 600;
+}
 @media (max-width: 700px) {
   .workspace-controls {
     grid-template-columns: 1fr 1fr;
@@ -257,4 +358,95 @@
   .workspace-toolbar > button {
     flex-grow: 1;
   }
+}
+
+.workspace-retained-source,
+.workspace-synthetic {
+  margin-top: 1.6rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.workspace-retained-source h3,
+.workspace-synthetic h3 {
+  font: 500 1.5rem/1.2 var(--font-report);
+}
+.workspace-retained-passage {
+  padding: 1rem 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.workspace-retained-text {
+  white-space: pre-wrap;
+  font: 400 1.1rem/1.8 var(--font-report);
+  overflow-wrap: anywhere;
+}
+.workspace-source-receipt {
+  margin: 1rem 0;
+}
+.workspace-synthetic {
+  display: grid;
+  gap: 1rem;
+}
+.workspace-synthetic h4 {
+  font-size: 1.05rem;
+}
+.workspace-synthetic h5 {
+  font-size: 0.9rem;
+  text-transform: capitalize;
+  margin: 1.2rem 0 0.6rem;
+}
+.workspace-synthetic-preview,
+.workspace-synthetic-result {
+  padding: 1rem;
+  border: 1px solid var(--color-border-subtle);
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+.workspace-span-picker {
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.9rem;
+  min-width: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.workspace-span-picker legend {
+  padding: 0 0.4rem;
+}
+.workspace-span-picker label,
+.workspace-inline-checkbox {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+.workspace-span-picker input,
+.workspace-inline-checkbox input {
+  flex: 0 0 auto;
+  width: 1rem;
+  margin-top: 0.2rem;
+}
+.workspace-span-picker span {
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.workspace-usage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+.workspace-usage dt {
+  font-size: 0.75rem;
+  color: var(--color-ink-muted);
+}
+.workspace-usage dd {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.workspace-synthetic-draft article {
+  border-top: 1px solid var(--color-border-subtle);
+  padding: 0.8rem 0;
+}
+.workspace-synthetic-draft ul {
+  padding-left: 1.2rem;
 }

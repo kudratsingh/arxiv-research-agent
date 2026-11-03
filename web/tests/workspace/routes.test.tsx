@@ -15,6 +15,7 @@ import { workspace } from "./fixtures";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/workspace/today",
+  useSearchParams: () => new URLSearchParams(window.location.search),
   notFound: () => {
     throw new Error("not found");
   },
