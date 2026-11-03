@@ -20,6 +20,9 @@
 # came from. All four are `py3-none-any` wheels with no
 # interpreter-specific resolution, so 3.14 gets the same versions; CI,
 # which installs this file on `.python-version`, is what proves it.
+# Qualification repair: jsonschema and its four new transitive pins were
+# frozen from a disposable --target directory using the locked Python3.13.
+# Shared venv untouched; runtime subset unchanged; exact-head CI checks3.14.
 aiosqlite==0.22.1
 annotated-doc==0.0.4
 annotated-types==0.7.0
@@ -28,6 +31,7 @@ anyio==4.14.1
 arxiv==4.0.0
 asgi-lifespan==2.1.0
 ast_serialize==0.6.0
+attrs==26.1.0
 certifi==2026.6.17
 chardet==7.6.0
 charset-normalizer==3.4.7
@@ -59,6 +63,8 @@ jiter==0.16.0
 joblib==1.5.3
 jsonpatch==1.33
 jsonpointer==3.1.1
+jsonschema-specifications==2025.9.1
+jsonschema==4.26.0
 langchain-core==1.4.8
 langchain-protocol==0.0.18
 langgraph-checkpoint-postgres==3.1.0
@@ -112,11 +118,13 @@ python-docx==1.2.0
 python-dotenv==1.2.2
 PyYAML==6.0.3
 redis==8.0.1
+referencing==0.37.0
 regex==2026.6.28
 reportlab==5.0.0
 requests-toolbelt==1.0.0
 requests==2.33.1
 rich==15.0.0
+rpds-py==2026.9.1
 ruff==0.15.21
 safetensors==0.8.0
 scikit-learn==1.9.0

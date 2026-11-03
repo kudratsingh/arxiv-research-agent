@@ -138,8 +138,12 @@ class GenerationAdmission:
         self.store = store
 
     @staticmethod
-    def _request_id(policy: dict[str, Any], request_id: str) -> None:
+    def _request_id(policy: dict[str, Any], request_id: str, inputs: dict[str, Any]) -> None:
         """Extension point for a qualification approval's single named job."""
+
+    @staticmethod
+    def _valid_amount(amount: Decimal) -> bool:
+        return amount > 0
 
     def _lock(self, conn: Any, owner: str) -> None:
         self.store._owner(owner)
@@ -261,7 +265,7 @@ class GenerationAdmission:
         with self.store.pool.connection() as conn:
             self._lock(conn, owner)
             approval_id, policy = self._policy(conn, owner, sealed, instant)
-            self._request_id(policy, request_id)
+            self._request_id(policy, request_id, sealed)
             self._sources(conn, owner, sealed)
             prior = conn.execute(
                 "SELECT state,input_digest,data FROM workspace_generation_jobs WHERE owner=%s AND id=%s",
@@ -278,8 +282,8 @@ class GenerationAdmission:
                     "result": prior[2].get("result"),
                 }
             cached = conn.execute(
-                "SELECT id,data FROM workspace_generation_jobs WHERE owner=%s AND input_digest=%s AND state='ready' AND approval_id=%s ORDER BY id LIMIT 1",
-                (owner, fingerprint, approval_id),
+                "SELECT id,data FROM workspace_generation_jobs WHERE owner=%s AND input_digest=%s AND state='ready' AND approval_id=%s AND data->>'policy_digest'=%s ORDER BY id LIMIT 1",
+                (owner, fingerprint, approval_id, _digest(policy)),
             ).fetchone()
             if cached:
                 return {
@@ -290,7 +294,7 @@ class GenerationAdmission:
                     "result": cached[1]["result"],
                 }
             day, month = self._exposure(conn, owner, instant)
-            if amount <= 0 or amount > _money(policy["per_job_usd"]):
+            if not self._valid_amount(amount) or amount > _money(policy["per_job_usd"]):
                 raise AdmissionError("job_cap_exceeded")
             if day + amount > _money(policy["day_usd"]):
                 raise AdmissionError("day_cap_exceeded")

@@ -182,6 +182,14 @@ adequate quality evidence and a separate everyday-use decision can open W8/W9.
 An unqualified checker is allowed inside the approved measurement experiment;
 its qualification is an outcome, not a circular precondition for that trial.
 
+The PR284 repair uses explicit wire section objects and rejects references outside
+sealed passages at draft/repair/check. A separate count-only runner admits exactly
+four named count bodies, no Messages; the funded experiment retains its separate
+approval. Both modes consume external permission and keep everyday use disabled.
+The refreshed v2 packet and [operator runbook](21-qualification-readiness-repair.md)
+replace v1 request digests. Local wire validation and MockTransport round trips do
+not measure remote schema acceptance, tokens or checker quality.
+
 ## W8 Add approved generated summaries
 
 **Scope:** bounded selected-item generation with version/input keyed caching,

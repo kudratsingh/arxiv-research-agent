@@ -12,6 +12,7 @@ from unittest.mock import Mock
 
 import httpx
 import pytest
+from jsonschema import Draft202012Validator
 
 from src.workspace import provider_adapter as p
 from src.workspace.admission import AdmissionError, _digest
@@ -80,7 +81,8 @@ class Transport:
                 materials = p.FakeExecutor(self.store)._sources(
                     conn, "a", [s.material_id for s in self.inputs.sources]
                 )
-            span = materials[0].spans[0]
+            selected = set(self.inputs.settings["selection"]["span_ids"])
+            span = next(s for s in materials[0].spans if s.span_id in selected)
             claim = ResearchClaim(
                 "c1", span.text, ClaimKind.FACTUAL, (evidence_ref(materials[0], span),)
             )
@@ -88,8 +90,20 @@ class Transport:
                 "kind": self.inputs.kind,
                 "title": "Mock transport draft",
                 "claims": [asdict(claim)],
-                "sections": {"overview": ["c1"]},
+                "sections": [{"name": "overview", "claim_ids": ["c1"]}],
+                "questions": ["Which evaluation setting limits this finding?"],
+                "limitations": ["Retained excerpts only; omitted pages were not reviewed."],
+                "proposed_actions": ["Propose a fixed-baseline replication; not a reported result."],
             }
+            if self.inputs.kind == "deep_dive":
+                output["sections"] += [
+                    {"name": name, "claim_ids": ["c1"]}
+                    for name in ("method", "assumptions", "comparison")
+                ]
+        schema = body["output_config"]["format"]["schema"]
+        Draft202012Validator.check_schema(schema)
+        Draft202012Validator(schema).validate(json.loads(json.dumps(output)))
+        (p.Checks if context["stage"] == "check" else p.StudyDraft).model_validate(output)
         value = {
             "model": p.MODEL,
             "stop_reason": "end_turn",

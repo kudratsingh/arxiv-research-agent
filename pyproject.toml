@@ -58,6 +58,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    # Validate fixtures against the exact SDK-transformed wire schemas offline.
+    "jsonschema>=4.26.0,<5.0",
     "pytest>=8.0.0,<10.0",
     "pytest-asyncio>=0.24.0,<2.0",
     # mypy + ruff are exact-pinned: a floating minor of either can fail

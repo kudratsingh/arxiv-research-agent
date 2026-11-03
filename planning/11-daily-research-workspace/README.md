@@ -47,6 +47,8 @@ is actually connected.
 
 Historical implementation and qualification preparation: [readiness walkthrough](20-readiness-and-qualification-walkthrough.md), [STATUS](STATUS.md), and the [original unexecuted proposal](15-grounded-generation-approval-packet.md). Later trial accounting and the new mode direction are separate checkpoints; the original packet is not current spending authority.
 
+Historical repair runbook: [wire schemas, passage selection and disjoint approval modes](21-qualification-readiness-repair.md). Its requests and approval examples are not authorization for the current model-free two-mode batch.
+
 ## Relationship to the existing project
 
 This is a transformation of `arxiv-research-agent`, retaining its Next.js

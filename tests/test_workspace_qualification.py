@@ -106,3 +106,12 @@ def test_exact_requests_read_only_and_cli_never_contact_or_approve(
         and "provider contacts 0" in capsys.readouterr().out
     )
     close.assert_called_once()
+
+
+def test_packet_really_is_read_only_even_when_bootstrap_would_be_attempted(store, monkeypatch):
+    _, material, _ = support.source(store)
+    monkeypatch.setattr(store, "migrate", Mock(side_effect=AssertionError("read-only preparation must not migrate")))
+    result = q.packet(store, "a", {"sources": [{"material_id": material, "job_kind": "summary"}]})
+    assert result["provider_contacts"] == 0 and not result["approved"]
+    with pytest.raises(ValueError, match="invalid_owner"):
+        q.packet(store, "x" * 121, {"sources": [{"material_id": material, "job_kind": "summary"}]})
