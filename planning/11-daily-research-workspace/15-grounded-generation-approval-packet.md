@@ -1,127 +1,157 @@
 # Grounded summary and guided deep-dive qualification proposal
 
-Prepared 2026-11-02. **Unapproved and unexecuted.** This file is a proposal,
-never an approval record. Existing credentials, model availability and numeric
-caps do not authorize a call. The application continues to return 403 before
-constructing a provider. Q2/Q3 remain required later milestones.
+Refreshed 2026-11-03 after the fake executor and exact request previews became
+reviewable. **Unapproved and unexecuted.** This document and its JSON companion
+are proposals, never approval records. Paid `/workspace/generate` remains 403;
+no credential, numeric cap or fixture completion can enable a provider client.
+
+## What can be reviewed now
+
+Reader → Understand → synthetic workbench runs a real local pipeline over
+retained evidence: select material/passages → inspect the exact sealed request
+→ draft → evidence checks → optional repair and mandatory recheck → persist
+→ inspect the result and return to its original source passage. It uses only
+`fixture-workspace-v1`, not an SDK or a remotely selectable provider.
+
+Four actual retained-source fake jobs reached `ready` in the isolated
+`workspace-verification` database. Exact inputs, stage requests, results and
+split counters are under `outputs/workspace-next/`; see
+`fake-execution-receipt.json`, `summary-{1,2,3}-sealed-preview.json` and
+`study-sealed-preview.json`. The latter selects original ReAct PDF page 3.
+Local counters are explicitly simulated UTF-8 byte units, **not measured model
+tokens**. Every actual USD field is zero. Synthetic quotation checks do not
+qualify factual reasoning or establish a paper's scientific truth.
+
+The job ledger now exercises atomic fake reservations, cache/source/settings
+binding, bounded calls, owner isolation, cancellation, interrupted leases,
+restart recovery and repair/recheck. A lost in-flight step is uncertain and is
+not automatically replayed. Fake reservations are separate from paid approval
+and spend tables. No paid approval writer is exposed.
 
 ## Model choices and price evidence
 
-Official pricing checked on 2026-11-02, USD per million ordinary input/output
-tokens: Haiku 4.5 **$1/$5**, Sonnet 4.6 **$3/$15**, Sonnet 5 **$2/$10**,
-Sonnet 5.5 **$2/$10**, and Haiku 5.5 **$0.10/$0.50** for inputs at most 100k.
-[Anthropic price table](https://platform.claude.com/docs/en/about-claude/pricing).
+Official ordinary USD prices per million input/output tokens were rechecked
+2026-11-03: Sonnet 4.6 **$3/$15**, Haiku 4.5 **$1/$5**, Sonnet 5.5 **$2/$10**,
+and Haiku 5.5 **$0.10/$0.50** for prompts at most 100k tokens. These are public
+price observations, not measured trial costs; no discounts are assumed.
+[Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing).
 
-Proposed first instrument: `claude-sonnet-4-6` for both workflow and checking,
-already explicitly represented by the repository's capability table.
-Its published ID remains active/legacy; this avoids an unqualified model-route
-change in the first measurement.
-[Official model specification](https://platform.claude.com/docs/en/models/sonnet-4-6/overview).
-
-Sonnet/Haiku 5.5 are current alternatives, requiring an explicit capability,
-tokenizer, price and schema-path update before qualification. A family-prefix
-guess is insufficient. The repository's historical Sonnet 5 price is stale;
-it must not be used for admission. This proposal uses only the verified
-Sonnet 4.6 row. No hosted subscription or API credit purchase is proposed.
+Propose `claude-sonnet-4-6` for both workflow and checking for the first bounded
+measurement. It has an explicit repository capability row; the official page
+lists it active/legacy with the same ID and $3/$15 price. Model availability is
+not execution approval. Newer Sonnet/Haiku routes require deliberate capability,
+tokenizer and schema qualification first. Historical repository price rows
+must not override the refreshed proposal.
+[Official Sonnet 4.6 specification](https://platform.claude.com/docs/en/models/sonnet-4-6/overview).
 
 ## Exact proposed source and privacy scope
 
-Use only selected public material already retained by the local workspace:
+The machine-readable companion pins material/version/source/content hashes,
+parser revisions, scopes and selected study span IDs. The local exact request
+artifacts show every source character the fake pipeline actually submitted.
+They do not pretend a future paid request already has its final digest.
 
-| Sample | Source/version | Expected evidence boundary |
+| Sample | Retained source | Allowed scope |
 |---|---|---|
-| Agent memory | `arxiv:2610.41482:v1`, KEEPER | Retained abstract; explain only what it states; methods questions may abstain |
-| Retrieval/claims | `arxiv:2610.41552:v1`, knowledge relation extraction | Retained abstract; distinguish reported results from unsupported extrapolation |
-| Missing material | Google Research sleep-framework observed revision `42d6cea8785311a4` | Very short publisher feed excerpt; refuse invented mechanism/results |
+| Summary 1 | KEEPER, `arxiv:2610.41482`, metadata revision `e5c832a06d88973f` | Abstract only; methods/results not stated there must abstain |
+| Summary 2 | Knowledge-relation extraction, `arxiv:2610.41552`, metadata revision `1c364e8ae805a931` | Abstract only; distinguish reported statements from extrapolation |
+| Summary 3 | Google Research sleep-framework revision `42d6cea8785311a4` | Short feed excerpt; refuse invented mechanisms or results |
+| Guided study | ReAct `2210.03629v3`, material `mat-2b7a38f3cfa1449f7728f044688ca2c2` | Three retained passages on original PDF page 3; excerpt scope, not a whole-paper reading |
 
-Seal exact material IDs, hashes, parser, source versions and spans at approval;
-changed bytes invalidate cached outputs. Exclude private notes, browser drafts,
-unrelated files and conversation history. Include the organizing research
-question only if the owner explicitly selects it as approved context. No new
-URLs, tools, article-body fetches or arbitrary repository execution occur in
-the model job. Public source text remains untrusted input, not instructions.
+Exclude private notes, browser drafts, preferences, reading history, unrelated
+files and implicit organizing questions. An optional question starts blank and
+is included only through an explicit context choice. Public source text is
+untrusted evidence, never executable instructions. No tools, new URL fetches,
+article-body fetches or repository code execution occur inside a job.
 
-The tiny trial is **three summaries and one bounded abstract-scope guided
-study**, with explicit abstentions. It is not full-text deep-dive acceptance.
-A methods/equations deep dive needs a separately retained, permission-checked
-scientific document and page/section/offset extraction review before its trial.
+ReAct and Self-RAG selected-page text is available for manual reading, with
+stable original-page/Unicode-offset anchors and retained extraction warnings.
+Equations, figure glyphs and table structure are not qualified for generated
+interpretation. See [the extraction inspection](18-fulltext-qualification.md).
+An abstract-scoped study remains labelled abstract-scoped; an excerpt study
+cannot imply appendix, equation or full-paper coverage.
 
-The companion `generation-trial.proposal.json` pins the currently retained
-material IDs, version hashes and scopes; it is explicitly unapproved. Proposed
-request settings: draft temperature 0.2, checking temperature 0.0, thinking off,
-effort omitted, structured JSON output, SDK automatic retries off, concurrency
-one, 30-second call timeout and at most nine calls across the qualification.
-Count the complete request before each call; refuse inputs above the envelope
-instead of silently truncating evidence. Only one study repair is allowed.
+## Proposed request envelope and cost
 
-## Call/token envelope and estimates
+This tiny trial is **three summaries and one excerpt-scoped guided study**.
+Proposed paid settings: draft temperature 0.2, checker temperature 0.0, thinking
+disabled, effort omitted, structured JSON, SDK retries zero, concurrency one,
+30-second call timeout. These differ from the fake instrument's sealed
+settings (temperature 0, structured JSON, one repair); actual paid gateway
+binding and token enforcement remain preconditions, not established facts.
 
-The following are conservative design bounds, **not measured token counts**.
-Use an exact local tokenizer or a separately authorized token-count endpoint
-before requesting execution. Inputs include system instructions, schemas,
-source text and prior draft where applicable. No cache/batch discounts assumed.
+One repair is permitted for either job kind and **every repair is rechecked**.
+A four-call maximum replaces the old packet's three-call study bound, which
+omitted rechecking. Total worst-case trial calls are sixteen. Stop rather than
+silently truncating source material or expanding a call envelope.
 
-| Job | Normal path | Maximum input/output per call | Worst calls | Unbuffered estimate | Proposed job cap |
-|---|---|---|---:|---:|---:|
-| Summary | draft then independent support/schema check | draft 6,000/1,200; check 8,000/800 | 2 | $0.072 | $0.10 |
-| Guided study | explain then check; one optional repair | draft 16,000/2,400; check 18,000/1,200; repair 18,000/2,400 | 3 | $0.246 | $0.32 |
+All token counts below are conservative design ceilings, **not measurements**.
+Complete input includes instructions, schemas, evidence and prior draft/check
+state. Before execution, measure the final bound request with an appropriate
+local tokenizer or separately authorized count endpoint. No endpoint was used.
 
-At the proposed model price, a short summary using half those token bounds is
-about $0.036; a typical three-quarter envelope is $0.054; the maximum is
-$0.072. The guided-study design scenarios are about $0.078 (half-size, no
-repair), $0.117 (three-quarter-size, no repair), and $0.246 (full envelope,
-repair). These arithmetic scenarios are estimates; they do not assert model
-quality or actual reasoning-token behavior. Any thinking tokens must fit the
-same output ceiling and be recorded.
+| Job/stage | Maximum input/output tokens |
+|---|---:|
+| Summary draft | 6,000 / 1,200 |
+| Summary check | 8,000 / 800 |
+| Summary repair | 8,000 / 1,200 |
+| Summary recheck | 8,000 / 800 |
+| Study draft | 16,000 / 2,400 |
+| Study check | 18,000 / 1,200 |
+| Study repair | 18,000 / 2,400 |
+| Study recheck | 18,000 / 1,200 |
 
-The 1.25x margin yields $0.090 per summary and $0.3075 per study; the proposed
-rounded caps are above those values. Three maximum summary jobs plus one
-study reserve **$0.62**. Propose **$0.75 total qualification**, **$0.75/day** and
-**$0.75/month**, one job at a time, with **zero automatic scheduling**. These
-ceilings are proposals; no policy row has been created. Provider billing can
-overshoot an estimate, so record actual/unknown spend and stop further work
-rather than treating a missing receipt as zero.
+| Envelope | Workflow | Checker | Raw maximum estimate | With 1.25× margin | Proposed job cap |
+|---|---:|---:|---:|---:|---:|
+| One summary, including repair | $0.078 | $0.072 | $0.150 | $0.1875 | $0.20 |
+| One study, including repair | $0.174 | $0.144 | $0.318 | $0.3975 | $0.40 |
 
-## Preconditions before asking for execution approval
+The two-call no-repair paths estimate $0.072 per summary and $0.156 per study.
+These arithmetic scenarios do not predict quality, actual tokenization or
+billing. Four worst-case jobs total **$0.768** before margin; the rounded job
+reservations total **$1.00**. Proposed trial/day/month ceilings are each
+**$1.25**, one job at a time, recurrence off. No policy/approval row was created.
+Unknown usage/billing remains a separate liability; it cannot be treated as
+zero or used to admit more work.
 
-Mechanical foundations implemented: immutable source material/spans; a
-model-free claim validator that separates citation identity from support;
-artifact-shape calibration repair; atomic owner/job/day/month reservations;
-settings/source/version digest checks; nullable unscored denominators;
-actual role/model routing and revision-aware median/worst-case cost estimates;
-single-start and recovery fences; separate workflow/judge/unknown accounting;
-and sentinel/default-mode tests that refuse before provider construction.
+## Remaining conditions before execution approval
 
-Still required: implement the actual summary/study executor and schema path;
-bind the sealed settings to every actual gateway request; enforce call/token/
-fan-out bounds and cooperative cancellation; refresh the exact allowed model
-capability/price evidence; measure tokens; review a permitted full-text sample
-for the later methods trial; connect representative expert packets/labels and
-calibrate the actual checker. No historical evaluation claim is upgraded by a
-fake checker agreeing with its own fixture.
+Implemented and testable now: source/version/span retention; explicit evidence
+selection and context preview; exact fake request/stage binding; persisted
+workflow/checker/unknown accounting; atomic fake reservation; bounded repair
+and recheck; cancellation, stale-cache refusal and restart fences; result
+presentation with findings, inference and proposed actions distinguished.
 
-The owner must then review the concrete scope/envelope, choose any private
-context, approve the exact trial and ceilings, and provide a specific GO.
-Approval is the final enabling step after those prerequisites are reviewable.
+Still required for paid execution:
 
-## Stop and acceptance rules
+- A reviewed paid adapter that binds actual model/settings/schema/source scope
+  and enforces measured input/output/call limits on every gateway request.
+- Exact token measurements and a refreshed paid request digest tied to the
+  proposed public context, model capability and current price evidence.
+- Representative human claim/span review and actual checker qualification.
+  Fixture agreement supplies no measured false-pass rate or scientific-quality
+  evidence; the tiny trial itself cannot certify a checker.
+- The owner's specific GO naming model, context, one-off scope and ceilings.
+  There is no code-generated approval and no broad credential-based consent.
 
-Stop before another call on: missing/revoked/expired approval, source/settings/
-model/schema drift, unpriced route, admission refusal, reached call/token/
-spend ceiling, unknown billing, malformed output, fabricated citation or number,
-unsupported factual claim, or user cancellation. A refusal leaves source
-reading and notes usable. An interrupted possibly billed request becomes
-uncertain; recovery does not blindly resend it.
+Until these are met, manual source reading, notes and fake protocol review
+remain usable. The paid path stays inaccessible. The owner can review this
+concrete proposal now without approving execution.
 
-For every output retain input/material hashes, actual model/settings, request
-identity, usage, separate costs, claim/check denominators and missing material.
-Every asserted factual sentence needs exact source spans and an explicit
-support check. Resolving an ID proves identity only. Abstract-only methods
-must abstain. Inferences and experiment proposals stay labelled.
+## Stop rules and small-sample acceptance
 
-For the four-item qualification, owner review must find no invented citation,
-number or unlabelled inference; inspect all proposed claim/span pairs and
-scope refusals, plus one cancellation/cache/version-change case. Publish the
-small denominators without a population-quality claim. Expansion toward Q2's
-30 examples/100 claim pairs and Q3's representative deep dives requires a new
-reviewed budget; this tiny trial cannot satisfy those launch gates by itself.
+Stop before another call on revoked/missing approval, changed source/settings/
+model/schema, unpriced route, exceeded call/token/spend envelope, unknown
+billing, malformed output, fabricated source/number, unsupported factual claim
+or cancellation. A possibly billed interrupted call remains uncertain and is
+never blindly resent. Retain every input/stage digest, actual model/settings,
+usage split, source scope and claim/check denominator.
+
+For the eventual four-item trial inspect every asserted claim/span pair and
+scope refusal. Findings must link to retained evidence; assumptions and
+limitations remain explicit; connections/inferences and proposed experiments
+are visibly separate. No invented citation/number or unlabelled inference is
+acceptable. Include cancellation, cache and source-version-change cases.
+Report small denominators without population claims. Q2's 30 examples/100
+claim pairs and Q3's representative guided dives remain later launch gates
+with separately reviewed budgets and human/model evidence.

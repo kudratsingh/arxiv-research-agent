@@ -1,5 +1,7 @@
 # Durable local workspace walkthrough
 
+For the current follow-up use [the review/executor walkthrough](16-review-and-executor-walkthrough.md) and [everyday operations](19-everyday-operation.md). This document retains the first durable checkpoint evidence.
+
 Implementation batch: 2026-11-02. Based on preview PR #281 (`139e065`, including
 the verified CI repair and ADR reservation correction). This is the real metadata/manual-reading stage; owner
 experience acceptance and paid generation remain pending.
@@ -93,13 +95,11 @@ or original downloaded file. Markdown export remains available independently.
 
 ## Observed source receipt
 
-Browser write tests use timestamped QA questions. Their examples are retained
-in test artifacts rather than treated as the owner's notes or usefulness
-labels. For a later browser write-test run, stop the default launcher and use
-`WORKSPACE_OWNER=workspace-verification bash scripts/workspace-local.sh run`.
-This uses a separate private namespace over the same public metadata. Restart
-the default launcher afterward to return to `personal-local`; changing the
-operator identifier never moves existing notes between owners.
+All new browser write tests require an isolated verification principal **and a
+separate disposable database**. The browser guard refuses `personal-local` before
+writing. Use a separate API/web port pair and copy only public metadata; never
+run the write walkthrough against the everyday owner app. Prior checkpoint QA
+notes were explicitly exported/cleaned as recorded in STATUS, not owner labels.
 
 The first integrated check at 2026-11-02T15:55Z made **five requests** and stored
 **83 logical works**: three arXiv feeds capped at 25 each, seven Hugging Face
