@@ -37,7 +37,9 @@ The source catalogue and taxonomy are deliberately broader than the first
 release's live ingestion. Every selectable interest must show what coverage
 is actually connected.
 
-Current implementation checkpoint: [daily workflow and qualification readiness](20-readiness-and-qualification-walkthrough.md), [STATUS](STATUS.md), and the [unexecuted measurement proposal](15-grounded-generation-approval-packet.md).
+Current repair runbook: [wire schemas, passage selection and disjoint approval modes](21-qualification-readiness-repair.md).
+
+Previous implementation checkpoint: [daily workflow and qualification readiness](20-readiness-and-qualification-walkthrough.md), [STATUS](STATUS.md), and the [unexecuted measurement proposal](15-grounded-generation-approval-packet.md).
 
 ## Relationship to the existing project
 

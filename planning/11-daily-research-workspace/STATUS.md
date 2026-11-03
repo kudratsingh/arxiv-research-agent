@@ -18,6 +18,38 @@ Paid services require a separate, concrete approval before activation.
 | W8–W9 | Real grounded summaries and guided deep dives | Exact source/model/usage envelope and separate owner spending approval; actual retained-source/provider walkthrough required |
 | W10–W12 | Questions, assumptions and experiment proposals; daily-use pilot; optional expansion | Follow observed owner workflow. No automatic code execution, publishing or external delivery |
 
+## Qualification-readiness repair of PR284 (2026-11-03)
+
+Reviewed916f038 and current remote PR284 agree; no later commits at start.
+Separate branch `codex/workspace-qualification-repair` preserves the running
+owner app. No frontend/runtime switch, owner write, recurrence, provider contact,
+spend or merge is part of this repair.
+
+- Adapterv2 exports an array of closed named section objects with explicit claim
+  IDs. Draft, repair and checker fixtures validate against the exact transformed
+  wire schema and local models; section cross-references remain semantic checks.
+- Every draft/repair/check path enforces the sealed selected span IDs, plus
+  existing work/version/hash/page/offset/quote checks. Real retained ReAct page1
+  is refused under the existing page3-only study selection before any checker.
+- Dedicated measurement-only approval permits four named count bodies and zero
+  Messages contacts. Zero-dollar reservations retain contact uncertainty and
+  replay fences. Separate funded approval remains mandatory; neither CLI writes
+  approval or enables everyday generation. Cache reuse also binds policy digest.
+- Read-only packet preparation avoids inherited schema migration, exports local
+  and transformed schemas plus digests, exact four initial bodies and24 blank
+  review cases. V1 digests are obsolete. Actual corpus was copied read-only into
+  isolated Postgres: four mocked counts and four wire-valid draft/check/repair/
+  recheck round trips passed. All usage integers are synthetic; quality unknown.
+
+The [repair runbook](21-qualification-readiness-repair.md) records invocation,
+external approval contract, contact limits and remaining owner decisions. Final
+checks:6074passed/54existing skips/53e2edeselected; patch99%
+(22missing/3800changed lines), package floors88/96/100/95 pass. Workflow
+e2e53passes; registry260/0; Ruff and strict mypy165files pass. Exact
+final-head CI attribution is retained in the local checkpoint and PR body. The three-
+summary/one-study scope stays quarantined; real grounded summaries and guided
+deep dives remain the next product milestone after approved measurement/review.
+
 ## Readiness follow-up from reviewed PR283 (2026-11-03)
 
 Verified reviewed/current remote head `a7ec430`; no subsequent changes at start.

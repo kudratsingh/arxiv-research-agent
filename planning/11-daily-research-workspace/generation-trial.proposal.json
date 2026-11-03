@@ -130,10 +130,9 @@
   "provider_calls": 0,
   "execution_enabled": false,
   "remaining": [
-    "Paid adapter with actual per-call settings/schema/token enforcement and sealed request digest",
-    "Exact input token measurements before approval; no paid count endpoint authorized",
-    "Representative human claim/span review and actual checker qualification",
-    "Specific owner GO naming model, public context, one-off trial and caps; no code-generated approval"
+    "Explicit external measurement-only or quarantined-experiment approval; runners cannot write approvals",
+    "Actual provider counts and remote schema acceptance (no contact yet)",
+    "Human claim/span review, measured checker quality and usefulness; everyday generation remains gated"
   ],
   "prepared_at": "2026-11-03",
   "qualification_kind": "separately approvable measurement/qualification experiment; unqualified checker permitted only for quarantined experiment; everyday generation requires quality evidence",
@@ -146,7 +145,7 @@
     "receipt": "outputs/workspace-next/fake-execution-receipt.json",
     "claim": "State/protocol tests only; fake checks are not model-quality evidence"
   },
-  "adapter_revision": "workspace-qualification-adapter-v1",
+  "adapter_revision": "workspace-qualification-adapter-v2",
   "provider_contact_scope": {
     "measurement_only_option": {
       "count_contacts_max": 4,
@@ -172,7 +171,7 @@
     "Review every experiment claim/span and omissions; checker qualification is an outcome, never assumed",
     "Everyday generation remains disabled pending adequate measured quality evidence and separate decision"
   ],
-  "exact_initial_request_artifact": "outputs/workspace-readiness/trial-packet.json",
+  "exact_initial_request_artifact": "outputs/workspace-qualification-repair/trial-packet.json",
   "dynamic_request_rule": "seal and count each check/repair/recheck after prior output exists; no source truncation or schema/model fallback",
   "review_cases": {
     "count": 24,
@@ -180,5 +179,61 @@
     "checker_qualified": false,
     "artifact": "outputs/workspace-readiness/trial-packet.json",
     "scope": "three retained text sources; PDF region review separate; not automatically sent by the four-job trial"
+  },
+  "sealed_requests": [
+    {
+      "request_id": "qualification-628a8c442856af150ca3314cdc0fc8abd7cf38ff",
+      "measurement_request_id": "measurement-628a8c442856af150ca3314cdc0fc8abd7cf38ff",
+      "input_digest": "628a8c442856af150ca3314cdc0fc8abd7cf38ff266c276b92e664af652241af",
+      "initial_wire_digest": "aed12fc542319b081556639b1528750d23d59f6a2a820d6098afbd61a5e0fb80",
+      "count_request_digest": "227522a658cd15626a99298dc770af84829c7029a466447c3d921eb3de16f1da"
+    },
+    {
+      "request_id": "qualification-c176d1185c983662bfaf660390e0502f5646aabd",
+      "measurement_request_id": "measurement-c176d1185c983662bfaf660390e0502f5646aabd",
+      "input_digest": "c176d1185c983662bfaf660390e0502f5646aabdae34f4cc63057292faf76ad3",
+      "initial_wire_digest": "354f9acd05aaae21707be7a01d5f543c490f65f2749b2e573cdfb5dc9894aabf",
+      "count_request_digest": "f14b7c1783aa214b18ccdf70f3ce1bb08e56162bcd56169246ad3c9022cbe6d2"
+    },
+    {
+      "request_id": "qualification-6d88f34321c4967d7dc50d71a04259c7301e998a",
+      "measurement_request_id": "measurement-6d88f34321c4967d7dc50d71a04259c7301e998a",
+      "input_digest": "6d88f34321c4967d7dc50d71a04259c7301e998a0afe3743f6fb39aea7ba5090",
+      "initial_wire_digest": "1193f7b5ac73382cbfd18ef11afcfcde908235904ea42d0d5c7159140d6c3968",
+      "count_request_digest": "d1c4533d035ec642d3277724df0f3e15d9f5aee55e7b9a178ceafb1113b63127"
+    },
+    {
+      "request_id": "qualification-e7a77fb58382efa4ada6226fcf516cbe03371442",
+      "measurement_request_id": "measurement-e7a77fb58382efa4ada6226fcf516cbe03371442",
+      "input_digest": "e7a77fb58382efa4ada6226fcf516cbe03371442f12c9d37511e8e1759397e91",
+      "initial_wire_digest": "eded63040ad770c7bfc9d7bc2f852c102a3209fd485407675e637c311e77ea51",
+      "count_request_digest": "6c45fbb104fe5e1740bf16f258d343d25ba83590f6e4db995c337476ddc8101b"
+    }
+  ],
+  "schema_digests": {
+    "draft_and_repair": {
+      "local_digest": "f132b97250a0bcf03637583ae19f903a28983d940c088855ea4c1089be891585",
+      "wire_digest": "73edc633ce99aea45ce043f8e8304f04b88b964417041fab1f837422fbba7682"
+    },
+    "checker": {
+      "local_digest": "35a98e858a8c95e93c8fa9636acb89d3ace6ff5adf921e8a17f8ecb7e6671a8a",
+      "wire_digest": "56f8338ddd473cdfffbbb33b5224cc83081d1f0d30dd73383715cbc98398e50a"
+    }
+  },
+  "measurement_only_execution": {
+    "module": "src.workspace.qualification_run",
+    "mode": "measurement",
+    "approval_purpose": "workspace-measurement-only",
+    "request_ids": [
+      "measurement-628a8c442856af150ca3314cdc0fc8abd7cf38ff",
+      "measurement-c176d1185c983662bfaf660390e0502f5646aabd",
+      "measurement-6d88f34321c4967d7dc50d71a04259c7301e998a",
+      "measurement-e7a77fb58382efa4ada6226fcf516cbe03371442"
+    ],
+    "monetary_reservation_usd": "0",
+    "count_contacts_max": 4,
+    "messages_contacts_max": 0,
+    "approval_record": null,
+    "status": "unapproved; MockTransport demonstration only"
   }
 }
