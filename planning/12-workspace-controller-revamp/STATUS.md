@@ -49,7 +49,7 @@ pasted from command output and never typed by hand.
 
 | Gate | Commit | Date | Result | Notes / links |
 |---|---|---|---|---|
-| G0 Setup & baseline | | | | |
+| G0 Setup & baseline | `83bea0a` (verified app code unchanged from `82d538f` / `916f038`) | 2026-11-03 09:55 UTC | PASS | [Before captures](evidence/before/p0-macos/); logs and deviations below |
 | G1 Foundations | | | | |
 | G2 Shell | | | | |
 | G3 Today controller | | | | |
@@ -134,3 +134,57 @@ production build above has30B. E27 governs temporary G1–G6 CSS overruns; no
 budget ratchet has been applied. Existing owner services3137/8137/15438 and
 private data remain untouched. PR285's backend qualification repair stays
 on its separate unmerged branch; this requested frontend branch builds on916f038.
+
+## P0 / WO-0.2 — isolated stack and before captures
+
+The Linux-only stack recipe was adapted to macOS without changing backend code:
+Compose project `arxiv-controller-p0`, Postgres15458, `workspace_rich` API8148/
+frontend3148 and separate browser-test `workspace` API8149/frontend3149. Both
+frontends run the real **production** build with CSP enabled. Every process
+uses the disabled provider key; recurrence is off. The rich feed bytes and
+browser fixtures are offline synthetic inputs, not live science/source evidence.
+Separate explicit DB URLs applied E31; the owner's3137/8137/15438 were preserved.
+
+Tool correction E79: screenshot capture accepts THEME/DPR, preserves BASE/ITEM,
+names images by theme and width, waits on loaded content, and blocks forbidden
+refresh POSTs. This explicitly required screenshot-tool edit is the exception
+to the frontend-only source scope; application code is unchanged. No tests edited.
+
+Copied browser-suite output:
+
+```text
+  16 passed (20.1s)
+```
+
+Image manifest (computed from PNG headers):
+
+```text
+{"count": 28, "pixel_widths": [780, 2880], "dpr": 2}
+```
+
+All7routes ×2themes ×2widths are in
+[evidence/before/p0-macos](evidence/before/p0-macos/), with hashes and dimensions
+in [capture-manifest.json](evidence/before/p0-macos/capture-manifest.json).
+Today before: [dark desktop](evidence/before/p0-macos/desktop-dark-today.png),
+[light desktop](evidence/before/p0-macos/desktop-light-today.png),
+[dark390px](evidence/before/p0-macos/mobile-dark-today.png),
+[light390px](evidence/before/p0-macos/mobile-light-today.png). Capture agent
+reviewed all4Today images; root also inspected desktop dark/mobile light. The
+long feed and second context column are the baseline to replace, not the new
+controller. Capture reported no browser console errors; this is not a full CSP
+audit. Initial sandbox Chromium launch failed; permitted retry succeeded.
+
+Mandatory pre-push Python gate, copied output:
+
+```text
+6042 passed, 54 skipped, 53 deselected in 418.50s (0:06:58)
+Total:   3658 lines
+Missing: 19 lines
+Coverage: 99%
+```
+
+The owner subsequently authorized the separate PR285/06c593f one-off paid
+qualification experiment. Controller work remains at G0, with no P1 source
+implementation yet; its key remains disabled. Waiting for the owner's promised
+new frontend instructions while the independent experiment is prepared. No PR
+was opened for this branch, no PR merged, and no owner data was modified.

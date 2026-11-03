@@ -1,0 +1,179 @@
+{
+  "kind": "offline synthetic seed; no real-source freshness or scientific evidence",
+  "application_baseline": "916f038",
+  "kit_head": "82d538f",
+  "device_scale_factor": 2,
+  "images": [
+    {
+      "file": "desktop-dark-interests.png",
+      "width_px": 2880,
+      "height_px": 6432,
+      "sha256": "13c1f2f8e5c74d3e3bbdfc0640c234b6d6954c387c286862bc6c79b9df1c2e08"
+    },
+    {
+      "file": "desktop-dark-items.png",
+      "width_px": 2880,
+      "height_px": 4146,
+      "sha256": "fdcd8fe2ab8a584fc1867d24302b912f82a4db57045823e62145cf80ca9b96d9"
+    },
+    {
+      "file": "desktop-dark-library.png",
+      "width_px": 2880,
+      "height_px": 2410,
+      "sha256": "320e64748444875d544d72ce9c2a4bf1bd1356ff3baa2fa7d226f74d2941c342"
+    },
+    {
+      "file": "desktop-dark-operations.png",
+      "width_px": 2880,
+      "height_px": 4550,
+      "sha256": "74f2b205541bb33f1f4bf08ea7485584f780caa6eb4526f96f4ab876c9718466"
+    },
+    {
+      "file": "desktop-dark-radar.png",
+      "width_px": 2880,
+      "height_px": 10830,
+      "sha256": "9378137564445fb3a5cc321c203a5e3b95b6a2e4a630be4124f9ded99116ebbb"
+    },
+    {
+      "file": "desktop-dark-review.png",
+      "width_px": 2880,
+      "height_px": 2000,
+      "sha256": "fea5d1284c5376003f75747e5aabec84bec838e490e3f85a4ed33cf3c7804817"
+    },
+    {
+      "file": "desktop-dark-today.png",
+      "width_px": 2880,
+      "height_px": 7774,
+      "sha256": "beafec2f417a07960a6a0be10539963242b23a15d6f8680ed1582bb352a4adfd"
+    },
+    {
+      "file": "desktop-light-interests.png",
+      "width_px": 2880,
+      "height_px": 6432,
+      "sha256": "6c0638cedef65485bfa810d6fbe4b7c2cb9854af111acb913a11656b25bb3dd0"
+    },
+    {
+      "file": "desktop-light-items.png",
+      "width_px": 2880,
+      "height_px": 4146,
+      "sha256": "0e7eb84af6d2d781d915bbef4f3458e3586de1eac402c7b46693c62c7404723a"
+    },
+    {
+      "file": "desktop-light-library.png",
+      "width_px": 2880,
+      "height_px": 2410,
+      "sha256": "38df8a82321a9956c420bed7835519753e6fc44c0e5fc852825b1e18020cb02d"
+    },
+    {
+      "file": "desktop-light-operations.png",
+      "width_px": 2880,
+      "height_px": 4550,
+      "sha256": "80c033f4d54a5f2d5ef2dcfcf5ffbfe2f128699a41c3bd32c6005e1a317b813d"
+    },
+    {
+      "file": "desktop-light-radar.png",
+      "width_px": 2880,
+      "height_px": 10830,
+      "sha256": "c197f2f54c07a97ab29fef5191d22e9ce3e5c861b53e9952e3a7781eea6b6a09"
+    },
+    {
+      "file": "desktop-light-review.png",
+      "width_px": 2880,
+      "height_px": 2000,
+      "sha256": "d7e8f91f741be10ea33fe10fe451525aef5e21f264b31427ac5c912e3b10c3f6"
+    },
+    {
+      "file": "desktop-light-today.png",
+      "width_px": 2880,
+      "height_px": 7774,
+      "sha256": "d130cb9f87355b0878e320426c3411c22c65635b81feff0b8b492af9c40a3b15"
+    },
+    {
+      "file": "mobile-dark-interests.png",
+      "width_px": 780,
+      "height_px": 8966,
+      "sha256": "e5e4a7429895b0fca8112db2052c0e49b667316944a451ec4dcb16faf1f924e9"
+    },
+    {
+      "file": "mobile-dark-items.png",
+      "width_px": 780,
+      "height_px": 3502,
+      "sha256": "19e120ba90d7c56bb6cf9f1cbfb9223bb88dc58069b5cd085f631c821dc909a7"
+    },
+    {
+      "file": "mobile-dark-library.png",
+      "width_px": 780,
+      "height_px": 2898,
+      "sha256": "1e2d73f49038500e47fd1aa61822f9c15c12dee6218ef2bfa8737f990494b3d2"
+    },
+    {
+      "file": "mobile-dark-operations.png",
+      "width_px": 780,
+      "height_px": 5890,
+      "sha256": "f242964cd1613fda36b199d2f85e7deefa1b978c25c771f3144287abc4451e64"
+    },
+    {
+      "file": "mobile-dark-radar.png",
+      "width_px": 780,
+      "height_px": 16010,
+      "sha256": "8d91fcb7088ede2c23ec06d728cbba1db4bbe736db39c24045879623381e76af"
+    },
+    {
+      "file": "mobile-dark-review.png",
+      "width_px": 780,
+      "height_px": 1846,
+      "sha256": "29be1a6320e9562e41fe71ebb5f587d58ec9a88d1088a23bc9a6f26a717a209e"
+    },
+    {
+      "file": "mobile-dark-today.png",
+      "width_px": 780,
+      "height_px": 11700,
+      "sha256": "2073e357261a5bf78b9490db741c64786ab8abe2be997936f0ae3469a08cf9db"
+    },
+    {
+      "file": "mobile-light-interests.png",
+      "width_px": 780,
+      "height_px": 8966,
+      "sha256": "407416c132ab0947191868d46ca1b162afaf08ac64f1bb7692b60afac225b293"
+    },
+    {
+      "file": "mobile-light-items.png",
+      "width_px": 780,
+      "height_px": 3502,
+      "sha256": "6e5159d14a6a74446c2a5018fa78229622cdb9d56b5c5552a87e9bcd28aad8f5"
+    },
+    {
+      "file": "mobile-light-library.png",
+      "width_px": 780,
+      "height_px": 2898,
+      "sha256": "f884e391d87d5ed6e0173a08aa5f481b28c0ef4918dad72780006fcd580c73af"
+    },
+    {
+      "file": "mobile-light-operations.png",
+      "width_px": 780,
+      "height_px": 5890,
+      "sha256": "858bd837df6dbed2e74c5b7eff5179871f445cb0a69ed8e865842cf9df3469d9"
+    },
+    {
+      "file": "mobile-light-radar.png",
+      "width_px": 780,
+      "height_px": 16010,
+      "sha256": "d461fa5605b2d208c759d64b3c44da35c2c42731fa2bbf857dea325ccab696f4"
+    },
+    {
+      "file": "mobile-light-review.png",
+      "width_px": 780,
+      "height_px": 1846,
+      "sha256": "4ed5e38918cfd06e345d6004e55dbbaaa05dd5b23d62e0f2bcd62ec4c67d430f"
+    },
+    {
+      "file": "mobile-light-today.png",
+      "width_px": 780,
+      "height_px": 11700,
+      "sha256": "fd28dd7ae9f06dde2ea50237ef6b96d523437c38103a5ce6dc65bd2865d8c315"
+    }
+  ],
+  "provider_contacts": 0,
+  "real_source_refreshes": 0,
+  "owner_writes": 0
+}
