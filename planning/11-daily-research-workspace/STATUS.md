@@ -18,6 +18,47 @@ Paid services require a separate, concrete approval before activation.
 | W8–W9 | Real grounded summaries and guided deep dives | Exact source/model/usage envelope and separate owner spending approval; actual retained-source/provider walkthrough required |
 | W10–W12 | Questions, assumptions and experiment proposals; daily-use pilot; optional expansion | Follow observed owner workflow. No automatic code execution, publishing or external delivery |
 
+## Readiness follow-up from reviewed PR283 (2026-11-03)
+
+Verified reviewed/current remote head `a7ec430`; no subsequent changes at start.
+Its nine green checks belong to that head, not this follow-up. New isolated
+branch `codex/daily-workspace-readiness` is stacked on283. Owner data and all PRs
+remain unmerged; provider contacts/spend0 and recurrence disabled.
+
+- Review fixes committed `c4c2a64`: all243 authored study areas have literal
+  matching terms;26 external fields and4 domains stay browse-only. Exact-version
+  retained availability drives cards/Radar/Reader without rewriting immutable
+  source metadata. PDF excerpts open on entry, with selected-page limits.
+- Today brings a compact saved-question return above the shortlist. A390px
+  browser regression checks a non-empty question and first reading title within
+  the initial viewport; allocation/identifiers/receipts are disclosed on demand.
+- Qualification-only actual wire adapter binds model/settings/schema/context,
+  input count estimates with25% headroom, output/call limits, one named job per
+  approval, reservations and split workflow/checker/unknown accounting. Contacts
+  are journalled before dispatch; cancellation and lost completion are fenced.
+  It reuses retained selection, structured request building and grounding checks;
+  the original fake executor remains a separate zero-dollar instrument.
+- Read-only packet builder exports four exact initial wire/count requests plus
+  24 representative claim/span cases. Human labels and checker judgments blank.
+  Dynamic check/repair bodies are sealed after prior outputs exist, never
+  invented in advance. No count endpoint or provider client was contacted.
+- Correct sequence: approve a bounded measurement/qualification experiment,
+  measure actual checker failures, then decide about everyday generation with
+  adequate quality evidence. The candidate remains3summaries/1excerpt study,
+  max16Messages+16count contacts, estimated raw ceiling$0.792, reservations$1.15,
+  proposed trial/day/month cap$1.25. Everything remains unapproved.
+
+Focused checkpoint: Python62passed for adapter/packet/admission; new adapter99%
+coverage, availability100%; frontend142workspace tests, strict typing/lint;
+14durable browser flows and compact2/excerpt2 passed in the isolated database.
+Full gates, production previews and final-head CI are recorded in the final
+checkpoint receipt; these focused results are not a green CI claim.
+
+See [readiness walkthrough](20-readiness-and-qualification-walkthrough.md) and
+[unexecuted trial](15-grounded-generation-approval-packet.md). The historical
+follow-up below describes the earlier instrument and earlier envelope only.
+Real grounded summaries and guided dives remain the next product milestone.
+
 ## Current follow-up: personal workflow and fake executor (2026-11-03)
 
 Branch `codex/daily-workspace-next` starts at the unchanged reviewed #282 head

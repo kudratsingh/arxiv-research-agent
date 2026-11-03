@@ -1,0 +1,440 @@
+"""Real Postgres, actual wire contracts, synthetic approvals and MockTransport only.
+
+Synthetic usage integers are test inputs, never measurements or quality labels.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+from dataclasses import asdict, replace
+from unittest.mock import Mock
+
+import httpx
+import pytest
+
+from src.workspace import provider_adapter as p
+from src.workspace.admission import AdmissionError, _digest
+from src.workspace.grounding import ClaimKind, ResearchClaim, evidence_ref
+from tests import test_workspace_admission as admission
+from tests import test_workspace_executor as support
+
+store = support.store
+if hasattr(support, "workspace_pg"):
+    workspace_pg_proc = support.workspace_pg_proc
+    workspace_pg = support.workspace_pg
+pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
+
+
+def prepared(store, kind="summary"):
+    _, material, _ = support.source(store)
+    return p.prepare(store, "a", kind, [material])
+
+
+def approve(store, inputs, **changes):
+    return admission.policy(
+        store,
+        model_ids=[p.MODEL],
+        purpose="workspace-qualification",
+        request_digest=_digest(inputs.snapshot()),
+        **{"transport_mode": "mock", "everyday_generation": False, "request_id": "one", **changes},
+    )
+
+
+class Transport:
+    def __init__(self, store, inputs, *, decision="supported", change=None):
+        self.calls = []
+        self.decision, self.change = decision, change
+        self.store, self.inputs = store, inputs
+        self.adapter = None
+        self.job = None
+
+    async def __call__(self, request):
+        body = json.loads(request.content)
+        self.calls.append((request.url.path, body))
+        assert request.url.host == "api.anthropic.com"
+        assert request.headers["x-api-key"] == "local-preview-disabled"
+        assert body["model"] == p.MODEL and "output_config" in body
+        assert "thinking" not in body and "effort" not in body["output_config"]
+        if request.url.path.endswith("count_tokens"):
+            assert "max_tokens" not in body and "temperature" not in body
+            return httpx.Response(200, json={"input_tokens": 100})
+        context = json.loads(body["messages"][0]["content"])
+        assert context["private_context"] == {"notes": False, "history": False, "profile": False}
+        if context["stage"] == "check":
+            assert body["temperature"] == 0
+            output = {
+                "checks": [
+                    {
+                        "claim_id": item["claim"]["claim_id"],
+                        "input_digest": item["input_digest"],
+                        "decision": self.decision,
+                        "reason": "Synthetic fixture decision, not quality evidence",
+                    }
+                    for item in context["claims"]
+                ]
+            }
+        else:
+            assert body["temperature"] == 0.2
+            with self.store.pool.connection() as conn:
+                materials = p.FakeExecutor(self.store)._sources(
+                    conn, "a", [s.material_id for s in self.inputs.sources]
+                )
+            span = materials[0].spans[0]
+            claim = ResearchClaim(
+                "c1", span.text, ClaimKind.FACTUAL, (evidence_ref(materials[0], span),)
+            )
+            output = {
+                "kind": self.inputs.kind,
+                "title": "Mock transport draft",
+                "claims": [asdict(claim)],
+                "sections": {"overview": ["c1"]},
+            }
+        value = {
+            "model": p.MODEL,
+            "stop_reason": "end_turn",
+            "usage": {"input_tokens": 110, "output_tokens": 90},
+            "content": [{"type": "text", "text": json.dumps(output)}],
+        }
+        if self.change:
+            value = self.change(value)
+        return httpx.Response(200, json=value)
+
+
+def setup(store, **kwargs):
+    inputs = prepared(store, kwargs.pop("kind", "summary"))
+    approve(store, inputs)
+    transport = Transport(store, inputs, **kwargs)
+    adapter = p.QualificationAdapter(store, "a", inputs, transport=httpx.MockTransport(transport))
+    job = adapter.start("one", "0.5")
+    transport.adapter, transport.job = adapter, job["id"]
+    return adapter, transport, job["id"]
+
+
+@pytest.mark.parametrize(
+    "kind,decision,calls",
+    [("summary", "supported", 4), ("deep_dive", "unsupported", 8), ("summary", "abstain", 8)],
+)
+async def test_exact_wire_to_durable_experiment_result_and_bounded_repair(
+    store, kind, decision, calls
+):
+    adapter, transport, job = setup(store, kind=kind, decision=decision)
+    first_wire = adapter.request(job)
+    assert first_wire == adapter.request(job)
+    assert first_wire["request_digest"] == _digest(first_wire["body"])
+    while adapter.snapshot(job)["state"] == "running":
+        result = await adapter.advance(job)
+    assert result["state"] == "ready" and len(transport.calls) == calls
+    assert result["result"]["experiment_only"] and not result["result"]["checker_qualified"]
+    assert not result["result"]["everyday_generation"]
+    assert result["workflow_usd"] == result["checker_usd"] == "0"
+    assert "synthetic" in result["usage_basis"]
+    assert {step["role"] for step in result["steps"]} == {"workflow", "checker"}
+    assert all(c["state"] == "completed" for c in result["contacts"])
+    assert adapter.start("one", "0.5")["cached"]
+    with pytest.raises(AdmissionError):
+        await adapter.advance(job)
+    assert len(transport.calls) == calls
+
+
+async def test_gate_binding_and_separate_qualification_approval_before_client(store, monkeypatch):
+    inputs = prepared(store)
+    client = Mock(side_effect=AssertionError("must refuse before client construction"))
+    monkeypatch.setattr(p.httpx, "AsyncClient", client)
+    for kwargs in ({}, {"enabled": True}, {"enabled": True, "api_key": "also-blocked-by-sentinel"}):
+        with pytest.raises(AdmissionError, match="provider_disabled"):
+            p.QualificationAdapter(store, "a", inputs, **kwargs)
+    with pytest.raises(AdmissionError, match="mock_transport_required"):
+        p.QualificationAdapter(store, "a", inputs, transport=object())
+    with pytest.raises(AdmissionError, match="mock_credential_required"):
+        p.QualificationAdapter(
+            store, "a", inputs, transport=httpx.MockTransport(lambda r: None), api_key="real-key"
+        )
+    for changed in (
+        replace(inputs, model_id="unknown"),
+        replace(inputs, private_question="private"),
+        replace(inputs, settings={**inputs.settings, "temperature": 0.8}),
+    ):
+        with pytest.raises(AdmissionError, match="sealed_execution_drift"):
+            p.QualificationAdapter(
+                store, "a", changed, transport=httpx.MockTransport(lambda r: None)
+            )
+    adapter = p.QualificationAdapter(
+        store, "a", inputs, transport=httpx.MockTransport(lambda r: None)
+    )
+    with pytest.raises(AdmissionError, match="reservation_below_envelope"):
+        adapter.start("small", "0.01")
+    with pytest.raises(AdmissionError, match="owner_approval_required"):
+        adapter.start("no", "0.5")
+    admission.policy(store, model_ids=[p.MODEL])
+    with pytest.raises(AdmissionError, match="qualification_approval_required"):
+        adapter.start("not-qualification", "0.5")
+    approve(store, inputs, transport_mode="provider", request_id="wrong-mode")
+    with pytest.raises(AdmissionError, match="approval_transport_mismatch"):
+        adapter.start("wrong-mode", "0.5")
+    client.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "change,error",
+    [
+        (lambda v: {**v, "model": "wrong"}, "model_drift"),
+        (lambda v: {**v, "stop_reason": "max_tokens"}, "incomplete_output"),
+        (
+            lambda v: {**v, "usage": {"input_tokens": True, "output_tokens": 0}},
+            "invalid_or_unpriced",
+        ),
+        (
+            lambda v: {**v, "usage": {"input_tokens": 10, "output_tokens": -1}},
+            "invalid_or_unpriced",
+        ),
+        (
+            lambda v: {
+                **v,
+                "usage": {"input_tokens": 10, "output_tokens": 1, "cache_read_input_tokens": 2},
+            },
+            "invalid_or_unpriced",
+        ),
+        (lambda v: {**v, "usage": {"input_tokens": 8001, "output_tokens": 1}}, "usage_cap"),
+        (lambda v: {**v, "usage": {"input_tokens": 1, "output_tokens": 1201}}, "usage_cap"),
+        (lambda v: {**v, "content": []}, "structured_text"),
+        (lambda v: {**v, "content": [{"type": "thinking"}]}, "structured_text"),
+        (lambda v: {**v, "content": [{"type": "text", "text": "not json"}]}, "Expecting value"),
+    ],
+)
+async def test_invalid_or_incomplete_billed_output_is_fenced_never_replayed(store, change, error):
+    adapter, transport, job = setup(store, change=change)
+    with pytest.raises((AdmissionError, ValueError), match=error):
+        await adapter.advance(job)
+    assert adapter.snapshot(job)["state"] == "uncertain"
+    assert admission.row(store, job)[4] > 0
+    with pytest.raises(AdmissionError):
+        await adapter.advance(job)
+    assert len(transport.calls) == 2
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "timeout",
+        "redirect",
+        "429",
+        "oversized",
+        "shape",
+        "count_negative",
+        "count_bool",
+        "count_large",
+    ],
+)
+async def test_counting_contact_failures_no_generation_or_implicit_retries(store, fault):
+    inputs = prepared(store)
+    approve(store, inputs, request_id="fault")
+    calls = []
+
+    async def handler(request):
+        calls.append(request)
+        if fault == "timeout":
+            raise httpx.ReadTimeout("synthetic", request=request)
+        if fault == "redirect":
+            return httpx.Response(302, headers={"location": "https://other.invalid"})
+        if fault == "429":
+            return httpx.Response(429, headers={"retry-after": "30"})
+        if fault == "oversized":
+            return httpx.Response(200, content=b"x" * 131073)
+        if fault == "shape":
+            return httpx.Response(200, json=[])
+        return httpx.Response(
+            200,
+            json={
+                "input_tokens": {"count_negative": -1, "count_bool": True, "count_large": 6401}[
+                    fault
+                ]
+            },
+        )
+
+    adapter = p.QualificationAdapter(store, "a", inputs, transport=httpx.MockTransport(handler))
+    job = adapter.start("fault", "0.5")["id"]
+    with pytest.raises((AdmissionError, httpx.HTTPError)):
+        await adapter.advance(job)
+    assert len(calls) == 1 and adapter.snapshot(job)["state"] == "uncertain"
+
+
+async def test_cancel_restart_and_competing_contact_are_fenced(store):
+    adapter, transport, job = setup(store)
+    assert (await adapter.advance(job, cancelled=lambda: True))["state"] == "cancelled"
+    assert not transport.calls
+    adapter, transport, job = setup_new(store, "second")
+    wire = adapter.request(job)
+    adapter._contact(job, wire, "messages/count_tokens")
+    with pytest.raises(AdmissionError, match="contact_fenced"):
+        adapter._contact(job, wire, "messages/count_tokens")
+    restarted = p.QualificationAdapter(
+        store, "a", adapter.inputs, transport=httpx.MockTransport(transport)
+    )
+    restarted.control.recover("a", job)
+    assert restarted.snapshot(job)["state"] == "uncertain"
+    with pytest.raises(AdmissionError):
+        await restarted.advance(job)
+    assert not transport.calls
+
+
+def setup_new(store, request_id):
+    inputs = prepared(store)
+    approve(store, inputs, request_id=request_id)
+    transport = Transport(store, inputs)
+    adapter = p.QualificationAdapter(store, "a", inputs, transport=httpx.MockTransport(transport))
+    return adapter, transport, adapter.start(request_id, "0.5")["id"]
+
+
+async def test_cancellation_during_generation_retains_receipt_and_discards_output(store):
+    adapter, transport, job = setup(store)
+    original = transport.__call__
+
+    async def handler(request):
+        response = await original(request)
+        if request.url.path == "/v1/messages":
+            adapter.control.cancel("a", job)
+        return response
+
+    adapter.transport = httpx.MockTransport(handler)
+    result = await adapter.advance(job)
+    assert result["state"] == "cancelled" and not result["steps"] and not result["result"]
+    assert result["contacts"][-1]["response"]["usage"]["input_tokens"] == 110
+    assert admission.row(store, job)[4] == 0
+
+
+async def test_task_cancellation_and_policy_drift_preserve_unknown(store):
+    adapter, _, job = setup(store)
+
+    async def interrupted(request):
+        raise asyncio.CancelledError()
+
+    adapter.transport = httpx.MockTransport(interrupted)
+    with pytest.raises(asyncio.CancelledError):
+        await adapter.advance(job)
+    assert admission.row(store, job)[4] > 0
+    adapter, transport, job = setup_new(store, "other")
+    approve(store, adapter.inputs, day_usd="2.1", request_id="other")
+    with pytest.raises(AdmissionError, match="contact_fenced"):
+        await adapter.advance(job)
+    assert not transport.calls
+
+
+async def test_dispatch_rechecks_transport_and_credential_drift_before_client(store, monkeypatch):
+    adapter, _, job = setup(store)
+    constructor = Mock(side_effect=AssertionError("no client construction"))
+    monkeypatch.setattr(p.httpx, "AsyncClient", constructor)
+    adapter.transport = None
+    with pytest.raises(AdmissionError, match="mock_transport_drift"):
+        await adapter.advance(job)
+    adapter.mode = "provider"
+    with pytest.raises(AdmissionError, match="provider_disabled"):
+        await adapter._post("messages", {})
+    constructor.assert_not_called()
+
+
+async def test_count_cancel_and_known_receipt_cancel_are_distinct(store):
+    adapter, transport, job = setup(store)
+    original = transport.__call__
+
+    async def cancelled_count(request):
+        response = await original(request)
+        adapter.control.cancel("a", job)
+        return response
+
+    adapter.transport = httpx.MockTransport(cancelled_count)
+    assert (await adapter.advance(job))["state"] == "cancelled"
+    assert len(transport.calls) == 1
+    for request_id, stop_after, expected in [("after-count", 2, 1), ("after-usage", 3, 2)]:
+        adapter, transport, job = setup_new(store, request_id)
+        checks = []
+
+        def cancelled(checks=checks, stop_after=stop_after):
+            checks.append(True)
+            return len(checks) >= stop_after
+
+        assert (await adapter.advance(job, cancelled=cancelled))["state"] == "cancelled"
+        assert len(transport.calls) == expected
+
+
+async def test_kind_schema_checker_provenance_and_capability_drift_refuse(store, monkeypatch):
+    def wrong_kind(value):
+        draft = json.loads(value["content"][0]["text"])
+        draft["kind"] = "deep_dive"
+        return {**value, "content": [{"type": "text", "text": json.dumps(draft)}]}
+
+    adapter, _, job = setup(store, change=wrong_kind)
+    with pytest.raises(AdmissionError, match="kind_drift"):
+        await adapter.advance(job)
+    adapter, transport, job = setup_new(store, "provenance")
+    await adapter.advance(job)
+
+    def drift(value):
+        checks = json.loads(value["content"][0]["text"])
+        checks["checks"][0]["input_digest"] = "sha256:" + "0" * 64
+        return {**value, "content": [{"type": "text", "text": json.dumps(checks)}]}
+
+    transport.change = drift
+    with pytest.raises(ValueError, match="checker_input_drift"):
+        await adapter.advance(job)
+    monkeypatch.setattr(p, "MODEL_CAPABILITIES", {})
+    with pytest.raises(AdmissionError, match="unsupported_model"):
+        p.QualificationAdapter(store, "a", adapter.inputs, transport=httpx.MockTransport(transport))
+
+
+async def test_provider_branch_uses_mocked_transport_but_records_priced_role_usage(
+    store, monkeypatch
+):
+    # Exercise the priced branch without sockets. This explicit test injection
+    # provides synthetic response usage, not measured or invoice-backed tokens.
+    inputs = prepared(store)
+    approve(store, inputs, transport_mode="provider", request_id="priced-branch")
+    transport = Transport(store, inputs)
+    original_client = httpx.AsyncClient
+
+    def mock_client(**kwargs):
+        kwargs["transport"] = httpx.MockTransport(transport)
+        return original_client(**kwargs)
+
+    monkeypatch.setattr(p.httpx, "AsyncClient", mock_client)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "synthetic-test-not-a-credential")
+    adapter = p.QualificationAdapter(
+        store, "a", inputs, api_key="synthetic-test-not-a-credential", enabled=True
+    )
+    # Only this test's handler accepts the synthetic key; production handler
+    # assertions continue to require the disabled sentinel for offline mode.
+    original = transport.__call__
+
+    async def handler(request):
+        request.headers["x-api-key"] = "local-preview-disabled"
+        return await original(request)
+
+    transport.__call__ = handler
+
+    # Special methods are resolved on the class, so inject the handler directly.
+    def mock_client(**kwargs):
+        kwargs["transport"] = httpx.MockTransport(handler)
+        return original_client(**kwargs)
+
+    monkeypatch.setattr(p.httpx, "AsyncClient", mock_client)
+    job = adapter.start("priced-branch", "0.5")["id"]
+    await adapter.advance(job)
+    result = await adapter.advance(job)
+    assert result["state"] == "ready"
+    assert result["workflow_usd"] == result["checker_usd"] == "0.00168"
+    assert admission.row(store, job)[2:5] == (
+        p.Decimal("0.00168"),
+        p.Decimal("0.00168"),
+        p.Decimal(0),
+    )
+
+
+async def test_named_approval_cannot_be_reused_for_another_request_id(store):
+    adapter, transport, job = setup(store)
+    with pytest.raises(AdmissionError, match="approved_request_id_required"):
+        adapter.start("another", "0.5")
+    with store.pool.connection() as conn:
+        assert conn.execute("SELECT count(*) FROM workspace_generation_jobs").fetchone()[0] == 1
+    with pytest.raises(AdmissionError, match="endpoint_not_permitted"):
+        await adapter._post("not-an-approved-endpoint", {})
+    assert not transport.calls
