@@ -267,7 +267,37 @@ test("editing an earlier question becomes latest activity, pins its exact versio
   const first = `Earlier question ${marker}: which baseline stays fixed?`;
   const later = `Later question ${marker}: how is retrieval measured?`;
   let entryId: string | undefined;
+  const originalReading = {
+    status: item!.reading.status,
+    anchor: item!.reading.anchor,
+    version_id: item!.reading.version_id || item!.version_id,
+    snoozed_until: item!.reading.snoozed_until,
+  };
+  async function restoreOrSetReading(data: typeof originalReading) {
+    const state = await realState(page);
+    const reading = state.works.find(
+      (work) => work.work_id === item!.work_id,
+    )!.reading;
+    const response = await page.request.post("/api/workspace/reading", {
+      data: {
+        work_id: item!.work_id,
+        revision: reading.revision,
+        request_id: crypto.randomUUID(),
+        data,
+      },
+    });
+    expect(response.ok()).toBe(true);
+  }
   try {
+    // Keep the edited work unread so Saved cannot accidentally satisfy Notes.
+    // Only the guarded verification principal is changed; restore in finally.
+    if (item!.reading.status !== "unread") {
+      await restoreOrSetReading({
+        ...originalReading,
+        status: "unread",
+        snoozed_until: null,
+      });
+    }
     for (const [version, question] of [
       [earlier.version_id, first],
       [item!.version_id, later],
@@ -292,6 +322,9 @@ test("editing an earlier question becomes latest activity, pins its exact versio
     await page.goto("/workspace/today");
     await expect(page.locator(".workspace-activity")).toContainText(later);
     await page.goto("/workspace/library?view=notes");
+    await expect(
+      page.getByRole("combobox", { name: "Library view" }),
+    ).toHaveValue("notes");
     const libraryEntry = page
       .getByRole("article")
       .filter({ has: page.getByText(first, { exact: true }) });
@@ -318,6 +351,9 @@ test("editing an earlier question becomes latest activity, pins its exact versio
     );
     await page.getByRole("link", { name: "← Library", exact: true }).click();
     await expect(page).toHaveURL(/\/workspace\/library\?view=notes$/);
+    await expect(
+      page.getByRole("combobox", { name: "Library view" }),
+    ).toHaveValue("notes");
     await expect(page.getByText(edited, { exact: true })).toBeVisible();
     await page.goto("/workspace/today");
     await expect(page.locator(".workspace-activity")).toContainText(edited);
@@ -357,6 +393,7 @@ test("editing an earlier question becomes latest activity, pins its exact versio
       });
       expect(response.ok()).toBe(true);
     }
+    await restoreOrSetReading(originalReading);
   }
 });
 

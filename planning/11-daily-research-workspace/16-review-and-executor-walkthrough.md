@@ -89,7 +89,7 @@ real model tokens, semantic factual support, checker calibration or usefulness.
 Equations/tables/figures remain explicitly unqualified where extraction lost
 structure; see [the inspected sample](18-fulltext-qualification.md).
 
-The reviewed source checkpoint has 3,710 web tests / zero skips and passes all
+The reviewed source checkpoint has 3,711 web tests / zero skips and passes all
 unchanged web coverage floors and production route/CSS ceilings. Fourteen real
 API desktop/mobile cases and two scientific PDF cases pass against the
 production standalone build. Final commit attribution, Python gates and CI
@@ -117,3 +117,9 @@ whether/when to approve a concrete paid qualification, and a schedule time if
 recurrence is desired. Hardware constraints are needed only for realistic
 experiment feasibility; proposed experiments remain unexecuted and feasibility
 unknown in the meantime.
+
+The first remote follow-up run exposed a Library return bug on an unread work:
+Notes in the URL could revert to Saved in the selector. Trace/API state proved
+the edit had committed. Reactive query-derived filtering plus the unread-work
+regression fixes it; the same clean CI seed passes all14 production cases. The
+failed run is retained, and replacement CI must match the final pushed head.

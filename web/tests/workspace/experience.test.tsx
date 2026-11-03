@@ -1030,7 +1030,7 @@ describe("the visible personal controls round trip their actual data", () => {
       }),
     );
     const user = userEvent.setup();
-    render(<LiveLibrary />);
+    const mounted = render(<LiveLibrary />);
     await load();
     expect(
       screen.getByText(/A newer source version is available/),
@@ -1049,17 +1049,22 @@ describe("the visible personal controls round trip their actual data", () => {
       screen.getByText("Compare the earlier baseline"),
     ).toBeInTheDocument();
     const view = screen.getByRole("combobox", { name: "Library view" });
+    // The simple navigation mock reads the URL when Next would notify it.
     await user.selectOptions(view, "notes");
+    mounted.rerender(<LiveLibrary />);
     expect(
       screen.getByText("Compare the earlier baseline"),
     ).toBeInTheDocument();
     await user.selectOptions(view, "read");
+    mounted.rerender(<LiveLibrary />);
     expect(
       screen.getByRole("link", { name: "A read source" }),
     ).toBeInTheDocument();
     await user.selectOptions(view, "archived");
+    mounted.rerender(<LiveLibrary />);
     expect(screen.getByText("No items in this view.")).toBeInTheDocument();
     await user.selectOptions(view, "all");
+    mounted.rerender(<LiveLibrary />);
     expect(
       screen.getByRole("link", { name: "A read source" }),
     ).toBeInTheDocument();

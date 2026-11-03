@@ -432,11 +432,11 @@ export default defineConfig(async () => ({
       // Fixing that is what makes the next re-seed worth the floor it
       // raises.
       // Daily workspace follow-up, measured after the production build:
-      // 3,710 tests across 177 files: 4297/4374 statements, 3184/3378 branches,
-      // 1552/1686 functions, 3621/3645 lines. Zero skipped bundle checks.
+      // 3,711 tests across 177 files: 4295/4372 statements, 3183/3376 branches,
+      // 1551/1685 functions, 3619/3643 lines. Zero skipped bundle checks.
       // Refresh the count before it ages beyond the documented file band.
       // Preserve the statements/branches/lines floors and their noise margin;
-      // ratchet functions from 88.8 to 91.8, below the measured 92.05.
+      // ratchet functions from 88.8 to 91.8, below the measured 92.04.
       // Coverage includes/exclusions and every test tier remain unchanged.
       thresholds: {
         statements: 98.15,
