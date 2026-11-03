@@ -885,6 +885,518 @@
         }
       }
     },
+    "/workspace/review": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Get Review",
+        "description": "Read an existing private ten-item review; a GET never creates judgments or packets.",
+        "operationId": "get_review_workspace_review_get",
+        "parameters": [
+          {
+            "name": "packet_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "Packet Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewIndex"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/review/prepare": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Prepare Review",
+        "description": "Freeze up to ten actual candidates with blank personal judgments, safely retried.",
+        "operationId": "prepare_review_workspace_review_prepare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewPrepare"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewPacket"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/review/feedback": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Save Usefulness",
+        "description": "Record an explicit owner judgment against the frozen candidate/version.",
+        "operationId": "save_usefulness_workspace_review_feedback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsefulnessFeedback"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/generation/preview": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Preview Fake Request",
+        "description": "Disclose exact retained source/context for the local synthetic pipeline; no provider exists.",
+        "operationId": "preview_fake_request_workspace_generation_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FakePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FakeRequestPreview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/generation/jobs": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "List Fake Jobs",
+        "description": "Read this account's explicitly synthetic jobs and usage, independently of paid admission.",
+        "operationId": "list_fake_jobs_workspace_generation_jobs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FakeJob"
+                  },
+                  "type": "array",
+                  "title": "Response List Fake Jobs Workspace Generation Jobs Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Submit Fake Job",
+        "description": "Reserve a separate zero-dollar fake job after exact request digest confirmation.",
+        "operationId": "submit_fake_job_workspace_generation_jobs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FakeSubmitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FakeJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/generation/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Get Fake Job",
+        "description": "Read a durable synthetic pipeline checkpoint without advancing it.",
+        "operationId": "get_fake_job_workspace_generation_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FakeJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/generation/jobs/{job_id}/advance": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Advance Fake Job",
+        "description": "Execute one bounded local fake step; SDK/provider construction is inaccessible.",
+        "operationId": "advance_fake_job_workspace_generation_jobs__job_id__advance_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FakeJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/generation/jobs/{job_id}/cancel": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Cancel Fake Job",
+        "description": "Request cooperative cancellation and preserve incurred simulated usage.",
+        "operationId": "cancel_fake_job_workspace_generation_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FakeJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/generation/jobs/{job_id}/recover": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Recover Fake Job",
+        "description": "Fence interrupted local work without silently replaying an uncertain step.",
+        "operationId": "recover_fake_job_workspace_generation_jobs__job_id__recover_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FakeJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/materials": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "List Materials",
+        "description": "List actual retained material for an exact source version, with scope/quality limits.",
+        "operationId": "list_materials_workspace_materials_get",
+        "parameters": [
+          {
+            "name": "work_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300,
+              "title": "Work Id"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300,
+              "title": "Version Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaterialInfo"
+                  },
+                  "title": "Response List Materials Workspace Materials Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspace/materials/{material_id}": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "summary": "Get Material",
+        "description": "Read safe retained text and original-page offsets, never fetch a remote URL.",
+        "operationId": "get_material_workspace_materials__material_id__get",
+        "parameters": [
+          {
+            "name": "material_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Material Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/workspace/refresh": {
       "post": {
         "tags": [
@@ -1305,6 +1817,93 @@
   },
   "components": {
     "schemas": {
+      "Activity": {
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "entry_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entry Id"
+          },
+          "work_id": {
+            "type": "string",
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "entry",
+              "reading"
+            ],
+            "title": "Kind"
+          },
+          "entry_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "question",
+                  "note",
+                  "next-action"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entry Kind"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body",
+            "default": ""
+          },
+          "anchor": {
+            "type": "string",
+            "title": "Anchor"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sequence",
+          "work_id",
+          "version_id",
+          "kind",
+          "anchor",
+          "revision",
+          "updated_at"
+        ],
+        "title": "Activity"
+      },
+      "ClaimKind": {
+        "type": "string",
+        "enum": [
+          "factual",
+          "inference"
+        ],
+        "title": "ClaimKind"
+      },
       "ConversationCreateRequest": {
         "properties": {
           "title": {
@@ -1466,6 +2065,11 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "allocation": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Allocation"
           }
         },
         "type": "object",
@@ -1568,6 +2172,16 @@
           "revision": {
             "type": "integer",
             "title": "Revision"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "default": ""
+          },
+          "activity_sequence": {
+            "type": "integer",
+            "title": "Activity Sequence",
+            "default": 0
           }
         },
         "additionalProperties": false,
@@ -1614,6 +2228,772 @@
           "data"
         ],
         "title": "EntryWrite"
+      },
+      "EvidenceRef": {
+        "properties": {
+          "material_id": {
+            "type": "string",
+            "title": "Material Id"
+          },
+          "span_id": {
+            "type": "string",
+            "title": "Span Id"
+          },
+          "work_id": {
+            "type": "string",
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "source_hash": {
+            "type": "string",
+            "title": "Source Hash"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "metadata",
+              "abstract",
+              "excerpt",
+              "full_text"
+            ],
+            "title": "Scope"
+          },
+          "parser_revision": {
+            "type": "string",
+            "title": "Parser Revision"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "quote": {
+            "type": "string",
+            "title": "Quote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "material_id",
+          "span_id",
+          "work_id",
+          "version_id",
+          "source_hash",
+          "scope",
+          "parser_revision",
+          "page",
+          "start",
+          "end",
+          "quote"
+        ],
+        "title": "EvidenceRef"
+      },
+      "FakeCounter": {
+        "properties": {
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens",
+            "default": 0
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FakeCounter"
+      },
+      "FakeDraft": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "deep_dive"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ResearchClaim"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Claims"
+          },
+          "sections": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Sections"
+          },
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Questions",
+            "default": []
+          },
+          "proposed_actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Proposed Actions",
+            "default": []
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Limitations",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "claims",
+          "sections"
+        ],
+        "title": "FakeDraft"
+      },
+      "FakeJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "deep_dive"
+            ],
+            "title": "Kind"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FakeJobState"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "mode": {
+            "type": "string",
+            "const": "fake",
+            "title": "Mode",
+            "default": "fake"
+          },
+          "model_id": {
+            "type": "string",
+            "const": "fixture-workspace-v1",
+            "title": "Model Id",
+            "default": "fixture-workspace-v1"
+          },
+          "fixture_revision": {
+            "type": "string",
+            "const": "workspace-executor-v1",
+            "title": "Fixture Revision",
+            "default": "workspace-executor-v1"
+          },
+          "request_digest": {
+            "type": "string",
+            "title": "Request Digest"
+          },
+          "request": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Request"
+          },
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FakeDraft"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "grounding": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grounding"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FakeResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/FakeStep"
+            },
+            "type": "array",
+            "title": "Steps",
+            "default": []
+          },
+          "usage": {
+            "$ref": "#/components/schemas/FakeUsage"
+          },
+          "cancel_requested": {
+            "type": "boolean",
+            "title": "Cancel Requested",
+            "default": false
+          },
+          "lease_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lease Until"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "revision",
+          "request_digest",
+          "request",
+          "usage"
+        ],
+        "title": "FakeJob"
+      },
+      "FakeJobState": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "drafting",
+          "checking",
+          "repairing",
+          "ready",
+          "ready_partial",
+          "cancelled",
+          "failed",
+          "interrupted",
+          "budget_stopped",
+          "stale"
+        ],
+        "title": "FakeJobState"
+      },
+      "FakeLimits": {
+        "properties": {
+          "max_calls": {
+            "type": "integer",
+            "const": 4,
+            "title": "Max Calls",
+            "default": 4
+          },
+          "max_repairs": {
+            "type": "integer",
+            "const": 1,
+            "title": "Max Repairs",
+            "default": 1
+          },
+          "per_call_input_tokens": {
+            "type": "integer",
+            "title": "Per Call Input Tokens"
+          },
+          "per_call_output_tokens": {
+            "type": "integer",
+            "title": "Per Call Output Tokens"
+          },
+          "max_input_tokens": {
+            "type": "integer",
+            "title": "Max Input Tokens"
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "title": "Max Output Tokens"
+          },
+          "max_source_bytes": {
+            "type": "integer",
+            "title": "Max Source Bytes"
+          },
+          "max_spans": {
+            "type": "integer",
+            "title": "Max Spans"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "per_call_input_tokens",
+          "per_call_output_tokens",
+          "max_input_tokens",
+          "max_output_tokens",
+          "max_source_bytes",
+          "max_spans"
+        ],
+        "title": "FakeLimits"
+      },
+      "FakePreviewRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "deep_dive"
+            ],
+            "title": "Kind"
+          },
+          "material_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Material Ids"
+          },
+          "span_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Span Ids"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Question",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "material_ids"
+        ],
+        "title": "FakePreviewRequest"
+      },
+      "FakeRequestPreview": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "const": "fake",
+            "title": "Mode",
+            "default": "fake"
+          },
+          "model_id": {
+            "type": "string",
+            "const": "fixture-workspace-v1",
+            "title": "Model Id",
+            "default": "fixture-workspace-v1"
+          },
+          "fixture_revision": {
+            "type": "string",
+            "const": "workspace-executor-v1",
+            "title": "Fixture Revision",
+            "default": "workspace-executor-v1"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "deep_dive"
+            ],
+            "title": "Kind"
+          },
+          "request_digest": {
+            "type": "string",
+            "title": "Request Digest"
+          },
+          "request": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Request"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/FakeLimits"
+          },
+          "usage_basis": {
+            "type": "string",
+            "const": "simulated UTF-8 byte counters; not provider tokens",
+            "title": "Usage Basis",
+            "default": "simulated UTF-8 byte counters; not provider tokens"
+          },
+          "actual_usd": {
+            "type": "string",
+            "const": "0.000000",
+            "title": "Actual Usd",
+            "default": "0.000000"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "request_digest",
+          "request",
+          "limits"
+        ],
+        "title": "FakeRequestPreview"
+      },
+      "FakeResult": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "const": "fake",
+            "title": "Mode",
+            "default": "fake"
+          },
+          "model_id": {
+            "type": "string",
+            "const": "fixture-workspace-v1",
+            "title": "Model Id",
+            "default": "fixture-workspace-v1"
+          },
+          "fixture_revision": {
+            "type": "string",
+            "const": "workspace-executor-v1",
+            "title": "Fixture Revision",
+            "default": "workspace-executor-v1"
+          },
+          "check_basis": {
+            "type": "string",
+            "title": "Check Basis",
+            "default": "synthetic exact-quotation checks; not a calibrated judge or model-quality result"
+          },
+          "request_digest": {
+            "type": "string",
+            "title": "Request Digest"
+          },
+          "draft": {
+            "$ref": "#/components/schemas/FakeDraft"
+          },
+          "grounding": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Grounding"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_digest",
+          "draft",
+          "grounding"
+        ],
+        "title": "FakeResult"
+      },
+      "FakeStep": {
+        "properties": {
+          "ordinal": {
+            "type": "integer",
+            "title": "Ordinal"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "check",
+              "repair"
+            ],
+            "title": "Phase"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "running",
+              "completed",
+              "failed",
+              "interrupted"
+            ],
+            "title": "State"
+          },
+          "request_digest": {
+            "type": "string",
+            "title": "Request Digest"
+          },
+          "request": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Request"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          },
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens",
+            "default": 0
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "unknown_recorded": {
+            "type": "boolean",
+            "title": "Unknown Recorded",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ordinal",
+          "phase",
+          "state",
+          "request_digest",
+          "request",
+          "input_tokens"
+        ],
+        "title": "FakeStep"
+      },
+      "FakeSubmitRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "deep_dive"
+            ],
+            "title": "Kind"
+          },
+          "material_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Material Ids"
+          },
+          "span_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "Span Ids"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Question",
+            "default": ""
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "expected_digest": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Expected Digest"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "material_ids",
+          "request_id",
+          "expected_digest"
+        ],
+        "title": "FakeSubmitRequest"
+      },
+      "FakeUsage": {
+        "properties": {
+          "workflow": {
+            "$ref": "#/components/schemas/FakeCounter"
+          },
+          "checker": {
+            "$ref": "#/components/schemas/FakeCounter"
+          },
+          "unknown": {
+            "$ref": "#/components/schemas/FakeCounter"
+          },
+          "used_calls": {
+            "type": "integer",
+            "title": "Used Calls",
+            "default": 0
+          },
+          "max_calls": {
+            "type": "integer",
+            "title": "Max Calls",
+            "default": 4
+          },
+          "usage_basis": {
+            "type": "string",
+            "title": "Usage Basis",
+            "default": "simulated UTF-8 byte counters; not provider tokens"
+          },
+          "actual_usd": {
+            "type": "string",
+            "const": "0.000000",
+            "title": "Actual Usd",
+            "default": "0.000000"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FakeUsage"
+      },
+      "FeedbackWrite": {
+        "properties": {
+          "packet_id": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Packet Id"
+          },
+          "work_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Version Id"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "useful",
+                  "maybe",
+                  "irrelevant"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Reason",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "packet_id",
+          "work_id",
+          "version_id",
+          "revision",
+          "request_id",
+          "label"
+        ],
+        "title": "FeedbackWrite"
       },
       "GenerationRequest": {
         "properties": {
@@ -1880,6 +3260,76 @@
           "profile_revision"
         ],
         "title": "ImportRequest"
+      },
+      "InterestCoverage": {
+        "properties": {
+          "topic_id": {
+            "type": "string",
+            "title": "Topic Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "matching_mode": {
+            "type": "string",
+            "enum": [
+              "descendant_terms",
+              "literal_terms",
+              "browse_only"
+            ],
+            "title": "Matching Mode"
+          },
+          "terms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Terms"
+          },
+          "descendant_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Descendant Ids"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Ids"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "limited",
+              "unconnected"
+            ],
+            "title": "Status"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "topic_id",
+          "label",
+          "matching_mode",
+          "terms",
+          "descendant_ids",
+          "source_ids",
+          "status",
+          "limitations"
+        ],
+        "title": "InterestCoverage"
       },
       "ItemPage": {
         "properties": {
@@ -2653,6 +4103,214 @@
         ],
         "title": "ManualRequest"
       },
+      "MaterialDocument": {
+        "properties": {
+          "material_id": {
+            "type": "string",
+            "title": "Material Id"
+          },
+          "work_id": {
+            "type": "string",
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "source_hash": {
+            "type": "string",
+            "title": "Source Hash"
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          },
+          "parser_revision": {
+            "type": "string",
+            "title": "Parser Revision"
+          },
+          "quality": {
+            "type": "string",
+            "title": "Quality"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "page_numbers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Numbers"
+          },
+          "offset_basis": {
+            "type": "string",
+            "title": "Offset Basis"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Provenance"
+          },
+          "pages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Pages"
+          },
+          "spans": {
+            "items": {
+              "$ref": "#/components/schemas/RetainedSpan"
+            },
+            "type": "array",
+            "title": "Spans"
+          }
+        },
+        "type": "object",
+        "required": [
+          "material_id",
+          "work_id",
+          "version_id",
+          "source_hash",
+          "content_hash",
+          "scope",
+          "parser_revision",
+          "quality",
+          "warnings",
+          "complete",
+          "offset_basis",
+          "pages",
+          "spans"
+        ],
+        "title": "MaterialDocument"
+      },
+      "MaterialInfo": {
+        "properties": {
+          "material_id": {
+            "type": "string",
+            "title": "Material Id"
+          },
+          "work_id": {
+            "type": "string",
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "source_hash": {
+            "type": "string",
+            "title": "Source Hash"
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          },
+          "parser_revision": {
+            "type": "string",
+            "title": "Parser Revision"
+          },
+          "quality": {
+            "type": "string",
+            "title": "Quality"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "page_numbers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Numbers"
+          },
+          "offset_basis": {
+            "type": "string",
+            "title": "Offset Basis"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Provenance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "material_id",
+          "work_id",
+          "version_id",
+          "source_hash",
+          "content_hash",
+          "scope",
+          "parser_revision",
+          "quality",
+          "warnings",
+          "complete",
+          "offset_basis"
+        ],
+        "title": "MaterialInfo"
+      },
       "MaterialVersion": {
         "properties": {
           "version_id": {
@@ -2936,6 +4594,19 @@
             "minimum": 0.0,
             "title": "Exploration",
             "default": 0.15
+          },
+          "pinned_entry_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinned Entry Id"
           }
         },
         "additionalProperties": false,
@@ -3293,6 +4964,16 @@
             "type": "integer",
             "title": "Revision",
             "default": 0
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "default": ""
+          },
+          "activity_sequence": {
+            "type": "integer",
+            "title": "Activity Sequence",
+            "default": 0
           }
         },
         "additionalProperties": false,
@@ -3376,6 +5057,69 @@
         "title": "ResearchAccepted",
         "description": "`POST /research` response \u2014 202 Accepted, work now in flight."
       },
+      "ResearchClaim": {
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "title": "Claim Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ClaimKind"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            },
+            "type": "array",
+            "title": "Evidence",
+            "default": []
+          },
+          "required_scope": {
+            "type": "string",
+            "enum": [
+              "metadata",
+              "abstract",
+              "excerpt",
+              "full_text"
+            ],
+            "title": "Required Scope",
+            "default": "abstract"
+          },
+          "required_section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Section"
+          },
+          "inference_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "claim_id",
+          "text",
+          "kind"
+        ],
+        "title": "ResearchClaim"
+      },
       "ResearchRequest": {
         "properties": {
           "query": {
@@ -3410,6 +5154,232 @@
         ],
         "title": "ResearchRequest",
         "description": "Body for `POST /research`."
+      },
+      "RetainedSpan": {
+        "properties": {
+          "span_id": {
+            "type": "string",
+            "title": "Span Id"
+          },
+          "work_id": {
+            "type": "string",
+            "title": "Work Id"
+          },
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "material_id": {
+            "type": "string",
+            "title": "Material Id"
+          },
+          "source_hash": {
+            "type": "string",
+            "title": "Source Hash"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          },
+          "parser_revision": {
+            "type": "string",
+            "title": "Parser Revision"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "span_id",
+          "work_id",
+          "version_id",
+          "material_id",
+          "source_hash",
+          "scope",
+          "parser_revision",
+          "start",
+          "end",
+          "text"
+        ],
+        "title": "RetainedSpan"
+      },
+      "ReviewCandidate": {
+        "properties": {
+          "work": {
+            "$ref": "#/components/schemas/WorkItem"
+          },
+          "matching_reason": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matching Reason"
+          },
+          "evidence_scope": {
+            "type": "string",
+            "title": "Evidence Scope"
+          },
+          "estimated_minutes": {
+            "type": "integer",
+            "const": 5,
+            "title": "Estimated Minutes",
+            "default": 5
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/UsefulnessFeedback"
+          }
+        },
+        "type": "object",
+        "required": [
+          "work",
+          "matching_reason",
+          "evidence_scope"
+        ],
+        "title": "ReviewCandidate"
+      },
+      "ReviewIndex": {
+        "properties": {
+          "packet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewPacket"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "packet_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Packet Ids"
+          }
+        },
+        "type": "object",
+        "title": "ReviewIndex"
+      },
+      "ReviewPacket": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "as_of": {
+            "type": "string",
+            "title": "As Of"
+          },
+          "profile_revision": {
+            "type": "integer",
+            "title": "Profile Revision"
+          },
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewCandidate"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/SourceStatus"
+            },
+            "type": "array",
+            "title": "Coverage"
+          },
+          "selection": {
+            "type": "string",
+            "title": "Selection"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "labelled_count": {
+            "type": "integer",
+            "title": "Labelled Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "as_of",
+          "profile_revision",
+          "policy_version",
+          "items",
+          "coverage",
+          "selection",
+          "limitations"
+        ],
+        "title": "ReviewPacket"
+      },
+      "ReviewPrepare": {
+        "properties": {
+          "profile_revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Profile Revision"
+          },
+          "request_id": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Request Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "profile_revision",
+          "request_id"
+        ],
+        "title": "ReviewPrepare"
       },
       "ReviewRequest": {
         "properties": {
@@ -4012,6 +5982,43 @@
         ],
         "title": "SourceStatus"
       },
+      "UsefulnessFeedback": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "default": 0
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "useful",
+                  "maybe",
+                  "irrelevant"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "default": ""
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "UsefulnessFeedback"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -4245,6 +6252,38 @@
           "as_of": {
             "type": "string",
             "title": "As Of"
+          },
+          "activity": {
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            },
+            "type": "array",
+            "title": "Activity"
+          },
+          "latest_activity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Activity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "interest_coverage": {
+            "items": {
+              "$ref": "#/components/schemas/InterestCoverage"
+            },
+            "type": "array",
+            "title": "Interest Coverage"
+          },
+          "allocation_previews": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Allocation Previews"
           }
         },
         "type": "object",

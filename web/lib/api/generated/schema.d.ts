@@ -544,6 +544,230 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workspace/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Review
+         * @description Read an existing private ten-item review; a GET never creates judgments or packets.
+         */
+        get: operations["get_review_workspace_review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/review/prepare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prepare Review
+         * @description Freeze up to ten actual candidates with blank personal judgments, safely retried.
+         */
+        post: operations["prepare_review_workspace_review_prepare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/review/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Usefulness
+         * @description Record an explicit owner judgment against the frozen candidate/version.
+         */
+        post: operations["save_usefulness_workspace_review_feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/generation/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Fake Request
+         * @description Disclose exact retained source/context for the local synthetic pipeline; no provider exists.
+         */
+        post: operations["preview_fake_request_workspace_generation_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/generation/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Fake Jobs
+         * @description Read this account's explicitly synthetic jobs and usage, independently of paid admission.
+         */
+        get: operations["list_fake_jobs_workspace_generation_jobs_get"];
+        put?: never;
+        /**
+         * Submit Fake Job
+         * @description Reserve a separate zero-dollar fake job after exact request digest confirmation.
+         */
+        post: operations["submit_fake_job_workspace_generation_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/generation/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Fake Job
+         * @description Read a durable synthetic pipeline checkpoint without advancing it.
+         */
+        get: operations["get_fake_job_workspace_generation_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/generation/jobs/{job_id}/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Advance Fake Job
+         * @description Execute one bounded local fake step; SDK/provider construction is inaccessible.
+         */
+        post: operations["advance_fake_job_workspace_generation_jobs__job_id__advance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/generation/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Fake Job
+         * @description Request cooperative cancellation and preserve incurred simulated usage.
+         */
+        post: operations["cancel_fake_job_workspace_generation_jobs__job_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/generation/jobs/{job_id}/recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recover Fake Job
+         * @description Fence interrupted local work without silently replaying an uncertain step.
+         */
+        post: operations["recover_fake_job_workspace_generation_jobs__job_id__recover_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Materials
+         * @description List actual retained material for an exact source version, with scope/quality limits.
+         */
+        get: operations["list_materials_workspace_materials_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workspace/materials/{material_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Material
+         * @description Read safe retained text and original-page offsets, never fetch a remote URL.
+         */
+        get: operations["get_material_workspace_materials__material_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/workspace/refresh": {
         parameters: {
             query?: never;
@@ -728,6 +952,40 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Activity */
+        Activity: {
+            /** Sequence */
+            sequence: number;
+            /** Entry Id */
+            entry_id?: string | null;
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "entry" | "reading";
+            /** Entry Kind */
+            entry_kind?: ("question" | "note" | "next-action") | null;
+            /**
+             * Body
+             * @default
+             */
+            body: string;
+            /** Anchor */
+            anchor: string;
+            /** Revision */
+            revision: number;
+            /** Updated At */
+            updated_at: string;
+        };
+        /**
+         * ClaimKind
+         * @enum {string}
+         */
+        ClaimKind: "factual" | "inference";
         /**
          * ConversationCreateRequest
          * @description Body for `POST /conversations`. Both fields optional — a
@@ -807,6 +1065,10 @@ export interface components {
             coverage: components["schemas"]["SourceStatus"][];
             /** Status */
             status: string;
+            /** Allocation */
+            allocation?: {
+                [key: string]: unknown;
+            };
         };
         /** EntryData */
         EntryData: {
@@ -849,6 +1111,16 @@ export interface components {
             id: string;
             /** Revision */
             revision: number;
+            /**
+             * Updated At
+             * @default
+             */
+            updated_at: string;
+            /**
+             * Activity Sequence
+             * @default 0
+             */
+            activity_sequence: number;
         };
         /** EntryWrite */
         EntryWrite: {
@@ -859,6 +1131,375 @@ export interface components {
             /** Request Id */
             request_id: string;
             data: components["schemas"]["EntryData"];
+        };
+        /** EvidenceRef */
+        EvidenceRef: {
+            /** Material Id */
+            material_id: string;
+            /** Span Id */
+            span_id: string;
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Source Hash */
+            source_hash: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "metadata" | "abstract" | "excerpt" | "full_text";
+            /** Parser Revision */
+            parser_revision: string;
+            /** Page */
+            page: number | null;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Quote */
+            quote: string;
+        };
+        /** FakeCounter */
+        FakeCounter: {
+            /**
+             * Input Tokens
+             * @default 0
+             */
+            input_tokens: number;
+            /**
+             * Output Tokens
+             * @default 0
+             */
+            output_tokens: number;
+        };
+        /** FakeDraft */
+        FakeDraft: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "deep_dive";
+            /** Title */
+            title: string;
+            /** Claims */
+            claims: components["schemas"]["ResearchClaim"][];
+            /** Sections */
+            sections: {
+                [key: string]: string[];
+            };
+            /**
+             * Questions
+             * @default []
+             */
+            questions: string[];
+            /**
+             * Proposed Actions
+             * @default []
+             */
+            proposed_actions: string[];
+            /**
+             * Limitations
+             * @default []
+             */
+            limitations: string[];
+        };
+        /** FakeJob */
+        FakeJob: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "deep_dive";
+            state: components["schemas"]["FakeJobState"];
+            /** Revision */
+            revision: number;
+            /**
+             * Mode
+             * @default fake
+             * @constant
+             */
+            mode: "fake";
+            /**
+             * Model Id
+             * @default fixture-workspace-v1
+             * @constant
+             */
+            model_id: "fixture-workspace-v1";
+            /**
+             * Fixture Revision
+             * @default workspace-executor-v1
+             * @constant
+             */
+            fixture_revision: "workspace-executor-v1";
+            /** Request Digest */
+            request_digest: string;
+            /** Request */
+            request: {
+                [key: string]: unknown;
+            };
+            draft?: components["schemas"]["FakeDraft"] | null;
+            /** Grounding */
+            grounding?: {
+                [key: string]: unknown;
+            } | null;
+            result?: components["schemas"]["FakeResult"] | null;
+            /**
+             * Steps
+             * @default []
+             */
+            steps: components["schemas"]["FakeStep"][];
+            usage: components["schemas"]["FakeUsage"];
+            /**
+             * Cancel Requested
+             * @default false
+             */
+            cancel_requested: boolean;
+            /** Lease Until */
+            lease_until?: string | null;
+            /** Error */
+            error?: string | null;
+            /**
+             * Cached
+             * @default false
+             */
+            cached: boolean;
+        };
+        /**
+         * FakeJobState
+         * @enum {string}
+         */
+        FakeJobState: "queued" | "drafting" | "checking" | "repairing" | "ready" | "ready_partial" | "cancelled" | "failed" | "interrupted" | "budget_stopped" | "stale";
+        /** FakeLimits */
+        FakeLimits: {
+            /**
+             * Max Calls
+             * @default 4
+             * @constant
+             */
+            max_calls: 4;
+            /**
+             * Max Repairs
+             * @default 1
+             * @constant
+             */
+            max_repairs: 1;
+            /** Per Call Input Tokens */
+            per_call_input_tokens: number;
+            /** Per Call Output Tokens */
+            per_call_output_tokens: number;
+            /** Max Input Tokens */
+            max_input_tokens: number;
+            /** Max Output Tokens */
+            max_output_tokens: number;
+            /** Max Source Bytes */
+            max_source_bytes: number;
+            /** Max Spans */
+            max_spans: number;
+        };
+        /** FakePreviewRequest */
+        FakePreviewRequest: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "deep_dive";
+            /** Material Ids */
+            material_ids: string[];
+            /** Span Ids */
+            span_ids?: string[];
+            /**
+             * Question
+             * @default
+             */
+            question: string;
+        };
+        /** FakeRequestPreview */
+        FakeRequestPreview: {
+            /**
+             * Mode
+             * @default fake
+             * @constant
+             */
+            mode: "fake";
+            /**
+             * Model Id
+             * @default fixture-workspace-v1
+             * @constant
+             */
+            model_id: "fixture-workspace-v1";
+            /**
+             * Fixture Revision
+             * @default workspace-executor-v1
+             * @constant
+             */
+            fixture_revision: "workspace-executor-v1";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "deep_dive";
+            /** Request Digest */
+            request_digest: string;
+            /** Request */
+            request: {
+                [key: string]: unknown;
+            };
+            limits: components["schemas"]["FakeLimits"];
+            /**
+             * Usage Basis
+             * @default simulated UTF-8 byte counters; not provider tokens
+             * @constant
+             */
+            usage_basis: "simulated UTF-8 byte counters; not provider tokens";
+            /**
+             * Actual Usd
+             * @default 0.000000
+             * @constant
+             */
+            actual_usd: "0.000000";
+        };
+        /** FakeResult */
+        FakeResult: {
+            /**
+             * Mode
+             * @default fake
+             * @constant
+             */
+            mode: "fake";
+            /**
+             * Model Id
+             * @default fixture-workspace-v1
+             * @constant
+             */
+            model_id: "fixture-workspace-v1";
+            /**
+             * Fixture Revision
+             * @default workspace-executor-v1
+             * @constant
+             */
+            fixture_revision: "workspace-executor-v1";
+            /**
+             * Check Basis
+             * @default synthetic exact-quotation checks; not a calibrated judge or model-quality result
+             */
+            check_basis: string;
+            /** Request Digest */
+            request_digest: string;
+            draft: components["schemas"]["FakeDraft"];
+            /** Grounding */
+            grounding: {
+                [key: string]: unknown;
+            };
+        };
+        /** FakeStep */
+        FakeStep: {
+            /** Ordinal */
+            ordinal: number;
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "draft" | "check" | "repair";
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "running" | "completed" | "failed" | "interrupted";
+            /** Request Digest */
+            request_digest: string;
+            /** Request */
+            request: {
+                [key: string]: unknown;
+            };
+            /** Response */
+            response?: {
+                [key: string]: unknown;
+            } | null;
+            /** Input Tokens */
+            input_tokens: number;
+            /**
+             * Output Tokens
+             * @default 0
+             */
+            output_tokens: number;
+            /** Error */
+            error?: string | null;
+            /**
+             * Unknown Recorded
+             * @default false
+             */
+            unknown_recorded: boolean;
+        };
+        /** FakeSubmitRequest */
+        FakeSubmitRequest: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "deep_dive";
+            /** Material Ids */
+            material_ids: string[];
+            /** Span Ids */
+            span_ids?: string[];
+            /**
+             * Question
+             * @default
+             */
+            question: string;
+            /** Request Id */
+            request_id: string;
+            /** Expected Digest */
+            expected_digest: string;
+        };
+        /** FakeUsage */
+        FakeUsage: {
+            workflow?: components["schemas"]["FakeCounter"];
+            checker?: components["schemas"]["FakeCounter"];
+            unknown?: components["schemas"]["FakeCounter"];
+            /**
+             * Used Calls
+             * @default 0
+             */
+            used_calls: number;
+            /**
+             * Max Calls
+             * @default 4
+             */
+            max_calls: number;
+            /**
+             * Usage Basis
+             * @default simulated UTF-8 byte counters; not provider tokens
+             */
+            usage_basis: string;
+            /**
+             * Actual Usd
+             * @default 0.000000
+             * @constant
+             */
+            actual_usd: "0.000000";
+        };
+        /** FeedbackWrite */
+        FeedbackWrite: {
+            /** Packet Id */
+            packet_id: string;
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Revision */
+            revision: number;
+            /** Request Id */
+            request_id: string;
+            /** Label */
+            label: ("useful" | "maybe" | "irrelevant") | null;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
         };
         /** GenerationRequest */
         GenerationRequest: {
@@ -1006,6 +1647,31 @@ export interface components {
              * @default false
              */
             import_profile: boolean;
+        };
+        /** InterestCoverage */
+        InterestCoverage: {
+            /** Topic Id */
+            topic_id: string;
+            /** Label */
+            label: string;
+            /**
+             * Matching Mode
+             * @enum {string}
+             */
+            matching_mode: "descendant_terms" | "literal_terms" | "browse_only";
+            /** Terms */
+            terms: string[];
+            /** Descendant Ids */
+            descendant_ids: string[];
+            /** Source Ids */
+            source_ids: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "limited" | "unconnected";
+            /** Limitations */
+            limitations: string[];
         };
         /** ItemPage */
         ItemPage: {
@@ -1318,6 +1984,76 @@ export interface components {
             /** Value */
             value: string;
         };
+        /** MaterialDocument */
+        MaterialDocument: {
+            /** Material Id */
+            material_id: string;
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Source Hash */
+            source_hash: string;
+            /** Content Hash */
+            content_hash: string;
+            /** Scope */
+            scope: string;
+            /** Parser Revision */
+            parser_revision: string;
+            /** Quality */
+            quality: string;
+            /** Warnings */
+            warnings: string[];
+            /** Complete */
+            complete: boolean;
+            /** Page Count */
+            page_count?: number | null;
+            /** Page Numbers */
+            page_numbers?: number[] | null;
+            /** Offset Basis */
+            offset_basis: string;
+            /** Provenance */
+            provenance?: {
+                [key: string]: unknown;
+            };
+            /** Pages */
+            pages: string[];
+            /** Spans */
+            spans: components["schemas"]["RetainedSpan"][];
+        };
+        /** MaterialInfo */
+        MaterialInfo: {
+            /** Material Id */
+            material_id: string;
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Source Hash */
+            source_hash: string;
+            /** Content Hash */
+            content_hash: string;
+            /** Scope */
+            scope: string;
+            /** Parser Revision */
+            parser_revision: string;
+            /** Quality */
+            quality: string;
+            /** Warnings */
+            warnings: string[];
+            /** Complete */
+            complete: boolean;
+            /** Page Count */
+            page_count?: number | null;
+            /** Page Numbers */
+            page_numbers?: number[] | null;
+            /** Offset Basis */
+            offset_basis: string;
+            /** Provenance */
+            provenance?: {
+                [key: string]: unknown;
+            };
+        };
         /** MaterialVersion */
         MaterialVersion: {
             /** Version Id */
@@ -1458,6 +2194,8 @@ export interface components {
              * @default 0.15
              */
             exploration: number;
+            /** Pinned Entry Id */
+            pinned_entry_id?: string | null;
         };
         /** ProfileRevision */
         ProfileRevision: {
@@ -1669,6 +2407,16 @@ export interface components {
              * @default 0
              */
             revision: number;
+            /**
+             * Updated At
+             * @default
+             */
+            updated_at: string;
+            /**
+             * Activity Sequence
+             * @default 0
+             */
+            activity_sequence: number;
         };
         /** ReadingWrite */
         ReadingWrite: {
@@ -1699,6 +2447,29 @@ export interface components {
             /** Stream Url */
             stream_url: string;
         };
+        /** ResearchClaim */
+        ResearchClaim: {
+            /** Claim Id */
+            claim_id: string;
+            /** Text */
+            text: string;
+            kind: components["schemas"]["ClaimKind"];
+            /**
+             * Evidence
+             * @default []
+             */
+            evidence: components["schemas"]["EvidenceRef"][];
+            /**
+             * Required Scope
+             * @default abstract
+             * @enum {string}
+             */
+            required_scope: "metadata" | "abstract" | "excerpt" | "full_text";
+            /** Required Section */
+            required_section?: string | null;
+            /** Inference Label */
+            inference_label?: string | null;
+        };
         /**
          * ResearchRequest
          * @description Body for `POST /research`.
@@ -1720,6 +2491,87 @@ export interface components {
              * @description Run this query as a follow-up in an existing conversation. Prior-report chunks from the same conversation are retrieved and prepended to the planner's system prompt. See ADR 0032.
              */
             conversation_id?: string | null;
+        };
+        /** RetainedSpan */
+        RetainedSpan: {
+            /** Span Id */
+            span_id: string;
+            /** Work Id */
+            work_id: string;
+            /** Version Id */
+            version_id: string;
+            /** Material Id */
+            material_id: string;
+            /** Source Hash */
+            source_hash: string;
+            /** Scope */
+            scope: string;
+            /** Parser Revision */
+            parser_revision: string;
+            /** Page */
+            page?: number | null;
+            /** Section */
+            section?: string | null;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Text */
+            text: string;
+        };
+        /** ReviewCandidate */
+        ReviewCandidate: {
+            work: components["schemas"]["WorkItem"];
+            /** Matching Reason */
+            matching_reason: string[];
+            /** Evidence Scope */
+            evidence_scope: string;
+            /**
+             * Estimated Minutes
+             * @default 5
+             * @constant
+             */
+            estimated_minutes: 5;
+            feedback?: components["schemas"]["UsefulnessFeedback"];
+        };
+        /** ReviewIndex */
+        ReviewIndex: {
+            packet?: components["schemas"]["ReviewPacket"] | null;
+            /** Packet Ids */
+            packet_ids?: string[];
+        };
+        /** ReviewPacket */
+        ReviewPacket: {
+            /** Id */
+            id: string;
+            /** Created At */
+            created_at: string;
+            /** As Of */
+            as_of: string;
+            /** Profile Revision */
+            profile_revision: number;
+            /** Policy Version */
+            policy_version: string;
+            /** Items */
+            items: components["schemas"]["ReviewCandidate"][];
+            /** Coverage */
+            coverage: components["schemas"]["SourceStatus"][];
+            /** Selection */
+            selection: string;
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Labelled Count
+             * @default 0
+             */
+            labelled_count: number;
+        };
+        /** ReviewPrepare */
+        ReviewPrepare: {
+            /** Profile Revision */
+            profile_revision: number;
+            /** Request Id */
+            request_id: string;
         };
         /**
          * ReviewRequest
@@ -2025,6 +2877,26 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** UsefulnessFeedback */
+        UsefulnessFeedback: {
+            /**
+             * Revision
+             * @default 0
+             */
+            revision: number;
+            /** Label */
+            label?: ("useful" | "maybe" | "irrelevant") | null;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /**
+             * Updated At
+             * @default
+             */
+            updated_at: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -2134,6 +3006,15 @@ export interface components {
             generation: "approval_required";
             /** As Of */
             as_of: string;
+            /** Activity */
+            activity?: components["schemas"]["Activity"][];
+            latest_activity?: components["schemas"]["Activity"] | null;
+            /** Interest Coverage */
+            interest_coverage?: components["schemas"]["InterestCoverage"][];
+            /** Allocation Previews */
+            allocation_previews?: {
+                [key: string]: unknown;
+            }[];
         };
     };
     responses: never;
@@ -2819,6 +3700,376 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EntryRevision"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_review_workspace_review_get: {
+        parameters: {
+            query?: {
+                packet_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewIndex"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_review_workspace_review_prepare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewPrepare"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewPacket"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_usefulness_workspace_review_feedback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsefulnessFeedback"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_fake_request_workspace_generation_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FakePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FakeRequestPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_fake_jobs_workspace_generation_jobs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FakeJob"][];
+                };
+            };
+        };
+    };
+    submit_fake_job_workspace_generation_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FakeSubmitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FakeJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_fake_job_workspace_generation_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FakeJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    advance_fake_job_workspace_generation_jobs__job_id__advance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FakeJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_fake_job_workspace_generation_jobs__job_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FakeJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recover_fake_job_workspace_generation_jobs__job_id__recover_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FakeJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_materials_workspace_materials_get: {
+        parameters: {
+            query: {
+                work_id: string;
+                version_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialInfo"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_material_workspace_materials__material_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                material_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialDocument"];
                 };
             };
             /** @description Validation Error */

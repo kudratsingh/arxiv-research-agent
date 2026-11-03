@@ -146,6 +146,12 @@ def _materials(materials: Sequence[SourceMaterial]) -> dict[str, SourceMaterial]
         )
         if expected_hash != material.content_hash:
             raise GroundingError("retained_material_content_drift")
+        if material.page_numbers is not None and (
+            len(material.page_numbers) != len(material.pages)
+            or any(type(page) is not int or page < 1 or material.page_count is None or page > material.page_count for page in material.page_numbers)
+            or list(material.page_numbers) != sorted(set(material.page_numbers))
+        ):
+            raise GroundingError("retained_page_mapping_drift")
         by_id[material.material_id] = material
     return by_id
 
@@ -185,7 +191,12 @@ def _resolve(
         material.parser_revision,
     ):
         raise GroundingError("retained_span_identity_drift")
-    page_index = span.page - 1 if span.page is not None else 0
+    if material.page_numbers is not None:
+        if span.page not in material.page_numbers:
+            raise GroundingError("retained_page_mapping_drift")
+        page_index = material.page_numbers.index(span.page)
+    else:
+        page_index = span.page - 1 if span.page is not None else 0
     if (
         not 0 <= page_index < len(material.pages)
         or material.pages[page_index][span.start : span.end] != span.text
@@ -237,6 +248,8 @@ def _digest(claim: ResearchClaim, resolved: Sequence[tuple[SourceMaterial, Sourc
                 "complete": material.complete,
                 "quality": material.quality,
                 "offset_basis": material.offset_basis,
+                "page_numbers": material.page_numbers,
+                "warnings": material.warnings,
                 "span": asdict(span),
             }
             for material, span in resolved
