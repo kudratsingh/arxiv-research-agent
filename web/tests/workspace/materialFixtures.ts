@@ -1,9 +1,15 @@
-import type { MaterialDocument } from "@/lib/workspace/api";
+import type { MaterialDocument, RetainedAvailability } from "@/lib/workspace/api";
 import { work } from "./fixtures";
 export const MAT = `mat-${"a".repeat(32)}`;
 export const SPAN = `span-${"b".repeat(32)}`;
 export const text =
   "🧭 A retrieval result on the original page. Equation layout is excluded.";
+export function available(overrides: Partial<RetainedAvailability> = {}): RetainedAvailability {
+  return { material_id: MAT, version_id: work().version_id, scope: "excerpt", format: "pdf",
+    quality: "partial", complete: false, page_count: 10, retained_pages: [3,7],
+    first_anchor: `material:${MAT}:page:3:0:${Array.from(text).length}`,
+    warnings: ["Equations and omitted pages remain outside reliable scope."], ...overrides };
+}
 export function retained(
   overrides: Partial<MaterialDocument> = {},
 ): MaterialDocument {

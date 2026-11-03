@@ -26,6 +26,7 @@ export type UsefulnessFeedback = Serialized<Schemas["UsefulnessFeedback"]>;
 export type MaterialInfo = Serialized<Schemas["MaterialInfo"]>;
 export type MaterialDocument = Serialized<Schemas["MaterialDocument"]>;
 export type RetainedSpan = Serialized<Schemas["RetainedSpan"]>;
+export type RetainedAvailability = Serialized<Schemas["RetainedAvailability"]>;
 export type FakeRequestPreview = Serialized<Schemas["FakeRequestPreview"]>;
 export type FakeJob = Serialized<Schemas["FakeJob"]>;
 export type FakeDraft = Serialized<Schemas["FakeDraft"]>;
@@ -96,6 +97,16 @@ export function readerHref(
   if (returnTo) params.set("return_to", normalizeReaderReturnTo(returnTo));
   const query = params.size ? `?${params}` : "";
   return `/workspace/items/${encodeURIComponent(item.work_id)}${query}${anchor ? `#${encodeURIComponent(anchor)}` : ""}`;
+}
+
+/** Exact-version acquired text is independent of the immutable source record. */
+export function readingMaterial(item: WorkItem, versionId?: string) {
+  const version = item.versions.find(
+    (value) => value.version_id === (versionId ?? item.version_id),
+  ) ?? item;
+  const retained = version.retained_materials ?? [];
+  const pdf = retained.find((value) => value.format === "pdf");
+  return { version, pdf, scope: version.available_scopes?.[0] ?? version.access_state };
 }
 
 /** A return link can only navigate within the three source-list routes. */

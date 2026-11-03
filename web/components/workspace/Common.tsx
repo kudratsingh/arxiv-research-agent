@@ -58,7 +58,7 @@ export function Coverage({ sources }: { sources: SourceStatus[] }) {
       source.status === "partial" || source.receipt.truncated === true,
   ).length;
   return (
-    <details className="daily-coverage">
+    <details className="daily-coverage" data-complete={good === sources.length && !limited}>
       <summary>
         <span className="daily-status-dot" aria-hidden="true" />
         Source checks: {good} of {sources.length} available

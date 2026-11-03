@@ -2097,6 +2097,15 @@ export interface components {
             url: string;
             /** Authors */
             authors?: string[];
+            /**
+             * Reading Access State
+             * @default metadata
+             */
+            reading_access_state: string;
+            /** Available Scopes */
+            available_scopes?: string[];
+            /** Retained Materials */
+            retained_materials?: components["schemas"]["RetainedAvailability"][];
         };
         /**
          * Plan
@@ -2491,6 +2500,35 @@ export interface components {
              * @description Run this query as a follow-up in an existing conversation. Prior-report chunks from the same conversation are retrieved and prepended to the planner's system prompt. See ADR 0032.
              */
             conversation_id?: string | null;
+        };
+        /** RetainedAvailability */
+        RetainedAvailability: {
+            /** Material Id */
+            material_id: string;
+            /** Version Id */
+            version_id: string;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "abstract" | "excerpt" | "full_text";
+            /**
+             * Format
+             * @enum {string}
+             */
+            format: "pdf" | "text";
+            /** Quality */
+            quality: string;
+            /** Complete */
+            complete: boolean;
+            /** Page Count */
+            page_count?: number | null;
+            /** Retained Pages */
+            retained_pages?: number[];
+            /** First Anchor */
+            first_anchor?: string | null;
+            /** Warnings */
+            warnings?: string[];
         };
         /** RetainedSpan */
         RetainedSpan: {
@@ -2981,6 +3019,15 @@ export interface components {
             entries?: components["schemas"]["EntryRevision"][];
             /** Reasons */
             reasons?: string[];
+            /**
+             * Reading Access State
+             * @default metadata
+             */
+            reading_access_state: string;
+            /** Available Scopes */
+            available_scopes?: string[];
+            /** Retained Materials */
+            retained_materials?: components["schemas"]["RetainedAvailability"][];
         };
         /** WorkspaceState */
         WorkspaceState: {
