@@ -15,25 +15,38 @@ from src.api.auth import ApiKeyPrincipal, enforce_rate_limit, require_principal
 from src.config import settings
 from src.tools.postgres_pool import get_pool
 from src.workspace import scheduler
+from src.workspace.executor import FakeExecutor, FakeJob, FakeRequestPreview
 from src.workspace.intake import SOURCES, fetch_source, normalize_manual
-from src.workspace.ranking import choose_edition, rank_items
+from src.workspace.interests import coverage as interest_coverage
+from src.workspace.materials_repository import WorkspaceMaterials
+from src.workspace.ranking import TOPIC_TERMS, rank_items, select_edition
+from src.workspace.reviews import WorkspaceReviews
 from src.workspace.schemas import (
     Edition,
     EntryRevision,
     EntryWrite,
+    FakePreviewRequest,
+    FakeSubmitRequest,
+    FeedbackWrite,
     GenerationRequest,
     ImportApply,
     ImportPreview,
     ImportRequest,
     ItemPage,
     ManualRequest,
+    MaterialDocument,
+    MaterialInfo,
     ProfileRevision,
     ProfileWrite,
     ReadingRevision,
     ReadingWrite,
     RefreshRequest,
+    ReviewIndex,
+    ReviewPacket,
+    ReviewPrepare,
     ScheduleRevision,
     ScheduleWrite,
+    UsefulnessFeedback,
     WorkItem,
     WorkspaceState,
 )
@@ -80,7 +93,18 @@ def snapshot(principal: str) -> dict[str, Any]:
     ranked = {item["work_id"]: item for item in rank_items(all_works, profile["data"], include_hidden=True)}
     # Library/Reader must retain dismissed and excluded sources and their notes.
     works = [ranked.get(item["work_id"], item) for item in all_works]
-    return {"principal_key_id": principal, "profile": profile, "works": works, "sources": store.sources(), "editions": store.editions(principal), "schedule": scheduler.schedule(store, principal), "tasks": scheduler.tasks(store, principal), "generation": "approval_required", "as_of": cutoff}
+    sources = store.sources()
+    activity = store.activity(principal, as_of=cutoff)
+    pinned = profile["data"].get("pinned_entry_id")
+    pinned_activity = store.activity(principal, as_of=cutoff, entry_id=pinned, limit=1) if pinned else []
+    thread_events = pinned_activity or activity
+    latest = thread_events[0] if thread_events else None
+    since = datetime.fromisoformat(cutoff) - timedelta(days=7)
+    candidates = rank_items([item for item in all_works if item["source_id"] in SOURCES and datetime.fromisoformat(item["fetched_at"]) >= since], profile["data"], now=datetime.fromisoformat(cutoff))
+    previews = [select_edition(candidates, minutes, exploration=profile["data"].get("exploration", 0.15))[1] for minutes in (5, 15, 45)]
+    return {"principal_key_id": principal, "profile": profile, "works": works, "sources": sources, "editions": store.editions(principal), "schedule": scheduler.schedule(store, principal), "tasks": scheduler.tasks(store, principal), "generation": "approval_required", "as_of": cutoff,
+            "activity": activity, "latest_activity": latest,
+            "interest_coverage": interest_coverage(profile["data"], sources, TOPIC_TERMS, now=datetime.fromisoformat(cutoff)), "allocation_previews": previews}
 
 
 @router.get("/state", response_model=WorkspaceState)
@@ -107,14 +131,105 @@ async def save_entry(write: EntryWrite, principal: Annotated[str, Depends(owner)
     return await asyncio.to_thread(call, repository().write_entry, principal, write)
 
 
+@router.get("/review", response_model=ReviewIndex)
+async def get_review(principal: Annotated[str, Depends(owner)], packet_id: str = Query("", max_length=80)) -> Any:
+    """Read an existing private ten-item review; a GET never creates judgments or packets."""
+    try:
+        return await asyncio.to_thread(WorkspaceReviews(repository()).index, principal, packet_id or None)
+    except KeyError as exc:
+        raise HTTPException(404, "review_packet_not_found") from exc
+
+
+@router.post("/review/prepare", response_model=ReviewPacket)
+async def prepare_review(write: ReviewPrepare, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Freeze up to ten actual candidates with blank personal judgments, safely retried."""
+    return await asyncio.to_thread(call, WorkspaceReviews(repository()).prepare, principal, write)
+
+
+@router.post("/review/feedback", response_model=UsefulnessFeedback)
+async def save_usefulness(write: FeedbackWrite, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Record an explicit owner judgment against the frozen candidate/version."""
+    return await asyncio.to_thread(call, WorkspaceReviews(repository()).save_feedback, principal, write)
+
+
+def fake_call(method: Any, *args: Any, **kwargs: Any) -> Any:
+    try:
+        return call(method, *args, **kwargs)
+    except HTTPException as exc:
+        if exc.status_code == 422 and exc.detail == "fake_job_not_found":
+            raise HTTPException(404, "fake_job_not_found") from exc
+        if exc.status_code == 422 and exc.detail == "fake_lane_requires_disabled_key_sentinel":
+            raise HTTPException(403, "fake_lane_requires_disabled_key_sentinel") from exc
+        raise
+
+
+@router.post("/generation/preview", response_model=FakeRequestPreview)
+async def preview_fake_request(write: FakePreviewRequest, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Disclose exact retained source/context for the local synthetic pipeline; no provider exists."""
+    executor = FakeExecutor(repository())
+    return await asyncio.to_thread(fake_call, executor.preview, principal, write.kind, write.material_ids, span_ids=write.span_ids, question=write.question)
+
+
+@router.post("/generation/jobs", response_model=FakeJob)
+async def submit_fake_job(write: FakeSubmitRequest, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Reserve a separate zero-dollar fake job after exact request digest confirmation."""
+    executor = FakeExecutor(repository())
+    return await asyncio.to_thread(fake_call, executor.submit, principal, write.request_id, write.kind, write.material_ids, expected_digest=write.expected_digest, span_ids=write.span_ids, question=write.question)
+
+
+@router.get("/generation/jobs", response_model=list[FakeJob])
+async def list_fake_jobs(principal: Annotated[str, Depends(owner)]) -> Any:
+    """Read this account's explicitly synthetic jobs and usage, independently of paid admission."""
+    return await asyncio.to_thread(fake_call, FakeExecutor(repository()).list, principal)
+
+
+@router.get("/generation/jobs/{job_id}", response_model=FakeJob)
+async def get_fake_job(job_id: str, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Read a durable synthetic pipeline checkpoint without advancing it."""
+    return await asyncio.to_thread(fake_call, FakeExecutor(repository()).get, principal, job_id)
+
+
+@router.post("/generation/jobs/{job_id}/advance", response_model=FakeJob)
+async def advance_fake_job(job_id: str, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Execute one bounded local fake step; SDK/provider construction is inaccessible."""
+    return await asyncio.to_thread(fake_call, FakeExecutor(repository()).advance, principal, job_id)
+
+
+@router.post("/generation/jobs/{job_id}/cancel", response_model=FakeJob)
+async def cancel_fake_job(job_id: str, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Request cooperative cancellation and preserve incurred simulated usage."""
+    return await asyncio.to_thread(fake_call, FakeExecutor(repository()).cancel, principal, job_id)
+
+
+@router.post("/generation/jobs/{job_id}/recover", response_model=FakeJob)
+async def recover_fake_job(job_id: str, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Fence interrupted local work without silently replaying an uncertain step."""
+    return await asyncio.to_thread(fake_call, FakeExecutor(repository()).recover, principal, job_id)
+
+
+@router.get("/materials", response_model=list[MaterialInfo])
+async def list_materials(principal: Annotated[str, Depends(owner)], work_id: str = Query(..., min_length=1, max_length=300), version_id: str = Query(..., min_length=1, max_length=300)) -> Any:
+    """List actual retained material for an exact source version, with scope/quality limits."""
+    return await asyncio.to_thread(call, WorkspaceMaterials(repository()).list, principal, work_id, version_id)
+
+
+@router.get("/materials/{material_id}", response_model=MaterialDocument)
+async def get_material(material_id: str, principal: Annotated[str, Depends(owner)]) -> Any:
+    """Read safe retained text and original-page offsets, never fetch a remote URL."""
+    material = await asyncio.to_thread(call, WorkspaceMaterials(repository()).get, principal, material_id)
+    if material is None:
+        raise HTTPException(404, "retained_material_not_found")
+    return material
+
+
 def prepare_edition(store: WorkspaceStore, principal: str, *, persist: bool = True) -> dict[str, Any]:
     profile = store.profile(principal)
     cutoff = store.cutoff()
     since = datetime.fromisoformat(cutoff) - timedelta(days=7)
     candidates = [item for item in store.works(principal, as_of=cutoff) if item["source_id"] in SOURCES and datetime.fromisoformat(item["fetched_at"]) >= since]
     items = rank_items(candidates, profile["data"], now=datetime.fromisoformat(cutoff))
-    selected = choose_edition(items, profile["data"]["minutes"], exploration=profile["data"]["exploration"])
-    return store.edition(principal, [item["work_id"] for item in selected], minutes=profile["data"]["minutes"], revision=profile["revision"], persist=persist, work_versions={item["work_id"]: item["version_id"] for item in selected}, as_of=cutoff)
+    selected, allocation = select_edition(items, profile["data"]["minutes"], exploration=profile["data"]["exploration"])
+    return store.edition(principal, [item["work_id"] for item in selected], minutes=profile["data"]["minutes"], revision=profile["revision"], persist=persist, work_versions={item["work_id"]: item["version_id"] for item in selected}, as_of=cutoff, allocation=allocation)
 
 
 def refresh(principal: str, source_ids: list[str], *, persist_edition: bool = True) -> dict[str, Any]:

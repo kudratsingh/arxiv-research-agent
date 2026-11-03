@@ -19,6 +19,7 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -68,6 +69,7 @@ class SourceMaterial:
     pages: tuple[str, ...]
     spans: tuple[SourceSpan, ...]
     offset_basis: str = "page-local Unicode code points; end exclusive"
+    page_numbers: tuple[int, ...] | None = None
 
 
 def _hash(value: bytes) -> str:
@@ -92,22 +94,22 @@ def _build(
     warnings: list[str],
     complete: bool,
     section: str | None = None,
+    page_numbers: list[int] | None = None,
 ) -> SourceMaterial:
     content_hash = _hash(json.dumps(pages, ensure_ascii=False, separators=(",", ":")).encode())
-    material_id = (
-        "mat-"
-        + _hash(
-            json.dumps(
-                [work_id, version_id, source_hash, content_hash, scope, parser_revision],
-                separators=(",", ":"),
-            ).encode()
-        )[7:39]
-    )
+    identity: list[Any] = [work_id, version_id, source_hash, content_hash, scope, parser_revision]
+    if page_numbers is not None:
+        identity.append({"page_numbers": page_numbers})
+    material_id = "mat-" + _hash(json.dumps(identity, separators=(",", ":")).encode())[7:39]
     spans: list[SourceSpan] = []
     for page_index, text in enumerate(pages):
         for start in range(0, len(text), MAX_SPAN_CHARS):
             end = min(start + MAX_SPAN_CHARS, len(text))
-            page = page_index + 1 if page_count is not None else None
+            page = (
+                (page_numbers[page_index] if page_numbers is not None else page_index + 1)
+                if page_count is not None
+                else None
+            )
             span_id = "span-" + _hash(f"{material_id}:{page}:{start}:{end}".encode())[7:39]
             spans.append(
                 SourceSpan(
@@ -139,6 +141,7 @@ def _build(
         page_count,
         tuple(pages),
         tuple(spans),
+        page_numbers=tuple(page_numbers) if page_numbers is not None else None,
     )
 
 
@@ -203,7 +206,23 @@ def extract_abstract(item: dict[str, Any]) -> SourceMaterial:
     )
 
 
-def _pdf_worker(pdf: bytes, max_pages: int, max_chars: int) -> dict[str, Any]:
+def _selected_pages(page_numbers: Sequence[int] | None, max_pages: int) -> list[int] | None:
+    if page_numbers is None:
+        return None
+    selected = list(page_numbers)
+    if (
+        not selected
+        or len(selected) > max_pages
+        or any(type(page) is not int or page < 1 for page in selected)
+        or selected != sorted(set(selected))
+    ):
+        raise MaterialError("invalid_page_selection")
+    return selected
+
+
+def _pdf_worker(
+    pdf: bytes, max_pages: int, max_chars: int, page_numbers: Sequence[int] | None = None
+) -> dict[str, Any]:
     # Import the existing parser engine only inside the isolated PDF process.
     import fitz
 
@@ -212,23 +231,33 @@ def _pdf_worker(pdf: bytes, max_pages: int, max_chars: int) -> dict[str, Any]:
             if document.needs_pass:
                 raise MaterialError("encrypted_pdf")
             total = len(document)
+            selected = _selected_pages(page_numbers, max_pages)
+            if selected is not None and any(page > total for page in selected):
+                raise MaterialError("page_outside_document")
+            originals = (
+                selected if selected is not None else list(range(1, min(total, max_pages) + 1))
+            )
             pages: list[str] = []
+            retained_numbers: list[int] = []
             remaining = max_chars
-            truncated = total > max_pages
-            for index in range(min(total, max_pages)):
-                text = document[index].get_text("text", sort=True)
+            truncated = len(originals) != total
+            for index, number in enumerate(originals):
+                text = document[number - 1].get_text("text", sort=True)
                 if len(text) > remaining:
                     truncated = True
                 pages.append(text[:remaining])
+                retained_numbers.append(number)
                 remaining -= len(pages[-1])
                 if remaining == 0:
-                    truncated = truncated or index + 1 < total
+                    truncated = truncated or index + 1 < len(originals)
                     break
             return {
                 "pages": pages,
                 "page_count": total,
                 "truncated": truncated,
-                "parser_revision": f"workspace-pymupdf-{fitz.VersionBind}-text-sort-v1",
+                "parser_revision": f"workspace-pymupdf-{fitz.VersionBind}-text-sort-v1"
+                + ("-selected-pages-v1" if selected is not None else ""),
+                "page_numbers": retained_numbers if selected is not None else None,
             }
     except MaterialError:
         raise
@@ -244,6 +273,7 @@ def extract_pdf(
     max_bytes: int = MAX_PDF_BYTES,
     max_pages: int = MAX_PAGES,
     max_chars: int = MAX_CHARS,
+    page_numbers: Sequence[int] | None = None,
 ) -> SourceMaterial:
     """Extract a permitted local PDF sample with bounded process lifetime.
 
@@ -258,6 +288,7 @@ def extract_pdf(
         or not 1 <= max_chars <= MAX_CHARS
     ):
         raise MaterialError("invalid_material_bounds")
+    selected = _selected_pages(page_numbers, max_pages)
     if len(pdf) > max_bytes:
         raise MaterialError("material_too_large")
     if not pdf.startswith(b"%PDF-"):
@@ -267,6 +298,7 @@ def extract_pdf(
             "pdf": base64.b64encode(pdf).decode("ascii"),
             "max_pages": max_pages,
             "max_chars": max_chars,
+            "page_numbers": selected,
         }
     ).encode()
     try:
@@ -293,6 +325,7 @@ def extract_pdf(
         total = result["page_count"]
         truncated = result["truncated"]
         parser_revision = result["parser_revision"]
+        retained_numbers = result.get("page_numbers")
         if (
             not isinstance(pages, list)
             or len(pages) > max_pages
@@ -304,6 +337,15 @@ def extract_pdf(
             or not isinstance(parser_revision, str)
         ):
             raise ValueError("invalid extraction result")
+        if selected is not None:
+            if (
+                retained_numbers != selected[: len(pages)]
+                or any(page > total for page in retained_numbers)
+                or (len(selected) != total and not truncated)
+            ):
+                raise ValueError("invalid selected page mapping")
+        elif retained_numbers is not None:
+            raise ValueError("unexpected page mapping")
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         if isinstance(exc, MaterialError):
             raise
@@ -311,6 +353,10 @@ def extract_pdf(
     warnings = [
         "PDF reading order, equations and tables require source review; no OCR was performed."
     ]
+    if selected is not None:
+        warnings.append(
+            "Selected original PDF pages only; unretained pages and sections were not read."
+        )
     text = "".join(pages)
     if not text.strip():
         quality = "empty"
@@ -340,6 +386,7 @@ def extract_pdf(
         quality=quality,
         warnings=warnings,
         complete=not truncated,
+        page_numbers=retained_numbers,
     )
 
 
@@ -361,7 +408,7 @@ def _worker_main() -> None:
         chars = int(request["max_chars"])
         if not 1 <= pages <= MAX_PAGES or not 1 <= chars <= MAX_CHARS:
             raise MaterialError("invalid_material_bounds")
-        result = _pdf_worker(pdf, pages, chars)
+        result = _pdf_worker(pdf, pages, chars, request.get("page_numbers"))
     except (ValueError, KeyError, TypeError) as exc:
         result = {
             "error": str(exc) if isinstance(exc, MaterialError) else "invalid_extraction_request"

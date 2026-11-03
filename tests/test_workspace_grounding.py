@@ -55,6 +55,19 @@ def check(
     )
 
 
+def test_selected_pdf_pages_resolve_original_page_numbers_without_aliasing(abstract: SourceMaterial) -> None:
+    span = replace(abstract.spans[0], page=17, section="methods", scope="excerpt")
+    selected = replace(abstract, scope="excerpt", page_count=20, page_numbers=(17,), spans=(span,), complete=False)
+    value = claim(selected, required_scope="excerpt", required_section="methods")
+    result = g.validate_claims([value], [selected], [check(value, selected)])
+    assert result.supported == 1 and result.assessments[0].scope_compatible
+    with pytest.raises(g.GroundingError, match="page_mapping"):
+        g.validate_claims([value], [replace(selected, page_numbers=(18,))])
+    for mapping in [(17, 17), (0,), (21,), (None,), (None, 17)]:
+        with pytest.raises(g.GroundingError, match="page_mapping"):
+            g.validate_claims([value], [replace(selected, page_numbers=mapping)])
+
+
 def test_resolving_a_real_citation_is_only_identity_not_factual_support(
     abstract: SourceMaterial,
 ) -> None:
