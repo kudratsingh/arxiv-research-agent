@@ -779,3 +779,48 @@ def test_selected_pdf_page_retains_original_page_mapping_and_exact_quotes_throug
     assert ref.page == 2 and ref.quote == material.pages[0][ref.start : ref.end]
     assert ref.version_id == item["version_id"] and ref.source_hash == material.source_hash
     assert result.grounding["supported"] == 1
+
+
+@pytest.mark.parametrize("terminal", ["cancelled", "stale"])
+def test_failed_completion_stays_unknown_after_cancellation_or_source_drift(store, terminal):
+    executor, material, job = queued(store)
+
+    class FailingCompletion(x.FakeProvider):
+        calls = 0
+
+        def draft(self, request, *, cancelled):
+            self.calls += 1
+            if terminal == "cancelled":
+                pending = executor.cancel("a", job.id)
+                assert pending.usage.unknown.input_tokens > 0
+                assert pending.usage.unknown.output_tokens > 0
+            else:
+                with store.pool.connection() as conn:
+                    payload = conn.execute(
+                        "SELECT data FROM workspace_material WHERE material_id=%s", (material,)
+                    ).fetchone()[0]
+                    payload["pages"][0] += " changed during unresolved completion"
+                    conn.execute(
+                        "UPDATE workspace_material SET data=%s WHERE material_id=%s",
+                        (Jsonb(payload), material),
+                    )
+            raise RuntimeError("completion unavailable; private diagnostic must stay private")
+
+    provider = FailingCompletion()
+    result = executor.advance("a", job.id, provider=provider)
+    assert result.state.value == terminal and result.result is None
+    assert result.usage.used_calls == 1 and result.usage.workflow.input_tokens > 0
+    assert result.usage.workflow.output_tokens == result.usage.unknown.input_tokens == 0
+    assert result.usage.unknown.output_tokens == job.request["limits"]["per_call_output_tokens"]
+    assert result.error == (
+        "cancelled" if terminal == "cancelled" else "sealed_request_or_source_drift"
+    )
+    assert "private diagnostic" not in result.model_dump_json()
+    assert executor.get("a", job.id) == result
+    assert executor.run_to_terminal("a", job.id, provider=provider) == result
+    assert provider.calls == 1
+    with store.pool.connection() as conn:
+        assert conn.execute(
+            "SELECT state,actual_usd FROM workspace_fake_generation_reservations WHERE job_id=%s",
+            (job.id,),
+        ).fetchone() == ("uncertain", 0)
