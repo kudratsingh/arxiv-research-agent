@@ -12,9 +12,52 @@ import pytest
 import urllib3
 
 from src.workspace import intake as m
+from src.workspace import rate_limit
 
 pytestmark = pytest.mark.unit
 NOW = datetime(2026, 11, 2, 16, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("host,group,interval", [
+    ("rss.arxiv.org", "arxiv", 3.1),
+    ("export.arxiv.org", "arxiv", 3.1),
+    ("huggingface.co", "huggingface.co", 1.0),
+])
+def test_configured_shared_governor_is_used_without_local_fallback(
+    monkeypatch: pytest.MonkeyPatch, host: str, group: str, interval: float
+) -> None:
+    calls: list[tuple[str, str, float]] = []
+
+    @contextlib.contextmanager
+    def slot(database: str, name: str, spacing: float) -> Any:
+        calls.append((database, name, spacing))
+        yield
+
+    monkeypatch.setenv("WORKSPACE_RATE_DATABASE_URL", "postgresql://verification")
+    monkeypatch.setattr(rate_limit, "shared_rate_slot", slot)
+    monkeypatch.setattr(Path, "open", lambda *args, **kwargs: pytest.fail("local fallback"))
+    with m._rate_slot(host):
+        assert calls == [("postgresql://verification", group, interval)]
+    # Body errors are not rewritten as governor failures.
+    with pytest.raises(m.IntakeError, match="source_unavailable"), m._rate_slot(host):
+        raise m.IntakeError("source_unavailable", request_count=1)
+
+
+def test_shared_governor_failure_refuses_before_request(monkeypatch: pytest.MonkeyPatch) -> None:
+    @contextlib.contextmanager
+    def unavailable(*args: Any, **kwargs: Any) -> Any:
+        raise rate_limit.SharedRateError("shared_source_rate_unavailable")
+        yield  # pragma: no cover - contextmanager protocol
+
+    monkeypatch.setenv("WORKSPACE_RATE_DATABASE_URL", "postgresql://verification")
+    monkeypatch.setattr(rate_limit, "shared_rate_slot", unavailable)
+    monkeypatch.setattr(Path, "open", lambda *args, **kwargs: pytest.fail("local fallback"))
+    with (
+        pytest.raises(m.IntakeError, match="shared_source_rate_unavailable") as error,
+        m._rate_slot("rss.arxiv.org"),
+    ):
+        pytest.fail("request must not start")
+    assert error.value.request_count == 0
 
 
 def test_default_ports_do_not_merge_distinct_manual_url_identities() -> None:

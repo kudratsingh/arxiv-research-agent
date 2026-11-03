@@ -18,6 +18,7 @@ import fcntl
 import hashlib
 import ipaddress
 import json
+import os
 import re
 import socket
 import tempfile
@@ -232,11 +233,22 @@ def validate_fetch_url(value: str) -> tuple[str, str]:
 def _rate_slot(host: str) -> Iterator[None]:
     """Cross-process local governor, held through the response to serialize arXiv.
 
-    The same local file covers all three arXiv feeds. It is intentionally not a
-    DB row lock; network calls never hold a workspace transaction. The existing
-    research tool's independent API path is not invoked by this metadata worker.
+    Configured API/worker processes share a committed Postgres clock and a
+    dedicated session lock. Standalone callers use a local file covering all
+    three arXiv feeds. Neither path holds a workspace transaction during HTTP.
+    A configured shared governor fails closed rather than falling back locally.
     """
     group = "arxiv" if host.endswith("arxiv.org") else host
+    database = os.environ.get("WORKSPACE_RATE_DATABASE_URL")
+    if database:
+        from src.workspace.rate_limit import SharedRateError, shared_rate_slot
+
+        try:
+            with shared_rate_slot(database, group, 3.1 if group == "arxiv" else 1.0):
+                yield
+        except SharedRateError as exc:
+            raise IntakeError("shared_source_rate_unavailable", request_count=0) from exc
+        return
     path = Path(tempfile.gettempdir()) / f"arxiv-workspace-rate-{group}.lock"
     with path.open("a+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
