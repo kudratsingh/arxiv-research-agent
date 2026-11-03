@@ -51,12 +51,14 @@ def descendants(topic_id: str) -> list[str]:
 
 def topic_terms(topic_id: str, existing: Mapping[str, tuple[str, ...]]) -> tuple[str, ...]:
     node = CATALOGUE.get(topic_id)
+    if node and node["kind"] in {"external_domain", "external_field"}:
+        return ()
     base = list(existing.get(topic_id, ()))
     if node and node["kind"] == "authored_ml_group":
         base.extend(GROUP_ALIASES.get(topic_id, ()))
         for child in descendants(topic_id):
             base.extend(topic_terms(child, existing))
-    elif node and node["kind"] == "authored_ml_topic":
+    elif node and node["kind"] in {"authored_ml_topic", "authored_study_area"}:
         slug = topic_id.rsplit("/", 1)[-1]
         base.extend((slug.replace("-", " "), node["label"].lower()))
         base.extend(LEAF_ALIASES.get(slug, ()))

@@ -450,3 +450,72 @@
 .workspace-synthetic-draft ul {
   padding-left: 1.2rem;
 }
+.workspace-today .daily-intro {
+  margin-block: 1rem;
+  gap: 1rem;
+}
+.workspace-today .daily-intro h1 {
+  font-size: clamp(1.85rem, 3vw, 2.6rem);
+  line-height: 1.1;
+}
+.workspace-today .daily-intro p { margin-top: .5rem; }
+.workspace-continuation {
+  border-left: 2px solid var(--color-signature);
+  padding: .7rem 1rem;
+  margin-block: .75rem 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .85fr);
+  column-gap: 1.5rem;
+}
+.workspace-continuation h2 { font-size: 1rem; margin: 0 0 .3rem; }
+.workspace-continuation .workspace-activity-body {
+  margin: .35rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.workspace-continuation .workspace-activity-link { font-size: .9rem; }
+.workspace-continuation-options { margin-top: .4rem; font-size: .8rem; }
+.workspace-continuation-options summary,
+.workspace-edition-details > summary { cursor: pointer; color: var(--color-ink-muted); }
+.workspace-edition-details { margin-block: .65rem; font-size: .85rem; }
+@media (max-width: 640px) {
+  .workspace-today .daily-page-meta { margin-block: .75rem; }
+  .workspace-today .daily-intro { margin-block: .75rem; }
+  .workspace-today .daily-intro p { display: none; }
+  .workspace-continuation { grid-template-columns: minmax(0, 1fr); padding-block: .5rem; gap: .25rem; }
+  .workspace-continuation > div::before { display: none; }
+  .workspace-continuation > div { padding-left: 0; margin-bottom: 0; }
+  .workspace-continuation > div > span { font-size: .7rem; }
+  .workspace-today .daily-item { padding-block: 1rem; }
+  .workspace-today .daily-item-lead h3 { font-size: 1.55rem; }
+  .workspace-today .workspace-toolbar { margin-block: .65rem; }
+}
+/* Override the timeline's connecting rail: this is one compact return card. */
+.workspace-continuation > div { border: 0; margin: 0; padding: 0; }
+.workspace-continuation > div::before { display: none; }
+.workspace-continuation .workspace-activity-link {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  .workspace-today .daily-intro { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: .6rem; }
+  .workspace-today .daily-intro h1 { font-size: 1.7rem; }
+  .workspace-today .daily-time { margin: 0; padding: .3rem; }
+  .workspace-today .daily-time legend { font-size: .65rem; }
+  .workspace-today .daily-time button { padding: .6rem .5rem; font-size: .75rem; }
+  .workspace-today .daily-coverage { margin-bottom: .6rem; }
+  .workspace-today .daily-coverage summary { padding: .6rem; }
+  .workspace-today .daily-section-heading { margin-top: 1rem; }
+}
+@media (max-width: 640px) {
+  .workspace-today .daily-page-meta { flex-wrap: nowrap; gap: .75rem; }
+  .workspace-today .daily-page-meta > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .workspace-today .daily-page-meta > a { flex-shrink: 0; font-size: .75rem; }
+  .workspace-today .daily-intro h1 { margin-bottom: 0; }
+  .workspace-today .daily-coverage[data-complete="true"] summary span:last-of-type { display: none; }
+}

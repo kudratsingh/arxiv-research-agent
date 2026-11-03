@@ -14,7 +14,8 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(window.location.search),
 }));
 import { job, preview } from "./syntheticFixtures";
-import { MAT, retained, text } from "./materialFixtures";
+import { MAT, retained, text, available } from "./materialFixtures";
+import { WorkCard } from "@/components/workspace/WorkCard";
 let documentValue: MaterialDocument;
 let responses: Record<string, number>;
 let calls: { path: string; body: Record<string, unknown> }[];
@@ -67,6 +68,37 @@ beforeEach(() => {
       return new Response(null, { status: 404 });
     }),
   );
+});
+
+describe("available reading material is separate from source metadata", () => {
+  it("opens the exact-version PDF excerpts on entry without a discovery click", async () => {
+    const item = work({ access_state: "metadata", abstract: "", available_scopes: ["excerpt"],
+      reading_access_state: "excerpt", retained_materials: [available()] });
+    state.works = [item];
+    render(<LiveReader id={item.work_id} />);
+    expect(await screen.findByText(text)).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name:"Retained document excerpts"})).toBeInTheDocument();
+    expect(calls.some(call=>call.path===`materials/${MAT}`)).toBe(true);
+    expect(screen.queryByText(/No abstract or full text was acquired/)).not.toBeInTheDocument();
+    expect(item.access_state).toBe("metadata");
+  });
+  it("cards expose retained excerpts and their original-page entry instead of metadata-only copy", () => {
+    const item = work({ access_state:"metadata", abstract:"", available_scopes:["excerpt"],
+      reading_access_state:"excerpt",retained_materials:[available()] });
+    render(<WorkCard item={item} status={vi.fn()} />);
+    expect(screen.getByText("PDF excerpts")).toBeInTheDocument();
+    expect(screen.getByText(/Selected original PDF pages/)).toBeInTheDocument();
+    expect(screen.getByRole("link",{name:"Read & investigate →"})).toHaveAttribute("href",expect.stringContaining(encodeURIComponent(available().first_anchor!)));
+  });
+  it("retained material on an earlier version does not label a newer version acquired", () => {
+    const item=work();item.retained_materials=[];item.available_scopes=["abstract"];
+    item.versions[0]!.retained_materials=[available({version_id:item.versions[0]!.version_id})];
+    item.versions[0]!.available_scopes=["excerpt"];
+    const view=render(<WorkCard item={item} versionId={item.version_id} status={vi.fn()} />);
+    expect(screen.queryByText("PDF excerpts")).not.toBeInTheDocument();
+    view.rerender(<WorkCard item={item} versionId={item.versions[0]!.version_id} status={vi.fn()} />);
+    expect(screen.getByText("PDF excerpts")).toBeInTheDocument();
+  });
 });
 afterEach(() => {
   vi.unstubAllGlobals();

@@ -7,6 +7,7 @@ import {
   errorMessage,
   readerHref,
   normalizeReaderReturnTo,
+  readingMaterial,
   requestId,
   workspaceRequest,
   type EntryRevision,
@@ -105,10 +106,8 @@ function ReaderContent({
       requestedVersion ||
       item.reading.version_id ||
       item.version_id;
-    const scope = scopeOf(
-      item.versions.find((candidate) => candidate.version_id === version) ??
-        item,
-    );
+    const selected = item.versions.find((candidate) => candidate.version_id === version) ?? item;
+    const scope = scopeOf(selected);
     let fragment =
       typeof window === "undefined" ? "" : window.location.hash.slice(1);
     try {
@@ -116,6 +115,11 @@ function ReaderContent({
     } catch {
       fragment = "";
     }
+    const preferredAnchor = !entry &&
+      !/^(abstract|excerpt|full_text|material):/.test(fragment) &&
+      !(item.reading.revision > 0 && item.reading.version_id === version)
+        ? selected.retained_materials?.find((value) => value.format === "pdf")?.first_anchor ?? undefined
+        : undefined;
     try {
       const recovered = loadDraft(owner, item.work_id, version);
       return {
@@ -124,7 +128,7 @@ function ReaderContent({
         scope,
         entryId: entry?.id,
         sourceAnchor:
-          entry?.anchor || (recovered?.body ? recovered.anchor : undefined),
+          entry?.anchor || (recovered?.body ? recovered.anchor : preferredAnchor),
         draft: recovered ?? emptyDraft(scope),
         recovery: true,
         notice: recovered
@@ -137,7 +141,7 @@ function ReaderContent({
         fragment,
         scope,
         entryId: entry?.id,
-        sourceAnchor: entry?.anchor,
+        sourceAnchor: entry?.anchor ?? preferredAnchor,
         draft: emptyDraft(scope),
         recovery: false,
         notice:
@@ -184,12 +188,16 @@ function ReaderContent({
           title: item.title,
           url: item.url,
           authors: item.authors,
+          reading_access_state: item.reading_access_state,
+          available_scopes: item.available_scopes,
+          retained_materials: item.retained_materials,
         },
       ];
   const material =
     versions.find((version) => version.version_id === versionId) ??
     versions[0]!;
   const sourceScope = scopeOf(material);
+  const knownPDF = material.retained_materials?.find((value) => value.format === "pdf");
   const entries = item.entries.filter(
     (entry) => entry.version_id === material.version_id,
   );
@@ -404,7 +412,8 @@ function ReaderContent({
   function viewVersion(value: string) {
     setVersionId(value);
     setPdfActive(false);
-    let nextAnchor = `${scopeOf(versions.find((candidate) => candidate.version_id === value) ?? material)}:0`;
+    const selected = versions.find((candidate) => candidate.version_id === value) ?? material;
+    let nextAnchor = readingMaterial(item, value).pdf?.first_anchor ?? `${scopeOf(selected)}:0`;
     try {
       const recovered = loadDraft(owner, item.work_id, value);
       setDraft(
@@ -621,7 +630,7 @@ function ReaderContent({
                   ? sourceScope === "excerpt"
                     ? "Retained feed excerpt"
                     : "Retained source abstract"
-                  : "Source metadata"}
+                  : knownPDF ? "Retained PDF excerpts" : "Source metadata"}
             </h2>
             <span>{material.version_label}</span>
           </div>
@@ -648,7 +657,9 @@ function ReaderContent({
                     </>
                   ) : (
                     material.abstract ||
-                    "No abstract or full text was acquired. Use the original-source link for reading. Your questions and notes can still be kept against this metadata version."
+                    (knownPDF
+                      ? "Retained PDF excerpts are available for this exact source version. Open their selected original pages below; omitted pages and unreliable structures remain outside the acquired reading scope."
+                      : "No abstract or full text was acquired. Use the original-source link for reading. Your questions and notes can still be kept against this metadata version.")
                   )}
                 </p>
               </div>
@@ -661,7 +672,7 @@ function ReaderContent({
               <div className="daily-source-boundary">
                 <span className="daily-eyebrow">Evidence boundary</span>
                 <p>
-                  Available scope: {sourceScope}. The full methods, experiments,
+                  Available scope: {knownPDF && !material.abstract ? knownPDF.scope : sourceScope}. The full methods, experiments,
                   appendices and result tables have not been acquired unless
                   explicitly shown.
                 </p>

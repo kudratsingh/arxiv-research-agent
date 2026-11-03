@@ -6,7 +6,7 @@
     "command": ".venv/bin/python -c \"import json; from src.api.app import create_app; print(json.dumps(create_app().openapi(), indent=2))\" > web/contract/openapi.json  # then re-add this x-provenance header",
     "consumers": "web/lib/api/generated/schema.d.ts via `npm run generate:types`.",
     "note": "JSON has no comment syntax, so this OpenAPI 3.1 x- extension carries the header. Strip the 'x-provenance' key before comparing against a freshly generated create_app().openapi().",
-    "workspace_update": "2026-11-02 durable workspace; no provider client"
+    "workspace_update": "2026-11-03 derived exact-version retained availability; immutable metadata unchanged; no provider client"
   },
   "openapi": "3.1.0",
   "info": {
@@ -4362,6 +4362,25 @@
             },
             "type": "array",
             "title": "Authors"
+          },
+          "reading_access_state": {
+            "type": "string",
+            "title": "Reading Access State",
+            "default": "metadata"
+          },
+          "available_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Scopes"
+          },
+          "retained_materials": {
+            "items": {
+              "$ref": "#/components/schemas/RetainedAvailability"
+            },
+            "type": "array",
+            "title": "Retained Materials"
           }
         },
         "type": "object",
@@ -5154,6 +5173,89 @@
         ],
         "title": "ResearchRequest",
         "description": "Body for `POST /research`."
+      },
+      "RetainedAvailability": {
+        "properties": {
+          "material_id": {
+            "type": "string",
+            "title": "Material Id"
+          },
+          "version_id": {
+            "type": "string",
+            "title": "Version Id"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "abstract",
+              "excerpt",
+              "full_text"
+            ],
+            "title": "Scope"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "pdf",
+              "text"
+            ],
+            "title": "Format"
+          },
+          "quality": {
+            "type": "string",
+            "title": "Quality"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "retained_pages": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Retained Pages"
+          },
+          "first_anchor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Anchor"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "material_id",
+          "version_id",
+          "scope",
+          "format",
+          "quality",
+          "complete"
+        ],
+        "title": "RetainedAvailability"
       },
       "RetainedSpan": {
         "properties": {
@@ -6188,6 +6290,25 @@
             },
             "type": "array",
             "title": "Reasons"
+          },
+          "reading_access_state": {
+            "type": "string",
+            "title": "Reading Access State",
+            "default": "metadata"
+          },
+          "available_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Scopes"
+          },
+          "retained_materials": {
+            "items": {
+              "$ref": "#/components/schemas/RetainedAvailability"
+            },
+            "type": "array",
+            "title": "Retained Materials"
           }
         },
         "type": "object",

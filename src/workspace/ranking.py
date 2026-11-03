@@ -14,7 +14,7 @@ from typing import Any
 
 from src.workspace.interests import topic_stream, topic_terms
 
-POLICY_VERSION = "workspace-lexical-v2"
+POLICY_VERSION = "workspace-lexical-v3"
 STOP_WORDS = frozenset(
     [
         "a",
