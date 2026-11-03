@@ -291,7 +291,14 @@ class QualificationAdapter:
         )
         return {"stage": stage, "request_digest": _digest(body), "body": body}
 
-    async def _post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
+    async def _post(
+        self,
+        path: str,
+        body: dict[str, Any],
+        *,
+        job_id: str | None = None,
+        ordinal: int | None = None,
+    ) -> dict[str, Any]:
         if path not in {"messages", "messages/count_tokens"}:
             raise AdmissionError("endpoint_not_permitted")
         # Recheck at construction, not just at session creation: revocation and
@@ -308,6 +315,49 @@ class QualificationAdapter:
             or os.environ.get("ANTHROPIC_API_KEY") == DISABLED_KEY
         ):
             raise AdmissionError("provider_disabled")
+        if job_id is None or type(ordinal) is not int or ordinal < 0:
+            raise AdmissionError("approved_contact_journal_required")
+        # Freeze caller-owned dictionaries and claim the one journal entry
+        # atomically before constructing any HTTP client, including count-only.
+        body = json.loads(json.dumps(body, allow_nan=False))
+        self._context()
+        with self.store.pool.connection() as conn:
+            self.control._lock(conn, self.owner)
+            state, digest, data = self.control._job(conn, self.owner, job_id)
+            _, policy = self.control._policy(
+                conn, self.owner, self.inputs.snapshot(), datetime.now(UTC)
+            )
+            self.control._sources(conn, self.owner, self.inputs.snapshot())
+            adapter = data.get("adapter", {})
+            contacts = adapter.get("contacts", [])
+            if (
+                state != "running"
+                or digest != _digest(self.inputs.snapshot())
+                or data["policy_digest"] != _digest(policy)
+                or adapter.get("mode") != self.mode
+                or policy["transport_mode"] != self.mode
+                or ordinal != len(contacts) - 1
+                or contacts[ordinal]["state"] != "running"
+                or contacts[ordinal]["endpoint"] != path
+                or contacts[ordinal]["request_digest"] != _digest(body)
+            ):
+                raise AdmissionError("approved_contact_journal_required")
+            if path == "messages":
+                prior = contacts[ordinal - 1] if ordinal else {}
+                estimate = prior.get("response", {}).get("input_tokens")
+                if (
+                    prior.get("state") != "completed"
+                    or prior.get("endpoint") != "messages/count_tokens"
+                    or prior.get("generation_request_digest") != _digest(body)
+                    or type(estimate) is not int
+                    or estimate < 0
+                    or estimate * 5 > int(self.inputs.settings["input_tokens"]) * 4
+                ):
+                    raise AdmissionError("bound_count_receipt_required")
+            contacts[ordinal]["state"] = "dispatching"
+            conn.execute(
+                "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job_id)
+            )
         async with asyncio.timeout(float(self.inputs.settings["timeout_seconds"])):
             async with httpx.AsyncClient(
                 transport=self.transport,
@@ -348,7 +398,7 @@ class QualificationAdapter:
                 or adapter.get("mode") != self.mode
                 or policy["transport_mode"] != self.mode
                 or len(contacts) >= 8
-                or any(c["state"] == "running" for c in contacts)
+                or any(c["state"] in {"running", "dispatching"} for c in contacts)
                 or expected != wire
                 or len(contacts) != len(adapter.get("steps", [])) * 2 + (endpoint == "messages")
             ):
@@ -396,7 +446,9 @@ class QualificationAdapter:
             count_body = {
                 k: v for k, v in wire["body"].items() if k not in {"max_tokens", "temperature"}
             }
-            count = await self._post("messages/count_tokens", count_body)
+            count = await self._post(
+                "messages/count_tokens", count_body, job_id=job_id, ordinal=ordinal
+            )
             self._record(job_id, ordinal, count)
             if self.snapshot(job_id)["state"] != "running":
                 return self.snapshot(job_id)
@@ -410,7 +462,7 @@ class QualificationAdapter:
             if cancelled():
                 return self.control.cancel(self.owner, job_id)
             ordinal = self._contact(job_id, wire, "messages")
-            response = await self._post("messages", wire["body"])
+            response = await self._post("messages", wire["body"], job_id=job_id, ordinal=ordinal)
             self._record(job_id, ordinal, response)
             usage = response["usage"]
             ins, outs = usage["input_tokens"], usage["output_tokens"]

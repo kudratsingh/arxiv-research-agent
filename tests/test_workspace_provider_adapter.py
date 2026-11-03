@@ -438,3 +438,49 @@ async def test_named_approval_cannot_be_reused_for_another_request_id(store):
     with pytest.raises(AdmissionError, match="endpoint_not_permitted"):
         await adapter._post("not-an-approved-endpoint", {})
     assert not transport.calls
+
+
+async def test_transport_construction_requires_the_exact_unconsumed_approved_journal(
+    store, monkeypatch
+):
+    adapter, _, job = setup(store)
+    constructor = Mock(side_effect=AssertionError("must refuse before transport construction"))
+    monkeypatch.setattr(p.httpx, "AsyncClient", constructor)
+    wire = adapter.request(job)
+    body = {k: v for k, v in wire["body"].items() if k not in {"max_tokens", "temperature"}}
+    with pytest.raises(AdmissionError, match="approved_contact_journal_required"):
+        await adapter._post("messages/count_tokens", body)
+    ordinal = adapter._contact(job, wire, "messages/count_tokens")
+    for endpoint, changed, index in [
+        ("messages", body, ordinal),
+        ("messages/count_tokens", {**body, "model": "wrong"}, ordinal),
+        ("messages/count_tokens", body, ordinal + 1),
+    ]:
+        with pytest.raises(AdmissionError, match="approved_contact_journal_required"):
+            await adapter._post(endpoint, changed, job_id=job, ordinal=index)
+    constructor.assert_not_called()
+    # Claiming a contact before a lost client construction consumes it. A new
+    # process cannot send it again merely because no response was journalled.
+    with pytest.raises(AssertionError, match="transport construction"):
+        await adapter._post("messages/count_tokens", body, job_id=job, ordinal=ordinal)
+    with pytest.raises(AdmissionError, match="approved_contact_journal_required"):
+        await adapter._post("messages/count_tokens", body, job_id=job, ordinal=ordinal)
+    assert constructor.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "count", [{"input_tokens": 6401}, {"input_tokens": None}, {"input_tokens": True}]
+)
+async def test_message_client_cannot_construct_without_a_bound_admissible_count(
+    store, monkeypatch, count
+):
+    adapter, _, job = setup(store)
+    wire = adapter.request(job)
+    ordinal = adapter._contact(job, wire, "messages/count_tokens")
+    adapter._record(job, ordinal, count)
+    ordinal = adapter._contact(job, wire, "messages")
+    constructor = Mock(side_effect=AssertionError("no message client"))
+    monkeypatch.setattr(p.httpx, "AsyncClient", constructor)
+    with pytest.raises(AdmissionError, match="bound_count_receipt_required"):
+        await adapter._post("messages", wire["body"], job_id=job, ordinal=ordinal)
+    constructor.assert_not_called()
