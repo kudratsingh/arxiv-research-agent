@@ -1,9 +1,9 @@
 """Disabled-by-default generation admission; no provider SDK or approval writer.
 
-This is a Postgres foundation, not an enabled generation executor. Production
-routes still refuse generation. A future gateway adapter must consume the
-sealed input passed to its factory, enforce per-call/fan-out token ceilings and
-cooperatively stop an in-flight call. No API key or numeric cap is approval.
+Production routes still refuse generation. The qualification-only adapter in
+provider_adapter consumes sealed retained input, applies wire/token/call limits
+and journals contacts over these reservations. Its mocked transport tests do
+not qualify a checker. No API key or numeric cap is approval.
 
 UTC accounting periods use the time a cumulative receipt is recorded. Unknown
 billing and unused active reservations carry into every new period until
@@ -137,6 +137,10 @@ class GenerationAdmission:
     def __init__(self, store: WorkspaceStore):
         self.store = store
 
+    @staticmethod
+    def _request_id(policy: dict[str, Any], request_id: str) -> None:
+        """Extension point for a qualification approval's single named job."""
+
     def _lock(self, conn: Any, owner: str) -> None:
         self.store._owner(owner)
         conn.execute(
@@ -257,6 +261,7 @@ class GenerationAdmission:
         with self.store.pool.connection() as conn:
             self._lock(conn, owner)
             approval_id, policy = self._policy(conn, owner, sealed, instant)
+            self._request_id(policy, request_id)
             self._sources(conn, owner, sealed)
             prior = conn.execute(
                 "SELECT state,input_digest,data FROM workspace_generation_jobs WHERE owner=%s AND id=%s",

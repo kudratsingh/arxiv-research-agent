@@ -103,3 +103,17 @@ The reader must display the selected-page/extraction warnings and navigate
 using original page numbers. It must retain an abstract fallback on acquisition
 or parser failure. Owner experience review and any later generated-summary
 acceptance remain pending.
+
+## Limits of the two hard-coded samples
+
+ReAct v3 and Self-RAG v1 are explicitly allowlisted qualification samples, not a
+general PDF acquisition service or representative coverage of scientific fields.
+Their fixed URLs, versions and selected pages are deliberate bounds. Other
+papers, revised versions, inaccessible PDFs and unsupported structures remain
+metadata/abstract/link fallbacks until separately retained and inspected. No
+complete-paper acquisition, mathematical interpretation, table-cell mapping,
+figure understanding or general extraction accuracy follows from these two
+examples. Availability is derived for the exact retained version, never copied
+to a newer version. The new claim/span packet initially uses three text sources;
+its24cases do not replace this scientific-region inspection or a representative
+PDF checker study.

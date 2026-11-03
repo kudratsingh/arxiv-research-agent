@@ -19,8 +19,8 @@
       "scope": "abstract",
       "parser_revision": "workspace-plain-text-v1",
       "job_kind": "summary",
-      "fake_request_digest": "sha256:b0ff8fbe6307617c59c858baeaf73b644780d722a694379a9a9010a119d0eb7a",
-      "local_exact_request_artifact": "outputs/workspace-next/summary-1-sealed-preview.json"
+      "historical_fake_request_digest": "sha256:b0ff8fbe6307617c59c858baeaf73b644780d722a694379a9a9010a119d0eb7a",
+      "historical_fake_request_artifact": "outputs/workspace-next/summary-1-sealed-preview.json"
     },
     {
       "work_id": "arxiv:2610.41552",
@@ -31,8 +31,8 @@
       "scope": "abstract",
       "parser_revision": "workspace-plain-text-v1",
       "job_kind": "summary",
-      "fake_request_digest": "sha256:bfd0d1c2e81b3218f3c30d16e632ab7fa3c7a07b7c1478b58900a6d78b1f8d05",
-      "local_exact_request_artifact": "outputs/workspace-next/summary-2-sealed-preview.json"
+      "historical_fake_request_digest": "sha256:bfd0d1c2e81b3218f3c30d16e632ab7fa3c7a07b7c1478b58900a6d78b1f8d05",
+      "historical_fake_request_artifact": "outputs/workspace-next/summary-2-sealed-preview.json"
     },
     {
       "work_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411",
@@ -43,8 +43,8 @@
       "scope": "excerpt",
       "parser_revision": "workspace-plain-text-v1",
       "job_kind": "summary",
-      "fake_request_digest": "sha256:c2f16deaa50ec6b400599fea9baf7a872e3c7433737ca8fd4a115e346708be39",
-      "local_exact_request_artifact": "outputs/workspace-next/summary-3-sealed-preview.json"
+      "historical_fake_request_digest": "sha256:c2f16deaa50ec6b400599fea9baf7a872e3c7433737ca8fd4a115e346708be39",
+      "historical_fake_request_artifact": "outputs/workspace-next/summary-3-sealed-preview.json"
     },
     {
       "work_id": "arxiv:2210.03629",
@@ -55,8 +55,6 @@
       "scope": "excerpt",
       "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
       "job_kind": "deep_dive",
-      "fake_request_digest": "sha256:dee2c431792c3c243da0033b4dddf4be31599d6dc553a724e8ca2b1c0547b994",
-      "local_exact_request_artifact": "outputs/workspace-next/study-sealed-preview.json",
       "span_ids": [
         "span-f6302b12e1703fd9e72c10e91b06a42b",
         "span-e938044ecb931aff97360bd1fe27f3df",
@@ -66,7 +64,9 @@
         3
       ],
       "selected_utf8_bytes": 5295,
-      "complete": false
+      "complete": false,
+      "historical_fake_request_digest": "sha256:dee2c431792c3c243da0033b4dddf4be31599d6dc553a724e8ca2b1c0547b994",
+      "historical_fake_request_artifact": "outputs/workspace-next/study-sealed-preview.json"
     }
   ],
   "private_context": {
@@ -92,63 +92,38 @@
   "envelope": {
     "summary": {
       "max_calls": 4,
-      "draft_tokens": [
-        6000,
-        1200
-      ],
-      "check_tokens": [
-        8000,
-        800
-      ],
-      "repair_tokens": [
-        8000,
-        1200
-      ],
-      "recheck_tokens": [
-        8000,
-        800
-      ],
-      "job_cap_usd": "0.20",
-      "workflow_estimate_max_usd": "0.078",
-      "checker_estimate_max_usd": "0.072",
-      "estimated_max_usd": "0.150",
+      "max_count_contacts": 4,
+      "per_call_input_tokens": 8000,
+      "per_call_output_tokens": 1200,
+      "workflow_usd_estimate": "0.084",
+      "checker_usd_estimate": "0.084",
+      "raw_usd_max": "0.168",
       "margin_multiplier": "1.25",
-      "buffered_estimate_usd": "0.18750"
+      "job_cap_usd": "0.25"
     },
-    "guided_study": {
+    "deep_dive": {
       "max_calls": 4,
-      "draft_tokens": [
-        16000,
-        2400
-      ],
-      "check_tokens": [
-        18000,
-        1200
-      ],
-      "repair_tokens": [
-        18000,
-        2400
-      ],
-      "recheck_tokens": [
-        18000,
-        1200
-      ],
-      "job_cap_usd": "0.40",
-      "workflow_estimate_max_usd": "0.174",
-      "checker_estimate_max_usd": "0.144",
-      "estimated_max_usd": "0.318",
+      "max_count_contacts": 4,
+      "per_call_input_tokens": 12000,
+      "per_call_output_tokens": 2400,
+      "workflow_usd_estimate": "0.144",
+      "checker_usd_estimate": "0.144",
+      "raw_usd_max": "0.288",
       "margin_multiplier": "1.25",
-      "buffered_estimate_usd": "0.39750"
+      "job_cap_usd": "0.40"
     },
     "qualification": {
-      "summaries": 3,
-      "guided_studies": 1,
-      "max_calls": 16,
-      "estimated_max_usd": "0.768",
-      "reserved_job_caps_usd": "1.00",
+      "summary_jobs": 3,
+      "study_jobs": 1,
+      "raw_usd_max": "0.792",
+      "margin_adjusted_usd": "0.990",
+      "sum_job_reservations_usd": "1.15",
       "trial_cap_usd": "1.25",
       "day_cap_usd": "1.25",
-      "month_cap_usd": "1.25"
+      "month_cap_usd": "1.25",
+      "messages_contacts_max": 16,
+      "count_contacts_max": 16,
+      "combined_contacts_max": 32
     }
   },
   "measured_token_counts": null,
@@ -161,8 +136,8 @@
     "Specific owner GO naming model, public context, one-off trial and caps; no code-generated approval"
   ],
   "prepared_at": "2026-11-03",
-  "qualification_kind": "unexecuted small trial, contingent on paid adapter/settings/token/quality prerequisites and explicit owner GO",
-  "token_basis": "conservative design bounds; NOT measured; fake UTF-8 counters are not tokens",
+  "qualification_kind": "separately approvable measurement/qualification experiment; unqualified checker permitted only for quarantined experiment; everyday generation requires quality evidence",
+  "token_basis": "unmeasured design ceilings; MockTransport usage and fake byte counters are synthetic",
   "paid_request_digest": null,
   "fake_verification": {
     "provider_calls": 0,
@@ -170,5 +145,40 @@
     "jobs": 4,
     "receipt": "outputs/workspace-next/fake-execution-receipt.json",
     "claim": "State/protocol tests only; fake checks are not model-quality evidence"
+  },
+  "adapter_revision": "workspace-qualification-adapter-v1",
+  "provider_contact_scope": {
+    "measurement_only_option": {
+      "count_contacts_max": 4,
+      "messages_contacts_max": 0,
+      "approved": false
+    },
+    "experiment_option": {
+      "count_contacts_max": 16,
+      "messages_contacts_max": 16,
+      "approved": false
+    },
+    "if_both_options_run": {
+      "count_contacts_max": 20,
+      "messages_contacts_max": 16
+    },
+    "payload": "selected public text plus instructions/schema/model; no private notes/history/profile",
+    "counts_are_estimates": true
+  },
+  "preconditions": [
+    "Owner approval specifically names count-token contacts and/or quarantined experiment, models, source/context and ceilings",
+    "One approved request_id and sealed input digest per job; no credential-based approval",
+    "Remote token/schema measurement and complete usage receipts within admitted envelope",
+    "Review every experiment claim/span and omissions; checker qualification is an outcome, never assumed",
+    "Everyday generation remains disabled pending adequate measured quality evidence and separate decision"
+  ],
+  "exact_initial_request_artifact": "outputs/workspace-readiness/trial-packet.json",
+  "dynamic_request_rule": "seal and count each check/repair/recheck after prior output exists; no source truncation or schema/model fallback",
+  "review_cases": {
+    "count": 24,
+    "human_labels": null,
+    "checker_qualified": false,
+    "artifact": "outputs/workspace-readiness/trial-packet.json",
+    "scope": "three retained text sources; PDF region review separate; not automatically sent by the four-job trial"
   }
 }

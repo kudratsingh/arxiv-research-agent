@@ -7,8 +7,10 @@ test("Today puts the saved thread and first reading item within reach", async ({
   const state = await response.json() as WorkspaceState;
   expect(state.principal_key_id).toBe(process.env.WORKSPACE_VERIFICATION_PRINCIPAL ?? "e2e");
   expect(state.principal_key_id).not.toBe("personal-local");
-  const item = state.works[0]!, id = crypto.randomUUID();
-  const saved = await page.request.post("/api/workspace/entries", { data: { id, revision: 0, request_id: id, data: {work_id: item.work_id, version_id: item.version_id, kind: "question", body: "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?", anchor: "abstract:0"} } });
+  const item = state.works.find(work => work.abstract)!, id = crypto.randomUUID();
+  expect(item).toBeTruthy();
+  const anchor = `${item.access_state}:0:${Math.min(60, Array.from(item.abstract).length)}`;
+  const saved = await page.request.post("/api/workspace/entries", { data: { id, revision: 0, request_id: id, data: {work_id: item.work_id, version_id: item.version_id, kind: "question", body: "Verification question: which evidence and baseline should stay fixed in a small reproducible retrieval experiment?", anchor} } });
   expect(saved.ok()).toBe(true);
   await page.goto("/workspace/today");
   const thread = page.getByRole("heading", { name: "Continue your question" });
