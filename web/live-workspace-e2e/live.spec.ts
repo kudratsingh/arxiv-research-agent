@@ -357,6 +357,7 @@ test("editing an earlier question becomes latest activity, pins its exact versio
     await expect(page.getByText(edited, { exact: true })).toBeVisible();
     await page.goto("/workspace/today");
     await expect(page.locator(".workspace-activity")).toContainText(edited);
+    await page.getByText("Source and pin options", { exact: true }).click();
     await page
       .getByRole("button", { name: "Pin this question", exact: true })
       .click();
@@ -371,6 +372,7 @@ test("editing an earlier question becomes latest activity, pins its exact versio
     );
     await page.goto("/workspace/today");
     await expect(page.locator(".workspace-activity")).toContainText(edited);
+    await page.getByText("Source and pin options", { exact: true }).click();
     await page
       .getByRole("button", { name: "Unpin saved item", exact: true })
       .click();

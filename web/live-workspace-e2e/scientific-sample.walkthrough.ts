@@ -46,12 +46,8 @@ test("actual public PDF excerpts retain original pages and an exact source ancho
   await page.goto(
     `/workspace/items/${encodeURIComponent(item!.work_id)}?version=${encodeURIComponent(item!.version_id)}`,
   );
-  await page
-    .getByRole("button", { name: "Find retained PDF excerpts", exact: true })
-    .click();
-  await page
-    .getByRole("combobox", { name: "Retained document", exact: true })
-    .selectOption(document.material_id);
+  // Exact-version availability opens retained excerpts on entry; no hidden
+  // discovery action should be required for a metadata-only observation.
   await expect(
     page.getByRole("heading", {
       name: "Retained document excerpts",
@@ -138,4 +134,23 @@ test("actual public PDF excerpts retain original pages and an exact source ancho
       ["critical", "serious"].includes(violation.impact ?? ""),
     ),
   ).toEqual([]);
+});
+
+test("metadata-only ReAct is discoverable as retained excerpts for its exact version", async ({ page }, info) => {
+  const state = await (await page.request.get("/api/workspace/state")).json() as WorkspaceState;
+  expect(state.principal_key_id).toBe(process.env.WORKSPACE_VERIFICATION_PRINCIPAL);
+  expect(state.principal_key_id).not.toBe("personal-local");
+  const item = state.works.find(w => w.work_id === "arxiv:2210.03629");
+  expect(item).toBeTruthy();
+  expect(item!.access_state).toBe("metadata");
+  expect(item!.available_scopes).toContain("excerpt");
+  const filteredResponse = await page.request.get("/api/workspace/items?access_state=excerpt&limit=50");
+  expect(filteredResponse.ok()).toBe(true);
+  const filtered = await filteredResponse.json();
+  expect(filtered.items.some((w: {work_id: string}) => w.work_id === item!.work_id)).toBe(true);
+  await page.goto(`/workspace/items/${encodeURIComponent(item!.work_id)}?version=${encodeURIComponent(item!.version_id)}`);
+  await expect(page.getByRole("heading", {name: "Retained document excerpts", exact: true})).toBeVisible();
+  await expect(page.getByText("This is an excerpt of the paper. Omitted pages have not been read or reconstructed.", {exact:true})).toBeVisible();
+  await page.screenshot({ path: info.outputPath("react-entry.png"), fullPage: true });
+  await page.screenshot({ path: info.outputPath("react-entry-viewport.png") });
 });

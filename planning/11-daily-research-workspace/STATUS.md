@@ -14,9 +14,88 @@ Paid services require a separate, concrete approval before activation.
 | W4 | Real Today and Radar, transparent lexical signals, finite editions, exclusions, read/dismiss/snooze/undo and frozen cursor pages | Chronological/keyword comparison sample has blank owner labels. Edition versions/profile/coverage are pinned. Personal usefulness remains unmeasured |
 | W5 | Real source reader, retained abstracts/feed excerpts, Unicode-safe anchors, durable questions/notes/actions, source version choice and export | Desktop/mobile/keyboard and failed-save recovery observed; bounded PDF extraction helper tested with synthetic files. Selected-page scientific sample now retained; inline PDF rendering remains deferred |
 | W6 | Durable schedules, owner/date occurrences, leased one-shot worker, bounded retries, single catch-up and atomic in-app intent | DST, racing workers, queued-before-sleep, pause/recovery tests. Recurrence remains disabled; continuous worker packaged disabled; image deployment and owner's time confirmation remain pending |
-| W7 | Independent retained materials/spans; explicit factual-check boundary; actual emitted calibration artifacts; role/revision estimator; atomic spend reservations/cancellation/recovery | Model-free/fake-provider tests. Fake-only executor now implemented; actual provider quality measurement and historical metric certification remain pending; remaining launch conditions are in the approval packet |
+| W7 | Independent retained materials/spans; explicit factual-check boundary; actual emitted calibration artifacts; role/revision estimator; atomic spend reservations/cancellation/recovery | Model-free/fake-provider tests. Fake executor and qualification-only wire adapter implemented/tested offline; actual provider quality measurement and historical metric certification remain pending; remaining launch conditions are in the approval packet |
 | W8–W9 | Real grounded summaries and guided deep dives | Exact source/model/usage envelope and separate owner spending approval; actual retained-source/provider walkthrough required |
 | W10–W12 | Questions, assumptions and experiment proposals; daily-use pilot; optional expansion | Follow observed owner workflow. No automatic code execution, publishing or external delivery |
+
+## Readiness follow-up from reviewed PR283 (2026-11-03)
+
+Verified reviewed/current remote head `a7ec430`; no subsequent changes at start.
+Its nine green checks belong to that head, not this follow-up. New isolated
+branch `codex/daily-workspace-readiness` is stacked on283. Owner data and all PRs
+remain unmerged; provider contacts/spend0 and recurrence disabled.
+
+- Review fixes committed `c4c2a64`: all243 authored study areas have literal
+  matching terms;26 external fields and4 domains stay browse-only. Exact-version
+  retained availability drives cards/Radar/Reader without rewriting immutable
+  source metadata. PDF excerpts open on entry, with selected-page limits.
+- Today brings a compact saved-question return above the shortlist. A390px
+  browser regression checks a non-empty question and first reading title within
+  the initial viewport; allocation/identifiers/receipts are disclosed on demand.
+- Qualification-only actual wire adapter binds model/settings/schema/context,
+  input count estimates with25% headroom, output/call limits, one named job per
+  approval, reservations and split workflow/checker/unknown accounting. Contacts
+  are journalled before dispatch; cancellation and lost completion are fenced.
+  It reuses retained selection, structured request building and grounding checks;
+  the original fake executor remains a separate zero-dollar instrument.
+- Read-only packet builder exports four exact initial wire/count requests plus
+  24 representative claim/span cases. Human labels and checker judgments blank.
+  Dynamic check/repair bodies are sealed after prior outputs exist, never
+  invented in advance. No count endpoint or provider client was contacted.
+- Correct sequence: approve a bounded measurement/qualification experiment,
+  measure actual checker failures, then decide about everyday generation with
+  adequate quality evidence. The candidate remains3summaries/1excerpt study,
+  max16Messages+16count contacts, estimated raw ceiling$0.792, reservations$1.15,
+  proposed trial/day/month cap$1.25. Everything remains unapproved.
+
+Focused checkpoint: Python66passed for adapter/packet/admission; new adapter99%
+coverage, availability100%; frontend142workspace tests, strict typing/lint;
+14durable browser flows and compact2/excerpt2 passed in the isolated database.
+Production desktop/mobile16 and scientific excerpt4 passed on isolated real
+Postgres, including automatic entry and exact saved passages. Full frontend3714
+passed with zero skips and coverage floors intact; CSS17378B stays below the
+unchanged17408B ceiling. The first unrestricted Python patch run caught a stale
+API-equality assertion: the revised test pins immutable stored metadata/notes
+while explicitly requiring the new derived availability. A superseded local
+project-coverage run was interrupted to strengthen the final HTTP-construction
+approval/count-receipt guard;5961passed/54skipped at interruption, no green claim.
+Both full gates are repeated after that fix. Final repeated Python gates pass6042/54skipped/53e2edeselected, project94.78%,
+patch99% (19uncovered/3658changed lines); package floors88/96/100/95 all pass.
+The final viewport test pins the first title before800px; real390px capture
+places it at771px versus1019px before, and the saved-question heading at394px
+versus3126px before. Refresh/search now sit inside visible source-health details;
+save failures and undo stay outside. Clean CI-seed16 and real-corpus16 plus
+scientific4 pass. Final-head remote CI remains separately recorded in the
+checkpoint receipt; local success is not a green CI claim.
+
+Every original owner row across27tables remains unchanged. Requested product
+preparation appended one ten-item metadata review packet and its retry record;
+all judgments remain blank, profile revision1 and notes0 unchanged. Private
+backup/disposable restore passed. All write-based tests used isolated principals.
+
+See [readiness walkthrough](20-readiness-and-qualification-walkthrough.md) and
+[unexecuted trial](15-grounded-generation-approval-packet.md). The historical
+follow-up below describes the earlier instrument and earlier envelope only.
+Real grounded summaries and guided dives remain the next product milestone.
+
+### Remote-CI layout correction
+
+First readiness run41595416524 atfd3be2d passed8jobs and failed the legacy CLS
+checkpoint test (0.007 on both attempts); durable workspace CI was consequently
+not run. Local forced callback separation reproduced0.007 in3/3. Holding the
+connection open and painting checkpoints separately then exposed an actual
+first-checkpoint announcement-width shift (0.004 in10/10). TraceSpine now reserves
+the pre-checkpoint sentence outside the live region and accessibility tree,
+without changing visible words or the strict0.000assertion. The test waits for
+open/font/input state and drains animation frames; EOF/reconnection is excluded
+from its checkpoint-only window. Semantic paragraph selectors still measure the
+same announcement row through the new sizing wrapper. Ten independent runs,
+35related layout/CSP checks, four Pixel7 checks and all55existing Darwin visual
+checks pass; no golden image was regenerated. Fullfrontend3714passes with its
+coverage floors intact. A fresh mandatory Python patch run precedes the next
+push. Replacement CI will be attributed to its exact new head; the original
+failure remains on record. Owner3137 remains available throughout verification
+because the changed frontend was built in a separate temporary clone.
 
 ## Current follow-up: personal workflow and fake executor (2026-11-03)
 

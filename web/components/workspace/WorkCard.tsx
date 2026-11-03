@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   displayDate,
   readerHref,
+  readingMaterial,
   type ReadingData,
   type WorkItem,
 } from "@/lib/workspace/api";
@@ -24,16 +25,17 @@ export function WorkCard({
 }) {
   const readingVersion =
     versionId || item.reading.version_id || item.version_id;
+  const { version, pdf, scope } = readingMaterial(item, readingVersion);
   const readingAnchor =
-    item.reading.version_id && item.reading.version_id !== readingVersion
-      ? `${item.access_state}:0`
-      : item.reading.anchor;
+    item.reading.revision > 0 && item.reading.version_id === readingVersion
+      ? item.reading.anchor
+      : pdf?.first_anchor ?? `${version.access_state}:0`;
   return (
     <article className={`daily-item${lead ? " daily-item-lead" : ""}`}>
       <div className="daily-item-meta">
         <span>{item.kind}</span>
-        <span>{item.version_label}</span>
-        <span>{item.access_state.replaceAll("_", " ")}</span>
+        <span>{version.version_label}</span>
+        <span>{pdf ? pdf.complete && pdf.scope === "full_text" ? "PDF text" : "PDF excerpts" : scope.replaceAll("_", " ")}</span>
         {item.reading.status !== "unread" && (
           <span className="daily-saved">{item.reading.status}</span>
         )}
@@ -49,13 +51,15 @@ export function WorkCard({
           )}
           prefetch={false}
         >
-          {item.title}
+          {version.title || item.title}
         </Link>
       </h3>
       <p className="daily-item-change">
-        {item.abstract
-          ? `${item.abstract.slice(0, 320)}${item.abstract.length > 320 ? "…" : ""}`
-          : "Source link and metadata are available. No abstract or full text was acquired."}
+        {version.abstract
+          ? `${version.abstract.slice(0, 320)}${version.abstract.length > 320 ? "…" : ""}`
+          : pdf
+            ? "Retained PDF excerpts are ready to read for this source version. Selected pages only; extraction limits remain visible in the reader."
+            : "Source link and metadata are available. No abstract or full text was acquired."}
       </p>
       {!versionId &&
         item.reading.version_id &&
@@ -77,9 +81,13 @@ export function WorkCard({
       </details>
       <p className="daily-caveat">
         <strong>Available evidence</strong>{" "}
-        {item.access_state === "abstract"
+        {pdf
+          ? pdf.complete && pdf.scope === "full_text"
+            ? "Retained PDF text; equations, figures and table structure may be unreliable. Inspect the extraction receipt before relying on them."
+            : "Selected original PDF pages; equations, figures and table structure may be unreliable. The complete paper is outside this retained reading scope."
+          : scope === "abstract"
           ? "The source abstract; methods, tables and full text have not been read."
-          : item.access_state === "excerpt"
+          : scope === "excerpt"
             ? "The publisher’s feed excerpt; the complete article has not been acquired."
             : "Metadata and the original link. Check access at the source."}
       </p>

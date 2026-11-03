@@ -299,7 +299,7 @@ async def list_items(
         date = item.get("updated_at") or item.get("announced_at") or item.get("published_at") or item.get("first_seen_at")
         if source_id and item["source_id"] != source_id:
             continue
-        if access_state and item.get("access_state") != access_state:
+        if access_state and access_state not in item.get("available_scopes", [item.get("access_state")]):
             continue
         if status and item.get("reading", {}).get("status", "unread") != status:
             continue

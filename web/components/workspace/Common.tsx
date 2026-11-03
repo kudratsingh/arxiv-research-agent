@@ -51,14 +51,14 @@ export function sourceAvailable(source: SourceStatus) {
   return ["ok", "success", "not_modified", "partial"].includes(source.status);
 }
 
-export function Coverage({ sources }: { sources: SourceStatus[] }) {
+export function Coverage({ sources, children }: { sources: SourceStatus[]; children?: React.ReactNode }) {
   const good = sources.filter(sourceAvailable).length;
   const limited = sources.filter(
     (source) =>
       source.status === "partial" || source.receipt.truncated === true,
   ).length;
   return (
-    <details className="daily-coverage">
+    <details className="daily-coverage" data-complete={good === sources.length && !limited}>
       <summary>
         <span className="daily-status-dot" aria-hidden="true" />
         Source checks: {good} of {sources.length} available
@@ -70,6 +70,7 @@ export function Coverage({ sources }: { sources: SourceStatus[] }) {
               : "Bounded metadata checks"}
         </span>
       </summary>
+      {children}
       <p>
         At most 25 items per check, with a seven-day candidate window. A partial
         check contains real metadata but does not establish full coverage of the

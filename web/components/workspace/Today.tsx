@@ -133,7 +133,7 @@ export function LiveToday() {
     }
   }
   return (
-    <>
+    <div className="workspace-today">
       <div className="daily-page-meta">
         <span className="daily-eyebrow">
           {latest
@@ -152,12 +152,9 @@ export function LiveToday() {
         <div>
           <h1>
             What changed.
-            <br />
-            <em>What to investigate.</em>
           </h1>
           <p>
-            A finite briefing from real source metadata, with room to follow a
-            question.
+            A short reading list for your next question.
           </p>
         </div>
         <fieldset className="daily-time">
@@ -174,19 +171,17 @@ export function LiveToday() {
           ))}
         </fieldset>
       </div>
+      <ActivityCard
+        compact
+        activity={activity}
+        work={activityWork}
+        pinned={Boolean(activity?.entry_id && state.profile.data.pinned_entry_id === activity.entry_id)}
+        busy={savingProfile}
+        onPin={(entryId) => void pin(entryId)}
+      />
       <ServiceNotice error={error} />
-      <div className="workspace-toolbar">
-        <button
-          className="daily-button"
-          disabled={refreshing}
-          onClick={() => void refresh()}
-        >
-          {refreshing ? "Checking sources…" : "Check sources now"}
-        </button>
-        <Link className="daily-link" href="/workspace/radar" prefetch={false}>
-          Search all stored items →
-        </Link>
-        {actions.hasUndo && (
+      <Message>{notice}</Message>
+      {actions.hasUndo && <div className="workspace-toolbar">
           <button
             className="daily-secondary"
             disabled={actions.busy}
@@ -194,18 +189,17 @@ export function LiveToday() {
           >
             Undo last change
           </button>
-        )}
-        <Message>{notice}</Message>
-      </div>
+      </div>}
       <div className="daily-columns">
         <div>
-          <Coverage sources={latest?.coverage ?? state.sources} />
-          {latest && (
-            <AllocationReceipt
-              allocation={latest.allocation}
-              minutes={latest.minutes}
-            />
-          )}
+          <Coverage sources={latest?.coverage ?? state.sources}>
+            <div className="workspace-toolbar">
+              <button className="daily-button" disabled={refreshing} onClick={() => void refresh()}>
+                {refreshing ? "Checking sources…" : "Check sources now"}
+              </button>
+              <Link className="daily-link" href="/workspace/radar" prefetch={false}>Search all stored items →</Link>
+            </div>
+          </Coverage>
           <section aria-labelledby="live-changes">
             <div className="daily-section-heading">
               <h2 id="live-changes">Changes to consider</h2>
@@ -260,6 +254,13 @@ export function LiveToday() {
               </p>
             )}
           </section>
+          {latest && <details className="workspace-edition-details">
+            <summary>Edition details · {latest.work_ids.length} items · about {latest.minutes} minutes</summary>
+            <AllocationReceipt
+              allocation={latest.allocation}
+              minutes={latest.minutes}
+            />
+          </details>}
         </div>
         <aside className="daily-context" aria-label="Continue your research">
           <span className="daily-eyebrow">Keep the thread</span>
@@ -277,16 +278,6 @@ export function LiveToday() {
               </p>
             </div>
           </div>
-          <ActivityCard
-            activity={activity}
-            work={activityWork}
-            pinned={Boolean(
-              activity?.entry_id &&
-              state.profile.data.pinned_entry_id === activity.entry_id,
-            )}
-            busy={savingProfile}
-            onPin={(entryId) => void pin(entryId)}
-          />
           <GenerationBoundary />
           <Link
             href="/workspace/library"
@@ -306,6 +297,6 @@ export function LiveToday() {
           </p>
         </aside>
       </div>
-    </>
+    </div>
   );
 }

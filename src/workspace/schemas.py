@@ -89,6 +89,19 @@ class EntryWrite(StrictModel):
     data: EntryData
 
 
+class RetainedAvailability(BaseModel):
+    material_id: str
+    version_id: str
+    scope: Literal["abstract", "excerpt", "full_text"]
+    format: Literal["pdf", "text"]
+    quality: str
+    complete: bool
+    page_count: int | None = None
+    retained_pages: list[int] = Field(default_factory=list)
+    first_anchor: str | None = None
+    warnings: list[str] = Field(default_factory=list)
+
+
 class MaterialVersion(BaseModel):
     version_id: str
     version_label: str
@@ -100,6 +113,9 @@ class MaterialVersion(BaseModel):
     title: str = ""
     url: str = ""
     authors: list[str] = Field(default_factory=list)
+    reading_access_state: str = "metadata"
+    available_scopes: list[str] = Field(default_factory=list)
+    retained_materials: list[RetainedAvailability] = Field(default_factory=list)
 
 
 class WorkItem(BaseModel):
@@ -126,6 +142,9 @@ class WorkItem(BaseModel):
     reading: ReadingRevision = Field(default_factory=ReadingRevision)
     entries: list[EntryRevision] = Field(default_factory=list)
     reasons: list[str] = Field(default_factory=list)
+    reading_access_state: str = "metadata"
+    available_scopes: list[str] = Field(default_factory=list)
+    retained_materials: list[RetainedAvailability] = Field(default_factory=list)
 
 
 class SourceStatus(BaseModel):

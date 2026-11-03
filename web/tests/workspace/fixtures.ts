@@ -3,7 +3,7 @@ import type { WorkspaceState, WorkItem } from "@/lib/workspace/api";
 export const SOURCE_TEXT =
   "A controlled retrieval study compares fixed baselines. The abstract does not describe all methods.";
 export function work(overrides: Partial<WorkItem> = {}): WorkItem {
-  return {
+  const value: WorkItem = {
     work_id: "arxiv:2610.00001",
     version_id: "arxiv:2610.00001:v2",
     source_id: "arxiv-cs-lg",
@@ -13,6 +13,9 @@ export function work(overrides: Partial<WorkItem> = {}): WorkItem {
     authors: ["Example Researcher"],
     abstract: SOURCE_TEXT,
     access_state: "abstract",
+    reading_access_state: "abstract",
+    available_scopes: ["abstract"],
+    retained_materials: [],
     categories: ["cs.LG"],
     published_at: "2026-10-30T10:00:00Z",
     updated_at: "2026-11-02T10:00:00Z",
@@ -29,6 +32,9 @@ export function work(overrides: Partial<WorkItem> = {}): WorkItem {
         version_label: "v1",
         abstract: "An earlier retrieval abstract.",
         access_state: "abstract",
+        reading_access_state: "abstract",
+        available_scopes: ["abstract"],
+        retained_materials: [],
         content_hash: "digest-1",
         fetched_at: "2026-10-30T15:00:00Z",
         source_scope: "abstract",
@@ -41,6 +47,9 @@ export function work(overrides: Partial<WorkItem> = {}): WorkItem {
         version_label: "v2",
         abstract: SOURCE_TEXT,
         access_state: "abstract",
+        reading_access_state: "abstract",
+        available_scopes: ["abstract"],
+        retained_materials: [],
         content_hash: "digest-2",
         fetched_at: "2026-11-02T15:00:00Z",
         source_scope: "abstract",
@@ -62,6 +71,19 @@ export function work(overrides: Partial<WorkItem> = {}): WorkItem {
     reasons: ["Watch term: retrieval"],
     ...overrides,
   };
+  if (overrides.access_state && !overrides.available_scopes) {
+    value.available_scopes = [overrides.access_state];
+    value.reading_access_state = overrides.access_state;
+  }
+  if (!overrides.versions) {
+    value.versions = value.versions.map((version) => version.version_id === value.version_id
+      ? { ...version, title: value.title, url: value.url, authors: value.authors,
+          abstract: value.abstract, access_state: value.access_state,
+          available_scopes: value.available_scopes, reading_access_state: value.reading_access_state,
+          retained_materials: value.retained_materials }
+      : version);
+  }
+  return value;
 }
 export function workspace(
   overrides: Partial<WorkspaceState> = {},

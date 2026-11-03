@@ -81,9 +81,40 @@ def test_existing_abstract_version_dates_and_reading_notes_remain_untouched(stor
     )
     store.write_entry("owner-a", support.entry(original))
     before = store.works("owner-a")[0]
+    with store.pool.connection() as conn:
+        stored_before = conn.execute(
+            "SELECT data FROM workspace_versions WHERE version_id=%s", (spec.version_id,)
+        ).fetchone()[0]
     WorkspaceMaterials(store).register_sample(spec, material, acquisition, qualification)
     after = store.works("owner-a")[0]
-    assert before == after
+    # Acquiring a separate excerpt intentionally changes the derived reading
+    # availability. Immutable observations and every note/location stay exact.
+    availability = {"reading_access_state", "available_scopes", "retained_materials"}
+
+    def immutable(work):
+        return {
+            **{key: value for key, value in work.items() if key not in availability | {"versions"}},
+            "versions": [
+                {key: value for key, value in version.items() if key not in availability}
+                for version in work["versions"]
+            ],
+        }
+
+    assert immutable(before) == immutable(after)
+    assert before["available_scopes"] == ["abstract"]
+    assert after["available_scopes"] == ["excerpt", "abstract"]
+    assert after["reading_access_state"] == "excerpt"
+    assert {item["material_id"] for item in after["retained_materials"]} == {
+        material.material_id,
+        *(item["material_id"] for item in before["retained_materials"]),
+    }
+    with store.pool.connection() as conn:
+        assert (
+            conn.execute(
+                "SELECT data FROM workspace_versions WHERE version_id=%s", (spec.version_id,)
+            ).fetchone()[0]
+            == stored_before
+        )
     versions = WorkspaceMaterials(store).list("owner-a", spec.work_id, spec.version_id)
     assert [item["scope"] for item in versions] == ["excerpt", "abstract"]
     assert all("pages" not in item and "spans" not in item for item in versions)

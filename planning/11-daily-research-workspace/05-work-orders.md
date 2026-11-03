@@ -169,6 +169,19 @@ admission respects approved allocations and uncertain spend. Fake-provider
 and no-network tests prove disabled mode reaches no client. No approval is
 manufactured by code, environment presence or a numeric cap.
 
+### W7 readiness and qualification sequence (2026-11-03)
+
+The actual qualification-only adapter now has mocked transport tests over real
+Postgres reservations, sealed context/settings/schema, count/usage boundaries,
+cancellation and uncertain recovery. This proves mechanics, not remote model or
+checker quality. Read-only `python -m src.workspace.qualification` exports exact
+initial requests and unlabelled review cases. Next: separately approve disclosed
+measurement/provider contacts; run a quarantined3summary/1study experiment; review
+actual claims/omissions/checker failures; expand qualification if needed. Only
+adequate quality evidence and a separate everyday-use decision can open W8/W9.
+An unqualified checker is allowed inside the approved measurement experiment;
+its qualification is an outcome, not a circular precondition for that trial.
+
 ## W8 Add approved generated summaries
 
 **Scope:** bounded selected-item generation with version/input keyed caching,

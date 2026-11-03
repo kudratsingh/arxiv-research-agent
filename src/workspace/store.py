@@ -15,6 +15,7 @@ from typing import Any
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
+from src.workspace.availability import reading_availability
 from src.workspace.schemas import (
     EntryWrite,
     ImportRequest,
@@ -302,6 +303,10 @@ class WorkspaceStore:
         cutoff = as_of or self.cutoff()
         with self.pool.connection() as conn:
             rows = conn.execute("SELECT v.data,w.first_seen_at FROM workspace_versions v JOIN workspace_works w USING(work_id) WHERE v.observed_at <= %s AND (w.visibility_owner IS NULL OR w.visibility_owner=%s) ORDER BY v.observed_at DESC,v.version_id DESC", (cutoff, owner)).fetchall()
+            material_rows = conn.execute(
+                "SELECT m.version_id,m.data FROM workspace_material m JOIN workspace_versions v USING(version_id) JOIN workspace_works w USING(work_id) WHERE v.observed_at<=%s AND (w.visibility_owner IS NULL OR w.visibility_owner=%s)",
+                (cutoff, owner),
+            ).fetchall()
             reading_rows = conn.execute("SELECT DISTINCT ON (id) id,revision,data FROM workspace_history WHERE owner=%s AND entity='reading' AND created_at<=%s ORDER BY id,revision DESC", (owner, as_of)).fetchall() if as_of else conn.execute("SELECT work_id,revision,data FROM workspace_reading WHERE owner=%s", (owner,)).fetchall()
             readings = {r[0]: {**r[2], "revision": r[1]} for r in reading_rows}
             activity_rows = conn.execute(
@@ -315,8 +320,12 @@ class WorkspaceStore:
             for r in conn.execute("SELECT id,revision,work_id,data FROM workspace_entries WHERE owner=%s ORDER BY id", (owner,)).fetchall():
                 entries.setdefault(r[2], []).append({**r[3], "id": r[0], "revision": r[1], **stamps.get(("entry", r[0], r[1]), {"activity_sequence": 0, "updated_at": ""})})
         works: dict[str, dict[str, Any]] = {}
+        retained: dict[str, list[dict[str, Any]]] = {}
+        for version_id, data in material_rows:
+            retained.setdefault(version_id, []).append(data)
         for raw, first_seen in rows:
             item = dict(raw)
+            item.update(reading_availability(item, retained.get(item["version_id"], [])))
             work_id = item["work_id"]
             if work_id not in works:
                 works[work_id] = {**item, "first_seen_at": first_seen.isoformat(), "versions": [], "reading": readings.get(work_id, {"revision": 0, "status": "unread", "anchor": "abstract:0", "version_id": item["version_id"]}), "entries": entries.get(work_id, [])}
