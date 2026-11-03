@@ -17,7 +17,8 @@ pasted from command output and never typed by hand.
 | 08:30–09:05 | A six-agent read-only mapping workflow ran, producing [recon/](recon/) (guardrails, tests, reader, surfaces, styles, run path). The run-path agent brought up Postgres, the API and Next with offline seed data and ran the live e2e suite: **16/16 passed**. |
 | 08:40–08:55 | The owner added references: "spotify has a nice frontend and designs that we can use" and a Claude Code web app screenshot ("this layout is also nice and clean"). The design direction was agreed in chat. |
 | 08:55 | The owner set a time limit. A first handoff brief was written and pushed (`18096be`); it now lives at [recon/00-first-session-brief.md](recon/00-first-session-brief.md). |
-| 09:05– | The owner asked for a full planning kit and a copyable prompt. This kit was written: `00`–`09`, `README`, `STATUS`, `tools/`, `evidence/before/`. |
+| 09:05– | The owner asked for a full planning kit and a copyable prompt. This kit was written: `00`–`09`, `README`, `STATUS`, `tools/`, `evidence/before/`. Pushed as `f5be574`. |
+| 09:13–09:31 | Independent review: fact-check and cold-read lenses returned **82 findings (7 blockers, 24 major, 51 minor)**, recorded as [10-review-corrections.md](10-review-corrections.md), which overrides 00–09. The requirements-coverage lens was stopped by the owner's time limit before it reported. |
 
 ## Key facts at handoff
 

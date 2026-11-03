@@ -36,6 +36,10 @@ red pixel bookmark creature).
 
 READ FIRST, IN THIS ORDER:
   1. README.md                (map of the kit, decisions, how to use it)
+  1b. 10-review-corrections.md (ERRATA — 82 verified review findings with exact
+      fixes; where it conflicts with 00–09 it WINS. Most blockers: the live e2e
+      runs at 390px with strict single-match locators, so any control a spec
+      touches must be visible without opening the drawer and exist once per page)
   2. 00-charter.md            (my words, goals, non-goals, success criteria S1–S8, product-truth rules)
   3. 03-screens-and-flows.md  (exact layout per route, wireframes, keyboard map, control bar)
   4. 02-design-system.md      (palette with contrast table, type, mascot grid, cover tiles, components)

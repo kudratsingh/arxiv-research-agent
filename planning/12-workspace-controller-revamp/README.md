@@ -16,6 +16,10 @@ VS Code. Only their patterns are borrowed; none of their assets are.
 
 > **Start here:** paste [09-agent-prompt.md](09-agent-prompt.md) into the
 > coding agent. It points the agent at everything else, in order.
+>
+> **Errata:** [10-review-corrections.md](10-review-corrections.md) records
+> 82 findings from an independent review (7 blockers, mostly 390px-mobile and
+> single-match e2e pins). **Where it conflicts with 00–09, it wins.**
 
 ## Contents
 
@@ -31,6 +35,7 @@ VS Code. Only their patterns are borrowed; none of their assets are.
 | [07-test-impact.md](07-test-impact.md) | Which tests break and why, what may change versus what must not, copy that must stay verbatim, e2e plan, new tests to add |
 | [08-local-stack.md](08-local-stack.md) | **Verified** recipe to run Postgres, the API and Next with offline seeded data; screenshots; live e2e (16/16 baseline) |
 | [09-agent-prompt.md](09-agent-prompt.md) | The copyable assignment for the coding agent |
+| [10-review-corrections.md](10-review-corrections.md) | **Errata: overrides 00–09.** 82 verified review findings, each with an exact fix |
 | [STATUS.md](STATUS.md) | Timeline so far and the live record to update at every gate |
 | [recon/](recon/) | Six read-only discovery reports with file:line evidence: guardrails, tests, reader, surfaces, styles, run path. They also hold the first-session brief. |
 | [tools/](tools/) | `rich_seed.py` (offline 9-item demo seed, loopback-only) and `shot.cjs` (7 routes × desktop/mobile screenshots) |
