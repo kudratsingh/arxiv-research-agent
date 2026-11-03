@@ -864,6 +864,9 @@ class FakeExecutor:
         finished: datetime | None = None,
         output_units: int = 0,
     ) -> FakeJob:
+        # Cancellation/source drift classify the job, not whether the missing
+        # provider completion is known. Preserve that uncertainty independently.
+        completion_unknown = error == "fake_provider_error"
         completion = _clock(self.store, finished)
         with self.store.pool.connection() as conn:
             self._lock(conn, owner)
@@ -925,7 +928,7 @@ class FakeExecutor:
                     state = self._apply(data, row, phase, response or {}, materials)
                 except (ValueError, KeyError, TypeError):
                     state, error = "failed", "invalid_fake_draft_or_checks"
-            if error == "fake_provider_error":
+            if completion_unknown:
                 # The missing local completion is unknown; never label it measured zero.
                 conn.execute(
                     "UPDATE workspace_fake_generation_reservations SET unknown_output=unknown_output+%s WHERE job_id=%s",

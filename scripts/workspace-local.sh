@@ -108,13 +108,30 @@ PY
     fi
     backup_file="$WORKSPACE_DATA_DIR/backups/workspace-$(date -u +%Y%m%dT%H%M%SZ)-$(basename "$backup_partial" .partial).dump"
     mv "$backup_partial" "$backup_file"
-    shasum -a 256 "$backup_file" > "$backup_file.sha256"
+    (cd "$(dirname "$backup_file")" && shasum -a 256 "$(basename "$backup_file")" > "$(basename "$backup_file").sha256")
     echo "Private backup: $backup_file"
     echo "Checksum: $backup_file.sha256"
     ;;
   restore-check)
     backup_file="${2:?Usage: workspace-local.sh restore-check /absolute/path/backup.dump}"
-    shasum -a 256 -c "$backup_file.sha256"
+    # Verify the exact supplied bytes, never the original path embedded in a
+    # copied/legacy sidecar. This also works after moving a backup directory.
+    "$VENV_PYTHON" - "$backup_file" <<'PY'
+import hashlib, re, sys
+from pathlib import Path
+backup = Path(sys.argv[1])
+sidecar = Path(str(backup) + '.sha256').read_text().strip()
+if not re.fullmatch(r'[0-9a-fA-F]{64} [ *].+', sidecar):
+    raise SystemExit('Invalid backup checksum sidecar; nothing restored.')
+expected = sidecar[:64].lower()
+hasher = hashlib.sha256()
+with backup.open('rb') as stream:
+    for block in iter(lambda: stream.read(1024 * 1024), b''):
+        hasher.update(block)
+if hasher.hexdigest() != expected:
+    raise SystemExit('Backup checksum mismatch; nothing restored.')
+print('Exact supplied backup checksum verified.')
+PY
     # Always a NEW disposable database; an existing database is never replaced.
     restore_db="workspace_restore_check_$(date -u +%Y%m%d%H%M%S)_$$"
     "${COMPOSE[@]}" exec -T postgres createdb -U workspace "$restore_db"
