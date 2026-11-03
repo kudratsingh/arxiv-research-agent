@@ -169,6 +169,7 @@ describe("real source briefing", () => {
     expect(
       screen.getByRole("button", { name: /Generation awaiting approval/ }),
     ).toBeDisabled();
+    await user.click(screen.getByText(/Source checks:/));
     await user.click(screen.getByRole("button", { name: "Check sources now" }));
     expect(calls.find((call) => call.path === "refresh")?.body).toEqual({
       source_ids: [],
@@ -937,6 +938,7 @@ describe("recovery paths that must not erase authored data", () => {
     render(<LiveToday />);
     await load();
     failures.refresh = 503;
+    await user.click(screen.getByText(/Source checks:/));
     await user.click(screen.getByRole("button", { name: "Check sources now" }));
     expect(screen.getByRole("status")).toHaveTextContent(
       "retry when the service is available",

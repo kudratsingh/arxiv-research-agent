@@ -152,4 +152,5 @@ test("metadata-only ReAct is discoverable as retained excerpts for its exact ver
   await expect(page.getByRole("heading", {name: "Retained document excerpts", exact: true})).toBeVisible();
   await expect(page.getByText("This is an excerpt of the paper. Omitted pages have not been read or reconstructed.", {exact:true})).toBeVisible();
   await page.screenshot({ path: info.outputPath("react-entry.png"), fullPage: true });
+  await page.screenshot({ path: info.outputPath("react-entry-viewport.png") });
 });

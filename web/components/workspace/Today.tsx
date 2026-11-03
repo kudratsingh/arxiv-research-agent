@@ -180,18 +180,8 @@ export function LiveToday() {
         onPin={(entryId) => void pin(entryId)}
       />
       <ServiceNotice error={error} />
-      <div className="workspace-toolbar">
-        <button
-          className="daily-button"
-          disabled={refreshing}
-          onClick={() => void refresh()}
-        >
-          {refreshing ? "Checking sources…" : "Check sources now"}
-        </button>
-        <Link className="daily-link" href="/workspace/radar" prefetch={false}>
-          Search all stored items →
-        </Link>
-        {actions.hasUndo && (
+      <Message>{notice}</Message>
+      {actions.hasUndo && <div className="workspace-toolbar">
           <button
             className="daily-secondary"
             disabled={actions.busy}
@@ -199,12 +189,17 @@ export function LiveToday() {
           >
             Undo last change
           </button>
-        )}
-        <Message>{notice}</Message>
-      </div>
+      </div>}
       <div className="daily-columns">
         <div>
-          <Coverage sources={latest?.coverage ?? state.sources} />
+          <Coverage sources={latest?.coverage ?? state.sources}>
+            <div className="workspace-toolbar">
+              <button className="daily-button" disabled={refreshing} onClick={() => void refresh()}>
+                {refreshing ? "Checking sources…" : "Check sources now"}
+              </button>
+              <Link className="daily-link" href="/workspace/radar" prefetch={false}>Search all stored items →</Link>
+            </div>
+          </Coverage>
           <section aria-labelledby="live-changes">
             <div className="daily-section-heading">
               <h2 id="live-changes">Changes to consider</h2>

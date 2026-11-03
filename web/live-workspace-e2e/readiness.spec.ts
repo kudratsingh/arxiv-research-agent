@@ -18,7 +18,7 @@ test("Today puts the saved thread and first reading item within reach", async ({
   const first = page.locator(".daily-item h3").first();
   const threadBox = await thread.boundingBox(), firstBox = await first.boundingBox();
   expect(threadBox!.y).toBeLessThan(firstBox!.y);
-  if (info.project.name === "mobile") expect(firstBox!.y).toBeLessThan(844);
+  if (info.project.name === "mobile") expect(firstBox!.y).toBeLessThan(800);
   await info.attach("layout.json", {body: JSON.stringify({viewport: page.viewportSize(), continuation: threadBox, first_item: firstBox}), contentType:"application/json"});
   await expect(page.getByText("Edition details", { exact: false })).toBeVisible();
   await page.screenshot({ path: info.outputPath("today-compact.png"), fullPage: true });
