@@ -446,6 +446,19 @@
       "enforcement": "gated",
       "enforcedBy": "npm run budgets (this script)",
       "note": "Measured 153,446 B on the final Next.js16.4.4 production build. Six new live routes use166KiB; largest5.5%headroom. Existing JavaScript ceilings unchanged."
+    },
+    {
+      "id": "route-js-live-review",
+      "kind": "route-first-load-js",
+      "route": "/workspace/review",
+      "label": "`/workspace/review` first-load JS, excl. polyfill",
+      "budgetBytes": 169984,
+      "budgetLabel": "166 KiB",
+      "baselineBytes": null,
+      "gate": "every PR",
+      "enforcement": "gated",
+      "enforcedBy": "npm run budgets (this script)",
+      "note": "New finite owner usefulness review; initial166KiB cap matches other live routes. Measured result recorded before push; all existing JavaScript ceilings unchanged."
     }
   ]
 }

@@ -13,7 +13,10 @@ import { DRAFT_KEY, storeDraft } from "@/lib/workspace/drafts";
 import type { EntryRevision, WorkspaceState } from "@/lib/workspace/api";
 import { SOURCE_TEXT, work, workspace } from "./fixtures";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/workspace/today" }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/workspace/today",
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
 let current: WorkspaceState;
 let failures: Record<string, number>;
 let calls: { path: string; body: Record<string, unknown> }[];
@@ -311,6 +314,8 @@ describe("durable notes and version continuity", () => {
     const entry: EntryRevision = {
       id: "old",
       revision: 1,
+      updated_at: "2026-11-02T15:00:00Z",
+      activity_sequence: 1,
       work_id: "arxiv:2610.00001",
       version_id: "arxiv:2610.00001:v1",
       kind: "note",
@@ -519,6 +524,8 @@ describe("durable notes and version continuity", () => {
     current.works[0]!.entries.push({
       id: "missing",
       revision: 1,
+      updated_at: "2026-11-02T15:00:00Z",
+      activity_sequence: 1,
       work_id: "arxiv:2610.00001",
       version_id: "missing-version",
       kind: "question",
@@ -999,6 +1006,8 @@ describe("the visible personal controls round trip their actual data", () => {
     first.entries.push({
       id: "q",
       revision: 1,
+      updated_at: "2026-11-02T15:00:00Z",
+      activity_sequence: 1,
       work_id: first.work_id,
       version_id: "arxiv:2610.00001:v1",
       kind: "next-action",
@@ -1015,11 +1024,13 @@ describe("the visible personal controls round trip their actual data", () => {
           anchor: "abstract:0",
           version_id: "",
           snoozed_until: null,
+          updated_at: "",
+          activity_sequence: 0,
         },
       }),
     );
     const user = userEvent.setup();
-    render(<LiveLibrary />);
+    const mounted = render(<LiveLibrary />);
     await load();
     expect(
       screen.getByText(/A newer source version is available/),
@@ -1038,17 +1049,22 @@ describe("the visible personal controls round trip their actual data", () => {
       screen.getByText("Compare the earlier baseline"),
     ).toBeInTheDocument();
     const view = screen.getByRole("combobox", { name: "Library view" });
+    // The simple navigation mock reads the URL when Next would notify it.
     await user.selectOptions(view, "notes");
+    mounted.rerender(<LiveLibrary />);
     expect(
       screen.getByText("Compare the earlier baseline"),
     ).toBeInTheDocument();
     await user.selectOptions(view, "read");
+    mounted.rerender(<LiveLibrary />);
     expect(
       screen.getByRole("link", { name: "A read source" }),
     ).toBeInTheDocument();
     await user.selectOptions(view, "archived");
+    mounted.rerender(<LiveLibrary />);
     expect(screen.getByText("No items in this view.")).toBeInTheDocument();
     await user.selectOptions(view, "all");
+    mounted.rerender(<LiveLibrary />);
     expect(
       screen.getByRole("link", { name: "A read source" }),
     ).toBeInTheDocument();

@@ -120,6 +120,7 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
       "/library/items/[id]/page": "/library/items/[id]",
       "/workspace/today/page": "/workspace/today",
       "/workspace/radar/page": "/workspace/radar",
+      "/workspace/review/page": "/workspace/review",
       "/workspace/interests/page": "/workspace/interests",
       "/workspace/library/page": "/workspace/library",
       "/workspace/items/[id]/page": "/workspace/items/[id]",
@@ -208,7 +209,7 @@ function makeFixture(options: { fonts?: Array<{ rel: string; size: number }> } =
     ].join("\n"),
   );
 
-  for (const route of ["today", "interests", "library", "library/items/[id]", "workspace/today", "workspace/radar", "workspace/interests", "workspace/library", "workspace/items/[id]", "workspace/operations"]) {
+  for (const route of ["today", "interests", "library", "library/items/[id]", "workspace/today", "workspace/radar", "workspace/review", "workspace/interests", "workspace/library", "workspace/items/[id]", "workspace/operations"]) {
     write(path.join(nextDir, "server/app", route, "page_client-reference-manifest.js"), `globalThis.__RSC_MANIFEST={"/${route}/page":${JSON.stringify({clientModules: homeModules, entryCSSFiles: {}})}};`);
   }
 
@@ -606,7 +607,7 @@ describe("report format", () => {
 describe("the committed budgets.json encodes RC-01 in bytes", () => {
   const budgets = loadBudgets(BUDGETS_PATH);
 
-  it("has the historical rows plus four preview and six live workspace routes", () => {
+  it("has the historical rows plus four preview and seven live workspace routes", () => {
     expect(budgets.rows.map((r) => r.id)).toEqual([
       "route-js-home",
       "route-js-conversation",
@@ -635,6 +636,7 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
       "route-js-live-library",
       "route-js-live-items-reader",
       "route-js-live-operations",
+      "route-js-live-review",
     ]);
   });
 
@@ -690,14 +692,14 @@ describe("the committed budgets.json encodes RC-01 in bytes", () => {
     expect(row?.baselineBytes ?? null).toBe(baselineBytes);
   });
 
-  it("gates nineteen rows, delegates one and only reports one", () => {
+  it("gates twenty rows, delegates one and only reports one", () => {
     const by = (enforcement: string) =>
       budgets.rows.filter((r) => r.enforcement === enforcement).map((r) => r.id);
     // Seven at WO-31, plus WO-W13's `/learn/sessions/[id]` and WO-W14's
     // `/learn/progress`. A new route row is gated from its first commit;
     // there is no "reported for a while first" grace, because a ceiling
     // nobody enforces is a note.
-    expect(by("gated")).toHaveLength(19);
+    expect(by("gated")).toHaveLength(20);
     expect(by("external")).toEqual(["total-transferred-js"]);
     expect(by("reported")).toEqual(["derived-total-first-load"]);
   });
@@ -898,8 +900,8 @@ describe("run()", () => {
     const { result, reportPath } = run({ webDir: fixture.root, now: new Date(0) });
     expect(reportPath).toBe(path.join(fixture.root, "budget-report.md"));
     expect(fs.readFileSync(reportPath, "utf8")).toContain("# Route budget report");
-    // Twenty-one rows: historical rows plus four preview and six live routes.
-    expect(result.rows).toHaveLength(21);
+    // Twenty-two rows: historical rows plus four preview and seven live routes.
+    expect(result.rows).toHaveLength(22);
   });
 
   it("explains how to fix a missing build instead of measuring nothing", () => {

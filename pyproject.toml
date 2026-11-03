@@ -118,7 +118,7 @@ namespaces = false
 
 [tool.setuptools.package-data]
 "src.eval" = ["mock_judge_fixture.json"]
-"src.workspace" = ["migrations/*.sql"]
+"src.workspace" = ["migrations/*.sql", "topics.json"]
 
 [tool.ruff]
 line-length = 100

@@ -15,5 +15,35 @@ services:
       interval: 2s
       timeout: 2s
       retries: 20
+  worker:
+    profiles: [worker]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: arxiv-workspace-worker:local
+    command: ["python", "-m", "src.workspace.worker", "--heartbeat", "/app/outputs/worker-heartbeat.json"]
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 45s
+    environment:
+      ANTHROPIC_API_KEY: local-preview-disabled
+      USE_MOCK_DATA: "true"
+      ENABLE_WORKSPACE: "true"
+      # Hard off. Enabling requires a reviewed owner time/activation change.
+      WORKSPACE_SCHEDULE_APPROVED: "false"
+      POSTGRES_URL: postgresql://workspace:workspace-local-only@postgres:5432/workspace
+      WORKSPACE_RATE_DATABASE_URL: postgresql://workspace:workspace-local-only@postgres:5432/workspace
+    volumes:
+      - worker-state:/app/outputs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "src.workspace.worker", "--healthcheck", "--heartbeat", "/app/outputs/worker-heartbeat.json"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
 volumes:
   workspace-data:
+  worker-state:

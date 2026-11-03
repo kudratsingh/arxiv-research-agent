@@ -12,13 +12,84 @@ Paid services require a separate, concrete approval before activation.
 | W2 | Postgres migrations/history, named principal, optimistic revisions, retry ledger, exact version notes and explicit browser/file import | Real isolated Postgres and owner A/B tests; app restart and backup/restore observed. Broader identity qualification and owner experience review remain pending |
 | W3 | Five bounded metadata feeds and private manual links; page/receipt/validator transaction, conditional requests, safe pinned TLS and Retry-After | 83 real works; 5 integrated requests plus one earlier connector probe. Replay made zero requests and no duplicate works; three arXiv windows remain partial |
 | W4 | Real Today and Radar, transparent lexical signals, finite editions, exclusions, read/dismiss/snooze/undo and frozen cursor pages | Chronological/keyword comparison sample has blank owner labels. Edition versions/profile/coverage are pinned. Personal usefulness remains unmeasured |
-| W5 | Real source reader, retained abstracts/feed excerpts, Unicode-safe anchors, durable questions/notes/actions, source version choice and export | Desktop/mobile/keyboard and failed-save recovery observed; bounded PDF extraction helper tested with synthetic files. No new scientific full-text acquisition or inline PDF viewer |
-| W6 | Durable schedules, owner/date occurrences, leased one-shot worker, bounded retries, single catch-up and atomic in-app intent | DST, racing workers, queued-before-sleep, pause/recovery tests. Recurrence remains disabled; continuous worker deployment and owner's time confirmation remain pending |
-| W7 | Independent retained materials/spans; explicit factual-check boundary; actual emitted calibration artifacts; role/revision estimator; atomic spend reservations/cancellation/recovery | Model-free/fake-provider tests. No generation executor, actual provider quality measurement or historical metric certification; remaining launch conditions are in the approval packet |
+| W5 | Real source reader, retained abstracts/feed excerpts, Unicode-safe anchors, durable questions/notes/actions, source version choice and export | Desktop/mobile/keyboard and failed-save recovery observed; bounded PDF extraction helper tested with synthetic files. Selected-page scientific sample now retained; inline PDF rendering remains deferred |
+| W6 | Durable schedules, owner/date occurrences, leased one-shot worker, bounded retries, single catch-up and atomic in-app intent | DST, racing workers, queued-before-sleep, pause/recovery tests. Recurrence remains disabled; continuous worker packaged disabled; image deployment and owner's time confirmation remain pending |
+| W7 | Independent retained materials/spans; explicit factual-check boundary; actual emitted calibration artifacts; role/revision estimator; atomic spend reservations/cancellation/recovery | Model-free/fake-provider tests. Fake-only executor now implemented; actual provider quality measurement and historical metric certification remain pending; remaining launch conditions are in the approval packet |
 | W8–W9 | Real grounded summaries and guided deep dives | Exact source/model/usage envelope and separate owner spending approval; actual retained-source/provider walkthrough required |
 | W10–W12 | Questions, assumptions and experiment proposals; daily-use pilot; optional expansion | Follow observed owner workflow. No automatic code execution, publishing or external delivery |
 
-## Autonomous batch evidence (2026-11-02)
+## Current follow-up: personal workflow and fake executor (2026-11-03)
+
+Branch `codex/daily-workspace-next` starts at the unchanged reviewed #282 head
+`403e5fa`. Shared owner checkout/data/preferences are preserved; #281/#282 stay
+draft/unmerged. The workspace ADR proposal remains unnumbered.
+
+- Review A: database-ordered latest activity, earlier-question edits, exact
+  work/version/anchor return and editable pins. Two-paper, reload, Reader and
+  Library cases have repository/component/desktop/390 px regression coverage.
+- Review B: all eight formerly empty authored ML groups expand to inspectable
+  descendant terms. Broad navigation and active/limited/unconnected monitored
+  coverage are explicitly distinct; no comprehensive monitoring claim.
+- Review C: exploration caps the final count, rounded down, with stored receipts
+  and honest historical editions. 15/45-minute, zero and sparse cases are tested.
+- Ten-item real-candidate review, blank initial judgments, explicit revision-aware
+  saves and optional reasons. Read-only owner packet is under
+  `outputs/workspace-next/owner-usefulness-review-10.{md,json}`.
+- Executable fake-only grounded pipeline, durable request/stage/result binding,
+  split workflow/checker/unknown accounting, reservations, cancellation, lease
+  recovery, source invalidation, one repair plus mandatory recheck. Paid endpoint
+  remains403 before SDK construction. No actual model/checker quality measured.
+- ReAct v3 and Self-RAG v1 retained selected pages with immutable provenance,
+  original-page/Unicode anchors and visually inspected extraction limitations.
+  Exactly two PDF GETs,2,038,932 bytes; no source instructions/code executed.
+- Continuous worker module, opt-in Compose profile, health, startup/shutdown and
+  private backup/disposable restore path. Recurrence hard false; no worker
+  container/image build or automatic delivery is claimed.
+- Proposal refreshed after exact fake requests were inspectable:3summaries plus
+ 1excerpt study, max16calls including repair rechecks, estimated raw max$0.768,
+  rounded job reservations$1.00 and proposed trial/day/month caps$1.25. These
+  are unapproved design bounds, not measured tokens or spend.
+
+Production build and all existing route/CSS ceilings pass; web3711/3711 with
+zero skips, statements98.23%, branches94.28%, functions92.04%, lines99.34%.
+The documented suite-count check caught stale158-file prose; README/config now
+record177files/3711tests. Function coverage floor ratchets88.8→91.8; other
+floors and all coverage inputs/tier selections remain intact.
+Production standalone desktop/mobile14 and real scientific-PDF2 pass using only
+an isolated verification principal/database. Two substantive integration defects
+were reproduced and fixed: lost unknown accounting on cancelled/failed fake
+completion, and relocated backup sidecars validating the wrong path. Focused
+regressions pin both; no gate/floor was lowered. Final Python/full CI attribution
+belongs to the final commit's receipt/checks, pending at this documentation
+checkpoint; the old #282 CI is not evidence for this branch.
+
+See [connected walkthrough and remaining sequence](16-review-and-executor-walkthrough.md),
+[full-text inspection](18-fulltext-qualification.md),
+[everyday operations](19-everyday-operation.md) and
+[unexecuted generation proposal](15-grounded-generation-approval-packet.md).
+Owner usefulness/experience review, paid adapter/token/checker measurement,
+specific spending GO and optional schedule activation remain outstanding.
+
+### CI-discovered Library correction
+
+First remote run `41578188828` at `efd545b` passed eight jobs and failed the
+new durable browser return case on both viewports. Trace data proved the edited
+question was committed and present in fresh API state, but the URL said
+`view=notes` while Library displayed Saved. The real-corpus local test masked
+this because its edited work was already saved. The clean three-work CI seed
+reproduced8passed/2failed/4notrun. This is recorded as a real UI defect.
+
+Library now derives its filter from the reactive router query, with the required
+Suspense boundary. A new unread-work regression failed before the fix and passes
+afterward; the browser explicitly checks Notes on return and preserves the
+edited-body/version assertions and existing timeout. The same seeded production
+suite now passes14/14; full web3711/177passes with zero skips and unchanged
+floors. Final Python patch gate and replacement exact-head CI follow this
+source checkpoint. No blind CI rerun, lowered assertion, extra wait or owner-data
+write was used to hide the failure.
+
+## Historical autonomous batch evidence (2026-11-02)
+
 
 Live follow-up branch: `codex/daily-workspace-live`, stacked on preview PR #281.
 Run **`bash scripts/workspace-local.sh run`** from this worktree, then open
@@ -53,8 +124,9 @@ paid generation and approval records remain off. Final-source receipts are in
 See [live walkthrough](14-live-local-walkthrough.md) and the explicitly
 [unexecuted generation proposal](15-grounded-generation-approval-packet.md).
 The historical claim-support primary, full instrument enforcement, real checker
-calibration, actual generated executor, exact token measurements, continuous
-worker packaging and representative full-text acquisition remain unfinished.
+calibration, paid adapter/settings/token enforcement, exact token measurements and real checker
+qualification remain unfinished. The follow-up above adds a fake executor, disabled
+worker packaging and a bounded scientific extraction sample.
 Owner review of usefulness and the connected experience remains pending.
 
 ## W0/W1 checkpoint evidence (preview PR #281)

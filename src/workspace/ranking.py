@@ -9,9 +9,12 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
+from decimal import ROUND_FLOOR, Decimal
 from typing import Any
 
-POLICY_VERSION = "workspace-lexical-v1"
+from src.workspace.interests import topic_stream, topic_terms
+
+POLICY_VERSION = "workspace-lexical-v2"
 STOP_WORDS = frozenset(
     [
         "a",
@@ -192,25 +195,14 @@ def rank_items(
     state_map = states or {}
     enabled_streams = set(profile.get("streams", ["core", "rocket-twin", "spatial"]))
     topics = list(profile.get("topics", []))
-    excluded_topics = {
-        t
-        for stream, stream_topics in STREAM_TOPICS.items()
-        if stream not in enabled_streams
-        for t in stream_topics
-    }
     terms = [
         (term, topic)
         for topic in topics
-        if topic not in excluded_topics
-        for term in TOPIC_TERMS.get(topic, ())
+        if topic_stream(topic) in enabled_streams
+        for term in topic_terms(topic, TOPIC_TERMS)
     ]
     custom = list(profile.get("custom_topics", profile.get("customTopics", [])))
     terms.extend((str(term), "custom interest") for term in custom)
-    # Custom taxonomy descendants receive transparent literal matching of their
-    # final slug; broad field anchors have no invented monitoring coverage.
-    for topic in topics:
-        if topic not in TOPIC_TERMS and "/" in topic:
-            terms.append((topic.rsplit("/", 1)[-1].replace("-", " "), topic))
     exclusions = [str(v) for v in profile.get("exclusions", [])]
     question = _tokens(str(profile.get("research_question", profile.get("researchQuestion", ""))))
     ranked: list[dict[str, Any]] = []
@@ -251,10 +243,10 @@ def rank_items(
         stream = next(
             (
                 name
-                for name, stream_topics in STREAM_TOPICS.items()
-                if name in enabled_streams and any(t in stream_topics for t in matched_topics)
+                for name in ("core", "rocket-twin", "spatial")
+                if name in enabled_streams and any(t != "custom interest" and topic_stream(t) == name for t in matched_topics)
             ),
-            "exploration",
+            "custom" if matches else "exploration",
         )
         reasons = (
             [f"Matches {', '.join(matches[:5])}."]
@@ -297,23 +289,35 @@ def rank_items(
 def choose_edition(
     items: Sequence[Mapping[str, Any]], minutes: int, *, exploration: float = 0.15
 ) -> list[dict[str, Any]]:
-    """Finite metadata reading list; one slot is an explicit five-minute estimate.
+    """Five-minute slots; exploration never exceeds the saved final-count cap."""
+    return select_edition(items, minutes, exploration=exploration)[0]
 
-    At most one nonmatching exploration item is included in a 15/45-minute
-    edition. With fewer than five direct matches the exploration allowance can
-    still supply one slot, visibly labelled. Empty matching results at five
-    minutes remain empty; no fixture filler or generated synopsis is inserted.
+
+def select_edition(items: Sequence[Mapping[str, Any]], minutes: int, *, exploration: float = 0.15) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Largest feasible finite edition, rounding exploration down on FINAL count.
+
+    Three slots cannot contain a whole exploratory item below a 30% cap. Nine
+    slots permit one at 15% or two at 30%. Sparse direct matches shorten the
+    edition; unrelated items never fill space by exceeding the percentage.
     """
     if minutes not in {5, 15, 45} or not 0 <= exploration <= 0.3:
         raise ValueError("invalid_edition_bounds")
     slots = minutes // 5
     direct = [dict(item) for item in items if item.get("relevance", {}).get("matched_terms")]
     adjacent = [dict(item) for item in items if not item.get("relevance", {}).get("matched_terms")]
-    include_exploration = bool(exploration > 0 and slots >= 3 and adjacent)
-    result = direct[: slots - int(include_exploration)]
-    if include_exploration:
-        result.append(adjacent[0])
-    return result
+    def budget(count: int) -> int:
+        return int((Decimal(count) * Decimal(str(exploration))).to_integral_value(rounding=ROUND_FLOOR))
+    count = min(slots, len(direct) + len(adjacent))
+    while count and max(0, count - len(direct)) > min(len(adjacent), budget(count)):
+        count -= 1
+    exploratory = min(len(adjacent), budget(count))
+    result = direct[:count - exploratory] + adjacent[:exploratory]
+    allocation = {"minutes": minutes, "slots": slots, "requested_fraction": exploration,
+                  "planned_max_exploration_slots": budget(slots), "max_exploration_slots": budget(count),
+                  "actual_exploration_slots": exploratory, "actual_items": len(result),
+                  "actual_fraction": exploratory / len(result) if result else None,
+                  "unused_slots": slots - len(result), "rounding": "floor_final_count"}
+    return result, allocation
 
 
 def comparison_sample(

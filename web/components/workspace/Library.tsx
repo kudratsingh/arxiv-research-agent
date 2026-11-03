@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
   errorMessage,
@@ -18,7 +19,12 @@ export function LiveLibrary() {
   const [notice, setNotice] = useState("");
   const [manual, setManual] = useState("");
   const [busy, setBusy] = useState(false);
-  const [filter, setFilter] = useState("saved");
+  const view = useSearchParams().get("view");
+  // Derive the view from the router on every render, including client returns.
+  const filter =
+    view && ["saved", "notes", "read", "archived", "all"].includes(view)
+      ? view
+      : "saved";
   const actions = useReadingActions(state, setState, setNotice);
   if (!state) return <LoadingState error={error} retry={() => void reload()} />;
   const works = state.works.filter((item) =>
@@ -98,7 +104,13 @@ export function LiveLibrary() {
           Library view
           <select
             value={filter}
-            onChange={(event) => setFilter(event.target.value)}
+            onChange={(event) => {
+              window.history.replaceState(
+                null,
+                "",
+                `/workspace/library?view=${encodeURIComponent(event.target.value)}`,
+              );
+            }}
           >
             <option value="saved">Saved</option>
             <option value="notes">With notes or questions</option>
@@ -123,6 +135,7 @@ export function LiveLibrary() {
           <section key={item.work_id}>
             <WorkCard
               item={item}
+              returnTo={`/workspace/library?view=${filter}`}
               busy={actions.busy}
               status={(work, status) => void actions.status(work, status)}
             />
@@ -136,7 +149,13 @@ export function LiveLibrary() {
                   Source {entry.version_id} · {entry.anchor}
                 </p>
                 <Link
-                  href={readerHref(item, entry.version_id, "notes")}
+                  href={readerHref(
+                    item,
+                    entry.version_id,
+                    entry.anchor,
+                    entry.id,
+                    `/workspace/library?view=${filter}`,
+                  )}
                   prefetch={false}
                   className="daily-link"
                 >

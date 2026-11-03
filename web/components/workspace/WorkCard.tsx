@@ -12,12 +12,14 @@ export function WorkCard({
   lead = false,
   busy = false,
   versionId,
+  returnTo,
   status,
 }: {
   item: WorkItem;
   lead?: boolean;
   busy?: boolean;
   versionId?: string;
+  returnTo?: string;
   status: (item: WorkItem, value: ReadingData["status"]) => void;
 }) {
   const readingVersion =
@@ -38,7 +40,13 @@ export function WorkCard({
       </div>
       <h3>
         <Link
-          href={readerHref(item, readingVersion, readingAnchor)}
+          href={readerHref(
+            item,
+            readingVersion,
+            readingAnchor,
+            undefined,
+            returnTo,
+          )}
           prefetch={false}
         >
           {item.title}
@@ -84,7 +92,13 @@ export function WorkCard({
         </span>
         <Link
           className="daily-link"
-          href={readerHref(item, readingVersion, readingAnchor)}
+          href={readerHref(
+            item,
+            readingVersion,
+            readingAnchor,
+            undefined,
+            returnTo,
+          )}
           prefetch={false}
         >
           Read & investigate →

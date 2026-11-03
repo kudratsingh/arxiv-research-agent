@@ -292,3 +292,97 @@ def test_child_protocol_bounds_encoded_and_decoded_input(monkeypatch: pytest.Mon
     ).encode()
     result, _ = _run_worker_main(raw, monkeypatch)
     assert result == {"error": "material_too_large"}
+
+
+def twenty_page_pdf(*, repeated: bool = False) -> bytes:
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, invariant=True)
+    for number in range(1, 21):
+        pdf.drawString(
+            72,
+            720,
+            "Same retained text." if repeated else f"Original PDF page {number}: source text.",
+        )
+        pdf.showPage()
+    pdf.save()
+    return buffer.getvalue()
+
+
+def test_selected_pdf_pages_keep_original_page_numbers_and_exact_offsets() -> None:
+    result = m.extract_pdf(
+        twenty_page_pdf(), work_id="w", version_id="v", page_numbers=[1, 5, 18, 20]
+    )
+    assert result.page_count == 20 and result.page_numbers == (1, 5, 18, 20)
+    assert [span.page for span in result.spans] == [1, 5, 18, 20]
+    assert result.scope == "excerpt" and result.quality == "partial" and not result.complete
+    assert "selected-pages" in result.parser_revision
+    for number, text in zip(result.page_numbers, result.pages, strict=True):
+        assert f"Original PDF page {number}:" in text
+    for index, span in enumerate(result.spans):
+        assert span.text == result.pages[index][span.start : span.end]
+    assert any("unretained" in warning for warning in result.warnings)
+
+
+def test_default_material_identity_is_unchanged_and_page_selection_is_sealed() -> None:
+    default = m.extract_pdf(sample_pdf(), work_id="w", version_id="v")
+    explicit_none = m.extract_pdf(sample_pdf(), work_id="w", version_id="v", page_numbers=None)
+    assert default == explicit_none and default.page_numbers is None
+    repeated = twenty_page_pdf(repeated=True)
+    first = m.extract_pdf(repeated, work_id="w", version_id="v", page_numbers=[1])
+    second = m.extract_pdf(repeated, work_id="w", version_id="v", page_numbers=[2])
+    assert first.pages == second.pages and first.content_hash == second.content_hash
+    assert first.source_hash == second.source_hash
+    assert (
+        first.material_id != second.material_id
+        and first.spans[0].span_id != second.spans[0].span_id
+    )
+    all_pages = m.extract_pdf(sample_pdf(), work_id="w", version_id="v", page_numbers=[1, 2])
+    assert all_pages.complete and all_pages.scope == "full_text"
+    assert all_pages.material_id != default.material_id
+
+
+@pytest.mark.parametrize(
+    "selection", [[], [0], [-1], [True], ["1"], [2, 1], [1, 1], list(range(1, 14))]
+)
+def test_invalid_original_page_selection_refuses_before_subprocess(
+    selection: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    process = MagicMock()
+    monkeypatch.setattr(m.subprocess, "run", process)
+    with pytest.raises(m.MaterialError, match="invalid_page_selection"):
+        m.extract_pdf(sample_pdf(), work_id="w", version_id="v", page_numbers=selection)
+    process.assert_not_called()
+
+
+def test_selected_pages_outside_document_refuse_and_character_limit_preserves_mapping() -> None:
+    with pytest.raises(m.MaterialError, match="page_outside_document"):
+        m._pdf_worker(sample_pdf(), 12, 120000, [3])
+    with pytest.raises(m.MaterialError, match="page_outside_document"):
+        m.extract_pdf(sample_pdf(), work_id="w", version_id="v", page_numbers=[3])
+    result = m.extract_pdf(
+        twenty_page_pdf(), work_id="w", version_id="v", page_numbers=[5, 18], max_chars=10
+    )
+    assert result.page_numbers == (5,) and result.spans[0].page == 5
+    assert not result.complete and result.scope == "excerpt"
+
+
+@pytest.mark.parametrize("numbers,truncated", [([2], True), ([1], False)])
+def test_worker_cannot_forge_selected_page_mapping(
+    numbers: list[int], truncated: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    payload = json.dumps(
+        {
+            "pages": ["x"],
+            "page_count": 20,
+            "truncated": truncated,
+            "parser_revision": "fixture",
+            "page_numbers": numbers,
+        }
+    ).encode()
+    monkeypatch.setattr(
+        m.subprocess, "run", lambda *a, **k: subprocess.CompletedProcess([], 0, stdout=payload)
+    )
+    with pytest.raises(m.MaterialError, match="invalid_extraction_result"):
+        m.extract_pdf(sample_pdf(), work_id="w", version_id="v", page_numbers=[1, 20])
+    with pytest.raises(m.MaterialError, match="invalid_extraction_result"):
+        m.extract_pdf(sample_pdf(), work_id="w", version_id="v")

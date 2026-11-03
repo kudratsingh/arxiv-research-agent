@@ -87,6 +87,11 @@ def test_snapshot_covers_every_route_the_frontend_calls() -> None:
         "/workspace/items", "/workspace/manual", "/workspace/import/preview",
         "/workspace/import/apply", "/workspace/schedule", "/workspace/export",
         "/workspace/generate",
+        "/workspace/review", "/workspace/review/prepare", "/workspace/review/feedback",
+        "/workspace/materials", "/workspace/materials/{material_id}",
+        "/workspace/generation/preview", "/workspace/generation/jobs",
+        "/workspace/generation/jobs/{job_id}", "/workspace/generation/jobs/{job_id}/advance",
+        "/workspace/generation/jobs/{job_id}/cancel", "/workspace/generation/jobs/{job_id}/recover",
         # WO-W07: the learner progress ledger. Present in the document
         # whatever `enable_learner_profile` says — the flag is runtime
         # behaviour (404 when off), not schema shape, so the contract

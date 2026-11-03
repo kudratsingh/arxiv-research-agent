@@ -1,10 +1,12 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
   displayDate,
   errorMessage,
   readerHref,
+  normalizeReaderReturnTo,
   requestId,
   workspaceRequest,
   type EntryRevision,
@@ -18,6 +20,8 @@ import {
   type ReaderDraft,
 } from "@/lib/workspace/drafts";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
+import { RetainedSourceReader } from "./RetainedSource";
+import { SyntheticWorkbench } from "./SyntheticWorkbench";
 import {
   GenerationBoundary,
   LoadingState,
@@ -27,6 +31,10 @@ import {
 
 export function LiveReader({ id }: { id: string }) {
   const { state, setState, error, reload } = useWorkspace();
+  const params = useSearchParams();
+  const requestedVersion = params.get("version");
+  const requestedEntry = params.get("entry");
+  const returnTo = normalizeReaderReturnTo(params.get("return_to"));
   if (!state) return <LoadingState error={error} retry={() => void reload()} />;
   const item = state.works.find((work) => work.work_id === id);
   if (!item)
@@ -44,11 +52,14 @@ export function LiveReader({ id }: { id: string }) {
     );
   return (
     <ReaderContent
-      key={`${state.principal_key_id}:${item.work_id}`}
+      key={`${state.principal_key_id}:${item.work_id}:${requestedVersion ?? ""}:${requestedEntry ?? ""}`}
       item={item}
       state={state}
       setState={setState}
       error={error}
+      requestedVersion={requestedVersion}
+      requestedEntry={requestedEntry}
+      returnTo={returnTo}
     />
   );
 }
@@ -72,19 +83,28 @@ function ReaderContent({
   state,
   setState,
   error,
+  requestedVersion,
+  requestedEntry,
+  returnTo,
 }: {
   item: WorkItem;
   state: WorkspaceState;
   setState: (state: WorkspaceState) => void;
   error: string;
+  requestedVersion: string | null;
+  requestedEntry: string | null;
+  returnTo: string;
 }) {
   const owner = state.principal_key_id;
   const [initial] = useState(() => {
-    const desired =
-      typeof window === "undefined"
-        ? null
-        : new URLSearchParams(window.location.search).get("version");
-    const version = desired || item.reading.version_id || item.version_id;
+    const entry = requestedEntry
+      ? item.entries.find((candidate) => candidate.id === requestedEntry)
+      : undefined;
+    const version =
+      entry?.version_id ||
+      requestedVersion ||
+      item.reading.version_id ||
+      item.version_id;
     const scope = scopeOf(
       item.versions.find((candidate) => candidate.version_id === version) ??
         item,
@@ -101,6 +121,10 @@ function ReaderContent({
       return {
         version,
         fragment,
+        scope,
+        entryId: entry?.id,
+        sourceAnchor:
+          entry?.anchor || (recovered?.body ? recovered.anchor : undefined),
         draft: recovered ?? emptyDraft(scope),
         recovery: true,
         notice: recovered
@@ -111,6 +135,9 @@ function ReaderContent({
       return {
         version,
         fragment,
+        scope,
+        entryId: entry?.id,
+        sourceAnchor: entry?.anchor,
         draft: emptyDraft(scope),
         recovery: false,
         notice:
@@ -120,21 +147,28 @@ function ReaderContent({
   });
   const [versionId, setVersionId] = useState(initial.version);
   const [active, setActive] = useState(
-    initial.fragment === "notes" || initial.fragment === "understand"
-      ? initial.fragment
-      : "source",
+    initial.entryId
+      ? "notes"
+      : initial.fragment === "notes" || initial.fragment === "understand"
+        ? initial.fragment
+        : "source",
   );
   const [draft, setDraft] = useState<ReaderDraft>(initial.draft);
   const [notice, setNotice] = useState(initial.notice);
   const [busy, setBusy] = useState(false);
   const [draftStorage, setDraftStorage] = useState(initial.recovery);
   const [selection, setSelection] = useState("");
+  const [pdfActive, setPdfActive] = useState(false);
   const [sourceAnchor, setSourceAnchor] = useState(
-    /^(abstract|excerpt|full_text):/.test(initial.fragment)
-      ? initial.fragment
-      : item.reading.anchor,
+    initial.sourceAnchor ||
+      (/^(abstract|excerpt|full_text|material):/.test(initial.fragment)
+        ? initial.fragment
+        : item.reading.version_id === initial.version
+          ? item.reading.anchor
+          : `${initial.scope}:0`),
   );
   const source = useRef<HTMLParagraphElement>(null);
+  const jumpToSource = useRef(false);
   const attempts = useRef(new Map<string, string>());
   const versions = item.versions.length
     ? item.versions
@@ -162,6 +196,65 @@ function ReaderContent({
   const otherEntries = item.entries.filter(
     (entry) => entry.version_id !== material.version_id,
   );
+  useEffect(() => {
+    if (!initial.entryId) return;
+    const target = document.getElementById(
+      `workspace-entry-${initial.entryId}`,
+    );
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView?.({ block: "center" });
+  }, [initial.entryId]);
+  useEffect(() => {
+    if (!jumpToSource.current || active !== "source") return;
+    jumpToSource.current = false;
+    const panel = document.getElementById("source");
+    panel?.focus({ preventScroll: true });
+    const passage = document.querySelector("#source mark") ?? panel;
+    passage?.scrollIntoView?.({ block: "center" });
+  }, [active, sourceAnchor]);
+  async function pin(entryId: string | null) {
+    const input = {
+      revision: state.profile.revision,
+      data: { ...state.profile.data, pinned_entry_id: entryId },
+    };
+    const fingerprint = JSON.stringify(input),
+      id = attempts.current.get(fingerprint) ?? requestId();
+    attempts.current.set(fingerprint, id);
+    setBusy(true);
+    try {
+      const profile = await workspaceRequest<WorkspaceState["profile"]>(
+        "profile",
+        { ...input, request_id: id },
+      );
+      setState({ ...state, profile });
+      setNotice(
+        entryId
+          ? "Saved item pinned for your return to Today. Its retained source version stays attached."
+          : "Saved item unpinned. Your saved text is unchanged.",
+      );
+    } catch (failure) {
+      setNotice(errorMessage(failure));
+    } finally {
+      setBusy(false);
+    }
+  }
+  function editEntry(entry: EntryRevision) {
+    if (draft.body.trim() && draft.id !== entry.id) {
+      setNotice(
+        "You have an unsaved draft. Save or explicitly discard it before editing a different saved item.",
+      );
+      return;
+    }
+    edit({
+      id: entry.id,
+      revision: entry.revision,
+      body: entry.body,
+      kind: entry.kind,
+      anchor: entry.anchor,
+    });
+    setSourceAnchor(entry.anchor);
+    document.getElementById("workspace-note-body")?.focus();
+  }
 
   function edit(change: Partial<ReaderDraft>) {
     const next = { ...draft, ...change };
@@ -204,7 +297,7 @@ function ReaderContent({
   }
   async function reading(
     status: ReadingRevision["status"],
-    anchor = item.reading.anchor,
+    anchor = sourceAnchor,
   ) {
     const input = {
       work_id: item.work_id,
@@ -293,6 +386,7 @@ function ReaderContent({
   }
   function tab(value: string) {
     setActive(value);
+    document.getElementById(value)?.focus({ preventScroll: true });
     window.history.replaceState(
       null,
       "",
@@ -300,11 +394,17 @@ function ReaderContent({
     );
     void reading(
       item.reading.status,
-      value === "source" ? draft.anchor : value,
+      sourceAnchor.startsWith("material:")
+        ? sourceAnchor
+        : value === "source"
+          ? draft.anchor
+          : value,
     );
   }
   function viewVersion(value: string) {
     setVersionId(value);
+    setPdfActive(false);
+    let nextAnchor = `${scopeOf(versions.find((candidate) => candidate.version_id === value) ?? material)}:0`;
     try {
       const recovered = loadDraft(owner, item.work_id, value);
       setDraft(
@@ -316,6 +416,7 @@ function ReaderContent({
             ),
           ),
       );
+      if (recovered?.body) nextAnchor = recovered.anchor;
       setDraftStorage(true);
       setNotice(
         recovered
@@ -329,12 +430,10 @@ function ReaderContent({
     window.history.replaceState(
       null,
       "",
-      `${window.location.pathname}?version=${encodeURIComponent(value)}#${active}`,
+      `${window.location.pathname}?version=${encodeURIComponent(value)}&return_to=${encodeURIComponent(returnTo)}#${active}`,
     );
     setSelection("");
-    setSourceAnchor(
-      `${scopeOf(versions.find((candidate) => candidate.version_id === value) ?? material)}:0`,
-    );
+    setSourceAnchor(nextAnchor);
   }
   const anchorMatch = /^(?:abstract|excerpt|full_text):(\d+):(\d+)$/.exec(
     sourceAnchor,
@@ -361,7 +460,13 @@ function ReaderContent({
             </article>
           ))}
         <Link
-          href={readerHref(item, item.version_id)}
+          href={readerHref(
+            item,
+            item.version_id,
+            undefined,
+            undefined,
+            returnTo,
+          )}
           className="daily-link"
           prefetch={false}
         >
@@ -373,14 +478,29 @@ function ReaderContent({
   return (
     <>
       <div className="daily-page-meta">
-        <Link href="/workspace/today" prefetch={false} className="daily-link">
-          ← Today
+        <Link href={returnTo} prefetch={false} className="daily-link">
+          ←{" "}
+          {returnTo.startsWith("/workspace/review")
+            ? "Candidate review"
+            : returnTo.startsWith("/workspace/radar")
+              ? "Radar"
+              : returnTo.startsWith("/workspace/library")
+                ? "Library"
+                : "Today"}
         </Link>
         <span className="daily-eyebrow">
-          Source reader · retained {sourceScope}
+          Source reader ·{" "}
+          {pdfActive ? "retained document text" : `retained ${sourceScope}`}
         </span>
       </div>
       <ServiceNotice error={error} />
+      <Message>{notice}</Message>
+      {requestedEntry && !initial.entryId && (
+        <p className="workspace-version-notice">
+          That saved item is unavailable in this account. No different question
+          has been substituted.
+        </p>
+      )}
       <header className="daily-reader-header">
         <div className="daily-item-meta">
           <span>{item.kind}</span>
@@ -488,65 +608,91 @@ function ReaderContent({
       <div className="daily-reader-grid">
         <section
           id="source"
+          tabIndex={-1}
           className="daily-source-panel"
           data-active={active === "source"}
           aria-labelledby="retained-source-title"
         >
           <div className="daily-section-heading">
             <h2 id="retained-source-title">
-              {material.abstract
-                ? sourceScope === "excerpt"
-                  ? "Retained feed excerpt"
-                  : "Retained source abstract"
-                : "Source metadata"}
+              {pdfActive
+                ? "Retained document excerpts"
+                : material.abstract
+                  ? sourceScope === "excerpt"
+                    ? "Retained feed excerpt"
+                    : "Retained source abstract"
+                  : "Source metadata"}
             </h2>
             <span>{material.version_label}</span>
           </div>
-          <p className="daily-source-attribution">
-            Source text, not a generated summary. Retained{" "}
-            {displayDate(material.fetched_at)}. Select a passage to anchor your
-            next note.
-          </p>
-          <div className="daily-source-text">
-            <p ref={source} onMouseUp={selectPassage} onKeyUp={selectPassage}>
-              {hasPassage ? (
-                <>
-                  {sourceCharacters.slice(0, start).join("")}
-                  <mark id="source-anchor">
-                    {sourceCharacters.slice(start, end).join("")}
-                  </mark>
-                  {sourceCharacters.slice(end).join("")}
-                </>
-              ) : (
-                material.abstract ||
-                "No abstract or full text was acquired. Use the original-source link for reading. Your questions and notes can still be kept against this metadata version."
+          {!pdfActive && (
+            <>
+              <p className="daily-source-attribution">
+                Source text, not a generated summary. Retained{" "}
+                {displayDate(material.fetched_at)}. Select a passage to anchor
+                your next note.
+              </p>
+              <div className="daily-source-text">
+                <p
+                  ref={source}
+                  onMouseUp={selectPassage}
+                  onKeyUp={selectPassage}
+                >
+                  {hasPassage ? (
+                    <>
+                      {sourceCharacters.slice(0, start).join("")}
+                      <mark id="source-anchor">
+                        {sourceCharacters.slice(start, end).join("")}
+                      </mark>
+                      {sourceCharacters.slice(end).join("")}
+                    </>
+                  ) : (
+                    material.abstract ||
+                    "No abstract or full text was acquired. Use the original-source link for reading. Your questions and notes can still be kept against this metadata version."
+                  )}
+                </p>
+              </div>
+              {hasPassage && (
+                <p className="workspace-note-context">
+                  Resumed source passage at character offsets {start}–{end} of
+                  this retained version.
+                </p>
               )}
-            </p>
-          </div>
-          {hasPassage && (
-            <p className="workspace-note-context">
-              Resumed source passage at character offsets {start}–{end} of this
-              retained version.
-            </p>
+              <div className="daily-source-boundary">
+                <span className="daily-eyebrow">Evidence boundary</span>
+                <p>
+                  Available scope: {sourceScope}. The full methods, experiments,
+                  appendices and result tables have not been acquired unless
+                  explicitly shown.
+                </p>
+                <p className="workspace-origin">
+                  {item.work_id}
+                  <br />
+                  {material.version_id}
+                  <br />
+                  Material digest {material.content_hash || "not available"}
+                </p>
+              </div>
+            </>
           )}
-          <div className="daily-source-boundary">
-            <span className="daily-eyebrow">Evidence boundary</span>
-            <p>
-              Available scope: {sourceScope}. The full methods, experiments,
-              appendices and result tables have not been acquired unless
-              explicitly shown.
-            </p>
-            <p className="workspace-origin">
-              {item.work_id}
-              <br />
-              {material.version_id}
-              <br />
-              Material digest {material.content_hash || "not available"}
-            </p>
-          </div>
+          <RetainedSourceReader
+            key={material.version_id}
+            workId={item.work_id}
+            versionId={material.version_id}
+            anchor={sourceAnchor}
+            onNavigate={setSourceAnchor}
+            onSelect={(anchor, quote) => {
+              setSourceAnchor(anchor);
+              setSelection(quote);
+              edit({ anchor });
+            }}
+            onActive={setPdfActive}
+            announce={setNotice}
+          />
         </section>
         <aside
           id="understand"
+          tabIndex={-1}
           className="daily-understand-panel"
           data-active={active === "understand"}
           aria-labelledby="understand-live-title"
@@ -578,10 +724,28 @@ function ReaderContent({
               </p>
             </div>
           </div>
+          <SyntheticWorkbench
+            key={material.version_id}
+            workId={item.work_id}
+            versionId={material.version_id}
+            announce={setNotice}
+            onSource={(anchor) => {
+              jumpToSource.current = true;
+              setSourceAnchor(anchor);
+              setActive("source");
+              window.history.replaceState(
+                null,
+                "",
+                `${window.location.pathname}${window.location.search}#${encodeURIComponent(anchor)}`,
+              );
+              void reading(item.reading.status, anchor);
+            }}
+          />
           <GenerationBoundary />
         </aside>
         <section
           id="notes"
+          tabIndex={-1}
           className="daily-notes-panel"
           data-active={active === "notes"}
           aria-labelledby="your-live-notes"
@@ -622,6 +786,7 @@ function ReaderContent({
             <label>
               Your {draft.kind.replaceAll("-", " ")}
               <textarea
+                id="workspace-note-body"
                 required
                 rows={6}
                 maxLength={10000}
@@ -636,22 +801,31 @@ function ReaderContent({
               >
                 {busy ? "Saving…" : `Save ${draft.kind.replaceAll("-", " ")}`}
               </button>
-              {draft.revision > 0 && (
+              {draft.body && (
                 <button
                   type="button"
                   className="daily-text-button"
                   onClick={() => {
+                    try {
+                      storeDraft(
+                        owner,
+                        item.work_id,
+                        material.version_id,
+                        null,
+                      );
+                    } catch {
+                      setDraftStorage(false);
+                    }
                     setDraft(emptyDraft(sourceScope));
                     setNotice(
                       "Editing stopped. The saved note was not changed.",
                     );
                   }}
                 >
-                  Cancel edit
+                  {draft.revision > 0 ? "Cancel edit" : "Discard unsaved draft"}
                 </button>
               )}
             </div>
-            <Message>{notice}</Message>
           </form>
           <div className="daily-saved-entries">
             <h3>Saved against this version</h3>
@@ -659,7 +833,17 @@ function ReaderContent({
               <p>No server-saved notes for this version yet.</p>
             )}
             {entries.map((entry) => (
-              <article key={entry.id}>
+              <article
+                key={entry.id}
+                id={`workspace-entry-${entry.id}`}
+                tabIndex={-1}
+                className={
+                  initial.entryId === entry.id
+                    ? "workspace-focused-entry"
+                    : undefined
+                }
+                aria-label={`Saved ${entry.kind.replaceAll("-", " ")}`}
+              >
                 <span className="daily-eyebrow">
                   Your {entry.kind.replaceAll("-", " ")}
                 </span>
@@ -670,24 +854,37 @@ function ReaderContent({
                 </p>
                 <button
                   className="daily-text-button"
-                  onClick={() =>
-                    edit({
-                      id: entry.id,
-                      revision: entry.revision,
-                      body: entry.body,
-                      kind: entry.kind,
-                      anchor: entry.anchor,
-                    })
-                  }
+                  onClick={() => editEntry(entry)}
                 >
                   Edit {entry.kind.replaceAll("-", " ")}
                 </button>
                 <a
-                  href={readerHref(item, entry.version_id, entry.anchor)}
+                  href={readerHref(
+                    item,
+                    entry.version_id,
+                    entry.anchor,
+                    undefined,
+                    returnTo,
+                  )}
                   className="daily-link"
                 >
                   Source context →
                 </a>
+                <button
+                  className="daily-text-button"
+                  disabled={busy}
+                  onClick={() =>
+                    void pin(
+                      state.profile.data.pinned_entry_id === entry.id
+                        ? null
+                        : entry.id,
+                    )
+                  }
+                >
+                  {state.profile.data.pinned_entry_id === entry.id
+                    ? "Unpin saved item"
+                    : `Pin ${entry.kind.replaceAll("-", " ")}`}
+                </button>
               </article>
             ))}
             {otherEntries.length > 0 && (
@@ -697,7 +894,13 @@ function ReaderContent({
                   <p key={entry.id}>
                     <a
                       className="daily-link"
-                      href={readerHref(item, entry.version_id, "notes")}
+                      href={readerHref(
+                        item,
+                        entry.version_id,
+                        entry.anchor,
+                        entry.id,
+                        returnTo,
+                      )}
                     >
                       {entry.body.slice(0, 100)} · {entry.version_id} →
                     </a>
