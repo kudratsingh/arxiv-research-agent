@@ -432,7 +432,7 @@ export default defineConfig(async () => ({
       // Fixing that is what makes the next re-seed worth the floor it
       // raises.
       // Daily workspace follow-up, measured after the production build:
-      // 3,711 tests across 177 files: 4295/4372 statements, 3183/3376 branches,
+      // 3,714 tests across 177 files: 4309/4386 statements, 3238/3441 branches,
       // 1551/1685 functions, 3619/3643 lines. Zero skipped bundle checks.
       // Refresh the count before it ages beyond the documented file band.
       // Preserve the statements/branches/lines floors and their noise margin;

@@ -14,7 +14,7 @@ Paid services require a separate, concrete approval before activation.
 | W4 | Real Today and Radar, transparent lexical signals, finite editions, exclusions, read/dismiss/snooze/undo and frozen cursor pages | Chronological/keyword comparison sample has blank owner labels. Edition versions/profile/coverage are pinned. Personal usefulness remains unmeasured |
 | W5 | Real source reader, retained abstracts/feed excerpts, Unicode-safe anchors, durable questions/notes/actions, source version choice and export | Desktop/mobile/keyboard and failed-save recovery observed; bounded PDF extraction helper tested with synthetic files. Selected-page scientific sample now retained; inline PDF rendering remains deferred |
 | W6 | Durable schedules, owner/date occurrences, leased one-shot worker, bounded retries, single catch-up and atomic in-app intent | DST, racing workers, queued-before-sleep, pause/recovery tests. Recurrence remains disabled; continuous worker packaged disabled; image deployment and owner's time confirmation remain pending |
-| W7 | Independent retained materials/spans; explicit factual-check boundary; actual emitted calibration artifacts; role/revision estimator; atomic spend reservations/cancellation/recovery | Model-free/fake-provider tests. Fake-only executor now implemented; actual provider quality measurement and historical metric certification remain pending; remaining launch conditions are in the approval packet |
+| W7 | Independent retained materials/spans; explicit factual-check boundary; actual emitted calibration artifacts; role/revision estimator; atomic spend reservations/cancellation/recovery | Model-free/fake-provider tests. Fake executor and qualification-only wire adapter implemented/tested offline; actual provider quality measurement and historical metric certification remain pending; remaining launch conditions are in the approval packet |
 | W8–W9 | Real grounded summaries and guided deep dives | Exact source/model/usage envelope and separate owner spending approval; actual retained-source/provider walkthrough required |
 | W10–W12 | Questions, assumptions and experiment proposals; daily-use pilot; optional expansion | Follow observed owner workflow. No automatic code execution, publishing or external delivery |
 
@@ -48,11 +48,19 @@ remain unmerged; provider contacts/spend0 and recurrence disabled.
   max16Messages+16count contacts, estimated raw ceiling$0.792, reservations$1.15,
   proposed trial/day/month cap$1.25. Everything remains unapproved.
 
-Focused checkpoint: Python62passed for adapter/packet/admission; new adapter99%
+Focused checkpoint: Python66passed for adapter/packet/admission; new adapter99%
 coverage, availability100%; frontend142workspace tests, strict typing/lint;
 14durable browser flows and compact2/excerpt2 passed in the isolated database.
-Full gates, production previews and final-head CI are recorded in the final
-checkpoint receipt; these focused results are not a green CI claim.
+Production desktop/mobile16 and scientific excerpt4 passed on isolated real
+Postgres, including automatic entry and exact saved passages. Full frontend3714
+passed with zero skips and coverage floors intact; CSS17378B stays below the
+unchanged17408B ceiling. The first unrestricted Python patch run caught a stale
+API-equality assertion: the revised test pins immutable stored metadata/notes
+while explicitly requiring the new derived availability. A superseded local
+project-coverage run was interrupted to strengthen the final HTTP-construction
+approval/count-receipt guard;5961passed/54skipped at interruption, no green claim.
+Both full gates are repeated after that fix. Final-head local/CI results belong
+to the checkpoint receipt; these focused results are not a green CI claim.
 
 See [readiness walkthrough](20-readiness-and-qualification-walkthrough.md) and
 [unexecuted trial](15-grounded-generation-approval-packet.md). The historical

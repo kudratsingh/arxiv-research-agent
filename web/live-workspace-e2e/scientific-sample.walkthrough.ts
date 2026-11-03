@@ -48,9 +48,6 @@ test("actual public PDF excerpts retain original pages and an exact source ancho
   );
   // Exact-version availability opens retained excerpts on entry; no hidden
   // discovery action should be required for a metadata-only observation.
-  await page
-    .getByRole("combobox", { name: "Retained document", exact: true })
-    .selectOption(document.material_id);
   await expect(
     page.getByRole("heading", {
       name: "Retained document excerpts",
