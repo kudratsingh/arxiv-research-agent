@@ -50,7 +50,7 @@ pasted from command output and never typed by hand.
 | Gate | Commit | Date | Result | Notes / links |
 |---|---|---|---|---|
 | G0 Setup & baseline | `83bea0a` (verified app code unchanged from `82d538f` / `916f038`) | 2026-11-03 09:55 UTC | PASS | [Before captures](evidence/before/p0-macos/); logs and deviations below |
-| G1 Foundations | | | | |
+| G1 Foundations | `1bf1a0c816c74eaff7ac53735d6ae8990ef94ee3` (verified application tree) | 2026-11-03 10:25 UTC | PASS under E27 | [G1 captures](evidence/after/g1-foundations/); CSS-only interim overrun recorded below |
 | G2 Shell | | | | |
 | G3 Today controller | | | | |
 | G4 Reader | | | | |
@@ -240,3 +240,64 @@ G1 closure still awaits the measured build/budget record and phase screenshots;
 E27 permits a recorded CSS-only interim overrun throughG6, with no early ratchet.
 The approved one-off qualification remains separately prepared and waiting for
 the owner's credential; frontend processes continue using the disabled sentinel.
+
+## G1 closure / WO-1.4 — measured interim headroom
+
+Verified source commits: WO-1.1 `9afe2df`, WO-1.2 `d0127fb`, WO-1.3 `1bf1a0c`.
+The G1 full suite passes3803tests in184files and all original coverage floors.
+Queue/URL/commands/cover helpers are each100%lines/branches. No new dependency,
+backend source, source-refresh behavior or API request body changed.
+
+Build succeeds. Budget command exits1 **only for emitted CSS**. This is the
+explicit E27 interim G1–G6 allowance, not a green budget claim: scoped palette
+raises CSS to17944B against17408B. No ratchet was applied. G7 must remove
+`components/workspace/workspace.css`, reduce first, and finish within the
+pre-authorized caps. All JS rows pass. Exact command output:
+
+```text
+PASS      `/` first-load JS, excl. polyfill — 165,929 B (162.0 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 191,824 B (187.3 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 164,641 B (160.8 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,560 B (161.7 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,312 B (181.9 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 167,966 B (164.0 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 134,087 B (130.9 KiB) against 139,264 B (136.0 KiB)
+BREACH    All emitted CSS — 17,944 B (17.5 KiB) against 17,408 B (17.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+EXTERNAL  Total transferred JS on a settled report route, incl. lazy chunks — not measured here against 245,760 B (240.0 KiB)
+REPORTED  Derived: total first-load transfer for `/c/[id]`, cold cache — 313,244 B (305.9 KiB) against 319,488 B (312.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,281 B (149.7 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 152,735 B (149.2 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,253 B (148.7 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 155,962 B (152.3 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 157,395 B (153.7 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 155,841 B (152.2 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 162,995 B (159.2 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 158,174 B (154.5 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 162,808 B (159.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 153,985 B (150.4 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 155,159 B (151.5 KiB) against 169,984 B (166.0 KiB)
+```
+
+Required pre-push Python gate output:
+
+```text
+6042 passed, 54 skipped, 53 deselected in 474.03s (0:07:54)
+Total:   3658 lines
+Missing: 19 lines
+Coverage: 99%
+```
+
+G1 Today preview (palette-only; shell/controller integration is still P2/P3):
+[dark desktop](evidence/after/g1-foundations/desktop-dark-today.png),
+[light desktop](evidence/after/g1-foundations/desktop-light-today.png),
+[dark390px](evidence/after/g1-foundations/mobile-dark-today.png),
+[light390px](evidence/after/g1-foundations/mobile-light-today.png).
+All four are DPR2 from the offline synthetic rich seed; capture manifest records
+zero console errors. Root inspected dark desktop and light mobile.
+
+Owner steering superseded the temporary waiting state: frontend agents continue
+through the gates while the separately approved experiment awaits its credential.
+Astra medium owns the complex foundations/shell lane; Terra high owns bounded
+visual primitives and keyboard/composer work. Frontend remains sentinel-only,
+no source refresh, recurrence disabled, owner data/services preserved, no PR.

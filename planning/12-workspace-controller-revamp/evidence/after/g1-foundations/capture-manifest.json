@@ -1,0 +1,45 @@
+{
+  "kind": "offline synthetic rich seed; P1 palette-only milestone, controller not integrated",
+  "rows": [
+    {
+      "file": "desktop-dark-today.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "dpr": 2,
+      "theme": "dark",
+      "console_errors": []
+    },
+    {
+      "file": "mobile-dark-today.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2,
+      "theme": "dark",
+      "console_errors": []
+    },
+    {
+      "file": "desktop-light-today.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "dpr": 2,
+      "theme": "light",
+      "console_errors": []
+    },
+    {
+      "file": "mobile-light-today.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dpr": 2,
+      "theme": "light",
+      "console_errors": []
+    }
+  ]
+}
