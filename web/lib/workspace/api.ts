@@ -109,7 +109,7 @@ export function readingMaterial(item: WorkItem, versionId?: string) {
   return { version, pdf, scope: version.available_scopes?.[0] ?? version.access_state };
 }
 
-/** A return link can only navigate within the three source-list routes. */
+/** A return link can only navigate within the four source-list routes. */
 export function normalizeReaderReturnTo(value: string | null): string {
   if (!value || !value.startsWith("/workspace/") || /[\\\u0000-\u001f]/.test(value))
     return "/workspace/today";
@@ -121,7 +121,10 @@ export function normalizeReaderReturnTo(value: string | null): string {
     if (!["/workspace/today", "/workspace/library", "/workspace/radar", "/workspace/review"].includes(pathname))
       return "/workspace/today";
     const params = new URLSearchParams();
-    if (pathname === "/workspace/review") {
+    if (pathname === "/workspace/today") {
+      const focus = search.get("focus");
+      if (focus && focus.length <= 500 && !/[\\\u0000-\u001f\u007f]/.test(focus)) params.set("focus", focus);
+    } else if (pathname === "/workspace/review") {
       const packet = search.get("packet");
       if (packet && /^review-[a-f0-9]{32}$/.test(packet)) params.set("packet", packet);
     } else if (pathname === "/workspace/library") {

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   displayDate,
   errorMessage,
+  normalizeReaderReturnTo,
   readerHref,
   requestId,
   workspaceRequest,
@@ -13,6 +14,29 @@ import {
   storeDraft,
   type ReaderDraft,
 } from "@/lib/workspace/drafts";
+
+describe("controller reader return focus", () => {
+  it("retains only Today focus, encoding it as data and dropping unrelated parameters", () => {
+    expect(normalizeReaderReturnTo("/workspace/today?focus=arxiv%3A2610.00001&extra=1#notes"))
+      .toBe("/workspace/today?focus=arxiv%3A2610.00001");
+    expect(normalizeReaderReturnTo(`/workspace/today?focus=${"a".repeat(500)}`))
+      .toBe(`/workspace/today?focus=${"a".repeat(500)}`);
+    expect(normalizeReaderReturnTo("/workspace/today?focus=a%26return_to%3Dhttps%3A%2F%2Fevil.example"))
+      .toBe("/workspace/today?focus=a%26return_to%3Dhttps%3A%2F%2Fevil.example");
+  });
+  it.each(["", "a".repeat(501), "%00bad", "a%0Ab", "a%5Cb", "%7Fbad"])(
+    "drops empty, oversized, or unsafe focus %s", (focus) => {
+      expect(normalizeReaderReturnTo(`/workspace/today?focus=${focus}`)).toBe("/workspace/today");
+    });
+  it("keeps exact Library and Review returns and excludes focus from Radar", () => {
+    expect(normalizeReaderReturnTo("/workspace/library?view=notes&focus=a")).toBe("/workspace/library?view=notes");
+    const packet = `review-${"a".repeat(32)}`;
+    expect(normalizeReaderReturnTo(`/workspace/review?packet=${packet}&focus=a`)).toBe(`/workspace/review?packet=${packet}`);
+    expect(normalizeReaderReturnTo("/workspace/radar?q=test&focus=a")).toBe("/workspace/radar?q=test");
+  });
+  it.each(["https://evil.example/workspace/today?focus=a", "//evil.example/workspace/today?focus=a", "/workspace/today/../../evil?focus=a"])(
+    "rejects hostile return destinations %s", (value) => expect(normalizeReaderReturnTo(value)).toBe("/workspace/today"));
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
