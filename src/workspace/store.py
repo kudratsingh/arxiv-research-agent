@@ -138,8 +138,44 @@ class WorkspaceStore:
         return row[0], row[1]
 
     @staticmethod
-    def _history(conn: Any, owner: str, entity: str, id_: str, revision: int, data: Any) -> None:
+    def _history(conn: Any, owner: str, entity: str, id_: str, revision: int, data: Any) -> dict[str, Any]:
         conn.execute("INSERT INTO workspace_history(owner,entity,id,revision,data) VALUES (%s,%s,%s,%s,%s)", (owner, entity, id_, revision, Jsonb(data)))
+        if entity not in {"entry", "reading"}:
+            return {}
+        row = conn.execute(
+            "INSERT INTO workspace_activity(owner,kind,entity_id,work_id,version_id,revision,data) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING sequence,updated_at",
+            (owner, entity, id_, id_ if entity == "reading" else data["work_id"], data["version_id"], revision, Jsonb(data)),
+        ).fetchone()
+        if row is None:
+            raise RuntimeError("activity write was not acknowledged")
+        return {"activity_sequence": row[0], "updated_at": row[1].isoformat()}
+
+    def activity(self, owner: str, *, as_of: str | None = None, entry_id: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
+        """Database sequence orders activity despite clock ties and source order.
+
+        Only current, owner-visible entries/reading records participate. Exact
+        historical source versions and anchors remain in each event payload.
+        """
+        self._owner(owner)
+        self.migrate()
+        with self.pool.connection() as conn:
+            rows = conn.execute(
+                "SELECT a.sequence,a.kind,a.entity_id,a.work_id,a.version_id,a.revision,a.data,a.updated_at "
+                "FROM workspace_activity a JOIN workspace_works w USING(work_id) "
+                "WHERE a.owner=%s AND (w.visibility_owner IS NULL OR w.visibility_owner=%s) "
+                "AND (%s::timestamptz IS NULL OR a.updated_at<=%s::timestamptz) "
+                "AND (%s::text IS NULL OR (a.kind='entry' AND a.entity_id=%s)) "
+                "AND ((a.kind='entry' AND EXISTS(SELECT 1 FROM workspace_entries e WHERE e.owner=a.owner AND e.id=a.entity_id)) "
+                "OR (a.kind='reading' AND EXISTS(SELECT 1 FROM workspace_reading r WHERE r.owner=a.owner AND r.work_id=a.work_id))) "
+                "ORDER BY a.sequence DESC LIMIT %s",
+                (owner, owner, as_of, as_of, entry_id, entry_id, limit),
+            ).fetchall()
+        return [{"sequence": seq, "kind": kind, "entry_id": id_ if kind == "entry" else None,
+                 "work_id": work, "version_id": version, "revision": revision,
+                 "entry_kind": data.get("kind") if kind == "entry" else None,
+                 "body": data.get("body", ""), "anchor": data.get("anchor", "abstract:0"),
+                 "updated_at": updated.isoformat()}
+                for seq, kind, id_, work, version, revision, data, updated in rows]
 
     def write_profile(self, owner: str, write: ProfileWrite) -> dict[str, Any]:
         def action(conn: Any) -> dict[str, Any]:
@@ -148,6 +184,10 @@ class WorkspaceStore:
             if current != write.revision:
                 raise ConflictError("interests changed; reload before applying your edits")
             data = write.data.model_dump()
+            if data["pinned_entry_id"] is not None and not conn.execute(
+                "SELECT 1 FROM workspace_entries WHERE owner=%s AND id=%s", (owner, data["pinned_entry_id"])
+            ).fetchone():
+                raise ValueError("pinned entry must belong to this account")
             revision = current + 1
             conn.execute("INSERT INTO workspace_profiles VALUES (%s,%s,%s) ON CONFLICT(owner) DO UPDATE SET revision=EXCLUDED.revision,data=EXCLUDED.data", (owner, revision, Jsonb(data)))
             self._history(conn, owner, "profile", owner, revision, data)
@@ -159,9 +199,34 @@ class WorkspaceStore:
         if not conn.execute("SELECT 1 FROM workspace_versions v JOIN workspace_works w USING(work_id) WHERE v.work_id=%s AND v.version_id=%s AND (w.visibility_owner IS NULL OR w.visibility_owner=%s)", (work_id, version_id, owner)).fetchone():
             raise ValueError("source version does not belong to this work")
 
+    @staticmethod
+    def _anchor(conn: Any, owner: str, work_id: str, version_id: str, anchor: str) -> None:
+        if not anchor.startswith("material:"):
+            return
+        match = re.fullmatch(r"material:(mat-[a-f0-9]{32}):page:([1-9]\d{0,5}):(\d{1,8}):(\d{1,8})", anchor)
+        if match is None:
+            raise ValueError("invalid retained-material anchor")
+        material_id, page_raw, start_raw, end_raw = match.groups()
+        row = conn.execute(
+            "SELECT m.data FROM workspace_material m JOIN workspace_versions v USING(version_id) JOIN workspace_works w USING(work_id) WHERE material_id=%s AND v.work_id=%s AND v.version_id=%s AND (w.visibility_owner IS NULL OR w.visibility_owner=%s)",
+            (material_id, work_id, version_id, owner),
+        ).fetchone()
+        if row is None:
+            raise ValueError("retained-material anchor is unavailable for this source version")
+        material = row[0]
+        page, start, end = int(page_raw), int(start_raw), int(end_raw)
+        mapping = material.get("page_numbers")
+        if mapping is not None and page not in mapping:
+            raise ValueError("retained-material page was not acquired")
+        index = mapping.index(page) if mapping is not None else page - 1
+        pages = material["pages"]
+        if not 0 <= index < len(pages) or not 0 <= start <= end <= len(pages[index]):
+            raise ValueError("retained-material anchor is outside the extracted text")
+
     def write_reading(self, owner: str, write: ReadingWrite) -> dict[str, Any]:
         def action(conn: Any) -> dict[str, Any]:
             self._version(conn, write.work_id, write.data.version_id, owner)
+            self._anchor(conn, owner, write.work_id, write.data.version_id, write.data.anchor)
             row = conn.execute("SELECT revision FROM workspace_reading WHERE owner=%s AND work_id=%s", (owner, write.work_id)).fetchone()
             current = row[0] if row else 0
             if current != write.revision:
@@ -169,22 +234,23 @@ class WorkspaceStore:
             data = write.data.model_dump()
             revision = current + 1
             conn.execute("INSERT INTO workspace_reading VALUES (%s,%s,%s,%s) ON CONFLICT(owner,work_id) DO UPDATE SET revision=EXCLUDED.revision,data=EXCLUDED.data", (owner, write.work_id, revision, Jsonb(data)))
-            self._history(conn, owner, "reading", write.work_id, revision, data)
-            return {**data, "revision": revision}
+            activity = self._history(conn, owner, "reading", write.work_id, revision, data)
+            return {**data, "revision": revision, **activity}
         return self._mutate(owner, write.request_id, write.model_dump(), action)
 
     def write_entry(self, owner: str, write: EntryWrite) -> dict[str, Any]:
         def action(conn: Any) -> dict[str, Any]:
             data = write.data.model_dump()
             self._version(conn, data["work_id"], data["version_id"], owner)
+            self._anchor(conn, owner, data["work_id"], data["version_id"], data["anchor"])
             row = conn.execute("SELECT revision FROM workspace_entries WHERE owner=%s AND id=%s", (owner, write.id)).fetchone()
             current = row[0] if row else 0
             if current != write.revision:
                 raise ConflictError("note changed; keep your draft and reload the saved revision")
             revision = current + 1
             conn.execute("INSERT INTO workspace_entries VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT(owner,id) DO UPDATE SET revision=EXCLUDED.revision,work_id=EXCLUDED.work_id,version_id=EXCLUDED.version_id,data=EXCLUDED.data", (owner, write.id, revision, data["work_id"], data["version_id"], Jsonb(data)))
-            self._history(conn, owner, "entry", write.id, revision, data)
-            return {"id": write.id, "revision": revision, **data}
+            activity = self._history(conn, owner, "entry", write.id, revision, data)
+            return {"id": write.id, "revision": revision, **data, **activity}
         return self._mutate(owner, write.request_id, write.model_dump(), action)
 
     @staticmethod
@@ -238,9 +304,16 @@ class WorkspaceStore:
             rows = conn.execute("SELECT v.data,w.first_seen_at FROM workspace_versions v JOIN workspace_works w USING(work_id) WHERE v.observed_at <= %s AND (w.visibility_owner IS NULL OR w.visibility_owner=%s) ORDER BY v.observed_at DESC,v.version_id DESC", (cutoff, owner)).fetchall()
             reading_rows = conn.execute("SELECT DISTINCT ON (id) id,revision,data FROM workspace_history WHERE owner=%s AND entity='reading' AND created_at<=%s ORDER BY id,revision DESC", (owner, as_of)).fetchall() if as_of else conn.execute("SELECT work_id,revision,data FROM workspace_reading WHERE owner=%s", (owner,)).fetchall()
             readings = {r[0]: {**r[2], "revision": r[1]} for r in reading_rows}
+            activity_rows = conn.execute(
+                "SELECT kind,entity_id,revision,sequence,updated_at FROM workspace_activity WHERE owner=%s AND updated_at<=%s ORDER BY sequence",
+                (owner, cutoff),
+            ).fetchall()
+            stamps = {(r[0], r[1], r[2]): {"activity_sequence": r[3], "updated_at": r[4].isoformat()} for r in activity_rows}
+            for work_id, reading in readings.items():
+                reading.update(stamps.get(("reading", work_id, reading["revision"]), {"activity_sequence": 0, "updated_at": ""}))
             entries: dict[str, list[dict[str, Any]]] = {}
             for r in conn.execute("SELECT id,revision,work_id,data FROM workspace_entries WHERE owner=%s ORDER BY id", (owner,)).fetchall():
-                entries.setdefault(r[2], []).append({**r[3], "id": r[0], "revision": r[1]})
+                entries.setdefault(r[2], []).append({**r[3], "id": r[0], "revision": r[1], **stamps.get(("entry", r[0], r[1]), {"activity_sequence": 0, "updated_at": ""})})
         works: dict[str, dict[str, Any]] = {}
         for raw, first_seen in rows:
             item = dict(raw)
@@ -317,11 +390,12 @@ class WorkspaceStore:
             return preview
         return self._mutate(owner, "import:" + fingerprint, request.model_dump(), action)
 
-    def edition(self, owner: str, work_ids: list[str], *, minutes: int, revision: int, persist: bool = True, work_versions: dict[str, str] | None = None, as_of: str | None = None) -> dict[str, Any]:
+    def edition(self, owner: str, work_ids: list[str], *, minutes: int, revision: int, persist: bool = True, work_versions: dict[str, str] | None = None, as_of: str | None = None, allocation: dict[str, Any] | None = None) -> dict[str, Any]:
         self._owner(owner)
         self.migrate()
         data: dict[str, Any] = {"id": uuid.uuid4().hex, "created_at": as_of or self.cutoff(), "profile_revision": revision, "minutes": minutes, "work_ids": work_ids, "coverage": self.sources()}
         data["work_versions"] = work_versions if work_versions is not None else {item["work_id"]: item["version_id"] for item in self.works(owner, as_of=data["created_at"]) if item["work_id"] in work_ids}
+        data["allocation"] = allocation or {}
         data["status"] = "ready" if all(s.get("status") in {"success", "not_modified", "ok", "empty"} for s in data["coverage"]) else "ready_partial"
         if persist:
             with self.pool.connection() as conn:

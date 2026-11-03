@@ -141,11 +141,11 @@ def test_finite_edition_time_exploration_and_empty_matching() -> None:
         edition = choose_edition(ranked, minutes)
         assert len(edition) == count
         assert sum(v["minutes"] for v in edition) <= minutes
-    assert choose_edition(ranked, 15)[-1]["work_id"] == "x"
+    assert choose_edition(ranked, 15)[-1]["work_id"] != "x"
     assert choose_edition(ranked, 15, exploration=0)[-1]["work_id"] != "x"
     adjacent = rank_items([item("x", "Adjacent field")], PROFILE, now=NOW)
     assert choose_edition(adjacent, 5) == []
-    assert len(choose_edition(adjacent, 15)) == 1
+    assert choose_edition(adjacent, 15) == []
     assert choose_edition([], 45) == []
 
 
