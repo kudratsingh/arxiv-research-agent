@@ -74,7 +74,7 @@ page into an **integrated controller**:
 - **No copied artwork.** Borrow *patterns* from Claude Code, Spotify and
   VS Code: layout, interaction and density. Never their logos, mascots, icons,
   names, trade dress or exact colours. The mascot is original
-  ([02 §6](02-design-system.md#6-mascot-folio)).
+  ([02 §6](02-design-system.md#6-mascot-jazzy)).
 
 ## 4. Success criteria
 

@@ -1,0 +1,39 @@
+/* P1: decorative workspace primitives. */
+.workspace-app .ws-mascot-wrap { position: relative; display: inline-flex; flex: none; }
+.workspace-app .ws-mascot-wrap[data-mood="busy"]::after { content: "…"; position: absolute; left: 100%; top: -0.5em; font: 600 12px/1 var(--font-ui); color: var(--color-ink); }
+.workspace-app .ws-mascot { display: inline-block; flex: none; overflow: visible; }
+.workspace-app .ws-mascot-body { fill: var(--ws-mascot-body); }
+.workspace-app .ws-mascot-shade { fill: var(--ws-mascot-shade); }
+.workspace-app .ws-mascot-highlight { fill: var(--ws-mascot-highlight); }
+.workspace-app .ws-mascot-whites { fill: var(--ws-mascot-eye); }
+.workspace-app .ws-mascot-pupils, .workspace-app .ws-mascot-alert-pupils, .workspace-app .ws-mascot-mouth, .workspace-app .ws-mascot-closed { fill: var(--ws-mascot-ink); }
+.workspace-app .ws-mascot-closed, .workspace-app .ws-mascot-alert-pupils { display: none; }
+.workspace-app .ws-mascot[data-mood="sleepy"] .ws-mascot-eyes { display: none; }
+.workspace-app .ws-mascot[data-mood="sleepy"] .ws-mascot-closed { display: inline; }
+.workspace-app .ws-mascot[data-mood="alert"] .ws-mascot-pupils { display: none; }
+.workspace-app .ws-mascot[data-mood="alert"] .ws-mascot-alert-pupils { display: inline; }
+@media (prefers-reduced-motion: no-preference) {
+  .workspace-app .ws-mascot[data-mood="idle"] .ws-mascot-eyes { transform-origin: 10px 5px; animation: ws-jazzy-blink 6s infinite; }
+  .workspace-app .ws-mascot[data-mood="busy"] { animation: ws-jazzy-hop 400ms alternate infinite; }
+  @keyframes ws-jazzy-blink { 0%, 95%, 98%, 100% { transform: scaleY(1); } 96.5% { transform: scaleY(.1); } }
+  @keyframes ws-jazzy-hop { to { transform: translateY(-1px); } }
+}
+.workspace-app .ws-cover { position: relative; display: flex; flex: none; flex-direction: column; justify-content: space-between; overflow: hidden; width: 168px; aspect-ratio: 1; padding: 12px; border-radius: var(--ws-radius-md, 10px); background: var(--ws-cover-ground); color: var(--ws-cover-ink); isolation: isolate; --ws-pattern-color: var(--color-signature); }
+.workspace-app .ws-cover[data-invert="1"] { background: var(--color-signature); color: var(--ws-cover-ground); --ws-pattern-color: var(--ws-cover-ground); }
+.workspace-app .ws-cover-pattern { position: absolute; inset: -75%; z-index: -1; opacity: .3; }
+.workspace-app .ws-cover[data-turn="1"] .ws-cover-pattern { transform: rotate(90deg); }
+.workspace-app .ws-cover[data-turn="2"] .ws-cover-pattern { transform: rotate(180deg); }
+.workspace-app .ws-cover[data-turn="3"] .ws-cover-pattern { transform: rotate(270deg); }
+.workspace-app .ws-cover[data-pattern="0"] .ws-cover-pattern { background: repeating-linear-gradient(45deg, var(--ws-pattern-color) 0 6px, transparent 6px 18px); }
+.workspace-app .ws-cover[data-pattern="1"] .ws-cover-pattern { background: radial-gradient(circle, var(--ws-pattern-color) 2px, transparent 3px) 0 0 / 16px 16px; }
+.workspace-app .ws-cover[data-pattern="2"] .ws-cover-pattern { background: repeating-radial-gradient(circle, var(--ws-pattern-color) 0 3px, transparent 3px 16px); }
+.workspace-app .ws-cover[data-pattern="3"] .ws-cover-pattern { background: repeating-conic-gradient(var(--ws-pattern-color) 0 25%, transparent 0 50%) 0 0 / 24px 24px; }
+.workspace-app .ws-cover[data-pattern="4"] .ws-cover-pattern { background: repeating-linear-gradient(90deg, var(--ws-pattern-color) 0 2px, transparent 2px 8px, var(--ws-pattern-color) 8px 12px, transparent 12px 20px); }
+.workspace-app .ws-cover[data-pattern="5"] .ws-cover-pattern { background: radial-gradient(circle at 25% 25%, var(--ws-pattern-color) 0 24%, transparent 24%); }
+.workspace-app .ws-cover-source { font: 500 12px/1.2 var(--font-mono); }
+.workspace-app .ws-cover-monogram { font: 700 36px/1 var(--font-ui); }
+.workspace-app .ws-cover[data-size="bar"] { width: 44px; padding: 3px; }
+.workspace-app .ws-cover[data-size="queue"] { width: 28px; padding: 2px; }
+.workspace-app .ws-cover[data-size="bar"] .ws-cover-source, .workspace-app .ws-cover[data-size="queue"] .ws-cover-source { display: none; }
+.workspace-app .ws-cover[data-size="bar"] .ws-cover-monogram, .workspace-app .ws-cover[data-size="queue"] .ws-cover-monogram { font-size: 12px; }
+@media (max-width: 600px) { .workspace-app .ws-cover[data-size="hero"] { width: 96px; padding: 8px; } .workspace-app .ws-cover[data-size="hero"] .ws-cover-monogram { font-size: 28px; } }

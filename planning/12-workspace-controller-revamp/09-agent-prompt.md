@@ -31,7 +31,7 @@ also has a nice design." I also want Spotify's frontend patterns used, and
 the Claude Code web app layout (left sidebar with a highlighted "recents"
 style list, clean centre column, floating rounded composer bar at the
 bottom) as the base. Borrow patterns only — no copied logos, mascots, icons
-or brand colours. The mascot must be our own (spec in the kit: "Folio", a
+or brand colours. The mascot must be our own (spec in the kit: "Jazzy", a
 red pixel bookmark creature).
 
 READ FIRST, IN THIS ORDER:

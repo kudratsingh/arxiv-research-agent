@@ -154,7 +154,7 @@ work order appends to **its own fenced section** of `controller.css`, e.g.
     only if needed
 - **Do.**
   - Build per [03 §1–2](03-screens-and-flows.md#1-shell-anatomy) and
-    [04 §2–3](04-architecture.md#2-shell): brand with Folio, the six nav
+    [04 §2–3](04-architecture.md#2-shell): brand with Jazzy, the six nav
     rows (Review added), the sidebar slot, the footer (export, Fictional
     preview, Research a question, Shortcuts, ThemeToggle, storage line), the
     stage header with breadcrumb and status line, the bar slot as the last
@@ -215,7 +215,7 @@ page content.
       question, Generation, links;
     - `ControlBar` with `PlayerBar`;
     - the resume strip and Edition details in the stage;
-    - empty states with Folio.
+    - empty states with Jazzy.
   - Today's status buttons now live **only** in the bar, with the existing
     accessible-name prefixes.
 - **Tests.**

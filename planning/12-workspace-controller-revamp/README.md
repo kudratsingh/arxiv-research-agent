@@ -9,7 +9,7 @@ scrolling list into an **integrated controller**:
 - **A floating bottom control bar**, modelled on the Claude Code web
   composer and Spotify's now-playing bar.
 - A **high-contrast black / white / red** palette in dark and light.
-- An original **cartoon pixel mascot**, Folio.
+- An original **cartoon pixel mascot**, Jazzy.
 
 The visual and layout references are the Claude Code web app, Spotify and
 VS Code. Only their patterns are borrowed; none of their assets are.
@@ -27,7 +27,7 @@ VS Code. Only their patterns are borrowed; none of their assets are.
 |---|---|
 | [00-charter.md](00-charter.md) | The owner's words verbatim, scope and non-goals, success criteria S1–S8, design, engineering and product-truth principles |
 | [01-references.md](01-references.md) | Claude Code web, the Claude Code composer, Spotify and VS Code: what we take from each and what we don't |
-| [02-design-system.md](02-design-system.md) | Palette for both themes with a computed contrast table, typography, space, radius, motion, icons, the **Folio mascot pixel grid**, cover tiles, component specs |
+| [02-design-system.md](02-design-system.md) | Palette for both themes with a computed contrast table, typography, space, radius, motion, icons, the **Jazzy mascot pixel grid**, cover tiles, component specs |
 | [03-screens-and-flows.md](03-screens-and-flows.md) | Shell anatomy with desktop, tablet and mobile wireframes, keyboard map, control bar, and per-route layouts for Today, Reader, Radar, Library, Interests, Sources & checks and Review, plus global states and the command palette |
 | [04-architecture.md](04-architecture.md) | File plan; Shell; slots (portal with inline fallback); URL focus state; the `data-command` keyboard and palette mechanism; budgets with a pre-authorized ratchet; CSS rules; accessibility contract |
 | [05-phases-and-work-orders.md](05-phases-and-work-orders.md) | P0–P8 (P9 optional): work orders with owned files, steps, tests and acceptance |
@@ -60,7 +60,7 @@ VS Code. Only their patterns are borrowed; none of their assets are.
 |---|---|
 | Scope | Live workspace only (`/workspace/*`). Evidence Workbench, learn and the fictional preview are unchanged (P9 is optional). |
 | Theme | Keep Light / Dark / System. Design dark first; light gets equal finish. |
-| Mascot | "Folio", a red pixel bookmark creature (grid in 02 §6). The owner may rename or restyle it. |
+| Mascot | "Jazzy", a red pixel bookmark creature (grid in 02 §6). The owner may rename or restyle it. |
 | Brand text | Keep "Research workspace". |
 | Review in nav | Yes, promoted to the sixth nav row. |
 | Command palette | Yes, lazy-loaded (`⌘K`), plus `?` shortcuts help. |

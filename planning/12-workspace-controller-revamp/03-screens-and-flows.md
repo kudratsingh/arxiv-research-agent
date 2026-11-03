@@ -14,7 +14,7 @@ copy it character for character.
 ```
 ┌─ canvas #0A0A0A ─────────────────────────────────────────────────────────────────────────────┐
 │ ┌─ SIDEBAR (320–340px, surface, radius-lg) ─┐ ┌─ STAGE (surface, radius-lg) ───────────────────┐ │
-│ │ [Folio] Research workspace     [◧] [◐]    │ │ workspace › today › 03 / 09        [↗ Read & investigate] │
+│ │ [Jazzy] Research workspace     [◧] [◐]    │ │ workspace › today › 03 / 09        [↗ Read & investigate] │
 │ │                                           │ │ ● Local workspace · Real source metadata · private server  │
 │ │  ◷ Today                         G T      │ │   saves · generation off · 5/5 sources · ⌘K                │
 │ │  ⌕ Radar                                  │ │ ─────────────────────────────────────────────────────────── │
@@ -77,7 +77,7 @@ control bar stays.
 
 ```
 ┌───────────────────────────────┐
-│ [Folio] Research   [☰ Queue]  │  ← top bar; ☰ opens drawer
+│ [Jazzy] Research   [☰ Queue]  │  ← top bar; ☰ opens drawer
 │ ◷Today ⌕Radar ▤Library ◎ ↻ ☑ │  ← nav row, horizontally scrollable, ALWAYS visible
 │ ● Local workspace · Real source│  ← status line (wraps), visible
 │   metadata · private server    │
@@ -132,7 +132,7 @@ the control bar, never inside a scrolled text region where arrows scroll.
 
 ### 2.1 Sidebar section order (desktop)
 
-1. **Brand row.** Folio (`idle`, blinking), the wordmark "Research
+1. **Brand row.** Jazzy (`idle`, blinking), the wordmark "Research
    workspace", a collapse button and a compact theme cycle. The full
    `ThemeToggle` radios sit in the footer.
 2. **Nav.** Today · Radar · Library · Interests · Sources & checks · Review.
@@ -206,7 +206,7 @@ text; use a different wording such as `5/5 sources`.
   slot. Routes with no queue (Interests) show only the composer row plus
   their own primary action, for example "Save interests and question".
 - **Busy and errors.**
-  - While a write is pending, the action buttons are `disabled` and Folio
+  - While a write is pending, the action buttons are `disabled` and Jazzy
     hops in the mini cover.
   - The outcome text goes to the page's single `Message` (`role="status"`).
     Render it **inside the bar** as a small line (row 0, above the input), or
@@ -249,7 +249,7 @@ actively snoozed items are dropped.
    - **"Available evidence"** caveat (existing copy and logic).
 4. A missing-version notice (existing copy) when `ordered.length <
    work_ids.length`.
-5. **Empty states** (keep headings verbatim, add Folio `sleepy`):
+5. **Empty states** (keep headings verbatim, add Jazzy `sleepy`):
    - "Make your first bounded check."
    - "No matching items in the available checks."
    - "Nothing new matched this reading window."
@@ -412,8 +412,8 @@ profile". It disables reading-time changes while a draft exists.
 
 | State | Treatment |
 |---|---|
-| Loading (no state yet) | The Shell renders immediately. The stage shows a skeleton of the focus card plus "Opening your local workspace…" (keep). Folio `busy` in the brand. |
-| Workspace unavailable (state fetch failed) | The `LoadingState` error box (critical style + ⚠), heading "Workspace unavailable", "No fictional items have been substituted.", and "Retry connection". Folio `alert`. |
+| Loading (no state yet) | The Shell renders immediately. The stage shows a skeleton of the focus card plus "Opening your local workspace…" (keep). Jazzy `busy` in the brand. |
+| Workspace unavailable (state fetch failed) | The `LoadingState` error box (critical style + ⚠), heading "Workspace unavailable", "No fictional items have been substituted.", and "Retry connection". Jazzy `alert`. |
 | Service notice (partial failure after load) | `ServiceNotice` box at the top of the stage (critical style). |
 | Source check running | Mascot `busy`. The button reads "Checking sources…". A status message. |
 | Conflict (409) | Existing copy in `Message`. The bar actions re-enable. |

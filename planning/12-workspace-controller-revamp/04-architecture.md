@@ -16,7 +16,7 @@ All new components go in `components/workspace/`. Do **not** put them in
 |---|---|
 | `components/workspace/controller.css` | The new stylesheet: shell, sidebar, stage, control bar, focus card, cover tiles, mascot, chips, kbd, dialogs, drawer, responsive rules. All selectors are scoped under `.workspace-app`. **No hex, rgb or hsl; no `font-family`.** |
 | `components/workspace/Slots.tsx` | `WorkspaceSlots` provider, `SidebarSection`, `ControlBar` (portal with inline fallback, §3) |
-| `components/workspace/Mascot.tsx` | Folio ([02 §6](02-design-system.md#6-mascot-folio)) |
+| `components/workspace/Mascot.tsx` | Jazzy ([02 §6](02-design-system.md#6-mascot-jazzy)) |
 | `components/workspace/Icon.tsx` | Inline SVG icon set ([02 §5](02-design-system.md#5-iconography)) |
 | `components/workspace/CoverTile.tsx` | Deterministic cover art ([02 §7](02-design-system.md#7-cover-tiles-spotify-album-art-idea)) |
 | `components/workspace/Queue.tsx` | `QueueList` and `QueueRow` (buttons, equalizer, status glyphs) |

@@ -222,9 +222,9 @@ three. **Never write `font-family`.** Use the `font:` shorthand with the
 - **Rule.** Draw them fresh: simple geometric strokes. Do not copy any icon
   library or brand glyph.
 
-## 6. Mascot: "Folio"
+## 6. Mascot: "Jazzy"
 
-Folio is an original red **bookmark-ribbon creature**: a rounded-top
+Jazzy is an original red **bookmark-ribbon creature**: a rounded-top
 rectangle body, two round eyes looking down and right (reading), a tiny
 smile, arm nubs, and a bookmark **V-notch** cut into the bottom that forms
 two legs.

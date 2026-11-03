@@ -82,9 +82,9 @@ Not taken: Spotify's green, its circular-logo brand, its fonts, the right
 
 The owner likes *having* a friendly mascot integrated into a serious tool. We
 make our **own** character:
-- **Folio**, a red bookmark-ribbon creature drawn on a 16×16 pixel grid.
+- **Jazzy**, a red bookmark-ribbon creature drawn on a 16×16 pixel grid.
   It has round eyes and a V-notch at the bottom that forms two little legs.
-  Full spec in [02 §6](02-design-system.md#6-mascot-folio).
+  Full spec in [02 §6](02-design-system.md#6-mascot-jazzy).
 - It must not resemble Anthropic's mascot (no crab or creature silhouette
   borrowed, no orange) or any other brand's character.
 
