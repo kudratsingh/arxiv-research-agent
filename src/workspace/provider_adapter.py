@@ -18,8 +18,9 @@ from decimal import Decimal
 from typing import Any, Literal
 
 import httpx
+from anthropic import transform_schema
 from psycopg.types.json import Jsonb
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.llm import RequestProfile, _build_request_kwargs
 from src.llm_models import MODEL_CAPABILITIES
@@ -33,6 +34,7 @@ from src.workspace.admission import (
 )
 from src.workspace.executor import FakeDraft, FakeExecutor
 from src.workspace.grounding import (
+    ResearchClaim,
     SupportCheck,
     SupportDecision,
     claim_input_digest,
@@ -40,7 +42,7 @@ from src.workspace.grounding import (
 )
 from src.workspace.store import WorkspaceStore
 
-REVISION = "workspace-qualification-adapter-v1"
+REVISION = "workspace-qualification-adapter-v2"
 MODEL = "claude-sonnet-4-6"
 PRICE_INPUT = Decimal("3")
 PRICE_OUTPUT = Decimal("15")
@@ -61,8 +63,35 @@ class Checks(BaseModel):
     checks: tuple[Verdict, ...] = Field(max_length=8)
 
 
-class StudyDraft(FakeDraft):
-    """Reuse structural claim/section checks, never the fake title or verdict rule."""
+class DraftSection(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    name: Literal["overview", "prerequisites", "method", "assumptions", "comparison", "experiment"]
+    claim_ids: tuple[str, ...] = Field(min_length=1, max_length=8)
+
+
+class StudyDraft(BaseModel):
+    """An explicit array of closed objects survives the SDK's schema transform.
+
+    Arbitrary mappings become additionalProperties=false on this wire. Keep the
+    fake executor's internal mapping separate from the qualification contract.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    kind: Literal["summary", "deep_dive"]
+    title: str = Field(min_length=1, max_length=300)
+    claims: tuple[ResearchClaim, ...] = Field(min_length=1, max_length=8)
+    sections: tuple[DraftSection, ...] = Field(min_length=1, max_length=6)
+    questions: tuple[str, ...] = Field(default=(), max_length=8)
+    proposed_actions: tuple[str, ...] = Field(default=(), max_length=8)
+    limitations: tuple[str, ...] = Field(default=(), max_length=8)
+
+    @model_validator(mode="after")
+    def semantic_sections(self) -> StudyDraft:
+        sections = {section.name: section.claim_ids for section in self.sections}
+        if len(sections) != len(self.sections):
+            raise ValueError("duplicate_sections")
+        FakeDraft.model_validate({**self.model_dump(), "sections": sections})
+        return self
 
 
 def prepare(
@@ -74,7 +103,13 @@ def prepare(
     span_ids: Sequence[str] = (),
 ) -> GenerationInput:
     # Shared, tested retained-source selection; fake prompts/counters are discarded.
-    preview = FakeExecutor(store).preview(owner, kind, material_ids, span_ids=span_ids)
+    store._owner(owner)
+    if len(owner) > 120:
+        raise AdmissionError("invalid_owner")
+    # Preparation is strictly read-only on an already migrated workspace.
+    # FakeExecutor.preview bootstraps tables; reuse only its selection builder.
+    with store.pool.connection() as conn:
+        preview, _ = FakeExecutor(store)._preview(conn, owner, kind, material_ids, span_ids, "")
     sources = preview.request["sources"]
     settings = {
         "adapter_revision": REVISION,
@@ -86,6 +121,7 @@ def prepare(
         "selection": preview.request["selection"],
         "context_digest": _digest(sources),
         "schema_digest": _digest([StudyDraft.model_json_schema(), Checks.model_json_schema()]),
+        "wire_schema_digest": _digest([transform_schema(StudyDraft), transform_schema(Checks)]),
         "temperature": 0.2,
         "checker_temperature": 0,
         "thinking": "disabled",
@@ -115,7 +151,7 @@ def prepare(
 
 class QualificationAdmission(GenerationAdmission):
     @staticmethod
-    def _request_id(policy: dict[str, Any], request_id: str) -> None:
+    def _request_id(policy: dict[str, Any], request_id: str, inputs: dict[str, Any]) -> None:
         if policy.get("request_id") != request_id:
             raise AdmissionError("approved_request_id_required")
 
@@ -137,6 +173,9 @@ class QualificationAdmission(GenerationAdmission):
 class QualificationAdapter:
     """Single fenced experiment job over the existing durable reservation ledger."""
 
+    admission_type: type[GenerationAdmission] = QualificationAdmission
+    allowed_endpoints = frozenset({"messages", "messages/count_tokens"})
+
     def __init__(
         self,
         store: WorkspaceStore,
@@ -149,7 +188,7 @@ class QualificationAdapter:
     ):
         self.store, self.owner, self.inputs = store, owner, inputs
         self.transport, self.api_key, self.enabled = transport, api_key, enabled
-        self.control = QualificationAdmission(store)
+        self.control = self.admission_type(store)
         self.mode = "mock" if isinstance(transport, httpx.MockTransport) else "provider"
         if transport is not None and not isinstance(transport, httpx.MockTransport):
             raise AdmissionError("mock_transport_required")
@@ -203,6 +242,11 @@ class QualificationAdapter:
         )
         if Decimal(amount_usd) < maximum * Decimal("1.25"):
             raise AdmissionError("reservation_below_envelope")
+        return self._start(request_id, amount_usd, now=now)
+
+    def _start(
+        self, request_id: str, amount_usd: str, *, now: datetime | None = None
+    ) -> dict[str, Any]:
         job = self.control.reserve(self.owner, request_id, self.inputs, amount_usd, now=now)
         if job["state"] != "reserved":
             return job
@@ -238,7 +282,24 @@ class QualificationAdapter:
             conn.execute(
                 "UPDATE workspace_generation_jobs SET data=%s WHERE id=%s", (Jsonb(data), job["id"])
             )
-        return {**job, "state": "running"}
+        return {**job, "state": "running", "newly_started": True}
+
+    def _draft(self, output: dict[str, Any]) -> StudyDraft:
+        draft = StudyDraft.model_validate(output)
+        if draft.kind != self.inputs.kind:
+            raise AdmissionError("kind_drift")
+        selected = set(self.inputs.settings["selection"]["span_ids"])
+        if any(ref.span_id not in selected for claim in draft.claims for ref in claim.evidence):
+            raise AdmissionError("draft_references_unselected_span")
+        _, materials = self._context()
+        report = validate_claims(draft.claims, materials)
+        if any(
+            not assessment.identity_resolved
+            for assessment in report.assessments
+            if assessment.kind == "factual"
+        ):
+            raise AdmissionError("draft_factual_evidence_missing")
+        return draft
 
     def snapshot(self, job_id: str) -> dict[str, Any]:
         with self.store.pool.connection() as conn:
@@ -272,13 +333,13 @@ class QualificationAdapter:
         if steps:
             context["previous_output"] = steps[-1]["output"]
         if stage == "check":
-            draft = StudyDraft.model_validate(steps[-1]["output"])
+            draft = self._draft(steps[-1]["output"])
             context["claims"] = [
                 {"claim": asdict(claim), "input_digest": claim_input_digest(claim, materials)}
                 for claim in draft.claims
             ]
         if stage == "repair":
-            context["draft"] = steps[0]["output"]
+            context["draft"] = self._draft(steps[0]["output"]).model_dump(mode="json")
         body = _build_request_kwargs(
             profile=RequestProfile(
                 self.inputs.model_id, 0 if stage == "check" else 0.2, False, "", True
@@ -299,7 +360,7 @@ class QualificationAdapter:
         job_id: str | None = None,
         ordinal: int | None = None,
     ) -> dict[str, Any]:
-        if path not in {"messages", "messages/count_tokens"}:
+        if path not in self.allowed_endpoints:
             raise AdmissionError("endpoint_not_permitted")
         # Recheck at construction, not just at session creation: revocation and
         # a mutated transport must never turn a mock approval into network work.
@@ -381,6 +442,8 @@ class QualificationAdapter:
         return value
 
     def _contact(self, job_id: str, wire: dict[str, Any], endpoint: str) -> int:
+        if endpoint not in self.allowed_endpoints:
+            raise AdmissionError("endpoint_not_permitted")
         expected = self.request(job_id)
         with self.store.pool.connection() as conn:
             self.control._lock(conn, self.owner)
@@ -438,6 +501,8 @@ class QualificationAdapter:
     async def advance(
         self, job_id: str, *, cancelled: Callable[[], bool] = lambda: False
     ) -> dict[str, Any]:
+        if "messages" not in self.allowed_endpoints:
+            raise AdmissionError("endpoint_not_permitted")
         if cancelled():
             return self.control.cancel(self.owner, job_id)
         wire = self.request(job_id)
@@ -511,7 +576,7 @@ class QualificationAdapter:
             if wire["stage"] == "check":
                 checks = Checks.model_validate(output)
                 sources, materials = self._context()
-                draft = StudyDraft.model_validate(snapshot["steps"][-1]["output"])
+                draft = self._draft(snapshot["steps"][-1]["output"])
                 grounding = validate_claims(
                     draft.claims,
                     materials,
@@ -532,11 +597,7 @@ class QualificationAdapter:
                 )
                 output = {**checks.model_dump(mode="json"), "grounding": asdict(grounding)}
             else:
-                parsed = StudyDraft.model_validate(output)
-                if parsed.kind != self.inputs.kind:
-                    raise AdmissionError("kind_drift")
-                _, materials = self._context()
-                validate_claims(parsed.claims, materials)
+                self._draft(output)
             with self.store.pool.connection() as conn:
                 self.control._lock(conn, self.owner)
                 state, _, data = self.control._job(conn, self.owner, job_id)

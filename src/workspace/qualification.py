@@ -14,12 +14,13 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from anthropic import transform_schema
 
 from src.tools.postgres_pool import close_pool, get_pool
 from src.workspace.admission import _digest
 from src.workspace.grounding import ClaimKind, ResearchClaim, evidence_ref
 from src.workspace.material import SourceMaterial
-from src.workspace.provider_adapter import QualificationAdapter, prepare
+from src.workspace.provider_adapter import Checks, QualificationAdapter, StudyDraft, prepare
 from src.workspace.store import WorkspaceStore
 
 
@@ -101,6 +102,7 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
                 "initial_generation": initial,
                 "initial_count_request": count,
                 "count_request_digest": _digest(count),
+                "measurement_request_id": "measurement-" + _digest(inputs.snapshot())[:40],
                 "measured_tokens": None,
                 "dynamic_stages": ["check", "optional repair", "mandatory repair recheck"],
                 "status": "unapproved; no provider contact",
@@ -110,7 +112,7 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
         if item["job_kind"] == "summary":
             selected.append(materials[0])
     return {
-        "revision": "workspace-qualification-packet-v1",
+        "revision": "workspace-qualification-packet-v2",
         "approved": False,
         "provider_contacts": 0,
         "actual_usd": "0",
@@ -118,6 +120,29 @@ def packet(store: WorkspaceStore, owner: str, proposal: dict[str, Any]) -> dict[
         "claim_span_review": review_cases(selected),
         "everyday_generation": False,
         "checker_qualified": False,
+        "schemas": {
+            name: {
+                "local": model.model_json_schema(),
+                "wire": transform_schema(model),
+                "local_digest": _digest(model.model_json_schema()),
+                "wire_digest": _digest(transform_schema(model)),
+            }
+            for name, model in (("draft_and_repair", StudyDraft), ("checker", Checks))
+        },
+        "measurement_only": {
+            "purpose": "workspace-measurement-only",
+            "count_contacts_max": 4,
+            "messages_contacts_max": 0,
+            "count_requests": [
+                {
+                    "request_id": job["measurement_request_id"],
+                    "input_digest": job["input_digest"],
+                    "count_request_digest": job["count_request_digest"],
+                }
+                for job in jobs
+            ],
+            "approval_record": None,
+        },
         "small_sample_caveat": "Four jobs and 24 unlabelled review cases cannot certify a false-pass bound. Human review and a separately scoped larger checker experiment may be needed.",
     }
 

@@ -1,7 +1,9 @@
 # Grounded summary and guided deep-dive qualification proposal
 
-Refreshed 2026-11-03 after the actual wire adapter became testable with mocked
-transport. **Unapproved and unexecuted.** Neither this packet nor its JSON
+Refreshed 2026-11-03 after the qualification-readiness repair of reviewed
+PR284 at916f038. Wire sections are explicit closed objects; selected passages
+are enforced through draft/repair/check; count-only and experiment runners have
+disjoint approval purposes. **Unapproved and unexecuted.** Neither this packet nor its JSON
 companion is an approval record. Provider calls and spend remain zero;
 recurrence is disabled. All workspace PRs remain unmerged.
 
@@ -68,13 +70,16 @@ The JSON companion retains the four source identities, hashes, parser versions
 and study span selection. Run the **read-only, zero-contact** packet builder:
 
 ```sh
-cd /private/tmp/arxiv-agent-eng-workspace-readiness
+cd /private/tmp/arxiv-agent-eng-workspace-qualification-repair
 POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15438/workspace \
 ANTHROPIC_API_KEY=local-preview-disabled \
 /Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python \
   -m src.workspace.qualification --owner personal-local \
-  --output outputs/workspace-readiness/trial-packet.json
+  --output outputs/workspace-qualification-repair/trial-packet.json
 ```
+
+This builder is now strictly read-only, including migration/bootstrap avoidance;
+preparation has passed under database-enforced read-only mode.
 
 This exports exact **initial** Messages and count bodies, schemas, settings,
 digests, all selected source characters and24 unlabelled claim/span cases. It
@@ -160,3 +165,6 @@ everyday-use policy. No approval row, credential or recurring schedule has been
 created by this batch. Paid `/workspace/generate` still refuses before client
 construction. The real adapter is only reachable through an explicitly
 configured qualification harness, not the public reader controls.
+
+
+The v2 packet invalidates all v1 request digests. See the [repair runbook](21-qualification-readiness-repair.md) for concrete count-only and quarantined-experiment invocations, the external approval record contract, replay/revocation fences, wire-schema evidence and remaining unmeasured outcomes. Neither runner creates permission.
