@@ -80,3 +80,5 @@ first runnable milestone, checks and unresolved evidence. The broader product
 is not complete at the fixture milestone.
 
 The live follow-up is documented in [the local walkthrough](14-live-local-walkthrough.md), [current status](STATUS.md) and [unexecuted generation proposal](15-grounded-generation-approval-packet.md).
+
+The current follow-up is [the personal review and fake-executor walkthrough](16-review-and-executor-walkthrough.md), with [scientific extraction limits](18-fulltext-qualification.md) and [disabled everyday operation](19-everyday-operation.md). Real generated summaries and guided dives remain explicit separately approved milestones.

@@ -78,7 +78,7 @@ The persisted material warnings and qualification receipts retain the specific
 observed problems. The general exclusions are equation semantics, table-cell
 structure, diagram content and unretained pages. Usable prose and stable anchors
 support manual reading; these records do not certify generated factual claims.
-Generation remains separately disabled pending the exact owner-approved trial.
+Paid generation remains separately disabled pending the exact owner-approved trial.
 
 ## Local evidence and integration boundary
 

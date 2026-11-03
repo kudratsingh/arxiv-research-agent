@@ -7,7 +7,7 @@
     "input": 3,
     "output": 15
   },
-  "prices_verified_at": "2026-11-02",
+  "prices_verified_at": "2026-11-03",
   "price_source": "https://platform.claude.com/docs/en/about-claude/pricing",
   "sources": [
     {
@@ -17,7 +17,10 @@
       "content_hash": "sha256:a1e2d03e8e9d1c84b615b075c16a309c69499e3fa466b8502a8ae63cc36aca32",
       "source_hash": "sha256:2b307ec864315d90d5e828786c2505fff1feda8837559b7e8601961ea9717759",
       "scope": "abstract",
-      "parser_revision": "workspace-plain-text-v1"
+      "parser_revision": "workspace-plain-text-v1",
+      "job_kind": "summary",
+      "fake_request_digest": "sha256:b0ff8fbe6307617c59c858baeaf73b644780d722a694379a9a9010a119d0eb7a",
+      "local_exact_request_artifact": "outputs/workspace-next/summary-1-sealed-preview.json"
     },
     {
       "work_id": "arxiv:2610.41552",
@@ -26,7 +29,10 @@
       "content_hash": "sha256:d3957979392138a48583d19fbe4eacdd34a9c9b5a7be53c71e284e37a247a492",
       "source_hash": "sha256:57d828d72e965955c14487b74cfd406d58aeab909942be50c97cafac89d3ccae",
       "scope": "abstract",
-      "parser_revision": "workspace-plain-text-v1"
+      "parser_revision": "workspace-plain-text-v1",
+      "job_kind": "summary",
+      "fake_request_digest": "sha256:bfd0d1c2e81b3218f3c30d16e632ab7fa3c7a07b7c1478b58900a6d78b1f8d05",
+      "local_exact_request_artifact": "outputs/workspace-next/summary-2-sealed-preview.json"
     },
     {
       "work_id": "url:b49ec3bd8394c6fb4c19e7973ae4b411",
@@ -35,13 +41,41 @@
       "content_hash": "sha256:97761022fb36ff719a56d706bdd6f879c3f3f270960de59d8b404c165b5dea03",
       "source_hash": "sha256:a9d24ada1cc839d6c40f857f0e963df612039b888706519edb9870398db8eab1",
       "scope": "excerpt",
-      "parser_revision": "workspace-plain-text-v1"
+      "parser_revision": "workspace-plain-text-v1",
+      "job_kind": "summary",
+      "fake_request_digest": "sha256:c2f16deaa50ec6b400599fea9baf7a872e3c7433737ca8fd4a115e346708be39",
+      "local_exact_request_artifact": "outputs/workspace-next/summary-3-sealed-preview.json"
+    },
+    {
+      "work_id": "arxiv:2210.03629",
+      "version_id": "arxiv:2210.03629:v3",
+      "material_id": "mat-2b7a38f3cfa1449f7728f044688ca2c2",
+      "content_hash": "sha256:196be15c138fb6e551d2641473fee7b175fca7f4dcb0d0f5a171ee103ba57e16",
+      "source_hash": "sha256:f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69",
+      "scope": "excerpt",
+      "parser_revision": "workspace-pymupdf-1.28.0-text-sort-v1-selected-pages-v1",
+      "job_kind": "deep_dive",
+      "fake_request_digest": "sha256:dee2c431792c3c243da0033b4dddf4be31599d6dc553a724e8ca2b1c0547b994",
+      "local_exact_request_artifact": "outputs/workspace-next/study-sealed-preview.json",
+      "span_ids": [
+        "span-f6302b12e1703fd9e72c10e91b06a42b",
+        "span-e938044ecb931aff97360bd1fe27f3df",
+        "span-e505ce9b7c0a17016f4e22e8caea7810"
+      ],
+      "original_pages": [
+        3
+      ],
+      "selected_utf8_bytes": 5295,
+      "complete": false
     }
   ],
   "private_context": {
     "notes": false,
     "drafts": false,
-    "organizing_question": false
+    "organizing_question": false,
+    "reading_history": false,
+    "preferences": false,
+    "implicit_question": false
   },
   "settings": {
     "draft_temperature": 0.2,
@@ -51,11 +85,13 @@
     "structured_outputs": true,
     "sdk_retries": 0,
     "max_concurrency": 1,
-    "timeout_seconds": 30
+    "timeout_seconds": 30,
+    "max_repairs_per_job": 1,
+    "repair_must_be_rechecked": true
   },
   "envelope": {
     "summary": {
-      "max_calls": 2,
+      "max_calls": 4,
       "draft_tokens": [
         6000,
         1200
@@ -64,10 +100,23 @@
         8000,
         800
       ],
-      "job_cap_usd": "0.10"
+      "repair_tokens": [
+        8000,
+        1200
+      ],
+      "recheck_tokens": [
+        8000,
+        800
+      ],
+      "job_cap_usd": "0.20",
+      "workflow_estimate_max_usd": "0.078",
+      "checker_estimate_max_usd": "0.072",
+      "estimated_max_usd": "0.150",
+      "margin_multiplier": "1.25",
+      "buffered_estimate_usd": "0.18750"
     },
     "guided_study": {
-      "max_calls": 3,
+      "max_calls": 4,
       "draft_tokens": [
         16000,
         2400
@@ -80,26 +129,46 @@
         18000,
         2400
       ],
-      "job_cap_usd": "0.32"
+      "recheck_tokens": [
+        18000,
+        1200
+      ],
+      "job_cap_usd": "0.40",
+      "workflow_estimate_max_usd": "0.174",
+      "checker_estimate_max_usd": "0.144",
+      "estimated_max_usd": "0.318",
+      "margin_multiplier": "1.25",
+      "buffered_estimate_usd": "0.39750"
     },
     "qualification": {
       "summaries": 3,
       "guided_studies": 1,
-      "max_calls": 9,
-      "estimated_max_usd": "0.462",
-      "reserved_job_caps_usd": "0.62",
-      "trial_cap_usd": "0.75",
-      "day_cap_usd": "0.75",
-      "month_cap_usd": "0.75"
+      "max_calls": 16,
+      "estimated_max_usd": "0.768",
+      "reserved_job_caps_usd": "1.00",
+      "trial_cap_usd": "1.25",
+      "day_cap_usd": "1.25",
+      "month_cap_usd": "1.25"
     }
   },
   "measured_token_counts": null,
   "provider_calls": 0,
   "execution_enabled": false,
   "remaining": [
-    "Actual executor and per-call settings/token enforcement",
-    "Exact token measurements",
-    "Checker qualification and representative labels",
-    "Specific owner GO; no code-generated approval"
-  ]
+    "Paid adapter with actual per-call settings/schema/token enforcement and sealed request digest",
+    "Exact input token measurements before approval; no paid count endpoint authorized",
+    "Representative human claim/span review and actual checker qualification",
+    "Specific owner GO naming model, public context, one-off trial and caps; no code-generated approval"
+  ],
+  "prepared_at": "2026-11-03",
+  "qualification_kind": "unexecuted small trial, contingent on paid adapter/settings/token/quality prerequisites and explicit owner GO",
+  "token_basis": "conservative design bounds; NOT measured; fake UTF-8 counters are not tokens",
+  "paid_request_digest": null,
+  "fake_verification": {
+    "provider_calls": 0,
+    "actual_usd": "0.000000",
+    "jobs": 4,
+    "receipt": "outputs/workspace-next/fake-execution-receipt.json",
+    "claim": "State/protocol tests only; fake checks are not model-quality evidence"
+  }
 }
