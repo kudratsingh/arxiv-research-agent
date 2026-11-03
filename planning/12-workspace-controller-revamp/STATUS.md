@@ -188,3 +188,55 @@ qualification experiment. Controller work remains at G0, with no P1 source
 implementation yet; its key remains disabled. Waiting for the owner's promised
 new frontend instructions while the independent experiment is prepared. No PR
 was opened for this branch, no PR merged, and no owner data was modified.
+
+## Owner steering: mascot name
+
+The owner renamed the mascot **Jazzy**. The original red pixel bookmark-ribbon
+design, moods and generic `Mascot` component API remain unchanged. Current kit
+references and heading anchors were updated; this overrides the original name
+default. No application branding or out-of-scope surfaces were renamed.
+
+## P1 integration — foundations and Jazzy
+
+WO-1.1 appends only the scoped23-role workspace palette and a header comment;
+the existing global theme/Workbench declarations are unchanged. The scoped
+contrast parser checks actual token values and both dark mechanisms. A deliberate
+light-ink mutation failed at1.09:1 versus4.5:1 and was restored; the targeted
+suite passed27files/568tests. Explicit missing-value guards fixed strict indexed
+access in the new test without weakening its checks. E36/E41: the progress track
+is decorative; the fill must contrast against it and the surrounding surfaces.
+
+The first composed coverage run found one old EOF-slice assumption in
+`tests/patterns/ReportReader.test.tsx`: its reader-token fence included all later
+CSS. The assertion now stops before the separately scoped workspace fence,
+preserving its no-media-query rule for the unchanged Report Reader. No production
+Workbench source or CSS was changed. Test-edit reason: pinned old EOF layout.
+
+WO-1.2 supplies original eight-part Jazzy SVG, icons and deterministic cover art.
+E08 separates eyes/pupils/mouth/closed/alert paths; reduced-motion disables ambient
+animation. `coverSeed` owns a small dedicated `lib/workspace/cover.ts` to avoid
+P1 parallel ownership conflicts; component/cover tests remain separate from queue
+tests. No runtime dependency was added. All current kit name references use Jazzy.
+
+WO-1.3 preserves pinned Today/Library queues and exact reader targets, adds local
+URL subscriptions with a named SSR snapshot, and a pure keymap. Today-only safe
+focus retention preserves exact Library/Review return URLs (E07/E22/E70). Enter
+and arrows leave native interactive controls alone; Shift guards were tightened
+after root review. Queue/URL/commands plus cover helpers reach100%line/branch
+coverage. Focused suite90tests passed; no existing request-body assertion changed.
+
+Standard lint/typecheck pass. Composed full-suite/coverage output, copied:
+
+```text
+ Test Files  184 passed (184)
+      Tests  3803 passed (3803)
+Statements   : 98.31% ( 4435/4511 )
+Branches     : 94.32% ( 3375/3578 )
+Functions    : 92.23% ( 1591/1725 )
+Lines        : 99.38% ( 3727/3750 )
+```
+
+G1 closure still awaits the measured build/budget record and phase screenshots;
+E27 permits a recorded CSS-only interim overrun throughG6, with no early ratchet.
+The approved one-off qualification remains separately prepared and waiting for
+the owner's credential; frontend processes continue using the disabled sentinel.

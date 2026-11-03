@@ -561,9 +561,11 @@ describe("criteria 5, 7, 8 — computed styles", () => {
   });
 
   it("criterion 7 — the fix is token resolution, not a second media query", () => {
-    const fence = stripComments(tokensCss).slice(
-      stripComments(tokensCss).indexOf(".ew-report-reader"),
-    );
+    // The append-only workspace palette is a separate surface, after the
+    // Evidence Workbench fence. Keep this assertion on the reader's own CSS.
+    const legacyTokens = tokensCss.split("/* ===== WORKSPACE CONTROLLER PALETTE")[0] ?? "";
+    const stripped = stripComments(legacyTokens);
+    const fence = stripped.slice(stripped.indexOf(".ew-report-reader"));
     expect(fence).not.toContain("prefers-color-scheme");
     // The legacy block is left standing until WO-31, and is not ours.
     expect(readWebFile("app/globals.css")).toContain("prefers-color-scheme");

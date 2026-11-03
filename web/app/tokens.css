@@ -13,6 +13,9 @@
  * asserts bidirectional parity between this file, web/lib/tokens.ts and
  * tokens.json in both themes; an orphan in either direction fails.
  *
+ * The workspace controller adds a scoped palette fence at the end; it does
+ * not change these global theme declarations.
+ *
  * Theme mechanism (04-ARCHITECTURE.md section 6.2 item 1):
  *   :root                        light values + color-scheme: light dark
  *   @media (prefers-color-scheme: dark) :root   dark values, no-JS fallback
@@ -632,5 +635,143 @@
     top: var(--space-6);
     max-height: calc(100vh - var(--space-16));
     overflow-y: auto;
+  }
+}
+
+/* ===== WORKSPACE CONTROLLER PALETTE (planning/12) — scoped, owns no :root ===== */
+.workspace-app {
+  color-scheme: light;
+  --color-canvas: #F5F5F5;
+  --color-surface: #FFFFFF;
+  --color-sunken: #EDEDED;
+  --color-ink: #0A0A0A;
+  --color-ink-muted: #4D4D4D;
+  --color-ink-faint: #666666;
+  --color-ink-disabled: #9E9E9E;
+  --color-border-subtle: #E3E3E3;
+  --color-border-strong: #8A8A8A;
+  --color-primary: #D70015;
+  --color-primary-strong: #A80010;
+  --color-primary-on: #FFFFFF;
+  --color-focus: #0A0A0A;
+  --color-signature: #D70015;
+  --color-signature-text: #B00012;
+  --color-signature-on: #FFFFFF;
+  --color-review: #B26B00;
+  --color-review-text: #8A5300;
+  --color-review-surface: #FFF4E0;
+  --color-critical: #B3261E;
+  --color-critical-text: #9E1F18;
+  --color-critical-surface: #FDECEA;
+  --color-critical-on: #FFFFFF;
+  --ws-raised: #FFFFFF;
+  --ws-hover: #F0F0F0;
+  --ws-accent-soft: #FDECEE;
+  --ws-accent-wash: rgba(215, 0, 21, 0.08);
+  --ws-shadow-bar: 0 8px 28px rgba(10, 10, 10, 0.12);
+  --ws-success: #15803D;
+  --ws-mascot-body: #D70015;
+  --ws-mascot-shade: #8F000E;
+  --ws-mascot-highlight: #FF6B78;
+  --ws-mascot-eye: #FFFFFF;
+  --ws-mascot-ink: #0A0A0A;
+  --ws-cover-ink: #0A0A0A;
+  --ws-cover-ground: #FFFFFF;
+  --ws-radius-sm: 6px;
+  --ws-radius-md: 10px;
+  --ws-radius-lg: 14px;
+  --ws-radius-xl: 18px;
+  --ws-radius-pill: 999px;
+}
+
+:root[data-theme="dark"] .workspace-app {
+  color-scheme: dark;
+  --color-canvas: #0A0A0A;
+  --color-surface: #141414;
+  --color-sunken: #050505;
+  --color-ink: #FAFAFA;
+  --color-ink-muted: #B3B3B3;
+  --color-ink-faint: #8F8F8F;
+  --color-ink-disabled: #6B6B6B;
+  --color-border-subtle: #262626;
+  --color-border-strong: #6B6B6B;
+  --color-primary: #FF4D4D;
+  --color-primary-strong: #FF7A7A;
+  --color-primary-on: #0A0A0A;
+  --color-focus: #FAFAFA;
+  --color-signature: #FF4D4D;
+  --color-signature-text: #FF6B6B;
+  --color-signature-on: #0A0A0A;
+  --color-review: #F5A524;
+  --color-review-text: #F5B54A;
+  --color-review-surface: #2A1F0A;
+  --color-critical: #FF8A80;
+  --color-critical-text: #FF8A80;
+  --color-critical-surface: #2B1111;
+  --color-critical-on: #0A0A0A;
+  --ws-raised: #1C1C1C;
+  --ws-hover: #1F1F1F;
+  --ws-accent-soft: #2A1012;
+  --ws-accent-wash: rgba(255, 77, 77, 0.16);
+  --ws-shadow-bar: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --ws-success: #4ADE80;
+  --ws-mascot-body: #FF4D4D;
+  --ws-mascot-shade: #B3001B;
+  --ws-mascot-highlight: #FF9A9A;
+  --ws-mascot-eye: #FFFFFF;
+  --ws-mascot-ink: #0A0A0A;
+  --ws-cover-ink: #FAFAFA;
+  --ws-cover-ground: #0A0A0A;
+  --ws-radius-sm: 6px;
+  --ws-radius-md: 10px;
+  --ws-radius-lg: 14px;
+  --ws-radius-xl: 18px;
+  --ws-radius-pill: 999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .workspace-app {
+    color-scheme: dark;
+    --color-canvas: #0A0A0A;
+    --color-surface: #141414;
+    --color-sunken: #050505;
+    --color-ink: #FAFAFA;
+    --color-ink-muted: #B3B3B3;
+    --color-ink-faint: #8F8F8F;
+    --color-ink-disabled: #6B6B6B;
+    --color-border-subtle: #262626;
+    --color-border-strong: #6B6B6B;
+    --color-primary: #FF4D4D;
+    --color-primary-strong: #FF7A7A;
+    --color-primary-on: #0A0A0A;
+    --color-focus: #FAFAFA;
+    --color-signature: #FF4D4D;
+    --color-signature-text: #FF6B6B;
+    --color-signature-on: #0A0A0A;
+    --color-review: #F5A524;
+    --color-review-text: #F5B54A;
+    --color-review-surface: #2A1F0A;
+    --color-critical: #FF8A80;
+    --color-critical-text: #FF8A80;
+    --color-critical-surface: #2B1111;
+    --color-critical-on: #0A0A0A;
+    --ws-raised: #1C1C1C;
+    --ws-hover: #1F1F1F;
+    --ws-accent-soft: #2A1012;
+    --ws-accent-wash: rgba(255, 77, 77, 0.16);
+    --ws-shadow-bar: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --ws-success: #4ADE80;
+    --ws-mascot-body: #FF4D4D;
+    --ws-mascot-shade: #B3001B;
+    --ws-mascot-highlight: #FF9A9A;
+    --ws-mascot-eye: #FFFFFF;
+    --ws-mascot-ink: #0A0A0A;
+    --ws-cover-ink: #FAFAFA;
+    --ws-cover-ground: #0A0A0A;
+    --ws-radius-sm: 6px;
+    --ws-radius-md: 10px;
+    --ws-radius-lg: 14px;
+    --ws-radius-xl: 18px;
+    --ws-radius-pill: 999px;
   }
 }
