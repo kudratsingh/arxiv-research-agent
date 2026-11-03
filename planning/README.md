@@ -35,6 +35,13 @@ Living log of enterprise-readiness plans, feature ideas, and roadmap for the arx
     for the owner's research, local first with paid services separately approved.
     Product research, source/topic seeds, experience design, architecture,
     work orders, quality gates and a copyable implementation-agent handoff.
+12. [Workspace Controller Revamp](12-workspace-controller-revamp/README.md) — the
+    2026-11-03 frontend revamp kit for the live workspace: one focused paper with
+    prev/next, one large sidebar holding the ordered queue and every control, a
+    floating Claude-Code-style control bar, a black/white/red palette and an
+    original pixel mascot. Charter, references, design system, screens,
+    architecture, phased work orders, gates, test impact, a verified local stack
+    and a copyable agent prompt.
 
 ## How to use this folder
 

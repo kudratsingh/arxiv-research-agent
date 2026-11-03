@@ -1,7 +1,7 @@
 # Handoff brief: research workspace frontend revamp
 
 **Branch:** `claude/youthful-dirac-69v19d` (pushed). **Status:** discovery done, design agreed, **no UI code written yet**.
-**Read first:** this file, then the five reports in `docs/handoff/workspace-revamp-map/` (`01-guardrails.md` is the most important).
+**Read first:** this file, then the five reports in `planning/12-workspace-controller-revamp/recon/` (`01-guardrails.md` is the most important).
 
 ---
 
@@ -29,7 +29,7 @@ The user added three references later:
    - `npx vitest run tests/workspace tests/daily tests/shell tests/tokens.test.ts tests/copy tests/primitives`: 53 files, 1417 tests pass.
    - `npm run typecheck`: clean.
    - `npm run lint`: clean.
-5. **Ran a 6-agent read-only mapping workflow.** Five reports finished and are saved verbatim in `docs/handoff/workspace-revamp-map/`:
+5. **Ran a 6-agent read-only mapping workflow.** Five reports finished and are saved verbatim in `planning/12-workspace-controller-revamp/recon/`:
    - `01-guardrails.md`: every ESLint, token, CSP, budget and coverage rule, with file:line references and tested palette options.
    - `02-tests.md`: every test that pins the DOM, what breaks under a focused-paper design, and the router mocks.
    - `03-reader.md`: Reader / RetainedSource / SyntheticWorkbench structure, controls and fragile bits.
