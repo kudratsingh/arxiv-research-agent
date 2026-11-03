@@ -1,0 +1,3069 @@
+{
+  "seedVersion": "0.1.0",
+  "topics": [
+    {
+      "id": "oa-domain:1",
+      "label": "Life Sciences",
+      "kind": "external_domain",
+      "parents": []
+    },
+    {
+      "id": "oa-domain:2",
+      "label": "Social Sciences",
+      "kind": "external_domain",
+      "parents": []
+    },
+    {
+      "id": "oa-domain:3",
+      "label": "Physical Sciences",
+      "kind": "external_domain",
+      "parents": []
+    },
+    {
+      "id": "oa-domain:4",
+      "label": "Health Sciences",
+      "kind": "external_domain",
+      "parents": []
+    },
+    {
+      "id": "oa-field:11",
+      "label": "Agricultural and Biological Sciences",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:1"
+      ]
+    },
+    {
+      "id": "study:11/agronomy-and-crop-science",
+      "label": "Agronomy and crop science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:11"
+      ]
+    },
+    {
+      "id": "study:11/forestry",
+      "label": "Forestry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:11"
+      ]
+    },
+    {
+      "id": "study:11/fisheries-and-aquaculture",
+      "label": "Fisheries and aquaculture",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:11"
+      ]
+    },
+    {
+      "id": "study:11/ecology-and-biodiversity",
+      "label": "Ecology and biodiversity",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:11"
+      ]
+    },
+    {
+      "id": "study:11/plant-science",
+      "label": "Plant science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:11"
+      ]
+    },
+    {
+      "id": "study:11/animal-science",
+      "label": "Animal science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:11"
+      ]
+    },
+    {
+      "id": "study:11/food-science",
+      "label": "Food science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:11"
+      ]
+    },
+    {
+      "id": "study:11/soil-science",
+      "label": "Soil science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:11"
+      ]
+    },
+    {
+      "id": "oa-field:12",
+      "label": "Arts and Humanities",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:2"
+      ]
+    },
+    {
+      "id": "study:12/history",
+      "label": "History",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/philosophy",
+      "label": "Philosophy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/linguistics",
+      "label": "Linguistics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/literature",
+      "label": "Literature",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/archaeology",
+      "label": "Archaeology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/religious-studies",
+      "label": "Religious studies",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/visual-arts-and-design",
+      "label": "Visual arts and design",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/music-and-performing-arts",
+      "label": "Music and performing arts",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/digital-humanities",
+      "label": "Digital humanities",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "study:12/history-and-philosophy-of-science",
+      "label": "History and philosophy of science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:12"
+      ]
+    },
+    {
+      "id": "oa-field:13",
+      "label": "Biochemistry, Genetics and Molecular Biology",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:1"
+      ]
+    },
+    {
+      "id": "study:13/biochemistry",
+      "label": "Biochemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/molecular-biology",
+      "label": "Molecular biology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/genetics-and-genomics",
+      "label": "Genetics and genomics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/cell-biology",
+      "label": "Cell biology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/developmental-biology",
+      "label": "Developmental biology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/structural-biology",
+      "label": "Structural biology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/systems-biology",
+      "label": "Systems biology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/synthetic-biology",
+      "label": "Synthetic biology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/proteomics",
+      "label": "Proteomics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "study:13/evolutionary-biology",
+      "label": "Evolutionary biology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:13"
+      ]
+    },
+    {
+      "id": "oa-field:14",
+      "label": "Business, Management and Accounting",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:2"
+      ]
+    },
+    {
+      "id": "study:14/management-and-strategy",
+      "label": "Management and strategy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:14"
+      ]
+    },
+    {
+      "id": "study:14/entrepreneurship",
+      "label": "Entrepreneurship",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:14"
+      ]
+    },
+    {
+      "id": "study:14/accounting",
+      "label": "Accounting",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:14"
+      ]
+    },
+    {
+      "id": "study:14/marketing",
+      "label": "Marketing",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:14"
+      ]
+    },
+    {
+      "id": "study:14/innovation-studies",
+      "label": "Innovation studies",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:14"
+      ]
+    },
+    {
+      "id": "study:14/operations-management",
+      "label": "Operations management",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:14"
+      ]
+    },
+    {
+      "id": "study:14/organizational-behavior",
+      "label": "Organizational behavior",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:14"
+      ]
+    },
+    {
+      "id": "study:14/information-systems",
+      "label": "Information systems",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:14"
+      ]
+    },
+    {
+      "id": "oa-field:15",
+      "label": "Chemical Engineering",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:15/process-engineering",
+      "label": "Process engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:15"
+      ]
+    },
+    {
+      "id": "study:15/catalysis",
+      "label": "Catalysis",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:15"
+      ]
+    },
+    {
+      "id": "study:15/separation-processes",
+      "label": "Separation processes",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:15"
+      ]
+    },
+    {
+      "id": "study:15/biochemical-engineering",
+      "label": "Biochemical engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:15"
+      ]
+    },
+    {
+      "id": "study:15/polymer-processing",
+      "label": "Polymer processing",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:15"
+      ]
+    },
+    {
+      "id": "study:15/electrochemical-engineering",
+      "label": "Electrochemical engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:15"
+      ]
+    },
+    {
+      "id": "study:15/transport-phenomena",
+      "label": "Transport phenomena",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:15"
+      ]
+    },
+    {
+      "id": "study:15/sustainable-manufacturing",
+      "label": "Sustainable manufacturing",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:15"
+      ]
+    },
+    {
+      "id": "oa-field:16",
+      "label": "Chemistry",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:16/organic-chemistry",
+      "label": "Organic chemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:16"
+      ]
+    },
+    {
+      "id": "study:16/inorganic-chemistry",
+      "label": "Inorganic chemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:16"
+      ]
+    },
+    {
+      "id": "study:16/physical-chemistry",
+      "label": "Physical chemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:16"
+      ]
+    },
+    {
+      "id": "study:16/analytical-chemistry",
+      "label": "Analytical chemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:16"
+      ]
+    },
+    {
+      "id": "study:16/computational-chemistry",
+      "label": "Computational chemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:16"
+      ]
+    },
+    {
+      "id": "study:16/medicinal-chemistry",
+      "label": "Medicinal chemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:16"
+      ]
+    },
+    {
+      "id": "study:16/chemical-biology",
+      "label": "Chemical biology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:16"
+      ]
+    },
+    {
+      "id": "study:16/electrochemistry",
+      "label": "Electrochemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:16"
+      ]
+    },
+    {
+      "id": "oa-field:17",
+      "label": "Computer Science",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:17/machine-learning",
+      "label": "Machine learning",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/algorithms-and-complexity",
+      "label": "Algorithms and complexity",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/programming-languages-and-compilers",
+      "label": "Programming languages and compilers",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/software-engineering",
+      "label": "Software engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/distributed-systems",
+      "label": "Distributed systems",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/databases-and-data-engineering",
+      "label": "Databases and data engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/computer-architecture",
+      "label": "Computer architecture",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/computer-networking",
+      "label": "Computer networking",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/cybersecurity-and-cryptography",
+      "label": "Cybersecurity and cryptography",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/human-computer-interaction",
+      "label": "Human computer interaction",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/computer-graphics",
+      "label": "Computer graphics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/information-retrieval",
+      "label": "Information retrieval",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/computational-theory",
+      "label": "Computational theory",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "study:17/quantum-computing",
+      "label": "Quantum computing",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:17"
+      ]
+    },
+    {
+      "id": "oa-field:18",
+      "label": "Decision Sciences",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:2"
+      ]
+    },
+    {
+      "id": "study:18/operations-research",
+      "label": "Operations research",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:18"
+      ]
+    },
+    {
+      "id": "study:18/optimization",
+      "label": "Optimization",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:18"
+      ]
+    },
+    {
+      "id": "study:18/decision-theory",
+      "label": "Decision theory",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:18"
+      ]
+    },
+    {
+      "id": "study:18/simulation",
+      "label": "Simulation",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:18"
+      ]
+    },
+    {
+      "id": "study:18/risk-analysis",
+      "label": "Risk analysis",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:18"
+      ]
+    },
+    {
+      "id": "study:18/supply-chain-analytics",
+      "label": "Supply chain analytics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:18"
+      ]
+    },
+    {
+      "id": "study:18/management-science",
+      "label": "Management science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:18"
+      ]
+    },
+    {
+      "id": "study:18/game-theory",
+      "label": "Game theory",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:18"
+      ]
+    },
+    {
+      "id": "oa-field:19",
+      "label": "Earth and Planetary Sciences",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:19/geology",
+      "label": "Geology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/geophysics",
+      "label": "Geophysics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/geochemistry",
+      "label": "Geochemistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/atmospheric-science",
+      "label": "Atmospheric science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/oceanography",
+      "label": "Oceanography",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/hydrology",
+      "label": "Hydrology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/planetary-science",
+      "label": "Planetary science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/remote-sensing-and-geospatial-science",
+      "label": "Remote sensing and geospatial science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/paleontology",
+      "label": "Paleontology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "study:19/natural-hazards",
+      "label": "Natural hazards",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:19"
+      ]
+    },
+    {
+      "id": "oa-field:20",
+      "label": "Economics, Econometrics and Finance",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:2"
+      ]
+    },
+    {
+      "id": "study:20/microeconomics",
+      "label": "Microeconomics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "study:20/macroeconomics",
+      "label": "Macroeconomics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "study:20/econometrics",
+      "label": "Econometrics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "study:20/development-economics",
+      "label": "Development economics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "study:20/labor-economics",
+      "label": "Labor economics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "study:20/financial-markets",
+      "label": "Financial markets",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "study:20/behavioral-economics",
+      "label": "Behavioral economics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "study:20/public-economics",
+      "label": "Public economics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "study:20/environmental-economics",
+      "label": "Environmental economics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:20"
+      ]
+    },
+    {
+      "id": "oa-field:21",
+      "label": "Energy",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:21/solar-energy",
+      "label": "Solar energy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:21"
+      ]
+    },
+    {
+      "id": "study:21/wind-energy",
+      "label": "Wind energy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:21"
+      ]
+    },
+    {
+      "id": "study:21/nuclear-energy",
+      "label": "Nuclear energy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:21"
+      ]
+    },
+    {
+      "id": "study:21/batteries-and-energy-storage",
+      "label": "Batteries and energy storage",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:21"
+      ]
+    },
+    {
+      "id": "study:21/power-systems",
+      "label": "Power systems",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:21"
+      ]
+    },
+    {
+      "id": "study:21/hydrogen-and-fuel-cells",
+      "label": "Hydrogen and fuel cells",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:21"
+      ]
+    },
+    {
+      "id": "study:21/energy-efficiency",
+      "label": "Energy efficiency",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:21"
+      ]
+    },
+    {
+      "id": "study:21/energy-economics-and-transitions",
+      "label": "Energy economics and transitions",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:21"
+      ]
+    },
+    {
+      "id": "oa-field:22",
+      "label": "Engineering",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:22/electrical-and-electronic-engineering",
+      "label": "Electrical and electronic engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/mechanical-engineering",
+      "label": "Mechanical engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/civil-and-structural-engineering",
+      "label": "Civil and structural engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/aerospace-engineering",
+      "label": "Aerospace engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/control-systems",
+      "label": "Control systems",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/robotics-and-mechatronics",
+      "label": "Robotics and mechatronics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/biomedical-engineering",
+      "label": "Biomedical engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/industrial-engineering",
+      "label": "Industrial engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/manufacturing",
+      "label": "Manufacturing",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/signal-processing",
+      "label": "Signal processing",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/communications-engineering",
+      "label": "Communications engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "study:22/transportation-engineering",
+      "label": "Transportation engineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:22"
+      ]
+    },
+    {
+      "id": "oa-field:23",
+      "label": "Environmental Science",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:23/climate-science",
+      "label": "Climate science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "study:23/conservation",
+      "label": "Conservation",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "study:23/environmental-monitoring",
+      "label": "Environmental monitoring",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "study:23/pollution-and-remediation",
+      "label": "Pollution and remediation",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "study:23/sustainability",
+      "label": "Sustainability",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "study:23/environmental-health",
+      "label": "Environmental health",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "study:23/water-resources",
+      "label": "Water resources",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "study:23/circular-economy",
+      "label": "Circular economy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "study:23/ecological-modeling",
+      "label": "Ecological modeling",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:23"
+      ]
+    },
+    {
+      "id": "oa-field:24",
+      "label": "Immunology and Microbiology",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:1"
+      ]
+    },
+    {
+      "id": "study:24/immunology",
+      "label": "Immunology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:24"
+      ]
+    },
+    {
+      "id": "study:24/microbiology",
+      "label": "Microbiology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:24"
+      ]
+    },
+    {
+      "id": "study:24/virology",
+      "label": "Virology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:24"
+      ]
+    },
+    {
+      "id": "study:24/bacteriology",
+      "label": "Bacteriology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:24"
+      ]
+    },
+    {
+      "id": "study:24/host-pathogen-interactions",
+      "label": "Host pathogen interactions",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:24"
+      ]
+    },
+    {
+      "id": "study:24/vaccinology",
+      "label": "Vaccinology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:24"
+      ]
+    },
+    {
+      "id": "study:24/microbial-ecology",
+      "label": "Microbial ecology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:24"
+      ]
+    },
+    {
+      "id": "study:24/antimicrobial-resistance",
+      "label": "Antimicrobial resistance",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:24"
+      ]
+    },
+    {
+      "id": "oa-field:25",
+      "label": "Materials Science",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:25/nanomaterials",
+      "label": "Nanomaterials",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/semiconductors",
+      "label": "Semiconductors",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/polymers",
+      "label": "Polymers",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/metallurgy",
+      "label": "Metallurgy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/ceramics",
+      "label": "Ceramics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/biomaterials",
+      "label": "Biomaterials",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/computational-materials",
+      "label": "Computational materials",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/photonic-materials",
+      "label": "Photonic materials",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/quantum-materials",
+      "label": "Quantum materials",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "study:25/materials-characterization",
+      "label": "Materials characterization",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:25"
+      ]
+    },
+    {
+      "id": "oa-field:26",
+      "label": "Mathematics",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:26/algebra",
+      "label": "Algebra",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/analysis",
+      "label": "Analysis",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/geometry-and-topology",
+      "label": "Geometry and topology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/probability",
+      "label": "Probability",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/statistics",
+      "label": "Statistics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/numerical-analysis",
+      "label": "Numerical analysis",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/discrete-mathematics",
+      "label": "Discrete mathematics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/mathematical-logic",
+      "label": "Mathematical logic",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/applied-mathematics",
+      "label": "Applied mathematics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/dynamical-systems",
+      "label": "Dynamical systems",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/information-theory",
+      "label": "Information theory",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "study:26/category-theory",
+      "label": "Category theory",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:26"
+      ]
+    },
+    {
+      "id": "oa-field:27",
+      "label": "Medicine",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:4"
+      ]
+    },
+    {
+      "id": "study:27/clinical-research",
+      "label": "Clinical research",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/public-health",
+      "label": "Public health",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/epidemiology",
+      "label": "Epidemiology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/oncology",
+      "label": "Oncology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/cardiology",
+      "label": "Cardiology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/neurology",
+      "label": "Neurology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/psychiatry",
+      "label": "Psychiatry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/infectious-disease",
+      "label": "Infectious disease",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/precision-medicine",
+      "label": "Precision medicine",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/medical-imaging",
+      "label": "Medical imaging",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/health-informatics",
+      "label": "Health informatics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "study:27/evidence-synthesis",
+      "label": "Evidence synthesis",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:27"
+      ]
+    },
+    {
+      "id": "oa-field:28",
+      "label": "Neuroscience",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:1"
+      ]
+    },
+    {
+      "id": "study:28/computational-neuroscience",
+      "label": "Computational neuroscience",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:28"
+      ]
+    },
+    {
+      "id": "study:28/cognitive-neuroscience",
+      "label": "Cognitive neuroscience",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:28"
+      ]
+    },
+    {
+      "id": "study:28/systems-neuroscience",
+      "label": "Systems neuroscience",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:28"
+      ]
+    },
+    {
+      "id": "study:28/neuroengineering",
+      "label": "Neuroengineering",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:28"
+      ]
+    },
+    {
+      "id": "study:28/neuroimaging",
+      "label": "Neuroimaging",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:28"
+      ]
+    },
+    {
+      "id": "study:28/neural-coding",
+      "label": "Neural coding",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:28"
+      ]
+    },
+    {
+      "id": "study:28/brain-computer-interfaces",
+      "label": "Brain computer interfaces",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:28"
+      ]
+    },
+    {
+      "id": "study:28/developmental-neuroscience",
+      "label": "Developmental neuroscience",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:28"
+      ]
+    },
+    {
+      "id": "oa-field:29",
+      "label": "Nursing",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:4"
+      ]
+    },
+    {
+      "id": "study:29/nursing-research",
+      "label": "Nursing research",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:29"
+      ]
+    },
+    {
+      "id": "study:29/clinical-care",
+      "label": "Clinical care",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:29"
+      ]
+    },
+    {
+      "id": "study:29/community-nursing",
+      "label": "Community nursing",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:29"
+      ]
+    },
+    {
+      "id": "study:29/patient-safety",
+      "label": "Patient safety",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:29"
+      ]
+    },
+    {
+      "id": "study:29/nursing-education",
+      "label": "Nursing education",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:29"
+      ]
+    },
+    {
+      "id": "study:29/care-delivery",
+      "label": "Care delivery",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:29"
+      ]
+    },
+    {
+      "id": "study:29/geriatric-nursing",
+      "label": "Geriatric nursing",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:29"
+      ]
+    },
+    {
+      "id": "study:29/health-equity",
+      "label": "Health equity",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:29"
+      ]
+    },
+    {
+      "id": "oa-field:30",
+      "label": "Pharmacology, Toxicology and Pharmaceutics",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:1"
+      ]
+    },
+    {
+      "id": "study:30/drug-discovery",
+      "label": "Drug discovery",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:30"
+      ]
+    },
+    {
+      "id": "study:30/pharmacology",
+      "label": "Pharmacology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:30"
+      ]
+    },
+    {
+      "id": "study:30/toxicology",
+      "label": "Toxicology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:30"
+      ]
+    },
+    {
+      "id": "study:30/drug-delivery",
+      "label": "Drug delivery",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:30"
+      ]
+    },
+    {
+      "id": "study:30/pharmacokinetics",
+      "label": "Pharmacokinetics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:30"
+      ]
+    },
+    {
+      "id": "study:30/pharmacogenomics",
+      "label": "Pharmacogenomics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:30"
+      ]
+    },
+    {
+      "id": "study:30/medicinal-development",
+      "label": "Medicinal development",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:30"
+      ]
+    },
+    {
+      "id": "study:30/drug-safety",
+      "label": "Drug safety",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:30"
+      ]
+    },
+    {
+      "id": "oa-field:31",
+      "label": "Physics and Astronomy",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:3"
+      ]
+    },
+    {
+      "id": "study:31/astrophysics-and-cosmology",
+      "label": "Astrophysics and cosmology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/particle-physics",
+      "label": "Particle physics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/nuclear-physics",
+      "label": "Nuclear physics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/condensed-matter",
+      "label": "Condensed matter",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/quantum-information",
+      "label": "Quantum information",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/quantum-optics",
+      "label": "Quantum optics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/plasma-physics",
+      "label": "Plasma physics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/statistical-physics",
+      "label": "Statistical physics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/biophysics",
+      "label": "Biophysics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/gravitation",
+      "label": "Gravitation",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "study:31/atomic-and-molecular-physics",
+      "label": "Atomic and molecular physics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:31"
+      ]
+    },
+    {
+      "id": "oa-field:32",
+      "label": "Psychology",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:2"
+      ]
+    },
+    {
+      "id": "study:32/cognitive-psychology",
+      "label": "Cognitive psychology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:32"
+      ]
+    },
+    {
+      "id": "study:32/developmental-psychology",
+      "label": "Developmental psychology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:32"
+      ]
+    },
+    {
+      "id": "study:32/social-psychology",
+      "label": "Social psychology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:32"
+      ]
+    },
+    {
+      "id": "study:32/clinical-psychology",
+      "label": "Clinical psychology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:32"
+      ]
+    },
+    {
+      "id": "study:32/learning-and-memory",
+      "label": "Learning and memory",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:32"
+      ]
+    },
+    {
+      "id": "study:32/psychometrics",
+      "label": "Psychometrics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:32"
+      ]
+    },
+    {
+      "id": "study:32/human-factors",
+      "label": "Human factors",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:32"
+      ]
+    },
+    {
+      "id": "study:32/behavioral-science",
+      "label": "Behavioral science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:32"
+      ]
+    },
+    {
+      "id": "oa-field:33",
+      "label": "Social Sciences",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:2"
+      ]
+    },
+    {
+      "id": "study:33/sociology",
+      "label": "Sociology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/political-science",
+      "label": "Political science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/education",
+      "label": "Education",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/law",
+      "label": "Law",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/anthropology",
+      "label": "Anthropology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/geography",
+      "label": "Geography",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/communication-and-media-studies",
+      "label": "Communication and media studies",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/demography",
+      "label": "Demography",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/public-policy",
+      "label": "Public policy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/international-relations",
+      "label": "International relations",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/science-and-technology-studies",
+      "label": "Science and technology studies",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "study:33/library-and-information-science",
+      "label": "Library and information science",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:33"
+      ]
+    },
+    {
+      "id": "oa-field:34",
+      "label": "Veterinary",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:4"
+      ]
+    },
+    {
+      "id": "study:34/veterinary-medicine",
+      "label": "Veterinary medicine",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:34"
+      ]
+    },
+    {
+      "id": "study:34/animal-health",
+      "label": "Animal health",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:34"
+      ]
+    },
+    {
+      "id": "study:34/veterinary-epidemiology",
+      "label": "Veterinary epidemiology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:34"
+      ]
+    },
+    {
+      "id": "study:34/wildlife-health",
+      "label": "Wildlife health",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:34"
+      ]
+    },
+    {
+      "id": "study:34/one-health",
+      "label": "One health",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:34"
+      ]
+    },
+    {
+      "id": "study:34/veterinary-pathology",
+      "label": "Veterinary pathology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:34"
+      ]
+    },
+    {
+      "id": "study:34/animal-welfare",
+      "label": "Animal welfare",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:34"
+      ]
+    },
+    {
+      "id": "study:34/veterinary-public-health",
+      "label": "Veterinary public health",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:34"
+      ]
+    },
+    {
+      "id": "oa-field:35",
+      "label": "Dentistry",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:4"
+      ]
+    },
+    {
+      "id": "study:35/dental-research",
+      "label": "Dental research",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:35"
+      ]
+    },
+    {
+      "id": "study:35/oral-health",
+      "label": "Oral health",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:35"
+      ]
+    },
+    {
+      "id": "study:35/restorative-dentistry",
+      "label": "Restorative dentistry",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:35"
+      ]
+    },
+    {
+      "id": "study:35/periodontology",
+      "label": "Periodontology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:35"
+      ]
+    },
+    {
+      "id": "study:35/orthodontics",
+      "label": "Orthodontics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:35"
+      ]
+    },
+    {
+      "id": "study:35/dental-materials",
+      "label": "Dental materials",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:35"
+      ]
+    },
+    {
+      "id": "study:35/oral-microbiology",
+      "label": "Oral microbiology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:35"
+      ]
+    },
+    {
+      "id": "study:35/dental-public-health",
+      "label": "Dental public health",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:35"
+      ]
+    },
+    {
+      "id": "oa-field:36",
+      "label": "Health Professions",
+      "kind": "external_field",
+      "parents": [
+        "oa-domain:4"
+      ]
+    },
+    {
+      "id": "study:36/rehabilitation",
+      "label": "Rehabilitation",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:36"
+      ]
+    },
+    {
+      "id": "study:36/physical-therapy",
+      "label": "Physical therapy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:36"
+      ]
+    },
+    {
+      "id": "study:36/occupational-therapy",
+      "label": "Occupational therapy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:36"
+      ]
+    },
+    {
+      "id": "study:36/nutrition-and-dietetics",
+      "label": "Nutrition and dietetics",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:36"
+      ]
+    },
+    {
+      "id": "study:36/speech-and-language-therapy",
+      "label": "Speech and language therapy",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:36"
+      ]
+    },
+    {
+      "id": "study:36/radiography",
+      "label": "Radiography",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:36"
+      ]
+    },
+    {
+      "id": "study:36/health-services-research",
+      "label": "Health services research",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:36"
+      ]
+    },
+    {
+      "id": "study:36/assistive-technology",
+      "label": "Assistive technology",
+      "kind": "authored_study_area",
+      "parents": [
+        "oa-field:36"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning",
+      "label": "Foundations and statistical learning",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/learning-theory",
+      "label": "Learning theory",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundations-and-statistical-learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/generalization-and-scaling-laws",
+      "label": "Generalization and scaling laws",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundations-and-statistical-learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/representation-learning",
+      "label": "Representation learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundations-and-statistical-learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/self-supervised-learning",
+      "label": "Self supervised learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundations-and-statistical-learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/bayesian-machine-learning",
+      "label": "Bayesian machine learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundations-and-statistical-learning"
+      ]
+    },
+    {
+      "id": "ml:foundations-and-statistical-learning/optimization-for-learning",
+      "label": "Optimization for learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundations-and-statistical-learning"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures",
+      "label": "Neural architectures",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/transformers-and-attention",
+      "label": "Transformers and attention",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:neural-architectures"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/state-space-models",
+      "label": "State space models",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:neural-architectures"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/mixture-of-experts",
+      "label": "Mixture of experts",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:neural-architectures"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/graph-neural-networks",
+      "label": "Graph neural networks",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:neural-architectures"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/sparse-and-modular-architectures",
+      "label": "Sparse and modular architectures",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:neural-architectures"
+      ]
+    },
+    {
+      "id": "ml:neural-architectures/sequence-modeling",
+      "label": "Sequence modeling",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:neural-architectures"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining",
+      "label": "Foundation model pretraining",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/data-mixtures-and-curation",
+      "label": "Data mixtures and curation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundation-model-pretraining"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/tokenization",
+      "label": "Tokenization",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundation-model-pretraining"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/pretraining-objectives",
+      "label": "Pretraining objectives",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundation-model-pretraining"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/multilingual-modeling",
+      "label": "Multilingual modeling",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundation-model-pretraining"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/synthetic-training-data",
+      "label": "Synthetic training data",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundation-model-pretraining"
+      ]
+    },
+    {
+      "id": "ml:foundation-model-pretraining/continual-pretraining",
+      "label": "Continual pretraining",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:foundation-model-pretraining"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment",
+      "label": "Post training and alignment",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/supervised-fine-tuning",
+      "label": "Supervised fine tuning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:post-training-and-alignment"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/preference-optimization",
+      "label": "Preference optimization",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:post-training-and-alignment"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/reinforcement-learning-from-feedback",
+      "label": "Reinforcement learning from feedback",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:post-training-and-alignment"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/reward-modeling",
+      "label": "Reward modeling",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:post-training-and-alignment"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/distillation",
+      "label": "Distillation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:post-training-and-alignment"
+      ]
+    },
+    {
+      "id": "ml:post-training-and-alignment/parameter-efficient-fine-tuning",
+      "label": "Parameter efficient fine tuning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:post-training-and-alignment"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute",
+      "label": "Reasoning and inference time compute",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/search-and-planning",
+      "label": "Search and planning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:reasoning-and-inference-time-compute"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/test-time-scaling",
+      "label": "Test time scaling",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:reasoning-and-inference-time-compute"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/verifier-guided-inference",
+      "label": "Verifier guided inference",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:reasoning-and-inference-time-compute"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/process-supervision",
+      "label": "Process supervision",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:reasoning-and-inference-time-compute"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/mathematical-reasoning",
+      "label": "Mathematical reasoning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:reasoning-and-inference-time-compute"
+      ]
+    },
+    {
+      "id": "ml:reasoning-and-inference-time-compute/programmatic-reasoning",
+      "label": "Programmatic reasoning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:reasoning-and-inference-time-compute"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use",
+      "label": "Agents and tool use",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/agent-orchestration",
+      "label": "Agent orchestration",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:agents-and-tool-use"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/tool-calling",
+      "label": "Tool calling",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:agents-and-tool-use"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/computer-use-agents",
+      "label": "Computer use agents",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:agents-and-tool-use"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/coding-agents",
+      "label": "Coding agents",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:agents-and-tool-use"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/long-horizon-tasks",
+      "label": "Long horizon tasks",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:agents-and-tool-use"
+      ]
+    },
+    {
+      "id": "ml:agents-and-tool-use/multi-agent-cooperation",
+      "label": "Multi agent cooperation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:agents-and-tool-use"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory",
+      "label": "Retrieval and memory",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/retrieval-augmented-generation",
+      "label": "Retrieval augmented generation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:retrieval-and-memory"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/embedding-models",
+      "label": "Embedding models",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:retrieval-and-memory"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/reranking",
+      "label": "Reranking",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:retrieval-and-memory"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/long-context-methods",
+      "label": "Long context methods",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:retrieval-and-memory"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/agent-memory",
+      "label": "Agent memory",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:retrieval-and-memory"
+      ]
+    },
+    {
+      "id": "ml:retrieval-and-memory/knowledge-graphs",
+      "label": "Knowledge graphs",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:retrieval-and-memory"
+      ]
+    },
+    {
+      "id": "ml:language-and-information",
+      "label": "Language and information",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/natural-language-processing",
+      "label": "Natural language processing",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:language-and-information"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/information-extraction",
+      "label": "Information extraction",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:language-and-information"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/machine-translation",
+      "label": "Machine translation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:language-and-information"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/speech-and-audio",
+      "label": "Speech and audio",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:language-and-information"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/information-retrieval",
+      "label": "Information retrieval",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:language-and-information"
+      ]
+    },
+    {
+      "id": "ml:language-and-information/document-understanding",
+      "label": "Document understanding",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:language-and-information"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception",
+      "label": "Multimodal and perception",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/vision-language-models",
+      "label": "Vision language models",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:multimodal-and-perception"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/image-understanding",
+      "label": "Image understanding",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:multimodal-and-perception"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/video-understanding",
+      "label": "Video understanding",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:multimodal-and-perception"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/3d-perception",
+      "label": "3D perception",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:multimodal-and-perception"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/sensor-fusion",
+      "label": "Sensor fusion",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:multimodal-and-perception"
+      ]
+    },
+    {
+      "id": "ml:multimodal-and-perception/multimodal-evaluation",
+      "label": "Multimodal evaluation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:multimodal-and-perception"
+      ]
+    },
+    {
+      "id": "ml:generative-models",
+      "label": "Generative models",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:generative-models/diffusion-and-flow-models",
+      "label": "Diffusion and flow models",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:generative-models"
+      ]
+    },
+    {
+      "id": "ml:generative-models/autoregressive-generation",
+      "label": "Autoregressive generation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:generative-models"
+      ]
+    },
+    {
+      "id": "ml:generative-models/image-and-video-generation",
+      "label": "Image and video generation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:generative-models"
+      ]
+    },
+    {
+      "id": "ml:generative-models/audio-generation",
+      "label": "Audio generation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:generative-models"
+      ]
+    },
+    {
+      "id": "ml:generative-models/controllable-generation",
+      "label": "Controllable generation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:generative-models"
+      ]
+    },
+    {
+      "id": "ml:generative-models/generative-model-evaluation",
+      "label": "Generative model evaluation",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:generative-models"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence",
+      "label": "Embodied intelligence",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/robot-learning",
+      "label": "Robot learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:embodied-intelligence"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/imitation-learning",
+      "label": "Imitation learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:embodied-intelligence"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/world-models",
+      "label": "World models",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:embodied-intelligence"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/model-based-reinforcement-learning",
+      "label": "Model based reinforcement learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:embodied-intelligence"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/simulation-and-sim-to-real",
+      "label": "Simulation and sim to real",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:embodied-intelligence"
+      ]
+    },
+    {
+      "id": "ml:embodied-intelligence/autonomous-systems",
+      "label": "Autonomous systems",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:embodied-intelligence"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency",
+      "label": "ML systems and efficiency",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/distributed-training",
+      "label": "Distributed training",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:ml-systems-and-efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/gpu-kernels-and-compilers",
+      "label": "GPU kernels and compilers",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:ml-systems-and-efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/inference-serving",
+      "label": "Inference serving",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:ml-systems-and-efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/quantization",
+      "label": "Quantization",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:ml-systems-and-efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/speculative-decoding",
+      "label": "Speculative decoding",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:ml-systems-and-efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/memory-and-communication-efficiency",
+      "label": "Memory and communication efficiency",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:ml-systems-and-efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/training-reliability",
+      "label": "Training reliability",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:ml-systems-and-efficiency"
+      ]
+    },
+    {
+      "id": "ml:ml-systems-and-efficiency/on-device-machine-learning",
+      "label": "On device machine learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:ml-systems-and-efficiency"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml",
+      "label": "Evaluation and responsible ML",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/benchmark-design",
+      "label": "Benchmark design",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:evaluation-and-responsible-ml"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/contamination-and-leakage",
+      "label": "Contamination and leakage",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:evaluation-and-responsible-ml"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/factuality-and-groundedness",
+      "label": "Factuality and groundedness",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:evaluation-and-responsible-ml"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/interpretability",
+      "label": "Interpretability",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:evaluation-and-responsible-ml"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/robustness-and-security",
+      "label": "Robustness and security",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:evaluation-and-responsible-ml"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/privacy-and-unlearning",
+      "label": "Privacy and unlearning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:evaluation-and-responsible-ml"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/fairness-and-accessibility",
+      "label": "Fairness and accessibility",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:evaluation-and-responsible-ml"
+      ]
+    },
+    {
+      "id": "ml:evaluation-and-responsible-ml/model-governance",
+      "label": "Model governance",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:evaluation-and-responsible-ml"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning",
+      "label": "Causal and reliable learning",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/causal-inference",
+      "label": "Causal inference",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:causal-and-reliable-learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/uncertainty-and-calibration",
+      "label": "Uncertainty and calibration",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:causal-and-reliable-learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/out-of-distribution-generalization",
+      "label": "Out of distribution generalization",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:causal-and-reliable-learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/active-learning",
+      "label": "Active learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:causal-and-reliable-learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/data-efficient-learning",
+      "label": "Data efficient learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:causal-and-reliable-learning"
+      ]
+    },
+    {
+      "id": "ml:causal-and-reliable-learning/probabilistic-programming",
+      "label": "Probabilistic programming",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:causal-and-reliable-learning"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science",
+      "label": "Machine learning for science",
+      "kind": "authored_ml_group",
+      "parents": [
+        "study:17/machine-learning"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/scientific-machine-learning",
+      "label": "Scientific machine learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:machine-learning-for-science"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/ai-for-biology",
+      "label": "AI for biology",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:machine-learning-for-science"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/ai-for-chemistry-and-materials",
+      "label": "AI for chemistry and materials",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:machine-learning-for-science"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/ai-for-physics",
+      "label": "AI for physics",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:machine-learning-for-science"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/weather-and-climate-modeling",
+      "label": "Weather and climate modeling",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:machine-learning-for-science"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/ai-for-mathematics",
+      "label": "AI for mathematics",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:machine-learning-for-science"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/healthcare-machine-learning",
+      "label": "Healthcare machine learning",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:machine-learning-for-science"
+      ]
+    },
+    {
+      "id": "ml:machine-learning-for-science/automated-scientific-discovery",
+      "label": "Automated scientific discovery",
+      "kind": "authored_ml_topic",
+      "parents": [
+        "ml:machine-learning-for-science"
+      ]
+    }
+  ]
+}
