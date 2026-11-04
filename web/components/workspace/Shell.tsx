@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useWorkspaceNavigation } from "@/lib/workspace/navigation";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { ThemeToggle } from "@/components/patterns/ThemeToggle";
 import { SkipLink } from "@/components/primitives/SkipLink";
 import { Composer } from "./Composer";
 import { Icon, type IconName } from "./Icon";
@@ -15,6 +15,7 @@ import { setSidebarCollapsed, useSidebarPreference, useSidebarViewport } from ".
 import "@/components/daily/daily.css";
 import "./workspace.css";
 import "./controller.css";
+import { ThemeToggle } from "@/components/patterns/ThemeToggle";
 
 const NAVIGATION: readonly [string, string, IconName, string][] = [
   ["today", "Today", "today", "T"], ["radar", "Radar", "radar", "R"],
@@ -43,6 +44,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const drawerHidden = mobile && !open;
   const route = NAVIGATION.find(([slug]) => path.startsWith(`/workspace/${slug}`))?.[1] ?? "Reader";
   useWorkspaceShortcuts();
+  useWorkspaceNavigation(path);
 
   // App Router may restore the mounted template from its navigation cache.
   // History navigation must dismiss an overlay before restoring page content.
@@ -98,13 +100,14 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   }
 
   return <WorkspaceSlots sidebar={sidebarNode} header={headerNode} bar={barNode}>
-    <div className="daily-app workspace-app ws-app font-ui" data-viewport={viewport} data-rail={rail} data-drawer={overlayOpen ? "open" : "closed"}>
+    <div className="daily-app workspace-app ws-app font-ui" data-workspace-path={path} data-viewport={viewport} data-rail={rail} data-drawer={overlayOpen ? "open" : "closed"}>
       <SkipLink />
+      <span className="sr-only" data-workspace-announcement="" aria-live="polite" aria-atomic="true" />
       {overlayOpen && <div className="ws-scrim" aria-hidden="true" onClick={() => setOpen(false)} />}
       <aside ref={sidebarRef} className="ws-sidebar" aria-label="Workspace controls"
         role={overlayOpen && !mobile ? "dialog" : undefined} aria-modal={overlayOpen && !mobile ? true : undefined} tabIndex={-1}>
         <div className="ws-brand-row" inert={mobile && overlayOpen}>
-          <Link href="/workspace/today" prefetch={false} className="ws-brand" title="Research workspace · Jazzy">
+          <Link href="/workspace/today" prefetch={false} scroll={false} className="ws-brand" title="Research workspace · Jazzy">
             <Mascot /><span className="ws-brand-name">Research workspace</span>
           </Link>
           <button ref={toggleRef} className="ws-sidebar-toggle" type="button" data-command="toggle-sidebar"
@@ -115,7 +118,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           <button type="button" className="ws-theme-cycle" aria-label="Cycle color theme" onClick={cycleTheme}><Icon name="theme" /></button>
         </div>
         <nav className="ws-navigation" aria-label="Research workspace" inert={mobile && overlayOpen}>
-          {NAVIGATION.map(([slug, label, icon, shortcut]) => <Link key={slug} href={`/workspace/${slug}`} prefetch={false}
+          {NAVIGATION.map(([slug, label, icon, shortcut]) => <Link key={slug} href={`/workspace/${slug}`} prefetch={false} scroll={false}
             title={label} aria-label={label} aria-current={path.startsWith(`/workspace/${slug}`) ? "page" : undefined}>
             <Icon name={icon} /><span className="ws-nav-label">{label}</span><kbd aria-hidden="true">G {shortcut}</kbd>
           </Link>)}

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { requestPaperNavigation } from "@/lib/workspace/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   errorMessage,
@@ -125,16 +126,17 @@ export function LiveRadar() {
   }
   function choose(id: string) {
     if (actions.busy) return;
+    requestPaperNavigation();
     setQueryParam("focus", id);
     Array.from(document.querySelectorAll<HTMLElement>(".ws-queue-row")).find((row) => row.dataset.workId === id)?.scrollIntoView?.({ block: "nearest" });
-    document.querySelector(".ws-stage-scroll")?.scrollTo?.({ top: 0 });
     closeDrawer();
   }
   function navigate(next: ReturnType<typeof fromURL>) {
+    requestPaperNavigation();
     const params = new URLSearchParams(next.filters as unknown as Record<string, string>);
     if (next.cursor) params.set("cursor", next.cursor);
     if (next.asOf) params.set("as_of", next.asOf);
-    window.history.pushState(null, "", `/workspace/radar?${params}`);
+    window.history.pushState(window.history.state, "", `/workspace/radar?${params}`);
     setQueryParam("focus", null);
     appliedKey.current = JSON.stringify(next);
     setFilters(next.filters);
@@ -260,7 +262,7 @@ export function LiveRadar() {
     <div className="daily-section-heading ws-focus-section-heading"><h2>Stored source records</h2><span>{loading ? "Loading stored result window…" : page ? `${items.length} on this page · stable observation cutoff` : "No successful result window loaded"}</span></div>
     {loading && <div className="ws-radar-state" aria-busy="true"><Mascot mood="busy" /><p>Loading this stored result window…</p></div>}
     {!loading && !page && <div className="ws-radar-state"><Mascot mood="alert" /><h2>This stored result window could not be loaded.</h2><button type="button" className="daily-secondary" onClick={() => navigate(applied ?? fromURL())}>Retry stored results</button></div>}
-    {focused && retained && <FocusPaper item={focused} href={href} />}
+    {focused && retained && <FocusPaper position={{ index: position.index, count: position.count }} item={focused} href={href} />}
     {focused && !retained && <section className="daily-empty ws-radar-state">
       <h2>This retained source version is unavailable.</h2>
       <p>Your saved reading position remains attached to {target?.version}. A newer version has not been substituted.</p>

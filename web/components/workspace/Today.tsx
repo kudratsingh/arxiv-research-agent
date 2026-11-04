@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { requestPaperNavigation } from "@/lib/workspace/navigation";
+import { lazy, Suspense, useRef, useState } from "react";
 import {
   displayDate,
   errorMessage,
@@ -30,9 +31,10 @@ import { Mascot } from "./Mascot";
 import { Icon } from "./Icon";
 import { useSyntheticPreview } from "./PreviewContext";
 import { ActivityCard } from "./ActivityCard";
-import { AllocationReceipt } from "./AllocationReceipt";
+const AllocationReceipt = lazy(() => import("./AllocationReceipt").then((module) => ({ default: module.AllocationReceipt })));
 
 export function LiveToday() {
+  const [editionOpen, setEditionOpen] = useState(false);
   const { state, setState, error, reload } = useWorkspace();
   const [notice, setNotice] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -60,11 +62,10 @@ export function LiveToday() {
     : sources.some((source) => source.status === "partial" || source.receipt.truncated === true) ? "limited" : "ok";
 
   function choose(id: string) {
+    requestPaperNavigation();
     setQueryParam("focus", id);
     Array.from(document.querySelectorAll<HTMLElement>(".ws-queue-row[data-work-id]"))
       .find((row) => row.dataset.workId === id)?.scrollIntoView?.({ block: "nearest" });
-    const stage = document.getElementById("main");
-    if (stage) { stage.scrollTop = 0; stage.scrollIntoView?.({ block: "start" }); }
     if (document.querySelector('.workspace-app [role="dialog"][aria-modal="true"]')) dispatchWorkspaceCommand("escape");
   }
   async function undo() {
@@ -169,11 +170,11 @@ export function LiveToday() {
         </div></div> : !focused ? <div className="daily-empty ws-empty"><Mascot mood="sleepy" size={72} /><div>
           <h2>{state.sources.some((source) => !sourceAvailable(source)) ? "No matching items in the available checks." : "Nothing new matched this reading window."}</h2>
           <p>Review the source coverage above, adjust your interests, or inspect all stored metadata in Radar.</p>
-        </div></div> : <FocusPaper key={`${focused.work_id}:${target?.version}`} item={focused} versionId={pinnedVersion} href={href} />}
+        </div></div> : <FocusPaper position={{ index: position.index, count: position.count }} item={focused} versionId={pinnedVersion} href={href} />}
         {latest && <p className="daily-muted ws-shortlist-end">That’s this edition’s shortlist. Its source check, profile revision {latest.profile_revision}, and cutoff are retained.</p>}
       </section>
-      {latest && <details className="workspace-edition-details"><summary>Edition details · {latest.work_ids.length} items · about {latest.minutes} minutes</summary>
-        <AllocationReceipt allocation={latest.allocation} minutes={latest.minutes} />
+      {latest && <details className="workspace-edition-details" onToggle={(event) => setEditionOpen(event.currentTarget.open)}><summary>Edition details · {latest.work_ids.length} items · about {latest.minutes} minutes</summary>
+        {editionOpen && <Suspense fallback={<p className="daily-muted">Opening the retained allocation receipt…</p>}><AllocationReceipt allocation={latest.allocation} minutes={latest.minutes} /></Suspense>}
       </details>}
       <SidebarSection label="Up next"><div className="ws-side-heading"><h2>Up next</h2><span>{visible.length} items</span></div>
         <QueueList items={visible} focusId={focused?.work_id ?? null} versionIds={latest?.work_versions} onSelect={choose} />

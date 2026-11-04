@@ -75,6 +75,20 @@ describe("workspace shortcuts and composer", () => {
     expect(second).toHaveBeenCalledTimes(1);
   });
 
+  it("routes keyboard commands through the same guarded navigation control when Shell is mounted", () => {
+    render(<Fixture next={vi.fn()} />);
+    const nav = document.createElement("nav"); nav.className = "ws-navigation";
+    const link = document.createElement("a"); link.href = "/workspace/library"; link.textContent = "Library";
+    nav.append(link); document.querySelector(".workspace-app")!.append(nav);
+    const guarded = vi.fn((event: MouseEvent) => event.preventDefault());
+    link.addEventListener("click", guarded);
+    key(document.body, "g"); key(document.body, "l");
+    expect(guarded).toHaveBeenCalledOnce(); expect(assign).not.toHaveBeenCalled();
+    link.setAttribute("aria-disabled", "true");
+    expect(dispatchWorkspaceCommand("go-library")).toBe(false);
+    expect(assign).not.toHaveBeenCalled();
+  });
+
   it("handles route sequences and guards fields, modifiers and native Enter", () => {
     const action = vi.fn(); render(<Fixture next={action} />);
     key(document.body, "g"); key(document.body, "l");

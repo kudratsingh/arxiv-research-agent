@@ -1,3 +1,4 @@
+import { requestWorkspaceNavigation } from "./navigation";
 import { GLOBAL_COMMANDS, PAGE_COMMANDS, ROUTE_COMMANDS, type WorkspaceCommand } from "./commands";
 
 const registry: readonly WorkspaceCommand[] = [
@@ -21,7 +22,12 @@ export function dispatchWorkspaceCommand(command: WorkspaceCommand): boolean {
   if (!scope) return false;
   if (command === "command-palette" || command === "shortcuts") return false;
   if (command in ROUTE_COMMANDS) {
-    location.assign(ROUTE_COMMANDS[command as keyof typeof ROUTE_COMMANDS]);
+    const href = ROUTE_COMMANDS[command as keyof typeof ROUTE_COMMANDS];
+    // Use the visible route link so pending-save guards also cover shortcuts.
+    const link = scope.querySelector<HTMLElement>(`.ws-navigation a[href="${href}"]`);
+    if (link) { if (!usable(link)) return false; link.click(); return true; }
+    requestWorkspaceNavigation(href);
+    location.assign(href);
     return true;
   }
   if (command === "focus-composer") {

@@ -81,6 +81,16 @@ async function select(user: ReturnType<typeof userEvent.setup>, index: number) {
 }
 
 describe("Today controller", () => {
+  it("opens the frozen allocation receipt on demand without changing the focused paper or requesting a new edition", async () => {
+    const user = userEvent.setup(); await mount();
+    focused(titles[0]!);
+    const summary = screen.getByText(/Edition details · 4 items/);
+    expect(summary.closest("details")).not.toHaveAttribute("open");
+    await user.click(summary);
+    expect(await screen.findByText(/no recorded exploration allocation/)).toBeVisible();
+    focused(titles[0]!); expect(calls).toHaveLength(0);
+    await user.click(summary); expect(summary.closest("details")).not.toHaveAttribute("open");
+  });
   it("keeps edition order in the queue and renders one focused article with its complete abstract once", async () => {
     await mount();
     const buttons = screen.getAllByRole("button", { name: /^Show paper \d of 4:/ });

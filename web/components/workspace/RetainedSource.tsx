@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { settleReaderTarget } from "@/lib/workspace/navigation";
 import {
   errorMessage,
   workspaceRequest,
@@ -118,7 +119,7 @@ export function RetainedSourceReader({
     const target = span
       ? window.document.getElementById(`retained-span-${span.span_id}`)
       : null;
-    target?.scrollIntoView?.({ block: "center" });
+    if (target) settleReaderTarget(target, false);
   }, [wantedMaterial, wantedPage, wantedStart, document]);
   async function list() {
     setLoading(true);

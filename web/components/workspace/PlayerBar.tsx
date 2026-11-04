@@ -20,7 +20,7 @@ export function PlayerBar({ item, versionId, href, index, count, onPrevious, onN
       <div className="ws-player-identity"><span className="ws-player-title">{title}</span><span>{item.source_id} · {version.version_label}</span></div>
       <div className="ws-player-navigation" role="group" aria-label="Move through papers">
         <button type="button" aria-label="Previous paper" title="Previous paper · K or ←" data-command="prev" aria-keyshortcuts="K ArrowLeft" disabled={!onPrevious} onClick={onPrevious}><Icon name="prev" /></button>
-        <Link href={href} prefetch={false} className="ws-player-open" aria-label="Open in reader" data-command="open" aria-keyshortcuts="O Enter" title="Open in reader · O or Enter"><Icon name="open" /><span>Read</span></Link>
+        <Link href={href} prefetch={false} scroll={false} className="ws-player-open" aria-label="Open in reader" data-command="open" aria-keyshortcuts="O Enter" title="Open in reader · O or Enter"><Icon name="open" /><span>Read</span></Link>
         <button type="button" aria-label="Next paper" title="Next paper · J or →" data-command="next" aria-keyshortcuts="J ArrowRight" disabled={!onNext} onClick={onNext}><Icon name="next" /></button>
       </div>
       <div className="ws-player-position"><progress aria-label="Reading queue progress" aria-valuetext={`Paper ${index + 1} of ${count}`} max={count} value={index + 1} />

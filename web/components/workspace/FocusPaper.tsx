@@ -6,11 +6,11 @@ import { readerTarget } from "@/lib/workspace/queue";
 import { CoverTile } from "./CoverTile";
 
 /** The reading surface owns evidence presentation; its actions live in the bar. */
-export function FocusPaper({ item, versionId, href }: { item: WorkItem; versionId?: string; href: string }) {
+export function FocusPaper({ item, versionId, href, position }: { item: WorkItem; versionId?: string; href: string; position?: { index: number; count: number } }) {
   const target = readerTarget(item, versionId);
   const { version, pdf, scope } = readingMaterial(item, target.version);
   const title = version.title || item.title;
-  return <article className="daily-item ws-focus">
+  return <article data-paper-key={`${item.work_id}:${target.version}`} className="daily-item ws-focus" data-paper-announcement={position ? `Paper ${position.index + 1} of ${position.count}: ${title}` : title}>
     <div className="ws-focus-heading">
       <CoverTile work_id={item.work_id} title={title} source_id={item.source_id} />
       <div className="ws-focus-identity">
@@ -19,7 +19,7 @@ export function FocusPaper({ item, versionId, href }: { item: WorkItem; versionI
           <span>{pdf ? pdf.complete && pdf.scope === "full_text" ? "PDF text" : "PDF excerpts" : scope.replaceAll("_", " ")}</span>
           {item.reading.status !== "unread" && <span className="daily-saved">{item.reading.status}</span>}
         </div>
-        <h3><Link href={href} prefetch={false}>{title}</Link></h3>
+        <h3><Link href={href} prefetch={false} scroll={false}>{title}</Link></h3>
         <p className="ws-focus-byline">{version.authors.join(", ") || "Authors not recorded for this source version"}</p>
         <p className="ws-focus-source">{item.source_id} · {item.published_at ? `Published ${displayDate(item.published_at)}` : "Publication date unknown"}</p>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { settleReaderTarget } from "@/lib/workspace/navigation";
 import { useSearchParams } from "next/navigation";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
@@ -12,7 +13,6 @@ import {
   workspaceRequest,
   type EntryRevision,
   type ReadingRevision,
-  type ReviewIndex,
   type WorkItem,
   type WorkspaceState,
 } from "@/lib/workspace/api";
@@ -24,7 +24,7 @@ import {
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
 import { libraryQueue, neighbours, readerTarget, todayQueue } from "@/lib/workspace/queue";
 import { SidebarSection, StageHeaderSlot } from "./Slots";
-import { DRAFT_NAVIGATION_NOTICE, ReaderControls, ReaderQueue } from "./ReaderControls";
+import { DRAFT_NAVIGATION_NOTICE, ReaderControls } from "./ReaderControls";
 import { RetainedSourceReader } from "./RetainedSource";
 import {
   GenerationBoundary,
@@ -32,6 +32,8 @@ import {
   ServiceNotice,
 } from "./Common";
 
+const ReaderQueue = lazy(() => import("./ReaderQueue"));
+const ReaderReviewContext = lazy(() => import("./ReaderReviewContext"));
 const SyntheticWorkbench = lazy(() => import("./SyntheticWorkbench").then((workbench) => ({ default: workbench.SyntheticWorkbench })));
 
 export function LiveReader({ id }: { id: string }) {
@@ -41,35 +43,24 @@ export function LiveReader({ id }: { id: string }) {
   const requestedEntry = params.get("entry");
   const returnTo = normalizeReaderReturnTo(params.get("return_to"));
   const [review, setReview] = useState<{ returnTo: string; works: WorkItem[] } | null>(null);
-  useEffect(() => {
-    if (!returnTo.startsWith("/workspace/review")) return;
-    const controller = new AbortController();
-    const packet = new URLSearchParams(returnTo.split("?")[1]).get("packet");
-    workspaceRequest<ReviewIndex>(`review${packet ? `?packet_id=${encodeURIComponent(packet)}` : ""}`, undefined, controller.signal)
-      .then((value) => {
-        if (!controller.signal.aborted) setReview({ returnTo, works: value.packet && (!packet || value.packet.id === packet) ? value.packet.items.map((candidate) => candidate.work) : [] });
-      }).catch(() => { /* An unavailable packet provides no invented neighbours. */ });
-    return () => controller.abort();
-  }, [returnTo]);
   const reviewWorks = review?.returnTo === returnTo ? review.works : [];
+  const reviewContext = returnTo.startsWith("/workspace/review")
+    ? <Suspense fallback={null}><ReaderReviewContext returnTo={returnTo} onReady={setReview} /></Suspense> : null;
 
-  if (!state) return <LoadingState error={error} retry={() => void reload()} />;
-  const item = state.works.find((work) => work.work_id === id);
-  if (!item)
-    return (
-      <div className="daily-empty">
+  const item = state?.works.find((work) => work.work_id === id);
+  return <>{reviewContext}{!state
+    ? <LoadingState error={error} retry={() => void reload()} />
+    : !item ? <div className="daily-empty">
         <h1>This source is not in the loaded workspace.</h1>
         <p>
           No fictional source was substituted. Save the source URL in Library or
           return to Radar.
         </p>
-        <Link href="/workspace/library" className="daily-link" prefetch={false}>
+        <Link href="/workspace/library" className="daily-link" prefetch={false} scroll={false}>
           Open Library →
         </Link>
       </div>
-    );
-  return (
-    <ReaderContent
+    : <ReaderContent
       key={`${state.principal_key_id}:${item.work_id}:${requestedVersion ?? ""}:${requestedEntry ?? ""}`}
       item={item}
       state={state}
@@ -79,8 +70,7 @@ export function LiveReader({ id }: { id: string }) {
       requestedEntry={requestedEntry}
       returnTo={returnTo}
       reviewWorks={reviewWorks}
-    />
-  );
+    />}</>;
 }
 
 const emptyDraft = (scope = "abstract"): ReaderDraft => ({
@@ -201,8 +191,7 @@ function ReaderContent({
     if (!tabFocus.current) return;
     tabFocus.current = false;
     const panel = document.getElementById(active);
-    panel?.focus({ preventScroll: true });
-    panel?.scrollIntoView?.({ block: "start" });
+    if (panel) settleReaderTarget(panel, true, true);
   }, [active]);
   const unsafeDraft = Boolean(draft.body && !draftStorage);
   const navigationBlocked = busy || unsafeDraft;
@@ -282,16 +271,23 @@ function ReaderContent({
     const target = document.getElementById(
       `workspace-entry-${initial.entryId}`,
     );
-    target?.focus({ preventScroll: true });
-    target?.scrollIntoView?.({ block: "center" });
+    if (target) settleReaderTarget(target);
   }, [initial.entryId]);
+  useEffect(() => {
+    if (initial.entryId || initial.fragment.startsWith("material:")) return;
+    const section = ["source", "understand", "notes"].includes(initial.fragment) ? initial.fragment
+      : /^(abstract|excerpt|full_text):/.test(initial.fragment) ? "source" : null;
+    if (!section) return;
+    const target = (section === "source" ? document.getElementById("source-anchor") : null) ?? document.getElementById(section);
+    if (target) settleReaderTarget(target);
+  }, [initial.entryId, initial.fragment]);
   useEffect(() => {
     if (!jumpToSource.current || active !== "source") return;
     jumpToSource.current = false;
     const panel = document.getElementById("source");
+    const passage = panel?.querySelector<HTMLElement>("mark") ?? panel;
     panel?.focus({ preventScroll: true });
-    const passage = document.querySelector("#source mark") ?? panel;
-    passage?.scrollIntoView?.({ block: "center" });
+    if (passage) settleReaderTarget(passage, false, true);
   }, [active, sourceAnchor]);
   async function pin(entryId: string | null) {
     const input = {
@@ -476,12 +472,11 @@ function ReaderContent({
     setActive(value);
     if (value === active) {
       const panel = document.getElementById(value);
-      panel?.focus({ preventScroll: true });
-      panel?.scrollIntoView?.({ block: "start" });
+      if (panel) settleReaderTarget(panel, true, true);
       tabFocus.current = false;
     }
     window.history.replaceState(
-      null,
+      window.history.state,
       "",
       `${window.location.pathname}${window.location.search}#${value}`,
     );
@@ -523,7 +518,7 @@ function ReaderContent({
       setDraftStorage(false);
     }
     window.history.replaceState(
-      null,
+      window.history.state,
       "",
       `${window.location.pathname}?version=${encodeURIComponent(value)}&return_to=${encodeURIComponent(returnTo)}#${active}`,
     );
@@ -563,7 +558,7 @@ function ReaderContent({
             returnTo,
           )}
           className="daily-link"
-          prefetch={false}
+          prefetch={false} scroll={false}
         >
           Choose the latest observed version →
         </Link>
@@ -575,7 +570,7 @@ function ReaderContent({
       <StageHeaderSlot position={position.index >= 0 ? { n: position.index + 1, N: position.count } : undefined} />
       <SidebarSection label="Reader queue">
         <h2>Reading queue</h2>
-        {targets.length ? <ReaderQueue targets={targets} currentId={item.work_id} blocked={navigationBlocked} /> : <p className="daily-muted">Return to the originating page to choose another source.</p>}
+        {targets.length ? <Suspense fallback={<p className="daily-muted">Opening queued papers…</p>}><ReaderQueue targets={targets} currentId={item.work_id} blocked={navigationBlocked} /></Suspense> : <p className="daily-muted">Return to the originating page to choose another source.</p>}
       </SidebarSection>
       <SidebarSection label="Retained version details">
         <h2>Retained version</h2><p>{material.version_label} · {material.access_state.replaceAll("_", " ")}</p>
@@ -587,7 +582,7 @@ function ReaderContent({
         nextHref={position.index >= 0 ? targets[position.index + 1]?.href : undefined}
         index={position.index} count={position.count} />
       <div className="daily-page-meta">
-        <Link href={returnTo} prefetch={false} className="daily-link" aria-disabled={navigationBlocked || undefined} onClick={(event) => { if (guardNavigation()) event.preventDefault(); }}>
+        <Link href={returnTo} prefetch={false} scroll={false} className="daily-link" aria-disabled={navigationBlocked || undefined} onClick={(event) => { if (guardNavigation()) event.preventDefault(); }}>
           ←{" "}
           {returnTo.startsWith("/workspace/review")
             ? "Candidate review"
