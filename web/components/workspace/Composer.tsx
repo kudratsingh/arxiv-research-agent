@@ -27,8 +27,9 @@ export function Composer(): React.ReactElement {
   }
   return (
     <form role="search" className="ws-composer" onSubmit={submit}>
-      <input className="ws-composer-input" type="search" name="q" aria-label="Search stored papers"
-        placeholder="Search stored papers, or type / for commands" aria-describedby={help ? "ws-composer-help" : undefined} />
+      <input className="ws-composer-input" type="search" name="q" aria-label="Search stored papers" aria-keyshortcuts="/"
+        placeholder="Search stored papers, or /command" aria-describedby={help ? "ws-composer-help" : undefined} />
+      <button className="ws-composer-submit" type="submit" title="Search stored papers or run a local /command">Search</button>
       {help && <span className="ws-composer-hint" id="ws-composer-help">{help}</span>}
     </form>
   );

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import Layout from "@/app/(live)/layout";
 import { Coverage } from "@/components/workspace/Common";
 import { WorkspaceShell } from "@/components/workspace/Shell";
+import { StageHeaderSlot } from "@/components/workspace/Slots";
 import { workspace } from "./fixtures";
 
 vi.mock("next/navigation", () => ({
@@ -13,7 +14,7 @@ afterEach(() => { vi.unstubAllEnvs(); });
 
 function view() {
   vi.stubEnv("WORKSPACE_LIVE", "1");
-  return render(Layout({ children: <WorkspaceShell><Coverage sources={workspace().sources} /></WorkspaceShell> }));
+  return render(Layout({ children: <WorkspaceShell><StageHeaderSlot sources={{ ok: 1, total: 2, worst: "failed" }} /><Coverage sources={workspace().sources} /></WorkspaceShell> }));
 }
 
 describe("server-configured workspace provenance", () => {
@@ -21,6 +22,7 @@ describe("server-configured workspace provenance", () => {
     vi.stubEnv("WORKSPACE_SYNTHETIC_PREVIEW", "");
     view();
     expect(screen.getByText("Real source metadata · private server saves · generation off")).toBeInTheDocument();
+    expect(screen.getByText("1/2 sources · failed")).toBeInTheDocument();
     expect(screen.getByText(/A partial check contains real metadata/)).toBeInTheDocument();
     expect(screen.queryByText("Design preview · synthetic sample papers")).not.toBeInTheDocument();
   });
@@ -29,6 +31,7 @@ describe("server-configured workspace provenance", () => {
     view();
     expect(screen.getByText("Design preview · synthetic sample papers")).toBeVisible();
     expect(screen.getByText("Sample source checks · private server saves · generation off")).toBeVisible();
+    expect(screen.getByText("1/2 sample checks · failed")).toBeInTheDocument();
     expect(screen.getByText(/These sample papers and source check results are synthetic/)).toBeInTheDocument();
     expect(screen.getAllByText(/Synthetic sample status/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/A partial check contains real metadata/)).not.toBeInTheDocument();

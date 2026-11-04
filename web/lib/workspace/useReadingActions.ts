@@ -22,7 +22,7 @@ export function useReadingActions(
   } | null>(null);
   const attempts = useRef(new Map<string, string>());
   async function write(item: WorkItem, data: ReadingData, reversible = true) {
-    if (!state || busy) return;
+    if (!state || busy) return false;
     const input = {
       work_id: item.work_id,
       revision: item.reading.revision,
@@ -55,8 +55,10 @@ export function useReadingActions(
         });
       else setUndo(null);
       announce(`Saved on the server: ${data.status.replaceAll("_", " ")}.`);
+      return true;
     } catch (error) {
       announce(errorMessage(error));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -64,7 +66,8 @@ export function useReadingActions(
   return {
     busy,
     hasUndo: undo !== null,
-    undo: () => undo && write(undo.work, undo.data, false),
+    undoWorkId: undo?.work.work_id ?? null,
+    undo: async () => undo ? write(undo.work, undo.data, false) : false,
     write,
     status: (item: WorkItem, status: ReadingData["status"]) =>
       write(item, {

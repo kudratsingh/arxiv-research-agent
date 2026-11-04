@@ -88,6 +88,15 @@ describe("workspace shortcuts and composer", () => {
     expect(assign).toHaveBeenCalledTimes(1);
   });
 
+  it("offers the same search through a visible submit control", async () => {
+    render(<Fixture next={vi.fn()} />);
+    const input = screen.getByRole("searchbox", { name: "Search stored papers" });
+    fireEvent.change(input, { target: { value: "source evidence" } });
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    expect(assign).toHaveBeenCalledWith("/workspace/radar?q=source+evidence&days=7");
+    expect(input).toHaveAttribute("aria-keyshortcuts", "/");
+  });
+
   it("handles unavailable, inert and removed controls without action", () => {
     expect(dispatchWorkspaceCommand("next")).toBe(false);
     const action = vi.fn(); const view = render(<Fixture next={action} />);

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useSyntheticPreview } from "./PreviewContext";
 
 interface SlotTargets { sidebar: HTMLElement | null; header: HTMLElement | null; bar: HTMLElement | null }
 const SlotContext = createContext<SlotTargets | null>(null);
@@ -33,13 +34,14 @@ export function StageHeaderSlot({ position, sources, action, children }: {
   action?: ReactNode;
   children?: ReactNode;
 }) {
+  const syntheticPreview = useSyntheticPreview();
   return <Slot target="header"><div className="ws-header-content">
     {position && <span className="ws-position" aria-label={`Paper ${position.n} of ${position.N}`}>
       {String(position.n).padStart(2, "0")} / {String(position.N).padStart(2, "0")}
     </span>}
     {sources && <span className="ws-source-summary" data-source-state={sources.worst}>
       <span className="ws-source-dot" aria-hidden="true" />
-      {sources.ok}/{sources.total} sources{sources.worst && sources.worst !== "ok" ? ` · ${sources.worst}` : ""}
+      {sources.ok}/{sources.total}{syntheticPreview ? " sample checks" : " sources"}{sources.worst && sources.worst !== "ok" ? ` · ${sources.worst}` : ""}
     </span>}
     {action && <div className="ws-header-action">{action}</div>}
     {children}
