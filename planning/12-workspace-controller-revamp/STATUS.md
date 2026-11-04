@@ -1,6 +1,6 @@
 # STATUS: workspace controller revamp
 
-Updated: **2026-11-04 UTC**. State: **G2 and G3 verified; focused Today ready for owner experience review. P4 onward deferred.**
+Updated: **2026-11-04 UTC**. State: **Mobile reading-density pass verified; P4 Reader integration is next in the current owner batch.**
 
 The implementing agent updates this file at every gate (G0–G8). Numbers are
 pasted from command output and never typed by hand.
@@ -600,3 +600,100 @@ and spend remain zero; recurrence remains disabled. The separately approved
 qualification worktree is unchanged and unexecuted; no real-key request,
 configuration, test, or automatic start was performed. All PRs stay unmerged;
 no new controller PR was opened. Stop at this G3 experience review.
+
+
+## Owner follow-up — mobile reading-density checkpoint
+
+Source **`8ec35f8f026af207a618eebd4f013c2802259396`**. Starting pushed head
+`3222ea8` was clean; fetch found no newer controller work. The owner extended
+the batch through mobile density and P4, superseding the earlier stop at G3.
+
+Mobile search is collapsed until Open search or `/`. Escape/Close search return
+focus to the same toggle and preserve query/help; desktop search stays present.
+The collapsed player retains navigation, Read and all paper actions, with 44px
+controls and disabled boundaries. Smaller decorative cover/gaps/preamble recover
+space without changing the 24px title, 16px abstract or source text sizes.
+Synthetic notice, source/evidence disclosures, queue, exact versions/anchors,
+URL focus and mutation/Undo logic are preserved.
+
+The first stricter browser pass caught long-title second lines under the player.
+A further spacing repair fixed it; no geometry assertion or type size was
+weakened. The final read-only audit separately identifies actual API data (all
+synthetic papers) and intercepted GET-state-only layout variants. One-, two-
+and three-line abstract fixtures must render their declared line counts. Each
+case requires the entire title and first min(2, available) rendered text lines
+to clear the collapsed player on initial, queue selection and Reader return.
+The intercepted variants are layout evidence, not source or persistence proof.
+
+Actual browser result:
+
+```json
+{"cases": 30, "failures": 0, "blocked": 0, "consoleErrors": 0, "pageErrors": 0, "requestFailures": 0}
+```
+
+[Browser record](evidence/after/mobile-density/browser-audit.json) ·
+[reproduction script](evidence/after/mobile-density/audit.cjs).
+
+`npm run lint`, direct ESLint on the touched Shell/shortcut tests,
+`npm run typecheck`, `npm test -- --coverage` and `make test-cov-diff` pass:
+
+```text
+ Test Files  189 passed (189)
+      Tests  3862 passed (3862)
+Statements   : 98.36% ( 4702/4780 )
+Branches     : 94.72% ( 3699/3905 )
+Functions    : 92.36% ( 1646/1782 )
+Lines        : 99.37% ( 3948/3973 )
+6042 passed, 54 skipped, 53 deselected in 473.25s (0:07:53)
+Total:   3658 lines
+Missing: 19 lines
+Coverage: 99%
+```
+
+The new Shell mini-map warning came from resetting the subscribed cosmetic
+preference outside act during test teardown; the reset is now wrapped in act.
+No warning was filtered or silenced. The export stub now has the same download
+attribute as production, allowing direct lint without disabling a rule. A new
+test initially used an unsupported query option; corrected the test option and
+reran typecheck and full coverage successfully. Existing assertions remain.
+
+Production build succeeds. All JS ceilings pass; CSS is still the documented
+interim E27 exception, with G7 consolidation unchanged and no ratchet:
+
+```text
+PASS      `/` first-load JS, excl. polyfill — 166,236 B (162.3 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 192,132 B (187.6 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 164,954 B (161.1 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,873 B (162.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,619 B (182.2 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 168,279 B (164.3 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 134,091 B (130.9 KiB) against 139,264 B (136.0 KiB)
+BREACH    All emitted CSS — 22,468 B (21.9 KiB) against 17,408 B (17.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,594 B (150.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 153,048 B (149.5 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,566 B (149.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,275 B (152.6 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 167,407 B (163.5 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 161,406 B (157.6 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 168,520 B (164.6 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 163,739 B (159.9 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 168,337 B (164.4 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 159,509 B (155.8 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 160,689 B (156.9 KiB) against 169,984 B (166.0 KiB)
+```
+
+Preview: http://localhost:3148/workspace/today. Captures:
+[dark desktop](evidence/after/mobile-density/desktop-dark-today.png),
+[light desktop](evidence/after/mobile-density/desktop-light-today.png),
+[dark mobile](evidence/after/mobile-density/mobile-dark-today.png),
+[light mobile](evidence/after/mobile-density/mobile-light-today.png),
+[long-title layout-only dark](evidence/after/mobile-density/mobile-dark-layout-only-long-title.png),
+[long-title layout-only light](evidence/after/mobile-density/mobile-light-layout-only-long-title.png).
+
+Only isolated synthetic accounts were read by this density audit; no browser
+writes or external/source/provider contacts occurred. Owner 3137/data/preferences
+remain untouched. Recurrence disabled; key setup/qualification remain deferred;
+all PRs unmerged and no new PR opened. P4 source implementation starts after
+this completed density checkpoint; its full live regression and Reader loop
+will use fresh isolated fixture data.
