@@ -90,6 +90,23 @@ describe("available reading material is separate from source metadata", () => {
     expect(screen.getByText(/Selected original PDF pages/)).toBeInTheDocument();
     expect(screen.getByRole("link",{name:"Read & investigate →"})).toHaveAttribute("href",expect.stringContaining(encodeURIComponent(available().first_anchor!)));
   });
+  it("retains the legacy card action contract while the controller owns live actions", async () => {
+    const item = work(), status = vi.fn(), user = userEvent.setup();
+    const view = render(<WorkCard item={item} status={status} />);
+    await user.click(screen.getByRole("button", { name: `Save ${item.title}` }));
+    await user.click(screen.getByRole("button", { name: `Dismiss ${item.title}` }));
+    await user.click(screen.getByRole("button", { name: `Snooze one day ${item.title}` }));
+    expect(status.mock.calls).toEqual([[item, "saved"], [item, "dismissed"], [item, "snoozed"]]);
+    const saved = { ...item, reading: { ...item.reading, status: "saved" as const } };
+    view.rerender(<WorkCard item={saved} status={status} />);
+    await user.click(screen.getByRole("button", { name: `Unsave ${item.title}` }));
+    expect(status).toHaveBeenLastCalledWith(saved, "unread");
+    view.rerender(<WorkCard item={saved} busy status={status} />);
+    for (const button of screen.getAllByRole("button")) expect(button).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: `Unsave ${item.title}` }));
+    expect(status).toHaveBeenCalledTimes(4);
+    expect(screen.getByRole("link", { name: "Read & investigate →" })).toHaveAttribute("href", expect.stringContaining(encodeURIComponent(item.version_id)));
+  });
   it("retained material on an earlier version does not label a newer version acquired", () => {
     const item=work();item.retained_materials=[];item.available_scopes=["abstract"];
     item.versions[0]!.retained_materials=[available({version_id:item.versions[0]!.version_id})];

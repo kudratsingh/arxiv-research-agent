@@ -603,7 +603,7 @@ adversarial suite's attack-success rate as an artifact), a Docker image
 build with base and production compose-file
 validation, a web image smoke test probing `/` and `/api/healthz`
 through the proxy, the web tier (TypeScript, ESLint, generated-type
-drift, **3,714 Vitest tests across 177 files** with coverage floors, and
+drift, **3,919 Vitest tests across 193 files** with coverage floors, and
 a production build with per-route JS budgets), the dependency-audit gate
 in its own bounded job, the Storybook static build with story tests, and
 Playwright + `@axe-core/playwright` against a seeded Compose stack

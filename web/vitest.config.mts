@@ -438,10 +438,16 @@ export default defineConfig(async () => ({
       // Preserve the statements/branches/lines floors and their noise margin;
       // ratchet functions from 88.8 to 91.8, below the measured 92.07.
       // Coverage includes/exclusions and every test tier remain unchanged.
+      // Controller G5 record refresh: 3,919 tests across 193 files:
+      // 4924/5015 statements, 3983/4217 branches, 1706/1841 functions, 4111/4137 lines.
+      // The documented-claims gate caught the old file record beyond its band.
+      // Preserve statements/branches/lines; ratchet functions 91.8 to 92.2,
+      // keeping the recorded measurement within the existing half-point band.
+      // No coverage input, exclusion, test tier or other floor is changed.
       thresholds: {
         statements: 98.15,
         branches: 94.0,
-        functions: 91.8,
+        functions: 92.2,
         lines: 99.11,
       },
     },

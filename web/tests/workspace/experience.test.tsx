@@ -118,6 +118,12 @@ afterEach(() => vi.unstubAllGlobals());
 const load = async () =>
   expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
 
+async function openPreviewImport(user: ReturnType<typeof userEvent.setup>) {
+  const disclosure = screen.getByText("Import preview notes", { exact: true });
+  if (!disclosure.closest("details")?.open) await user.click(disclosure);
+  await screen.findByRole("button", { name: "Preview browser import" });
+}
+
 describe("real source briefing", () => {
   it("keeps a separately labelled live shell and preserves preview access", () => {
     render(
@@ -619,6 +625,7 @@ describe("profile, import and return state", () => {
     render(<LiveLibrary />);
     await load();
     expect(calls.some((call) => call.path.startsWith("import"))).toBe(false);
+    await openPreviewImport(user);
     await user.click(
       screen.getByRole("button", { name: "Preview browser import" }),
     );
@@ -639,6 +646,7 @@ describe("profile, import and return state", () => {
     const user = userEvent.setup();
     render(<LiveLibrary />);
     await load();
+    await openPreviewImport(user);
     await user.click(
       screen.getByRole("button", { name: "Preview browser import" }),
     );
@@ -647,6 +655,7 @@ describe("profile, import and return state", () => {
     );
     localStorage.setItem(PREVIEW_KEY, JSON.stringify(INITIAL_DATA));
     importConflicts = ["A server note has changed"];
+    await openPreviewImport(user);
     await user.click(
       screen.getByRole("button", { name: "Preview browser import" }),
     );
@@ -672,6 +681,7 @@ describe("profile, import and return state", () => {
     const user = userEvent.setup();
     render(<LiveLibrary />);
     await load();
+    await openPreviewImport(user);
     await user.click(
       screen.getByText("Import an export from a different preview address"),
     );
@@ -781,6 +791,7 @@ describe("recovery paths that must not erase authored data", () => {
     const user = userEvent.setup();
     render(<LiveLibrary />);
     await load();
+    await openPreviewImport(user);
     await user.click(
       screen.getByText("Import an export from a different preview address"),
     );
@@ -835,6 +846,7 @@ describe("recovery paths that must not erase authored data", () => {
     const user = userEvent.setup();
     render(<LiveLibrary />);
     await load();
+    await openPreviewImport(user);
     await user.click(
       screen.getByText("Import an export from a different preview address"),
     );
@@ -859,6 +871,7 @@ describe("recovery paths that must not erase authored data", () => {
     );
     localStorage.setItem(PREVIEW_KEY, JSON.stringify(INITIAL_DATA));
     failures["import/preview"] = 503;
+    await openPreviewImport(user);
     await user.click(
       screen.getByRole("button", { name: "Preview browser import" }),
     );
@@ -1074,6 +1087,8 @@ describe("the visible personal controls round trip their actual data", () => {
     expect(screen.getByText("No items in this view.")).toBeInTheDocument();
     await user.selectOptions(view, "all");
     mounted.rerender(<LiveLibrary />);
+    // The controller exposes every work in its queue and one in the stage.
+    await user.click(screen.getByRole("button", { name: /Show paper .*A read source/ }));
     expect(
       screen.getByRole("link", { name: "A read source" }),
     ).toBeInTheDocument();

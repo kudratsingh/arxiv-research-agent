@@ -76,9 +76,9 @@ describe("workspace controller shell", () => {
     expect(bar.lastElementChild).toContainElement(screen.getByRole("button", { name: "Page bar action" }));
     expect(screen.getAllByRole("radio")).toHaveLength(3);
   });
-  it("keeps export exactly once when the old Library page supplies it", () => {
+  it("keeps the sole export in the Shell footer on Library too", () => {
     route.path = "/workspace/library";
-    render(<WorkspaceShell><a href="/api/workspace/export" download="research-notes.md">Export notes as Markdown ↗</a></WorkspaceShell>);
+    render(<WorkspaceShell><p>Library stage</p></WorkspaceShell>);
     expect(screen.getAllByRole("link", { name: /Export notes as Markdown/ })).toHaveLength(1);
     expect(screen.getByRole("link", { name: "Library" })).toHaveAttribute("aria-current", "page");
   });

@@ -5,6 +5,16 @@ import type { WorkspaceState } from "../lib/workspace/api";
 /** Real loopback API + Postgres only. Failure injection aborts one save; no fixture responses fill the live UI. */
 test.describe.configure({ mode: "serial" });
 
+// Controller filters/view/export live once in the responsive sidebar.
+async function openControls(page: import("@playwright/test").Page) {
+  const toggle = page.getByRole("button", { name: "Queue & controls", exact: true });
+  if (await toggle.isVisible() && await toggle.getAttribute("aria-expanded") === "false") await toggle.click();
+}
+async function closeControls(page: import("@playwright/test").Page) {
+  const toggle = page.getByRole("button", { name: "Queue & controls", exact: true });
+  if (await toggle.isVisible() && await toggle.getAttribute("aria-expanded") === "true") await page.keyboard.press("Escape");
+}
+
 async function realState(page: import("@playwright/test").Page) {
   const response = await page.request.get("/api/workspace/state");
   expect(response.ok()).toBe(true);
@@ -99,6 +109,7 @@ test("real Today → source → server-saved question → reload → Library exp
     .getByRole("link", { name: /Library/ })
     .click();
   await expect(page.getByText(question, { exact: true })).toBeVisible();
+  await openControls(page);
   const downloadEvent = page.waitForEvent("download");
   await page.getByRole("link", { name: /Export notes as Markdown/ }).click();
   const download = await downloadEvent;
@@ -155,6 +166,7 @@ test("real filters, editable interests, honest source receipts and disabled sche
   await expect(
     page.getByRole("heading", { name: "Stored source records" }),
   ).toBeVisible();
+  await openControls(page);
   await page
     .getByRole("searchbox", { name: "Search titles and abstracts" })
     .fill("retrieval");
@@ -322,9 +334,11 @@ test("editing an earlier question becomes latest activity, pins its exact versio
     await page.goto("/workspace/today");
     await expect(page.locator(".workspace-activity")).toContainText(later);
     await page.goto("/workspace/library?view=notes");
+    await openControls(page);
     await expect(
       page.getByRole("combobox", { name: "Library view" }),
     ).toHaveValue("notes");
+    await closeControls(page);
     const libraryEntry = page
       .getByRole("article")
       .filter({ has: page.getByText(first, { exact: true }) });
@@ -351,9 +365,11 @@ test("editing an earlier question becomes latest activity, pins its exact versio
     );
     await page.getByRole("link", { name: "← Library", exact: true }).click();
     await expect(page).toHaveURL(/\/workspace\/library\?view=notes$/);
+    await openControls(page);
     await expect(
       page.getByRole("combobox", { name: "Library view" }),
     ).toHaveValue("notes");
+    await closeControls(page);
     await expect(page.getByText(edited, { exact: true })).toBeVisible();
     await page.goto("/workspace/today");
     await expect(page.locator(".workspace-activity")).toContainText(edited);

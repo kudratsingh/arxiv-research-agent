@@ -128,7 +128,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           </button>}
           <div ref={setSidebarNode} className="ws-sidebar-slot" />
           <footer className="ws-sidebar-footer" hidden={rail}>
-            {!path.startsWith("/workspace/library") && <a href="/api/workspace/export" download="research-notes.md">Export notes as Markdown ↗</a>}
+            <a href="/api/workspace/export" download="research-notes.md">Export notes as Markdown ↗</a>
             <Link href="/today" prefetch={false}>Fictional preview ↗</Link>
             <Link href="/" prefetch={false}>Research a question ↗</Link>
             <ThemeToggle />

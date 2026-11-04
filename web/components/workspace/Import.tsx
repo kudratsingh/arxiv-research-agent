@@ -12,10 +12,14 @@ export function PreviewImport({
   revision,
   reload,
   announce,
+  disabled = false,
+  onBusyChange,
 }: {
   revision: number;
   reload: () => Promise<void>;
   announce: (value: string) => void;
+  disabled?: boolean;
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const [record, setRecord] = useState<PreviewData | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
@@ -24,8 +28,10 @@ export function PreviewImport({
   const [baseRevision, setBaseRevision] = useState(revision);
   const [original, setOriginal] = useState("");
   const [pasted, setPasted] = useState("");
+  function pending(value: boolean) { setBusy(value); onBusyChange?.(value); }
   async function inspect(rawInput?: string) {
-    setBusy(true);
+    if (busy || disabled) return;
+    pending(true);
     setPreview(null);
     try {
       const raw = rawInput ?? window.localStorage.getItem(PREVIEW_KEY);
@@ -56,12 +62,12 @@ export function PreviewImport({
           : "This preview record is malformed, too large or uses an unsupported schema. The original was not changed.",
       );
     } finally {
-      setBusy(false);
+      pending(false);
     }
   }
   async function apply() {
-    if (!preview || !record || preview.conflicts.length) return;
-    setBusy(true);
+    if (busy || disabled || !preview || !record || preview.conflicts.length) return;
+    pending(true);
     try {
       const result = await workspaceRequest<ImportPreview>("import/apply", {
         record,
@@ -77,11 +83,12 @@ export function PreviewImport({
     } catch (error) {
       announce(errorMessage(error));
     } finally {
-      setBusy(false);
+      pending(false);
     }
   }
   return (
     <section className="workspace-import" aria-labelledby="import-title">
+      <fieldset className="workspace-import-fields" disabled={busy || disabled}>
       <span className="daily-eyebrow">Explicit one-time transfer</span>
       <h2 id="import-title">Bring your preview notes with you.</h2>
       <p className="daily-muted">
@@ -215,6 +222,7 @@ export function PreviewImport({
           )}
         </div>
       )}
+      </fieldset>
     </section>
   );
 }
