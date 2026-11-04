@@ -1,6 +1,6 @@
 # STATUS: workspace controller revamp
 
-Updated: **2026-11-03**. State: **P0 baseline verified; isolated stack and before captures ready.**
+Updated: **2026-11-04 UTC**. State: **G2 verified; single-paper Today is next (P3).**
 
 The implementing agent updates this file at every gate (G0–G8). Numbers are
 pasted from command output and never typed by hand.
@@ -301,3 +301,110 @@ through the gates while the separately approved experiment awaits its credential
 Astra medium owns the complex foundations/shell lane; Terra high owns bounded
 visual primitives and keyboard/composer work. Frontend remains sentinel-only,
 no source refresh, recurrence disabled, owner data/services preserved, no PR.
+
+
+## G2 closure — responsive Shell and explicit sample provenance
+
+Source attribution: WO-2.2 `c6b109e` (composer/commands), WO-2.1 `235f676`
+(Shell/slots/preferences/provenance and cached-drawer fix). Starting head was
+`6a4c6b8`; fetch found no newer controller-branch work. `origin/main` is already
+an ancestor. Existing local P2 work was preserved.
+
+`WORKSPACE_SYNTHETIC_PREVIEW=1` is read explicitly on the server. The isolated
+[design preview](http://localhost:3148/workspace/today) persistently states
+**Design preview · synthetic sample papers** and labels coverage as sample
+checks. With the flag absent, production retains its real-metadata and private
+save wording. Save and evidence-scope boundaries are unchanged. No hostname or
+paper-ID guessing is used. Seeded checks do not establish live source coverage.
+
+Commands: `npm run lint`, `npm run typecheck`, `npm test -- --coverage`,
+`npm run budgets`; live regression command:
+`WORKSPACE_LIVE_URL=http://127.0.0.1:3149 npx --no-install playwright test --config=live-workspace-e2e/playwright.config.ts --reporter=line`.
+All processes used the disabled-key sentinel. Actual output:
+
+```text
+ Test Files  188 passed (188)
+      Tests  3833 passed (3833)
+Statements   : 98.37% ( 4649/4726 )
+Branches     : 94.67% ( 3572/3773 )
+Functions    : 92.42% ( 1636/1770 )
+Lines        : 99.41% ( 3902/3925 )
+  16 passed (21.0s)
+6042 passed, 54 skipped, 53 deselected in 443.14s (0:07:23)
+Total:   3658 lines
+Missing: 19 lines
+Coverage: 99%
+```
+
+Browser audit: `NODE_PATH=web/node_modules node outputs/controller-session/g2-shell-audit.cjs`
+(run from the worktree, with the NODE_PATH resolved absolutely). Actual result:
+
+```json
+{"cases": 80, "failed": 0, "console_errors": 0, "page_errors": 0, "failed_requests": 0, "blocked_requests": 0}
+```
+
+[Full browser record](evidence/after/g2-shell/browser-audit.json) covers all seven
+surfaces, Reader discovered through a fixture link, both themes, widths 1440,
+390, 768 and 1024; active navigation, collapse, drawer trap/Escape/focus return,
+route closure, composer query and slash routing. Unit coverage proves inline
+and single portal rendering, enabled-control dispatch, native-field guards,
+inert/disabled protection and one status region. Existing durable save, failed
+save, source-version, keyboard, note export and review assertions remain green.
+No live-suite assertion was weakened or changed.
+
+The first broader audit exposed a real cached-template defect: Back could
+restore Today with the drawer open even after the page fully rendered. Added
+a `popstate` dismissal listener and a Back/Forward regression. The original
+audit had four failures; the final audit above reran all cases successfully.
+
+CSS-only budget exit 1 remains the explicit E27 allowance through G6; no
+ratchet or coverage floor changed. Build succeeds, every JS row passes:
+
+```text
+PASS      `/` first-load JS, excl. polyfill — 166,241 B (162.3 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 192,136 B (187.6 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 164,953 B (161.1 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,872 B (162.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,624 B (182.3 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 168,278 B (164.3 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 134,090 B (130.9 KiB) against 139,264 B (136.0 KiB)
+BREACH    All emitted CSS — 20,313 B (19.8 KiB) against 17,408 B (17.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,593 B (150.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 153,047 B (149.5 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,565 B (149.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,274 B (152.6 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 162,262 B (158.5 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 160,708 B (156.9 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 167,855 B (163.9 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 163,041 B (159.2 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 167,672 B (163.7 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 158,844 B (155.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 160,024 B (156.3 KiB) against 169,984 B (166.0 KiB)
+```
+
+G7 still must consolidate and delete `components/workspace/workspace.css`
+before applying any permitted CSS ratchet. P2 retains the old multi-card Today
+content; the single-paper reading stage is P3. Desktop uses an internal stage
+scroller, so its full-page captures show that viewport rather than every paper.
+
+Today captures (synthetic data, DPR2):
+[dark desktop](evidence/after/g2-shell/desktop-dark-today.png),
+[light desktop](evidence/after/g2-shell/desktop-light-today.png),
+[dark mobile](evidence/after/g2-shell/mobile-dark-today.png),
+[light mobile](evidence/after/g2-shell/mobile-light-today.png).
+
+Applied errata: E20/E21 three slots and Shell-owned composer; E25 retained
+`daily-app`; E15 uses the permitted alternative of suppressing Shell export on
+Library; E28 reserves palette UI for P7. E42/RC05 deviation: the cosmetic
+sidebar preference has an in-document fallback when storage is blocked, with
+SSR snapshots and failure tests. The only existing test edit, routes.test.tsx,
+asserts admitted content through the new provider rather than a raw JSX return;
+all admission and product-truth assertions stay intact.
+
+Owner workspace 3137/API8137/PG15438 and owner preferences remain untouched.
+Verification uses isolated PG15458, APIs8148/8149 and the e2e principal. Backend
+source and dependencies are unchanged. Provider contacts/spend are zero,
+recurrence disabled. Per latest owner steering the qualification experiment is
+deferred: no key request/configuration/test or automatic execution tonight.
+P4 onward is outside this batch; no PR opened and no merge performed.

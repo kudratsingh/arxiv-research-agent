@@ -1,0 +1,731 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "generatedAt": "2026-11-04T02:42:59.516Z",
+  "fixture": "offline synthetic rich data",
+  "cases": [
+    {
+      "name": "desktop-light: discover reader from Today",
+      "status": "pass",
+      "detail": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday#abstract%3A0"
+    },
+    {
+      "name": "desktop-light: today route",
+      "status": "pass",
+      "detail": {
+        "heading": "What changed.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-light: radar route",
+      "status": "pass",
+      "detail": {
+        "heading": "A wider view.\nYour terms, your pace.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-light: library route",
+      "status": "pass",
+      "detail": {
+        "heading": "Keep the source.\nKeep your thinking.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-light: interests route",
+      "status": "pass",
+      "detail": {
+        "heading": "Follow a field.\nOr your own question.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-light: operations route",
+      "status": "pass",
+      "detail": {
+        "heading": "Know what was checked.\nAnd what wasn’t.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-light: review route",
+      "status": "pass",
+      "detail": {
+        "heading": "What deserves\nyour attention?",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-light: reader route",
+      "status": "pass",
+      "detail": {
+        "heading": "Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-light: sidebar controls",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-light: composer search and slash",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-dark: discover reader from Today",
+      "status": "pass",
+      "detail": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday#abstract%3A0"
+    },
+    {
+      "name": "desktop-dark: today route",
+      "status": "pass",
+      "detail": {
+        "heading": "What changed.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-dark: radar route",
+      "status": "pass",
+      "detail": {
+        "heading": "A wider view.\nYour terms, your pace.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-dark: library route",
+      "status": "pass",
+      "detail": {
+        "heading": "Keep the source.\nKeep your thinking.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-dark: interests route",
+      "status": "pass",
+      "detail": {
+        "heading": "Follow a field.\nOr your own question.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-dark: operations route",
+      "status": "pass",
+      "detail": {
+        "heading": "Know what was checked.\nAnd what wasn’t.",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-dark: review route",
+      "status": "pass",
+      "detail": {
+        "heading": "What deserves\nyour attention?",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-dark: reader route",
+      "status": "pass",
+      "detail": {
+        "heading": "Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+        "layout": {
+          "width": 1440,
+          "scrollWidth": 1440
+        }
+      }
+    },
+    {
+      "name": "desktop-dark: sidebar controls",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-dark: composer search and slash",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-light: discover reader from Today",
+      "status": "pass",
+      "detail": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday#abstract%3A0"
+    },
+    {
+      "name": "mobile-light: today route",
+      "status": "pass",
+      "detail": {
+        "heading": "What changed.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-light: radar route",
+      "status": "pass",
+      "detail": {
+        "heading": "A wider view.\nYour terms, your pace.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-light: library route",
+      "status": "pass",
+      "detail": {
+        "heading": "Keep the source.\nKeep your thinking.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-light: interests route",
+      "status": "pass",
+      "detail": {
+        "heading": "Follow a field.\nOr your own question.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-light: operations route",
+      "status": "pass",
+      "detail": {
+        "heading": "Know what was checked.\nAnd what wasn’t.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-light: review route",
+      "status": "pass",
+      "detail": {
+        "heading": "What deserves\nyour attention?",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-light: reader route",
+      "status": "pass",
+      "detail": {
+        "heading": "Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-light: sidebar controls",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-light: composer search and slash",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-dark: discover reader from Today",
+      "status": "pass",
+      "detail": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday#abstract%3A0"
+    },
+    {
+      "name": "mobile-dark: today route",
+      "status": "pass",
+      "detail": {
+        "heading": "What changed.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: radar route",
+      "status": "pass",
+      "detail": {
+        "heading": "A wider view.\nYour terms, your pace.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: library route",
+      "status": "pass",
+      "detail": {
+        "heading": "Keep the source.\nKeep your thinking.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: interests route",
+      "status": "pass",
+      "detail": {
+        "heading": "Follow a field.\nOr your own question.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: operations route",
+      "status": "pass",
+      "detail": {
+        "heading": "Know what was checked.\nAnd what wasn’t.",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: review route",
+      "status": "pass",
+      "detail": {
+        "heading": "What deserves\nyour attention?",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: reader route",
+      "status": "pass",
+      "detail": {
+        "heading": "Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+        "layout": {
+          "width": 390,
+          "scrollWidth": 390
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: sidebar controls",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-dark: composer search and slash",
+      "status": "pass"
+    },
+    {
+      "name": "tablet768-light: discover reader from Today",
+      "status": "pass",
+      "detail": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday#abstract%3A0"
+    },
+    {
+      "name": "tablet768-light: today route",
+      "status": "pass",
+      "detail": {
+        "heading": "What changed.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-light: radar route",
+      "status": "pass",
+      "detail": {
+        "heading": "A wider view.\nYour terms, your pace.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-light: library route",
+      "status": "pass",
+      "detail": {
+        "heading": "Keep the source.\nKeep your thinking.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-light: interests route",
+      "status": "pass",
+      "detail": {
+        "heading": "Follow a field.\nOr your own question.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-light: operations route",
+      "status": "pass",
+      "detail": {
+        "heading": "Know what was checked.\nAnd what wasn’t.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-light: review route",
+      "status": "pass",
+      "detail": {
+        "heading": "What deserves\nyour attention?",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-light: reader route",
+      "status": "pass",
+      "detail": {
+        "heading": "Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-light: sidebar controls",
+      "status": "pass"
+    },
+    {
+      "name": "tablet768-light: composer search and slash",
+      "status": "pass"
+    },
+    {
+      "name": "tablet768-dark: discover reader from Today",
+      "status": "pass",
+      "detail": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday#abstract%3A0"
+    },
+    {
+      "name": "tablet768-dark: today route",
+      "status": "pass",
+      "detail": {
+        "heading": "What changed.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-dark: radar route",
+      "status": "pass",
+      "detail": {
+        "heading": "A wider view.\nYour terms, your pace.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-dark: library route",
+      "status": "pass",
+      "detail": {
+        "heading": "Keep the source.\nKeep your thinking.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-dark: interests route",
+      "status": "pass",
+      "detail": {
+        "heading": "Follow a field.\nOr your own question.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-dark: operations route",
+      "status": "pass",
+      "detail": {
+        "heading": "Know what was checked.\nAnd what wasn’t.",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-dark: review route",
+      "status": "pass",
+      "detail": {
+        "heading": "What deserves\nyour attention?",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-dark: reader route",
+      "status": "pass",
+      "detail": {
+        "heading": "Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+        "layout": {
+          "width": 768,
+          "scrollWidth": 768
+        }
+      }
+    },
+    {
+      "name": "tablet768-dark: sidebar controls",
+      "status": "pass"
+    },
+    {
+      "name": "tablet768-dark: composer search and slash",
+      "status": "pass"
+    },
+    {
+      "name": "tablet1024-light: discover reader from Today",
+      "status": "pass",
+      "detail": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday#abstract%3A0"
+    },
+    {
+      "name": "tablet1024-light: today route",
+      "status": "pass",
+      "detail": {
+        "heading": "What changed.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-light: radar route",
+      "status": "pass",
+      "detail": {
+        "heading": "A wider view.\nYour terms, your pace.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-light: library route",
+      "status": "pass",
+      "detail": {
+        "heading": "Keep the source.\nKeep your thinking.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-light: interests route",
+      "status": "pass",
+      "detail": {
+        "heading": "Follow a field.\nOr your own question.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-light: operations route",
+      "status": "pass",
+      "detail": {
+        "heading": "Know what was checked.\nAnd what wasn’t.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-light: review route",
+      "status": "pass",
+      "detail": {
+        "heading": "What deserves\nyour attention?",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-light: reader route",
+      "status": "pass",
+      "detail": {
+        "heading": "Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-light: sidebar controls",
+      "status": "pass"
+    },
+    {
+      "name": "tablet1024-light: composer search and slash",
+      "status": "pass"
+    },
+    {
+      "name": "tablet1024-dark: discover reader from Today",
+      "status": "pass",
+      "detail": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday#abstract%3A0"
+    },
+    {
+      "name": "tablet1024-dark: today route",
+      "status": "pass",
+      "detail": {
+        "heading": "What changed.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-dark: radar route",
+      "status": "pass",
+      "detail": {
+        "heading": "A wider view.\nYour terms, your pace.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-dark: library route",
+      "status": "pass",
+      "detail": {
+        "heading": "Keep the source.\nKeep your thinking.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-dark: interests route",
+      "status": "pass",
+      "detail": {
+        "heading": "Follow a field.\nOr your own question.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-dark: operations route",
+      "status": "pass",
+      "detail": {
+        "heading": "Know what was checked.\nAnd what wasn’t.",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-dark: review route",
+      "status": "pass",
+      "detail": {
+        "heading": "What deserves\nyour attention?",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-dark: reader route",
+      "status": "pass",
+      "detail": {
+        "heading": "Budgeted Retrieval for Long-Horizon Agents: When to Stop Searching",
+        "layout": {
+          "width": 1024,
+          "scrollWidth": 1024
+        }
+      }
+    },
+    {
+      "name": "tablet1024-dark: sidebar controls",
+      "status": "pass"
+    },
+    {
+      "name": "tablet1024-dark: composer search and slash",
+      "status": "pass"
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "blocked": [],
+  "requestFailures": []
+}
