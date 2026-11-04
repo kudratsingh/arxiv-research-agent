@@ -1,0 +1,522 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "generatedAt": "2026-11-04T03:13:45.932Z",
+  "fixture": "offline synthetic rich data; principal e2e",
+  "cases": [
+    {
+      "name": "desktop-light: seeded Today",
+      "status": "pass",
+      "detail": {
+        "ids": [
+          "arxiv:2611.99000",
+          "arxiv:2611.99102",
+          "arxiv:2611.99100",
+          "arxiv:2611.99101",
+          "arxiv:2611.99200",
+          "arxiv:2611.99001",
+          "url:6e4530c8ea5a27b7a39cc43ffe3e6c8c",
+          "url:373aa19bb6f0683a5946a8fd683c08bf",
+          "arxiv:2611.99202"
+        ],
+        "titleY": 417.671875
+      }
+    },
+    {
+      "name": "desktop-light: progress fill and track contrast",
+      "status": "pass",
+      "detail": {
+        "track": "rgb(227, 227, 227)",
+        "fill": "rgb(215, 0, 21)",
+        "primary": "#D70015",
+        "ratio": 4.195385307162637
+      }
+    },
+    {
+      "name": "desktop-light: queue selection and drawer close",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-light: j/k order and boundaries",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-light: reload and browser history",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-light: Reader retained version and return",
+      "status": "pass",
+      "detail": {
+        "id": "arxiv:2611.99102",
+        "version": "arxiv:2611.99102:v1",
+        "anchor": "abstract:0"
+      }
+    },
+    {
+      "name": "desktop-light: end of stage is unobscured",
+      "status": "pass",
+      "detail": {
+        "top": 717.953125,
+        "bottom": 741.953125,
+        "viewport": 1000,
+        "barTop": 780,
+        "barBottom": 976,
+        "left": 444,
+        "right": 1344,
+        "barLeft": 484,
+        "barRight": 1304
+      }
+    },
+    {
+      "name": "desktop-light: failed save and reversible Save/Undo",
+      "status": "pass",
+      "detail": {
+        "workId": "arxiv:2611.99000",
+        "restoredStatus": "unread",
+        "revisions": [
+          24,
+          30
+        ]
+      }
+    },
+    {
+      "name": "desktop-dark: seeded Today",
+      "status": "pass",
+      "detail": {
+        "ids": [
+          "arxiv:2611.99000",
+          "arxiv:2611.99102",
+          "arxiv:2611.99100",
+          "arxiv:2611.99101",
+          "arxiv:2611.99200",
+          "arxiv:2611.99001",
+          "url:6e4530c8ea5a27b7a39cc43ffe3e6c8c",
+          "url:373aa19bb6f0683a5946a8fd683c08bf",
+          "arxiv:2611.99202"
+        ],
+        "titleY": 417.671875
+      }
+    },
+    {
+      "name": "desktop-dark: progress fill and track contrast",
+      "status": "pass",
+      "detail": {
+        "track": "rgb(38, 38, 38)",
+        "fill": "rgb(255, 77, 77)",
+        "primary": "#FF4D4D",
+        "ratio": 4.62705159228857
+      }
+    },
+    {
+      "name": "desktop-dark: queue selection and drawer close",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-dark: j/k order and boundaries",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-dark: reload and browser history",
+      "status": "pass"
+    },
+    {
+      "name": "desktop-dark: Reader retained version and return",
+      "status": "pass",
+      "detail": {
+        "id": "arxiv:2611.99102",
+        "version": "arxiv:2611.99102:v1",
+        "anchor": "abstract:0"
+      }
+    },
+    {
+      "name": "desktop-dark: end of stage is unobscured",
+      "status": "pass",
+      "detail": {
+        "top": 717.953125,
+        "bottom": 741.953125,
+        "viewport": 1000,
+        "barTop": 780,
+        "barBottom": 976,
+        "left": 444,
+        "right": 1344,
+        "barLeft": 484,
+        "barRight": 1304
+      }
+    },
+    {
+      "name": "mobile-light: seeded Today",
+      "status": "pass",
+      "detail": {
+        "ids": [
+          "arxiv:2611.99000",
+          "arxiv:2611.99102",
+          "arxiv:2611.99100",
+          "arxiv:2611.99101",
+          "arxiv:2611.99200",
+          "arxiv:2611.99001",
+          "url:6e4530c8ea5a27b7a39cc43ffe3e6c8c",
+          "url:373aa19bb6f0683a5946a8fd683c08bf",
+          "arxiv:2611.99202"
+        ],
+        "titleY": 480.34375
+      }
+    },
+    {
+      "name": "mobile-light: progress fill and track contrast",
+      "status": "pass",
+      "detail": {
+        "track": "rgb(227, 227, 227)",
+        "fill": "rgb(215, 0, 21)",
+        "primary": "#D70015",
+        "ratio": 4.195385307162637
+      }
+    },
+    {
+      "name": "mobile-light: queue selection and drawer close",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-light: j/k order and boundaries",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-light: reload and browser history",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-light: Reader retained version and return",
+      "status": "pass",
+      "detail": {
+        "id": "arxiv:2611.99102",
+        "version": "arxiv:2611.99102:v1",
+        "anchor": "abstract:0"
+      }
+    },
+    {
+      "name": "mobile-light: end of stage is unobscured",
+      "status": "pass",
+      "detail": {
+        "top": 569.53125,
+        "bottom": 593.53125,
+        "viewport": 844,
+        "barTop": 630,
+        "barBottom": 832,
+        "left": 16,
+        "right": 374,
+        "barLeft": 12,
+        "barRight": 378
+      }
+    },
+    {
+      "name": "mobile-dark: seeded Today",
+      "status": "pass",
+      "detail": {
+        "ids": [
+          "arxiv:2611.99000",
+          "arxiv:2611.99102",
+          "arxiv:2611.99100",
+          "arxiv:2611.99101",
+          "arxiv:2611.99200",
+          "arxiv:2611.99001",
+          "url:6e4530c8ea5a27b7a39cc43ffe3e6c8c",
+          "url:373aa19bb6f0683a5946a8fd683c08bf",
+          "arxiv:2611.99202"
+        ],
+        "titleY": 480.34375
+      }
+    },
+    {
+      "name": "mobile-dark: progress fill and track contrast",
+      "status": "pass",
+      "detail": {
+        "track": "rgb(38, 38, 38)",
+        "fill": "rgb(255, 77, 77)",
+        "primary": "#FF4D4D",
+        "ratio": 4.62705159228857
+      }
+    },
+    {
+      "name": "mobile-dark: queue selection and drawer close",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-dark: j/k order and boundaries",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-dark: reload and browser history",
+      "status": "pass"
+    },
+    {
+      "name": "mobile-dark: Reader retained version and return",
+      "status": "pass",
+      "detail": {
+        "id": "arxiv:2611.99102",
+        "version": "arxiv:2611.99102:v1",
+        "anchor": "abstract:0"
+      }
+    },
+    {
+      "name": "mobile-dark: end of stage is unobscured",
+      "status": "pass",
+      "detail": {
+        "top": 569.53125,
+        "bottom": 593.53125,
+        "viewport": 844,
+        "barTop": 630,
+        "barBottom": 832,
+        "left": 16,
+        "right": 374,
+        "barLeft": 12,
+        "barRight": 378
+      }
+    },
+    {
+      "name": "tablet768-dark: seeded Today",
+      "status": "pass",
+      "detail": {
+        "ids": [
+          "arxiv:2611.99000",
+          "arxiv:2611.99102",
+          "arxiv:2611.99100",
+          "arxiv:2611.99101",
+          "arxiv:2611.99200",
+          "arxiv:2611.99001",
+          "url:6e4530c8ea5a27b7a39cc43ffe3e6c8c",
+          "url:373aa19bb6f0683a5946a8fd683c08bf",
+          "arxiv:2611.99202"
+        ],
+        "titleY": 439.671875
+      }
+    },
+    {
+      "name": "tablet768-dark: progress fill and track contrast",
+      "status": "pass",
+      "detail": {
+        "track": "rgb(38, 38, 38)",
+        "fill": "rgb(255, 77, 77)",
+        "primary": "#FF4D4D",
+        "ratio": 4.62705159228857
+      }
+    },
+    {
+      "name": "tablet768-dark: queue selection and drawer close",
+      "status": "pass"
+    },
+    {
+      "name": "tablet768-dark: j/k order and boundaries",
+      "status": "pass"
+    },
+    {
+      "name": "tablet768-dark: reload and browser history",
+      "status": "pass"
+    },
+    {
+      "name": "tablet768-dark: Reader retained version and return",
+      "status": "pass",
+      "detail": {
+        "id": "arxiv:2611.99102",
+        "version": "arxiv:2611.99102:v1",
+        "anchor": "abstract:0"
+      }
+    },
+    {
+      "name": "tablet768-dark: end of stage is unobscured",
+      "status": "pass",
+      "detail": {
+        "top": 717.53125,
+        "bottom": 741.53125,
+        "viewport": 1000,
+        "barTop": 780,
+        "barBottom": 976,
+        "left": 104,
+        "right": 736,
+        "barLeft": 100,
+        "barRight": 740
+      }
+    },
+    {
+      "name": "tablet1024-dark: seeded Today",
+      "status": "pass",
+      "detail": {
+        "ids": [
+          "arxiv:2611.99000",
+          "arxiv:2611.99102",
+          "arxiv:2611.99100",
+          "arxiv:2611.99101",
+          "arxiv:2611.99200",
+          "arxiv:2611.99001",
+          "url:6e4530c8ea5a27b7a39cc43ffe3e6c8c",
+          "url:373aa19bb6f0683a5946a8fd683c08bf",
+          "arxiv:2611.99202"
+        ],
+        "titleY": 439.671875
+      }
+    },
+    {
+      "name": "tablet1024-dark: progress fill and track contrast",
+      "status": "pass",
+      "detail": {
+        "track": "rgb(38, 38, 38)",
+        "fill": "rgb(255, 77, 77)",
+        "primary": "#FF4D4D",
+        "ratio": 4.62705159228857
+      }
+    },
+    {
+      "name": "tablet1024-dark: queue selection and drawer close",
+      "status": "pass"
+    },
+    {
+      "name": "tablet1024-dark: j/k order and boundaries",
+      "status": "pass"
+    },
+    {
+      "name": "tablet1024-dark: reload and browser history",
+      "status": "pass"
+    },
+    {
+      "name": "tablet1024-dark: Reader retained version and return",
+      "status": "pass",
+      "detail": {
+        "id": "arxiv:2611.99102",
+        "version": "arxiv:2611.99102:v1",
+        "anchor": "abstract:0"
+      }
+    },
+    {
+      "name": "tablet1024-dark: end of stage is unobscured",
+      "status": "pass",
+      "detail": {
+        "top": 717.734375,
+        "bottom": 741.734375,
+        "viewport": 1000,
+        "barTop": 780,
+        "barBottom": 976,
+        "left": 388,
+        "right": 984,
+        "barLeft": 376,
+        "barRight": 996
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "blocked": [],
+  "requestFailures": [],
+  "readingRequests": [
+    {
+      "label": "desktop-light",
+      "body": {
+        "work_id": "arxiv:2611.99000",
+        "revision": 24,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99000:v1",
+          "snoozed_until": null
+        },
+        "request_id": "d0a2bdda-cb17-428b-b40d-0e1ced8b9bb6"
+      },
+      "injectedFailure": true
+    },
+    {
+      "label": "desktop-light",
+      "body": {
+        "work_id": "arxiv:2611.99000",
+        "revision": 24,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99000:v1",
+          "snoozed_until": null
+        },
+        "request_id": "d0a2bdda-cb17-428b-b40d-0e1ced8b9bb6"
+      },
+      "injectedFailure": false
+    },
+    {
+      "label": "desktop-light",
+      "body": {
+        "work_id": "arxiv:2611.99000",
+        "revision": 25,
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99000:v1",
+          "snoozed_until": null
+        },
+        "request_id": "5cfe0741-5b1d-4003-b581-407cc4e77b5c"
+      },
+      "injectedFailure": false
+    },
+    {
+      "label": "desktop-light",
+      "body": {
+        "work_id": "arxiv:2611.99000",
+        "revision": 26,
+        "data": {
+          "status": "dismissed",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99000:v1",
+          "snoozed_until": null
+        },
+        "request_id": "55c800ac-d8ac-41ba-9487-68de27ccc484"
+      },
+      "injectedFailure": false
+    },
+    {
+      "label": "desktop-light",
+      "body": {
+        "work_id": "arxiv:2611.99000",
+        "revision": 27,
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99000:v1",
+          "snoozed_until": null
+        },
+        "request_id": "63f6217c-29e4-44f3-bc55-6a392f8cac6d"
+      },
+      "injectedFailure": false
+    },
+    {
+      "label": "desktop-light",
+      "body": {
+        "work_id": "arxiv:2611.99000",
+        "revision": 28,
+        "data": {
+          "status": "snoozed",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99000:v1",
+          "snoozed_until": "2026-11-05T03:13:55.944Z"
+        },
+        "request_id": "ae5f997d-6548-4d1b-bee2-318805bbccb6"
+      },
+      "injectedFailure": false
+    },
+    {
+      "label": "desktop-light",
+      "body": {
+        "work_id": "arxiv:2611.99000",
+        "revision": 29,
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0",
+          "version_id": "arxiv:2611.99000:v1",
+          "snoozed_until": null
+        },
+        "request_id": "8bd3f85f-5bea-499b-b1b0-15f3616d83dc"
+      },
+      "injectedFailure": false
+    }
+  ],
+  "expectedInjectedConsole": [
+    {
+      "label": "desktop-light",
+      "url": "http://127.0.0.1:3148/workspace/today?focus=arxiv%3A2611.99000",
+      "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    }
+  ],
+  "navigationCancellations": []
+}

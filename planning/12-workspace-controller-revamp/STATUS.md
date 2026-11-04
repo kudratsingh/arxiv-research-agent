@@ -1,6 +1,6 @@
 # STATUS: workspace controller revamp
 
-Updated: **2026-11-04 UTC**. State: **G2 verified; single-paper Today is next (P3).**
+Updated: **2026-11-04 UTC**. State: **G2 and G3 verified; focused Today ready for owner experience review. P4 onward deferred.**
 
 The implementing agent updates this file at every gate (G0–G8). Numbers are
 pasted from command output and never typed by hand.
@@ -408,3 +408,195 @@ source and dependencies are unchanged. Provider contacts/spend are zero,
 recurrence disabled. Per latest owner steering the qualification experiment is
 deferred: no key request/configuration/test or automatic execution tonight.
 P4 onward is outside this batch; no PR opened and no merge performed.
+
+
+## G3 closure / WO-3.1–3.2 — one pinned paper in focus
+
+Verified implementation commit: **`d4f5855ff2b5863baee73c02d10ff452904b267b`**.
+This gate-record commit contains only documentation and browser evidence.
+[Runnable design preview](http://localhost:3148/workspace/today) ·
+[desktop/mobile walkthrough and exact run commands](evidence/after/g3-today/WALKTHROUGH.md).
+
+Today has one paper article, its full available abstract, retained-version
+byline, relevance rationale and explicit evidence scope. The ordered edition
+queue lives in the sidebar; the bar owns bounded navigation and the single
+Save/Dismiss/Snooze/Undo controls. Search has a visible submit button. Local
+commands use the current enabled control. The exact edition version is passed
+through readerTarget; an unavailable pinned version is omitted with the
+existing warning, never replaced by a newer version.
+
+Queue/Previous/Next/j/k use reactive focus URL replacement. Back/Forward and
+reload retain selection. Successful dismiss/snooze chooses the next surviving
+item or predecessor at the boundary; failed writes leave the selection and
+retry identity intact. Undo restores the original paper even after manual
+navigation, and a failed Undo leaves the current selection unchanged. The
+reading hook now returns success booleans and exposes its Undo work id; request
+bodies and revision/idempotency behavior are unchanged. Pending mutations,
+profile writes and refresh disable conflicting writes while navigation remains
+available.
+
+The new multi-paper module uses four items, plus evidence-scope cases for PDF
+text, selected PDF pages, feed excerpt and metadata. It covers delayed saves,
+failed writes, native/inert controls, exact Reader anchors, older/missing
+versions, unknown focus, drawer selection and source-health states. All former
+Today/Reader/Library/save/conflict/version assertions remain unchanged; the
+existing focused regression set passed without any layout-test edits.
+
+Final commands: `npm run lint`, `npm run typecheck`, `npm test -- --coverage`,
+`npm run budgets`; the unchanged live Playwright suite against fresh isolated
+DB `workspace_e2e_g3_final` through API8149/web3149. Python invocation:
+`env -u POSTGRES_URL -u WORKSPACE_RATE_DATABASE_URL WORKSPACE_TEST_POSTGRES_URL=postgresql://workspace:workspace-local-only@127.0.0.1:15458/workspace make test-cov-diff VENV_PYTHON=/Users/kudratsingh/Machine-Learning-Projects/arxiv-venv-lock/bin/python`
+(with the disabled-key sentinel). Actual output:
+
+```text
+ Test Files  189 passed (189)
+      Tests  3858 passed (3858)
+Statements   : 98.36% ( 4684/4762 )
+Branches     : 94.69% ( 3677/3883 )
+Functions    : 92.35% ( 1644/1780 )
+Lines        : 99.36% ( 3935/3960 )
+  16 passed (21.0s)
+6042 passed, 54 skipped, 53 deselected in 408.78s (0:06:48)
+Total:   3658 lines
+Missing: 19 lines
+Coverage: 99%
+```
+
+Full committed [browser audit](evidence/after/g3-today/browser-audit.json) and
+[reproduction script](evidence/after/g3-today/audit.cjs) exercise the richer
+nine-paper edition in both themes at desktop/mobile, plus tablet transitions.
+Actual final result:
+
+```json
+{"cases": 43, "failed": 0, "unexpected_console_errors": 0, "page_errors": 0, "failed_requests": 0, "blocked_requests": 0, "expected_injected_503": 1}
+```
+
+Read-only axe on Today, both themes at desktop and mobile:
+
+```json
+[
+  {
+    "width": 1440,
+    "theme": "dark",
+    "violations": 0,
+    "seriousCritical": 0
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "violations": 0,
+    "seriousCritical": 0
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "violations": 0,
+    "seriousCritical": 0
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "violations": 0,
+    "seriousCritical": 0
+  }
+]
+```
+
+[Detailed axe record](evidence/after/g3-today/axe.json). This Today coverage is
+not the future G7 all-route accessibility matrix.
+
+Visual review found a real issue the initial title-top check missed: the mobile
+player covered most of the title. The repaired mobile layout removes duplicate
+header Read/position/date presentation, keeps notice/source checks/breadcrumb,
+tightens the continuation strip, and puts the entire title across the reading
+column below a small cover row. The bar retains Read/progress; Edition details
+retain the date/context; Source and pin options remain reachable. The audit now
+requires the whole title to clear the bar on initial load, queue selection and
+Reader return, in both themes. Captured mobile title ends above the player;
+measurements are retained in the browser receipt and [mobile geometry record](evidence/after/g3-today/mobile-geometry.json).
+
+Independent read-only review found and fixed two additional concrete issues:
+progress used the wrong track token (now the approved subtle track), and a new
+byline could fall back to newer authors for an older version with no authors.
+Missing authors now remain explicitly unknown for that version, with a
+regression test. Browser contrast checks enforce the progress fill/track bound
+in every audited context. Desktop composition is preserved. Jazzy appears in
+branding and Today loading/error/empty states; current name scans find no Folio.
+
+Screenshots (synthetic sample data, DPR2, actual viewport):
+[dark desktop](evidence/after/g3-today/desktop-dark-today.png),
+[light desktop](evidence/after/g3-today/desktop-light-today.png),
+[dark mobile](evidence/after/g3-today/mobile-dark-today.png),
+[light mobile](evidence/after/g3-today/mobile-light-today.png),
+[mobile queue](evidence/after/g3-today/mobile-dark-queue-open.png),
+[Reader return](evidence/after/g3-today/desktop-dark-reader-return.png).
+Root inspected desktop and mobile captures; browser verification is separate
+from owner experience approval.
+
+Final build succeeds; every JS ceiling is preserved and passes. CSS-only
+budget exit 1 remains E27's explicit interim G1–G6 allowance, with no ratchet:
+
+```text
+PASS      `/` first-load JS, excl. polyfill — 166,240 B (162.3 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 192,135 B (187.6 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 164,952 B (161.1 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,871 B (162.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,623 B (182.2 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 168,277 B (164.3 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 134,089 B (130.9 KiB) against 139,264 B (136.0 KiB)
+BREACH    All emitted CSS — 22,346 B (21.8 KiB) against 17,408 B (17.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,592 B (150.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 153,046 B (149.5 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,564 B (149.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,273 B (152.6 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 167,200 B (163.3 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 161,210 B (157.4 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 168,324 B (164.4 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 163,543 B (159.7 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 168,141 B (164.2 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 159,313 B (155.6 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 160,493 B (156.7 KiB) against 169,984 B (166.0 KiB)
+```
+
+G7 must consolidate/delete `components/workspace/workspace.css` and reduce
+before any allowed final ratchet. Budget files, coverage floors, backend source,
+fictional-preview production files and Evidence Workbench files were not changed.
+
+### Failed, interrupted and unrun checks
+
+- One Python invocation incorrectly used the runtime rate-governor override,
+  causing a local-file-governor assertion and skipping DB tests. No source/test
+  assertion was changed. Corrected to WORKSPACE_TEST_POSTGRES_URL, proved the
+  failing test passes, and reran the full gate above with DB integration active.
+- A repeated live-suite run on the already-used regression API hit its unchanged
+  per-key write quota (HTTP429): two failed, two did not run, twelve passed. The
+  final full suite above uses a fresh isolated DB/API process and passes. No
+  rate limit, timeout, save assertion, or test tier was weakened.
+- One exploratory audit recorded two canceled same-origin Next RSC requests
+  during rapid navigation. Explicit network settlement between cases and before
+  context close removes the cancellation; final raw records report zero failed
+  requests. The one 503 in the final audit is deliberate failure injection.
+- Python's skips and deselected e2e tier are shown in the exact output above.
+  No provider trial, real source-intake quality, physical-phone test, owner
+  usefulness judgment, or broader G7 visual/accessibility matrix is claimed.
+- GitHub CI has no run for branch-only pushes here: ci.yml triggers on main
+  pushes or PRs, and the owner explicitly requested no controller PR. Local
+  phase gates above are the verified evidence, not a green GitHub CI claim.
+
+### Scope and remaining work
+
+P2 and P3 are complete for review. P4 Reader redesign and later surfaces, palette
+UI and G7 CSS consolidation are deferred by this batch's scope. Reader itself
+retains all manual reading/notes, exact source scope, durable failure recovery
+and return behavior. The design preview remains synthetic, with live refresh
+disabled on Today; production defaults keep real-metadata wording. Reversible
+fixture tests restore reading fields but advance revision/activity history,
+which is explicitly recorded rather than presented as a full rollback.
+
+Owner 3137/API8137/PG15438 and owner data/preferences remain intact. Verification
+writes use only the isolated e2e fixture accounts/databases. Provider contacts
+and spend remain zero; recurrence remains disabled. The separately approved
+qualification worktree is unchanged and unexecuted; no real-key request,
+configuration, test, or automatic start was performed. All PRs stay unmerged;
+no new controller PR was opened. Stop at this G3 experience review.

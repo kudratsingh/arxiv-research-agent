@@ -1,0 +1,20 @@
+[
+  {
+    "theme": "dark",
+    "width": 390,
+    "height": 844,
+    "top": 480.34375,
+    "bottom": 565.28125,
+    "barTop": 630,
+    "clearance": 64.71875
+  },
+  {
+    "theme": "light",
+    "width": 390,
+    "height": 844,
+    "top": 480.34375,
+    "bottom": 565.28125,
+    "barTop": 630,
+    "clearance": 64.71875
+  }
+]
