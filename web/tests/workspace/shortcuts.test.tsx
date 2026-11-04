@@ -26,6 +26,22 @@ beforeEach(() => { assign.mockReset(); vi.stubGlobal("location", { assign }); })
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("workspace shortcuts and composer", () => {
+  it("binds the Radar query while preserving filters and starting a new observation window", () => {
+    const current = { assign, pathname: "/workspace/radar", search: "?q=old&days=30&source_id=arxiv-cs-lg&access_state=excerpt&status=saved&cursor=old-page&as_of=old-cutoff&focus=old-work" };
+    vi.stubGlobal("location", current);
+    render(<Fixture next={vi.fn()} />);
+    const input = screen.getByRole("searchbox", { name: "Search stored papers" });
+    expect(input).toHaveValue("old");
+    fireEvent.change(input, { target: { value: "new research" } });
+    fireEvent.submit(input.closest("form")!);
+    expect(assign).toHaveBeenCalledOnce();
+    const result = new URL(assign.mock.calls[0]![0], "http://localhost");
+    expect(Object.fromEntries(result.searchParams)).toEqual({ q: "new research", days: "30", source_id: "arxiv-cs-lg", access_state: "excerpt", status: "saved" });
+    current.search = "?q=history-query&days=30";
+    fireEvent(window, new PopStateEvent("popstate"));
+    expect(screen.getByRole("searchbox", { name: "Search stored papers" })).toHaveValue("history-query");
+  });
+
   it("executes the current enabled scoped button, never a stale or outside control", () => {
     const outside = vi.fn(); const first = vi.fn(); const replacement = vi.fn();
     const other = document.createElement("button"); other.dataset.command = "next"; other.onclick = outside;

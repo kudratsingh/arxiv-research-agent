@@ -3,9 +3,11 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { dispatchWorkspacePrefix } from "@/lib/workspace/dispatch";
 import { Icon } from "./Icon";
+import { useQueryParam } from "@/lib/workspace/urlState";
 import { useSidebarViewport } from "./useSidebarPreference";
 
 export function Composer(): React.ReactElement {
+  const queryFromURL = useQueryParam("q");
   const [help, setHelp] = useState("");
   const [open, setOpen] = useState(false);
   const mobile = useSidebarViewport() === "mobile";
@@ -36,7 +38,12 @@ export function Composer(): React.ReactElement {
       }
       return;
     }
-    const params = new URLSearchParams({ q: query, days: "7" });
+    const current = window.location.pathname === "/workspace/radar" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const params = new URLSearchParams({ q: query, days: current.get("days") ?? "7" });
+    for (const key of ["source_id", "access_state", "status"]) {
+      const value = current.get(key);
+      if (value !== null) params.set(key, value);
+    }
     // Full navigation preserves the existing route contract without a router dependency.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     location.assign(`/workspace/radar?${params.toString()}`);
@@ -49,7 +56,7 @@ export function Composer(): React.ReactElement {
         <Icon name={expanded ? "dismiss" : "search"} /><span>{expanded ? "Close" : "Search"}</span>
       </button>
       <div className="ws-composer-fields" id={fieldsId} hidden={!expanded}>
-      <input ref={inputRef} className="ws-composer-input" type="search" name="q" aria-label="Search stored papers" aria-keyshortcuts="/"
+      <input key={queryFromURL ?? ""} defaultValue={queryFromURL ?? ""} ref={inputRef} className="ws-composer-input" type="search" name="q" aria-label="Search stored papers" aria-keyshortcuts="/"
         placeholder="Search stored papers, or /command" aria-describedby={help ? "ws-composer-help" : undefined} />
       <button className="ws-composer-submit" type="submit" title="Search stored papers or run a local /command">Search</button>
       {help && <span className="ws-composer-hint" id="ws-composer-help">{help}</span>}

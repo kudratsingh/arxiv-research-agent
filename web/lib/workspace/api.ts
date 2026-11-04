@@ -131,9 +131,10 @@ export function normalizeReaderReturnTo(value: string | null): string {
       const view = search.get("view");
       if (view && ["saved", "notes", "read", "archived", "all"].includes(view)) params.set("view", view);
     } else if (pathname === "/workspace/radar") {
-      for (const key of ["q", "source_id", "access_state", "status", "days"]) {
+      for (const key of ["q", "source_id", "access_state", "status", "days", "cursor", "as_of", "focus"]) {
         const item = search.get(key);
-        if (item && item.length <= 500) params.set(key, item);
+        const limit = key === "cursor" ? 2048 : key === "as_of" ? 80 : 500;
+        if (item && item.length <= limit && !/[\\\u0000-\u001f\u007f]/.test(item)) params.set(key, item);
       }
     }
     return `${pathname}${params.size ? `?${params}` : ""}`;

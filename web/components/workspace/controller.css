@@ -313,3 +313,39 @@
   .workspace-app .ws-reader-actions { gap: 4px; padding-top: 2px; }
 }
 /* == end P4 == */
+
+/* == P5 discovery and return == */
+.workspace-app .ws-radar, .workspace-app .ws-library { max-width: 1000px; margin-inline: auto; }
+.workspace-app .ws-radar-intro, .workspace-app .ws-library-intro { margin-bottom: 20px; }
+.workspace-app .ws-radar-intro h1, .workspace-app .ws-library-intro h1 { font-size: clamp(26px, 3vw, 36px); line-height: 1.15; }
+.workspace-app .ws-radar-intro p, .workspace-app .ws-library-intro p { margin-block: 10px 0; }
+.workspace-app .ws-side-section .workspace-controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.workspace-app .ws-side-section label { min-width: 0; }
+.workspace-app .ws-side-section input, .workspace-app .ws-side-section select, .workspace-app .ws-side-section textarea { min-width: 0; max-width: 100%; }
+.workspace-app .ws-side-section .workspace-form-stack { margin: 0; }
+.workspace-app .ws-side-section .workspace-import { padding: 0; border: 0; border-radius: 0; }
+.workspace-app .ws-side-section .workspace-import h2 { font-size: 18px; }
+.workspace-app .ws-side-section .workspace-import p, .workspace-app .ws-side-section .daily-muted { font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.workspace-app .ws-side-section .workspace-review-link { margin-top: 14px; }
+.workspace-app .ws-side-section .workspace-list-pagination { margin-top: 12px; }
+.workspace-app .ws-radar-state, .workspace-app .ws-library-state { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding-block: 24px; }
+.workspace-app .ws-radar-state h2 { width: 100%; }
+.workspace-app .ws-library-notebook { margin-block: 28px; }
+.workspace-app .ws-library-notebook > h2 { font: 650 22px/1.3 var(--font-ui); }
+.workspace-app .ws-library-notebook .daily-notebook-entry { margin-block: 16px; padding: 20px; border: 1px solid var(--color-border-subtle); border-radius: var(--ws-radius-md); background: var(--color-surface-raised); overflow-wrap: anywhere; }
+.workspace-app .ws-library-notebook .workspace-note-context { font: 400 12px/1.6 var(--font-mono); color: var(--color-ink-muted); }
+.workspace-app:has(.ws-radar) .ws-bar-slot > [data-command="next-page"] { margin-top: 6px; }
+@media (max-width: 767px) {
+  .workspace-app:has(.ws-today) .ws-stage-header { padding-bottom: 4px; margin-bottom: 6px; }
+  .workspace-app .ws-today .ws-today-intro { margin-bottom: 6px; }
+  .workspace-app .ws-radar > .daily-page-meta, .workspace-app .ws-library > .daily-page-meta { margin-bottom: 10px; }
+  .workspace-app .ws-radar-intro, .workspace-app .ws-library-intro { margin-bottom: 16px; }
+  .workspace-app .ws-radar-intro h1, .workspace-app .ws-library-intro h1 { font-size: 24px; }
+  .workspace-app .ws-radar-intro p, .workspace-app .ws-library-intro p { font-size: 13px; line-height: 1.5; }
+  .workspace-app .ws-library-notebook .daily-notebook-entry { padding: 16px; }
+  .workspace-app:has(.ws-radar, .ws-library) .ws-bar:has(.ws-player):has(.ws-composer-shell[data-expanded="false"]) .ws-composer-shell { position: absolute; top: 10px; left: 10px; width: 60px; }
+  .workspace-app:has(.ws-radar, .ws-library) .ws-bar:has(.ws-player):has(.ws-composer-shell[data-expanded="false"]) .ws-player { padding-top: 0; }
+  .workspace-app:has(.ws-radar, .ws-library) .ws-bar:has(.ws-player):has(.ws-composer-shell[data-expanded="false"]) .ws-player-track { padding-left: 68px; }
+}
+.workspace-app .workspace-import-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+/* == end P5 == */

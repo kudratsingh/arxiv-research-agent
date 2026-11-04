@@ -25,9 +25,9 @@ export function QueueRow({ item, index, count, current, versionId, onSelect }: {
   </button></li>;
 }
 
-export function QueueList({ items, focusId, versionIds, onSelect }: {
-  items: readonly WorkItem[]; focusId: string | null; versionIds?: Readonly<Record<string, string>>; onSelect: (id: string) => void;
+export function QueueList({ items, focusId, versionIds, onSelect, label = "Today's reading queue" }: {
+  items: readonly WorkItem[]; focusId: string | null; versionIds?: Readonly<Record<string, string>>; onSelect: (id: string) => void; label?: string;
 }) {
-  return <ol className="ws-queue" aria-label="Today's reading queue">{items.map((item, index) => <QueueRow key={item.work_id}
+  return <ol className="ws-queue" aria-label={label}>{items.map((item, index) => <QueueRow key={item.work_id}
     item={item} index={index} count={items.length} current={focusId === item.work_id} versionId={versionIds?.[item.work_id]} onSelect={onSelect} />)}</ol>;
 }

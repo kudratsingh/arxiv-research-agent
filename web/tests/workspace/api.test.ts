@@ -16,7 +16,7 @@ import {
 } from "@/lib/workspace/drafts";
 
 describe("controller reader return focus", () => {
-  it("retains only Today focus, encoding it as data and dropping unrelated parameters", () => {
+  it("retains Today focus, encoding it as data and dropping unrelated parameters", () => {
     expect(normalizeReaderReturnTo("/workspace/today?focus=arxiv%3A2610.00001&extra=1#notes"))
       .toBe("/workspace/today?focus=arxiv%3A2610.00001");
     expect(normalizeReaderReturnTo(`/workspace/today?focus=${"a".repeat(500)}`))
@@ -28,11 +28,27 @@ describe("controller reader return focus", () => {
     "drops empty, oversized, or unsafe focus %s", (focus) => {
       expect(normalizeReaderReturnTo(`/workspace/today?focus=${focus}`)).toBe("/workspace/today");
     });
-  it("keeps exact Library and Review returns and excludes focus from Radar", () => {
+  it("keeps exact Library and Review returns and retains Radar focus", () => {
     expect(normalizeReaderReturnTo("/workspace/library?view=notes&focus=a")).toBe("/workspace/library?view=notes");
     const packet = `review-${"a".repeat(32)}`;
     expect(normalizeReaderReturnTo(`/workspace/review?packet=${packet}&focus=a`)).toBe(`/workspace/review?packet=${packet}`);
-    expect(normalizeReaderReturnTo("/workspace/radar?q=test&focus=a")).toBe("/workspace/radar?q=test");
+    expect(normalizeReaderReturnTo("/workspace/radar?q=test&focus=a")).toBe("/workspace/radar?q=test&focus=a");
+  });
+  it("preserves the bounded Radar page snapshot and focused work through Reader", () => {
+    const params = new URLSearchParams({ q: "retrieval", source_id: "arxiv-cs-lg", access_state: "excerpt", status: "saved", days: "30", cursor: "page-cursor", as_of: "2026-11-02T15:00:00Z", focus: "arxiv:2610.00001", extra: "discard" });
+    const result = new URL(normalizeReaderReturnTo(`/workspace/radar?${params}#notes`), "http://localhost");
+    params.delete("extra");
+    expect(result.pathname).toBe("/workspace/radar");
+    expect(result.searchParams.toString()).toBe(params.toString());
+    expect(result.hash).toBe("");
+  });
+  it.each([["cursor", 2048], ["as_of", 80], ["focus", 500]] as const)("bounds Radar %s and rejects encoded control data", (key, limit) => {
+    const accepted = new URLSearchParams({ [key]: "a".repeat(limit) });
+    expect(normalizeReaderReturnTo(`/workspace/radar?${accepted}`)).toBe(`/workspace/radar?${accepted}`);
+    for (const value of ["a".repeat(limit + 1), "unsafe\nvalue", "unsafe\\value", "unsafe\x7fvalue"]) {
+      const rejected = new URLSearchParams({ [key]: value });
+      expect(normalizeReaderReturnTo(`/workspace/radar?${rejected}`)).toBe("/workspace/radar");
+    }
   });
   it.each(["https://evil.example/workspace/today?focus=a", "//evil.example/workspace/today?focus=a", "/workspace/today/../../evil?focus=a"])(
     "rejects hostile return destinations %s", (value) => expect(normalizeReaderReturnTo(value)).toBe("/workspace/today"));
