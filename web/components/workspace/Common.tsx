@@ -2,6 +2,7 @@
 
 import type { SourceStatus } from "@/lib/workspace/api";
 import { displayDate } from "@/lib/workspace/api";
+import { useSyntheticPreview } from "./PreviewContext";
 
 /** One polite mutation result per live route; errors share this region. */
 export function Message({ children }: { children: React.ReactNode }) {
@@ -52,6 +53,7 @@ export function sourceAvailable(source: SourceStatus) {
 }
 
 export function Coverage({ sources, children }: { sources: SourceStatus[]; children?: React.ReactNode }) {
+  const syntheticPreview = useSyntheticPreview();
   const good = sources.filter(sourceAvailable).length;
   const limited = sources.filter(
     (source) =>
@@ -61,29 +63,29 @@ export function Coverage({ sources, children }: { sources: SourceStatus[]; child
     <details className="daily-coverage" data-complete={good === sources.length && !limited}>
       <summary>
         <span className="daily-status-dot" aria-hidden="true" />
-        Source checks: {good} of {sources.length} available
+        {syntheticPreview ? "Sample source checks" : "Source checks"}: {good} of {sources.length} available
         <span>
           {good < sources.length
             ? "Unavailable checks"
             : limited
               ? `${limited} limited source windows`
-              : "Bounded metadata checks"}
+              : syntheticPreview ? "Synthetic sample checks" : "Bounded metadata checks"}
         </span>
       </summary>
       {children}
-      <p>
+      {syntheticPreview ? <p>These sample papers and source check results are synthetic. They do not represent live fetches or establish source coverage.</p> : <p>
         At most 25 items per check, with a seven-day candidate window. A partial
         check contains real metadata but does not establish full coverage of the
         requested window. A successful check can be empty. A failed check cannot
         establish that nothing changed.
-      </p>
+      </p>}
       <ul>
         {sources.map((source) => (
           <li key={source.source_id}>
             <strong>{source.name}</strong>
             <span>
               {source.status.replaceAll("_", " ")} ·{" "}
-              {source.last_success_at
+              {syntheticPreview ? "Synthetic sample status" : source.last_success_at
                 ? `last success ${displayDate(source.last_success_at)}`
                 : source.status === "partial"
                   ? "Limited fetch committed; no complete-window success recorded"

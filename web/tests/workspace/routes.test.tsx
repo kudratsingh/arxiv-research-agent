@@ -51,7 +51,8 @@ describe("live route admission and identity contracts", () => {
       "not found",
     );
     vi.stubEnv("WORKSPACE_LIVE", "1");
-    expect(Layout({ children: "private workspace" })).toBe("private workspace");
+    render(Layout({ children: "private workspace" }));
+    expect(screen.getByText("private workspace")).toBeInTheDocument();
   });
   it("mounts the real Today in its own shell with source checks and fixture access separately labelled", async () => {
     render(
