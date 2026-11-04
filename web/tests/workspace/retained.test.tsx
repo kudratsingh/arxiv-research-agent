@@ -371,7 +371,7 @@ describe("retained document reading", () => {
     await screen.findByRole("heading", { name: "Retained source abstract" });
     await user.click(screen.getByRole("link", { name: "Understand" }));
     await user.click(
-      screen.getByRole("button", { name: "Choose retained source context" }),
+      await screen.findByRole("button", { name: "Choose retained source context" }),
     );
     await user.selectOptions(
       await screen.findByLabelText("Source context"),

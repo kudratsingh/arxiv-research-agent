@@ -890,10 +890,17 @@ describe("recovery paths that must not erase authored data", () => {
       screen.getByRole("combobox", { name: "Source version" }),
       "arxiv:2610.00001:v1",
     );
+    expect(screen.getByRole("combobox", { name: "Source version" })).toHaveValue("arxiv:2610.00001:v2");
+    expect(text).toHaveValue("Keep my question even when both stores fail");
     expect(
       screen.getByText(/Draft recovery is unavailable. Copy your text/),
     ).toBeInTheDocument();
     delete failures.reading;
+    await user.click(screen.getByRole("button", { name: "Discard unsaved draft" }));
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Source version" }),
+      "arxiv:2610.00001:v1",
+    );
     await user.click(
       screen.getByRole("button", { name: "View latest source version" }),
     );

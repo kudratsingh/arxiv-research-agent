@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   displayDate,
   errorMessage,
@@ -12,6 +12,7 @@ import {
   workspaceRequest,
   type EntryRevision,
   type ReadingRevision,
+  type ReviewIndex,
   type WorkItem,
   type WorkspaceState,
 } from "@/lib/workspace/api";
@@ -21,14 +22,17 @@ import {
   type ReaderDraft,
 } from "@/lib/workspace/drafts";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
+import { libraryQueue, neighbours, readerTarget, todayQueue } from "@/lib/workspace/queue";
+import { SidebarSection, StageHeaderSlot } from "./Slots";
+import { DRAFT_NAVIGATION_NOTICE, ReaderControls, ReaderQueue } from "./ReaderControls";
 import { RetainedSourceReader } from "./RetainedSource";
-import { SyntheticWorkbench } from "./SyntheticWorkbench";
 import {
   GenerationBoundary,
   LoadingState,
-  Message,
   ServiceNotice,
 } from "./Common";
+
+const SyntheticWorkbench = lazy(() => import("./SyntheticWorkbench").then((workbench) => ({ default: workbench.SyntheticWorkbench })));
 
 export function LiveReader({ id }: { id: string }) {
   const { state, setState, error, reload } = useWorkspace();
@@ -36,6 +40,19 @@ export function LiveReader({ id }: { id: string }) {
   const requestedVersion = params.get("version");
   const requestedEntry = params.get("entry");
   const returnTo = normalizeReaderReturnTo(params.get("return_to"));
+  const [review, setReview] = useState<{ returnTo: string; works: WorkItem[] } | null>(null);
+  useEffect(() => {
+    if (!returnTo.startsWith("/workspace/review")) return;
+    const controller = new AbortController();
+    const packet = new URLSearchParams(returnTo.split("?")[1]).get("packet");
+    workspaceRequest<ReviewIndex>(`review${packet ? `?packet_id=${encodeURIComponent(packet)}` : ""}`, undefined, controller.signal)
+      .then((value) => {
+        if (!controller.signal.aborted) setReview({ returnTo, works: value.packet && (!packet || value.packet.id === packet) ? value.packet.items.map((candidate) => candidate.work) : [] });
+      }).catch(() => { /* An unavailable packet provides no invented neighbours. */ });
+    return () => controller.abort();
+  }, [returnTo]);
+  const reviewWorks = review?.returnTo === returnTo ? review.works : [];
+
   if (!state) return <LoadingState error={error} retry={() => void reload()} />;
   const item = state.works.find((work) => work.work_id === id);
   if (!item)
@@ -61,6 +78,7 @@ export function LiveReader({ id }: { id: string }) {
       requestedVersion={requestedVersion}
       requestedEntry={requestedEntry}
       returnTo={returnTo}
+      reviewWorks={reviewWorks}
     />
   );
 }
@@ -87,6 +105,7 @@ function ReaderContent({
   requestedVersion,
   requestedEntry,
   returnTo,
+  reviewWorks,
 }: {
   item: WorkItem;
   state: WorkspaceState;
@@ -95,6 +114,7 @@ function ReaderContent({
   requestedVersion: string | null;
   requestedEntry: string | null;
   returnTo: string;
+  reviewWorks: WorkItem[];
 }) {
   const owner = state.principal_key_id;
   const [initial] = useState(() => {
@@ -157,9 +177,11 @@ function ReaderContent({
         ? initial.fragment
         : "source",
   );
+  const [workbenchOpened, setWorkbenchOpened] = useState(initial.fragment === "understand");
   const [draft, setDraft] = useState<ReaderDraft>(initial.draft);
   const [notice, setNotice] = useState(initial.notice);
   const [busy, setBusy] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [draftStorage, setDraftStorage] = useState(initial.recovery);
   const [selection, setSelection] = useState("");
   const [pdfActive, setPdfActive] = useState(false);
@@ -174,6 +196,57 @@ function ReaderContent({
   const source = useRef<HTMLParagraphElement>(null);
   const jumpToSource = useRef(false);
   const attempts = useRef(new Map<string, string>());
+  const tabFocus = useRef(false);
+  useEffect(() => {
+    if (!tabFocus.current) return;
+    tabFocus.current = false;
+    const panel = document.getElementById(active);
+    panel?.focus({ preventScroll: true });
+    panel?.scrollIntoView?.({ block: "start" });
+  }, [active]);
+  const unsafeDraft = Boolean(draft.body && !draftStorage);
+  const navigationBlocked = busy || unsafeDraft;
+  useEffect(() => {
+    if (!navigationBlocked) return;
+    function guardLink(event: MouseEvent) {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target instanceof Element ? event.target.closest("a[href]") : null;
+      if (!(target instanceof HTMLAnchorElement) || target.hasAttribute("download")) return;
+      const destination = target.getAttribute("href");
+      if (!destination || destination.startsWith("#") || target.target.toLowerCase() === "_blank") return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (unsafeDraft) setNotice(DRAFT_NAVIGATION_NOTICE);
+    }
+    function warnBeforeUnload(event: BeforeUnloadEvent) {
+      if (!unsafeDraft) return;
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    document.addEventListener("click", guardLink, true);
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => {
+      document.removeEventListener("click", guardLink, true);
+      window.removeEventListener("beforeunload", warnBeforeUnload);
+    };
+  }, [navigationBlocked, unsafeDraft]);
+  const isToday = returnTo.startsWith("/workspace/today");
+  const queue = isToday ? todayQueue(state)
+    : returnTo.startsWith("/workspace/library") ? libraryQueue(state, new URLSearchParams(returnTo.split("?")[1]).get("view") || "saved")
+    : returnTo.startsWith("/workspace/review") ? reviewWorks : [];
+  const position = neighbours(queue, item.work_id);
+  const targets = queue.map((work) => {
+    const target = readerTarget(work, isToday ? state.editions[0]?.work_versions[work.work_id] : returnTo.startsWith("/workspace/review") ? work.version_id : undefined);
+    const version = readingMaterial(work, target.version).version;
+    return { workId: work.work_id, title: version.title || work.title,
+      href: readerHref(work, target.version, target.anchor, undefined, isToday ? `/workspace/today?focus=${encodeURIComponent(work.work_id)}` : returnTo) };
+  });
+  function guardNavigation() {
+    if (!navigationBlocked) return false;
+    if (unsafeDraft) setNotice(DRAFT_NAVIGATION_NOTICE);
+    return true;
+  }
+
   const versions = item.versions.length
     ? item.versions
     : [
@@ -247,6 +320,7 @@ function ReaderContent({
     }
   }
   function editEntry(entry: EntryRevision) {
+    if (savingDraft) return;
     if (draft.body.trim() && draft.id !== entry.id) {
       setNotice(
         "You have an unsaved draft. Save or explicitly discard it before editing a different saved item.",
@@ -281,7 +355,7 @@ function ReaderContent({
     setNotice("Unsaved draft. Your text is not a durable server save yet.");
   }
   function selectPassage() {
-    if (!material.abstract) return;
+    if (savingDraft || !material.abstract) return;
     const selection = window.getSelection();
     if (!selection?.rangeCount || !source.current) return;
     const range = selection.getRangeAt(0);
@@ -307,6 +381,7 @@ function ReaderContent({
     status: ReadingRevision["status"],
     anchor = sourceAnchor,
   ) {
+    if (busy) return;
     const input = {
       work_id: item.work_id,
       revision: item.reading.revision,
@@ -343,6 +418,7 @@ function ReaderContent({
   }
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (busy) return;
     const input = {
       id: draft.id,
       revision: draft.revision,
@@ -358,6 +434,7 @@ function ReaderContent({
       id = attempts.current.get(fingerprint) ?? requestId();
     attempts.current.set(fingerprint, id);
     setBusy(true);
+    setSavingDraft(true);
     try {
       const entry = await workspaceRequest<EntryRevision>("entries", {
         ...input,
@@ -389,18 +466,26 @@ function ReaderContent({
     } catch (failure) {
       setNotice(errorMessage(failure));
     } finally {
+      setSavingDraft(false);
       setBusy(false);
     }
   }
   function tab(value: string) {
+    if (value === "understand") setWorkbenchOpened(true);
+    tabFocus.current = true;
     setActive(value);
-    document.getElementById(value)?.focus({ preventScroll: true });
+    if (value === active) {
+      const panel = document.getElementById(value);
+      panel?.focus({ preventScroll: true });
+      panel?.scrollIntoView?.({ block: "start" });
+      tabFocus.current = false;
+    }
     window.history.replaceState(
       null,
       "",
       `${window.location.pathname}${window.location.search}#${value}`,
     );
-    void reading(
+    if (!busy) void reading(
       item.reading.status,
       sourceAnchor.startsWith("material:")
         ? sourceAnchor
@@ -410,6 +495,7 @@ function ReaderContent({
     );
   }
   function viewVersion(value: string) {
+    if (guardNavigation()) return;
     setVersionId(value);
     setPdfActive(false);
     const selected = versions.find((candidate) => candidate.version_id === value) ?? material;
@@ -485,9 +571,23 @@ function ReaderContent({
     );
   }
   return (
-    <>
+    <div className="ws-reader">
+      <StageHeaderSlot position={position.index >= 0 ? { n: position.index + 1, N: position.count } : undefined} />
+      <SidebarSection label="Reader queue">
+        <h2>Reading queue</h2>
+        {targets.length ? <ReaderQueue targets={targets} currentId={item.work_id} blocked={navigationBlocked} /> : <p className="daily-muted">Return to the originating page to choose another source.</p>}
+      </SidebarSection>
+      <SidebarSection label="Retained version details">
+        <h2>Retained version</h2><p>{material.version_label} · {material.access_state.replaceAll("_", " ")}</p>
+        <p className="ws-reader-digest">{material.content_hash || "No retained content hash available."}</p>
+      </SidebarSection>
+      <ReaderControls saved={item.reading.status === "saved"} busy={busy} notice={notice}
+        onReading={(status) => void reading(status)} navigationBlocked={navigationBlocked}
+        previousHref={position.index > 0 ? targets[position.index - 1]?.href : undefined}
+        nextHref={position.index >= 0 ? targets[position.index + 1]?.href : undefined}
+        index={position.index} count={position.count} />
       <div className="daily-page-meta">
-        <Link href={returnTo} prefetch={false} className="daily-link">
+        <Link href={returnTo} prefetch={false} className="daily-link" aria-disabled={navigationBlocked || undefined} onClick={(event) => { if (guardNavigation()) event.preventDefault(); }}>
           ←{" "}
           {returnTo.startsWith("/workspace/review")
             ? "Candidate review"
@@ -503,7 +603,6 @@ function ReaderContent({
         </span>
       </div>
       <ServiceNotice error={error} />
-      <Message>{notice}</Message>
       {requestedEntry && !initial.entryId && (
         <p className="workspace-version-notice">
           That saved item is unavailable in this account. No different question
@@ -520,9 +619,7 @@ function ReaderContent({
           {material.title || item.title}
         </h1>
         <p>
-          {(material.authors.length ? material.authors : item.authors).join(
-            ", ",
-          ) || item.source_id}{" "}
+          {material.authors.join(", ") || "Authors not retained for this version"}{" "}
           ·{" "}
           {item.published_at
             ? `Published ${displayDate(item.published_at)}`
@@ -537,39 +634,15 @@ function ReaderContent({
           >
             Open original source ↗
           </a>
-          <button
-            className="daily-secondary"
-            disabled={busy}
-            aria-pressed={item.reading.status === "saved"}
-            onClick={() =>
-              void reading(item.reading.status === "saved" ? "unread" : "saved")
-            }
-          >
-            {item.reading.status === "saved"
-              ? "Remove from saved items"
-              : "Save to Library"}
-          </button>
-          <button
-            className="daily-text-button"
-            disabled={busy}
-            onClick={() => void reading("read")}
-          >
-            Mark read
-          </button>
-          <button
-            className="daily-text-button"
-            disabled={busy}
-            onClick={() => void reading("archived")}
-          >
-            Archive
-          </button>
         </div>
       </header>
+      {unsafeDraft && <p className="workspace-version-notice">{DRAFT_NAVIGATION_NOTICE}</p>}
       {versions.length > 1 && (
         <label className="workspace-form-stack">
           Source version
           <select
             value={material.version_id}
+            disabled={navigationBlocked}
             onChange={(event) => viewVersion(event.target.value)}
           >
             {versions.map((version) => (
@@ -589,6 +662,7 @@ function ReaderContent({
           here.{" "}
           <button
             className="daily-text-button"
+            disabled={navigationBlocked}
             onClick={() => viewVersion(item.version_id)}
           >
             View latest source version
@@ -693,6 +767,7 @@ function ReaderContent({
             anchor={sourceAnchor}
             onNavigate={setSourceAnchor}
             onSelect={(anchor, quote) => {
+              if (savingDraft) return;
               setSourceAnchor(anchor);
               setSelection(quote);
               edit({ anchor });
@@ -735,7 +810,7 @@ function ReaderContent({
               </p>
             </div>
           </div>
-          <SyntheticWorkbench
+          {workbenchOpened ? <Suspense fallback={<p className="daily-muted">Opening synthetic workbench…</p>}><SyntheticWorkbench
             key={material.version_id}
             workId={item.work_id}
             versionId={material.version_id}
@@ -751,7 +826,7 @@ function ReaderContent({
               );
               void reading(item.reading.status, anchor);
             }}
-          />
+          /></Suspense> : <button type="button" className="daily-secondary" onClick={() => tab("understand")}>Open synthetic workbench · $0</button>}
           <GenerationBoundary />
         </aside>
         <section
@@ -785,6 +860,7 @@ function ReaderContent({
               Save as
               <select
                 value={draft.kind}
+                disabled={savingDraft}
                 onChange={(event) =>
                   edit({ kind: event.target.value as ReaderDraft["kind"] })
                 }
@@ -802,6 +878,7 @@ function ReaderContent({
                 rows={6}
                 maxLength={10000}
                 value={draft.body}
+                readOnly={savingDraft}
                 onChange={(event) => edit({ body: event.target.value })}
               />
             </label>
@@ -816,6 +893,7 @@ function ReaderContent({
                 <button
                   type="button"
                   className="daily-text-button"
+                  disabled={savingDraft}
                   onClick={() => {
                     try {
                       storeDraft(
@@ -865,6 +943,7 @@ function ReaderContent({
                 </p>
                 <button
                   className="daily-text-button"
+                  disabled={savingDraft}
                   onClick={() => editEntry(entry)}
                 >
                   Edit {entry.kind.replaceAll("-", " ")}
@@ -922,6 +1001,6 @@ function ReaderContent({
           </div>
         </section>
       </div>
-    </>
+    </div>
   );
 }
