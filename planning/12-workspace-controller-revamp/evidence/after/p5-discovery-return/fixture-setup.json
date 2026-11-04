@@ -1,0 +1,44 @@
+{
+  "mode": "offline-synthetic-fixtures",
+  "worktreeSrcImport": "/private/tmp/arxiv-agent-eng-workspace-controller/src/__init__.py",
+  "initialPreviewSeedAttempt": {
+    "outcome": "failed-before-writes",
+    "reason": "Executing the script by path omitted the worktree from Python's import path; src.workspace could not be imported.",
+    "correction": "The corrected attempt used the worktree import path. Later verification and seeds used locked Python from the worktree with stdin."
+  },
+  "preview": {
+    "database": "workspace_controller_p5_preview",
+    "principal": "controller-p5-preview",
+    "works": 38,
+    "agentMatches": 29,
+    "editionItems": 9,
+    "questions": 2,
+    "questionWorks": ["arxiv:2611.99001", "arxiv:2611.99500"],
+    "olderVersion": "arxiv:2611.99001:v1",
+    "olderPassageAnchor": "abstract:36:68",
+    "secondQuestionReadingStatus": "unread",
+    "recurrenceEnabled": false,
+    "agentPagination": {"firstPage": 20, "secondPage": 9, "stableCutoff": true, "disjoint": true},
+    "rerunGuard": "refused populated database"
+  },
+  "liveRegression": {
+    "database": "workspace_controller_p5_live",
+    "principal": "controller-p5",
+    "seed": "workspace-browser-synthetic-v1",
+    "initialWorks": 3,
+    "initialVersions": 4
+  },
+  "customWalkthrough": {
+    "database": "workspace_controller_p5_walk",
+    "principal": "controller-p5",
+    "works": 27,
+    "agentMatches": 26,
+    "editionItems": 3,
+    "initialQuestions": 0,
+    "recurrenceEnabled": false,
+    "agentPagination": {"firstPage": 20, "secondPage": 6, "stableCutoff": true, "disjoint": true}
+  },
+  "publicSourceRequests": 0,
+  "providerCalls": 0,
+  "note": "Both pagination checks call the real backend list_items function and freeze a test snapshot; no browser acceptance is implied. The seed transports use in-memory RSS."
+}

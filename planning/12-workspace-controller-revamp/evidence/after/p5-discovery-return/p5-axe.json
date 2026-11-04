@@ -1,0 +1,67 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "cases": [
+    {
+      "label": "1440-dark-radar",
+      "state": "closed",
+      "violations": []
+    },
+    {
+      "label": "1440-dark-library",
+      "state": "closed",
+      "violations": []
+    },
+    {
+      "label": "1440-light-radar",
+      "state": "closed",
+      "violations": []
+    },
+    {
+      "label": "1440-light-library",
+      "state": "closed",
+      "violations": []
+    },
+    {
+      "label": "390-dark-radar",
+      "state": "closed",
+      "violations": []
+    },
+    {
+      "label": "390-dark-radar",
+      "state": "drawer-open",
+      "violations": []
+    },
+    {
+      "label": "390-dark-library",
+      "state": "closed",
+      "violations": []
+    },
+    {
+      "label": "390-dark-library",
+      "state": "drawer-open-import",
+      "violations": []
+    },
+    {
+      "label": "390-light-radar",
+      "state": "closed",
+      "violations": []
+    },
+    {
+      "label": "390-light-radar",
+      "state": "drawer-open",
+      "violations": []
+    },
+    {
+      "label": "390-light-library",
+      "state": "closed",
+      "violations": []
+    },
+    {
+      "label": "390-light-library",
+      "state": "drawer-open-import",
+      "violations": []
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

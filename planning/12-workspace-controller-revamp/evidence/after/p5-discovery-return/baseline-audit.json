@@ -1,0 +1,72 @@
+{
+  "fixture": "offline synthetic rich preview, before P5",
+  "base": "http://127.0.0.1:3148",
+  "cases": [
+    {
+      "label": "desktop-light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace."
+    },
+    {
+      "label": "desktop-light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking."
+    },
+    {
+      "label": "desktop-dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace."
+    },
+    {
+      "label": "desktop-dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking."
+    },
+    {
+      "label": "mobile-light",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace."
+    },
+    {
+      "label": "mobile-light",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking."
+    },
+    {
+      "label": "mobile-dark",
+      "route": "radar",
+      "status": "pass",
+      "heading": "A wider view.\nYour terms, your pace."
+    },
+    {
+      "label": "mobile-dark",
+      "route": "library",
+      "status": "pass",
+      "heading": "Keep the source.\nKeep your thinking."
+    }
+  ],
+  "blocked": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "fixtureState": {
+    "principal": "e2e",
+    "workCount": 14,
+    "editionItems": 9,
+    "entryCount": 0,
+    "statuses": {
+      "unread": 14
+    },
+    "radarPageItems": 14,
+    "hasNextCursor": false,
+    "hasAsOf": true
+  },
+  "gitHead": "2c06bde",
+  "appSource": "5fdbf48"
+}

@@ -1,0 +1,205 @@
+{
+  "base": "http://127.0.0.1:3149",
+  "principal": "controller-p5",
+  "fixture": "isolated P5 synthetic verification",
+  "cases": [
+    {
+      "name": "guard isolated account and existing CI questions",
+      "status": "pass",
+      "detail": {
+        "works": 27,
+        "questions": 2,
+        "recurrence": false
+      }
+    },
+    {
+      "name": "reserved invalid host is rejected without mutation",
+      "status": "pass",
+      "detail": {
+        "status": 422,
+        "inputPreserved": true,
+        "works": 27
+      }
+    },
+    {
+      "name": "quick add repeated unsupported URL is one metadata work",
+      "status": "pass",
+      "detail": {
+        "logicalMatches": 1,
+        "accessState": "metadata",
+        "works": 28
+      }
+    },
+    {
+      "name": "preview, explicit confirm and repeat import preserves original/profile",
+      "status": "pass",
+      "detail": {
+        "works": 29,
+        "importedEntries": 1,
+        "previewWorkId": "preview:16f3685c8e9c22df799fe1e900976484e50c548a",
+        "originalPreserved": true,
+        "profileUnchanged": true
+      }
+    },
+    {
+      "name": "Shell Markdown export includes all verification questions and context",
+      "status": "pass",
+      "detail": {
+        "questionCount": 3,
+        "includesVersionsAnchorsAndPreviewProvenance": true,
+        "bytes": 1248
+      }
+    }
+  ],
+  "blocked": [],
+  "unexpectedConsole": [],
+  "expectedValidationConsole": [
+    {
+      "case": "reserved invalid host is rejected without mutation",
+      "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Content)"
+    }
+  ],
+  "pageErrors": [],
+  "requestFailures": [],
+  "requests": [
+    {
+      "case": "reserved invalid host is rejected without mutation",
+      "path": "/api/workspace/manual",
+      "body": {
+        "value": "https://p5-ci.invalid/synthetic-metadata"
+      }
+    },
+    {
+      "case": "quick add repeated unsupported URL is one metadata work",
+      "path": "/api/workspace/manual",
+      "body": {
+        "value": "https://example.com/p5-ci-synthetic-metadata"
+      }
+    },
+    {
+      "case": "quick add repeated unsupported URL is one metadata work",
+      "path": "/api/workspace/manual",
+      "body": {
+        "value": "https://example.com/p5-ci-synthetic-metadata"
+      }
+    },
+    {
+      "case": "preview, explicit confirm and repeat import preserves original/profile",
+      "path": "/api/workspace/import/preview",
+      "body": {
+        "record": {
+          "revision": 1,
+          "topics": [],
+          "customTopics": [],
+          "configured": false,
+          "minutes": 15,
+          "saved": [],
+          "entries": [
+            {
+              "id": "p5-ci-import",
+              "itemId": "p5-ci-fictional-source",
+              "kind": "question",
+              "body": "CI synthetic P5 imported verification note.",
+              "anchor": "source"
+            }
+          ],
+          "anchors": {},
+          "done": false,
+          "researchQuestion": "CI synthetic verification",
+          "streams": []
+        },
+        "profile_revision": 1,
+        "import_profile": false
+      }
+    },
+    {
+      "case": "preview, explicit confirm and repeat import preserves original/profile",
+      "path": "/api/workspace/import/apply",
+      "body": {
+        "record": {
+          "revision": 1,
+          "topics": [],
+          "customTopics": [],
+          "configured": false,
+          "minutes": 15,
+          "saved": [],
+          "entries": [
+            {
+              "id": "p5-ci-import",
+              "itemId": "p5-ci-fictional-source",
+              "kind": "question",
+              "body": "CI synthetic P5 imported verification note.",
+              "anchor": "source"
+            }
+          ],
+          "anchors": {},
+          "done": false,
+          "researchQuestion": "CI synthetic verification",
+          "streams": []
+        },
+        "profile_revision": 1,
+        "import_profile": false,
+        "digest": "26997f8d1823393c119f8a8b38557c722ee6d395c585582ae26249910bf087ec"
+      }
+    },
+    {
+      "case": "preview, explicit confirm and repeat import preserves original/profile",
+      "path": "/api/workspace/import/preview",
+      "body": {
+        "record": {
+          "revision": 1,
+          "topics": [],
+          "customTopics": [],
+          "configured": false,
+          "minutes": 15,
+          "saved": [],
+          "entries": [
+            {
+              "id": "p5-ci-import",
+              "itemId": "p5-ci-fictional-source",
+              "kind": "question",
+              "body": "CI synthetic P5 imported verification note.",
+              "anchor": "source"
+            }
+          ],
+          "anchors": {},
+          "done": false,
+          "researchQuestion": "CI synthetic verification",
+          "streams": []
+        },
+        "profile_revision": 1,
+        "import_profile": false
+      }
+    },
+    {
+      "case": "preview, explicit confirm and repeat import preserves original/profile",
+      "path": "/api/workspace/import/apply",
+      "body": {
+        "record": {
+          "revision": 1,
+          "topics": [],
+          "customTopics": [],
+          "configured": false,
+          "minutes": 15,
+          "saved": [],
+          "entries": [
+            {
+              "id": "p5-ci-import",
+              "itemId": "p5-ci-fictional-source",
+              "kind": "question",
+              "body": "CI synthetic P5 imported verification note.",
+              "anchor": "source"
+            }
+          ],
+          "anchors": {},
+          "done": false,
+          "researchQuestion": "CI synthetic verification",
+          "streams": []
+        },
+        "profile_revision": 1,
+        "import_profile": false,
+        "digest": "26997f8d1823393c119f8a8b38557c722ee6d395c585582ae26249910bf087ec"
+      }
+    }
+  ]
+}

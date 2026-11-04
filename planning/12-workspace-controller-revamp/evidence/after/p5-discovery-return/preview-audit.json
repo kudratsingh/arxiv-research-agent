@@ -1,0 +1,894 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "fixture": "controller-p5-preview synthetic data",
+  "cases": [
+    {
+      "name": "desktop-dark: radar first page",
+      "status": "pass",
+      "detail": {
+        "fixture": {
+          "works": 38,
+          "edition": 9,
+          "questions": 2,
+          "schedule": false
+        },
+        "queue": 20,
+        "viewport": {
+          "width": 1440,
+          "height": 1000,
+          "scrollWidth": 1440
+        },
+        "title": {
+          "top": 404.953125,
+          "bottom": 447.421875,
+          "left": 586,
+          "right": 1394,
+          "width": 808,
+          "height": 42.46875
+        },
+        "bar": {
+          "top": 780,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304,
+          "width": 820,
+          "height": 196
+        },
+        "nav": {
+          "top": 875,
+          "bottom": 915,
+          "left": 1028.015625,
+          "right": 1191,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "desktop-dark: radar page two",
+      "status": "pass",
+      "detail": {
+        "queue": 9,
+        "cutoff": "2026-11-04T07:15:42.181914+00:00",
+        "cursor": true
+      }
+    },
+    {
+      "name": "desktop-dark: saved library",
+      "status": "pass",
+      "detail": {
+        "focused": "CI synthetic earlier version of a retained agent study"
+      }
+    },
+    {
+      "name": "desktop-dark: library notes",
+      "status": "pass",
+      "detail": {
+        "notes": [
+          "Your questionCI synthetic preview question 1: Which evidence would verify this fixture?Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching · Source arxiv:2611.99001:v1 · abstract:36:68Resume this question →",
+          "Your questionCI synthetic preview question 2: Which evidence would verify this fixture?CI synthetic agent retrieval study 00 · Source arxiv:2611.99500:v1 · abstract:0Resume this question →"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 1000,
+          "scrollWidth": 1440
+        },
+        "title": {
+          "top": 371.75,
+          "bottom": 456.6875,
+          "left": 586,
+          "right": 1394,
+          "width": 808,
+          "height": 84.9375
+        },
+        "bar": {
+          "top": 780,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304,
+          "width": 820,
+          "height": 196
+        },
+        "nav": {
+          "top": 875,
+          "bottom": 915,
+          "left": 1028.015625,
+          "right": 1191,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "desktop-light: radar first page",
+      "status": "pass",
+      "detail": {
+        "fixture": {
+          "works": 38,
+          "edition": 9,
+          "questions": 2,
+          "schedule": false
+        },
+        "queue": 20,
+        "viewport": {
+          "width": 1440,
+          "height": 1000,
+          "scrollWidth": 1440
+        },
+        "title": {
+          "top": 404.953125,
+          "bottom": 447.421875,
+          "left": 586,
+          "right": 1394,
+          "width": 808,
+          "height": 42.46875
+        },
+        "bar": {
+          "top": 780,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304,
+          "width": 820,
+          "height": 196
+        },
+        "nav": {
+          "top": 875,
+          "bottom": 915,
+          "left": 1028.015625,
+          "right": 1191,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "desktop-light: radar page two",
+      "status": "pass",
+      "detail": {
+        "queue": 9,
+        "cutoff": "2026-11-04T07:15:45.032248+00:00",
+        "cursor": true
+      }
+    },
+    {
+      "name": "desktop-light: saved library",
+      "status": "pass",
+      "detail": {
+        "focused": "CI synthetic earlier version of a retained agent study"
+      }
+    },
+    {
+      "name": "desktop-light: library notes",
+      "status": "pass",
+      "detail": {
+        "notes": [
+          "Your questionCI synthetic preview question 1: Which evidence would verify this fixture?Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching · Source arxiv:2611.99001:v1 · abstract:36:68Resume this question →",
+          "Your questionCI synthetic preview question 2: Which evidence would verify this fixture?CI synthetic agent retrieval study 00 · Source arxiv:2611.99500:v1 · abstract:0Resume this question →"
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 1000,
+          "scrollWidth": 1440
+        },
+        "title": {
+          "top": 371.75,
+          "bottom": 456.6875,
+          "left": 586,
+          "right": 1394,
+          "width": 808,
+          "height": 84.9375
+        },
+        "bar": {
+          "top": 780,
+          "bottom": 976,
+          "left": 484,
+          "right": 1304,
+          "width": 820,
+          "height": 196
+        },
+        "nav": {
+          "top": 875,
+          "bottom": 915,
+          "left": 1028.015625,
+          "right": 1191,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "mobile-dark: radar first page",
+      "status": "pass",
+      "detail": {
+        "fixture": {
+          "works": 38,
+          "edition": 9,
+          "questions": 2,
+          "schedule": false
+        },
+        "queue": 20,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "scrollWidth": 390
+        },
+        "title": {
+          "top": 518.765625,
+          "bottom": 575.390625,
+          "left": 16,
+          "right": 374,
+          "width": 358,
+          "height": 56.625
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378,
+          "width": 366,
+          "height": 120
+        },
+        "nav": {
+          "top": 723,
+          "bottom": 767,
+          "left": 91,
+          "right": 265.984375,
+          "width": 174.984375,
+          "height": 44
+        },
+        "composer": "false",
+        "mobile": true
+      }
+    },
+    {
+      "name": "mobile-dark: radar page two",
+      "status": "pass",
+      "detail": {
+        "queue": 9,
+        "cutoff": "2026-11-04T07:15:47.851162+00:00",
+        "cursor": true
+      }
+    },
+    {
+      "name": "mobile-dark: saved library",
+      "status": "pass",
+      "detail": {
+        "focused": "CI synthetic earlier version of a retained agent study"
+      }
+    },
+    {
+      "name": "mobile-dark: library notes",
+      "status": "pass",
+      "detail": {
+        "notes": [
+          "Your questionCI synthetic preview question 1: Which evidence would verify this fixture?Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching · Source arxiv:2611.99001:v1 · abstract:36:68Resume this question →",
+          "Your questionCI synthetic preview question 2: Which evidence would verify this fixture?CI synthetic agent retrieval study 00 · Source arxiv:2611.99500:v1 · abstract:0Resume this question →"
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "scrollWidth": 390
+        },
+        "title": {
+          "top": 442.375,
+          "bottom": 499,
+          "left": 16,
+          "right": 374,
+          "width": 358,
+          "height": 56.625
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378,
+          "width": 366,
+          "height": 120
+        },
+        "nav": {
+          "top": 723,
+          "bottom": 767,
+          "left": 91,
+          "right": 265.984375,
+          "width": 174.984375,
+          "height": 44
+        },
+        "composer": "false",
+        "mobile": true
+      }
+    },
+    {
+      "name": "mobile-dark: composer preserves filters and resets result window",
+      "status": "pass",
+      "detail": {
+        "query": "retrieval",
+        "source_id": "arxiv-cs-lg",
+        "days": "0",
+        "reset": [
+          "focus",
+          "cursor",
+          "as_of"
+        ]
+      }
+    },
+    {
+      "name": "mobile-dark: empty read search toggle",
+      "status": "pass",
+      "detail": {
+        "toggle": {
+          "x": 23,
+          "y": 771,
+          "width": 72.5625,
+          "height": 44
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: empty archived search toggle",
+      "status": "pass",
+      "detail": {
+        "toggle": {
+          "x": 23,
+          "y": 771,
+          "width": 72.5625,
+          "height": 44
+        }
+      }
+    },
+    {
+      "name": "mobile-dark: drawer controls",
+      "status": "pass",
+      "detail": {
+        "drawerClosed": true
+      }
+    },
+    {
+      "name": "mobile-light: radar first page",
+      "status": "pass",
+      "detail": {
+        "fixture": {
+          "works": 38,
+          "edition": 9,
+          "questions": 2,
+          "schedule": false
+        },
+        "queue": 20,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "scrollWidth": 390
+        },
+        "title": {
+          "top": 518.765625,
+          "bottom": 575.390625,
+          "left": 16,
+          "right": 374,
+          "width": 358,
+          "height": 56.625
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378,
+          "width": 366,
+          "height": 120
+        },
+        "nav": {
+          "top": 723,
+          "bottom": 767,
+          "left": 91,
+          "right": 265.984375,
+          "width": 174.984375,
+          "height": 44
+        },
+        "composer": "false",
+        "mobile": true
+      }
+    },
+    {
+      "name": "mobile-light: radar page two",
+      "status": "pass",
+      "detail": {
+        "queue": 9,
+        "cutoff": "2026-11-04T07:15:52.977403+00:00",
+        "cursor": true
+      }
+    },
+    {
+      "name": "mobile-light: saved library",
+      "status": "pass",
+      "detail": {
+        "focused": "CI synthetic earlier version of a retained agent study"
+      }
+    },
+    {
+      "name": "mobile-light: library notes",
+      "status": "pass",
+      "detail": {
+        "notes": [
+          "Your questionCI synthetic preview question 1: Which evidence would verify this fixture?Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching · Source arxiv:2611.99001:v1 · abstract:36:68Resume this question →",
+          "Your questionCI synthetic preview question 2: Which evidence would verify this fixture?CI synthetic agent retrieval study 00 · Source arxiv:2611.99500:v1 · abstract:0Resume this question →"
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "scrollWidth": 390
+        },
+        "title": {
+          "top": 442.375,
+          "bottom": 499,
+          "left": 16,
+          "right": 374,
+          "width": 358,
+          "height": 56.625
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378,
+          "width": 366,
+          "height": 120
+        },
+        "nav": {
+          "top": 723,
+          "bottom": 767,
+          "left": 91,
+          "right": 265.984375,
+          "width": 174.984375,
+          "height": 44
+        },
+        "composer": "false",
+        "mobile": true
+      }
+    },
+    {
+      "name": "mobile-light: empty read search toggle",
+      "status": "pass",
+      "detail": {
+        "toggle": {
+          "x": 23,
+          "y": 771,
+          "width": 72.5625,
+          "height": 44
+        }
+      }
+    },
+    {
+      "name": "mobile-light: empty archived search toggle",
+      "status": "pass",
+      "detail": {
+        "toggle": {
+          "x": 23,
+          "y": 771,
+          "width": 72.5625,
+          "height": 44
+        }
+      }
+    },
+    {
+      "name": "mobile-light: drawer controls",
+      "status": "pass",
+      "detail": {
+        "drawerClosed": true
+      }
+    },
+    {
+      "name": "tablet768-dark: radar first page",
+      "status": "pass",
+      "detail": {
+        "fixture": {
+          "works": 38,
+          "edition": 9,
+          "questions": 2,
+          "schedule": false
+        },
+        "queue": 20,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "scrollWidth": 768
+        },
+        "title": {
+          "top": 403.953125,
+          "bottom": 434.625,
+          "left": 296,
+          "right": 736,
+          "width": 440,
+          "height": 30.671875
+        },
+        "bar": {
+          "top": 804,
+          "bottom": 1000,
+          "left": 100,
+          "right": 740,
+          "width": 640,
+          "height": 196
+        },
+        "nav": {
+          "top": 899,
+          "bottom": 939,
+          "left": 490.015625,
+          "right": 653,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "tablet768-dark: radar page two",
+      "status": "pass",
+      "detail": {
+        "queue": 9,
+        "cutoff": "2026-11-04T07:15:57.265235+00:00",
+        "cursor": true
+      }
+    },
+    {
+      "name": "tablet768-dark: saved library",
+      "status": "pass",
+      "detail": {
+        "focused": "CI synthetic earlier version of a retained agent study"
+      }
+    },
+    {
+      "name": "tablet768-dark: library notes",
+      "status": "pass",
+      "detail": {
+        "notes": [
+          "Your questionCI synthetic preview question 1: Which evidence would verify this fixture?Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching · Source arxiv:2611.99001:v1 · abstract:36:68Resume this question →",
+          "Your questionCI synthetic preview question 2: Which evidence would verify this fixture?CI synthetic agent retrieval study 00 · Source arxiv:2611.99500:v1 · abstract:0Resume this question →"
+        ],
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "scrollWidth": 768
+        },
+        "title": {
+          "top": 370.75,
+          "bottom": 432.09375,
+          "left": 296,
+          "right": 736,
+          "width": 440,
+          "height": 61.34375
+        },
+        "bar": {
+          "top": 804,
+          "bottom": 1000,
+          "left": 100,
+          "right": 740,
+          "width": 640,
+          "height": 196
+        },
+        "nav": {
+          "top": 899,
+          "bottom": 939,
+          "left": 490.015625,
+          "right": 653,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "tablet768-light: radar first page",
+      "status": "pass",
+      "detail": {
+        "fixture": {
+          "works": 38,
+          "edition": 9,
+          "questions": 2,
+          "schedule": false
+        },
+        "queue": 20,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "scrollWidth": 768
+        },
+        "title": {
+          "top": 403.953125,
+          "bottom": 434.625,
+          "left": 296,
+          "right": 736,
+          "width": 440,
+          "height": 30.671875
+        },
+        "bar": {
+          "top": 804,
+          "bottom": 1000,
+          "left": 100,
+          "right": 740,
+          "width": 640,
+          "height": 196
+        },
+        "nav": {
+          "top": 899,
+          "bottom": 939,
+          "left": 490.015625,
+          "right": 653,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "tablet768-light: radar page two",
+      "status": "pass",
+      "detail": {
+        "queue": 9,
+        "cutoff": "2026-11-04T07:15:59.749760+00:00",
+        "cursor": true
+      }
+    },
+    {
+      "name": "tablet768-light: saved library",
+      "status": "pass",
+      "detail": {
+        "focused": "CI synthetic earlier version of a retained agent study"
+      }
+    },
+    {
+      "name": "tablet768-light: library notes",
+      "status": "pass",
+      "detail": {
+        "notes": [
+          "Your questionCI synthetic preview question 1: Which evidence would verify this fixture?Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching · Source arxiv:2611.99001:v1 · abstract:36:68Resume this question →",
+          "Your questionCI synthetic preview question 2: Which evidence would verify this fixture?CI synthetic agent retrieval study 00 · Source arxiv:2611.99500:v1 · abstract:0Resume this question →"
+        ],
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "scrollWidth": 768
+        },
+        "title": {
+          "top": 370.75,
+          "bottom": 432.09375,
+          "left": 296,
+          "right": 736,
+          "width": 440,
+          "height": 61.34375
+        },
+        "bar": {
+          "top": 804,
+          "bottom": 1000,
+          "left": 100,
+          "right": 740,
+          "width": 640,
+          "height": 196
+        },
+        "nav": {
+          "top": 899,
+          "bottom": 939,
+          "left": 490.015625,
+          "right": 653,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "tablet1024-dark: radar first page",
+      "status": "pass",
+      "detail": {
+        "fixture": {
+          "works": 38,
+          "edition": 9,
+          "questions": 2,
+          "schedule": false
+        },
+        "queue": 20,
+        "viewport": {
+          "width": 1024,
+          "height": 1024,
+          "scrollWidth": 1024
+        },
+        "title": {
+          "top": 440.390625,
+          "bottom": 503.203125,
+          "left": 580,
+          "right": 984,
+          "width": 404,
+          "height": 62.8125
+        },
+        "bar": {
+          "top": 804,
+          "bottom": 1000,
+          "left": 376,
+          "right": 996,
+          "width": 620,
+          "height": 196
+        },
+        "nav": {
+          "top": 899,
+          "bottom": 939,
+          "left": 720.015625,
+          "right": 883,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "tablet1024-dark: radar page two",
+      "status": "pass",
+      "detail": {
+        "queue": 9,
+        "cutoff": "2026-11-04T07:16:02.308524+00:00",
+        "cursor": true
+      }
+    },
+    {
+      "name": "tablet1024-dark: saved library",
+      "status": "pass",
+      "detail": {
+        "focused": "CI synthetic earlier version of a retained agent study"
+      }
+    },
+    {
+      "name": "tablet1024-dark: library notes",
+      "status": "pass",
+      "detail": {
+        "notes": [
+          "Your questionCI synthetic preview question 1: Which evidence would verify this fixture?Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching · Source arxiv:2611.99001:v1 · abstract:36:68Resume this question →",
+          "Your questionCI synthetic preview question 2: Which evidence would verify this fixture?CI synthetic agent retrieval study 00 · Source arxiv:2611.99500:v1 · abstract:0Resume this question →"
+        ],
+        "viewport": {
+          "width": 1024,
+          "height": 1024,
+          "scrollWidth": 1024
+        },
+        "title": {
+          "top": 381.59375,
+          "bottom": 444.40625,
+          "left": 580,
+          "right": 984,
+          "width": 404,
+          "height": 62.8125
+        },
+        "bar": {
+          "top": 804,
+          "bottom": 1000,
+          "left": 376,
+          "right": 996,
+          "width": 620,
+          "height": 196
+        },
+        "nav": {
+          "top": 899,
+          "bottom": 939,
+          "left": 720.015625,
+          "right": 883,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "tablet1024-light: radar first page",
+      "status": "pass",
+      "detail": {
+        "fixture": {
+          "works": 38,
+          "edition": 9,
+          "questions": 2,
+          "schedule": false
+        },
+        "queue": 20,
+        "viewport": {
+          "width": 1024,
+          "height": 1024,
+          "scrollWidth": 1024
+        },
+        "title": {
+          "top": 440.390625,
+          "bottom": 503.203125,
+          "left": 580,
+          "right": 984,
+          "width": 404,
+          "height": 62.8125
+        },
+        "bar": {
+          "top": 804,
+          "bottom": 1000,
+          "left": 376,
+          "right": 996,
+          "width": 620,
+          "height": 196
+        },
+        "nav": {
+          "top": 899,
+          "bottom": 939,
+          "left": 720.015625,
+          "right": 883,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    },
+    {
+      "name": "tablet1024-light: radar page two",
+      "status": "pass",
+      "detail": {
+        "queue": 9,
+        "cutoff": "2026-11-04T07:16:04.871061+00:00",
+        "cursor": true
+      }
+    },
+    {
+      "name": "tablet1024-light: saved library",
+      "status": "pass",
+      "detail": {
+        "focused": "CI synthetic earlier version of a retained agent study"
+      }
+    },
+    {
+      "name": "tablet1024-light: library notes",
+      "status": "pass",
+      "detail": {
+        "notes": [
+          "Your questionCI synthetic preview question 1: Which evidence would verify this fixture?Sparse Mixture-of-Experts Inference on a Single GPU via Expert Caching · Source arxiv:2611.99001:v1 · abstract:36:68Resume this question →",
+          "Your questionCI synthetic preview question 2: Which evidence would verify this fixture?CI synthetic agent retrieval study 00 · Source arxiv:2611.99500:v1 · abstract:0Resume this question →"
+        ],
+        "viewport": {
+          "width": 1024,
+          "height": 1024,
+          "scrollWidth": 1024
+        },
+        "title": {
+          "top": 381.59375,
+          "bottom": 444.40625,
+          "left": 580,
+          "right": 984,
+          "width": 404,
+          "height": 62.8125
+        },
+        "bar": {
+          "top": 804,
+          "bottom": 1000,
+          "left": 376,
+          "right": 996,
+          "width": 620,
+          "height": 196
+        },
+        "nav": {
+          "top": 899,
+          "bottom": 939,
+          "left": 720.015625,
+          "right": 883,
+          "width": 162.984375,
+          "height": 40
+        },
+        "composer": "true",
+        "mobile": false
+      }
+    }
+  ],
+  "blocked": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": []
+}

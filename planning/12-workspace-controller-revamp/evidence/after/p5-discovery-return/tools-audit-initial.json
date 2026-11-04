@@ -1,0 +1,39 @@
+{
+  "base": "http://127.0.0.1:3149",
+  "principal": "controller-p5",
+  "fixture": "isolated P5 synthetic verification",
+  "cases": [
+    {
+      "name": "guard isolated account and existing CI questions",
+      "status": "pass",
+      "detail": {
+        "works": 27,
+        "questions": 2,
+        "recurrence": false
+      }
+    },
+    {
+      "name": "quick add repeated unsupported URL is one metadata work",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: manual HTTP 422\n    at /private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/tools-audit.cjs:14:463\n    at runNextTicks (node:internal/process/task_queues:64:5)\n    at process.processImmediate (node:internal/timers:452:9)\n    at process.callbackTrampoline (node:internal/async_hooks:130:17)\n    at async check (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/tools-audit.cjs:5:65)\n    at async main (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/tools-audit.cjs:14:16)"
+    }
+  ],
+  "blocked": [],
+  "unexpectedConsole": [
+    {
+      "case": "quick add repeated unsupported URL is one metadata work",
+      "text": "Failed to load resource: the server responded with a status of 422 (Unprocessable Content)"
+    }
+  ],
+  "pageErrors": [],
+  "requestFailures": [],
+  "requests": [
+    {
+      "case": "quick add repeated unsupported URL is one metadata work",
+      "path": "/api/workspace/manual",
+      "body": {
+        "value": "https://p5-ci.invalid/synthetic-metadata"
+      }
+    }
+  ]
+}

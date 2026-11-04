@@ -1,0 +1,16 @@
+{
+  "baseline": "2c06bde9ba924bd1c201661a157137886c31d0c8",
+  "files": {
+    "web/components/workspace/Composer.tsx": "3da7b97c23f90b3f770fafa0fe356a3c081617057af2633dd0cae1762815e3a1",
+    "web/components/workspace/Radar.tsx": "29f8f1b2d5a35400ca68b82afdb882b43acbe72ee1b876716b573b4a7fb220c6",
+    "web/components/workspace/Library.tsx": "9e0f74106adf02c99d0fb3b04f6cd465fc6cec4b471e65258f6e5b4e1a2c4dd5",
+    "web/components/workspace/Import.tsx": "25541df98b767adbcded097f349dbb12edfcde13d45d1b889bb62b81d454773b",
+    "web/components/workspace/Queue.tsx": "31cacda616c3d3f37f800d08aa7e11441361523a75f05692dfd3905678c52d1b",
+    "web/components/workspace/Shell.tsx": "d17d27abb7642bdacd6a438e38d04eaeae3204ecb6cda1db4d9402197e70eee8",
+    "web/components/workspace/controller.css": "a516488b173893a06d8f5faeeced2060552418063afa458352ddb74f6528d872",
+    "web/lib/workspace/api.ts": "588238007fba18574f99ee8a5925aa1dd80cdaeb47530bddaa7fe5dd136d6275"
+  },
+  "note": "Frozen application bytes verified before commit; committing the passing work orders did not change these bytes.",
+  "application_commit": "ade234b48520782d32e388e16a3cb811f8a2cf2b",
+  "radar_work_order_commit": "734773f"
+}

@@ -1,0 +1,1001 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "generatedAt": "2026-11-04T07:02:04.993Z",
+  "purpose": "mobile density; synthetic data, no writes",
+  "cases": [
+    {
+      "name": "light:real-nine-paper: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 460.53125,
+          "bottom": 545.46875,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 598.46875,
+            "bottom": 622.46875,
+            "left": 16,
+            "right": 362.25
+          },
+          {
+            "top": 625.65625,
+            "bottom": 649.65625,
+            "left": 16,
+            "right": 360.328125
+          },
+          {
+            "top": 652.84375,
+            "bottom": 676.84375,
+            "left": 16,
+            "right": 355.84375
+          },
+          {
+            "top": 680.03125,
+            "bottom": 704.03125,
+            "left": 16,
+            "right": 299.171875
+          },
+          {
+            "top": 707.21875,
+            "bottom": 731.21875,
+            "left": 16,
+            "right": 360.4375
+          },
+          {
+            "top": 734.40625,
+            "bottom": 758.40625,
+            "left": 16,
+            "right": 287.6875
+          },
+          {
+            "top": 761.59375,
+            "bottom": 785.59375,
+            "left": 16,
+            "right": 341.1875
+          },
+          {
+            "top": 788.78125,
+            "bottom": 812.78125,
+            "left": 16,
+            "right": 80.890625
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:real-nine-paper: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 463.53125,
+          "bottom": 548.46875,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 601.46875,
+            "bottom": 625.46875,
+            "left": 16,
+            "right": 360.140625
+          },
+          {
+            "top": 628.65625,
+            "bottom": 652.65625,
+            "left": 16,
+            "right": 299.234375
+          },
+          {
+            "top": 655.84375,
+            "bottom": 679.84375,
+            "left": 16,
+            "right": 342.609375
+          },
+          {
+            "top": 683.03125,
+            "bottom": 707.03125,
+            "left": 16,
+            "right": 313.71875
+          },
+          {
+            "top": 710.21875,
+            "bottom": 734.21875,
+            "left": 16,
+            "right": 325.796875
+          },
+          {
+            "top": 737.40625,
+            "bottom": 761.40625,
+            "left": 16,
+            "right": 262.1875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:real-nine-paper: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 461.73065185546875,
+          "bottom": 546.6681518554688,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 599.6681518554688,
+            "bottom": 623.6681518554688,
+            "left": 16,
+            "right": 360.140625
+          },
+          {
+            "top": 626.8556518554688,
+            "bottom": 650.8556518554688,
+            "left": 16,
+            "right": 299.234375
+          },
+          {
+            "top": 654.0431518554688,
+            "bottom": 678.0431518554688,
+            "left": 16,
+            "right": 342.609375
+          },
+          {
+            "top": 681.2306518554688,
+            "bottom": 705.2306518554688,
+            "left": 16,
+            "right": 313.71875
+          },
+          {
+            "top": 708.4181518554688,
+            "bottom": 732.4181518554688,
+            "left": 16,
+            "right": 325.796875
+          },
+          {
+            "top": 735.6056518554688,
+            "bottom": 759.6056518554688,
+            "left": 16,
+            "right": 262.1875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-long-title: initial",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: initial: abstract line obscured {\"title\":{\"top\":460.53125,\"bottom\":602.09375,\"left\":16,\"right\":374},\"bar\":{\"top\":712,\"bottom\":832,\"left\":12,\"right\":378},\"composerExpanded\":\"false\",\"lines\":[{\"top\":655.09375,\"bottom\":679.09375,\"left\":16,\"right\":304.0625},{\"top\":682.28125,\"bottom\":706.28125,\"left\":16,\"right\":361.421875},{\"top\":709.46875,\"bottom\":733.46875,\"left\":16,\"right\":358.359375},{\"top\":736.65625,\"bottom\":760.65625,\"left\":16,\"right\":118.546875}]}\n    at measure (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:48:44)\n    at async /private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:85:22\n    at async check (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:19:65)\n    at async main (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:80:7)"
+    },
+    {
+      "name": "light:layout-only-long-title: queue change",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: queue change: abstract line obscured {\"title\":{\"top\":463.53125,\"bottom\":605.09375,\"left\":16,\"right\":374},\"bar\":{\"top\":712,\"bottom\":832,\"left\":12,\"right\":378},\"composerExpanded\":\"false\",\"lines\":[{\"top\":658.09375,\"bottom\":682.09375,\"left\":16,\"right\":304.0625},{\"top\":685.28125,\"bottom\":709.28125,\"left\":16,\"right\":361.421875},{\"top\":712.46875,\"bottom\":736.46875,\"left\":16,\"right\":358.359375},{\"top\":739.65625,\"bottom\":763.65625,\"left\":16,\"right\":118.546875}]}\n    at measure (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:48:44)\n    at async check (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:19:65)\n    at async main (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:87:7)"
+    },
+    {
+      "name": "light:layout-only-long-title: Reader return",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Reader return: abstract line obscured {\"title\":{\"top\":461.77667236328125,\"bottom\":603.3391723632812,\"left\":16,\"right\":374},\"bar\":{\"top\":712,\"bottom\":832,\"left\":12,\"right\":378},\"composerExpanded\":\"false\",\"lines\":[{\"top\":656.3391723632812,\"bottom\":680.3391723632812,\"left\":16,\"right\":304.0625},{\"top\":683.5266723632812,\"bottom\":707.5266723632812,\"left\":16,\"right\":361.421875},{\"top\":710.7141723632812,\"bottom\":734.7141723632812,\"left\":16,\"right\":358.359375},{\"top\":737.9016723632812,\"bottom\":761.9016723632812,\"left\":16,\"right\":118.546875}]}\n    at measure (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:48:44)\n    at async check (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:19:65)\n    at async main (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:97:7)"
+    },
+    {
+      "name": "light:layout-only-short-one-line: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 460.53125,
+          "bottom": 488.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 541.84375,
+            "bottom": 565.84375,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-one-line: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 463.53125,
+          "bottom": 491.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 544.84375,
+            "bottom": 568.84375,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-one-line: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 462.13726806640625,
+          "bottom": 490.44976806640625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 543.4497680664062,
+            "bottom": 567.4497680664062,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-two-lines: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 460.53125,
+          "bottom": 488.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 541.84375,
+            "bottom": 565.84375,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 569.03125,
+            "bottom": 593.03125,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-two-lines: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 463.53125,
+          "bottom": 491.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 544.84375,
+            "bottom": 568.84375,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 572.03125,
+            "bottom": 596.03125,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-two-lines: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 461.38287353515625,
+          "bottom": 489.69537353515625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 542.6953735351562,
+            "bottom": 566.6953735351562,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 569.8828735351562,
+            "bottom": 593.8828735351562,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-three-lines: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 460.53125,
+          "bottom": 488.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 541.84375,
+            "bottom": 565.84375,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 569.03125,
+            "bottom": 593.03125,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 596.21875,
+            "bottom": 620.21875,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-three-lines: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 463.53125,
+          "bottom": 491.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 544.84375,
+            "bottom": 568.84375,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 572.03125,
+            "bottom": 596.03125,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 599.21875,
+            "bottom": 623.21875,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-three-lines: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 461.79541015625,
+          "bottom": 490.10791015625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 543.10791015625,
+            "bottom": 567.10791015625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 570.29541015625,
+            "bottom": 594.29541015625,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 597.48291015625,
+            "bottom": 621.48291015625,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:real-nine-paper: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 460.53125,
+          "bottom": 545.46875,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 598.46875,
+            "bottom": 622.46875,
+            "left": 16,
+            "right": 362.25
+          },
+          {
+            "top": 625.65625,
+            "bottom": 649.65625,
+            "left": 16,
+            "right": 360.328125
+          },
+          {
+            "top": 652.84375,
+            "bottom": 676.84375,
+            "left": 16,
+            "right": 355.84375
+          },
+          {
+            "top": 680.03125,
+            "bottom": 704.03125,
+            "left": 16,
+            "right": 299.171875
+          },
+          {
+            "top": 707.21875,
+            "bottom": 731.21875,
+            "left": 16,
+            "right": 360.4375
+          },
+          {
+            "top": 734.40625,
+            "bottom": 758.40625,
+            "left": 16,
+            "right": 287.6875
+          },
+          {
+            "top": 761.59375,
+            "bottom": 785.59375,
+            "left": 16,
+            "right": 341.1875
+          },
+          {
+            "top": 788.78125,
+            "bottom": 812.78125,
+            "left": 16,
+            "right": 80.890625
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:real-nine-paper: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 463.53125,
+          "bottom": 548.46875,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 601.46875,
+            "bottom": 625.46875,
+            "left": 16,
+            "right": 360.140625
+          },
+          {
+            "top": 628.65625,
+            "bottom": 652.65625,
+            "left": 16,
+            "right": 299.234375
+          },
+          {
+            "top": 655.84375,
+            "bottom": 679.84375,
+            "left": 16,
+            "right": 342.609375
+          },
+          {
+            "top": 683.03125,
+            "bottom": 707.03125,
+            "left": 16,
+            "right": 313.71875
+          },
+          {
+            "top": 710.21875,
+            "bottom": 734.21875,
+            "left": 16,
+            "right": 325.796875
+          },
+          {
+            "top": 737.40625,
+            "bottom": 761.40625,
+            "left": 16,
+            "right": 262.1875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:real-nine-paper: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 461.759765625,
+          "bottom": 546.697265625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 599.697265625,
+            "bottom": 623.697265625,
+            "left": 16,
+            "right": 360.140625
+          },
+          {
+            "top": 626.884765625,
+            "bottom": 650.884765625,
+            "left": 16,
+            "right": 299.234375
+          },
+          {
+            "top": 654.072265625,
+            "bottom": 678.072265625,
+            "left": 16,
+            "right": 342.609375
+          },
+          {
+            "top": 681.259765625,
+            "bottom": 705.259765625,
+            "left": 16,
+            "right": 313.71875
+          },
+          {
+            "top": 708.447265625,
+            "bottom": 732.447265625,
+            "left": 16,
+            "right": 325.796875
+          },
+          {
+            "top": 735.634765625,
+            "bottom": 759.634765625,
+            "left": 16,
+            "right": 262.1875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-long-title: initial",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: initial: abstract line obscured {\"title\":{\"top\":460.53125,\"bottom\":602.09375,\"left\":16,\"right\":374},\"bar\":{\"top\":712,\"bottom\":832,\"left\":12,\"right\":378},\"composerExpanded\":\"false\",\"lines\":[{\"top\":655.09375,\"bottom\":679.09375,\"left\":16,\"right\":304.0625},{\"top\":682.28125,\"bottom\":706.28125,\"left\":16,\"right\":361.421875},{\"top\":709.46875,\"bottom\":733.46875,\"left\":16,\"right\":358.359375},{\"top\":736.65625,\"bottom\":760.65625,\"left\":16,\"right\":118.546875}]}\n    at measure (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:48:44)\n    at async /private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:85:22\n    at async check (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:19:65)\n    at async main (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:80:7)"
+    },
+    {
+      "name": "dark:layout-only-long-title: queue change",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: queue change: abstract line obscured {\"title\":{\"top\":463.53125,\"bottom\":605.09375,\"left\":16,\"right\":374},\"bar\":{\"top\":712,\"bottom\":832,\"left\":12,\"right\":378},\"composerExpanded\":\"false\",\"lines\":[{\"top\":658.09375,\"bottom\":682.09375,\"left\":16,\"right\":304.0625},{\"top\":685.28125,\"bottom\":709.28125,\"left\":16,\"right\":361.421875},{\"top\":712.46875,\"bottom\":736.46875,\"left\":16,\"right\":358.359375},{\"top\":739.65625,\"bottom\":763.65625,\"left\":16,\"right\":118.546875}]}\n    at measure (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:48:44)\n    at async check (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:19:65)\n    at async main (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:87:7)"
+    },
+    {
+      "name": "dark:layout-only-long-title: Reader return",
+      "status": "fail",
+      "error": "AssertionError [ERR_ASSERTION]: Reader return: abstract line obscured {\"title\":{\"top\":462.1466064453125,\"bottom\":603.7091064453125,\"left\":16,\"right\":374},\"bar\":{\"top\":712,\"bottom\":832,\"left\":12,\"right\":378},\"composerExpanded\":\"false\",\"lines\":[{\"top\":656.7091064453125,\"bottom\":680.7091064453125,\"left\":16,\"right\":304.0625},{\"top\":683.8966064453125,\"bottom\":707.8966064453125,\"left\":16,\"right\":361.421875},{\"top\":711.0841064453125,\"bottom\":735.0841064453125,\"left\":16,\"right\":358.359375},{\"top\":738.2716064453125,\"bottom\":762.2716064453125,\"left\":16,\"right\":118.546875}]}\n    at measure (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:48:44)\n    at async check (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:19:65)\n    at async main (/private/tmp/arxiv-agent-eng-workspace-controller/planning/12-workspace-controller-revamp/evidence/after/p5-discovery-return/today-density.cjs:97:7)"
+    },
+    {
+      "name": "dark:layout-only-short-one-line: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 460.53125,
+          "bottom": 488.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 541.84375,
+            "bottom": 565.84375,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-one-line: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 463.53125,
+          "bottom": 491.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 544.84375,
+            "bottom": 568.84375,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-one-line: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 461.7286376953125,
+          "bottom": 490.0411376953125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 543.0411376953125,
+            "bottom": 567.0411376953125,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-two-lines: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 460.53125,
+          "bottom": 488.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 541.84375,
+            "bottom": 565.84375,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 569.03125,
+            "bottom": 593.03125,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-two-lines: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 463.53125,
+          "bottom": 491.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 544.84375,
+            "bottom": 568.84375,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 572.03125,
+            "bottom": 596.03125,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-two-lines: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 462.1209716796875,
+          "bottom": 490.4334716796875,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 543.4334716796875,
+            "bottom": 567.4334716796875,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 570.6209716796875,
+            "bottom": 594.6209716796875,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-three-lines: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 460.53125,
+          "bottom": 488.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 541.84375,
+            "bottom": 565.84375,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 569.03125,
+            "bottom": 593.03125,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 596.21875,
+            "bottom": 620.21875,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-three-lines: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 463.53125,
+          "bottom": 491.84375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 544.84375,
+            "bottom": 568.84375,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 572.03125,
+            "bottom": 596.03125,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 599.21875,
+            "bottom": 623.21875,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-three-lines: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 461.77484130859375,
+          "bottom": 490.08734130859375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 543.0873413085938,
+            "bottom": 567.0873413085938,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 570.2748413085938,
+            "bottom": 594.2748413085938,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 597.4623413085938,
+            "bottom": 621.4623413085938,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    }
+  ],
+  "blocked": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": []
+}

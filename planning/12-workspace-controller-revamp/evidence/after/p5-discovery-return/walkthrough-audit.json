@@ -1,0 +1,221 @@
+{
+  "base": "http://127.0.0.1:3149",
+  "principal": "controller-p5",
+  "fixture": "isolated CI-synthetic P5 walk",
+  "cases": [
+    {
+      "name": "guard and seed two labeled verification questions",
+      "status": "pass",
+      "detail": {
+        "entries": [
+          {
+            "id": "p5-ci-older-question",
+            "work_id": "ci:workspace-agent-evaluation",
+            "version_id": "ci:workspace-agent-evaluation:v1",
+            "anchor": "abstract:96:110"
+          },
+          {
+            "id": "p5-ci-unread-question",
+            "work_id": "ci:workspace-retrieval-budget",
+            "version_id": "ci:workspace-retrieval-budget:v1",
+            "anchor": "abstract:0"
+          }
+        ]
+      }
+    },
+    {
+      "name": "desktop-light: Radar search, real pagination, focus history and Reader return",
+      "status": "pass",
+      "detail": {
+        "page1": 20,
+        "page2Expected": 6,
+        "asOf": "2026-11-04T07:11:05.951503+00:00",
+        "cursorPreserved": true,
+        "focus": "arxiv:2611.99502"
+      }
+    },
+    {
+      "name": "desktop-light: Library Notes exact older passage and return",
+      "status": "pass",
+      "detail": {
+        "version": "ci:workspace-agent-evaluation:v1",
+        "anchor": "abstract:96:110",
+        "returnTo": "?view=notes"
+      }
+    },
+    {
+      "name": "desktop-dark: Radar search, real pagination, focus history and Reader return",
+      "status": "pass",
+      "detail": {
+        "page1": 20,
+        "page2Expected": 6,
+        "asOf": "2026-11-04T07:11:12.777192+00:00",
+        "cursorPreserved": true,
+        "focus": "arxiv:2611.99502"
+      }
+    },
+    {
+      "name": "desktop-dark: Library Notes exact older passage and return",
+      "status": "pass",
+      "detail": {
+        "version": "ci:workspace-agent-evaluation:v1",
+        "anchor": "abstract:96:110",
+        "returnTo": "?view=notes"
+      }
+    },
+    {
+      "name": "mobile-light: Radar search, real pagination, focus history and Reader return",
+      "status": "pass",
+      "detail": {
+        "page1": 20,
+        "page2Expected": 6,
+        "asOf": "2026-11-04T07:11:19.583985+00:00",
+        "cursorPreserved": true,
+        "focus": "arxiv:2611.99502"
+      }
+    },
+    {
+      "name": "mobile-light: Library Notes exact older passage and return",
+      "status": "pass",
+      "detail": {
+        "version": "ci:workspace-agent-evaluation:v1",
+        "anchor": "abstract:96:110",
+        "returnTo": "?view=notes"
+      }
+    },
+    {
+      "name": "mobile-dark: Radar search, real pagination, focus history and Reader return",
+      "status": "pass",
+      "detail": {
+        "page1": 20,
+        "page2Expected": 6,
+        "asOf": "2026-11-04T07:11:26.344835+00:00",
+        "cursorPreserved": true,
+        "focus": "arxiv:2611.99502"
+      }
+    },
+    {
+      "name": "mobile-dark: Library Notes exact older passage and return",
+      "status": "pass",
+      "detail": {
+        "version": "ci:workspace-agent-evaluation:v1",
+        "anchor": "abstract:96:110",
+        "returnTo": "?view=notes"
+      }
+    },
+    {
+      "name": "injected GET failure, retry and empty result",
+      "status": "pass",
+      "detail": {
+        "injected503": "unavailable and retry succeeded",
+        "empty": "explicit no match"
+      }
+    },
+    {
+      "name": "injected POST failure and reversible save/Undo",
+      "status": "pass",
+      "detail": {
+        "workId": "ci:workspace-agent-evaluation",
+        "restoredStatus": "unread"
+      }
+    }
+  ],
+  "blocked": [],
+  "unexpectedConsole": [],
+  "expectedFailures": [
+    {
+      "case": "injected GET failure, retry and empty result",
+      "kind": "injected-get-503"
+    },
+    {
+      "case": "injected POST failure and reversible save/Undo",
+      "kind": "injected-post-503"
+    }
+  ],
+  "pageErrors": [],
+  "requestFailures": [],
+  "writes": [
+    {
+      "case": "guard and seed two labeled verification questions",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "p5-ci-older-question",
+        "revision": 0,
+        "request_id": "2b2752cd-dd94-4bc4-ad83-26e03cfc95b8",
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v1",
+          "kind": "question",
+          "body": "CI synthetic P5 older-version verification question.",
+          "anchor": "abstract:96:110"
+        }
+      },
+      "injected503": false
+    },
+    {
+      "case": "guard and seed two labeled verification questions",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "p5-ci-unread-question",
+        "revision": 0,
+        "request_id": "bc619823-6863-408d-9c93-1e8939a00ccb",
+        "data": {
+          "work_id": "ci:workspace-retrieval-budget",
+          "version_id": "ci:workspace-retrieval-budget:v1",
+          "kind": "question",
+          "body": "CI synthetic P5 unread-work verification question.",
+          "anchor": "abstract:0"
+        }
+      },
+      "injected503": false
+    },
+    {
+      "case": "injected POST failure and reversible save/Undo",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "ci:workspace-agent-evaluation",
+        "revision": 0,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "snoozed_until": null
+        },
+        "request_id": "e35f5486-be10-4a8b-81c2-e5edbdb89721"
+      },
+      "injected503": true
+    },
+    {
+      "case": "injected POST failure and reversible save/Undo",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "ci:workspace-agent-evaluation",
+        "revision": 0,
+        "data": {
+          "status": "saved",
+          "anchor": "abstract:0",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "snoozed_until": null
+        },
+        "request_id": "e35f5486-be10-4a8b-81c2-e5edbdb89721"
+      },
+      "injected503": false
+    },
+    {
+      "case": "injected POST failure and reversible save/Undo",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "ci:workspace-agent-evaluation",
+        "revision": 1,
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "snoozed_until": null
+        },
+        "request_id": "ac2c5bdd-c86d-481b-a661-d7cb392c163d"
+      },
+      "injected503": false
+    }
+  ]
+}

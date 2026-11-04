@@ -1,0 +1,77 @@
+PASS desktop-dark: radar first page
+PASS desktop-dark: radar page two
+PASS desktop-dark: saved library
+PASS desktop-dark: library notes
+PASS desktop-light: radar first page
+PASS desktop-light: radar page two
+PASS desktop-light: saved library
+PASS desktop-light: library notes
+PASS mobile-dark: radar first page
+PASS mobile-dark: radar page two
+FAIL mobile-dark: saved library Expected values to be strictly equal:
+
+0 !== 1
+
+PASS mobile-dark: library notes
+PASS mobile-dark: composer preserves filters and resets result window
+PASS mobile-dark: empty read search toggle
+PASS mobile-dark: empty archived search toggle
+PASS mobile-dark: drawer controls
+PASS mobile-light: radar first page
+PASS mobile-light: radar page two
+FAIL mobile-light: saved library Expected values to be strictly equal:
+
+0 !== 1
+
+PASS mobile-light: library notes
+PASS mobile-light: empty read search toggle
+PASS mobile-light: empty archived search toggle
+PASS mobile-light: drawer controls
+PASS tablet768-dark: radar first page
+PASS tablet768-dark: radar page two
+FAIL tablet768-dark: saved library Expected values to be strictly equal:
+
+0 !== 1
+
+PASS tablet768-dark: library notes
+PASS tablet768-light: radar first page
+PASS tablet768-light: radar page two
+FAIL tablet768-light: saved library Expected values to be strictly equal:
+
+0 !== 1
+
+PASS tablet768-light: library notes
+PASS tablet1024-dark: radar first page
+PASS tablet1024-dark: radar page two
+PASS tablet1024-dark: saved library
+PASS tablet1024-dark: library notes
+PASS tablet1024-light: radar first page
+PASS tablet1024-light: radar page two
+PASS tablet1024-light: saved library
+PASS tablet1024-light: library notes
+{
+  "cases": 39,
+  "passed": 35,
+  "failed": [
+    {
+      "name": "mobile-dark: saved library",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+    },
+    {
+      "name": "mobile-light: saved library",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+    },
+    {
+      "name": "tablet768-dark: saved library",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+    },
+    {
+      "name": "tablet768-light: saved library",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:"
+    }
+  ],
+  "blocked": 0,
+  "consoleErrors": 0,
+  "pageErrors": 0,
+  "requestFailures": 0
+}

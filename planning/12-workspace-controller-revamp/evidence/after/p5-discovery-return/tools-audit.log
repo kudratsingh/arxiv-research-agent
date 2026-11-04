@@ -1,0 +1,14 @@
+PASS guard isolated account and existing CI questions
+PASS reserved invalid host is rejected without mutation
+PASS quick add repeated unsupported URL is one metadata work
+PASS preview, explicit confirm and repeat import preserves original/profile
+PASS Shell Markdown export includes all verification questions and context
+{
+  "cases": 5,
+  "failed": 0,
+  "blocked": 0,
+  "unexpectedConsole": 0,
+  "pageErrors": 0,
+  "requestFailures": 0,
+  "failures": []
+}

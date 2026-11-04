@@ -1,0 +1,276 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 2
+  },
+  "cases": [
+    {
+      "name": "dark-radar",
+      "status": "pass",
+      "measurements": {
+        "abstract-last-line": {
+          "target": {
+            "top": 409.953125,
+            "bottom": 433.953125,
+            "left": 16,
+            "right": 122.3125,
+            "width": 106.3125,
+            "height": 24
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "P"
+        },
+        "source-evidence": {
+          "target": {
+            "top": 492.953125,
+            "bottom": 584.265625,
+            "left": 16,
+            "right": 374,
+            "width": 358,
+            "height": 91.3125
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "P"
+        }
+      }
+    },
+    {
+      "name": "dark-library",
+      "status": "pass",
+      "measurements": {
+        "abstract-last-line": {
+          "target": {
+            "top": 410.375,
+            "bottom": 434.375,
+            "left": 16,
+            "right": 290.78125,
+            "width": 274.78125,
+            "height": 24
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "P"
+        },
+        "source-evidence": {
+          "target": {
+            "top": 376.375,
+            "bottom": 467.6875,
+            "left": 16,
+            "right": 374,
+            "width": 358,
+            "height": 91.3125
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "P"
+        },
+        "last-resume-link": {
+          "target": {
+            "top": 537.609375,
+            "bottom": 555.609375,
+            "left": 33,
+            "right": 187.671875,
+            "width": 154.671875,
+            "height": 18
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "A"
+        }
+      }
+    },
+    {
+      "name": "light-radar",
+      "status": "pass",
+      "measurements": {
+        "abstract-last-line": {
+          "target": {
+            "top": 409.953125,
+            "bottom": 433.953125,
+            "left": 16,
+            "right": 122.3125,
+            "width": 106.3125,
+            "height": 24
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "P"
+        },
+        "source-evidence": {
+          "target": {
+            "top": 492.953125,
+            "bottom": 584.265625,
+            "left": 16,
+            "right": 374,
+            "width": 358,
+            "height": 91.3125
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "P"
+        }
+      }
+    },
+    {
+      "name": "light-library",
+      "status": "pass",
+      "measurements": {
+        "abstract-last-line": {
+          "target": {
+            "top": 410.375,
+            "bottom": 434.375,
+            "left": 16,
+            "right": 290.78125,
+            "width": 274.78125,
+            "height": 24
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "P"
+        },
+        "source-evidence": {
+          "target": {
+            "top": 376.375,
+            "bottom": 467.6875,
+            "left": 16,
+            "right": 374,
+            "width": 358,
+            "height": 91.3125
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "P"
+        },
+        "last-resume-link": {
+          "target": {
+            "top": 537.609375,
+            "bottom": 555.609375,
+            "left": 33,
+            "right": 187.671875,
+            "width": 154.671875,
+            "height": 18
+          },
+          "bar": {
+            "top": 712,
+            "bottom": 832,
+            "left": 12,
+            "right": 378,
+            "width": 366,
+            "height": 120
+          },
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "hitMatches": true,
+          "hitTag": "A"
+        }
+      }
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

@@ -1,0 +1,30 @@
+PASS guard and seed two labeled verification questions
+PASS desktop-light: Radar search, real pagination, focus history and Reader return
+PASS desktop-light: Library Notes exact older passage and return
+PASS desktop-dark: Radar search, real pagination, focus history and Reader return
+PASS desktop-dark: Library Notes exact older passage and return
+PASS mobile-light: Radar search, real pagination, focus history and Reader return
+PASS mobile-light: Library Notes exact older passage and return
+PASS mobile-dark: Radar search, real pagination, focus history and Reader return
+PASS mobile-dark: Library Notes exact older passage and return
+PASS injected GET failure, retry and empty result
+PASS injected POST failure and reversible save/Undo
+{
+  "cases": 11,
+  "failed": 0,
+  "blocked": 0,
+  "unexpectedConsole": 0,
+  "pageErrors": 0,
+  "requestFailures": 0,
+  "expectedFailures": [
+    {
+      "case": "injected GET failure, retry and empty result",
+      "kind": "injected-get-503"
+    },
+    {
+      "case": "injected POST failure and reversible save/Undo",
+      "kind": "injected-post-503"
+    }
+  ],
+  "failures": []
+}

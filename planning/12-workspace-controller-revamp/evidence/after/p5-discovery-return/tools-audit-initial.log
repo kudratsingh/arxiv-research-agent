@@ -1,0 +1,16 @@
+PASS guard isolated account and existing CI questions
+FAIL quick add repeated unsupported URL is one metadata work manual HTTP 422
+{
+  "cases": 2,
+  "failed": 1,
+  "blocked": 0,
+  "unexpectedConsole": 1,
+  "pageErrors": 0,
+  "requestFailures": 0,
+  "failures": [
+    {
+      "name": "quick add repeated unsupported URL is one metadata work",
+      "error": "AssertionError [ERR_ASSERTION]: manual HTTP 422"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "application_commit": "ade234b48520782d32e388e16a3cb811f8a2cf2b",
+  "radar_commit": "734773f",
+  "baseline": "2c06bde",
+  "frontend": [
+    " Test Files  193 passed (193)",
+    "      Tests  3919 passed (3919)",
+    "Statements   : 98.18% ( 4924/5015 )",
+    "Branches     : 94.45% ( 3983/4217 )",
+    "Functions    : 92.66% ( 1706/1841 )",
+    "Lines        : 99.37% ( 4111/4137 )"
+  ],
+  "python": [
+    "6042 passed, 54 skipped, 53 deselected in 555.61s (0:09:15)",
+    "Total:   3658 lines",
+    "Missing: 19 lines",
+    "Coverage: 99%"
+  ],
+  "live_e2e": [
+    "  16 passed (21.6s)"
+  ],
+  "browser": {
+    "preview-audit.json": {
+      "cases": 39,
+      "failed": 0
+    },
+    "reachability.json": {
+      "cases": 4,
+      "failed": 0
+    },
+    "walkthrough-audit.json": {
+      "cases": 11,
+      "failed": 0
+    },
+    "tools-audit.json": {
+      "cases": 5,
+      "failed": 0
+    },
+    "today-density.json": {
+      "cases": 30,
+      "failed": 0
+    }
+  },
+  "accessibility": {
+    "p5_cases": 12,
+    "reader_cases": 12,
+    "violations": 0
+  },
+  "provider_contacts": 0,
+  "recurrence_enabled": false,
+  "ci": "Local results; no controller PR and no branch-push CI trigger.",
+  "css_exception": "Owner-permitted E27 interim emitted CSS overrun, consolidation G7; JS ceilings unchanged.",
+  "notes": "No source bytes changed between frozen-tree checks and source commit; see application-tree.json."
+}

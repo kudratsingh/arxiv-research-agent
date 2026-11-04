@@ -1,6 +1,6 @@
 # STATUS: workspace controller revamp
 
-Updated: **2026-11-04 UTC**. State: **Mobile reading-density pass and G4 Reader integration verified; ready for owner review.**
+Updated: **2026-11-04 UTC**. State: **G5 Radar and Library verified; stopped for owner experience review before P6.**
 
 The implementing agent updates this file at every gate (G0–G8). Numbers are
 pasted from command output and never typed by hand.
@@ -877,3 +877,183 @@ fresh-database rerun closed that artifact gap without changing tests; exact
 [raw output](evidence/after/p4-reader/live-e2e.txt) is committed. The verification
 stack was restored to the labelled final_walk database afterward, preserving
 its two synthetic questions. No further retry or test broadening was performed.
+
+
+## G5 — Radar and Library connected controller
+
+Application **`ade234b48520782d32e388e16a3cb811f8a2cf2b`**, Radar WO-5.1 **`734773f`**; baseline **`2c06bde`**.
+Initial checkout was clean and fetch found no newer controller commits. Main
+remains88d283d. The checked application bytes were frozen before gates and are
+identical to the committed source ([manifest](evidence/after/p5-discovery-return/application-tree.json)).
+The following evidence commit changes docs/captures only.
+
+Radar now presents one full available abstract and evidence scope, with filters
+and the ordered result page in the sidebar/drawer. Focus uses replace-history
+URL state independently of fetches. Server `as_of`, cursor, filters and focus
+survive exact Reader return; filter/page changes reset focus. Next page is one
+unique explicit control in the bar at page end. No stale card is presented as
+a successful new search. Retry now starts a fresh request; a work added between
+workspace and items snapshots gets a visible reading-state update and Undo.
+Composer follows `q`, retains other filters for new queries and resets paging.
+
+Library has the native five-view select and queue in the sidebar, one focused
+source, exact-version notes, quick add and explicit import. Notes view retains
+all entries in that view, focused work first, including unread sources. Reader
+returns stay exactly `?view=...` (E07); selection is separately remembered per
+principal/view, while explicit queue focus also lives in its URL. Missing
+versions show unavailable rather than newer source content.
+
+**Action location:** all Library Save/Unsave/Dismiss/Snooze/Undo controls live
+only in the bar; no duplicate card controls. Export lives only in the Shell
+footer. Import loads on explicit disclosure open, remains mounted when closed,
+and never previews/applies automatically. Its requests, digest/conflict rules,
+original retention and opt-in profile transfer remain unchanged. Reading,
+manual save and import operations are mutually guarded against stale reload
+races. P4 pending-save protections and readable type sizes are preserved.
+
+### Exact local results
+
+`npm run lint`, final `npm run typecheck`, direct touched-test/live-spec ESLint,
+full coverage, production build and every JS budget row pass. Functions floor
+raised91.8→92.2; statements98.15, branches94.0 and lines99.11 remain unchanged.
+No input, exclusion, tier or budget was weakened. Actual pasted output:
+
+```text
+ Test Files  193 passed (193)
+      Tests  3919 passed (3919)
+Statements   : 98.18% ( 4924/5015 )
+Branches     : 94.45% ( 3983/4217 )
+Functions    : 92.66% ( 1706/1841 )
+Lines        : 99.37% ( 4111/4137 )
+  16 passed (21.6s)
+6042 passed, 54 skipped, 53 deselected in 555.61s (0:09:15)
+Total:   3658 lines
+Missing: 19 lines
+Coverage: 99%
+```
+
+`make test-cov-diff` ran from the worktree with locked arxiv-venv-lock Python,
+disabled sentinel and isolated `WORKSPACE_TEST_POSTGRES_URL` on15458, with
+runtime POSTGRES_URL/rate overrides unset. Skips/deselections are explicit;
+no model or provider acceptance is implied. The final coupled README/config
+count record also passes all three documented-claim tests after matching the
+last measured3919-test/193-file run. No backend runtime code changed.
+
+Production build/budget output:
+
+```text
+PASS      `/` first-load JS, excl. polyfill — 166,277 B (162.4 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 192,172 B (187.7 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 164,989 B (161.1 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,908 B (162.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,660 B (182.3 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 168,314 B (164.4 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 134,126 B (131.0 KiB) against 139,264 B (136.0 KiB)
+BREACH    All emitted CSS — 23,216 B (22.7 KiB) against 17,408 B (17.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,629 B (150.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 153,083 B (149.5 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,601 B (149.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,310 B (152.6 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 168,926 B (165.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 167,699 B (163.8 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 168,875 B (164.9 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 167,771 B (163.8 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 168,053 B (164.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 159,861 B (156.1 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 161,039 B (157.3 KiB) against 169,984 B (166.0 KiB)
+```
+
+The sole nonzero budget row is emitted CSS, the owner-permitted E27 interim
+exception through G6; G7 consolidation/legacy stylesheet removal remains due.
+No ratchet changed JS ceilings. Library initially exceeded169984 by188B;
+explicitly deferring import until needed reduced it below the unchanged bound.
+
+### Browser acceptance and captures
+
+[Runnable desktop/mobile walkthrough and gallery](evidence/after/p5-discovery-return/WALKTHROUGH.md)
+· preview http://localhost:3148/workspace/radar?q=agent&days=0.
+
+- Read-only preview39/39:1440/390/768/1024 × themes, including actual20+9
+  pagination, full focused title clearance, drawer reachability and closure,
+  composer/filter behavior, empty views and native controls.
+- Final real-API live regression16/16 on fresh CI data; exact raw output retained.
+- Guarded core walkthrough11/11: actual20+6 paging/cutoff/focus, Reader return,
+  history/reload, Notes on two works, exact older v1 passage, unavailable→retry,
+  successful empty search and failed-write→retry→Undo.
+- Guarded tools5/5: expected422 retains input/no work; valid manual metadata
+  save repeated without duplicate; explicit preview/import repeated without
+  duplicate note/profile change; original retained; actual Markdown download.
+- P5 axe12 cases, zero violations of any severity, including open mobile
+  drawer and expanded import. P4 Reader axe12 cases also zero violations.
+- Mobile lower-content reachability4/4: final abstract line, full evidence
+  block and last Resume link can be scrolled clear of the fixed bar; actual
+  hit testing confirms the note link is not covered.
+- Preserved Today density30/30 on the populated-question fixture, unchanged
+  full-title and first-two-actual-lines assertion and8px clearance. Clearly
+  labelled GET-only long-title/short-abstract variants remain layout evidence.
+- Final browser receipts record zero unexpected console/page/request errors,
+  external/provider/refresh attempts or denied writes. Expected503 injections
+  and reserved-host422 are retained rather than hidden.
+
+Ten primary previews plus eight guarded walkthrough screenshots are linked.
+They are DPR2 browser emulation, not physical-device qualification. Lower
+abstract/notes content does not all fit at once: explicit scroll reachability
+is verified, not a claim that the entire page is visible initially.
+
+### Corrections and unsuccessful attempts retained
+
+Applied E01/E03/E06/E07/E15/E19/E22/E27/E30/E46: responsive sidebar access,
+sole export/page control, all Notes-view entries, exact Library return with
+scoped selection restoration, no focus refetch and interim CSS reporting.
+One justified E19 placement choice moves the **single** Next page control into
+the bar, where it is explicit at390px; there is no sidebar duplicate.
+
+Existing test edits and reasons are in each source commit body: experience
+opens the import disclosure/selects a queue row before its former multi-card
+assertion; Shell export assertion follows its sole footer location; retained
+adds legacy card action coverage; API returns now retain bounded Radar page
+state; live.spec only opens/closes moved sidebar controls. All original private
+save, body, conflict, source/version, provenance and recovery assertions remain.
+
+The initial full frontend suite passed3904 tests but missed coverage floors;
+meaningful interaction/SSR/privacy cases close the gap. A later documented-
+claims failure caught the stale177-file record beyond its15-file band; refresh
+uses actual counts and raises the functions floor, not the lag band. Its first
+restricted focused run passed but printed a sandbox psutil cleanup warning;
+the final focused and full gates ran with required process/socket access.
+
+The richer preview exposed six long-title Today density failures because its
+saved-question body adds a line to the continuation strip. Recovering12px only
+from noninteractive header/intro margins resolves all30 cases without reducing
+fonts, hiding disclosures or changing the8px assertion. Pre-repair JSON is kept.
+
+Initial preview audit35/39 used a wrong visible-role assumption for a closed
+mobile/tablet drawer; the corrected audit asserts DOM uniqueness and explicitly
+opens controls. Initial tools `.invalid` URL was rejected by existing safety
+validation before any write; valid example.com metadata then exercised the
+intended path. The initial seed import-path failure occurred before writes;
+corrected verifiers use locked Python stdin and prove worktree src resolution.
+An unrun tablet-script draft is excluded from acceptance and the commit.
+
+### Boundaries and unresolved follow-up
+
+Main3148 now uses a fresh clearly labelled38-work synthetic P5 preview account,
+with the same nine-item Today edition and two seeded verification questions.
+Old P4 workspace_rich remains preserved. Actual browser writes use separate
+controller-p5 databases: final live starts3 works/4 versions; core walk starts27
+and ends with two CI questions; tools then ends29 works/three synthetic questions.
+No owner notes, preferences or usefulness labels were copied or invented.
+Owner3137/API8137/PG15438 and all PRs remain untouched/unmerged.
+
+The **browser-storage / client-side Back-Forward reliability limitation is
+unresolved**. Save/copy text if recovery is unavailable; same-tab/unload guards
+are not a guarantee over every Next history transition. Library return focus
+also falls back if its session store is unavailable; explicit focus URLs work.
+
+Provider contacts/spend zero; recurrence disabled; no real-key setup, no
+qualification execution, no new runtime dependencies, no PR and no merge.
+GitHub CI is not triggered by this branch-only push; verified results here are
+local and tied to the application commit, not a green remote CI claim.
+Stop at G5 for owner experience review. P6 is not started; broader G7/G8 visual
+and browser matrices, CSS consolidation and paid quality evidence remain later.
