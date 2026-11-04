@@ -35,7 +35,7 @@ beforeEach(() => {
     return media.get(query)!;
   }));
 });
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); setSidebarCollapsed(false); localStorage.clear(); });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); act(() => setSidebarCollapsed(false)); localStorage.clear(); });
 function Page() {
   return <><h1>Page title</h1><p>Reading content</p>
     <SidebarSection label="Reading controls"><button type="button">Page control</button></SidebarSection>
@@ -78,7 +78,7 @@ describe("workspace controller shell", () => {
   });
   it("keeps export exactly once when the old Library page supplies it", () => {
     route.path = "/workspace/library";
-    render(<WorkspaceShell><a href="/api/workspace/export">Export notes as Markdown ↗</a></WorkspaceShell>);
+    render(<WorkspaceShell><a href="/api/workspace/export" download="research-notes.md">Export notes as Markdown ↗</a></WorkspaceShell>);
     expect(screen.getAllByRole("link", { name: /Export notes as Markdown/ })).toHaveLength(1);
     expect(screen.getByRole("link", { name: "Library" })).toHaveAttribute("aria-current", "page");
   });
@@ -116,6 +116,71 @@ describe("workspace controller shell", () => {
     expect(button.closest("[hidden], [inert]")).toBeNull();
     await user.click(button);
     expect(select).toHaveBeenCalledOnce();
+  });
+  it("opens the compact mobile composer, preserves its draft on close, and restores toggle focus", async () => {
+    width = 390;
+    const user = userEvent.setup();
+    const { container } = render(<WorkspaceShell><Page /></WorkspaceShell>);
+    const open = screen.getByRole("button", { name: "Open search" });
+    const fields = container.querySelector(".ws-composer-fields");
+    expect(fields).toHaveAttribute("hidden");
+    expect(screen.queryByRole("searchbox", { name: "Search stored papers" })).not.toBeInTheDocument();
+    expect(container.querySelector(".ws-composer")).toHaveAttribute("data-expanded", "false");
+    await user.click(open);
+    const input = screen.getByRole("searchbox", { name: "Search stored papers" });
+    expect(input).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Close search" })).toBe(open);
+    expect(open).toHaveAttribute("aria-controls", fields?.id);
+    expect(container.querySelector(".ws-composer")).toHaveAttribute("data-expanded", "true");
+    await user.type(input, "retrieval draft");
+    await user.keyboard("{Escape}");
+    expect(open).toHaveAccessibleName("Open search");
+    expect(open).toHaveFocus();
+    expect(fields).toHaveAttribute("hidden");
+    await user.click(open);
+    expect(screen.getByRole("searchbox", { name: "Search stored papers" })).toHaveValue("retrieval draft");
+    await user.clear(input); await user.type(input, "/unknown-command");
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    expect(screen.getByText("No available command matches. Try another command.")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Close search" }));
+    expect(container.querySelector('.ws-composer [data-command="escape"]')).toBeNull();
+    await user.click(open);
+    expect(input).toHaveValue("/unknown-command");
+    expect(screen.getByText("No available command matches. Try another command.")).toBeVisible();
+  });
+  it("opens and focuses mobile search with slash but does not dispatch into an inert main", async () => {
+    width = 390;
+    const user = userEvent.setup();
+    const { container } = render(<WorkspaceShell><Page /></WorkspaceShell>);
+    fireEvent.keyDown(document.body, { key: "/" });
+    expect(screen.getByRole("searchbox", { name: "Search stored papers" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(container.querySelector(".ws-composer-fields")).toHaveAttribute("hidden");
+    await user.click(screen.getByRole("button", { name: "Queue & controls" }));
+    expect(screen.getByRole("main")).toHaveAttribute("inert");
+    fireEvent.keyDown(document.body, { key: "/" });
+    expect(container.querySelector(".ws-composer-fields")).toHaveAttribute("hidden");
+    expect(screen.queryByRole("searchbox", { name: "Search stored papers" })).not.toBeInTheDocument();
+  });
+  it("does not execute a hidden composer form even if a submit is dispatched", async () => {
+    width = 390;
+    const user = userEvent.setup(); const command = vi.fn();
+    const { container } = render(<WorkspaceShell><button data-command="next" onClick={command}>Next</button></WorkspaceShell>);
+    const toggle = screen.getByRole("button", { name: "Open search" });
+    await user.click(toggle);
+    await user.type(screen.getByRole("searchbox"), "/next");
+    await user.click(screen.getByRole("button", { name: "Close search" }));
+    const form = container.querySelector("form.ws-composer");
+    if (!form) throw new Error("Composer form missing");
+    fireEvent.submit(form);
+    expect(command).not.toHaveBeenCalled();
+    expect(toggle).toHaveAccessibleName("Open search");
+  });
+  it("keeps desktop search open without a mobile toggle", () => {
+    const { container } = render(<WorkspaceShell><Page /></WorkspaceShell>);
+    expect(screen.getByRole("searchbox", { name: "Search stored papers" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Open search" })).not.toBeInTheDocument();
+    expect(container.querySelector(".ws-composer-fields")).not.toHaveAttribute("hidden");
   });
   it("keeps mobile navigation outside a closed drawer, then traps and restores focus", async () => {
     width = 390;

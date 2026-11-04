@@ -26,8 +26,10 @@ export function dispatchWorkspaceCommand(command: WorkspaceCommand): boolean {
   }
   if (command === "focus-composer") {
     const input = control(scope, ".ws-composer-input");
-    if (!input) return false;
-    input.focus();
+    if (input) { input.focus(); return true; }
+    const opener = control(scope, ".ws-composer-toggle");
+    if (!opener) return false;
+    opener.click();
     return true;
   }
   if (command === "escape") {
