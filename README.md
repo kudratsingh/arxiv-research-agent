@@ -1,6 +1,6 @@
-# arXiv Research Agent
+# arXiv Research Agent — Multi-Agent Research & Evaluation
 
-A research workbench for ML/AI papers and a controlled testbed for agent policies. Ask a question, review the search plan, inspect the evidence and read a cited briefing. LangGraph and Claude drive the workflow; FastAPI streams progress to a Next.js **Evidence Workbench**.
+A **multi-agent research and LLM evaluation platform** for ML/AI literature. LangGraph and Claude coordinate arXiv discovery, full-text retrieval, evidence-grounded synthesis, citation verification and bounded repair across fixed, supervisor and orchestrator-worker graph architectures. The **Next.js Evidence Workbench** gives users human-in-the-loop plan review, streamed progress, evidence inspection and cited briefings over durable FastAPI/SSE jobs; sealed contracts and reproducible policy campaigns support controlled agent comparisons.
 
 [![CI](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml)
 
