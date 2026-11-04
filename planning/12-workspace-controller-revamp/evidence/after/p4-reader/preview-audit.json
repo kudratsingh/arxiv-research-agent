@@ -1,0 +1,30 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "fixture": "offline synthetic rich nine-paper preview",
+  "cases": [
+    {
+      "label": "desktop-light",
+      "status": "pass",
+      "readerHref": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99000#abstract%3A0"
+    },
+    {
+      "label": "desktop-dark",
+      "status": "pass",
+      "readerHref": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99000#abstract%3A0"
+    },
+    {
+      "label": "mobile-light",
+      "status": "pass",
+      "readerHref": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99000#abstract%3A0"
+    },
+    {
+      "label": "mobile-dark",
+      "status": "pass",
+      "readerHref": "/workspace/items/arxiv%3A2611.99000?version=arxiv%3A2611.99000%3Av1&return_to=%2Fworkspace%2Ftoday%3Ffocus%3Darxiv%253A2611.99000#abstract%3A0"
+    }
+  ],
+  "blocked": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": []
+}

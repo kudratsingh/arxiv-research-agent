@@ -1,0 +1,396 @@
+{
+  "base": "http://127.0.0.1:3149",
+  "principal": "controller-p4",
+  "fixture": "CI-synthetic; three works, four versions",
+  "cases": [
+    {
+      "name": "desktop: guard and Today to Reader",
+      "status": "pass",
+      "detail": {
+        "workId": "ci:workspace-agent-evaluation",
+        "version": "ci:workspace-agent-evaluation:v2",
+        "editionOrder": [
+          "ci:workspace-retrieval-budget",
+          "ci:workspace-feed-excerpt",
+          "ci:workspace-agent-evaluation"
+        ]
+      }
+    },
+    {
+      "name": "desktop: selected passage and keyboard to notes",
+      "status": "pass",
+      "detail": {
+        "selectedText": "𝛼 + 🚀",
+        "anchor": "abstract:181:186",
+        "tabsToNotes": 6,
+        "tabOrder": [
+          "Source",
+          "Understand",
+          "Your notes"
+        ]
+      }
+    },
+    {
+      "name": "desktop: Reader queue and recovered draft",
+      "status": "pass",
+      "detail": {
+        "direction": "Previous paper",
+        "returnedPath": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+        "anchor": "abstract:181:186"
+      }
+    },
+    {
+      "name": "desktop: injected outage, reload recovery and real save",
+      "status": "pass",
+      "detail": {
+        "entryId": "b9f700dd-bb44-4d64-a98a-07671eaa962f",
+        "revision": 1,
+        "version": "ci:workspace-agent-evaluation:v2",
+        "anchor": "abstract:181:186"
+      }
+    },
+    {
+      "name": "desktop: Today return, reload and Library resume",
+      "status": "pass",
+      "detail": {
+        "entryId": "b9f700dd-bb44-4d64-a98a-07671eaa962f",
+        "version": "ci:workspace-agent-evaluation:v2",
+        "anchor": "abstract:181:186"
+      }
+    },
+    {
+      "name": "desktop: real conflict retains local and server text",
+      "status": "pass",
+      "detail": {
+        "entryId": "b9f700dd-bb44-4d64-a98a-07671eaa962f",
+        "priorRevision": 1,
+        "serverRevision": 2,
+        "version": "ci:workspace-agent-evaluation:v2",
+        "anchor": "abstract:181:186"
+      }
+    },
+    {
+      "name": "mobile: guard and Today to Reader",
+      "status": "pass",
+      "detail": {
+        "workId": "ci:workspace-agent-evaluation",
+        "version": "ci:workspace-agent-evaluation:v2",
+        "editionOrder": [
+          "ci:workspace-retrieval-budget",
+          "ci:workspace-feed-excerpt",
+          "ci:workspace-agent-evaluation"
+        ]
+      }
+    },
+    {
+      "name": "mobile: selected passage and keyboard to notes",
+      "status": "pass",
+      "detail": {
+        "selectedText": "𝛼 + 🚀",
+        "anchor": "abstract:181:186",
+        "tabsToNotes": 6,
+        "tabOrder": [
+          "Source",
+          "Understand",
+          "Your notes"
+        ]
+      }
+    },
+    {
+      "name": "mobile: Reader queue and recovered draft",
+      "status": "pass",
+      "detail": {
+        "direction": "Previous paper",
+        "returnedPath": "/workspace/items/ci%3Aworkspace-agent-evaluation",
+        "anchor": "abstract:181:186"
+      }
+    },
+    {
+      "name": "mobile: injected outage, reload recovery and real save",
+      "status": "pass",
+      "detail": {
+        "entryId": "eab1c731-c30c-48c0-b46b-c51be6cfd532",
+        "revision": 1,
+        "version": "ci:workspace-agent-evaluation:v2",
+        "anchor": "abstract:181:186"
+      }
+    },
+    {
+      "name": "mobile: Today return, reload and Library resume",
+      "status": "pass",
+      "detail": {
+        "entryId": "eab1c731-c30c-48c0-b46b-c51be6cfd532",
+        "version": "ci:workspace-agent-evaluation:v2",
+        "anchor": "abstract:181:186"
+      }
+    },
+    {
+      "name": "mobile: real conflict retains local and server text",
+      "status": "pass",
+      "detail": {
+        "entryId": "eab1c731-c30c-48c0-b46b-c51be6cfd532",
+        "priorRevision": 1,
+        "serverRevision": 2,
+        "version": "ci:workspace-agent-evaluation:v2",
+        "anchor": "abstract:181:186"
+      }
+    }
+  ],
+  "blocked": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": [],
+  "expectedInjectedConsole": [
+    {
+      "size": "desktop",
+      "case": "desktop: injected outage, reload recovery and real save",
+      "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: real conflict retains local and server text",
+      "text": "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: injected outage, reload recovery and real save",
+      "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: real conflict retains local and server text",
+      "text": "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    }
+  ],
+  "writes": [
+    {
+      "size": "desktop",
+      "case": "desktop: selected passage and keyboard to notes",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "ci:workspace-agent-evaluation",
+        "revision": 0,
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "snoozed_until": null
+        },
+        "request_id": "df3b686e-05a5-45ff-9f0e-a22703495a86"
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: Reader queue and recovered draft",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "ci:workspace-agent-evaluation",
+        "revision": 1,
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "snoozed_until": null
+        },
+        "request_id": "7da4d93d-a3df-4405-80d0-335b0990c693"
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: injected outage, reload recovery and real save",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "b9f700dd-bb44-4d64-a98a-07671eaa962f",
+        "revision": 0,
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "CI synthetic P4 verification desktop: which baseline supports this selected passage?",
+          "anchor": "abstract:181:186"
+        },
+        "request_id": "9140eca8-995a-4190-a7b5-a6b4a76b5d13"
+      },
+      "injected503": true
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: injected outage, reload recovery and real save",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "b9f700dd-bb44-4d64-a98a-07671eaa962f",
+        "revision": 0,
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "CI synthetic P4 verification desktop: which baseline supports this selected passage?",
+          "anchor": "abstract:181:186"
+        },
+        "request_id": "d1b4651e-9316-4d41-8b52-6686ede24aef"
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: real conflict retains local and server text",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "b9f700dd-bb44-4d64-a98a-07671eaa962f",
+        "revision": 1,
+        "request_id": "6971e8d7-8db9-4150-b3fd-8a7256af648d",
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "CI synthetic P4 verification desktop: which baseline supports this selected passage? Remote revision.",
+          "anchor": "abstract:181:186"
+        }
+      },
+      "injected503": false
+    },
+    {
+      "size": "desktop",
+      "case": "desktop: real conflict retains local and server text",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "b9f700dd-bb44-4d64-a98a-07671eaa962f",
+        "revision": 1,
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "CI synthetic P4 verification desktop: which baseline supports this selected passage? Local stale edit.",
+          "anchor": "abstract:181:186"
+        },
+        "request_id": "abe261eb-3d74-4983-ba46-ce676cd835ac"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: selected passage and keyboard to notes",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "ci:workspace-agent-evaluation",
+        "revision": 2,
+        "data": {
+          "status": "unread",
+          "anchor": "abstract:0",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "snoozed_until": null
+        },
+        "request_id": "0e926628-6041-4cee-ae60-09f5ca95e905"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: selected passage and keyboard to notes",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "ci:workspace-agent-evaluation",
+        "revision": 3,
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "snoozed_until": null
+        },
+        "request_id": "8c6fd2d4-ca06-40da-9f81-33482dbf671e"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: Reader queue and recovered draft",
+      "path": "/api/workspace/reading",
+      "body": {
+        "work_id": "ci:workspace-agent-evaluation",
+        "revision": 4,
+        "data": {
+          "status": "unread",
+          "anchor": "notes",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "snoozed_until": null
+        },
+        "request_id": "54d04c35-b04e-46d2-8e15-831cc8938fb8"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: injected outage, reload recovery and real save",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "eab1c731-c30c-48c0-b46b-c51be6cfd532",
+        "revision": 0,
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "CI synthetic P4 verification mobile: which baseline supports this selected passage?",
+          "anchor": "abstract:181:186"
+        },
+        "request_id": "ca0b0e4a-775c-4bb7-b564-df1bd2f0de20"
+      },
+      "injected503": true
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: injected outage, reload recovery and real save",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "eab1c731-c30c-48c0-b46b-c51be6cfd532",
+        "revision": 0,
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "CI synthetic P4 verification mobile: which baseline supports this selected passage?",
+          "anchor": "abstract:181:186"
+        },
+        "request_id": "6cb239aa-c200-4d20-8f61-aae6f25a3e75"
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: real conflict retains local and server text",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "eab1c731-c30c-48c0-b46b-c51be6cfd532",
+        "revision": 1,
+        "request_id": "ddee8034-7e6e-4912-95ea-99b73f3e2c18",
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "CI synthetic P4 verification mobile: which baseline supports this selected passage? Remote revision.",
+          "anchor": "abstract:181:186"
+        }
+      },
+      "injected503": false
+    },
+    {
+      "size": "mobile",
+      "case": "mobile: real conflict retains local and server text",
+      "path": "/api/workspace/entries",
+      "body": {
+        "id": "eab1c731-c30c-48c0-b46b-c51be6cfd532",
+        "revision": 1,
+        "data": {
+          "work_id": "ci:workspace-agent-evaluation",
+          "version_id": "ci:workspace-agent-evaluation:v2",
+          "kind": "question",
+          "body": "CI synthetic P4 verification mobile: which baseline supports this selected passage? Local stale edit.",
+          "anchor": "abstract:181:186"
+        },
+        "request_id": "03ef584a-5369-4dfa-9be6-4aa049ee993f"
+      },
+      "injected503": false
+    }
+  ]
+}

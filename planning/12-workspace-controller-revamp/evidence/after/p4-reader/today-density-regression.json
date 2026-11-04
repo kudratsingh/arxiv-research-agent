@@ -1,0 +1,1241 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "generatedAt": "2026-11-04T06:07:30.663Z",
+  "purpose": "mobile density; synthetic data, no writes",
+  "cases": [
+    {
+      "name": "light:real-nine-paper: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 527.28125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 580.28125,
+            "bottom": 604.28125,
+            "left": 16,
+            "right": 362.25
+          },
+          {
+            "top": 607.46875,
+            "bottom": 631.46875,
+            "left": 16,
+            "right": 360.328125
+          },
+          {
+            "top": 634.65625,
+            "bottom": 658.65625,
+            "left": 16,
+            "right": 355.84375
+          },
+          {
+            "top": 661.84375,
+            "bottom": 685.84375,
+            "left": 16,
+            "right": 299.171875
+          },
+          {
+            "top": 689.03125,
+            "bottom": 713.03125,
+            "left": 16,
+            "right": 360.4375
+          },
+          {
+            "top": 716.21875,
+            "bottom": 740.21875,
+            "left": 16,
+            "right": 287.6875
+          },
+          {
+            "top": 743.40625,
+            "bottom": 767.40625,
+            "left": 16,
+            "right": 341.1875
+          },
+          {
+            "top": 770.59375,
+            "bottom": 794.59375,
+            "left": 16,
+            "right": 80.890625
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:real-nine-paper: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 530.28125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 583.28125,
+            "bottom": 607.28125,
+            "left": 16,
+            "right": 360.140625
+          },
+          {
+            "top": 610.46875,
+            "bottom": 634.46875,
+            "left": 16,
+            "right": 299.234375
+          },
+          {
+            "top": 637.65625,
+            "bottom": 661.65625,
+            "left": 16,
+            "right": 342.609375
+          },
+          {
+            "top": 664.84375,
+            "bottom": 688.84375,
+            "left": 16,
+            "right": 313.71875
+          },
+          {
+            "top": 692.03125,
+            "bottom": 716.03125,
+            "left": 16,
+            "right": 325.796875
+          },
+          {
+            "top": 719.21875,
+            "bottom": 743.21875,
+            "left": 16,
+            "right": 262.1875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:real-nine-paper: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 530.28125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 583.28125,
+            "bottom": 607.28125,
+            "left": 16,
+            "right": 360.140625
+          },
+          {
+            "top": 610.46875,
+            "bottom": 634.46875,
+            "left": 16,
+            "right": 299.234375
+          },
+          {
+            "top": 637.65625,
+            "bottom": 661.65625,
+            "left": 16,
+            "right": 342.609375
+          },
+          {
+            "top": 664.84375,
+            "bottom": 688.84375,
+            "left": 16,
+            "right": 313.71875
+          },
+          {
+            "top": 692.03125,
+            "bottom": 716.03125,
+            "left": 16,
+            "right": 325.796875
+          },
+          {
+            "top": 719.21875,
+            "bottom": 743.21875,
+            "left": 16,
+            "right": 262.1875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-long-title: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 583.90625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 636.90625,
+            "bottom": 660.90625,
+            "left": 16,
+            "right": 304.0625
+          },
+          {
+            "top": 664.09375,
+            "bottom": 688.09375,
+            "left": 16,
+            "right": 361.421875
+          },
+          {
+            "top": 691.28125,
+            "bottom": 715.28125,
+            "left": 16,
+            "right": 358.359375
+          },
+          {
+            "top": 718.46875,
+            "bottom": 742.46875,
+            "left": 16,
+            "right": 118.546875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-long-title: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 586.90625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 639.90625,
+            "bottom": 663.90625,
+            "left": 16,
+            "right": 304.0625
+          },
+          {
+            "top": 667.09375,
+            "bottom": 691.09375,
+            "left": 16,
+            "right": 361.421875
+          },
+          {
+            "top": 694.28125,
+            "bottom": 718.28125,
+            "left": 16,
+            "right": 358.359375
+          },
+          {
+            "top": 721.46875,
+            "bottom": 745.46875,
+            "left": 16,
+            "right": 118.546875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-long-title: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 586.90625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 639.90625,
+            "bottom": 663.90625,
+            "left": 16,
+            "right": 304.0625
+          },
+          {
+            "top": 667.09375,
+            "bottom": 691.09375,
+            "left": 16,
+            "right": 361.421875
+          },
+          {
+            "top": 694.28125,
+            "bottom": 718.28125,
+            "left": 16,
+            "right": 358.359375
+          },
+          {
+            "top": 721.46875,
+            "bottom": 745.46875,
+            "left": 16,
+            "right": 118.546875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-one-line: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 470.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 523.65625,
+            "bottom": 547.65625,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-one-line: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-one-line: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-two-lines: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 470.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 523.65625,
+            "bottom": 547.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 550.84375,
+            "bottom": 574.84375,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-two-lines: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 553.84375,
+            "bottom": 577.84375,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-two-lines: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 553.84375,
+            "bottom": 577.84375,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-three-lines: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 470.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 523.65625,
+            "bottom": 547.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 550.84375,
+            "bottom": 574.84375,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 578.03125,
+            "bottom": 602.03125,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-three-lines: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 553.84375,
+            "bottom": 577.84375,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 581.03125,
+            "bottom": 605.03125,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "light:layout-only-short-three-lines: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 444.84320068359375,
+          "bottom": 473.15570068359375,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.1557006835938,
+            "bottom": 550.1557006835938,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 553.3432006835938,
+            "bottom": 577.3432006835938,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 580.5307006835938,
+            "bottom": 604.5307006835938,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:real-nine-paper: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 527.28125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 580.28125,
+            "bottom": 604.28125,
+            "left": 16,
+            "right": 362.25
+          },
+          {
+            "top": 607.46875,
+            "bottom": 631.46875,
+            "left": 16,
+            "right": 360.328125
+          },
+          {
+            "top": 634.65625,
+            "bottom": 658.65625,
+            "left": 16,
+            "right": 355.84375
+          },
+          {
+            "top": 661.84375,
+            "bottom": 685.84375,
+            "left": 16,
+            "right": 299.171875
+          },
+          {
+            "top": 689.03125,
+            "bottom": 713.03125,
+            "left": 16,
+            "right": 360.4375
+          },
+          {
+            "top": 716.21875,
+            "bottom": 740.21875,
+            "left": 16,
+            "right": 287.6875
+          },
+          {
+            "top": 743.40625,
+            "bottom": 767.40625,
+            "left": 16,
+            "right": 341.1875
+          },
+          {
+            "top": 770.59375,
+            "bottom": 794.59375,
+            "left": 16,
+            "right": 80.890625
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:real-nine-paper: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 530.28125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 583.28125,
+            "bottom": 607.28125,
+            "left": 16,
+            "right": 360.140625
+          },
+          {
+            "top": 610.46875,
+            "bottom": 634.46875,
+            "left": 16,
+            "right": 299.234375
+          },
+          {
+            "top": 637.65625,
+            "bottom": 661.65625,
+            "left": 16,
+            "right": 342.609375
+          },
+          {
+            "top": 664.84375,
+            "bottom": 688.84375,
+            "left": 16,
+            "right": 313.71875
+          },
+          {
+            "top": 692.03125,
+            "bottom": 716.03125,
+            "left": 16,
+            "right": 325.796875
+          },
+          {
+            "top": 719.21875,
+            "bottom": 743.21875,
+            "left": 16,
+            "right": 262.1875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:real-nine-paper: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 530.28125,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 583.28125,
+            "bottom": 607.28125,
+            "left": 16,
+            "right": 360.140625
+          },
+          {
+            "top": 610.46875,
+            "bottom": 634.46875,
+            "left": 16,
+            "right": 299.234375
+          },
+          {
+            "top": 637.65625,
+            "bottom": 661.65625,
+            "left": 16,
+            "right": 342.609375
+          },
+          {
+            "top": 664.84375,
+            "bottom": 688.84375,
+            "left": 16,
+            "right": 313.71875
+          },
+          {
+            "top": 692.03125,
+            "bottom": 716.03125,
+            "left": 16,
+            "right": 325.796875
+          },
+          {
+            "top": 719.21875,
+            "bottom": 743.21875,
+            "left": 16,
+            "right": 262.1875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-long-title: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 583.90625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 636.90625,
+            "bottom": 660.90625,
+            "left": 16,
+            "right": 304.0625
+          },
+          {
+            "top": 664.09375,
+            "bottom": 688.09375,
+            "left": 16,
+            "right": 361.421875
+          },
+          {
+            "top": 691.28125,
+            "bottom": 715.28125,
+            "left": 16,
+            "right": 358.359375
+          },
+          {
+            "top": 718.46875,
+            "bottom": 742.46875,
+            "left": 16,
+            "right": 118.546875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-long-title: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 586.90625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 639.90625,
+            "bottom": 663.90625,
+            "left": 16,
+            "right": 304.0625
+          },
+          {
+            "top": 667.09375,
+            "bottom": 691.09375,
+            "left": 16,
+            "right": 361.421875
+          },
+          {
+            "top": 694.28125,
+            "bottom": 718.28125,
+            "left": 16,
+            "right": 358.359375
+          },
+          {
+            "top": 721.46875,
+            "bottom": 745.46875,
+            "left": 16,
+            "right": 118.546875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-long-title: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 444.8101806640625,
+          "bottom": 586.3726806640625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 639.3726806640625,
+            "bottom": 663.3726806640625,
+            "left": 16,
+            "right": 304.0625
+          },
+          {
+            "top": 666.5601806640625,
+            "bottom": 690.5601806640625,
+            "left": 16,
+            "right": 361.421875
+          },
+          {
+            "top": 693.7476806640625,
+            "bottom": 717.7476806640625,
+            "left": 16,
+            "right": 358.359375
+          },
+          {
+            "top": 720.9351806640625,
+            "bottom": 744.9351806640625,
+            "left": 16,
+            "right": 118.546875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-one-line: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 470.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 523.65625,
+            "bottom": 547.65625,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-one-line: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-one-line: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 134.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-two-lines: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 470.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 523.65625,
+            "bottom": 547.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 550.84375,
+            "bottom": 574.84375,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-two-lines: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 553.84375,
+            "bottom": 577.84375,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-two-lines: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 553.84375,
+            "bottom": 577.84375,
+            "left": 16,
+            "right": 164.859375
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-three-lines: initial",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 442.34375,
+          "bottom": 470.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 523.65625,
+            "bottom": 547.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 550.84375,
+            "bottom": 574.84375,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 578.03125,
+            "bottom": 602.03125,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-three-lines: queue change",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 445.34375,
+          "bottom": 473.65625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.65625,
+            "bottom": 550.65625,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 553.84375,
+            "bottom": 577.84375,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 581.03125,
+            "bottom": 605.03125,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    },
+    {
+      "name": "dark:layout-only-short-three-lines: Reader return",
+      "status": "pass",
+      "detail": {
+        "title": {
+          "top": 444.86676025390625,
+          "bottom": 473.17926025390625,
+          "left": 16,
+          "right": 374
+        },
+        "bar": {
+          "top": 712,
+          "bottom": 832,
+          "left": 12,
+          "right": 378
+        },
+        "composerExpanded": "false",
+        "lines": [
+          {
+            "top": 526.1792602539062,
+            "bottom": 550.1792602539062,
+            "left": 16,
+            "right": 331.171875
+          },
+          {
+            "top": 553.3667602539062,
+            "bottom": 577.3667602539062,
+            "left": 16,
+            "right": 324.21875
+          },
+          {
+            "top": 580.5542602539062,
+            "bottom": 604.5542602539062,
+            "left": 16,
+            "right": 138.578125
+          }
+        ]
+      }
+    }
+  ],
+  "blocked": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "requestFailures": []
+}

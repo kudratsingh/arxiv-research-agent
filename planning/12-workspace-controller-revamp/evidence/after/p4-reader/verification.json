@@ -1,0 +1,24 @@
+{
+  "application_source": "5fdbf48e35abce86ff09f99c40d7b3481c8c9d9d",
+  "test_checkpoint": "a933a7195de41a33c473520b45e61a2d7d9235db",
+  "frontend": [
+    "Test Files  190 passed (190)",
+    "Tests  3882 passed (3882)",
+    "Statements   : 98.15% ( 4785/4875 )",
+    "Branches     : 94.53% ( 3803/4023 )",
+    "Functions    : 92.29% ( 1664/1803 )",
+    "Lines        : 99.25% ( 4014/4044 )"
+  ],
+  "python": [
+    "6042 passed, 54 skipped, 53 deselected in 511.75s (0:08:31)",
+    "Total:   3658 lines",
+    "Missing: 19 lines",
+    "Coverage: 99%"
+  ],
+  "budget_exception": "Owner E27 interim emitted CSS overrun; consolidate G7; no ceiling changes",
+  "provider_contacts": 0,
+  "recurrence_enabled": false,
+  "ci": "No controller PR and no branch-push CI trigger; local checks only",
+  "live_e2e_stdout_summary": "16 passed (22.9s)",
+  "live_e2e_artifact": "live-e2e.txt"
+}

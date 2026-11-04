@@ -1,0 +1,176 @@
+{
+  "base": "http://127.0.0.1:3148",
+  "fixture": "read-only synthetic rich",
+  "cases": [
+    {
+      "label": "desktop-light",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "field",
+          "geometry": {
+            "element": {
+              "top": 428.40625,
+              "bottom": 594.40625,
+              "left": 908,
+              "right": 1319
+            },
+            "bar": {
+              "top": 788,
+              "bottom": 976,
+              "left": 484,
+              "right": 1304
+            },
+            "viewport": 1000
+          }
+        },
+        {
+          "name": "button",
+          "geometry": {
+            "element": {
+              "top": 610.40625,
+              "bottom": 651.40625,
+              "left": 908,
+              "right": 1030.890625
+            },
+            "bar": {
+              "top": 788,
+              "bottom": 976,
+              "left": 484,
+              "right": 1304
+            },
+            "viewport": 1000
+          }
+        }
+      ]
+    },
+    {
+      "label": "desktop-dark",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "field",
+          "geometry": {
+            "element": {
+              "top": 428.40625,
+              "bottom": 594.40625,
+              "left": 908,
+              "right": 1319
+            },
+            "bar": {
+              "top": 788,
+              "bottom": 976,
+              "left": 484,
+              "right": 1304
+            },
+            "viewport": 1000
+          }
+        },
+        {
+          "name": "button",
+          "geometry": {
+            "element": {
+              "top": 610.40625,
+              "bottom": 651.40625,
+              "left": 908,
+              "right": 1030.890625
+            },
+            "bar": {
+              "top": 788,
+              "bottom": 976,
+              "left": 484,
+              "right": 1304
+            },
+            "viewport": 1000
+          }
+        }
+      ]
+    },
+    {
+      "label": "mobile-light",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "field",
+          "geometry": {
+            "element": {
+              "top": 338.578125,
+              "bottom": 504.578125,
+              "left": 33,
+              "right": 357
+            },
+            "bar": {
+              "top": 666,
+              "bottom": 832,
+              "left": 12,
+              "right": 378
+            },
+            "viewport": 844
+          }
+        },
+        {
+          "name": "button",
+          "geometry": {
+            "element": {
+              "top": 520.578125,
+              "bottom": 561.578125,
+              "left": 33,
+              "right": 155.890625
+            },
+            "bar": {
+              "top": 666,
+              "bottom": 832,
+              "left": 12,
+              "right": 378
+            },
+            "viewport": 844
+          }
+        }
+      ]
+    },
+    {
+      "label": "mobile-dark",
+      "status": "pass",
+      "checks": [
+        {
+          "name": "field",
+          "geometry": {
+            "element": {
+              "top": 338.578125,
+              "bottom": 504.578125,
+              "left": 33,
+              "right": 357
+            },
+            "bar": {
+              "top": 666,
+              "bottom": 832,
+              "left": 12,
+              "right": 378
+            },
+            "viewport": 844
+          }
+        },
+        {
+          "name": "button",
+          "geometry": {
+            "element": {
+              "top": 520.578125,
+              "bottom": 561.578125,
+              "left": 33,
+              "right": 155.890625
+            },
+            "bar": {
+              "top": 666,
+              "bottom": 832,
+              "left": 12,
+              "right": 378
+            },
+            "viewport": 844
+          }
+        }
+      ]
+    }
+  ],
+  "blocked": [],
+  "errors": []
+}

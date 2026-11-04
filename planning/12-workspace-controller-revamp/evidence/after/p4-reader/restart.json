@@ -1,0 +1,21 @@
+{
+  "status": "pass",
+  "source": "5fdbf48",
+  "database": "workspace_controller_p4_final_walk",
+  "principal": "controller-p4",
+  "verificationQuestionCount": 2,
+  "comparedFields": [
+    "id",
+    "body",
+    "revision",
+    "work_id",
+    "version_id",
+    "anchor"
+  ],
+  "revisions": [
+    2,
+    2
+  ],
+  "checkedAt": "2026-11-04T06:09:00.495Z",
+  "note": "Synthetic verification questions; bodies omitted."
+}

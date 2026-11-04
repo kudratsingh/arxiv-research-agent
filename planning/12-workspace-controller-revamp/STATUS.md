@@ -1,6 +1,6 @@
 # STATUS: workspace controller revamp
 
-Updated: **2026-11-04 UTC**. State: **Mobile reading-density pass verified; P4 Reader integration is next in the current owner batch.**
+Updated: **2026-11-04 UTC**. State: **Mobile reading-density pass and G4 Reader integration verified; ready for owner review.**
 
 The implementing agent updates this file at every gate (G0–G8). Numbers are
 pasted from command output and never typed by hand.
@@ -697,3 +697,183 @@ remain untouched. Recurrence disabled; key setup/qualification remain deferred;
 all PRs unmerged and no new PR opened. P4 source implementation starts after
 this completed density checkpoint; its full live regression and Reader loop
 will use fresh isolated fixture data.
+
+
+## G4 — Reader integration and final mobile regression
+
+Application source **`5fdbf48e35abce86ff09f99c40d7b3481c8c9d9d`**; final guard-test checkpoint **`a933a7195de41a33c473520b45e61a2d7d9235db`**; preceding mobile source
+`8ec35f8`, pushed checkpoint `6df8694`. This gate adds evidence/status only after
+the tested source commit. No newer controller branch work was found on fetch.
+
+Reader now uses the Shell sidebar queue and floating reading actions, retaining
+Back, version picker, Source/Understand/Your notes and the native note form in
+main exactly once. Today queue respects edition order/pinned versions; Library
+preserves view; Review uses its explicit packet order/version. Radar or missing,
+failed or unknown Review packets stay honest back-only. Queue admission still
+requires a work in state.works. No packet-only mutation shortcut was added.
+
+Queue/version/Back navigation blocks while busy or when a private draft cannot
+be stored. Existing source IDs/Unicode-codepoint offsets, draft keys, revision
+and idempotency request bodies remain intact. Tab focus/scroll waits for panel
+DOM commit. Desktop keeps panels available; mobile shows the active panel.
+Missing older-version authors are unavailable rather than copied from latest.
+
+A deferred-response regression reproduced a pre-existing private-text loss:
+editing while an older entry save was pending could have new text cleared by
+that response. Entry saves now temporarily lock the editor/kind/discard and
+prevent a second submission or passage retarget; ordinary reading requests do
+not lock the editor. Successful acknowledgement precedes clearing. The focused
+test proves one request and retained pending text; recovery/conflict tests pass.
+
+Existing test edits strengthen or adapt layout only: recovery test first proves
+unsaved text blocks version switching, then explicitly discards before its
+original version/ViewLatest assertions. Retained test awaits the genuinely
+lazy synthetic context picker; request/anchor assertions remain unchanged.
+The Shell act warning was fixed at the prior mobile gate without filtering.
+
+### Local checks on source5fdbf48
+
+`npm run lint`, direct touched-test ESLint, `npm run typecheck`,
+`npm test -- --coverage`, production build and every JS budget row pass.
+20 focused Reader tests and 97 existing focused tests pass. Full results pasted
+from command logs:
+
+```text
+ Test Files  190 passed (190)
+      Tests  3882 passed (3882)
+Statements   : 98.15% ( 4785/4875 )
+Branches     : 94.53% ( 3803/4023 )
+Functions    : 92.29% ( 1664/1803 )
+Lines        : 99.25% ( 4014/4044 )
+  16 passed (22.9s)
+6042 passed, 54 skipped, 53 deselected in 511.75s (0:08:31)
+Total:   3658 lines
+Missing: 19 lines
+Coverage: 99%
+```
+
+Python gate ran from the worktree with locked arxiv-venv-lock Python,
+`ANTHROPIC_API_KEY=local-preview-disabled`, runtime POSTGRES_URL/rate override
+unset, and isolated `WORKSPACE_TEST_POSTGRES_URL` on controller PG15458. All
+floors and test tiers remain unchanged. Python skips/deselections are explicitly
+reported above; no paid or live-model test is claimed.
+
+Production budget output (CSS exception **permitted by owner E27 through these
+phases**, pending G7; no budget file/ceiling/floor changed):
+
+```text
+PASS      `/` first-load JS, excl. polyfill — 166,259 B (162.4 KiB) against 166,912 B (163.0 KiB)
+PASS      `/c/[id]` first-load JS, excl. polyfill — 192,154 B (187.7 KiB) against 192,512 B (188.0 KiB)
+PASS      `/learn` first-load JS, excl. polyfill — 164,971 B (161.1 KiB) against 166,912 B (163.0 KiB)
+PASS      `/learn/paths/[id]` first-load JS, excl. polyfill — 165,890 B (162.0 KiB) against 169,984 B (166.0 KiB)
+PASS      `/learn/sessions/[id]` first-load JS, excl. polyfill — 186,642 B (182.3 KiB) against 188,416 B (184.0 KiB)
+PASS      `/learn/progress` first-load JS, excl. polyfill — 168,296 B (164.4 KiB) against 169,984 B (166.0 KiB)
+PASS      Shared framework/runtime chunk — 134,108 B (131.0 KiB) against 139,264 B (136.0 KiB)
+BREACH    All emitted CSS — 22,808 B (22.3 KiB) against 17,408 B (17.0 KiB)
+PASS      All self-hosted font files (woff2, latin subset) — 103,476 B (101.1 KiB) against 109,568 B (107.0 KiB)
+PASS      `/today` first-load JS, excl. polyfill — 153,611 B (150.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/interests` first-load JS, excl. polyfill — 153,065 B (149.5 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library` first-load JS, excl. polyfill — 152,583 B (149.0 KiB) against 163,840 B (160.0 KiB)
+PASS      `/library/items/[id]` first-load JS, excl. polyfill — 156,292 B (152.6 KiB) against 163,840 B (160.0 KiB)
+PASS      `/workspace/today` first-load JS, excl. polyfill — 167,531 B (163.6 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/radar` first-load JS, excl. polyfill — 161,423 B (157.6 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/interests` first-load JS, excl. polyfill — 168,537 B (164.6 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/library` first-load JS, excl. polyfill — 163,756 B (159.9 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/items/[id]` first-load JS, excl. polyfill — 167,716 B (163.8 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/operations` first-load JS, excl. polyfill — 159,526 B (155.8 KiB) against 169,984 B (166.0 KiB)
+PASS      `/workspace/review` first-load JS, excl. polyfill — 160,706 B (156.9 KiB) against 169,984 B (166.0 KiB)
+```
+
+The first Reader build exceeded its JS ceiling by443B. Loading the labelled
+synthetic workbench only after Understand opens, then retaining its mounted
+state, resolves this without raising the ceiling. CSS consolidation remains G7.
+The standard budget command still exits nonzero for the recorded CSS row;
+that exception is disclosed, not called an entirely green budget gate.
+
+### Browser and evidence
+
+[Walkthrough and all captures](evidence/after/p4-reader/WALKTHROUGH.md).
+Preview **http://localhost:3148/workspace/today** stays running with explicit
+synthetic notice on all captures. Rich9-paper previews are read-only; write
+verification uses fresh controller-p4 DB/principal, never owner data.
+
+- Existing real-API live regression:16/16, desktop/mobile, unchanged assertions.
+- New guarded walkthrough:12/12, two synthetic questions saved,503 draft/reload
+  recovery and actual409 local/server separation, exact version2 Unicode anchor
+  `abstract:181:186`, six Tabs to notes.13 bounded mutation requests recorded.
+- Verification API restart:2/2 entries preserve all compared fields including
+  text, revision, work/version and anchor. This is Postgres persistence evidence.
+- Today density rerun after Reader:30/30 title/actual abstract-line geometry
+  cases. Layout-only overrides remain labelled; no source claims inferred.
+- Rich preview:4/4 themes/viewports,12 screenshots (Today/Reader/notes).
+- Note textarea/Save clearance:4/4 themes/viewports.
+- Reader axe:12/12 panels×themes×viewports, zero violations.
+- Final browser audits:zero unexpected console/page/request failures or blocked
+  external/provider/source requests. Four expected503/409 console events are
+  retained in the write receipt. No physical phone test is claimed.
+
+The initial walkthrough harness assumed Source was still selected after mobile
+reading resumed notes; it now explicitly opens Source. It also waits for the
+reading mutation to finish before testing form Tab order. An axe script initially
+used same-document hash navigation rather than a fresh panel mount; corrected
+the audit harness and reran. No product-truth assertion was weakened. Initial
+focused test failures from duplicate Source-context wording and draft navigation
+were resolved by a unique Retained-version-details label and the stronger
+explicit-discard test described above. The intentionally failing draft-race
+probe is historical reproduction evidence, not an unresolved final test.
+
+### Scope and non-claims
+
+G4 is complete for owner review. P5/P6 and broader final G7 matrix are not started
+in this batch. Source/evidence boundaries remain; generated analysis, checker
+qualification and personal usefulness are not established by synthetic data.
+No provider contacts/spend, real-key request/configuration/test or automatic
+qualification start; recurrence disabled. Owner3137/API8137/PG15438, data and
+preferences unchanged. All PRs unmerged; no new controller PR.
+
+GitHub CI does not run on this branch-only push (workflow is main-push/PR; owner
+asked for no PR). These are exact-source local results, not green GitHub CI.
+Final docs/evidence commit contains no source changes after these checks.
+
+Independent adversarial review caught two additional confirmed gaps before the
+final push: saved-context/other-version/Shell links bypassed the unavailable-
+recovery guard, and reopening the same saved entry during its pending save
+could replace the edited draft. Both are fixed with focused regression tests.
+Capture-phase protection now covers same-tab anchor activation while unsafe or
+busy, retaining fragment tabs, modified/new-tab links and downloads. Reopening
+saved entries is disabled during entry saves. An unavailable-recovery draft also
+triggers a document-unload warning. This does **not** establish interception of
+Next client-side browser Back/Forward: if browser storage is unavailable, keep
+the tab open and save or copy text before history navigation. Normal recoverable
+draft history/return flows remain verified. No broader guarantee is claimed.
+
+The first final frontend coverage rerun was launched inside the restricted
+sandbox: seven unchanged healthcheck tests could not bind their ephemeral
+127.0.0.1 servers (`listen EPERM`), then timed out. The full suite was rerun
+with localhost socket permission; no tests, timeout or assertions were changed.
+That failed attempt remains in the verification log; its result is not green.
+
+Final reruns after adversarial-review fixes: all3882 frontend tests pass and all
+unchanged coverage floors pass. The first unrestricted rerun passed every test
+but statement coverage was98.03%, below98.15%; additional lifecycle/allowed-path
+regressions close the gap. No coverage input or floor was changed. Test checkpoint
+a933a71 adds tests only after application source5fdbf48; the final evidence commit
+adds documentation/captures only.
+
+The first final preview capture attempt failed with static-asset404s because the
+preview server started before standalone static files finished copying. After
+copy completed, only the isolated3148 server was restarted; the final four-case
+capture audit and30-case density pass show zero browser errors. This was local
+startup sequencing, not a product assertion changed to make a test pass.
+
+Final live16 uses a fresh `workspace_controller_p4_final_live` database with the
+production-wording flagfalse solely to retain its existing exact copy assertion.
+The separate fresh `workspace_controller_p4_final_walk` run uses the synthetic
+flagtrue, labelled captures and controller-p4 principal; the main3148 rich preview
+also stays explicitly synthetic. Both keep the sentinel and disabled recurrence.
+
+The first final live rerun passed but its stdout was not retained. A single
+fresh-database rerun closed that artifact gap without changing tests; exact
+[raw output](evidence/after/p4-reader/live-e2e.txt) is committed. The verification
+stack was restored to the labelled final_walk database afterward, preserving
+its two synthetic questions. No further retry or test broadening was performed.

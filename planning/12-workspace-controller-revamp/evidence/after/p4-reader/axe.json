@@ -1,0 +1,74 @@
+[
+  {
+    "width": 1440,
+    "theme": "dark",
+    "tab": "source",
+    "violations": []
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "tab": "notes",
+    "violations": []
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "tab": "understand",
+    "violations": []
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "tab": "source",
+    "violations": []
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "tab": "notes",
+    "violations": []
+  },
+  {
+    "width": 1440,
+    "theme": "light",
+    "tab": "understand",
+    "violations": []
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "tab": "source",
+    "violations": []
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "tab": "notes",
+    "violations": []
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "tab": "understand",
+    "violations": []
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "tab": "source",
+    "violations": []
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "tab": "notes",
+    "violations": []
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "tab": "understand",
+    "violations": []
+  }
+]
