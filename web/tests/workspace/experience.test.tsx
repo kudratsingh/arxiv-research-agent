@@ -978,7 +978,7 @@ describe("the visible personal controls round trip their actual data", () => {
     const user = userEvent.setup();
     render(<LiveInterests />);
     await load();
-    const search = screen.getByRole("searchbox", { name: "Find a topic" });
+    const search = await screen.findByRole("searchbox", { name: "Find a topic" });
     await user.type(search, "retrieval");
     const selectedTopic = screen.getByRole("checkbox", {
       name: /Retrieval and memory/,

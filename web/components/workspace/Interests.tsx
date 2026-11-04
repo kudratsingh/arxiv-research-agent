@@ -1,20 +1,24 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState } from "react";
-import topicsSeed from "@/lib/daily/topics.json";
+import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { STREAMS } from "@/lib/daily/profile";
 import {
   errorMessage,
   requestId,
   workspaceRequest,
   type ProfileData,
+  type WorkspaceState,
 } from "@/lib/workspace/api";
 import { useWorkspace } from "@/lib/workspace/useWorkspace";
 import { LoadingState, Message, ServiceNotice } from "./Common";
 import { AllocationReceipt } from "./AllocationReceipt";
 import { InterestCoverage } from "./InterestCoverage";
+import { ControlBar, SidebarSection } from "./Slots";
+import { Mascot } from "./Mascot";
+import { dispatchWorkspaceCommand } from "@/lib/workspace/dispatch";
+import { loadInterestDraft, storeInterestDraft, discardInterestDraft, type InterestDraft } from "@/lib/workspace/interestDrafts";
 
-const topics = topicsSeed.topics;
+const InterestTopics = lazy(() => import("./InterestTopics"));
 function lines(value: string) {
   return value
     .split("\n")
@@ -23,44 +27,81 @@ function lines(value: string) {
 }
 
 export function LiveInterests() {
-  const { state, error, reload } = useWorkspace();
-  const [draft, setDraft] = useState<ProfileData | null>(null);
-  const [baseRevision, setBaseRevision] = useState<number | null>(null);
-  const [notice, setNotice] = useState("");
+  const { state, setState, error, reload } = useWorkspace();
+  if (!state) return <div className="ws-interests-state"><Mascot mood={error ? "alert" : "busy"} /><LoadingState error={error} retry={() => void reload()} /></div>;
+  return <InterestsEditor key={state.principal_key_id} state={state} setState={setState} error={error} />;
+}
+
+function InterestsEditor({ state, setState, error }: { state: WorkspaceState; setState: (value: WorkspaceState) => void; error: string }) {
+  const owner = state.principal_key_id;
+  const [recovery] = useState(() => {
+    try { const value = loadInterestDraft(owner); return { value, available: true }; }
+    catch { return { value: null, available: false }; }
+  });
+  const [draft, setDraft] = useState<ProfileData | null>(recovery.value?.data ?? null);
+  const [baseRevision, setBaseRevision] = useState<number | null>(recovery.value?.baseRevision ?? null);
+  const [notice, setNotice] = useState(recovery.value
+    ? "Recovered local interest edits for this account. Review before saving; opening this page has not changed your saved preferences."
+    : recovery.available ? "" : "Browser interest-draft recovery is unavailable. Keep this tab open or copy your changes before leaving.");
+  const [draftStorage, setDraftStorage] = useState(recovery.available);
+  const formId = `workspace-interests-${useId()}`;
   const [busy, setBusy] = useState(false);
-  const [query, setQuery] = useState("");
-  const [field, setField] = useState("");
-  const [customRaw, setCustomRaw] = useState<string | null>(null);
-  const [exclusionsRaw, setExclusionsRaw] = useState<string | null>(null);
-  const attempts = useRef(new Map<string, string>());
-  if (!state) return <LoadingState error={error} retry={() => void reload()} />;
+  const [customRaw, setCustomRaw] = useState<string | null>(recovery.value?.customRaw ?? null);
+  const [exclusionsRaw, setExclusionsRaw] = useState<string | null>(recovery.value?.exclusionsRaw ?? null);
+  const attempts = useRef(new Map<string, string>(recovery.value?.attempt ? [[recovery.value.attempt.fingerprint, recovery.value.attempt.id]] : []));
   const data = draft ?? state.profile.data;
-  const fields = topics.filter((topic) => topic.kind === "external_field");
-  const inField = (id: string, parent: string): boolean =>
-    id === parent ||
-    (topics
-      .find((topic) => topic.id === id)
-      ?.parents.some((candidate) => inField(candidate, parent)) ??
-      false);
-  const visible = topics.filter(
-    (topic) =>
-      (query
-        ? `${topic.id} ${topic.label}`
-            .toLowerCase()
-            .includes(query.toLowerCase())
-        : Boolean(field) ||
-          ["authored_ml_group", "external_field"].includes(topic.kind)) &&
-      (!field || inField(topic.id, field)),
-  );
-  function change(next: Partial<ProfileData>) {
-    if (!state) return;
-    if (draft === null) setBaseRevision(state.profile.revision);
-    setDraft({ ...(draft ?? state.profile.data), ...next });
-    setNotice("You have unsaved interest changes.");
+  const unsafeDraft = draft !== null && !draftStorage;
+  useEffect(() => {
+    if (!unsafeDraft && !busy) return;
+    const click = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+      if (!link || link.hasAttribute("download") || link.target === "_blank" || link.getAttribute("href")?.startsWith("#")) return;
+      event.preventDefault(); event.stopPropagation();
+      setNotice(unsafeDraft ? "Save or copy your interest changes before leaving. Browser draft recovery is unavailable." : "Wait for this preference save to finish before leaving.");
+    };
+    const unload = (event: BeforeUnloadEvent) => { if (unsafeDraft) { event.preventDefault(); event.returnValue = ""; } };
+    document.addEventListener("click", click, true); window.addEventListener("beforeunload", unload);
+    return () => { document.removeEventListener("click", click, true); window.removeEventListener("beforeunload", unload); };
+  }, [unsafeDraft, busy]);
+  function cache(value: InterestDraft | null) {
+    try { storeInterestDraft(owner, value); setDraftStorage(true); return true; }
+    catch { setDraftStorage(false); return false; }
+  }
+  function change(next: Partial<ProfileData>, raw: { customRaw?: string; exclusionsRaw?: string } = {}) {
+    if (busy) return;
+    const nextData = { ...(draft ?? state.profile.data), ...next };
+    const revision = baseRevision ?? state.profile.revision;
+    setBaseRevision(revision); setDraft(nextData);
+    if (raw.customRaw !== undefined) setCustomRaw(raw.customRaw);
+    if (raw.exclusionsRaw !== undefined) setExclusionsRaw(raw.exclusionsRaw);
+    const nextCustomRaw = raw.customRaw ?? customRaw, nextExclusionsRaw = raw.exclusionsRaw ?? exclusionsRaw;
+    const fingerprint = JSON.stringify({ revision, data: { ...nextData,
+      custom_topics: nextCustomRaw === null ? nextData.custom_topics : lines(nextCustomRaw),
+      exclusions: nextExclusionsRaw === null ? nextData.exclusions : lines(nextExclusionsRaw) } });
+    const attemptId = attempts.current.get(fingerprint);
+    const retained = cache({ version: 1, baseRevision: revision, data: nextData, customRaw: nextCustomRaw, exclusionsRaw: nextExclusionsRaw,
+      ...(attemptId ? { attempt: { fingerprint, id: attemptId } } : {}) });
+    setNotice(retained ? "You have unsaved interest changes." : "You have unsaved interest changes. Browser recovery is unavailable; keep this tab open or copy them before leaving.");
+  }
+  async function discard() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const fresh = await workspaceRequest<WorkspaceState>("state");
+      discardInterestDraft(owner);
+      setState(fresh); setDraft(null); setBaseRevision(null); setCustomRaw(null); setExclusionsRaw(null); setDraftStorage(true);
+      setNotice("Draft discarded at your request. Loading the saved server profile.");
+    } catch (failure) { setNotice(errorMessage(failure)); }
+    finally { setBusy(false); }
+  }
+  function jump(id: string) {
+    if (document.querySelector('.workspace-app [role="dialog"][aria-modal="true"]')) dispatchWorkspaceCommand("escape");
+    requestAnimationFrame(() => { const section = document.getElementById(id); section?.focus({ preventScroll: true }); section?.scrollIntoView?.({ block: "start" }); });
   }
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!state) return;
+    if (busy) return;
     const payload = {
       revision: baseRevision ?? state.profile.revision,
       data: {
@@ -74,17 +115,25 @@ export function LiveInterests() {
     const fingerprint = JSON.stringify(payload),
       id = attempts.current.get(fingerprint) ?? requestId();
     attempts.current.set(fingerprint, id);
+    cache({ version: 1, baseRevision: payload.revision, data, customRaw, exclusionsRaw, attempt: { fingerprint, id } });
     setBusy(true);
     try {
-      await workspaceRequest("profile", { ...payload, request_id: id });
+      const acknowledged = await workspaceRequest<WorkspaceState["profile"]>("profile", { ...payload, request_id: id });
       await workspaceRequest("edition", {});
-      await reload();
+      const fresh = await workspaceRequest<WorkspaceState>("state");
+      setState(fresh);
+      if (fresh.profile.revision !== acknowledged.revision) {
+        setNotice("A different profile revision is now saved. Your local draft has been kept for review; no saved preferences were overwritten by reloading.");
+        return;
+      }
+      const cleared = cache(null);
       setDraft(null);
       setBaseRevision(null);
       setCustomRaw(null);
       setExclusionsRaw(null);
       setNotice(
-        "Interests and research question saved on the server. A new edition uses this revision; earlier editions remain unchanged.",
+        cleared ? "Interests and research question saved on the server. A new edition uses this revision; earlier editions remain unchanged."
+          : "Interests and research question saved on the server. The local recovery copy could not be cleared; keep it for reconciliation.",
       );
     } catch (failure) {
       setNotice(errorMessage(failure));
@@ -93,7 +142,10 @@ export function LiveInterests() {
     }
   }
   return (
-    <>
+    <div className="ws-interests">
+      <SidebarSection label="Interest sections"><h2>Your research lens</h2><nav aria-label="Interest sections">
+        {[["interest-question", "Question & window"], ["interest-streams", "Streams"], ["interest-topics", "Topics"], ["interest-terms", "Terms & boundaries"], ["interest-coverage", "Coverage"]].map(([id, title]) => <a key={id} href={`#${id}`} onClick={(event) => { event.preventDefault(); jump(id!); }}>{title}</a>)}
+      </nav><p className="workspace-note-context">Profile revision {state.profile.revision}</p></SidebarSection>
       <div className="daily-page-meta">
         <span className="daily-eyebrow">
           Your research lens · revision {state.profile.revision}
@@ -102,7 +154,7 @@ export function LiveInterests() {
           Back to Today →
         </Link>
       </div>
-      <div className="daily-intro">
+      <div className="daily-intro ws-interests-intro">
         <div>
           <h1>
             Follow a field.
@@ -116,9 +168,10 @@ export function LiveInterests() {
         </div>
       </div>
       <ServiceNotice error={error} />
-      <form onSubmit={(event) => void save(event)}>
+      <form id={formId} onSubmit={(event) => void save(event)}>
+        <fieldset className="ws-interest-fields" disabled={busy}>
         <section className="daily-lens">
-          <div>
+          <div id="interest-question" tabIndex={-1}>
             <label>
               Your current research question
               <textarea
@@ -144,7 +197,7 @@ export function LiveInterests() {
               </select>
             </label>
           </div>
-          <fieldset>
+          <fieldset id="interest-streams" tabIndex={-1}>
             <legend>Your research streams</legend>
             {STREAMS.map((stream) => (
               <label key={stream.id}>
@@ -173,83 +226,12 @@ export function LiveInterests() {
           </fieldset>
         </section>
         <div className="daily-interests-grid">
-          <section>
-            <div className="daily-section-heading">
-              <h2>Fields and detailed topics</h2>
-              <span>
-                {topics.length} catalogue entries · {fields.length} field
-                anchors
-              </span>
-            </div>
-            <p className="daily-muted">
-              The broad catalogue is navigation. Active intake covers only arXiv
-              cs.LG/cs.AI/cs.CL, Hugging Face Blog and Google Research Blog.
-            </p>
-            <div className="daily-filters">
-              <label>
-                Find a topic
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Retrieval, control, evaluation…"
-                />
-              </label>
-              <label>
-                Browse a field
-                <select
-                  value={field}
-                  onChange={(event) => setField(event.target.value)}
-                >
-                  <option value="">All fields</option>
-                  {fields.map((topic) => (
-                    <option key={topic.id} value={topic.id}>
-                      {topic.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="daily-topic-list">
-              {visible.map((topic) => (
-                <label key={topic.id}>
-                  <input
-                    type="checkbox"
-                    checked={data.topics.includes(topic.id)}
-                    onChange={() =>
-                      change({
-                        topics: data.topics.includes(topic.id)
-                          ? data.topics.filter((id) => id !== topic.id)
-                          : [...data.topics, topic.id],
-                      })
-                    }
-                  />
-                  <span>
-                    <strong>{topic.label}</strong>
-                    <small>
-                      {topic.kind.startsWith("external")
-                        ? "Scholarly catalogue · navigation is separate from monitoring"
-                        : data.topics.includes(topic.id)
-                          ? state.interest_coverage.find(
-                              (coverage) => coverage.topic_id === topic.id,
-                            )?.matching_mode === "browse_only"
-                            ? "Browse only · no matching terms configured"
-                            : state.interest_coverage.some(
-                                  (coverage) => coverage.topic_id === topic.id,
-                                )
-                              ? "Saved matching vocabulary · inspect its terms and sources below"
-                              : "Save this selection to inspect its matching vocabulary"
-                          : "Select and save to inspect matching terms and source scope"}
-                    </small>
-                  </span>
-                </label>
-              ))}
-              {visible.length === 0 && (
-                <p>No catalogue entries match. Add a custom interest.</p>
-              )}
-            </div>
+          <section id="interest-topics" tabIndex={-1}>
+            <Suspense fallback={<p className="daily-muted" aria-busy="true">Loading the topic catalogue…</p>}>
+              <InterestTopics selected={data.topics} coverage={state.interest_coverage} onChange={(topics) => change({ topics })} />
+            </Suspense>
           </section>
-          <aside className="daily-interest-summary">
+          <aside className="daily-interest-summary" id="interest-terms" tabIndex={-1}>
             <h2>Your terms and boundaries</h2>
             <label>
               Custom interests or watch terms
@@ -258,8 +240,7 @@ export function LiveInterests() {
                 rows={5}
                 value={customRaw ?? data.custom_topics.join("\n")}
                 onChange={(event) => {
-                  setCustomRaw(event.target.value);
-                  change({});
+                  change({}, { customRaw: event.target.value });
                 }}
                 placeholder="agent memory&#10;sim-to-real control"
               />
@@ -273,8 +254,7 @@ export function LiveInterests() {
                 rows={4}
                 value={exclusionsRaw ?? data.exclusions.join("\n")}
                 onChange={(event) => {
-                  setExclusionsRaw(event.target.value);
-                  change({});
+                  change({}, { exclusionsRaw: event.target.value });
                 }}
               />
             </label>
@@ -324,36 +304,31 @@ export function LiveInterests() {
             </p>
           </aside>
         </div>
-        <InterestCoverage
+        <div id="interest-coverage" tabIndex={-1}><InterestCoverage
           coverage={state.interest_coverage}
           sources={state.sources}
           draft={draft !== null}
-        />
-        <div className="workspace-toolbar">
-          <button className="daily-button" disabled={busy}>
+        /></div>
+        </fieldset>
+      </form>
+      {!draftStorage && <p className="workspace-version-notice">Browser recovery is unavailable. A confirmed server save is durable; local draft text is not. Save or copy it before browser history navigation.</p>}
+      <ControlBar><div className="workspace-toolbar ws-interests-actions">
+        <span className="ws-unsaved" aria-live="polite">{draft ? "Unsaved interest changes" : `Saved profile · revision ${state.profile.revision}`}</span>
+          <button className="daily-button" type="submit" form={formId} disabled={busy}>
             {busy ? "Saving interests…" : "Save interests and question"}
           </button>
           {draft && (
             <button
               type="button"
               className="daily-secondary"
-              onClick={() => {
-                setDraft(null);
-                setBaseRevision(null);
-                setCustomRaw(null);
-                setExclusionsRaw(null);
-                void reload();
-                setNotice(
-                  "Draft discarded at your request. Loading the saved server profile.",
-                );
-              }}
+              disabled={busy}
+              onClick={() => void discard()}
             >
               Discard draft and reload saved profile
             </button>
           )}
           <Message>{notice}</Message>
-        </div>
-      </form>
-    </>
+        </div></ControlBar>
+    </div>
   );
 }

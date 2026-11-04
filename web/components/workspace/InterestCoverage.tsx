@@ -46,6 +46,7 @@ export function InterestCoverage({
                     : "Matching terms configured · limited source scope"}
               </span>
             </summary>
+            <p className="workspace-coverage-status"><strong>Check status:</strong> {interest.status.replaceAll("_", " ")} · {interest.matching_mode === "browse_only" ? "Browse-only navigation" : "Coverage remains bounded to configured sources"}</p>
             {interest.terms.length > 0 && (
               <p>
                 <strong>Matches these terms:</strong>{" "}
