@@ -1,37 +1,54 @@
-# arxiv-research-agent
+# arXiv Research Agent
 
-[![ci](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml)
-[![python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
-[![node 22+](https://img.shields.io/badge/node-22%2B-339933?logo=nodedotjs&logoColor=white)](web/package.json)
-[![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](web/package.json)
+A research workbench for ML/AI papers and a controlled testbed for agent policies. Ask a question, review the search plan, inspect the evidence and read a cited briefing. LangGraph and Claude drive the workflow; FastAPI streams progress to a Next.js **Evidence Workbench**.
 
-A multi-agent research assistant for ML/AI papers, and the operable
-surface around it. Ask a research question in natural language; the
-system plans the search, **pauses for you to approve or rewrite that
-plan before it spends anything**, searches arXiv (optionally enriching
-through Semantic Scholar's citation graph), reads each paper's full
-text, synthesizes a briefing with citations, and self-critiques for
-quality. The workflow is orchestrated with LangGraph and Claude and
-ships behind a FastAPI async job API with SSE streaming and a Next.js
-browser client — the **Evidence Workbench** — so a run is something you
-watch and steer, not a black box you wait on.
+[![CI](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kudratsingh/arxiv-research-agent/actions/workflows/ci.yml)
 
-![The Evidence Workbench showing a completed research thread: the thread
-rail on the left, the checkpoint spine across the top, and the finished
-briefing rendered in the report reader beside its section
-rail](docs/images/workbench-briefing.png)
+![Evidence Workbench with a completed research thread and its cited briefing.](docs/images/workbench-briefing.png)
 
-Under the fixed pipeline (Sprint 1 shape) it's a five-agent DAG with one
-conditional edge on the critic. Behind opt-in flags it becomes an
-agentic supervisor loop with runtime faithfulness verification,
-evidence-grounded synthesis, and search-layer / read-layer recovery
-actions — and behind `RESEARCH_POLICY` two further graph shapes, one
-adding an explicit verify-and-repair stage and one fanning each
-sub-question out to its own worker branch, either of which
-`COMPUTE_CONTROLLER` can select per job. Every stateful concern has a pluggable Redis/Postgres backend
-(jobs, checkpoints, conversations, caches, rate limits), workers hold
-leases with a redriver for crash recovery, and everything emits
-structured JSON logs plus OpenTelemetry traces and metrics.
+## What it does
+
+- **Plan and steer research:** approve, revise or cancel the plan before search and reading proceed. Planning itself can use the model and incur cost.
+- **Find and read papers:** arXiv search, optional Semantic Scholar enrichment, full-text extraction, evidence retrieval and cited synthesis.
+- **Compare agent designs:** fixed pipeline, supervisor loop, verify-and-repair and orchestrated workers, with optional per-job compute allocation.
+- **Keep work recoverable:** async jobs, SSE progress, resumable human review, conversations, exports and Redis/Postgres-backed state.
+- **Evaluate policy changes:** sealed task/run contracts, append-only trajectories, five policy arms, budget enforcement and campaign resume/report tooling.
+
+The browser uses a server-side proxy; provider credentials stay off the client. Authentication, rate limiting, worker leases, crash redriving, structured logs and OpenTelemetry are implemented around the research loop.
+
+## Try it without an API key
+
+Python 3.11+; the shipped container and primary development lock target Python 3.14.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-lock.txt -e ".[dev]"
+USE_MOCK_DATA=true .venv/bin/python -m src.main "How do retrieval-augmented systems check their citations?"
+```
+
+Mock mode runs the whole research graph on deterministic fixtures without provider calls. It demonstrates the workflow, not research quality. For the browser stack, Docker requires a real provider key; see the [full-stack quickstart](#quickstart) in the expandable reference below and the [demo guide](docs/demo.md).
+
+## Current evidence
+
+The research application, Evidence Workbench and policy-campaign infrastructure are implemented. The offline five-arm campaign exercises execution, scoring, resume and budget stops at zero provider spend.
+
+**There is no completed funded policy comparison or measured research-quality improvement to report.** The repeated live baseline, live SDK gateway smoke and expert-label calibration still need their recorded approvals and execution. The workbench uses a shared workspace; real per-user multi-tenancy is proposed, not shipped. A public hosted deployment is not established.
+
+[Campaign design](docs/agent-engineering/README.md) · [Evaluation status](docs/eval.md) · [Current roadmap](planning/03-roadmap.md)
+
+## Explore the implementation
+
+| Area | Entry point |
+|---|---|
+| Research agents and graph selection | [agents](src/agents/), [workflow](src/graph/workflow.py) |
+| Job API and durable runtime | [src/api](src/api/), [architecture](docs/architecture.md) |
+| Browser product | [web](web/), [workbench implementation status](docs/revamp/STATUS.md) |
+| Policy campaigns and sealed contracts | [campaign](src/campaign/), [contracts](src/contracts/) |
+| Reproduction and testing | [Development](docs/development.md), [testing](docs/testing.md), [demo](docs/demo.md) |
+| Design rationale | [Decision index](docs/decisions/README.md), [documentation index](docs/README.md) |
+
+<details>
+<summary><strong>Technical reference: architecture, screenshots, flags, setup, tests and evaluation</strong></summary>
 
 ## Architecture
 
@@ -430,8 +447,8 @@ and publishes only HTTPS through Caddy (ADR
 Requires Python 3.11+ (the container images build on `python:3.14-slim`).
 
 ```bash
-make install        # fresh .venv + runtime deps (editable)
-make install-dev    # + dev deps (pytest, mypy, ruff)
+make install-dev    # fresh .venv + runtime and dev deps
+. .venv/bin/activate
 
 cp .env.example .env
 # edit .env and set ANTHROPIC_API_KEY=sk-ant-...
@@ -917,11 +934,8 @@ documentation index is [`docs/README.md`](docs/README.md); the frontend
 campaign's own index is
 [`docs/revamp/STATUS.md`](docs/revamp/STATUS.md).
 
+</details>
+
 ## Rights
 
-Copyright © 2025–2026 Kudrat Singh. All rights reserved. No license is
-granted to use, copy, modify, or distribute this code. The absence of a
-`LICENSE` file is deliberate, not an oversight: this repository is
-published to be **read**, not reused. Everything here — the ADRs, the
-assurance pack, the campaign records — is written so that the reasoning
-is inspectable, and that is the whole of the offer.
+Copyright © 2025–2026 Kudrat Singh. All rights reserved. Published for inspection; no license to use, copy, modify or distribute is granted.
